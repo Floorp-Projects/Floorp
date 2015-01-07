@@ -10777,7 +10777,10 @@ StkCommandParamsFactoryObject.prototype = {
    */
   processSelectItem: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let menu = {};
+    let menu = {
+      // Help information available.
+      isHelpAvailable: !!(cmdDetails.commandQualifier & 0x80)
+    };
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
       COMPREHENSIONTLV_TAG_ALPHA_ID,
@@ -10810,11 +10813,6 @@ StkCommandParamsFactoryObject.prototype = {
     if (cmdDetails.typeOfCommand == STK_CMD_SELECT_ITEM) {
       // The 1st bit and 2nd bit determines the presentation type.
       menu.presentationType = cmdDetails.commandQualifier & 0x03;
-    }
-
-    // Help information available.
-    if (cmdDetails.commandQualifier & 0x80) {
-      menu.isHelpAvailable = true;
     }
 
     ctlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_NEXT_ACTION_IND);
@@ -10862,7 +10860,10 @@ StkCommandParamsFactoryObject.prototype = {
 
   processDisplayText: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let textMsg = {};
+    let textMsg = {
+      isHighPriority: !!(cmdDetails.commandQualifier & 0x01),
+      userClear: !!(cmdDetails.commandQualifier & 0x80)
+    };
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
       COMPREHENSIONTLV_TAG_TEXT_STRING,
@@ -10880,24 +10881,12 @@ StkCommandParamsFactoryObject.prototype = {
     }
     textMsg.text = ctlv.value.textString;
 
-    ctlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE);
-    if (ctlv) {
-      textMsg.responseNeeded = true;
-    }
+    textMsg.responseNeeded =
+      !!(selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE));
 
     ctlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_DURATION);
     if (ctlv) {
       textMsg.duration = ctlv.value;
-    }
-
-    // High priority.
-    if (cmdDetails.commandQualifier & 0x01) {
-      textMsg.isHighPriority = true;
-    }
-
-    // User clear.
-    if (cmdDetails.commandQualifier & 0x80) {
-      textMsg.userClear = true;
     }
 
     this.appendIconIfNecessary(selectedCtlvs[COMPREHENSIONTLV_TAG_ICON_ID] || null,
@@ -10930,7 +10919,17 @@ StkCommandParamsFactoryObject.prototype = {
 
   processGetInkey: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let input = {};
+    let input = {
+      minLength: 1,
+      maxLength: 1,
+      isAlphabet: !!(cmdDetails.commandQualifier & 0x01),
+      isUCS2: !!(cmdDetails.commandQualifier & 0x02),
+      // Character sets defined in bit 1 and bit 2 are disable and
+      // the YES/NO reponse is required.
+      isYesNoRequested: !!(cmdDetails.commandQualifier & 0x04),
+      // Help information available.
+      isHelpAvailable: !!(cmdDetails.commandQualifier & 0x80)
+    };
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
       COMPREHENSIONTLV_TAG_TEXT_STRING,
@@ -10953,30 +10952,6 @@ StkCommandParamsFactoryObject.prototype = {
       input.duration = ctlv.value;
     }
 
-    input.minLength = 1;
-    input.maxLength = 1;
-
-    // isAlphabet
-    if (cmdDetails.commandQualifier & 0x01) {
-      input.isAlphabet = true;
-    }
-
-    // UCS2
-    if (cmdDetails.commandQualifier & 0x02) {
-      input.isUCS2 = true;
-    }
-
-    // Character sets defined in bit 1 and bit 2 are disable and
-    // the YES/NO reponse is required.
-    if (cmdDetails.commandQualifier & 0x04) {
-      input.isYesNoRequested = true;
-    }
-
-    // Help information available.
-    if (cmdDetails.commandQualifier & 0x80) {
-      input.isHelpAvailable = true;
-    }
-
     this.appendIconIfNecessary(selectedCtlvs[COMPREHENSIONTLV_TAG_ICON_ID] || null,
                                input,
                                onComplete);
@@ -10984,7 +10959,16 @@ StkCommandParamsFactoryObject.prototype = {
 
   processGetInput: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let input = {};
+    let input = {
+      isAlphabet: !!(cmdDetails.commandQualifier & 0x01),
+      isUCS2: !!(cmdDetails.commandQualifier & 0x02),
+      // User input shall not be revealed
+      hideInput: !!(cmdDetails.commandQualifier & 0x04),
+      // User input in SMS packed format
+      isPacked: !!(cmdDetails.commandQualifier & 0x08),
+      // Help information available.
+      isHelpAvailable: !!(cmdDetails.commandQualifier & 0x80)
+    };
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
       COMPREHENSIONTLV_TAG_TEXT_STRING,
@@ -11011,31 +10995,6 @@ StkCommandParamsFactoryObject.prototype = {
     ctlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_DEFAULT_TEXT);
     if (ctlv) {
       input.defaultText = ctlv.value.textString;
-    }
-
-    // Alphabet only
-    if (cmdDetails.commandQualifier & 0x01) {
-      input.isAlphabet = true;
-    }
-
-    // UCS2
-    if (cmdDetails.commandQualifier & 0x02) {
-      input.isUCS2 = true;
-    }
-
-    // User input shall not be revealed
-    if (cmdDetails.commandQualifier & 0x04) {
-      input.hideInput = true;
-    }
-
-    // User input in SMS packed format
-    if (cmdDetails.commandQualifier & 0x08) {
-      input.isPacked = true;
-    }
-
-    // Help information available.
-    if (cmdDetails.commandQualifier & 0x80) {
-      input.isHelpAvailable = true;
     }
 
     this.appendIconIfNecessary(selectedCtlvs[COMPREHENSIONTLV_TAG_ICON_ID] || null,
@@ -11124,7 +11083,9 @@ StkCommandParamsFactoryObject.prototype = {
 
   processLaunchBrowser: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let browser = {};
+    let browser = {
+      mode: cmdDetails.commandQualifier & 0x03
+    };
     let confirmMessage = {};
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
@@ -11141,8 +11102,6 @@ StkCommandParamsFactoryObject.prototype = {
       throw new Error("Stk Launch Browser: Required value missing : URL");
     }
     browser.url = ctlv.value.url;
-
-    browser.mode = cmdDetails.commandQualifier & 0x03;
 
     ctlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
     if (ctlv) {
@@ -11165,7 +11124,10 @@ StkCommandParamsFactoryObject.prototype = {
 
   processPlayTone: function(cmdDetails, ctlvs, onComplete) {
     let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
-    let playTone = {};
+    let playTone = {
+      // The vibrate is only defined in TS 102.223.
+      isVibrate: !!(cmdDetails.commandQualifier & 0x01)
+    };
 
     let selectedCtlvs = StkProactiveCmdHelper.searchForSelectedTags(ctlvs, [
       COMPREHENSIONTLV_TAG_ALPHA_ID,
@@ -11188,9 +11150,6 @@ StkCommandParamsFactoryObject.prototype = {
     if (ctlv) {
       playTone.duration = ctlv.value;
     }
-
-    // vibrate is only defined in TS 102.223
-    playTone.isVibrate = (cmdDetails.commandQualifier & 0x01) !== 0x00;
 
     this.appendIconIfNecessary(selectedCtlvs[COMPREHENSIONTLV_TAG_ICON_ID] || null,
                                playTone,
