@@ -42,6 +42,13 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *hand
     return NewProxyObject(cx, handler, priv, options.proto(), parent, options);
 }
 
+JSObject *
+Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler)
+{
+    existing->as<ProxyObject>().renew(cx, handler, ObjectValue(*obj));
+    return existing;
+}
+
 const Wrapper *
 Wrapper::wrapperHandler(JSObject *wrapper)
 {
@@ -120,7 +127,8 @@ JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
 /* Compartments. */
 
 extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, HandleObject obj, HandleObject parent)
+js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
+                             HandleObject parent)
 {
     // Allow wrapping outer window proxies.
     MOZ_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);

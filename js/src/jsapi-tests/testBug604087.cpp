@@ -44,7 +44,8 @@ PreWrap(JSContext *cx, JS::HandleObject scope, JS::HandleObject obj,
 }
 
 static JSObject *
-Wrap(JSContext *cx, JS::HandleObject obj, JS::HandleObject parent)
+Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj,
+     JS::HandleObject parent)
 {
     return js::Wrapper::New(cx, obj, parent, &js::CrossCompartmentWrapper::singleton);
 }
