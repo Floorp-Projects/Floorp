@@ -14,6 +14,7 @@
 #include "nsIUploadChannel2.h"
 
 #include "nsContentPolicyUtils.h"
+#include "nsCORSListenerProxy.h"
 #include "nsDataHandler.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsNetUtil.h"
@@ -95,6 +96,9 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
     return FailWithNetworkError();
   }
 
+  // Begin Step 4 of the Fetch algorithm
+  // https://fetch.spec.whatwg.org/#fetching
+
   // FIXME(nsm): Bug 1039846: Add CSP checks
 
   nsAutoCString scheme;
@@ -125,7 +129,7 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
 
   bool corsPreflight = false;
   if (mRequest->Mode() == RequestMode::Cors_with_forced_preflight ||
-      (mRequest->UnsafeRequest() && (mRequest->HasSimpleMethod() || !mRequest->Headers()->HasOnlySimpleHeaders()))) {
+      (mRequest->UnsafeRequest() && (!mRequest->HasSimpleMethod() || !mRequest->Headers()->HasOnlySimpleHeaders()))) {
     corsPreflight = true;
   }
 
@@ -274,46 +278,14 @@ FetchDriver::BasicFetch()
   return FailWithNetworkError();
 }
 
+// This function implements the "HTTP Fetch" algorithm from the Fetch spec.
+// Functionality is often split between here, the CORS listener proxy and the
+// Necko HTTP implementation.
 nsresult
-FetchDriver::HttpFetch(bool aCORSFlag, bool aPreflightCORSFlag, bool aAuthenticationFlag)
+FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthenticationFlag)
 {
+  // Step 1. "Let response be null."
   mResponse = nullptr;
-
-  // XXXnsm: The ServiceWorker interception should happen automatically.
-  return ContinueHttpFetchAfterServiceWorker();
-}
-
-nsresult
-FetchDriver::ContinueHttpFetchAfterServiceWorker()
-{
-  if (!mResponse) {
-    // FIXME(nsm): Set skip SW flag.
-    // FIXME(nsm): Deal with CORS flags cases which will also call
-    // ContinueHttpFetchAfterCORSPreflight().
-    return ContinueHttpFetchAfterCORSPreflight();
-  }
-
-  // Otherwise ServiceWorker replied with a response.
-  return ContinueHttpFetchAfterNetworkFetch();
-}
-
-nsresult
-FetchDriver::ContinueHttpFetchAfterCORSPreflight()
-{
-  // mResponse is currently the CORS response.
-  // We may have to pass it via argument.
-  if (mResponse && mResponse->IsError()) {
-    return FailWithNetworkError();
-  }
-
-  return HttpNetworkFetch();
-}
-
-nsresult
-FetchDriver::HttpNetworkFetch()
-{
-  // We don't create a HTTPRequest copy since Necko sets the information on the
-  // nsIHttpChannel instead.
 
   nsresult rv;
 
@@ -336,6 +308,13 @@ FetchDriver::HttpNetworkFetch()
     return rv;
   }
 
+  // Step 2 deals with letting ServiceWorkers intercept requests. This is
+  // handled by Necko after the channel is opened.
+  // FIXME(nsm): Bug 1119026: The channel's skip service worker flag should be
+  // set based on the Request's flag.
+
+  // From here on we create a channel and set its properties with the
+  // information from the InternalRequest. This is an implementation detail.
   MOZ_ASSERT(mLoadGroup);
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannel(getter_AddRefs(chan),
@@ -353,8 +332,39 @@ FetchDriver::HttpNetworkFetch()
     return rv;
   }
 
+  // Step 3.1 "If the CORS preflight flag is set and one of these conditions is
+  // true..." is handled by the CORS proxy.
+  //
+  // Step 3.2 "Set request's skip service worker flag." This isn't required
+  // since Necko will fall back to the network if the ServiceWorker does not
+  // respond with a valid Response.
+  //
+  // NS_StartCORSPreflight() will automatically kick off the original request
+  // if it succeeds, so we need to have everything setup for the original
+  // request too.
+
+  // Step 3.3 "Let credentials flag be set if either request's credentials mode
+  // is include, or request's credentials mode is same-origin and the CORS flag
+  // is unset, and unset otherwise."
+  bool useCredentials = false;
+  if (mRequest->GetCredentialsMode() == RequestCredentials::Include ||
+      (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin && !aCORSFlag)) {
+    useCredentials = true;
+  }
+
+  // FIXME(nsm): Bug 1120715.
+  // Step 3.4 "If request's cache mode is default and request's header list
+  // contains a header named `If-Modified-Since`, `If-None-Match`,
+  // `If-Unmodified-Since`, `If-Match`, or `If-Range`, set request's cache mode
+  // to no-store."
+
+  // Step 3.5 begins "HTTP network or cache fetch".
+  // HTTP network or cache fetch
+  // ---------------------------
+  // Step 1 "Let HTTPRequest..." The channel is the HTTPRequest.
   nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(chan);
   if (httpChan) {
+    // Copy the method.
     nsAutoCString method;
     mRequest->GetMethod(method);
     rv = httpChan->SetRequestMethod(method);
@@ -363,39 +373,53 @@ FetchDriver::HttpNetworkFetch()
       return rv;
     }
 
+    // Set the same headers.
     nsAutoTArray<InternalHeaders::Entry, 5> headers;
     mRequest->Headers()->GetEntries(headers);
     for (uint32_t i = 0; i < headers.Length(); ++i) {
       httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
     }
 
+    // Step 2. Set the referrer. This is handled better in Bug 1112922.
     MOZ_ASSERT(mRequest->ReferrerIsURL());
     nsCString referrer = mRequest->ReferrerAsURL();
     if (!referrer.IsEmpty()) {
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewURI(getter_AddRefs(uri), referrer, nullptr, nullptr, ios);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return FailWithNetworkError();
       }
       rv = httpChan->SetReferrer(uri);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return FailWithNetworkError();
       }
     }
 
+    // Step 3 "If HTTPRequest's force Origin header flag is set..."
     if (mRequest->ForceOriginHeader()) {
       nsAutoString origin;
       rv = nsContentUtils::GetUTFOrigin(mPrincipal, origin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        FailWithNetworkError();
-        return rv;
+        return FailWithNetworkError();
       }
       httpChan->SetRequestHeader(NS_LITERAL_CSTRING("origin"),
                                  NS_ConvertUTF16toUTF8(origin),
                                  false /* merge */);
     }
+    // Bug 1120722 - Authorization will be handled later.
+    // Auth may require prompting, we don't support it yet.
+    // The next patch in this same bug prevents this from aborting the request.
+    // Credentials checks for CORS are handled by nsCORSListenerProxy,
+    if (useCredentials) {
+      return FailWithNetworkError();
+    }
   }
 
+  // Step 5. Proxy authentication will be handled by Necko.
+  // FIXME(nsm): Bug 1120715.
+  // Step 7-10. "If request's cache mode is neither no-store nor reload..."
+
+  // Continue setting up 'HTTPRequest'. Content-Type and body data.
   nsCOMPtr<nsIUploadChannel2> uploadChan = do_QueryInterface(chan);
   if (uploadChan) {
     nsAutoCString contentType;
@@ -404,7 +428,7 @@ FetchDriver::HttpNetworkFetch()
     // This is an error because the Request constructor explicitly extracts and
     // sets a content-type per spec.
     if (result.Failed()) {
-      return result.ErrorCode();
+      return FailWithNetworkError();
     }
 
     nsCOMPtr<nsIInputStream> bodyStream;
@@ -414,11 +438,47 @@ FetchDriver::HttpNetworkFetch()
       mRequest->GetMethod(method);
       rv = uploadChan->ExplicitSetUploadStream(bodyStream, contentType, -1, method, false /* aStreamHasHeaders */);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return FailWithNetworkError();
       }
     }
   }
-  return chan->AsyncOpen(this, nullptr);
+
+  // Set up a CORS proxy that will handle the various requirements of the CORS
+  // protocol. It handles the preflight cache and CORS response headers.
+  // If the request is allowed, it will start our original request
+  // and our observer will be notified. On failure, our observer is notified
+  // directly.
+  nsRefPtr<nsCORSListenerProxy> corsListener =
+    new nsCORSListenerProxy(this, mPrincipal, useCredentials);
+  rv = corsListener->Init(chan, true /* allow data uri */);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return FailWithNetworkError();
+  }
+
+  // If preflight is required, start a "CORS preflight fetch"
+  // https://fetch.spec.whatwg.org/#cors-preflight-fetch-0. All the
+  // implementation is handled by NS_StartCORSPreflight, we just set up the
+  // unsafeHeaders so they can be verified against the response's
+  // "Access-Control-Allow-Headers" header.
+  if (aCORSPreflightFlag) {
+    nsCOMPtr<nsIChannel> preflightChannel;
+    nsAutoTArray<nsCString, 5> unsafeHeaders;
+    mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);
+
+    rv = NS_StartCORSPreflight(chan, corsListener, mPrincipal,
+                               useCredentials,
+                               unsafeHeaders,
+                               getter_AddRefs(preflightChannel));
+  } else {
+   rv = chan->AsyncOpen(corsListener, nullptr);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return FailWithNetworkError();
+  }
+
+  // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
+  return NS_OK;
 }
 
 nsresult
@@ -457,6 +517,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse)
   }
 
   MOZ_ASSERT(filteredResponse);
+  MOZ_ASSERT(mObserver);
   mObserver->OnResponseAvailable(filteredResponse);
   mResponseAvailableCalled = true;
   return filteredResponse.forget();
@@ -472,18 +533,25 @@ FetchDriver::BeginResponse(InternalResponse* aResponse)
 nsresult
 FetchDriver::SucceedWithResponse()
 {
-  mObserver->OnResponseEnd();
+  workers::AssertIsOnMainThread();
+  if (mObserver) {
+    mObserver->OnResponseEnd();
+    mObserver = nullptr;
+  }
   return NS_OK;
 }
 
 nsresult
 FetchDriver::FailWithNetworkError()
 {
-  MOZ_ASSERT(mObserver);
+  workers::AssertIsOnMainThread();
   nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
-  mObserver->OnResponseAvailable(error);
-  mResponseAvailableCalled = true;
-  mObserver->OnResponseEnd();
+  if (mObserver) {
+    mObserver->OnResponseAvailable(error);
+    mResponseAvailableCalled = true;
+    mObserver->OnResponseEnd();
+    mObserver = nullptr;
+  }
   return NS_OK;
 }
 
@@ -517,7 +585,9 @@ NS_IMETHODIMP
 FetchDriver::OnStartRequest(nsIRequest* aRequest,
                             nsISupports* aContext)
 {
+  workers::AssertIsOnMainThread();
   MOZ_ASSERT(!mPipeOutputStream);
+  MOZ_ASSERT(mObserver);
   nsresult rv;
   aRequest->GetStatus(&rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -607,8 +677,10 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
                            nsISupports* aContext,
                            nsresult aStatusCode)
 {
-  MOZ_ASSERT(mPipeOutputStream);
-  mPipeOutputStream->Close();
+  workers::AssertIsOnMainThread();
+  if (mPipeOutputStream) {
+    mPipeOutputStream->Close();
+  }
 
   if (NS_FAILED(aStatusCode)) {
     FailWithNetworkError();

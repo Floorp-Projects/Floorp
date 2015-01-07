@@ -65,10 +65,7 @@ private:
   nsresult Fetch(bool aCORSFlag);
   nsresult ContinueFetch(bool aCORSFlag);
   nsresult BasicFetch();
-  nsresult HttpFetch(bool aCORSFlag = false, bool aPreflightCORSFlag = false, bool aAuthenticationFlag = false);
-  nsresult ContinueHttpFetchAfterServiceWorker();
-  nsresult ContinueHttpFetchAfterCORSPreflight();
-  nsresult HttpNetworkFetch();
+  nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
   nsresult ContinueHttpFetchAfterNetworkFetch();
   // Returns the filtered response sent to the observer.
   already_AddRefed<InternalResponse>
