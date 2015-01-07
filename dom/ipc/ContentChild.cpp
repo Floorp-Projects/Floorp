@@ -2489,6 +2489,20 @@ ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
     return true;
 }
 
+bool
+ContentChild::RecvShutdown()
+{
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+        os->NotifyObservers(this, "content-child-shutdown", nullptr);
+    }
+
+    // Ignore errors here. If this fails, the parent will kill us after a
+    // timeout.
+    unused << SendFinishShutdown();
+    return true;
+}
+
 PBrowserOrId
 ContentChild::GetBrowserOrId(TabChild* aTabChild)
 {
