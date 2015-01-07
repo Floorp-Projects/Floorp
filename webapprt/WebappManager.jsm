@@ -42,7 +42,7 @@ this.WebappManager = {
         WebappOSUtils.launch(data);
         break;
       case "webapps-uninstall":
-        WebappOSUtils.uninstall(data);
+        WebappOSUtils.uninstall(data).then(null, Cu.reportError);
         break;
     }
   },
@@ -122,7 +122,7 @@ this.WebappManager = {
     // Perform the uninstall if the user allows it
     if (choice == 0) {
       DOMApplicationRegistry.confirmUninstall(aData).then((aApp) => {
-        WebappOSUtils.uninstall(aApp);
+        WebappOSUtils.uninstall(aApp).then(null, Cu.reportError);
       });
     } else {
       DOMApplicationRegistry.denyUninstall(aData);

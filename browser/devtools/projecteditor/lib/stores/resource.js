@@ -127,6 +127,21 @@ var Resource = Class({
   },
 
   /**
+   * Checks a resource has child with specific name.
+   *
+   * @param Resource resource
+   * @param string name
+   */
+  hasChild: function(resource, name) {
+    for (let child of resource.children) {
+      if (child.basename === name) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
    * Remove a resource to children set and notify of the change.
    *
    * @param Resource resource
@@ -293,6 +308,27 @@ var FileResource = Class({
     return OS.File.writeAtomic(newPath, buffer, {
       noOverwrite: true
     }).then(() => {
+      return this.store.refresh();
+    }).then(() => {
+      let resource = this.store.resources.get(newPath);
+      if (!resource) {
+        throw new Error("Error creating " + newPath);
+      }
+      return resource;
+    });
+  },
+
+  /**
+   * Rename the file from the filesystem
+   *
+   * @returns Promise
+   *          Resolves with the renamed FileResource.
+   */
+  rename: function(oldName, newName) {
+    let oldPath = OS.Path.join(this.path, oldName);
+    let newPath = OS.Path.join(this.path, newName);
+
+    return OS.File.move(oldPath, newPath).then(() => {
       return this.store.refresh();
     }).then(() => {
       let resource = this.store.resources.get(newPath);

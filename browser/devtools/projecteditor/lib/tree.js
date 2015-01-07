@@ -277,6 +277,39 @@ var TreeView = Class({
   },
 
   /**
+   * Prompt the user to rename file in the tree.
+   *
+   * @param string initial
+   *               The suggested starting file name
+   * @param resource
+   *
+   * @returns Promise
+   *          Resolves once the prompt has been successful,
+   *          Rejected if it is cancelled
+   */
+  promptEdit: function(initial, resource) {
+    let deferred = promise.defer();
+    let placeholder = this._containers.get(resource).elt;
+
+    new InplaceEditor({
+      element: placeholder,
+      initial: initial,
+      start: editor => {
+        editor.input.select();
+      },
+      done: function(val, commit) {
+        if (commit) {
+          deferred.resolve(val);
+        } else {
+          deferred.reject(val);
+        }
+      },
+    });
+
+    return deferred.promise;
+  },
+
+  /**
    * Add a new Store into the TreeView
    *
    * @param Store model
