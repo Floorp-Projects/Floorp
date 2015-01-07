@@ -125,12 +125,6 @@ public:
                                        bool aLastPart) = 0;
 
   /**
-   * Called for multipart images to allow for any necessary reinitialization
-   * when there's a new part to add.
-   */
-  virtual nsresult OnNewSourceData() = 0;
-
-  /**
    * Called when the SurfaceCache discards a persistent surface belonging to
    * this image.
    */

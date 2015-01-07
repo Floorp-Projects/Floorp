@@ -55,7 +55,6 @@ public:
                                        nsISupports* aContext,
                                        nsresult aResult,
                                        bool aLastPart) MOZ_OVERRIDE;
-  virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
   /**
    * Callback for SVGRootRenderingObserver.
