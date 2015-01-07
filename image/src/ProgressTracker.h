@@ -13,7 +13,7 @@
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
 #include "nsRect.h"
-#include "imgRequestProxy.h"
+#include "IProgressObserver.h"
 
 class imgIContainer;
 class nsIRunnable;
@@ -62,11 +62,12 @@ inline Progress LoadCompleteProgress(bool aLastPart,
 /**
  * ProgressTracker is a class that records an Image's progress through the
  * loading and decoding process, and makes it possible to send notifications to
- * imgRequestProxys, both synchronously and asynchronously.
+ * IProgressObservers, both synchronously and asynchronously.
  *
- * When a new proxy needs to be notified of the current progress of an image,
- * call the Notify() method on this class with the relevant proxy as its
- * argument, and the notifications will be replayed to the proxy asynchronously.
+ * When a new observer needs to be notified of the current progress of an image,
+ * call the Notify() method on this class with the relevant observer as its
+ * argument, and the notifications will be replayed to the observer
+ * asynchronously.
  */
 class ProgressTracker : public mozilla::SupportsWeakPtr<ProgressTracker>
 {
@@ -107,28 +108,28 @@ public:
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time
-  // Notify() is called and when we call SyncNotify on |proxy|, and replay them
-  // as well.
-  // Should be called on the main thread only, since imgRequestProxy and GetURI
-  // are not threadsafe.
-  void Notify(imgRequestProxy* proxy);
+  // Notify() is called and when we call SyncNotify on |aObserver|, and replay
+  // them as well.
+  // Should be called on the main thread only, since observers and GetURI are
+  // not threadsafe.
+  void Notify(IProgressObserver* aObserver);
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the state we are in right now.
   // Unlike Notify(), does *not* take into account future notifications.
   // This is only useful if you do not have an imgRequest, e.g., if you are a
   // static request returned from imgIRequest::GetStaticRequest().
-  // Should be called on the main thread only, since imgRequestProxy and GetURI
-  // are not threadsafe.
-  void NotifyCurrentState(imgRequestProxy* proxy);
+  // Should be called on the main thread only, since observers and GetURI are
+  // not threadsafe.
+  void NotifyCurrentState(IProgressObserver* aObserver);
 
   // "Replay" all of the notifications that would have to happen to put us in
   // the state we're currently in.
   // Only use this if you're already servicing an asynchronous call (e.g.
   // OnStartRequest).
-  // Should be called on the main thread only, since imgRequestProxy and GetURI
-  // are not threadsafe.
-  void SyncNotify(imgRequestProxy* proxy);
+  // Should be called on the main thread only, since observers and GetURI are
+  // not threadsafe.
+  void SyncNotify(IProgressObserver* aObserver);
 
   // Get this ProgressTracker ready for a new request. This resets all the
   // state that doesn't persist between requests.
@@ -155,28 +156,28 @@ public:
   void SyncNotifyProgress(Progress aProgress,
                           const nsIntRect& aInvalidRect = nsIntRect());
 
-  // We manage a set of consumers that are using an image and thus concerned
+  // We manage a set of observers that are using an image and thus concerned
   // with its loading progress. Weak pointers.
-  void AddConsumer(imgRequestProxy* aConsumer);
-  bool RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus);
-  size_t ConsumerCount() const {
-    MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
-    return mConsumers.Length();
+  void AddObserver(IProgressObserver* aObserver);
+  bool RemoveObserver(IProgressObserver* aObserver, nsresult aStatus);
+  size_t ObserverCount() const {
+    MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
+    return mObservers.Length();
   }
 
   // This is intentionally non-general because its sole purpose is to support
   // some obscure network priority logic in imgRequest. That stuff could
   // probably be improved, but it's too scary to mess with at the moment.
-  bool FirstConsumerIs(imgRequestProxy* aConsumer);
+  bool FirstObserverIs(IProgressObserver* aObserver);
 
-  void AdoptConsumers(ProgressTracker* aTracker) {
-    MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+  void AdoptObservers(ProgressTracker* aTracker) {
+    MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
     MOZ_ASSERT(aTracker);
-    mConsumers = aTracker->mConsumers;
+    mObservers = aTracker->mObservers;
   }
 
 private:
-  typedef nsTObserverArray<mozilla::WeakPtr<imgRequestProxy>> ProxyArray;
+  typedef nsTObserverArray<mozilla::WeakPtr<IProgressObserver>> ObserverArray;
   friend class AsyncNotifyRunnable;
   friend class AsyncNotifyCurrentStateRunnable;
   friend class ProgressTrackerInit;
@@ -191,17 +192,17 @@ private:
   // of scope.  ProgressTrackerInit automates this.
   void ResetImage();
 
-  // Send some notifications that would be necessary to make |aProxy| believe
+  // Send some notifications that would be necessary to make |aObserver| believe
   // the request is finished downloading and decoding.  We only send
-  // FLAG_REQUEST_* and FLAG_ONLOAD_UNBLOCKED, and only if necessary.
-  void EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStatus);
+  // FLAG_LOAD_COMPLETE and FLAG_ONLOAD_UNBLOCKED, and only if necessary.
+  void EmulateRequestFinished(IProgressObserver* aObserver, nsresult aStatus);
 
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
 
-  // Main thread only, since imgRequestProxy calls are expected on the main
-  // thread, and mConsumers is not threadsafe.
-  static void SyncNotifyInternal(ProxyArray& aProxies,
+  // Main thread only, since notifications are expected on the main thread, and
+  // mObservers is not threadsafe.
+  static void SyncNotifyInternal(ObserverArray& aObservers,
                                  bool aHasImage, Progress aProgress,
                                  const nsIntRect& aInvalidRect);
 
@@ -210,10 +211,10 @@ private:
   // This weak ref should be set null when the image goes out of scope.
   Image* mImage;
 
-  // List of proxies attached to the image. Each proxy represents a consumer
-  // using the image. Array and/or individual elements should only be accessed
-  // on the main thread.
-  ProxyArray mConsumers;
+  // List of observers attached to the image. Each observer represents a
+  // consumer using the image. Array and/or individual elements should only be
+  // accessed on the main thread.
+  ObserverArray mObservers;
 
   Progress mProgress;
 };
