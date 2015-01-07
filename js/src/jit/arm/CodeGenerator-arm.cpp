@@ -60,10 +60,8 @@ CodeGeneratorARM::generateEpilogue()
     masm.bind(&returnLabel_);
 
 #ifdef JS_TRACE_LOGGING
-    if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger_IonMonkey);
-        emitTracelogScriptStop();
-    }
+    emitTracelogStopEvent(TraceLogger_IonMonkey);
+    emitTracelogScriptStop();
 #endif
 
     masm.freeStack(frameSize());
@@ -150,7 +148,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
 
-        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler(gen->info().executionMode());
+        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler();
         masm.branch(handler);
     }
 
@@ -2183,18 +2181,6 @@ CodeGeneratorARM::visitNegF(LNegF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     masm.ma_vneg_f32(input, ToFloatRegister(ins->output()));
-}
-
-void
-CodeGeneratorARM::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-JitCode *
-JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
-{
-    MOZ_CRASH("NYI");
 }
 
 void

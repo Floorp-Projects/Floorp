@@ -91,7 +91,6 @@ namespace jit {
     _(Div)                                                                  \
     _(Mod)                                                                  \
     _(Concat)                                                               \
-    _(ConcatPar)                                                            \
     _(CharCodeAt)                                                           \
     _(FromCharCode)                                                         \
     _(StringSplit)                                                          \
@@ -247,17 +246,7 @@ namespace jit {
     _(AsmJSVoidReturn)                                                      \
     _(AsmJSPassStackArg)                                                    \
     _(AsmJSCall)                                                            \
-    _(CheckOverRecursedPar)                                                 \
-    _(NewCallObjectPar)                                                     \
-    _(NewPar)                                                               \
-    _(NewDenseArrayPar)                                                     \
     _(NewDerivedTypedObject)                                                \
-    _(LambdaPar)                                                            \
-    _(RestPar)                                                              \
-    _(ForkJoinContext)                                                      \
-    _(ForkJoinGetSlice)                                                     \
-    _(GuardThreadExclusive)                                                 \
-    _(InterruptCheckPar)                                                    \
     _(RecompileCheck)                                                       \
     _(MemoryBarrier)                                                        \
     _(AsmJSCompareExchangeHeap)                                             \

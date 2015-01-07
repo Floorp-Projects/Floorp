@@ -569,8 +569,6 @@ class LDefinition
             return LDefinition::SLOTS;
           case MIRType_Pointer:
             return LDefinition::GENERAL;
-          case MIRType_ForkJoinContext:
-            return LDefinition::GENERAL;
           case MIRType_Int32x4:
             return LDefinition::INT32X4;
           case MIRType_Float32x4:

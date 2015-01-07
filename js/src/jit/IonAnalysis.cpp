@@ -2065,7 +2065,6 @@ IsResumableMIRType(MIRType type)
       case MIRType_Pointer:
       case MIRType_Shape:
       case MIRType_TypeObject:
-      case MIRType_ForkJoinContext:
       case MIRType_Float32x4:
       case MIRType_Int32x4:
       case MIRType_Doublex2:

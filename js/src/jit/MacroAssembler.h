@@ -198,8 +198,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     IonInstrumentation *sps_;
 
     // Labels for handling exceptions and failures.
-    NonAssertingLabel sequentialFailureLabel_;
-    NonAssertingLabel parallelFailureLabel_;
+    NonAssertingLabel failureLabel_;
 
   public:
     // If instrumentation should be emitted, then the sps parameter should be
@@ -830,26 +829,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCString(Register result, Register temp, Label *fail);
     void newGCFatInlineString(Register result, Register temp, Label *fail);
 
-    void newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                       gc::AllocKind allocKind, Label *fail);
-    void newGCTenuredThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                              gc::AllocKind allocKind, Label *fail);
-    void newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                       NativeObject *templateObject, Label *fail);
-    void newGCStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                        Label *fail);
-    void newGCFatInlineStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                                 Label *fail);
-
-
     // Compares two strings for equality based on the JSOP.
     // This checks for identical pointers, atoms and length and fails for everything else.
     void compareStrings(JSOp op, Register left, Register right, Register result,
                         Label *fail);
-
-    // Checks the flags that signal that parallel code may need to interrupt or
-    // abort.  Branches to fail in that case.
-    void checkInterruptFlagPar(Register tempReg, Label *fail);
 
     // If the JitCode that created this assembler needs to transition into the VM,
     // we want to store the JitCode on the stack in order to mark it during a GC.
@@ -859,7 +842,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   private:
     void linkExitFrame();
-    void linkParallelExitFrame(Register pt);
 
   public:
     void enterExitFrame(const VMFunction *f = nullptr) {
@@ -883,20 +865,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         // JSRuntime, so we can hardcode the ThreadPool address here.
         movePtr(ImmPtr(GetJitContext()->runtime->addressOfThreadPool()), pool);
     }
-
-    void loadForkJoinContext(Register cx, Register scratch);
-    void loadContext(Register cxReg, Register scratch, ExecutionMode executionMode);
-
-    void enterParallelExitFrameAndLoadContext(const VMFunction *f, Register cx,
-                                              Register scratch);
-
-    void enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
-                                      ExecutionMode executionMode);
-
-    void enterFakeParallelExitFrame(Register cx, Register scratch, JitCode *codeVal);
-
-    void enterFakeExitFrame(Register cxReg, Register scratch, ExecutionMode executionMode,
-                            JitCode *codeVal);
 
     void leaveExitFrame() {
         freeStack(ExitFooterFrame::Size());
@@ -1169,8 +1137,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void spsMarkJit(SPSProfiler *p, Register framePtr, Register temp);
     void spsUnmarkJit(SPSProfiler *p, Register temp);
 
-    void loadBaselineOrIonRaw(Register script, Register dest, ExecutionMode mode, Label *failure);
-    void loadBaselineOrIonNoArgCheck(Register callee, Register dest, ExecutionMode mode, Label *failure);
+    void loadBaselineOrIonRaw(Register script, Register dest, Label *failure);
+    void loadBaselineOrIonNoArgCheck(Register callee, Register dest, Label *failure);
 
     void loadBaselineFramePtr(Register framePtr, Register dest);
 
@@ -1180,20 +1148,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
   private:
-    void handleFailure(ExecutionMode executionMode);
+    void handleFailure();
 
   public:
     Label *exceptionLabel() {
         // Exceptions are currently handled the same way as sequential failures.
-        return &sequentialFailureLabel_;
+        return &failureLabel_;
     }
 
-    Label *failureLabel(ExecutionMode executionMode) {
-        switch (executionMode) {
-          case SequentialExecution: return &sequentialFailureLabel_;
-          case ParallelExecution: return &parallelFailureLabel_;
-          default: MOZ_CRASH("Unexpected execution mode");
-        }
+    Label *failureLabel() {
+        return &failureLabel_;
     }
 
     void finish();

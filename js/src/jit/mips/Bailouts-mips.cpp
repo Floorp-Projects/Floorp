@@ -22,10 +22,7 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator &activations,
 
     JSScript *script = ScriptFromCalleeToken(((JitFrameLayout *) framePointer_)->calleeToken());
     JitActivation *activation = activations.activation()->asJit();
-    if (activation->cx()->isForkJoinContext())
-        topIonScript_ = script->parallelIonScript();
-    else
-        topIonScript_ = script->ionScript();
+    topIonScript_ = script->ionScript();
 
     attachOnJitActivation(activations);
 
