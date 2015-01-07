@@ -27,8 +27,6 @@
 
 #include <cassert>
 
-#include "pkix/enumclass.h"
-
 namespace mozilla { namespace pkix {
 
 static const unsigned int FATAL_ERROR_FLAG = 0x800;
@@ -183,7 +181,7 @@ static const unsigned int FATAL_ERROR_FLAG = 0x800;
                      SEC_ERROR_NO_MEMORY) \
     /* nothing here */
 
-MOZILLA_PKIX_ENUM_CLASS Result
+enum class Result
 {
 #define MOZILLA_PKIX_MAP(name, value, nss_name) name = value,
   MOZILLA_PKIX_MAP_LIST
@@ -197,13 +195,7 @@ const char* MapResultToName(Result result);
 // We write many comparisons as (x != Success), and this shortened name makes
 // those comparisons clearer, especially because the shortened name often
 // results in less line wrapping.
-//
-// If MOZILLA_PKIX_ENUM_CLASS doesn't expand to "enum class" then
-// Result::Success will already be in scope, and compilation would fail if we
-// were to try to define a variable named "Success" here.
-#ifdef MOZILLA_PKIX_ENUM_CLASS_REALLY_IS_ENUM_CLASS
 static const Result Success = Result::Success;
-#endif
 
 inline bool
 IsFatalError(Result rv)
