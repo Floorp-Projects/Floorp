@@ -2699,7 +2699,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT);
   mContext->DidInitializeContext();
 
   // We wait to fire the debugger hook until the window is all set up and hooked
