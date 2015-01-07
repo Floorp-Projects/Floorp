@@ -485,18 +485,14 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (mRenderMode == RENDER_DIRECT2D) {
       canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
       contentMask |= BackendTypeBit(BackendType::DIRECT2D);
-#ifdef USE_D2D1_1
       if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1() &&
           GetD3D11ContentDevice()) {
         contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         defaultBackend = BackendType::DIRECT2D1_1;
       } else {
-#endif
         defaultBackend = BackendType::DIRECT2D;
-#ifdef USE_D2D1_1
       }
-#endif
     } else {
       canvasMask |= BackendTypeBit(BackendType::SKIA);
     }
@@ -619,13 +615,11 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
         mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
     }
 
-#ifdef USE_D2D1_1
     ScopedGfxFeatureReporter reporter1_1("D2D1.1");
 
     if (Factory::SupportsD2D1()) {
       reporter1_1.SetSuccessful();
     }
-#endif
 #endif
 }
 
@@ -1825,7 +1819,6 @@ gfxWindowsPlatform::InitD3D11Devices()
 
   mD3D11Device->SetExceptionMode(0);
 
-#ifdef USE_D2D1_1
   // We create our device for D2D content drawing here. Normally we don't use
   // D2D content drawing when using WARP. However when WARP is forced by
   // default we will let Direct2D use WARP as well.
@@ -1851,7 +1844,6 @@ gfxWindowsPlatform::InitD3D11Devices()
 
     Factory::SetDirect3D11Device(mD3D11ContentDevice);
   }
-#endif
 
   // We leak these everywhere and we need them our entire runtime anyway, let's
   // leak it here as well.

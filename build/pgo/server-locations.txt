@@ -20,7 +20,8 @@
 # number is the default for the protocol.
 #
 # Unrecognized options are ignored.  Recognized options are "primary" and
-# "privileged", "nocert", "cert=some_cert_nickname", "redir=hostname".
+# "privileged", "nocert", "cert=some_cert_nickname", "redir=hostname" and
+# "failHandshake".
 #
 # "primary" denotes a location which is the canonical location of
 # the server; this location is the one assumed for requests which don't
@@ -31,6 +32,9 @@
 #
 # "nocert" makes sense only for https:// hosts and means there is not
 # any certificate automatically generated for this host.
+#
+# "failHandshake" causes the tls handshake to fail (by sending a client hello to
+# the client).
 #
 # "cert=nickname" tells the pgo server to use a particular certificate
 # for this host. The certificate is referenced by its nickname that must
@@ -227,7 +231,8 @@ https://include-subdomains.pinning-dynamic.example.com:443        privileged,cer
 https://bad.include-subdomains.pinning-dynamic.example.com:443    privileged,cert=dynamicPinningBad
 
 # Host for static pin tests
-https://include-subdomains.pinning.example.com:443                privileged,cert=staticPinningBad
+https://badchain.include-subdomains.pinning.example.com:443       privileged,cert=staticPinningBad
+https://fail-handshake.example.com:443                            privileged,failHandshake
 
 # Hosts for sha1 console warning tests
 https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity

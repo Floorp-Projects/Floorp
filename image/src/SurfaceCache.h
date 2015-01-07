@@ -79,10 +79,10 @@ private:
     return aSIC.Hash();
   }
 
-  friend SurfaceKey RasterSurfaceKey(const IntSize&, const uint32_t);
+  friend SurfaceKey RasterSurfaceKey(const IntSize&, uint32_t, uint32_t);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
                                      const Maybe<SVGImageContext>&,
-                                     const float);
+                                     float);
 
   IntSize                mSize;
   Maybe<SVGImageContext> mSVGContext;
@@ -92,18 +92,16 @@ private:
 
 inline SurfaceKey
 RasterSurfaceKey(const gfx::IntSize& aSize,
-                 const uint32_t aFlags)
+                 uint32_t aFlags,
+                 uint32_t aFrameNum)
 {
-  // We don't care about aAnimationTime for RasterImage because it's not
-  // currently possible to store anything but the first frame in the
-  // SurfaceCache.
-  return SurfaceKey(aSize, Nothing(), 0.0f, aFlags);
+  return SurfaceKey(aSize, Nothing(), float(aFrameNum), aFlags);
 }
 
 inline SurfaceKey
 VectorSurfaceKey(const gfx::IntSize& aSize,
                  const Maybe<SVGImageContext>& aSVGContext,
-                 const float aAnimationTime)
+                 float aAnimationTime)
 {
   // We don't care about aFlags for VectorImage because none of the flags we
   // have right now influence VectorImage's rendering. If we add a new flag that

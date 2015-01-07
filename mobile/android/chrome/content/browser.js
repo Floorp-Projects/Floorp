@@ -109,9 +109,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-                                  "resource://gre/modules/ReaderMode.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
 
@@ -119,7 +116,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
-  ["AboutReader", "chrome://global/content/reader/aboutReader.js"],
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
@@ -150,7 +146,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
-  ["Reader", ["Reader:Removed"], "chrome://browser/content/Reader.js"],
+  ["Reader", ["Reader:Added", "Reader:Removed", "Gesture:DoubleTap"], "chrome://browser/content/Reader.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -165,6 +161,39 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
   };
   notifications.forEach((notification) => {
     Services.obs.addObserver(observer, notification, false);
+  });
+});
+
+// Lazily-loaded browser scripts that use message listeners.
+[
+  ["Reader", [
+    "Reader:AddToList",
+    "Reader:ArticleGet",
+    "Reader:FaviconRequest",
+    "Reader:ListStatusRequest",
+    "Reader:RemoveFromList",
+    "Reader:Share",
+    "Reader:ShowToast",
+    "Reader:ToolbarVisibility",
+    "Reader:SystemUIVisibility",
+    "Reader:UpdateIsArticle",
+  ], "chrome://browser/content/Reader.js"],
+].forEach(aScript => {
+  let [name, messages, script] = aScript;
+  XPCOMUtils.defineLazyGetter(window, name, function() {
+    let sandbox = {};
+    Services.scriptloader.loadSubScript(script, sandbox);
+    return sandbox[name];
+  });
+
+  let mm = window.getGroupMessageManager("browsers");
+  let listener = (message) => {
+    mm.removeMessageListener(message.name, listener);
+    mm.addMessageListener(message.name, window[name]);
+    window[name].receiveMessage(message);
+  };
+  messages.forEach((message) => {
+    mm.addMessageListener(message, listener);
   });
 });
 
@@ -505,6 +534,9 @@ var BrowserApp = {
     } catch (e) {
       // Tiles reporting is disabled.
     }
+
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript("chrome://browser/content/content.js", true);
 
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
@@ -3235,7 +3267,7 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.savedArticle = null;
+  this.isArticle = false;
   this.hasTouchListener = false;
   this.browserWidth = 0;
   this.browserHeight = 0;
@@ -3286,6 +3318,7 @@ Tab.prototype = {
 
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
+    this.browser.setAttribute("messagemanagergroup", "browsers");
     this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
@@ -3580,7 +3613,6 @@ Tab.prototype = {
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     this.browser = null;
-    this.savedArticle = null;
   },
 
   // This should be called to update the browser when the tab gets selected/unselected
@@ -3634,7 +3666,7 @@ Tab.prototype = {
     if (BrowserApp.selectedTab == this) {
       if (resolution != this._drawZoom) {
         this._drawZoom = resolution;
-        cwu.setResolution(resolution / window.devicePixelRatio, resolution / window.devicePixelRatio);
+        cwu.setResolutionAndScaleTo(resolution / window.devicePixelRatio, resolution / window.devicePixelRatio);
       }
     } else if (!fuzzyEquals(resolution, zoom)) {
       dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
@@ -3758,7 +3790,7 @@ Tab.prototype = {
       if (BrowserApp.selectedTab == this) {
         let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         this._drawZoom = aZoom;
-        cwu.setResolution(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
+        cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
       }
     }
   },
@@ -3976,14 +4008,6 @@ Tab.prototype = {
         }
 
         if (docURI.startsWith("about:reader")) {
-          // During browser restart / recovery, duplicate "DOMContentLoaded" messages are received here
-          // For the visible tab ... where more than one tab is being reloaded, the inital "DOMContentLoaded"
-          // Message can be received before the document body is available ... so we avoid instantiating an
-          // AboutReader object, expecting that an eventual valid message will follow.
-          let contentDocument = this.browser.contentDocument;
-          if (contentDocument.body) {
-            new AboutReader(contentDocument, this.browser.contentWindow);
-          }
           // Update the page action to show the "reader active" icon.
           Reader.updatePageAction(this);
         }
@@ -4288,31 +4312,6 @@ Tab.prototype = {
           xhr.send(this.tilesData);
           this.tilesData = null;
         }
-
-        // Don't try to parse the document if reader mode is disabled,
-        // or if the page is already in reader mode.
-        if (!Reader.isEnabledForParseOnLoad || this.readerActive) {
-          return;
-        }
-
-        // Reader mode is disabled until proven enabled.
-        this.savedArticle = null;
-        Reader.updatePageAction(this);
-
-        // Once document is fully loaded, parse it
-        ReaderMode.parseDocumentFromBrowser(this.browser).then(article => {
-          // The loaded page may have changed while we were parsing the document. 
-          // Make sure we've got the current one.
-          let currentURL = this.browser.currentURI.specIgnoringRef;
-
-          // Do nothing if there's no article or the page in this tab has changed.
-          if (article == null || (article.url != currentURL)) {
-            return;
-          }
-
-          this.savedArticle = article;
-          Reader.updatePageAction(this);
-        }).catch(e => Cu.reportError("Error parsing document from tab: " + e));
       }
     }
   },
@@ -4523,7 +4522,7 @@ Tab.prototype = {
 
   saveSessionZoom: function(aZoom) {
     let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setResolution(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
+    cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio, aZoom / window.devicePixelRatio);
   },
 
   restoredSessionZoom: function() {

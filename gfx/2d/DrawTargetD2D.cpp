@@ -6,9 +6,7 @@
 #include <initguid.h>
 #include "DrawTargetD2D.h"
 #include "SourceSurfaceD2D.h"
-#ifdef USE_D2D1_1
 #include "SourceSurfaceD2D1.h"
-#endif
 #include "SourceSurfaceD2DTarget.h"
 #include "ShadersD2D.h"
 #include "PathD2D.h"
@@ -21,9 +19,7 @@
 #include "mozilla/Constants.h"
 #include "FilterNodeSoftware.h"
 
-#ifdef USE_D2D1_1
 #include "FilterNodeD2D1.h"
-#endif
 
 #include <dwrite.h>
 
@@ -323,7 +319,6 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
   return bitmap;
 }
 
-#ifdef USE_D2D1_1
 TemporaryRef<ID2D1Image>
 DrawTargetD2D::GetImageForSurface(SourceSurface *aSurface)
 {
@@ -334,7 +329,6 @@ DrawTargetD2D::GetImageForSurface(SourceSurface *aSurface)
 
   return image;
 }
-#endif
 
 void
 DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
@@ -369,7 +363,6 @@ DrawTargetD2D::DrawFilter(FilterNode *aNode,
                           const Point &aDestPoint,
                           const DrawOptions &aOptions)
 {
-#ifdef USE_D2D1_1
   RefPtr<ID2D1DeviceContext> dc;
   HRESULT hr;
   
@@ -395,7 +388,6 @@ DrawTargetD2D::DrawFilter(FilterNode *aNode,
       return;
     }
   }
-#endif
 
   if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
     gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
@@ -1314,14 +1306,12 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
 TemporaryRef<FilterNode>
 DrawTargetD2D::CreateFilter(FilterType aType)
 {
-#ifdef USE_D2D1_1
   RefPtr<ID2D1DeviceContext> dc;
   HRESULT hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
 
   if (SUCCEEDED(hr)) {
     return FilterNodeD2D1::Create(dc, aType);
   }
-#endif
   return FilterNodeSoftware::Create(aType);
 }
 

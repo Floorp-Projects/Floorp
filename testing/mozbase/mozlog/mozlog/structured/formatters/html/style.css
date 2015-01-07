@@ -45,13 +45,15 @@ span.pass, .pass .col-result {
 	color: green;
 }
 span.expected_fail, .expected_fail .col-result,
+span.expected_skip, .expected_skip .col-result,
 span.skip, .skip .col-result {
 	color: orange;
 }
+span.error, .error .col-result,
 span.fail, .fail .col-result,
+span.unexpected_error, .unexpected_error .col-result,
 span.unexpected_fail, .unexpected_fail .col-result,
-span.unexpected_pass, .unexpected_pass .col-result,
-span.error,.error .col-result {
+span.unexpected_pass, .unexpected_pass .col-result {
 	color: red;
 }
 
