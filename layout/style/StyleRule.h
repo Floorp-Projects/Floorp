@@ -353,13 +353,13 @@ public:
   void GetSelectorText(nsAString& aSelectorText);
   void SetSelectorText(const nsAString& aSelectorText);
 
-  virtual int32_t GetType() const;
+  virtual int32_t GetType() const MOZ_OVERRIDE;
 
-  virtual already_AddRefed<Rule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
 
-  virtual nsIDOMCSSRule* GetDOMRule();
+  virtual nsIDOMCSSRule* GetDOMRule() MOZ_OVERRIDE;
 
-  virtual nsIDOMCSSRule* GetExistingDOMRule();
+  virtual nsIDOMCSSRule* GetExistingDOMRule() MOZ_OVERRIDE;
 
   // The new mapping function.
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
@@ -368,7 +368,7 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
 private:
   ~StyleRule();

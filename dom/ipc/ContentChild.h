@@ -62,9 +62,9 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-    NS_IMETHOD_(MozExternalRefCountType) AddRef(void) { return 1; }
-    NS_IMETHOD_(MozExternalRefCountType) Release(void) { return 1; }
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+    NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE { return 1; }
+    NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE { return 1; }
 
     struct AppInfo
     {
@@ -142,14 +142,18 @@ public:
                                               const uint32_t& aChromeFlags,
                                               const ContentParentId& aCpID,
                                               const bool& aIsForApp,
-                                              const bool& aIsForBrowser);
-    virtual bool DeallocPBrowserChild(PBrowserChild*);
+                                              const bool& aIsForBrowser)
+                                              MOZ_OVERRIDE;
+    virtual bool DeallocPBrowserChild(PBrowserChild*) MOZ_OVERRIDE;
 
-    virtual PDeviceStorageRequestChild* AllocPDeviceStorageRequestChild(const DeviceStorageParams&);
-    virtual bool DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild*);
+    virtual PDeviceStorageRequestChild* AllocPDeviceStorageRequestChild(const DeviceStorageParams&)
+                                                                        MOZ_OVERRIDE;
+    virtual bool DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild*)
+                                                   MOZ_OVERRIDE;
 
-    virtual PFileSystemRequestChild* AllocPFileSystemRequestChild(const FileSystemParams&);
-    virtual bool DeallocPFileSystemRequestChild(PFileSystemRequestChild*);
+    virtual PFileSystemRequestChild* AllocPFileSystemRequestChild(const FileSystemParams&)
+                                                                  MOZ_OVERRIDE;
+    virtual bool DeallocPFileSystemRequestChild(PFileSystemRequestChild*) MOZ_OVERRIDE;
 
     virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams)
                                         MOZ_OVERRIDE;

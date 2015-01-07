@@ -134,20 +134,20 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLContentSink, nsContentSink)
 
   // nsIContentSink
-  NS_IMETHOD WillParse(void);
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode);
-  NS_IMETHOD DidBuildModel(bool aTerminated);
-  NS_IMETHOD WillInterrupt(void);
-  NS_IMETHOD WillResume(void);
-  NS_IMETHOD SetParser(nsParserBase* aParser);
-  virtual void FlushPendingNotifications(mozFlushType aType);
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
-  virtual nsISupports *GetTarget();
-  virtual bool IsScriptExecuting();
+  NS_IMETHOD WillParse(void) MOZ_OVERRIDE;
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
+  NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
+  NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
+  NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
+  NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
+  virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
+  virtual nsISupports *GetTarget() MOZ_OVERRIDE;
+  virtual bool IsScriptExecuting() MOZ_OVERRIDE;
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenContainer(ElementType aNodeType);
-  NS_IMETHOD CloseContainer(ElementType aTag);
+  NS_IMETHOD OpenContainer(ElementType aNodeType) MOZ_OVERRIDE;
+  NS_IMETHOD CloseContainer(ElementType aTag) MOZ_OVERRIDE;
 
 protected:
   virtual ~HTMLContentSink();
@@ -175,7 +175,7 @@ protected:
 
   mozilla::dom::NodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
-  nsresult FlushTags();
+  nsresult FlushTags() MOZ_OVERRIDE;
 
   // Routines for tags that require special handling
   nsresult CloseHTML();
@@ -185,7 +185,7 @@ protected:
   void CloseHeadContext();
 
   // nsContentSink overrides
-  void UpdateChildCounts();
+  void UpdateChildCounts() MOZ_OVERRIDE;
 
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,

@@ -996,6 +996,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     } else {
       if (nsGkAtoms::letterFrame==frameType) {
         pfd->mIsLetterFrame = true;
+      } else if (nsGkAtoms::rubyFrame == frameType) {
+        SyncAnnotationContainersBounds(pfd);
       }
       if (pfd->mSpan) {
         isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
@@ -1203,6 +1205,30 @@ nsLineLayout::GetCurrentFrameInlineDistanceFromBlock()
     x += psd->mICoord;
   }
   return x;
+}
+
+/**
+ * This method syncs all ruby annotation containers' bounds in their
+ * PerFrameData from their rect. It is necessary to do so because the
+ * containers are not part of line in their levels, which means their
+ * bounds are not set properly before.
+ */
+void
+nsLineLayout::SyncAnnotationContainersBounds(PerFrameData* aRubyFrame)
+{
+  MOZ_ASSERT(aRubyFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
+  MOZ_ASSERT(aRubyFrame->mSpan);
+
+  PerSpanData* span = aRubyFrame->mSpan;
+  WritingMode lineWM = mRootSpan->mWritingMode;
+  nscoord containerWidth = ContainerWidthForSpan(span);
+  for (PerFrameData* pfd = span->mFirstFrame; pfd; pfd = pfd->mNext) {
+    for (PerFrameData* annotation = pfd->mNextAnnotation;
+         annotation; annotation = annotation->mNextAnnotation) {
+      LogicalRect bounds(lineWM, annotation->mFrame->GetRect(), containerWidth);
+      annotation->mBounds = bounds;
+    }
+  }
 }
 
 /**
@@ -2504,6 +2530,21 @@ nsLineLayout::TrimTrailingWhiteSpace()
   return 0 != deltaISize;
 }
 
+bool
+nsLineLayout::PerFrameData::ParticipatesInJustification() const
+{
+  if (mIsBullet || mIsEmpty || mSkipWhenTrimmingWhitespace) {
+    // Skip bullets, empty frames, and placeholders
+    return false;
+  }
+  if (mIsTextFrame && !mIsNonWhitespaceTextFrame &&
+      static_cast<nsTextFrame*>(mFrame)->IsAtEndOfLine()) {
+    // Skip trimmed whitespaces
+    return false;
+  }
+  return true;
+}
+
 struct nsLineLayout::JustificationComputationState
 {
   PerFrameData* mFirstParticipant;
@@ -2578,6 +2619,7 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
             // and ruby align could be strange.
             prevAssign.mGapsAtEnd = 1;
             assign.mGapsAtStart = 1;
+            aState.mCrossingRubyBaseBoundary = false;
           } else if (!info.mIsStartJustifiable) {
             prevAssign.mGapsAtEnd = 2;
             assign.mGapsAtStart = 0;
@@ -2592,7 +2634,10 @@ nsLineLayout::ComputeFrameJustification(PerSpanData* aPSD,
       }
 
       aState.mLastParticipant = pfd;
-      aState.mCrossingRubyBaseBoundary = isRubyBase;
+    }
+
+    if (isRubyBase) {
+      aState.mCrossingRubyBaseBoundary = true;
     }
 
     if (firstChild) {
@@ -2620,8 +2665,7 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
 
   PerSpanData* psd = aPFD->mSpan;
   WritingMode lineWM = mRootSpan->mWritingMode;
-  LogicalRect bounds(lineWM, frame->GetRect(), aContainerWidth);
-  bounds.IStart(lineWM) += aDeltaICoord;
+  aPFD->mBounds.IStart(lineWM) += aDeltaICoord;
 
   // Check whether this expansion should be counted into the reserved
   // isize or not. When it is a ruby text container, and it has some
@@ -2640,10 +2684,9 @@ nsLineLayout::AdvanceAnnotationInlineBounds(PerFrameData* aPFD,
   } else {
     // It is a normal ruby text container. Its children will expand
     // themselves properly. We only need to expand its own size here.
-    bounds.ISize(lineWM) += aDeltaISize;
+    aPFD->mBounds.ISize(lineWM) += aDeltaISize;
   }
-  aPFD->mBounds = bounds;
-  aPFD->mFrame->SetRect(lineWM, bounds, aContainerWidth);
+  aPFD->mFrame->SetRect(lineWM, aPFD->mBounds, aContainerWidth);
 }
 
 /**
@@ -2990,19 +3033,17 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     nsIFrame* frame = pfd->mFrame;
-    nsPoint origin = frame->GetPosition();
 
     // Adjust the origin of the frame
     if (pfd->mRelativePos) {
-      //XXX temporary until ApplyRelativePositioning can handle logical offsets
-      nsMargin physicalOffsets =
-        pfd->mOffsets.GetPhysicalMargin(pfd->mFrame->GetWritingMode());
+      WritingMode frameWM = frame->GetWritingMode();
+      LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
       // right and bottom are handled by
       // nsHTMLReflowState::ComputeRelativeOffsets
-      nsHTMLReflowState::ApplyRelativePositioning(pfd->mFrame,
-                                                  physicalOffsets,
-                                                  &origin);
-      frame->SetPosition(origin);
+      nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
+                                                  pfd->mOffsets, &origin,
+                                                  mContainerWidth);
+      frame->SetPosition(frameWM, origin, mContainerWidth);
     }
 
     // We must position the view correctly before positioning its
@@ -3056,7 +3097,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
                                                  r.VisualOverflow(),
                                                  NS_FRAME_NO_MOVE_VIEW);
 
-    overflowAreas.UnionWith(r + origin);
+    overflowAreas.UnionWith(r + frame->GetPosition());
   }
 
   // If we just computed a spans combined area, we need to update its

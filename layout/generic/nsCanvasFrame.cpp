@@ -602,18 +602,22 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       kidReflowState.SetVResize(true);
     }
 
-    nsPoint kidPt(kidReflowState.ComputedPhysicalMargin().left,
-                  kidReflowState.ComputedPhysicalMargin().top);
+    WritingMode wm = aReflowState.GetWritingMode();
+    WritingMode kidWM = kidReflowState.GetWritingMode();
+    nscoord containerWidth = aReflowState.ComputedWidth();
 
-    kidReflowState.ApplyRelativePositioning(&kidPt);
+    LogicalMargin margin = kidReflowState.ComputedLogicalMargin();
+    LogicalPoint kidPt(kidWM, margin.IStart(kidWM), margin.BStart(kidWM));
+
+    kidReflowState.ApplyRelativePositioning(&kidPt, containerWidth);
 
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                kidPt.x, kidPt.y, 0, aStatus);
+                kidWM, kidPt, containerWidth, 0, aStatus);
 
     // Complete the reflow and position and size the child frame
     FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, &kidReflowState,
-                      kidPt.x, kidPt.y, 0);
+                      kidWM, kidPt, containerWidth, 0);
 
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
@@ -651,7 +655,6 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     // Return our desired size. Normally it's what we're told, but
     // sometimes we can be given an unconstrained height (when a window
     // is sizing-to-content), and we should compute our desired height.
-    WritingMode wm = aReflowState.GetWritingMode();
     LogicalSize finalSize(wm);
     finalSize.ISize(wm) = aReflowState.ComputedISize();
     if (aReflowState.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
@@ -664,7 +667,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aDesiredSize.SetSize(wm, finalSize);
     aDesiredSize.SetOverflowAreasToDesiredBounds();
     aDesiredSize.mOverflowAreas.UnionWith(
-      kidDesiredSize.mOverflowAreas + kidPt);
+      kidDesiredSize.mOverflowAreas + kidFrame->GetPosition());
   }
 
   if (prevCanvasFrame) {

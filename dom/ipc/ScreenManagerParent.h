@@ -43,7 +43,7 @@ class ScreenManagerParent : public PScreenManagerParent
 
   virtual bool RecvScreenForBrowser(PBrowserParent* aBrowser,
                                     ScreenDetails* aRetVal,
-                                    bool* aSuccess);
+                                    bool* aSuccess) MOZ_OVERRIDE;
 
  private:
   bool ExtractScreenDetails(nsIScreen* aScreen, ScreenDetails &aDetails);

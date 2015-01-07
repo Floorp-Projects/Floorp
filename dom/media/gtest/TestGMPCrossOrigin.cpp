@@ -120,6 +120,42 @@ GetGMPThread()
   return thread.forget();
 }
 
+template<typename T>
+static nsresult
+EnumerateDir(const nsACString& aDir, T&& aDirIter)
+{
+  nsRefPtr<GeckoMediaPluginService> service =
+    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  MOZ_ASSERT(service);
+
+  // $profileDir/gmp/
+  nsCOMPtr<nsIFile> path;
+  nsresult rv = service->GetStorageDir(getter_AddRefs(path));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // $profileDir/gmp/$aDir/
+  rv = path->AppendNative(aDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Iterate all sub-folders of $profileDir/gmp/$aDir/
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  rv = path->GetDirectoryEntries(getter_AddRefs(iter));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasMore = false;
+  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    rv = iter->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+    nsCOMPtr<nsIFile> entry(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+    aDirIter(entry);
+  }
+  return NS_OK;
+}
+
 class GMPShutdownObserver : public nsIRunnable
                           , public nsIObserver {
 public:
@@ -410,6 +446,138 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     Expect(NS_LITERAL_CSTRING("test-storage complete"),
            NS_NewRunnableMethod(this, &GMPStorageTest::SetFinished));
     Update(NS_LITERAL_CSTRING("test-storage"));
+  }
+
+  /**
+   * 1. Generate storage data for some sites.
+   * 2. Forget about one of the sites.
+   * 3. Check if the storage data for the forgotten site are erased correctly.
+   * 4. Check if the storage data for other sites remain unchanged.
+   */
+  void TestForgetThisSite() {
+    AssertIsOnGMPThread();
+    EXPECT_TRUE(IsGMPStorageIsEmpty());
+
+    // Generate storage data for some site.
+    CreateDecryptor(NS_LITERAL_STRING("example1.com"),
+                    NS_LITERAL_STRING("example2.com"),
+                    false);
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestForgetThisSite_AnotherSite);
+    Expect(NS_LITERAL_CSTRING("test-storage complete"), r);
+    Update(NS_LITERAL_CSTRING("test-storage"));
+  }
+
+  void TestForgetThisSite_AnotherSite() {
+    Shutdown();
+
+    // Generate storage data for another site.
+    CreateDecryptor(NS_LITERAL_STRING("example3.com"),
+                    NS_LITERAL_STRING("example4.com"),
+                    false);
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestForgetThisSite_CollectSiteInfo);
+    Expect(NS_LITERAL_CSTRING("test-storage complete"), r);
+    Update(NS_LITERAL_CSTRING("test-storage"));
+  }
+
+  struct NodeInfo {
+    explicit NodeInfo(const nsACString& aSite) : siteToForget(aSite) {}
+    nsCString siteToForget;
+    nsTArray<nsCString> expectedRemainingNodeIds;
+  };
+
+  class NodeIdCollector {
+  public:
+    explicit NodeIdCollector(NodeInfo* aInfo) : mNodeInfo(aInfo) {}
+    void operator()(nsIFile* aFile) {
+      nsCString salt;
+      nsresult rv = ReadSalt(aFile, salt);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      if (!MatchOrigin(aFile, mNodeInfo->siteToForget)) {
+        mNodeInfo->expectedRemainingNodeIds.AppendElement(salt);
+      }
+    }
+  private:
+    NodeInfo* mNodeInfo;
+  };
+
+  void TestForgetThisSite_CollectSiteInfo() {
+    nsAutoPtr<NodeInfo> siteInfo(
+        new NodeInfo(NS_LITERAL_CSTRING("example1.com")));
+    // Collect nodeIds that are expected to remain for later comparison.
+    EnumerateDir(NS_LITERAL_CSTRING("id"), NodeIdCollector(siteInfo));
+    // Invoke "Forget this site" on the main thread.
+    NS_DispatchToMainThread(NS_NewRunnableMethodWithArg<nsAutoPtr<NodeInfo>>(
+        this, &GMPStorageTest::TestForgetThisSite_Forget, siteInfo));
+  }
+
+  void TestForgetThisSite_Forget(nsAutoPtr<NodeInfo> aSiteInfo) {
+    nsRefPtr<GeckoMediaPluginService> service =
+        GeckoMediaPluginService::GetGeckoMediaPluginService();
+    service->ForgetThisSite(NS_ConvertUTF8toUTF16(aSiteInfo->siteToForget));
+
+    nsCOMPtr<nsIThread> thread;
+    service->GetThread(getter_AddRefs(thread));
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<nsAutoPtr<NodeInfo>>(
+        this, &GMPStorageTest::TestForgetThisSite_Verify, aSiteInfo);
+    thread->Dispatch(r, NS_DISPATCH_NORMAL);
+
+    nsCOMPtr<nsIRunnable> f = NS_NewRunnableMethod(
+        this, &GMPStorageTest::SetFinished);
+    thread->Dispatch(f, NS_DISPATCH_NORMAL);
+  }
+
+  class NodeIdVerifier {
+  public:
+    explicit NodeIdVerifier(const NodeInfo* aInfo)
+      : mNodeInfo(aInfo)
+      , mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds) {}
+    void operator()(nsIFile* aFile) {
+      nsCString salt;
+      nsresult rv = ReadSalt(aFile, salt);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      // Shouldn't match the origin if we clear correctly.
+      EXPECT_FALSE(MatchOrigin(aFile, mNodeInfo->siteToForget));
+      // Check if remaining nodeIDs are as expected.
+      EXPECT_TRUE(mExpectedRemainingNodeIds.RemoveElement(salt));
+    }
+    ~NodeIdVerifier() {
+      EXPECT_TRUE(mExpectedRemainingNodeIds.IsEmpty());
+    }
+  private:
+    const NodeInfo* mNodeInfo;
+    nsTArray<nsCString> mExpectedRemainingNodeIds;
+  };
+
+  class StorageVerifier {
+  public:
+    explicit StorageVerifier(const NodeInfo* aInfo)
+      : mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds) {}
+    void operator()(nsIFile* aFile) {
+      nsCString salt;
+      nsresult rv = aFile->GetNativeLeafName(salt);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_TRUE(mExpectedRemainingNodeIds.RemoveElement(salt));
+    }
+    ~StorageVerifier() {
+      EXPECT_TRUE(mExpectedRemainingNodeIds.IsEmpty());
+    }
+  private:
+    nsTArray<nsCString> mExpectedRemainingNodeIds;
+  };
+
+  void TestForgetThisSite_Verify(nsAutoPtr<NodeInfo> aSiteInfo) {
+    nsresult rv = EnumerateDir(
+        NS_LITERAL_CSTRING("id"), NodeIdVerifier(aSiteInfo));
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    rv = EnumerateDir(
+        NS_LITERAL_CSTRING("storage"), StorageVerifier(aSiteInfo));
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
   }
 
   void TestCrossOriginStorage() {
@@ -816,6 +984,11 @@ TEST(GeckoMediaPlugins, GMPStorageGetNodeId) {
 TEST(GeckoMediaPlugins, GMPStorageBasic) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestBasicStorage);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageForgetThisSite) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestForgetThisSite);
 }
 
 TEST(GeckoMediaPlugins, GMPStorageCrossOrigin) {

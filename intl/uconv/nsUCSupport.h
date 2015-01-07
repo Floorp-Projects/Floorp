@@ -81,8 +81,8 @@ public:
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
 
-  virtual void SetInputErrorBehavior(int32_t aBehavior);
-  virtual char16_t GetCharacterForUnMapped();
+  virtual void SetInputErrorBehavior(int32_t aBehavior) MOZ_OVERRIDE;
+  virtual char16_t GetCharacterForUnMapped() MOZ_OVERRIDE;
 
 protected:
   int32_t   mErrBehavior;

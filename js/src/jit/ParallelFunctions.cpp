@@ -42,11 +42,7 @@ JSObject *
 jit::NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind)
 {
     MOZ_ASSERT(ForkJoinContext::current() == cx);
-#ifdef JSGC_FJGENERATIONAL
-    return js::NewGCObject<CanGC>(cx, allocKind, 0, gc::DefaultHeap);
-#else
     return js::NewGCObject<NoGC>(cx, allocKind, 0, gc::TenuredHeap);
-#endif
 }
 
 bool

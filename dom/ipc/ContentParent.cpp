@@ -385,7 +385,7 @@ public:
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-    virtual bool Recv__delete__(const uint32_t& generation, const InfallibleTArray<MemoryReport>& report);
+    virtual bool Recv__delete__(const uint32_t& aGeneration, const InfallibleTArray<MemoryReport>& aReport) MOZ_OVERRIDE;
 private:
     ContentParent* Owner()
     {
@@ -1342,7 +1342,7 @@ public:
                                  nsITimer::TYPE_ONE_SHOT);
     }
 
-    NS_IMETHOD Notify(nsITimer* aTimer)
+    NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE
     {
         // Careful: ShutDown() may delete |this|.
         ShutDown();
