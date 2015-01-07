@@ -550,7 +550,6 @@ class GCRuntime
     ChunkPool expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock);
     void freeEmptyChunks(JSRuntime *rt, const AutoLockGC &lock);
     void prepareToFreeChunk(ChunkInfo &info);
-    void releaseChunk(Chunk *chunk);
 
     friend class BackgroundAllocTask;
     friend class AutoMaybeStartBackgroundAllocation;
