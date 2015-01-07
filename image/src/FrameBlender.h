@@ -8,9 +8,11 @@
 #define mozilla_imagelib_FrameBlender_h_
 
 #include "mozilla/MemoryReporting.h"
+#include "gfx2DGlue.h"
 #include "gfxTypes.h"
 #include "imgFrame.h"
 #include "nsCOMPtr.h"
+#include "SurfaceCache.h"
 
 namespace mozilla {
 namespace image {
@@ -24,35 +26,27 @@ namespace image {
 class FrameBlender
 {
 public:
-
-  /**
-   * Create a new FrameBlender with a given frame sequence.
-   *
-   * If aSequenceToUse is not specified, it will be allocated automatically.
-   */
-  FrameBlender();
-  ~FrameBlender();
+  FrameBlender(ImageKey aImageKey, gfx::IntSize aSize)
+   : mImageKey(aImageKey)
+   , mSize(aSize)
+   , mLastCompositedFrameIndex(-1)
+   , mLoopCount(-1)
+  { }
 
   bool DoBlend(nsIntRect* aDirtyRect, uint32_t aPrevFrameIndex,
                uint32_t aNextFrameIndex);
 
   /**
-   * Get the @aIndex-th frame, including (if applicable) any results of
-   * blending.
+   * If we have a composited frame for @aFrameNum, returns it. Otherwise, returns
+   * an empty DrawableFrameRef. It is an error to call this method with
+   * aFrameNum == 0, because the first frame is never composited.
    */
-  already_AddRefed<imgFrame> GetFrame(uint32_t aIndex);
+  DrawableFrameRef GetCompositedFrame(uint32_t aFrameNum);
 
   /**
    * Get the @aIndex-th frame in the frame index, ignoring results of blending.
    */
-  already_AddRefed<imgFrame> RawGetFrame(uint32_t aIndex);
-
-  void InsertFrame(uint32_t aFrameNum, RawAccessFrameRef&& aRef);
-  void RemoveFrame(uint32_t aFrameNum);
-  void ClearFrames();
-
-  /* The total number of frames in this image. */
-  uint32_t GetNumFrames() const;
+  RawAccessFrameRef GetRawFrame(uint32_t aFrameNum);
 
   /*
    * Returns the frame's adjusted timeout. If the animation loops and the
@@ -66,12 +60,8 @@ public:
    * Set number of times to loop the image.
    * @note -1 means loop forever.
    */
-  void SetLoopCount(int32_t aLoopCount);
-  int32_t GetLoopCount() const;
-
-  void Discard();
-
-  void SetSize(nsIntSize aSize) { mSize = aSize; }
+  void SetLoopCount(int32_t aLoopCount) { mLoopCount = aLoopCount; }
+  int32_t LoopCount() const { return mLoopCount; }
 
   size_t SizeOfDecoded(gfxMemoryLocation aLocation,
                        MallocSizeOf aMallocSizeOf) const;
@@ -107,33 +97,6 @@ public:
   };
 
 private:
-
-  struct Anim
-  {
-    //! Track the last composited frame for Optimizations (See DoComposite code)
-    int32_t lastCompositedFrameIndex;
-
-    /** For managing blending of frames
-     *
-     * Some animations will use the compositingFrame to composite images
-     * and just hand this back to the caller when it is time to draw the frame.
-     * NOTE: When clearing compositingFrame, remember to set
-     *       lastCompositedFrameIndex to -1.  Code assume that if
-     *       lastCompositedFrameIndex >= 0 then compositingFrame exists.
-     */
-    RawAccessFrameRef compositingFrame;
-
-    /** the previous composited frame, for DISPOSE_RESTORE_PREVIOUS
-     *
-     * The Previous Frame (all frames composited up to the current) needs to be
-     * stored in cases where the image specifies it wants the last frame back
-     * when it's done with the current frame.
-     */
-    RawAccessFrameRef compositingPrevFrame;
-
-    Anim() : lastCompositedFrameIndex(-1) { }
-  };
-
   /** Clears an area of <aFrame> with transparent black.
    *
    * @param aFrameData Target Frame data
@@ -174,10 +137,30 @@ private:
                               FrameBlendMethod aBlendMethod);
 
 private: // data
-  //! All the frames of the image
-  nsTArray<RawAccessFrameRef> mFrames;
-  nsIntSize mSize;
-  Anim* mAnim;
+  ImageKey mImageKey;
+  gfx::IntSize mSize;
+
+  //! Track the last composited frame for Optimizations (See DoComposite code)
+  int32_t mLastCompositedFrameIndex;
+
+  /** For managing blending of frames
+   *
+   * Some animations will use the compositingFrame to composite images
+   * and just hand this back to the caller when it is time to draw the frame.
+   * NOTE: When clearing compositingFrame, remember to set
+   *       lastCompositedFrameIndex to -1.  Code assume that if
+   *       lastCompositedFrameIndex >= 0 then compositingFrame exists.
+   */
+  RawAccessFrameRef mCompositingFrame;
+
+  /** the previous composited frame, for DISPOSE_RESTORE_PREVIOUS
+   *
+   * The Previous Frame (all frames composited up to the current) needs to be
+   * stored in cases where the image specifies it wants the last frame back
+   * when it's done with the current frame.
+   */
+  RawAccessFrameRef mCompositingPrevFrame;
+
   int32_t mLoopCount;
 };
 

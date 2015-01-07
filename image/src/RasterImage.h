@@ -169,7 +169,7 @@ public:
                                       uint32_t* aWriteCount);
 
   /* The total number of frames in this image. */
-  uint32_t GetNumFrames() const;
+  uint32_t GetNumFrames() const { return mFrameCount; }
 
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
@@ -179,6 +179,7 @@ public:
   void Discard();
 
   /* Callbacks for decoders */
+
   /** Sets the size and inherent orientation of the container. This should only
    * be called by the decoder. This function may be called multiple times, but
    * will throw an error if subsequent calls do not match the first.
@@ -396,6 +397,9 @@ private: // data
   DecodeStatus               mDecodeStatus;
   // END LOCKED MEMBER VARIABLES
 
+  // The number of frames this image has.
+  uint32_t                   mFrameCount;
+
   // Notification state. Used to avoid recursive notifications.
   Progress                   mNotifyProgress;
   nsIntRect                  mNotifyInvalidRect;
@@ -410,7 +414,6 @@ private: // data
 
   // Do we have the frames in decoded form?
   bool                       mDecoded:1;
-  bool                       mHasFirstFrame:1;
   bool                       mHasBeenDecoded:1;
 
   // Whether we're waiting to start animation. If we get a StartAnimation() call
