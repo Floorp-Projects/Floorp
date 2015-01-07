@@ -550,6 +550,9 @@ private:
 
     virtual bool DeallocPHalParent(PHalParent*) override;
 
+    virtual PIccParent* AllocPIccParent(const uint32_t& aServiceId) override;
+    virtual bool DeallocPIccParent(PIccParent* aActor) override;
+
     virtual PMemoryReportRequestParent*
     AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                     const bool &aAnonymize,
@@ -743,7 +746,7 @@ private:
                                   OptionalURIParams* aURI) override;
 
     virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
-                                                const nsString &aKeyword) override; 
+                                                const nsString &aKeyword) override;
 
     virtual void ProcessingError(Result aCode, const char* aMsgName) override;
 
