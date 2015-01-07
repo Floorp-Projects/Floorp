@@ -43,13 +43,23 @@ this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
  * We can work around this by copying the properties we care about onto a regular
  * object.
  *
- * @param {Error}        error        Error object to copy
- * @param {nsIDOMWindow} targetWindow The content window to attach the API
+ * @param {Error|nsIException} error        Error object to copy
+ * @param {nsIDOMWindow}       targetWindow The content window to clone into
  */
 const cloneErrorObject = function(error, targetWindow) {
   let obj = new targetWindow.Error();
-  for (let prop of Object.getOwnPropertyNames(error)) {
+  let props = Object.getOwnPropertyNames(error);
+  // nsIException properties are not enumerable, so we'll try to copy the most
+  // common and useful ones.
+  if (!props.length) {
+    props.push("message", "filename", "lineNumber", "columnNumber", "stack");
+  }
+  for (let prop of props) {
     let value = error[prop];
+    // for nsIException objects, the property may not be defined.
+    if (typeof value == "undefined") {
+      continue;
+    }
     if (typeof value != "string" && typeof value != "number") {
       value = String(value);
     }
@@ -78,6 +88,11 @@ const cloneValueInto = function(value, targetWindow) {
     return value;
   }
 
+  // HAWK request errors contain an nsIException object inside `value`.
+  if (("error" in value) && (value.error instanceof Ci.nsIException)) {
+    value = value.error;
+  }
+
   // Strip Function properties, since they can not be cloned across boundaries
   // like this.
   for (let prop of Object.getOwnPropertyNames(value)) {
@@ -87,7 +102,7 @@ const cloneValueInto = function(value, targetWindow) {
   }
 
   // Inspect for an error this way, because the Error object is special.
-  if (value.constructor.name == "Error") {
+  if (value.constructor.name == "Error" || value instanceof Ci.nsIException) {
     return cloneErrorObject(value, targetWindow);
   }
 
