@@ -10,7 +10,8 @@ use command::WebDriverCommand::{NewSession, DeleteSession, Get, GetCurrentUrl,
                                 GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
                                 SwitchToParentFrame, FindElement, FindElements, IsDisplayed,
                                 IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
-                                GetElementTagName, GetElementRect, IsEnabled, ExecuteScript,
+                                GetElementTagName, GetElementRect, IsEnabled, ElementClick,
+                                ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
                                 ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
                                 DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
                                 TakeScreenshot};
@@ -97,7 +98,8 @@ impl MarionetteSession {
             Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DismissAlert | AcceptAlert |
-            SendAlertText(_) => {
+            SendAlertText(_) | ElementClick(_) | ElementTap(_) | ElementClear(_) |
+            ElementSendKeys(_, _) => {
                 Ok(Some(WebDriverResponse::Void))
             },
             //Things that simply return the contents of the marionette "value" property
@@ -438,6 +440,15 @@ impl ToMarionette for WebDriverMessage {
             GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
             GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
             IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
+            ElementClick(ref x) => (Some("clickElement"), Some(x.to_marionette())),
+            ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
+            ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
+            ElementSendKeys(ref e, ref x) => {
+                let mut data = TreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("value".to_string(), x.value.to_json());
+                (Some("sendKeysToElement"), Some(Ok(Json::Object(data))))
+            },
             ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
             ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
             GetCookie(ref x) => (Some("getCookies"), Some(x.to_marionette())),

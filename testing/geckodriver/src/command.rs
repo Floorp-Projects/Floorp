@@ -43,7 +43,11 @@ pub enum WebDriverCommand {
     GetCookie(GetCookieParameters),
     AddCookie(AddCookieParameters),
     SetTimeouts(TimeoutsParameters),
-    //Actions(ActionsParameters)
+    //Actions(ActionsParameters),
+    ElementClick(WebElement),
+    ElementTap(WebElement),
+    ElementClear(WebElement),
+    ElementSendKeys(WebElement, SendKeysParameters),
     DismissAlert,
     AcceptAlert,
     GetAlertText,
@@ -153,6 +157,23 @@ impl WebDriverMessage {
                 let element = WebElement::new(params.name("elementId").to_string());
                 WebDriverCommand::IsEnabled(element)
             },
+            MatchType::ElementClick => {
+                let element = WebElement::new(params.name("elementId").to_string());
+                WebDriverCommand::ElementClick(element)
+            },
+            MatchType::ElementTap => {
+                let element = WebElement::new(params.name("elementId").to_string());
+                WebDriverCommand::ElementTap(element)
+            },
+            MatchType::ElementClear => {
+                let element = WebElement::new(params.name("elementId").to_string());
+                WebDriverCommand::ElementClear(element)
+            },
+            MatchType::ElementSendKeys => {
+                let element = WebElement::new(params.name("elementId").to_string());
+                let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::ElementSendKeys(element, parameters)
+            },
             MatchType::ExecuteScript => {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteScript(parameters)
@@ -214,7 +235,8 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::GetElementTagName(_) | WebDriverCommand::GetElementRect(_) |
             WebDriverCommand::IsEnabled(_) | WebDriverCommand::AddCookie(_) |
             WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
-            WebDriverCommand::GetAlertText => {
+            WebDriverCommand::GetAlertText | WebDriverCommand::ElementClick(_) |
+            WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),
@@ -224,6 +246,7 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
             WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
             WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
+            WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
             WebDriverCommand::ExecuteScript(ref x) |
             WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
             WebDriverCommand::GetCookie(ref x) => Some(x.to_json()),
@@ -444,6 +467,36 @@ impl ToJson for SwitchToFrameParameters {
 }
 
 #[deriving(PartialEq)]
+pub struct SendKeysParameters {
+    pub value: String
+}
+
+impl Parameters for SendKeysParameters {
+    fn from_json(body: &json::Json) -> WebDriverResult<SendKeysParameters> {
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::InvalidArgument,
+                            "Message body was not an object");
+        let value = try_opt!(try_opt!(data.get("value"),
+                                      ErrorStatus::InvalidArgument,
+                                      "Missing 'value' parameter").as_string(),
+                             ErrorStatus::InvalidArgument,
+                             "'value' not a string").into_string();
+
+        Ok(SendKeysParameters {
+            value: value
+        })
+    }
+}
+
+impl ToJson for SendKeysParameters {
+    fn to_json(&self) -> json::Json {
+        let mut data = TreeMap::new();
+        data.insert("value".to_string(), self.value.to_json());
+        json::Object(data)
+    }
+}
+
+#[deriving(PartialEq)]
 pub struct JavascriptCommandParameters {
     script: String,
     args: Nullable<Vec<json::Json>>
@@ -452,27 +505,27 @@ pub struct JavascriptCommandParameters {
 impl Parameters for JavascriptCommandParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<JavascriptCommandParameters> {
         let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
+                            ErrorStatus::InvalidArgument,
                             "Message body was not an object");
 
         let args_json = try_opt!(data.get("args"),
-                                 ErrorStatus::UnknownError,
+                                 ErrorStatus::InvalidArgument,
                                  "Missing args parameter");
 
         let args = try!(Nullable::from_json(
             args_json,
             |x| {
                 Ok((try_opt!(x.as_array(),
-                             ErrorStatus::UnknownError,
+                             ErrorStatus::InvalidArgument,
                              "Failed to convert args to Array")).clone())
             }));
 
          //TODO: Look for WebElements in args?
         let script = try_opt!(
             try_opt!(data.get("script"),
-                     ErrorStatus::UnknownError,
+                     ErrorStatus::InvalidArgument,
                      "Missing script parameter").as_string(),
-            ErrorStatus::UnknownError,
+            ErrorStatus::InvalidArgument,
             "Failed to convert script to String");
         Ok(JavascriptCommandParameters {
             script: script.to_string(),
@@ -501,7 +554,7 @@ pub struct GetCookieParameters {
 
 impl Parameters for GetCookieParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<GetCookieParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+        let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let name_json = try_opt!(data.get("name"),
                                  ErrorStatus::InvalidArgument,
@@ -510,7 +563,7 @@ impl Parameters for GetCookieParameters {
             name_json,
             |x| {
                 Ok(try_opt!(x.as_string(),
-                            ErrorStatus::UnknownError,
+                            ErrorStatus::InvalidArgument,
                             "Failed to convert name to String").into_string())
             }));
         return Ok(GetCookieParameters {
@@ -542,7 +595,7 @@ pub struct AddCookieParameters {
 impl Parameters for AddCookieParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<AddCookieParameters> {
         let data = try_opt!(body.as_object(),
-                            ErrorStatus::UnknownError,
+                            ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let name = try_opt!(
             try_opt!(data.get("name"),
@@ -564,7 +617,7 @@ impl Parameters for AddCookieParameters {
                     path_json,
                     |x| {
                         Ok(try_opt!(x.as_string(),
-                                    ErrorStatus::UnknownError,
+                                    ErrorStatus::InvalidArgument,
                                     "Failed to convert path to String").into_string())
                     }))
             },
@@ -577,7 +630,7 @@ impl Parameters for AddCookieParameters {
                     domain_json,
                     |x| {
                         Ok(try_opt!(x.as_string(),
-                                    ErrorStatus::UnknownError,
+                                    ErrorStatus::InvalidArgument,
                                     "Failed to convert domain to String").into_string())
                     }))
             },
@@ -591,7 +644,7 @@ impl Parameters for AddCookieParameters {
                     expiry_json,
                     |x| {
                         Ok(Date::new(try_opt!(x.as_u64(),
-                                              ErrorStatus::UnknownError,
+                                              ErrorStatus::InvalidArgument,
                                               "Failed to convert expiry to Date")))
                     }))
             },
@@ -604,7 +657,7 @@ impl Parameters for AddCookieParameters {
                     max_age_json,
                     |x| {
                         Ok(Date::new(try_opt!(x.as_u64(),
-                                              ErrorStatus::UnknownError,
+                                              ErrorStatus::InvalidArgument,
                                               "Failed to convert expiry to Date")))
                     }))
             },
@@ -613,14 +666,14 @@ impl Parameters for AddCookieParameters {
 
         let secure = match data.get("secure") {
             Some(x) => try_opt!(x.as_boolean(),
-                                ErrorStatus::UnknownError,
+                                ErrorStatus::InvalidArgument,
                                 "Failed to convert secure to boolean"),
             None => false
         };
 
         let http_only = match data.get("httpOnly") {
             Some(x) => try_opt!(x.as_boolean(),
-                                ErrorStatus::UnknownError,
+                                ErrorStatus::InvalidArgument,
                                 "Failed to convert httpOnly to boolean"),
             None => false
         };
@@ -660,7 +713,7 @@ pub struct SendAlertTextParameters {
 
 impl Parameters for SendAlertTextParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<SendAlertTextParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+        let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let keys = try_opt!(
             try_opt!(data.get("keysToSend"),
@@ -689,7 +742,8 @@ pub struct TakeScreenshotParameters {
 
 impl Parameters for TakeScreenshotParameters {
     fn from_json(body: &json::Json) -> WebDriverResult<TakeScreenshotParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let element = match data.get("element") {
             Some(element_json) => try!(Nullable::from_json(
