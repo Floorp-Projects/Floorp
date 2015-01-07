@@ -36,9 +36,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MozNDEFRecord)
 
 public:
-
-  MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
-                const MozNDEFRecordOptions& aOptions);
+  MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf);
 
   ~MozNDEFRecord();
 
@@ -59,28 +57,28 @@ public:
     return mTnf;
   }
 
-  void GetType(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetType(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mType) {
       JS::ExposeObjectToActiveJS(mType);
     }
-    retval.set(mType);
+    aRetVal.set(mType);
   }
 
-  void GetId(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetId(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mId) {
       JS::ExposeObjectToActiveJS(mId);
     }
-    retval.set(mId);
+    aRetVal.set(mId);
   }
 
-  void GetPayload(JSContext* cx, JS::MutableHandle<JSObject*> retval) const
+  void GetPayload(JSContext* /* unused */, JS::MutableHandle<JSObject*> aRetVal) const
   {
     if (mPayload) {
       JS::ExposeObjectToActiveJS(mPayload);
     }
-    retval.set(mPayload);
+    aRetVal.set(mPayload);
   }
 
   uint32_t Size() const
@@ -93,6 +91,11 @@ private:
   nsRefPtr<nsPIDOMWindow> mWindow;
   void HoldData();
   void DropData();
+  void InitType(JSContext* aCx, const Optional<Uint8Array>& aType);
+  void InitId(JSContext* aCx, const Optional<Uint8Array>& aId);
+  void InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload);
+  void IncSize(uint32_t aCount);
+  void IncSizeForPayload(uint32_t aLen);
 
   static bool
   ValidateTNF(const MozNDEFRecordOptions& aOptions, ErrorResult& aRv);

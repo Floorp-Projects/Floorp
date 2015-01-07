@@ -69,8 +69,7 @@ MozNDEFRecord::DropData()
  * See section 3.3 THE NDEF Specification Test Requirements,
  * NDEF specification 1.0
  */
-/* static */
-bool
+/* static */ bool
 MozNDEFRecord::ValidateTNF(const MozNDEFRecordOptions& aOptions,
                            ErrorResult& aRv)
 {
@@ -100,64 +99,91 @@ MozNDEFRecord::ValidateTNF(const MozNDEFRecordOptions& aOptions,
   return true;
 }
 
-/* static */
-already_AddRefed<MozNDEFRecord>
+/* static */ already_AddRefed<MozNDEFRecord>
 MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
                            const MozNDEFRecordOptions& aOptions,
                            ErrorResult& aRv)
 {
+  if (!ValidateTNF(aOptions, aRv)) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  if (!ValidateTNF(aOptions, aRv)) {
-    return nullptr;
-  }
+  JSContext* context = aGlobal.Context();
+  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(win, aOptions.mTnf);
+  ndefRecord->InitType(context, aOptions.mType);
+  ndefRecord->InitId(context, aOptions.mId);
+  ndefRecord->InitPayload(context, aOptions.mPayload);
 
-  nsRefPtr<MozNDEFRecord> ndefrecord = new MozNDEFRecord(aGlobal.Context(),
-                                                         win, aOptions);
-  if (!ndefrecord) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  return ndefrecord.forget();
+  return ndefRecord.forget();
 }
 
-MozNDEFRecord::MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
-                             const MozNDEFRecordOptions& aOptions)
+MozNDEFRecord::MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf)
+  : mWindow(aWindow) // For GetParentObject()
+  , mTnf(aTnf)
+  , mSize(3) // 1(flags) + 1(type_length) + 1(payload_length)
 {
-  mWindow = aWindow; // For GetParentObject()
-
-  mTnf = aOptions.mTnf;
-  mSize = 3; // 1(flags) + 1(type_length) + 1(payload_length)
-
-  if (aOptions.mType.WasPassed()) {
-    const Uint8Array& type = aOptions.mType.Value();
-    type.ComputeLengthAndData();
-    mType = Uint8Array::Create(aCx, this, type.Length(), type.Data());
-    mSize += type.Length();
-  }
-
-  if (aOptions.mId.WasPassed()) {
-    const Uint8Array& id = aOptions.mId.Value();
-    id.ComputeLengthAndData();
-    mId = Uint8Array::Create(aCx, this, id.Length(), id.Data());
-    mSize += 1 /* id_length */ + id.Length();
-  }
-
-  if (aOptions.mPayload.WasPassed()) {
-    const Uint8Array& payload = aOptions.mPayload.Value();
-    payload.ComputeLengthAndData();
-    mPayload = Uint8Array::Create(aCx, this, payload.Length(), payload.Data());
-    if (payload.Length() > 0xff) {
-      mSize += 3;
-    }
-    mSize += payload.Length();
-  }
-
   HoldData();
+}
+
+void
+MozNDEFRecord::InitType(JSContext* aCx, const Optional<Uint8Array>& aType)
+{
+  if (!aType.WasPassed()) {
+    return;
+  }
+
+  const Uint8Array& type = aType.Value();
+  type.ComputeLengthAndData();
+  mType = Uint8Array::Create(aCx, this, type.Length(), type.Data());
+  IncSize(type.Length());
+}
+
+void
+MozNDEFRecord::InitId(JSContext* aCx, const Optional<Uint8Array>& aId)
+{
+  if (!aId.WasPassed()) {
+    return;
+  }
+
+  const Uint8Array& id = aId.Value();
+  id.ComputeLengthAndData();
+  mId = Uint8Array::Create(aCx, this, id.Length(), id.Data());
+  IncSize(1 /* id_length */ + id.Length());
+}
+
+void
+MozNDEFRecord::InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload)
+{
+  if (!aPayload.WasPassed()) {
+    return;
+  }
+
+  const Uint8Array& payload = aPayload.Value();
+  payload.ComputeLengthAndData();
+  mPayload = Uint8Array::Create(aCx, this, payload.Length(), payload.Data());
+  IncSizeForPayload(payload.Length());
+}
+
+void
+MozNDEFRecord::IncSize(uint32_t aCount)
+{
+  mSize += aCount;
+}
+
+void
+MozNDEFRecord::IncSizeForPayload(uint32_t aLen)
+{
+  if (aLen > 0xff) {
+    IncSize(3);
+  }
+
+  IncSize(aLen);
 }
 
 MozNDEFRecord::~MozNDEFRecord()
