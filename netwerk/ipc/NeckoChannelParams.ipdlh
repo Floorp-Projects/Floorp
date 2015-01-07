@@ -57,6 +57,7 @@ struct HttpChannelOpenArgs
   PrincipalInfo               triggeringPrincipalInfo;
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
+  uint32_t                    innerWindowID;
 };
 
 struct HttpChannelConnectArgs
@@ -84,6 +85,7 @@ struct FTPChannelOpenArgs
   PrincipalInfo             triggeringPrincipalInfo;
   uint32_t                  securityFlags;
   uint32_t                  contentPolicyType;
+  uint32_t                  innerWindowID;
 };
 
 struct FTPChannelConnectArgs
