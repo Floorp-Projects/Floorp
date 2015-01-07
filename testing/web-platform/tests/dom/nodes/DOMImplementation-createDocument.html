@@ -102,8 +102,8 @@ test(function() {
       test(function() {
         var doc = document.implementation.createDocument(namespace, qualifiedName, doctype)
         assert_equals(doc.compatMode, "CSS1Compat")
-        // XXX Spec says "utf-8", browsers do "UTF-8".
-        assert_equals(doc.characterSet.toUpperCase(), "UTF-8")
+        assert_equals(doc.characterSet, "UTF-8")
+        assert_equals(doc.inputEncoding, "UTF-8")
         assert_equals(doc.contentType, "application/xml")
         assert_equals(doc.URL, "about:blank")
         assert_equals(doc.documentURI, "about:blank")

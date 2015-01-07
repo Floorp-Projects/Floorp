@@ -22,7 +22,6 @@ def main(request, response):
         return "OK"
 
     elif "delete-cookie" in request.GET:
-        print "delete-cookie"
         response.delete_cookie(id)
         return [("Content-Type", "text/plain")], "OK"
 

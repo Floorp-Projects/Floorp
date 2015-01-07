@@ -51,3 +51,12 @@ PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/minimal_html.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-1.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-2.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-3.xhtml
+
+# Test generation files containing print statements
+PRINT STATEMENT:2dcontext/tools/gentest.py
+PRINT STATEMENT:dom/nodes/Document-createElement-namespace-tests/generate.py
+PRINT STATEMENT:serve.py
+PRINT STATEMENT:tools/runner/report.py
+PRINT STATEMENT:tools/scripts/lint.py
+PRINT STATEMENT:tools/scripts/update_html5lib_tests.py
+PRINT STATEMENT:subresource-integrity/tools/generate_javascript.py

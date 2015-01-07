@@ -39,9 +39,12 @@
                 on_event(target0, "pointerout", function (event) {
                     pointeroutCounter++;
 
-                    test(function() {
-                        assert_true(pointeroutCounter == 1, "pointerout received just once")
-                    }, "pointerout received just once");
+                    setTimeout(function() {
+                        test(function() {
+                            assert_true(pointeroutCounter == 1, "pointerout received just once")
+                        }, "pointerout received just once");
+                        done();
+                    }, 5000);
                 });
             }
         </script>

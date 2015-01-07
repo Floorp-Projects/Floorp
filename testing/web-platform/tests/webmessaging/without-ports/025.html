@@ -4,8 +4,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-async_test(function() { 
-   var obj = { f : function() {}};
+async_test(function() {
    var ch = new MessageChannel();
    assert_true(ch.port1 instanceof MessagePort, "MessageChannel's port not an instance of MessagePort");
    assert_throws(new TypeError(), function () { var p = new MessagePort();}, "MessagePort is [[Callable]]");

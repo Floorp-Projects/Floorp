@@ -1,24 +1,12 @@
 <!DOCTYPE html>
-<html>
-<head>
-<title> Worker SECURITY_ERR exception </title>
+<title> Worker cross-origin URL </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-
-    var description = "Test Description: Throw a SECURITY_ERR exception when origin of the "
-                    + "worker script URL and origin URL are not same.";
-
-    test(function()
-    {
-        assert_throws("SECURITY_ERR", function()
-        {
-            var worker = new Worker("ftp://example.org/support/WorkerBasic.js");
-        });
-    }, description);
+test(function() {
+  assert_throws("SECURITY_ERR", function() {
+    new Worker("ftp://example.org/support/WorkerBasic.js");
+  });
+});
 </script>
-</body>
-</html>
