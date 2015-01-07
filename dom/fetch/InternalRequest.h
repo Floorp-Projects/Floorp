@@ -62,10 +62,8 @@ public:
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(RESPONSETAINT_BASIC)
     , mCacheMode(RequestCache::Default)
-    , mRedirectCount(0)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
-    , mManualRedirect(false)
     , mPreserveContentCodings(false)
       // FIXME(nsm): This should be false by default, but will lead to the
       // algorithm never loading data: URLs right now. See Bug 1018872 about
@@ -92,10 +90,8 @@ public:
     , mCredentialsMode(aOther.mCredentialsMode)
     , mResponseTainting(aOther.mResponseTainting)
     , mCacheMode(aOther.mCacheMode)
-    , mRedirectCount(aOther.mRedirectCount)
     , mAuthenticationFlag(aOther.mAuthenticationFlag)
     , mForceOriginHeader(aOther.mForceOriginHeader)
-    , mManualRedirect(aOther.mManualRedirect)
     , mPreserveContentCodings(aOther.mPreserveContentCodings)
     , mSameOriginDataURL(aOther.mSameOriginDataURL)
     , mSandboxedStorageAreaURLs(aOther.mSandboxedStorageAreaURLs)
@@ -130,6 +126,12 @@ public:
   GetURL(nsCString& aURL) const
   {
     aURL.Assign(mURL);
+  }
+
+  void
+  SetURL(const nsACString& aURL)
+  {
+    mURL.Assign(aURL);
   }
 
   bool
@@ -251,6 +253,12 @@ public:
   }
 
   void
+  UnsetSameOriginDataURL()
+  {
+    mSameOriginDataURL = false;
+  }
+
+  void
   SetBody(nsIInputStream* aStream)
   {
     // A request's body may not be reset once set.
@@ -274,12 +282,6 @@ public:
 private:
   ~InternalRequest();
 
-  void
-  SetURL(const nsACString& aURL)
-  {
-    mURL.Assign(aURL);
-  }
-
   nsCString mMethod;
   nsCString mURL;
   nsRefPtr<InternalHeaders> mHeaders;
@@ -300,11 +302,8 @@ private:
   ResponseTainting mResponseTainting;
   RequestCache mCacheMode;
 
-  uint32_t mRedirectCount;
-
   bool mAuthenticationFlag;
   bool mForceOriginHeader;
-  bool mManualRedirect;
   bool mPreserveContentCodings;
   bool mSameOriginDataURL;
   bool mSandboxedStorageAreaURLs;
