@@ -155,21 +155,21 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
 #define NS_DECL_NSICSSDECLARATION                                   \
   NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,          \
-                              nsAString& aValue);                   \
+                              nsAString& aValue) MOZ_OVERRIDE;      \
   NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,   \
-                                      nsAString& aValue);           \
+                                      nsAString& aValue) MOZ_OVERRIDE; \
   NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,          \
-                              const nsAString& aValue);
+                              const nsAString& aValue) MOZ_OVERRIDE;
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
-  NS_IMETHOD GetCssText(nsAString & aCssText); \
-  NS_IMETHOD SetCssText(const nsAString & aCssText); \
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority); \
-  NS_IMETHOD GetLength(uint32_t *aLength); \
-  NS_IMETHOD Item(uint32_t index, nsAString & _retval); \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule);
+  NS_IMETHOD GetCssText(nsAString & aCssText) MOZ_OVERRIDE; \
+  NS_IMETHOD SetCssText(const nsAString & aCssText) MOZ_OVERRIDE; \
+  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
+  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
+  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
+  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) MOZ_OVERRIDE; \
+  NS_IMETHOD GetLength(uint32_t *aLength) MOZ_OVERRIDE; \
+  NS_IMETHOD Item(uint32_t index, nsAString & _retval) MOZ_OVERRIDE; \
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE;
 
 #endif // nsICSSDeclaration_h__

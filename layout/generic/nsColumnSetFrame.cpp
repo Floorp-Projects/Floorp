@@ -359,13 +359,14 @@ nsColumnSetFrame::ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
   return feasible;
 }
 
-static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin)
+static void MoveChildTo(nsIFrame* aChild, LogicalPoint aOrigin,
+                        WritingMode aWM, nscoord aContainerWidth)
 {
-  if (aChild->GetPosition() == aOrigin) {
+  if (aChild->GetLogicalPosition(aWM, aContainerWidth) == aOrigin) {
     return;
   }
 
-  aChild->SetPosition(aOrigin);
+  aChild->SetPosition(aWM, aOrigin, aContainerWidth);
   nsContainerFrame::PlaceFrameView(aChild);
 }
 
@@ -485,22 +486,29 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   nsOverflowAreas overflowRects;
 
   nsIFrame* child = mFrames.FirstChild();
-  nsMargin physicalBP = borderPadding.GetPhysicalMargin(wm);
-  nsPoint childOrigin(physicalBP.left, physicalBP.top);
-  // For RTL, figure out where the last column's left edge should be. Since the
-  // columns might not fill the frame exactly, we need to account for the
-  // slop. Otherwise we'll waste time moving the columns by some tiny
-  // amount unnecessarily.
-  nscoord& childOriginICoord = isVertical ? childOrigin.y : childOrigin.x;
-  if (isRTL) {
+  LogicalPoint childOrigin(wm, borderPadding.IStart(wm),
+                           borderPadding.BStart(wm));
+  // In vertical-rl mode we can't use the computed width as the
+  // container width because it may be NS_UNCONSTRAINEDSIZE, so we use 0
+  // for now and reposition the columns after reflowing them all.
+  nscoord containerWidth = wm.IsVerticalRL() ? 0 : aReflowState.ComputedWidth();
+
+  // For RTL, since the columns might not fill the frame exactly, we
+  // need to account for the slop. Otherwise we'll waste time moving the
+  // columns by some tiny amount
+
+  // XXX when all of layout is converted to logical coordinates, we
+  //     probably won't need to do this hack any more. For now, we
+  //     confine it to the legacy horizontal-rl case
+  if (!isVertical && isRTL) {
     nscoord availISize = aReflowState.AvailableISize();
     if (aReflowState.ComputedISize() != NS_INTRINSICSIZE) {
       availISize = aReflowState.ComputedISize();
     }
     if (availISize != NS_INTRINSICSIZE) {
-      childOriginICoord += availISize - aConfig.mColISize;
+      childOrigin.I(wm) = containerWidth - borderPadding.Left(wm) - availISize;
 #ifdef DEBUG_roc
-      printf("*** childOrigin.iCoord = %d\n", childOriginICoord);
+      printf("*** childOrigin.iCoord = %d\n", childOrigin.I(wm));
 #endif
     }
   }
@@ -559,7 +567,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     nscoord childContentBEnd = 0;
     if (!reflowNext && (skipIncremental || skipResizeBSizeShrink)) {
       // This child does not need to be reflowed, but we may need to move it
-      MoveChildTo(this, child, childOrigin);
+      MoveChildTo(child, childOrigin, wm, containerWidth);
 
       // If this is the last frame then make sure we get the right status
       nsIFrame* kidNext = child->GetNextSibling();
@@ -621,13 +629,16 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       // columns would flow around it.
 
       // Reflow the frame
+      LogicalPoint origin(wm,
+                          childOrigin.I(wm) +
+                          kidReflowState.ComputedLogicalMargin().IStart(wm),
+                          childOrigin.B(wm) +
+                          kidReflowState.ComputedLogicalMargin().BStart(wm));
       ReflowChild(child, PresContext(), kidDesiredSize, kidReflowState,
-                  childOrigin.x + kidReflowState.ComputedPhysicalMargin().left,
-                  childOrigin.y + kidReflowState.ComputedPhysicalMargin().top,
-                  0, aStatus);
+                  wm, origin, containerWidth, 0, aStatus);
 
       reflowNext = (aStatus & NS_FRAME_REFLOW_NEXTINFLOW) != 0;
-    
+
 #ifdef DEBUG_roc
       printf("*** Reflowed child #%d %p: status = %d, desiredSize=%d,%d CarriedOutBEndMargin=%d\n",
              columnCount, (void*)child, aStatus, kidDesiredSize.Width(), kidDesiredSize.Height(),
@@ -639,7 +650,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       *aCarriedOutBEndMargin = kidDesiredSize.mCarriedOutBEndMargin;
 
       FinishReflowChild(child, PresContext(), kidDesiredSize,
-                        &kidReflowState, childOrigin.x, childOrigin.y, 0);
+                        &kidReflowState, wm, childOrigin, containerWidth, 0);
 
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
       if (childContentBEnd > aConfig.mColMaxBSize) {
@@ -732,14 +743,10 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     child = child->GetNextSibling();
 
     if (child) {
-      if (isRTL) {
-        childOriginICoord -= aConfig.mColISize + aConfig.mColGap;
-      } else {
-        childOriginICoord += aConfig.mColISize + aConfig.mColGap;
-      }
+      childOrigin.I(wm) += aConfig.mColISize + aConfig.mColGap;
 
 #ifdef DEBUG_roc
-      printf("*** NEXT CHILD ORIGIN.iCoord = %d\n", childOriginICoord);
+      printf("*** NEXT CHILD ORIGIN.icoord = %d\n", childOrigin.I(wm));
 #endif
     }
   }
@@ -763,21 +770,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   LogicalSize contentSize = LogicalSize(wm, contentRect.Size());
   contentSize.BSize(wm) = std::max(contentSize.BSize(wm), contentBEnd);
   mLastFrameStatus = aStatus;
-
-  // In vertical-rl mode, where we want the column "top" (right) edge to be
-  // aligned, we need to adjust the position of any short columns so as to
-  // make them flush-right instead of flush-left within the entire set.
-  if (wm.IsVerticalRL()) {
-    child = mFrames.FirstChild();
-    while (child) {
-      nscoord offset = aColData.mMaxBSize - child->GetRect().width;
-      if (offset) {
-        nsPoint childPos = child->GetPosition();
-        child->SetPosition(childPos + nsPoint(offset, 0));
-      }
-      child = child->GetNextSibling();
-    }
-  }
 
   // Apply computed and min/max values
   if (aConfig.mComputedBSize != NS_INTRINSICSIZE) {
@@ -809,6 +801,20 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   aDesiredSize.SetSize(wm, contentSize);
   aDesiredSize.mOverflowAreas = overflowRects;
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
+
+  // In vertical-rl mode, make a second pass to reposition the columns
+  // with the correct container width
+  if (wm.IsVerticalRL()) {
+    child = mFrames.FirstChild();
+    while (child) {
+      // Get the logical position as set before with containerWidth=0
+      // and reset with the correct container width (which is the block
+      // size in vertical modes).
+      child->SetPosition(wm, child->GetLogicalPosition(wm, 0),
+                         contentSize.BSize(wm));
+      child = child->GetNextSibling();
+    }
+  }
 
 #ifdef DEBUG_roc
   printf("*** DONE PASS feasible=%d\n", allFit && NS_FRAME_IS_FULLY_COMPLETE(aStatus)

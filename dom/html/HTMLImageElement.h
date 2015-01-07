@@ -52,7 +52,7 @@ public:
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLImageElement, img)
 
   // override from nsImageLoadingContent
-  CORSMode GetCORSMode();
+  CORSMode GetCORSMode() MOZ_OVERRIDE;
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,

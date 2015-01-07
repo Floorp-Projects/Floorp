@@ -13,7 +13,6 @@
 
 #include "jscntxt.h"
 
-#include "gc/ForkJoinNursery.h"
 #include "gc/GCInternals.h"
 
 #include "jit/Ion.h"
@@ -190,26 +189,12 @@
 // To deal with this, the forkjoin code creates a distinct |Allocator|
 // object for each worker, which is used as follows.
 //
-// In a non-generational setting you can access the appropriate
-// allocator via the |ForkJoinContext| object that is provided to the
-// callbacks.  Once the parallel execution is complete, all the
-// objects found in these distinct |Allocator| are merged back into
-// the main compartment lists and things proceed normally.  (If it is
-// known that the result array contains no references then no merging
-// is necessary.)
-//
-// In a generational setting there is a per-thread |ForkJoinNursery|
-// in addition to the per-thread Allocator.  All "simple" objects
-// (meaning they are reasonably small, can be copied, and have no
-// complicated finalization semantics) are allocated in the nurseries;
-// other objects are allocated directly in the threads' Allocators,
-// which serve as the tenured areas for the threads.
-//
-// When a thread's nursery fills up it can be collected independently
-// of the other threads' nurseries, and does not require any of the
-// threads to bail out of the parallel section.  The nursery is
-// copy-collected, and the expectation is that the survival rate will
-// be very low and the collection will be very cheap.
+// You can access the appropriate allocator via the |ForkJoinContext|
+// object that is provided to the callbacks.  Once the parallel
+// execution is complete, all the objects found in these distinct
+// |Allocator| are merged back into the main compartment lists and
+// things proceed normally.  (If it is known that the result array
+// contains no references then no merging is necessary.)
 //
 // When the parallel execution is complete, and only if merging of the
 // Allocators into the main compartment is necessary, then the live
@@ -217,16 +202,13 @@
 // in parallel, before the merging takes place.
 //
 // In Ion-generated code, we will do allocation through the
-// |ForkJoinNursery| or |Allocator| found in |ForkJoinContext| (which
-// is obtained via TLS).
+// |Allocator| found in |ForkJoinContext| (which is obtained via TLS).
 //
 // No write barriers are emitted.  We permit writes to thread-local
 // objects, and such writes can create cross-generational pointers or
-// pointers that may interact with incremental GC.  However, the
-// per-thread generational collector scans its entire tenured area on
-// each minor collection, and we block upon entering a parallel
-// section to ensure that any concurrent marking or incremental GC has
-// completed.
+// pointers that may interact with incremental GC.  However, we block
+// upon entering a parallel section to ensure that any concurrent
+// marking or incremental GC has completed.
 //
 // In the future, it should be possible to lift the restriction that
 // we must block until incremental GC has completed. But we're not
@@ -475,21 +457,6 @@ class ForkJoinContext : public ThreadSafeContext
         return offsetof(ForkJoinContext, worker_);
     }
 
-#ifdef JSGC_FJGENERATIONAL
-    // There is already a nursery() method in ThreadSafeContext.
-    gc::ForkJoinNursery &nursery() { return nursery_; }
-
-    // Evacuate live data from the per-thread nursery into the per-thread
-    // tenured area.
-    void evacuateLiveData() { nursery_.evacuatingGC(); }
-
-    // Used in inlining nursery allocation.  Note the nursery is a
-    // member of the ForkJoinContext (a substructure), not a pointer.
-    static size_t offsetOfFJNursery() {
-        return offsetof(ForkJoinContext, nursery_);
-    }
-#endif
-
   private:
     friend class AutoSetForkJoinContext;
 
@@ -497,11 +464,6 @@ class ForkJoinContext : public ThreadSafeContext
     static mozilla::ThreadLocal<ForkJoinContext*> tlsForkJoinContext;
 
     ForkJoinShared *const shared_;
-
-#ifdef JSGC_FJGENERATIONAL
-    gc::ForkJoinGCShared gcShared_;
-    gc::ForkJoinNursery nursery_;
-#endif
 
     ThreadPoolWorker *worker_;
 

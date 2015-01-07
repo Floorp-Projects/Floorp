@@ -726,6 +726,15 @@ public:
     SetRect(nsRect(mRect.TopLeft(), aSize));
   }
   void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
+  void SetPosition(mozilla::WritingMode aWritingMode,
+                   const mozilla::LogicalPoint& aPt,
+                   nscoord aContainerWidth) {
+    // We subtract mRect.width from the container width to account for
+    // the fact that logical origins in RTL coordinate systems are at
+    // the top right of the frame instead of the top left.
+    mRect.MoveTo(aPt.GetPhysicalPoint(aWritingMode,
+                                      aContainerWidth - mRect.width));
+  }
 
   /**
    * Move the frame, accounting for relative positioning. Use this when

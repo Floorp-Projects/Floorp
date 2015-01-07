@@ -81,9 +81,9 @@ public:
 
   virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
 
-  virtual void OnDNSPrefetchDeferred();
-  virtual void OnDNSPrefetchRequested();
-  virtual bool HasDeferredDNSPrefetchRequest();
+  virtual void OnDNSPrefetchDeferred() MOZ_OVERRIDE;
+  virtual void OnDNSPrefetchRequested() MOZ_OVERRIDE;
+  virtual bool HasDeferredDNSPrefetchRequest() MOZ_OVERRIDE;
 
   // WebIDL API
   void GetHref(nsAString& aValue, ErrorResult& rv)

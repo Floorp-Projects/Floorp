@@ -42,7 +42,7 @@ public:
   virtual void GetScriptText(nsAString& text) MOZ_OVERRIDE;
   virtual void GetScriptCharset(nsAString& charset) MOZ_OVERRIDE;
   virtual void FreezeUriAsyncDefer() MOZ_OVERRIDE;
-  virtual CORSMode GetCORSMode() const;
+  virtual CORSMode GetCORSMode() const MOZ_OVERRIDE;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

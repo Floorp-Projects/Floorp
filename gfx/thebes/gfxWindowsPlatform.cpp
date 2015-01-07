@@ -326,7 +326,6 @@ NS_IMPL_ISUPPORTS(GPUAdapterReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
-  , mPrefFonts(32)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;
@@ -1096,18 +1095,6 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile(void* &mem, size_t &mem_size)
                 NS_ConvertUTF16toUTF8(str).get());
 #endif // DEBUG_tor
 #endif // _WIN32
-}
-
-bool
-gfxWindowsPlatform::GetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> > *array)
-{
-    return mPrefFonts.Get(aKey, array);
-}
-
-void
-gfxWindowsPlatform::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxFontEntry> >& array)
-{
-    mPrefFonts.Put(aKey, array);
 }
 
 bool

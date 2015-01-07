@@ -20,8 +20,6 @@
 #include "vm/ProxyObject.h"
 #include "vm/Symbol.h"
 
-#include "gc/ForkJoinNursery-inl.h"
-
 namespace js {
 
 #ifdef JS_CRASH_DIAGNOSTICS

@@ -35,7 +35,7 @@ public:
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
-  virtual bool WillIgnoreCharsetOverride()
+  virtual bool WillIgnoreCharsetOverride() MOZ_OVERRIDE
   {
     return true;
   }
