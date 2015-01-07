@@ -5877,10 +5877,6 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_47.dll
     AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.1.])
   ;;
-  0x0602*)
-    MOZ_D3DCOMPILER_VISTA_DLL=d3dcompiler_46.dll
-    AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.0.])
-  ;;
   esac
 
   if test -n "$MOZ_D3DCOMPILER_VISTA_DLL"; then
@@ -7974,13 +7970,6 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_TARGET}" = "WINNT"; then
-  if $PERL -e "exit($MOZ_WINSDK_MAXVER < 0x06020000)"; then
-    MOZ_ENABLE_DIRECT2D1_1=1
-    AC_SUBST(MOZ_ENABLE_DIRECT2D1_1)
-  fi
-fi
-
 if test "${OS_TARGET}" = "WINNT" -o \
         "${OS_ARCH}" = "Darwin" -o \
         "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
@@ -8155,17 +8144,12 @@ if test "$MOZ_TREE_CAIRO"; then
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
         ;;
       windows)
-        WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+        WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
+        WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
         WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-        if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
-            WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
-            WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
-            MOZ_ENABLE_D2D_SURFACE=1
-            MOZ_ENABLE_DWRITE_FONT=1
-        else
-            WIN32_DWRITE_FONT_FEATURE=
-            WIN32_D2D_SURFACE_FEATURE=
-        fi
+        WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+        MOZ_ENABLE_D2D_SURFACE=1
+        MOZ_ENABLE_DWRITE_FONT=1
 
         MOZ_CHECK_HEADER(d3d9.h, MOZ_ENABLE_D3D9_LAYER=1)
 
