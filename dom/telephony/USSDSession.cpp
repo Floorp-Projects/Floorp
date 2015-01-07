@@ -45,6 +45,28 @@ USSDSession::WrapObject(JSContext* aCx)
   return USSDSessionBinding::Wrap(aCx, this);
 }
 
+already_AddRefed<Promise>
+USSDSession::CreatePromise(ErrorResult& aRv)
+{
+  if (!mService) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  return promise.forget();
+}
+
 // WebIDL
 
 already_AddRefed<USSDSession>
@@ -71,24 +93,32 @@ USSDSession::Constructor(const GlobalObject& aGlobal, uint32_t aServiceId,
 already_AddRefed<Promise>
 USSDSession::Send(const nsAString& aUssd, ErrorResult& aRv)
 {
-  if (!mService) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  if (!global) {
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
+  if (!promise) {
     return nullptr;
   }
 
   nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
 
   nsresult rv = mService->SendUSSD(mServiceId, aUssd, callback);
+  if (NS_FAILED(rv)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+USSDSession::Cancel(ErrorResult& aRv)
+{
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
+  if (!promise) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
+
+  nsresult rv = mService->CancelUSSD(mServiceId, callback);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
