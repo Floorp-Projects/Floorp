@@ -409,16 +409,14 @@ SignedData(const ByteString& tbsData,
 //                  -- by extnID
 //      }
 static ByteString
-Extension(Input extnID, ExtensionCriticality criticality,
-          const ByteString& extnValueBytes)
+Extension(Input extnID, Critical critical, const ByteString& extnValueBytes)
 {
   ByteString encoded;
 
   encoded.append(ByteString(extnID.UnsafeGetData(), extnID.GetLength()));
 
-  if (criticality == ExtensionCriticality::Critical) {
-    ByteString critical(Boolean(true));
-    encoded.append(critical);
+  if (critical == Critical::Yes) {
+    encoded.append(Boolean(true));
   }
 
   ByteString extnValueSequence(TLV(der::SEQUENCE, extnValueBytes));
@@ -428,13 +426,12 @@ Extension(Input extnID, ExtensionCriticality criticality,
 }
 
 static ByteString
-EmptyExtension(Input extnID, ExtensionCriticality criticality)
+EmptyExtension(Input extnID, Critical critical)
 {
   ByteString encoded(extnID.UnsafeGetData(), extnID.GetLength());
 
-  if (criticality == ExtensionCriticality::Critical) {
-    ByteString critical(Boolean(true));
-    encoded.append(critical);
+  if (critical == Critical::Yes) {
+    encoded.append(Boolean(true));
   }
 
   ByteString extnValue(TLV(der::OCTET_STRING, ByteString()));
@@ -682,7 +679,7 @@ CreateEncodedSerialNumber(long serialNumberValue)
 ByteString
 CreateEncodedBasicConstraints(bool isCA,
                               /*optional*/ long* pathLenConstraintValue,
-                              ExtensionCriticality criticality)
+                              Critical critical)
 {
   ByteString value;
 
@@ -700,13 +697,13 @@ CreateEncodedBasicConstraints(bool isCA,
   static const uint8_t tlv_id_ce_basicConstraints[] = {
     0x06, 0x03, 0x55, 0x1d, 0x13
   };
-  return Extension(Input(tlv_id_ce_basicConstraints), criticality, value);
+  return Extension(Input(tlv_id_ce_basicConstraints), critical, value);
 }
 
 // ExtKeyUsageSyntax ::= SEQUENCE SIZE (1..MAX) OF KeyPurposeId
 // KeyPurposeId ::= OBJECT IDENTIFIER
 ByteString
-CreateEncodedEKUExtension(Input ekuOID, ExtensionCriticality criticality)
+CreateEncodedEKUExtension(Input ekuOID, Critical critical)
 {
   ByteString value(ekuOID.UnsafeGetData(), ekuOID.GetLength());
 
@@ -715,7 +712,7 @@ CreateEncodedEKUExtension(Input ekuOID, ExtensionCriticality criticality)
     0x06, 0x03, 0x55, 0x1d, 0x25
   };
 
-  return Extension(Input(tlv_id_ce_extKeyUsage), criticality, value);
+  return Extension(Input(tlv_id_ce_extKeyUsage), critical, value);
 }
 
 // python DottedOIDToCode.py --tlv id-ce-subjectAltName 2.5.29.17
@@ -726,15 +723,13 @@ static const uint8_t tlv_id_ce_subjectAltName[] = {
 ByteString
 CreateEncodedSubjectAltName(const ByteString& names)
 {
-  return Extension(Input(tlv_id_ce_subjectAltName),
-                   ExtensionCriticality::NotCritical, names);
+  return Extension(Input(tlv_id_ce_subjectAltName), Critical::No, names);
 }
 
 ByteString
 CreateEncodedEmptySubjectAltName()
 {
-  return EmptyExtension(Input(tlv_id_ce_subjectAltName),
-                        ExtensionCriticality::NotCritical);
+  return EmptyExtension(Input(tlv_id_ce_subjectAltName), Critical::No);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -839,8 +834,7 @@ OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension& extension)
   ByteString encoded;
   encoded.append(extension.id);
   if (extension.critical) {
-    ByteString critical(Boolean(true));
-    encoded.append(critical);
+    encoded.append(Boolean(true));
   }
   ByteString value(TLV(der::OCTET_STRING, extension.value));
   encoded.append(value);
