@@ -62,7 +62,7 @@ NS_IMPL_ISUPPORTS(imgRequest,
 
 imgRequest::imgRequest(imgLoader* aLoader)
  : mLoader(aLoader)
- , mProgressTracker(new ProgressTracker(nullptr))
+ , mProgressTracker(new ProgressTracker())
  , mValidator(nullptr)
  , mInnerWindowId(0)
  , mCORSMode(imgIRequest::CORS_NONE)
@@ -204,7 +204,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   // before Cancel() returns, leaving the image in a different state then the
   // one it was in at this point.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->RemoveObserver(proxy, aStatus))
+  if (!progressTracker->RemoveObserver(proxy))
     return NS_OK;
 
   if (progressTracker->ObserverCount() == 0) {
@@ -897,7 +897,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         MOZ_ASSERT(mIsMultiPartChannel, "Resniffing a non-multipart image");
 
         // Initialize a new status tracker.
-        nsRefPtr<ProgressTracker> freshTracker = new ProgressTracker(nullptr);
+        nsRefPtr<ProgressTracker> freshTracker = new ProgressTracker();
         freshTracker->SetIsMultipart();
 
         // Replace the old status tracker with it.
