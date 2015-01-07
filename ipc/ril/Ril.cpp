@@ -29,24 +29,21 @@ using namespace mozilla::ipc;
 
 namespace {
 
-const char* RIL_SOCKET_NAME = "/dev/socket/rilproxy";
+static const char RIL_SOCKET_NAME[] = "/dev/socket/rilproxy";
 
 // Network port to connect to for adb forwarded sockets when doing
 // desktop development.
-const uint32_t RIL_TEST_PORT = 6200;
+static const uint32_t RIL_TEST_PORT = 6200;
 
-nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
+static nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
 
-class ConnectWorkerToRIL : public WorkerTask
+class ConnectWorkerToRIL MOZ_FINAL : public WorkerTask
 {
 public:
-  ConnectWorkerToRIL()
-  { }
-
-  virtual bool RunTask(JSContext* aCx);
+  bool RunTask(JSContext* aCx) MOZ_OVERRIDE;
 };
 
-class SendRilSocketDataTask : public nsRunnable
+class SendRilSocketDataTask MOZ_FINAL : public nsRunnable
 {
 public:
   SendRilSocketDataTask(unsigned long aClientId,
@@ -55,7 +52,7 @@ public:
     , mClientId(aClientId)
   { }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -76,7 +73,7 @@ private:
   unsigned long mClientId;
 };
 
-bool
+static bool
 PostToRIL(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
@@ -162,7 +159,7 @@ ConnectWorkerToRIL::RunTask(JSContext* aCx)
                              PostToRIL, 2, 0);
 }
 
-class DispatchRILEvent : public WorkerTask
+class DispatchRILEvent MOZ_FINAL : public WorkerTask
 {
 public:
   DispatchRILEvent(unsigned long aClient, UnixSocketRawData* aMessage)
@@ -170,7 +167,7 @@ public:
     , mMessage(aMessage)
   { }
 
-  virtual bool RunTask(JSContext* aCx);
+  bool RunTask(JSContext* aCx) MOZ_OVERRIDE;
 
 private:
   unsigned long mClientId;
@@ -201,25 +198,22 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
-class RilConnector : public mozilla::ipc::UnixSocketConnector
+class RilConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
 {
 public:
   RilConnector(unsigned long aClientId)
     : mClientId(aClientId)
   { }
 
-  virtual ~RilConnector()
-  { }
-
-  virtual int Create();
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
-                          const char* aAddress);
-  virtual bool SetUp(int aFd);
-  virtual bool SetUpListenSocket(int aFd);
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
-                             nsAString& aAddrStr);
+  int Create() MOZ_OVERRIDE;
+  bool CreateAddr(bool aIsServer,
+                  socklen_t& aAddrSize,
+                  sockaddr_any& aAddr,
+                  const char* aAddress) MOZ_OVERRIDE;
+  bool SetUp(int aFd) MOZ_OVERRIDE;
+  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+  void GetSocketAddr(const sockaddr_any& aAddr,
+                     nsAString& aAddrStr) MOZ_OVERRIDE;
 
 private:
   unsigned long mClientId;

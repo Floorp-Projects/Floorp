@@ -13,26 +13,24 @@
 namespace mozilla {
 namespace ipc {
 
-class RilConsumer : public mozilla::ipc::UnixSocketConsumer
+class RilConsumer MOZ_FINAL : public mozilla::ipc::UnixSocketConsumer
 {
 public:
-  virtual ~RilConsumer() { }
-
-  static nsresult Register(unsigned int aClientId,
-                           mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+  static nsresult Register(
+    unsigned int aClientId,
+    mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   static void Shutdown();
 
 private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
+  void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
 
-  virtual void OnConnectSuccess();
-  virtual void OnConnectError();
-  virtual void OnDisconnect();
+  void OnConnectSuccess() MOZ_OVERRIDE;
+  void OnConnectError() MOZ_OVERRIDE;
+  void OnDisconnect() MOZ_OVERRIDE;
 
-private:
   nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
   unsigned long mClientId;
   nsCString mAddress;
