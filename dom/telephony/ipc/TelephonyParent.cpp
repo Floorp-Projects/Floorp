@@ -60,9 +60,15 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return true;
     }
 
-    case IPCTelephonyRequest::TUSSDRequest: {
-      const USSDRequest& request = aRequest.get_USSDRequest();
+    case IPCTelephonyRequest::TSendUSSDRequest: {
+      const SendUSSDRequest& request = aRequest.get_SendUSSDRequest();
       service->SendUSSD(request.clientId(), request.ussd(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TCancelUSSDRequest: {
+      const CancelUSSDRequest& request = aRequest.get_CancelUSSDRequest();
+      service->CancelUSSD(request.clientId(), actor);
       return true;
     }
 
