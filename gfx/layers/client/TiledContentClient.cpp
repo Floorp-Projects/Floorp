@@ -5,6 +5,7 @@
 
 #include "mozilla/layers/TiledContentClient.h"
 #include <math.h>                       // for ceil, ceilf, floor
+#include <algorithm>
 #include "ClientTiledPaintedLayer.h"     // for ClientTiledPaintedLayer
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "ClientLayerManager.h"         // for ClientLayerManager
@@ -16,6 +17,7 @@
 #include "mozilla/MathAlgorithms.h"     // for Abs
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Tools.h"          // for BytesPerPixel
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
@@ -969,6 +971,68 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mSinglePaintDrawTarget = nullptr;
 }
 
+void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &region)
+{
+  struct LockedBits {
+    uint8_t *data;
+    IntSize size;
+    int32_t stride;
+    SurfaceFormat format;
+    static int clamp(int x, int min, int max)
+    {
+      if (x < min)
+        x = min;
+      if (x > max)
+        x = max;
+      return x;
+    }
+
+    static void visitor(void *closure, VisitSide side, int x1, int y1, int x2, int y2) {
+      LockedBits *lb = static_cast<LockedBits*>(closure);
+      uint8_t *bitmap = lb->data;
+      const int bpp = gfx::BytesPerPixel(lb->format);
+      const int stride = lb->stride;
+      const int width = lb->size.width;
+      const int height = lb->size.height;
+
+      if (side == VisitSide::TOP) {
+        if (y1 > 0) {
+          x1 = clamp(x1, 0, width - 1);
+          x2 = clamp(x2, 0, width - 1);
+          memcpy(&bitmap[x1*bpp + (y1-1) * stride], &bitmap[x1*bpp + y1 * stride], (x2 - x1) * bpp);
+        }
+      } else if (side == VisitSide::BOTTOM) {
+        if (y1 < height) {
+          x1 = clamp(x1, 0, width - 1);
+          x2 = clamp(x2, 0, width - 1);
+          memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[x1*bpp + (y1-1) * stride], (x2 - x1) * bpp);
+        }
+      } else if (side == VisitSide::LEFT) {
+        if (x1 > 0) {
+          while (y1 != y2) {
+            memcpy(&bitmap[(x1-1)*bpp + y1 * stride], &bitmap[x1*bpp + y1*stride], bpp);
+            y1++;
+          }
+        }
+      } else if (side == VisitSide::RIGHT) {
+        if (x1 < width) {
+          while (y1 != y2) {
+            memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[(x1-1)*bpp + y1*stride], bpp);
+            y1++;
+          }
+        }
+      }
+
+    }
+  } lb;
+
+  if (drawTarget->LockBits(&lb.data, &lb.size, &lb.stride, &lb.format)) {
+    // we can only pad software targets so if we can't lock the bits don't pad
+    region.VisitEdges(lb.visitor, &lb);
+    drawTarget->ReleaseBits(lb.data);
+  }
+}
+
 void
 ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion)
 {
@@ -1170,6 +1234,26 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
       aTile.mInvalidFront.Or(aTile.mInvalidFront, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
     }
 
+    // only worry about padding when not doing low-res
+    // because it simplifies the math and the artifacts
+    // won't be noticable
+    if (mResolution == 1) {
+      nsIntRect unscaledTile = nsIntRect(aTileOrigin.x,
+                                         aTileOrigin.y,
+                                         GetTileSize().width,
+                                         GetTileSize().height);
+
+      nsIntRegion tileValidRegion = GetValidRegion();
+      tileValidRegion.Or(tileValidRegion, aDirtyRegion);
+      // We only need to pad out if the tile has area that's not valid
+      if (!tileValidRegion.Contains(unscaledTile)) {
+        tileValidRegion = tileValidRegion.Intersect(unscaledTile);
+        // translate the region into tile space and pad
+        tileValidRegion.MoveBy(-nsIntPoint(unscaledTile.x, unscaledTile.y));
+        PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
+      }
+    }
+
     // The new buffer is now validated, remove the dirty region from it.
     aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
                            offsetScaledDirtyRegion);
@@ -1178,6 +1262,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     nsIntRegion tileRegion =
       nsIntRect(aTileOrigin.x, aTileOrigin.y,
                 GetScaledTileSize().width, GetScaledTileSize().height);
+
     // Intersect this area with the portion that's dirty.
     tileRegion = tileRegion.Intersect(aDirtyRegion);
 
