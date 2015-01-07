@@ -94,7 +94,7 @@ SetStrokeOptions(CGContextRef cg, const StrokeOptions &aStrokeOptions)
 class GlyphRenderingOptionsCG : public GlyphRenderingOptions
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsCG)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsCG, MOZ_OVERRIDE)
 
   explicit GlyphRenderingOptionsCG(const Color &aFontSmoothingBackgroundColor)
     : mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
@@ -111,33 +111,33 @@ private:
 class DrawTargetCG : public DrawTarget
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCG)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCG, MOZ_OVERRIDE)
   friend class BorrowedCGContext;
   friend class SourceSurfaceCGBitmapContext;
   DrawTargetCG();
   virtual ~DrawTargetCG();
 
   virtual DrawTargetType GetType() const MOZ_OVERRIDE;
-  virtual BackendType GetBackendType() const;
-  virtual TemporaryRef<SourceSurface> Snapshot();
+  virtual BackendType GetBackendType() const MOZ_OVERRIDE;
+  virtual TemporaryRef<SourceSurface> Snapshot() MOZ_OVERRIDE;
 
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
-                           const DrawOptions &aOptions = DrawOptions());
+                           const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
   virtual void DrawFilter(FilterNode *aNode,
                           const Rect &aSourceRect,
                           const Point &aDestPoint,
-                          const DrawOptions &aOptions = DrawOptions());
+                          const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
   virtual void MaskSurface(const Pattern &aSource,
                            SourceSurface *aMask,
                            Point aOffset,
-                           const DrawOptions &aOptions = DrawOptions());
+                           const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   virtual void FillRect(const Rect &aRect,
                         const Pattern &aPattern,
-                        const DrawOptions &aOptions = DrawOptions());
+                        const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
 
   //XXX: why do we take a reference to SurfaceFormat?
@@ -146,40 +146,40 @@ public:
   bool Init(CGContextRef cgContext, const IntSize &aSize);
 
   // Flush if using IOSurface context
-  virtual void Flush();
+  virtual void Flush() MOZ_OVERRIDE;
 
-  virtual void DrawSurfaceWithShadow(SourceSurface *, const Point &, const Color &, const Point &, Float, CompositionOp);
-  virtual void ClearRect(const Rect &);
-  virtual void CopySurface(SourceSurface *, const IntRect&, const IntPoint&);
-  virtual void StrokeRect(const Rect &, const Pattern &, const StrokeOptions&, const DrawOptions&);
-  virtual void StrokeLine(const Point &, const Point &, const Pattern &, const StrokeOptions &, const DrawOptions &);
-  virtual void Stroke(const Path *, const Pattern &, const StrokeOptions &, const DrawOptions &);
-  virtual void Fill(const Path *, const Pattern &, const DrawOptions &);
-  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &, const GlyphRenderingOptions *);
+  virtual void DrawSurfaceWithShadow(SourceSurface *, const Point &, const Color &, const Point &, Float, CompositionOp) MOZ_OVERRIDE;
+  virtual void ClearRect(const Rect &) MOZ_OVERRIDE;
+  virtual void CopySurface(SourceSurface *, const IntRect&, const IntPoint&) MOZ_OVERRIDE;
+  virtual void StrokeRect(const Rect &, const Pattern &, const StrokeOptions&, const DrawOptions&) MOZ_OVERRIDE;
+  virtual void StrokeLine(const Point &, const Point &, const Pattern &, const StrokeOptions &, const DrawOptions &) MOZ_OVERRIDE;
+  virtual void Stroke(const Path *, const Pattern &, const StrokeOptions &, const DrawOptions &) MOZ_OVERRIDE;
+  virtual void Fill(const Path *, const Pattern &, const DrawOptions &) MOZ_OVERRIDE;
+  virtual void FillGlyphs(ScaledFont *, const GlyphBuffer&, const Pattern &, const DrawOptions &, const GlyphRenderingOptions *) MOZ_OVERRIDE;
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
-                    const DrawOptions &aOptions = DrawOptions());
-  virtual void PushClip(const Path *);
-  virtual void PushClipRect(const Rect &aRect);
-  virtual void PopClip();
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const { return nullptr;}
-  virtual TemporaryRef<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const;
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule) const;
+                    const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
+  virtual void PushClip(const Path *) MOZ_OVERRIDE;
+  virtual void PushClipRect(const Rect &aRect) MOZ_OVERRIDE;
+  virtual void PopClip() MOZ_OVERRIDE;
+  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const MOZ_OVERRIDE { return nullptr;}
+  virtual TemporaryRef<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const MOZ_OVERRIDE;
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule) const MOZ_OVERRIDE;
   virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *, uint32_t,
-                                                          ExtendMode aExtendMode = ExtendMode::CLAMP) const;
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+                                                          ExtendMode aExtendMode = ExtendMode::CLAMP) const MOZ_OVERRIDE;
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) MOZ_OVERRIDE;
 
-  virtual void *GetNativeSurface(NativeSurfaceType);
+  virtual void *GetNativeSurface(NativeSurfaceType) MOZ_OVERRIDE;
 
-  virtual IntSize GetSize() { return mSize; }
+  virtual IntSize GetSize() MOZ_OVERRIDE { return mSize; }
 
 
   /* This is for creating good compatible surfaces */
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
                                                             int32_t aStride,
-                                                            SurfaceFormat aFormat) const;
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
+                                                            SurfaceFormat aFormat) const MOZ_OVERRIDE;
+  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const MOZ_OVERRIDE;
   CGContextRef GetCGContext() {
       return mCg;
   }

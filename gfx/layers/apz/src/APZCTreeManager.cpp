@@ -628,7 +628,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         apzc->GetGuid(aOutTargetGuid);
         Matrix4x4 transformToGecko = transformToApzc * GetApzcToGeckoTransform(apzc);
         wheelInput.mOrigin =
-          TransformTo<ScreenPixel>(transformToGecko, wheelInput.mLocalOrigin);
+          TransformTo<ScreenPixel>(transformToGecko, wheelInput.mOrigin);
       }
       break;
     } case PANGESTURE_INPUT: {

@@ -7,6 +7,7 @@
 #define MOZILLA_IMAGELIB_IMAGE_H_
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TimeStamp.h"
 #include "gfx2DGlue.h"                // for gfxMemoryLocation
 #include "imgIContainer.h"
 #include "ProgressTracker.h"
@@ -46,14 +47,16 @@ public:
    * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
    * decoding on load.
    *
-   * INIT_FLAG_MULTIPART: The container will be used to display a stream of
-   * images in a multipart channel. If this flag is set, INIT_FLAG_DISCARDABLE
-   * and INIT_FLAG_DECODE_ON_DRAW must not be set.
+   * INIT_FLAG_TRANSIENT: The container is likely to exist for only a short time
+   * before being destroyed. (For example, containers for
+   * multipart/x-mixed-replace image parts fall into this category.) If this
+   * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ON_DRAW must not be
+   * set.
    */
   static const uint32_t INIT_FLAG_NONE           = 0x0;
   static const uint32_t INIT_FLAG_DISCARDABLE    = 0x1;
   static const uint32_t INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  static const uint32_t INIT_FLAG_MULTIPART      = 0x4;
+  static const uint32_t INIT_FLAG_TRANSIENT      = 0x4;
 
   /**
    * Creates a new image container.
@@ -66,11 +69,6 @@ public:
 
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() = 0;
   virtual void SetProgressTracker(ProgressTracker* aProgressTracker) {}
-
-  /**
-   * The rectangle defining the location and size of the given frame.
-   */
-  virtual nsIntRect FrameRect(uint32_t aWhichFrame) = 0;
 
   /**
    * The size, in bytes, occupied by the compressed source data of the image.
@@ -121,12 +119,6 @@ public:
                                        nsISupports* aContext,
                                        nsresult aStatus,
                                        bool aLastPart) = 0;
-
-  /**
-   * Called for multipart images to allow for any necessary reinitialization
-   * when there's a new part to add.
-   */
-  virtual nsresult OnNewSourceData() = 0;
 
   /**
    * Called when the SurfaceCache discards a persistent surface belonging to

@@ -26,29 +26,6 @@ namespace image {
 
 NS_IMPL_ISUPPORTS_INHERITED0(OrientedImage, ImageWrapper)
 
-nsIntRect
-OrientedImage::FrameRect(uint32_t aWhichFrame)
-{
-  nsresult rv;
-
-  // Retrieve the frame rect of the inner image.
-  nsIntRect innerRect = InnerImage()->FrameRect(aWhichFrame);
-  if (mOrientation.IsIdentity()) {
-    return innerRect;
-  }
-
-  // Get the underlying image's dimensions.
-  nsIntSize size;
-  rv = InnerImage()->GetWidth(&size.width);
-  NS_ENSURE_SUCCESS(rv, innerRect);
-  rv = InnerImage()->GetHeight(&size.height);
-  NS_ENSURE_SUCCESS(rv, innerRect);
-
-  // Transform the frame rect.
-  gfxRect finalRect = OrientationMatrix(size).TransformBounds(innerRect);
-  return nsIntRect(finalRect.x, finalRect.y, finalRect.width, finalRect.height);
-}
-
 NS_IMETHODIMP
 OrientedImage::GetWidth(int32_t* aWidth)
 {

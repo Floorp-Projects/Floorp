@@ -4,7 +4,7 @@
     <title> Child window for Web Messaging tests </title>
 </head>
 <body>
-    <script> 
+    <script>
         if (window.opener)
         {
             window.onload = function()
@@ -23,7 +23,7 @@
         window.onmessage = function(e)
         {
             try
-            {    
+            {
                 if (typeof(e.data) == "object" && typeof(e.data.test) == "string")
                 {
                     eval(e.data.test);
@@ -36,7 +36,7 @@
                 {
                     e.source.postMessage(e.data, e.origin);
                 }
-               
+
                 if (e.data == "ports")
                 {
                     var total = e.ports.length;

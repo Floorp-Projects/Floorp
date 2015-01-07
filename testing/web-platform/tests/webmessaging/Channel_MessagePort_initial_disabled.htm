@@ -10,17 +10,17 @@
 <script>
 
     var TestResult = true;
-    
+
     var t = async_test("Test Description: A port message queue can be enabled or disabled, and is initially disabled.");
-                  
+
     var channel = new MessageChannel();
-    
+
     channel.port2.addEventListener("message", TestMessageEvent, true);
-    
+
     channel.port1.postMessage("ping");
-    
+
     setTimeout(t.step_func(VerifyResult), 100);
-    
+
     function TestMessageEvent(evt)
     {
         TestResult = false;

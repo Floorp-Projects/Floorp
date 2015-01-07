@@ -154,6 +154,12 @@ public:
    */
   virtual void SetResolution(const gfxSize& aResolution) = 0;
   /**
+   * Set the element resolution and specify that content should be scaled by
+   * the amount of the resolution. This is only meaningful for root scroll
+   * frames. See nsIDOMWindowUtils.setResolutionAndScaleTo().
+   */
+  virtual void SetResolutionAndScaleTo(const gfxSize& aResolution) = 0;
+  /**
    * Return how much we would try to scroll by in each direction if
    * asked to scroll by one "line" vertically and horizontally.
    */

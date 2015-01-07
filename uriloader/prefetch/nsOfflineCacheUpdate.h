@@ -223,7 +223,7 @@ public:
     bool IsForGroupID(const nsCSubstring &groupID);
     bool IsForProfile(nsIFile* aCustomProfileDir);
 
-    virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
+    virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) MOZ_OVERRIDE;
 
 protected:
     ~nsOfflineCacheUpdate();
@@ -349,7 +349,7 @@ public:
                       bool aInBrowser,
                       nsIOfflineCacheUpdate **aUpdate);
 
-    virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
+    virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) MOZ_OVERRIDE;
 
     /**
      * Returns the singleton nsOfflineCacheUpdateService without an addref, or

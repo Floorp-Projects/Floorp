@@ -13,19 +13,18 @@ import uuid
 from collections import defaultdict
 from multiprocessing import Process, Event
 
-repo_root = os.path.abspath(os.path.split(__file__)[0])
-
-sys.path.insert(1, os.path.join(repo_root, "tools", "wptserve"))
+from tools.scripts import _env
+repo_root = _env.repo_root
 from wptserve import server as wptserve, handlers
 from wptserve.router import any_method
 from wptserve.logger import set_logger
 
-sys.path.insert(1, os.path.join(repo_root, "tools", "pywebsocket", "src"))
 from mod_pywebsocket import standalone as pywebsocket
 
 routes = [("GET", "/tools/runner/*", handlers.file_handler),
           ("POST", "/tools/runner/update_manifest.py", handlers.python_script_handler),
           (any_method, "/tools/*", handlers.ErrorHandler(404)),
+          (any_method, "{spec}/tools/*", handlers.ErrorHandler(404)),
           (any_method, "/serve.py", handlers.ErrorHandler(404)),
           (any_method, "*.py", handlers.python_script_handler),
           ("GET", "*.asis", handlers.as_is_handler),
@@ -69,15 +68,17 @@ class ServerProc(object):
         self.daemon = None
         self.stop = Event()
 
-    def start(self, init_func, host, port, paths, bind_hostname, external_config):
+    def start(self, init_func, host, port, paths, bind_hostname, external_config, **kwargs):
         self.proc = Process(target=self.create_daemon,
-                            args=(init_func, host, port, paths, bind_hostname, external_config))
+                            args=(init_func, host, port, paths, bind_hostname,
+                                  external_config), kwargs=kwargs)
         self.proc.daemon = True
         self.proc.start()
 
-    def create_daemon(self, init_func, host, port, paths, bind_hostname, external_config):
+    def create_daemon(self, init_func, host, port, paths, bind_hostname, external_config,
+                      **kwargs):
         try:
-            self.daemon = init_func(host, port, paths, bind_hostname, external_config)
+            self.daemon = init_func(host, port, paths, bind_hostname, external_config, **kwargs)
         except socket.error:
             print >> sys.stderr, "Socket error on port %s" % port
             raise
@@ -139,9 +140,8 @@ def get_subdomains(host):
     return {subdomain: (subdomain.encode("idna"), host)
             for subdomain in subdomains}
 
-def start_servers(host, ports, paths, bind_hostname, external_config):
+def start_servers(host, ports, paths, bind_hostname, external_config, **kwargs):
     servers = defaultdict(list)
-
     for scheme, ports in ports.iteritems():
         assert len(ports) == {"http":2}.get(scheme, 1)
 
@@ -152,12 +152,13 @@ def start_servers(host, ports, paths, bind_hostname, external_config):
                          "wss":start_wss_server}[scheme]
 
             server_proc = ServerProc()
-            server_proc.start(init_func, host, port, paths, bind_hostname, external_config)
+            server_proc.start(init_func, host, port, paths, bind_hostname,
+                              external_config, **kwargs)
             servers[scheme].append((port, server_proc))
 
     return servers
 
-def start_http_server(host, port, paths, bind_hostname, external_config):
+def start_http_server(host, port, paths, bind_hostname, external_config, **kwargs):
     return wptserve.WebTestHttpd(host=host,
                                  port=port,
                                  doc_root=paths["doc_root"],
@@ -166,9 +167,10 @@ def start_http_server(host, port, paths, bind_hostname, external_config):
                                  bind_hostname=bind_hostname,
                                  config=external_config,
                                  use_ssl=False,
-                                 certificate=None)
+                                 certificate=None,
+                                 latency=kwargs.get("latency"))
 
-def start_https_server(host, port, paths, bind_hostname):
+def start_https_server(host, port, paths, bind_hostname, external_config, **kwargs):
     return
 
 class WebSocketDaemon(object):
@@ -216,7 +218,7 @@ class WebSocketDaemon(object):
             self.started = False
         self.server = None
 
-def start_ws_server(host, port, paths, bind_hostname, external_config):
+def start_ws_server(host, port, paths, bind_hostname, external_config, **kwargs):
     return WebSocketDaemon(host,
                            str(port),
                            repo_root,
@@ -224,7 +226,7 @@ def start_ws_server(host, port, paths, bind_hostname, external_config):
                            "debug",
                            bind_hostname)
 
-def start_wss_server(host, port, path, bind_hostname, external_config):
+def start_wss_server(host, port, path, bind_hostname, external_config, **kwargs):
     return
 
 def get_ports(config):
@@ -255,7 +257,7 @@ def normalise_config(config, ports):
             "domains": domains,
             "ports": ports_}
 
-def start(config):
+def start(config, **kwargs):
     host = config["host"]
     domains = get_subdomains(host)
     ports = get_ports(config)
@@ -269,7 +271,7 @@ def start(config):
 
     external_config = normalise_config(config, ports)
 
-    servers = start_servers(host, ports, paths, bind_hostname, external_config)
+    servers = start_servers(host, ports, paths, bind_hostname, external_config, **kwargs)
 
     return external_config, servers
 
@@ -306,7 +308,7 @@ def merge_json(base_obj, override_obj):
                 rv[key] = override_obj[key]
     return rv
 
-def load_config(default_path, override_path=None):
+def load_config(default_path, override_path=None, **kwargs):
     if os.path.exists(default_path):
         with open(default_path) as f:
             base_obj = json.load(f)
@@ -320,16 +322,37 @@ def load_config(default_path, override_path=None):
         override_obj = {}
     rv = merge_json(base_obj, override_obj)
 
+    if kwargs.get("config_path"):
+        other_path = os.path.abspath(os.path.expanduser(kwargs.get("config_path")))
+        if os.path.exists(other_path):
+            base_obj = rv
+            with open(other_path) as f:
+                override_obj = json.load(f)
+            rv = merge_json(base_obj, override_obj)
+        else:
+            raise ValueError("Config path %s does not exist" % other_path)
+
     set_computed_defaults(rv)
     return rv
 
+
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--latency", type=int,
+                        help="Artificial latency to add before sending http responses, in ms")
+    parser.add_argument("--config", action="store", dest="config_path",
+                        help="Path to external config file")
+    return parser
+
 def main():
+    kwargs = vars(get_parser().parse_args())
     config = load_config("config.default.json",
-                         "config.json")
+                         "config.json",
+                         **kwargs)
 
     setup_logger(config["log_level"])
 
-    config_, servers = start(config)
+    config_, servers = start(config, **kwargs)
 
     try:
         while any(item.is_alive() for item in iter_procs(servers)):

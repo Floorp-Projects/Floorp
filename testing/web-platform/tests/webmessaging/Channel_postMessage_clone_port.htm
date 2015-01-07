@@ -18,15 +18,15 @@
     var ChannelA = new MessageChannel();
     var ChannelB = new MessageChannel();
     OriginalPort = ChannelB.port2;
-    
+
     ChannelA.port2.onmessage = t.step_func(function(evt)
     {
         if(evt.data == "ports")
         {
             ClonedPort = evt.ports[0];
-            
+
             assert_not_equals(ClonedPort, OriginalPort, "new cloned port object should not equal to the original port!");
-            
+
             ClonedPort.onmessage = function(e)
             {
                 test(function(){ assert_equals(e.data, "ping"); }, "Data sent through remote port is received by the new cloned port");
@@ -34,7 +34,7 @@
             }
         }
     });
-    
+
     ChannelA.port1.postMessage("ports", [OriginalPort]);
     ChannelB.port1.postMessage("ping");
 </script>

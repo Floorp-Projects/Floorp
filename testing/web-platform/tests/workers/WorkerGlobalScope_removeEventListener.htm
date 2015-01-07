@@ -1,43 +1,17 @@
 <!DOCTYPE html>
-<html>
-<head>
 <title> WorkerGlobalScope API: removeEventListener() </title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
 <div id=log></div>
 <script>
-    
-    var DATA = "TestEventTarget";
-    var FileName = './support/EventListener.js';
-    var ExpectedResult = "ping"; 
-    var StartTime = (new Date()).valueOf();
-    var description = "WorkerGlobalScope API: removeEventListener()";
-
-    var t = async_test("Test Description: " + description);
-                  
-    var worker = new Worker(FileName);
-
-    worker.onmessage = function(evt)
-    {
-        TestResult = evt.data;
-        var time = (new Date()).valueOf() - StartTime;
-        
-        if (TestResult == ExpectedResult)
-        {
-            worker.postMessage("pong");
-            setTimeout(t.step_func(VerifyResult), time * 2);
-        }
-    };
-    
-    worker.postMessage("removeEventListener");
-
-    function VerifyResult()
-    {
-        assert_equals(TestResult, ExpectedResult);
-        t.done();
-    }
+async_test(function(t) {
+  var worker = new Worker('./support/EventListener.js');
+  worker.onmessage = t.step_func(function(e) {
+    assert_equals(e.data, "ping");
+    worker.onmessage = t.unreached_func("Unexpected message event");
+    worker.postMessage("pong");
+    setTimeout(t.step_func_done(), 100);
+  });
+  worker.postMessage("removeEventListener");
+});
 </script>
-</body>
-</html>

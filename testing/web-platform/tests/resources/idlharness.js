@@ -413,12 +413,14 @@ IdlArray.prototype.assert_type_is = function(value, type)
             return;
 
         case "unsigned long long":
+        case "DOMTimeStamp":
             assert_equals(typeof value, "number");
             assert_true(0 <= value, "unsigned long long is negative");
             return;
 
         case "float":
         case "double":
+        case "DOMHighResTimeStamp":
         case "unrestricted float":
         case "unrestricted double":
             // TODO: distinguish these cases

@@ -396,7 +396,7 @@ public:
     NS_RELEASE_THIS();
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->

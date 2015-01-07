@@ -21,13 +21,13 @@ function assert_array_equals_(observed, expected, msg)
      for (var i = 0; i < observed.length; i++)
          if (observed[i] instanceof Date)
     {
-      expected[i] = true;
       observed[i] = sameDate(observed[i], expected[i]);
+      expected[i] = true;
   }
          else if (observed[i] instanceof RegExp)
          {
-             expected[i] = true;
              observed[i] = sameRE(observed[i], expected[i]);
+             expected[i] = true;
          }
   }
 
@@ -40,18 +40,18 @@ function assert_object_equals_(observed, expected, msg)
   {
       if (observed[p] instanceof Date)
       {
-         expected[p] = true;
          observed[p] = sameDate(observed[p], expected[p]);
+         expected[p] = true;
       }
       else if (observed[p] instanceof RegExp)
       {
-         expected[p] = true;
          observed[p] = sameRE(observed[p], expected[p]);
+         expected[p] = true;
       }
       else if (observed[p] instanceof Array || String(observed[p]) === '[object Object]')
       {
-         expected[p] = true;
          observed[p] = String(observed[p]) === String(expected[p]);
+         expected[p] = true;
       }
       assert_equals(observed[p], expected[p], msg);
   }

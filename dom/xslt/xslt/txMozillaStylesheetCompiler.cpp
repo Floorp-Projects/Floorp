@@ -79,14 +79,14 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsIContentSink
-    NS_IMETHOD WillParse(void) { return NS_OK; }
-    NS_IMETHOD DidBuildModel(bool aTerminated);
-    NS_IMETHOD WillInterrupt(void) { return NS_OK; }
-    NS_IMETHOD WillResume(void) { return NS_OK; }
-    NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
-    virtual void FlushPendingNotifications(mozFlushType aType) { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
-    virtual nsISupports *GetTarget() { return nullptr; }
+    NS_IMETHOD WillParse(void) MOZ_OVERRIDE { return NS_OK; }
+    NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
+    NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE { return NS_OK; }
+    NS_IMETHOD WillResume(void) MOZ_OVERRIDE { return NS_OK; }
+    NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE { return NS_OK; }
+    virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE { }
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE { return NS_OK; }
+    virtual nsISupports *GetTarget() MOZ_OVERRIDE { return nullptr; }
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;

@@ -114,7 +114,7 @@ public:
         return !IsOnCxxStack();
     }
 
-    void ProcessRemoteNativeEventsInInterruptCall();
+    void ProcessRemoteNativeEventsInInterruptCall() MOZ_OVERRIDE;
 
     virtual bool WaitForIPCConnection() { return true; }
 
@@ -214,10 +214,10 @@ protected:
     static void NPP_URLRedirectNotify(NPP instance, const char* url,
                                       int32_t status, void* notifyData);
 
-    virtual bool HasRequiredFunctions();
-    virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
-    virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer);
-    virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
+    virtual bool HasRequiredFunctions() MOZ_OVERRIDE;
+    virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) MOZ_OVERRIDE;
+    virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) MOZ_OVERRIDE;
+    virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) MOZ_OVERRIDE;
     virtual bool IsOOP() MOZ_OVERRIDE { return true; }
     virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
     virtual nsresult BeginUpdateBackground(NPP instance,
@@ -230,27 +230,27 @@ protected:
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error);
 #else
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error);
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) MOZ_OVERRIDE;
 #endif
-    virtual nsresult NP_Shutdown(NPError* error);
+    virtual nsresult NP_Shutdown(NPError* error) MOZ_OVERRIDE;
 
-    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc);
+    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) MOZ_OVERRIDE;
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
-                                 void *aValue, NPError* error);
+                                 void *aValue, NPError* error) MOZ_OVERRIDE;
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error);
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) MOZ_OVERRIDE;
 #endif
     virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
                              uint16_t mode, int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
-                             NPError* error);
+                             NPError* error) MOZ_OVERRIDE;
     virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
-                                       uint64_t maxAge);
-    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
+                                       uint64_t maxAge) MOZ_OVERRIDE;
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result) MOZ_OVERRIDE;
 
 #if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing);
-    virtual nsresult ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor);
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) MOZ_OVERRIDE;
+    virtual nsresult ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor) MOZ_OVERRIDE;
 #endif
 
     void InitAsyncSurrogates();

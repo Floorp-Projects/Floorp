@@ -15,22 +15,22 @@ namespace gfx {
 class DrawTargetRecording : public DrawTarget
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetRecording)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetRecording, MOZ_OVERRIDE)
   DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT, bool aHasData = false);
   ~DrawTargetRecording();
 
   virtual DrawTargetType GetType() const MOZ_OVERRIDE { return mFinalDT->GetType(); }
-  virtual BackendType GetBackendType() const { return mFinalDT->GetBackendType(); }
+  virtual BackendType GetBackendType() const MOZ_OVERRIDE { return mFinalDT->GetBackendType(); }
 
-  virtual TemporaryRef<SourceSurface> Snapshot();
+  virtual TemporaryRef<SourceSurface> Snapshot() MOZ_OVERRIDE;
 
-  virtual IntSize GetSize() { return mFinalDT->GetSize(); }
+  virtual IntSize GetSize() MOZ_OVERRIDE { return mFinalDT->GetSize(); }
 
   /* Ensure that the DrawTarget backend has flushed all drawing operations to
    * this draw target. This must be called before using the backing surface of
    * this draw target outside of GFX 2D code.
    */
-  virtual void Flush() { mFinalDT->Flush(); }
+  virtual void Flush() MOZ_OVERRIDE { mFinalDT->Flush(); }
 
   /*
    * Draw a surface to the draw target. Possibly doing partial drawing or
@@ -47,12 +47,12 @@ public:
                            const Rect &aDest,
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
-                           const DrawOptions &aOptions = DrawOptions());
+                           const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   virtual void DrawFilter(FilterNode *aNode,
                           const Rect &aSourceRect,
                           const Point &aDestPoint,
-                          const DrawOptions &aOptions = DrawOptions());
+                          const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
@@ -73,7 +73,7 @@ public:
                                      const Color &aColor,
                                      const Point &aOffset,
                                      Float aSigma,
-                                     CompositionOp aOperator);
+                                     CompositionOp aOperator) MOZ_OVERRIDE;
 
   /* 
    * Clear a rectangle on the draw target to transparent black. This will
@@ -81,7 +81,7 @@ public:
    *
    * aRect Rectangle to clear
    */
-  virtual void ClearRect(const Rect &aRect);
+  virtual void ClearRect(const Rect &aRect) MOZ_OVERRIDE;
 
   /*
    * This is essentially a 'memcpy' between two surfaces. It moves a pixel
@@ -94,7 +94,7 @@ public:
    */
   virtual void CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
-                           const IntPoint &aDestination);
+                           const IntPoint &aDestination) MOZ_OVERRIDE;
 
   /*
    * Fill a rectangle on the DrawTarget with a certain source pattern.
@@ -105,7 +105,7 @@ public:
    */
   virtual void FillRect(const Rect &aRect,
                         const Pattern &aPattern,
-                        const DrawOptions &aOptions = DrawOptions());
+                        const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Stroke a rectangle on the DrawTarget with a certain source pattern.
@@ -117,7 +117,7 @@ public:
   virtual void StrokeRect(const Rect &aRect,
                           const Pattern &aPattern,
                           const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                          const DrawOptions &aOptions = DrawOptions());
+                          const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Stroke a line on the DrawTarget with a certain source pattern.
@@ -131,7 +131,7 @@ public:
                           const Point &aEnd,
                           const Pattern &aPattern,
                           const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                          const DrawOptions &aOptions = DrawOptions());
+                          const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Stroke a path on the draw target with a certain source pattern.
@@ -144,7 +144,7 @@ public:
   virtual void Stroke(const Path *aPath,
                       const Pattern &aPattern,
                       const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                      const DrawOptions &aOptions = DrawOptions());
+                      const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
   
   /*
    * Fill a path on the draw target with a certain source pattern.
@@ -155,7 +155,7 @@ public:
    */
   virtual void Fill(const Path *aPath,
                     const Pattern &aPattern,
-                    const DrawOptions &aOptions = DrawOptions());
+                    const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Fill a series of clyphs on the draw target with a certain source pattern.
@@ -164,7 +164,7 @@ public:
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions = DrawOptions(),
-                          const GlyphRenderingOptions *aRenderingOptions = nullptr);
+                          const GlyphRenderingOptions *aRenderingOptions = nullptr) MOZ_OVERRIDE;
 
   /*
    * This takes a source pattern and a mask, and composites the source pattern
@@ -177,19 +177,19 @@ public:
    */
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
-                    const DrawOptions &aOptions = DrawOptions());
+                    const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   virtual void MaskSurface(const Pattern &aSource,
                            SourceSurface *aMask,
                            Point aOffset,
-                           const DrawOptions &aOptions = DrawOptions());
+                           const DrawOptions &aOptions = DrawOptions()) MOZ_OVERRIDE;
 
   /*
    * Push a clip to the DrawTarget.
    *
    * aPath The path to clip to
    */
-  virtual void PushClip(const Path *aPath);
+  virtual void PushClip(const Path *aPath) MOZ_OVERRIDE;
 
   /*
    * Push an axis-aligned rectangular clip to the DrawTarget. This rectangle
@@ -197,12 +197,12 @@ public:
    *
    * aRect The rect to clip to
    */
-  virtual void PushClipRect(const Rect &aRect);
+  virtual void PushClipRect(const Rect &aRect) MOZ_OVERRIDE;
 
   /* Pop a clip from the DrawTarget. A pop without a corresponding push will
    * be ignored.
    */
-  virtual void PopClip();
+  virtual void PopClip() MOZ_OVERRIDE;
 
   /*
    * Create a SourceSurface optimized for use with this DrawTarget from
@@ -213,14 +213,14 @@ public:
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
-                                                                  SurfaceFormat aFormat) const;
+                                                                  SurfaceFormat aFormat) const MOZ_OVERRIDE;
 
   /*
    * Create a SourceSurface optimized for use with this DrawTarget from
    * an arbitrary other SourceSurface. This may return aSourceSurface or some
    * other existing surface.
    */
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
+  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const MOZ_OVERRIDE;
 
   /*
    * Create a SourceSurface for a type of NativeSurface. This may fail if the
@@ -228,13 +228,13 @@ public:
    * in.
    */
   virtual TemporaryRef<SourceSurface>
-    CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const;
+    CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const MOZ_OVERRIDE;
 
   /*
    * Create a DrawTarget whose snapshot is optimized for use with this DrawTarget.
    */
   virtual TemporaryRef<DrawTarget>
-    CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
+    CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const MOZ_OVERRIDE;
 
   /*
    * Create a path builder with the specified fillmode.
@@ -243,7 +243,7 @@ public:
    * ID2D1SimplifiedGeometrySink requires the fill mode
    * to be set before calling BeginFigure().
    */
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const MOZ_OVERRIDE;
 
   /*
    * Create a GradientStops object that holds information about a set of
@@ -258,20 +258,20 @@ public:
   virtual TemporaryRef<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
-                        ExtendMode aExtendMode = ExtendMode::CLAMP) const;
+                        ExtendMode aExtendMode = ExtendMode::CLAMP) const MOZ_OVERRIDE;
 
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) MOZ_OVERRIDE;
 
   /*
    * Set a transform on the surface, this transform is applied at drawing time
    * to both the mask and source of the operation.
    */
-  virtual void SetTransform(const Matrix &aTransform);
+  virtual void SetTransform(const Matrix &aTransform) MOZ_OVERRIDE;
 
   /* Tries to get a native surface for a DrawTarget, this may fail if the
    * draw target cannot convert to this surface type.
    */
-  virtual void *GetNativeSurface(NativeSurfaceType aType) { return mFinalDT->GetNativeSurface(aType); }
+  virtual void *GetNativeSurface(NativeSurfaceType aType) MOZ_OVERRIDE { return mFinalDT->GetNativeSurface(aType); }
 
 private:
   Path *GetPathForPathRecording(const Path *aPath) const;
