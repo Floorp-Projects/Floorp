@@ -180,14 +180,14 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   // If we're empty before adding, we have to tell the loader we now have
   // proxies.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     NS_ABORT_IF_FALSE(mURI, "Trying to SetHasProxies without key uri.");
     if (mLoader) {
       mLoader->SetHasProxies(this);
     }
   }
 
-  progressTracker->AddConsumer(proxy);
+  progressTracker->AddObserver(proxy);
 }
 
 nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
@@ -204,10 +204,10 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   // before Cancel() returns, leaving the image in a different state then the
   // one it was in at this point.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->RemoveConsumer(proxy, aStatus))
+  if (!progressTracker->RemoveObserver(proxy, aStatus))
     return NS_OK;
 
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     // If we have no observers, there's nothing holding us alive. If we haven't
     // been cancelled and thus removed from the cache, tell the image loader so
     // we can be evicted from the cache.
@@ -417,7 +417,7 @@ void imgRequest::RemoveFromCache()
 bool imgRequest::HasConsumers()
 {
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  return progressTracker && progressTracker->ConsumerCount() > 0;
+  return progressTracker && progressTracker->ObserverCount() > 0;
 }
 
 int32_t imgRequest::Priority() const
@@ -439,7 +439,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
   // of content such as link clicks, CSS, and JS.
   //
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->FirstConsumerIs(proxy))
+  if (!progressTracker->FirstObserverIs(proxy))
     return;
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
@@ -701,7 +701,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   mApplicationCache = GetApplicationCache(aRequest);
 
   // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
-  if (progressTracker->ConsumerCount() == 0) {
+  if (progressTracker->ObserverCount() == 0) {
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
   }
 
@@ -902,7 +902,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 
         // Replace the old status tracker with it.
         nsRefPtr<ProgressTracker> oldProgressTracker = GetProgressTracker();
-        freshTracker->AdoptConsumers(oldProgressTracker);
+        freshTracker->AdoptObservers(oldProgressTracker);
         mProgressTracker = freshTracker.forget();
       }
 
