@@ -594,6 +594,11 @@ BrowserElementChild.prototype = {
 
   _selectionStateChangedHandler: function(e) {
     e.stopPropagation();
+
+    if (!this._isContentWindowCreated) {
+      return;
+    }
+
     let boundingClientRect = e.boundingClientRect;
 
     let isCollapsed = (e.selectedText.length == 0);
@@ -613,11 +618,13 @@ BrowserElementChild.prototype = {
       }
 
       // The collapsed SelectionStateChanged event is unnecessary to dispatch,
-      // bypass this event by default. But there is one exception to support
-      // the shortcut mode which can paste previous copied content easily
+      // bypass this event by default, but here comes some exceptional cases
       if (isCollapsed) {
         if (isMouseUp && canPaste) {
-          //Dispatch this selection change event to support shortcut mode
+          // Always dispatch to support shortcut mode which can paste previous
+          // copied content easily
+        } else if (e.states.indexOf('blur') == 0) {
+          // Always dispatch to notify the blur for the focus content
         } else {
           return;
         }
