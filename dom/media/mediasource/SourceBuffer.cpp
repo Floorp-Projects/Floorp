@@ -335,7 +335,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   StartUpdating();
 
-  if (!mTrackBuffer->AppendData(aData, aLength)) {
+  MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
+             "We don't handle timestampOffset for sequence mode yet");
+  if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
     Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
     ErrorResult dummy;
     mMediaSource->EndOfStream(decodeError, dummy);
