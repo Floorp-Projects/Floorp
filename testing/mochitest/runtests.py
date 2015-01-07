@@ -914,7 +914,7 @@ class SSLTunnel:
         config.write("redirhost:%s:%s:%s:%s\n" %
                      (loc.host, loc.port, self.sslPort, redirhost))
 
-      if self.useSSLTunnelExts and option in ('ssl3', 'rc4'):
+      if self.useSSLTunnelExts and option in ('ssl3', 'rc4', 'failHandshake'):
         config.write("%s:%s:%s:%s\n" % (option, loc.host, loc.port, self.sslPort))
 
   def buildConfig(self, locations):
