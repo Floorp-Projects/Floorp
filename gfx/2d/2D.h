@@ -1181,6 +1181,8 @@ public:
    */
   static TemporaryRef<DrawTarget> CreateTiledDrawTarget(const TileSet& aTileSet);
 
+  static bool DoesBackendSupportDataDrawtarget(BackendType aType);
+
 #ifdef XP_MACOSX
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize);
   static TemporaryRef<GlyphRenderingOptions>
