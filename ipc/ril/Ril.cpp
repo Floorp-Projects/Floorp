@@ -21,6 +21,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
@@ -323,7 +324,7 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     mAddress = addr_un.sun_path;
   }
 
-  ConnectSocket(new RilConnector(mClientId), mAddress.get());
+  Connect(new RilConnector(mClientId), mAddress.get());
 }
 
 nsresult
@@ -362,7 +363,7 @@ RilConsumer::Shutdown()
     }
 
     instance->mShutdown = true;
-    instance->CloseSocket();
+    instance->Close();
     instance = nullptr;
   }
 }
@@ -387,7 +388,7 @@ void
 RilConsumer::OnConnectError()
 {
   CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
-  CloseSocket();
+  Close();
 }
 
 void
@@ -395,9 +396,15 @@ RilConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
   if (!mShutdown) {
-    ConnectSocket(new RilConnector(mClientId), mAddress.get(),
-                  GetSuggestedConnectDelayMs());
+    Connect(new RilConnector(mClientId), mAddress.get(),
+            GetSuggestedConnectDelayMs());
   }
+}
+
+ConnectionOrientedSocketIO*
+RilConsumer::GetIO()
+{
+  return PrepareAccept(new RilConnector(mClientId));
 }
 
 } // namespace ipc

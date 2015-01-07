@@ -8,18 +8,20 @@
 #define mozilla_ipc_Ril_h 1
 
 #include <mozilla/dom/workers/Workers.h>
-#include <mozilla/ipc/UnixSocket.h>
+#include <mozilla/ipc/StreamSocket.h>
 
 namespace mozilla {
 namespace ipc {
 
-class RilConsumer MOZ_FINAL : public mozilla::ipc::UnixSocketConsumer
+class RilConsumer MOZ_FINAL : public mozilla::ipc::StreamSocket
 {
 public:
   static nsresult Register(
     unsigned int aClientId,
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   static void Shutdown();
+
+  ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
 
 private:
   RilConsumer(unsigned long aClientId,
