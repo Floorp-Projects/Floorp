@@ -63,17 +63,11 @@ CheckProgressConsistency(Progress aProgress)
     // No preconditions.
   }
   if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    if (aProgress & FLAG_IS_MULTIPART) {
-      MOZ_ASSERT(aProgress & FLAG_ONLOAD_UNBLOCKED);
-    } else {
-      MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
-    }
+    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
   }
   if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
     MOZ_ASSERT(aProgress & FLAG_ONLOAD_BLOCKED);
-    MOZ_ASSERT(aProgress & (FLAG_FRAME_COMPLETE |
-                            FLAG_IS_MULTIPART |
-                            FLAG_HAS_ERROR));
+    MOZ_ASSERT(aProgress & (FLAG_FRAME_COMPLETE | FLAG_HAS_ERROR));
   }
   if (aProgress & FLAG_IS_ANIMATED) {
     MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
@@ -81,9 +75,6 @@ CheckProgressConsistency(Progress aProgress)
   }
   if (aProgress & FLAG_HAS_TRANSPARENCY) {
     MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
-  }
-  if (aProgress & FLAG_IS_MULTIPART) {
-    // No preconditions.
   }
   if (aProgress & FLAG_LAST_PART_COMPLETE) {
     MOZ_ASSERT(aProgress & FLAG_LOAD_COMPLETE);
@@ -106,22 +97,6 @@ ProgressTracker::ResetImage()
 {
   NS_ABORT_IF_FALSE(mImage, "Resetting image when it's already null!");
   mImage = nullptr;
-}
-
-void
-ProgressTracker::SetIsMultipart()
-{
-  if (mProgress & FLAG_IS_MULTIPART) {
-    return;
-  }
-
-  MOZ_ASSERT(!(mProgress & FLAG_ONLOAD_BLOCKED),
-             "Blocked onload before we knew we were multipart?");
-
-  // Set the MULTIPART flag and ensure that we never block onload.
-  mProgress |= FLAG_IS_MULTIPART | FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
-
-  CheckProgressConsistency(mProgress);
 }
 
 bool
