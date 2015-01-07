@@ -249,7 +249,11 @@ public:
     bool initSegment = IsInitSegmentPresent(aData, aLength);
     if (initSegment) {
       mStream = new mp4_demuxer::BufferStream();
-      mParser = new mp4_demuxer::MoofParser(mStream, 0, &mMonitor);
+      // We use a timestampOffset of 0 for ContainerParser, and require
+      // consumers of ParseStartAndEndTimestamps to add their timestamp offset
+      // manually. This allows the ContainerParser to be shared across different
+      // timestampOffsets.
+      mParser = new mp4_demuxer::MoofParser(mStream, 0, 0, &mMonitor);
     } else if (!mStream || !mParser) {
       return false;
     }
