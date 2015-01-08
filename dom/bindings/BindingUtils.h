@@ -1019,11 +1019,9 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    obj = value->WrapObject(cx);
-  }
-
-  if (!obj) {
-    return false;
+    if (!value->WrapObject(cx, &obj)) {
+      return false;
+    }
   }
 
   // We can end up here in all sorts of compartments, per above.  Make
@@ -1067,14 +1065,11 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    obj = value->WrapObject(cx);
-    if (obj) {
-      value.forget();
+    if (!value->WrapObject(cx, &obj)) {
+      return false;
     }
-  }
 
-  if (!obj) {
-    return false;
+    value.forget();
   }
 
   // We can end up here in all sorts of compartments, per above.  Make
@@ -2767,57 +2762,55 @@ class MOZ_STACK_CLASS BindingJSObjectCreator
 {
 public:
   explicit BindingJSObjectCreator(JSContext* aCx)
-    : mObject(aCx)
+    : mReflector(aCx)
   {
   }
 
   ~BindingJSObjectCreator()
   {
-    if (mObject) {
-      js::SetReservedOrProxyPrivateSlot(mObject, DOM_OBJECT_SLOT,
+    if (mReflector) {
+      js::SetReservedOrProxyPrivateSlot(mReflector, DOM_OBJECT_SLOT,
                                         JS::UndefinedValue());
     }
   }
 
-  JS::Rooted<JSObject*>&
+  void
   CreateProxyObject(JSContext* aCx, const js::Class* aClass,
                     const DOMProxyHandler* aHandler,
                     JS::Handle<JSObject*> aProto,
-                    JS::Handle<JSObject*> aParent, T* aNative)
+                    JS::Handle<JSObject*> aParent, T* aNative,
+                    JS::MutableHandle<JSObject*> aReflector)
   {
     js::ProxyOptions options;
     options.setClass(aClass);
     JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aNative));
-    mObject = js::NewProxyObject(aCx, aHandler, proxyPrivateVal, aProto,
-                                 aParent, options);
-    if (mObject) {
+    aReflector.set(js::NewProxyObject(aCx, aHandler, proxyPrivateVal, aProto,
+                                      aParent, options));
+    if (aReflector) {
       mNative = aNative;
+      mReflector = aReflector;
     }
-    return mObject;
   }
 
-  JS::Rooted<JSObject*>&
+  void
   CreateObject(JSContext* aCx, const JSClass* aClass,
                JS::Handle<JSObject*> aProto, JS::Handle<JSObject*> aParent,
-               T* aNative)
+               T* aNative, JS::MutableHandle<JSObject*> aReflector)
   {
-    mObject = JS_NewObject(aCx, aClass, aProto, aParent);
-    if (mObject) {
-      js::SetReservedSlot(mObject, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
+    aReflector.set(JS_NewObject(aCx, aClass, aProto, aParent));
+    if (aReflector) {
+      js::SetReservedSlot(aReflector, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
       mNative = aNative;
+      mReflector = aReflector;
     }
-    return mObject;
   }
 
-  JSObject*
-  ForgetObject()
+  void
+  InitializationSucceeded()
   {
     void* dummy;
     mNative.forget(&dummy);
-
-    JSObject* obj = mObject;
-    mObject = nullptr;
-    return obj;
+    mReflector = nullptr;
   }
 
 private:
@@ -2843,7 +2836,7 @@ private:
     }
   };
 
-  JS::Rooted<JSObject*> mObject;
+  JS::Rooted<JSObject*> mReflector;
   typename Conditional<IsRefcounted<T>::value, nsRefPtr<T>, OwnedNative>::Type mNative;
 };
 

@@ -68,7 +68,7 @@ public:
               double aDownDegrees, double aLeftDegrees,
               ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx);
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
   void SetUpDegrees(double aVal) { mUpDegrees = aVal; }
   void SetRightDegrees(double aVal) { mRightDegrees = aVal; }
