@@ -19,7 +19,12 @@ function test() {
   SimpleTest.finish();
 }
 
-SpecialPowers.pushPrefEnv({"set": [["media.mediasource.enabled", false]]},
+SpecialPowers.pushPrefEnv({"set":
+    [
+      ["media.mediasource.enabled", false],
+      ["media.mediasource.youtubeonly", false],
+    ]
+  },
                           test);
 
 </script>

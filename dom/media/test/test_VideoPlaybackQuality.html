@@ -51,7 +51,12 @@ function test() {
 }
 
 addLoadEvent(function() {
-  SpecialPowers.pushPrefEnv({"set": [["media.mediasource.enabled", true]]}, test);
+  SpecialPowers.pushPrefEnv({"set":
+    [
+      ["media.mediasource.enabled", true],
+      ["media.mediasource.youtubeonly", false],
+    ]
+  }, test);
 });
 </script>
 </pre>
