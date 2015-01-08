@@ -52,7 +52,7 @@ public:
 
     ConsumerContext() { }
 
-    NS_IMETHOD Equals(void *aPtr, bool *_retval) {
+    NS_IMETHOD Equals(void *aPtr, bool *_retval) MOZ_OVERRIDE {
         *_retval = true;
         if (aPtr != this) *_retval = false;
         return NS_OK;
