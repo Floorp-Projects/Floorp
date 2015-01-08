@@ -56,7 +56,7 @@ GetValueFromAtom(const nsIAtom* aValueAsAtom, bool *aValue)
 nsresult
 nsSVGBoolean::SetBaseValueAtom(const nsIAtom* aValue, nsSVGElement *aSVGElement)
 {
-  bool val;
+  bool val = false;
 
   nsresult rv = GetValueFromAtom(aValue, &val);
   if (NS_FAILED(rv)) {
