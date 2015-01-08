@@ -133,6 +133,17 @@ AnimationPlayer::SetSource(Animation* aSource)
 void
 AnimationPlayer::Tick()
 {
+  // Since we are not guaranteed to get only one call per refresh driver tick,
+  // it's possible that mPendingReadyTime is set to a time in the future.
+  // In that case, we should wait until the next refresh driver tick before
+  // resuming.
+  if (mIsPending &&
+      !mPendingReadyTime.IsNull() &&
+      mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
+    ResumeAt(mPendingReadyTime.Value());
+    mPendingReadyTime.SetNull();
+  }
+
   // FIXME (bug 1112969): Check if we are pending but have lost access to the
   // pending player tracker. If that's the case we should probably trigger the
   // animation now.
@@ -145,9 +156,8 @@ AnimationPlayer::StartOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 {
   // Normally we expect the play state to be pending but it's possible that,
   // due to the handling of possibly orphaned players in Tick() [coming
-  // in a later patch in this series], this player
-  // got started whilst still being in another document's pending player
-  // map.
+  // in a later patch in this series], this player got started whilst still
+  // being in another document's pending player map.
   if (PlayState() != AnimationPlayState::Pending) {
     return;
   }
