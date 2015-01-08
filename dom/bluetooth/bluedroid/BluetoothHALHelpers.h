@@ -783,6 +783,36 @@ Convert(BluetoothTransport aIn, int& aOut)
 
 nsresult
 Convert(const bt_activity_energy_info& aIn, BluetoothActivityEnergyInfo& aOut);
+
+inline nsresult
+Convert(bthf_wbs_config_t aIn, BluetoothHandsfreeWbsConfig& aOut)
+{
+  static const BluetoothHandsfreeWbsConfig sWbsConfig[] = {
+    CONVERT(BTHF_WBS_NONE, HFP_WBS_NONE),
+    CONVERT(BTHF_WBS_NO, HFP_WBS_NO),
+    CONVERT(BTHF_WBS_YES, HFP_WBS_YES)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sWbsConfig[aIn];
+  return NS_OK;
+}
+
+inline nsresult
+Convert(BluetoothHandsfreeWbsConfig aIn, bthf_wbs_config_t& aOut)
+{
+  static const bthf_wbs_config_t sWbsConfig[] = {
+    CONVERT(HFP_WBS_NONE, BTHF_WBS_NONE),
+    CONVERT(HFP_WBS_NO, BTHF_WBS_NO),
+    CONVERT(HFP_WBS_YES, BTHF_WBS_YES)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sWbsConfig[aIn];
+  return NS_OK;
+}
 #endif // ANDROID_VERSION >= 21
 
 /* |ConvertArray| is a helper for converting arrays. Pass an
