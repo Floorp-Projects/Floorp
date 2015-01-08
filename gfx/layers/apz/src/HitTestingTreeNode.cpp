@@ -6,9 +6,12 @@
 
 #include "HitTestingTreeNode.h"
 
-#include "AsyncPanZoomController.h"
-#include "LayersLogging.h"
-#include "nsPrintfCString.h"
+#include "AsyncPanZoomController.h"                     // for AsyncPanZoomController
+#include "LayersLogging.h"                              // for Stringify
+#include "mozilla/gfx/Point.h"                          // for Point4D
+#include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
+#include "nsPrintfCString.h"                            // for nsPrintfCString
+#include "UnitTransforms.h"                             // for ViewAs
 
 namespace mozilla {
 namespace layers {
@@ -116,13 +119,62 @@ HitTestingTreeNode::IsPrimaryHolder() const
 }
 
 void
+HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
+                                   const gfx::Matrix4x4& aTransform,
+                                   const nsIntRegion& aClipRegion)
+{
+  mEventRegions = aRegions;
+  mTransform = aTransform;
+  mClipRegion = aClipRegion;
+}
+
+HitTestResult
+HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
+{
+  // When event regions are disabled, we are actually storing the
+  // touch-sensitive section of the composition bounds in the clip rect, and we
+  // don't need to use mTransform or mEventRegions.
+  if (!gfxPrefs::LayoutEventRegionsEnabled()) {
+    MOZ_ASSERT(mEventRegions == EventRegions());
+    MOZ_ASSERT(mTransform == gfx::Matrix4x4());
+    return mClipRegion.Contains(aPoint.x, aPoint.y)
+        ? HitTestResult::ApzcHitRegion
+        : HitTestResult::NoApzcHit;
+  }
+
+  // test against clip rect in ParentLayer coordinate space
+  if (!mClipRegion.Contains(aPoint.x, aPoint.y)) {
+    return HitTestResult::NoApzcHit;
+  }
+
+  // convert into Layer coordinate space
+  gfx::Matrix4x4 localTransform = mTransform * gfx::Matrix4x4(mApzc->GetCurrentAsyncTransform());
+  gfx::Point4D pointInLayerPixels = localTransform.Inverse().ProjectPoint(aPoint.ToUnknownPoint());
+  if (!pointInLayerPixels.HasPositiveWCoord()) {
+    return HitTestResult::NoApzcHit;
+  }
+  LayerIntPoint point = RoundedToInt(ViewAs<LayerPixel>(pointInLayerPixels.As2DPoint()));
+
+  // test against event regions in Layer coordinate space
+  if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {
+    return HitTestResult::NoApzcHit;
+  }
+  if (mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y)) {
+    return HitTestResult::ApzcContentRegion;
+  }
+  return HitTestResult::ApzcHitRegion;
+}
+
+void
 HitTestingTreeNode::Dump(const char* aPrefix) const
 {
   if (mPrevSibling) {
     mPrevSibling->Dump(aPrefix);
   }
-  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) guid (%s)\n",
-    aPrefix, this, mApzc.get(), Stringify(mApzc->GetGuid()).c_str());
+  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) r=(%s) t=(%s) c=(%s)\n",
+    aPrefix, this, mApzc.get(), Stringify(mApzc->GetGuid()).c_str(),
+    Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
+    Stringify(mClipRegion).c_str());
   if (mLastChild) {
     mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());
   }
