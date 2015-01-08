@@ -148,8 +148,7 @@ window.addEventListener('ContentStart', function() {
     let chromewidth = window.outerWidth - window.innerWidth;
     let chromeheight = window.outerHeight - window.innerHeight + controlsHeight;
     if (isMulet) {
-      let tab = browserWindow.gBrowser.selectedTab;
-      let responsive = ResponsiveUIManager.getResponsiveUIForTab(tab);
+      let responsive = browserWindow.gBrowser.selectedTab.__responsiveUI;
       responsive.setSize((Math.round(width * scale) + 16*2),
                         (Math.round(height * scale) + controlsHeight + 61));
     } else {
