@@ -6506,8 +6506,10 @@ class CGPerSignatureCall(CGThing):
                 for i in descriptor.interface.getInheritedInterfaces())):
                 cgThings.append(CGGeneric(dedent(
                     """
-                    if (mozilla::dom::CheckSafetyInPrerendering(cx, obj)) {
-                        //TODO: Handle call into unsafe API during Prerendering (Bug 730101)
+                    if (!mozilla::dom::EnforceNotInPrerendering(cx, obj)) {
+                        // Return false from the JSNative in order to trigger
+                        // an uncatchable exception.
+                        MOZ_ASSERT(!JS_IsExceptionPending(cx));
                         return false;
                     }
                     """)))
