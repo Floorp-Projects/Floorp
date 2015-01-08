@@ -970,27 +970,12 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const EventRegions& aRegions, const Matrix4x4& aTransformToLayer) {
-    mEventRegions = aRegions;
+  void SetAncestorTransform(const Matrix4x4& aTransformToLayer) {
     mAncestorTransform = aTransformToLayer;
-  }
-
-  void AddHitTestRegions(const EventRegions& aRegions) {
-    mEventRegions.OrWith(aRegions);
   }
 
   Matrix4x4 GetAncestorTransform() const {
     return mAncestorTransform;
-  }
-
-  bool HitRegionContains(const ParentLayerPoint& aPoint) const {
-    ParentLayerIntPoint point = RoundedToInt(aPoint);
-    return mEventRegions.mHitRegion.Contains(point.x, point.y);
-  }
-
-  bool DispatchToContentRegionContains(const ParentLayerPoint& aPoint) const {
-    ParentLayerIntPoint point = RoundedToInt(aPoint);
-    return mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y);
   }
 
   bool IsOverscrolled() const {
@@ -998,11 +983,6 @@ public:
   }
 
 private:
-  /* This is the union of the hit regions of the layers that this APZC
-   * corresponds to, in the local screen pixels of those layers. (This is the
-   * same coordinate system in which this APZC receives events in
-   * ReceiveInputEvent()). */
-  EventRegions mEventRegions;
   /* This is the cumulative CSS transform for all the layers from (and including)
    * the parent APZC down to (but excluding) this one. */
   Matrix4x4 mAncestorTransform;
