@@ -69,11 +69,11 @@ impl MarionetteSession {
     }
 
     pub fn response_from_json(&mut self, message: &WebDriverMessage,
-                              data: &str) -> WebDriverResult<Option<WebDriverResponse>> {
+                              data: &str) -> WebDriverResult<WebDriverResponse> {
         let json_data = try!(object_from_json(data));
-        if json_data.contains_key(&"error".to_string()) {
-            //TODO: convert the marionette error into the right webdriver error
-            let error = try_opt!(json_data.get("error").unwrap().as_object(),
+
+        if let Some(error) = json_data.get("error") {
+            let error = try_opt!(error.as_object(),
                                  ErrorStatus::UnknownError,
                                  "Marionette error field was not an object");
             let status_code = try_opt!(
@@ -93,14 +93,14 @@ impl MarionetteSession {
 
         try!(self.update(message, &json_data));
 
-        match message.command {
+        Ok(match message.command {
             //Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DismissAlert | AcceptAlert |
             SendAlertText(_) | ElementClick(_) | ElementTap(_) | ElementClear(_) |
             ElementSendKeys(_, _) => {
-                Ok(Some(WebDriverResponse::Void))
+                WebDriverResponse::Void
             },
             //Things that simply return the contents of the marionette "value" property
             GetCurrentUrl | GetTitle | GetWindowHandle | GetWindowHandles |
@@ -112,14 +112,14 @@ impl MarionetteSession {
                                      ErrorStatus::UnknownError,
                                      "Failed to find value field");
                 //TODO: Convert webelement keys
-                Ok(Some(WebDriverResponse::Generic(ValueResponse::new(value.clone()))))
+                WebDriverResponse::Generic(ValueResponse::new(value.clone()))
             },
             GetWindowSize => {
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
                              ErrorStatus::UnknownError,
                              "Failed to find value field").as_object(),
-                        ErrorStatus::UnknownError,
+                    ErrorStatus::UnknownError,
                     "Failed to interpret value as object");
 
                 let width = try_opt!(
@@ -136,15 +136,15 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as integer");
 
-                Ok(Some(WebDriverResponse::WindowSize(WindowSizeResponse::new(width, height))))
+                WebDriverResponse::WindowSize(WindowSizeResponse::new(width, height))
             },
             GetElementRect(_) => {
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
-                                           ErrorStatus::UnknownError,
-                                           "Failed to find value field").as_object(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret value as object");
+                             ErrorStatus::UnknownError,
+                             "Failed to find value field").as_object(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret value as object");
 
                 let x = try_opt!(
                     try_opt!(value.get("x"),
@@ -171,18 +171,18 @@ impl MarionetteSession {
                     try_opt!(value.get("height"),
                              ErrorStatus::UnknownError,
                              "Failed to find height field").as_u64(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret width as integer");
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret width as integer");
 
-                Ok(Some(WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))))
+                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
             },
             GetCookie(_) => {
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
-                                           ErrorStatus::UnknownError,
-                                           "Failed to find value field").as_array(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret value as array");
+                             ErrorStatus::UnknownError,
+                             "Failed to find value field").as_array(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret value as array");
                 let cookies = try!(value.iter().map(|x| {
                     let name = try_opt!(
                         try_opt!(x.find("name"),
@@ -244,7 +244,7 @@ impl MarionetteSession {
                     };
                     Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
                 }).collect::<Result<Vec<_>, _>>());
-                Ok(Some(WebDriverResponse::Cookie(CookieResponse::new(cookies))))
+                WebDriverResponse::Cookie(CookieResponse::new(cookies))
             },
             NewSession => {
                 let session_id = try_opt!(
@@ -261,13 +261,13 @@ impl MarionetteSession {
                     ErrorStatus::SessionNotCreated,
                     "value field was not an Object");
 
-                Ok(Some(WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id, json::Object(value.clone())))))
+                WebDriverResponse::NewSession(NewSessionResponse::new(
+                    session_id, json::Object(value.clone())))
             }
             DeleteSession => {
-                Ok(Some(WebDriverResponse::DeleteSession))
+                WebDriverResponse::DeleteSession
             }
-        }
+        })
     }
 
     pub fn error_from_code(&self, error_code: u64) -> ErrorStatus {
@@ -291,6 +291,7 @@ impl MarionetteSession {
             32 => ErrorStatus::InvalidSelector,
             34 => ErrorStatus::MoveTargetOutOfBounds,
             405 => ErrorStatus::UnsupportedOperation,
+            // Explicitly list all known marionette error codes
             13 | 19 | 51 | 52 | 53 | 54 | 55 | 56 | 500 | _ => ErrorStatus::UnknownError
 
         }
@@ -319,10 +320,7 @@ impl MarionetteConnection {
         msg.insert("to".to_string(), "root".to_json());
         match self.send(&msg.to_json()) {
             Ok(resp) => {
-                let json_data = match object_from_json(resp.as_slice()) {
-                    Ok(x) => x,
-                    Err(_) => panic!("Failed to connect to marionette")
-                };
+                let json_data = object_from_json(resp.as_slice()).ok().expect("Failed to connect to marionette");
                 match json_data.get(&"id".to_string()) {
                     Some(x) => match x.as_string() {
                         Some(id) => self.session.to = id.to_string(),
@@ -338,20 +336,13 @@ impl MarionetteConnection {
 
     fn encode_msg(&self, msg:&Json) -> String {
         let data = json::encode(msg);
-        let len = data.len().to_string();
-        let mut message = len;
-        message.push_str(":");
-        message.push_str(data.as_slice());
-        message
+        format!("{}:{}", data.len(), data)
     }
 
-    pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<Option<WebDriverResponse>>  {
+    pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse>  {
         let resp = try!(self.session.msg_to_marionette(msg));
-        let resp = match self.send(&resp) {
-            Ok(resp_data) => self.session.response_from_json(msg, resp_data[]),
-            Err(x) => Err(x)
-        };
-        resp
+        let resp_data = try!(self.send(&resp));
+        self.session.response_from_json(msg, resp_data.as_slice())
     }
 
     fn send(&mut self, msg: &Json) -> WebDriverResult<String> {
@@ -375,7 +366,7 @@ impl MarionetteConnection {
     }
 
     fn read_resp(&mut self) -> Result<String, IoError> {
-        let mut bytes = 0 as uint;
+        let mut bytes = 0u;
         loop {
             let byte = try!(self.stream.read_byte()) as char;
             match byte {
@@ -456,7 +447,7 @@ impl ToMarionette for WebDriverMessage {
             DismissAlert => (None, None), //Unsupported
             AcceptAlert => (None, None), //Unsupported
             GetAlertText => (None, None), //Unsupported
-            SendAlertText(ref x) => (None, None), //Unsupported
+            SendAlertText(_) => (None, None), //Unsupported
             TakeScreenshot(ref x) => (Some("takeScreenshot"), Some(x.to_marionette())),
         };
 

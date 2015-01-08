@@ -2,6 +2,7 @@
 #![feature(phase)]
 #![feature(macro_rules)]
 #![feature(unboxed_closures)]
+#![feature(if_let)]
 
 extern crate core;
 extern crate getopts;
@@ -36,14 +37,12 @@ static DEFAULT_ADDR: &'static str = "127.0.0.1:4444";
 static VERSION: &'static str = include_str!("../.version");
 
 fn err(msg: String) {
-    let prog = os::args()[0].clone();
-    io::stderr().write_line(format!("{}: error: {}", prog, msg).as_slice()).unwrap();
+    io::stderr().write_line(format!("{}: error: {}", os::args()[0], msg).as_slice()).unwrap();
 }
 
 fn print_usage(opts: &[OptGroup]) {
-    let prog = os::args()[0].clone();
-    let shorts: Vec<_> = opts.iter().map(|opt| opt.short_name.clone()).collect();
-    let msg = format!("usage: {} [-{}] [ADDRESS]", prog, shorts.as_slice().concat());
+    let shorts: Vec<_> = opts.iter().map(|opt| opt.short_name.as_slice()).collect();
+    let msg = format!("usage: {} [-{}] [ADDRESS]", os::args()[0], shorts.concat());
     io::stderr().write_line(usage(msg.as_slice(), opts).as_slice()).unwrap();
 }
 
