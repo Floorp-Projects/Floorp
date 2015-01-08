@@ -667,9 +667,6 @@ protected:
 
   void ApplyRelativePositioning(PerFrameData* aPFD);
 
-  void RelativePositionAnnotations(PerSpanData* aRubyPSD,
-                                   nsOverflowAreas& aOverflowAreas);
-
   void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
