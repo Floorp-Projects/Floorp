@@ -647,6 +647,10 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
     mD2D1Device = nullptr;
   }
 
+  if (!aDevice) {
+    return;
+  }
+
   RefPtr<ID2D1Factory1> factory = D2DFactory1();
 
   RefPtr<IDXGIDevice> device;
