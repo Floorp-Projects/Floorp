@@ -36,6 +36,7 @@
 #include <android/log.h>
 #define OD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "OmxDecoder", __VA_ARGS__)
 
+#undef LOG
 #ifdef PR_LOGGING
 PRLogModuleInfo *gOmxDecoderLog;
 #define LOG(type, msg...) PR_LOG(gOmxDecoderLog, type, (msg))
