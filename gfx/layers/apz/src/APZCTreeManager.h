@@ -76,8 +76,9 @@ class HitTestingTreeNode;
  *
  * The bulk of the work of this class happens as part of the UpdateHitTestingTree
  * function, which is when a layer tree update is received by the compositor.
- * This function walks through the layer tree and creates a tree of APZC instances
- * to match the scrollable container layers. APZC instances may be preserved across
+ * This function walks through the layer tree and creates a tree of
+ * HitTestingTreeNode instances to match the layer tree and for use in
+ * hit-testing on the controller thread. APZC instances may be preserved across
  * calls to this function if the corresponding layers are still present in the layer
  * tree.
  *
@@ -97,7 +98,7 @@ class APZCTreeManager {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef uint32_t TouchBehaviorFlags;
 
-  // Helper struct to hold some state while we build the APZ tree. The
+  // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
   // UpdateHitTestingTree. All the state that we don't need to
   // push on the stack during recursion and pop on unwind is stored here.
@@ -107,9 +108,9 @@ public:
   APZCTreeManager();
 
   /**
-   * Rebuild the APZC tree based on the layer update that just came up. Preserve
-   * APZC instances where possible, but retire those whose layers are no longer
-   * in the layer tree.
+   * Rebuild the hit-testing tree based on the layer update that just came up.
+   * Preserve nodes and APZC instances where possible, but retire those whose
+   * layers are no longer in the layer tree.
    *
    * This must be called on the compositor thread as it walks the layer tree.
    *
@@ -420,7 +421,7 @@ private:
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
-                                         const gfx::Point& aHitTestPoint,
+                                         const ParentLayerPoint& aHitTestPoint,
                                          HitTestResult* aOutHitResult);
   already_AddRefed<AsyncPanZoomController> GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
@@ -440,50 +441,43 @@ private:
                                         const ZoomConstraints& aConstraints);
   void FlushRepaintsRecursively(HitTestingTreeNode* aNode);
 
+  already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
+                                                           AsyncPanZoomController* aApzc);
   HitTestingTreeNode* PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                           const FrameMetrics& aMetrics,
                                           uint64_t aLayersId,
                                           const gfx::Matrix4x4& aAncestorTransform,
-                                          const nsIntRegion& aObscured,
                                           HitTestingTreeNode* aParent,
                                           HitTestingTreeNode* aNextSibling,
                                           TreeBuildingState& aState);
 
   /**
-   * Recursive helper function to build the APZC tree. The tree of APZC instances has
-   * the same shape as the layer tree, but excludes all the layers that are not scrollable.
-   * Note that this means APZCs corresponding to layers at different depths in the tree
-   * may end up becoming siblings. It also means that the "root" APZC may have siblings.
-   * This function walks the layer tree backwards through siblings and constructs the APZC
-   * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
-   * code.
+   * Recursive helper function to build the hit-testing tree. See documentation
+   * in HitTestingTreeNode.h for more details on the shape of the tree.
+   * This function walks the layer tree backwards through siblings and
+   * constructs the hit-testing tree also as a last-child-prev-sibling tree
+   * because that simplifies the hit detection code.
    *
-   * @param aState             The current tree building state.
-   * @param aLayer             The (layer, metrics) pair which is the current
-   *                           position in the recursive walk of the layer tree.
-   *                           This calls builds an APZC subtree corresponding
-   *                           to the layer subtree rooted at aLayer.
-   * @param aLayersId          The layers id of the layer in aLayer.
+   * @param aState The current tree building state.
+   * @param aLayer The (layer, metrics) pair which is the current position in
+   *               the recursive walk of the layer tree. This call builds a
+   *               hit-testing subtree corresponding to the layer subtree rooted
+   *               at aLayer.
+   * @param aLayersId The layers id of the layer in aLayer.
    * @param aAncestorTransform The accumulated CSS transforms of all the
    *                           layers from aLayer up (via the parent chain)
    *                           to the next APZC-bearing layer.
-   * @param aParent            The parent of any node built at this level.
-   * @param aNextSibling       The next sibling of any node built at this level.
-   * @param aObscured          The region that is obscured by APZCs above
-   *                           the one at this level (in practice, the
-   *                           next-siblings of this one), in the ParentLayer
-   *                           pixels of the APZC at this level.
-   * @return                   The root of the APZC subtree at this level, or
-   *                           aNextSibling if no APZCs were built for the
-   *                           layer subtree at this level.
+   * @param aParent The parent of any node built at this level.
+   * @param aNextSibling The next sibling of any node built at this level.
+   * @return The HitTestingTreeNode created at this level. This will always
+   *         be non-null.
    */
   HitTestingTreeNode* UpdateHitTestingTree(TreeBuildingState& aState,
                                            const LayerMetricsWrapper& aLayer,
                                            uint64_t aLayersId,
                                            const gfx::Matrix4x4& aAncestorTransform,
                                            HitTestingTreeNode* aParent,
-                                           HitTestingTreeNode* aNextSibling,
-                                           const nsIntRegion& aObscured);
+                                           HitTestingTreeNode* aNextSibling);
 
   void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                      const AsyncPanZoomController* apzc);
