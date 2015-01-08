@@ -73,7 +73,7 @@ public:
     return mData;
   }
 
-  JSObject* WrapObject(JSContext* cx);
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
 private:
   void HoldData();
