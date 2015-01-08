@@ -862,7 +862,7 @@ pref("browser.preferences.animateFadeIn", false);
 #endif
 
 // Toggles between the two Preferences implementations, pop-up window and in-content
-#ifndef RELEASE_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.preferences.inContent", true);
 pref("browser.preferences.instantApply", true);
 #else
