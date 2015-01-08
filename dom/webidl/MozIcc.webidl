@@ -89,6 +89,11 @@ enum IccMvnoType
   "gid"
 };
 
+enum IccService
+{
+  "fdn"
+};
+
 dictionary IccUnlockCardLockOptions
 {
   required IccLockType lockType;
@@ -331,4 +336,17 @@ interface MozIcc : EventTarget
    */
   [Throws]
   DOMRequest matchMvno(IccMvnoType mvnoType, DOMString matchData);
+
+  /**
+   * Retrieve the the availability of an icc service.
+   *
+   * @param service
+   *        Identifies the service type.
+   *
+   * @return a Promise
+   *         If succeeds, the promise is resolved with boolean indicating the
+   *         availability of the service. Otherwise, rejected with a DOMError.
+   */
+  [NewObject, Throws]
+  Promise<boolean> getServiceState(IccService service);
 };

@@ -106,6 +106,16 @@ ASSERT_ICC_MVNO_TYPE_EQUALITY(Gid, CARD_MVNO_TYPE_GID);
 
 #undef ASSERT_ICC_MVNO_TYPE_EQUALITY
 
+/**
+ * Enum IccService
+ */
+#define ASSERT_ICC_SERVICE_EQUALITY(webidlState, xpidlState) \
+  ASSERT_EQUALITY(IccService, webidlState, xpidlState)
+
+ASSERT_ICC_SERVICE_EQUALITY(Fdn, CARD_SERVICE_FDN);
+
+#undef ASSERT_ICC_SERVICE_EQUALITY
+
 #undef ASSERT_EQUALITY
 
 } // namespace icc
