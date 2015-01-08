@@ -419,6 +419,9 @@ nsresult
 PackPDU(BluetoothScanMode aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
+PackPDU(BluetoothTransport aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
 PackPDU(ControlPlayStatus aIn, BluetoothDaemonPDU& aPDU);
 
 /* |PackConversion| is a helper for packing converted values. Pass

@@ -1318,7 +1318,8 @@ BluetoothDaemonHandsfreeInterface::Init(
   }
 
   nsresult rv = mModule->RegisterModule(
-    BluetoothDaemonHandsfreeModule::SERVICE_ID, MODE_NARROWBAND_SPEECH, res);
+    BluetoothDaemonHandsfreeModule::SERVICE_ID, MODE_NARROWBAND_SPEECH,
+    aMaxNumClients, res);
 
   if (NS_FAILED(rv) && aRes) {
     DispatchError(aRes, STATUS_FAIL);
