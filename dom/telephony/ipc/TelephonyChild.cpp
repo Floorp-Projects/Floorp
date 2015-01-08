@@ -58,23 +58,16 @@ TelephonyChild::RecvNotifyCallError(const uint32_t& aClientId,
 }
 
 bool
-TelephonyChild::RecvNotifyCallStateChanged(const uint32_t& aClientId,
-                                           const IPCCallStateData& aData)
+TelephonyChild::RecvNotifyCallStateChanged(nsITelephonyCallInfo* const& aInfo)
 {
+  // Use dont_AddRef here because this instances has already been AddRef-ed in
+  // TelephonyIPCSerializer.h
+  nsCOMPtr<nsITelephonyCallInfo> info = dont_AddRef(aInfo);
+
   MOZ_ASSERT(mService);
 
-  mService->CallStateChanged(aClientId,
-                              aData.callIndex(),
-                              aData.callState(),
-                              aData.number(),
-                              aData.numberPresentation(),
-                              aData.name(),
-                              aData.namePresentation(),
-                              aData.isOutGoing(),
-                              aData.isEmergency(),
-                              aData.isConference(),
-                              aData.isSwitchable(),
-                              aData.isMergeable());
+  mService->CallStateChanged(aInfo);
+
   return true;
 }
 
@@ -165,23 +158,16 @@ TelephonyRequestChild::Recv__delete__(const IPCTelephonyResponse& aResponse)
 }
 
 bool
-TelephonyRequestChild::RecvNotifyEnumerateCallState(const uint32_t& aClientId,
-                                                    const IPCCallStateData& aData)
+TelephonyRequestChild::RecvNotifyEnumerateCallState(nsITelephonyCallInfo* const& aInfo)
 {
+  // Use dont_AddRef here because this instances has already been AddRef-ed in
+  // TelephonyIPCSerializer.h
+  nsCOMPtr<nsITelephonyCallInfo> info = dont_AddRef(aInfo);
+
   MOZ_ASSERT(mListener);
 
-  mListener->EnumerateCallState(aClientId,
-                                aData.callIndex(),
-                                aData.callState(),
-                                aData.number(),
-                                aData.numberPresentation(),
-                                aData.name(),
-                                aData.namePresentation(),
-                                aData.isOutGoing(),
-                                aData.isEmergency(),
-                                aData.isConference(),
-                                aData.isSwitchable(),
-                                aData.isMergeable());
+  mListener->EnumerateCallState(aInfo);
+
   return true;
 }
 
