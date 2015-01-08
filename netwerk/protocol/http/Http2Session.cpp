@@ -2225,7 +2225,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
 
 void
 Http2Session::OnTransportStatus(nsITransport* aTransport,
-                                nsresult aStatus, uint64_t aProgress)
+                                nsresult aStatus, int64_t aProgress)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 

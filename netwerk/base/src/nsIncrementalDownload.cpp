@@ -205,8 +205,8 @@ nsIncrementalDownload::UpdateProgress()
 
   if (mProgressSink)
     mProgressSink->OnProgress(this, mObserverContext,
-                              uint64_t(int64_t(mCurrentSize) + mChunkLen),
-                              uint64_t(int64_t(mTotalSize)));
+                              mCurrentSize + mChunkLen,
+                              mTotalSize);
 }
 
 nsresult

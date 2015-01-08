@@ -281,7 +281,7 @@ Http2PushTransactionBuffer::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 
 void
 Http2PushTransactionBuffer::OnTransportStatus(nsITransport* transport,
-                                              nsresult status, uint64_t progress)
+                                              nsresult status, int64_t progress)
 {
 }
 

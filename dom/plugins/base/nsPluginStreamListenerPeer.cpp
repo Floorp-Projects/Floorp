@@ -572,8 +572,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request,
                                                      nsISupports* aContext,
-                                                     uint64_t aProgress,
-                                                     uint64_t aProgressMax)
+                                                     int64_t aProgress,
+                                                     int64_t aProgressMax)
 {
   nsresult rv = NS_OK;
   return rv;

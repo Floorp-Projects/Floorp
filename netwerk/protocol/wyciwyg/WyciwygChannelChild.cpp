@@ -254,7 +254,7 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
 
   if (mProgressSink && NS_SUCCEEDED(rv)) {
     mProgressSink->OnProgress(this, nullptr, offset + data.Length(),
-                              uint64_t(mContentLength));
+                              mContentLength);
   }
 }
 

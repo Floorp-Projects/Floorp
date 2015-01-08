@@ -94,9 +94,9 @@ private:
     uint32_t  mHttp1xTransactionCount;
 
     // For support of OnTransportStatus()
-    uint64_t  mReceivingFromProgress;
-    uint64_t  mSendingToProgress;
-    bool      mSuppressSendEvents;
+    int64_t  mReceivingFromProgress;
+    int64_t  mSendingToProgress;
+    bool     mSuppressSendEvents;
 };
 
 }} // namespace mozilla::net

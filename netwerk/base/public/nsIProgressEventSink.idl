@@ -27,7 +27,7 @@ interface nsIRequest;
  * NOTE: This interface is actually not specific to channels and may be used
  * with other implementations of nsIRequest.
  */
-[scriptable, uuid(D974C99E-4148-4df9-8D98-DE834A2F6462)]
+[scriptable, uuid(87d55fba-cb7e-4f38-84c1-5c6c2b2a55e9)]
 interface nsIProgressEventSink : nsISupports
 {
     /**
@@ -44,12 +44,12 @@ interface nsIProgressEventSink : nsISupports
      *        number of bytes transfered thus far.
      * @param aProgressMax
      *        numeric value indicating maximum number of bytes that will be
-     *        transfered (or 0xFFFFFFFFFFFFFFFF if total is unknown).
+     *        transfered (or -1 if total is unknown).
      */
     void onProgress(in nsIRequest aRequest,
                     in nsISupports aContext,
-                    in unsigned long long aProgress,
-                    in unsigned long long aProgressMax);
+                    in long long aProgress,
+                    in long long aProgressMax);
 
     /**
      * Called to notify the event sink with a status message for the given
