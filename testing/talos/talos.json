@@ -14,7 +14,14 @@
         "chromez": {
             "tests": ["tresize", "tcanvasmark"]
         },
+        "chromez-snow": {
+            "tests": ["tresize", "tcanvasmark"]
+        },
         "chromez-e10s": {
+            "tests": ["tresize", "tcanvasmark"],
+            "talos_options": ["--e10s"]
+        },
+        "chromez-snow-e10s": {
             "tests": ["tresize", "tcanvasmark"],
             "talos_options": ["--e10s"]
         },
@@ -27,6 +34,12 @@
         },
         "other": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
+        },
+        "other-snow": {
+            "tests": ["tpaint"]
+        },
+        "other-snow-e10s": {
+            "tests": ["tpaint"]
         },
         "other_nol64": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
@@ -63,12 +76,24 @@
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             }
         },
+        "g1-snow": {
+            "tests": ["glterrain"]
+        },
+        "g1-snow-e10s": {
+            "tests": ["glterrain"]
+        },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
         },
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
             "talos_options": ["--e10s"]
+        },
+        "svgr-snow": {
+            "tests": ["tsvgx", "tscrollx"]
+        },
+        "svgr-snow-e10s": {
+            "tests": ["tsvgx", "tscrollx"]
         },
         "tp5o": {
             "tests": ["tp5o"],
