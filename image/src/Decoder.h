@@ -159,6 +159,11 @@ public:
   bool HasSize() const { return mImageMetadata.HasSize(); }
   void SetSizeOnImage();
 
+  void SetSize(const nsIntSize& aSize, const Orientation& aOrientation)
+  {
+    PostSize(aSize.width, aSize.height, aOrientation);
+  }
+
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
@@ -265,6 +270,27 @@ protected:
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
 
+  /**
+   * Ensures that a given frame number exists with the given parameters, and
+   * returns a RawAccessFrameRef for that frame.
+   * It is not possible to create sparse frame arrays; you can only append
+   * frames to the current frame array, or if there is only one frame in the
+   * array, replace that frame.
+   * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
+   */
+  RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
+                                const nsIntRect& aFrameRect,
+                                uint32_t aDecodeFlags,
+                                gfx::SurfaceFormat aFormat,
+                                uint8_t aPaletteDepth,
+                                imgFrame* aPreviousFrame);
+
+  RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
+                                     const nsIntRect& aFrameRect,
+                                     uint32_t aDecodeFlags,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint8_t aPaletteDepth,
+                                     imgFrame* aPreviousFrame);
   /*
    * Member variables.
    *
