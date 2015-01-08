@@ -259,8 +259,8 @@ SimpleTest.ok = function (condition, name, diag) {
         SimpleTest.num_failed++;
         test.result = !test.result;
       }
-      var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
-      var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+      var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+      var failureInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
     } else {
       var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
