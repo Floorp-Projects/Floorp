@@ -426,8 +426,8 @@ private: // data
   nsresult WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
-  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
-  nsresult DecodeSomeData(size_t aMaxBytes, DecodeStrategy aStrategy);
+  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount);
+  nsresult DecodeSomeData(size_t aMaxBytes);
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 

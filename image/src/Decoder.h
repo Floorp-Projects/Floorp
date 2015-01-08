@@ -56,7 +56,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  void Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  void Write(const char* aBuffer, uint32_t aCount);
 
   /**
    * Informs the decoder that all the data has been written.
@@ -180,13 +180,8 @@ public:
                     uint32_t width, uint32_t height,
                     gfx::SurfaceFormat format,
                     uint8_t palette_depth = 0);
-
   virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
 
-  // Returns true if we may have stored data that we need to flush now that we
-  // have a new frame to decode into. Callers can use Write() to actually
-  // flush the data; see the documentation for that method.
-  bool NeedsToFlushData() const { return mNeedsToFlushData; }
 
   // Try to allocate a frame as described in mNewFrameData and return the
   // status code from that attempt. Clears mNewFrameData.
@@ -212,8 +207,7 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
-    DecodeStrategy aStrategy);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
 
   /*
@@ -269,6 +263,11 @@ protected:
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
+
+  // Returns true if we may have stored data that we need to flush now that we
+  // have a new frame to decode into. Callers can use Write() to actually
+  // flush the data; see the documentation for that method.
+  bool NeedsToFlushData() const { return mNeedsToFlushData; }
 
   /**
    * Ensures that a given frame number exists with the given parameters, and
