@@ -322,6 +322,12 @@ enum BluetoothHandsfreeNetworkState {
   HFP_NETWORK_STATE_AVAILABLE
 };
 
+enum BluetoothHandsfreeWbsConfig {
+  HFP_WBS_NONE, /* Neither CVSD nor mSBC codec, but other optional codec.*/
+  HFP_WBS_NO,   /* CVSD */
+  HFP_WBS_YES   /* mSBC */
+};
+
 enum BluetoothHandsfreeNRECState {
   HFP_NREC_STOPPED,
   HFP_NREC_STARTED

@@ -75,62 +75,78 @@ struct BluetoothHandsfreeHALCallback
     BluetoothHandsfreeAudioState, const nsAString&>
     AudioStateNotification;
 
-  typedef BluetoothNotificationHALRunnable1<
+  typedef BluetoothNotificationHALRunnable2<
     HandsfreeNotificationHandlerWrapper, void,
-    BluetoothHandsfreeVoiceRecognitionState>
+    BluetoothHandsfreeVoiceRecognitionState, nsString,
+    BluetoothHandsfreeVoiceRecognitionState, const nsAString&>
     VoiceRecognitionNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     AnswerCallNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     HangupCallNotification;
+
+  typedef BluetoothNotificationHALRunnable3<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeVolumeType, int, nsString,
+    BluetoothHandsfreeVolumeType, int, const nsAString&>
+    VolumeNotification;
 
   typedef BluetoothNotificationHALRunnable2<
     HandsfreeNotificationHandlerWrapper, void,
-    BluetoothHandsfreeVolumeType, int>
-    VolumeNotification;
-
-  typedef BluetoothNotificationHALRunnable1<
-    HandsfreeNotificationHandlerWrapper, void, nsString, const nsAString&>
+    nsString, nsString, const nsAString&, const nsAString&>
     DialCallNotification;
 
-  typedef BluetoothNotificationHALRunnable1<
-    HandsfreeNotificationHandlerWrapper, void, char>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    char, nsString, char, const nsAString&>
     DtmfNotification;
 
-  typedef BluetoothNotificationHALRunnable1<
-    HandsfreeNotificationHandlerWrapper, void, BluetoothHandsfreeNRECState>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeNRECState, nsString,
+    BluetoothHandsfreeNRECState, const nsAString&>
     NRECNotification;
 
-  typedef BluetoothNotificationHALRunnable1<
-    HandsfreeNotificationHandlerWrapper, void, BluetoothHandsfreeCallHoldType>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    BluetoothHandsfreeCallHoldType, nsString,
+    BluetoothHandsfreeCallHoldType, const nsAString&>
     CallHoldNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     CnumNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     CindNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     CopsNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     ClccNotification;
 
-  typedef BluetoothNotificationHALRunnable1<
-    HandsfreeNotificationHandlerWrapper, void, nsCString, const nsACString&>
+  typedef BluetoothNotificationHALRunnable2<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsCString, nsString, const nsACString&, const nsAString&>
     UnknownAtNotification;
 
-  typedef BluetoothNotificationHALRunnable0<
-    HandsfreeNotificationHandlerWrapper, void>
+  typedef BluetoothNotificationHALRunnable1<
+    HandsfreeNotificationHandlerWrapper, void,
+    nsString, const nsAString&>
     KeyPressedNotification;
 
   // Bluedroid Handsfree callbacks
@@ -138,6 +154,14 @@ struct BluetoothHandsfreeHALCallback
   static void
   ConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddr)
   {
+    if (aState == BTHF_CONNECTION_STATE_CONNECTED && aBdAddr) {
+      memcpy(&sConnectedDeviceAddress, aBdAddr,
+             sizeof(sConnectedDeviceAddress));
+    } else if (aState == BTHF_CONNECTION_STATE_DISCONNECTED) {
+      memset(&sConnectedDeviceAddress, 0,
+             sizeof(sConnectedDeviceAddress));
+    }
+
     ConnectionStateNotification::Dispatch(
       &BluetoothHandsfreeNotificationHandler::ConnectionStateNotification,
       aState, aBdAddr);
@@ -156,21 +180,23 @@ struct BluetoothHandsfreeHALCallback
   {
     VoiceRecognitionNotification::Dispatch(
       &BluetoothHandsfreeNotificationHandler::VoiceRecognitionNotification,
-      aState);
+      aState, &sConnectedDeviceAddress);
   }
 
   static void
   AnswerCall()
   {
     AnswerCallNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::AnswerCallNotification);
+      &BluetoothHandsfreeNotificationHandler::AnswerCallNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
   HangupCall()
   {
     HangupCallNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::HangupCallNotification);
+      &BluetoothHandsfreeNotificationHandler::HangupCallNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
@@ -178,63 +204,71 @@ struct BluetoothHandsfreeHALCallback
   {
     VolumeNotification::Dispatch(
       &BluetoothHandsfreeNotificationHandler::VolumeNotification,
-      aType, aVolume);
+      aType, aVolume, &sConnectedDeviceAddress);
   }
 
   static void
   DialCall(char* aNumber)
   {
     DialCallNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::DialCallNotification, aNumber);
+      &BluetoothHandsfreeNotificationHandler::DialCallNotification,
+      aNumber, &sConnectedDeviceAddress);
   }
 
   static void
   Dtmf(char aDtmf)
   {
     DtmfNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::DtmfNotification, aDtmf);
+      &BluetoothHandsfreeNotificationHandler::DtmfNotification,
+      aDtmf, &sConnectedDeviceAddress);
   }
 
   static void
   NoiseReductionEchoCancellation(bthf_nrec_t aNrec)
   {
     NRECNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::NRECNotification, aNrec);
+      &BluetoothHandsfreeNotificationHandler::NRECNotification,
+      aNrec, &sConnectedDeviceAddress);
   }
 
   static void
   CallHold(bthf_chld_type_t aChld)
   {
     CallHoldNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::CallHoldNotification, aChld);
+      &BluetoothHandsfreeNotificationHandler::CallHoldNotification,
+      aChld, &sConnectedDeviceAddress);
   }
 
   static void
   Cnum()
   {
     CnumNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::CnumNotification);
+      &BluetoothHandsfreeNotificationHandler::CnumNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
   Cind()
   {
     CindNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::CindNotification);
+      &BluetoothHandsfreeNotificationHandler::CindNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
   Cops()
   {
     CopsNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::CopsNotification);
+      &BluetoothHandsfreeNotificationHandler::CopsNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
   Clcc()
   {
     ClccNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::ClccNotification);
+      &BluetoothHandsfreeNotificationHandler::ClccNotification,
+      &sConnectedDeviceAddress);
   }
 
   static void
@@ -242,15 +276,22 @@ struct BluetoothHandsfreeHALCallback
   {
     UnknownAtNotification::Dispatch(
       &BluetoothHandsfreeNotificationHandler::UnknownAtNotification,
-      aAtString);
+      aAtString, &sConnectedDeviceAddress);
   }
 
   static void
   KeyPressed()
   {
     KeyPressedNotification::Dispatch(
-      &BluetoothHandsfreeNotificationHandler::KeyPressedNotification);
+      &BluetoothHandsfreeNotificationHandler::KeyPressedNotification,
+      &sConnectedDeviceAddress);
   }
+
+  static bt_bdaddr_t sConnectedDeviceAddress;
+};
+
+bt_bdaddr_t BluetoothHandsfreeHALCallback::sConnectedDeviceAddress = {
+  {0, 0, 0, 0, 0, 0}
 };
 
 // Interface
@@ -269,7 +310,7 @@ BluetoothHandsfreeHALInterface::~BluetoothHandsfreeHALInterface()
 void
 BluetoothHandsfreeHALInterface::Init(
   BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-  BluetoothHandsfreeResultHandler* aRes)
+  int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes)
 {
   static bthf_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
@@ -400,6 +441,7 @@ BluetoothHandsfreeHALInterface::DisconnectAudio(
 
 void
 BluetoothHandsfreeHALInterface::StartVoiceRecognition(
+  const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->start_voice_recognition();
@@ -413,6 +455,7 @@ BluetoothHandsfreeHALInterface::StartVoiceRecognition(
 
 void
 BluetoothHandsfreeHALInterface::StopVoiceRecognition(
+  const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->stop_voice_recognition();
@@ -428,7 +471,7 @@ BluetoothHandsfreeHALInterface::StopVoiceRecognition(
 
 void
 BluetoothHandsfreeHALInterface::VolumeControl(
-  BluetoothHandsfreeVolumeType aType, int aVolume,
+  BluetoothHandsfreeVolumeType aType, int aVolume, const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -478,7 +521,8 @@ BluetoothHandsfreeHALInterface::DeviceStatusNotification(
 
 void
 BluetoothHandsfreeHALInterface::CopsResponse(
-  const char* aCops, BluetoothHandsfreeResultHandler* aRes)
+  const char* aCops, const nsAString& aBdAddr,
+  BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->cops_response(aCops);
 
@@ -494,6 +538,7 @@ BluetoothHandsfreeHALInterface::CindResponse(
   int aSvc, int aNumActive, int aNumHeld,
   BluetoothHandsfreeCallState aCallSetupState,
   int aSignal, int aRoam, int aBattChg,
+  const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -516,7 +561,8 @@ BluetoothHandsfreeHALInterface::CindResponse(
 
 void
 BluetoothHandsfreeHALInterface::FormattedAtResponse(
-  const char* aRsp, BluetoothHandsfreeResultHandler* aRes)
+  const char* aRsp, const nsAString& aBdAddr,
+  BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status = mInterface->formatted_at_response(aRsp);
 
@@ -530,6 +576,7 @@ BluetoothHandsfreeHALInterface::FormattedAtResponse(
 void
 BluetoothHandsfreeHALInterface::AtResponse(
   BluetoothHandsfreeAtResponse aResponseCode, int aErrorCode,
+  const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -557,6 +604,7 @@ BluetoothHandsfreeHALInterface::ClccResponse(
   BluetoothHandsfreeCallMptyType aMpty,
   const nsAString& aNumber,
   BluetoothHandsfreeCallAddressType aType,
+  const nsAString& aBdAddr,
   BluetoothHandsfreeResultHandler* aRes)
 {
   bt_status_t status;
@@ -609,6 +657,25 @@ BluetoothHandsfreeHALInterface::PhoneStateChange(int aNumActive, int aNumHeld,
   if (aRes) {
     DispatchBluetoothHandsfreeHALResult(
       aRes, &BluetoothHandsfreeResultHandler::PhoneStateChange,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+/* Wide Band Speech */
+
+void
+BluetoothHandsfreeHALInterface::ConfigureWbs(
+  const nsAString& aBdAddr,
+  BluetoothHandsfreeWbsConfig aConfig,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  // TODO: to be implemented
+
+  bt_status_t status = BT_STATUS_UNSUPPORTED;
+
+  if (aRes) {
+    DispatchBluetoothHandsfreeHALResult(
+      aRes, &BluetoothHandsfreeResultHandler::ConfigureWbs,
       ConvertDefault(status, STATUS_FAIL));
   }
 }
