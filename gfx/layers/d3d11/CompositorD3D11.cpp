@@ -1211,20 +1211,14 @@ CompositorD3D11::VerifyBufferSize()
     hr = mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
                                    DXGI_FORMAT_B8G8R8A8_UNORM,
                                    0);
-    HandleError(hr);
     mDisableSequenceForNextFrame = true;
   } else {
     hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
                                    DXGI_FORMAT_B8G8R8A8_UNORM,
                                    0);
-    HandleError(hr);
   }
 
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  return true;
+  return Succeeded(hr);
 }
 
 void
