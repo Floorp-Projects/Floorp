@@ -67,12 +67,15 @@ public:
 
   /* Voice Recognition */
 
-  nsresult StartVoiceRecognitionCmd(BluetoothHandsfreeResultHandler* aRes);
-  nsresult StopVoiceRecognitionCmd(BluetoothHandsfreeResultHandler* aRes);
+  nsresult StartVoiceRecognitionCmd(const nsAString& aBdAddr,
+                                    BluetoothHandsfreeResultHandler* aRes);
+  nsresult StopVoiceRecognitionCmd(const nsAString& aBdAddr,
+                                   BluetoothHandsfreeResultHandler* aRes);
 
   /* Volume */
 
   nsresult VolumeControlCmd(BluetoothHandsfreeVolumeType aType, int aVolume,
+                            const nsAString& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes);
 
   /* Device status */
@@ -85,16 +88,17 @@ public:
 
   /* Responses */
 
-  nsresult CopsResponseCmd(const char* aCops,
+  nsresult CopsResponseCmd(const char* aCops, const nsAString& aBdAddr,
                            BluetoothHandsfreeResultHandler* aRes);
   nsresult CindResponseCmd(int aSvc, int aNumActive, int aNumHeld,
                            BluetoothHandsfreeCallState aCallSetupState,
                            int aSignal, int aRoam, int aBattChg,
+                           const nsAString& aBdAddr,
                            BluetoothHandsfreeResultHandler* aRes);
-  nsresult FormattedAtResponseCmd(const char* aRsp,
+  nsresult FormattedAtResponseCmd(const char* aRsp, const nsAString& aBdAddr,
                                   BluetoothHandsfreeResultHandler* aRes);
   nsresult AtResponseCmd(BluetoothHandsfreeAtResponse aResponseCode,
-                         int aErrorCode,
+                         int aErrorCode, const nsAString& aBdAddr,
                          BluetoothHandsfreeResultHandler* aRes);
   nsresult ClccResponseCmd(int aIndex, BluetoothHandsfreeCallDirection aDir,
                            BluetoothHandsfreeCallState aState,
@@ -102,6 +106,7 @@ public:
                            BluetoothHandsfreeCallMptyType aMpty,
                            const nsAString& aNumber,
                            BluetoothHandsfreeCallAddressType aType,
+                           const nsAString& aBdAddr,
                            BluetoothHandsfreeResultHandler* aRes);
 
   /* Phone State */
@@ -361,7 +366,14 @@ protected:
                  void* aUserData);
 
   static BluetoothHandsfreeNotificationHandler* sNotificationHandler;
+#if ANDROID_VERSION < 21
+  /* |sConnectedDeviceAddress| stores Bluetooth device address of the
+   * connected device. Before BlueZ 5.25, we maintain this address by ourselves
+   * through ConnectionStateNtf(); after BlueZ 5.25, every callback carries
+   * this address directly so we don't have to keep it.
+   */
   static nsString sConnectedDeviceAddress;
+#endif
 };
 
 class BluetoothDaemonHandsfreeInterface MOZ_FINAL
