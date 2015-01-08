@@ -471,8 +471,9 @@ case "$target" in
         changequote([,])
 
         # Determine compiler version
-        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | cut -c 1-2`
-        _CC_MINOR_VERSION=`echo ${CC_VERSION} | cut -c 3-4`
+        _CC_MAJOR_VERSION=`echo ${MSVC_VERSION_FULL} | cut -c 1-2`
+        _CC_MINOR_VERSION=`echo ${MSVC_VERSION_FULL} | cut -c 3-4`
+        _CC_BUILD_VERSION=`echo ${MSVC_VERSION_FULL} | cut -c 5-`
         _MSC_VER=${CC_VERSION}
 
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | cut -c 1-2`
@@ -484,13 +485,15 @@ case "$target" in
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
 
-        if test "$_CC_MAJOR_VERSION" = "18"; then
+        if test "$_CC_MAJOR_VERSION" = "18" -a "$_CC_BUILD_VERSION" -ge "30723"; then
             _CC_SUITE=12
             MSVS_VERSION=2013
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
         else
-            AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
+            AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
+You must install Visual C++ 2013 Update 3 or newer in order to build.
+See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_C_RUNTIME_DLL)

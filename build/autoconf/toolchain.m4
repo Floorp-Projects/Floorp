@@ -15,7 +15,7 @@ cat <<EOF > conftest.c
 #if defined(__clang__)
 COMPILER clang-cl _MSC_VER
 #else
-COMPILER msvc _MSC_VER
+COMPILER msvc _MSC_FULL_VER
 #endif
 #elif defined(__clang__)
 COMPILER clang __clang_major__.__clang_minor__.__clang_patchlevel__
@@ -55,6 +55,13 @@ rm -f conftest.out
 if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_LD=1
 fi
+
+if test "$compiler" = "msvc"; then
+     MSVC_VERSION_FULL="$CXX_VERSION"
+     CC_VERSION=`echo ${CC_VERSION} | cut -c 1-4`
+     CXX_VERSION=`echo ${CXX_VERSION} | cut -c 1-4`
+fi
+
 INTEL_CC=
 INTEL_CXX=
 if test "$compiler" = "icc"; then
@@ -78,6 +85,7 @@ if test "$compiler" = "clang-cl"; then
     # getting the right version here manually.
     CC_VERSION=1800
     CXX_VERSION=1800
+    MSVC_VERSION_FULL=180030723
     # Build on clang-cl with MSVC 2013 with fallback emulation.
     CFLAGS="$CFLAGS -fmsc-version=1800 -fallback"
     CXXFLAGS="$CXXFLAGS -fmsc-version=1800 -fallback"
