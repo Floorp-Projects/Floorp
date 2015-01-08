@@ -62,6 +62,7 @@ public:
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(RESPONSETAINT_BASIC)
     , mRedirectCount(0)
+    , mCacheMode(RequestCache::Default)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
     , mManualRedirect(false)
@@ -91,6 +92,7 @@ public:
     , mCredentialsMode(aOther.mCredentialsMode)
     , mResponseTainting(aOther.mResponseTainting)
     , mRedirectCount(aOther.mRedirectCount)
+    , mCacheMode(aOther.mCacheMode)
     , mAuthenticationFlag(aOther.mAuthenticationFlag)
     , mForceOriginHeader(aOther.mForceOriginHeader)
     , mManualRedirect(aOther.mManualRedirect)
@@ -200,6 +202,12 @@ public:
     mResponseTainting = aTainting;
   }
 
+  RequestCache
+  GetCacheMode() const
+  {
+    return mCacheMode;
+  }
+
   nsContentPolicyType
   GetContext() const
   {
@@ -278,6 +286,7 @@ private:
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
   ResponseTainting mResponseTainting;
+  RequestCache mCacheMode;
 
   uint32_t mRedirectCount;
 
