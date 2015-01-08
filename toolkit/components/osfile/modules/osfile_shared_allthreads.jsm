@@ -25,6 +25,15 @@
 const Cu = typeof Components != "undefined" ? Components.utils : undefined;
 const Ci = typeof Components != "undefined" ? Components.interfaces : undefined;
 const Cc = typeof Components != "undefined" ? Components.classes : undefined;
+
+/**
+ * A constructor for messages that require transfers instead of copies.
+ *
+ * See BasePromiseWorker.Meta.
+ *
+ * @constructor
+ */
+let Meta;
 if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
@@ -32,6 +41,10 @@ if (typeof Components != "undefined") {
   this.exports = {};
 
   Cu.import("resource://gre/modules/Services.jsm", this);
+  Meta = Cu.import("resource://gre/modules/PromiseWorker.jsm", {}).BasePromiseWorker.Meta;
+} else {
+  importScripts("resource://gre/modules/workers/require.js");
+  Meta = require("resource://gre/modules/workers/PromiseWorker.js").Meta;
 }
 
 let EXPORTED_SYMBOLS = [
@@ -46,11 +59,11 @@ let EXPORTED_SYMBOLS = [
   "declareFFI",
   "declareLazy",
   "declareLazyFFI",
-  "normalizeToPointer",
+  "normalizeBufferArgs",
   "projectValue",
+  "isArrayBuffer",
   "isTypedArray",
   "defineLazyGetter",
-  "offsetBy",
   "OS" // Warning: this exported symbol will disappear
 ];
 
@@ -141,7 +154,15 @@ let stringifyArg = function stringifyArg(arg) {
      * compartment.
      */
     if (argToString === "[object Object]") {
-      return JSON.stringify(arg);
+      return JSON.stringify(arg, function(key, value) {
+        if (isTypedArray(value)) {
+          return "["+ value.constructor.name + " " + value.byteOffset + " " + value.byteLength + "]";
+        }
+        if (isArrayBuffer(arg)) {
+          return "[" + value.constructor.name + " " + value.byteLength + "]";
+        }
+        return value;
+      });
     } else {
       return argToString;
     }
@@ -387,10 +408,19 @@ Type.prototype = {
  * Utility function used to determine whether an object is a typed array
  */
 let isTypedArray = function isTypedArray(obj) {
-  return typeof obj == "object"
+  return obj != null && typeof obj == "object"
     && "byteOffset" in obj;
 };
 exports.isTypedArray = isTypedArray;
+
+/**
+ * Utility function used to determine whether an object is an ArrayBuffer.
+ */
+let isArrayBuffer = function(obj) {
+  return obj != null && typeof obj == "object" &&
+    obj.constructor.name == "ArrayBuffer";
+};
+exports.isArrayBuffer = isArrayBuffer;
 
 /**
  * A |Type| of pointers.
@@ -430,13 +460,16 @@ PtrType.prototype.toMsg = function ptr_toMsg(value) {
   if (typeof value == "string") {
     return { string: value };
   }
+  if (isTypedArray(value)) {
+    // Automatically transfer typed arrays
+    return new Meta({data: value}, {transfers: [value.buffer]});
+  }
+  if (isArrayBuffer(value)) {
+    // Automatically transfer array buffers
+    return new Meta({data: value}, {transfers: [value]});
+  }
   let normalized;
-  if (isTypedArray(value)) { // Typed array
-    normalized = Type.uint8_t.in_ptr.implementation(value.buffer);
-    if (value.byteOffset != 0) {
-      normalized = offsetBy(normalized, value.byteOffset);
-    }
-  } else if ("addressOfElement" in value) { // C array
+  if ("addressOfElement" in value) { // C array
     normalized = value.addressOfElement(0);
   } else if ("isNull" in value) { // C pointer
     normalized = value;
@@ -457,6 +490,9 @@ PtrType.prototype.fromMsg = function ptr_fromMsg(msg) {
   }
   if ("string" in msg) {
     return msg.string;
+  }
+  if ("data" in msg) {
+    return msg.data;
   }
   if ("ptr" in msg) {
     let address = ctypes.uintptr_t(msg.ptr);
@@ -1144,96 +1180,34 @@ function declareLazy(object, field, lib, ...declareArgs) {
 }
 exports.declareLazy = declareLazy;
 
-// A bogus array type used to perform pointer arithmetics
-let gOffsetByType;
-
 /**
- * Advance a pointer by a number of items.
+ * Utility function used to sanity check buffer and length arguments.  The
+ * buffer must be a Typed Array.
  *
- * This method implements adding an integer to a pointer in C.
- *
- * Example:
- *   // ptr is a uint16_t*,
- *   offsetBy(ptr, 3)
- *  // returns a uint16_t* with the address ptr + 3 * 2 bytes
- *
- * @param {C pointer} pointer The start pointer.
- * @param {number} length The number of items to advance. Must not be
- * negative.
- *
- * @return {C pointer} |pointer| advanced by |length| items
- */
-let offsetBy =
-  function offsetBy(pointer, length) {
-    if (length === undefined || length < 0) {
-      throw new TypeError("offsetBy expects a positive number");
-    }
-   if (!("isNull" in pointer)) {
-      throw new TypeError("offsetBy expects a pointer");
-    }
-    if (length == 0) {
-      return pointer;
-    }
-    let type = pointer.constructor;
-    let size = type.targetType.size;
-    if (size == 0 || size == null) {
-      throw new TypeError("offsetBy cannot be applied to a pointer without size");
-    }
-    let bytes = length * size;
-    if (!gOffsetByType || gOffsetByType.size <= bytes) {
-      gOffsetByType = ctypes.uint8_t.array(bytes * 2);
-    }
-    let addr = ctypes.cast(pointer, gOffsetByType.ptr).
-      contents.addressOfElement(bytes);
-    return ctypes.cast(addr, type);
-};
-exports.offsetBy = offsetBy;
-
-/**
- * Utility function used to normalize a Typed Array or C
- * pointer into a uint8_t C pointer.
- *
- * Future versions might extend this to other data structures.
- *
- * @param {Typed array | C pointer} candidate The buffer. If
- * a C pointer, it must be non-null.
+ * @param {Typed array} candidate The buffer.
  * @param {number} bytes The number of bytes that |candidate| should contain.
- * Used for sanity checking if the size of |candidate| can be determined.
  *
- * @return {ptr:{C pointer}, bytes:number} A C pointer of type uint8_t,
- * corresponding to the start of |candidate|.
+ * @return number The bytes argument clamped to the length of the buffer.
  */
-function normalizeToPointer(candidate, bytes) {
+function normalizeBufferArgs(candidate, bytes) {
   if (!candidate) {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
+    throw new TypeError("Expecting a Typed Array");
   }
-  let ptr;
-  if ("isNull" in candidate) {
-    if (candidate.isNull()) {
-      throw new TypeError("Expecting a non-null pointer");
-    }
-    ptr = Type.uint8_t.out_ptr.cast(candidate);
-    if (bytes == null) {
-      throw new TypeError("C pointer missing bytes indication.");
-    }
-  } else if (isTypedArray(candidate)) {
-    // Typed Array
-    ptr = Type.uint8_t.out_ptr.implementation(candidate.buffer);
-    if (bytes == null) {
-      bytes = candidate.byteLength;
-    } else if (candidate.byteLength < bytes) {
-      throw new TypeError("Buffer is too short. I need at least " +
-                         bytes +
-                         " bytes but I have only " +
-                         candidate.byteLength +
-                          "bytes");
-    }
-  } else {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
+  if (!isTypedArray(candidate)) {
+    throw new TypeError("Expecting a Typed Array");
   }
-  return {ptr: ptr, bytes: bytes};
+  if (bytes == null) {
+    bytes = candidate.byteLength;
+  } else if (candidate.byteLength < bytes) {
+    throw new TypeError("Buffer is too short. I need at least " +
+                       bytes +
+                       " bytes but I have only " +
+                       candidate.byteLength +
+                        "bytes");
+  }
+  return bytes;
 };
-exports.normalizeToPointer = normalizeToPointer;
+exports.normalizeBufferArgs = normalizeBufferArgs;
 
 ///////////////////// OS interactions
 
@@ -1274,8 +1248,7 @@ exports.OS = {
     declareFFI: declareFFI,
     projectValue: projectValue,
     isTypedArray: isTypedArray,
-    defineLazyGetter: defineLazyGetter,
-    offsetBy: offsetBy
+    defineLazyGetter: defineLazyGetter
   }
 };
 
