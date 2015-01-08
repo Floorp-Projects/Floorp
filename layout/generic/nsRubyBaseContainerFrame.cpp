@@ -62,8 +62,8 @@ nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const
  */
 struct MOZ_STACK_CLASS mozilla::RubyColumn
 {
-  nsIFrame* mBaseFrame;
-  nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE> mTextFrames;
+  nsRubyBaseFrame* mBaseFrame;
+  nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
   RubyColumn() : mBaseFrame(nullptr) { }
 };
 
@@ -184,10 +184,14 @@ RubyColumnEnumerator::GetFrameAtLevel(uint32_t aIndex) const
 void
 RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
 {
-  aColumn.mBaseFrame = GetFrameAtLevel(0);
+  nsRubyContentFrame* rbFrame = GetFrameAtLevel(0);
+  MOZ_ASSERT(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+  aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(rbFrame);
   aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 1, iend = mFrames.Length(); i < iend; i++) {
-    aColumn.mTextFrames.AppendElement(GetFrameAtLevel(i));
+    nsRubyContentFrame* rtFrame = GetFrameAtLevel(i);
+    MOZ_ASSERT(!rtFrame || rtFrame->GetType() == nsGkAtoms::rubyTextFrame);
+    aColumn.mTextFrames.AppendElement(static_cast<nsRubyTextFrame*>(rtFrame));
   }
 }
 
@@ -581,7 +585,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
       PushChildren(column.mBaseFrame, column.mBaseFrame->GetPrevSibling());
     }
     for (uint32_t i = 0; i < rtcCount; i++) {
-      nsIFrame* textFrame = column.mTextFrames[i];
+      nsRubyTextFrame* textFrame = column.mTextFrames[i];
       if (textFrame) {
         aReflowState.mTextContainers[i]->PushChildren(
           textFrame, textFrame->GetPrevSibling());
@@ -625,9 +629,8 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   // Reflow text frames
   for (uint32_t i = 0; i < rtcCount; i++) {
-    nsIFrame* textFrame = aColumn.mTextFrames[i];
+    nsRubyTextFrame* textFrame = aColumn.mTextFrames[i];
     if (textFrame) {
-      MOZ_ASSERT(textFrame->GetType() == nsGkAtoms::rubyTextFrame);
       nsAutoString annotationText;
       if (!nsContentUtils::GetNodeTextContent(textFrame->GetContent(),
                                               true, annotationText)) {
@@ -667,7 +670,6 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   // Reflow the base frame
   if (aColumn.mBaseFrame) {
-    MOZ_ASSERT(aColumn.mBaseFrame->GetType() == nsGkAtoms::rubyBaseFrame);
     nsReflowStatus reflowStatus;
     nsHTMLReflowMetrics metrics(baseReflowState);
     RubyUtils::ClearReservedISize(aColumn.mBaseFrame);
@@ -694,7 +696,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       continue;
     }
     nsLineLayout* lineLayout = textReflowStates[i]->mLineLayout;
-    nsIFrame* textFrame = aColumn.mTextFrames[i];
+    nsRubyTextFrame* textFrame = aColumn.mTextFrames[i];
     nscoord deltaISize = icoord - lineLayout->GetCurrentICoord();
     if (deltaISize > 0) {
       lineLayout->AdvanceICoord(deltaISize);
@@ -738,14 +740,17 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
   const TextContainerArray& textContainers = aPullFrameState.mTextContainers;
   const uint32_t rtcCount = textContainers.Length();
 
-  aColumn.mBaseFrame = PullNextInFlowChild(aPullFrameState.mBase);
+  nsIFrame* nextBase = PullNextInFlowChild(aPullFrameState.mBase);
+  MOZ_ASSERT(!nextBase || nextBase->GetType() == nsGkAtoms::rubyBaseFrame);
+  aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(nextBase);
   aIsComplete = !aColumn.mBaseFrame;
 
   aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsIFrame* nextText =
       textContainers[i]->PullNextInFlowChild(aPullFrameState.mTexts[i]);
-    aColumn.mTextFrames.AppendElement(nextText);
+    MOZ_ASSERT(!nextText || nextText->GetType() == nsGkAtoms::rubyTextFrame);
+    aColumn.mTextFrames.AppendElement(static_cast<nsRubyTextFrame*>(nextText));
     // If there exists any frame in continations, we haven't
     // completed the reflow process.
     aIsComplete = aIsComplete && !nextText;
