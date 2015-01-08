@@ -386,17 +386,17 @@ class RepatchIonCache : public IonCache
     {
     }
 
-    virtual void reset();
+    virtual void reset() MOZ_OVERRIDE;
 
     // Set the initial jump state of the cache. The initialJump is the inline
     // jump that will point to out-of-line code (such as the slow path, or
     // stubs), and the rejoinLabel is the position that all out-of-line paths
     // will rejoin to.
-    void emitInitialJump(MacroAssembler &masm, AddCacheState &addState);
-    void bindInitialJump(MacroAssembler &masm, AddCacheState &addState);
+    void emitInitialJump(MacroAssembler &masm, AddCacheState &addState) MOZ_OVERRIDE;
+    void bindInitialJump(MacroAssembler &masm, AddCacheState &addState) MOZ_OVERRIDE;
 
     // Update the labels once the code is finalized.
-    void updateBaseAddress(JitCode *code, MacroAssembler &masm);
+    void updateBaseAddress(JitCode *code, MacroAssembler &masm) MOZ_OVERRIDE;
 
     virtual void *rejoinAddress() MOZ_OVERRIDE {
         return rejoinLabel().raw();
@@ -492,14 +492,14 @@ class DispatchIonCache : public IonCache
     {
     }
 
-    virtual void reset();
-    virtual void initializeAddCacheState(LInstruction *ins, AddCacheState *addState);
+    virtual void reset() MOZ_OVERRIDE;
+    virtual void initializeAddCacheState(LInstruction *ins, AddCacheState *addState) MOZ_OVERRIDE;
 
-    void emitInitialJump(MacroAssembler &masm, AddCacheState &addState);
-    void bindInitialJump(MacroAssembler &masm, AddCacheState &addState);
+    void emitInitialJump(MacroAssembler &masm, AddCacheState &addState) MOZ_OVERRIDE;
+    void bindInitialJump(MacroAssembler &masm, AddCacheState &addState) MOZ_OVERRIDE;
 
     // Fix up the first stub pointer once the code is finalized.
-    void updateBaseAddress(JitCode *code, MacroAssembler &masm);
+    void updateBaseAddress(JitCode *code, MacroAssembler &masm) MOZ_OVERRIDE;
 
     virtual void *rejoinAddress() MOZ_OVERRIDE {
         return rejoinLabel_.raw();
