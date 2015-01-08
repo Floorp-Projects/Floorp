@@ -880,9 +880,10 @@ XRE_ProcLoaderPreload(const char* aProgramDir, const nsXREAppData* aAppData)
     rv = NS_NewNativeLocalFile(nsCString(aProgramDir),
 			       true,
 			       getter_AddRefs(omnijarFile));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
     rv = omnijarFile->AppendNative(NS_LITERAL_CSTRING(NS_STRINGIFY(OMNIJAR_NAME)));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
     /*
      * gAppData is required by nsXULAppInfo.  The manifest parser
