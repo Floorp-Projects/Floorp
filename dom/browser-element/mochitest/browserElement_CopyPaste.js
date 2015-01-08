@@ -181,12 +181,15 @@ function testSelectAll(e) {
   // Skip mozbrowser test if we're at child process.
   if (!isChildProcess()) {
     iframeOuter.addEventListener("mozbrowserselectionstatechanged", function selectchangeforselectall(e) {
-      iframeOuter.removeEventListener("mozbrowserselectionstatechanged", selectchangeforselectall, true);
-      ok(true, "got mozbrowserselectionstatechanged event." + stateMeaning);
-      ok(e.detail, "event.detail is not null." + stateMeaning);
-      ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
-      ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
-      SimpleTest.executeSoon(function() { testCopy1(e); });
+      if (e.detail.states.indexOf('selectall') == 0) {
+        iframeOuter.removeEventListener("mozbrowserselectionstatechanged", selectchangeforselectall, true);
+        ok(true, "got mozbrowserselectionstatechanged event." + stateMeaning);
+        ok(e.detail, "event.detail is not null." + stateMeaning);
+        ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
+        ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
+        ok(e.detail.states, "event.detail.state " + e.detail.states);
+        SimpleTest.executeSoon(function() { testCopy1(e); });
+      }
     }, true);
   }
 
