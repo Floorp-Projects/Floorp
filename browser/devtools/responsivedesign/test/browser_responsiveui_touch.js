@@ -34,7 +34,7 @@ function test() {
   }
 
   function testWithTouch() {
-    gBrowser.selectedTab.__responsiveUI.enableTouch();
+    mgr.getResponsiveUIForTab(gBrowser.selectedTab).enableTouch();
     let div = content.document.querySelector("div");
     let x = 2, y = 2;
     EventUtils.synthesizeMouse(div, x, y, {type: "mousedown", isSynthesized: false}, content);
@@ -47,7 +47,7 @@ function test() {
   }
 
   function testWithTouchAgain() {
-    gBrowser.selectedTab.__responsiveUI.disableTouch();
+    mgr.getResponsiveUIForTab(gBrowser.selectedTab).disableTouch();
     let div = content.document.querySelector("div");
     let x = 2, y = 2;
     EventUtils.synthesizeMouse(div, x, y, {type: "mousedown", isSynthesized: false}, content);
