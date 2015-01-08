@@ -55,21 +55,6 @@ public:
   Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
   TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;
 
-  // Force the timeline to advance to |aTimeStamp|.
-  //
-  // Normally the timeline uses the refresh driver time but when we have
-  // animations that are timed from when their first frame is rendered we need
-  // to bring the timeline forward to that moment. If we don't, calling
-  // IsRunning() will incorrectly return false (because GetCurrentTime() will
-  // return a negative time) until the next refresh driver tick causes the
-  // timeline to catch up.
-  //
-  // |aTimeStamp| must be greater or equal to the current refresh driver
-  // time for the document with which this timeline is associated unless the
-  // refresh driver is under test control, in which case this method will
-  // be a no-op.
-  void FastForward(const TimeStamp& aTimeStamp);
-
   nsRefreshDriver* GetRefreshDriver() const;
   // Returns true if this timeline is driven by a refresh driver that is
   // under test control. In such a case, there is no correspondence between
@@ -91,10 +76,6 @@ protected:
   // we don't have a refresh driver (e.g. because we are in a display:none
   // iframe).
   mutable TimeStamp mLastRefreshDriverTime;
-
-  // The time to which the timeline has been forced-to in order to account for
-  // animations that are started in-between frames.
-  mutable TimeStamp mFastForwardTime;
 };
 
 } // namespace dom
