@@ -94,12 +94,12 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS(nsFindContentIterator)
 
   // nsIContentIterator
-  virtual nsresult Init(nsINode* aRoot)
+  virtual nsresult Init(nsINode* aRoot) MOZ_OVERRIDE
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsresult Init(nsIDOMRange* aRange)
+  virtual nsresult Init(nsIDOMRange* aRange) MOZ_OVERRIDE
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -107,13 +107,13 @@ public:
   // Not a range because one of the endpoints may be anonymous.
   nsresult Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
                 nsIDOMNode* aEndNode, int32_t aEndOffset);
-  virtual void First();
-  virtual void Last();
-  virtual void Next();
-  virtual void Prev();
-  virtual nsINode* GetCurrentNode();
-  virtual bool IsDone();
-  virtual nsresult PositionAt(nsINode* aCurNode);
+  virtual void First() MOZ_OVERRIDE;
+  virtual void Last() MOZ_OVERRIDE;
+  virtual void Next() MOZ_OVERRIDE;
+  virtual void Prev() MOZ_OVERRIDE;
+  virtual nsINode* GetCurrentNode() MOZ_OVERRIDE;
+  virtual bool IsDone() MOZ_OVERRIDE;
+  virtual nsresult PositionAt(nsINode* aCurNode) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsFindContentIterator()
