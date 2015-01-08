@@ -180,7 +180,7 @@ GeckoMediaPluginService::Init()
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "profile-change-teardown", false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "last-pb-context-exited", false)));
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "gmp-clear-storage", false)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "browser:purge-session-history", false)));
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -324,10 +324,12 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
     // mode, we'll get the NodeId salt stored on-disk, and if we try to
     // open a PB mode origin-pair, we'll re-generate new salt.
     mTempNodeIds.Clear();
-  } else if (!strcmp("gmp-clear-storage", aTopic)) {
-    nsresult rv = GMPDispatch(
-      NS_NewRunnableMethod(this, &GeckoMediaPluginService::ClearStorage));
-    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!strcmp("browser:purge-session-history", aTopic)) {
+    // Clear everything!
+    if (!aSomeData || nsDependentString(aSomeData).IsEmpty()) {
+      return GMPDispatch(NS_NewRunnableMethod(
+          this, &GeckoMediaPluginService::ClearStorage));
+    }
   }
   return NS_OK;
 }
