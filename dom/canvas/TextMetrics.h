@@ -30,9 +30,9 @@ public:
     return width;
   }
 
-  JSObject* WrapObject(JSContext* aCx)
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
   {
-    return TextMetricsBinding::Wrap(aCx, this);
+    return TextMetricsBinding::Wrap(aCx, this, aReflector);
   }
 
 private:

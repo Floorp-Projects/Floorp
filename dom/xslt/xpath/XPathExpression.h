@@ -34,9 +34,9 @@ public:
                     nsIDocument *aDocument);
     ~XPathExpression();
 
-    JSObject* WrapObject(JSContext* aCx)
+    bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
     {
-        return XPathExpressionBinding::Wrap(aCx, this);
+        return XPathExpressionBinding::Wrap(aCx, this, aReflector);
     }
 
     already_AddRefed<XPathResult>
