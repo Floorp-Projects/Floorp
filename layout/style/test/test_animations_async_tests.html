@@ -27,10 +27,11 @@
    */
   function test1() {
     var animdiv = document.createElement("div");
+    // Take control of the refresh driver right from the start
+    advance_clock(0);
     animdiv.style.animation = "slide-left 100s linear"; // 10px per second
     gDisplay.appendChild(animdiv);
     var cs = getComputedStyle(animdiv, "");
-    advance_clock(0);
     is(cs.marginLeft, "-1000px", "initial value of animation (force flush)");
     advance_clock(1000);
     is(cs.marginLeft, "-990px", "value of animation before font load");
