@@ -7047,21 +7047,6 @@ if test -n "$MOZ_DEBUG"; then
 fi
 
 dnl ========================================================
-dnl = Enable trace malloc
-dnl ========================================================
-NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
-MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc   Enable malloc tracing; also disables DMD and jemalloc],
-    NS_TRACE_MALLOC=1,
-    NS_TRACE_MALLOC= )
-if test "$NS_TRACE_MALLOC"; then
-  # Please, Mr. Linker Man, don't take away our symbol names
-  MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-  AC_DEFINE(NS_TRACE_MALLOC)
-fi
-AC_SUBST(NS_TRACE_MALLOC)
-
-dnl ========================================================
 dnl = Enable DMD
 dnl ========================================================
 
@@ -7069,11 +7054,6 @@ MOZ_ARG_ENABLE_BOOL(dmd,
 [  --enable-dmd            Enable DMD; also enables jemalloc and replace-malloc],
     MOZ_DMD=1,
     MOZ_DMD= )
-
-dnl The two options are conflicting. Fails the configure to alert the user.
-if test "$NS_TRACE_MALLOC" -a "$MOZ_DMD"; then
-    AC_MSG_ERROR([--enable-trace-malloc and --enable-dmd are conflicting options])
-fi
 
 if test "$MOZ_DMD"; then
     AC_DEFINE(MOZ_DMD)
@@ -7096,10 +7076,6 @@ MOZ_ARG_ENABLE_BOOL(jemalloc,
     MOZ_MEMORY=1,
     MOZ_MEMORY=)
 
-if test "$NS_TRACE_MALLOC"; then
-    MOZ_MEMORY=
-fi
-
 case "${OS_TARGET}" in
 Android|WINNT|Darwin)
   MOZ_GLUE_IN_PROGRAM=
@@ -7121,11 +7097,6 @@ MOZ_ARG_ENABLE_BOOL(replace-malloc,
 [  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
     MOZ_REPLACE_MALLOC=1,
     MOZ_REPLACE_MALLOC= )
-
-dnl The two options are conflicting. Fails the configure to alert the user.
-if test "$NS_TRACE_MALLOC" -a "$MOZ_REPLACE_MALLOC"; then
-    AC_MSG_ERROR([--enable-trace-malloc and --enable-replace-malloc are conflicting options])
-fi
 
 if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
     dnl We don't want to enable jemalloc unconditionally because it may be a
@@ -7601,9 +7572,9 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
     AC_LANG_RESTORE
 fi
 
-# Demangle only for debug or trace-malloc or DMD builds
+# Demangle only for debug or DMD builds
 MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
+if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_DEMANGLE_SYMBOLS=1
     AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
 fi
@@ -8423,7 +8394,7 @@ if test -n "$MOZ_DEVICES"; then
 fi
 
 dnl ========================================================
-if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
+if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
