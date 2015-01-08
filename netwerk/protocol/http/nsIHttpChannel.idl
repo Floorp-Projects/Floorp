@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[scriptable, uuid(82083578-fb78-4f9a-953c-cecbae500697)]
+[scriptable, uuid(a8bed710-653c-4ea4-9747-a629cc482cf8)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -298,6 +298,15 @@ interface nsIHttpChannel : nsIChannel
      *         has been received (before onStartRequest).
      */
     boolean isNoCacheResponse();
+
+    /**
+     * Returns true if the server sent a "Cache-Control: private" response
+     * header.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if called before the response
+     *         has been received (before onStartRequest).
+     */
+    boolean isPrivateResponse();
 
     /**
      * Instructs the channel to immediately redirect to a new destination.
