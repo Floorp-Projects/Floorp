@@ -10,6 +10,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "WritingModes.h"
+#include "RubyReflowState.h"
 #include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
@@ -124,6 +125,8 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsRubyTextContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
+  MOZ_ASSERT(aReflowState.mRubyReflowState, "No ruby reflow state provided");
+
   // All rt children have already been reflowed. All we need to do is
   // to report complete and return the desired size provided by the
   // ruby base container.
@@ -134,5 +137,7 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   // will take care of our continuations.
   aStatus = NS_FRAME_COMPLETE;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
-  aDesiredSize.SetSize(lineWM, mLineSize);
+  const RubyReflowState::TextContainerInfo& info =
+    aReflowState.mRubyReflowState->GetCurrentTextContainerInfo(this);
+  aDesiredSize.SetSize(lineWM, info.mLineSize);
 }
