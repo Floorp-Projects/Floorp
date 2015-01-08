@@ -1,5 +1,9 @@
 require "formula"
 
+# This is an antiquated version pinned to NDK revision r8e.  That's
+# the revision Mozilla's automation currently uses.  We could push
+# this to https://github.com/Homebrew/homebrew-versions if there's a
+# problem shipping it locally.
 class AndroidNdk < Formula
   homepage "http://developer.android.com/sdk/ndk/index.html"
 
