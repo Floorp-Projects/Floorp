@@ -176,6 +176,11 @@ struct BluetoothCallback
                                             BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
+  typedef BluetoothNotificationHALRunnable1<NotificationHandlerWrapper, void,
+                                            BluetoothActivityEnergyInfo,
+                                            const BluetoothActivityEnergyInfo&>
+    EnergyInfoNotification;
+
   // Bluedroid callbacks
 
   static const bt_property_t*
@@ -665,6 +670,7 @@ BluetoothHALInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 
 void
 BluetoothHALInterface::CreateBond(const nsAString& aBdAddr,
+                                  BluetoothTransport aTransport,
                                   BluetoothResultHandler* aRes)
 {
   bt_bdaddr_t bdAddr;
@@ -719,6 +725,23 @@ BluetoothHALInterface::CancelBond(const nsAString& aBdAddr,
   if (aRes) {
     DispatchBluetoothHALResult(aRes,
                                &BluetoothResultHandler::CancelBond,
+                               ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+/* Connection */
+
+void
+BluetoothHALInterface::GetConnectionState(const nsAString& aBdAddr,
+                                          BluetoothResultHandler* aRes)
+{
+  // TODO: to be implemented
+
+  int status = BT_STATUS_UNSUPPORTED;
+
+  if (aRes) {
+    DispatchBluetoothHALResult(aRes,
+                               &BluetoothResultHandler::GetConnectionState,
                                ConvertDefault(status, STATUS_FAIL));
   }
 }
@@ -827,6 +850,21 @@ BluetoothHALInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
   if (aRes) {
     DispatchBluetoothHALResult(aRes,
                                &BluetoothResultHandler::LeTestMode,
+                               ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+/* Energy Information */
+void
+BluetoothHALInterface::ReadEnergyInfo(BluetoothResultHandler* aRes)
+{
+  // TODO: to be implemented
+
+  int status = BT_STATUS_UNSUPPORTED;
+
+  if (aRes) {
+    DispatchBluetoothHALResult(aRes,
+                               &BluetoothResultHandler::ReadEnergyInfo,
                                ConvertDefault(status, STATUS_FAIL));
   }
 }

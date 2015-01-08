@@ -495,6 +495,9 @@ public:
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
                                       uint16_t aNumPackets) { }
 
+  virtual void EnergyInfoNotification(const BluetoothActivityEnergyInfo& aInfo)
+  { }
+
 protected:
   BluetoothNotificationHandler()
   { }
@@ -535,6 +538,8 @@ public:
   virtual void RemoveBond() { }
   virtual void CancelBond() { }
 
+  virtual void GetConnectionState() { }
+
   virtual void PinReply() { }
   virtual void SspReply() { }
 
@@ -542,6 +547,8 @@ public:
   virtual void DutModeSend() { }
 
   virtual void LeTestMode() { }
+
+  virtual void ReadEnergyInfo() { }
 };
 
 class BluetoothInterface
@@ -591,11 +598,17 @@ public:
   /* Bonds */
 
   virtual void CreateBond(const nsAString& aBdAddr,
+                          BluetoothTransport aTransport,
                           BluetoothResultHandler* aRes) = 0;
   virtual void RemoveBond(const nsAString& aBdAddr,
                           BluetoothResultHandler* aRes) = 0;
   virtual void CancelBond(const nsAString& aBdAddr,
                           BluetoothResultHandler* aRes) = 0;
+
+  /* Connection */
+
+  virtual void GetConnectionState(const nsAString& aBdAddr,
+                                  BluetoothResultHandler* aRes) = 0;
 
   /* Authentication */
 
@@ -618,6 +631,10 @@ public:
 
   virtual void LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                           BluetoothResultHandler* aRes) = 0;
+
+  /* Energy Info */
+
+  virtual void ReadEnergyInfo(BluetoothResultHandler* aRes) = 0;
 
   /* Profile Interfaces */
 

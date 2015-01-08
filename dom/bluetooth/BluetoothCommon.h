@@ -235,6 +235,22 @@ struct BluetoothProperty {
   BluetoothRemoteInfo mRemoteInfo;
 };
 
+/* Physical transport for GATT connections to remote dual-mode devices */
+enum BluetoothTransport {
+  TRANSPORT_AUTO,   /* No preference of physical transport */
+  TRANSPORT_BREDR,  /* Prefer BR/EDR transport */
+  TRANSPORT_LE      /* Prefer LE transport */
+};
+
+struct BluetoothActivityEnergyInfo {
+  uint8_t mStatus;
+  uint8_t mStackState;  /* stack reported state */
+  uint64_t mTxTime;     /* in ms */
+  uint64_t mRxTime;     /* in ms */
+  uint64_t mIdleTime;   /* in ms */
+  uint64_t mEnergyUsed; /* a product of mA, V and ms */
+};
+
 enum BluetoothSocketType {
   RFCOMM = 1,
   SCO    = 2,
