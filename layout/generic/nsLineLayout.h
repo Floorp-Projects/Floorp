@@ -27,10 +27,6 @@
 class nsFloatManager;
 struct nsStyleText;
 
-namespace mozilla {
-class RubyReflowState;
-}
-
 class nsLineLayout {
 public:
   /**
@@ -101,13 +97,6 @@ public:
   void SplitLineTo(int32_t aNewCount);
 
   bool IsZeroBSize();
-
-  // The ruby layout will be passed to the next frame to be reflowed
-  // via the HTML reflow state.
-  void SetRubyReflowState(mozilla::RubyReflowState* aRubyReflowState)
-  {
-    mRubyReflowState = aRubyReflowState;
-  }
 
   // Reflows the frame and returns the reflow status. aPushedFrame is true
   // if the frame is pushed to the next line because it doesn't fit.
@@ -564,10 +553,6 @@ protected:
   // "global" state not span "local" state.
   int32_t mLineNumber;
   mozilla::JustificationInfo mJustificationInfo;
-
-  // The ruby layout for the next frame to be reflowed.
-  // It is reset every time it is used.
-  mozilla::RubyReflowState* mRubyReflowState;
 
   int32_t mTotalPlacedFrames;
 

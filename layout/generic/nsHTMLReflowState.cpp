@@ -72,7 +72,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
   mFloatManager = nullptr;
   mLineLayout = nullptr;
-  mRubyReflowState = nullptr;
   memset(&mFlags, 0, sizeof(mFlags));
   mDiscoveredClearance = nullptr;
   mPercentHeightObserver = nullptr;
@@ -208,7 +207,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
     mLineLayout = aParentReflowState.mLineLayout;
   else
     mLineLayout = nullptr;
-  mRubyReflowState = nullptr;
 
   // Note: mFlags was initialized as a copy of aParentReflowState.mFlags up in
   // this constructor's init list, so the only flags that we need to explicitly
