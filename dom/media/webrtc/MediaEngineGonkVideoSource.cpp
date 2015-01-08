@@ -24,6 +24,7 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace android;
 
+#undef LOG
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
