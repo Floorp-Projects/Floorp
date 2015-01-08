@@ -129,13 +129,6 @@ static int32_t sMaxDecodeCount = 0;
   }                                     \
   PR_END_MACRO
 
-
-
-static int num_containers;
-static int num_discardable_containers;
-static int64_t total_source_bytes;
-static int64_t discardable_source_bytes;
-
 class ScaleRunner : public nsRunnable
 {
   enum ScaleState
@@ -309,30 +302,11 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mProgressTrackerInit = new ProgressTrackerInit(this, aProgressTracker);
 
   Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(0);
-
-  // Statistics
-  num_containers++;
 }
 
 //******************************************************************************
 RasterImage::~RasterImage()
 {
-  // Discardable statistics
-  if (mDiscardable) {
-    num_discardable_containers--;
-    discardable_source_bytes -= mSourceData.Length();
-
-    PR_LOG (GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
-            ("CompressedImageAccounting: destroying RasterImage %p.  "
-             "Total Containers: %d, Discardable containers: %d, "
-             "Total source bytes: %lld, Source bytes for discardable containers %lld",
-             this,
-             num_containers,
-             num_discardable_containers,
-             total_source_bytes,
-             discardable_source_bytes));
-  }
-
   if (mDecoder) {
     // Kill off our decode request, if it's pending.  (If not, this call is
     // harmless.)
@@ -345,10 +319,6 @@ RasterImage::~RasterImage()
   SurfaceCache::RemoveImage(ImageKey(this));
 
   mAnim = nullptr;
-
-  // Total statistics
-  num_containers--;
-  total_source_bytes -= mSourceData.Length();
 }
 
 /* static */ void
@@ -385,12 +355,6 @@ RasterImage::Init(const char* aMimeType,
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
-
-  // Statistics
-  if (mDiscardable) {
-    num_discardable_containers++;
-    discardable_source_bytes += mSourceData.Length();
-  }
 
   // Lock this image's surfaces in the SurfaceCache if we're not discardable.
   if (!mDiscardable) {
@@ -1250,21 +1214,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
     }
   }
 
-  // Statistics
-  total_source_bytes += aCount;
-  if (mDiscardable)
-    discardable_source_bytes += aCount;
-  PR_LOG (GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
-          ("CompressedImageAccounting: Added compressed data to RasterImage %p (%s). "
-           "Total Containers: %d, Discardable containers: %d, "
-           "Total source bytes: %lld, Source bytes for discardable containers %lld",
-           this,
-           mSourceDataMimeType.get(),
-           num_containers,
-           num_discardable_containers,
-           total_source_bytes,
-           discardable_source_bytes));
-
   return NS_OK;
 }
 
@@ -1450,9 +1399,6 @@ RasterImage::Discard()
   // timers are cancelled.
   NS_ABORT_IF_FALSE(!mAnim, "Asked to discard for animated image!");
 
-  // For post-operation logging
-  int old_frame_count = GetNumFrames();
-
   // Delete all the decoded frames.
   SurfaceCache::RemoveImage(ImageKey(this));
 
@@ -1466,21 +1412,6 @@ RasterImage::Discard()
   }
 
   mDecodeStatus = DecodeStatus::INACTIVE;
-
-  // Log
-  PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
-         ("CompressedImageAccounting: discarded uncompressed image "
-          "data from RasterImage %p (%s) - %d frames (cached count: %d); "
-          "Total Containers: %d, Discardable containers: %d, "
-          "Total source bytes: %lld, Source bytes for discardable containers %lld",
-          this,
-          mSourceDataMimeType.get(),
-          old_frame_count,
-          GetNumFrames(),
-          num_containers,
-          num_discardable_containers,
-          total_source_bytes,
-          discardable_source_bytes));
 }
 
 bool
