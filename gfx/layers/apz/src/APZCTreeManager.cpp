@@ -1374,9 +1374,9 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
     // If we didn't match anything in the subtree, check |node|.
     if (!result) {
-      APZCTM_LOG("Testing ParentLayer point %f %f (Layer %f %f) against node %p\n",
-          aHitTestPoint.x, aHitTestPoint.y,
-          hitTestPointForChildLayers.x, hitTestPointForChildLayers.y,
+      APZCTM_LOG("Testing ParentLayer point %s (Layer %s) against node %p\n",
+          Stringify(aHitTestPoint).c_str(),
+          hitTestPointForChildLayers ? Stringify(hitTestPointForChildLayers.ref()).c_str() : "nil",
           node);
       HitTestResult hitResult = node->HitTest(aHitTestPoint);
       if (hitResult != HitTestResult::NoApzcHit) {
