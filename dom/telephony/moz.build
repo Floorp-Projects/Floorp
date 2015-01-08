@@ -23,6 +23,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.telephony += [
     'ipc/TelephonyChild.h',
+    'ipc/TelephonyIPCSerializer.h',
     'ipc/TelephonyParent.h',
     'TelephonyCallback.h',
     'TelephonyCallInfo.h',

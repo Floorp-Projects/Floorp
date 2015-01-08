@@ -294,26 +294,11 @@ TelephonyParent::RecvSetSpeakerEnabled(const bool& aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyParent::CallStateChanged(uint32_t aClientId,
-                                  uint32_t aCallIndex,
-                                  uint16_t aCallState,
-                                  const nsAString& aNumber,
-                                  uint16_t aNumberPresentation,
-                                  const nsAString& aName,
-                                  uint16_t aNamePresentation,
-                                  bool aIsOutgoing,
-                                  bool aIsEmergency,
-                                  bool aIsConference,
-                                  bool aIsSwitchable,
-                                  bool aIsMergeable)
+TelephonyParent::CallStateChanged(nsITelephonyCallInfo* aInfo)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
-                        aNumberPresentation, nsString(aName), aNamePresentation,
-                        aIsOutgoing, aIsEmergency, aIsConference,
-                        aIsSwitchable, aIsMergeable);
-  return SendNotifyCallStateChanged(aClientId, data) ? NS_OK : NS_ERROR_FAILURE;
+  return SendNotifyCallStateChanged(aInfo) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -332,18 +317,7 @@ TelephonyParent::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyParent::EnumerateCallState(uint32_t aClientId,
-                                    uint32_t aCallIndex,
-                                    uint16_t aCallState,
-                                    const nsAString& aNumber,
-                                    uint16_t aNumberPresentation,
-                                    const nsAString& aName,
-                                    uint16_t aNamePresentation,
-                                    bool aIsOutgoing,
-                                    bool aIsEmergency,
-                                    bool aIsConference,
-                                    bool aIsSwitchable,
-                                    bool aIsMergeable)
+TelephonyParent::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
   MOZ_CRASH("Not a EnumerateCalls request!");
 }
@@ -428,18 +402,7 @@ TelephonyRequestParent::SendResponse(const IPCTelephonyResponse& aResponse)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyRequestParent::CallStateChanged(uint32_t aClientId,
-                                         uint32_t aCallIndex,
-                                         uint16_t aCallState,
-                                         const nsAString& aNumber,
-                                         uint16_t aNumberPresentation,
-                                         const nsAString& aName,
-                                         uint16_t aNamePresentation,
-                                         bool aIsOutgoing,
-                                         bool aIsEmergency,
-                                         bool aIsConference,
-                                         bool aIsSwitchable,
-                                         bool aIsMergeable)
+TelephonyRequestParent::CallStateChanged(nsITelephonyCallInfo* aInfo)
 {
   MOZ_CRASH("Not a TelephonyParent!");
 }
@@ -459,27 +422,11 @@ TelephonyRequestParent::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::EnumerateCallState(uint32_t aClientId,
-                                           uint32_t aCallIndex,
-                                           uint16_t aCallState,
-                                           const nsAString& aNumber,
-                                           uint16_t aNumberPresentation,
-                                           const nsAString& aName,
-                                           uint16_t aNamePresentation,
-                                           bool aIsOutgoing,
-                                           bool aIsEmergency,
-                                           bool aIsConference,
-                                           bool aIsSwitchable,
-                                           bool aIsMergeable)
+TelephonyRequestParent::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
-                        aNumberPresentation, nsString(aName), aNamePresentation,
-                        aIsOutgoing, aIsEmergency, aIsConference,
-                        aIsSwitchable, aIsMergeable);
-  return SendNotifyEnumerateCallState(aClientId, data) ? NS_OK
-                                                       : NS_ERROR_FAILURE;
+  return SendNotifyEnumerateCallState(aInfo) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
