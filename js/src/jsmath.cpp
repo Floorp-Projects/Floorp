@@ -14,6 +14,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/unused.h"
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>
@@ -724,20 +725,22 @@ random_generateSeed()
     seed.u64 = 0;
 
 #if defined(XP_WIN)
-    /*
-     * Our PRNG only uses 48 bits, so calling rand_s() twice to get 64 bits is
-     * probably overkill.
-     */
-    rand_s(&seed.u32[0]);
+    errno_t error = rand_s(&seed.u32[0]);
+    MOZ_ASSERT(error == 0, "rand_s() error?!");
+
+    error = rand_s(&seed.u32[1]);
+    MOZ_ASSERT(error == 0, "rand_s() error?!");
 #elif defined(XP_UNIX)
     /*
      * In the unlikely event we can't read /dev/urandom, there's not much we can
      * do, so just mix in the fd error code and the current time.
      */
     int fd = open("/dev/urandom", O_RDONLY);
-    MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom");
+    MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom?!");
     if (fd >= 0) {
-        (void)read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
+        ssize_t nread = read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
+        MOZ_ASSERT(nread == 8, "Can't read /dev/urandom?!");
+        mozilla::unused << nread;
         close(fd);
     }
     seed.u32[0] ^= fd;
@@ -745,7 +748,7 @@ random_generateSeed()
 # error "Platform needs to implement random_generateSeed()"
 #endif
 
-    seed.u32[1] ^= PRMJ_Now();
+    seed.u64 ^= PRMJ_Now();
     return seed.u64;
 }
 
@@ -979,7 +982,6 @@ js::math_tan(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-
 typedef double (*UnaryMathFunctionType)(MathCache *cache, double);
 
 template <UnaryMathFunctionType F>
@@ -1003,8 +1005,6 @@ static bool math_function(JSContext *cx, unsigned argc, Value *vp)
 
     return true;
 }
-
-
 
 double
 js::math_log10_impl(MathCache *cache, double x)
@@ -1144,7 +1144,6 @@ double sqrt1pm1(double x)
     return expm1(log1p(x) / 2);
 }
 #endif
-
 
 double
 js::math_cosh_impl(MathCache *cache, double x)
