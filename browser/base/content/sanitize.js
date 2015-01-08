@@ -249,7 +249,8 @@ Sanitizer.prototype = {
         try {
           var os = Components.classes["@mozilla.org/observer-service;1"]
                              .getService(Components.interfaces.nsIObserverService);
-          os.notifyObservers(null, "browser:purge-session-history", "");
+          let clearStartingTime = this.range ? String(this.range[0]) : "";
+          os.notifyObservers(null, "browser:purge-session-history", clearStartingTime);
         }
         catch (e) { }
 
