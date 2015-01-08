@@ -400,6 +400,16 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
+   * Pre-fetches any information that might help with migration away from this
+   * identity.  Called after every sync and is really just an optimization that
+   * allows us to avoid a network request for when we actually need the
+   * migration info.
+   */
+  prefetchMigrationSentinel: function(service) {
+    // nothing to do here until we decide to migrate away from FxA.
+  },
+
+  /**
     * Return credentials hosts for this identity only.
     */
   _getSyncCredentialsHosts: function() {

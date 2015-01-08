@@ -134,13 +134,6 @@ static MOZ_CONSTEXPR_VAR uint32_t NumFloatArgRegs = 8;
 static MOZ_CONSTEXPR_VAR FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
-// The convention used by the ForkJoinGetSlice stub. None of these can be rax
-// or rdx, which the stub also needs for cmpxchg and div, respectively.
-static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_cx = rdi;
-static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp0 = rbx;
-static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp1 = rcx;
-static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_output = rsi;
-
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r10;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = rax;

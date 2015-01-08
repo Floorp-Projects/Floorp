@@ -614,7 +614,7 @@ PREF_ClearUserPref(const char *pref_name)
         pref->flags &= ~PREF_USERSET;
 
         if (!(pref->flags & PREF_HAS_DEFAULT)) {
-            PL_DHashTableOperate(&gHashTable, pref_name, PL_DHASH_REMOVE);
+            PL_DHashTableRemove(&gHashTable, pref_name);
         }
 
         pref_DoCallback(pref_name);
@@ -734,7 +734,7 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
 #endif
 
     PrefHashEntry* result =
-        static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
+        static_cast<PrefHashEntry*>(PL_DHashTableLookup(&gHashTable, key));
 
     if (PL_DHASH_ENTRY_IS_FREE(result))
         return nullptr;
@@ -751,7 +751,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     if (!gHashTable.ops)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PrefHashEntry* pref = static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_ADD));
+    PrefHashEntry* pref = static_cast<PrefHashEntry*>(PL_DHashTableAdd(&gHashTable, key));
 
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;

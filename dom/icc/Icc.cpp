@@ -35,9 +35,9 @@ IsPukCardLockType(IccLockType aLockType)
     case IccLockType::RcckPuk:
     case IccLockType::RspckPuk:
       return true;
+    default:
+      return false;
   }
-
-  return false;
 }
 
 } // anonymous namespace

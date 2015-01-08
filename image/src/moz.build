@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     'Decoder.cpp',
     'DynamicImage.cpp',
     'FrameAnimator.cpp',
-    'FrameBlender.cpp',
     'FrozenImage.cpp',
     'Image.cpp',
     'ImageFactory.cpp',

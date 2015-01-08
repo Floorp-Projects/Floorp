@@ -469,7 +469,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threads(nullptr),
    asmJSCompilationInProgress(false),
    helperLock(nullptr),
-#ifdef DEbUG
+#ifdef DEBUG
    lockOwner(nullptr),
 #endif
    consumerWakeup(nullptr),

@@ -43,7 +43,7 @@ enum TrackType { kVideo = 1, kAudio };
 class MP4Demuxer
 {
 public:
-  explicit MP4Demuxer(Stream* aSource, Monitor* aMonitor);
+  explicit MP4Demuxer(Stream* aSource, Microseconds aTimestampOffset, Monitor* aMonitor);
   ~MP4Demuxer();
 
   bool Init();
@@ -82,6 +82,7 @@ private:
   nsRefPtr<Stream> mSource;
   nsTArray<mozilla::MediaByteRange> mCachedByteRanges;
   nsTArray<Interval<Microseconds>> mCachedTimeRanges;
+  Microseconds mTimestampOffset;
   Monitor* mMonitor;
 };
 

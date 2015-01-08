@@ -359,19 +359,6 @@ LIRGeneratorX86Shared::lowerTruncateFToInt32(MTruncateToInt32 *ins)
 }
 
 void
-LIRGeneratorX86Shared::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
-{
-    // We fix eax and edx for cmpxchg and div.
-    LForkJoinGetSlice *lir = new(alloc())
-        LForkJoinGetSlice(useFixed(ins->forkJoinContext(), ForkJoinGetSliceReg_cx),
-                          tempFixed(eax),
-                          tempFixed(edx),
-                          tempFixed(ForkJoinGetSliceReg_temp0),
-                          tempFixed(ForkJoinGetSliceReg_temp1));
-    defineFixed(lir, ins, LAllocation(AnyRegister(ForkJoinGetSliceReg_output)));
-}
-
-void
 LIRGeneratorX86Shared::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
