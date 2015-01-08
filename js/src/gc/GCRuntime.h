@@ -835,7 +835,7 @@ class GCRuntime
 
     bool poked;
 
-    mozilla::Atomic<js::HeapState> heapState;
+    volatile js::HeapState heapState;
 
     /*
      * These options control the zealousness of the GC. The fundamental values
