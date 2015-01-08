@@ -220,14 +220,6 @@ public class SearchEngine {
     }
 
     /**
-     * Determine whether a particular url belongs to this search engine. If not,
-     * the url will be sent to Fennec.
-     */
-    public boolean isSearchResultsPage(String url) {
-        return getResultsUri().getAuthority().equalsIgnoreCase(Uri.parse(url).getAuthority());
-    }
-
-    /**
      * Finds the search query encoded in a given results URL.
      *
      * @param url Current results URL.
