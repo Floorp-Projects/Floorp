@@ -370,7 +370,7 @@ Migrator.prototype = {
   // we'll move to either the STATE_USER_FXA_VERIFIED state or we'll just
   // complete the migration if they login as an already verified user.
   createFxAccount: Task.async(function* (win) {
-    let {url, options} = yield this.getFxAccountOptions();
+    let {url, options} = yield this.getFxAccountCreationOptions();
     win.switchToTabHavingURI(url, true, options);
     // An FxA observer will fire when the user completes this, which will
     // cause us to move to the next "user blocked" state and notify via our
@@ -386,10 +386,10 @@ Migrator.prototype = {
   // notification from FxA and we'll move to either the STATE_USER_FXA_VERIFIED
   // state or we'll just complete the migration if they login as an already
   // verified user.
-  getFxAccountOptions: Task.async(function* (win) {
+  getFxAccountCreationOptions: Task.async(function* (win) {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("getFxAccountCreationOptions called in an unexpected state: ${}", this._state);
     }
     // We need to obtain the sentinel and apply any prefs that might be
     // specified *before* attempting to setup FxA as the prefs might
@@ -425,7 +425,7 @@ Migrator.prototype = {
   resendVerificationMail: Task.async(function * (win) {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA_VERIFIED) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("resendVerificationMail called in an unexpected state: ${}", this._state);
     }
     let ok = true;
     try {
@@ -460,7 +460,7 @@ Migrator.prototype = {
   forgetFxAccount: Task.async(function * () {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA_VERIFIED) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("forgetFxAccount called in an unexpected state: ${}", this._state);
     }
     return fxAccounts.signOut();
   }),

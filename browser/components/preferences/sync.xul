@@ -41,23 +41,22 @@
         <deck id="sync-migration-deck">
           <!-- When we are in the "need FxA user" state -->
           <hbox align="center">
-            <label>&migrate.upgradeNeeded;</label>
+            <description id="sync-migrate-upgrade-description" flex="1"/>
             <spacer flex="1"/>
+            <button id="sync-migrate-unlink"
+                    onclick="event.stopPropagation(); gSyncPane.startOverMigration();"/>
             <button id="sync-migrate-upgrade"
-                    onclick="event.stopPropagation(); gSyncPane.migrateUpgrade();"
-                    label="&migrate.upgradeButton;"/>
+                    onclick="event.stopPropagation(); gSyncPane.migrateUpgrade();"/>
           </hbox>
 
           <!-- When we are in the "need the user to be verified" state -->
           <hbox align="center">
-            <label id="sync-migrate-verify-label"/>
+            <description id="sync-migrate-verify-description" flex="1"/>
             <spacer flex="1"/>
             <button id="sync-migrate-forget"
-                    onclick="event.stopPropagation(); gSyncPane.migrateForget();"
-                    label="&migrate.verifyForgetButton;"/>
+                    onclick="event.stopPropagation(); gSyncPane.migrateForget();"/>
             <button id="sync-migrate-resend"
-                    onclick="event.stopPropagation(); gSyncPane.migrateResend();"
-                    label="&migrate.verifyResendButton;"/>
+                    onclick="event.stopPropagation(); gSyncPane.migrateResend();"/>
           </hbox>
         </deck>
       </vbox>
