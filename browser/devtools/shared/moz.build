@@ -12,6 +12,7 @@ EXTRA_JS_MODULES.devtools += [
     'Curl.jsm',
     'DeveloperToolbar.jsm',
     'DOMHelpers.jsm',
+    'FloatingScrollbars.jsm',
     'Jsbeautify.jsm',
     'Parser.jsm',
     'SplitView.jsm',

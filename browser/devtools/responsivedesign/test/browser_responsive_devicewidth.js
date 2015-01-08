@@ -7,11 +7,13 @@ function test() {
 
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab("about:logo");
+  gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    startTest();
+    waitForFocus(startTest, content);
   }, true);
+
+  content.location = "data:text/html,mop";
 
   function startTest() {
     mgr.once("on", function() {executeSoon(onUIOpen)});
@@ -19,7 +21,7 @@ function test() {
   }
 
   function onUIOpen() {
-    instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
+    instance = gBrowser.selectedTab.__responsiveUI;
     instance.stack.setAttribute("notransition", "true");
     ok(instance, "instance of the module is attached to the tab.");
 
