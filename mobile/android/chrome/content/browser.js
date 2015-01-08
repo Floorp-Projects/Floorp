@@ -3175,6 +3175,8 @@ nsBrowserAccess.prototype = {
       }
     }
 
+    // If OPEN_SWITCHTAB was not handled above, we need to open a new tab,
+    // along with other OPEN_ values that create a new tab.
     let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
@@ -3204,8 +3206,9 @@ nsBrowserAccess.prototype = {
 
     // OPEN_CURRENTWINDOW and illegal values
     let browser = BrowserApp.selectedBrowser;
-    if (aURI && browser)
+    if (aURI && browser) {
       browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
+    }
 
     return browser;
   },
