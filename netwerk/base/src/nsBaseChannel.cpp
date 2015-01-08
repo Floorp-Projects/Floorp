@@ -653,7 +653,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
 NS_IMETHODIMP
 nsBaseChannel::OnTransportStatus(nsITransport *transport, nsresult status,
-                                 uint64_t progress, uint64_t progressMax)
+                                 int64_t progress, int64_t progressMax)
 {
   // In some cases, we may wish to suppress transport-layer status events.
 
@@ -796,19 +796,19 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   nsresult rv = mListener->OnDataAvailable(this, mListenerContext, stream,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
-    uint64_t prog = offset + count;
+    int64_t prog = offset + count;
     if (NS_IsMainThread()) {
       OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
     } else {
       class OnTransportStatusAsyncEvent : public nsRunnable
       {
         nsRefPtr<nsBaseChannel> mChannel;
-        uint64_t mProgress;
-        uint64_t mContentLength;
+        int64_t mProgress;
+        int64_t mContentLength;
       public:
         OnTransportStatusAsyncEvent(nsBaseChannel* aChannel,
-                                    uint64_t aProgress,
-                                    uint64_t aContentLength)
+                                    int64_t aProgress,
+                                    int64_t aContentLength)
           : mChannel(aChannel),
             mProgress(aProgress),
             mContentLength(aContentLength)

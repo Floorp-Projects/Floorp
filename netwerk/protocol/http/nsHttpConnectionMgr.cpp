@@ -3426,8 +3426,8 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 NS_IMETHODIMP
 nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                                                          nsresult status,
-                                                         uint64_t progress,
-                                                         uint64_t progressMax)
+                                                         int64_t progress,
+                                                         int64_t progressMax)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 

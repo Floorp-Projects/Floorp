@@ -168,7 +168,7 @@ NS_IMPL_ISUPPORTS(ConnectionData, nsITransportEventSink, nsITimerCallback)
 
 NS_IMETHODIMP
 ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
-                                  uint64_t aProgress, uint64_t aProgressMax)
+                                  int64_t aProgress, int64_t aProgressMax)
 {
     if (aStatus == NS_NET_STATUS_CONNECTED_TO) {
         StopTimer();
