@@ -368,12 +368,10 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     PLUGIN_LOG_DEBUG_FUNCTION;
 
     nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(aFilePath, aPluginId));
-    UniquePtr<LaunchCompleteTask> launchRunnable;
-    if (parent->mIsStartingAsync) {
-        launchRunnable.reset(new LaunchedTask(parent));
-    }
+    UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
+    parent->mSubprocess->SetCallRunnableImmediately(!parent->mIsStartingAsync);
     TimeStamp launchStart = TimeStamp::Now();
-    bool launched = parent->mSubprocess->Launch(Move(launchRunnable));
+    bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable));
     if (!launched) {
         // We never reached open
         parent->mShutdown = true;
