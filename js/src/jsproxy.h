@@ -409,7 +409,7 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                                    unsigned indent) const MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy,
                                  RegExpGuard *g) const MOZ_OVERRIDE;
-    virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const;
+    virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy) const MOZ_OVERRIDE;
 };
