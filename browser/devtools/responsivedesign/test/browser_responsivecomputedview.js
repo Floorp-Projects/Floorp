@@ -8,12 +8,11 @@ function test() {
   let inspector;
 
   waitForExplicitFinish();
-  let mgr = ResponsiveUI.ResponsiveUIManager;
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    startTest();
+    waitForFocus(startTest, content);
   }, true);
 
   content.location = "data:text/html;charset=utf-8,<html><style>" +
@@ -44,7 +43,7 @@ function test() {
   }
 
   function onUIOpen() {
-    instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
+    instance = gBrowser.selectedTab.__responsiveUI;
     ok(instance, "instance of the module is attached to the tab.");
 
     instance.stack.setAttribute("notransition", "true");
