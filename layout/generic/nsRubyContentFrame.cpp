@@ -9,6 +9,7 @@
 #include "nsRubyContentFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
+#include "nsCSSAnonBoxes.h"
 
 using namespace mozilla;
 
@@ -31,4 +32,17 @@ nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const
     return false;
   }
   return nsRubyContentFrameSuper::IsFrameOfType(aFlags);
+}
+
+bool
+nsRubyContentFrame::IsIntraLevelWhitespace() const
+{
+  nsIAtom* pseudoType = StyleContext()->GetPseudo();
+  if (pseudoType != nsCSSAnonBoxes::rubyBase &&
+      pseudoType != nsCSSAnonBoxes::rubyText) {
+    return false;
+  }
+
+  nsIFrame* child = mFrames.OnlyChild();
+  return child && child->GetContent()->TextIsOnlyWhitespace();
 }
