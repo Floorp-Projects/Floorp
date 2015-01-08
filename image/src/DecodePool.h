@@ -25,22 +25,6 @@ namespace image {
 class Decoder;
 class RasterImage;
 
-MOZ_BEGIN_ENUM_CLASS(DecodeStrategy, uint8_t)
-  // DecodeStrategy::SYNC requests a synchronous decode, which will continue
-  // decoding frames as long as it has more source data. It returns to the
-  // caller only once decoding is complete (or until it needs more source data
-  // before continuing). Because DecodeStrategy::SYNC can involve allocating new
-  // imgFrames, it can only be run on the main thread.
-  SYNC,
-
-  // DecodeStrategy::ASYNC requests an asynchronous decode, which will continue
-  // decoding until it either finishes a frame or runs out of source data.
-  // Because DecodeStrategy::ASYNC does not allocate new imgFrames, it can be
-  // safely run off the main thread. (And hence workers in the decode pool
-  // always use it.)
-  ASYNC
-MOZ_END_ENUM_CLASS(DecodeStrategy)
-
 MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
   INACTIVE,
   PENDING,
@@ -92,7 +76,7 @@ public:
    * Decode aImage for a short amount of time, and post the remainder to the
    * queue.
    */
-  void DecodeABitOf(RasterImage* aImage, DecodeStrategy aStrategy);
+  void DecodeABitOf(RasterImage* aImage);
 
   /**
    * Ask the DecodePool to stop decoding this image.  Internally, we also
@@ -128,7 +112,6 @@ public:
    * DONE_BYTES, decode until all bytesToDecode bytes are decoded.
    */
   nsresult DecodeSomeOfImage(RasterImage* aImage,
-                             DecodeStrategy aStrategy,
                              DecodeUntil aDecodeUntil = DecodeUntil::TIME,
                              uint32_t bytesToDecode = 0);
 

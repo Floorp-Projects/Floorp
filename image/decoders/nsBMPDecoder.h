@@ -50,8 +50,8 @@ public:
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
     bool HasAlphaData() const;
 
-    virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
-                               DecodeStrategy aStrategy) MOZ_OVERRIDE;
+    virtual void WriteInternal(const char* aBuffer,
+                               uint32_t aCount) MOZ_OVERRIDE;
     virtual void FinishInternal() MOZ_OVERRIDE;
 
 private:

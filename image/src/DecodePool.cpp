@@ -66,49 +66,6 @@ private:
   nsRefPtr<RasterImage> mImage;
 };
 
-class FrameNeededWorker : public nsRunnable
-{
-public:
-  /**
-   * Called when an off-main-thread decoder needs a new frame to be allocated on
-   * the main thread.
-   *
-   * After allocating the new frame, the worker will call RequestDecode to
-   * continue decoding.
-   */
-  static void Dispatch(RasterImage* aImage)
-  {
-    nsCOMPtr<nsIRunnable> worker = new FrameNeededWorker(aImage);
-    NS_DispatchToMainThread(worker);
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    ReentrantMonitorAutoEnter lock(mImage->mDecodingMonitor);
-    nsresult rv = NS_OK;
-
-    // If we got a synchronous decode in the mean time, we don't need to do
-    // anything.
-    if (mImage->mDecoder && mImage->mDecoder->NeedsNewFrame()) {
-      rv = mImage->mDecoder->AllocateFrame();
-    }
-
-    if (NS_SUCCEEDED(rv) && mImage->mDecoder) {
-      // By definition, we're not done decoding, so enqueue us for more decoding.
-      DecodePool::Singleton()->RequestDecode(mImage);
-    }
-
-    return NS_OK;
-  }
-
-private:
-  explicit FrameNeededWorker(RasterImage* aImage)
-    : mImage(aImage)
-  { }
-
-  nsRefPtr<RasterImage> mImage;
-};
-
 class DecodeWorker : public nsRunnable
 {
 public:
@@ -132,13 +89,6 @@ public:
       return NS_OK;
     }
 
-    // If we're a decode job that's been enqueued since a previous decode that
-    // still needs a new frame, we can't do anything. Wait until the
-    // FrameNeededWorker enqueues another frame.
-    if (mImage->mDecoder->NeedsNewFrame()) {
-      return NS_OK;
-    }
-
     mImage->mDecodeStatus = DecodeStatus::ACTIVE;
 
     size_t oldByteCount = mImage->mDecoder->BytesDecoded();
@@ -150,23 +100,18 @@ public:
 
     size_t maxBytes = mImage->mSourceData.Length() -
                       mImage->mDecoder->BytesDecoded();
-    DecodePool::Singleton()->DecodeSomeOfImage(mImage, DecodeStrategy::ASYNC,
-                                               type, maxBytes);
+    DecodePool::Singleton()->DecodeSomeOfImage(mImage, type, maxBytes);
 
     size_t bytesDecoded = mImage->mDecoder->BytesDecoded() - oldByteCount;
 
     mImage->mDecodeStatus = DecodeStatus::WORK_DONE;
 
-    if (mImage->mDecoder && mImage->mDecoder->NeedsNewFrame()) {
-      // The decoder needs a new frame. Enqueue an event to get it; that event
-      // will enqueue another decode request when it's done.
-      FrameNeededWorker::Dispatch(mImage);
-    } else if (mImage->mDecoder &&
-               !mImage->mError &&
-               !mImage->mPendingError &&
-               !mImage->IsDecodeFinished() &&
-               bytesDecoded < maxBytes &&
-               bytesDecoded > 0) {
+    if (mImage->mDecoder &&
+        !mImage->mError &&
+        !mImage->mPendingError &&
+        !mImage->IsDecodeFinished() &&
+        bytesDecoded < maxBytes &&
+        bytesDecoded > 0) {
       // We aren't finished decoding, and we have more data, so add this request
       // to the back of the list.
       DecodePool::Singleton()->RequestDecode(mImage);
@@ -323,30 +268,26 @@ DecodePool::RequestDecode(RasterImage* aImage)
   MOZ_ASSERT(aImage->mDecoder);
   aImage->mDecodingMonitor.AssertCurrentThreadIn();
 
-  // If we're currently waiting on a new frame for this image, we can't do any
-  // decoding.
-  if (!aImage->mDecoder->NeedsNewFrame()) {
-    if (aImage->mDecodeStatus == DecodeStatus::PENDING ||
-        aImage->mDecodeStatus == DecodeStatus::ACTIVE) {
-      // The image is already in our list of images to decode, or currently being
-      // decoded, so we don't have to do anything else.
-      return;
-    }
+  if (aImage->mDecodeStatus == DecodeStatus::PENDING ||
+      aImage->mDecodeStatus == DecodeStatus::ACTIVE) {
+    // The image is already in our list of images to decode, or currently being
+    // decoded, so we don't have to do anything else.
+    return;
+  }
 
-    aImage->mDecodeStatus = DecodeStatus::PENDING;
-    nsCOMPtr<nsIRunnable> worker = new DecodeWorker(aImage);
+  aImage->mDecodeStatus = DecodeStatus::PENDING;
+  nsCOMPtr<nsIRunnable> worker = new DecodeWorker(aImage);
 
-    MutexAutoLock threadPoolLock(mThreadPoolMutex);
-    if (!gfxPrefs::ImageMTDecodingEnabled() || !mThreadPool) {
-      NS_DispatchToMainThread(worker);
-    } else {
-      mThreadPool->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
-    }
+  MutexAutoLock threadPoolLock(mThreadPoolMutex);
+  if (!gfxPrefs::ImageMTDecodingEnabled() || !mThreadPool) {
+    NS_DispatchToMainThread(worker);
+  } else {
+    mThreadPool->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
   }
 }
 
 void
-DecodePool::DecodeABitOf(RasterImage* aImage, DecodeStrategy aStrategy)
+DecodePool::DecodeABitOf(RasterImage* aImage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   aImage->mDecodingMonitor.AssertCurrentThreadIn();
@@ -356,23 +297,17 @@ DecodePool::DecodeABitOf(RasterImage* aImage, DecodeStrategy aStrategy)
     aImage->FinishedSomeDecoding();
   }
 
-  DecodeSomeOfImage(aImage, aStrategy);
+  DecodeSomeOfImage(aImage);
 
   aImage->FinishedSomeDecoding();
 
-  // If the decoder needs a new frame, enqueue an event to get it; that event
-  // will enqueue another decode request when it's done.
-  if (aImage->mDecoder && aImage->mDecoder->NeedsNewFrame()) {
-    FrameNeededWorker::Dispatch(aImage);
-  } else {
-    // If we aren't yet finished decoding and we have more data in hand, add
-    // this request to the back of the priority list.
-    if (aImage->mDecoder &&
-        !aImage->mError &&
-        !aImage->IsDecodeFinished() &&
-        aImage->mSourceData.Length() > aImage->mDecoder->BytesDecoded()) {
-      RequestDecode(aImage);
-    }
+  // If we aren't yet finished decoding and we have more data in hand, add
+  // this request to the back of the priority list.
+  if (aImage->mDecoder &&
+      !aImage->mError &&
+      !aImage->IsDecodeFinished() &&
+      aImage->mSourceData.Length() > aImage->mDecoder->BytesDecoded()) {
+    RequestDecode(aImage);
   }
 }
 
@@ -401,28 +336,16 @@ DecodePool::DecodeUntilSizeAvailable(RasterImage* aImage)
     }
   }
 
-  // We use DecodeStrategy::ASYNC here because we just want to get the size
-  // information here and defer the rest of the work.
-  nsresult rv =
-    DecodeSomeOfImage(aImage, DecodeStrategy::ASYNC, DecodeUntil::SIZE);
+  nsresult rv = DecodeSomeOfImage(aImage, DecodeUntil::SIZE);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // If the decoder needs a new frame, enqueue an event to get it; that event
-  // will enqueue another decode request when it's done.
-  if (aImage->mDecoder && aImage->mDecoder->NeedsNewFrame()) {
-    FrameNeededWorker::Dispatch(aImage);
-  } else {
-    rv = aImage->FinishedSomeDecoding();
-  }
-
-  return rv;
+  return aImage->FinishedSomeDecoding();
 }
 
 nsresult
 DecodePool::DecodeSomeOfImage(RasterImage* aImage,
-                              DecodeStrategy aStrategy,
                               DecodeUntil aDecodeUntil /* = DecodeUntil::TIME */,
                               uint32_t bytesToDecode /* = 0 */)
 {
@@ -445,15 +368,6 @@ DecodePool::DecodeSomeOfImage(RasterImage* aImage,
   // example, a synchronous decode request came while the worker was pending).
   if (!aImage->mDecoder || aImage->mDecoded) {
     return NS_OK;
-  }
-
-  if (aImage->mDecoder->NeedsNewFrame()) {
-    if (aStrategy == DecodeStrategy::SYNC) {
-      MOZ_ASSERT(NS_IsMainThread());
-      aImage->mDecoder->AllocateFrame();
-    } else {
-      return NS_OK;
-    }
   }
 
   nsRefPtr<Decoder> decoderKungFuDeathGrip = aImage->mDecoder;
@@ -482,16 +396,12 @@ DecodePool::DecodeSomeOfImage(RasterImage* aImage,
   //  * the decode completes,
   //  * we're an DecodeUntil::SIZE decode and we get the size, or
   //  * we run out of time.
-  // We also try to decode at least one "chunk" if we've allocated a new frame,
-  // even if we have no more data to send to the decoder.
-  while ((aImage->mSourceData.Length() > aImage->mDecoder->BytesDecoded() &&
-          bytesToDecode > 0 &&
-          !aImage->IsDecodeFinished() &&
-          !(aDecodeUntil == DecodeUntil::SIZE && aImage->mHasSize) &&
-          !aImage->mDecoder->NeedsNewFrame()) ||
-         aImage->mDecoder->NeedsToFlushData()) {
+  while (aImage->mSourceData.Length() > aImage->mDecoder->BytesDecoded() &&
+         bytesToDecode > 0 &&
+         !aImage->IsDecodeFinished() &&
+         !(aDecodeUntil == DecodeUntil::SIZE && aImage->mHasSize)) {
     uint32_t chunkSize = min(bytesToDecode, maxBytes);
-    nsresult rv = aImage->DecodeSomeData(chunkSize, aStrategy);
+    nsresult rv = aImage->DecodeSomeData(chunkSize);
     if (NS_FAILED(rv)) {
       aImage->DoError();
       return rv;

@@ -1230,7 +1230,7 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // write the data directly to the decoder. (If we haven't gotten the size,
   // we'll queue up the data and write it out when we do.)
   if (!StoringSourceData() && mHasSize) {
-    rv = WriteToDecoder(aBuffer, aCount, DecodeStrategy::SYNC);
+    rv = WriteToDecoder(aBuffer, aCount);
     CONTAINER_ENSURE_SUCCESS(rv);
 
     rv = FinishedSomeDecoding();
@@ -1638,7 +1638,7 @@ RasterImage::ShutdownDecoder(ShutdownReason aReason)
 
 // Writes the data to the decoder, updating the total number of bytes written.
 nsresult
-RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
+RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount)
 {
   mDecodingMonitor.AssertCurrentThreadIn();
 
@@ -1647,7 +1647,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy
 
   // Write
   nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
-  mDecoder->Write(aBuffer, aCount, aStrategy);
+  mDecoder->Write(aBuffer, aCount);
 
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
@@ -1715,11 +1715,6 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
 
   // If we're already decoded, there's nothing to do.
   if (mDecoded)
-    return NS_OK;
-
-  // If we're currently waiting for a new frame, we can't do anything until
-  // that frame is allocated.
-  if (mDecoder && mDecoder->NeedsNewFrame())
     return NS_OK;
 
   // If we have a size decoder open, make sure we get the size
@@ -1821,7 +1816,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
     PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf",
       js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
 
-    DecodePool::Singleton()->DecodeABitOf(this, DecodeStrategy::SYNC);
+    DecodePool::Singleton()->DecodeABitOf(this);
     return NS_OK;
   }
 
@@ -1889,11 +1884,6 @@ RasterImage::SyncDecode()
     }
   }
 
-  // If we're currently waiting on a new frame for this image, create it now.
-  if (mDecoder && mDecoder->NeedsNewFrame()) {
-    mDecoder->AllocateFrame();
-  }
-
   // If we don't have a decoder, create one
   if (!mDecoder) {
     rv = InitDecoder(/* aDoSizeDecode = */ false);
@@ -1903,8 +1893,7 @@ RasterImage::SyncDecode()
   MOZ_ASSERT(mDecoder);
 
   // Write everything we have
-  rv = DecodeSomeData(mSourceData.Length() - mDecoder->BytesDecoded(),
-                      DecodeStrategy::SYNC);
+  rv = DecodeSomeData(mSourceData.Length() - mDecoder->BytesDecoded());
   CONTAINER_ENSURE_SUCCESS(rv);
 
   rv = FinishedSomeDecoding();
@@ -2215,21 +2204,11 @@ RasterImage::RequestDiscard()
 
 // Flushes up to aMaxBytes to the decoder.
 nsresult
-RasterImage::DecodeSomeData(size_t aMaxBytes, DecodeStrategy aStrategy)
+RasterImage::DecodeSomeData(size_t aMaxBytes)
 {
   MOZ_ASSERT(mDecoder, "Should have a decoder");
 
   mDecodingMonitor.AssertCurrentThreadIn();
-
-  // First, if we've just been called because we allocated a frame on the main
-  // thread, let the decoder deal with the data it set aside at that time by
-  // passing it a null buffer.
-  if (mDecoder->NeedsToFlushData()) {
-    nsresult rv = WriteToDecoder(nullptr, 0, aStrategy);
-    if (NS_FAILED(rv) || mDecoder->NeedsNewFrame()) {
-      return rv;
-    }
-  }
 
   // If we have nothing else to decode, return.
   if (mDecoder->BytesDecoded() == mSourceData.Length()) {
@@ -2242,8 +2221,7 @@ RasterImage::DecodeSomeData(size_t aMaxBytes, DecodeStrategy aStrategy)
   size_t bytesToDecode = min(aMaxBytes,
                              mSourceData.Length() - mDecoder->BytesDecoded());
   return WriteToDecoder(mSourceData.Elements() + mDecoder->BytesDecoded(),
-                        bytesToDecode,
-                        aStrategy);
+                        bytesToDecode);
 
 }
 
@@ -2265,13 +2243,6 @@ RasterImage::IsDecodeFinished()
     }
   } else if (mDecoder->GetDecodeDone()) {
     return true;
-  }
-
-  // If the decoder returned because it needed a new frame and we haven't
-  // written to it since then, the decoder may be storing data that it hasn't
-  // decoded yet.
-  if (mDecoder->NeedsNewFrame() || mDecoder->NeedsToFlushData()) {
-    return false;
   }
 
   // Otherwise, if we have all the source data and wrote all the source data,

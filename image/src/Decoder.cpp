@@ -98,12 +98,10 @@ Decoder::InitSharedDecoder(uint8_t* aImageData, uint32_t aImageDataLength,
 }
 
 void
-Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
+Decoder::Write(const char* aBuffer, uint32_t aCount)
 {
   PROFILER_LABEL("ImageDecoder", "Write",
     js::ProfileEntry::Category::GRAPHICS);
-
-  MOZ_ASSERT(NS_IsMainThread() || aStrategy == DecodeStrategy::ASYNC);
 
   // We're strict about decoder errors
   MOZ_ASSERT(!HasDecoderError(),
@@ -131,8 +129,13 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
     return;
   }
 
-  // Pass the data along to the implementation
-  WriteInternal(aBuffer, aCount, aStrategy);
+  MOZ_ASSERT(!NeedsNewFrame() || HasDataError(),
+             "Should not need a new frame before writing anything");
+  MOZ_ASSERT(!NeedsToFlushData() || HasDataError(),
+             "Should not need to flush data before writing anything");
+
+  // Pass the data along to the implementation.
+  WriteInternal(aBuffer, aCount);
 
   // If we need a new frame to proceed, let's create one and call it again.
   while (NeedsNewFrame() && !HasDataError()) {
@@ -142,7 +145,7 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
 
     if (NS_SUCCEEDED(rv)) {
       // Use the data we saved when we asked for a new frame.
-      WriteInternal(nullptr, 0, aStrategy);
+      WriteInternal(nullptr, 0);
     }
 
     mNeedsToFlushData = false;
@@ -418,7 +421,7 @@ Decoder::SetSizeOnImage()
  */
 
 void Decoder::InitInternal() { }
-void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy) { }
+void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
 void Decoder::FinishInternal() { }
 
 /*
