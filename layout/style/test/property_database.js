@@ -2004,7 +2004,12 @@ var gCSSProperties = {
                       "top 20%", "bottom 20%", "50% left", "top 50%",
                       "50% bottom 10%", "right 10% 50%", "left right",
                       "top bottom", "left 10% right",
-                      "top 20px bottom 20px", "left left", "20 20" ]
+                      "top 20px bottom 20px", "left left" ],
+    quirks_values: {
+      "20 20": "20px 20px",
+      "10 5px": "10px 5px",
+      "7px 2": "7px 2px",
+    },
   },
   "background-repeat": {
     domProp: "backgroundRepeat",
@@ -2221,7 +2226,12 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0", "0 0", "0px", "0 0px", "calc(0px)", "calc(0px) calc(0em)", "calc(2em - 2em) calc(3px + 7px - 10px)", "calc(-5px)", "calc(-5px) calc(-5px)" ],
     other_values: [ "3px", "4em 2px", "4em 0", "0px 2px", "calc(7px)", "0 calc(7px)", "calc(7px) 0", "calc(0px) calc(7px)", "calc(7px) calc(0px)", "7px calc(0px)", "calc(0px) 7px", "7px calc(0px)", "3px calc(2em)" ],
-    invalid_values: [ "0%", "0 0%", "-5px", "-5px -5px", "0 -5px", "-5px 0" ]
+    invalid_values: [ "0%", "0 0%", "-5px", "-5px -5px", "0 -5px", "-5px 0" ],
+    quirks_values: {
+      "2px 5": "2px 5px",
+      "7": "7px",
+      "3 4px": "3px 4px",
+    },
   },
   "border-style": {
     domProp: "borderStyle",
@@ -2930,7 +2940,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available", "5" ]
+    invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+    quirks_values: { "5": "5px" },
   },
   "max-width": {
     domProp: "maxWidth",
@@ -2947,7 +2958,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "auto", "5" ]
+    invalid_values: [ "auto" ],
+    quirks_values: { "5": "5px" },
   },
   "min-height": {
     domProp: "minHeight",
@@ -2962,7 +2974,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: ["none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available", "5" ]
+    invalid_values: ["none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
+    quirks_values: { "5": "5px" },
   },
   "min-width": {
     domProp: "minWidth",
@@ -2977,7 +2990,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "none", "5" ]
+    invalid_values: [ "none" ],
+    quirks_values: { "5": "5px" },
   },
 
   "opacity": {
@@ -3356,7 +3370,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "5" ]
+    invalid_values: [ ],
+    quirks_values: { "5": "5px" },
   },
   "text-overflow": {
     domProp: "textOverflow",
@@ -3478,7 +3493,8 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
     ],
-    invalid_values: [ "5" ]
+    invalid_values: [ ],
+    quirks_values: { "5": "5px" },
   },
   "visibility": {
     domProp: "visibility",
