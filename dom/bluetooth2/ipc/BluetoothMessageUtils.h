@@ -30,4 +30,4 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothStatus>
 
 } // namespace IPC
 
-#endif // mozilla_dom_bluetooth_ipc_bluetoothchild_h__
+#endif // mozilla_dom_bluetooth_ipc_bluetoothmessageutils_h__
