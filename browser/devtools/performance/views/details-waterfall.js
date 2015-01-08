@@ -16,7 +16,7 @@ let WaterfallView = {
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
 
-    this.graph = new Waterfall($("#waterfall-graph"), $("#details-pane"));
+    this.graph = new Waterfall($("#waterfall-graph"), $("#details-pane"), TIMELINE_BLUEPRINT);
     this.markerDetails = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
 
     this.graph.on("selected", this._onMarkerSelected);
