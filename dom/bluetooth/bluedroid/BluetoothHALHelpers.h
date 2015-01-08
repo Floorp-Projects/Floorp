@@ -765,6 +765,26 @@ Convert(btrc_remote_features_t aIn, unsigned long& aOut)
 }
 #endif // ANDROID_VERSION >= 19
 
+#if ANDROID_VERSION >= 21
+inline nsresult
+Convert(BluetoothTransport aIn, int& aOut)
+{
+  static const int sTransport[] = {
+    CONVERT(TRANSPORT_AUTO, 0),
+    CONVERT(TRANSPORT_BREDR, 1),
+    CONVERT(TRANSPORT_LE, 2)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sTransport))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sTransport[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(const bt_activity_energy_info& aIn, BluetoothActivityEnergyInfo& aOut);
+#endif // ANDROID_VERSION >= 21
+
 /* |ConvertArray| is a helper for converting arrays. Pass an
  * instance of this structure as the first argument to |Convert|
  * to convert an array. The output type has to support the array
