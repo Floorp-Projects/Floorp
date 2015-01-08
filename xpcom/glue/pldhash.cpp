@@ -667,6 +667,24 @@ PL_DHashTableOperate(PLDHashTable* aTable, const void* aKey, PLDHashOperator aOp
   return aTable->Operate(aKey, aOp);
 }
 
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey)
+{
+  return aTable->Operate(aKey, PL_DHASH_LOOKUP);
+}
+
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey)
+{
+  return aTable->Operate(aKey, PL_DHASH_ADD);
+}
+
+void PL_DHASH_FASTCALL
+PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey)
+{
+  aTable->Operate(aKey, PL_DHASH_REMOVE);
+}
+
 MOZ_ALWAYS_INLINE void
 PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 {

@@ -144,9 +144,9 @@ nsBMPDecoder::FinishInternal()
         PostInvalidation(r);
 
         if (mUseAlphaData) {
-          PostFrameStop(FrameBlender::kFrameHasAlpha);
+          PostFrameStop(Opacity::SOME_TRANSPARENCY);
         } else {
-          PostFrameStop(FrameBlender::kFrameOpaque);
+          PostFrameStop(Opacity::OPAQUE);
         }
         PostDecodeDone();
     }

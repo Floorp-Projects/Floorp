@@ -88,8 +88,6 @@ MethodStatus CanEnter(JSContext *cx, RunState &state);
 MethodStatus CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame);
 MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs);
 
-MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
-
 MethodStatus
 Recompile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
           bool constructing, bool force);
@@ -128,8 +126,6 @@ void Invalidate(types::TypeZone &types, FreeOp *fop,
                 const types::RecompileInfoVector &invalid, bool resetUses = true,
                 bool cancelOffThread = true);
 void Invalidate(JSContext *cx, const types::RecompileInfoVector &invalid, bool resetUses = true,
-                bool cancelOffThread = true);
-bool Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetUses = true,
                 bool cancelOffThread = true);
 bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true,
                 bool cancelOffThread = true);
@@ -194,7 +190,6 @@ NumLocalsAndArgs(JSScript *script)
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);
-void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
 
 void PurgeCaches(JSScript *script);
 size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);

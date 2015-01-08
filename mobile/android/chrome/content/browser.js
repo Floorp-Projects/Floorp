@@ -478,6 +478,7 @@ var BrowserApp = {
     DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
+    SearchEngines.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -486,7 +487,6 @@ var BrowserApp = {
 #endif
 
     let url = null;
-    let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
@@ -494,18 +494,11 @@ var BrowserApp = {
         gScreenWidth = window.arguments[1];
       if (window.arguments[2])
         gScreenHeight = window.arguments[2];
-      if (window.arguments[3])
-        pinned = window.arguments[3];
     }
 
-    if (pinned) {
-      this._initRuntime(this._startupStatus, url, aUrl => this.addTab(aUrl));
-    } else {
-      SearchEngines.init();
-      this.initContextMenu();
-    }
     // The order that context menu items are added is important
     // Make sure the "Open in App" context menu item appears at the bottom of the list
+    this.initContextMenu();
     ExternalApps.init();
 
     // XXX maybe we don't do this if the launch was kicked off from external
@@ -516,8 +509,9 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    if (this._startupStatus)
+    if (this._startupStatus) {
       this.onAppUpdated();
+    }
 
     if (!ParentalControls.isAllowed(ParentalControls.INSTALL_EXTENSION)) {
       // Disable extension installs
@@ -1103,7 +1097,8 @@ var BrowserApp = {
   },
 
   _loadWebapp: function(aMessage) {
-
+    // Entry point for WebApps. This is the point in which we know
+    // the code is being used as a WebApp runtime.
     this._initRuntime(this._startupStatus, aMessage.url, aUrl => {
       this.manifestUrl = aMessage.url;
       this.addTab(aUrl, { title: aMessage.name });
@@ -1380,6 +1375,7 @@ var BrowserApp = {
       // preferences to the correct type.
       switch (prefName) {
         // (string) index for determining which multiple choice value to display.
+        case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
         case "home.sync.updateMode":
@@ -1430,6 +1426,7 @@ var BrowserApp = {
       // When sending to Java, we normalized special preferences that use
       // integers and strings to represent booleans. Here, we convert them back
       // to their actual types so we can store them.
+      case "browser.chrome.titlebarMode":
       case "network.cookie.cookieBehavior":
       case "font.size.inflation.minTwips":
       case "home.sync.updateMode":
@@ -3178,6 +3175,8 @@ nsBrowserAccess.prototype = {
       }
     }
 
+    // If OPEN_SWITCHTAB was not handled above, we need to open a new tab,
+    // along with other OPEN_ values that create a new tab.
     let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
@@ -3207,8 +3206,9 @@ nsBrowserAccess.prototype = {
 
     // OPEN_CURRENTWINDOW and illegal values
     let browser = BrowserApp.selectedBrowser;
-    if (aURI && browser)
+    if (aURI && browser) {
       browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
+    }
 
     return browser;
   },

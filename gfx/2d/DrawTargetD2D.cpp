@@ -1274,7 +1274,7 @@ DrawTargetD2D::CreatePathBuilder(FillRule aFillRule) const
     sink->SetFillMode(D2D1_FILL_MODE_WINDING);
   }
 
-  return new PathBuilderD2D(sink, path, aFillRule);
+  return new PathBuilderD2D(sink, path, aFillRule, BackendType::DIRECT2D);
 }
 
 TemporaryRef<GradientStops>

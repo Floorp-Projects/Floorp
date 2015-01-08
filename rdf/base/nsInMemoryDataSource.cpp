@@ -320,14 +320,14 @@ public:
     // Implementation methods
     Assertion*
     GetForwardArcs(nsIRDFResource* u) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mForwardArcs, u, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(&mForwardArcs, u);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr; }
 
     Assertion*
     GetReverseArcs(nsIRDFNode* v) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mReverseArcs, v, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(&mReverseArcs, v);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr; }
@@ -436,8 +436,8 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
 
         if (mNextAssertion && mNextAssertion->mHashEntry) {
             // its our magical HASH_ENTRY forward hash for assertions
-            PLDHashEntryHdr* hdr = PL_DHashTableOperate(mNextAssertion->u.hash.mPropertyHash,
-                aProperty, PL_DHASH_LOOKUP);
+            PLDHashEntryHdr* hdr = PL_DHashTableLookup(mNextAssertion->u.hash.mPropertyHash,
+                aProperty);
             mNextAssertion = PL_DHASH_ENTRY_IS_BUSY(hdr)
                 ? reinterpret_cast<Entry*>(hdr)->mAssertions
                 : nullptr;
@@ -980,7 +980,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash, property, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash, property);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1026,7 +1026,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash, property, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash, property);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1139,7 +1139,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(next->u.hash.mPropertyHash, aProperty, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash, aProperty);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1180,8 +1180,8 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     if (haveHash)
     {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(next->u.hash.mPropertyHash,
-            aProperty, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash,
+            aProperty);
         Assertion *asRef = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1192,8 +1192,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
         }
         else
         {
-            hdr = PL_DHashTableOperate(next->u.hash.mPropertyHash,
-                                            aProperty, PL_DHASH_ADD);
+            hdr = PL_DHashTableAdd(next->u.hash.mPropertyHash, aProperty);
             if (hdr)
             {
                 Entry* entry = reinterpret_cast<Entry*>(hdr);
@@ -1282,8 +1281,8 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
     
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(next->u.hash.mPropertyHash,
-            aProperty, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash,
+            aProperty);
         prev = next = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1306,8 +1305,8 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
             PL_DHashTableRawRemove(root->u.hash.mPropertyHash, hdr);
 
             if (next && next->mNext) {
-                PLDHashEntryHdr* hdr = PL_DHashTableOperate(root->u.hash.mPropertyHash,
-                                     aProperty, PL_DHASH_ADD);
+                PLDHashEntryHdr* hdr = PL_DHashTableAdd(root->u.hash.mPropertyHash,
+                                     aProperty);
                 if (hdr) {
                     Entry* entry = reinterpret_cast<Entry*>(hdr);
                     entry->mNode = aProperty;
@@ -1585,8 +1584,8 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
 {
     Assertion* ass = GetForwardArcs(aSource);
     if (ass && ass->mHashEntry) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(ass->u.hash.mPropertyHash,
-            aArc, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(ass->u.hash.mPropertyHash,
+            aArc);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1746,8 +1745,8 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         nextRef = first->mNext;
         nsIRDFResource *prop = first->u.as.mProperty;
 
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(table,
-            prop, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(table,
+            prop);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1756,8 +1755,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
             val->mNext = first;
         }
         else {
-            PLDHashEntryHdr* hdr = PL_DHashTableOperate(table,
-                                            prop, PL_DHASH_ADD);
+            PLDHashEntryHdr* hdr = PL_DHashTableAdd(table, prop);
             if (hdr) {
                 Entry* entry = reinterpret_cast<Entry*>(hdr);
                 entry->mNode = prop;
@@ -1812,8 +1810,8 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
 
     Assertion *as = GetForwardArcs(aSource);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(as->u.hash.mPropertyHash,
-            aProperty, PL_DHASH_LOOKUP);
+        PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash,
+            aProperty);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
             ? reinterpret_cast<Entry*>(hdr)->mAssertions
             : nullptr;
@@ -1948,7 +1946,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
             // remove from the reverse arcs
             PLDHashEntryHdr* hdr =
-                PL_DHashTableOperate(info->mReverseArcs, as->u.as.mTarget, PL_DHASH_LOOKUP);
+                PL_DHashTableLookup(info->mReverseArcs, as->u.as.mTarget);
             NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(hdr), "no assertion in reverse arcs");
 
             Entry* rentry = reinterpret_cast<Entry*>(hdr);

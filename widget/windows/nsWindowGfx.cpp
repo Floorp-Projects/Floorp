@@ -187,6 +187,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() && mPainting)
     return false;
 
+  if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
+    mLayerManager = nullptr;
+    DestroyCompositor();
+    return false;
+  }
+
   // After we CallUpdateWindow to the child, occasionally a WM_PAINT message
   // is posted to the parent event loop with an empty update rect. Do a
   // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
@@ -546,7 +553,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         break;
 #endif
       case LayersBackend::LAYERS_CLIENT:
-        gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
         result = listener->PaintWindow(this, region);
         break;
       default:

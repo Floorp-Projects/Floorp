@@ -7,6 +7,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "MainThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

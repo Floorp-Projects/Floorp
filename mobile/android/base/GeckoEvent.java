@@ -719,13 +719,6 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createWebappLoadEvent(String uri) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
-        event.mCharacters = uri;
-        event.mCharactersExtra = "-webapp";
-        return event;
-    }
-
     public static GeckoEvent createBookmarkLoadEvent(String uri) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
         event.mCharacters = uri;

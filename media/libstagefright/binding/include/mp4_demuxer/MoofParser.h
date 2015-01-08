@@ -151,7 +151,7 @@ private:
 class Moof
 {
 public:
-  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts);
+  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Microseconds aTimestampOffset);
   bool GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
@@ -169,14 +169,17 @@ private:
   void ParseSaiz(Box& aBox);
   void ParseSaio(Box& aBox);
   bool ProcessCenc();
+  Microseconds mTimestampOffset;
   uint64_t mMaxRoundingError;
 };
 
 class MoofParser
 {
 public:
-  MoofParser(Stream* aSource, uint32_t aTrackId, Monitor* aMonitor)
-    : mSource(aSource), mOffset(0), mTrex(aTrackId), mMonitor(aMonitor)
+  MoofParser(Stream* aSource, uint32_t aTrackId,
+             Microseconds aTimestampOffset, Monitor* aMonitor)
+    : mSource(aSource), mOffset(0), mTimestampOffset(aTimestampOffset),
+      mTrex(aTrackId), mMonitor(aMonitor)
   {
     // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
     // the composition range for MSE. We need an array of tracks.
@@ -197,6 +200,7 @@ public:
   mozilla::MediaByteRange mInitRange;
   nsRefPtr<Stream> mSource;
   uint64_t mOffset;
+  Microseconds mTimestampOffset;
   nsTArray<uint64_t> mMoofOffsets;
   Mdhd mMdhd;
   Trex mTrex;

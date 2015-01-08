@@ -237,8 +237,8 @@ public:
       return false;
     }
 
-    return aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' &&
-           aData[7] == 'f';
+    return (aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' && aData[7] == 'f') ||
+           (aData[4] == 's' && aData[5] == 't' && aData[6] == 'y' && aData[7] == 'p');
   }
 
   bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
@@ -249,7 +249,11 @@ public:
     bool initSegment = IsInitSegmentPresent(aData, aLength);
     if (initSegment) {
       mStream = new mp4_demuxer::BufferStream();
-      mParser = new mp4_demuxer::MoofParser(mStream, 0, &mMonitor);
+      // We use a timestampOffset of 0 for ContainerParser, and require
+      // consumers of ParseStartAndEndTimestamps to add their timestamp offset
+      // manually. This allows the ContainerParser to be shared across different
+      // timestampOffsets.
+      mParser = new mp4_demuxer::MoofParser(mStream, 0, 0, &mMonitor);
     } else if (!mStream || !mParser) {
       return false;
     }

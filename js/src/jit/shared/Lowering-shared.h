@@ -218,11 +218,6 @@ class LIRGeneratorShared : public MDefinitionVisitor
         return false;
     }
 
-    // Whether we can inline ForkJoinGetSlice.
-    static bool allowInlineForkJoinGetSlice() {
-        return false;
-    }
-
 };
 
 } // namespace jit
