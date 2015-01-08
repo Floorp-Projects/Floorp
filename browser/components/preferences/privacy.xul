@@ -95,24 +95,30 @@
                     preference="privacy.trackingprotection.enabled"
                     accesskey="&trackingProtection.accesskey;"
                     label="&trackingProtection.label;" />
-          <image id="trackingProtectionImage" src="chrome://browser/skin/bad-content-blocked-16.png"/>
+          <image id="trackingProtectionImage"
+                 src="chrome://browser/skin/bad-content-blocked-16.png"/>
         </hbox>
-        <label id="trackingProtectionLearnMore"
-               class="text-link"
-               value="&trackingProtectionLearnMore.label;"/>
-        <separator/>
+        <hbox align="center"
+              class="indent">
+          <label id="trackingProtectionLearnMore"
+                 class="text-link"
+                 value="&trackingProtectionLearnMore.label;"/>
+        </hbox>
       </vbox>
-      <checkbox id="privacyDoNotTrackCheckbox"
-                label="&dntTrackingNotOkay.label2;"
-                accesskey="&dntTrackingNotOkay.accesskey;"
-                preference="privacy.donottrackheader.enabled"/>
-      <separator class="thin"/>
       <vbox>
-        <hbox pack="end">
-          <spacer flex="1"/>
-          <label class="text-link" id="doNotTrackInfo"
-                href="https://www.mozilla.org/dnt"
-                value="&doNotTrackInfo.label;"/>
+        <hbox align="center">
+          <checkbox id="privacyDoNotTrackCheckbox"
+                    label="&dntTrackingNotOkay.label2;"
+                    accesskey="&dntTrackingNotOkay.accesskey;"
+                    preference="privacy.donottrackheader.enabled"/>
+        </hbox>
+        <hbox align="center"
+              class="indent">
+          <label id="doNotTrackInfo"
+                 class="text-link"
+                 href="https://www.mozilla.org/dnt">
+            &doNotTrackInfo.label;
+          </label>
         </hbox>
       </vbox>
 
