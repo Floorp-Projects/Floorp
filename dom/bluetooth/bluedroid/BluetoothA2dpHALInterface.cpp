@@ -75,12 +75,6 @@ struct BluetoothA2dpHALCallback
     BluetoothA2dpAudioState, const nsAString&>
     AudioStateNotification;
 
-  typedef BluetoothNotificationHALRunnable3<
-    A2dpNotificationHandlerWrapper, void,
-    nsString, uint32_t, uint8_t,
-    const nsAString&, uint32_t, uint8_t>
-    AudioConfigNotification;
-
   // Bluedroid A2DP callbacks
 
   static void
@@ -98,16 +92,6 @@ struct BluetoothA2dpHALCallback
       &BluetoothA2dpNotificationHandler::AudioStateNotification,
       aState, aBdAddr);
   }
-
-#if ANDROID_VERSION >= 21
-  static void
-  AudioConfig(bt_bdaddr_t *aBdAddr, uint32_t aSampleRate, uint8_t aChannelCount)
-  {
-    AudioConfigNotification::Dispatch(
-      &BluetoothA2dpNotificationHandler::AudioConfigNotification,
-      aBdAddr, aSampleRate, aChannelCount);
-  }
-#endif
 };
 
 // Interface
@@ -131,10 +115,7 @@ BluetoothA2dpHALInterface::Init(
   static btav_callbacks_t sCallbacks = {
     sizeof(sCallbacks),
     BluetoothA2dpHALCallback::ConnectionState,
-    BluetoothA2dpHALCallback::AudioState,
-#if ANDROID_VERSION >= 21
-    BluetoothA2dpHALCallback::AudioConfig
-#endif
+    BluetoothA2dpHALCallback::AudioState
   };
 
   sA2dpNotificationHandler = aNotificationHandler;
