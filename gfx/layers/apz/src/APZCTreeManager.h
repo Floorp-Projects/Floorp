@@ -74,7 +74,7 @@ class HitTestingTreeNode;
  * This class generally lives on the compositor thread, although some functions
  * may be called from other threads as noted; thread safety is ensured internally.
  *
- * The bulk of the work of this class happens as part of the UpdatePanZoomControllerTree
+ * The bulk of the work of this class happens as part of the UpdateHitTestingTree
  * function, which is when a layer tree update is received by the compositor.
  * This function walks through the layer tree and creates a tree of APZC instances
  * to match the scrollable container layers. APZC instances may be preserved across
@@ -99,7 +99,7 @@ class APZCTreeManager {
 
   // Helper struct to hold some state while we build the APZ tree. The
   // sole purpose of this struct is to shorten the argument list to
-  // UpdatePanZoomControllerTree. All the state that we don't need to
+  // UpdateHitTestingTree. All the state that we don't need to
   // push on the stack during recursion and pop on unwind is stored here.
   struct TreeBuildingState;
 
@@ -127,11 +127,11 @@ public:
    *                             process' layer subtree has its own sequence
    *                             numbers.
    */
-  void UpdatePanZoomControllerTree(CompositorParent* aCompositor,
-                                   Layer* aRoot,
-                                   bool aIsFirstPaint,
-                                   uint64_t aOriginatingLayersId,
-                                   uint32_t aPaintSequenceNumber);
+  void UpdateHitTestingTree(CompositorParent* aCompositor,
+                            Layer* aRoot,
+                            bool aIsFirstPaint,
+                            uint64_t aOriginatingLayersId,
+                            uint32_t aPaintSequenceNumber);
 
   /**
    * General handler for incoming input events. Manipulates the frame metrics
@@ -477,13 +477,13 @@ private:
    *                           aNextSibling if no APZCs were built for the
    *                           layer subtree at this level.
    */
-  HitTestingTreeNode* UpdatePanZoomControllerTree(TreeBuildingState& aState,
-                                                  const LayerMetricsWrapper& aLayer,
-                                                  uint64_t aLayersId,
-                                                  const gfx::Matrix4x4& aAncestorTransform,
-                                                  HitTestingTreeNode* aParent,
-                                                  HitTestingTreeNode* aNextSibling,
-                                                  const nsIntRegion& aObscured);
+  HitTestingTreeNode* UpdateHitTestingTree(TreeBuildingState& aState,
+                                           const LayerMetricsWrapper& aLayer,
+                                           uint64_t aLayersId,
+                                           const gfx::Matrix4x4& aAncestorTransform,
+                                           HitTestingTreeNode* aParent,
+                                           HitTestingTreeNode* aNextSibling,
+                                           const nsIntRegion& aObscured);
 
   void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                      const AsyncPanZoomController* apzc);

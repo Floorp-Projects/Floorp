@@ -153,11 +153,11 @@ Collect(HitTestingTreeNode* aNode, nsTArray<nsRefPtr<HitTestingTreeNode>>* aColl
 }
 
 void
-APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
-                                             Layer* aRoot,
-                                             bool aIsFirstPaint,
-                                             uint64_t aOriginatingLayersId,
-                                             uint32_t aPaintSequenceNumber)
+APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
+                                      Layer* aRoot,
+                                      bool aIsFirstPaint,
+                                      uint64_t aOriginatingLayersId,
+                                      uint32_t aPaintSequenceNumber)
 {
   if (AsyncPanZoomController::GetThreadAssertionsEnabled()) {
     Compositor::AssertOnCompositorThread();
@@ -196,10 +196,10 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   if (aRoot) {
     mApzcTreeLog << "[start]\n";
     LayerMetricsWrapper root(aRoot);
-    UpdatePanZoomControllerTree(state, root,
-                                // aCompositor is null in gtest scenarios
-                                aCompositor ? aCompositor->RootLayerTreeId() : 0,
-                                Matrix4x4(), nullptr, nullptr, nsIntRegion());
+    UpdateHitTestingTree(state, root,
+                         // aCompositor is null in gtest scenarios
+                         aCompositor ? aCompositor->RootLayerTreeId() : 0,
+                         Matrix4x4(), nullptr, nullptr, nsIntRegion());
     mApzcTreeLog << "[end]\n";
   }
   MOZ_ASSERT(state.mEventRegions.Length() == 0);
@@ -463,13 +463,13 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
 }
 
 HitTestingTreeNode*
-APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
-                                             const LayerMetricsWrapper& aLayer,
-                                             uint64_t aLayersId,
-                                             const gfx::Matrix4x4& aAncestorTransform,
-                                             HitTestingTreeNode* aParent,
-                                             HitTestingTreeNode* aNextSibling,
-                                             const nsIntRegion& aObscured)
+APZCTreeManager::UpdateHitTestingTree(TreeBuildingState& aState,
+                                      const LayerMetricsWrapper& aLayer,
+                                      uint64_t aLayersId,
+                                      const gfx::Matrix4x4& aAncestorTransform,
+                                      HitTestingTreeNode* aParent,
+                                      HitTestingTreeNode* aNextSibling,
+                                      const nsIntRegion& aObscured)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
@@ -544,9 +544,9 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
   obscured.Transform(To3DMatrix(transform).Inverse());
   for (LayerMetricsWrapper child = aLayer.GetLastChild(); child; child = child.GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
-    next = UpdatePanZoomControllerTree(aState, child, childLayersId,
-                                       ancestorTransform, aParent, next,
-                                       obscured);
+    next = UpdateHitTestingTree(aState, child, childLayersId,
+                                ancestorTransform, aParent, next,
+                                obscured);
 
     // Each layer obscures its previous siblings, so we augment the obscured
     // region as we loop backwards through the children.
