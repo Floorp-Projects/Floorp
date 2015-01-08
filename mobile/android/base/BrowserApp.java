@@ -1200,13 +1200,13 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected void loadStartupTab(String url) {
+    protected void loadStartupTab(String url, int flags) {
         // We aren't showing about:home, so cancel the telemetry timer
         if (url != null || mShouldRestore) {
             mAboutHomeStartupTimer.cancel();
         }
 
-        super.loadStartupTab(url);
+        super.loadStartupTab(url, flags);
     }
 
     private void setToolbarMargin(int margin) {
