@@ -35,12 +35,12 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SandboxPrivate,
                                                            nsIGlobalObject)
 
-    nsIPrincipal *GetPrincipal()
+    nsIPrincipal *GetPrincipal() MOZ_OVERRIDE
     {
         return mPrincipal;
     }
 
-    JSObject *GetGlobalJSObject()
+    JSObject *GetGlobalJSObject() MOZ_OVERRIDE
     {
         return GetWrapper();
     }
