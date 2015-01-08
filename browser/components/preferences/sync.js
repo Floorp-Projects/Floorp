@@ -9,6 +9,12 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "fxaMigrator",
+  "resource://services-sync/FxaMigrator.jsm");
+
 const PAGE_NO_ACCOUNT = 0;
 const PAGE_HAS_ACCOUNT = 1;
 const PAGE_NEEDS_UPDATE = 2;
@@ -89,6 +95,7 @@ let gSyncPane = {
                   "weave:service:setup-complete",
                   "weave:service:logout:finish",
                   FxAccountsCommon.ONVERIFIED_NOTIFICATION];
+    let migrateTopic = "fxa-migration:state-changed";
 
     // Add the observers now and remove them on unload
     //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
@@ -96,11 +103,21 @@ let gSyncPane = {
     topics.forEach(function (topic) {
       Weave.Svc.Obs.add(topic, this.updateWeavePrefs, this);
     }, this);
+    // The FxA migration observer is a special case.
+    Weave.Svc.Obs.add(migrateTopic, this.updateMigrationState, this);
+
     window.addEventListener("unload", function() {
       topics.forEach(function (topic) {
         Weave.Svc.Obs.remove(topic, this.updateWeavePrefs, this);
       }, gSyncPane);
+      Weave.Svc.Obs.remove(migrateTopic, this.updateMigrationState, this);
     }, false);
+
+    // ask the migration module to broadcast its current state (and nothing will
+    // happen if it's not loaded - which is good, as that means no migration
+    // is pending/necessary) - we don't want to suck that module in just to
+    // find there's nothing to do.
+    Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
 
     this._stringBundle =
       Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
@@ -116,7 +133,6 @@ let gSyncPane = {
     if (service.fxAccountsEnabled) {
       // determine the fxa status...
       this.page = PAGE_PLEASE_WAIT;
-      Components.utils.import("resource://gre/modules/FxAccounts.jsm");
       fxAccounts.getSignedInUser().then(data => {
         if (!data) {
           this.page = FXA_PAGE_LOGGED_OUT;
@@ -173,6 +189,31 @@ let gSyncPane = {
       document.getElementById("syncComputerName").value = Weave.Service.clientsEngine.localName;
       document.getElementById("tosPP-normal").hidden = this._usingCustomServer;
     }
+  },
+
+  updateMigrationState: function(subject, state) {
+    let selIndex;
+    switch (state) {
+      case fxaMigrator.STATE_USER_FXA:
+        selIndex = 0;
+        break;
+      case fxaMigrator.STATE_USER_FXA_VERIFIED:
+        let email = subject.QueryInterface(Components.interfaces.nsISupportsString).data;
+        let fsfn = this._stringBundle.formatStringFromName;
+        let label = fsfn("fxaVerificationNeeded.label", [email], 1);
+        let elt = document.getElementById("sync-migrate-verify-label");
+        elt.setAttribute("value", label);
+        selIndex = 1;
+        break;
+      default:
+        if (state) { // |null| is expected, but everything else is not.
+          Cu.reportError("updateMigrationState has unknown state: " + state);
+        }
+        document.getElementById("sync-migration").hidden = true;
+        return;
+    }
+    document.getElementById("sync-migration").hidden = false;
+    document.getElementById("sync-migration-deck").selectedIndex = selIndex;
   },
 
   startOver: function (showDialog) {
@@ -282,7 +323,6 @@ let gSyncPane = {
   },
 
   verifyFirefoxAccount: function() {
-    Components.utils.import("resource://gre/modules/FxAccounts.jsm");
     fxAccounts.resendVerificationEmail().then(() => {
       fxAccounts.getSignedInUser().then(data => {
         let sb = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
@@ -323,7 +363,6 @@ let gSyncPane = {
         return;
       }
     }
-    Components.utils.import('resource://gre/modules/FxAccounts.jsm');
     fxAccounts.signOut().then(() => {
       this.updateWeavePrefs();
     });
@@ -355,6 +394,21 @@ let gSyncPane = {
 
   resetSync: function () {
     this.openSetup("reset");
+  },
+
+  // click handlers for the FxA migration.
+  migrateUpgrade: function() {
+    fxaMigrator.getFxAccountOptions().then(({url, options}) => {
+      this.openContentInBrowser(url, options);
+    });
+  },
+
+  migrateForget: function() {
+    fxaMigrator.forgetFxAccount();
+  },
+
+  migrateResend: function() {
+    fxaMigrator.resendVerificationMail(window);
   },
 };
 
