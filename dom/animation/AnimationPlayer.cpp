@@ -144,9 +144,11 @@ AnimationPlayer::Tick()
     mPendingReadyTime.SetNull();
   }
 
-  // FIXME (bug 1112969): Check if we are pending but have lost access to the
-  // pending player tracker. If that's the case we should probably trigger the
-  // animation now.
+  if (IsPossiblyOrphanedPendingPlayer()) {
+    MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
+               "Orphaned pending players should have an active timeline");
+    ResumeAt(mTimeline->GetCurrentTime().Value());
+  }
 
   UpdateSourceContent();
 }
@@ -162,8 +164,8 @@ AnimationPlayer::StartOnNextTick(const Nullable<TimeDuration>& aReadyTime)
     return;
   }
 
-  // TODO: Make sure the player starts even if |aReadyTime| is null
-  // (this is covered by a subsequent patch in this series)
+  // If aReadyTime.IsNull() we'll detect this in Tick() where we check for
+  // orphaned players and trigger this animation anyway
   mPendingReadyTime = aReadyTime;
 }
 
@@ -372,6 +374,55 @@ AnimationPlayer::CancelPendingPlay()
 
   mIsPending = false;
   mPendingReadyTime.SetNull();
+}
+
+bool
+AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
+{
+  // Check if we are pending but might never start because we are not being
+  // tracked.
+  //
+  // This covers the following cases:
+  //
+  // * We started playing but our source content's target element was orphaned
+  //   or bound to a different document.
+  //   (note that for the case of our source content changing we should handle
+  //   that in SetSource)
+  // * We started playing but our timeline became inactive.
+  //   In this case the pending player tracker will drop us from its hashmap
+  //   when we have been painted.
+  // * When we started playing we couldn't find a PendingPlayerTracker to
+  //   register with (perhaps the source content had no document) so we simply
+  //   set mIsPending in DoPlay and relied on this method to catch us on the
+  //   next tick.
+
+  // If we're not pending we're ok.
+  if (!mIsPending) {
+    return false;
+  }
+
+  // If we have a pending ready time then we will be started on the next
+  // tick.
+  if (!mPendingReadyTime.IsNull()) {
+    return false;
+  }
+
+  // If we don't have an active timeline then we shouldn't start until
+  // we do.
+  if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+    return false;
+  }
+
+  // If we have no rendered document, or we're not in our rendered document's
+  // PendingPlayerTracker then there's a good chance no one is tracking us.
+  //
+  // If we're wrong and another document is tracking us then, at worst, we'll
+  // simply start the animation one tick too soon. That's better than never
+  // starting the animation and is unlikely.
+  nsIDocument* doc = GetRenderedDocument();
+  return !doc ||
+         !doc->GetPendingPlayerTracker() ||
+         !doc->GetPendingPlayerTracker()->IsWaitingToPlay(*this);
 }
 
 StickyTimeDuration
