@@ -253,6 +253,17 @@ describe("loop.panel", function() {
     });
 
     describe("AuthLink", function() {
+
+      beforeEach(function() {
+        navigator.mozLoop.calls = { clearCallInProgress: function() {} };
+      });
+
+      afterEach(function() {
+        delete navigator.mozLoop.logInToFxA;
+        delete navigator.mozLoop.calls;
+        navigator.mozLoop.fxAEnabled = true;
+      });
+
       it("should trigger the FxA sign in/up process when clicking the link",
         function() {
           navigator.mozLoop.loggedInToFxA = false;
@@ -266,16 +277,25 @@ describe("loop.panel", function() {
           sinon.assert.calledOnce(navigator.mozLoop.logInToFxA);
         });
 
+      it("should close the panel after clicking the link",
+        function() {
+          navigator.mozLoop.loggedInToFxA = false;
+          navigator.mozLoop.logInToFxA = sandbox.stub();
+
+          var view = createTestPanelView();
+
+          TestUtils.Simulate.click(
+            view.getDOMNode().querySelector(".signin-link a"));
+
+          sinon.assert.calledOnce(fakeWindow.close);
+        });
+
       it("should be hidden if FxA is not enabled",
         function() {
           navigator.mozLoop.fxAEnabled = false;
           var view = TestUtils.renderIntoDocument(
             React.createElement(loop.panel.AuthLink));
           expect(view.getDOMNode()).to.be.null;
-      });
-
-      afterEach(function() {
-        navigator.mozLoop.fxAEnabled = true;
       });
     });
 
