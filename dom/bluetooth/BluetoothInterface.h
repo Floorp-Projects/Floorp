@@ -263,6 +263,12 @@ public:
                          const nsAString& aBdAddr)
   { }
 
+  virtual void
+  AudioConfigNotification(const nsAString& aBdAddr,
+                          uint32_t aSampleRate,
+                          uint8_t aChannelCount)
+  { }
+
 protected:
   BluetoothA2dpNotificationHandler()
   { }
