@@ -82,6 +82,7 @@ UNIFIED_SOURCES += [
     'nsPlaceholderFrame.cpp',
     'nsRubyBaseContainerFrame.cpp',
     'nsRubyBaseFrame.cpp',
+    'nsRubyContentFrame.cpp',
     'nsRubyFrame.cpp',
     'nsRubyTextContainerFrame.cpp',
     'nsRubyTextFrame.cpp',

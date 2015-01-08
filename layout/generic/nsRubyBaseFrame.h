@@ -9,9 +9,9 @@
 #ifndef nsRubyBaseFrame_h___
 #define nsRubyBaseFrame_h___
 
-#include "nsInlineFrame.h"
+#include "nsRubyContentFrame.h"
 
-typedef nsInlineFrame nsRubyBaseFrameSuper;
+typedef nsRubyContentFrame nsRubyBaseFrameSuper;
 
 /**
  * Factory function.
@@ -29,7 +29,6 @@ public:
 
   // nsIFrame overrides
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
