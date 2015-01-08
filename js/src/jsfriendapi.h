@@ -92,7 +92,7 @@ JS_IsDeadWrapper(JSObject *obj);
  * process. Uses bounded stack space.
  */
 extern JS_FRIEND_API(void)
-JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape);
+JS_TraceShapeCycleCollectorChildren(JSTracer *trc, JS::GCCellPtr shape);
 
 enum {
     JS_TELEMETRY_GC_REASON,

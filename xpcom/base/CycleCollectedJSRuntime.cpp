@@ -382,13 +382,12 @@ struct TraversalTracer : public JSTracer
 };
 
 static void
-NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
+NoteJSChild(JSTracer* aTrc, JS::GCCellPtr aThing)
 {
-  JS::GCCellPtr thing(aThing, aTraceKind);
   TraversalTracer* tracer = static_cast<TraversalTracer*>(aTrc);
 
   // Don't traverse non-gray objects, unless we want all traces.
-  if (!JS::GCThingIsMarkedGray(thing) && !tracer->mCb.WantAllTraces()) {
+  if (!JS::GCThingIsMarkedGray(aThing) && !tracer->mCb.WantAllTraces()) {
     return;
   }
 
@@ -400,7 +399,7 @@ NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
    * shape parent pointers. The special JSTRACE_SHAPE case below handles
    * parent pointers iteratively, rather than recursively, to avoid overflow.
    */
-  if (AddToCCKind(aTraceKind)) {
+  if (AddToCCKind(aThing.kind())) {
     if (MOZ_UNLIKELY(tracer->mCb.WantDebugInfo())) {
       // based on DumpNotify in jsapi.cpp
       if (tracer->debugPrinter()) {
@@ -417,29 +416,30 @@ NoteJSChild(JSTracer* aTrc, void* aThing, JSGCTraceKind aTraceKind)
         tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg()));
       }
     }
-    if (thing.isObject()) {
-      tracer->mCb.NoteJSObject(thing.toObject());
+    if (aThing.isObject()) {
+      tracer->mCb.NoteJSObject(aThing.toObject());
     } else {
-      tracer->mCb.NoteJSScript(thing.toScript());
+      tracer->mCb.NoteJSScript(aThing.toScript());
     }
-  } else if (aTraceKind == JSTRACE_SHAPE) {
+  } else if (aThing.isShape()) {
     JS_TraceShapeCycleCollectorChildren(aTrc, aThing);
-  } else if (aTraceKind != JSTRACE_STRING) {
-    JS_TraceChildren(aTrc, aThing, aTraceKind);
+  } else if (!aThing.isString()) {
+    JS_TraceChildren(aTrc, aThing.asCell(), aThing.kind());
   }
 }
 
 static void
 NoteJSChildTracerShim(JSTracer* aTrc, void** aThingp, JSGCTraceKind aTraceKind)
 {
-  NoteJSChild(aTrc, *aThingp, aTraceKind);
+  JS::GCCellPtr thing(*aThingp, aTraceKind);
+  NoteJSChild(aTrc, thing);
 }
 
 static void
 NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing)
 {
   TraversalTracer* trc = static_cast<TraversalTracer*>(aData);
-  NoteJSChild(trc, aThing.asCell(), aThing.kind());
+  NoteJSChild(trc, aThing);
 }
 
 /*
