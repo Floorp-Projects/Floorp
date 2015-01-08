@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -333,6 +334,9 @@ public class FxAccountStatusFragment
 
   protected void showNeedsMasterSyncAutomaticallyEnabled() {
     syncCategory.setTitle(R.string.fxaccount_status_sync);
+    needsMasterSyncAutomaticallyEnabledPreference.setTitle(AppConstants.Versions.preLollipop ?
+                                                   R.string.fxaccount_status_needs_master_sync_automatically_enabled :
+                                                   R.string.fxaccount_status_needs_master_sync_automatically_enabled_v21);
     showOnlyOneErrorPreference(needsMasterSyncAutomaticallyEnabledPreference);
     setCheckboxesEnabled(false);
   }
