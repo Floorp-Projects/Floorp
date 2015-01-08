@@ -1713,9 +1713,6 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
     mPostedRunInStableState = false;
   }
 
-  for (uint32_t i = 0; i < runnables.Length(); ++i) {
-    runnables[i]->Run();
-  }
   for (uint32_t i = 0; i < controlMessagesToRunDuringShutdown.Length(); ++i) {
     controlMessagesToRunDuringShutdown[i]->RunDuringShutdown();
   }
@@ -1724,6 +1721,10 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
   mCanRunMessagesSynchronously = mDetectedNotRunning &&
     mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
 #endif
+
+  for (uint32_t i = 0; i < runnables.Length(); ++i) {
+    runnables[i]->Run();
+  }
 }
 
 
