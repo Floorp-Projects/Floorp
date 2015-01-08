@@ -31,6 +31,10 @@ xul|*.help-button > xul|*.button-box > xul|*.button-icon {
   -moz-margin-end: 0;
 }
 
+xul|*.groupbox-body {
+  -moz-padding-start: 0;
+}
+
 xul|menulist {
   font-size: inherit;
 }
