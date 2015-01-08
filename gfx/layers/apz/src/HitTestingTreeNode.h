@@ -11,6 +11,7 @@
 #include "FrameMetrics.h"                   // for ScrollableLayerGuid
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
 #include "mozilla/layers/LayersTypes.h"     // for EventRegions
+#include "mozilla/Maybe.h"                  // for Maybe
 #include "nsRefPtr.h"                       // for nsRefPtr
 
 namespace mozilla {
@@ -20,16 +21,21 @@ class AsyncPanZoomController;
 
 /**
  * This class represents a node in a tree that is used by the APZCTreeManager
- * to do hit testing. The tree is roughly a copy of the layer tree but only
- * contains nodes for layers that have scrollable metrics. There will be
- * exactly one node per {layer, scrollable metrics} pair (since a layer may have
- * multiple scrollable metrics). However, multiple HitTestingTreeNode instances
- * may share the same underlying APZC instance if the layers they represent
- * share the same scrollable metrics (i.e. are part of the same animated
- * geometry root). If this happens, exactly one of the HitTestingTreeNode
- * instances will be designated as the "primary holder" of the APZC. When
- * this primary holder is destroyed, it will destroy the APZC along with it;
- * in contrast, destroying non-primary-holder nodes will not destroy the APZC.
+ * to do hit testing. The tree is roughly a copy of the layer tree, but will
+ * contain multiple nodes in cases where the layer has multiple FrameMetrics.
+ * In other words, the structure of this tree should be identical to the
+ * LayerMetrics tree (see documentation in LayerMetricsWrapper.h).
+ *
+ * Not all HitTestingTreeNode instances will have an APZC associated with them;
+ * only HitTestingTreeNodes that correspond to layers with scrollable metrics
+ * have APZCs.
+ * Multiple HitTestingTreeNode instances may share the same underlying APZC
+ * instance if the layers they represent share the same scrollable metrics (i.e.
+ * are part of the same animated geometry root). If this happens, exactly one of
+ * the HitTestingTreeNode instances will be designated as the "primary holder"
+ * of the APZC. When this primary holder is destroyed, it will destroy the APZC
+ * along with it; in contrast, destroying non-primary-holder nodes will not
+ * destroy the APZC.
  * Code should not make assumptions about which of the nodes will be the
  * primary holder, only that that there will be exactly one for each APZC in
  * the tree.
@@ -48,29 +54,40 @@ private:
   ~HitTestingTreeNode();
 public:
   HitTestingTreeNode(AsyncPanZoomController* aApzc, bool aIsPrimaryHolder);
+  void RecycleWith(AsyncPanZoomController* aApzc);
   void Destroy();
 
   /* Tree construction methods */
+
   void SetLastChild(HitTestingTreeNode* aChild);
   void SetPrevSibling(HitTestingTreeNode* aSibling);
   void MakeRoot();
 
   /* Tree walking methods. GetFirstChild is O(n) in the number of children. The
    * other tree walking methods are all O(1). */
+
   HitTestingTreeNode* GetFirstChild() const;
   HitTestingTreeNode* GetLastChild() const;
   HitTestingTreeNode* GetPrevSibling() const;
   HitTestingTreeNode* GetParent() const;
 
   /* APZC related methods */
+
   AsyncPanZoomController* GetApzc() const;
   AsyncPanZoomController* GetNearestContainingApzc() const;
   bool IsPrimaryHolder() const;
 
   /* Hit test related methods */
+
   void SetHitTestData(const EventRegions& aRegions,
                       const gfx::Matrix4x4& aTransform,
-                      const nsIntRegion& aClipRegion);
+                      const Maybe<nsIntRegion>& aClipRegion);
+  bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
+  /* Convert aPoint into the LayerPixel space for the layer corresponding to
+   * this node. */
+  Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint) const;
+  /* Assuming aPoint is inside the clip region for this node, check which of the
+   * event region spaces it falls inside. */
   HitTestResult HitTest(const ParentLayerPoint& aPoint) const;
 
   /* Debug helpers */
@@ -87,30 +104,24 @@ private:
   bool mIsPrimaryApzcHolder;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
-   * corresponds to in the layer tree. Then, mEventRegions contains the union
-   * of the event regions of all layers in L's subtree, excluding those layers
-   * which are contained in a descendant HitTestingTreeNode's mEventRegions.
-   * This value is stored in L's LayerPixel space.
-   * For example, if this HitTestingTreeNode maps to a ContainerLayer with
-   * scrollable metrics and which has two PaintedLayer children, the event
-   * regions stored here will be the union of the three event regions in the
-   * ContainerLayer's layer pixel space. This means the event regions from the
-   * PaintedLayer children will have been transformed and clipped according to
-   * the individual properties on those layers but the ContainerLayer's event
-   * regions will be used "raw". */
+   * corresponds to in the layer tree. mEventRegions contains the event regions
+   * from L, in the case where event-regions are enabled. If event-regions are
+   * disabled, it will contain the visible region of L, which we use as an
+   * approximation to the hit region for the purposes of obscuring other layers.
+   * This value is in L's LayerPixels.
+   */
   EventRegions mEventRegions;
 
-  /* This is the transform that the layer subtree corresponding to this node is
-   * subject to. In the terms of the comment on mEventRegions, it is the
-   * transform from the ContainerLayer. This does NOT include any async
+  /* This is the transform from layer L. This does NOT include any async
    * transforms. */
   gfx::Matrix4x4 mTransform;
 
-  /* This is the clip rect that the layer subtree corresponding to this node
-   * is subject to. In the terms of the comment on mEventRegions, it is the clip
-   * rect of the ContainerLayer, and is in the ContainerLayer's ParentLayerPixel
-   * space. */
-  nsIntRegion mClipRegion;
+  /* This is clip rect for L that we wish to use for hit-testing purposes. Note
+   * that this may not be exactly the same as the clip rect on layer L because
+   * of the touch-sensitive region provided by the GeckoContentController, or
+   * because we may use the composition bounds of the layer if the clip is not
+   * present. This value is in L's ParentLayerPixels. */
+  Maybe<nsIntRegion> mClipRegion;
 };
 
 }
