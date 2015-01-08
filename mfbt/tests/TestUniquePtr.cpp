@@ -330,24 +330,6 @@ TestReferenceDeleter()
   return true;
 }
 
-// MSVC10 miscompiles mozilla::RemoveReference<reference to function>, claiming
-// that the partial specializations RemoveReference<T&&> and RemoveReference<T&>
-// both match RemoveReference<FreeSignature> below.  Thus in Mozilla code using
-// UniquePtr with a function reference deleter is forbidden.  But it doesn't
-// hurt to run these tests when the compiler doesn't have problems with this, so
-// do so for anything non-MSVC.
-#if MOZ_IS_MSVC
-   // Technically this could be MOZ_MSVC_VERSION_AT_LEAST(11), but we're not
-   // going to support function deleters as long as we support MSVC10, so it
-   // hardly matters.  In the meantime it's not worth the potential trouble (and
-   // potential for bustage) to run these tests on MSVC>=11.
-#  define SHOULD_TEST_FUNCTION_REFERENCE_DELETER 0
-#else
-#  define SHOULD_TEST_FUNCTION_REFERENCE_DELETER 1
-#endif
-
-#if SHOULD_TEST_FUNCTION_REFERENCE_DELETER
-
 typedef void (&FreeSignature)(void*);
 
 static size_t DeleteIntFunctionCallCount = 0;
@@ -399,8 +381,6 @@ TestFunctionReferenceDeleter()
 
   return true;
 }
-
-#endif // SHOULD_TEST_FUNCTION_REFERENCE_DELETER
 
 template<typename T, bool = IsNullPointer<decltype(nullptr)>::value>
 struct AppendNullptrTwice;
@@ -597,11 +577,9 @@ main()
   if (!TestReferenceDeleter()) {
     return 1;
   }
-#if SHOULD_TEST_FUNCTION_REFERENCE_DELETER
   if (!TestFunctionReferenceDeleter()) {
     return 1;
   }
-#endif
   if (!TestVector()) {
     return 1;
   }
