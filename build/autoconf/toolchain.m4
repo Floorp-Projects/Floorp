@@ -86,9 +86,9 @@ if test "$compiler" = "clang-cl"; then
     CC_VERSION=1800
     CXX_VERSION=1800
     MSVC_VERSION_FULL=180030723
-    # Build on clang-cl with MSVC 2013 with fallback emulation.
-    CFLAGS="$CFLAGS -fmsc-version=1800 -fallback"
-    CXXFLAGS="$CXXFLAGS -fmsc-version=1800 -fallback"
+    # Build on clang-cl with MSVC 2013 Update 3 with fallback emulation.
+    CFLAGS="$CFLAGS -fms-compatibility-version=18.00.30723 -fallback"
+    CXXFLAGS="$CXXFLAGS -fms-compatibility-version=18.00.30723 -fallback"
 fi
 
 if test "$GNU_CC"; then
