@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1099807 - Intra-level whitespace pairing</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body { font-family: monospace; }
+    .container { border: 1px solid blue; margin: 20px; }
+  </style>
+  <style id="style"></style>
+</head>
+<body>
+  <span id="ref1">12345</span> <span id="ref2">12345 67890</span>
+  <div class="container"><ruby><rb>12345</rb> <rb>67890</rb><rt>09876</rt><rt>54321</rt></ruby></div>
+  <div class="container"><ruby><rb>12345</rb><rb>67890</rb><rt>09876</rt> <rt>54321</rt></ruby></div>
+  <div class="container"><ruby><rb>12345</rb> <rb>67890</rb><rt>09876</rt> <rt>54321</rt></ruby></div>
+  <script type="text/javascript">
+    var ref2 = document.getElementById('ref2');
+    var style = document.getElementById('style');
+    var width2 = ref2.getBoundingClientRect().width + 'px';
+    // This is the same as the script in the corresponding
+    // testcase, except that here we skip the intermediate
+    // size and jump straight to the final size.
+    style.textContent = '.container { width: ' + width2 + '; }';
+  </script>
+</body>
+</html>
