@@ -206,7 +206,7 @@ SandboxCreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
 
     nsCOMPtr<nsIXMLHttpRequest> xhr = new nsXMLHttpRequest();
     nsresult rv = xhr->Init(nsContentUtils::SubjectPrincipal(), nullptr,
-                            iglobal, nullptr);
+                            iglobal, nullptr, nullptr);
     if (NS_FAILED(rv))
         return false;
 
