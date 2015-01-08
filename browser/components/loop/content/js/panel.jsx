@@ -201,13 +201,29 @@ loop.panel = (function(_, mozL10n) {
 
       return {
         seenToS: getPref("seenToS"),
-        gettingStartedSeen: getPref("gettingStarted.seen")
+        gettingStartedSeen: getPref("gettingStarted.seen"),
+        showPartnerLogo: getPref("showPartnerLogo")
       };
+    },
+
+    renderPartnerLogo: function() {
+      if (!this.state.showPartnerLogo) {
+        return null;
+      }
+
+      var locale = mozL10n.getLanguage();
+      navigator.mozLoop.setLoopPref('showPartnerLogo', false);
+      return (
+        <p id="powered-by" className="powered-by">
+          {mozL10n.get("powered_by_beforeLogo")}
+          <img id="powered-by-logo" className={locale} />
+          {mozL10n.get("powered_by_afterLogo")}
+        </p>
+      );
     },
 
     render: function() {
       if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
-        var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
         var tosHTML = mozL10n.get("legal_text_and_links3", {
@@ -224,11 +240,7 @@ loop.panel = (function(_, mozL10n) {
           ),
         });
         return <div id="powered-by-wrapper">
-          <p id="powered-by">
-            {mozL10n.get("powered_by_beforeLogo")}
-            <img id="powered-by-logo" className={locale} />
-            {mozL10n.get("powered_by_afterLogo")}
-          </p>
+          {this.renderPartnerLogo()}
           <p className="terms-service"
              dangerouslySetInnerHTML={{__html: tosHTML}}></p>
          </div>;
