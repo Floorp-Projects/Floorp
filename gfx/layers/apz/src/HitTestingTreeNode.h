@@ -7,8 +7,11 @@
 #ifndef mozilla_layers_HitTestingTreeNode_h
 #define mozilla_layers_HitTestingTreeNode_h
 
-#include "FrameMetrics.h"
-#include "nsRefPtr.h"
+#include "APZUtils.h"                       // for HitTestResult
+#include "FrameMetrics.h"                   // for ScrollableLayerGuid
+#include "mozilla/gfx/Matrix.h"             // for Matrix4x4
+#include "mozilla/layers/LayersTypes.h"     // for EventRegions
+#include "nsRefPtr.h"                       // for nsRefPtr
 
 namespace mozilla {
 namespace layers {
@@ -67,6 +70,12 @@ public:
   AsyncPanZoomController* Apzc() const;
   bool IsPrimaryHolder() const;
 
+  /* Hit test related methods */
+  void SetHitTestData(const EventRegions& aRegions,
+                      const gfx::Matrix4x4& aTransform,
+                      const nsIntRegion& aClipRegion);
+  HitTestResult HitTest(const ParentLayerPoint& aPoint) const;
+
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;
 
@@ -77,6 +86,32 @@ private:
 
   nsRefPtr<AsyncPanZoomController> mApzc;
   bool mIsPrimaryApzcHolder;
+
+  /* Let {L,M} be the {layer, scrollable metrics} pair that this node
+   * corresponds to in the layer tree. Then, mEventRegions contains the union
+   * of the event regions of all layers in L's subtree, excluding those layers
+   * which are contained in a descendant HitTestingTreeNode's mEventRegions.
+   * This value is stored in L's LayerPixel space.
+   * For example, if this HitTestingTreeNode maps to a ContainerLayer with
+   * scrollable metrics and which has two PaintedLayer children, the event
+   * regions stored here will be the union of the three event regions in the
+   * ContainerLayer's layer pixel space. This means the event regions from the
+   * PaintedLayer children will have been transformed and clipped according to
+   * the individual properties on those layers but the ContainerLayer's event
+   * regions will be used "raw". */
+  EventRegions mEventRegions;
+
+  /* This is the transform that the layer subtree corresponding to this node is
+   * subject to. In the terms of the comment on mEventRegions, it is the
+   * transform from the ContainerLayer. This does NOT include any async
+   * transforms. */
+  gfx::Matrix4x4 mTransform;
+
+  /* This is the clip rect that the layer subtree corresponding to this node
+   * is subject to. In the terms of the comment on mEventRegions, it is the clip
+   * rect of the ContainerLayer, and is in the ContainerLayer's ParentLayerPixel
+   * space. */
+  nsIntRegion mClipRegion;
 };
 
 }
