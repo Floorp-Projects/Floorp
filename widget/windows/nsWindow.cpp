@@ -6607,7 +6607,7 @@ void nsWindow::OnDestroy()
   }
   if (this == rollupWidget) {
     if ( rollupListener )
-      rollupListener->Rollup(0, nullptr, nullptr);
+      rollupListener->Rollup(0, false, nullptr, nullptr);
     CaptureRollupEvents(nullptr, false);
   }
 
@@ -7553,11 +7553,11 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     nsIntPoint pos(pt.x, pt.y);
 
     consumeRollupEvent =
-      rollupListener->Rollup(popupsToRollup, &pos, &mLastRollup);
+      rollupListener->Rollup(popupsToRollup, true, &pos, &mLastRollup);
     NS_IF_ADDREF(mLastRollup);
   } else {
     consumeRollupEvent =
-      rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
+      rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
   }
 
   // Tell hook to stop processing messages
