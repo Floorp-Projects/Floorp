@@ -5,54 +5,28 @@
 #include "nsISupports.idl"
 
 interface nsIMobileCallForwardingOptions;
+interface nsITelephonyCallInfo;
 
-[scriptable, uuid(464d4cf8-454a-4cdb-9329-bfe7ede97103)]
+[scriptable, uuid(3cdc0b98-0c5f-489d-9190-083d137f40da)]
 interface nsITelephonyListener : nsISupports
 {
   /**
-   * Notified when a telephony call changes state.
-   *
-   * @param clientId
-            Indicate the RIL client, 0 ~ (number of client - 1).
-   * @param callIndex
-   *        Call identifier assigned by the RIL.
-   * @param callState
-   *        One of the nsITelephonyService::CALL_STATE_* values.
-   * @param number
-   *        Number of the other party.
-   * @param numberPresentation
-   *        Presentation of the call number.
-   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
-   * @param name
-   *        Name of the other party.
-   * @param namePresentation
-   *        Presentation of the call name.
-   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
-   * @param isOutgoing
-   *        Indicates whether this call is outgoing or incoming.
-   * @param isEmergency
-   *        Indicates whether this call is an emergency call.
-   * @param isConference
-   *        Indicates whether this call is a conference call.
-   * @param isSwitchable
-   *        Indicates whether this call can be switched between states of
-   *        nsITelephonyService::CALL_STATE_CONNECTED and
-   *        nsITelephonyService::CALL_STATE_HELD.
-   * @param isMergeable
-   *        Indicates whether this call be be added into a conference.
+   * Called when enumeration asked by nsITelephonyService::enumerateCalls
+   * is completed.
    */
-  void callStateChanged(in unsigned long clientId,
-                        in unsigned long callIndex,
-                        in unsigned short callState,
-                        in AString number,
-                        in unsigned short numberPresentation,
-                        in AString name,
-                        in unsigned short namePresentation,
-                        in boolean isOutgoing,
-                        in boolean isEmergency,
-                        in boolean isConference,
-                        in boolean isSwitchable,
-                        in boolean isMergeable);
+  void enumerateCallStateComplete();
+
+  /**
+   * Called when nsITelephonyService is asked to enumerate the current
+   * telephony call state (nsITelephonyService::enumerateCalls). This is
+   * called once per call that is currently managed by the RIL.
+   */
+  void enumerateCallState(in nsITelephonyCallInfo info);
+
+  /**
+   * Notified when a telephony call changes state.
+   */
+  void callStateChanged(in nsITelephonyCallInfo info);
 
   /**
    * Called when participants of a conference call have been updated, and the
@@ -64,57 +38,6 @@ interface nsITelephonyListener : nsISupports
    *        nsITelephonyService::CALL_STATE_CONNECTED.
    */
   void conferenceCallStateChanged(in unsigned short callState);
-
-  /**
-   * Called when enumeration asked by nsITelephonyService::enumerateCalls
-   * is completed.
-   */
-  void enumerateCallStateComplete();
-
-  /**
-   * Called when nsITelephonyService is asked to enumerate the current
-   * telephony call state (nsITelephonyService::enumerateCalls). This is
-   * called once per call that is currently managed by the RIL.
-   *
-   * @param clientId
-            Indicate the RIL client, 0 ~ (number of client - 1).
-   * @param callIndex
-   *        Call identifier assigned by the RIL.
-   * @param callState
-   *        One of the nsITelephonyService::CALL_STATE_* values.
-   * @param number
-   *        Number of the other party.
-   * @param numberPresentation
-   *        Presentation of the call number.
-   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
-   * @param name
-   *        Name of the other party.
-   * @param namePresentation
-   *        Presentation of the call name.
-   *        One of the nsITelephonyProvider::CALL_PRESENTATION_* values.
-   * @param isOutgoing
-   *        Indicates whether this call is outgoing or incoming.
-   * @param isConference
-   *        Indicates whether this call is a conference call.
-   * @param isSwitchable
-   *        Indicates whether this call can be switched between states of
-   *        nsITelephonyService::CALL_STATE_CONNECTED and
-   *        nsITelephonyService::CALL_STATE_HELD.
-   * @param isMergeable
-   *        Indicates whether this call be be added into a conference.
-   */
-  void enumerateCallState(in unsigned long clientId,
-                          in unsigned long callIndex,
-                          in unsigned short callState,
-                          in AString number,
-                          in unsigned short numberPresentation,
-                          in AString name,
-                          in unsigned short namePresentation,
-                          in boolean isOutgoing,
-                          in boolean isEmergency,
-                          in boolean isConference,
-                          in boolean isSwitchable,
-                          in boolean isMergeable);
 
   /**
    * Notify when RIL receives supplementary service notification.
