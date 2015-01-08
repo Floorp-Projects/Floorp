@@ -196,6 +196,8 @@ protected:
   // as necessary. The caller is responsible for resolving or aborting the
   // mReady promise as necessary.
   void CancelPendingPlay();
+
+  bool IsPossiblyOrphanedPendingPlayer() const;
   StickyTimeDuration SourceContentEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
