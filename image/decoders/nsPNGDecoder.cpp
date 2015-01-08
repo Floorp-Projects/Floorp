@@ -165,11 +165,6 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
   } else if (mNumFrames != 0) {
     NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
-  } else {
-    // Our preallocated frame matches up, with the possible exception of alpha.
-    if (format == gfx::SurfaceFormat::B8G8R8X8) {
-      currentFrame->SetHasNoAlpha();
-    }
   }
 
   mFrameRect = neededRect;
@@ -204,11 +199,9 @@ nsPNGDecoder::EndImageFrame()
 
   mNumFrames++;
 
-  Opacity opacity;
-  if (mFrameHasNoAlpha) {
+  Opacity opacity = Opacity::SOME_TRANSPARENCY;
+  if (format == gfx::SurfaceFormat::B8G8R8X8 || mFrameHasNoAlpha) {
     opacity = Opacity::OPAQUE;
-  } else {
-    opacity = Opacity::SOME_TRANSPARENCY;
   }
 
 #ifdef PNG_APNG_SUPPORTED

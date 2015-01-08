@@ -199,12 +199,6 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
       NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
                    mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,
                    format);
-    } else {
-      // Our preallocated frame matches up, with the possible exception
-      // of alpha.
-      if (format == gfx::SurfaceFormat::B8G8R8X8) {
-        currentFrame->SetHasNoAlpha();
-      }
     }
   }
 
@@ -233,8 +227,12 @@ nsGIFDecoder2::EndImageFrame()
                   mGIFStruct.screen_height - realFrameHeight);
       PostInvalidation(r);
     }
-    // This transparency check is only valid for first frame
-    if (mGIFStruct.is_transparent && !mSawTransparency) {
+
+    // The first frame was preallocated with alpha; if it wasn't transparent, we
+    // should fix that. We can also mark it opaque unconditionally if we didn't
+    // actually see any transparent pixels - this test is only valid for the
+    // first frame.
+    if (!mGIFStruct.is_transparent || !mSawTransparency) {
       opacity = Opacity::OPAQUE;
     }
   }
