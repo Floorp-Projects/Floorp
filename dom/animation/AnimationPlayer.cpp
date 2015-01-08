@@ -141,6 +141,23 @@ AnimationPlayer::Tick()
 }
 
 void
+AnimationPlayer::StartOnNextTick(const Nullable<TimeDuration>& aReadyTime)
+{
+  // Normally we expect the play state to be pending but it's possible that,
+  // due to the handling of possibly orphaned players in Tick() [coming
+  // in a later patch in this series], this player
+  // got started whilst still being in another document's pending player
+  // map.
+  if (PlayState() != AnimationPlayState::Pending) {
+    return;
+  }
+
+  // TODO: Make sure the player starts even if |aReadyTime| is null
+  // (this is covered by a subsequent patch in this series)
+  mPendingReadyTime = aReadyTime;
+}
+
+void
 AnimationPlayer::StartNow()
 {
   MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
@@ -351,6 +368,7 @@ AnimationPlayer::CancelPendingPlay()
   }
 
   mIsPending = false;
+  mPendingReadyTime.SetNull();
 }
 
 StickyTimeDuration
