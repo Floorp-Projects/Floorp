@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1099807 - Intra-level whitespace pairing</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    rbc::before {
+      display: ruby-base;
+      content: "before";
+    }
+    rbc::after {
+      display: ruby-base;
+      content: " ";
+    }
+    rtc::before {
+      display: ruby-text;
+      content: " ";
+    }
+    rtc::after {
+      display: ruby-text;
+      content: "after";
+    }
+  </style>
+</head>
+<body>
+  <!-- This test ensures that we don't treat all-whitespace
+       ::before/::after content as intra-level whitespace -->
+  |<ruby>
+    <rbc><rb>base</rb></rbc>
+    <rtc><rt>text</rt></rtc>
+  </ruby>|
+</body>
+</html>

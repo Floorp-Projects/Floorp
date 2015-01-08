@@ -19,15 +19,14 @@ using namespace js::jit;
 
 JitCode *JitRuntime::generateEnterJIT(JSContext *, EnterJitType) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateInvalidator(JSContext *) { MOZ_CRASH(); }
-JitCode *JitRuntime::generateArgumentsRectifier(JSContext *, ExecutionMode, void **) { MOZ_CRASH(); }
+JitCode *JitRuntime::generateArgumentsRectifier(JSContext *, void **) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateBailoutTable(JSContext *, uint32_t) { MOZ_CRASH(); }
-JitCode *JitRuntime::generateBailoutHandler(JSContext *, ExecutionMode) { MOZ_CRASH(); }
+JitCode *JitRuntime::generateBailoutHandler(JSContext *) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateVMWrapper(JSContext *, const VMFunction &) { MOZ_CRASH(); }
 JitCode *JitRuntime::generatePreBarrier(JSContext *, MIRType) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateDebugTrapHandler(JSContext *) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateExceptionTailStub(JSContext *, void *) { MOZ_CRASH(); }
 JitCode *JitRuntime::generateBailoutTailStub(JSContext *) { MOZ_CRASH(); }
-JitCode *JitRuntime::generateForkJoinGetSliceStub(JSContext *) { MOZ_CRASH(); }
 
 FrameSizeClass FrameSizeClass::FromDepth(uint32_t) { MOZ_CRASH(); }
 FrameSizeClass FrameSizeClass::ClassLimit() { MOZ_CRASH(); }

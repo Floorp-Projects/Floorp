@@ -8492,7 +8492,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     // 2.4. Load callee executable entry point
     masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
-    masm.loadBaselineOrIonNoArgCheck(callee, callee, SequentialExecution, nullptr);
+    masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
     // 3. Argc
     unsigned argc = exit.sig().args().length();

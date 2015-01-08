@@ -434,7 +434,7 @@ nsCacheEntryHashTable::GetEntry( const nsCString * key)
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!initialized)  return nullptr;
     
-    hashEntry = PL_DHashTableOperate(&table, key, PL_DHASH_LOOKUP);
+    hashEntry = PL_DHashTableLookup(&table, key);
     if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
         result = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
     }
@@ -451,7 +451,7 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     if (!initialized)  return NS_ERROR_NOT_INITIALIZED;
     if (!cacheEntry)   return NS_ERROR_NULL_POINTER;
 
-    hashEntry = PL_DHashTableOperate(&table, &(cacheEntry->mKey), PL_DHASH_ADD);
+    hashEntry = PL_DHashTableAdd(&table, &(cacheEntry->mKey));
 #ifndef DEBUG_dougt
     NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
                  "### nsCacheEntryHashTable::AddEntry - entry already used");
@@ -475,7 +475,7 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     nsCacheEntry *check = GetEntry(&(cacheEntry->mKey));
     NS_ASSERTION(check == cacheEntry, "### Attempting to remove unknown cache entry!!!");
 #endif
-    (void) PL_DHashTableOperate(&table, &(cacheEntry->mKey), PL_DHASH_REMOVE);
+    PL_DHashTableRemove(&table, &(cacheEntry->mKey));
 }
 
 

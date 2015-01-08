@@ -207,8 +207,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
 
-    void visitForkJoinGetSlice(LForkJoinGetSlice *ins);
-
     void visitNegI(LNegI *lir);
     void visitNegD(LNegD *lir);
     void visitNegF(LNegF *lir);

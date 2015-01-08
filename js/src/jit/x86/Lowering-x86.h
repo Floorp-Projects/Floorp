@@ -41,8 +41,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
 
     bool needTempForPostBarrier() { return true; }
 
-    LDefinition tempForDispatchCache(MIRType outputType = MIRType_None);
-
     void lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
     void defineUntypedPhi(MPhi *phi, size_t lirIndex);
 
@@ -64,9 +62,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     }
 
     static bool allowStaticTypedArrayAccesses() {
-        return true;
-    }
-    static bool allowInlineForkJoinGetSlice() {
         return true;
     }
 };

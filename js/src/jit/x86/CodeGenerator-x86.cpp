@@ -691,53 +691,6 @@ DispatchIonCache::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
     MOZ_CRASH("x86 needs manual assignment of dispatchScratch");
 }
 
-void
-GetPropertyParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
-{
-    // We don't have a scratch register, but only use the temp if we needed
-    // one, it's BogusTemp otherwise.
-    MOZ_ASSERT(ins->isGetPropertyCacheV() || ins->isGetPropertyCacheT());
-    if (ins->isGetPropertyCacheV() || ins->toGetPropertyCacheT()->temp()->isBogusTemp())
-        addState->dispatchScratch = output_.scratchReg().gpr();
-    else
-        addState->dispatchScratch = ToRegister(ins->toGetPropertyCacheT()->temp());
-}
-
-void
-GetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
-{
-    // We don't have a scratch register, but only use the temp if we needed
-    // one, it's BogusTemp otherwise.
-    MOZ_ASSERT(ins->isGetElementCacheV() || ins->isGetElementCacheT());
-    if (ins->isGetElementCacheV() || ins->toGetElementCacheT()->temp()->isBogusTemp())
-        addState->dispatchScratch = output_.scratchReg().gpr();
-    else
-        addState->dispatchScratch = ToRegister(ins->toGetElementCacheT()->temp());
-}
-
-void
-SetPropertyParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
-{
-    // We don't have an output register to reuse, so we always need a temp.
-    MOZ_ASSERT(ins->isSetPropertyCacheV() || ins->isSetPropertyCacheT());
-    if (ins->isSetPropertyCacheV())
-        addState->dispatchScratch = ToRegister(ins->toSetPropertyCacheV()->tempForDispatchCache());
-    else
-        addState->dispatchScratch = ToRegister(ins->toSetPropertyCacheT()->tempForDispatchCache());
-}
-
-void
-SetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
-{
-    // We don't have an output register to reuse, but luckily SetElementCache
-    // already needs a temp.
-    MOZ_ASSERT(ins->isSetElementCacheV() || ins->isSetElementCacheT());
-    if (ins->isSetElementCacheV())
-        addState->dispatchScratch = ToRegister(ins->toSetElementCacheV()->temp());
-    else
-        addState->dispatchScratch = ToRegister(ins->toSetElementCacheT()->temp());
-}
-
 namespace js {
 namespace jit {
 

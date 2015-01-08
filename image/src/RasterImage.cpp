@@ -552,10 +552,9 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
   }
 
   if (mAnim && aFrameNum > 0) {
-    MOZ_ASSERT(mFrameBlender, "mAnim but no mFrameBlender?");
     MOZ_ASSERT(DecodeFlags(aFlags) == DECODE_FLAGS_DEFAULT,
                "Can't composite frames with non-default decode flags");
-    return mFrameBlender->GetCompositedFrame(aFrameNum);
+    return mAnim->GetCompositedFrame(aFrameNum);
   }
 
   return SurfaceCache::Lookup(ImageKey(this),
@@ -702,8 +701,8 @@ RasterImage::GetFirstFrameDelay()
   if (NS_FAILED(GetAnimated(&animated)) || !animated)
     return -1;
 
-  MOZ_ASSERT(mFrameBlender, "Animated images should have a FrameBlender");
-  return mFrameBlender->GetTimeoutForFrame(0);
+  MOZ_ASSERT(mAnim, "Animated images should have a FrameAnimator");
+  return mAnim->GetTimeoutForFrame(0);
 }
 
 TemporaryRef<SourceSurface>
@@ -925,8 +924,8 @@ RasterImage::SizeOfDecoded(gfxMemoryLocation aLocation,
 {
   size_t n = 0;
   n += SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
-  if (mFrameBlender) {
-    n += mFrameBlender->SizeOfDecoded(aLocation, aMallocSizeOf);
+  if (mAnim) {
+    n += mAnim->SizeOfCompositingFrames(aLocation, aMallocSizeOf);
   }
   return n;
 }
@@ -984,10 +983,8 @@ RasterImage::InternalAddFrame(uint32_t aFrameNum,
 
   if (aFrameNum == 1) {
     // We're becoming animated, so initialize animation stuff.
-    MOZ_ASSERT(!mFrameBlender, "Already have a FrameBlender?");
     MOZ_ASSERT(!mAnim, "Already have animation state?");
-    mFrameBlender.emplace(ImageKey(this), mSize.ToIntSize());
-    mAnim = MakeUnique<FrameAnimator>(this, *mFrameBlender, mAnimationMode);
+    mAnim = MakeUnique<FrameAnimator>(this, mSize.ToIntSize(), mAnimationMode);
 
     // We don't support discarding animated images (See bug 414259).
     // Lock the image and throw away the key.
@@ -1005,9 +1002,10 @@ RasterImage::InternalAddFrame(uint32_t aFrameNum,
     // If we dispose of the first frame by clearing it, then the first frame's
     // refresh area is all of itself.
     // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR).
-    int32_t frameDisposalMethod = aPreviousFrame->GetFrameDisposalMethod();
-    if (frameDisposalMethod == FrameBlender::kDisposeClear ||
-        frameDisposalMethod == FrameBlender::kDisposeRestorePrevious) {
+    DisposalMethod disposalMethod = aPreviousFrame->GetDisposalMethod();
+    if (disposalMethod == DisposalMethod::CLEAR ||
+        disposalMethod == DisposalMethod::CLEAR_ALL ||
+        disposalMethod == DisposalMethod::RESTORE_PREVIOUS) {
       mAnim->SetFirstFrameRefreshArea(aPreviousFrame->GetRect());
     }
 
@@ -1097,7 +1095,7 @@ RasterImage::EnsureFrame(uint32_t aFrameNum,
   MOZ_ASSERT(aFrameNum == 0, "Replacing a frame other than the first?");
   MOZ_ASSERT(GetNumFrames() == 1, "Should have only one frame");
   MOZ_ASSERT(aPreviousFrame, "Need the previous frame to replace");
-  MOZ_ASSERT(!mFrameBlender && !mAnim, "Shouldn't be animated");
+  MOZ_ASSERT(!mAnim, "Shouldn't be animated");
   if (aFrameNum != 0 || !aPreviousFrame || GetNumFrames() != 1) {
     return RawAccessFrameRef();
   }
@@ -1172,17 +1170,14 @@ RasterImage::StartAnimation()
   }
 
   // A timeout of -1 means we should display this frame forever.
-  MOZ_ASSERT(mFrameBlender, "Have an animation but no FrameBlender?");
-  if (mFrameBlender->GetTimeoutForFrame(GetCurrentFrameIndex()) < 0) {
+  if (mAnim->GetTimeoutForFrame(GetCurrentFrameIndex()) < 0) {
     mAnimationFinished = true;
     return NS_ERROR_ABORT;
   }
 
-  if (mAnim) {
-    // We need to set the time that this initial frame was first displayed, as
-    // this is used in AdvanceFrame().
-    mAnim->InitAnimationFrameTimeIfNecessary();
-  }
+  // We need to set the time that this initial frame was first displayed, as
+  // this is used in AdvanceFrame().
+  mAnim->InitAnimationFrameTimeIfNecessary();
 
   return NS_OK;
 }
@@ -1225,8 +1220,7 @@ RasterImage::ResetAnimation()
   if (mAnimating)
     StopAnimation();
 
-  MOZ_ASSERT(mFrameBlender, "Should have a FrameBlender");
-  mFrameBlender->ResetAnimation();
+  MOZ_ASSERT(mAnim, "Should have a FrameAnimator");
   mAnim->ResetAnimation();
 
   UpdateImageContainer();
@@ -1273,10 +1267,9 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
   if (mError)
     return;
 
+  // No need to set this if we're not an animation.
   if (mAnim) {
-    // No need to set this if we're not an animation
-    MOZ_ASSERT(mFrameBlender, "Should have a FrameBlender");
-    mFrameBlender->SetLoopCount(aLoopCount);
+    mAnim->SetLoopCount(aLoopCount);
   }
 }
 
@@ -1538,8 +1531,7 @@ RasterImage::Discard()
   // For post-operation logging
   int old_frame_count = GetNumFrames();
 
-  // Delete all the decoded frames
-  mFrameBlender.reset();
+  // Delete all the decoded frames.
   SurfaceCache::RemoveImage(ImageKey(this));
 
   // Flag that we no longer have decoded frames for this image

@@ -206,8 +206,6 @@ class ForkJoinOperation
     bool invalidateBailedOutScripts();
     ExecutionStatus sequentialExecution(bool disqualified);
 
-    TrafficLight appendCallTargetsToWorklist(uint32_t index, ExecutionStatus *status);
-    TrafficLight appendCallTargetToWorklist(HandleScript script, ExecutionStatus *status);
     bool addToWorklist(HandleScript script);
     inline bool hasScript(const types::RecompileInfoVector &scripts, JSScript *script);
 }; // class ForkJoinOperation
@@ -677,7 +675,7 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
             if (!script->hasParallelIonScript()) {
                 // Script has not yet been compiled. Attempt to compile it.
                 SpewBeginCompile(script);
-                MethodStatus mstatus = CanEnterInParallel(cx_, script);
+                MethodStatus mstatus = Method_Error;
                 SpewEndCompile(mstatus);
 
                 switch (mstatus) {
@@ -727,8 +725,6 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
             // worklist if so. Clear the flag after that, since we
             // will be compiling the call targets.
             MOZ_ASSERT(script->hasParallelIonScript());
-            if (appendCallTargetsToWorklist(i, status) == RedLight)
-                return RedLight;
         }
 
         // If there is compilation occurring in a helper thread, then
@@ -791,65 +787,6 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
     }
     worklist_.clear();
     worklistData_.clear();
-    return GreenLight;
-}
-
-ForkJoinOperation::TrafficLight
-ForkJoinOperation::appendCallTargetsToWorklist(uint32_t index, ExecutionStatus *status)
-{
-    // GreenLight: call targets appended
-    // RedLight: fatal error or completed work via warmups or fallback
-
-    MOZ_ASSERT(worklist_[index]->hasParallelIonScript());
-
-    // Check whether we have already enqueued the targets for
-    // this entry and avoid doing it again if so.
-    if (worklistData_[index].calleesEnqueued)
-        return GreenLight;
-    worklistData_[index].calleesEnqueued = true;
-
-    // Iterate through the callees and enqueue them.
-    RootedScript target(cx_);
-    IonScript *ion = worklist_[index]->parallelIonScript();
-    for (uint32_t i = 0; i < ion->callTargetEntries(); i++) {
-        target = ion->callTargetList()[i];
-        parallel::Spew(parallel::SpewCompile,
-                       "Adding call target %s:%u",
-                       target->filename(), target->lineno());
-        if (appendCallTargetToWorklist(target, status) == RedLight)
-            return RedLight;
-    }
-
-    return GreenLight;
-}
-
-ForkJoinOperation::TrafficLight
-ForkJoinOperation::appendCallTargetToWorklist(HandleScript script, ExecutionStatus *status)
-{
-    // GreenLight: call target appended if necessary
-    // RedLight: fatal error or completed work via warmups or fallback
-
-    MOZ_ASSERT(script);
-
-    // Fallback to sequential if disabled.
-    if (!script->canParallelIonCompile()) {
-        Spew(SpewCompile, "Skipping %p:%s:%u, canParallelIonCompile() is false",
-             script.get(), script->filename(), script->lineno());
-        return sequentialExecution(true, status);
-    }
-
-    if (script->hasParallelIonScript()) {
-        // Skip if the code is expected to result in a bailout.
-        if (script->parallelIonScript()->bailoutExpected()) {
-            Spew(SpewCompile, "Skipping %p:%s:%u, bailout expected",
-                 script.get(), script->filename(), script->lineno());
-            return sequentialExecution(false, status);
-        }
-    }
-
-    if (!addToWorklist(script))
-        return fatalError(status);
-
     return GreenLight;
 }
 

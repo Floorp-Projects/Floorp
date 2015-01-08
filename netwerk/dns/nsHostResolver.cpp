@@ -627,7 +627,7 @@ nsHostResolver::FlushCache()
           nsHostRecord *rec = static_cast<nsHostRecord *>(node);
           node = node->next;
           PR_REMOVE_AND_INIT_LINK(rec);
-          PL_DHashTableOperate(&mDB, (nsHostKey *) rec, PL_DHASH_REMOVE);
+          PL_DHashTableRemove(&mDB, (nsHostKey *) rec);
           NS_RELEASE(rec);
       }
   }
@@ -759,7 +759,7 @@ nsHostResolver::ResolveHost(const char            *host,
 
             nsHostKey key = { host, flags, af };
             nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                         (PL_DHashTableOperate(&mDB, &key, PL_DHASH_ADD));
+                                         (PL_DHashTableAdd(&mDB, &key));
 
             // if the record is null, then HostDB_InitEntry failed.
             if (!he || !he->rec) {
@@ -832,7 +832,7 @@ nsHostResolver::ResolveHost(const char            *host,
                     // First, search for an entry with AF_UNSPEC
                     const nsHostKey unspecKey = { host, flags, PR_AF_UNSPEC };
                     nsHostDBEnt *unspecHe = static_cast<nsHostDBEnt *>
-                        (PL_DHashTableOperate(&mDB, &unspecKey, PL_DHASH_LOOKUP));
+                        (PL_DHashTableLookup(&mDB, &unspecKey));
                     NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(unspecHe) ||
                                  (PL_DHASH_ENTRY_IS_BUSY(unspecHe) &&
                                   unspecHe->rec),
@@ -960,7 +960,7 @@ nsHostResolver::DetachCallback(const char            *host,
 
         nsHostKey key = { host, flags, af };
         nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                     (PL_DHashTableOperate(&mDB, &key, PL_DHASH_LOOKUP));
+                                     (PL_DHashTableLookup(&mDB, &key));
         if (he && he->rec) {
             // walk list looking for |callback|... we cannot assume
             // that it will be there!
@@ -1252,7 +1252,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
                 nsHostRecord *head =
                     static_cast<nsHostRecord *>(PR_LIST_HEAD(&mEvictionQ));
                 PR_REMOVE_AND_INIT_LINK(head);
-                PL_DHashTableOperate(&mDB, (nsHostKey *) head, PL_DHASH_REMOVE);
+                PL_DHashTableRemove(&mDB, (nsHostKey *) head);
 
                 if (!head->negative) {
                     // record the age of the entry upon eviction.
@@ -1308,7 +1308,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
     // Lookup the host record associated with host, flags & address family
     nsHostKey key = { host, flags, af };
     nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                      (PL_DHashTableOperate(&mDB, &key, PL_DHASH_LOOKUP));
+                      (PL_DHashTableLookup(&mDB, &key));
     if (he && he->rec) {
         nsHostRecord* recPtr = nullptr;
         PRCList *node = he->rec->callbacks.next;
@@ -1329,7 +1329,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
 
         // If there are no more callbacks, remove the hash table entry
         if (recPtr && PR_CLIST_IS_EMPTY(&recPtr->callbacks)) {
-            PL_DHashTableOperate(&mDB, (nsHostKey *)recPtr, PL_DHASH_REMOVE);
+            PL_DHashTableRemove(&mDB, (nsHostKey *)recPtr);
             // If record is on a Queue, remove it and then deref it
             if (recPtr->next != recPtr) {
                 PR_REMOVE_LINK(recPtr);

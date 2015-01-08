@@ -18,9 +18,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
-#include "jit/ParallelFunctions.h"
 #include "js/Conversions.h"
-#include "vm/ForkJoin.h"
 #include "vm/TraceLogging.h"
 
 #include "jsgcinlines.h"
@@ -836,86 +834,6 @@ MacroAssembler::newGCFatInlineString(Register result, Register temp, Label *fail
 }
 
 void
-MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                              gc::AllocKind allocKind, Label *fail)
-{
-    return newGCTenuredThingPar(result, cx, tempReg1, tempReg2, allocKind, fail);
-}
-
-void
-MacroAssembler::newGCTenuredThingPar(Register result, Register cx,
-                                     Register tempReg1, Register tempReg2,
-                                     gc::AllocKind allocKind, Label *fail)
-{
-    // Similar to ::newGCThing(), except that it allocates from a custom
-    // Allocator in the ForkJoinContext*, rather than being hardcoded to the
-    // compartment allocator.  This requires two temporary registers.
-    //
-    // Subtle: I wanted to reuse `result` for one of the temporaries, but the
-    // register allocator was assigning it to the same register as `cx`.
-    // Then we overwrite that register which messed up the OOL code.
-
-    uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
-
-    // Load the allocator:
-    // tempReg1 = (Allocator*) forkJoinCx->allocator()
-    loadPtr(Address(cx, ThreadSafeContext::offsetOfAllocator()),
-            tempReg1);
-
-    // Get a pointer to the relevant free list:
-    // tempReg1 = (FreeList*) &tempReg1->arenas.freeLists[(allocKind)]
-    uint32_t offset = (offsetof(Allocator, arenas) +
-                       js::gc::ArenaLists::getFreeListOffset(allocKind));
-    addPtr(Imm32(offset), tempReg1);
-
-    // Load first item on the list
-    // tempReg2 = tempReg1->head.first
-    loadPtr(Address(tempReg1, gc::FreeList::offsetOfFirst()), tempReg2);
-
-    // Check whether bump-allocation is possible.
-    // if tempReg1->head.last <= tempReg2, fail
-    branchPtr(Assembler::BelowOrEqual,
-              Address(tempReg1, gc::FreeList::offsetOfLast()),
-              tempReg2,
-              fail);
-
-    // If so, take |first| and advance pointer by thingSize bytes.
-    // result = tempReg2;
-    // tempReg2 += thingSize;
-    movePtr(tempReg2, result);
-    addPtr(Imm32(thingSize), tempReg2);
-
-    // Update |first|.
-    // tempReg1->head.first = tempReg2;
-    storePtr(tempReg2, Address(tempReg1, gc::FreeList::offsetOfFirst()));
-}
-
-void
-MacroAssembler::newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                              NativeObject *templateObject, Label *fail)
-{
-    gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
-    MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
-    MOZ_ASSERT(!templateObject->numDynamicSlots());
-
-    newGCThingPar(result, cx, tempReg1, tempReg2, allocKind, fail);
-}
-
-void
-MacroAssembler::newGCStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                               Label *fail)
-{
-    newGCTenuredThingPar(result, cx, tempReg1, tempReg2, js::gc::FINALIZE_STRING, fail);
-}
-
-void
-MacroAssembler::newGCFatInlineStringPar(Register result, Register cx, Register tempReg1,
-                                        Register tempReg2, Label *fail)
-{
-    newGCTenuredThingPar(result, cx, tempReg1, tempReg2, js::gc::FINALIZE_FAT_INLINE_STRING, fail);
-}
-
-void
 MacroAssembler::copySlotsFromTemplate(Register obj, const NativeObject *templateObj,
                                       uint32_t start, uint32_t end)
 {
@@ -1203,28 +1121,12 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output)
     bind(&done);
 }
 
-void
-MacroAssembler::checkInterruptFlagPar(Register tempReg, Label *fail)
-{
-    movePtr(ImmPtr(GetJitContext()->runtime->addressOfInterruptParUint32()), tempReg);
-    branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
-}
-
 // Save an exit frame (which must be aligned to the stack pointer) to
 // PerThreadData::jitTop of the main thread.
 void
 MacroAssembler::linkExitFrame()
 {
     AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
-    storePtr(StackPointer, jitTop);
-}
-
-// Save an exit frame to the thread data of the current thread, given a
-// register that holds a PerThreadData *.
-void
-MacroAssembler::linkParallelExitFrame(Register pt)
-{
-    Address jitTop(pt, offsetof(PerThreadData, jitTop));
     storePtr(StackPointer, jitTop);
 }
 
@@ -1384,52 +1286,19 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 }
 
 void
-MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, ExecutionMode mode,
-                                     Label *failure)
+MacroAssembler::loadBaselineOrIonRaw(Register script, Register dest, Label *failure)
 {
-    if (mode == SequentialExecution) {
-        loadPtr(Address(script, JSScript::offsetOfBaselineOrIonRaw()), dest);
-        if (failure)
-            branchTestPtr(Assembler::Zero, dest, dest, failure);
-    } else {
-        loadPtr(Address(script, JSScript::offsetOfParallelIonScript()), dest);
-        if (failure)
-            branchPtr(Assembler::BelowOrEqual, dest, ImmPtr(ION_COMPILING_SCRIPT), failure);
-        loadPtr(Address(dest, IonScript::offsetOfMethod()), dest);
-        loadPtr(Address(dest, JitCode::offsetOfCode()), dest);
-    }
+    loadPtr(Address(script, JSScript::offsetOfBaselineOrIonRaw()), dest);
+    if (failure)
+        branchTestPtr(Assembler::Zero, dest, dest, failure);
 }
 
 void
-MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, ExecutionMode mode,
-                                            Label *failure)
+MacroAssembler::loadBaselineOrIonNoArgCheck(Register script, Register dest, Label *failure)
 {
-    if (mode == SequentialExecution) {
-        loadPtr(Address(script, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
-        if (failure)
-            branchTestPtr(Assembler::Zero, dest, dest, failure);
-    } else {
-        // Find second register to get the offset to skip argument check
-        Register offset = script;
-        if (script == dest) {
-            GeneralRegisterSet regs(GeneralRegisterSet::All());
-            regs.take(dest);
-            offset = regs.takeAny();
-        }
-
-        loadPtr(Address(script, JSScript::offsetOfParallelIonScript()), dest);
-        if (failure)
-            branchPtr(Assembler::BelowOrEqual, dest, ImmPtr(ION_COMPILING_SCRIPT), failure);
-
-        Push(offset);
-        load32(Address(script, IonScript::offsetOfSkipArgCheckEntryOffset()), offset);
-
-        loadPtr(Address(dest, IonScript::offsetOfMethod()), dest);
-        loadPtr(Address(dest, JitCode::offsetOfCode()), dest);
-        addPtr(offset, dest);
-
-        Pop(offset);
-    }
+    loadPtr(Address(script, JSScript::offsetOfBaselineOrIonSkipArgCheck()), dest);
+    if (failure)
+        branchTestPtr(Assembler::Zero, dest, dest, failure);
 }
 
 void
@@ -1441,96 +1310,7 @@ MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest)
 }
 
 void
-MacroAssembler::loadForkJoinContext(Register cx, Register scratch)
-{
-    // Load the current ForkJoinContext *. If we need a parallel exit frame,
-    // chances are we are about to do something very slow anyways, so just
-    // call ForkJoinContextPar again instead of using the cached version.
-    setupUnalignedABICall(0, scratch);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForkJoinContextPar));
-    if (ReturnReg != cx)
-        movePtr(ReturnReg, cx);
-}
-
-void
-MacroAssembler::loadContext(Register cxReg, Register scratch, ExecutionMode executionMode)
-{
-    switch (executionMode) {
-      case SequentialExecution:
-        // The scratch register is not used for sequential execution.
-        loadJSContext(cxReg);
-        break;
-      case ParallelExecution:
-        loadForkJoinContext(cxReg, scratch);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
-}
-
-void
-MacroAssembler::enterParallelExitFrameAndLoadContext(const VMFunction *f, Register cx,
-                                                     Register scratch)
-{
-    loadForkJoinContext(cx, scratch);
-    // Load the PerThreadData from from the cx.
-    loadPtr(Address(cx, offsetof(ForkJoinContext, perThreadData)), scratch);
-    linkParallelExitFrame(scratch);
-    // Push the ioncode.
-    exitCodePatch_ = PushWithPatch(ImmWord(-1));
-    // Push the VMFunction pointer, to mark arguments.
-    Push(ImmPtr(f));
-}
-
-void
-MacroAssembler::enterFakeParallelExitFrame(Register cx, Register scratch,
-                                           JitCode *codeVal)
-{
-    // Load the PerThreadData from from the cx.
-    loadPtr(Address(cx, offsetof(ForkJoinContext, perThreadData)), scratch);
-    linkParallelExitFrame(scratch);
-    Push(ImmPtr(codeVal));
-    Push(ImmPtr(nullptr));
-}
-
-void
-MacroAssembler::enterExitFrameAndLoadContext(const VMFunction *f, Register cxReg, Register scratch,
-                                             ExecutionMode executionMode)
-{
-    switch (executionMode) {
-      case SequentialExecution:
-        // The scratch register is not used for sequential execution.
-        enterExitFrame(f);
-        loadJSContext(cxReg);
-        break;
-      case ParallelExecution:
-        enterParallelExitFrameAndLoadContext(f, cxReg, scratch);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
-}
-
-void
-MacroAssembler::enterFakeExitFrame(Register cxReg, Register scratch,
-                                   ExecutionMode executionMode,
-                                   JitCode *codeVal)
-{
-    switch (executionMode) {
-      case SequentialExecution:
-        // The cx and scratch registers are not used for sequential execution.
-        enterFakeExitFrame(codeVal);
-        break;
-      case ParallelExecution:
-        enterFakeParallelExitFrame(cxReg, scratch, codeVal);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
-}
-
-void
-MacroAssembler::handleFailure(ExecutionMode executionMode)
+MacroAssembler::handleFailure()
 {
     // Re-entry code is irrelevant because the exception will leave the
     // running function and never come back
@@ -1538,17 +1318,7 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
         sps_->skipNextReenter();
     leaveSPSFrame();
 
-    JitCode *excTail;
-    switch (executionMode) {
-      case SequentialExecution:
-        excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
-        break;
-      case ParallelExecution:
-        excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTailParallel();
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     jump(excTail);
 
     // Doesn't actually emit code, but balances the leave()
@@ -2147,13 +1917,9 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
 void
 MacroAssembler::finish()
 {
-    if (sequentialFailureLabel_.used()) {
-        bind(&sequentialFailureLabel_);
-        handleFailure(SequentialExecution);
-    }
-    if (parallelFailureLabel_.used()) {
-        bind(&parallelFailureLabel_);
-        handleFailure(ParallelExecution);
+    if (failureLabel_.used()) {
+        bind(&failureLabel_);
+        handleFailure();
     }
 
     MacroAssemblerSpecific::finish();

@@ -98,8 +98,8 @@ public:
     AnimFrameInfo(png_structp aPNG, png_infop aInfo);
 #endif
 
-    FrameBlender::FrameDisposalMethod mDispose;
-    FrameBlender::FrameBlendMethod mBlend;
+    DisposalMethod mDispose;
+    BlendMethod mBlend;
     int32_t mTimeout;
   };
 

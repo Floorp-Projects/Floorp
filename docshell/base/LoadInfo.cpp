@@ -28,6 +28,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mSecurityFlags(aSecurityFlags)
   , mContentPolicyType(aContentPolicyType)
   , mBaseURI(aBaseURI)
+  , mInnerWindowID(aLoadingContext ?
+                     aLoadingContext->OwnerDoc()->InnerWindowID() : 0)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -41,6 +43,21 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
     mSecurityFlags ^= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
+}
+
+LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
+                   nsIPrincipal* aTriggeringPrincipal,
+                   nsSecurityFlags aSecurityFlags,
+                   nsContentPolicyType aContentPolicyType,
+                   uint32_t aInnerWindowID)
+  : mLoadingPrincipal(aLoadingPrincipal)
+  , mTriggeringPrincipal(aTriggeringPrincipal)
+  , mSecurityFlags(aSecurityFlags)
+  , mContentPolicyType(aContentPolicyType)
+  , mInnerWindowID(aInnerWindowID)
+{
+  MOZ_ASSERT(mLoadingPrincipal);
+  MOZ_ASSERT(mTriggeringPrincipal);
 }
 
 LoadInfo::~LoadInfo()
@@ -133,6 +150,13 @@ nsIURI*
 LoadInfo::BaseURI()
 {
   return mBaseURI;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetInnerWindowID(uint32_t* outInnerWindowID)
+{
+  *outInnerWindowID = mInnerWindowID;
+  return NS_OK;
 }
 
 } // namespace mozilla

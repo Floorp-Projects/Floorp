@@ -439,7 +439,6 @@ class IonBuilder
                             types::TemporaryTypeSet *types);
     bool getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
                          BarrierKind barrier, types::TemporaryTypeSet *types);
-    bool needsToMonitorMissingProperties(types::TemporaryTypeSet *types);
 
     // jsop_setprop() helpers.
     bool setPropTryCommonSetter(bool *emitted, MDefinition *obj,
@@ -770,17 +769,11 @@ class IonBuilder
                                           ScalarTypeDescr::Type arrayType);
     bool inlineUnsafeSetTypedObjectArrayElement(CallInfo &callInfo, uint32_t base,
                                                 ScalarTypeDescr::Type arrayType);
-    InliningStatus inlineNewDenseArray(CallInfo &callInfo);
-    InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);
-    InliningStatus inlineNewDenseArrayForParallelExecution(CallInfo &callInfo);
 
     // Slot intrinsics.
     InliningStatus inlineUnsafeSetReservedSlot(CallInfo &callInfo);
     InliningStatus inlineUnsafeGetReservedSlot(CallInfo &callInfo,
                                                MIRType knownValueType);
-
-    // ForkJoin intrinsics
-    InliningStatus inlineForkJoinGetSlice(CallInfo &callInfo);
 
     // TypedArray intrinsics.
     InliningStatus inlineIsTypedArray(CallInfo &callInfo);
@@ -808,7 +801,6 @@ class IonBuilder
     InliningStatus inlineSubstringKernel(CallInfo &callInfo);
 
     // Testing functions.
-    InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
     InliningStatus inlineBailout(CallInfo &callInfo);
     InliningStatus inlineAssertFloat32(CallInfo &callInfo);
 

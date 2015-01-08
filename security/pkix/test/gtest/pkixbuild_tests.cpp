@@ -49,8 +49,7 @@ CreateCert(const char* issuerCN, // null means "empty name"
   ByteString extensions[2];
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     extensions[0] =
-      CreateEncodedBasicConstraints(true, nullptr,
-                                    ExtensionCriticality::Critical);
+      CreateEncodedBasicConstraints(true, nullptr, Critical::Yes);
     EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
   }
 

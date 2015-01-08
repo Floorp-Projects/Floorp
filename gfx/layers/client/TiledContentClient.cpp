@@ -1282,8 +1282,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     nsIntRect(aTileOrigin.x, aTileOrigin.y,
               GetScaledTileSize().width, GetScaledTileSize().height);
   // Intersect this area with the portion that's invalid.
-  tileRegion = tileRegion.Sub(tileRegion, GetValidRegion());
-  tileRegion = tileRegion.Sub(tileRegion, aDirtyRegion); // Has now been validated
+  tileRegion.SubOut(GetValidRegion());
+  tileRegion.SubOut(aDirtyRegion); // Has now been validated
 
   backBuffer->SetWaste(tileRegion.Area() * mResolution * mResolution);
   backBuffer->Unlock();

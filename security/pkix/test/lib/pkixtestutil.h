@@ -29,7 +29,6 @@
 #include <stdint.h> // Some Mozilla-supported compilers lack <cstdint>
 #include <string>
 
-#include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
 
@@ -303,15 +302,14 @@ ByteString CreateEncodedCertificate(long version, const ByteString& signature,
 
 ByteString CreateEncodedSerialNumber(long value);
 
-MOZILLA_PKIX_ENUM_CLASS ExtensionCriticality { NotCritical = 0, Critical = 1 };
+enum class Critical { No = 0, Yes = 1 };
 
 ByteString CreateEncodedBasicConstraints(bool isCA,
                                          /*optional*/ long* pathLenConstraint,
-                                         ExtensionCriticality criticality);
+                                         Critical critical);
 
 // Creates a DER-encoded extKeyUsage extension with one EKU OID.
-ByteString CreateEncodedEKUExtension(Input eku,
-                                     ExtensionCriticality criticality);
+ByteString CreateEncodedEKUExtension(Input eku, Critical critical);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode OCSP responses

@@ -82,11 +82,11 @@ public:
 
   NS_IMETHOD SendAudioNative(int16_t* aData, uint32_t aDataLen) MOZ_OVERRIDE;
 
-  virtual void Pause();
+  virtual void Pause() MOZ_OVERRIDE;
 
-  virtual void Resume();
+  virtual void Resume() MOZ_OVERRIDE;
 
-  virtual void Cancel();
+  virtual void Cancel() MOZ_OVERRIDE;
 
 private:
   SpeechSynthesisRequestChild* mActor;

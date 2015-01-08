@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="dom.animations-api.core.enabled"]
+[Func="nsDocument::IsWebAnimationsEnabled"]
 interface Animation {
   // FIXME: |effect| should have type (AnimationEffect or EffectCallback)?
   // but we haven't implemented EffectCallback yet.

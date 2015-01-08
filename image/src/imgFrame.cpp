@@ -133,9 +133,9 @@ imgFrame::imgFrame() :
   mDecodedMutex("imgFrame::mDecoded"),
   mPalettedImageData(nullptr),
   mTimeout(100),
-  mDisposalMethod(0), /* imgIContainer::kDisposeNotSpecified */
   mLockCount(0),
-  mBlendMethod(1), /* imgIContainer::kBlendOver */
+  mDisposalMethod(DisposalMethod::NOT_SPECIFIED),
+  mBlendMethod(BlendMethod::OVER),
   mSinglePixel(false),
   mCompositingFailed(false),
   mHasNoAlpha(false),
@@ -833,26 +833,6 @@ int32_t imgFrame::GetRawTimeout() const
 void imgFrame::SetRawTimeout(int32_t aTimeout)
 {
   mTimeout = aTimeout;
-}
-
-int32_t imgFrame::GetFrameDisposalMethod() const
-{
-  return mDisposalMethod;
-}
-
-void imgFrame::SetFrameDisposalMethod(int32_t aFrameDisposalMethod)
-{
-  mDisposalMethod = aFrameDisposalMethod;
-}
-
-int32_t imgFrame::GetBlendMethod() const
-{
-  return mBlendMethod;
-}
-
-void imgFrame::SetBlendMethod(int32_t aBlendMethod)
-{
-  mBlendMethod = (int8_t)aBlendMethod;
 }
 
 // This can be called from any thread.

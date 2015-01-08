@@ -288,7 +288,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIRollupListener
-  virtual bool Rollup(uint32_t aCount, const nsIntPoint* pos, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
+  virtual bool Rollup(uint32_t aCount, bool aFlush,
+                      const nsIntPoint* pos, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
   virtual bool ShouldRollupOnMouseWheelEvent() MOZ_OVERRIDE;
   virtual bool ShouldConsumeOnMouseWheelEvent() MOZ_OVERRIDE;
   virtual bool ShouldRollupOnMouseActivate() MOZ_OVERRIDE;

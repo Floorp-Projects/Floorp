@@ -381,8 +381,7 @@ enum MIRType
     MIRType_Pointer,                   // An opaque pointer that receives no special treatment
     MIRType_Shape,                     // A Shape pointer.
     MIRType_TypeObject,                // A TypeObject pointer.
-    MIRType_ForkJoinContext,           // js::ForkJoinContext*
-    MIRType_Last = MIRType_ForkJoinContext,
+    MIRType_Last = MIRType_TypeObject,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Int32x4   = MIRType_Int32   | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Doublex2  = MIRType_Double  | (1 << VECTOR_SCALE_SHIFT)
@@ -496,8 +495,6 @@ StringFromMIRType(MIRType type)
       return "Elements";
     case MIRType_Pointer:
       return "Pointer";
-    case MIRType_ForkJoinContext:
-      return "ForkJoinContext";
     case MIRType_Int32x4:
       return "Int32x4";
     case MIRType_Float32x4:

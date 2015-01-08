@@ -6,6 +6,7 @@
 #ifndef MOZILLA_IMAGELIB_DECODER_H_
 #define MOZILLA_IMAGELIB_DECODER_H_
 
+#include "FrameAnimator.h"
 #include "RasterImage.h"
 #include "mozilla/RefPtr.h"
 #include "DecodePool.h"
@@ -226,7 +227,7 @@ protected:
   // that affect content, so it's necessarily pessimistic - if there's a
   // possibility that the image has transparency, for example because its header
   // specifies that it has an alpha channel, we fire PostHasTransparency
-  // immediately. PostFrameStop's aFrameAlpha argument, on the other hand, is
+  // immediately. PostFrameStop's aFrameOpacity argument, on the other hand, is
   // only used internally to ImageLib. Because PostFrameStop isn't delivered
   // until the entire frame has been decoded, decoders may take into account the
   // actual contents of the frame and give a more accurate result.
@@ -241,10 +242,10 @@ protected:
   // Specify whether this frame is opaque as an optimization.
   // For animated images, specify the disposal, blend method and timeout for
   // this frame.
-  void PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha = FrameBlender::kFrameHasAlpha,
-                     FrameBlender::FrameDisposalMethod aDisposalMethod = FrameBlender::kDisposeKeep,
+  void PostFrameStop(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
+                     DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
                      int32_t aTimeout = 0,
-                     FrameBlender::FrameBlendMethod aBlendMethod = FrameBlender::kBlendOver);
+                     BlendMethod aBlendMethod = BlendMethod::OVER);
 
   // Called by the decoders when they have a region to invalidate. We may not
   // actually pass these invalidations on right away.

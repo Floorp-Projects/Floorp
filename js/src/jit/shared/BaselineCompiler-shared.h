@@ -140,6 +140,13 @@ class BaselineCompilerShared
     };
     bool callVM(const VMFunction &fun, CallVMPhase phase=POST_INITIALIZE);
 
+    bool callVMNonOp(const VMFunction &fun, CallVMPhase phase=POST_INITIALIZE) {
+        if (!callVM(fun, phase))
+            return false;
+        icEntries_.back().setForNonOpCallVM();
+        return true;
+    }
+
   public:
     BytecodeAnalysis &analysis() {
         return analysis_;
