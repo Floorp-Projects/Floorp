@@ -199,18 +199,14 @@ public:
   {
     if (mState == eReady) {
       // Collect information from the frames that we need to scale.
-      uint8_t* srcData = mSrcRef->GetImageData();
-      IntSize srcSize = mSrcRef->GetSize();
-      uint32_t srcStride = mSrcRef->GetImageBytesPerRow();
-      uint8_t* dstData = mDstRef->GetImageData();
-      uint32_t dstStride = mDstRef->GetImageBytesPerRow();
-      SurfaceFormat srcFormat = mSrcRef->GetFormat();
+      ScalingData srcData = mSrcRef->GetScalingData();
+      ScalingData dstData = mDstRef->GetScalingData();
 
       // Actually do the scaling.
       bool succeeded =
-        gfx::Scale(srcData, srcSize.width, srcSize.height, srcStride,
-                   dstData, mDstSize.width, mDstSize.height, dstStride,
-                   srcFormat);
+        gfx::Scale(srcData.mRawData, srcData.mSize.width, srcData.mSize.height,
+                   srcData.mBytesPerRow, dstData.mRawData, mDstSize.width,
+                   mDstSize.height, dstData.mBytesPerRow, srcData.mFormat);
 
       if (succeeded) {
         // Mark the frame as complete and discardable.
@@ -657,6 +653,13 @@ RasterImage::IsOpaque()
 void
 RasterImage::OnSurfaceDiscarded()
 {
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &RasterImage::OnSurfaceDiscarded);
+    NS_DispatchToMainThread(runnable);
+    return;
+  }
+
   if (mProgressTracker) {
     mProgressTracker->OnDiscard();
   }
@@ -930,11 +933,42 @@ RasterImage::SizeOfDecoded(gfxMemoryLocation aLocation,
   return n;
 }
 
+class OnAddedFrameRunnable : public nsRunnable
+{
+public:
+  OnAddedFrameRunnable(RasterImage* aImage,
+                       uint32_t aNewFrameCount,
+                       const nsIntRect& aNewRefreshArea)
+    : mImage(aImage)
+    , mNewFrameCount(aNewFrameCount)
+    , mNewRefreshArea(aNewRefreshArea)
+  {
+    MOZ_ASSERT(aImage);
+  }
+
+  NS_IMETHOD Run()
+  {
+    mImage->OnAddedFrame(mNewFrameCount, mNewRefreshArea);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<RasterImage> mImage;
+  uint32_t mNewFrameCount;
+  nsIntRect mNewRefreshArea;
+};
+
 void
 RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
                           const nsIntRect& aNewRefreshArea)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> runnable =
+      new OnAddedFrameRunnable(this, aNewFrameCount, aNewRefreshArea);
+    NS_DispatchToMainThread(runnable);
+    return;
+  }
+
   MOZ_ASSERT((mFrameCount == 1 && aNewFrameCount == 1) ||
              mFrameCount < aNewFrameCount,
              "Frame count running backwards");
