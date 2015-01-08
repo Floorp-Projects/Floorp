@@ -202,20 +202,6 @@ StackWalkInitCriticalAddress()
 #error Too old imagehlp.h
 #endif
 
-// Define these as static pointers so that we can load the DLL on the
-// fly (and not introduce a link-time dependency on it). Tip o' the
-// hat to Matt Pietrick for this idea. See:
-//
-//   http://msdn.microsoft.com/library/periodic/period97/F1/D3/S245C6.htm
-//
-extern "C" {
-
-extern HANDLE hStackWalkMutex;
-
-bool EnsureSymInitialized();
-
-bool EnsureWalkThreadReady();
-
 struct WalkStackData
 {
   uint32_t skipFrames;
@@ -234,18 +220,11 @@ struct WalkStackData
   void* platformData;
 };
 
-void PrintError(char* aPrefix, WalkStackData* aData);
-unsigned int WINAPI WalkStackThread(void* aData);
-void WalkStackMain64(struct WalkStackData* aData);
-
-
 DWORD gStackWalkThread;
 CRITICAL_SECTION gDbgHelpCS;
 
-}
-
 // Routine to print an error message to standard error.
-void
+static void
 PrintError(const char* aPrefix)
 {
   LPVOID lpMsgBuf;
@@ -265,7 +244,9 @@ PrintError(const char* aPrefix)
   LocalFree(lpMsgBuf);
 }
 
-bool
+static unsigned int WINAPI WalkStackThread(void* aData);
+
+static bool
 EnsureWalkThreadReady()
 {
   static bool walkThreadReady = false;
@@ -321,7 +302,7 @@ EnsureWalkThreadReady()
   return walkThreadReady = true;
 }
 
-void
+static void
 WalkStackMain64(struct WalkStackData* aData)
 {
   // Get the context information for the thread. That way we will
@@ -439,8 +420,7 @@ WalkStackMain64(struct WalkStackData* aData)
   return;
 }
 
-
-unsigned int WINAPI
+static unsigned int WINAPI
 WalkStackThread(void* aData)
 {
   BOOL msgRet;
@@ -742,7 +722,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr,
   return retval;
 }
 
-bool
+static bool
 EnsureSymInitialized()
 {
   static bool gInitialized = false;
