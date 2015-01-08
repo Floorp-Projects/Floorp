@@ -485,8 +485,7 @@ nsJARChannel::FireOnProgress(uint64_t aProgress)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mProgressSink);
 
-  mProgressSink->OnProgress(this, nullptr, aProgress,
-                            uint64_t(mContentLength));
+  mProgressSink->OnProgress(this, nullptr, aProgress, mContentLength);
 }
 
 nsresult

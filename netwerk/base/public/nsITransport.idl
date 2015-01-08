@@ -24,7 +24,7 @@ interface nsIEventTarget;
  * socket transport, these events can include status about the connection.
  * See nsISocketTransport for more info about socket transport specifics.
  */
-[scriptable, uuid(d8786c64-eb49-4a0b-b42c-0936a745fbe8)]
+[scriptable, uuid(2a8c6334-a5e6-4ec3-9865-1256541446fb)]
 interface nsITransport : nsISupports
 {
     /**
@@ -154,10 +154,10 @@ interface nsITransportEventSink : nsISupports
      *        of the status code.  this value is relative to aProgressMax.
      * @param aProgressMax
      *        the maximum amount of data that will be read or written.  if
-     *        unknown, 0xFFFFFFFF will be passed.
+     *        unknown, -1 will be passed.
      */
     void onTransportStatus(in nsITransport aTransport,
                            in nsresult aStatus,
-                           in unsigned long long aProgress,
-                           in unsigned long long aProgressMax);
+                           in long long aProgress,
+                           in long long aProgressMax);
 };

@@ -147,7 +147,7 @@ NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 
 void
 NullHttpTransaction::OnTransportStatus(nsITransport* transport,
-                                       nsresult status, uint64_t progress)
+                                       nsresult status, int64_t progress)
 {
   if (mActivityDistributor) {
     NS_DispatchToMainThread(new CallObserveActivity(mActivityDistributor,
