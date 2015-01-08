@@ -850,7 +850,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
     nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
     nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
     if (rollupWidget)
-      rollupListener->Rollup(0, nullptr, nullptr);
+      rollupListener->Rollup(0, true, nullptr, nullptr);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
