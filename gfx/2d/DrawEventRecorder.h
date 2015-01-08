@@ -12,7 +12,7 @@
 #include <fstream>
 
 #if defined(_MSC_VER)
-#include <hash_set>
+#include <unordered_set>
 #else
 #include <set>
 #endif
@@ -53,7 +53,7 @@ protected:
   virtual void Flush() = 0;
 
 #if defined(_MSC_VER)
-  typedef stdext::hash_set<const void*> ObjectSet;
+  typedef std::unordered_set<const void*> ObjectSet;
 #else
   typedef std::set<const void*> ObjectSet;
 #endif
