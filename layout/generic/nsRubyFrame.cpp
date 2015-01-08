@@ -11,6 +11,7 @@
 #include "nsStyleContext.h"
 #include "WritingModes.h"
 #include "RubyUtils.h"
+#include "RubyReflowState.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
 
@@ -240,9 +241,11 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     textContainers.AppendElement(iter.GetTextContainer());
   }
   const uint32_t rtcCount = textContainers.Length();
+  RubyReflowState rubyReflowState(lineWM, textContainers);
 
   nsHTMLReflowMetrics baseMetrics(aReflowState);
   bool pushedFrame;
+  aReflowState.mLineLayout->SetRubyReflowState(&rubyReflowState);
   aReflowState.mLineLayout->ReflowFrame(aBaseContainer, aStatus,
                                         &baseMetrics, pushedFrame);
 
@@ -327,10 +330,13 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   nsRect offsetRect = baseRect;
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* textContainer = textContainers[i];
+    rubyReflowState.AdvanceCurrentContainerIndex();
+
     nsReflowStatus textReflowStatus;
     nsHTMLReflowMetrics textMetrics(aReflowState);
     nsHTMLReflowState textReflowState(aPresContext, aReflowState,
                                       textContainer, availSize);
+    textReflowState.mRubyReflowState = &rubyReflowState;
     // FIXME We probably shouldn't be using the same nsLineLayout for
     //       the text containers. But it should be fine now as we are
     //       not actually using this line layout to reflow something,

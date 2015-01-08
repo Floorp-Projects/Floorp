@@ -67,6 +67,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mForceBreakFrameOffset(-1),
     mMinLineBSize(0),
     mTextIndent(0),
+    mRubyReflowState(nullptr),
     mFirstLetterStyleOK(false),
     mIsTopOfPage(false),
     mImpactedByFloats(false),
@@ -885,6 +886,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                               aFrame, availSize);
     nsHTMLReflowState& reflowState = *reflowStateHolder;
     reflowState.mLineLayout = this;
+    if (mRubyReflowState) {
+      reflowState.mRubyReflowState = mRubyReflowState;
+      mRubyReflowState = nullptr;
+    }
     reflowState.mFlags.mIsTopOfPage = mIsTopOfPage;
     if (reflowState.ComputedISize() == NS_UNCONSTRAINEDSIZE) {
       reflowState.AvailableISize() = availableSpaceOnLine;
