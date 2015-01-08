@@ -14,6 +14,8 @@
 #include "nsStyleStructInlines.h"
 #include "WritingModes.h"
 #include "RubyUtils.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/DebugOnly.h"
 
 using namespace mozilla;
 
@@ -64,7 +66,8 @@ struct MOZ_STACK_CLASS mozilla::RubyColumn
 {
   nsRubyBaseFrame* mBaseFrame;
   nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
-  RubyColumn() : mBaseFrame(nullptr) { }
+  bool mIsIntraLevelWhitespace;
+  RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
 };
 
 class MOZ_STACK_CLASS RubyColumnEnumerator
@@ -193,6 +196,7 @@ RubyColumnEnumerator::GetColumn(RubyColumn& aColumn) const
     MOZ_ASSERT(!rtFrame || rtFrame->GetType() == nsGkAtoms::rubyTextFrame);
     aColumn.mTextFrames.AppendElement(static_cast<nsRubyTextFrame*>(rtFrame));
   }
+  aColumn.mIsIntraLevelWhitespace = mAtIntraLevelWhitespace;
 }
 
 static nscoord
@@ -581,11 +585,30 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus) || aReflowState.mAllowLineBreak);
 
-    if (column.mBaseFrame) {
-      PushChildren(column.mBaseFrame, column.mBaseFrame->GetPrevSibling());
+    // If we are on an intra-level whitespace column, null values in
+    // column.mBaseFrame and column.mTextFrames don't represent the
+    // end of the frame-sibling-chain at that level -- instead, they
+    // represent an anonymous empty intra-level whitespace box. It is
+    // likely that there are frames in the next column (which can't be
+    // intra-level whitespace). Those frames should be pushed as well.
+    Maybe<RubyColumn> nextColumn;
+    if (column.mIsIntraLevelWhitespace && !e.AtEnd()) {
+      e.Next();
+      nextColumn.emplace();
+      e.GetColumn(nextColumn.ref());
+    }
+    nsIFrame* baseFrame = column.mBaseFrame;
+    if (!baseFrame & nextColumn.isSome()) {
+      baseFrame = nextColumn->mBaseFrame;
+    }
+    if (baseFrame) {
+      PushChildren(baseFrame, baseFrame->GetPrevSibling());
     }
     for (uint32_t i = 0; i < rtcCount; i++) {
       nsRubyTextFrame* textFrame = column.mTextFrames[i];
+      if (!textFrame && nextColumn.isSome()) {
+        textFrame = nextColumn->mTextFrames[i];
+      }
       if (textFrame) {
         aReflowState.mTextContainers[i]->PushChildren(
           textFrame, textFrame->GetPrevSibling());
@@ -740,20 +763,55 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
   const TextContainerArray& textContainers = aPullFrameState.mTextContainers;
   const uint32_t rtcCount = textContainers.Length();
 
-  nsIFrame* nextBase = PullNextInFlowChild(aPullFrameState.mBase);
+  nsIFrame* nextBase = GetNextInFlowChild(aPullFrameState.mBase);
   MOZ_ASSERT(!nextBase || nextBase->GetType() == nsGkAtoms::rubyBaseFrame);
   aColumn.mBaseFrame = static_cast<nsRubyBaseFrame*>(nextBase);
   aIsComplete = !aColumn.mBaseFrame;
+  bool pullingIntraLevelWhitespace =
+    aColumn.mBaseFrame && aColumn.mBaseFrame->IsIntraLevelWhitespace();
 
   aColumn.mTextFrames.ClearAndRetainStorage();
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsIFrame* nextText =
-      textContainers[i]->PullNextInFlowChild(aPullFrameState.mTexts[i]);
+      textContainers[i]->GetNextInFlowChild(aPullFrameState.mTexts[i]);
     MOZ_ASSERT(!nextText || nextText->GetType() == nsGkAtoms::rubyTextFrame);
-    aColumn.mTextFrames.AppendElement(static_cast<nsRubyTextFrame*>(nextText));
+    nsRubyTextFrame* textFrame = static_cast<nsRubyTextFrame*>(nextText);
+    aColumn.mTextFrames.AppendElement(textFrame);
     // If there exists any frame in continations, we haven't
     // completed the reflow process.
     aIsComplete = aIsComplete && !nextText;
+    if (nextText && !pullingIntraLevelWhitespace) {
+      pullingIntraLevelWhitespace = textFrame->IsIntraLevelWhitespace();
+    }
+  }
+
+  aColumn.mIsIntraLevelWhitespace = pullingIntraLevelWhitespace;
+  if (pullingIntraLevelWhitespace) {
+    // We are pulling an intra-level whitespace. Drop all frames which
+    // are not part of this intra-level whitespace column. (Those frames
+    // are really part of the *next* column, after the pulled one.)
+    if (aColumn.mBaseFrame && !aColumn.mBaseFrame->IsIntraLevelWhitespace()) {
+      aColumn.mBaseFrame = nullptr;
+    }
+    for (uint32_t i = 0; i < rtcCount; i++) {
+      nsRubyTextFrame*& textFrame = aColumn.mTextFrames[i];
+      if (textFrame && !textFrame->IsIntraLevelWhitespace()) {
+        textFrame = nullptr;
+      }
+    }
+  }
+
+  // Pull the frames of this column.
+  if (aColumn.mBaseFrame) {
+    DebugOnly<nsIFrame*> pulled = PullNextInFlowChild(aPullFrameState.mBase);
+    MOZ_ASSERT(pulled == aColumn.mBaseFrame, "pulled a wrong frame?");
+  }
+  for (uint32_t i = 0; i < rtcCount; i++) {
+    if (aColumn.mTextFrames[i]) {
+      DebugOnly<nsIFrame*> pulled =
+        textContainers[i]->PullNextInFlowChild(aPullFrameState.mTexts[i]);
+      MOZ_ASSERT(pulled == aColumn.mTextFrames[i], "pulled a wrong frame?");
+    }
   }
 
   if (!aIsComplete) {
