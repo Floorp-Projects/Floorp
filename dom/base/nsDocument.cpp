@@ -3282,6 +3282,15 @@ nsDocument::GetUndoManager()
   return undoManager.forget();
 }
 
+bool
+nsDocument::IsWebAnimationsEnabled(JSContext* /*unused*/, JSObject* /*unused*/)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return nsContentUtils::IsCallerChrome() ||
+         Preferences::GetBool("dom.animations-api.core.enabled");
+}
+
 AnimationTimeline*
 nsDocument::Timeline()
 {
