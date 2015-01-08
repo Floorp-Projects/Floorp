@@ -155,6 +155,7 @@ public:
 protected:
   void DoPlay();
   void DoPause();
+  void ResumeAt(const TimeDuration& aResumeTime);
 
   void UpdateSourceContent();
   void FlushStyle() const;

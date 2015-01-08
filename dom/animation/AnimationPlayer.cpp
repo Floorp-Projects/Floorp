@@ -143,39 +143,12 @@ AnimationPlayer::Tick()
 void
 AnimationPlayer::StartNow()
 {
-  // This method is only expected to be called for an animation that is
-  // waiting to play. We can easily adapt it to handle other states
-  // but it's currently not necessary.
   MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
              "Expected to start a pending player");
-  MOZ_ASSERT(!mHoldTime.IsNull(),
-             "A player in the pending state should have a resolved hold time");
+  MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
+             "Expected an active timeline");
 
-  Nullable<TimeDuration> readyTime = mTimeline->GetCurrentTime();
-
-  // FIXME (bug 1096776): If readyTime.IsNull(), we should return early here.
-  // This will leave mIsPending = true but the caller will remove us from the
-  // PendingPlayerTracker if we were added there.
-  // Then, in Tick(), if we have:
-  // - a resolved timeline, and
-  // - mIsPending = true, and
-  // - *no* document or we are *not* in the PendingPlayerTracker
-  // then we should call StartNow.
-  //
-  // For now, however, we don't support inactive/missing timelines so
-  // |readyTime| should be resolved.
-  MOZ_ASSERT(!readyTime.IsNull(), "Missing or inactive timeline");
-
-  mStartTime.SetValue(readyTime.Value() - mHoldTime.Value());
-  mHoldTime.SetNull();
-  mIsPending = false;
-
-  UpdateSourceContent();
-  PostUpdate();
-
-  if (mReady) {
-    mReady->MaybeResolve(this);
-  }
+  ResumeAt(mTimeline->GetCurrentTime().Value());
 }
 
 void
@@ -311,6 +284,29 @@ AnimationPlayer::DoPause()
   // Bug 1109390 - check for null result here and go to pending state
   mHoldTime = GetCurrentTime();
   mStartTime.SetNull();
+}
+
+void
+AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
+{
+  // This method is only expected to be called for a player that is
+  // waiting to play. We can easily adapt it to handle other states
+  // but it's currently not necessary.
+  MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
+             "Expected to resume a pending player");
+  MOZ_ASSERT(!mHoldTime.IsNull(),
+             "A player in the pending state should have a resolved hold time");
+
+  mStartTime.SetValue(aResumeTime - mHoldTime.Value());
+  mHoldTime.SetNull();
+  mIsPending = false;
+
+  UpdateSourceContent();
+  PostUpdate();
+
+  if (mReady) {
+    mReady->MaybeResolve(this);
+  }
 }
 
 void
