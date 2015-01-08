@@ -19,7 +19,6 @@ LOCAL_INCLUDES += [
     '/toolkit/xre',
 ]
 
-
 USE_STATIC_LIBS = True
 
 OS_LIBS += [
@@ -27,3 +26,5 @@ OS_LIBS += [
     'ws2_32',
     'shell32',
 ]
+
+FAIL_ON_WARNINGS = True
