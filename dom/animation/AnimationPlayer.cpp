@@ -270,14 +270,7 @@ AnimationPlayer::DoPlay()
 
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
-    // If we have no rendered document (e.g. because the source content's
-    // target element is orphaned), then treat the animation as ready and
-    // start it immediately. It is probably preferable to make playing
-    // *always* asynchronous (e.g. by setting some additional state that
-    // marks this player as pending and queueing a runnable to resolve the
-    // start time). That situation, however, is currently rare enough that
-    // we don't bother for now.
-    StartNow();
+    StartOnNextTick(Nullable<TimeDuration>());
     return;
   }
 
