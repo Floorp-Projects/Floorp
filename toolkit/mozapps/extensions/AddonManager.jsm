@@ -2988,3 +2988,25 @@ Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);
+
+// Functions to support about:plugins
+Cu.import("resource://gre/modules/RemotePageManager.jsm");
+
+// Lists all the properties that plugins.html needs
+const NEEDED_PROPS = ["name", "pluginLibraries", "pluginFullpath", "version",
+                      "isActive", "blocklistState", "description",
+                      "pluginMimeTypes"];
+function filterProperties(plugin) {
+  let filtered = {};
+  for (let prop of NEEDED_PROPS) {
+    filtered[prop] = plugin[prop];
+  }
+  return filtered;
+}
+
+let listener = new RemotePages("about:plugins");
+listener.addMessageListener("RequestPlugins", ({ target: port }) => {
+  AddonManager.getAddonsByTypes(["plugin"], function (aPlugins) {
+    port.sendAsyncMessage("PluginList", [filterProperties(p) for (p of aPlugins)]);
+  });
+});
