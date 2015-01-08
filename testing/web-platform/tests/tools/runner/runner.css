@@ -130,7 +130,7 @@ body {
 }
 
 .horizontal-form .form-group {
-    padding-bottom: 15px;
+    padding: 6px;
 }
 
 header.navbar-inverse {
@@ -159,4 +159,35 @@ td.ERROR {
 }
 .stopped {
     background-image: linear-gradient(to bottom, #fc0000 0, #770000 100%);
+}
+
+.col-sm-9 label {
+    margin-right: 20px;
+}
+
+.instructions {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+@keyframes alert_updating {
+  from {
+    background-color: inherit;
+  }
+  to {
+    background-color: #ffc;
+  }
+}
+
+#manifest {
+  padding-left: 6px;
+  padding-right: 6px;
+  font-size: 80%;
+  font-weight: normal;
+  font-style: italic;
+  color: #999;
+  animation-duration: 1.5s;
+  animation-name: alert_updating;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
