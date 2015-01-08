@@ -369,13 +369,16 @@ var BrowserApp = {
 
         // Queue up some other performance-impacting initializations
         Services.tm.mainThread.dispatch(function() {
-          // Init LoginManager
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-          CastingApps.init();
-        }, Ci.nsIThread.DISPATCH_NORMAL);
 
-        BrowserApp.gmpInstallManager = new GMPInstallManager();
-        BrowserApp.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+          CastingApps.init();
+
+          // Delay this a minute because there's no rush
+          setTimeout(() => {
+            BrowserApp.gmpInstallManager = new GMPInstallManager();
+            BrowserApp.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+          }, 1000 * 60);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
 
 #ifdef MOZ_SAFE_BROWSING
         Services.tm.mainThread.dispatch(function() {
