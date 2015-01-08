@@ -26,7 +26,7 @@ public:
   NS_IMETHODIMP AddPath(const nsAString& aPathToWatch,
                         nsINativeFileWatcherCallback* aOnChange,
                         nsINativeFileWatcherErrorCallback* aOnError,
-                        nsINativeFileWatcherSuccessCallback* aOnSuccess)
+                        nsINativeFileWatcherSuccessCallback* aOnSuccess) MOZ_OVERRIDE
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   };
@@ -34,7 +34,7 @@ public:
   NS_IMETHODIMP RemovePath(const nsAString& aPathToRemove,
                            nsINativeFileWatcherCallback* aOnChange,
                            nsINativeFileWatcherErrorCallback* aOnError,
-                           nsINativeFileWatcherSuccessCallback* aOnSuccess)
+                           nsINativeFileWatcherSuccessCallback* aOnSuccess) MOZ_OVERRIDE
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   };
