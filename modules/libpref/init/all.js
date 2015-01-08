@@ -3799,10 +3799,6 @@ pref("image.mem.surfacecache.size_factor", 4);
 // and laptop systems, where we never discard visible images.
 pref("image.mem.surfacecache.discard_factor", 1);
 
-// Whether we decode images on multiple background threads rather than the
-// foreground thread.
-pref("image.multithreaded_decoding.enabled", true);
-
 // How many threads we'll use for multithreaded decoding. If < 0, will be
 // automatically determined based on the system's number of cores.
 pref("image.multithreaded_decoding.limit", -1);
