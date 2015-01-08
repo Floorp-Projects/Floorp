@@ -3064,27 +3064,25 @@ def CreateBindingJSObject(descriptor, properties):
     if descriptor.proxy:
         create = dedent(
             """
-            const JS::Rooted<JSObject*>& obj =
-              creator.CreateProxyObject(aCx, &Class.mBase, DOMProxyHandler::getInstance(),
-                                        proto, global, aObject);
-            if (!obj) {
-              return nullptr;
+            creator.CreateProxyObject(aCx, &Class.mBase, DOMProxyHandler::getInstance(),
+                                      proto, global, aObject, aReflector);
+            if (!aReflector) {
+              return false;
             }
 
             """)
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             create += dedent("""
-                js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO,
+                js::SetProxyExtra(aReflector, JSPROXYSLOT_EXPANDO,
                                   JS::PrivateValue(&aObject->mExpandoAndGeneration));
 
                 """)
     else:
         create = dedent(
             """
-            const JS::Rooted<JSObject*>& obj =
-              creator.CreateObject(aCx, Class.ToJSClass(), proto, global, aObject);
-            if (!obj) {
-              return nullptr;
+            creator.CreateObject(aCx, Class.ToJSClass(), proto, global, aObject, aReflector);
+            if (!aReflector) {
+              return false;
             }
             """)
     return objDecl + create
@@ -3160,7 +3158,7 @@ def InitUnforgeableProperties(descriptor, properties):
             "// by the interface prototype object.\n")
     else:
         unforgeableProperties = CGWrapper(
-            InitUnforgeablePropertiesOnObject(descriptor, "obj", properties, "nullptr"),
+            InitUnforgeablePropertiesOnObject(descriptor, "aReflector", properties, "false"),
             pre=(
                 "// Important: do unforgeable property setup after we have handed\n"
                 "// over ownership of the C++ object to obj as needed, so that if\n"
@@ -3198,9 +3196,9 @@ def InitMemberSlots(descriptor, wrapperCache):
         clearWrapper = "  aCache->ClearWrapper();\n"
     else:
         clearWrapper = ""
-    return ("if (!UpdateMemberSlots(aCx, obj, aObject)) {\n"
+    return ("if (!UpdateMemberSlots(aCx, aReflector, aObject)) {\n"
             "%s"
-            "  return nullptr;\n"
+            "  return false;\n"
             "}\n" % clearWrapper)
 
 
@@ -3214,8 +3212,9 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
-                Argument('nsWrapperCache*', 'aCache')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+                Argument('nsWrapperCache*', 'aCache'),
+                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.properties = properties
 
     def definition_body(self):
@@ -3228,33 +3227,31 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             JS::Rooted<JSObject*> parent(aCx, WrapNativeParent(aCx, aObject->GetParentObject()));
             if (!parent) {
-              return nullptr;
+              return false;
             }
 
             // That might have ended up wrapping us already, due to the wonders
-            // of XBL.  Check for that, and bail out as needed.  Scope so we don't
-            // collide with the "obj" we declare in CreateBindingJSObject.
-            {
-              JSObject* obj = aCache->GetWrapper();
-              if (obj) {
-                return obj;
-              }
+            // of XBL.  Check for that, and bail out as needed.
+            aReflector.set(aCache->GetWrapper());
+            if (aReflector) {
+              return true;
             }
 
             JSAutoCompartment ac(aCx, parent);
             JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(parent));
             JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
-              return nullptr;
+              return false;
             }
 
             $*{createObject}
 
             $*{unforgeable}
 
-            aCache->SetWrapper(obj);
+            aCache->SetWrapper(aReflector);
             $*{slots}
-            return creator.ForgetObject();
+            creator.InitializationSucceeded();
+            return true;
             """,
             assertion=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
@@ -3272,7 +3269,10 @@ class CGWrapMethod(CGAbstractMethod):
                                   inline=True, templateArgs=["class T"])
 
     def definition_body(self):
-        return "return Wrap(aCx, aObject, aObject);\n"
+        return dedent("""
+            JS::Rooted<JSObject*> reflector(aCx);
+            return Wrap(aCx, aObject, aObject, &reflector) ? reflector.get() : nullptr;
+            """)
 
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
@@ -3286,8 +3286,9 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument(descriptor.nativeType + '*', 'aObject')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+                Argument(descriptor.nativeType + '*', 'aObject'),
+                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.properties = properties
 
     def definition_body(self):
@@ -3298,7 +3299,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
             JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
-              return nullptr;
+              return false;
             }
 
             $*{createObject}
@@ -3306,7 +3307,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
-            return creator.ForgetObject();
+            creator.InitializationSucceeded();
+            return true;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
@@ -3328,8 +3330,9 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                 Argument('nsWrapperCache*', 'aCache'),
                 Argument('JS::CompartmentOptions&', 'aOptions'),
                 Argument('JSPrincipals*', 'aPrincipal'),
-                Argument('bool', 'aInitStandardClasses')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+                Argument('bool', 'aInitStandardClasses'),
+                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
         self.descriptor = descriptor
         self.properties = properties
 
@@ -3345,7 +3348,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
 
         if self.descriptor.workers:
             fireOnNewGlobal = """// XXXkhuey can't do this yet until workers can lazy resolve.
-// JS_FireOnNewGlobalObject(aCx, obj);
+// JS_FireOnNewGlobalObject(aCx, aReflector);
 """
         else:
             fireOnNewGlobal = ""
@@ -3356,7 +3359,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            JS::Rooted<JSObject*> obj(aCx);
             CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
@@ -3364,24 +3366,24 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                                              aOptions,
                                              aPrincipal,
                                              aInitStandardClasses,
-                                             &obj);
-            if (!obj) {
-              return nullptr;
+                                             aReflector);
+            if (!aReflector) {
+              return false;
             }
 
-            // obj is a new global, so has a new compartment.  Enter it
+            // aReflector is a new global, so has a new compartment.  Enter it
             // before doing anything with it.
-            JSAutoCompartment ac(aCx, obj);
+            JSAutoCompartment ac(aCx, aReflector);
 
-            if (!DefineProperties(aCx, obj, ${properties}, ${chromeProperties})) {
-              return nullptr;
+            if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
+              return false;
             }
             $*{unforgeable}
 
             $*{slots}
             $*{fireOnNewGlobal}
 
-            return obj;
+            return true;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,

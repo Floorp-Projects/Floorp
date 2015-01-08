@@ -158,10 +158,11 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
     return new XPathExpression(Move(expression), mRecycler, aDocument);
 }
 
-JSObject*
-XPathEvaluator::WrapObject(JSContext* aCx)
+bool
+XPathEvaluator::WrapObject(JSContext* aCx,
+                           JS::MutableHandle<JSObject*> aReflector)
 {
-    return dom::XPathEvaluatorBinding::Wrap(aCx, this);
+    return dom::XPathEvaluatorBinding::Wrap(aCx, this, aReflector);
 }
 
 /* static */
