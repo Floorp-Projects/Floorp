@@ -32,8 +32,10 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(FetchDriver, nsIStreamListener)
 
-FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal)
+FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
+                         nsILoadGroup* aLoadGroup)
   : mPrincipal(aPrincipal)
+  , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mFetchRecursionCount(0)
   , mResponseAvailableCalled(false)
@@ -333,16 +335,19 @@ FetchDriver::HttpNetworkFetch()
     FailWithNetworkError();
     return rv;
   }
+
+  MOZ_ASSERT(mLoadGroup);
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannel(getter_AddRefs(chan),
                      uri,
                      mPrincipal,
                      nsILoadInfo::SEC_NORMAL,
                      mRequest->GetContext(),
-                     nullptr, /* FIXME(nsm): loadgroup */
+                     mLoadGroup,
                      nullptr, /* aCallbacks */
                      nsIRequest::LOAD_NORMAL,
                      ios);
+  mLoadGroup = nullptr;
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailWithNetworkError();
     return rv;
