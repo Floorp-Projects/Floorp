@@ -10,6 +10,11 @@ let Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/RemotePageManager.jsm");
+// Creates a new PageListener for this frame. This will listen for page loads
+// and for those that match URLs provided by the parent process will set up
+// a dedicated message port and notify the parent process.
+new PageListener(this);
 
 var global = this;
 
