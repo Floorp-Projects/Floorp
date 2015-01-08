@@ -207,7 +207,8 @@
         {input:'outline-width:1', prop:'outline-width'},
         ];
 
-        var other_template = "#test{position:relative;outline-style:solid;{test}}";
+        var other_template = "#test{position:relative;outline-style:solid;{test}}" +
+                             "#ref{outline-style:solid}";
 
         other_tests.forEach(function(t) {
             test(function() {

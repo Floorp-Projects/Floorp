@@ -1,13 +1,14 @@
 <!doctype html>
 <meta charset=utf-8>
 <title>DOMException constants</title>
-<link rel=help href="https://dom.spec.whatwg.org/#domexception">
-<link rel=help href="https://heycam.github.io/webidl/#es-exception-constants">
+<link rel=help href="https://heycam.github.io/webidl/#es-DOMException-constructor-object">
+<link rel=help href="https://heycam.github.io/webidl/#es-DOMException-prototype-object">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
 test(function() {
+  // https://www.w3.org/Bugs/Public/show_bug.cgi?id=27732
   var constants = [
     "INDEX_SIZE_ERR",
     "DOMSTRING_SIZE_ERR",
@@ -35,14 +36,21 @@ test(function() {
     "INVALID_NODE_TYPE_ERR",
     "DATA_CLONE_ERR"
   ]
+  var objects = [
+    [DOMException, "DOMException constructor object"],
+    [DOMException.prototype, "DOMException prototype object"]
+  ]
   constants.forEach(function(name, i) {
-    test(function() {
-      assert_equals(DOMException[name], i + 1, name)
-      var pd = Object.getOwnPropertyDescriptor(DOMException, name)
-      assert_equals(pd.writable, false, "not writable")
-      assert_equals(pd.enumerable, true, "enumerable")
-      assert_equals(pd.configurable, false, "not configurable")
-    }, "Constant: " + name)
+    objects.forEach(function(o) {
+      var object = o[0], description = o[1];
+      test(function() {
+        assert_equals(object[name], i + 1, name)
+        var pd = Object.getOwnPropertyDescriptor(object, name)
+        assert_equals(pd.writable, false, "not writable")
+        assert_equals(pd.enumerable, true, "enumerable")
+        assert_equals(pd.configurable, false, "not configurable")
+      }, "Constant " + name + " on " + description)
+    })
   })
 })
 </script>
