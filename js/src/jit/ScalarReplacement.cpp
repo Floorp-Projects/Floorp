@@ -254,6 +254,9 @@ ObjectMemoryView::ObjectMemoryView(TempAllocator &alloc, MInstruction *obj)
     obj_(obj),
     startBlock_(obj->block())
 {
+    // Annotate the instruction such that we do not replace it by a
+    // Magic(JS_OPTIMIZED_OUT) in case of removed uses.
+    obj_->setImplicitlyUsedUnchecked();
 }
 
 MBasicBlock *
@@ -707,6 +710,9 @@ ArrayMemoryView::ArrayMemoryView(TempAllocator &alloc, MInstruction *arr)
     startBlock_(arr->block()),
     state_(nullptr)
 {
+    // Annotate the instruction such that we do not replace it by a
+    // Magic(JS_OPTIMIZED_OUT) in case of removed uses.
+    arr_->setImplicitlyUsedUnchecked();
 }
 
 MBasicBlock *
