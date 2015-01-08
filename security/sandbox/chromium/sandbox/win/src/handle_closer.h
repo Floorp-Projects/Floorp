@@ -19,7 +19,7 @@ namespace sandbox {
 // This is a map of handle-types to names that we need to close in the
 // target process. A null set means we need to close all handles of the
 // given type.
-typedef std::map<const base::string16, std::set<const base::string16> >
+typedef std::map<const base::string16, std::set<base::string16> >
     HandleMap;
 
 // Type and set of corresponding handle names to close.
