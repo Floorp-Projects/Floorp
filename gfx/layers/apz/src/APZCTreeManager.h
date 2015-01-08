@@ -21,6 +21,7 @@
 #include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
+#include "mozilla/layers/APZUtils.h"    // for HitTestResult
 
 class nsIntRegion;
 
@@ -399,13 +400,6 @@ public:
      about it going away. These are public for testing code and generally should not be
      used by other production code.
   */
-  enum HitTestResult {
-    NoApzcHit,
-    ApzcHitRegion,
-    ApzcContentRegion,
-    OverscrolledApzc,
-  };
-
   nsRefPtr<HitTestingTreeNode> GetRootNode() const;
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
                                                          HitTestResult* aOutHitResult);
