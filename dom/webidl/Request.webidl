@@ -15,15 +15,16 @@ typedef (Request or USVString) RequestInfo;
 interface Request {
   readonly attribute ByteString method;
   readonly attribute USVString url;
-  readonly attribute Headers headers;
+  [SameObject] readonly attribute Headers headers;
 
+  // FIXME(nsm) Bug 1119037: readonly attribute RequestContext context;
   readonly attribute DOMString referrer;
   readonly attribute RequestMode mode;
   readonly attribute RequestCredentials credentials;
+  readonly attribute RequestCache cache;
 
-  Request clone();
+  [NewObject] Request clone();
 };
-
 Request implements Body;
 
 dictionary RequestInit {
@@ -32,7 +33,17 @@ dictionary RequestInit {
   BodyInit body;
   RequestMode mode;
   RequestCredentials credentials;
+  RequestCache cache;
 };
 
+// FIXME(nsm): Bug 1119037 Implement RequestContext.
+
+// cors-with-forced-preflight is internal to the Fetch spec, but adding it here
+// allows us to use the various conversion conveniences offered by the WebIDL
+// codegen. The Request constructor has explicit checks to prevent it being
+// passed as a valid value, while Request.mode never returns it. Since enums
+// are only exposed as strings to client JS, this has the same effect as not
+// exposing it at all.
 enum RequestMode { "same-origin", "no-cors", "cors", "cors-with-forced-preflight" };
 enum RequestCredentials { "omit", "same-origin", "include" };
+enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" };
