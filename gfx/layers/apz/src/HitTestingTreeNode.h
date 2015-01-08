@@ -34,10 +34,6 @@ class AsyncPanZoomController;
  * primary holder, only that that there will be exactly one for each APZC in
  * the tree.
  *
- * Note that every HitTestingTreeNode instance will have a pointer to an APZC,
- * and that pointer will be non-null. This will NOT be the case after the
- * HitTestingTreeNode has been Destroy()'d.
- *
  * The reason this tree exists at all is so that we can do hit-testing on the
  * thread that we receive input on (referred to the as the controller thread in
  * APZ terminology), which may be different from the compositor thread.
@@ -67,7 +63,8 @@ public:
   HitTestingTreeNode* GetParent() const;
 
   /* APZC related methods */
-  AsyncPanZoomController* Apzc() const;
+  AsyncPanZoomController* GetApzc() const;
+  AsyncPanZoomController* GetNearestContainingApzc() const;
   bool IsPrimaryHolder() const;
 
   /* Hit test related methods */
@@ -80,6 +77,8 @@ public:
   void Dump(const char* aPrefix = "") const;
 
 private:
+  void SetApzcParent(AsyncPanZoomController* aApzc);
+
   nsRefPtr<HitTestingTreeNode> mLastChild;
   nsRefPtr<HitTestingTreeNode> mPrevSibling;
   nsRefPtr<HitTestingTreeNode> mParent;
