@@ -57,8 +57,22 @@ struct APZCTreeManager::TreeBuildingState {
   const APZPaintLogHelper mPaintLogger;
 
   // State that is updated as we perform the tree build
+
+  // A list of APZCs that need to be destroyed at the end of the tree building.
+  // This is initialized with all APZCs in the old tree, and APZCs are removed
+  // from it as we reuse them in the new tree.
   nsTArray< nsRefPtr<AsyncPanZoomController> > mApzcsToDestroy;
+
+  // This map is populated as we place APZCs into the new tree. Its purpose is
+  // to facilitate re-using the same APZC for different layers that scroll
+  // together (and thus have the same ScrollableLayerGuid).
   std::map<ScrollableLayerGuid, AsyncPanZoomController*> mApzcMap;
+
+  // A stack of event regions which corresponds to the call stack of recursive
+  // UpdatePanZoomController calls during tree-building, except that we don't
+  // start populating this stack until we first encounter an APZC. At each level
+  // we accumulate the event regions of non-APZC descendants of the layer at
+  // that level.
   nsTArray<EventRegions> mEventRegions;
 };
 
@@ -195,6 +209,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   }
 }
 
+// Compute the touch-sensitive region of an APZC. This is used only when
+// event-regions are disabled.
 static nsIntRegion
 ComputeTouchSensitiveRegion(GeckoContentController* aController,
                             const FrameMetrics& aMetrics,
@@ -339,6 +355,10 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     if (!gfxPrefs::LayoutEventRegionsEnabled()) {
       unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
     }
+    // This initializes, among other things, the APZC's hit-region.
+    // If event-regions are disabled, this will initialize it to the empty
+    // region, but UpdatePanZoomControllerTree will add the hit-region from
+    // the event regions later.
     apzc->SetLayerHitTestData(EventRegions(unobscured), aAncestorTransform);
     APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
         Stringify(unobscured).c_str(), apzc);
@@ -385,6 +405,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
       }
     }
 
+    // Add a guid -> APZC mapping for the newly created APZC.
     insertResult.first->second = apzc;
   } else {
     // We already built an APZC earlier in this tree walk, but we have another layer
@@ -398,7 +419,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // z-order and C is at the bottom. A and C share a scrollid and scroll together; but
     // B has a different scrollid and scrolls independently. Depending on how B moves
     // and the async transform on it, a larger/smaller area of C may be unobscured.
-    // However, when we combine the hit regions of A and C here we are ignoring the async
+    // However, when we combine the hit regions of A and C here we are ignoring the
     // async transform and so we basically assume the same amount of C is always visible
     // on top of B. Fixing this doesn't appear to be very easy so I'm leaving it for
     // now in the hopes that we won't run into this problem a lot.
@@ -469,7 +490,13 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
   AsyncPanZoomController* next = aNextSibling;
   if (apzc) {
     // Otherwise, use this APZC as the parent going downwards, and start off
-    // with its first child as the next sibling
+    // with its first child as the next sibling.
+    // Note that |apzc| at this point will not have children corresponding to
+    // the subtree of aLayer (those children will be populated in the loop
+    // below). However, it might have children corresponding to the subtree of
+    // another layer that shares the same APZC and that has already been
+    // visited; the children added at this level will become prev-siblings
+    // of those.
     aParent = apzc;
     next = apzc->GetFirstChild();
   }
@@ -519,7 +546,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
     //
     // Also at this point in the code the |obscured| region includes the hit
     // regions of children of |aLayer| as well as the hit regions of |aLayer|'s
-    // younger uncles (i.e. the next-sibling chain of |aLayer|'s parent).
+    // younger uncles (i.e. the next-sibling chains of |aLayer|'s ancestors).
     // When we compute the unobscured regions below, we subtract off the
     // |obscured| region, but it would also be ok to do this before the above
     // loop. At that point |obscured| would only have the uncles' hit regions
