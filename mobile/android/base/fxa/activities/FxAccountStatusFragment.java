@@ -60,6 +60,7 @@ public class FxAccountStatusFragment
   // schedule the sync as usual. See also comment below about garbage
   // collection.
   private static final long DELAY_IN_MILLISECONDS_BEFORE_REQUESTING_SYNC = 5 * 1000;
+  private static final long LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000;
 
   // By default, the auth/account server preference is only shown when the
   // account is configured to use a custom server. In debug mode, this is set.
@@ -104,6 +105,9 @@ public class FxAccountStatusFragment
   // This Runnable references the fxAccount above, but it is not specific to a
   // single account. (That is, it does not capture a single account instance.)
   protected Runnable requestSyncRunnable;
+
+  // Runnable to update last synced time.
+  protected Runnable lastSyncedTimeUpdateRunnable;
 
   protected final InnerSyncStatusDelegate syncStatusDelegate = new InnerSyncStatusDelegate();
 
@@ -425,6 +429,7 @@ public class FxAccountStatusFragment
     // a reference to this fragment alive, but we expect posted runnables to be
     // serviced very quickly, so this is not an issue.
     requestSyncRunnable = new RequestSyncRunnable();
+    lastSyncedTimeUpdateRunnable = new LastSyncTimeUpdateRunnable();
 
     // We would very much like register these status observers in bookended
     // onResume/onPause calls, but because the Fragment gets onResume during the
@@ -441,6 +446,11 @@ public class FxAccountStatusFragment
   public void onPause() {
     super.onPause();
     FxAccountSyncStatusHelper.getInstance().stopObserving(syncStatusDelegate);
+
+    // Focus lost, remove scheduled update if any.
+    if (lastSyncedTimeUpdateRunnable != null) {
+      handler.removeCallbacks(lastSyncedTimeUpdateRunnable);
+    }
   }
 
   protected void hardRefresh() {
@@ -535,8 +545,13 @@ public class FxAccountStatusFragment
     } else {
       syncNowPreference.setTitle(R.string.fxaccount_status_sync_now);
     }
+    scheduleAndUpdateLastSyncedTime();
+  }
+
+  private void scheduleAndUpdateLastSyncedTime() {
     final String lastSynced = getLastSyncedString(fxAccount.getLastSyncedTimestamp());
     syncNowPreference.setSummary(lastSynced);
+    handler.postDelayed(lastSyncedTimeUpdateRunnable, LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS);
   }
 
   protected void updateAuthServerPreference() {
@@ -695,6 +710,16 @@ public class FxAccountStatusFragment
       }
       Logger.info(LOG_TAG, "Requesting a sync sometime soon.");
       fxAccount.requestSync();
+    }
+  }
+
+  /**
+   * The Runnable that schedules a future update and updates the last synced time.
+   */
+  protected class LastSyncTimeUpdateRunnable implements Runnable  {
+    @Override
+    public void run() {
+      scheduleAndUpdateLastSyncedTime();
     }
   }
 
