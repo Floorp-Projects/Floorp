@@ -14,6 +14,7 @@
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/UniquePtr.h"
 #include "apz/src/AsyncPanZoomController.h"
+#include "apz/src/HitTestingTreeNode.h"
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
@@ -875,6 +876,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1.5), ParentLayerPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
+
+  childApzc->Destroy();
 }
 
 class APZCPanningTester : public APZCBasicTester {
@@ -2028,16 +2031,21 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
   ScopedLayerTreeRegistration registration(0, root, mcc);
 
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
-  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[0])->GetLastChild());
-  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[0])->GetFirstChild());
+  nsRefPtr<HitTestingTreeNode> root = manager->GetRootNode();
+  nsRefPtr<HitTestingTreeNode> node2 = root->GetFirstChild();
+  nsRefPtr<HitTestingTreeNode> node5 = root->GetLastChild();
+
+  EXPECT_EQ(ApzcOf(layers[2]), node5->Apzc());
+  EXPECT_EQ(ApzcOf(layers[2]), node2->Apzc());
   EXPECT_EQ(ApzcOf(layers[0]), ApzcOf(layers[2])->GetParent());
   EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[5]));
 
-  EXPECT_EQ(ApzcOf(layers[3]), ApzcOf(layers[2])->GetFirstChild());
-  EXPECT_EQ(ApzcOf(layers[6]), ApzcOf(layers[2])->GetLastChild());
-  EXPECT_EQ(ApzcOf(layers[3]), ApzcOf(layers[6])->GetPrevSibling());
+  EXPECT_EQ(node2->GetFirstChild(), node2->GetLastChild());
+  EXPECT_EQ(ApzcOf(layers[3]), node2->GetLastChild()->Apzc());
+  EXPECT_EQ(node5->GetFirstChild(), node5->GetLastChild());
+  EXPECT_EQ(ApzcOf(layers[6]), node5->GetLastChild()->Apzc());
   EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[3])->GetParent());
-  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[6])->GetParent());
+  EXPECT_EQ(ApzcOf(layers[5]), ApzcOf(layers[6])->GetParent());
 }
 
 TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
@@ -2070,6 +2078,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   EXPECT_NE(ApzcOf(layers[7]), ApzcOf(layers[9]));
 
   // Ensure the shape of the APZC tree is as expected
+  nsRefPtr<HitTestingTreeNode> root = manager->GetRootNode();
   TestAsyncPanZoomController* layers1_2 = ApzcOf(layers[1]);
   TestAsyncPanZoomController* layers4_6_8 = ApzcOf(layers[4]);
   TestAsyncPanZoomController* layer7 = ApzcOf(layers[7]);
@@ -2078,10 +2087,19 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   EXPECT_EQ(nullptr, layers4_6_8->GetParent());
   EXPECT_EQ(layers4_6_8, layer7->GetParent());
   EXPECT_EQ(nullptr, layer9->GetParent());
-  EXPECT_EQ(nullptr, layers1_2->GetPrevSibling());
-  EXPECT_EQ(layers1_2, layers4_6_8->GetPrevSibling());
-  EXPECT_EQ(nullptr, layer7->GetPrevSibling());
-  EXPECT_EQ(layers4_6_8, layer9->GetPrevSibling());
+  EXPECT_EQ(layer9, root->Apzc());
+  TestAsyncPanZoomController* expected[] = {
+    layer9,
+    layers4_6_8, layers4_6_8, layers4_6_8,
+    layers1_2, layers1_2
+  };
+  int i = 0;
+  for (HitTestingTreeNode *iter = root; iter; iter = iter->GetPrevSibling()) {
+    EXPECT_EQ(expected[i++], iter->Apzc());
+  }
+  HitTestingTreeNode* node6 = root->GetPrevSibling()->GetPrevSibling();
+  EXPECT_EQ(layer7, node6->GetLastChild()->Apzc());
+  EXPECT_EQ(nullptr, node6->GetLastChild()->GetPrevSibling());
 
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(ApzcOf(layers[1]), hit.get());
