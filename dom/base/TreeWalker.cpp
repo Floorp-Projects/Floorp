@@ -450,10 +450,10 @@ TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
     }
 }
 
-JSObject*
-TreeWalker::WrapObject(JSContext *cx)
+bool
+TreeWalker::WrapObject(JSContext *aCx, JS::MutableHandle<JSObject*> aReflector)
 {
-    return TreeWalkerBinding::Wrap(cx, this);
+    return TreeWalkerBinding::Wrap(aCx, this, aReflector);
 }
 
 } // namespace dom

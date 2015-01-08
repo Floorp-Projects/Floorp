@@ -42,9 +42,9 @@ public:
   ~TextEncoder()
   {}
 
-  JSObject* WrapObject(JSContext* aCx)
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
   {
-    return TextEncoderBinding::Wrap(aCx, this);
+    return TextEncoderBinding::Wrap(aCx, this, aReflector);
   }
 
 protected:

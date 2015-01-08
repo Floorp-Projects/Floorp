@@ -24,7 +24,7 @@ public:
         , mPrecision(precision)
     { }
 
-    JSObject* WrapObject(JSContext* cx);
+    bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
     // WebIDL WebGLShaderPrecisionFormat API
     GLint RangeMin() const {
