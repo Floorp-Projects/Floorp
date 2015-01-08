@@ -40,8 +40,15 @@ xul|caption > xul|label {
   margin: 0 !important;
 }
 
+xul|description {
+  -moz-margin-start: 0;
+}
+
 *|*.main-content {
-  padding: 40px 48px 48px;
+  padding-top: 40px;
+  -moz-padding-end: 44px; /* compensate the 4px margin of child elements */
+  padding-bottom: 48px;
+  -moz-padding-start: 48px;
   overflow: auto;
 }
 
@@ -54,9 +61,7 @@ xul|prefpane > xul|*.content-box {
 xul|groupbox {
   -moz-appearance: none;
   border: none;
-  margin-top: 15px;
-  margin-bottom: 15px;
-  -moz-margin-end: 0;
+  margin: 15px 0;
   -moz-padding-start: 0;
   -moz-padding-end: 0;
   font-size: 1.25rem;
@@ -524,6 +529,7 @@ xul|*#categories[keyboard-navigation="true"]:-moz-focusring > xul|*.category[cur
 
 *|*.header {
   border-bottom: 1px solid #c8c8c8;
+  -moz-margin-end: 4px; /* add the 4px end-margin of other elements */
   margin-bottom: 15px;
   padding-bottom: 15px;
 }
@@ -584,6 +590,7 @@ xul|filefield + xul|button {
 xul|richlistbox,
 xul|listbox {
   -moz-appearance: none;
+  -moz-margin-start: 0;
   background-color: #fff;
   border: 1px solid #c1c1c1;
   color: #333;
