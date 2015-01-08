@@ -1082,8 +1082,7 @@ this.MozLoopService = {
     Services.prefs.clearUserPref("loop.throttled");
 
     // Don't do anything if loop is not enabled.
-    if (!Services.prefs.getBoolPref("loop.enabled") ||
-        Services.prefs.getBoolPref("loop.throttled2")) {
+    if (!Services.prefs.getBoolPref("loop.enabled")) {
       return Promise.reject(new Error("loop is not enabled"));
     }
 
