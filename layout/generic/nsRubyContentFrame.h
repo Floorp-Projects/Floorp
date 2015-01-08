@@ -21,6 +21,13 @@ public:
   // nsIFrame overrides
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
+  // Indicates whether this is an "intra-level whitespace" frame, i.e.
+  // an anonymous frame that was created to contain non-droppable
+  // whitespaces directly inside a ruby level container. This impacts
+  // ruby pairing behavior.
+  // See http://dev.w3.org/csswg/css-ruby/#anon-gen-interpret-space
+  bool IsIntraLevelWhitespace() const;
+
 protected:
   explicit nsRubyContentFrame(nsStyleContext* aContext)
     : nsRubyContentFrameSuper(aContext) {}
