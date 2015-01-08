@@ -504,7 +504,6 @@ class Automation(object):
 
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
-    env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
 
     # Set WebRTC logging in case it is not set yet
     env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')
