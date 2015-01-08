@@ -43,6 +43,7 @@ public:
   virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
 
   virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
+                                  uint32_t aMaxNumClients,
                                   BluetoothSetupResultHandler* aRes) = 0;
 
   virtual nsresult UnregisterModule(uint8_t aId,
