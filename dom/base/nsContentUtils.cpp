@@ -6259,15 +6259,31 @@ void nsContentUtils::RemoveNewlines(nsString &aString)
 void
 nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
 {
+  if (!PlatformToDOMLineBreaks(aString, mozilla::fallible_t())) {
+    aString.AllocFailed(aString.Length());
+  }
+}
+
+bool
+nsContentUtils::PlatformToDOMLineBreaks(nsString& aString, const fallible_t& aFallible)
+{
   if (aString.FindChar(char16_t('\r')) != -1) {
     // Windows linebreaks: Map CRLF to LF:
-    aString.ReplaceSubstring(MOZ_UTF16("\r\n"),
-                             MOZ_UTF16("\n"));
+    if (!aString.ReplaceSubstring(MOZ_UTF16("\r\n"),
+                                  MOZ_UTF16("\n"),
+                                  aFallible)) {
+      return false;
+    }
 
     // Mac linebreaks: Map any remaining CR to LF:
-    aString.ReplaceSubstring(MOZ_UTF16("\r"),
-                             MOZ_UTF16("\n"));
+    if (!aString.ReplaceSubstring(MOZ_UTF16("\r"),
+                                  MOZ_UTF16("\n"),
+                                  aFallible)) {
+      return false;
+    }
   }
+
+  return true;
 }
 
 void
