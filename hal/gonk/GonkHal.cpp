@@ -600,28 +600,6 @@ namespace {
 /**
  * RAII class to help us remember to close file descriptors.
  */
-const char *wakeLockFilename = "/sys/power/wake_lock";
-const char *wakeUnlockFilename = "/sys/power/wake_unlock";
-
-template<ssize_t n>
-bool ReadFromFile(const char *filename, char (&buf)[n])
-{
-  int fd = open(filename, O_RDONLY);
-  ScopedClose autoClose(fd);
-  if (fd < 0) {
-    HAL_LOG("Unable to open file %s.", filename);
-    return false;
-  }
-
-  ssize_t numRead = read(fd, buf, n);
-  if (numRead < 0) {
-    HAL_LOG("Error reading from file %s.", filename);
-    return false;
-  }
-
-  buf[std::min(numRead, n - 1)] = '\0';
-  return true;
-}
 
 bool WriteToFile(const char *filename, const char *toWrite)
 {
@@ -747,6 +725,9 @@ static Monitor* sInternalLockCpuMonitor = nullptr;
 static void
 UpdateCpuSleepState()
 {
+  const char *wakeLockFilename = "/sys/power/wake_lock";
+  const char *wakeUnlockFilename = "/sys/power/wake_unlock";
+
   sInternalLockCpuMonitor->AssertCurrentThreadOwns();
   bool allowed = sCpuSleepAllowed && !sInternalLockCpuCount;
   WriteToFile(allowed ? wakeUnlockFilename : wakeLockFilename, "gecko");
@@ -1258,7 +1239,6 @@ OomVictimLogger::Observe(
       lineTimestampFound = true;
       mLastLineChecked = lineTimestamp;
     }
-      
 
     // Log interesting lines
     for (size_t i = 0; i < regex_count; i++) {
