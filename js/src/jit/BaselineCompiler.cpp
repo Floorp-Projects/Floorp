@@ -551,7 +551,7 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
     else if (needsEarlyStackCheck())
         phase = CHECK_OVER_RECURSED;
 
-    if (!callVM(CheckOverRecursedWithExtraInfo, phase))
+    if (!callVMNonOp(CheckOverRecursedWithExtraInfo, phase))
         return false;
 
     masm.bind(&skipCall);
@@ -626,7 +626,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(HeavyweightFunPrologueInfo, phase))
+            if (!callVMNonOp(HeavyweightFunPrologueInfo, phase))
                 return false;
         }
     } else {
@@ -640,7 +640,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(StrictEvalPrologueInfo, phase))
+            if (!callVMNonOp(StrictEvalPrologueInfo, phase))
                 return false;
         }
     }
