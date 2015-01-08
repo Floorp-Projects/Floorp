@@ -126,7 +126,7 @@
   // and subsequent processes.
   //
   // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
-  // --enable-trace-malloc build.  Allow for that exception, but *only* that
+  // --disable-jemalloc build. Allow for that exception, but *only* that
   // exception.
   try {
     is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");

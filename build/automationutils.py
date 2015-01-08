@@ -330,7 +330,6 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
   # crashreporter
   env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
   env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
-  env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
 
   if crashreporter and not debugger:
     env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
