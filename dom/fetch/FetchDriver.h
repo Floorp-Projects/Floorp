@@ -13,8 +13,8 @@
 #include "mozilla/DebugOnly.h"
 
 class nsIOutputStream;
+class nsILoadGroup;
 class nsIPrincipal;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -42,11 +42,13 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  explicit FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal);
+  explicit FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
+                       nsILoadGroup* aLoadGroup);
   NS_IMETHOD Fetch(FetchDriverObserver* aObserver);
 
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsRefPtr<InternalRequest> mRequest;
   nsRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;

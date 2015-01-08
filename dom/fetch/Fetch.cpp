@@ -174,7 +174,8 @@ public:
     }
 
     nsCOMPtr<nsIPrincipal> principal = mResolver->GetWorkerPrivate()->GetPrincipal();
-    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal);
+    nsCOMPtr<nsILoadGroup> loadGroup = mResolver->GetWorkerPrivate()->GetLoadGroup();
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
     nsresult rv = fetch->Fetch(mResolver);
     // Right now we only support async fetch, which should never directly fail.
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -229,7 +230,9 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     }
 
     nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
-    nsRefPtr<FetchDriver> fetch = new FetchDriver(r, doc->NodePrincipal());
+    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
+    nsRefPtr<FetchDriver> fetch =
+      new FetchDriver(r, doc->NodePrincipal(), loadGroup);
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
