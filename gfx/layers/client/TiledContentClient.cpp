@@ -1543,6 +1543,11 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   while (true) {
     aRegionToPaint.And(aInvalidRegion, tileBounds);
     if (!aRegionToPaint.IsEmpty()) {
+      if (mResolution != 1) {
+        // Paint the entire tile for low-res. This is aimed to fixing low-res resampling
+        // and to avoid doing costly region accurate painting for a small area.
+        aRegionToPaint = tileBounds;
+      }
       break;
     }
     if (Abs(scrollDiffY) >= Abs(scrollDiffX)) {
