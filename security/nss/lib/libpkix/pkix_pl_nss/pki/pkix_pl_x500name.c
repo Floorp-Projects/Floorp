@@ -13,61 +13,6 @@
 /* --Private-X500Name-Functions------------------------------------- */
 
 /*
- * FUNCTION: pkix_pl_X500Name_ToString_Helper
- * DESCRIPTION:
- *
- *  Helper function that creates a string representation of the X500Name
- *  pointed to by "name" and stores it at "pString".
- *
- * PARAMETERS
- *  "name"
- *      Address of X500Name whose string representation is desired.
- *      Must be non-NULL.
- *  "pString"
- *      Address where object pointer will be stored. Must be non-NULL.
- *  "plContext" - Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread Safe (see Thread Safety Definitions in Programmer's Guide)
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a X500Name Error if the function fails in a non-fatal way.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-static PKIX_Error *
-pkix_pl_X500Name_ToString_Helper(
-        PKIX_PL_X500Name *name,
-        PKIX_PL_String **pString,
-        void *plContext)
-{
-        CERTName *nssDN = NULL;
-        char *utf8String = NULL;
-        PKIX_UInt32 utf8Length;
-
-        PKIX_ENTER(X500NAME, "pkix_pl_X500Name_ToString_Helper");
-        PKIX_NULLCHECK_TWO(name, pString);
-        nssDN = &name->nssDN;
-
-        /* this should really be called CERT_NameToUTF8 */
-        utf8String = CERT_NameToAsciiInvertible(nssDN, CERT_N2A_INVERTIBLE);
-        if (!utf8String){
-                PKIX_ERROR(PKIX_CERTNAMETOASCIIFAILED);
-        }
-
-        PKIX_X500NAME_DEBUG("\t\tCalling PL_strlen).\n");
-        utf8Length = PL_strlen(utf8String);
-
-        PKIX_CHECK(PKIX_PL_String_Create
-                    (PKIX_UTF8, utf8String, utf8Length, pString, plContext),
-                    PKIX_STRINGCREATEFAILED);
-
-cleanup:
-
-        PR_Free(utf8String);
-
-        PKIX_RETURN(X500NAME);
-}
-
-/*
  * FUNCTION: pkix_pl_X500Name_Destroy
  * (see comments for PKIX_PL_DestructorCallback in pkix_pl_system.h)
  */
