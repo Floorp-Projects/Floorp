@@ -134,19 +134,18 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
   // Pass the data along to the implementation
   WriteInternal(aBuffer, aCount, aStrategy);
 
-  // If we're a synchronous decoder and we need a new frame to proceed, let's
-  // create one and call it again.
-  if (aStrategy == DecodeStrategy::SYNC) {
-    while (NeedsNewFrame() && !HasDataError()) {
-      nsresult rv = AllocateFrame();
+  // If we need a new frame to proceed, let's create one and call it again.
+  while (NeedsNewFrame() && !HasDataError()) {
+    MOZ_ASSERT(!IsSizeDecode(), "Shouldn't need new frame for size decode");
 
-      if (NS_SUCCEEDED(rv)) {
-        // Use the data we saved when we asked for a new frame.
-        WriteInternal(nullptr, 0, aStrategy);
-      }
+    nsresult rv = AllocateFrame();
 
-      mNeedsToFlushData = false;
+    if (NS_SUCCEEDED(rv)) {
+      // Use the data we saved when we asked for a new frame.
+      WriteInternal(nullptr, 0, aStrategy);
     }
+
+    mNeedsToFlushData = false;
   }
 
   // Finish telemetry.
@@ -237,7 +236,6 @@ nsresult
 Decoder::AllocateFrame()
 {
   MOZ_ASSERT(mNeedsNewFrame);
-  MOZ_ASSERT(NS_IsMainThread());
 
   mCurrentFrame = EnsureFrame(mNewFrameData.mFrameNum,
                               mNewFrameData.mFrameRect,
@@ -279,8 +277,6 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
                      uint8_t aPaletteDepth,
                      imgFrame* aPreviousFrame)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (mDataError || NS_FAILED(mFailCode)) {
     return RawAccessFrameRef();
   }
@@ -352,13 +348,13 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
   }
 
   nsRefPtr<imgFrame> frame = new imgFrame();
+  bool nonPremult =
+    aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   if (NS_FAILED(frame->InitForDecoder(imageSize, aFrameRect, aFormat,
-                                      aPaletteDepth))) {
+                                      aPaletteDepth, nonPremult))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
   }
-  frame->SetAsNonPremult(aDecodeFlags &
-                         imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
 
   RawAccessFrameRef ref = frame->RawAccessRef();
   if (!ref) {
@@ -384,11 +380,11 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
     // If we dispose of the first frame by clearing it, then the first frame's
     // refresh area is all of itself.
     // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR).
-    DisposalMethod disposalMethod = aPreviousFrame->GetDisposalMethod();
-    if (disposalMethod == DisposalMethod::CLEAR ||
-        disposalMethod == DisposalMethod::CLEAR_ALL ||
-        disposalMethod == DisposalMethod::RESTORE_PREVIOUS) {
-      refreshArea = aPreviousFrame->GetRect();
+    AnimationData previousFrameData = aPreviousFrame->GetAnimationData();
+    if (previousFrameData.mDisposalMethod == DisposalMethod::CLEAR ||
+        previousFrameData.mDisposalMethod == DisposalMethod::CLEAR_ALL ||
+        previousFrameData.mDisposalMethod == DisposalMethod::RESTORE_PREVIOUS) {
+      refreshArea = previousFrameData.mRect;
     }
   }
 
@@ -481,14 +477,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity /* = Opacity::TRANSPARENT */,
   // Update our state
   mInFrame = false;
 
-  if (aFrameOpacity == Opacity::OPAQUE) {
-    mCurrentFrame->SetHasNoAlpha();
-  }
-
-  mCurrentFrame->SetDisposalMethod(aDisposalMethod);
-  mCurrentFrame->SetRawTimeout(aTimeout);
-  mCurrentFrame->SetBlendMethod(aBlendMethod);
-  mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
+  mCurrentFrame->Finish(aFrameOpacity, aDisposalMethod, aTimeout, aBlendMethod);
 
   mProgress |= FLAG_FRAME_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
 }

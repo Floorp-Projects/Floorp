@@ -289,7 +289,7 @@ int32_t
 FrameAnimator::GetTimeoutForFrame(uint32_t aFrameNum) const
 {
   RawAccessFrameRef frame = GetRawFrame(aFrameNum);
-  const int32_t timeout = frame->GetRawTimeout();
+  AnimationData data = frame->GetAnimationData();
 
   // Ensure a minimal time between updates so we don't throttle the UI thread.
   // consider 0 == unspecified and make it fast but not too fast.  Unless we
@@ -304,11 +304,11 @@ FrameAnimator::GetTimeoutForFrame(uint32_t aFrameNum) const
   // It seems that there are broken tools out there that set a 0ms or 10ms
   // timeout when they really want a "default" one.  So munge values in that
   // range.
-  if (timeout >= 0 && timeout <= 10 && mLoopCount != 0) {
+  if (data.mRawTimeout >= 0 && data.mRawTimeout <= 10 && mLoopCount != 0) {
     return 100;
   }
 
-  return timeout;
+  return data.mRawTimeout;
 }
 
 size_t
@@ -352,34 +352,34 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
 
   MOZ_ASSERT(prevFrame && nextFrame, "Should have frames here");
 
-  DisposalMethod prevFrameDisposalMethod = prevFrame->GetDisposalMethod();
-  if (prevFrameDisposalMethod == DisposalMethod::RESTORE_PREVIOUS &&
+  AnimationData prevFrameData = prevFrame->GetAnimationData();
+  if (prevFrameData.mDisposalMethod == DisposalMethod::RESTORE_PREVIOUS &&
       !mCompositingPrevFrame) {
-    prevFrameDisposalMethod = DisposalMethod::CLEAR;
+    prevFrameData.mDisposalMethod = DisposalMethod::CLEAR;
   }
 
-  nsIntRect prevFrameRect = prevFrame->GetRect();
-  bool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
-                          prevFrameRect.width == mSize.width &&
-                          prevFrameRect.height == mSize.height);
+  bool isFullPrevFrame = prevFrameData.mRect.x == 0 &&
+                         prevFrameData.mRect.y == 0 &&
+                         prevFrameData.mRect.width == mSize.width &&
+                         prevFrameData.mRect.height == mSize.height;
 
   // Optimization: DisposeClearAll if the previous frame is the same size as
   //               container and it's clearing itself
   if (isFullPrevFrame &&
-      (prevFrameDisposalMethod == DisposalMethod::CLEAR)) {
-    prevFrameDisposalMethod = DisposalMethod::CLEAR_ALL;
+      (prevFrameData.mDisposalMethod == DisposalMethod::CLEAR)) {
+    prevFrameData.mDisposalMethod = DisposalMethod::CLEAR_ALL;
   }
 
-  DisposalMethod nextFrameDisposalMethod = nextFrame->GetDisposalMethod();
-  nsIntRect nextFrameRect = nextFrame->GetRect();
-  bool isFullNextFrame = (nextFrameRect.x == 0 && nextFrameRect.y == 0 &&
-                          nextFrameRect.width == mSize.width &&
-                          nextFrameRect.height == mSize.height);
+  AnimationData nextFrameData = nextFrame->GetAnimationData();
+  bool isFullNextFrame = nextFrameData.mRect.x == 0 &&
+                         nextFrameData.mRect.y == 0 &&
+                         nextFrameData.mRect.width == mSize.width &&
+                         nextFrameData.mRect.height == mSize.height;
 
   if (!nextFrame->GetIsPaletted()) {
     // Optimization: Skip compositing if the previous frame wants to clear the
     //               whole image
-    if (prevFrameDisposalMethod == DisposalMethod::CLEAR_ALL) {
+    if (prevFrameData.mDisposalMethod == DisposalMethod::CLEAR_ALL) {
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       return true;
     }
@@ -387,19 +387,19 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
     // Optimization: Skip compositing if this frame is the same size as the
     //               container and it's fully drawing over prev frame (no alpha)
     if (isFullNextFrame &&
-        (nextFrameDisposalMethod != DisposalMethod::RESTORE_PREVIOUS) &&
-        !nextFrame->GetHasAlpha()) {
+        (nextFrameData.mDisposalMethod != DisposalMethod::RESTORE_PREVIOUS) &&
+        !nextFrameData.mHasAlpha) {
       aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       return true;
     }
   }
 
   // Calculate area that needs updating
-  switch (prevFrameDisposalMethod) {
+  switch (prevFrameData.mDisposalMethod) {
     default:
     case DisposalMethod::NOT_SPECIFIED:
     case DisposalMethod::KEEP:
-      *aDirtyRect = nextFrameRect;
+      *aDirtyRect = nextFrameData.mRect;
       break;
 
     case DisposalMethod::CLEAR_ALL:
@@ -415,7 +415,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
       //       way at the bottom, and both frames being small, we'd be
       //       telling framechanged to refresh the whole image when only two
       //       small areas are needed.
-      aDirtyRect->UnionRect(nextFrameRect, prevFrameRect);
+      aDirtyRect->UnionRect(nextFrameData.mRect, prevFrameData.mRect);
       break;
 
     case DisposalMethod::RESTORE_PREVIOUS:
@@ -453,6 +453,8 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
     needToBlankComposite = true;
   }
 
+  AnimationData compositingFrameData = mCompositingFrame->GetAnimationData();
+
   // More optimizations possible when next frame is not transparent
   // But if the next frame has DisposalMethod::RESTORE_PREVIOUS,
   // this "no disposal" optimization is not possible,
@@ -460,8 +462,8 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
   // needs to be stored in compositingFrame, so it can be
   // copied into compositingPrevFrame later.
   bool doDisposal = true;
-  if (!nextFrame->GetHasAlpha() &&
-      nextFrameDisposalMethod != DisposalMethod::RESTORE_PREVIOUS) {
+  if (!nextFrameData.mHasAlpha &&
+      nextFrameData.mDisposalMethod != DisposalMethod::RESTORE_PREVIOUS) {
     if (isFullNextFrame) {
       // Optimization: No need to dispose prev.frame when
       // next frame is full frame and not transparent.
@@ -469,12 +471,12 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
       // No need to blank the composite frame
       needToBlankComposite = false;
     } else {
-      if ((prevFrameRect.x >= nextFrameRect.x) &&
-          (prevFrameRect.y >= nextFrameRect.y) &&
-          (prevFrameRect.x + prevFrameRect.width <=
-              nextFrameRect.x + nextFrameRect.width) &&
-          (prevFrameRect.y + prevFrameRect.height <=
-              nextFrameRect.y + nextFrameRect.height)) {
+      if ((prevFrameData.mRect.x >= nextFrameData.mRect.x) &&
+          (prevFrameData.mRect.y >= nextFrameData.mRect.y) &&
+          (prevFrameData.mRect.x + prevFrameData.mRect.width <=
+              nextFrameData.mRect.x + nextFrameData.mRect.width) &&
+          (prevFrameData.mRect.y + prevFrameData.mRect.height <=
+              nextFrameData.mRect.y + nextFrameData.mRect.height)) {
         // Optimization: No need to dispose prev.frame when
         // next frame fully overlaps previous frame.
         doDisposal = false;
@@ -484,43 +486,46 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
 
   if (doDisposal) {
     // Dispose of previous: clear, restore, or keep (copy)
-    switch (prevFrameDisposalMethod) {
+    switch (prevFrameData.mDisposalMethod) {
       case DisposalMethod::CLEAR:
         if (needToBlankComposite) {
           // If we just created the composite, it could have anything in its
           // buffer. Clear whole frame
-          ClearFrame(mCompositingFrame->GetRawData(),
-                     mCompositingFrame->GetRect());
+          ClearFrame(compositingFrameData.mRawData,
+                     compositingFrameData.mRect);
         } else {
           // Only blank out previous frame area (both color & Mask/Alpha)
-          ClearFrame(mCompositingFrame->GetRawData(),
-                     mCompositingFrame->GetRect(),
-                     prevFrameRect);
+          ClearFrame(compositingFrameData.mRawData,
+                     compositingFrameData.mRect,
+                     prevFrameData.mRect);
         }
         break;
 
       case DisposalMethod::CLEAR_ALL:
-        ClearFrame(mCompositingFrame->GetRawData(),
-                   mCompositingFrame->GetRect());
+        ClearFrame(compositingFrameData.mRawData,
+                   compositingFrameData.mRect);
         break;
 
       case DisposalMethod::RESTORE_PREVIOUS:
         // It would be better to copy only the area changed back to
         // compositingFrame.
         if (mCompositingPrevFrame) {
-          CopyFrameImage(mCompositingPrevFrame->GetRawData(),
-                         mCompositingPrevFrame->GetRect(),
-                         mCompositingFrame->GetRawData(),
-                         mCompositingFrame->GetRect());
+          AnimationData compositingPrevFrameData =
+            mCompositingPrevFrame->GetAnimationData();
+
+          CopyFrameImage(compositingPrevFrameData.mRawData,
+                         compositingPrevFrameData.mRect,
+                         compositingFrameData.mRawData,
+                         compositingFrameData.mRect);
 
           // destroy only if we don't need it for this frame's disposal
-          if (nextFrameDisposalMethod !=
+          if (nextFrameData.mDisposalMethod !=
               DisposalMethod::RESTORE_PREVIOUS) {
             mCompositingPrevFrame.reset();
           }
         } else {
-          ClearFrame(mCompositingFrame->GetRawData(),
-                     mCompositingFrame->GetRect());
+          ClearFrame(compositingFrameData.mRawData,
+                     compositingFrameData.mRect);
         }
         break;
 
@@ -535,39 +540,39 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
         if (mLastCompositedFrameIndex != int32_t(aNextFrameIndex - 1)) {
           if (isFullPrevFrame && !prevFrame->GetIsPaletted()) {
             // Just copy the bits
-            CopyFrameImage(prevFrame->GetRawData(),
-                           prevFrame->GetRect(),
-                           mCompositingFrame->GetRawData(),
-                           mCompositingFrame->GetRect());
+            CopyFrameImage(prevFrameData.mRawData,
+                           prevFrameData.mRect,
+                           compositingFrameData.mRawData,
+                           compositingFrameData.mRect);
           } else {
             if (needToBlankComposite) {
               // Only blank composite when prev is transparent or not full.
-              if (prevFrame->GetHasAlpha() || !isFullPrevFrame) {
-                ClearFrame(mCompositingFrame->GetRawData(),
-                           mCompositingFrame->GetRect());
+              if (prevFrameData.mHasAlpha || !isFullPrevFrame) {
+                ClearFrame(compositingFrameData.mRawData,
+                           compositingFrameData.mRect);
               }
             }
-            DrawFrameTo(prevFrame->GetRawData(), prevFrameRect,
-                        prevFrame->PaletteDataLength(),
-                        prevFrame->GetHasAlpha(),
-                        mCompositingFrame->GetRawData(),
-                        mCompositingFrame->GetRect(),
-                        prevFrame->GetBlendMethod());
+            DrawFrameTo(prevFrameData.mRawData, prevFrameData.mRect,
+                        prevFrameData.mPaletteDataLength,
+                        prevFrameData.mHasAlpha,
+                        compositingFrameData.mRawData,
+                        compositingFrameData.mRect,
+                        prevFrameData.mBlendMethod);
           }
         }
     }
   } else if (needToBlankComposite) {
     // If we just created the composite, it could have anything in its
     // buffers. Clear them
-    ClearFrame(mCompositingFrame->GetRawData(),
-               mCompositingFrame->GetRect());
+    ClearFrame(compositingFrameData.mRawData,
+               compositingFrameData.mRect);
   }
 
   // Check if the frame we are composing wants the previous image restored after
   // it is done. Don't store it (again) if last frame wanted its image restored
   // too
-  if ((nextFrameDisposalMethod == DisposalMethod::RESTORE_PREVIOUS) &&
-      (prevFrameDisposalMethod != DisposalMethod::RESTORE_PREVIOUS)) {
+  if ((nextFrameData.mDisposalMethod == DisposalMethod::RESTORE_PREVIOUS) &&
+      (prevFrameData.mDisposalMethod != DisposalMethod::RESTORE_PREVIOUS)) {
     // We are storing the whole image.
     // It would be better if we just stored the area that nextFrame is going to
     // overwrite.
@@ -583,28 +588,26 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
       mCompositingPrevFrame = newFrame->RawAccessRef();
     }
 
-    CopyFrameImage(mCompositingFrame->GetRawData(),
-                   mCompositingFrame->GetRect(),
-                   mCompositingPrevFrame->GetRawData(),
-                   mCompositingPrevFrame->GetRect());
+    AnimationData compositingPrevFrameData =
+      mCompositingPrevFrame->GetAnimationData();
+
+    CopyFrameImage(compositingFrameData.mRawData,
+                   compositingFrameData.mRect,
+                   compositingPrevFrameData.mRawData,
+                   compositingPrevFrameData.mRect);
   }
 
   // blit next frame into it's correct spot
-  DrawFrameTo(nextFrame->GetRawData(), nextFrameRect,
-              nextFrame->PaletteDataLength(),
-              nextFrame->GetHasAlpha(),
-              mCompositingFrame->GetRawData(),
-              mCompositingFrame->GetRect(),
-              nextFrame->GetBlendMethod());
-
-  // Set timeout of CompositeFrame to timeout of frame we just composed
-  // Bug 177948
-  int32_t timeout = nextFrame->GetRawTimeout();
-  mCompositingFrame->SetRawTimeout(timeout);
+  DrawFrameTo(nextFrameData.mRawData, nextFrameData.mRect,
+              nextFrameData.mPaletteDataLength,
+              nextFrameData.mHasAlpha,
+              compositingFrameData.mRawData,
+              compositingFrameData.mRect,
+              nextFrameData.mBlendMethod);
 
   // Tell the image that it is fully 'downloaded'.
   nsresult rv =
-    mCompositingFrame->ImageUpdated(mCompositingFrame->GetRect());
+    mCompositingFrame->ImageUpdated(compositingFrameData.mRect);
   if (NS_FAILED(rv)) {
     return false;
   }
