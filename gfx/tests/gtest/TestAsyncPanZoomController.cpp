@@ -2035,15 +2035,15 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
   nsRefPtr<HitTestingTreeNode> node2 = root->GetFirstChild();
   nsRefPtr<HitTestingTreeNode> node5 = root->GetLastChild();
 
-  EXPECT_EQ(ApzcOf(layers[2]), node5->Apzc());
-  EXPECT_EQ(ApzcOf(layers[2]), node2->Apzc());
+  EXPECT_EQ(ApzcOf(layers[2]), node5->GetApzc());
+  EXPECT_EQ(ApzcOf(layers[2]), node2->GetApzc());
   EXPECT_EQ(ApzcOf(layers[0]), ApzcOf(layers[2])->GetParent());
   EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[5]));
 
   EXPECT_EQ(node2->GetFirstChild(), node2->GetLastChild());
-  EXPECT_EQ(ApzcOf(layers[3]), node2->GetLastChild()->Apzc());
+  EXPECT_EQ(ApzcOf(layers[3]), node2->GetLastChild()->GetApzc());
   EXPECT_EQ(node5->GetFirstChild(), node5->GetLastChild());
-  EXPECT_EQ(ApzcOf(layers[6]), node5->GetLastChild()->Apzc());
+  EXPECT_EQ(ApzcOf(layers[6]), node5->GetLastChild()->GetApzc());
   EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[3])->GetParent());
   EXPECT_EQ(ApzcOf(layers[5]), ApzcOf(layers[6])->GetParent());
 }
@@ -2087,7 +2087,7 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   EXPECT_EQ(nullptr, layers4_6_8->GetParent());
   EXPECT_EQ(layers4_6_8, layer7->GetParent());
   EXPECT_EQ(nullptr, layer9->GetParent());
-  EXPECT_EQ(layer9, root->Apzc());
+  EXPECT_EQ(layer9, root->GetApzc());
   TestAsyncPanZoomController* expected[] = {
     layer9,
     layers4_6_8, layers4_6_8, layers4_6_8,
@@ -2095,10 +2095,10 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   };
   int i = 0;
   for (HitTestingTreeNode *iter = root; iter; iter = iter->GetPrevSibling()) {
-    EXPECT_EQ(expected[i++], iter->Apzc());
+    EXPECT_EQ(expected[i++], iter->GetApzc());
   }
   HitTestingTreeNode* node6 = root->GetPrevSibling()->GetPrevSibling();
-  EXPECT_EQ(layer7, node6->GetLastChild()->Apzc());
+  EXPECT_EQ(layer7, node6->GetLastChild()->GetApzc());
   EXPECT_EQ(nullptr, node6->GetLastChild()->GetPrevSibling());
 
   nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));

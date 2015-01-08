@@ -21,7 +21,9 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
 {
-  MOZ_ASSERT(mApzc);
+  if (mIsPrimaryApzcHolder) {
+    MOZ_ASSERT(mApzc);
+  }
 }
 
 HitTestingTreeNode::~HitTestingTreeNode()
@@ -50,14 +52,17 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 {
   mLastChild = aChild;
   if (aChild) {
-    // We assume that HitTestingTreeNodes with an ancestor/descendant
-    // relationship cannot both point to the same APZC instance. This assertion
-    // only covers a subset of cases in which that might occur, but it's better
-    // than nothing.
-    MOZ_ASSERT(aChild->Apzc() != Apzc());
-
     aChild->mParent = this;
-    aChild->Apzc()->SetParent(Apzc());
+
+    if (aChild->GetApzc()) {
+      AsyncPanZoomController* parent = GetNearestContainingApzc();
+      // We assume that HitTestingTreeNodes with an ancestor/descendant
+      // relationship cannot both point to the same APZC instance. This
+      // assertion only covers a subset of cases in which that might occur,
+      // but it's better than nothing.
+      MOZ_ASSERT(aChild->GetApzc() != parent);
+      aChild->SetApzcParent(parent);
+    }
   }
 }
 
@@ -67,7 +72,11 @@ HitTestingTreeNode::SetPrevSibling(HitTestingTreeNode* aSibling)
   mPrevSibling = aSibling;
   if (aSibling) {
     aSibling->mParent = mParent;
-    aSibling->Apzc()->SetParent(mParent ? mParent->Apzc() : nullptr);
+
+    if (aSibling->GetApzc()) {
+      AsyncPanZoomController* parent = mParent ? mParent->GetNearestContainingApzc() : nullptr;
+      aSibling->SetApzcParent(parent);
+    }
   }
 }
 
@@ -75,7 +84,10 @@ void
 HitTestingTreeNode::MakeRoot()
 {
   mParent = nullptr;
-  Apzc()->SetParent(nullptr);
+
+  if (GetApzc()) {
+    SetApzcParent(nullptr);
+  }
 }
 
 HitTestingTreeNode*
@@ -107,9 +119,20 @@ HitTestingTreeNode::GetParent() const
 }
 
 AsyncPanZoomController*
-HitTestingTreeNode::Apzc() const
+HitTestingTreeNode::GetApzc() const
 {
   return mApzc;
+}
+
+AsyncPanZoomController*
+HitTestingTreeNode::GetNearestContainingApzc() const
+{
+  for (const HitTestingTreeNode* n = this; n; n = n->GetParent()) {
+    if (n->GetApzc()) {
+      return n->GetApzc();
+    }
+  }
+  return nullptr;
 }
 
 bool
@@ -148,7 +171,10 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
   }
 
   // convert into Layer coordinate space
-  gfx::Matrix4x4 localTransform = mTransform * gfx::Matrix4x4(mApzc->GetCurrentAsyncTransform());
+  gfx::Matrix4x4 localTransform = mTransform;
+  if (mApzc) {
+    localTransform = localTransform * gfx::Matrix4x4(mApzc->GetCurrentAsyncTransform());
+  }
   gfx::Point4D pointInLayerPixels = localTransform.Inverse().ProjectPoint(aPoint.ToUnknownPoint());
   if (!pointInLayerPixels.HasPositiveWCoord()) {
     return HitTestResult::NoApzcHit;
@@ -172,11 +198,23 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
     mPrevSibling->Dump(aPrefix);
   }
   printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) r=(%s) t=(%s) c=(%s)\n",
-    aPrefix, this, mApzc.get(), Stringify(mApzc->GetGuid()).c_str(),
+    aPrefix, this, mApzc.get(), mApzc ? Stringify(mApzc->GetGuid()).c_str() : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     Stringify(mClipRegion).c_str());
   if (mLastChild) {
     mLastChild->Dump(nsPrintfCString("%s  ", aPrefix).get());
+  }
+}
+
+void
+HitTestingTreeNode::SetApzcParent(AsyncPanZoomController* aParent)
+{
+  // precondition: GetApzc() is non-null
+  MOZ_ASSERT(GetApzc() != nullptr);
+  if (IsPrimaryHolder()) {
+    GetApzc()->SetParent(aParent);
+  } else {
+    MOZ_ASSERT(GetApzc()->GetParent() == aParent);
   }
 }
 
