@@ -13,7 +13,7 @@ use command::WebDriverMessage;
 use common::WebDriverResult;
 
 enum DispatchMessage {
-    HandleWebDriver(WebDriverMessage, Sender<WebDriverResult<Option<WebDriverResponse>>>),
+    HandleWebDriver(WebDriverMessage, Sender<WebDriverResult<WebDriverResponse>>),
     Quit
 }
 
@@ -73,7 +73,7 @@ impl Dispatcher {
                     };
                     debug!("{}", resp);
                     match resp {
-                        Ok(Some(WebDriverResponse::DeleteSession)) => {
+                        Ok(WebDriverResponse::DeleteSession) => {
                             debug!("Deleting session");
                             self.connection = None;
                         },
@@ -138,10 +138,7 @@ impl Handler for MarionetteHandler {
                             c.send(DispatchMessage::HandleWebDriver(message, send_res));
                         }
                         match recv_res.recv() {
-                            Ok(None) => return,
-                            Ok(Some(response)) => {
-                                (200, response.to_json_string())
-                            },
+                            Ok(response) => (200, response.to_json_string()),
                             Err(err) => (err.http_status(), err.to_json_string()),
                         }
                     },

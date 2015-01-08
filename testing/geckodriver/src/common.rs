@@ -4,6 +4,8 @@ use serialize::json::{ToJson, ParserError};
 use std::collections::TreeMap;
 use std::error::{Error, FromError};
 
+static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
+
 #[deriving(PartialEq, Show)]
 pub enum ErrorStatus {
     ElementNotSelectable,
@@ -48,7 +50,7 @@ impl WebDriverError {
         }
     }
 
-    pub fn status_code(&self) -> &str {
+    pub fn status_code(&self) -> &'static str {
         match self.status {
             ErrorStatus::ElementNotSelectable => "element not selectable",
             ErrorStatus::ElementNotVisible => "element not visible",
@@ -184,24 +186,25 @@ impl WebElement {
     }
 
     pub fn from_json(data: &json::Json) -> WebDriverResult<WebElement> {
-        Ok(WebElement::new(
-            try_opt!(
-                try_opt!(
-                    try_opt!(data.as_object(),
-                             ErrorStatus::InvalidArgument,
-                             "Could not convert webelement to object").get(
-                        "element-6066-11e4-a52e-4f735466cecf"),
-                    ErrorStatus::InvalidArgument,
-                    "Could not find webelement key").as_string(),
-                ErrorStatus::InvalidArgument,
-                "Could not convert web element to string").into_string()))
+        let object = try_opt!(data.as_object(),
+                              ErrorStatus::InvalidArgument,
+                              "Could not convert webelement to object");
+        let id_value = try_opt!(object.get(ELEMENT_KEY),
+                                ErrorStatus::InvalidArgument,
+                                "Could not find webelement key");
+
+        let id = try_opt!(id_value.as_string(),
+                          ErrorStatus::InvalidArgument,
+                          "Could not convert web element to string").into_string();
+
+        Ok(WebElement::new(id))
     }
 }
 
 impl ToJson for WebElement {
     fn to_json(&self) -> json::Json {
         let mut data = TreeMap::new();
-        data.insert("element-6066-11e4-a52e-4f735466cecf".to_string(), self.id.to_json());
+        data.insert(ELEMENT_KEY.to_string(), self.id.to_json());
         json::Object(data)
     }
 }
@@ -215,19 +218,17 @@ pub enum FrameId {
 
 impl FrameId {
     pub fn from_json(data: &json::Json) -> WebDriverResult<FrameId> {
-      match data {
+        match data {
             &json::Json::U64(x) => {
-                if x <= u16::MAX as u64 {
-                    Ok(FrameId::Short(x as u16))
-                } else {
-                    Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                            "frame id out of range"))
-                }
+                let id = try_opt!(x.to_u16(),
+                                  ErrorStatus::NoSuchFrame,
+                                  "frame id out of range");
+                Ok(FrameId::Short(id))
             },
-          &json::Json::Null => Ok(FrameId::Null),
-          &json::Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
-          _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
-                                       "frame id has unexpected type"))
+            &json::Json::Null => Ok(FrameId::Null),
+            &json::Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
+            _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
+                                         "frame id has unexpected type"))
         }
     }
 }
