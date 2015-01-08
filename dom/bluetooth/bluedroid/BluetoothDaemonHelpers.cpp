@@ -1260,12 +1260,6 @@ PackPDU(BluetoothSocketType aIn, BluetoothDaemonPDU& aPDU)
 }
 
 nsresult
-PackPDU(BluetoothTransport aIn, BluetoothDaemonPDU& aPDU)
-{
-  return PackPDU(PackConversion<BluetoothTransport, uint8_t>(aIn), aPDU);
-}
-
-nsresult
 PackPDU(ControlPlayStatus aIn, BluetoothDaemonPDU& aPDU)
 {
   return PackPDU(PackConversion<ControlPlayStatus, uint8_t>(aIn), aPDU);
