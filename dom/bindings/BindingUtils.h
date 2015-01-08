@@ -2651,19 +2651,19 @@ GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
 }
 
 // Given a JSObject* that represents the chrome side of a JS-implemented WebIDL
-// interface, get the nsPIDOMWindow corresponding to the content side, if any.
+// interface, get the nsIGlobalObject corresponding to the content side, if any.
 // A false return means an exception was thrown.
 bool
-GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
-                                nsPIDOMWindow** window);
+GetContentGlobalForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
+                                       nsIGlobalObject** global);
 
 void
 ConstructJSImplementation(JSContext* aCx, const char* aContractId,
-                          nsPIDOMWindow* aWindow,
+                          nsIGlobalObject* aGlobal,
                           JS::MutableHandle<JSObject*> aObject,
                           ErrorResult& aRv);
 
-already_AddRefed<nsPIDOMWindow>
+already_AddRefed<nsIGlobalObject>
 ConstructJSImplementation(JSContext* aCx, const char* aContractId,
                           const GlobalObject& aGlobal,
                           JS::MutableHandle<JSObject*> aObject,
