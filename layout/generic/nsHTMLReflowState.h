@@ -21,10 +21,6 @@ class nsLineLayout;
 class nsIPercentHeightObserver;
 struct nsHypotheticalBox;
 
-namespace mozilla {
-class RubyReflowState;
-}
-
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
  *
@@ -261,9 +257,6 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
 
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
   nsLineLayout*    mLineLayout;
-
-  // RubyReflowState object (only for ruby reflow; set to nullptr otherwise)
-  mozilla::RubyReflowState* mRubyReflowState;
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
