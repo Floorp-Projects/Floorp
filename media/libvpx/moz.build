@@ -30,9 +30,10 @@ if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
         'vpx_scale/vpx_scale_asm_offsets.c',
     ]
     SOURCES += offset_sources
+    # Bug 934984 - MSVC bustage when /GL is specified
     if CONFIG['_MSC_VER']:
         for s in offset_sources:
-            SOURCES[s].no_pgo = True
+            SOURCES[s].flags += ['-GL-']
 
 if CONFIG['VPX_X86_ASM']:
     SOURCES += files['X86_ASM']
