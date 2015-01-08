@@ -12,9 +12,9 @@
 #include "mozilla/TimeStamp.h"
 #include "js/TypeDecls.h"
 #include "nsIDocument.h"
+#include "nsRefreshDriver.h"
 
 struct JSContext;
-class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
@@ -47,6 +47,11 @@ public:
   // script.
   Nullable<double> GetCurrentTimeAsDouble() const;
 
+  // Converts a TimeStamp to the equivalent value in timeline time.
+  // Note that when IsUnderTestControl() is true, there is no correspondence
+  // between timeline time and wallclock time. In such a case, passing a
+  // timestamp from TimeStamp::Now() to this method will not return a
+  // meaningful result.
   Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
   TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;
 
@@ -66,6 +71,16 @@ public:
   void FastForward(const TimeStamp& aTimeStamp);
 
   nsRefreshDriver* GetRefreshDriver() const;
+  // Returns true if this timeline is driven by a refresh driver that is
+  // under test control. In such a case, there is no correspondence between
+  // TimeStamp values returned by the refresh driver and wallclock time.
+  // As a result, passing a value from TimeStamp::Now() to ToTimelineTime()
+  // would not return a meaningful result.
+  bool IsUnderTestControl() const
+  {
+    nsRefreshDriver* refreshDriver = GetRefreshDriver();
+    return refreshDriver && refreshDriver->IsTestControllingRefreshesEnabled();
+  }
 
 protected:
   TimeStamp GetCurrentTimeStamp() const;
