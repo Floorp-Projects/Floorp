@@ -31,7 +31,6 @@ const FXA_LOGIN_UNVERIFIED = 1;
 const FXA_LOGIN_FAILED = 2;
 
 let gSyncPane = {
-  _stringBundle: null,
   prefArray: ["engine.bookmarks", "engine.passwords", "engine.prefs",
               "engine.tabs", "engine.history"],
 
@@ -107,24 +106,30 @@ let gSyncPane = {
     Weave.Svc.Obs.add(migrateTopic, this.updateMigrationState, this);
 
     window.addEventListener("unload", function() {
-      topics.forEach(function (topic) {
+      topics.forEach(topic => {
         Weave.Svc.Obs.remove(topic, this.updateWeavePrefs, this);
-      }, gSyncPane);
+      });
       Weave.Svc.Obs.remove(migrateTopic, this.updateMigrationState, this);
-    }, false);
+    }.bind(this), false);
 
+    XPCOMUtils.defineLazyGetter(this, '_stringBundle', () => {
+      return Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
+    });
+
+    XPCOMUtils.defineLazyGetter(this, '_accountsStringBundle', () => {
+      return Services.strings.createBundle("chrome://browser/locale/accounts.properties");
+    });
+
+    this.updateWeavePrefs();
+  },
+
+  updateWeavePrefs: function () {
     // ask the migration module to broadcast its current state (and nothing will
     // happen if it's not loaded - which is good, as that means no migration
     // is pending/necessary) - we don't want to suck that module in just to
     // find there's nothing to do.
     Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
 
-    this._stringBundle =
-      Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
-    this.updateWeavePrefs();
-  },
-
-  updateWeavePrefs: function () {
     let service = Components.classes["@mozilla.org/weave/service;1"]
                   .getService(Components.interfaces.nsISupports)
                   .wrappedJSObject;
@@ -193,27 +198,74 @@ let gSyncPane = {
 
   updateMigrationState: function(subject, state) {
     let selIndex;
+    let container = document.getElementById("sync-migration");
     switch (state) {
-      case fxaMigrator.STATE_USER_FXA:
+      case fxaMigrator.STATE_USER_FXA: {
+        let sb = this._accountsStringBundle;
+        // There are 2 cases here - no email address means it is an offer on
+        // the first device (so the user is prompted to create an account).
+        // If there is an email address it is the "join the party" flow, so the
+        // user is prompted to sign in with the address they previously used.
+        let email = subject ? subject.QueryInterface(Components.interfaces.nsISupportsString).data : null;
+        let elt = document.getElementById("sync-migrate-upgrade-description");
+        elt.textContent = email ?
+                          sb.formatStringFromName("signInAfterUpgradeOnOtherDevice.description",
+                                                  [email], 1) :
+                          sb.GetStringFromName("needUserLong");
+
+        // The "upgrade" button.
+        let button = document.getElementById("sync-migrate-upgrade");
+        button.setAttribute("label",
+                            sb.GetStringFromName(email
+                                                 ? "signInAfterUpgradeOnOtherDevice.label"
+                                                 : "upgradeToFxA.label"));
+        button.setAttribute("accesskey",
+                            sb.GetStringFromName(email
+                                                 ? "signInAfterUpgradeOnOtherDevice.accessKey"
+                                                 : "upgradeToFxA.accessKey"));
+        // The "unlink" button - this is only shown for first migration
+        button = document.getElementById("sync-migrate-unlink");
+        if (email) {
+          button.hidden = true;
+        } else {
+          button.setAttribute("label", sb.GetStringFromName("unlinkMigration.label"));
+          button.setAttribute("accesskey", sb.GetStringFromName("unlinkMigration.accessKey"));
+        }
         selIndex = 0;
         break;
-      case fxaMigrator.STATE_USER_FXA_VERIFIED:
+      }
+      case fxaMigrator.STATE_USER_FXA_VERIFIED: {
+        let sb = this._accountsStringBundle;
         let email = subject.QueryInterface(Components.interfaces.nsISupportsString).data;
-        let fsfn = this._stringBundle.formatStringFromName;
-        let label = fsfn("fxaVerificationNeeded.label", [email], 1);
-        let elt = document.getElementById("sync-migrate-verify-label");
-        elt.setAttribute("value", label);
+        let label = sb.formatStringFromName("needVerifiedUserLong", [email], 1);
+        let elt = document.getElementById("sync-migrate-verify-description");
+        elt.textContent = label;
+        // The "resend" button.
+        let button = document.getElementById("sync-migrate-resend");
+        button.setAttribute("label", sb.GetStringFromName("resendVerificationEmail.label"));
+        button.setAttribute("accesskey", sb.GetStringFromName("resendVerificationEmail.accessKey"));
+        // The "forget" button.
+        button = document.getElementById("sync-migrate-forget");
+        button.setAttribute("label", sb.GetStringFromName("forgetMigration.label"));
+        button.setAttribute("accesskey", sb.GetStringFromName("forgetMigration.accessKey"));
         selIndex = 1;
         break;
+      }
       default:
         if (state) { // |null| is expected, but everything else is not.
           Cu.reportError("updateMigrationState has unknown state: " + state);
         }
-        document.getElementById("sync-migration").hidden = true;
+        if (!container.hidden) {
+          window.innerHeight -= container.clientHeight;
+          container.hidden = true;
+        }
         return;
     }
-    document.getElementById("sync-migration").hidden = false;
     document.getElementById("sync-migration-deck").selectedIndex = selIndex;
+    if (container.hidden) {
+      container.hidden = false;
+      window.innerHeight += container.clientHeight;
+    }
   },
 
   startOver: function (showDialog) {
@@ -398,7 +450,7 @@ let gSyncPane = {
 
   // click handlers for the FxA migration.
   migrateUpgrade: function() {
-    fxaMigrator.getFxAccountOptions().then(({url, options}) => {
+    fxaMigrator.getFxAccountCreationOptions().then(({url, options}) => {
       this.openContentInBrowser(url, options);
     });
   },
@@ -409,6 +461,29 @@ let gSyncPane = {
 
   migrateResend: function() {
     fxaMigrator.resendVerificationMail(window);
+  },
+
+  // When the "Unlink" button in the migration header is selected we display
+  // a slightly different message.
+  startOverMigration: function () {
+    let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
+                Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
+                Services.prompt.BUTTON_POS_1_DEFAULT;
+    let sb = this._accountsStringBundle;
+    let buttonChoice =
+      Services.prompt.confirmEx(window,
+                                sb.GetStringFromName("unlinkVerificationTitle"),
+                                sb.GetStringFromName("unlinkVerificationDescription"),
+                                flags,
+                                sb.GetStringFromName("unlinkVerificationConfirm"),
+                                null, null, null, {});
+
+    // If the user selects cancel, just bail
+    if (buttonChoice == 1)
+      return;
+
+    Weave.Service.startOver();
+    this.updateWeavePrefs();
   },
 };
 

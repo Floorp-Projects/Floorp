@@ -201,6 +201,10 @@ label.small {
   animation: fadein 3000ms;
 }
 
+#sync-migration description {
+  margin: 8px;
+}
+
 @keyframes fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
