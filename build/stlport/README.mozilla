@@ -7,3 +7,6 @@ The overrides/ directory contains Mozilla-specific overrides to the standard
 The following patches are applied on top:
 - android-mozilla-config.patch: Adjusts Android-specific configuration
   to the mozilla codebase use of the STL.
+
+- fix-warnings-as-errors.patch: Fixes warnings which were causing the
+  B2G emulator-ICS build to fail (related to bug 1073003).
