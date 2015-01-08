@@ -317,7 +317,7 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 
   std::ifstream stream;
 #ifdef _MSC_VER
-  stream.open(path.get());
+  stream.open(static_cast<const wchar_t*>(path.get()));
 #else
   stream.open(NS_ConvertUTF16toUTF8(path).get());
 #endif
