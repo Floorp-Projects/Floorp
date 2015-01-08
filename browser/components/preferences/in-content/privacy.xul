@@ -88,21 +88,25 @@
                 label="&trackingProtection.label;" />
       <image id="trackingProtectionImage"/>
     </hbox>
-    <label id="trackingProtectionLearnMore"
-           class="text-link"
-           value="&trackingProtectionLearnMore.label;"/>
-    <separator/>
+    <hbox align="center"
+          class="indent">
+      <label id="trackingProtectionLearnMore"
+             class="text-link"
+             value="&trackingProtectionLearnMore.label;"/>
+    </hbox>
   </vbox>
-  <checkbox id="privacyDoNotTrackCheckbox"
-            label="&dntTrackingNotOkay.label2;"
-            accesskey="&dntTrackingNotOkay.accesskey;"
-            preference="privacy.donottrackheader.enabled"/>
-  <separator class="thin"/>
   <vbox>
-    <hbox pack="end">
-      <spacer flex="1"/>
-      <label class="text-link" id="doNotTrackInfo"
-            href="https://www.mozilla.org/dnt">
+    <hbox align="center">
+      <checkbox id="privacyDoNotTrackCheckbox"
+                label="&dntTrackingNotOkay.label2;"
+                accesskey="&dntTrackingNotOkay.accesskey;"
+                preference="privacy.donottrackheader.enabled"/>
+    </hbox>
+    <hbox align="center"
+          class="indent">
+      <label id="doNotTrackInfo"
+             class="text-link"
+             href="https://www.mozilla.org/dnt">
         &doNotTrackInfo.label;
       </label>
     </hbox>
