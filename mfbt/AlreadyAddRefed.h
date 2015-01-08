@@ -71,6 +71,26 @@ struct already_AddRefed
 
   already_AddRefed(already_AddRefed<T>&& aOther) : mRawPtr(aOther.take()) {}
 
+  /**
+   * This helper is useful in cases like
+   *
+   *  already_AddRefed<BaseClass>
+   *  Foo()
+   *  {
+   *    nsRefPtr<SubClass> x = ...;
+   *    return x.forget();
+   *  }
+   *
+   * The autoconversion allows one to omit the idiom
+   *
+   *    nsRefPtr<BaseClass> y = x.forget();
+   *    return y.forget();
+   *
+   * Note that nsRefPtr is the XPCOM reference counting smart pointer class.
+   */
+  template <typename U>
+  already_AddRefed(already_AddRefed<U>&& aOther) : mRawPtr(aOther.take()) {}
+
   ~already_AddRefed() { MOZ_ASSERT(!mRawPtr); }
 
   // Specialize the unused operator<< for already_AddRefed, to allow
@@ -89,31 +109,6 @@ struct already_AddRefed
     T* rawPtr = mRawPtr;
     mRawPtr = nullptr;
     return rawPtr;
-  }
-
-  /**
-   * This helper is useful in cases like
-   *
-   *  already_AddRefed<BaseClass>
-   *  Foo()
-   *  {
-   *    nsRefPtr<SubClass> x = ...;
-   *    return x.forget();
-   *  }
-   *
-   * The autoconversion allows one to omit the idiom
-   *
-   *    nsRefPtr<BaseClass> y = x.forget();
-   *    return y.forget();
-   *
-   * Note that nsRefPtr is the XPCOM reference counting smart pointer class.
-   */
-  template<class U>
-  operator already_AddRefed<U>()
-  {
-    U* tmp = mRawPtr;
-    mRawPtr = nullptr;
-    return already_AddRefed<U>(tmp);
   }
 
   /**
