@@ -19,9 +19,9 @@ class nsXREDirProvider MOZ_FINAL : public nsIDirectoryServiceProvider2,
 {
 public:
   // we use a custom isupports implementation (no refcount)
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;
 
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
