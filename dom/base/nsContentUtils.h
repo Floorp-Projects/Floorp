@@ -1715,6 +1715,8 @@ public:
    * @param aString the string to convert the newlines inside [in/out]
    */
   static void PlatformToDOMLineBreaks(nsString &aString);
+  static NS_WARN_UNUSED_RESULT bool PlatformToDOMLineBreaks(nsString &aString,
+                                                            const mozilla::fallible_t&);
 
   /**
    * Populates aResultString with the contents of the string-buffer aBuf, up
