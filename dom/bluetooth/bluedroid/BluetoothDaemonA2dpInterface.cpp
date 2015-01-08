@@ -262,6 +262,52 @@ BluetoothDaemonA2dpModule::AudioStateNtf(
     AudioStateInitOp(aPDU));
 }
 
+// Init operator class for AudioConfigNotification
+class BluetoothDaemonA2dpModule::AudioConfigInitOp MOZ_FINAL
+  : private PDUInitOp
+{
+public:
+  AudioConfigInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+  { }
+
+  nsresult
+  operator () (nsString& aArg1, uint32_t aArg2, uint8_t aArg3) const
+  {
+    BluetoothDaemonPDU& pdu = GetPDU();
+
+    /* Read address */
+    nsresult rv = UnpackPDU(
+      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    /* Read sample rate */
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    /* Read channel count */
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
+
+void
+BluetoothDaemonA2dpModule::AudioConfigNtf(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU)
+{
+  AudioConfigNotification::Dispatch(
+    &BluetoothA2dpNotificationHandler::AudioConfigNotification,
+    AudioConfigInitOp(aPDU));
+}
+
 void
 BluetoothDaemonA2dpModule::HandleNtf(
   const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
@@ -271,6 +317,9 @@ BluetoothDaemonA2dpModule::HandleNtf(
     const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&) = {
     INIT_ARRAY_AT(0, &BluetoothDaemonA2dpModule::ConnectionStateNtf),
     INIT_ARRAY_AT(1, &BluetoothDaemonA2dpModule::AudioStateNtf),
+#if ANDROID_VERSION >= 21
+    INIT_ARRAY_AT(2, &BluetoothDaemonA2dpModule::AudioConfigNtf),
+#endif
   };
 
   MOZ_ASSERT(!NS_IsMainThread());
