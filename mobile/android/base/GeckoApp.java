@@ -142,7 +142,6 @@ public abstract class GeckoApp
     public static final String ACTION_LAUNCH_SETTINGS      = "org.mozilla.gecko.SETTINGS";
     public static final String ACTION_LOAD                 = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW              = "org.mozilla.gecko.INIT_PW";
-    public static final String ACTION_WEBAPP_PREFIX        = "org.mozilla.gecko.WEBAPP";
 
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
@@ -1849,12 +1848,6 @@ public abstract class GeckoApp
             Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB |
                                             Tabs.LOADURL_USER_ENTERED |
                                             Tabs.LOADURL_EXTERNAL);
-        } else if (action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) {
-            // A lightweight mechanism for loading a web page as a webapp
-            // without installing the app natively nor registering it in the DOM
-            // application registry.
-            String uri = getURIFromIntent(intent);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
