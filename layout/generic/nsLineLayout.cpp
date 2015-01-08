@@ -3021,25 +3021,6 @@ nsLineLayout::RelativePositionFrames(nsOverflowAreas& aOverflowAreas)
   RelativePositionFrames(mRootSpan, aOverflowAreas);
 }
 
-// This method applies any relative positioning to the given frame.
-void
-nsLineLayout::ApplyRelativePositioning(PerFrameData* aPFD)
-{
-  if (!aPFD->mRelativePos) {
-    return;
-  }
-
-  nsIFrame* frame = aPFD->mFrame;
-  WritingMode frameWM = frame->GetWritingMode();
-  LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
-  // right and bottom are handled by
-  // nsHTMLReflowState::ComputeRelativeOffsets
-  nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
-                                              aPFD->mOffsets, &origin,
-                                              mContainerWidth);
-  frame->SetPosition(frameWM, origin, mContainerWidth);
-}
-
 void
 nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas)
 {
@@ -3078,7 +3059,16 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
     nsIFrame* frame = pfd->mFrame;
 
     // Adjust the origin of the frame
-    ApplyRelativePositioning(pfd);
+    if (pfd->mRelativePos) {
+      WritingMode frameWM = frame->GetWritingMode();
+      LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
+      // right and bottom are handled by
+      // nsHTMLReflowState::ComputeRelativeOffsets
+      nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
+                                                  pfd->mOffsets, &origin,
+                                                  mContainerWidth);
+      frame->SetPosition(frameWM, origin, mContainerWidth);
+    }
 
     // We must position the view correctly before positioning its
     // descendants so that widgets are positioned properly (since only

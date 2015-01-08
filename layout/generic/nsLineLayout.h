@@ -665,8 +665,6 @@ protected:
                             nscoord aDistanceFromStart,
                             nscoord aLineBSize);
 
-  void ApplyRelativePositioning(PerFrameData* aPFD);
-
   void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
