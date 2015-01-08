@@ -324,7 +324,6 @@ AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
   mIsPending = false;
 
   UpdateSourceContent();
-  PostUpdate();
 
   if (mReady) {
     mReady->MaybeResolve(this);
