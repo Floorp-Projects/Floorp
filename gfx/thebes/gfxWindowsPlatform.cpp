@@ -389,6 +389,7 @@ gfxWindowsPlatform::UpdateRenderMode()
       mD3D11DeviceInitialized = false;
       mD3D11Device = nullptr;
       mD3D11ContentDevice = nullptr;
+      mAdapter = nullptr;
 
       imgLoader::Singleton()->ClearCache(true);
       imgLoader::Singleton()->ClearCache(false);
