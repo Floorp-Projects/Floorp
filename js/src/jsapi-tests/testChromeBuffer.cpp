@@ -198,7 +198,7 @@ BEGIN_TEST(testChromeBuffer)
 
     return true;
 }
-virtual void uninit() {
+virtual void uninit() MOZ_OVERRIDE {
     trusted_glob = nullptr;
     trusted_fun = nullptr;
     JS::RemoveObjectRoot(cx, &trusted_glob);
