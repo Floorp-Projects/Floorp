@@ -452,6 +452,25 @@ private:
    * This function walks the layer tree backwards through siblings and constructs the APZC
    * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
    * code.
+   *
+   * @param aState             The current tree building state.
+   * @param aLayer             The (layer, metrics) pair which is the current
+   *                           position in the recursive walk of the layer tree.
+   *                           This calls builds an APZC subtree corresponding
+   *                           to the layer subtree rooted at aLayer.
+   * @param aLayersId          The layers id of the layer in aLayer.
+   * @param aAncestorTransform The accumulated CSS transforms of all the
+   *                           layers from aLayer up (via the parent chain)
+   *                           to the next APZC-bearing layer.
+   * @param aParent            The parent of any APZC built at this level.
+   * @param aNextSibling       The next sibling any APZC built at this level.
+   * @param aObscured          The region that is obscured by APZCs above
+   *                           the one at this level (in practice, the
+   *                           next-siblings of this one), in the ParentLayer
+   *                           pixels of the APZC at this level.
+   * @return                   The root of the APZC subtree at this level, or
+   *                           aNextSibling if no APZCs were built for the
+   *                           layer subtree at this level.
    */
   AsyncPanZoomController* UpdatePanZoomControllerTree(TreeBuildingState& aState,
                                                       const LayerMetricsWrapper& aLayer,
