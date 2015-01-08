@@ -2517,6 +2517,40 @@ protected:
     manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
     rootApzc = ApzcOf(root);
   }
+
+  void CreateObscuringLayerTree() {
+    const char* layerTreeSyntax = "c(c(t)t)";
+    // LayerID                     0 1 2 3
+    // 0 is the root.
+    // 1 is a parent scrollable layer.
+    // 2 is a child scrollable layer.
+    // 3 is the Obscurer, who ruins everything.
+    nsIntRegion layerVisibleRegions[] = {
+        // x coordinates are uninteresting
+        nsIntRegion(nsIntRect(0,   0, 200, 200)),  // [0, 200]
+        nsIntRegion(nsIntRect(0,   0, 200, 200)),  // [0, 200]
+        nsIntRegion(nsIntRect(0, 100, 200,  50)),  // [100, 150]
+        nsIntRegion(nsIntRect(0, 100, 200, 100))   // [100, 200]
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
+
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 200, 300));
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 200, 100));
+    SetScrollHandoff(layers[2], layers[1]);
+    SetScrollHandoff(layers[1], root);
+
+    EventRegions regions(nsIntRegion(nsIntRect(0, 0, 200, 200)));
+    root->SetEventRegions(regions);
+    regions.mHitRegion = nsIntRegion(nsIntRect(0, 0, 200, 300));
+    layers[1]->SetEventRegions(regions);
+    regions.mHitRegion = nsIntRegion(nsIntRect(0, 100, 200, 100));
+    layers[2]->SetEventRegions(regions);
+
+    registration = MakeUnique<ScopedLayerTreeRegistration>(0, root, mcc);
+    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    rootApzc = ApzcOf(root);
+  }
 };
 
 TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
@@ -2587,6 +2621,26 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   EXPECT_CALL(*mcc, HandleSingleTap(_, _, rootApzc->GetGuid())).Times(1);
   Tap(manager, 10, 160, time, 100);
   mcc->RunThroughDelayedTasks();    // this runs the tap event
+}
+
+TEST_F(APZEventRegionsTester, Obscuration) {
+  SCOPED_GFX_PREF(LayoutEventRegionsEnabled, bool, true);
+
+  CreateObscuringLayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+
+  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+
+  TestAsyncPanZoomController* parent = ApzcOf(layers[1]);
+  TestAsyncPanZoomController* child = ApzcOf(layers[2]);
+
+  int time = 0;
+  ApzcPanNoFling(parent, time, 75, 25);
+
+  HitTestResult result;
+  nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(ScreenPoint(50, 75), &result);
+  EXPECT_EQ(child, hit.get());
+  EXPECT_EQ(HitTestResult::ApzcHitRegion, result);
 }
 
 class TaskRunMetrics {
