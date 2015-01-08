@@ -241,7 +241,7 @@ public:
     EXPECT_TRUE(observerService);
     observerService->AddObserver(this, "gmp-clear-storage-complete", false);
     if (observerService) {
-      observerService->NotifyObservers(nullptr, "gmp-clear-storage", nullptr);
+      observerService->NotifyObservers(nullptr, "browser:purge-session-history", nullptr);
     }
     return NS_OK;
   }
