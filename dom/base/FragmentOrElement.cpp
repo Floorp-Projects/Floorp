@@ -154,7 +154,8 @@ nsIContent::GetFlattenedTreeParent() const
 {
   nsIContent* parent = GetParent();
 
-  if (nsContentUtils::HasDistributedChildren(parent)) {
+  if (parent && nsContentUtils::HasDistributedChildren(parent) &&
+      nsContentUtils::IsInSameAnonymousTree(parent, this)) {
     // This node is distributed to insertion points, thus we
     // need to consult the destination insertion points list to
     // figure out where this node was inserted in the flattened tree.
