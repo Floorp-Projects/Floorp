@@ -247,12 +247,6 @@ FrameAnimator::SetAnimationFrameTime(const TimeStamp& aTime)
 }
 
 void
-FrameAnimator::SetFirstFrameRefreshArea(const nsIntRect& aRect)
-{
-  mFirstFrameRefreshArea = aRect;
-}
-
-void
 FrameAnimator::UnionFirstFrameRefreshArea(const nsIntRect& aRect)
 {
   mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, aRect);

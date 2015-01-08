@@ -94,6 +94,9 @@ private:
     /// data to native data as necessary
     void ProcessInfoHeader();
 
+    /// True if we've already processed the BMP header.
+    bool mProcessedHeader;
+
     // Stores whether the image data may store alpha data, or if
     // the alpha data is unspecified and filled with a padding byte of 0.
     // When a 32BPP bitmap is stored in an ICO or CUR file, its 4th byte
