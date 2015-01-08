@@ -428,12 +428,21 @@ pref("media.webvtt.regions.enabled", false);
 // AudioTrack and VideoTrack support
 pref("media.track.enabled", false);
 
-// Whether to enable MediaSource support
-#ifdef RELEASE_BUILD
-pref("media.mediasource.enabled", false);
-#else
+// Whether to enable MediaSource support.  We want to enable on non-release
+// builds and on release windows, but on release builds restrict to YouTube.  We
+// don't enable for YouTube on non-Windows for now because the MP4 code for
+// those platforms isn't ready yet.
+#if defined(XP_WIN) || !defined(RELEASE_BUILD)
 pref("media.mediasource.enabled", true);
+#else
+pref("media.mediasource.enabled", false);
 #endif
+
+#ifdef RELEASE_BUILD
+pref("media.mediasource.youtubeonly", true);
+#else
+pref("media.mediasource.youtubeonly", false);
+#endif // RELEASE_BUILD
 
 #ifdef MOZ_WIDGET_GONK
 pref("media.mediasource.mp4.enabled", false);
