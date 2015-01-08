@@ -55,7 +55,8 @@ gfxFT2Font::ShapeText(gfxContext     *aContext,
                             aVertical, aShapedText)) {
         // harfbuzz must have failed(?!), just render raw glyphs
         AddRange(aText, aOffset, aLength, aShapedText);
-        PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
+        PostShapingFixup(aContext, aText, aOffset, aLength, aVertical,
+                         aShapedText);
     }
 
     return true;
