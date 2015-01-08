@@ -31,13 +31,18 @@ public:
   //
 
   nsresult RegisterModuleCmd(uint8_t aId, uint8_t aMode,
+                             uint32_t aMaxNumClients,
                              BluetoothSetupResultHandler* aRes)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x00, 0x01, 0));
 
+#if ANDROID_VERSION >= 21
+    nsresult rv = PackPDU(aId, aMode, aMaxNumClients, *pdu);
+#else
     nsresult rv = PackPDU(aId, aMode, *pdu);
+#endif
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -188,6 +193,9 @@ static BluetoothNotificationHandler* sNotificationHandler;
 class BluetoothDaemonCoreModule
 {
 public:
+
+  static const int MAX_NUM_CLIENTS;
+
   virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
 
   nsresult EnableCmd(BluetoothResultHandler* aRes)
@@ -413,8 +421,13 @@ public:
 
     nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x0d, 0));
 
+#if ANDROID_VERSION >= 21
+    nsresult rv = PackPDU(
+      PackConversion<nsAString, BluetoothAddress>(aBdAddr), aTransport, *pdu);
+#else
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
+#endif
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1354,6 +1367,8 @@ private:
 
 };
 
+const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
+
 //
 // Protocol handling
 //
@@ -1418,7 +1433,7 @@ class BluetoothDaemonProtocol MOZ_FINAL
 public:
   BluetoothDaemonProtocol(BluetoothDaemonConnection* aConnection);
 
-  nsresult RegisterModule(uint8_t aId, uint8_t aMode,
+  nsresult RegisterModule(uint8_t aId, uint8_t aMode, uint32_t aMaxNumClients,
                           BluetoothSetupResultHandler* aRes) MOZ_OVERRIDE;
 
   nsresult UnregisterModule(uint8_t aId,
@@ -1465,9 +1480,11 @@ BluetoothDaemonProtocol::BluetoothDaemonProtocol(
 
 nsresult
 BluetoothDaemonProtocol::RegisterModule(uint8_t aId, uint8_t aMode,
+                                        uint32_t aMaxNumClients,
                                         BluetoothSetupResultHandler* aRes)
 {
-  return BluetoothDaemonSetupModule::RegisterModuleCmd(aId, aMode, aRes);
+  return BluetoothDaemonSetupModule::RegisterModuleCmd(aId, aMode,
+                                                       aMaxNumClients, aRes);
 }
 
 nsresult
@@ -1747,7 +1764,8 @@ public:
     if (!mRegisteredSocketModule) {
       mRegisteredSocketModule = true;
       // Init, step 4: Register Socket module
-      mInterface->mProtocol->RegisterModuleCmd(0x02, 0x00, this);
+      mInterface->mProtocol->RegisterModuleCmd(0x02, 0x00,
+        BluetoothDaemonSocketModule::MAX_NUM_CLIENTS, this);
     } else if (mRes) {
       // Init, step 5: Signal success to caller
       mRes->Init();
@@ -1786,7 +1804,8 @@ BluetoothDaemonInterface::OnConnectSuccess(enum Channel aChannel)
 
         // Init, step 3: Register Core module
         nsresult rv = mProtocol->RegisterModuleCmd(
-          0x01, 0x00, new InitResultHandler(this, res));
+          0x01, 0x00, BluetoothDaemonCoreModule::MAX_NUM_CLIENTS,
+          new InitResultHandler(this, res));
         if (NS_FAILED(rv) && res) {
           DispatchError(res, STATUS_FAIL);
         }
