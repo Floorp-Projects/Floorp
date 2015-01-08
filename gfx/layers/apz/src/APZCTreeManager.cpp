@@ -792,9 +792,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     // the event we send to gecko because we don't know the layer to untransform with
     // respect to.
     MonitorAutoLock lock(mTreeLock);
-    for (HitTestingTreeNode* node = mRootNode; node; node = node->GetPrevSibling()) {
-      FlushRepaintsRecursively(node);
-    }
+    FlushRepaintsRecursively(mRootNode);
   }
 
   apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutHitResult);
@@ -1124,11 +1122,11 @@ APZCTreeManager::FlushRepaintsRecursively(HitTestingTreeNode* aNode)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  if (aNode->IsPrimaryHolder()) {
-    aNode->Apzc()->FlushRepaintForNewInputBlock();
-  }
-  for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
-    FlushRepaintsRecursively(child);
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    if (node->IsPrimaryHolder()) {
+      node->Apzc()->FlushRepaintForNewInputBlock();
+    }
+    FlushRepaintsRecursively(node->GetLastChild());
   }
 }
 
@@ -1313,14 +1311,7 @@ APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
                                GuidComparator aComparator)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<HitTestingTreeNode> target;
-  // The root may have siblings, check those too
-  for (HitTestingTreeNode* node = mRootNode; node; node = node->GetPrevSibling()) {
-    target = FindTargetNode(node, aGuid, aComparator);
-    if (target) {
-      break;
-    }
-  }
+  nsRefPtr<HitTestingTreeNode> target = FindTargetNode(mRootNode, aGuid, aComparator);
   return target.forget();
 }
 
@@ -1328,32 +1319,9 @@ already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, HitTestResult* aOutHitResult)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<AsyncPanZoomController> target;
-  // The root may have siblings, so check those too
   HitTestResult hitResult = NoApzcHit;
-  for (HitTestingTreeNode* node = mRootNode; node; node = node->GetPrevSibling()) {
-    target = GetAPZCAtPoint(node, aPoint.ToUnknownPoint(), &hitResult);
-    if (!gfxPrefs::LayoutEventRegionsEnabled() && target == node->Apzc()
-        && node->GetPrevSibling() && target == node->GetPrevSibling()->Apzc()) {
-      // When event-regions are disabled, we treat scrollinfo layers as
-      // regular scrollable layers. Unfortunately, their "hit region" (which
-      // we create from the composition bounds) is their full area, and they
-      // sit on top of their non-scrollinfo siblings. This means they will get
-      // a HitTestingTreeNode with a hit region that will aggressively match
-      // any input events that might be directed to sub-APZCs of their non-
-      // scrollinfo siblings. This means that we need to keep looping through
-      // to see if there are any other non-scrollinfo siblings that have
-      // children that match this event. If so, they should take priority.
-      // Once we turn on event-regions and ignore scrollinfo layers, this
-      // will become unnecessary.
-      continue;
-    }
-    // If we hit an overscrolled APZC, 'target' will be nullptr but it's still
-    // a hit so we don't search further siblings.
-    if (target || (hitResult == OverscrolledApzc)) {
-      break;
-    }
-  }
+  nsRefPtr<AsyncPanZoomController> target = GetAPZCAtPoint(mRootNode, aPoint.ToUnknownPoint(), &hitResult);
+
   // If we are in an overscrolled APZC, we should be returning nullptr.
   MOZ_ASSERT(!(target && (hitResult == OverscrolledApzc)));
   if (aOutHitResult) {
@@ -1449,21 +1417,21 @@ APZCTreeManager::FindTargetNode(HitTestingTreeNode* aNode,
 
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
-    HitTestingTreeNode* match = FindTargetNode(child, aGuid, aComparator);
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    HitTestingTreeNode* match = FindTargetNode(node->GetLastChild(), aGuid, aComparator);
     if (match) {
       return match;
     }
-  }
 
-  bool matches = false;
-  if (aComparator) {
-    matches = aComparator(aGuid, aNode->Apzc()->GetGuid());
-  } else {
-    matches = aNode->Apzc()->Matches(aGuid);
-  }
-  if (matches) {
-    return aNode;
+    bool matches = false;
+    if (aComparator) {
+      matches = aComparator(aGuid, node->Apzc()->GetGuid());
+    } else {
+      matches = node->Apzc()->Matches(aGuid);
+    }
+    if (matches) {
+      return node;
+    }
   }
   return nullptr;
 }
@@ -1474,90 +1442,93 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                 HitTestResult* aOutHitResult)
 {
   mTreeLock.AssertCurrentThreadOwns();
-  AsyncPanZoomController* apzc = aNode->Apzc();
 
-  // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
-  // explained in the comment above GetScreenToApzcTransform. This function will recurse with apzc at L and P, and the
-  // comments explain what values are stored in the variables at these two levels. All the comments
-  // use standard matrix notation where the leftmost matrix in a multiplication is applied first.
-
-  // ancestorUntransform takes points from apzc's parent APZC's CSS-transformed layer coordinates
-  // to apzc's parent layer's layer coordinates.
-  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
-  //   and RC.Inverse() * QC.Inverse()                               at recursion level for P.
-  Matrix4x4 ancestorUntransform = apzc->GetAncestorTransform().Inverse();
-
-  // Hit testing for this layer takes place in our parent layer coordinates,
-  // since the composition bounds (used to initialize the visible rect against
-  // which we hit test are in those coordinates).
-  Point4D hitTestPointForThisLayer = ancestorUntransform.ProjectPoint(aHitTestPoint);
-  APZCTM_LOG("Untransformed %f %f to parentlayer coordinates %f %f for hit-testing APZC %p\n",
-           aHitTestPoint.x, aHitTestPoint.y,
-           hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, apzc);
-
-  // childUntransform takes points from apzc's parent APZC's CSS-transformed layer coordinates
-  // to apzc's CSS-transformed layer coordinates.
-  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() at L
-  //   and RC.Inverse() * QC.Inverse() * PA.Inverse()                               at P.
-  Matrix4x4 childUntransform = ancestorUntransform * Matrix4x4(apzc->GetCurrentAsyncTransform()).Inverse();
-  Point4D hitTestPointForChildLayers = childUntransform.ProjectPoint(aHitTestPoint);
-  APZCTM_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
-           aHitTestPoint.x, aHitTestPoint.y,
-           hitTestPointForChildLayers.x, hitTestPointForChildLayers.y, apzc);
-
-  AsyncPanZoomController* result = nullptr;
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  if (hitTestPointForChildLayers.HasPositiveWCoord()) {
-    for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
-      AsyncPanZoomController* match = GetAPZCAtPoint(child, hitTestPointForChildLayers.As2DPoint(), aOutHitResult);
-      if (!gfxPrefs::LayoutEventRegionsEnabled() && match == aNode->Apzc()
-          && aNode->GetPrevSibling() && match == aNode->GetPrevSibling()->Apzc()) {
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    AsyncPanZoomController* apzc = node->Apzc();
+
+    // The comments below assume there is a chain of layers L..R with L and P
+    // having APZC instances as explained in the comment above
+    // GetScreenToApzcTransform. This function will recurse with apzc at L and
+    // P, and the comments explain what values are stored in the variables at
+    // these two levels. All the comments use standard matrix notation where the
+    // leftmost matrix in a multiplication is applied first.
+
+    // ancestorUntransform takes points from apzc's parent APZC's CSS-
+    // transformed layer coordinates to apzc's parent layer's layer coordinates.
+    // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
+    //   and RC.Inverse() * QC.Inverse()                               at recursion level for P.
+    Matrix4x4 ancestorUntransform = apzc->GetAncestorTransform().Inverse();
+
+    // Hit testing for this layer takes place in our parent layer coordinates,
+    // since the composition bounds (used to initialize the visible rect against
+    // which we hit test are in those coordinates).
+    Point4D hitTestPointForThisLayer = ancestorUntransform.ProjectPoint(aHitTestPoint);
+    APZCTM_LOG("Untransformed %f %f to parentlayer coordinates %f %f for hit-testing APZC %p\n",
+        aHitTestPoint.x, aHitTestPoint.y,
+        hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, apzc);
+
+    // childUntransform takes points from apzc's parent APZC's CSS-transformed
+    // layer coordinates to apzc's CSS-transformed layer coordinates.
+    // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() at L
+    //   and RC.Inverse() * QC.Inverse() * PA.Inverse()                               at P.
+    Matrix4x4 childUntransform = ancestorUntransform * Matrix4x4(apzc->GetCurrentAsyncTransform()).Inverse();
+    Point4D hitTestPointForChildLayers = childUntransform.ProjectPoint(aHitTestPoint);
+    APZCTM_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
+        aHitTestPoint.x, aHitTestPoint.y,
+        hitTestPointForChildLayers.x, hitTestPointForChildLayers.y, apzc);
+
+    AsyncPanZoomController* result = nullptr;
+    if (hitTestPointForChildLayers.HasPositiveWCoord()) {
+      result = GetAPZCAtPoint(node->GetLastChild(), hitTestPointForChildLayers.As2DPoint(), aOutHitResult);
+      if (*aOutHitResult == OverscrolledApzc) {
+        // We matched an overscrolled APZC, abort.
+        return nullptr;
+      }
+    }
+    if (!result && hitTestPointForThisLayer.HasPositiveWCoord()) {
+      ParentLayerPoint point = ParentLayerPoint::FromUnknownPoint(hitTestPointForThisLayer.As2DPoint());
+      HitTestResult hitResult = node->HitTest(point);
+      if (hitResult != HitTestResult::NoApzcHit) {
+        APZCTM_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p via node %p\n",
+             hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, apzc, node);
+        result = apzc;
+        MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
+        // If event regions are disabled, *aOutHitResult will be ApzcHitRegion
+        *aOutHitResult = hitResult;
+      }
+    }
+
+    // If we are overscrolled, and the point matches us or one of our children,
+    // the result is inside an overscrolled APZC, inform our caller of this
+    // (callers typically ignore events targeted at overscrolled APZCs).
+    if (result && apzc->IsOverscrolled()) {
+      *aOutHitResult = OverscrolledApzc;
+      return nullptr;
+    }
+
+    if (result) {
+      if (!gfxPrefs::LayoutEventRegionsEnabled() && node->GetPrevSibling()
+          && result == node->GetPrevSibling()->Apzc()) {
         // When event-regions are disabled, we treat scrollinfo layers as
         // regular scrollable layers. Unfortunately, their "hit region" (which
         // we create from the composition bounds) is their full area, and they
         // sit on top of their non-scrollinfo siblings. This means they will get
         // a HitTestingTreeNode with a hit region that will aggressively match
         // any input events that might be directed to sub-APZCs of their non-
-        // scrollinfo siblings. This means that we need to keep looping through
-        // to see if there are any other non-scrollinfo siblings that have
-        // children that match this event. If so, they should take priority.
-        // Once we turn on event-regions and ignore scrollinfo layers, this
-        // will become unnecessary.
+        // scrollinfo siblings. This means we need to keep looping through to
+        // see if there are any other non-scrollinfo siblings that have children
+        // that match this input. If so, they should take priority. With event-
+        // regions enabled we ignore scrollinfo layers and this is unnecessary.
         continue;
       }
-      if (*aOutHitResult == OverscrolledApzc) {
-        // We matched an overscrolled APZC, abort.
-        return nullptr;
-      }
-      if (match) {
-        result = match;
-        break;
-      }
-    }
-  }
-  if (!result && hitTestPointForThisLayer.HasPositiveWCoord()) {
-    ParentLayerPoint point = ParentLayerPoint::FromUnknownPoint(hitTestPointForThisLayer.As2DPoint());
-    HitTestResult hitResult = aNode->HitTest(point);
-    if (hitResult != HitTestResult::NoApzcHit) {
-      APZCTM_LOG("Successfully matched untransformed point %s to visible region for APZC %p via node %p\n",
-        Stringify(hitTestPointForThisLayer.As2DPoint()).c_str(), apzc, aNode);
-      result = apzc;
-      MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
-      // If event regions are disabled, *aOutHitResult will be ApzcHitRegion
-      *aOutHitResult = hitResult;
+
+      return result;
     }
   }
 
-  // If we are overscrolled, and the point matches us or one of our children,
-  // the result is inside an overscrolled APZC, inform our caller of this
-  // (callers typically ignore events targeted at overscrolled APZCs).
-  if (result && apzc->IsOverscrolled()) {
-    *aOutHitResult = OverscrolledApzc;
-    result = nullptr;
-  }
-
-  return result;
+  return nullptr;
 }
 
 /* The methods GetScreenToApzcTransform() and GetApzcToGeckoTransform() return
