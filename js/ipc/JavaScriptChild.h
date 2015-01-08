@@ -26,7 +26,7 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     void drop(JSObject *obj);
 
   protected:
-    virtual bool isParent() { return false; }
+    virtual bool isParent() MOZ_OVERRIDE { return false; }
     virtual JSObject *scopeForTargetObjects() MOZ_OVERRIDE;
 
   private:
