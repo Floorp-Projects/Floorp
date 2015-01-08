@@ -1204,7 +1204,13 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
   }
 
   mSyncPointInMediaStream = stream->GetLastOutputTime();
-  mSyncPointInDecodedStream = mStartTime + mPlayDuration;
+  TimeDuration timeSincePlayStart = mPlayStartTime.IsNull() ? TimeDuration(0) :
+                                    TimeStamp::Now() - mPlayStartTime;
+  mSyncPointInDecodedStream = mStartTime + mPlayDuration +
+                              timeSincePlayStart.ToMicroseconds();
+
+  DECODER_LOG("SetSyncPointForMediaStream MediaStream=%lldus, DecodedStream=%lldus",
+              mSyncPointInMediaStream, mSyncPointInDecodedStream);
 }
 
 void MediaDecoderStateMachine::ResyncMediaStreamClock()
