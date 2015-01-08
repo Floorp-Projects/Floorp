@@ -1286,9 +1286,7 @@ Search.prototype = {
       // search or because of the user's preferences), so only set it if we
       // haven't already done so.
       if (showTags) {
-        // If we're not suggesting bookmarks, then this shouldn't
-        // display as one.
-        match.style = this.hasBehavior("bookmark") ? "bookmark-tag" : "tag";
+        match.style = "tag";
       }
       else if (bookmarked) {
         match.style = "bookmark";
