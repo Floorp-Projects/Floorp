@@ -447,6 +447,22 @@ IdentityManager.prototype = {
   },
 
   /**
+   * Pre-fetches any information that might help with migration away from this
+   * identity.  Called after every sync and is really just an optimization that
+   * allows us to avoid a network request for when we actually need the
+   * migration info.
+   */
+  prefetchMigrationSentinel: function(service) {
+    // Try and fetch the migration sentinel - it will end up in the recordManager
+    // cache.
+    try {
+      service.recordManager.get(service.storageURL + "meta/fxa_credentials");
+    } catch (ex) {
+      this._log.warn("Failed to pre-fetch the migration sentinel", ex);
+    }
+  },
+
+  /**
    * Obtains the array of basic logins from nsiPasswordManager.
    */
   _getLogins: function _getLogins(realm) {
