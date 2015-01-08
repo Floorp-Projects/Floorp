@@ -6,7 +6,6 @@ function handleRequest(request, response) {
   response.setHeader("Pragma", "no-cache");
   response.setHeader("Expires", "0");
 
-  response.setHeader("Access-Control-Allow-Origin", "*", false);
 
   if (request.scheme === "http") {
     response.setStatusLine(request.httpVersion, 302, "Found");
