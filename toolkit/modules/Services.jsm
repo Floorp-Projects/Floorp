@@ -45,6 +45,12 @@ XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
 });
 #endif
 
+XPCOMUtils.defineLazyGetter(Services, "mm", () => {
+  return Cc["@mozilla.org/globalmessagemanager;1"]
+           .getService(Ci.nsIMessageBroadcaster)
+           .QueryInterface(Ci.nsIFrameScriptLoader);
+});
+
 let initTable = [
 #ifdef MOZ_WIDGET_ANDROID
   ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge"],
@@ -52,6 +58,7 @@ let initTable = [
   ["appShell", "@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],
   ["cache", "@mozilla.org/network/cache-service;1", "nsICacheService"],
   ["cache2", "@mozilla.org/netwerk/cache-storage-service;1", "nsICacheStorageService"],
+  ["cpmm", "@mozilla.org/childprocessmessagemanager;1", "nsIMessageSender"],
   ["console", "@mozilla.org/consoleservice;1", "nsIConsoleService"],
   ["contentPrefs", "@mozilla.org/content-pref/service;1", "nsIContentPrefService"],
   ["cookies", "@mozilla.org/cookiemanager;1", "nsICookieManager2"],
@@ -63,6 +70,7 @@ let initTable = [
   ["logins", "@mozilla.org/login-manager;1", "nsILoginManager"],
   ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
+  ["ppmm", "@mozilla.org/parentprocessmessagemanager;1", "nsIMessageBroadcaster"],
   ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
 #ifdef MOZ_ENABLE_PROFILER_SPS
   ["profiler", "@mozilla.org/tools/profiler;1", "nsIProfiler"],
