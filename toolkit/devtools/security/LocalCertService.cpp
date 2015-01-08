@@ -315,9 +315,9 @@ private:
     return NS_OK;
   }
 
-  virtual void ReleaseNSSResources() {}
+  virtual void ReleaseNSSResources() MOZ_OVERRIDE {}
 
-  virtual void CallCallback(nsresult rv)
+  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
   {
     (void) mCallback->HandleCert(mCert, rv);
   }
@@ -342,9 +342,9 @@ private:
     return RemoveExisting();
   }
 
-  virtual void ReleaseNSSResources() {}
+  virtual void ReleaseNSSResources() MOZ_OVERRIDE {}
 
-  virtual void CallCallback(nsresult rv)
+  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
   {
     (void) mCallback->HandleResult(rv);
   }
