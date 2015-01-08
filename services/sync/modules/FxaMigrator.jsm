@@ -387,6 +387,8 @@ Migrator.prototype = {
     // See if we can find a default account name to use.
     let email = yield this._getDefaultAccountName(sentinel);
     let tail = email ? "&email=" + encodeURIComponent(email) : "";
+    // A special flag so server-side metrics can tell this is part of migration.
+    tail += "&migration=sync11";
     // We want to ask FxA to offer a "Customize Sync" checkbox iff any engines
     // are disabled.
     let customize = !this._allEnginesEnabled();
