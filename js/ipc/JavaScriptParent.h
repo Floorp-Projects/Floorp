@@ -29,7 +29,7 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
     CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
   protected:
-    virtual bool isParent() { return true; }
+    virtual bool isParent() MOZ_OVERRIDE { return true; }
     virtual JSObject *scopeForTargetObjects() MOZ_OVERRIDE;
 };
 
