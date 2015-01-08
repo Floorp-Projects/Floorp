@@ -179,10 +179,11 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     }
 
     @Override
-    protected void loadStartupTab(String uri) {
+    protected void loadStartupTab(String uri, int flags) {
         // Load a tab so it's available for any code that assumes a tab
         // before the app tab itself is loaded in BrowserApp._loadWebapp.
-        super.loadStartupTab("about:blank");
+        flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
+        super.loadStartupTab("about:blank", flags);
     }
 
     private void showSplash() {
