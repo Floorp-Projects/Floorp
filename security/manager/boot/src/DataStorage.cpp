@@ -111,12 +111,6 @@ private:
 
 DataStorage::Reader::~Reader()
 {
-  {
-    MutexAutoLock lock(mDataStorage->mMutex);
-    Telemetry::Accumulate(Telemetry::DATA_STORAGE_ENTRIES,
-                          mDataStorage->mPersistentDataTable.Count());
-  }
-
   // Notify that calls to Get can proceed.
   {
     MonitorAutoLock readyLock(mDataStorage->mReadyMonitor);
@@ -209,6 +203,9 @@ DataStorage::Reader::Run()
         }
       }
     } while (true);
+
+    Telemetry::Accumulate(Telemetry::DATA_STORAGE_ENTRIES,
+                          mDataStorage->mPersistentDataTable.Count());
   }
 
   return NS_OK;
