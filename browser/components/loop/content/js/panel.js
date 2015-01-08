@@ -201,13 +201,29 @@ loop.panel = (function(_, mozL10n) {
 
       return {
         seenToS: getPref("seenToS"),
-        gettingStartedSeen: getPref("gettingStarted.seen")
+        gettingStartedSeen: getPref("gettingStarted.seen"),
+        showPartnerLogo: getPref("showPartnerLogo")
       };
+    },
+
+    renderPartnerLogo: function() {
+      if (!this.state.showPartnerLogo) {
+        return null;
+      }
+
+      var locale = mozL10n.getLanguage();
+      navigator.mozLoop.setLoopPref('showPartnerLogo', false);
+      return (
+        React.createElement("p", {id: "powered-by", className: "powered-by"}, 
+          mozL10n.get("powered_by_beforeLogo"), 
+          React.createElement("img", {id: "powered-by-logo", className: locale}), 
+          mozL10n.get("powered_by_afterLogo")
+        )
+      );
     },
 
     render: function() {
       if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
-        var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
         var tosHTML = mozL10n.get("legal_text_and_links3", {
@@ -224,11 +240,7 @@ loop.panel = (function(_, mozL10n) {
           ),
         });
         return React.createElement("div", {id: "powered-by-wrapper"}, 
-          React.createElement("p", {id: "powered-by"}, 
-            mozL10n.get("powered_by_beforeLogo"), 
-            React.createElement("img", {id: "powered-by-logo", className: locale}), 
-            mozL10n.get("powered_by_afterLogo")
-          ), 
+          this.renderPartnerLogo(), 
           React.createElement("p", {className: "terms-service", 
              dangerouslySetInnerHTML: {__html: tosHTML}})
          );
