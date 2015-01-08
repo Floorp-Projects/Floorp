@@ -819,7 +819,7 @@ imgFrame::AssertImageDataLocked() const
 class UnlockImageDataRunnable : public nsRunnable
 {
 public:
-  UnlockImageDataRunnable(imgFrame* aTarget)
+  explicit UnlockImageDataRunnable(imgFrame* aTarget)
     : mTarget(aTarget)
   {
     MOZ_ASSERT(mTarget);
