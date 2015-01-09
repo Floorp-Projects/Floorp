@@ -2685,6 +2685,7 @@ public:
     : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0), mHasZIndexOverride(false)
   {
     MOZ_COUNT_CTOR(nsDisplayWrapList);
+    mBaseVisibleRect = mVisibleRect;
   }
   virtual ~nsDisplayWrapList();
   /**
@@ -2693,6 +2694,14 @@ public:
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
   {
     mBounds = mList.GetBounds(aBuilder);
+    // The display list may contain content that's visible outside the visible
+    // rect (i.e. the current dirty rect) passed in when the item was created.
+    // This happens when the dirty rect has been restricted to the visual
+    // overflow rect of a frame for some reason (e.g. when setting up dirty
+    // rects in nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay), but that
+    // frame contains placeholders for out-of-flows that aren't descendants of
+    // the frame.
+    mVisibleRect.UnionRect(mBaseVisibleRect, mList.GetVisibleRect());
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
@@ -2787,6 +2796,9 @@ protected:
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
   nsRect mBounds;
+  // Visible rect contributed by this display item itself.
+  // Our mVisibleRect may include the visible areas of children.
+  nsRect mBaseVisibleRect;
   int32_t mOverrideZIndex;
   bool mHasZIndexOverride;
 };

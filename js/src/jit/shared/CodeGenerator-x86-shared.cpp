@@ -310,8 +310,8 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
               case MIRType_Float32:
                 masm.storeDouble(ToFloatRegister(ins->arg()), dst);
                 return;
-              // StackPointer is SimdStackAlignment-aligned and ABIArgGenerator guarantees stack
-              // offsets are SimdStackAlignment-aligned.
+              // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
+              // stack offsets are SIMD-aligned.
               case MIRType_Int32x4:
                 masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
                 return;
