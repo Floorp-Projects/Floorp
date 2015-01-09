@@ -69,5 +69,12 @@ ProxyAccessible::Attributes(nsTArray<Attribute> *aAttrs) const
 {
   unused << mDoc->SendAttributes(mID, aAttrs);
 }
+
+void
+ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
+                               nsString& aText) const
+{
+  unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText);
+}
 }
 }
