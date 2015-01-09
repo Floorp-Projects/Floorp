@@ -5065,7 +5065,7 @@ JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const JS::CallAr
 #define JS_DEFAULT_ZEAL_FREQ 100
 
 extern JS_PUBLIC_API(void)
-JS_GetGCZeal(JSContext *cx, uint8_t *zeal, uint32_t *frequency);
+JS_GetGCZeal(JSContext *cx, uint8_t *zeal, uint32_t *frequency, uint32_t *nextScheduled);
 
 extern JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency);
