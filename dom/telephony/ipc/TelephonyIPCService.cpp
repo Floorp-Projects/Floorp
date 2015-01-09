@@ -9,6 +9,8 @@
 #include "mozilla/dom/telephony/TelephonyChild.h"
 #include "mozilla/Preferences.h"
 
+#include "nsITelephonyCallInfo.h"
+
 USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
 
@@ -384,24 +386,10 @@ TelephonyIPCService::SetSpeakerEnabled(bool aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyIPCService::CallStateChanged(uint32_t aClientId,
-                                       uint32_t aCallIndex,
-                                       uint16_t aCallState,
-                                       const nsAString& aNumber,
-                                       uint16_t aNumberPresentation,
-                                       const nsAString& aName,
-                                       uint16_t aNamePresentation,
-                                       bool aIsOutgoing,
-                                       bool aIsEmergency,
-                                       bool aIsConference,
-                                       bool aIsSwitchable,
-                                       bool aIsMergeable)
+TelephonyIPCService::CallStateChanged(nsITelephonyCallInfo* aInfo)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->CallStateChanged(aClientId, aCallIndex, aCallState, aNumber,
-                                    aNumberPresentation, aName, aNamePresentation,
-                                    aIsOutgoing, aIsEmergency, aIsConference,
-                                    aIsSwitchable, aIsMergeable);
+    mListeners[i]->CallStateChanged(aInfo);
   }
   return NS_OK;
 }
@@ -422,18 +410,7 @@ TelephonyIPCService::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyIPCService::EnumerateCallState(uint32_t aClientId,
-                                         uint32_t aCallIndex,
-                                         uint16_t aCallState,
-                                         const nsAString& aNumber,
-                                         uint16_t aNumberPresentation,
-                                         const nsAString& aName,
-                                         uint16_t aNamePresentation,
-                                         bool aIsOutgoing,
-                                         bool aIsEmergency,
-                                         bool aIsConference,
-                                         bool aIsSwitchable,
-                                         bool aIsMergeable)
+TelephonyIPCService::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
   MOZ_CRASH("Not a EnumerateCalls request!");
 }

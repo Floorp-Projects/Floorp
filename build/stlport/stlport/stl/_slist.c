@@ -148,7 +148,6 @@ template <class _Tp, class _Alloc, class _StrictWeakOrdering>
 void _Slist_merge(slist<_Tp, _Alloc>& __that, slist<_Tp, _Alloc>& __x,
                   _StrictWeakOrdering __comp) {
   typedef _Slist_node<_Tp> _Node;
-  typedef _STLP_PRIV _Slist_node_base _Node_base;
   if (__that.get_allocator() == __x.get_allocator()) {
     typename slist<_Tp, _Alloc>::iterator __ite(__that.before_begin());
     while (__ite._M_node->_M_next && !__x.empty()) {

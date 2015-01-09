@@ -21,12 +21,13 @@ public final class DataStorageContract {
 
     public static class Stats {
         public static final String KEY_VERSION = "version_code";
-        public static final int VERSION_CODE = 1;
+        public static final int VERSION_CODE = 2;
         public static final String KEY_BYTES_SENT = "bytes_sent";
         public static final String KEY_LAST_UPLOAD_TIME = "last_upload_time";
         public static final String KEY_OBSERVATIONS_SENT = "observations_sent";
         public static final String KEY_WIFIS_SENT = "wifis_sent";
         public static final String KEY_CELLS_SENT = "cells_sent";
+        public static final String KEY_OBSERVATIONS_PER_DAY = "obs_per_day";
     }
 
     private DataStorageContract() {

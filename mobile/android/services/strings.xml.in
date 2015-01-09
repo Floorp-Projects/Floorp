@@ -196,6 +196,7 @@
 <string name="fxaccount_status_needs_credentials">&fxaccount_status_needs_credentials;</string>
 <string name="fxaccount_status_needs_upgrade">&fxaccount_status_needs_upgrade;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled">&fxaccount_status_needs_master_sync_automatically_enabled;</string>
+<string name="fxaccount_status_needs_master_sync_automatically_enabled_v21">&fxaccount_status_needs_master_sync_automatically_enabled_v21;</string>
 <string name="fxaccount_status_needs_account_enabled">&fxaccount_status_needs_account_enabled;</string>
 <string name="fxaccount_status_needs_finish_migrating">&fxaccount_status_needs_finish_migrating;</string>
 <string name="fxaccount_status_bookmarks">&fxaccount_status_bookmarks;</string>
