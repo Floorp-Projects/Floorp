@@ -991,7 +991,7 @@ class AutoNewContext
                 JS_GetPendingException(newcx, &exc);
             newCompartment.reset();
             newRequest.reset();
-            if (throwing && JS_WrapValue(oldcx, &exc))
+            if (throwing)
                 JS_SetPendingException(oldcx, exc);
             DestroyContext(newcx, false);
         }
