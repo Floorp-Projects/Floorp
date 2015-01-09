@@ -724,6 +724,7 @@ private:
 
   CaretAssociateHint mHint;   //hint to tell if the selection is at the end of this line or beginning of next
   nsBidiLevel mCaretBidiLevel;
+  nsBidiLevel mKbdBidiLevel;
 
   nsPoint mDesiredPos;
   uint32_t mDelayedMouseEventClickCount;

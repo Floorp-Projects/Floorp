@@ -72,7 +72,7 @@ thread_main(void *_info)
 			scope_str = GLOBAL_BOUND_SCOPE_STRING;
 			break;
 		default:
-			PR_ASSERT(!"Invalid thread scope");
+			PR_NOT_REACHED("Invalid thread scope");
 			break;
 	}
 	printf("thread id %d, scope %s\n", info->id, scope_str);

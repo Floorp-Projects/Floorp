@@ -1,3 +1,4 @@
+// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
 assertAsmTypeFail(USE_ASM + "function f(i,j,k) { i=i|0;j=+j;k=+k; return (i+(j+k))|0 } return f");

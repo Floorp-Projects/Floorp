@@ -59,9 +59,15 @@ public:
 
   /* Bonds */
 
-  void CreateBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
+  void CreateBond(const nsAString& aBdAddr, BluetoothTransport aTransport,
+                  BluetoothResultHandler* aRes);
   void RemoveBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
   void CancelBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
+
+  /* Connection */
+
+  void GetConnectionState(const nsAString& aBdAddr,
+                          BluetoothResultHandler* aRes);
 
   /* Authentication */
 
@@ -83,6 +89,10 @@ public:
 
   void LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                   BluetoothResultHandler* aRes);
+
+  /* Energy Information */
+
+  void ReadEnergyInfo(BluetoothResultHandler* aRes);
 
   /* Profile Interfaces */
 
