@@ -58,3 +58,6 @@
     // desired side-effect of preventing our geoip lookup.
     branch.setBoolPref("browser.search.isUS", true);
     branch.setCharPref("browser.search.countryCode", "US");
+
+    // Make sure SelfSupport doesn't hit the network.
+    branch.setCharPref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");

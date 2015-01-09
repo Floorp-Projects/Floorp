@@ -25,6 +25,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
+  "resource:///modules/SelfSupportBackend.jsm");
+
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "ise", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
@@ -521,6 +524,7 @@ Tester.prototype = {
             gBrowser.getNotificationBox(browser).remove();
           }
 
+          SelfSupportBackend.uninit();
           CustomizationTabPreloader.uninit();
           SocialFlyout.unload();
           SocialShare.uninit();

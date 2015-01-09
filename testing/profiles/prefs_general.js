@@ -279,6 +279,9 @@ user_pref("browser.search.highlightCount", 0);
 user_pref("browser.search.isUS", true);
 user_pref("browser.search.countryCode", "US");
 
+// Make sure the self support tab doesn't hit the network.
+user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
+
 user_pref("media.eme.enabled", true);
 
 #if defined(XP_WIN)
