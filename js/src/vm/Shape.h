@@ -1292,12 +1292,6 @@ SHAPE_IS_REMOVED(js::Shape *shape)
     return shape == SHAPE_REMOVED;
 }
 
-inline bool
-SHAPE_IS_LIVE(js::Shape *shape)
-{
-    return shape > SHAPE_REMOVED;
-}
-
 inline void
 SHAPE_FLAG_COLLISION(js::Shape **spp, js::Shape *shape)
 {
