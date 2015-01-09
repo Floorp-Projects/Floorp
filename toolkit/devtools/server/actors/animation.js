@@ -27,9 +27,8 @@
 const {Cu} = require("chrome");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {setInterval, clearInterval} = require("sdk/timers");
-const {ActorClass, Actor,
-       FrontClass, Front,
-       Arg, method, RetVal} = require("devtools/server/protocol");
+const protocol = require("devtools/server/protocol");
+const {ActorClass, Actor, FrontClass, Front, Arg, method, RetVal} = protocol;
 const {NodeActor} = require("devtools/server/actors/inspector");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 
@@ -57,11 +56,12 @@ let AnimationPlayerActor = ActorClass({
    * applied to the same node.
    */
   initialize: function(animationsActor, player, node, playerIndex) {
+    Actor.prototype.initialize.call(this, animationsActor.conn);
+
     this.player = player;
     this.node = node;
     this.playerIndex = playerIndex;
     this.styles = node.ownerDocument.defaultView.getComputedStyle(node);
-    Actor.prototype.initialize.call(this, animationsActor.conn);
   },
 
   destroy: function() {
@@ -175,9 +175,28 @@ let AnimationPlayerActor = ActorClass({
 
   /**
    * Play the player.
+   * This method only returns when the animation has left its pending state.
    */
   play: method(function() {
     this.player.play();
+    return this.player.ready;
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  /**
+   * Simply exposes the player ready promise.
+   *
+   * When an animation is created/paused then played, there's a short time
+   * during which its playState is pending, before being set to running.
+   *
+   * If you either created a new animation using the Web Animations API or
+   * paused/played an existing one, and then want to access the playState, you
+   * might be interested to call this method.
+   * This is especially important for tests.
+   */
+  ready: method(function() {
     return this.player.ready;
   }, {
     request: {},
