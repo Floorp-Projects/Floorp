@@ -5062,7 +5062,7 @@ WorkerPrivate::AddFeature(JSContext* aCx, WorkerFeature* aFeature)
   {
     MutexAutoLock lock(mMutex);
 
-    if (mStatus >= Killing) {
+    if (mStatus >= Canceling) {
       return false;
     }
   }
