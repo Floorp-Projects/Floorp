@@ -88,11 +88,9 @@ const PREF_SECURITY_DELAY_INITIAL = Services.prefs.getIntPref("security.notifica
 function setup() {
   // Disable transitions as they slow the test down and we want to click the
   // mouse buttons in a predictable location.
-  PopupNotifications.transitionsEnabled = false;
 
   registerCleanupFunction(() => {
     PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
-    PopupNotifications.transitionsEnabled = true;
   });
 }
 

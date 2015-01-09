@@ -1,8 +1,9 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-// Tests that disabling the cache for a tab works as it should.
-
+// Common code shared by browser_toolbox_options_disable_cache-*.js
 const TEST_URI = "http://mochi.test:8888/browser/browser/devtools/framework/" +
                  "test/browser_toolbox_options_disable_cache.sjs";
 let tabs = [
@@ -26,39 +27,6 @@ let tabs = [
   desc: "No toolbox",
   startToolbox: false
 }];
-
-add_task(function*() {
-  // Initialise tabs: 1 and 2 with a toolbox, 3 and 4 without.
-  for (let tab of tabs) {
-    yield initTab(tab, tab.startToolbox);
-  }
-
-  // Ensure cache is enabled for all tabs.
-  yield checkCacheStateForAllTabs([true, true, true, true]);
-
-  // Check the checkbox in tab 0 and ensure cache is disabled for tabs 0 and 1.
-  yield setDisableCacheCheckboxChecked(tabs[0], true);
-  yield checkCacheStateForAllTabs([false, false, true, true]);
-
-  // Open toolbox in tab 2 and ensure the cache is then disabled.
-  tabs[2].toolbox = yield gDevTools.showToolbox(tabs[2].target, "options");
-  yield checkCacheEnabled(tabs[2], false);
-
-  // Close toolbox in tab 2 and ensure the cache is enabled again
-  yield tabs[2].toolbox.destroy();
-  tabs[2].target = TargetFactory.forTab(tabs[2].tab);
-  yield checkCacheEnabled(tabs[2], true);
-
-  // Open toolbox in tab 2 and ensure the cache is then disabled.
-  tabs[2].toolbox = yield gDevTools.showToolbox(tabs[2].target, "options");
-  yield checkCacheEnabled(tabs[2], false);
-
-  // Check the checkbox in tab 2 and ensure cache is enabled for all tabs.
-  yield setDisableCacheCheckboxChecked(tabs[2], false);
-  yield checkCacheStateForAllTabs([true, true, true, true]);
-
-  yield finishUp();
-});
 
 function* initTab(tabX, startToolbox) {
   tabX.tab = yield addTab(TEST_URI);

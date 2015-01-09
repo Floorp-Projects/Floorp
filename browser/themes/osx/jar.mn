@@ -7,6 +7,7 @@ browser.jar:
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
   skin/classic/browser/aboutNetError.css                    (../shared/aboutNetError.css)
   skin/classic/browser/aboutNetError_info.svg               (../shared/aboutNetError_info.svg)
+  skin/classic/browser/aboutNetError_alert.svg              (../shared/aboutNetError_alert.svg)
 * skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutWelcomeBack.css                 (../shared/aboutWelcomeBack.css)
