@@ -81,7 +81,7 @@ this.StorageUI = function StorageUI(front, target, panelWin) {
 
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
-  }).catch(Cu.reportError);
+  });
   this.onUpdate = this.onUpdate.bind(this);
   this.front.on("stores-update", this.onUpdate);
 
