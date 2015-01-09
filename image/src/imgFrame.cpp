@@ -130,13 +130,14 @@ static bool AllowedImageAndFrameDimensions(const nsIntSize& aImageSize,
 
 
 imgFrame::imgFrame()
-  : mMutex("imgFrame")
+  : mMonitor("imgFrame")
   , mDecoded(0, 0, 0, 0)
   , mLockCount(0)
   , mTimeout(100)
   , mDisposalMethod(DisposalMethod::NOT_SPECIFIED)
   , mBlendMethod(BlendMethod::OVER)
   , mHasNoAlpha(false)
+  , mAborted(false)
   , mPalettedImageData(nullptr)
   , mPaletteDepth(0)
   , mNonPremult(false)
@@ -155,6 +156,11 @@ imgFrame::imgFrame()
 
 imgFrame::~imgFrame()
 {
+#ifdef DEBUG
+  MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mAborted || IsImageCompleteInternal());
+#endif
+
   moz_free(mPalettedImageData);
   mPalettedImageData = nullptr;
 }
@@ -301,13 +307,17 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     mOptSurface = target->Snapshot();
   }
 
+  // If we reach this point, we should regard ourselves as complete.
+  mDecoded = GetRect();
+  MOZ_ASSERT(IsImageComplete());
+
   return NS_OK;
 }
 
 nsresult imgFrame::Optimize()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mLockCount == 1,
              "Should only optimize when holding the lock exclusively");
 
@@ -455,7 +465,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
                             SourceSurface*     aSurface)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
 
   IntSize size(int32_t(aImageRect.Width()), int32_t(aImageRect.Height()));
   if (!aDoPadding && !aDoPartialDecode) {
@@ -516,7 +526,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
                "We must be allowed to sample *some* source pixels!");
   NS_ASSERTION(!mPalettedImageData, "Directly drawing a paletted image!");
 
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
   nsIntMargin padding(mOffset.y,
                       mImageSize.width - (mOffset.x + mSize.width),
@@ -524,7 +534,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
                       mOffset.x);
 
   bool doPadding = padding != nsIntMargin(0,0,0,0);
-  bool doPartialDecode = !ImageCompleteInternal();
+  bool doPartialDecode = !IsImageCompleteInternal();
 
   if (mSinglePixel && !doPadding && !doPartialDecode) {
     if (mSinglePixelColor.a == 0.0) {
@@ -569,14 +579,14 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
 nsresult
 imgFrame::ImageUpdated(const nsIntRect& aUpdateRect)
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   return ImageUpdatedInternal(aUpdateRect);
 }
 
 nsresult
 imgFrame::ImageUpdatedInternal(const nsIntRect& aUpdateRect)
 {
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
 
   mDecoded.UnionRect(mDecoded, aUpdateRect);
 
@@ -585,14 +595,21 @@ imgFrame::ImageUpdatedInternal(const nsIntRect& aUpdateRect)
   nsIntRect boundsRect(mOffset, nsIntSize(mSize.width, mSize.height));
   mDecoded.IntersectRect(mDecoded, boundsRect);
 
+  // If the image is now complete, wake up anyone who's waiting.
+  if (IsImageCompleteInternal()) {
+    mMonitor.NotifyAll();
+  }
+
   return NS_OK;
 }
 
 void
-imgFrame::Finish(Opacity aFrameOpacity, DisposalMethod aDisposalMethod,
-                 int32_t aRawTimeout, BlendMethod aBlendMethod)
+imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
+                 DisposalMethod aDisposalMethod /* = DisposalMethod::KEEP */,
+                 int32_t aRawTimeout /* = 0 */,
+                 BlendMethod aBlendMethod /* = BlendMethod::OVER */)
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
 
   if (aFrameOpacity == Opacity::OPAQUE) {
@@ -613,7 +630,7 @@ nsIntRect imgFrame::GetRect() const
 int32_t
 imgFrame::GetStride() const
 {
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
 
   if (mImageSurface) {
     return mImageSurface->Stride();
@@ -624,13 +641,13 @@ imgFrame::GetStride() const
 
 SurfaceFormat imgFrame::GetFormat() const
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   return mFormat;
 }
 
 uint32_t imgFrame::GetImageBytesPerRow() const
 {
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
 
   if (mVBuf)
     return mSize.width * BytesPerPixel(mFormat);
@@ -649,14 +666,14 @@ uint32_t imgFrame::GetImageDataLength() const
 void
 imgFrame::GetImageData(uint8_t** aData, uint32_t* aLength) const
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   GetImageDataInternal(aData, aLength);
 }
 
 void
 imgFrame::GetImageDataInternal(uint8_t** aData, uint32_t* aLength) const
 {
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
 
   if (mImageSurface) {
@@ -710,7 +727,7 @@ uint32_t* imgFrame::GetPaletteData() const
 nsresult
 imgFrame::LockImageData()
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
   MOZ_ASSERT(mLockCount >= 0, "Unbalanced locks and unlocks");
   if (mLockCount < 0) {
@@ -742,7 +759,7 @@ nsresult
 imgFrame::Deoptimize()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(!mImageSurface);
 
   if (!mImageSurface) {
@@ -811,7 +828,7 @@ void
 imgFrame::AssertImageDataLocked() const
 {
 #ifdef DEBUG
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
 #endif
 }
@@ -834,12 +851,15 @@ private:
 nsresult
 imgFrame::UnlockImageData()
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
   MOZ_ASSERT(mLockCount > 0, "Unlocking an unlocked image!");
   if (mLockCount <= 0) {
     return NS_ERROR_FAILURE;
   }
+
+  MOZ_ASSERT(mLockCount > 1 || IsImageCompleteInternal() || mAborted,
+             "Should have marked complete or aborted before unlocking");
 
   // If we're about to become unlocked, we don't need to hold on to our data
   // surface anymore. (But we don't need to do anything for paletted images,
@@ -898,14 +918,14 @@ imgFrame::IsSinglePixel() const
 TemporaryRef<SourceSurface>
 imgFrame::GetSurface()
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   return GetSurfaceInternal();
 }
 
 TemporaryRef<SourceSurface>
 imgFrame::GetSurfaceInternal()
 {
-  mMutex.AssertCurrentThreadOwns();
+  mMonitor.AssertCurrentThreadOwns();
 
   if (mOptSurface) {
     if (mOptSurface->IsValid())
@@ -930,7 +950,7 @@ imgFrame::GetSurfaceInternal()
 TemporaryRef<DrawTarget>
 imgFrame::GetDrawTarget()
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
   uint8_t* data;
   uint32_t length;
@@ -947,7 +967,7 @@ imgFrame::GetDrawTarget()
 AnimationData
 imgFrame::GetAnimationData() const
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
 
   uint8_t* data;
@@ -967,7 +987,7 @@ imgFrame::GetAnimationData() const
 ScalingData
 imgFrame::GetScalingData() const
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
   MOZ_ASSERT(!GetIsPaletted(), "GetScalingData can't handle paletted images");
 
@@ -978,17 +998,46 @@ imgFrame::GetScalingData() const
   return ScalingData(data, mSize, GetImageBytesPerRow(), mFormat);
 }
 
-bool
-imgFrame::ImageComplete() const
+void
+imgFrame::Abort()
 {
-  MutexAutoLock lock(mMutex);
-  return ImageCompleteInternal();
+  MonitorAutoLock lock(mMonitor);
+
+  mAborted = true;
+
+  // Wake up anyone who's waiting.
+  if (IsImageCompleteInternal()) {
+    mMonitor.NotifyAll();
+  }
 }
 
 bool
-imgFrame::ImageCompleteInternal() const
+imgFrame::IsImageComplete() const
 {
-  mMutex.AssertCurrentThreadOwns();
+  MonitorAutoLock lock(mMonitor);
+  return IsImageCompleteInternal();
+}
+
+void
+imgFrame::WaitUntilComplete() const
+{
+  MonitorAutoLock lock(mMonitor);
+
+  while (true) {
+    // Return if we're aborted or complete.
+    if (mAborted || IsImageCompleteInternal()) {
+      return;
+    }
+
+    // Not complete yet, so we'll have to wait.
+    mMonitor.Wait();
+  }
+}
+
+bool
+imgFrame::IsImageCompleteInternal() const
+{
+  mMonitor.AssertCurrentThreadOwns();
   return mDecoded.IsEqualInterior(nsIntRect(mOffset.x, mOffset.y,
                                             mSize.width, mSize.height));
 }
@@ -1009,7 +1058,7 @@ size_t
 imgFrame::SizeOfExcludingThis(gfxMemoryLocation aLocation,
                               MallocSizeOf aMallocSizeOf) const
 {
-  MutexAutoLock lock(mMutex);
+  MonitorAutoLock lock(mMonitor);
 
   // aMallocSizeOf is only used if aLocation==gfxMemoryLocation::IN_PROCESS_HEAP.  It
   // should be nullptr otherwise.
