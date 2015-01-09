@@ -1377,6 +1377,8 @@ pref("devtools.inspector.show_pseudo_elements", true);
 pref("devtools.inspector.imagePreviewTooltipSize", 300);
 // Enable user agent style inspection in rule-view
 pref("devtools.inspector.showUserAgentStyles", false);
+// Show all native anonymous content (like controls in <video> tags)
+pref("devtools.inspector.showAllAnonymousContent", false);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
