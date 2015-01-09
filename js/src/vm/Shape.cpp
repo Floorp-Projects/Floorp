@@ -36,9 +36,9 @@ using mozilla::RotateLeft;
 bool
 ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
 {
-    uint32_t sizeLog2 = CeilingLog2Size(entryCount);
+    uint32_t sizeLog2 = CeilingLog2Size(entryCount_);
     uint32_t size = JS_BIT(sizeLog2);
-    if (entryCount >= size - (size >> 2))
+    if (entryCount_ >= size - (size >> 2))
         sizeLog2++;
     if (sizeLog2 < MIN_SIZE_LOG2)
         sizeLog2 = MIN_SIZE_LOG2;
@@ -47,11 +47,11 @@ ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
      * Use rt->calloc for memory accounting and overpressure handling
      * without OOM reporting. See ShapeTable::change.
      */
-    entries = cx->pod_calloc<Shape *>(JS_BIT(sizeLog2));
-    if (!entries)
+    entries_ = cx->pod_calloc<Shape *>(JS_BIT(sizeLog2));
+    if (!entries_)
         return false;
 
-    hashShift = HASH_BITS - sizeLog2;
+    hashShift_ = HASH_BITS - sizeLog2;
     for (Shape::Range<NoGC> r(lastProp); !r.empty(); r.popFront()) {
         Shape &shape = r.front();
         MOZ_ASSERT(cx->isThreadLocal(&shape));
@@ -181,13 +181,13 @@ Hash2(HashNumber hash0, int log2, int shift)
 Shape **
 ShapeTable::search(jsid id, bool adding)
 {
-    MOZ_ASSERT(entries);
+    MOZ_ASSERT(entries_);
     MOZ_ASSERT(!JSID_IS_EMPTY(id));
 
     /* Compute the primary hash address. */
     HashNumber hash0 = HashId(id);
-    HashNumber hash1 = Hash1(hash0, hashShift);
-    Shape **spp = entries + hash1;
+    HashNumber hash1 = Hash1(hash0, hashShift_);
+    Shape **spp = entries_ + hash1;
 
     /* Miss: return space for a new entry. */
     Shape *stored = *spp;
@@ -200,8 +200,8 @@ ShapeTable::search(jsid id, bool adding)
         return spp;
 
     /* Collision: double hash. */
-    int sizeLog2 = HASH_BITS - hashShift;
-    HashNumber hash2 = Hash2(hash0, sizeLog2, hashShift);
+    int sizeLog2 = HASH_BITS - hashShift_;
+    HashNumber hash2 = Hash2(hash0, sizeLog2, hashShift_);
     uint32_t sizeMask = JS_BITMASK(sizeLog2);
 
 #ifdef DEBUG
@@ -224,7 +224,7 @@ ShapeTable::search(jsid id, bool adding)
     for (;;) {
         hash1 -= hash2;
         hash1 &= sizeMask;
-        spp = entries + hash1;
+        spp = entries_ + hash1;
 
         stored = *spp;
         if (SHAPE_IS_FREE(stored))
@@ -255,12 +255,12 @@ ShapeTable::search(jsid id, bool adding)
 void
 ShapeTable::fixupAfterMovingGC()
 {
-    int log2 = HASH_BITS - hashShift;
+    int log2 = HASH_BITS - hashShift_;
     uint32_t size = JS_BIT(log2);
     for (HashNumber i = 0; i < size; i++) {
-        Shape *shape = SHAPE_FETCH(&entries[i]);
+        Shape *shape = SHAPE_FETCH(&entries_[i]);
         if (shape && IsForwarded(shape))
-            SHAPE_STORE_PRESERVING_COLLISION(&entries[i], Forwarded(shape));
+            SHAPE_STORE_PRESERVING_COLLISION(&entries_[i], Forwarded(shape));
     }
 }
 #endif
@@ -268,12 +268,12 @@ ShapeTable::fixupAfterMovingGC()
 bool
 ShapeTable::change(int log2Delta, ExclusiveContext *cx)
 {
-    MOZ_ASSERT(entries);
+    MOZ_ASSERT(entries_);
 
     /*
-     * Grow, shrink, or compress by changing this->entries.
+     * Grow, shrink, or compress by changing this->entries_.
      */
-    int oldlog2 = HASH_BITS - hashShift;
+    int oldlog2 = HASH_BITS - hashShift_;
     int newlog2 = oldlog2 + log2Delta;
     uint32_t oldsize = JS_BIT(oldlog2);
     uint32_t newsize = JS_BIT(newlog2);
@@ -282,10 +282,10 @@ ShapeTable::change(int log2Delta, ExclusiveContext *cx)
         return false;
 
     /* Now that we have newTable allocated, update members. */
-    hashShift = HASH_BITS - newlog2;
-    removedCount = 0;
-    Shape **oldTable = entries;
-    entries = newTable;
+    hashShift_ = HASH_BITS - newlog2;
+    removedCount_ = 0;
+    Shape **oldTable = entries_;
+    entries_ = newTable;
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (Shape **oldspp = oldTable; oldsize != 0; oldspp++) {
@@ -310,9 +310,9 @@ ShapeTable::grow(ExclusiveContext *cx)
     MOZ_ASSERT(needsToGrow());
 
     uint32_t size = capacity();
-    int delta = removedCount < size >> 2;
+    int delta = removedCount_ < size >> 2;
 
-    if (!change(delta, cx) && entryCount + removedCount == size - 1) {
+    if (!change(delta, cx) && entryCount_ + removedCount_ == size - 1) {
         js_ReportOutOfMemory(cx);
         return false;
     }
@@ -599,7 +599,7 @@ NativeObject::addPropertyInternal(ExclusiveContext *cx,
         if (table) {
             /* Store the tree node pointer in the table entry for id. */
             SHAPE_STORE_PRESERVING_COLLISION(spp, static_cast<Shape *>(shape));
-            ++table->entryCount;
+            table->incEntryCount();
 
             /* Pass the table along to the new last property, namely shape. */
             MOZ_ASSERT(&shape->parent->table() == table);
@@ -994,11 +994,11 @@ NativeObject::removeProperty(ExclusiveContext *cx, jsid id_)
 
         if (SHAPE_HAD_COLLISION(*spp)) {
             *spp = SHAPE_REMOVED;
-            ++table.removedCount;
-            --table.entryCount;
+            table.incRemovedCount();
+            table.decEntryCount();
         } else {
             *spp = nullptr;
-            --table.entryCount;
+            table.decEntryCount();
 
 #ifdef DEBUG
             /*
@@ -1026,7 +1026,7 @@ NativeObject::removeProperty(ExclusiveContext *cx, jsid id_)
 
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table.capacity();
-        if (size > ShapeTable::MIN_SIZE && table.entryCount <= size >> 2)
+        if (size > ShapeTable::MIN_SIZE && table.entryCount() <= size >> 2)
             (void) table.change(-1, cx);
     } else {
         /*

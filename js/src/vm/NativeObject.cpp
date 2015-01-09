@@ -174,8 +174,10 @@ js::NativeObject::checkShapeConsistency()
         MOZ_ASSERT(shape->hasTable());
 
         ShapeTable &table = shape->table();
-        for (uint32_t fslot = table.freelist; fslot != SHAPE_INVALID_SLOT;
-             fslot = getSlot(fslot).toPrivateUint32()) {
+        for (uint32_t fslot = table.freeList();
+             fslot != SHAPE_INVALID_SLOT;
+             fslot = getSlot(fslot).toPrivateUint32())
+        {
             MOZ_ASSERT(fslot < slotSpan());
         }
 
@@ -953,7 +955,7 @@ NativeObject::allocSlot(ExclusiveContext *cx, HandleNativeObject obj, uint32_t *
      */
     if (obj->inDictionaryMode()) {
         ShapeTable &table = obj->lastProperty()->table();
-        uint32_t last = table.freelist;
+        uint32_t last = table.freeList();
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
             MOZ_ASSERT(last < slot);
@@ -964,7 +966,7 @@ NativeObject::allocSlot(ExclusiveContext *cx, HandleNativeObject obj, uint32_t *
             *slotp = last;
 
             const Value &vref = obj->getSlot(last);
-            table.freelist = vref.toPrivateUint32();
+            table.setFreeList(vref.toPrivateUint32());
             obj->setSlot(last, UndefinedValue());
             return true;
         }
@@ -989,7 +991,8 @@ NativeObject::freeSlot(uint32_t slot)
     MOZ_ASSERT(slot < slotSpan());
 
     if (inDictionaryMode()) {
-        uint32_t &last = lastProperty()->table().freelist;
+        ShapeTable &table = lastProperty()->table();
+        uint32_t last = table.freeList();
 
         /* Can't afford to check the whole freelist, but let's check the head. */
         MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan() && last != slot);
@@ -1001,7 +1004,7 @@ NativeObject::freeSlot(uint32_t slot)
         if (JSSLOT_FREE(getClass()) <= slot) {
             MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
             setSlot(slot, PrivateUint32Value(last));
-            last = slot;
+            table.setFreeList(slot);
             return;
         }
     }
