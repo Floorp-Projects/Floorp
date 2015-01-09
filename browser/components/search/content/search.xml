@@ -722,6 +722,11 @@
 
       <handler event="click" button="0">
       <![CDATA[
+        // Ignore clicks on the search go button.
+        if (event.originalTarget.getAttribute("anonid") == "search-go-button") {
+          return;
+        }
+
         // Open the suggestions whenever clicking on the search icon or if there
         // is text in the textbox.
         if (event.originalTarget.getAttribute("anonid") == "searchbar-search-button" ||
