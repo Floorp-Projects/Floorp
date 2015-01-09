@@ -658,7 +658,7 @@ static void NT_TimeProc(void *arg)
         if (closesocket(bottom->secret->md.osfd) == SOCKET_ERROR)
         {
             fprintf(stderr, "closesocket failed: %d\n", WSAGetLastError());
-            PR_ASSERT(!"What shall I do?");
+            PR_NOT_REACHED("What shall I do?");
         }
     }
     return;
