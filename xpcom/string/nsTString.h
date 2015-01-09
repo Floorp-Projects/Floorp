@@ -869,7 +869,7 @@ public:
   self_type& operator=(const self_type& aStr);
 
 private:
-  self_type& operator=(const char_type* aData) MOZ_DELETE;
-  self_type& operator=(char_type* aData) MOZ_DELETE;
+  self_type& operator=(const char_type* aData) = delete;
+  self_type& operator=(char_type* aData) = delete;
 };
 

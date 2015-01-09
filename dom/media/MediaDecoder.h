@@ -616,7 +616,7 @@ public:
   virtual bool IsMediaSeekable() MOZ_FINAL MOZ_OVERRIDE;
   // Returns true if seeking is supported on a transport level (e.g. the server
   // supports range requests, we are playing a file, etc.).
-  virtual bool IsTransportSeekable();
+  virtual bool IsTransportSeekable() MOZ_OVERRIDE;
 
   // Return the time ranges that can be seeked into.
   virtual nsresult GetSeekable(dom::TimeRanges* aSeekable);
@@ -749,7 +749,7 @@ public:
   // or equal to aPublishTime.
   void QueueMetadata(int64_t aPublishTime,
                      nsAutoPtr<MediaInfo> aInfo,
-                     nsAutoPtr<MetadataTags> aTags);
+                     nsAutoPtr<MetadataTags> aTags) MOZ_OVERRIDE;
 
   int64_t GetSeekTime() { return mRequestedSeekTarget.mTime; }
   void ResetSeekTime() { mRequestedSeekTarget.Reset(); }
@@ -775,11 +775,11 @@ public:
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                              nsAutoPtr<MetadataTags> aTags);
+                              nsAutoPtr<MetadataTags> aTags) MOZ_OVERRIDE;
 
   // Called when the first audio and/or video from the media file has been loaded
   // by the state machine. Call on the main thread only.
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo);
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo) MOZ_OVERRIDE;
 
   // Called from MetadataLoaded(). Creates audio tracks and adds them to its
   // owner's audio track list, and implies to video tracks respectively.

@@ -193,6 +193,7 @@ class JS_FRIEND_API(GCCellPtr)
     bool isScript() const { return kind() == JSTRACE_SCRIPT; }
     bool isString() const { return kind() == JSTRACE_STRING; }
     bool isSymbol() const { return kind() == JSTRACE_SYMBOL; }
+    bool isShape() const { return kind() == JSTRACE_SHAPE; }
 
     // Conversions to more specific types must match the kind. Access to
     // further refined types is not allowed directly from a GCCellPtr.

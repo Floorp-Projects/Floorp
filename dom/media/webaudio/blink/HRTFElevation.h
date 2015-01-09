@@ -67,8 +67,8 @@ public:
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-    HRTFElevation(const HRTFElevation& other) MOZ_DELETE;
-    void operator=(const HRTFElevation& other) MOZ_DELETE;
+    HRTFElevation(const HRTFElevation& other) = delete;
+    void operator=(const HRTFElevation& other) = delete;
 
     HRTFElevation(HRTFKernelList *kernelListL, int elevation, float sampleRate)
         : m_elevationAngle(elevation)

@@ -62,7 +62,7 @@ public:
 
 private:
   // Hide default constructor.
-  TouchCaret() MOZ_DELETE;
+  TouchCaret() = delete;
 
   ~TouchCaret();
 

@@ -616,7 +616,7 @@ protected:
   };
 
 private:
-  ThisClass& operator=(const ThisClass& aSmartRef) MOZ_DELETE;
+  ThisClass& operator=(const ThisClass& aSmartRef) = delete;
 
 public:
   RawRef operator->() const

@@ -2605,9 +2605,9 @@ class AlwaysTenured
     T operator->() const { return static_cast<T>(ptr_); }
 
   private:
-    AlwaysTenured() MOZ_DELETE;
-    AlwaysTenured(const AlwaysTenured<T> &) MOZ_DELETE;
-    AlwaysTenured<T> &operator=(const AlwaysTenured<T> &) MOZ_DELETE;
+    AlwaysTenured() = delete;
+    AlwaysTenured(const AlwaysTenured<T> &) = delete;
+    AlwaysTenured<T> &operator=(const AlwaysTenured<T> &) = delete;
 };
 
 typedef AlwaysTenured<JSObject*> AlwaysTenuredObject;

@@ -147,7 +147,7 @@ protected:
 private:
 
   void
-  DescribeGCThing(bool aIsMarked, void* aThing, JSGCTraceKind aTraceKind,
+  DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
                   nsCycleCollectionTraversalCallback& aCb) const;
 
   virtual bool
@@ -158,7 +158,7 @@ private:
   }
 
   void
-  NoteGCThingJSChildren(void* aThing, JSGCTraceKind aTraceKind,
+  NoteGCThingJSChildren(JS::GCCellPtr aThing,
                         nsCycleCollectionTraversalCallback& aCb) const;
 
   void
@@ -178,8 +178,7 @@ private:
   };
 
   void
-  TraverseGCThing(TraverseSelect aTs, void* aThing,
-                  JSGCTraceKind aTraceKind,
+  TraverseGCThing(TraverseSelect aTs, JS::GCCellPtr aThing,
                   nsCycleCollectionTraversalCallback& aCb);
 
   void

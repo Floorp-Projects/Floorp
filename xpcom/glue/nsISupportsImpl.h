@@ -339,8 +339,8 @@ public:
 
   static const bool isThreadSafe = false;
 private:
-  nsrefcnt operator++(int) MOZ_DELETE;
-  nsrefcnt operator--(int) MOZ_DELETE;
+  nsrefcnt operator++(int) = delete;
+  nsrefcnt operator--(int) = delete;
   nsrefcnt mValue;
 };
 
@@ -365,8 +365,8 @@ public:
 
   static const bool isThreadSafe = true;
 private:
-  nsrefcnt operator++(int) MOZ_DELETE;
-  nsrefcnt operator--(int) MOZ_DELETE;
+  nsrefcnt operator++(int) = delete;
+  nsrefcnt operator--(int) = delete;
   // In theory, RelaseAcquire consistency (but no weaker) is sufficient for
   // the counter. Making it weaker could speed up builds on ARM (but not x86),
   // but could break pre-existing code that assumes sequential consistency.

@@ -561,8 +561,8 @@ class HeapPtr : public BarrieredBase<T>
      * and are deleted here. Please note that not all containers support move
      * semantics, so this does not completely prevent invalid uses.
      */
-    HeapPtr(HeapPtr<T> &&) MOZ_DELETE;
-    HeapPtr<T> &operator=(HeapPtr<T> &&) MOZ_DELETE;
+    HeapPtr(HeapPtr<T> &&) = delete;
+    HeapPtr<T> &operator=(HeapPtr<T> &&) = delete;
 };
 
 /*
@@ -844,7 +844,7 @@ class HeapSlot : public BarrieredBase<Value>
         Element = 1
     };
 
-    explicit HeapSlot() MOZ_DELETE;
+    explicit HeapSlot() = delete;
 
     explicit HeapSlot(NativeObject *obj, Kind kind, uint32_t slot, const Value &v)
       : BarrieredBase<Value>(v)

@@ -93,7 +93,6 @@ class JitFrameIterator
     FrameType type_;
     uint8_t *returnAddressToFp_;
     size_t frameSize_;
-    ExecutionMode mode_;
 
   private:
     mutable const SafepointIndex *cachedSafepointIndex_;
@@ -103,7 +102,7 @@ class JitFrameIterator
 
   public:
     explicit JitFrameIterator();
-    explicit JitFrameIterator(ThreadSafeContext *cx);
+    explicit JitFrameIterator(JSContext *cx);
     explicit JitFrameIterator(const ActivationIterator &activations);
 
     // Current frame information.
@@ -605,9 +604,9 @@ class InlineFrameIterator
                                 bool *hasCallObj = nullptr) const;
 
   public:
-    InlineFrameIterator(ThreadSafeContext *cx, const JitFrameIterator *iter);
+    InlineFrameIterator(JSContext *cx, const JitFrameIterator *iter);
     InlineFrameIterator(JSRuntime *rt, const JitFrameIterator *iter);
-    InlineFrameIterator(ThreadSafeContext *cx, const InlineFrameIterator *iter);
+    InlineFrameIterator(JSContext *cx, const InlineFrameIterator *iter);
 
     bool more() const {
         return frame_ && framesRead_ < frameCount_;
@@ -643,7 +642,7 @@ class InlineFrameIterator
     }
 
     template <class ArgOp, class LocalOp>
-    void readFrameArgsAndLocals(ThreadSafeContext *cx, ArgOp &argOp, LocalOp &localOp,
+    void readFrameArgsAndLocals(JSContext *cx, ArgOp &argOp, LocalOp &localOp,
                                 JSObject **scopeChain, bool *hasCallObj, Value *rval,
                                 ArgumentsObject **argsObj, Value *thisv,
                                 ReadFrameArgsBehavior behavior,
@@ -800,8 +799,8 @@ class InlineFrameIterator
     }
 
   private:
-    InlineFrameIterator() MOZ_DELETE;
-    InlineFrameIterator(const InlineFrameIterator &iter) MOZ_DELETE;
+    InlineFrameIterator() = delete;
+    InlineFrameIterator(const InlineFrameIterator &iter) = delete;
 };
 
 } // namespace jit

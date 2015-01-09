@@ -24,7 +24,7 @@ class SVGSVGElement;
 class SVGFragmentIdentifier
 {
   // To prevent the class being instantiated
-  SVGFragmentIdentifier() MOZ_DELETE;
+  SVGFragmentIdentifier() = delete;
 
 public:
   /**

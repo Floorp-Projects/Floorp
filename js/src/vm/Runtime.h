@@ -51,7 +51,7 @@
 namespace js {
 
 class PerThreadData;
-struct ThreadSafeContext;
+class ExclusiveContext;
 class AutoKeepAtoms;
 #ifdef JS_TRACE_LOGGING
 class TraceLoggerThread;
@@ -65,13 +65,13 @@ extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
 struct DtoaState;
 
 extern void
-js_ReportOutOfMemory(js::ThreadSafeContext *cx);
+js_ReportOutOfMemory(js::ExclusiveContext *cx);
 
 extern void
-js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
+js_ReportAllocationOverflow(js::ExclusiveContext *maybecx);
 
 extern void
-js_ReportOverRecursed(js::ThreadSafeContext *cx);
+js_ReportOverRecursed(js::ExclusiveContext *cx);
 
 namespace js {
 
@@ -477,8 +477,7 @@ void DisableExtraThreads();
  * Encapsulates portions of the runtime/context that are tied to a
  * single active thread.  Instances of this structure can occur for
  * the main thread as |JSRuntime::mainThread|, for select operations
- * performed off thread, such as parsing, and for Parallel JS worker
- * threads.
+ * performed off thread, such as parsing.
  */
 class PerThreadData : public PerThreadDataFriendFields
 {
@@ -1540,8 +1539,8 @@ class MOZ_STACK_CLASS AutoLockGC
     mozilla::DebugOnly<bool> wasUnlocked_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoLockGC(const AutoLockGC&) MOZ_DELETE;
-    AutoLockGC& operator=(const AutoLockGC&) MOZ_DELETE;
+    AutoLockGC(const AutoLockGC&) = delete;
+    AutoLockGC& operator=(const AutoLockGC&) = delete;
 };
 
 class MOZ_STACK_CLASS AutoUnlockGC
@@ -1563,8 +1562,8 @@ class MOZ_STACK_CLASS AutoUnlockGC
     AutoLockGC& lock;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoUnlockGC(const AutoUnlockGC&) MOZ_DELETE;
-    AutoUnlockGC& operator=(const AutoUnlockGC&) MOZ_DELETE;
+    AutoUnlockGC(const AutoUnlockGC&) = delete;
+    AutoUnlockGC& operator=(const AutoUnlockGC&) = delete;
 };
 
 class MOZ_STACK_CLASS AutoKeepAtoms

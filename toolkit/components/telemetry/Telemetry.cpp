@@ -254,8 +254,8 @@ public:
 
   private:
     // Force move constructor
-    AnnotationInfo(const AnnotationInfo& aOther) MOZ_DELETE;
-    void operator=(const AnnotationInfo& aOther) MOZ_DELETE;
+    AnnotationInfo(const AnnotationInfo& aOther) = delete;
+    void operator=(const AnnotationInfo& aOther) = delete;
   };
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration,

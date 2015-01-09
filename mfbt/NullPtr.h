@@ -55,7 +55,7 @@ namespace mozilla {
  *   template<typename U>
  *   void foo(U,
  *            typename EnableIf<!IsNullPointer<U>::value, int>::Type dummy = 0)
- *   MOZ_DELETE;
+ *   = delete;
  *
  * The exact details of how set up the SFINAE bits vary on a case-by-case basis.
  * If you need help with this (and unless you've internalized way more sadmaking

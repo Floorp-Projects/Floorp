@@ -267,6 +267,7 @@ export_cert localhostAndExampleCom default-ee.der
 make_EE ocspOtherEndEntity 'CN=Other Cert' testCA "localhost,*.example.com"
 
 make_INT testINT 'CN=Test Intermediate' testCA
+export_cert testINT test-int.der
 make_EE ocspEEWithIntermediate 'CN=Test End-entity with Intermediate' testINT "localhost,*.example.com"
 make_EE expired 'CN=Expired Test End-entity' testCA "expired.example.com" "-w -400"
 export_cert expired expired-ee.der
@@ -279,6 +280,7 @@ make_EE selfsigned 'CN=Self-signed Test End-entity' testCA "selfsigned.example.c
 # get regenerated. Either way, deletedINT will then be removed again.
 make_INT deletedINT 'CN=Test Intermediate to delete' testCA
 make_EE unknownissuer 'CN=Test End-entity from unknown issuer' deletedINT "unknownissuer.example.com"
+export_cert unknownissuer unknown-issuer.der
 
 $RUN_MOZILLA $CERTUTIL -d $DB_ARGUMENT -D -n deletedINT
 
@@ -319,5 +321,9 @@ make_EE_with_nsCertType nsCertTypeCriticalWithExtKeyUsage 'CN=nsCertType Critica
 make_V1 v1Cert 'CN=V1 Cert' testCA
 export_cert v1Cert v1Cert.der
 make_EE eeIssuedByV1Cert 'CN=EE Issued by V1 Cert' v1Cert "localhost,*.example.com"
+
+# Make a valid EE using testINT to test OneCRL revocation of testINT
+make_EE eeIssuedByIntermediate 'CN=EE issued by intermediate' testINT "localhost"
+export_cert eeIssuedByIntermediate test-int-ee.der
 
 cleanup

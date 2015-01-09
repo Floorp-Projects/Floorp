@@ -47,20 +47,8 @@ function getDefaultEngineName() {
   return Services.prefs.getComplexValue(pref, nsIPLS).data;
 }
 
-function waitForNotification(aExpectedData) {
-  let deferred = Promise.defer();
-
-  const SEARCH_SERVICE_TOPIC = "browser-search-service";
-  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-    if (aData != aExpectedData)
-      return;
-
-    Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
-    deferred.resolve();
-  }, SEARCH_SERVICE_TOPIC, false);
-
-  return deferred.promise;
-}
+// waitForSearchNotification is in head_search.js
+let waitForNotification = waitForSearchNotification;
 
 function asyncInit() {
   let deferred = Promise.defer();

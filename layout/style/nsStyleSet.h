@@ -371,8 +371,8 @@ class nsStyleSet
   nsIStyleRule* InitialStyleRule();
 
  private:
-  nsStyleSet(const nsStyleSet& aCopy) MOZ_DELETE;
-  nsStyleSet& operator=(const nsStyleSet& aCopy) MOZ_DELETE;
+  nsStyleSet(const nsStyleSet& aCopy) = delete;
+  nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
 
   // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
   void GCRuleTrees();

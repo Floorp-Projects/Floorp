@@ -41,7 +41,8 @@ How to prepare a new release
 . Run  src/tools/chktrcmp.py  and check  that there  are no  undefined
   trace_XXXX macros.
 
-. Tag the git repositories (freetype2, freetype2-demos) with
+. After pushing the new release,  tag the git repositories (freetype2,
+  freetype2-demos) with
 
     git tag VER-<version> -m "" -u <committer>
 
@@ -188,7 +189,7 @@ How to prepare a new release
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2005-2007, 2009, 2011-2013 by
+Copyright 2003, 2005-2007, 2009, 2011-2014 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

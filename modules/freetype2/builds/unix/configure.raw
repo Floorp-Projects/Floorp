@@ -17,7 +17,7 @@ AC_CONFIG_SRCDIR([ftconfig.in])
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='17:2:11'
+version_info='17:4:11'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -437,7 +437,7 @@ if test x"$with_png" = xyes -o x"$with_png" = xauto; then
     else
       # fall back to config script.
       AC_MSG_CHECKING([for libpng-config])
-      if which libpng-config > /dev/null; then
+      if which libpng-config > /dev/null 2>&1; then
         LIBPNG_CFLAGS=`libpng-config --cflags`
         LIBPNG_LIBS=`libpng-config --ldflags`
         libpng_libpriv=`libpng-config --static --ldflags`
@@ -656,7 +656,7 @@ else
 fi
 
 
-# Whether to use FileManager which is deprecated since Mac OS X 10.4.
+# Whether to use FileManager, which is deprecated since Mac OS X 10.4.
 
 AC_ARG_WITH([fsspec],
   AS_HELP_STRING([--with-fsspec],
@@ -765,7 +765,7 @@ elif test x$with_old_mac_fonts = xyes -a x$with_fsref != x; then
 fi
 
 
-# Whether to use QuickDraw API in ToolBox which is deprecated since
+# Whether to use QuickDraw API in ToolBox, which is deprecated since
 # Mac OS X 10.4.
 
 AC_ARG_WITH([quickdraw-toolbox],
@@ -807,7 +807,7 @@ elif test x$with_old_mac_fonts = xyes -a x$with_quickdraw_toolbox != x; then
 fi
 
 
-# Whether to use QuickDraw API in Carbon which is deprecated since
+# Whether to use QuickDraw API in Carbon, which is deprecated since
 # Mac OS X 10.4.
 
 AC_ARG_WITH([quickdraw-carbon],
@@ -937,21 +937,6 @@ LIBS_PRIVATE=`echo "$LIBS_PRIVATE"  \
                     -e 's/  *$//'   \
                     -e 's/  */ /g'`
 
-LIBS_CONFIG="-lfreetype      \
-             $ZLIB_LIBS      \
-             $BZIP2_LIBS     \
-             $LIBPNG_LIBS    \
-             $HARFBUZZ_LIBS  \
-             $ft2_extra_libs"
-# remove -L/usr/lib and -L/usr/lib64 since `freetype-config' adds them later
-# on if necessary; also beautify
-LIBS_CONFIG=`echo "$LIBS_CONFIG"                \
-             | sed -e 's|-L */usr/lib64/* | |g' \
-                   -e 's|-L */usr/lib/* | |g'   \
-                   -e 's/^  *//'                \
-                   -e 's/  *$//'                \
-                   -e 's/  */ /g'`
-
 LIBSSTATIC_CONFIG="-lfreetype              \
                    $zlib_libstaticconf     \
                    $bzip2_libstaticconf    \
@@ -971,7 +956,6 @@ LIBSSTATIC_CONFIG=`echo "$LIBSSTATIC_CONFIG"          \
 AC_SUBST([ftmac_c])
 AC_SUBST([REQUIRES_PRIVATE])
 AC_SUBST([LIBS_PRIVATE])
-AC_SUBST([LIBS_CONFIG])
 AC_SUBST([LIBSSTATIC_CONFIG])
 
 AC_SUBST([hardcode_libdir_flag_spec])

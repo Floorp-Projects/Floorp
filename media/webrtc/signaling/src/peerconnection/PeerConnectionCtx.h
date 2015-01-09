@@ -62,8 +62,8 @@ class PeerConnectionCtx {
 
   PeerConnectionCtx() :  mGMPReady(false) {}
   // This is a singleton, so don't copy construct it, etc.
-  PeerConnectionCtx(const PeerConnectionCtx& other) MOZ_DELETE;
-  void operator=(const PeerConnectionCtx& other) MOZ_DELETE;
+  PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
+  void operator=(const PeerConnectionCtx& other) = delete;
   virtual ~PeerConnectionCtx();
 
   nsresult Initialize();

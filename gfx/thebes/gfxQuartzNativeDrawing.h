@@ -55,8 +55,8 @@ public:
 
 private:
     // don't allow copying via construction or assignment
-    gfxQuartzNativeDrawing(const gfxQuartzNativeDrawing&) MOZ_DELETE;
-    const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&) MOZ_DELETE;
+    gfxQuartzNativeDrawing(const gfxQuartzNativeDrawing&) = delete;
+    const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&) = delete;
 
     // Final destination context
     mozilla::RefPtr<DrawTarget> mDrawTarget;

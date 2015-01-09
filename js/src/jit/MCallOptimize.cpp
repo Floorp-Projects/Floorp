@@ -208,28 +208,28 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineTypedArrayLength(callInfo);
 
     // TypedObject intrinsics.
-    if (native == intrinsic_ObjectIsTypedObject)
+    if (native == js::ObjectIsTypedObject)
         return inlineHasClass(callInfo,
                               &OutlineTransparentTypedObject::class_,
                               &OutlineOpaqueTypedObject::class_,
                               &InlineTransparentTypedObject::class_,
                               &InlineOpaqueTypedObject::class_);
-    if (native == intrinsic_ObjectIsTransparentTypedObject)
+    if (native == js::ObjectIsTransparentTypedObject)
         return inlineHasClass(callInfo,
                               &OutlineTransparentTypedObject::class_,
                               &InlineTransparentTypedObject::class_);
-    if (native == intrinsic_ObjectIsOpaqueTypedObject)
+    if (native == js::ObjectIsOpaqueTypedObject)
         return inlineHasClass(callInfo,
                               &OutlineOpaqueTypedObject::class_,
                               &InlineOpaqueTypedObject::class_);
-    if (native == intrinsic_ObjectIsTypeDescr)
+    if (native == js::ObjectIsTypeDescr)
         return inlineObjectIsTypeDescr(callInfo);
-    if (native == intrinsic_TypeDescrIsSimpleType)
+    if (native == js::TypeDescrIsSimpleType)
         return inlineHasClass(callInfo,
                               &ScalarTypeDescr::class_, &ReferenceTypeDescr::class_);
-    if (native == intrinsic_TypeDescrIsArrayType)
+    if (native == js::TypeDescrIsArrayType)
         return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
-    if (native == intrinsic_SetTypedObjectOffset)
+    if (native == js::SetTypedObjectOffset)
         return inlineSetTypedObjectOffset(callInfo);
 
     // Testing Functions

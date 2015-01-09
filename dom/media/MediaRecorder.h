@@ -107,7 +107,7 @@ public:
 protected:
   virtual ~MediaRecorder();
 
-  MediaRecorder& operator = (const MediaRecorder& x) MOZ_DELETE;
+  MediaRecorder& operator = (const MediaRecorder& x) = delete;
   // Create dataavailable event with Blob data and it runs in main thread
   nsresult CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob);
   // Creating a simple event to notify UA simple event.
@@ -119,7 +119,7 @@ protected:
   // Set encoded MIME type.
   void SetMimeType(const nsString &aMimeType);
 
-  MediaRecorder(const MediaRecorder& x) MOZ_DELETE; // prevent bad usage
+  MediaRecorder(const MediaRecorder& x) = delete; // prevent bad usage
   // Remove session pointer.
   void RemoveSession(Session* aSession);
   // Functions for Session to query input source info.

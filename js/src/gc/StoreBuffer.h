@@ -158,7 +158,7 @@ class StoreBuffer
         }
 
       private:
-        MonoTypeBuffer &operator=(const MonoTypeBuffer& other) MOZ_DELETE;
+        MonoTypeBuffer &operator=(const MonoTypeBuffer& other) = delete;
     };
 
     struct GenericBuffer
@@ -215,7 +215,7 @@ class StoreBuffer
         }
 
       private:
-        GenericBuffer &operator=(const GenericBuffer& other) MOZ_DELETE;
+        GenericBuffer &operator=(const GenericBuffer& other) = delete;
     };
 
     template <typename Edge>

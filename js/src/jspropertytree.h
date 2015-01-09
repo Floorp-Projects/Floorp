@@ -97,7 +97,6 @@ class PropertyTree
     JSCompartment *compartment() { return compartment_; }
 
     Shape *getChild(ExclusiveContext *cx, Shape *parent, StackShape &child);
-    Shape *lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape &child);
 };
 
 } /* namespace js */

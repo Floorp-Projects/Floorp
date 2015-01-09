@@ -1800,9 +1800,9 @@ public:
     IFACEMETHODIMP GetCurrentFontFile(IDWriteFontFile ** fontFile);
 
 private:
-    BundledFontFileEnumerator() MOZ_DELETE;
-    BundledFontFileEnumerator(const BundledFontFileEnumerator&) MOZ_DELETE;
-    BundledFontFileEnumerator& operator=(const BundledFontFileEnumerator&) MOZ_DELETE;
+    BundledFontFileEnumerator() = delete;
+    BundledFontFileEnumerator(const BundledFontFileEnumerator&) = delete;
+    BundledFontFileEnumerator& operator=(const BundledFontFileEnumerator&) = delete;
 
     nsRefPtr<IDWriteFactory>      mFactory;
 
@@ -1868,8 +1868,8 @@ public:
         IDWriteFontFileEnumerator **aFontFileEnumerator);
 
 private:
-    BundledFontLoader(const BundledFontLoader&) MOZ_DELETE;
-    BundledFontLoader& operator=(const BundledFontLoader&) MOZ_DELETE;
+    BundledFontLoader(const BundledFontLoader&) = delete;
+    BundledFontLoader& operator=(const BundledFontLoader&) = delete;
 };
 
 IFACEMETHODIMP

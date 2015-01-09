@@ -46,30 +46,42 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
                   void* aReadyTime)
 {
   dom::AnimationPlayer* player = aKey->GetKey();
-
-  // For animations that are waiting until their first frame has rendered
-  // before starting, we record the moment when they finish painting
-  // as the "ready time" and make any pending layer animations start at
-  // that time.
-  //
-  // Here we fast-forward the player's timeline to the same "ready time" and
-  // then tell the player to start at the timeline's current time.
-  //
-  // Redundant calls to FastForward with the same ready time are ignored by
-  // AnimationTimeline.
   dom::AnimationTimeline* timeline = player->Timeline();
-  timeline->FastForward(*static_cast<const TimeStamp*>(aReadyTime));
 
-  player->StartNow();
+  // When the timeline's refresh driver is under test control, its values
+  // have no correspondance to wallclock times so we shouldn't try to convert
+  // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
+  // animation player will be started when the refresh driver is next
+  // advanced since this will trigger a call to StartPendingPlayersNow.
+  if (timeline->IsUnderTestControl()) {
+    return PL_DHASH_NEXT;
+  }
 
+  Nullable<TimeDuration> readyTime =
+    timeline->ToTimelineTime(*static_cast<const TimeStamp*>(aReadyTime));
+  player->StartOnNextTick(readyTime);
+
+  return PL_DHASH_REMOVE;
+}
+
+void
+PendingPlayerTracker::StartPendingPlayersOnNextTick(const TimeStamp& aReadyTime)
+{
+  mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
+                                   const_cast<TimeStamp*>(&aReadyTime));
+}
+
+PLDHashOperator
+StartPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
+{
+  aKey->GetKey()->StartNow();
   return PL_DHASH_NEXT;
 }
 
 void
-PendingPlayerTracker::StartPendingPlayers(const TimeStamp& aReadyTime)
+PendingPlayerTracker::StartPendingPlayersNow()
 {
-  mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
-                                   const_cast<TimeStamp*>(&aReadyTime));
+  mPlayPendingSet.EnumerateEntries(StartPlayerNow, nullptr);
   mPlayPendingSet.Clear();
 }
 

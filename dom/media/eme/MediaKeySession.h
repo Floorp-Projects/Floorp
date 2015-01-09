@@ -43,7 +43,7 @@ public:
                   SessionType aSessionType,
                   ErrorResult& aRv);
 
-  void Init(const nsAString& aSessionId);
+  void SetSessionId(const nsAString& aSessionId);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
@@ -90,6 +90,9 @@ public:
 
   bool IsClosed() const;
 
+  // Process-unique identifier.
+  uint32_t Token() const;
+
 private:
   ~MediaKeySession();
 
@@ -100,6 +103,7 @@ private:
   const nsString mKeySystem;
   nsString mSessionId;
   const SessionType mSessionType;
+  const uint32_t mToken;
   bool mIsClosed;
   bool mUninitialized;
 };

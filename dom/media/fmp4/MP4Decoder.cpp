@@ -16,6 +16,7 @@
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
+#include "WMFDecoderModule.h"
 #endif
 #ifdef MOZ_FFMPEG
 #include "FFmpegRuntimeLinker.h"
@@ -63,6 +64,12 @@ IsSupportedAudioCodec(const nsAString& aCodec,
   aOutContainsAAC = aCodec.EqualsASCII("mp4a.40.2") ||
                     aCodec.EqualsASCII("mp4a.40.5");
   if (aOutContainsAAC) {
+#ifdef XP_WIN
+    if (!Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") &&
+        !WMFDecoderModule::HasAAC()) {
+      return false;
+    }
+#endif
     return true;
   }
 #ifndef MOZ_GONK_MEDIACODEC // B2G doesn't support MP3 in MP4 yet.
@@ -84,6 +91,13 @@ IsSupportedH264Codec(const nsAString& aCodec)
   if (!ExtractH264CodecDetails(aCodec, profile, level)) {
     return false;
   }
+
+#ifdef XP_WIN
+  if (!Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") &&
+      !WMFDecoderModule::HasH264()) {
+    return false;
+  }
+#endif
 
   // Just assume what we can play on all platforms the codecs/formats that
   // WMF can play, since we don't have documentation about what other

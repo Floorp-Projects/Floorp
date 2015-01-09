@@ -167,8 +167,8 @@ class LifoAlloc
     size_t      curSize_;
     size_t      peakSize_;
 
-    void operator=(const LifoAlloc &) MOZ_DELETE;
-    LifoAlloc(const LifoAlloc &) MOZ_DELETE;
+    void operator=(const LifoAlloc &) = delete;
+    LifoAlloc(const LifoAlloc &) = delete;
 
     // Return a BumpChunk that can perform an allocation of at least size |n|
     // and add it to the chain appropriately.

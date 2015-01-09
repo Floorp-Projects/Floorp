@@ -134,34 +134,34 @@ protected:
 
 public:
   virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
-  virtual nsresult ResetDecode();
-  virtual bool DecodeAudioData();
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
+  virtual nsresult ResetDecode() MOZ_OVERRIDE;
+  virtual bool DecodeAudioData() MOZ_OVERRIDE;
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold);
+                                int64_t aTimeThreshold) MOZ_OVERRIDE;
 
-  virtual bool HasAudio()
+  virtual bool HasAudio() MOZ_OVERRIDE
   {
     NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
     return mHasAudio;
   }
 
-  virtual bool HasVideo()
+  virtual bool HasVideo() MOZ_OVERRIDE
   {
     NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
     return mHasVideo;
   }
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags);
+                                MetadataTags** aTags) MOZ_OVERRIDE;
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime) MOZ_OVERRIDE;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
-                                 int64_t aOffset);
-  virtual int64_t GetEvictionOffset(double aTime);
+                                 int64_t aOffset) MOZ_OVERRIDE;
+  virtual int64_t GetEvictionOffset(double aTime) MOZ_OVERRIDE;
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 

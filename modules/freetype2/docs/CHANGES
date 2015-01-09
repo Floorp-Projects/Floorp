@@ -1,11 +1,92 @@
 
+CHANGES BETWEEN 2.5.4 and 2.5.5
+
+  I. IMPORTANT BUG FIXES
+
+    - Handling of  uncompressed PCF files works again (bug  introduced
+      in version 2.5.4).
+
+
+======================================================================
+
+CHANGES BETWEEN 2.5.3 and 2.5.4
+
+  I. IMPORTANT BUG FIXES
+
+    - A   variant  of   vulnerability  CVE-2014-2240   was  identified
+      (cf.  http://savannah.nongnu.org/bugs/?43661) and  fixed in  the
+      new CFF driver.  All users should upgrade.
+
+    - The new auto-hinter code using HarfBuzz crashed for some invalid
+      fonts.
+
+    - Many fixes to better protect against malformed input.
+
+
+  II. IMPORTANT CHANGES
+
+    - Full auto-hinter support of the Devanagari script.
+
+    - Experimental auto-hinter support of the Telugu script.
+
+    - CFF stem darkening behaviour can now be controlled at build time
+      using the eight macros
+
+        CFF_CONFIG_OPTION_DARKENING_PARAMETER_{X,Y}{1,2,3,4}    .
+
+    - Some fields in the `FT_Bitmap'  structure have been changed from
+      signed to unsigned type, which better reflects the actual usage.
+      It  is also  an additional  means to  protect against  malformed
+      input.
+
+      This  change doesn't  break  the ABI;  however,  it might  cause
+      compiler warnings.
+
+
+  III. MISCELLANEOUS
+
+    - Improvements to  the auto-hinter's algorithm to  recognize stems
+      and local extrema.
+
+    - Function `FT_Get_SubGlyph_Info' always returned an error even in
+      case of success.
+
+    - Version  2.5.1 introduced  major bugs  in  the cjk  part of  the
+      auto-hinter, which are now fixed.
+
+    - The  `FT_Sfnt_Tag'  enumeration  values  have  been  changed  to
+      uppercase,  e.g.  `FT_SFNT_HEAD'.   The lowercase  variants  are
+      deprecated.    This  is   for  orthogonality   with  all   other
+      enumeration (and enumeration-like) values in FreeType.
+
+    - `cmake' now supports builds of FreeType as an OS X framework and
+      for iOS.
+
+    - Improved project files for vc2010, introducing a property file.
+
+    - The  documentation generator  for  the API  reference  has  been
+      updated to produce  better HTML code (with proper  CSS).  At the
+      same time, the documentation got a better structure.
+
+    - The FT_LOAD_BITMAP_CROP flag is obsolete;  it is not used by any
+      driver.
+
+    - The  TrueType  DELTAP[123]  bytecode instructions  now  work  in
+      subpixel hinting  mode as described in  the ClearType whitepaper
+      (i.e., for touched points in the non-subpixel direction).
+
+    - Many small improvements to the internal arithmetic routines.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.5.2 and 2.5.3
 
   I. IMPORTANT BUG FIXES
 
-    - A vulnerability was  identified and fixed in the  new CFF driver
-      (cf. http://savannah.nongnu.org/bugs/?41697;  it doesn't  have a
-      CVE number yet).  All users should upgrade.
+    - A vulnerability (CVE-2014-2240) was  identified and fixed in the
+      new  CFF  driver  (cf.  http://savannah.nongnu.org/bugs/?41697).
+      All users should upgrade.
 
     - More  bug  fixes related  to  correct  positioning of  composite
       glyphs.
@@ -260,6 +341,9 @@ CHANGES BETWEEN 2.4.12 and 2.5
     - The `ttdebug' program has been further improved.  In particular,
       it accepts a new command line  option `-H' to select the hinting
       engine.
+
+    - `ftdump's verbose option has been renamed to `-V'.  For all demo
+      programs, `-v' now shows version information.
 
     - Another round of TrueType subpixel hinting fixes.
 

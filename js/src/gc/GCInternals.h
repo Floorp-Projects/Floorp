@@ -49,8 +49,8 @@ class AutoTraceSession
     JSRuntime *runtime;
 
   private:
-    AutoTraceSession(const AutoTraceSession&) MOZ_DELETE;
-    void operator=(const AutoTraceSession&) MOZ_DELETE;
+    AutoTraceSession(const AutoTraceSession&) = delete;
+    void operator=(const AutoTraceSession&) = delete;
 
     HeapState prevState;
 };

@@ -23,7 +23,7 @@ InputListAutoComplete.prototype = {
     // formHistoryResult will be null if form autocomplete is disabled.
     // We still want the list values to display.
     if (formHistoryResult) {
-      entries = formHistoryResult.wrappedJSObject.entries;
+      let entries = formHistoryResult.wrappedJSObject.entries;
       for (let i = 0; i < entries.length; ++i) {
         historyResults.push(entries[i].text);
         historyComments.push("");

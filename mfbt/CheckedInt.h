@@ -668,11 +668,11 @@ private:
    * The !=, <, <=, >, >= operators are disabled:
    * see the comment on operator==.
    */
-  template<typename U> bool operator !=(U aOther) const MOZ_DELETE;
-  template<typename U> bool operator < (U aOther) const MOZ_DELETE;
-  template<typename U> bool operator <=(U aOther) const MOZ_DELETE;
-  template<typename U> bool operator > (U aOther) const MOZ_DELETE;
-  template<typename U> bool operator >=(U aOther) const MOZ_DELETE;
+  template<typename U> bool operator !=(U aOther) const = delete;
+  template<typename U> bool operator < (U aOther) const = delete;
+  template<typename U> bool operator <=(U aOther) const = delete;
+  template<typename U> bool operator > (U aOther) const = delete;
+  template<typename U> bool operator >=(U aOther) const = delete;
 };
 
 #define MOZ_CHECKEDINT_BASIC_BINARY_OPERATOR(NAME, OP)                        \

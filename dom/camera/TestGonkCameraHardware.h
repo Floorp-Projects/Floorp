@@ -65,8 +65,8 @@ protected:
   void InjectFakeSystemFailure();
 
 private:
-  TestGonkCameraHardware(const TestGonkCameraHardware&) MOZ_DELETE;
-  TestGonkCameraHardware& operator=(const TestGonkCameraHardware&) MOZ_DELETE;
+  TestGonkCameraHardware(const TestGonkCameraHardware&) = delete;
+  TestGonkCameraHardware& operator=(const TestGonkCameraHardware&) = delete;
 };
 
 #define IsTestCase(test)  IsTestCaseInternal((test), __FILE__, __LINE__)

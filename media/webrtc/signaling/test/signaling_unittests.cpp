@@ -270,25 +270,25 @@ public:
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_IMETHODIMP OnCreateOfferSuccess(const char* offer, ER&);
-  NS_IMETHODIMP OnCreateOfferError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP OnCreateAnswerSuccess(const char* answer, ER&);
-  NS_IMETHODIMP OnCreateAnswerError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP OnSetLocalDescriptionSuccess(ER&);
-  NS_IMETHODIMP OnSetRemoteDescriptionSuccess(ER&);
-  NS_IMETHODIMP OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&);
-  NS_IMETHODIMP OnStateChange(PCObserverStateType state_type, ER&, void*);
-  NS_IMETHODIMP OnAddStream(DOMMediaStream *stream, ER&);
-  NS_IMETHODIMP OnRemoveStream(ER&);
-  NS_IMETHODIMP OnAddTrack(ER&);
-  NS_IMETHODIMP OnRemoveTrack(ER&);
-  NS_IMETHODIMP OnReplaceTrackSuccess(ER&);
-  NS_IMETHODIMP OnReplaceTrackError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP OnAddIceCandidateSuccess(ER&);
-  NS_IMETHODIMP OnAddIceCandidateError(uint32_t code, const char *msg, ER&);
-  NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&);
+  NS_IMETHOD OnCreateOfferSuccess(const char* offer, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnCreateOfferError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnCreateAnswerSuccess(const char* answer, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnCreateAnswerError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnSetLocalDescriptionSuccess(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnStateChange(PCObserverStateType state_type, ER&, void*) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddStream(DOMMediaStream *stream, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnRemoveStream(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddTrack(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnRemoveTrack(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnReplaceTrackSuccess(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnReplaceTrackError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddIceCandidateSuccess(ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnAddIceCandidateError(uint32_t code, const char *msg, ER&) MOZ_OVERRIDE;
+  NS_IMETHOD OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&) MOZ_OVERRIDE;
 
   // Hack because add_ice_candidates can happen asynchronously with respect
   // to the API calls. The whole test suite needs a refactor.

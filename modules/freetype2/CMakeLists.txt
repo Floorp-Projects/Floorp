@@ -16,13 +16,28 @@
 #
 #   cmake CMakeLists.txt
 #
-# to create a Makefile that builds a static version of the library.  For a
-# dynamic library, use
+# to create a Makefile that builds a static version of the library.
+#
+# For a dynamic library, use
 #
 #   cmake CMakeLists.txt -DBUILD_SHARED_LIBS:BOOL=true
 #
-# instead.  Please refer to the cmake manual for further options, in
-# particular, how to modify compilation and linking parameters.
+# For a framework on OS X, use
+#
+#   cmake CMakeLists.txt -DBUILD_FRAMEWORK:BOOL=true -G Xcode
+#
+# instead.
+#
+# For an iOS static library, use
+#
+#   cmake CMakeLists.txt -DIOS_PLATFORM=OS -G Xcode
+#
+# or
+#
+#   cmake CMakeLists.txt -DIOS_PLATFORM=SIMULATOR -G Xcode
+#
+# Please refer to the cmake manual for further options, in particular, how
+# to modify compilation and linking parameters.
 #
 # Some notes.
 #
@@ -37,11 +52,54 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+# CMAKE_TOOLCHAIN_FILE must be set before `project' is called, which
+# configures the base build environment and references the toolchain file
+if (APPLE)
+  if (DEFINED IOS_PLATFORM)
+    if (NOT "${IOS_PLATFORM}" STREQUAL "OS"
+        AND NOT "${IOS_PLATFORM}" STREQUAL "SIMULATOR")
+      message(FATAL_ERROR
+        "IOS_PLATFORM must be set to either OS or SIMULATOR")
+    endif ()
+    if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+      message(AUTHOR_WARNING
+        "You should use Xcode generator with IOS_PLATFORM enabled to get Universal builds.")
+    endif ()
+    if (BUILD_SHARED_LIBS)
+      message(FATAL_ERROR
+        "BUILD_SHARED_LIBS can not be on with IOS_PLATFORM enabled")
+    endif ()
+    if (BUILD_FRAMEWORK)
+      message(FATAL_ERROR
+        "BUILD_FRAMEWORK can not be on with IOS_PLATFORM enabled")
+    endif ()
+
+    # iOS only uses static libraries
+    set(BUILD_SHARED_LIBS OFF)
+
+    set(CMAKE_TOOLCHAIN_FILE
+      ${PROJECT_SOURCE_DIR}/builds/cmake/iOS.cmake)
+  endif ()
+else ()
+  if (DEFINED IOS_PLATFORM)
+    message(FATAL_ERROR "IOS_PLATFORM is not supported on this platform")
+  endif ()
+endif ()
+
 project(freetype)
+
+if (BUILD_FRAMEWORK)
+  if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+    message(FATAL_ERROR
+      "You should use Xcode generator with BUILD_FRAMEWORK enabled")
+  endif ()
+  set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD_32_64_BIT)")
+  set(BUILD_SHARED_LIBS ON)
+endif ()
 
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "5")
-set(VERSION_PATCH "3")
+set(VERSION_PATCH "5")
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Compiler definitions for building the library
@@ -51,22 +109,27 @@ add_definitions(-DFT2_BUILD_LIBRARY)
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 # Create the configuration file
-message(STATUS "Creating directory, ${PROJECT_BINARY_DIR}/include.")
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/include)
+message(STATUS "Creating directory, ${PROJECT_BINARY_DIR}/include/freetype2.")
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/include/freetype2)
 
 # For the auto-generated ftconfig.h file
-include_directories("${PROJECT_BINARY_DIR}/include")
-message(STATUS "Creating ${PROJECT_BINARY_DIR}/include/ftconfig.h.")
+include_directories(BEFORE "${PROJECT_BINARY_DIR}/include/freetype2")
+message(STATUS "Creating ${PROJECT_BINARY_DIR}/include/freetype2/ftconfig.h.")
 execute_process(
   COMMAND sed -e "s/FT_CONFIG_OPTIONS_H/<ftoption.h>/" -e "s/FT_CONFIG_STANDARD_LIBRARY_H/<ftstdlib.h>/" -e "s?/undef ?#undef ?"
   INPUT_FILE ${PROJECT_SOURCE_DIR}/builds/unix/ftconfig.in
-  OUTPUT_FILE ${PROJECT_BINARY_DIR}/include/ftconfig.h
+  OUTPUT_FILE ${PROJECT_BINARY_DIR}/include/freetype2/ftconfig.h
 )
+
+file(GLOB PUBLIC_HEADERS "include/*.h")
+file(GLOB PUBLIC_CONFIG_HEADERS "include/config/*.h")
+file(GLOB PRIVATE_HEADERS "include/internal/*.h")
 
 set(BASE_SRCS
   src/autofit/autofit.c
   src/base/ftadvanc.c
   src/base/ftbbox.c
+  src/base/ftbdf.c
   src/base/ftbitmap.c
   src/base/ftcalc.c
   src/base/ftcid.c
@@ -125,7 +188,31 @@ include_directories("src/raster")
 include_directories("src/psaux")
 include_directories("src/psnames")
 
-add_library(freetype ${BASE_SRCS})
+if (BUILD_FRAMEWORK)
+  set(BASE_SRCS
+    ${BASE_SRCS}
+    builds/mac/freetype-Info.plist
+  )
+endif ()
+
+add_library(freetype
+  ${PUBLIC_HEADERS}
+  ${PUBLIC_CONFIG_HEADERS}
+  ${PRIVATE_HEADERS}
+  ${BASE_SRCS}
+)
+
+if (BUILD_FRAMEWORK)
+  set_property(SOURCE ${PUBLIC_CONFIG_HEADERS}
+    PROPERTY MACOSX_PACKAGE_LOCATION Headers/config
+  )
+  set_target_properties(freetype PROPERTIES
+    FRAMEWORK TRUE
+    MACOSX_FRAMEWORK_INFO_PLIST builds/mac/freetype-Info.plist
+    PUBLIC_HEADER "${PUBLIC_HEADERS}"
+    XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+  )
+endif ()
 
 # Installations
 # Note the trailing slash in the argument to the `DIRECTORY' directive
@@ -137,6 +224,7 @@ install(TARGETS freetype
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  FRAMEWORK DESTINATION Library/Frameworks
 )
 
 # Packaging
