@@ -272,7 +272,7 @@ static const struct ParamPair {
 };
 
 // Keep this in sync with above params.
-#define GC_PARAMETER_ARGS_LIST "maxBytes, maxMallocBytes, gcBytes, gcNumber, sliceTimeBudget, or markStackLimit"
+#define GC_PARAMETER_ARGS_LIST "maxBytes, maxMallocBytes, gcBytes, gcNumber, sliceTimeBudget, markStackLimit, minEmptyChunkCount or maxEmptyChunkCount"
 
 static bool
 GCParameter(JSContext *cx, unsigned argc, Value *vp)

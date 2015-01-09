@@ -1,0 +1,100 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+	<script type="application/javascript">
+
+var timingParams = [
+  "navigationStart",
+  "unloadEventStart",
+  "unloadEventEnd",
+  "redirectStart",
+  "redirectEnd",
+  "fetchStart",
+  "domainLookupStart",
+  "domainLookupEnd",
+  "connectStart",
+  "connectEnd",
+  "requestStart",
+  "responseStart",
+  "responseEnd",
+  "domLoading",
+  "domInteractive",
+  "domContentLoadedEventStart",
+  "domContentLoadedEventEnd",
+  "domComplete",
+  "loadEventStart",
+  "loadEventEnd"
+  ];
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+window.onload = function() {
+  if (location.href.indexOf("_blank") != -1) {
+    test_blank();
+    return;
+  }
+
+  if (location.href.indexOf("_self") != -1) {
+    test_self();
+    return;
+  }
+}
+
+function checkTimingValues(expectedValues) {
+  for (var name of timingParams) {
+    if (name in expectedValues) {
+      is(window.performance.timing[name], expectedValues[name], name+" should be "+expectedValues[name]);
+    } else {
+      isnot(window.performance.timing[name], 0, name+" should not be 0");
+    }
+  }
+}
+
+function test_blank() {
+  // We set a timeout to make sure this is run after onload is called
+  setTimeout(function(){
+    // When loading the page in _blank, unloadEvent and redirect timestamps should be 0
+    var expectedValues = { "unloadEventStart": 0, "unloadEventEnd": 0, "redirectStart": 0, "redirectEnd": 0 };
+    checkTimingValues(expectedValues);
+
+    // change location in order to test a _self load
+    window.location.href = "navigation_timing.html?x=1#_self";
+  }, 0);
+}
+
+function test_self() {
+  // We set a timeout to make sure this is run after onload is called
+  setTimeout(function(){
+    // When simply loading in _self, redirect timestamps should be 0 (unloadEventStart/End != 0)
+    var expectedValues = { "redirectStart": 0, "redirectEnd": 0 };
+    checkTimingValues(expectedValues);
+
+    window.opener.finishTests();
+  }, 0);
+}
+
+</script>
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1099092"
+     title="Navigation timing">
+    Bug #1099092 - Navigation Timing has incorrect values when page is load via link with target=_blank attribute
+  </a>
+  <p id="display"></p>
+</body>
+</html>

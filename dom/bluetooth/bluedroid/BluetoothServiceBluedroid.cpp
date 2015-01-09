@@ -693,7 +693,7 @@ BluetoothServiceBluedroid::CreatePairedDeviceInternal(
 
   sBondingRunnableArray.AppendElement(aRunnable);
 
-  sBtInterface->CreateBond(aDeviceAddress,
+  sBtInterface->CreateBond(aDeviceAddress, TRANSPORT_AUTO,
                            new CreateBondResultHandler(aRunnable));
 
   return NS_OK;
@@ -1618,6 +1618,15 @@ BluetoothServiceBluedroid::DutModeRecvNotification(uint16_t aOpcode,
 void
 BluetoothServiceBluedroid::LeTestModeNotification(BluetoothStatus aStatus,
                                                   uint16_t aNumPackets)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // FIXME: This will be implemented in the later patchset
+}
+
+void
+BluetoothServiceBluedroid::EnergyInfoNotification(
+  const BluetoothActivityEnergyInfo& aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

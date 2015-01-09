@@ -16,7 +16,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=7
+MOD_PATCH_VERSION=8
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -2178,7 +2178,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
     fi
-    DSO_LDOPTS='-shared -fPIC'
+    DSO_LDOPTS='-shared -fPIC -Wl,-soname,$(notdir $@)'
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
 

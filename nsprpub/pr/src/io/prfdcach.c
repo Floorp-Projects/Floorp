@@ -31,13 +31,11 @@ typedef struct _PR_Fd_Cache
 {
     PRLock *ml;
     PRIntn count;
-    PRStack *stack;
     PRFileDesc *head, *tail;
     PRIntn limit_low, limit_high;
 } _PR_Fd_Cache;
 
 static _PR_Fd_Cache _pr_fd_cache;
-static PRFileDesc **stack2fd = &(((PRFileDesc*)NULL)->higher);
 
 
 /*
@@ -59,11 +57,7 @@ PRFileDesc *_PR_Getfd(void)
     */
     if (0 == _pr_fd_cache.limit_high)
     {
-        PRStackElem *pop;
-        PR_ASSERT(NULL != _pr_fd_cache.stack);
-        pop = PR_StackPop(_pr_fd_cache.stack);
-        if (NULL == pop) goto allocate;
-        fd = (PRFileDesc*)((PRPtrdiff)pop - (PRPtrdiff)stack2fd);
+        goto allocate;
     }
     else
     {
@@ -128,18 +122,9 @@ void _PR_Putfd(PRFileDesc *fd)
     fd->identity = PR_INVALID_IO_LAYER;
     fd->secret->state = _PR_FILEDESC_FREED;
 
-    if (0 == _pr_fd_cache.limit_high)
+    if (0 != _pr_fd_cache.limit_high)
     {
-        PR_StackPush(_pr_fd_cache.stack, (PRStackElem*)(&fd->higher));
-    }
-    else
-    {
-        if (_pr_fd_cache.count > _pr_fd_cache.limit_high)
-        {
-            PR_Free(fd->secret);
-            PR_Free(fd);
-        }
-        else
+        if (_pr_fd_cache.count < _pr_fd_cache.limit_high)
         {
             PR_Lock(_pr_fd_cache.ml);
             if (NULL == _pr_fd_cache.tail)
@@ -157,8 +142,12 @@ void _PR_Putfd(PRFileDesc *fd)
             fd->higher = NULL;  /* always so */
             _pr_fd_cache.count += 1;  /* count the new entry */
             PR_Unlock(_pr_fd_cache.ml);
+            return;
         }
     }
+
+    PR_Free(fd->secret);
+    PR_Free(fd);
 }  /* _PR_Putfd */
 
 PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
@@ -173,48 +162,8 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
     if (low > high) low = high;  /* sanity check the params */
     
     PR_Lock(_pr_fd_cache.ml);
-    if (0 == high)  /* shutting down or staying down */
-    {
-        if (0 != _pr_fd_cache.limit_high)  /* shutting down */
-        {
-            _pr_fd_cache.limit_high = 0;  /* stop use */
-            /*
-            ** Hold the lock throughout - nobody's going to want it
-            ** other than another caller to this routine. Just don't
-            ** let that happen.
-            **
-            ** Put all the cached fds onto the new cache.
-            */
-            while (NULL != _pr_fd_cache.head)
-            {
-                PRFileDesc *fd = _pr_fd_cache.head;
-                _pr_fd_cache.head = fd->higher;
-                PR_StackPush(_pr_fd_cache.stack, (PRStackElem*)(&fd->higher));
-            }
-            _pr_fd_cache.limit_low = 0;
-            _pr_fd_cache.tail = NULL;
-            _pr_fd_cache.count = 0;
-        }
-    }
-    else  /* starting up or just adjusting parameters */
-    {
-        PRBool was_using_stack = (0 == _pr_fd_cache.limit_high);
-        _pr_fd_cache.limit_low = low;
-        _pr_fd_cache.limit_high = high;
-        if (was_using_stack)  /* was using stack - feed into cache */
-        {
-            PRStackElem *pop;
-            while (NULL != (pop = PR_StackPop(_pr_fd_cache.stack)))
-            {
-                PRFileDesc *fd = (PRFileDesc*)
-                    ((PRPtrdiff)pop - (PRPtrdiff)stack2fd);
-                if (NULL == _pr_fd_cache.tail) _pr_fd_cache.tail = fd;
-                fd->higher = _pr_fd_cache.head;
-                _pr_fd_cache.head = fd;
-                _pr_fd_cache.count += 1;
-            }
-        }
-    }
+    _pr_fd_cache.limit_high = high;
+    _pr_fd_cache.limit_low = low;
     PR_Unlock(_pr_fd_cache.ml);
     return PR_SUCCESS;
 }  /* PR_SetFDCacheSize */
@@ -258,8 +207,6 @@ void _PR_InitFdCache(void)
 
     _pr_fd_cache.ml = PR_NewLock();
     PR_ASSERT(NULL != _pr_fd_cache.ml);
-    _pr_fd_cache.stack = PR_CreateStack("FD");
-    PR_ASSERT(NULL != _pr_fd_cache.stack);
 
 }  /* _PR_InitFdCache */
 
@@ -279,14 +226,6 @@ void _PR_CleanupFdCache(void)
     _pr_fd_cache.count = 0;
     PR_DestroyLock(_pr_fd_cache.ml);
     _pr_fd_cache.ml = NULL;
-    while ((pop = PR_StackPop(_pr_fd_cache.stack)) != NULL)
-    {
-        fd = (PRFileDesc*)((PRPtrdiff)pop - (PRPtrdiff)stack2fd);
-        PR_DELETE(fd->secret);
-        PR_DELETE(fd);
-    }
-    PR_DestroyStack(_pr_fd_cache.stack);
-    _pr_fd_cache.stack = NULL;
 }  /* _PR_CleanupFdCache */
 
 /* prfdcach.c */

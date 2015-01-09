@@ -19,7 +19,7 @@ PR_IMPLEMENT(PROrderedLock *)
         const char *name
 )
 {
-    PR_ASSERT(!"Not implemented"); /* Not implemented yet */
+    PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return NULL;
 } /*  end PR_CreateOrderedLock() */
@@ -30,7 +30,7 @@ PR_IMPLEMENT(void)
         PROrderedLock *lock 
 )
 {
-    PR_ASSERT(!"Not implemented"); /* Not implemented yet */
+    PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
 } /*  end PR_DestroyOrderedLock() */
 
@@ -40,7 +40,7 @@ PR_IMPLEMENT(void)
         PROrderedLock *lock 
 )
 {
-    PR_ASSERT(!"Not implemented"); /* Not implemented yet */
+    PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
 } /*  end PR_LockOrderedLock() */
 
@@ -50,7 +50,7 @@ PR_IMPLEMENT(PRStatus)
         PROrderedLock *lock 
 )
 {
-    PR_ASSERT(!"Not implemented"); /* Not implemented yet */
+    PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
 } /*  end PR_UnlockOrderedLock() */

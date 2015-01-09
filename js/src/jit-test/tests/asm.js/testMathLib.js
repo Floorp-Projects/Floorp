@@ -1,3 +1,4 @@
+// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
 function testUnary(f, g) {
