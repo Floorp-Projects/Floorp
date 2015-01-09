@@ -174,6 +174,27 @@ Http2BigListener.prototype.onStopRequest = function(request, ctx, status) {
   do_test_finished();
 };
 
+var Http2HugeSuspendedListener = function() {};
+
+Http2HugeSuspendedListener.prototype = new Http2CheckListener();
+Http2HugeSuspendedListener.prototype.count = 0;
+
+Http2HugeSuspendedListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
+  this.onDataAvailableFired = true;
+  this.isHttp2Connection = checkIsHttp2(request);
+  this.count += cnt;
+  read_stream(stream, cnt);
+};
+
+Http2HugeSuspendedListener.prototype.onStopRequest = function(request, ctx, status) {
+  do_check_true(this.onStartRequestFired);
+  do_check_true(this.onDataAvailableFired);
+  do_check_true(this.isHttp2Connection);
+  do_check_eq(this.count, 1024 * 1024 * 1); // 1mb of data expected
+  run_next_test();
+  do_test_finished();
+};
+
 // Does the appropriate checks for POSTs
 var Http2PostListener = function(expected_md5) {
   this.expected_md5 = expected_md5;
@@ -331,6 +352,14 @@ function test_http2_big() {
   var chan = makeChan("https://localhost:6944/big");
   var listener = new Http2BigListener();
   chan.asyncOpen(listener, null);
+}
+
+function test_http2_huge_suspended() {
+  var chan = makeChan("https://localhost:6944/huge");
+  var listener = new Http2HugeSuspendedListener();
+  chan.asyncOpen(listener, null);
+  chan.suspend();
+  do_timeout(500, chan.resume);
 }
 
 // Support for doing a POST
@@ -565,6 +594,7 @@ var tests = [ test_http2_post_big
             , test_http2_cookie_crumbling
             , test_http2_multiplex
             , test_http2_big
+            , test_http2_huge_suspended
             , test_http2_post
             , test_http2_pushapi_1
             // These next two must always come in this order
