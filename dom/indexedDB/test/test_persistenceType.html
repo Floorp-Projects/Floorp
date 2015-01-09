@@ -31,21 +31,6 @@
       for (let storage of storages) {
         let request = indexedDB.open(name, { version: version,
                                              storage: storage });
-
-        if (storage == "persistent" &&
-            (navigator.userAgent.indexOf("Android") != -1 ||
-             navigator.userAgent.indexOf("Mobile") != -1 ||
-             navigator.userAgent.indexOf("Tablet") != -1)) {
-          request.onerror = expectedErrorHandler("InvalidStateError");
-          request.onupgradeneeded = unexpectedSuccessHandler;
-          request.onsuccess = unexpectedSuccessHandler;
-          let event = yield undefined;
-
-          is(event.type, "error", "Got corrent event type");
-
-          continue;
-        }
-
         request.onerror = errorHandler;
         request.onupgradeneeded = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
