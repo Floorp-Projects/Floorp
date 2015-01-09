@@ -1596,6 +1596,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // we need extra stuff.
           this._extraBox.hidden = true;
           this._titleBox.flex = 1;
+          this._typeImage.hidden = false;
 
           this.removeAttribute("actiontype");
           this.classList.remove("overridable-action");
@@ -1681,7 +1682,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           type = [...types].join(" ");
 
           // If we have a tag match, show the tags and icon
-          if (type == "tag") {
+          if (type == "tag" || type == "bookmark-tag") {
             // Configure the extra box for tags display
             this._extraBox.hidden = false;
             this._extraBox.childNodes[0].hidden = false;
@@ -1699,8 +1700,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             // Emphasize the matching text in the tags
             this._setUpDescription(this._extra, sortedTags);
 
-            // Treat tagged matches as bookmarks for the star
-            type = "bookmark";
+            // If we're suggesting bookmarks, then treat tagged matches as
+            // bookmarks for the star.
+            if (type == "bookmark-tag") {
+              type = "bookmark";
+            } else {
+              this._typeImage.hidden = true;
+            }
           // keyword and favicon type results for search engines
           // have an extra magnifying glass icon after them
           } else if (type == "keyword" || (initialTypes.has("search") &&

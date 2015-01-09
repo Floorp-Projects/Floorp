@@ -416,17 +416,35 @@ let Printing = {
       printSettings = null;
     }
 
+    // We'll call this whenever we've finished reflowing the document, or if
+    // we errored out while attempting to print preview (in which case, we'll
+    // notify the parent that we've failed).
+    let notifyEntered = (error) => {
+      removeEventListener("printPreviewUpdate", onPrintPreviewReady);
+      sendAsyncMessage("Printing:Preview:Entered", {
+        failed: !!error,
+      });
+    };
+
+    let onPrintPreviewReady = () => {
+      notifyEntered();
+    };
+
     // We have to wait for the print engine to finish reflowing all of the
     // documents and subdocuments before we can tell the parent to flip to
     // the print preview UI - otherwise, the print preview UI might ask for
     // information (like the number of pages in the document) before we have
     // our PresShells set up.
-    addEventListener("printPreviewUpdate", function onPrintPreviewReady() {
-      removeEventListener("printPreviewUpdate", onPrintPreviewReady);
-      sendAsyncMessage("Printing:Preview:Entered");
-    });
+    addEventListener("printPreviewUpdate", onPrintPreviewReady);
 
-    docShell.printPreview.printPreview(printSettings, contentWindow, this);
+    try {
+      docShell.printPreview.printPreview(printSettings, contentWindow, this);
+    } catch(error) {
+      // This might fail if we, for example, attempt to print a XUL document.
+      // In that case, we inform the parent to bail out of print preview.
+      Components.utils.reportError(error);
+      notifyEntered(error);
+    }
   },
 
   exitPrintPreview() {

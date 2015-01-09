@@ -23,15 +23,15 @@ add_task(function* test_tag_match_url() {
   addBookmark({ uri: uri1,
                 title: "title",
                 tags: [ "superTag" ],
-                style: [ "tag" ] });
+                style: [ "bookmark-tag" ] });
   addBookmark({ uri: uri2,
                 title: "title",
                 tags: [ "superTag" ],
-                style: [ "tag" ] });
+                style: [ "bookmark-tag" ] });
   yield check_autocomplete({
     search: "superTag",
-    matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "tag" ] },
-     		   { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri1, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] },
+     		   { uri: uri2, title: "title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
   });
   yield cleanup();
 });
