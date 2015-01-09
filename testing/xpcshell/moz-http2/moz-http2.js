@@ -227,6 +227,18 @@ function handleRequest(req, res) {
     res.setHeader("X-Expected-MD5", md5);
   }
 
+  else if (u.pathname === "/huge") {
+    content = generateContent(1024);
+    res.setHeader('Content-Type', 'text/plain');
+    res.writeHead(200);
+    // 1mb of data
+    for (var i = 0; i < (1024 * 1); i++) {
+      res.write(content); // 1kb chunk
+    }
+    res.end();
+    return;
+  }
+
   else if (u.pathname === "/post") {
     if (req.method != "POST") {
       res.writeHead(405);
