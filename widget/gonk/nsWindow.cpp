@@ -47,7 +47,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "ParentProcessController.h"
 #include "nsThreadUtils.h"
 #include "HwcComposer2D.h"
 
@@ -629,13 +628,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     }
     MOZ_ASSERT(mLayerManager);
     return mLayerManager;
-}
-
-already_AddRefed<GeckoContentController>
-nsWindow::CreateRootContentController()
-{
-    nsRefPtr<ParentProcessController> controller = new ParentProcessController();
-    return controller.forget();
 }
 
 void
