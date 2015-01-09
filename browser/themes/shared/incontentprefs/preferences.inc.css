@@ -194,6 +194,10 @@ description > html|a {
   padding-bottom: 0; /* no padding needed in inContent prefs */
 }
 
+#tabsElement {
+  -moz-margin-end: 4px; /* add the 4px end-margin of other elements */
+}
+
 #encryptionPanel {
   margin-top: 15px;
 }

@@ -8,6 +8,8 @@ include protocol PContent;
 include protocol PTelephonyRequest;
 include TelephonyTypes;
 
+using nsTelephonyCallInfo from "mozilla/dom/telephony/TelephonyIPCSerializer.h";
+
 namespace mozilla {
 namespace dom {
 namespace telephony {
@@ -100,7 +102,7 @@ sync protocol PTelephony {
 child:
   NotifyCallError(uint32_t aClientId, int32_t aCallIndex, nsString aError);
 
-  NotifyCallStateChanged(uint32_t aClientId, IPCCallStateData aData);
+  NotifyCallStateChanged(nsTelephonyCallInfo aInfo);
 
   NotifyCdmaCallWaiting(uint32_t aClientId, IPCCdmaWaitingCallData aData);
 
