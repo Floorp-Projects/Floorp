@@ -1700,7 +1700,7 @@ ia64*-hpux*)
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(WINDRES)'
         # Use static libgcc and libstdc++
-        LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
+        LDFLAGS="$LDFLAGS -static"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
