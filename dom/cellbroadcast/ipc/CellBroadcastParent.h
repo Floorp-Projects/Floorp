@@ -28,7 +28,7 @@ private:
   // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
   ~CellBroadcastParent() {};
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy);
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 };
 
 } // namespace cellbroadcast

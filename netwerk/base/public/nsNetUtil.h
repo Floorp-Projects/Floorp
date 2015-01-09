@@ -257,6 +257,9 @@ NS_NewFileURI(nsIURI* *result,
 * Please note, if you provide both a loadingNode and a loadingPrincipal,
 * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
 * But less error prone is to just supply a loadingNode.
+*
+* Keep in mind that URIs coming from a webpage should *never* use the
+* systemPrincipal as the loadingPrincipal.
 */
 inline nsresult
 NS_NewChannelInternal(nsIChannel**           outChannel,

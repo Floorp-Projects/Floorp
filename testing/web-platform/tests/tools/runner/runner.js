@@ -131,6 +131,7 @@ function VisualOutput(elem, runner) {
     this.meter = this.progress.querySelector(".progress-bar");
     this.result_count = null;
     this.json_results_area = this.elem.querySelector("textarea");
+    this.instructions = document.querySelector(".instructions");
 
     this.elem.style.display = "none";
     this.runner.manifest_wait_callbacks.push(this.on_manifest_wait.bind(this));
@@ -163,12 +164,14 @@ VisualOutput.prototype = {
 
     on_manifest_wait: function() {
         this.clear();
+        this.instructions.style.display = "none";
         this.elem.style.display = "block";
-        this.manifest_status.style.display = "block";
+        this.manifest_status.style.display = "inline";
     },
 
     on_start: function() {
         this.clear();
+        this.instructions.style.display = "none";
         this.elem.style.display = "block";
         this.meter.classList.remove("stopped");
         this.meter.classList.add("progress-striped", "active");

@@ -33,7 +33,13 @@ interface nsIContentPolicy : nsISupports
   const nsContentPolicyType TYPE_INVALID = 0;
 
   /**
-   * Gecko/Firefox developers: Do not use TYPE_OTHER under any circumstances.
+   * Gecko/Firefox developers: Avoid using TYPE_OTHER. Especially for
+   * requests that are coming from webpages. Or requests in general which
+   * you expect that security checks will be done on.
+   * Always use a more specific type if one is available. And do not hesitate
+   * to add more types as appropriate.
+   * But if you are fairly sure that no one would care about your more specific
+   * type, then it's ok to use TYPE_OTHER.
    *
    * Extension developers: Whenever it is reasonable, use one of the existing
    * content types. If none of the existing content types are right for

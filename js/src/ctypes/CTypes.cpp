@@ -2464,7 +2464,7 @@ ImplicitConvert(JSContext* cx,
       }
       *static_cast<void**>(buffer) = ptr;
       break;
-    } if (val.isObject() && JS_IsTypedArrayObject(valObj)) {
+    } if (val.isObject() && JS_IsArrayBufferViewObject(valObj)) {
       // Same as ArrayBuffer, above, though note that this will take the offset
       // of the view into account.
       if(!CanConvertTypedArrayItemTo(baseType, valObj, cx)) {

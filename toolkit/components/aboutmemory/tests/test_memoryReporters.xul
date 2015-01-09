@@ -139,7 +139,7 @@
   // non-deterministic.
   //
   // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
-  // --enable-trace-malloc build.  Allow for that exception, but *only* that
+  // --disable-jemalloc build.  Allow for that exception, but *only* that
   // exception.
   let dummy;
   let haveExplicit = true;

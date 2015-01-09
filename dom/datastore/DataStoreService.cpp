@@ -1005,9 +1005,12 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
       return;
     }
 
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
+    MOZ_ASSERT(global);
+
     JSAutoCompartment ac(cx, dataStoreJS);
     nsRefPtr<DataStoreImpl> dataStoreObj = new DataStoreImpl(dataStoreJS,
-                                                             aWindow);
+                                                             global);
 
     nsRefPtr<DataStore> exposedStore = new DataStore(aWindow);
 
