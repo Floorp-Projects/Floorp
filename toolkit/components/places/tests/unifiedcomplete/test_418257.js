@@ -33,32 +33,32 @@ add_task(function* test_javascript_match() {
   do_log_info("Make sure tags come back in the title when matching tags");
   yield check_autocomplete({
     search: "page1 tag",
-    matches: [ { uri: uri1, title: "tagged", tags: [ "tag1" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri1, title: "tagged", tags: [ "tag1" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Check tags in title for page2");
   yield check_autocomplete({
     search: "page2 tag",
-    matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Make sure tags appear even when not matching the tag");
   yield check_autocomplete({
     search: "page3",
-    matches: [ { uri: uri3, title: "tagged", tags: [ "tag1", "tag3" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri3, title: "tagged", tags: [ "tag1", "tag3" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Multiple tags come in commas for page4");
   yield check_autocomplete({
     search: "page4",
-    matches: [ { uri: uri4, title: "tagged", tags: [ "tag1", "tag2", "tag3" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri4, title: "tagged", tags: [ "tag1", "tag2", "tag3" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Extra test just to make sure we match the title");
   yield check_autocomplete({
     search: "tag2",
-    matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "tag" ] },
-               { uri: uri4, title: "tagged", tags: [ "tag1", "tag2", "tag3" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "bookmark-tag" ] },
+               { uri: uri4, title: "tagged", tags: [ "tag1", "tag2", "tag3" ], style: [ "bookmark-tag" ] } ]
   });
 
   yield cleanup();

@@ -80,7 +80,7 @@ let OverviewView = {
    * Sets up the markers overivew graph.
    */
   _showMarkersGraph: Task.async(function *() {
-    this.markersOverview = new MarkersOverview($("#markers-overview"));
+    this.markersOverview = new MarkersOverview($("#markers-overview"), TIMELINE_BLUEPRINT);
     this.markersOverview.headerHeight = MARKERS_GRAPH_HEADER_HEIGHT;
     this.markersOverview.bodyHeight = MARKERS_GRAPH_BODY_HEIGHT;
     this.markersOverview.groupPadding = MARKERS_GROUP_VERTICAL_PADDING;
