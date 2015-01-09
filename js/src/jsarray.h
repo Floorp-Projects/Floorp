@@ -107,20 +107,16 @@ NewDenseCopyOnWriteArray(JSContext *cx, HandleArrayObject templateObject, gc::In
  * increase the length of the array.
  */
 extern bool
-WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
+WouldDefinePastNonwritableLength(ExclusiveContext *cx,
                                  HandleObject obj, uint32_t index, bool strict,
                                  bool *definesPast);
 
 /*
  * Canonicalize |vp| to a uint32_t value potentially suitable for use as an
  * array length.
- *
- * For parallel execution we can only canonicalize non-object values.
  */
-template <ExecutionMode mode>
 extern bool
-CanonicalizeArrayLengthValue(typename ExecutionModeTraits<mode>::ContextType cx,
-                             HandleValue v, uint32_t *canonicalized);
+CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *canonicalized);
 
 extern bool
 GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp);

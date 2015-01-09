@@ -160,11 +160,6 @@ struct ThreadSafeContext : ContextFriendFields,
 {
     friend struct StackBaseShape;
     friend class Activation;
-    friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
-                                                      const StackBaseShape &base);
-    friend Shape *NativeObject::lookupChildProperty(ThreadSafeContext *cx,
-                                                    HandleNativeObject obj, HandleShape parent,
-                                                    StackShape &child);
 
   public:
     enum ContextKind {
