@@ -31,6 +31,19 @@
       for (let storage of storages) {
         let request = indexedDB.open(name, { version: version,
                                              storage: storage });
+
+        if (storage == "persistent" &&
+            SpecialPowers.Services.appinfo.widgetToolkit == "android") {
+          request.onerror = expectedErrorHandler("InvalidStateError");
+          request.onupgradeneeded = unexpectedSuccessHandler;
+          request.onsuccess = unexpectedSuccessHandler;
+          let event = yield undefined;
+
+          is(event.type, "error", "Got corrent event type");
+
+          continue;
+        }
+
         request.onerror = errorHandler;
         request.onupgradeneeded = grabEventAndContinueHandler;
         request.onsuccess = grabEventAndContinueHandler;
