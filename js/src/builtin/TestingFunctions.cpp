@@ -169,14 +169,6 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "oom-backtraces", value))
         return false;
 
-#ifdef ENABLE_PARALLEL_JS
-    value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
-    if (!JS_SetProperty(cx, info, "parallelJS", value))
-        return false;
-
 #ifdef ENABLE_BINARYDATA
     value = BooleanValue(true);
 #else

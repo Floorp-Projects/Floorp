@@ -444,12 +444,6 @@ MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_RANGEERR, "bad combinatio
 MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_ARG_RANGE,   1, JSEXN_RANGEERR, "argument {0} out of range")
 MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_BAD_LENGTH,  0, JSEXN_TYPEERR, "length argument must not be an object")
 
-// Parallel array
-MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,       0, JSEXN_RANGEERR, "invalid parallel method argument")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, 1, JSEXN_ERR, "target for index {0} is not an integer")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BOUNDS,0, JSEXN_ERR, "index in scatter vector out of bounds")
-MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 0, JSEXN_ERR, "no conflict resolution function provided")
-
 // Reflect
 MSG_DEF(JSMSG_BAD_PARSE_NODE,          0, JSEXN_INTERNALERR, "bad parse node")
 
