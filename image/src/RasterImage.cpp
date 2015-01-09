@@ -933,9 +933,9 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
     return;
   }
 
-  MOZ_ASSERT(aNewFrameCount <= mFrameCount ||
-             aNewFrameCount == mFrameCount + 1,
-             "Skipped a frame?");
+  MOZ_ASSERT((mFrameCount == 1 && aNewFrameCount == 1) ||
+             mFrameCount < aNewFrameCount,
+             "Frame count running backwards");
 
   mFrameCount = aNewFrameCount;
 
@@ -1480,6 +1480,15 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Initialize the decoder
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
+  if (!aDoSizeDecode) {
+    // We already have the size; tell the decoder so it can preallocate a
+    // frame.  By default, we create an ARGB frame with no offset. If decoders
+    // need a different type, they need to ask for it themselves.
+    mDecoder->SetSize(mSize, mOrientation);
+    mDecoder->NeedNewFrame(0, 0, 0, mSize.width, mSize.height,
+                           SurfaceFormat::B8G8R8A8);
+    mDecoder->AllocateFrame();
+  }
   mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
