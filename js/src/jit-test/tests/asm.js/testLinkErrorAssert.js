@@ -1,3 +1,4 @@
+// |jit-test| test-also-noasmjs
 // This test should not assert.
 
 function asmModule(g, foreign, heap) {
