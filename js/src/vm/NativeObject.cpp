@@ -184,8 +184,8 @@ js::NativeObject::checkShapeConsistency()
         for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
             MOZ_ASSERT_IF(lastProperty() != shape, !shape->hasTable());
 
-            Shape **spp = table.search(shape->propid(), false);
-            MOZ_ASSERT(SHAPE_FETCH(spp) == shape);
+            ShapeTable::Entry &entry = table.search(shape->propid(), false);
+            MOZ_ASSERT(entry.shape() == shape);
         }
 
         shape = lastProperty();
@@ -205,8 +205,8 @@ js::NativeObject::checkShapeConsistency()
                 ShapeTable &table = shape->table();
                 MOZ_ASSERT(shape->parent);
                 for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
-                    Shape **spp = table.search(r.front().propid(), false);
-                    MOZ_ASSERT(SHAPE_FETCH(spp) == &r.front());
+                    ShapeTable::Entry &entry = table.search(r.front().propid(), false);
+                    MOZ_ASSERT(entry.shape() == &r.front());
                 }
             }
             if (prev) {
@@ -282,8 +282,8 @@ Shape *
 js::NativeObject::lookup(ExclusiveContext *cx, jsid id)
 {
     MOZ_ASSERT(isNative());
-    Shape **spp;
-    return Shape::search(cx, lastProperty(), id, &spp);
+    ShapeTable::Entry *entry;
+    return Shape::search(cx, lastProperty(), id, &entry);
 }
 
 Shape *

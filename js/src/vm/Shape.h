@@ -132,6 +132,45 @@ class ShapeTable {
     friend class NativeObject;
     static const uint32_t MIN_ENTRIES   = 11;
 
+    class Entry {
+        // js::Shape pointer tag bit indicating a collision.
+        static const uintptr_t SHAPE_COLLISION = 1;
+        static Shape *const SHAPE_REMOVED; // = SHAPE_COLLISION
+
+        Shape *shape_;
+
+        Entry() MOZ_DELETE;
+        Entry(const Entry&) MOZ_DELETE;
+        Entry& operator=(const Entry&) MOZ_DELETE;
+
+      public:
+        bool isFree() const { return shape_ == nullptr; }
+        bool isRemoved() const { return shape_ == SHAPE_REMOVED; }
+        bool hadCollision() const { return uintptr_t(shape_) & SHAPE_COLLISION; }
+
+        void setFree() { shape_ = nullptr; }
+        void setRemoved() { shape_ = SHAPE_REMOVED; }
+
+        Shape *shape() const {
+            return reinterpret_cast<Shape*>(uintptr_t(shape_) & ~SHAPE_COLLISION);
+        }
+
+        void setShape(Shape *shape) {
+            MOZ_ASSERT(isFree());
+            MOZ_ASSERT(shape);
+            MOZ_ASSERT(shape != SHAPE_REMOVED);
+            shape_ = shape;
+            MOZ_ASSERT(!hadCollision());
+        }
+
+        void flagCollision() {
+            shape_ = reinterpret_cast<Shape*>(uintptr_t(shape_) | SHAPE_COLLISION);
+        }
+        void setPreservingCollision(Shape *shape) {
+            shape_ = reinterpret_cast<Shape*>(uintptr_t(shape) | uintptr_t(hadCollision()));
+        }
+    };
+
   private:
     static const uint32_t HASH_BITS     = mozilla::tl::BitSize<HashNumber>::value;
 
@@ -149,7 +188,7 @@ class ShapeTable {
                                            freelist in owning dictionary-mode
                                            object */
 
-    js::Shape       **entries_;         /* table of ptrs to shared tree nodes */
+    Entry           *entries_;          /* table of ptrs to shared tree nodes */
 
   public:
     explicit ShapeTable(uint32_t nentries)
@@ -186,7 +225,7 @@ class ShapeTable {
      */
     bool init(ExclusiveContext *cx, Shape *lastProp);
     bool change(int log2Delta, ExclusiveContext *cx);
-    Shape **search(jsid id, bool adding);
+    Entry &search(jsid id, bool adding);
 
 #ifdef JSGC_COMPACTING
     /* Update entries whose shapes have been moved */
@@ -639,7 +678,7 @@ class Shape : public gc::TenuredCell
     };
 
     static inline Shape *search(ExclusiveContext *cx, Shape *start, jsid id,
-                                Shape ***pspp, bool adding = false);
+                                ShapeTable::Entry **pentry, bool adding = false);
     static inline Shape *searchNoHashify(Shape *start, jsid id);
 
     void removeFromDictionary(NativeObject *obj);
@@ -1297,59 +1336,6 @@ struct StackShape
     void trace(JSTracer *trc);
 };
 
-} /* namespace js */
-
-/* js::Shape pointer tag bit indicating a collision. */
-#define SHAPE_COLLISION                 (uintptr_t(1))
-#define SHAPE_REMOVED                   ((js::Shape *) SHAPE_COLLISION)
-
-/* Functions to get and set shape pointer values and collision flags. */
-
-inline bool
-SHAPE_IS_FREE(js::Shape *shape)
-{
-    return shape == nullptr;
-}
-
-inline bool
-SHAPE_IS_REMOVED(js::Shape *shape)
-{
-    return shape == SHAPE_REMOVED;
-}
-
-inline void
-SHAPE_FLAG_COLLISION(js::Shape **spp, js::Shape *shape)
-{
-    *spp = reinterpret_cast<js::Shape*>(uintptr_t(shape) | SHAPE_COLLISION);
-}
-
-inline bool
-SHAPE_HAD_COLLISION(js::Shape *shape)
-{
-    return uintptr_t(shape) & SHAPE_COLLISION;
-}
-
-inline js::Shape *
-SHAPE_CLEAR_COLLISION(js::Shape *shape)
-{
-    return reinterpret_cast<js::Shape*>(uintptr_t(shape) & ~SHAPE_COLLISION);
-}
-
-inline js::Shape *
-SHAPE_FETCH(js::Shape **spp)
-{
-    return SHAPE_CLEAR_COLLISION(*spp);
-}
-
-inline void
-SHAPE_STORE_PRESERVING_COLLISION(js::Shape **spp, js::Shape *shape)
-{
-    *spp = reinterpret_cast<js::Shape*>(uintptr_t(shape) |
-                                        uintptr_t(SHAPE_HAD_COLLISION(*spp)));
-}
-
-namespace js {
-
 inline
 Shape::Shape(const StackShape &other, uint32_t nfixed)
   : base_(other.base),
@@ -1483,8 +1469,8 @@ Shape::searchNoHashify(Shape *start, jsid id)
      * search. We never hashify into a table in parallel.
      */
     if (start->hasTable()) {
-        Shape **spp = start->table().search(id, false);
-        return SHAPE_FETCH(spp);
+        ShapeTable::Entry &entry = start->table().search(id, false);
+        return entry.shape();
     }
 
     return start->searchLinear(id);
