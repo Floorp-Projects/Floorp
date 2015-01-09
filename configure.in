@@ -2151,7 +2151,7 @@ ia64*-hpux*)
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(WINDRES)'
         # Use static libgcc and libstdc++
-        LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
+        LDFLAGS="$LDFLAGS -static"
         NSPR_LDFLAGS="$NSPR_LDFLAGS -static-libgcc"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
