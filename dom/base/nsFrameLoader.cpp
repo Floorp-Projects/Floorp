@@ -2218,6 +2218,20 @@ nsFrameLoader::DeactivateRemoteFrame() {
   return NS_ERROR_UNEXPECTED;
 }
 
+void
+nsFrameLoader::ActivateUpdateHitRegion() {
+  if (mRemoteBrowser) {
+    unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
+  }
+}
+
+void
+nsFrameLoader::DeactivateUpdateHitRegion() {
+  if (mRemoteBrowser) {
+    unused << mRemoteBrowser->SendSetUpdateHitRegion(false);
+  }
+}
+
 NS_IMETHODIMP
 nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
                                           float aX,
