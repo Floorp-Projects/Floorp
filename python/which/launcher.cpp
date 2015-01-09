@@ -70,8 +70,10 @@
 
 #ifdef WIN32
     #define spawnvp _spawnvp
-    #define snprintf _snprintf
-    #define vsnprintf _vsnprintf
+    #if defined(_MSC_VER) && _MSC_VER < 1900
+        #define snprintf _snprintf
+        #define vsnprintf _vsnprintf
+    #endif
     //NOTE: this is for the stat *call* and the stat *struct*
     #define stat _stat
 #endif

@@ -45,6 +45,8 @@
 # define LOG_S "%S"
 # define NS_T(str) L ## str
 # define NS_SLASH NS_T('\\')
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
 // On Windows, _snprintf and _snwprintf don't guarantee null termination. These
 // macros always leave room in the buffer for null termination and set the end
 // of the buffer to null in case the string is larger than the buffer. Having
@@ -62,6 +64,7 @@ static inline int mysnprintf(char* dest, size_t count, const char* fmt, ...)
   return result;
 }
 #define snprintf mysnprintf
+#endif
 static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 {
   size_t _count = count - 1;

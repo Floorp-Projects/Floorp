@@ -13,8 +13,10 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <io.h>
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#endif
 #define strcasecmp _stricmp
 #define PATH_SEPARATOR_CHAR '\\'
 #define R_OK 04
