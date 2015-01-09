@@ -166,45 +166,50 @@ Shape::hashify(ExclusiveContext *cx, Shape *shape)
  * Double hashing needs the second hash code to be relatively prime to table
  * size, so we simply make hash2 odd.
  */
-#define HASH1(hash0,shift)      ((hash0) >> (shift))
-#define HASH2(hash0,log2,shift) ((((hash0) << (log2)) >> (shift)) | 1)
+static HashNumber
+Hash1(HashNumber hash0, int shift)
+{
+    return hash0 >> shift;
+}
+
+static HashNumber
+Hash2(HashNumber hash0, int log2, int shift)
+{
+    return ((hash0 << log2) >> shift) | 1;
+}
 
 Shape **
 ShapeTable::search(jsid id, bool adding)
 {
-    js::HashNumber hash0, hash1, hash2;
-    int sizeLog2;
-    Shape *stored, *shape, **spp, **firstRemoved;
-    uint32_t sizeMask;
-
     MOZ_ASSERT(entries);
     MOZ_ASSERT(!JSID_IS_EMPTY(id));
 
     /* Compute the primary hash address. */
-    hash0 = HashId(id);
-    hash1 = HASH1(hash0, hashShift);
-    spp = entries + hash1;
+    HashNumber hash0 = HashId(id);
+    HashNumber hash1 = Hash1(hash0, hashShift);
+    Shape **spp = entries + hash1;
 
     /* Miss: return space for a new entry. */
-    stored = *spp;
+    Shape *stored = *spp;
     if (SHAPE_IS_FREE(stored))
         return spp;
 
     /* Hit: return entry. */
-    shape = SHAPE_CLEAR_COLLISION(stored);
+    Shape *shape = SHAPE_CLEAR_COLLISION(stored);
     if (shape && shape->propidRaw() == id)
         return spp;
 
     /* Collision: double hash. */
-    sizeLog2 = HASH_BITS - hashShift;
-    hash2 = HASH2(hash0, sizeLog2, hashShift);
-    sizeMask = JS_BITMASK(sizeLog2);
+    int sizeLog2 = HASH_BITS - hashShift;
+    HashNumber hash2 = Hash2(hash0, sizeLog2, hashShift);
+    uint32_t sizeMask = JS_BITMASK(sizeLog2);
 
 #ifdef DEBUG
     uintptr_t collision_flag = SHAPE_COLLISION;
 #endif
 
     /* Save the first removed entry pointer so we can recycle it if adding. */
+    Shape **firstRemoved;
     if (SHAPE_IS_REMOVED(stored)) {
         firstRemoved = spp;
     } else {
@@ -244,7 +249,6 @@ ShapeTable::search(jsid id, bool adding)
     }
 
     MOZ_CRASH("Shape::search failed to find an expected entry.");
-    return nullptr;
 }
 
 #ifdef JSGC_COMPACTING
