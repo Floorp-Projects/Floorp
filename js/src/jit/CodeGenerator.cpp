@@ -2388,7 +2388,7 @@ CodeGenerator::visitMaybeToDoubleElement(LMaybeToDoubleElement *lir)
     masm.bind(&done);
 }
 
-typedef bool (*CopyElementsForWriteFn)(ThreadSafeContext *, NativeObject *);
+typedef bool (*CopyElementsForWriteFn)(ExclusiveContext *, NativeObject *);
 static const VMFunction CopyElementsForWriteInfo =
     FunctionInfo<CopyElementsForWriteFn>(NativeObject::CopyElementsForWrite);
 

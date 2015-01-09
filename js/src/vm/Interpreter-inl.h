@@ -324,11 +324,8 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     if (scope->isUnqualifiedVarObj()) {
         MOZ_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
-        return baseops::SetPropertyHelper<SequentialExecution>(cx,
-                                                               scope.as<NativeObject>(),
-                                                               scope.as<NativeObject>(),
-                                                               id, baseops::Unqualified, &valCopy,
-                                                               strict);
+        return baseops::SetPropertyHelper(cx, scope.as<NativeObject>(), scope.as<NativeObject>(),
+                                          id, baseops::Unqualified, &valCopy, strict);
     }
 
     return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);
