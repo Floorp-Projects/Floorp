@@ -32,6 +32,8 @@ private:
   bool WriteNDEFRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool MakeReadOnlyRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool FormatRequest(android::Parcel& aParcel, const CommandOptions& options);
+  bool TransceiveRequest(android::Parcel& aParcel, const CommandOptions& options);
+  bool TransceiveResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool ConnectRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool CloseRequest(android::Parcel& aParcel, const CommandOptions& options);
 
@@ -42,7 +44,7 @@ private:
 
   bool ReadNDEFMessage(const android::Parcel& aParcel, EventOptions& aOptions);
   bool WriteNDEFMessage(android::Parcel& aParcel, const CommandOptions& aOptions);
-
+  bool ReadTransceiveResponse(const android::Parcel& aParcel, EventOptions& aOptions);
 private:
   nsTArray<int32_t> mPendingReqQueue;
   nsTArray<nsString> mRequestIdQueue;
