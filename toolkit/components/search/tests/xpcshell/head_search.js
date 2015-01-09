@@ -289,3 +289,51 @@ let addTestEngines = Task.async(function* (aItems) {
 
   return engines;
 });
+
+/**
+ * Returns a promise that is resolved when an observer notification from the
+ * search service fires with the specified data.
+ *
+ * @param aExpectedData
+ *        The value the observer notification sends that causes us to resolve
+ *        the promise.
+ */
+function waitForSearchNotification(aExpectedData) {
+  return new Promise(resolve => {
+    const SEARCH_SERVICE_TOPIC = "browser-search-service";
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      if (aData != aExpectedData)
+        return;
+
+      Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
+      resolve(aSubject);
+    }, SEARCH_SERVICE_TOPIC, false);
+  });
+}
+
+// This "enum" from nsSearchService.js
+const TELEMETRY_RESULT_ENUM = {
+  SUCCESS: 0,
+  SUCCESS_WITHOUT_DATA: 1,
+  XHRTIMEOUT: 2,
+  ERROR: 3,
+};
+
+/**
+ * Checks the value of the SEARCH_SERVICE_COUNTRY_FETCH_RESULT probe.
+ *
+ * @param aExpectedValue
+ *        If a value from TELEMETRY_RESULT_ENUM, we expect to see this value
+ *        recorded exactly once in the probe.  If |null|, we expect to see
+ *        nothing recorded in the probe at all.
+ */
+function checkCountryResultTelemetry(aExpectedValue) {
+  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT");
+  let snapshot = histogram.snapshot();
+  // The probe is declared with 8 values, but we get 9 back from .counts
+  let expectedCounts = [0,0,0,0,0,0,0,0,0];
+  if (aExpectedValue != null) {
+    expectedCounts[aExpectedValue] = 1;
+  }
+  deepEqual(snapshot.counts, expectedCounts);
+}

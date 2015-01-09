@@ -36,15 +36,15 @@ function run_test() {
     equal(Services.prefs.getBoolPref("browser.search.isUS"),
           isUSTimezone(),
           "should have set isUS based on current timezone.");
-    // should have a false value for success.
-    let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS");
-    let snapshot = histogram.snapshot();
-    equal(snapshot.sum, 0);
-
-    // and a flag for SEARCH_SERVICE_COUNTRY_SUCCESS_WITHOUT_DATA
-    histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS_WITHOUT_DATA");
-    snapshot = histogram.snapshot();
-    equal(snapshot.sum, 1);
+    // should have recorded SUCCESS_WITHOUT_DATA
+    checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
+    // and false values for timeout and forced-sync-init.
+    for (let hid of ["SEARCH_SERVICE_COUNTRY_TIMEOUT",
+                     "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
+      let histogram = Services.telemetry.getHistogramById(hid);
+      let snapshot = histogram.snapshot();
+      deepEqual(snapshot.counts, [1,0,0]); // boolean probe so 3 buckets, expect 1 result for |0|.
+    }
 
     do_test_finished();
     run_next_test();

@@ -4543,31 +4543,32 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to build the cache of the search service"
   },
-  "SEARCH_SERVICE_COUNTRY_FETCH_MS": {
+  "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
     "expires_in_version": "never",
-    "kind": "linear",
-    "n_buckets": 20,
-    "high": 2000,
+    "kind": "exponential",
+    "n_buckets": 30,
+    "high": 100000,
     "description": "Time (ms) it takes to fetch the country code"
   },
-  "SEARCH_SERVICE_COUNTRY_FETCH_TIMEOUT": {
+  "SEARCH_SERVICE_COUNTRY_FETCH_RESULT": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
     "expires_in_version": "never",
-    "kind": "flag",
-    "description": "If we saw a timeout fetching the country-code"
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Result of XHR request fetching the country-code. 0=SUCCESS, 1=SUCCESS_WITHOUT_DATA, 2=XHRTIMEOUT, 3=ERROR (rest reserved for finer-grained error codes later)"
   },
-  "SEARCH_SERVICE_COUNTRY_SUCCESS": {
+  "SEARCH_SERVICE_COUNTRY_TIMEOUT": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "If we successfully fetched the country-code."
+    "description": "True if we stopped waiting for the XHR response before it completed"
   },
-  "SEARCH_SERVICE_COUNTRY_SUCCESS_WITHOUT_DATA": {
+  "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
     "expires_in_version": "never",
-    "kind": "flag",
-    "description": "If we got a success response but no country-code"
+    "kind": "boolean",
+    "description": "True if the search service was synchronously initialized while we were waiting for the XHR response"
   },
   "SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
