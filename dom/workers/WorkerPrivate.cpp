@@ -3988,8 +3988,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
     stackLoadInfo.emplace();
 
     nsresult rv = GetLoadInfo(aCx, nullptr, parent, aScriptURL,
-                              aIsChromeWorker, InheritLoadGroup,
-                              stackLoadInfo.ptr());
+                              aIsChromeWorker, stackLoadInfo.ptr());
     if (NS_FAILED(rv)) {
       scriptloader::ReportLoadError(aCx, aScriptURL, rv, !parent);
       aRv.Throw(rv);
@@ -4044,9 +4043,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
 nsresult
 WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
                            WorkerPrivate* aParent, const nsAString& aScriptURL,
-                           bool aIsChromeWorker,
-                           LoadGroupBehavior aLoadGroupBehavior,
-                           LoadInfo* aLoadInfo)
+                           bool aIsChromeWorker, LoadInfo* aLoadInfo)
 {
   using namespace mozilla::dom::workers::scriptloader;
   using mozilla::dom::indexedDB::IDBFactory;
@@ -4279,9 +4276,9 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       loadInfo.mReportCSPViolations = false;
     }
 
-    if (!loadInfo.mLoadGroup || aLoadGroupBehavior == ForceNewLoadGroup) {
+    if (!loadInfo.mLoadGroup) {
       rv = NS_NewLoadGroup(getter_AddRefs(loadInfo.mLoadGroup),
-                           loadInfo.mPrincipal, loadInfo.mLoadGroup);
+                           loadInfo.mPrincipal);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadInfo.mLoadGroup,

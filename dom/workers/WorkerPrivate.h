@@ -921,16 +921,10 @@ public:
   static bool
   WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
 
-  enum LoadGroupBehavior
-  {
-    InheritLoadGroup,
-    ForceNewLoadGroup
-  };
-
   static nsresult
   GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
               const nsAString& aScriptURL, bool aIsChromeWorker,
-              LoadGroupBehavior aLoadGroupBehavior, LoadInfo* aLoadInfo);
+              LoadInfo* aLoadInfo);
 
   WorkerDebugger*
   Debugger() const

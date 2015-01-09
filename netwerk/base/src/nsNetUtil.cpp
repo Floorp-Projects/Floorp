@@ -19,27 +19,16 @@ bool NS_IsValidHTTPToken(const nsACString& aToken)
 }
 
 nsresult
-NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal,
-                nsILoadGroup* aOptionalBase)
+NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal)
 {
     using mozilla::LoadContext;
     nsresult rv;
-
-    nsCOMPtr<nsILoadContext> baseLoadContext;
-    if (aOptionalBase) {
-      nsCOMPtr<nsIInterfaceRequestor> cb;
-      rv = aOptionalBase->GetNotificationCallbacks(getter_AddRefs(cb));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      baseLoadContext = do_QueryInterface(cb);
-    }
 
     nsCOMPtr<nsILoadGroup> group =
         do_CreateInstance(NS_LOADGROUP_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<LoadContext> loadContext = new LoadContext(aPrincipal,
-                                                        baseLoadContext);
+    nsRefPtr<LoadContext> loadContext = new LoadContext(aPrincipal);
     rv = group->SetNotificationCallbacks(loadContext);
     NS_ENSURE_SUCCESS(rv, rv);
 
