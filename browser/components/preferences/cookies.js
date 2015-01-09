@@ -555,7 +555,8 @@ var gCookiesWindow = {
 
     let buttonLabel = this._bundle.getString("removeSelectedCookies");
     let removeSelectedCookies = document.getElementById("removeSelectedCookies");
-    removeSelectedCookies.label = PluralForm.get(selectedCookieCount, buttonLabel);
+    removeSelectedCookies.label = PluralForm.get(selectedCookieCount, buttonLabel)
+                                            .replace("#1", selectedCookieCount);
 
     removeSelectedCookies.disabled = !(seln.count > 0);
   },

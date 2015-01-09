@@ -13,6 +13,7 @@ stumbler_sources = [
     'java/org/mozilla/mozstumbler/service/stumblerthread/blocklist/WifiBlockListInterface.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/datahandling/DataStorageContract.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/datahandling/DataStorageManager.java',
+    'java/org/mozilla/mozstumbler/service/stumblerthread/datahandling/PersistedStats.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/datahandling/StumblerBundle.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/Reporter.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/cellscanner/CellInfo.java',
@@ -28,5 +29,6 @@ stumbler_sources = [
     'java/org/mozilla/mozstumbler/service/utils/AbstractCommunicator.java',
     'java/org/mozilla/mozstumbler/service/utils/NetworkUtils.java',
     'java/org/mozilla/mozstumbler/service/utils/PersistentIntentService.java',
+    'java/org/mozilla/mozstumbler/service/utils/TelemetryWrapper.java',
     'java/org/mozilla/mozstumbler/service/utils/Zipper.java',
 ]
