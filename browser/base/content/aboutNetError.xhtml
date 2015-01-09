@@ -157,7 +157,7 @@
         }
 
         if (err == "nssFailure2" &&
-            sd.textContent.contains("ssl_error_no_cypher_overlap")) {
+            sd.textContent.contains("ssl_error_unsupported_version")) {
           var ssl3ErrorTitle = document.getElementById("et_ssl3");
           var ssl3ErrorDesc = document.getElementById("ed_ssl3");
           var ssl3ShortDesc = document.getElementById("esd_ssl3");
@@ -173,7 +173,7 @@
 
           errDesc.parentNode.replaceChild(ssl3ErrorDesc, errDesc);
           ssl3ErrorDesc.id = "errorLongDesc";
-          ssl3ErrorDesc.querySelector('span').textContent = "ssl_error_no_cypher_overlap";
+          ssl3ErrorDesc.querySelector('span').textContent = "ssl_error_unsupported_version";
 
           var retryBtn = document.getElementById("errorTryAgain");
           retryBtn.textContent = learnMoreText.textContent;
