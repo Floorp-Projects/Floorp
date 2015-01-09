@@ -412,6 +412,61 @@ describe("loop.conversationViews", function () {
       sinon.assert.calledOnce(fakeAudio.play);
       expect(fakeAudio.loop).to.equal(false);
     });
+
+    it("should show 'something went wrong' when the reason is 'media-fail'",
+      function () {
+        store.setStoreState({callStateReason: "media-fail"});
+
+        view = mountTestComponent({contact: contact});
+
+        sinon.assert.calledWith(document.mozL10n.get, "generic_failure_title");
+      });
+
+    it("should show 'contact unavailable' when the reason is 'reject'",
+      function () {
+        store.setStoreState({callStateReason: "reject"});
+
+        view = mountTestComponent({contact: contact});
+
+        sinon.assert.calledWithExactly(document.mozL10n.get,
+          "contact_unavailable_title",
+          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+      });
+
+    it("should show 'contact unavailable' when the reason is 'busy'",
+      function () {
+        store.setStoreState({callStateReason: "busy"});
+
+        view = mountTestComponent({contact: contact});
+
+        sinon.assert.calledWithExactly(document.mozL10n.get,
+          "contact_unavailable_title",
+          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+      });
+
+    it("should show 'contact unavailable' when the reason is 'setup'",
+      function () {
+        store.setStoreState({callStateReason: "setup"});
+
+        view = mountTestComponent({contact: contact});
+
+        sinon.assert.calledWithExactly(document.mozL10n.get,
+          "contact_unavailable_title",
+          {contactName: loop.conversationViews._getContactDisplayName(contact)});
+      });
+
+    it("should display a generic contact unavailable msg when the reason is" +
+       " 'busy' and no display name is available", function() {
+        store.setStoreState({callStateReason: "busy"});
+        var phoneOnlyContact = {
+          tel: [{"pref": true, type: "work", value: ""}]
+        };
+
+        view = mountTestComponent({contact: phoneOnlyContact});
+
+        sinon.assert.calledWith(document.mozL10n.get,
+          "generic_contact_unavailable_title");
+    });
   });
 
   describe("OngoingConversationView", function() {
@@ -531,7 +586,10 @@ describe("loop.conversationViews", function () {
 
     it("should render the CallFailedView when the call state is 'terminated'",
       function() {
-        store.setStoreState({callState: CALL_STATES.TERMINATED});
+        store.setStoreState({
+          callState: CALL_STATES.TERMINATED,
+          contact: contact
+        });
 
         view = mountTestComponent();
 

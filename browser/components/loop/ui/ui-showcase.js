@@ -74,6 +74,11 @@
   var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
     feedbackClient: stageFeedbackApiClient
   });
+  var conversationStore = new loop.store.ConversationStore(dispatcher, {
+    client: {},
+    mozLoop: navigator.mozLoop,
+    sdkDriver: {}
+  });
 
   // Local mocks
 
@@ -376,13 +381,14 @@
             React.createElement(Example, {summary: "Call Failed", dashed: "true", 
                      style: {width: "260px", height: "265px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(CallFailedView, {dispatcher: dispatcher})
+                React.createElement(CallFailedView, {dispatcher: dispatcher, store: conversationStore})
               )
             ), 
             React.createElement(Example, {summary: "Call Failed — with call URL error", dashed: "true", 
                      style: {width: "260px", height: "265px"}}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(CallFailedView, {dispatcher: dispatcher, emailLinkError: true})
+                React.createElement(CallFailedView, {dispatcher: dispatcher, emailLinkError: true, 
+                                store: conversationStore})
               )
             )
           ), 
