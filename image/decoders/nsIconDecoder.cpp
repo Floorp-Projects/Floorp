@@ -73,10 +73,17 @@ nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           break;
         }
 
-        if (!mImageData) {
-          PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
-          return;
+        {
+          MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+          nsresult rv = AllocateFrame(0, nsIntRect(nsIntPoint(), GetSize()),
+                                      gfx::SurfaceFormat::B8G8R8A8);
+          if (NS_FAILED(rv)) {
+            mState = iconStateFinished;
+            return;
+          }
         }
+
+        MOZ_ASSERT(mImageData, "Should have a buffer now");
 
         // Book Keeping
         aBuffer++;
