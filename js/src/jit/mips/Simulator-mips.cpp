@@ -239,9 +239,9 @@ class SimInstruction
 
   private:
 
-    SimInstruction() MOZ_DELETE;
-    SimInstruction(const SimInstruction &other) MOZ_DELETE;
-    void operator=(const SimInstruction &other) MOZ_DELETE;
+    SimInstruction() = delete;
+    SimInstruction(const SimInstruction &other) = delete;
+    void operator=(const SimInstruction &other) = delete;
 };
 
 bool

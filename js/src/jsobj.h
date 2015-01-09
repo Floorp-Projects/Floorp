@@ -568,9 +568,9 @@ class JSObject : public js::gc::Cell
                                    bool *foundp);
 
   public:
-    static bool reportReadOnly(js::ThreadSafeContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
-    bool reportNotConfigurable(js::ThreadSafeContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
-    bool reportNotExtensible(js::ThreadSafeContext *cx, unsigned report = JSREPORT_ERROR);
+    static bool reportReadOnly(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
+    bool reportNotConfigurable(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
+    bool reportNotExtensible(JSContext *cx, unsigned report = JSREPORT_ERROR);
 
     /*
      * Get the property with the given id, then call it as a function with the
@@ -753,9 +753,9 @@ class JSObject : public js::gc::Cell
     js::HeapPtrTypeObject *addressOfType() { return &type_; }
 
   private:
-    JSObject() MOZ_DELETE;
-    JSObject(const JSObject &other) MOZ_DELETE;
-    void operator=(const JSObject &other) MOZ_DELETE;
+    JSObject() = delete;
+    JSObject(const JSObject &other) = delete;
+    void operator=(const JSObject &other) = delete;
 };
 
 template <class U>
@@ -1096,14 +1096,14 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
 namespace js {
 
 bool
-LookupPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
                    Shape **propp);
 
 bool
-GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp);
+GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
 
 inline bool
-GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+GetPropertyPure(ExclusiveContext *cx, JSObject *obj, PropertyName *name, Value *vp)
 {
     return GetPropertyPure(cx, obj, NameToId(name), vp);
 }
@@ -1127,7 +1127,7 @@ extern bool
 IsDelegateOfObject(JSContext *cx, HandleObject protoObj, JSObject* obj, bool *result);
 
 bool
-GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Value &prop, Value *vp);
+GetObjectElementOperationPure(ExclusiveContext *cx, JSObject *obj, const Value &prop, Value *vp);
 
 /* Wrap boolean, number or string as Boolean, Number or String object. */
 extern JSObject *

@@ -212,8 +212,8 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 
   private:
     // Copy and assignment are not supported.
-    JSAutoStructuredCloneBuffer(const JSAutoStructuredCloneBuffer &other) MOZ_DELETE;
-    JSAutoStructuredCloneBuffer &operator=(const JSAutoStructuredCloneBuffer &other) MOZ_DELETE;
+    JSAutoStructuredCloneBuffer(const JSAutoStructuredCloneBuffer &other) = delete;
+    JSAutoStructuredCloneBuffer &operator=(const JSAutoStructuredCloneBuffer &other) = delete;
 };
 
 // The range of tag values the application may use for its own custom object types.

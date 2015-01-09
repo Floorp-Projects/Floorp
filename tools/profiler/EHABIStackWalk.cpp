@@ -62,16 +62,16 @@ struct PRel31 {
     return reinterpret_cast<const char *>(this) + offset();
   }
 private:
-  PRel31(const PRel31 &copied) MOZ_DELETE;
-  PRel31() MOZ_DELETE;
+  PRel31(const PRel31 &copied) = delete;
+  PRel31() = delete;
 };
 
 struct EHEntry {
   PRel31 startPC;
   PRel31 exidx;
 private:
-  EHEntry(const EHEntry &copied) MOZ_DELETE;
-  EHEntry() MOZ_DELETE;
+  EHEntry(const EHEntry &copied) = delete;
+  EHEntry() = delete;
 };
 
 class EHState {

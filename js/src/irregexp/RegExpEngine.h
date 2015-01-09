@@ -1489,8 +1489,8 @@ class Analysis : public NodeVisitor
     bool is_ascii_;
     const char* error_message_;
 
-    Analysis(Analysis &) MOZ_DELETE;
-    void operator=(Analysis &) MOZ_DELETE;
+    Analysis(Analysis &) = delete;
+    void operator=(Analysis &) = delete;
 };
 
 } }  // namespace js::irregexp

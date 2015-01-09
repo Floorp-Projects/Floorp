@@ -86,7 +86,7 @@ interface nsINfcEventListener : nsISupports
   void notifyRFStateChange(in DOMString rfState);
 };
 
-[scriptable, uuid(a8ef3590-d853-4766-b54a-a4547da4dde4)]
+[scriptable, uuid(6c913015-9658-46a9-88d9-6ecfda2bd020)]
 interface nsINfcRequestCallback : nsISupports
 {
   DOMString getCallbackId();
@@ -97,10 +97,12 @@ interface nsINfcRequestCallback : nsISupports
 
   void notifySuccessWithNDEFRecords(in nsIVariant records);
 
+  void notifySuccessWithByteArray(in nsIVariant array);
+
   void notifyError(in DOMString errorMsg);
 };
 
-[scriptable, uuid(c5fdf956-735e-45d3-aa25-3a871bd3e2f8)]
+[scriptable, uuid(0f8aae32-9920-491e-a197-8995941d54df)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -156,6 +158,27 @@ interface nsINfcContentHelper : nsISupports
    */
   void format(in DOMString sessionToken,
               in nsINfcRequestCallback callback);
+
+  /**
+   * Send raw command to the tag and receive the response.
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param technology
+   *        Tag technology
+   *
+   * @param command
+   *        Command to send
+   *
+   * @param callback
+   *        Called when request is finished
+   *
+   */
+  void transceive(in DOMString sessionToken,
+                  in DOMString technology,
+                  in nsIVariant command,
+                  in nsINfcRequestCallback callback);
 
   /**
    * Enable I/O operations to the tag

@@ -878,6 +878,10 @@ GetLastModifiedTime(nsIFile* aFile, int64_t* aTimestamp)
           return rv;
         }
 
+        // Need to convert from milliseconds to microseconds.
+        MOZ_ASSERT((INT64_MAX / PR_USEC_PER_MSEC) > timestamp);
+        timestamp *= int64_t(PR_USEC_PER_MSEC);
+
         if (timestamp > *aTimestamp) {
           *aTimestamp = timestamp;
         }

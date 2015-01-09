@@ -111,6 +111,22 @@ PluginProcessParent::SetCallRunnableImmediately(bool aCallImmediately)
     mRunCompleteTaskImmediately = aCallImmediately;
 }
 
+/**
+ * This function exists so that we may provide an additional level of
+ * indirection between the task being posted to main event loop (a
+ * RunnableMethod) and the launch complete task itself. This is needed
+ * for cases when both WaitUntilConnected or OnChannel* race to invoke the
+ * task.
+ */
+void
+PluginProcessParent::RunLaunchCompleteTask()
+{
+    if (mLaunchCompleteTask) {
+        mLaunchCompleteTask->Run();
+        mLaunchCompleteTask = nullptr;
+    }
+}
+
 bool
 PluginProcessParent::WaitUntilConnected(int32_t aTimeoutMs)
 {
@@ -119,8 +135,7 @@ PluginProcessParent::WaitUntilConnected(int32_t aTimeoutMs)
         if (result) {
             mLaunchCompleteTask->SetLaunchSucceeded();
         }
-        mLaunchCompleteTask->Run();
-        mLaunchCompleteTask = nullptr;
+        RunLaunchCompleteTask();
     }
     return result;
 }
@@ -131,7 +146,8 @@ PluginProcessParent::OnChannelConnected(int32_t peer_pid)
     GeckoChildProcessHost::OnChannelConnected(peer_pid);
     if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
         mLaunchCompleteTask->SetLaunchSucceeded();
-        mMainMsgLoop->PostTask(FROM_HERE, mLaunchCompleteTask.release());
+        mMainMsgLoop->PostTask(FROM_HERE, NewRunnableMethod(this,
+                                   &PluginProcessParent::RunLaunchCompleteTask));
     }
 }
 
@@ -140,7 +156,8 @@ PluginProcessParent::OnChannelError()
 {
     GeckoChildProcessHost::OnChannelError();
     if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
-        mMainMsgLoop->PostTask(FROM_HERE, mLaunchCompleteTask.release());
+        mMainMsgLoop->PostTask(FROM_HERE, NewRunnableMethod(this,
+                                   &PluginProcessParent::RunLaunchCompleteTask));
     }
 }
 

@@ -60,7 +60,10 @@ async_test(function(t) {
       assert_unreached('ready promise was rejected');
     });
 
-  }).then(waitForFrame).then(t.step_func(function() {
+  // We need to wait for up to two frames since the animation may not start
+  // until the beginning of the next refresh driver tick and it won't queue
+  // the ready Promise callback until that point.
+  }).then(waitForFrame).then(waitForFrame).then(t.step_func(function() {
     assert_true(promiseCallbackDone,
                 'ready promise callback was called before the next'
                 + ' requestAnimationFrame callback');
@@ -71,7 +74,7 @@ async_test(function(t) {
 // Test that compositor animations with delays get synced correctly
 //
 // NOTE: It is important that we DON'T use
-// SpecialWindows.DOMWindowUtils.advanceTimeAndRefresh here since that takes
+// SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
 async_test(function(t) {
   // This test only applies to compositor animations

@@ -142,7 +142,7 @@ public:
 private:
   virtual ~_OldCacheEntryWrapper();
 
-  _OldCacheEntryWrapper() MOZ_DELETE;
+  _OldCacheEntryWrapper() = delete;
   nsICacheEntryDescriptor* mOldDesc; // ref holded in mOldInfo
   nsCOMPtr<nsICacheEntryInfo> mOldInfo;
 };

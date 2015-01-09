@@ -9503,8 +9503,8 @@ class CGClass(CGThing):
 
                 def declare(self, cgClass):
                     name = cgClass.getNameString()
-                    return ("%s(const %s&) MOZ_DELETE;\n"
-                            "void operator=(const %s) MOZ_DELETE;\n" % (name, name, name))
+                    return ("%s(const %s&) = delete;\n"
+                            "void operator=(const %s) = delete;\n" % (name, name, name))
 
             disallowedCopyConstructors = [DisallowedCopyConstructor()]
         else:

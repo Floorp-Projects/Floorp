@@ -59,8 +59,8 @@ public:
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-    HRTFDatabase(const HRTFDatabase& other) MOZ_DELETE;
-    void operator=(const HRTFDatabase& other) MOZ_DELETE;
+    HRTFDatabase(const HRTFDatabase& other) = delete;
+    void operator=(const HRTFDatabase& other) = delete;
 
     explicit HRTFDatabase(float sampleRate);
 

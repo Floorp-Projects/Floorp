@@ -44,7 +44,7 @@ private:
   uint32_t mFlags : 2;
 
 private:
-  CacheMemoryConsumer() MOZ_DELETE;
+  CacheMemoryConsumer() = delete;
 
 protected:
   enum {
@@ -320,7 +320,7 @@ private:
 
   private:
     uint32_t const Limit() const;
-    MemoryPool() MOZ_DELETE;
+    MemoryPool() = delete;
   };
 
   MemoryPool mDiskPool;

@@ -63,7 +63,7 @@ public:
   float            mZoomRatio;
 
 private:
-  nsPrintObject& operator=(const nsPrintObject& aOther) MOZ_DELETE;
+  nsPrintObject& operator=(const nsPrintObject& aOther) = delete;
 };
 
 

@@ -98,7 +98,7 @@ class NrIceResolver
         cb_(cb), cb_arg_(cb_arg),
         canceled_ (false) {}
     NS_IMETHOD OnLookupComplete(nsICancelable *request, nsIDNSRecord *record,
-                                nsresult status);
+                                nsresult status) MOZ_OVERRIDE;
     int cancel();
     nsCOMPtr<nsICancelable> request_;
     NS_DECL_THREADSAFE_ISUPPORTS

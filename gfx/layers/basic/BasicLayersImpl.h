@@ -10,7 +10,7 @@
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "ReadbackLayer.h"              // for ReadbackLayer
 #include "gfxContext.h"                 // for gfxContext, etc
-#include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_STACK_CLASS
+#include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"              // for Maybe
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION

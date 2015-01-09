@@ -2631,7 +2631,7 @@ IsPropertyAddInlineable(NativeObject *obj, HandleId id, ConstantOrRegister val, 
 }
 
 static SetPropertyIC::NativeSetPropCacheability
-CanAttachNativeSetProp(ThreadSafeContext *cx, HandleObject obj, HandleId id, ConstantOrRegister val,
+CanAttachNativeSetProp(JSContext *cx, HandleObject obj, HandleId id, ConstantOrRegister val,
                        bool needsTypeBarrier, MutableHandleNativeObject holder,
                        MutableHandleShape shape, bool *checkTypeset)
 {

@@ -48,8 +48,8 @@ public:
   }
 
 private:
-  ReentrancyGuard(const ReentrancyGuard&) MOZ_DELETE;
-  void operator=(const ReentrancyGuard&) MOZ_DELETE;
+  ReentrancyGuard(const ReentrancyGuard&) = delete;
+  void operator=(const ReentrancyGuard&) = delete;
 };
 
 } // namespace mozilla

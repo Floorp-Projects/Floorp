@@ -66,8 +66,8 @@ public:
   nsIStyleRule* LangRuleFor(const nsString& aLanguage);
 
 private: 
-  nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) MOZ_DELETE;
-  nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) MOZ_DELETE;
+  nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
+  nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
 
   ~nsHTMLStyleSheet();
 

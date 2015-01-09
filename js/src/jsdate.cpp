@@ -304,7 +304,7 @@ DayFromMonth(int month, bool isLeapYear)
 
 template<typename T>
 static inline int
-DayFromMonth(T month, bool isLeapYear) MOZ_DELETE;
+DayFromMonth(T month, bool isLeapYear) = delete;
 
 /* ES5 15.9.1.12 (out of order to accommodate DaylightSavingTA). */
 static double

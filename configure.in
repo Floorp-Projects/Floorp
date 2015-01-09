@@ -1882,16 +1882,6 @@ case "$host" in
     ;;
 esac
 
-dnl Check for using a custom <inttypes.h> implementation
-dnl ========================================================
-AC_MSG_CHECKING(for custom <inttypes.h> implementation)
-if test "$MOZ_CUSTOM_INTTYPES_H"; then
-  AC_DEFINE_UNQUOTED(MOZ_CUSTOM_INTTYPES_H, "$MOZ_CUSTOM_INTTYPES_H")
-  AC_MSG_RESULT(using $MOZ_CUSTOM_INTTYPES_H)
-else
-  AC_MSG_RESULT(none specified)
-fi
-
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`

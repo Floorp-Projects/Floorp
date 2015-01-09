@@ -35,8 +35,8 @@ class Symbol : public js::gc::TenuredCell
     Symbol(SymbolCode code, JSAtom *desc)
         : code_(code), description_(desc) {}
 
-    Symbol(const Symbol &) MOZ_DELETE;
-    void operator=(const Symbol &) MOZ_DELETE;
+    Symbol(const Symbol &) = delete;
+    void operator=(const Symbol &) = delete;
 
     static Symbol *
     newInternal(js::ExclusiveContext *cx, SymbolCode code, JSAtom *description);

@@ -96,27 +96,59 @@ public:
   void Tick();
 
   /**
-   * Sets the start time of a player that is waiting to play to the current
-   * time of its timeline.
-   *
-   * This will reset the pending flag if the call succeeded. The caller is
-   * responsible for removing the player from the PendingPlayerTracker though.
-   *
    * Typically, when a player is played, it does not start immediately but is
    * added to a table of pending players on the document of its source content.
-   * In the meantime it sets its hold time to the time from which should
-   * begin playback.
+   * In the meantime it sets its hold time to the time from which playback
+   * should begin.
    *
    * When the document finishes painting, any pending players in its table
-   * are started by calling this method.
+   * are marked as being ready to start by calling StartOnNextTick.
+   * The moment when the paint completed is also recorded, converted to a
+   * timeline time, and passed to StartOnTick. This is so that when these
+   * players do start, they can be timed from the point when painting
+   * completed.
+   *
+   * After calling StartOnNextTick, players remain in the pending state until
+   * the next refresh driver tick. At that time they transition out of the
+   * pending state using the time passed to StartOnNextTick as the effective
+   * time at which they resumed.
    *
    * This approach means that any setup time required for performing the
    * initial paint of an animation such as layerization is not deducted from
    * the running time of the animation. Without this we can easily drop the
    * first few frames of an animation, or, on slower devices, the whole
    * animation.
+   *
+   * Furthermore:
+   *
+   * - Starting the player immediately when painting finishes is problematic
+   *   because the start time of the player will be ahead of its timeline
+   *   (since the timeline time is based on the refresh driver time).
+   *   That's a problem because the player is playing but its timing suggests
+   *   it starts in the future. We could update the timeline to match the start
+   *   time of the player but then we'd also have to update the timing and style
+   *   of all animations connected to that timeline or else be stuck in an
+   *   inconsistent state until the next refresh driver tick.
+   *
+   * - If we simply use the refresh driver time on its next tick, the lag
+   *   between triggering an animation and its effective start is unacceptably
+   *   long.
+   *
+   * Note that the caller of this method is responsible for removing the player
+   * from any PendingPlayerTracker it may have been added to.
    */
+  void StartOnNextTick(const Nullable<TimeDuration>& aReadyTime);
+
+  // Testing only: Start a pending player using the current timeline time.
+  // This is used to support existing tests that expect animations to begin
+  // immediately. Ideally we would rewrite the those tests and get rid of this
+  // method, but there are a lot of them.
+  //
+  // As with StartOnNextTick, the caller of this method is responsible for
+  // removing the player from any PendingPlayerTracker it may have been added
+  // to.
   void StartNow();
+
   void Cancel();
 
   const nsString& Name() const {
@@ -155,6 +187,7 @@ public:
 protected:
   void DoPlay();
   void DoPause();
+  void ResumeAt(const TimeDuration& aResumeTime);
 
   void UpdateSourceContent();
   void FlushStyle() const;
@@ -163,6 +196,8 @@ protected:
   // as necessary. The caller is responsible for resolving or aborting the
   // mReady promise as necessary.
   void CancelPendingPlay();
+
+  bool IsPossiblyOrphanedPendingPlayer() const;
   StickyTimeDuration SourceContentEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
@@ -175,6 +210,7 @@ protected:
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
+  Nullable<TimeDuration> mPendingReadyTime; // Timeline timescale
 
   // A Promise that is replaced on each call to Play() (and in future Pause())
   // and fulfilled when Play() is successfully completed.

@@ -178,7 +178,7 @@ void
 MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f)", this, aDuration);
+  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f, ErrorResult)", this, aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -188,6 +188,14 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+  SetDuration(aDuration);
+}
+
+void
+MediaSource::SetDuration(double aDuration)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f)", this, aDuration);
   mDecoder->SetMediaSourceDuration(aDuration);
 }
 
@@ -330,8 +338,9 @@ MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
     return true;
   }
 
-  // We want to restrict to YouTube only.  We define that as the
-  // origin being https://*.youtube.com.
+  // We want to restrict to YouTube only.
+  // We define that as the origin being https://*.youtube.com.
+  // We also support https://*.youtube-nocookie.com.
   nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(global);
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(principal->GetURI(getter_AddRefs(uri))) || !uri) {
@@ -348,9 +357,12 @@ MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
   NS_ENSURE_TRUE(tldServ, false);
 
   nsAutoCString eTLDplusOne;
-  return
-    NS_SUCCEEDED(tldServ->GetBaseDomain(uri, 0, eTLDplusOne)) &&
-    eTLDplusOne.EqualsLiteral("youtube.com");
+   if (NS_FAILED(tldServ->GetBaseDomain(uri, 0, eTLDplusOne))) {
+     return false;
+   }
+
+   return eTLDplusOne.EqualsLiteral("youtube.com") ||
+          eTLDplusOne.EqualsLiteral("youtube-nocookie.com");
 }
 
 bool

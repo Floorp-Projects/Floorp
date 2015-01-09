@@ -9,6 +9,7 @@
 #include <jni.h>
 #include <android/input.h>
 #include <android/log.h>
+#include <android/api-level.h>
 
 #include "nsGeoPosition.h"
 #include "nsRect.h"
@@ -233,6 +234,7 @@ private:
 
 enum {
     // These keycode masks are not defined in android/keycodes.h:
+#if __ANDROID_API__ < 13
     AKEYCODE_ESCAPE             = 111,
     AKEYCODE_FORWARD_DEL        = 112,
     AKEYCODE_CTRL_LEFT          = 113,
@@ -326,13 +328,19 @@ enum {
     AKEYCODE_BUTTON_14          = 201,
     AKEYCODE_BUTTON_15          = 202,
     AKEYCODE_BUTTON_16          = 203,
+#endif
+#if __ANDROID_API__ < 14
     AKEYCODE_LANGUAGE_SWITCH    = 204,
     AKEYCODE_MANNER_MODE        = 205,
     AKEYCODE_3D_MODE            = 206,
+#endif
+#if __ANDROID_API__ < 15
     AKEYCODE_CONTACTS           = 207,
     AKEYCODE_CALENDAR           = 208,
     AKEYCODE_MUSIC              = 209,
     AKEYCODE_CALCULATOR         = 210,
+#endif
+#if __ANDROID_API__ < 16
     AKEYCODE_ZENKAKU_HANKAKU    = 211,
     AKEYCODE_EISU               = 212,
     AKEYCODE_MUHENKAN           = 213,
@@ -342,6 +350,7 @@ enum {
     AKEYCODE_RO                 = 217,
     AKEYCODE_KANA               = 218,
     AKEYCODE_ASSIST             = 219,
+#endif
 
     AMETA_FUNCTION_ON           = 0x00000008,
     AMETA_CTRL_ON               = 0x00001000,

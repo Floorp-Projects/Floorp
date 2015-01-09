@@ -329,18 +329,15 @@ var tests = [
 ]
 
 function runTests() {
-  var testIter = Iterator(tests);
   function runNextTest() {
-    let name, anchorPos, test;
-    try {
-      let index;
-      [index, [name, anchorPos, test]] = testIter.next();
-    } catch (err if err instanceof StopIteration) {
+    let result = tests.shift();
+    if (!result) {
       // out of tests
       panel.hidePopup();
       SimpleTest.finish();
       return;
     }
+    let [name, anchorPos, test] = result;
     SimpleTest.info("sub-test " + anchorPos + "." + name + " starting");
     // first arrange for the anchor to be where the test requires it.
     panel.hidePopup();

@@ -171,59 +171,59 @@
        Enum mEnum; \
      };
 #  define MOZ_FINISH_NESTED_ENUM_CLASS(Name) \
-     inline int operator+(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator+(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator-(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator-(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator*(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator*(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator/(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator/(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator%(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator%(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator+(const Name::Enum&) MOZ_DELETE; \
-     inline int operator-(const Name::Enum&) MOZ_DELETE; \
-     inline int& operator++(Name::Enum&) MOZ_DELETE; \
-     inline int operator++(Name::Enum&, int) MOZ_DELETE; \
-     inline int& operator--(Name::Enum&) MOZ_DELETE; \
-     inline int operator--(Name::Enum&, int) MOZ_DELETE; \
-     inline bool operator==(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator==(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator!=(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator!=(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator>(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator>(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator<(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator<(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator>=(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator>=(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator<=(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator<=(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline bool operator!(const Name::Enum&) MOZ_DELETE; \
-     inline bool operator&&(const bool&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator&&(const Name::Enum&, const bool&) MOZ_DELETE; \
-     inline bool operator||(const bool&, const Name::Enum&) MOZ_DELETE; \
-     inline bool operator||(const Name::Enum&, const bool&) MOZ_DELETE; \
-     inline int operator&(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator&(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator|(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator|(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator^(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator^(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator<<(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator<<(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int operator>>(const int&, const Name::Enum&) MOZ_DELETE; \
-     inline int operator>>(const Name::Enum&, const int&) MOZ_DELETE; \
-     inline int& operator+=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator-=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator*=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator/=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator%=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator&=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator|=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator^=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator<<=(int&, const Name::Enum&) MOZ_DELETE; \
-     inline int& operator>>=(int&, const Name::Enum&) MOZ_DELETE;
+     inline int operator+(const int&, const Name::Enum&) = delete; \
+     inline int operator+(const Name::Enum&, const int&) = delete; \
+     inline int operator-(const int&, const Name::Enum&) = delete; \
+     inline int operator-(const Name::Enum&, const int&) = delete; \
+     inline int operator*(const int&, const Name::Enum&) = delete; \
+     inline int operator*(const Name::Enum&, const int&) = delete; \
+     inline int operator/(const int&, const Name::Enum&) = delete; \
+     inline int operator/(const Name::Enum&, const int&) = delete; \
+     inline int operator%(const int&, const Name::Enum&) = delete; \
+     inline int operator%(const Name::Enum&, const int&) = delete; \
+     inline int operator+(const Name::Enum&) = delete; \
+     inline int operator-(const Name::Enum&) = delete; \
+     inline int& operator++(Name::Enum&) = delete; \
+     inline int operator++(Name::Enum&, int) = delete; \
+     inline int& operator--(Name::Enum&) = delete; \
+     inline int operator--(Name::Enum&, int) = delete; \
+     inline bool operator==(const int&, const Name::Enum&) = delete; \
+     inline bool operator==(const Name::Enum&, const int&) = delete; \
+     inline bool operator!=(const int&, const Name::Enum&) = delete; \
+     inline bool operator!=(const Name::Enum&, const int&) = delete; \
+     inline bool operator>(const int&, const Name::Enum&) = delete; \
+     inline bool operator>(const Name::Enum&, const int&) = delete; \
+     inline bool operator<(const int&, const Name::Enum&) = delete; \
+     inline bool operator<(const Name::Enum&, const int&) = delete; \
+     inline bool operator>=(const int&, const Name::Enum&) = delete; \
+     inline bool operator>=(const Name::Enum&, const int&) = delete; \
+     inline bool operator<=(const int&, const Name::Enum&) = delete; \
+     inline bool operator<=(const Name::Enum&, const int&) = delete; \
+     inline bool operator!(const Name::Enum&) = delete; \
+     inline bool operator&&(const bool&, const Name::Enum&) = delete; \
+     inline bool operator&&(const Name::Enum&, const bool&) = delete; \
+     inline bool operator||(const bool&, const Name::Enum&) = delete; \
+     inline bool operator||(const Name::Enum&, const bool&) = delete; \
+     inline int operator&(const int&, const Name::Enum&) = delete; \
+     inline int operator&(const Name::Enum&, const int&) = delete; \
+     inline int operator|(const int&, const Name::Enum&) = delete; \
+     inline int operator|(const Name::Enum&, const int&) = delete; \
+     inline int operator^(const int&, const Name::Enum&) = delete; \
+     inline int operator^(const Name::Enum&, const int&) = delete; \
+     inline int operator<<(const int&, const Name::Enum&) = delete; \
+     inline int operator<<(const Name::Enum&, const int&) = delete; \
+     inline int operator>>(const int&, const Name::Enum&) = delete; \
+     inline int operator>>(const Name::Enum&, const int&) = delete; \
+     inline int& operator+=(int&, const Name::Enum&) = delete; \
+     inline int& operator-=(int&, const Name::Enum&) = delete; \
+     inline int& operator*=(int&, const Name::Enum&) = delete; \
+     inline int& operator/=(int&, const Name::Enum&) = delete; \
+     inline int& operator%=(int&, const Name::Enum&) = delete; \
+     inline int& operator&=(int&, const Name::Enum&) = delete; \
+     inline int& operator|=(int&, const Name::Enum&) = delete; \
+     inline int& operator^=(int&, const Name::Enum&) = delete; \
+     inline int& operator<<=(int&, const Name::Enum&) = delete; \
+     inline int& operator>>=(int&, const Name::Enum&) = delete;
 
   /*
    * MOZ_ENUM_CLASS_ENUM_TYPE allows using enum classes

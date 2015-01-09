@@ -64,8 +64,8 @@ private:
     }
   }
 
-  void operator=(const AutoClose<T> &) MOZ_DELETE;
-  AutoClose(const AutoClose<T> &) MOZ_DELETE;
+  void operator=(const AutoClose<T> &) = delete;
+  AutoClose(const AutoClose<T> &) = delete;
 
   nsCOMPtr<T> mPtr;
 };

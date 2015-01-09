@@ -503,7 +503,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
     }
 
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        return baseops::SetPropertyHelper<SequentialExecution>(
+        return baseops::SetPropertyHelper(
             cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
             (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
              op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
