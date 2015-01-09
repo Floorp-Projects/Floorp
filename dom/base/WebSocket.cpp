@@ -646,14 +646,13 @@ WebSocketImpl::DoOnMessageAvailable(const nsACString& aMsg, bool isBinary)
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the message event");
     }
-
-    return NS_OK;
+  } else {
+    // CLOSING should be the only other state where it's possible to get msgs
+    // from channel: Spec says to drop them.
+    MOZ_ASSERT(readyState == WebSocket::CLOSING,
+               "Received message while CONNECTING or CLOSED");
   }
 
-  // CLOSING should be the only other state where it's possible to get msgs
-  // from channel: Spec says to drop them.
-  MOZ_ASSERT(readyState == WebSocket::CLOSING,
-             "Received message while CONNECTING or CLOSED");
   return NS_OK;
 }
 
@@ -719,17 +718,14 @@ WebSocketImpl::OnStart(nsISupports* aContext)
 
   mWebSocket->SetReadyState(WebSocket::OPEN);
 
-  // Let's keep the object alive because the webSocket can be CCed in the
-  // onopen callback.
-  nsRefPtr<WebSocket> webSocket = mWebSocket;
-
   // Call 'onopen'
-  rv = webSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("open"));
+  rv = mWebSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("open"));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the open event");
   }
 
-  webSocket->UpdateMustKeepAlive();
+  mWebSocket->UpdateMustKeepAlive();
+
   return NS_OK;
 }
 
@@ -1600,27 +1596,23 @@ WebSocketImpl::DispatchConnectionCloseEvents()
 
   mWebSocket->SetReadyState(WebSocket::CLOSED);
 
-  // Let's keep the object alive because the webSocket can be CCed in the
-  // onerror or in the onclose callback.
-  nsRefPtr<WebSocket> webSocket = mWebSocket;
-
   // Call 'onerror' if needed
   if (mFailed) {
     nsresult rv =
-      webSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
+      mWebSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the error event");
     }
   }
 
-  nsresult rv = webSocket->CreateAndDispatchCloseEvent(mCloseEventWasClean,
-                                                       mCloseEventCode,
-                                                       mCloseEventReason);
+  nsresult rv = mWebSocket->CreateAndDispatchCloseEvent(mCloseEventWasClean,
+                                                        mCloseEventCode,
+                                                        mCloseEventReason);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the close event");
   }
 
-  webSocket->UpdateMustKeepAlive();
+  mWebSocket->UpdateMustKeepAlive();
   Disconnect();
 }
 
