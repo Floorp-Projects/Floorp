@@ -65,7 +65,7 @@ def print_command(command, outfile=None, env=None):
 
 def generate_hazards(config, outfilename):
     jobs = []
-    for i in range(config['jobs']):
+    for i in range(int(config['jobs'])):
         command = fill(('%(js)s',
                         '%(analysis_scriptdir)s/analyzeRoots.js',
                         '%(gcFunctions_list)s',
@@ -90,7 +90,7 @@ def generate_hazards(config, outfilename):
         raise subprocess.CalledProcessError(final_status, 'analyzeRoots.js')
 
     with open(outfilename, 'w') as output:
-        command = ['cat'] + [ 'rootingHazards.%s' % (i+1,) for i in range(config['jobs']) ]
+        command = ['cat'] + [ 'rootingHazards.%s' % (i+1,) for i in range(int(config['jobs'])) ]
         print_command(command, outfile=outfilename)
         subprocess.call(command, stdout=output)
 
