@@ -1931,16 +1931,6 @@ JS_StrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict,
     return true;
 }
 
-#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 4
-/* See comment in jsapi.h. */
-JS_PUBLIC_API(bool)
-JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
-{
-    MOZ_ASSERT(*resolvedp == false);
-    return true;
-}
-#endif  /* GCC 4.4 */
-
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, HandleObject obj, HandleObject parent_proto,
              const JSClass *clasp, JSNative constructor, unsigned nargs,

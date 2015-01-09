@@ -140,10 +140,8 @@ static bool sUseHardLinks = true;
 #define BZ2_CRC32TABLE_UNDECLARED
 
 #if MOZ_IS_GCC
-#if MOZ_GCC_VERSION_AT_LEAST(3, 3, 0)
 extern "C"  __attribute__((visibility("default"))) unsigned int BZ2_crc32Table[256];
 #undef BZ2_CRC32TABLE_UNDECLARED
-#endif
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 extern "C" __global unsigned int BZ2_crc32Table[256];
 #undef BZ2_CRC32TABLE_UNDECLARED

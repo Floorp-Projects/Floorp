@@ -1358,7 +1358,7 @@ Interpret(JSContext *cx, RunState &state)
  * IBM's C compiler when run with the right options (e.g., -qlanglvl=extended)
  * also supports threading. Ditto the SunPro C compiler.
  */
-#if (__GNUC__ >= 3 ||                                                         \
+#if (defined(__GNUC__) ||                                                         \
      (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) ||                      \
      __SUNPRO_C >= 0x570)
 // Non-standard but faster indirect-goto-based dispatch.
