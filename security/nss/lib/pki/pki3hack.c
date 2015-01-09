@@ -856,6 +856,8 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
     CERTCertificate *cc = NULL;
     CERTCertTrust certTrust;
 
+    /* make sure object does not go away until we finish */
+    nssPKIObject_AddRef(&c->object);
     nssPKIObject_Lock(&c->object);
 
     dc = c->decoding;
@@ -905,6 +907,7 @@ stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate)
 
   loser:
     nssPKIObject_Unlock(&c->object);
+    nssPKIObject_Destroy(&c->object);
     return cc;
 }
 
@@ -1271,6 +1274,7 @@ DeleteCertTrustMatchingSlot(PK11SlotInfo *pk11slot, nssPKIObject *tObject)
     int failureCount = 0;        /* actual deletion failures by devices */
     int index;
 
+    nssPKIObject_AddRef(tObject);
     nssPKIObject_Lock(tObject);
     /* Keep going even if a module fails to delete. */
     for (index = 0; index < tObject->numInstances; index++) {
@@ -1304,6 +1308,7 @@ DeleteCertTrustMatchingSlot(PK11SlotInfo *pk11slot, nssPKIObject *tObject)
     }
 
     nssPKIObject_Unlock(tObject);
+    nssPKIObject_Destroy(tObject);
 
     return failureCount == 0 ? PR_SUCCESS : PR_FAILURE;
 }
@@ -1330,6 +1335,7 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
      * loop so that once it's failed the other gets set.
      */
     NSSRWLock_LockRead(td->tokensLock);
+    nssPKIObject_AddRef(cobject);
     nssPKIObject_Lock(cobject);
     for (i = 0; i < cobject->numInstances; i++) {
 	nssCryptokiObject *cInstance = cobject->instances[i];
@@ -1344,6 +1350,7 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
 	}
     }
     nssPKIObject_Unlock(cobject);
+    nssPKIObject_Destroy(cobject);
     NSSRWLock_UnlockRead(td->tokensLock);
     return nssrv;
 }

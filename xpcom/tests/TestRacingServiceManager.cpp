@@ -96,9 +96,9 @@ public:
 
   NS_IMETHOD CreateInstance(nsISupports* aDelegate,
                             const nsIID& aIID,
-                            void** aResult);
+                            void** aResult) MOZ_OVERRIDE;
 
-  NS_IMETHOD LockFactory(bool aLock) {
+  NS_IMETHOD LockFactory(bool aLock) MOZ_OVERRIDE {
     return NS_OK;
   }
 

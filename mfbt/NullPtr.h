@@ -25,7 +25,7 @@
 #    endif
 #  endif
 #elif defined(_MSC_VER)
-   // The minimum supported MSVC (10, _MSC_VER 1600) supports nullptr.
+   // The minimum supported MSVC (12, _MSC_VER 1800) supports nullptr.
 #  define MOZ_HAVE_CXX11_NULLPTR
 #endif
 

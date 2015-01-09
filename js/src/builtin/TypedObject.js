@@ -380,7 +380,7 @@ function TypeDescrEquivalent(otherDescr) {
   return DescrsEquiv(this, otherDescr);
 }
 
-// TypedArray.redimension(newArrayType)
+// TypedObjectArray.redimension(newArrayType)
 //
 // Method that "repackages" the data from this array into a new typed
 // object whose type is `newArrayType`. Once you strip away all the
@@ -400,7 +400,7 @@ function TypeDescrEquivalent(otherDescr) {
 // if the base element types are not equivalent.
 //
 // Warning: user exposed!
-function TypedArrayRedimension(newArrayType) {
+function TypedObjectArrayRedimension(newArrayType) {
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
@@ -631,7 +631,7 @@ function TypedObjectArrayTypeFrom(a, b, c) {
 }
 
 // Warning: user exposed!
-function TypedArrayMap(a, b) {
+function TypedObjectArrayMap(a, b) {
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = TypedObjectTypeDescr(this);
@@ -647,26 +647,26 @@ function TypedArrayMap(a, b) {
 }
 
 // Warning: user exposed!
-function TypedArrayMapPar(a, b) {
+function TypedObjectArrayMapPar(a, b) {
   // Arguments: [depth], func
 
   // Defer to the sequential variant for error cases or
   // when not working with typed objects.
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return callFunction(TypedArrayMap, this, a, b);
+    return callFunction(TypedObjectArrayMap, this, a, b);
   var thisType = TypedObjectTypeDescr(this);
   if (!TypeDescrIsArrayType(thisType))
-    return callFunction(TypedArrayMap, this, a, b);
+    return callFunction(TypedObjectArrayMap, this, a, b);
 
   if (typeof a === "number" && IsCallable(b))
     return MapTypedParImpl(this, a, thisType, b);
   else if (IsCallable(a))
     return MapTypedParImpl(this, 1, thisType, a);
-  return callFunction(TypedArrayMap, this, a, b);
+  return callFunction(TypedObjectArrayMap, this, a, b);
 }
 
 // Warning: user exposed!
-function TypedArrayReduce(a, b) {
+function TypedObjectArrayReduce(a, b) {
   // Arguments: func, [initial]
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -682,7 +682,7 @@ function TypedArrayReduce(a, b) {
 }
 
 // Warning: user exposed!
-function TypedArrayScatter(a, b, c, d) {
+function TypedObjectArrayScatter(a, b, c, d) {
   // Arguments: outputArrayType, indices, defaultValue, conflictFunction
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -700,7 +700,7 @@ function TypedArrayScatter(a, b, c, d) {
 }
 
 // Warning: user exposed!
-function TypedArrayFilter(func) {
+function TypedObjectArrayFilter(func) {
   // Arguments: predicate
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -741,18 +741,18 @@ function TypedObjectArrayTypeFromPar(a,b,c) {
 }
 
 // Warning: user exposed!
-function TypedArrayReducePar(a, b) {
-  return callFunction(TypedArrayReduce, this, a, b);
+function TypedObjectArrayReducePar(a, b) {
+  return callFunction(TypedObjectArrayReduce, this, a, b);
 }
 
 // Warning: user exposed!
-function TypedArrayScatterPar(a, b, c, d) {
-  return callFunction(TypedArrayScatter, this, a, b, c, d);
+function TypedObjectArrayScatterPar(a, b, c, d) {
+  return callFunction(TypedObjectArrayScatter, this, a, b, c, d);
 }
 
 // Warning: user exposed!
-function TypedArrayFilterPar(func) {
-  return callFunction(TypedArrayFilter, this, func);
+function TypedObjectArrayFilterPar(func) {
+  return callFunction(TypedObjectArrayFilter, this, func);
 }
 
 // should eventually become macros

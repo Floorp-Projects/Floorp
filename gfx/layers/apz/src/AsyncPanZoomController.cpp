@@ -916,7 +916,9 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
   }
 }
 
-AsyncPanZoomController::~AsyncPanZoomController() {
+AsyncPanZoomController::~AsyncPanZoomController()
+{
+  MOZ_ASSERT(IsDestroyed());
 }
 
 PCompositorParent*
@@ -963,8 +965,6 @@ AsyncPanZoomController::Destroy()
     mGeckoContentController = nullptr;
     mGestureEventListener = nullptr;
   }
-  mPrevSibling = nullptr;
-  mLastChild = nullptr;
   mParent = nullptr;
   mTreeManager = nullptr;
 

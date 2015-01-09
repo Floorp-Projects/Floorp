@@ -21,6 +21,7 @@
 #include "mozilla/Vector.h"             // for mozilla::Vector
 #include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
+#include "mozilla/layers/APZUtils.h"    // for HitTestResult
 
 class nsIntRegion;
 
@@ -48,6 +49,7 @@ struct OverscrollHandoffState;
 class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
+class HitTestingTreeNode;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -72,10 +74,11 @@ class GeckoContentController;
  * This class generally lives on the compositor thread, although some functions
  * may be called from other threads as noted; thread safety is ensured internally.
  *
- * The bulk of the work of this class happens as part of the UpdatePanZoomControllerTree
+ * The bulk of the work of this class happens as part of the UpdateHitTestingTree
  * function, which is when a layer tree update is received by the compositor.
- * This function walks through the layer tree and creates a tree of APZC instances
- * to match the scrollable container layers. APZC instances may be preserved across
+ * This function walks through the layer tree and creates a tree of
+ * HitTestingTreeNode instances to match the layer tree and for use in
+ * hit-testing on the controller thread. APZC instances may be preserved across
  * calls to this function if the corresponding layers are still present in the layer
  * tree.
  *
@@ -95,9 +98,9 @@ class APZCTreeManager {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef uint32_t TouchBehaviorFlags;
 
-  // Helper struct to hold some state while we build the APZ tree. The
+  // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
-  // UpdatePanZoomControllerTree. All the state that we don't need to
+  // UpdateHitTestingTree. All the state that we don't need to
   // push on the stack during recursion and pop on unwind is stored here.
   struct TreeBuildingState;
 
@@ -105,9 +108,9 @@ public:
   APZCTreeManager();
 
   /**
-   * Rebuild the APZC tree based on the layer update that just came up. Preserve
-   * APZC instances where possible, but retire those whose layers are no longer
-   * in the layer tree.
+   * Rebuild the hit-testing tree based on the layer update that just came up.
+   * Preserve nodes and APZC instances where possible, but retire those whose
+   * layers are no longer in the layer tree.
    *
    * This must be called on the compositor thread as it walks the layer tree.
    *
@@ -125,11 +128,11 @@ public:
    *                             process' layer subtree has its own sequence
    *                             numbers.
    */
-  void UpdatePanZoomControllerTree(CompositorParent* aCompositor,
-                                   Layer* aRoot,
-                                   bool aIsFirstPaint,
-                                   uint64_t aOriginatingLayersId,
-                                   uint32_t aPaintSequenceNumber);
+  void UpdateHitTestingTree(CompositorParent* aCompositor,
+                            Layer* aRoot,
+                            bool aIsFirstPaint,
+                            uint64_t aOriginatingLayersId,
+                            uint32_t aPaintSequenceNumber);
 
   /**
    * General handler for incoming input events. Manipulates the frame metrics
@@ -398,24 +401,27 @@ public:
      about it going away. These are public for testing code and generally should not be
      used by other production code.
   */
-  enum HitTestResult {
-    NoApzcHit,
-    ApzcHitRegion,
-    ApzcContentRegion,
-    OverscrolledApzc,
-  };
-
-  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
+  nsRefPtr<HitTestingTreeNode> GetRootNode() const;
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
                                                          HitTestResult* aOutHitResult);
   gfx::Matrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
   gfx::Matrix4x4 GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) const;
 private:
+  typedef bool (*GuidComparator)(const ScrollableLayerGuid&, const ScrollableLayerGuid&);
+
   /* Helpers */
-  AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::ViewID aScrollId);
-  AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
-  AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc,
-                                         const gfx::Point& aHitTestPoint,
+  void AttachNodeToTree(HitTestingTreeNode* aNode,
+                        HitTestingTreeNode* aParent,
+                        HitTestingTreeNode* aNextSibling);
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid,
+                                                         GuidComparator aComparator = nullptr);
+  already_AddRefed<HitTestingTreeNode> GetTargetNode(const ScrollableLayerGuid& aGuid,
+                                                     GuidComparator aComparator);
+  HitTestingTreeNode* FindTargetNode(HitTestingTreeNode* aNode,
+                                     const ScrollableLayerGuid& aGuid,
+                                     GuidComparator aComparator);
+  AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
+                                         const ParentLayerPoint& aHitTestPoint,
                                          HitTestResult* aOutHitResult);
   already_AddRefed<AsyncPanZoomController> GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
@@ -431,35 +437,47 @@ private:
   nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent,
                              ScrollableLayerGuid* aOutTargetGuid,
                              uint64_t* aOutInputBlockId);
-  void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
+  void UpdateZoomConstraintsRecursively(HitTestingTreeNode* aNode,
                                         const ZoomConstraints& aConstraints);
-  void FlushRepaintsRecursively(AsyncPanZoomController* aApzc);
+  void FlushRepaintsRecursively(HitTestingTreeNode* aNode);
 
-  AsyncPanZoomController* PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
-                                              const FrameMetrics& aMetrics,
-                                              uint64_t aLayersId,
-                                              const gfx::Matrix4x4& aAncestorTransform,
-                                              const nsIntRegion& aObscured,
-                                              AsyncPanZoomController* aParent,
-                                              AsyncPanZoomController* aNextSibling,
-                                              TreeBuildingState& aState);
+  already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
+                                                           AsyncPanZoomController* aApzc);
+  HitTestingTreeNode* PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
+                                          const FrameMetrics& aMetrics,
+                                          uint64_t aLayersId,
+                                          const gfx::Matrix4x4& aAncestorTransform,
+                                          HitTestingTreeNode* aParent,
+                                          HitTestingTreeNode* aNextSibling,
+                                          TreeBuildingState& aState);
 
   /**
-   * Recursive helper function to build the APZC tree. The tree of APZC instances has
-   * the same shape as the layer tree, but excludes all the layers that are not scrollable.
-   * Note that this means APZCs corresponding to layers at different depths in the tree
-   * may end up becoming siblings. It also means that the "root" APZC may have siblings.
-   * This function walks the layer tree backwards through siblings and constructs the APZC
-   * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
-   * code.
+   * Recursive helper function to build the hit-testing tree. See documentation
+   * in HitTestingTreeNode.h for more details on the shape of the tree.
+   * This function walks the layer tree backwards through siblings and
+   * constructs the hit-testing tree also as a last-child-prev-sibling tree
+   * because that simplifies the hit detection code.
+   *
+   * @param aState The current tree building state.
+   * @param aLayer The (layer, metrics) pair which is the current position in
+   *               the recursive walk of the layer tree. This call builds a
+   *               hit-testing subtree corresponding to the layer subtree rooted
+   *               at aLayer.
+   * @param aLayersId The layers id of the layer in aLayer.
+   * @param aAncestorTransform The accumulated CSS transforms of all the
+   *                           layers from aLayer up (via the parent chain)
+   *                           to the next APZC-bearing layer.
+   * @param aParent The parent of any node built at this level.
+   * @param aNextSibling The next sibling of any node built at this level.
+   * @return The HitTestingTreeNode created at this level. This will always
+   *         be non-null.
    */
-  AsyncPanZoomController* UpdatePanZoomControllerTree(TreeBuildingState& aState,
-                                                      const LayerMetricsWrapper& aLayer,
-                                                      uint64_t aLayersId,
-                                                      const gfx::Matrix4x4& aAncestorTransform,
-                                                      AsyncPanZoomController* aParent,
-                                                      AsyncPanZoomController* aNextSibling,
-                                                      const nsIntRegion& aObscured);
+  HitTestingTreeNode* UpdateHitTestingTree(TreeBuildingState& aState,
+                                           const LayerMetricsWrapper& aLayer,
+                                           uint64_t aLayersId,
+                                           const gfx::Matrix4x4& aAncestorTransform,
+                                           HitTestingTreeNode* aParent,
+                                           HitTestingTreeNode* aNextSibling);
 
   void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                      const AsyncPanZoomController* apzc);
@@ -471,15 +489,15 @@ protected:
   nsRefPtr<InputQueue> mInputQueue;
 
 private:
-  /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.
+  /* Whenever walking or mutating the tree rooted at mRootNode, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
-   * lock also needs to be held when accessing the mRootApzc instance variable, as that
+   * lock also needs to be held when accessing the mRootNode instance variable, as that
    * is considered part of the APZC tree management state.
    * Finally, the lock needs to be held when accessing mOverscrollHandoffChain.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
   mutable mozilla::Monitor mTreeLock;
-  nsRefPtr<AsyncPanZoomController> mRootApzc;
+  nsRefPtr<HitTestingTreeNode> mRootNode;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the

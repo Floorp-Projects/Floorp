@@ -428,12 +428,21 @@ pref("media.webvtt.regions.enabled", false);
 // AudioTrack and VideoTrack support
 pref("media.track.enabled", false);
 
-// Whether to enable MediaSource support
-#ifdef RELEASE_BUILD
-pref("media.mediasource.enabled", false);
-#else
+// Whether to enable MediaSource support.  We want to enable on non-release
+// builds and on release windows, but on release builds restrict to YouTube.  We
+// don't enable for YouTube on non-Windows for now because the MP4 code for
+// those platforms isn't ready yet.
+#if defined(XP_WIN) || !defined(RELEASE_BUILD)
 pref("media.mediasource.enabled", true);
+#else
+pref("media.mediasource.enabled", false);
 #endif
+
+#ifdef RELEASE_BUILD
+pref("media.mediasource.youtubeonly", true);
+#else
+pref("media.mediasource.youtubeonly", false);
+#endif // RELEASE_BUILD
 
 #ifdef MOZ_WIDGET_GONK
 pref("media.mediasource.mp4.enabled", false);
@@ -3798,10 +3807,6 @@ pref("image.mem.surfacecache.size_factor", 4);
 // of the data, and so forth. The default should be a good balance for desktop
 // and laptop systems, where we never discard visible images.
 pref("image.mem.surfacecache.discard_factor", 1);
-
-// Whether we decode images on multiple background threads rather than the
-// foreground thread.
-pref("image.multithreaded_decoding.enabled", true);
 
 // How many threads we'll use for multithreaded decoding. If < 0, will be
 // automatically determined based on the system's number of cores.

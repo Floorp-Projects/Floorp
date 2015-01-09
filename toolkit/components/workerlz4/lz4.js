@@ -93,39 +93,39 @@ function compressFileContent(array, options = {}) {
 exports.compressFileContent = compressFileContent;
 
 function decompressFileContent(array, options = {}) {
-  let {ptr, bytes} = SharedAll.normalizeToPointer(array, options.bytes || null);
+  let bytes = SharedAll.normalizeBufferArgs(array, options.bytes || null);
   if (bytes < HEADER_SIZE) {
     throw new LZError("decompress", "becauseLZNoHeader", "Buffer is too short (no header)");
   }
 
   // Read headers
-  let expectMagicNumber = ctypes.cast(ptr, EXPECTED_HEADER_TYPE.ptr).contents;
+  let expectMagicNumber = new DataView(array.buffer, 0, MAGIC_NUMBER.byteLength);
   for (let i = 0; i < MAGIC_NUMBER.byteLength; ++i) {
-    if (expectMagicNumber[i] != MAGIC_NUMBER[i]) {
+    if (expectMagicNumber.getUint8(i) != MAGIC_NUMBER[i]) {
       throw new LZError("decompress", "becauseLZWrongMagicNumber", "Invalid header (no magic number");
     }
   }
 
-  let sizeBuf =
-    ctypes.cast(
-      SharedAll.offsetBy(ptr, MAGIC_NUMBER.byteLength),
-      EXPECTED_SIZE_BUFFER_TYPE.ptr).contents;
+  let sizeBuf = new DataView(array.buffer, MAGIC_NUMBER.byteLength, BYTES_IN_SIZE_HEADER);
   let expectDecompressedSize =
-    sizeBuf[0] + (sizeBuf[1] << 8) + (sizeBuf[2] << 16) + (sizeBuf[3] << 24);
+    sizeBuf.getUint8(0) +
+    (sizeBuf.getUint8(1) << 8) +
+    (sizeBuf.getUint8(2) << 16) +
+    (sizeBuf.getUint8(3) << 24);
   if (expectDecompressedSize == 0) {
     // The underlying algorithm cannot handle a size of 0
     return new Uint8Array(0);
   }
 
   // Prepare the input buffer
-  let inputPtr = SharedAll.offsetBy(ptr, HEADER_SIZE);
+  let inputData = new DataView(array.buffer, HEADER_SIZE);
 
   // Prepare the output buffer
   let outputBuffer = new Uint8Array(expectDecompressedSize);
   let decompressedBytes = (new SharedAll.Type.size_t.implementation(0));
 
   // Decompress
-  let success = Internals.decompress(inputPtr, bytes - HEADER_SIZE,
+  let success = Internals.decompress(inputData, bytes - HEADER_SIZE,
                                      outputBuffer, outputBuffer.byteLength,
                                      decompressedBytes.address());
   if (!success) {

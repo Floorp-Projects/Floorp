@@ -836,9 +836,6 @@ class XPCShellTests(object):
             self.env["MOZ_CRASHREPORTER"] = "1"
         # Don't launch the crash reporter client
         self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
-        # Capturing backtraces is very slow on some platforms, and it's
-        # disabled by automation.py too
-        self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
         # Don't permit remote connections by default.
         # MOZ_DISABLE_NONLOCAL_CONNECTIONS can be set to "0" to temporarily
         # enable non-local connections for the purposes of local testing.

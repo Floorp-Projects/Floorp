@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the OscillatorNode when the frequency is negative</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  var types = ["sine",
+               "square",
+               "sawtooth",
+               "triangle"];
+
+  var finished = 0;
+  function finish() {
+    if (++finished == types.length) {
+      SimpleTest.finish();
+    }
+  }
+
+  types.forEach(function(t) {
+    var context = new OfflineAudioContext(1, 256, 44100);
+    var osc = context.createOscillator();
+
+    osc.frequency.value = -440;
+    osc.type = t;
+
+    osc.connect(context.destination);
+    osc.start();
+    context.startRendering().then(function(buffer) {
+      var samples = buffer.getChannelData(0);
+      // This samples the wave form in the middle of the first period, the value
+      // should be negative.
+      ok(samples[Math.floor(44100 / 440 / 4)] < 0., "Phase should be inverted when using a " + t + " waveform");
+      finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

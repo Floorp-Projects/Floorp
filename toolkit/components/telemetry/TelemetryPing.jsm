@@ -372,6 +372,18 @@ let Impl = {
       ret.savedPings = TelemetryFile.pingsLoaded;
     }
 
+    ret.activeTicks = -1;
+    if ("@mozilla.org/datareporting/service;1" in Cc) {
+      let drs = Cc["@mozilla.org/datareporting/service;1"]
+                  .getService(Ci.nsISupports)
+                  .wrappedJSObject;
+
+      let sr = drs.getSessionRecorder();
+      if (sr) {
+        ret.activeTicks = sr.activeTicks;
+      }
+    }
+
     ret.pingsOverdue = TelemetryFile.pingsOverdue;
     ret.pingsDiscarded = TelemetryFile.pingsDiscarded;
 

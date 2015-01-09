@@ -27,7 +27,7 @@
 #include "nsSize.h"                     // for nsIntSize
 #include "gfxReusableSharedImageSurfaceWrapper.h"
 #include "nsExpirationTracker.h"        // for nsExpirationTracker
-#include "nsMathUtils.h"               // for NS_roundf
+#include "nsMathUtils.h"               // for NS_lroundf
 #include "gfx2DGlue.h"
 #include "LayersLogging.h"
 #include "UnitTransforms.h"             // for TransformTo
@@ -1189,7 +1189,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
       // Mark the newly updated area as invalid in the front buffer
       aTile.mInvalidFront.Or(aTile.mInvalidFront,
-        nsIntRect(NS_roundf(drawRect.x), NS_roundf(drawRect.y),
+        nsIntRect(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y),
                   drawRect.width, drawRect.height));
 
       if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
@@ -1235,11 +1235,11 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                        dirtyRect->height);
     drawRect.Scale(mResolution);
 
-    gfx::IntRect copyRect(NS_roundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
-                          NS_roundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
+    gfx::IntRect copyRect(NS_lroundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
+                          NS_lroundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
                           drawRect.width,
                           drawRect.height);
-    gfx::IntPoint copyTarget(NS_roundf(drawRect.x), NS_roundf(drawRect.y));
+    gfx::IntPoint copyTarget(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y));
     drawTarget->CopySurface(source, copyRect, copyTarget);
 
     // Mark the newly updated area as invalid in the front buffer
@@ -1489,6 +1489,11 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   while (true) {
     aRegionToPaint.And(aInvalidRegion, tileBounds);
     if (!aRegionToPaint.IsEmpty()) {
+      if (mResolution != 1) {
+        // Paint the entire tile for low-res. This is aimed to fixing low-res resampling
+        // and to avoid doing costly region accurate painting for a small area.
+        aRegionToPaint = tileBounds;
+      }
       break;
     }
     if (Abs(scrollDiffY) >= Abs(scrollDiffX)) {

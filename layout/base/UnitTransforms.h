@@ -24,6 +24,9 @@ MOZ_BEGIN_ENUM_CLASS(PixelCastJustification, uint8_t)
   ScreenIsParentLayerForRoot,
   // For the root composition size we want to view it as layer pixels in any layer
   ParentLayerToLayerForRootComposition,
+  // The Layer coordinate space for one layer is the ParentLayer coordinate
+  // space for its children
+  MovingDownToChildren,
   // The transform that is usually used to convert between two coordinate
   // systems is not available (for example, because the object that stores it
   // is being destroyed), so fall back to the identity.

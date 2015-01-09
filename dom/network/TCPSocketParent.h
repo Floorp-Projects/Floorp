@@ -52,7 +52,7 @@ public:
   TCPSocketParent() {}
 
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
-                        const bool& useSSL, const nsString& aBinaryType);
+                        const bool& useSSL, const nsString& aBinaryType) MOZ_OVERRIDE;
 
   virtual bool RecvStartTLS() MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
