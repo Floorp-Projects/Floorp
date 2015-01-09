@@ -12,12 +12,12 @@ __BEGIN_DECLS
 
 #include <string.h>
 
-#ifdef _MSC_VER
-
+#if defined(_MSC_VER)
 #define cpr_strcasecmp _stricmp
 #define cpr_strncasecmp _strnicmp
+#if _MSC_VER < 1900
 #define snprintf _snprintf
-
+#endif
 #else // _MSC_VER
 
 #define cpr_strcasecmp  strcasecmp
