@@ -27,7 +27,7 @@ nsContentSupportMap::Remove(nsIContent* aElement)
 
     nsIContent* child = aElement;
     do {
-        PL_DHashTableOperate(&mMap, child, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(&mMap, child);
         child = child->GetNextNode(aElement);
     } while(child);
 

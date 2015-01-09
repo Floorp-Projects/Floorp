@@ -21,7 +21,7 @@ using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsRubyTextFrame)
   NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsRubyTextFrameSuper)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextFrame)
 
@@ -52,14 +52,6 @@ nsRubyTextFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/* virtual */ bool
-nsRubyTextFrame::IsFrameOfType(uint32_t aFlags) const
-{
-  if (aFlags & eBidiInlineContainer) {
-    return false;
-  }
-  return nsRubyTextFrameSuper::IsFrameOfType(aFlags);
-}
 
 
 /* virtual */ void

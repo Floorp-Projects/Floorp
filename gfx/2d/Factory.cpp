@@ -430,6 +430,25 @@ Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
   return dt.forget();
 }
 
+bool
+Factory::DoesBackendSupportDataDrawtarget(BackendType aType)
+{
+  switch (aType) {
+  case BackendType::DIRECT2D:
+  case BackendType::DIRECT2D1_1:
+  case BackendType::RECORDING:
+  case BackendType::NONE:
+  case BackendType::COREGRAPHICS_ACCELERATED:
+    return false;
+  case BackendType::CAIRO:
+  case BackendType::COREGRAPHICS:
+  case BackendType::SKIA:
+    return true;
+  }
+
+  return false;
+}
+
 TemporaryRef<ScaledFont>
 Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize)
 {
@@ -628,6 +647,10 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
   if (mD2D1Device) {
     mD2D1Device->Release();
     mD2D1Device = nullptr;
+  }
+
+  if (!aDevice) {
+    return;
   }
 
   RefPtr<ID2D1Factory1> factory = D2DFactory1();

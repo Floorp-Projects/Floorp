@@ -36,11 +36,11 @@ public:
 
     void
     Put(nsIContent* aContent, nsIContent* aTemplate) {
-        NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP)),
+        NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableLookup(&mTable, aContent)),
                      "aContent already in map");
 
         Entry* entry =
-            reinterpret_cast<Entry*>(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_ADD));
+            reinterpret_cast<Entry*>(PL_DHashTableAdd(&mTable, aContent));
 
         if (entry) {
             entry->mContent = aContent;
@@ -50,7 +50,7 @@ public:
 
     void
     Remove(nsIContent* aContent) {
-        PL_DHashTableOperate(&mTable, aContent, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(&mTable, aContent);
 
         for (nsIContent* child = aContent->GetFirstChild();
              child;
@@ -63,7 +63,7 @@ public:
     void
     GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
         Entry* entry =
-            reinterpret_cast<Entry*>(PL_DHashTableOperate(&mTable, aContent, PL_DHASH_LOOKUP));
+            reinterpret_cast<Entry*>(PL_DHashTableLookup(&mTable, aContent));
 
         if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
             NS_IF_ADDREF(*aResult = entry->mTemplate);

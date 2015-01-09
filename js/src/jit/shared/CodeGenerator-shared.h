@@ -17,7 +17,6 @@
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
-#include "vm/ForkJoin.h"
 
 namespace js {
 namespace jit {

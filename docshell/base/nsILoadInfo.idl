@@ -180,4 +180,24 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(BaseURI)]
   nsIURI binaryBaseURI();
+
+  /**
+   * The innerWindowId of the loadingDocument, used to identify
+   * the loadingDocument in e10s where the loadingDocument is
+   * not available.
+   *
+   * Warning: If the loadingDocument is null, then the
+   * innerWindowId is 0.
+   */
+  readonly attribute unsigned long innerWindowID;
+
+%{ C++
+  inline uint32_t GetInnerWindowID()
+  {
+    uint32_t result;
+    mozilla::DebugOnly<nsresult> rv = GetInnerWindowID(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
 };

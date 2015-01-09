@@ -692,7 +692,7 @@ public:
 
             FNCMapEntry* mapEntry =
                 static_cast<FNCMapEntry*>
-                (PL_DHashTableOperate(&mMap, filename.get(), PL_DHASH_ADD));
+                (PL_DHashTableAdd(&mMap, filename.get()));
             if (mapEntry) {
                 mapEntry->mFilename.Assign(filename);
                 mapEntry->mTimestamp = timestamp;
@@ -719,7 +719,7 @@ public:
             return;
         }
         PLDHashEntryHdr *hdr =
-            PL_DHashTableOperate(&mMap, aFileName.get(), PL_DHASH_LOOKUP);
+            PL_DHashTableLookup(&mMap, aFileName.get());
         if (!hdr) {
             return;
         }
@@ -744,7 +744,7 @@ public:
         }
         FNCMapEntry* entry =
             static_cast<FNCMapEntry*>
-            (PL_DHashTableOperate(&mMap, aFileName.get(), PL_DHASH_ADD));
+            (PL_DHashTableAdd(&mMap, aFileName.get()));
         if (entry) {
             entry->mFilename.Assign(aFileName);
             entry->mTimestamp = aTimestamp;

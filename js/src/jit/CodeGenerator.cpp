@@ -31,10 +31,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
-#include "jit/ParallelFunctions.h"
-#include "jit/ParallelSafetyAnalysis.h"
 #include "jit/RangeAnalysis.h"
-#include "vm/ForkJoin.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
@@ -167,10 +164,7 @@ CodeGenerator::~CodeGenerator()
 }
 
 typedef bool (*StringToNumberFn)(ThreadSafeContext *, JSString *, double *);
-typedef bool (*StringToNumberParFn)(ForkJoinContext *, JSString *, double *);
-static const VMFunctionsModal StringToNumberInfo = VMFunctionsModal(
-    FunctionInfo<StringToNumberFn>(StringToNumber),
-    FunctionInfo<StringToNumberParFn>(StringToNumberPar));
+static const VMFunction StringToNumberInfo = FunctionInfo<StringToNumberFn>(StringToNumber);
 
 void
 CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
@@ -821,10 +815,7 @@ CodeGenerator::emitIntToString(Register input, Register output, Label *ool)
 }
 
 typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
-typedef JSFlatString *(*IntToStringParFn)(ForkJoinContext *, int);
-static const VMFunctionsModal IntToStringInfo = VMFunctionsModal(
-    FunctionInfo<IntToStringFn>(Int32ToString<CanGC>),
-    FunctionInfo<IntToStringParFn>(IntToStringPar));
+static const VMFunction IntToStringInfo = FunctionInfo<IntToStringFn>(Int32ToString<CanGC>);
 
 void
 CodeGenerator::visitIntToString(LIntToString *lir)
@@ -841,10 +832,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 }
 
 typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
-typedef JSString *(*DoubleToStringParFn)(ForkJoinContext *, double);
-static const VMFunctionsModal DoubleToStringInfo = VMFunctionsModal(
-    FunctionInfo<DoubleToStringFn>(NumberToString<CanGC>),
-    FunctionInfo<DoubleToStringParFn>(DoubleToStringPar));
+static const VMFunction DoubleToStringInfo = FunctionInfo<DoubleToStringFn>(NumberToString<CanGC>);
 
 void
 CodeGenerator::visitDoubleToString(LDoubleToString *lir)
@@ -864,10 +852,7 @@ CodeGenerator::visitDoubleToString(LDoubleToString *lir)
 }
 
 typedef JSString *(*PrimitiveToStringFn)(JSContext *, HandleValue);
-typedef JSString *(*PrimitiveToStringParFn)(ForkJoinContext *, HandleValue);
-static const VMFunctionsModal PrimitiveToStringInfo = VMFunctionsModal(
-    FunctionInfo<PrimitiveToStringFn>(ToStringSlow),
-    FunctionInfo<PrimitiveToStringParFn>(PrimitiveToStringPar));
+static const VMFunction PrimitiveToStringInfo = FunctionInfo<PrimitiveToStringFn>(ToStringSlow);
 
 void
 CodeGenerator::visitValueToString(LValueToString *lir)
@@ -1766,22 +1751,6 @@ CodeGenerator::emitLambdaInit(Register output, Register scopeChain,
 }
 
 void
-CodeGenerator::visitLambdaPar(LLambdaPar *lir)
-{
-    Register resultReg = ToRegister(lir->output());
-    Register cxReg = ToRegister(lir->forkJoinContext());
-    Register scopeChainReg = ToRegister(lir->scopeChain());
-    Register tempReg1 = ToRegister(lir->getTemp0());
-    Register tempReg2 = ToRegister(lir->getTemp1());
-    const LambdaFunctionInfo &info = lir->mir()->info();
-
-    MOZ_ASSERT(scopeChainReg != resultReg);
-
-    emitAllocateGCThingPar(lir, resultReg, cxReg, tempReg1, tempReg2, info.fun);
-    emitLambdaInit(resultReg, scopeChainReg, info);
-}
-
-void
 CodeGenerator::visitLabel(LLabel *lir)
 {
 }
@@ -1853,10 +1822,7 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*InterruptCheckFn)(JSContext *);
-typedef bool (*InterruptCheckParFn)(ForkJoinContext *);
-static const VMFunctionsModal InterruptCheckInfo = VMFunctionsModal(
-    FunctionInfo<InterruptCheckFn>(InterruptCheck),
-    FunctionInfo<InterruptCheckParFn>(InterruptCheckPar));
+static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
 
 void
 CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit *ool)
@@ -2021,10 +1987,8 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     setOsrEntryOffset(masm.size());
 
 #ifdef JS_TRACE_LOGGING
-    if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger_Baseline);
-        emitTracelogStartEvent(TraceLogger_IonMonkey);
-    }
+    emitTracelogStopEvent(TraceLogger_Baseline);
+    emitTracelogStartEvent(TraceLogger_IonMonkey);
 #endif
 
     // Allocate the full frame for this function
@@ -2453,30 +2417,6 @@ CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
 }
 
 void
-CodeGenerator::visitForkJoinContext(LForkJoinContext *lir)
-{
-    const Register tempReg = ToRegister(lir->getTempReg());
-
-    masm.setupUnalignedABICall(0, tempReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForkJoinContextPar));
-    MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
-}
-
-void
-CodeGenerator::visitGuardThreadExclusive(LGuardThreadExclusive *lir)
-{
-    MOZ_ASSERT(gen->info().executionMode() == ParallelExecution);
-
-    const Register tempReg = ToRegister(lir->getTempReg());
-    masm.setupUnalignedABICall(2, tempReg);
-    masm.passABIArg(ToRegister(lir->forkJoinContext()));
-    masm.passABIArg(ToRegister(lir->object()));
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParallelWriteGuard));
-
-    bailoutIfFalseBool(ReturnReg, lir->snapshot());
-}
-
-void
 CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity *guard)
 {
     Register obj = ToRegister(guard->input());
@@ -2669,10 +2609,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     masm.checkStackAlignment();
 
-    // Sequential native functions have the signature:
+    // Native functions have the signature:
     //  bool (*)(JSContext *, unsigned, Value *vp)
-    // and parallel native functions have the signature:
-    //  ParallelResult (*)(ForkJoinContext *, unsigned, Value *vp)
     // Where vp[0] is space for an outparam, vp[1] is |this|, and vp[2] onward
     // are the function arguments.
 
@@ -2684,12 +2622,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.Push(ObjectValue(*target));
 
     // Preload arguments into registers.
-    //
-    // Note that for parallel execution, loadContext does an ABI call, so we
-    // need to do this before we load the other argument registers, otherwise
-    // we'll hose them.
-    ExecutionMode executionMode = gen->info().executionMode();
-    masm.loadContext(argContextReg, tempReg, executionMode);
+    masm.loadJSContext(argContextReg);
     masm.move32(Imm32(call->numStackArgs()), argUintNReg);
     masm.movePtr(StackPointer, argVpReg);
 
@@ -2698,8 +2631,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     // Construct native exit frame.
     uint32_t safepointOffset;
     masm.buildFakeExitFrame(tempReg, &safepointOffset);
-    masm.enterFakeExitFrame(argContextReg, tempReg, executionMode,
-                            NativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
 
     markSafepointAt(safepointOffset, call);
 
@@ -2708,22 +2640,10 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.passABIArg(argContextReg);
     masm.passABIArg(argUintNReg);
     masm.passABIArg(argVpReg);
-
-    switch (executionMode) {
-      case SequentialExecution:
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
-        break;
-
-      case ParallelExecution:
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->parallelNative()));
-        break;
-
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
     // Test for failure.
-    masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
+    masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(StackPointer, NativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
@@ -2908,14 +2828,13 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     Register objreg    = ToRegister(call->getTempObject());
     Register nargsreg  = ToRegister(call->getNargsReg());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    ExecutionMode executionMode = gen->info().executionMode();
     Label invoke, thunk, makeCall, end;
 
     // Known-target case is handled by LCallKnown.
     MOZ_ASSERT(!call->hasSingleTarget());
 
     // Generate an ArgumentsRectifier.
-    JitCode *argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier(executionMode);
+    JitCode *argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier();
 
     masm.checkStackAlignment();
 
@@ -2934,7 +2853,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 
     // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &invoke);
+    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -2972,18 +2891,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Handle uncompiled or native functions.
     masm.bind(&invoke);
-    switch (executionMode) {
-      case SequentialExecution:
-        emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
-        break;
-
-      case ParallelExecution:
-        emitCallToUncompiledScriptPar(call, calleereg);
-        break;
-
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
 
     masm.bind(&end);
 
@@ -2999,20 +2907,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     dropArguments(call->numStackArgs() + 1);
 }
 
-typedef bool (*CallToUncompiledScriptParFn)(ForkJoinContext *, JSObject *);
-static const VMFunction CallToUncompiledScriptParInfo =
-    FunctionInfo<CallToUncompiledScriptParFn>(CallToUncompiledScriptPar);
-
-// Generates a call to CallToUncompiledScriptPar() and then bails out.
-// |calleeReg| should contain the JSFunction*.
-void
-CodeGenerator::emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg)
-{
-    pushArg(calleeReg);
-    callVM(CallToUncompiledScriptParInfo, lir);
-    masm.assumeUnreachable("CallToUncompiledScriptParInfo always returns false.");
-}
-
 void
 CodeGenerator::visitCallKnown(LCallKnown *call)
 {
@@ -3020,7 +2914,6 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
     DebugOnly<JSFunction *> target = call->getSingleTarget();
-    ExecutionMode executionMode = gen->info().executionMode();
     Label end, uncompiled;
 
     // Native single targets are handled by LCallNative.
@@ -3041,9 +2934,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Load script jitcode.
     if (call->mir()->needsArgCheck())
-        masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+        masm.loadBaselineOrIonRaw(objreg, objreg, &uncompiled);
     else
-        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, executionMode, &uncompiled);
+        masm.loadBaselineOrIonNoArgCheck(objreg, objreg, &uncompiled);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -3066,18 +2959,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     // Handle uncompiled functions.
     masm.bind(&uncompiled);
-    switch (executionMode) {
-      case SequentialExecution:
-        emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
-        break;
-
-      case ParallelExecution:
-        emitCallToUncompiledScriptPar(call, calleereg);
-        break;
-
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack);
 
     masm.bind(&end);
 
@@ -3200,7 +3082,6 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     masm.checkStackAlignment();
 
     // If the function is known to be uncompilable, only emit the call to InvokeFunction.
-    ExecutionMode executionMode = gen->info().executionMode();
     if (apply->hasSingleTarget()) {
         JSFunction *target = apply->getSingleTarget();
         if (target->isNative()) {
@@ -3224,7 +3105,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 
     // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &invoke);
+    masm.loadBaselineOrIonRaw(objreg, objreg, &invoke);
 
     // Call with an Ion frame or a rectifier frame.
     {
@@ -3257,7 +3138,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
             masm.bind(&underflow);
 
             // Hardcode the address of the argumentsRectifier code.
-            JitCode *argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier(executionMode);
+            JitCode *argumentsRectifier = gen->jitRuntime()->getArgumentsRectifier();
 
             MOZ_ASSERT(ArgumentsRectifierReg != objreg);
             masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
@@ -3553,10 +3434,8 @@ CodeGenerator::visitDefFun(LDefFun *lir)
 }
 
 typedef bool (*CheckOverRecursedFn)(JSContext *);
-typedef bool (*CheckOverRecursedParFn)(ForkJoinContext *);
-static const VMFunctionsModal CheckOverRecursedInfo = VMFunctionsModal(
-    FunctionInfo<CheckOverRecursedFn>(CheckOverRecursed),
-    FunctionInfo<CheckOverRecursedParFn>(CheckOverRecursedPar));
+static const VMFunction CheckOverRecursedInfo =
+    FunctionInfo<CheckOverRecursedFn>(CheckOverRecursed);
 
 void
 CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
@@ -3573,42 +3452,6 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
 
     restoreLive(ool->lir());
     masm.jump(ool->rejoin());
-}
-
-void
-CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
-{
-    // See above: unlike visitCheckOverRecursed(), this code runs in
-    // parallel mode and hence uses the jitStackLimit from the current
-    // thread state.  Also, we must check the interrupt flags because
-    // on interrupt or abort, only the stack limit for the main thread
-    // is reset, not the worker threads.  See comment in vm/ForkJoin.h
-    // for more details.
-
-    Register cxReg = ToRegister(lir->forkJoinContext());
-    Register tempReg = ToRegister(lir->getTempReg());
-
-    masm.loadPtr(Address(cxReg, offsetof(ForkJoinContext, perThreadData)), tempReg);
-    masm.loadPtr(Address(tempReg, PerThreadData::offsetOfJitStackLimit()), tempReg);
-
-    // Conditional forward (unlikely) branch to failure.
-    CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
-    addOutOfLineCode(ool, lir->mir());
-
-    masm.branchPtr(Assembler::BelowOrEqual, StackPointer, tempReg, ool->entry());
-    masm.checkInterruptFlagPar(tempReg, ool->entry());
-    masm.bind(ool->rejoin());
-}
-
-void
-CodeGenerator::visitInterruptCheckPar(LInterruptCheckPar *lir)
-{
-    // First check for cx->shared->interrupt_.
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
-
-    Register tempReg = ToRegister(lir->getTempReg());
-    masm.checkInterruptFlagPar(tempReg, ool->entry());
-    masm.bind(ool->rejoin());
 }
 
 IonScriptCounts *
@@ -3773,34 +3616,32 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
     }
 
     // Check that we have a valid GC pointer.
-    if (gen->info().executionMode() != ParallelExecution) {
-        saveVolatile();
-        masm.setupUnalignedABICall(2, temp);
-        masm.loadJSContext(temp);
-        masm.passABIArg(temp);
-        masm.passABIArg(output);
+    saveVolatile();
+    masm.setupUnalignedABICall(2, temp);
+    masm.loadJSContext(temp);
+    masm.passABIArg(temp);
+    masm.passABIArg(output);
 
-        void *callee;
-        switch (mir->type()) {
-          case MIRType_Object:
-            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr);
-            break;
-          case MIRType_ObjectOrNull:
-            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectOrNullPtr);
-            break;
-          case MIRType_String:
-            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr);
-            break;
-          case MIRType_Symbol:
-            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidSymbolPtr);
-            break;
-          default:
-            MOZ_CRASH();
-        }
-
-        masm.callWithABINoProfiling(callee);
-        restoreVolatile();
+    void *callee;
+    switch (mir->type()) {
+      case MIRType_Object:
+        callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr);
+        break;
+      case MIRType_ObjectOrNull:
+        callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectOrNullPtr);
+        break;
+      case MIRType_String:
+        callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr);
+        break;
+      case MIRType_Symbol:
+        callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidSymbolPtr);
+        break;
+      default:
+        MOZ_CRASH();
     }
+
+    masm.callWithABINoProfiling(callee);
+    restoreVolatile();
 
     masm.bind(&done);
     masm.pop(temp);
@@ -3844,20 +3685,18 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     }
 
     // Check that we have a valid GC pointer.
-    if (gen->info().executionMode() != ParallelExecution) {
-        saveVolatile();
+    saveVolatile();
 
-        masm.pushValue(output);
-        masm.movePtr(StackPointer, temp1);
+    masm.pushValue(output);
+    masm.movePtr(StackPointer, temp1);
 
-        masm.setupUnalignedABICall(2, temp2);
-        masm.loadJSContext(temp2);
-        masm.passABIArg(temp2);
-        masm.passABIArg(temp1);
-        masm.callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, AssertValidValue));
-        masm.popValue(output);
-        restoreVolatile();
-    }
+    masm.setupUnalignedABICall(2, temp2);
+    masm.loadJSContext(temp2);
+    masm.passABIArg(temp2);
+    masm.passABIArg(temp1);
+    masm.callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, AssertValidValue));
+    masm.popValue(output);
+    restoreVolatile();
 
     masm.bind(&done);
     masm.pop(temp2);
@@ -4013,8 +3852,6 @@ static const VMFunction NewDenseArrayInfo = FunctionInfo<NewDenseArrayFn>(NewDen
 void
 CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
 {
-    MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
-
     Register objReg = ToRegister(lir->output());
 
     MOZ_ASSERT(!lir->isCall());
@@ -4046,9 +3883,6 @@ static const VMFunction CreateDerivedTypedObjInfo =
 void
 CodeGenerator::visitNewDerivedTypedObject(LNewDerivedTypedObject *lir)
 {
-    // Not yet made safe for par exec:
-    MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
-
     pushArg(ToRegister(lir->offset()));
     pushArg(ToRegister(lir->owner()));
     pushArg(ToRegister(lir->type()));
@@ -4088,7 +3922,6 @@ CodeGenerator::visitHypot(LHypot *lir)
 void
 CodeGenerator::visitNewArray(LNewArray *lir)
 {
-    MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     ArrayObject *templateObject = lir->mir()->templateObject();
@@ -4204,8 +4037,6 @@ static const VMFunction NewInitObjectWithClassPrototypeInfo =
 void
 CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
 {
-    MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
-
     Register objReg = ToRegister(lir->output());
 
     MOZ_ASSERT(!lir->isCall());
@@ -4315,7 +4146,6 @@ ShouldInitFixedSlots(LInstruction *lir, NativeObject *templateObj)
 void
 CodeGenerator::visitNewObject(LNewObject *lir)
 {
-    MOZ_ASSERT(gen->info().executionMode() == SequentialExecution);
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     PlainObject *templateObject = lir->mir()->templateObject();
@@ -4442,45 +4272,6 @@ CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject *lir)
     masm.bind(ool->rejoin());
 }
 
-void
-CodeGenerator::visitNewCallObjectPar(LNewCallObjectPar *lir)
-{
-    Register resultReg = ToRegister(lir->output());
-    Register cxReg = ToRegister(lir->forkJoinContext());
-    Register tempReg1 = ToRegister(lir->getTemp0());
-    Register tempReg2 = ToRegister(lir->getTemp1());
-    CallObject *templateObj = lir->mir()->templateObj();
-
-    emitAllocateGCThingPar(lir, resultReg, cxReg, tempReg1, tempReg2, templateObj);
-}
-
-typedef ArrayObject *(*ExtendArrayParFn)(ForkJoinContext*, ArrayObject*, uint32_t);
-static const VMFunction ExtendArrayParInfo =
-    FunctionInfo<ExtendArrayParFn>(ExtendArrayPar);
-
-void
-CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
-{
-    Register cxReg = ToRegister(lir->forkJoinContext());
-    Register lengthReg = ToRegister(lir->length());
-    Register tempReg0 = ToRegister(lir->getTemp0());
-    Register tempReg1 = ToRegister(lir->getTemp1());
-    Register tempReg2 = ToRegister(lir->getTemp2());
-    ArrayObject *templateObj = lir->mir()->templateObject();
-
-    emitAllocateGCThingPar(lir, tempReg2, cxReg, tempReg0, tempReg1, templateObj);
-
-    // Invoke a C helper to allocate the elements.  The helper returns
-    // nullptr on allocation error or the array object.
-
-    saveLive(lir);
-    pushArg(lengthReg);
-    pushArg(tempReg2);
-    callVM(ExtendArrayParInfo, lir);
-    storeResultTo(ToRegister(lir->output()));
-    restoreLive(lir);
-}
-
 typedef JSObject *(*NewStringObjectFn)(JSContext *, HandleString);
 static const VMFunction NewStringObjectInfo = FunctionInfo<NewStringObjectFn>(NewStringObject);
 
@@ -4504,76 +4295,6 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
     masm.storeValue(JSVAL_TYPE_INT32, temp, Address(output, StringObject::offsetOfLength()));
 
     masm.bind(ool->rejoin());
-}
-
-void
-CodeGenerator::visitNewPar(LNewPar *lir)
-{
-    Register objReg = ToRegister(lir->output());
-    Register cxReg = ToRegister(lir->forkJoinContext());
-    Register tempReg1 = ToRegister(lir->getTemp0());
-    Register tempReg2 = ToRegister(lir->getTemp1());
-    NativeObject *templateObject = lir->mir()->templateObject();
-    emitAllocateGCThingPar(lir, objReg, cxReg, tempReg1, tempReg2, templateObject);
-}
-
-class OutOfLineNewGCThingPar : public OutOfLineCodeBase<CodeGenerator>
-{
-public:
-    LInstruction *lir;
-    gc::AllocKind allocKind;
-    Register objReg;
-    Register cxReg;
-
-    OutOfLineNewGCThingPar(LInstruction *lir, gc::AllocKind allocKind, Register objReg,
-                           Register cxReg)
-      : lir(lir), allocKind(allocKind), objReg(objReg), cxReg(cxReg)
-    {}
-
-    void accept(CodeGenerator *codegen) {
-        codegen->visitOutOfLineNewGCThingPar(this);
-    }
-};
-
-typedef JSObject *(*NewGCThingParFn)(ForkJoinContext *, js::gc::AllocKind allocKind);
-static const VMFunction NewGCThingParInfo =
-    FunctionInfo<NewGCThingParFn>(NewGCThingPar);
-
-void
-CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, Register objReg, Register cxReg,
-                                      Register tempReg1, Register tempReg2, NativeObject *templateObj)
-{
-    MOZ_ASSERT(lir->mirRaw());
-    MOZ_ASSERT(lir->mirRaw()->isInstruction());
-
-    gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
-    OutOfLineNewGCThingPar *ool = new(alloc()) OutOfLineNewGCThingPar(lir, allocKind, objReg, cxReg);
-    addOutOfLineCode(ool, lir->mirRaw()->toInstruction());
-
-    masm.newGCThingPar(objReg, cxReg, tempReg1, tempReg2, templateObj, ool->entry());
-    masm.bind(ool->rejoin());
-    masm.initGCThing(objReg, tempReg1, templateObj);
-}
-
-void
-CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
-{
-    // As a fallback for allocation in par. exec. mode, we invoke the
-    // C helper NewGCThingPar(), which calls into the GC code.  If it
-    // returns nullptr, we bail.  If returns non-nullptr, we rejoin the
-    // original instruction.
-    Register out = ool->objReg;
-
-    saveVolatile(out);
-    masm.setupUnalignedABICall(2, out);
-    masm.passABIArg(ool->cxReg);
-    masm.move32(Imm32(ool->allocKind), out);
-    masm.passABIArg(out);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewGCThingPar));
-    masm.storeCallResult(out);
-    restoreVolatile(out);
-
-    bailoutTestPtr(Assembler::Zero, out, out, ool->lir->snapshot());
 }
 
 typedef bool(*InitElemFn)(JSContext *cx, HandleObject obj,
@@ -5187,16 +4908,13 @@ CodeGenerator::visitModD(LModD *ins)
 }
 
 typedef bool (*BinaryFn)(JSContext *, MutableHandleValue, MutableHandleValue, MutableHandleValue);
-typedef bool (*BinaryParFn)(ForkJoinContext *, HandleValue, HandleValue, MutableHandleValue);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
 static const VMFunction MulInfo = FunctionInfo<BinaryFn>(js::MulValues);
 static const VMFunction DivInfo = FunctionInfo<BinaryFn>(js::DivValues);
 static const VMFunction ModInfo = FunctionInfo<BinaryFn>(js::ModValues);
-static const VMFunctionsModal UrshInfo = VMFunctionsModal(
-    FunctionInfo<BinaryFn>(js::UrshValues),
-    FunctionInfo<BinaryParFn>(UrshValuesPar));
+static const VMFunction UrshInfo = FunctionInfo<BinaryFn>(js::UrshValues);
 
 void
 CodeGenerator::visitBinaryV(LBinaryV *lir)
@@ -5235,13 +4953,10 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 }
 
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, bool *);
-typedef bool (*StringCompareParFn)(ForkJoinContext *, HandleString, HandleString, bool *);
-static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>),
-    FunctionInfo<StringCompareParFn>(jit::StringsEqualPar));
-static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>),
-    FunctionInfo<StringCompareParFn>(jit::StringsUnequalPar));
+static const VMFunction StringsEqualInfo =
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>);
+static const VMFunction StringsNotEqualInfo =
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>);
 
 void
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -5299,31 +5014,14 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, bool *);
-typedef bool (*CompareParFn)(ForkJoinContext *, MutableHandleValue, MutableHandleValue, bool *);
-static const VMFunctionsModal EqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::LooselyEqual<true>),
-    FunctionInfo<CompareParFn>(jit::LooselyEqualPar));
-static const VMFunctionsModal NeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::LooselyEqual<false>),
-    FunctionInfo<CompareParFn>(jit::LooselyUnequalPar));
-static const VMFunctionsModal StrictEqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::StrictlyEqual<true>),
-    FunctionInfo<CompareParFn>(jit::StrictlyEqualPar));
-static const VMFunctionsModal StrictNeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::StrictlyEqual<false>),
-    FunctionInfo<CompareParFn>(jit::StrictlyUnequalPar));
-static const VMFunctionsModal LtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::LessThan),
-    FunctionInfo<CompareParFn>(jit::LessThanPar));
-static const VMFunctionsModal LeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::LessThanOrEqual),
-    FunctionInfo<CompareParFn>(jit::LessThanOrEqualPar));
-static const VMFunctionsModal GtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::GreaterThan),
-    FunctionInfo<CompareParFn>(jit::GreaterThanPar));
-static const VMFunctionsModal GeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(jit::GreaterThanOrEqual),
-    FunctionInfo<CompareParFn>(jit::GreaterThanOrEqualPar));
+static const VMFunction EqInfo = FunctionInfo<CompareFn>(jit::LooselyEqual<true>);
+static const VMFunction NeInfo = FunctionInfo<CompareFn>(jit::LooselyEqual<false>);
+static const VMFunction StrictEqInfo = FunctionInfo<CompareFn>(jit::StrictlyEqual<true>);
+static const VMFunction StrictNeInfo = FunctionInfo<CompareFn>(jit::StrictlyEqual<false>);
+static const VMFunction LtInfo = FunctionInfo<CompareFn>(jit::LessThan);
+static const VMFunction LeInfo = FunctionInfo<CompareFn>(jit::LessThanOrEqual);
+static const VMFunction GtInfo = FunctionInfo<CompareFn>(jit::GreaterThan);
+static const VMFunction GeInfo = FunctionInfo<CompareFn>(jit::GreaterThanOrEqual);
 
 void
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -5584,10 +5282,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
 }
 
 typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
-typedef JSString *(*ConcatStringsParFn)(ForkJoinContext *, HandleString, HandleString);
-static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
-    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>),
-    FunctionInfo<ConcatStringsParFn>(ConcatStringsPar));
+static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>);
 
 void
 CodeGenerator::emitConcat(LInstruction *lir, Register lhs, Register rhs, Register output)
@@ -5595,8 +5290,7 @@ CodeGenerator::emitConcat(LInstruction *lir, Register lhs, Register rhs, Registe
     OutOfLineCode *ool = oolCallVM(ConcatStringsInfo, lir, (ArgList(), lhs, rhs),
                                    StoreRegisterTo(output));
 
-    ExecutionMode mode = gen->info().executionMode();
-    JitCode *stringConcatStub = gen->compartment->jitCompartment()->stringConcatStubNoBarrier(mode);
+    JitCode *stringConcatStub = gen->compartment->jitCompartment()->stringConcatStubNoBarrier();
     masm.call(stringConcatStub);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
@@ -5618,26 +5312,6 @@ CodeGenerator::visitConcat(LConcat *lir)
     MOZ_ASSERT(ToRegister(lir->temp3()) == CallTempReg2);
     MOZ_ASSERT(ToRegister(lir->temp4()) == CallTempReg3);
     MOZ_ASSERT(ToRegister(lir->temp5()) == CallTempReg4);
-    MOZ_ASSERT(output == CallTempReg5);
-
-    emitConcat(lir, lhs, rhs, output);
-}
-
-void
-CodeGenerator::visitConcatPar(LConcatPar *lir)
-{
-    DebugOnly<Register> cx = ToRegister(lir->forkJoinContext());
-    Register lhs = ToRegister(lir->lhs());
-    Register rhs = ToRegister(lir->rhs());
-    Register output = ToRegister(lir->output());
-
-    MOZ_ASSERT(lhs == CallTempReg0);
-    MOZ_ASSERT(rhs == CallTempReg1);
-    MOZ_ASSERT((Register)cx == CallTempReg4);
-    MOZ_ASSERT(ToRegister(lir->temp1()) == CallTempReg0);
-    MOZ_ASSERT(ToRegister(lir->temp2()) == CallTempReg1);
-    MOZ_ASSERT(ToRegister(lir->temp3()) == CallTempReg2);
-    MOZ_ASSERT(ToRegister(lir->temp4()) == CallTempReg3);
     MOZ_ASSERT(output == CallTempReg5);
 
     emitConcat(lir, lhs, rhs, output);
@@ -5703,8 +5377,8 @@ CopyStringCharsMaybeInflate(MacroAssembler &masm, Register input, Register destC
 
 static void
 ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register output,
-                      Register temp1, Register temp2, Register temp3, Register forkJoinContext,
-                      ExecutionMode mode, Label *failure, Label *failurePopTemps, bool isTwoByte)
+                      Register temp1, Register temp2, Register temp3,
+                      Label *failure, Label *failurePopTemps, bool isTwoByte)
 {
     // State: result length in temp2.
 
@@ -5713,20 +5387,7 @@ ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register
     masm.branchIfRope(rhs, failure);
 
     // Allocate a JSFatInlineString.
-    switch (mode) {
-      case SequentialExecution:
-        masm.newGCFatInlineString(output, temp1, failure);
-        break;
-      case ParallelExecution:
-        masm.push(temp1);
-        masm.push(temp2);
-        masm.newGCFatInlineStringPar(output, forkJoinContext, temp1, temp2, failurePopTemps);
-        masm.pop(temp2);
-        masm.pop(temp1);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    masm.newGCFatInlineString(output, temp1, failure);
 
     // Store length and flags.
     uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
@@ -5739,12 +5400,6 @@ ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register
     masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()), temp2);
 
     {
-        // We use temp3 in this block, which in parallel execution also holds
-        // a live ForkJoinContext pointer. If we are compiling for parallel
-        // execution, be sure to save and restore the ForkJoinContext.
-        if (mode == ParallelExecution)
-            masm.push(temp3);
-
         // Copy lhs chars. Note that this advances temp2 to point to the next
         // char. This also clobbers the lhs register.
         if (isTwoByte) {
@@ -5769,9 +5424,6 @@ ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register
             masm.store16(Imm32(0), Address(temp2, 0));
         else
             masm.store8(Imm32(0), Address(temp2, 0));
-
-        if (mode == ParallelExecution)
-            masm.pop(temp3);
     }
 
     masm.ret();
@@ -5896,7 +5548,7 @@ CodeGenerator::visitSubstr(LSubstr *lir)
 }
 
 JitCode *
-JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
+JitCompartment::generateStringConcatStub(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
@@ -5906,11 +5558,6 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     Register temp2 = CallTempReg3;
     Register temp3 = CallTempReg4;
     Register output = CallTempReg5;
-
-    // In parallel execution, we pass in the ForkJoinContext in CallTempReg4, as
-    // by the time we need to use the temp3 we no longer have need of the
-    // cx.
-    Register forkJoinContext = CallTempReg4;
 
     Label failure, failurePopTemps;
 #ifdef JS_USE_LINK_REGISTER
@@ -5954,20 +5601,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.branch32(Assembler::Above, temp2, Imm32(JSString::MAX_LENGTH), &failure);
 
     // Allocate a new rope.
-    switch (mode) {
-      case SequentialExecution:
-        masm.newGCString(output, temp3, &failure);
-        break;
-      case ParallelExecution:
-        masm.push(temp1);
-        masm.push(temp2);
-        masm.newGCStringPar(output, forkJoinContext, temp1, temp2, &failurePopTemps);
-        masm.pop(temp2);
-        masm.pop(temp1);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    masm.newGCString(output, temp3, &failure);
 
     // Store rope length and flags. temp1 still holds the result of AND'ing the
     // lhs and rhs flags, so we just have to clear the other flags to get our
@@ -5991,12 +5625,12 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.ret();
 
     masm.bind(&isFatInlineTwoByte);
-    ConcatFatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3, forkJoinContext,
-                          mode, &failure, &failurePopTemps, true);
+    ConcatFatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
+                          &failure, &failurePopTemps, true);
 
     masm.bind(&isFatInlineLatin1);
-    ConcatFatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3, forkJoinContext,
-                          mode, &failure, &failurePopTemps, false);
+    ConcatFatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
+                          &failure, &failurePopTemps, false);
 
     masm.bind(&failurePopTemps);
     masm.pop(temp2);
@@ -6525,10 +6159,7 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
 
 typedef bool (*SetDenseElementFn)(JSContext *, HandleNativeObject, int32_t, HandleValue,
                                   bool strict);
-typedef bool (*SetDenseElementParFn)(ForkJoinContext *, HandleObject, int32_t, HandleValue, bool);
-static const VMFunctionsModal SetDenseElementInfo = VMFunctionsModal(
-    FunctionInfo<SetDenseElementFn>(SetDenseElement),
-    FunctionInfo<SetDenseElementParFn>(SetDenseElementPar));
+static const VMFunction SetDenseElementInfo = FunctionInfo<SetDenseElementFn>(SetDenseElement);
 
 void
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
@@ -7156,11 +6787,8 @@ CodeGenerator::visitRunOncePrologue(LRunOncePrologue *lir)
 
 typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
                                          HandleObject);
-typedef JSObject *(*InitRestParameterParFn)(ForkJoinContext *, uint32_t, Value *,
-                                            HandleObject, HandleArrayObject);
-static const VMFunctionsModal InitRestParameterInfo = VMFunctionsModal(
-    FunctionInfo<InitRestParameterFn>(InitRestParameter),
-    FunctionInfo<InitRestParameterParFn>(InitRestParameterPar));
+static const VMFunction InitRestParameterInfo =
+    FunctionInfo<InitRestParameterFn>(InitRestParameter);
 
 void
 CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
@@ -7220,24 +6848,6 @@ CodeGenerator::visitRest(LRest *lir)
     masm.bind(&joinAlloc);
 
     emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject, false, ToRegister(lir->output()));
-}
-
-// LRestPar cannot derive from LCallInstructionHelper because emitAllocateGCThingPar may
-// itself contain a VM call.  Thus there's some manual work here and in emitRest().
-
-void
-CodeGenerator::visitRestPar(LRestPar *lir)
-{
-    Register numActuals = ToRegister(lir->numActuals());
-    Register cx = ToRegister(lir->forkJoinContext());
-    Register temp0 = ToRegister(lir->getTemp(0));
-    Register temp1 = ToRegister(lir->getTemp(1));
-    Register temp2 = ToRegister(lir->getTemp(2));
-    unsigned numFormals = lir->mir()->numFormals();
-    ArrayObject *templateObject = lir->mir()->templateObject();
-
-    emitAllocateGCThingPar(lir, temp2, cx, temp0, temp1, templateObject);
-    emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject, true, ToRegister(lir->output()));
 }
 
 bool
@@ -7339,7 +6949,7 @@ CodeGenerator::generate()
     masm.bind(&skipPrologue);
 
 #ifdef JS_TRACE_LOGGING
-    if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
+    if (!gen->compilingAsmJS()) {
         emitTracelogScriptStart();
         emitTracelogStartEvent(TraceLogger_IonMonkey);
     }
@@ -7423,19 +7033,14 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     ExecutionMode executionMode = gen->info().executionMode();
     OptimizationLevel optimizationLevel = gen->optimizationInfo().level();
 
-    MOZ_ASSERT_IF(HasIonScript(script, executionMode), executionMode == SequentialExecution);
-
     // We finished the new IonScript. Invalidate the current active IonScript,
     // so we can replace it with this new (probably higher optimized) version.
     if (HasIonScript(script, executionMode)) {
         MOZ_ASSERT(GetIonScript(script, executionMode)->isRecompiling());
         // Do a normal invalidate, except don't cancel offThread compilations,
         // since that will cancel this compilation too.
-        if (!Invalidate(cx, script, SequentialExecution,
-                        /* resetUses */ false, /* cancelOffThread*/ false))
-        {
+        if (!Invalidate(cx, script, /* resetUses */ false, /* cancelOffThread*/ false))
             return false;
-        }
     }
 
     if (scriptCounts_ && !script->hasScriptCounts() && !script->initScriptCounts(cx))
@@ -7462,12 +7067,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // We encode safepoints after the OSI-point offsets have been determined.
     encodeSafepoints();
 
-    // List of possible scripts that this graph may call. Currently this is
-    // only tracked when compiling for parallel execution.
-    CallTargetVector callTargets(alloc());
-    if (executionMode == ParallelExecution)
-        AddPossibleCallees(cx, graph.mir(), callTargets);
-
     AutoDiscardIonCode discardIonCode(cx, &recompileInfo);
 
     IonScript *ionScript =
@@ -7477,8 +7076,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      recovers_.size(), bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
-                     safepoints_.size(), callTargets.length(),
-                     patchableBackedges_.length(), optimizationLevel);
+                     safepoints_.size(), patchableBackedges_.length(), optimizationLevel);
     if (!ionScript)
         return false;
     discardIonCode.ionScript = ionScript;
@@ -7488,9 +7086,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // read barriers which were skipped while compiling the script off thread.
     Linker linker(masm);
     AutoFlushICache afc("IonLink");
-    JitCode *code = (executionMode == SequentialExecution)
-                    ? linker.newCodeForIonScript(cx)
-                    : linker.newCode<CanGC>(cx, ION_CODE);
+    JitCode *code = linker.newCodeForIonScript(cx);
     if (!code)
         return false;
 
@@ -7550,12 +7146,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     SetIonScript(cx, script, executionMode, ionScript);
 
-    // In parallel execution mode, when we first compile a script, we
-    // don't know that its potential callees are compiled, so set a
-    // flag warning that the callees may not be fully compiled.
-    if (!callTargets.empty())
-        ionScript->setHasUncompiledCallTarget();
-
     invalidateEpilogueData_.fixup(&masm);
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
                                        ImmPtr(ionScript),
@@ -7608,8 +7198,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyRecovers(&recovers_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
-    if (callTargets.length() > 0)
-        ionScript->copyCallTargetEntries(callTargets.begin());
     if (patchableBackedges_.length() > 0)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin(), masm);
 
@@ -7636,21 +7224,11 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     }
 #endif
 
-    switch (executionMode) {
-      case SequentialExecution:
-        // The correct state for prebarriers is unknown until the end of compilation,
-        // since a GC can occur during code generation. All barriers are emitted
-        // off-by-default, and are toggled on here if necessary.
-        if (cx->zone()->needsIncrementalBarrier())
-            ionScript->toggleBarriers(true);
-        break;
-      case ParallelExecution:
-        // We don't run incremental GC during parallel execution; no need to
-        // turn on barriers.
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    // The correct state for prebarriers is unknown until the end of compilation,
+    // since a GC can occur during code generation. All barriers are emitted
+    // off-by-default, and are toggled on here if necessary.
+    if (cx->zone()->needsIncrementalBarrier())
+        ionScript->toggleBarriers(true);
 
     // Attach any generated script counts to the script.
     if (IonScriptCounts *counts = extractScriptCounts())
@@ -7753,10 +7331,7 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 
 typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
                                    bool strict);
-typedef bool (*SetElementParFn)(ForkJoinContext *, HandleObject, HandleValue, HandleValue, bool);
-static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
-    FunctionInfo<SetObjectElementFn>(SetObjectElement),
-    FunctionInfo<SetElementParFn>(SetElementPar));
+static const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(SetObjectElement);
 
 void
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
@@ -7904,22 +7479,9 @@ CodeGenerator::addGetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
                                    PropertyName *name, TypedOrValueRegister output,
                                    bool monitoredResult, jsbytecode *profilerLeavePc)
 {
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: {
-        GetPropertyIC cache(liveRegs, objReg, name, output, monitoredResult);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      case ParallelExecution: {
-        GetPropertyParIC cache(objReg, name, output);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      default:
-        MOZ_CRASH("Bad execution mode");
-    }
+    GetPropertyIC cache(liveRegs, objReg, name, output, monitoredResult);
+    cache.setProfilerLeavePC(profilerLeavePc);
+    addCache(ins, allocateCache(cache));
 }
 
 void
@@ -7927,22 +7489,9 @@ CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
                                    PropertyName *name, ConstantOrRegister value, bool strict,
                                    bool needsTypeBarrier, jsbytecode *profilerLeavePc)
 {
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: {
-          SetPropertyIC cache(liveRegs, objReg, name, value, strict, needsTypeBarrier);
-            cache.setProfilerLeavePC(profilerLeavePc);
-          addCache(ins, allocateCache(cache));
-          break;
-      }
-      case ParallelExecution: {
-          SetPropertyParIC cache(objReg, name, value, strict, needsTypeBarrier);
-            cache.setProfilerLeavePC(profilerLeavePc);
-          addCache(ins, allocateCache(cache));
-          break;
-      }
-      default:
-        MOZ_CRASH("Bad execution mode");
-    }
+    SetPropertyIC cache(liveRegs, objReg, name, value, strict, needsTypeBarrier);
+    cache.setProfilerLeavePC(profilerLeavePc);
+    addCache(ins, allocateCache(cache));
 }
 
 void
@@ -7952,24 +7501,10 @@ CodeGenerator::addSetElementCache(LInstruction *ins, Register obj, Register unbo
                                   ConstantOrRegister value, bool strict, bool guardHoles,
                                   jsbytecode *profilerLeavePc)
 {
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: {
-        SetElementIC cache(obj, unboxIndex, temp, tempDouble, tempFloat32, index, value, strict,
-                           guardHoles);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      case ParallelExecution: {
-        SetElementParIC cache(obj, unboxIndex, temp, tempDouble, tempFloat32, index, value, strict,
-                              guardHoles);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      default:
-        MOZ_CRASH("Bad execution mode");
-    }
+    SetElementIC cache(obj, unboxIndex, temp, tempDouble, tempFloat32, index, value, strict,
+                       guardHoles);
+    cache.setProfilerLeavePC(profilerLeavePc);
+    addCache(ins, allocateCache(cache));
 }
 
 void
@@ -8025,47 +7560,15 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetProperty
     masm.jump(ool->rejoin());
 }
 
-typedef bool (*GetPropertyParICFn)(ForkJoinContext *, size_t, HandleObject, MutableHandleValue);
-const VMFunction GetPropertyParIC::UpdateInfo =
-    FunctionInfo<GetPropertyParICFn>(GetPropertyParIC::update);
-
-void
-CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic)
-{
-    LInstruction *lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    callVM(GetPropertyParIC::UpdateInfo, lir);
-    StoreValueTo(ic->output()).generate(this);
-    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
-
-    masm.jump(ool->rejoin());
-}
-
 void
 CodeGenerator::addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
                                   TypedOrValueRegister output, bool monitoredResult,
                                   bool allowDoubleResult, jsbytecode *profilerLeavePc)
 {
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: {
-        RegisterSet liveRegs = ins->safepoint()->liveRegs();
-        GetElementIC cache(liveRegs, obj, index, output, monitoredResult, allowDoubleResult);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      case ParallelExecution: {
-        GetElementParIC cache(obj, index, output, monitoredResult, allowDoubleResult);
-        cache.setProfilerLeavePC(profilerLeavePc);
-        addCache(ins, allocateCache(cache));
-        break;
-      }
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    RegisterSet liveRegs = ins->safepoint()->liveRegs();
+    GetElementIC cache(liveRegs, obj, index, output, monitoredResult, allowDoubleResult);
+    cache.setProfilerLeavePC(profilerLeavePc);
+    addCache(ins, allocateCache(cache));
 }
 
 void
@@ -8169,47 +7672,6 @@ CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC
     masm.jump(ool->rejoin());
 }
 
-typedef bool (*SetElementParICFn)(ForkJoinContext *, size_t, HandleObject, HandleValue, HandleValue);
-const VMFunction SetElementParIC::UpdateInfo =
-    FunctionInfo<SetElementParICFn>(SetElementParIC::update);
-
-void
-CodeGenerator::visitSetElementParIC(OutOfLineUpdateCache *ool, DataPtr<SetElementParIC> &ic)
-{
-    LInstruction *lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->value());
-    pushArg(ic->index());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    callVM(SetElementParIC::UpdateInfo, lir);
-    restoreLive(lir);
-
-    masm.jump(ool->rejoin());
-}
-
-typedef bool (*GetElementParICFn)(ForkJoinContext *, size_t, HandleObject, HandleValue,
-                                  MutableHandleValue);
-const VMFunction GetElementParIC::UpdateInfo =
-    FunctionInfo<GetElementParICFn>(GetElementParIC::update);
-
-void
-CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic)
-{
-    LInstruction *lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->index());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    callVM(GetElementParIC::UpdateInfo, lir);
-    StoreValueTo(ic->output()).generate(this);
-    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
-
-    masm.jump(ool->rejoin());
-}
-
 void
 CodeGenerator::visitBindNameCache(LBindNameCache *ins)
 {
@@ -8242,11 +7704,7 @@ CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &i
 
 typedef bool (*SetPropertyFn)(JSContext *, HandleObject,
                               HandlePropertyName, const HandleValue, bool, jsbytecode *);
-typedef bool (*SetPropertyParFn)(ForkJoinContext *, HandleObject,
-                                 HandlePropertyName, const HandleValue, bool, jsbytecode *);
-static const VMFunctionsModal SetPropertyInfo = VMFunctionsModal(
-    FunctionInfo<SetPropertyFn>(SetProperty),
-    FunctionInfo<SetPropertyParFn>(SetPropertyPar));
+static const VMFunction SetPropertyInfo = FunctionInfo<SetPropertyFn>(SetProperty);
 
 void
 CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
@@ -8349,25 +7807,6 @@ CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetProperty
     masm.jump(ool->rejoin());
 }
 
-typedef bool (*SetPropertyParICFn)(ForkJoinContext *, size_t, HandleObject, HandleValue);
-const VMFunction SetPropertyParIC::UpdateInfo =
-    FunctionInfo<SetPropertyParICFn>(SetPropertyParIC::update);
-
-void
-CodeGenerator::visitSetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyParIC> &ic)
-{
-    LInstruction *lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->value());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    callVM(SetPropertyParIC::UpdateInfo, lir);
-    restoreLive(lir);
-
-    masm.jump(ool->rejoin());
-}
-
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
 static const VMFunction ThrowInfoCodeGen = FunctionInfo<ThrowFn>(js::Throw);
 
@@ -8379,10 +7818,7 @@ CodeGenerator::visitThrow(LThrow *lir)
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);
-typedef bool (*BitNotParFn)(ForkJoinContext *, HandleValue, int32_t *);
-static const VMFunctionsModal BitNotInfo = VMFunctionsModal(
-    FunctionInfo<BitNotFn>(BitNot),
-    FunctionInfo<BitNotParFn>(BitNotPar));
+static const VMFunction BitNotInfo = FunctionInfo<BitNotFn>(BitNot);
 
 void
 CodeGenerator::visitBitNotV(LBitNotV *lir)
@@ -8392,22 +7828,11 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 }
 
 typedef bool (*BitopFn)(JSContext *, HandleValue, HandleValue, int *p);
-typedef bool (*BitopParFn)(ForkJoinContext *, HandleValue, HandleValue, int32_t *);
-static const VMFunctionsModal BitAndInfo = VMFunctionsModal(
-    FunctionInfo<BitopFn>(BitAnd),
-    FunctionInfo<BitopParFn>(BitAndPar));
-static const VMFunctionsModal BitOrInfo = VMFunctionsModal(
-    FunctionInfo<BitopFn>(BitOr),
-    FunctionInfo<BitopParFn>(BitOrPar));
-static const VMFunctionsModal BitXorInfo = VMFunctionsModal(
-    FunctionInfo<BitopFn>(BitXor),
-    FunctionInfo<BitopParFn>(BitXorPar));
-static const VMFunctionsModal BitLhsInfo = VMFunctionsModal(
-    FunctionInfo<BitopFn>(BitLsh),
-    FunctionInfo<BitopParFn>(BitLshPar));
-static const VMFunctionsModal BitRhsInfo = VMFunctionsModal(
-    FunctionInfo<BitopFn>(BitRsh),
-    FunctionInfo<BitopParFn>(BitRshPar));
+static const VMFunction BitAndInfo = FunctionInfo<BitopFn>(BitAnd);
+static const VMFunction BitOrInfo = FunctionInfo<BitopFn>(BitOr);
+static const VMFunction BitXorInfo = FunctionInfo<BitopFn>(BitXor);
+static const VMFunction BitLhsInfo = FunctionInfo<BitopFn>(BitLsh);
+static const VMFunction BitRhsInfo = FunctionInfo<BitopFn>(BitRsh);
 
 void
 CodeGenerator::visitBitOpV(LBitOpV *lir)

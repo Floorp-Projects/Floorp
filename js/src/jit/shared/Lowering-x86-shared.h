@@ -52,7 +52,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void lowerConstantFloat32(float d, MInstruction *ins);
     void lowerTruncateDToInt32(MTruncateToInt32 *ins);
     void lowerTruncateFToInt32(MTruncateToInt32 *ins);
-    void visitForkJoinGetSlice(MForkJoinGetSlice *ins);
     void visitSimdBinaryArith(MSimdBinaryArith *ins);
     void visitSimdSelect(MSimdSelect *ins);
     void visitSimdSplatX4(MSimdSplatX4 *ins);

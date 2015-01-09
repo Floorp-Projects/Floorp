@@ -898,8 +898,7 @@ PtrInfo*
 CCGraph::FindNode(void* aPtr)
 {
   PtrToNodeEntry* e =
-    static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
-                                                      PL_DHASH_LOOKUP));
+    static_cast<PtrToNodeEntry*>(PL_DHashTableLookup(&mPtrToNodeMap, aPtr));
   if (!PL_DHASH_ENTRY_IS_BUSY(e)) {
     return nullptr;
   }
@@ -911,8 +910,7 @@ CCGraph::AddNodeToMap(void* aPtr)
 {
   JS::AutoSuppressGCAnalysis suppress;
   PtrToNodeEntry* e =
-    static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr,
-                                                      PL_DHASH_ADD));
+    static_cast<PtrToNodeEntry*>(PL_DHashTableAdd(&mPtrToNodeMap, aPtr));
   if (!e) {
     // Caller should track OOMs
     return nullptr;
@@ -923,7 +921,7 @@ CCGraph::AddNodeToMap(void* aPtr)
 void
 CCGraph::RemoveNodeFromMap(void* aPtr)
 {
-  PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_REMOVE);
+  PL_DHashTableRemove(&mPtrToNodeMap, aPtr);
 }
 
 
@@ -3277,14 +3275,9 @@ nsCycleCollector::CollectWhite()
     if (pinfo->mColor == white && pinfo->mParticipant) {
       if (pinfo->IsGrayJS()) {
         ++numWhiteGCed;
-        JS::Zone* zone;
         if (MOZ_UNLIKELY(pinfo->mParticipant == zoneParticipant)) {
           ++numWhiteJSZones;
-          zone = static_cast<JS::Zone*>(pinfo->mPointer);
-        } else {
-          zone = JS::GetTenuredGCThingZone(pinfo->mPointer);
         }
-        mJSRuntime->AddZoneWaitingForGC(zone);
       } else {
         whiteNodes.InfallibleAppend(pinfo);
         pinfo->mParticipant->Root(pinfo->mPointer);

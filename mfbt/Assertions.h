@@ -198,7 +198,7 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #    define MOZ_REALLY_CRASH() \
        do { \
          ::__debugbreak(); \
-         *((volatile int*) NULL) = 123; \
+         *((volatile int*) NULL) = __LINE__; \
          ::TerminateProcess(::GetCurrentProcess(), 3); \
          ::MOZ_NoReturn(); \
        } while (0)
@@ -206,7 +206,7 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #    define MOZ_REALLY_CRASH() \
        do { \
          __debugbreak(); \
-         *((volatile int*) NULL) = 123; \
+         *((volatile int*) NULL) = __LINE__; \
          TerminateProcess(GetCurrentProcess(), 3); \
          MOZ_NoReturn(); \
        } while (0)
@@ -215,13 +215,13 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #  ifdef __cplusplus
 #    define MOZ_REALLY_CRASH() \
        do { \
-         *((volatile int*) NULL) = 123; \
+         *((volatile int*) NULL) = __LINE__; \
          ::abort(); \
        } while (0)
 #  else
 #    define MOZ_REALLY_CRASH() \
        do { \
-         *((volatile int*) NULL) = 123; \
+         *((volatile int*) NULL) = __LINE__; \
          abort(); \
        } while (0)
 #  endif

@@ -21,7 +21,6 @@
 #include "jit/JitCompartment.h"
 #include "jit/JitSpewer.h"
 #include "jit/MacroAssembler.h"
-#include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Recover.h"
 #include "jit/Safepoints.h"
@@ -870,29 +869,6 @@ HandleException(ResumeFromException *rfe)
     }
 
     rfe->stackPointer = iter.fp();
-}
-
-void
-HandleParallelFailure(ResumeFromException *rfe)
-{
-    parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
-
-    ForkJoinContext *cx = ForkJoinContext::current();
-    JitFrameIterator frameIter(cx);
-
-    // Advance to the first Ion frame so we can pull out the BailoutKind.
-    while (!frameIter.isIonJS())
-        ++frameIter;
-    SnapshotIterator snapIter(frameIter);
-
-    cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
-    while (!frameIter.done())
-        ++frameIter;
-
-    rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
-
-    MOZ_ASSERT(frameIter.done());
-    rfe->stackPointer = frameIter.fp();
 }
 
 void

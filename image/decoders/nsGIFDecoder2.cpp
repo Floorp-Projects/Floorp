@@ -199,12 +199,6 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
       NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
                    mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,
                    format);
-    } else {
-      // Our preallocated frame matches up, with the possible exception
-      // of alpha.
-      if (format == gfx::SurfaceFormat::B8G8R8X8) {
-        currentFrame->SetHasNoAlpha();
-      }
     }
   }
 
@@ -216,7 +210,7 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 void
 nsGIFDecoder2::EndImageFrame()
 {
-  FrameBlender::FrameAlpha alpha = FrameBlender::kFrameHasAlpha;
+  Opacity opacity = Opacity::SOME_TRANSPARENCY;
 
   // First flush all pending image data
   if (!mGIFStruct.images_decoded) {
@@ -233,9 +227,13 @@ nsGIFDecoder2::EndImageFrame()
                   mGIFStruct.screen_height - realFrameHeight);
       PostInvalidation(r);
     }
-    // This transparency check is only valid for first frame
-    if (mGIFStruct.is_transparent && !mSawTransparency) {
-      alpha = FrameBlender::kFrameOpaque;
+
+    // The first frame was preallocated with alpha; if it wasn't transparent, we
+    // should fix that. We can also mark it opaque unconditionally if we didn't
+    // actually see any transparent pixels - this test is only valid for the
+    // first frame.
+    if (!mGIFStruct.is_transparent || !mSawTransparency) {
+      opacity = Opacity::OPAQUE;
     }
   }
   mCurrentRow = mLastFlushedRow = -1;
@@ -259,8 +257,8 @@ nsGIFDecoder2::EndImageFrame()
   mGIFStruct.images_decoded++;
 
   // Tell the superclass we finished a frame
-  PostFrameStop(alpha,
-                FrameBlender::FrameDisposalMethod(mGIFStruct.disposal_method),
+  PostFrameStop(opacity,
+                DisposalMethod(mGIFStruct.disposal_method),
                 mGIFStruct.delay_time);
 
   // Reset the transparent pixel
@@ -569,8 +567,7 @@ ConvertColormap(uint32_t* aColormap, uint32_t aColors)
 }
 
 void
-nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount,
-                             DecodeStrategy)
+nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
@@ -830,10 +827,9 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount,
       }
 
       {
-        int32_t method =
-          FrameBlender::FrameDisposalMethod(mGIFStruct.disposal_method);
-        if (method == FrameBlender::kDisposeClearAll ||
-            method == FrameBlender::kDisposeClear) {
+        DisposalMethod method = DisposalMethod(mGIFStruct.disposal_method);
+        if (method == DisposalMethod::CLEAR_ALL ||
+            method == DisposalMethod::CLEAR) {
           // We may have to display the background under this image during
           // animation playback, so we regard it as transparent.
           PostHasTransparency();

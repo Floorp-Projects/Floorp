@@ -111,8 +111,7 @@ public:
     inline XPCWrappedNative* Find(nsISupports* Obj)
     {
         NS_PRECONDITION(Obj,"bad param");
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, Obj, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, Obj);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -123,8 +122,7 @@ public:
         NS_PRECONDITION(wrapper,"bad param");
         nsISupports* obj = wrapper->GetIdentityObject();
         MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, obj, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, obj);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -144,7 +142,7 @@ public:
                    "nsISupports identity! This will most likely cause serious "
                    "problems!");
 #endif
-        PL_DHashTableOperate(mTable, wrapper->GetIdentityObject(), PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, wrapper->GetIdentityObject());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -181,8 +179,7 @@ public:
 
     inline nsXPCWrappedJSClass* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, &iid, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, &iid);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -192,8 +189,7 @@ public:
     {
         NS_PRECONDITION(clazz,"bad param");
         const nsIID* iid = &clazz->GetIID();
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, iid, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, iid);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -206,7 +202,7 @@ public:
     inline void Remove(nsXPCWrappedJSClass* clazz)
     {
         NS_PRECONDITION(clazz,"bad param");
-        PL_DHashTableOperate(mTable, &clazz->GetIID(), PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, &clazz->GetIID());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -238,8 +234,7 @@ public:
 
     inline XPCNativeInterface* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, &iid, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, &iid);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -249,8 +244,7 @@ public:
     {
         NS_PRECONDITION(iface,"bad param");
         const nsIID* iid = iface->GetIID();
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, iid, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, iid);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -263,7 +257,7 @@ public:
     inline void Remove(XPCNativeInterface* iface)
     {
         NS_PRECONDITION(iface,"bad param");
-        PL_DHashTableOperate(mTable, iface->GetIID(), PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, iface->GetIID());
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -298,8 +292,7 @@ public:
 
     inline XPCNativeSet* Find(nsIClassInfo* info)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, info, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, info);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -308,8 +301,7 @@ public:
     inline XPCNativeSet* Add(nsIClassInfo* info, XPCNativeSet* set)
     {
         NS_PRECONDITION(info,"bad param");
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, info, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, info);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -322,7 +314,7 @@ public:
     inline void Remove(nsIClassInfo* info)
     {
         NS_PRECONDITION(info,"bad param");
-        PL_DHashTableOperate(mTable, info, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, info);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -358,8 +350,7 @@ public:
 
     inline XPCWrappedNativeProto* Find(nsIClassInfo* info)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, info, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, info);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -368,8 +359,7 @@ public:
     inline XPCWrappedNativeProto* Add(nsIClassInfo* info, XPCWrappedNativeProto* proto)
     {
         NS_PRECONDITION(info,"bad param");
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, info, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, info);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -382,7 +372,7 @@ public:
     inline void Remove(nsIClassInfo* info)
     {
         NS_PRECONDITION(info,"bad param");
-        PL_DHashTableOperate(mTable, info, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, info);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -423,8 +413,7 @@ public:
 
     inline XPCNativeSet* Find(XPCNativeSetKey* key)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, key, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, key);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->key_value;
@@ -434,8 +423,7 @@ public:
     {
         NS_PRECONDITION(key,"bad param");
         NS_PRECONDITION(set,"bad param");
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, key, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, key);
         if (!entry)
             return nullptr;
         if (entry->key_value)
@@ -455,7 +443,7 @@ public:
         NS_PRECONDITION(set,"bad param");
 
         XPCNativeSetKey key(set, nullptr, 0);
-        PL_DHashTableOperate(mTable, &key, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, &key);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -500,8 +488,7 @@ public:
 
     inline nsIXPCFunctionThisTranslator* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, &iid, PL_DHASH_LOOKUP);
+        Entry* entry = (Entry*) PL_DHashTableLookup(mTable, &iid);
         if (PL_DHASH_ENTRY_IS_FREE(entry))
             return nullptr;
         return entry->value;
@@ -511,8 +498,7 @@ public:
                                              nsIXPCFunctionThisTranslator* obj)
     {
 
-        Entry* entry = (Entry*)
-            PL_DHashTableOperate(mTable, &iid, PL_DHASH_ADD);
+        Entry* entry = (Entry*) PL_DHashTableAdd(mTable, &iid);
         if (!entry)
             return nullptr;
         entry->value = obj;
@@ -522,7 +508,7 @@ public:
 
     inline void Remove(REFNSIID iid)
     {
-        PL_DHashTableOperate(mTable, &iid, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, &iid);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
@@ -584,7 +570,7 @@ public:
     {
         NS_PRECONDITION(proto,"bad param");
         PLDHashEntryStub* entry = (PLDHashEntryStub*)
-            PL_DHashTableOperate(mTable, proto, PL_DHASH_ADD);
+            PL_DHashTableAdd(mTable, proto);
         if (!entry)
             return nullptr;
         if (entry->key)
@@ -596,7 +582,7 @@ public:
     inline void Remove(XPCWrappedNativeProto* proto)
     {
         NS_PRECONDITION(proto,"bad param");
-        PL_DHashTableOperate(mTable, proto, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(mTable, proto);
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }

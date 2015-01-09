@@ -25,7 +25,7 @@
     <command id="Browser:SavePage" oncommand="saveDocument(gBrowser.selectedBrowser.contentDocumentAsCPOW);"/>
 
     <command id="Browser:SendLink"
-             oncommand="MailIntegration.sendLinkForWindow(window.content);"/>
+             oncommand="MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);"/>
 
     <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
     <command id="cmd_print" oncommand="PrintUtils.print(window.gBrowser.selectedBrowser.contentWindowAsCPOW, window.gBrowser.selectedBrowser);"/>

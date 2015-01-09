@@ -26,7 +26,7 @@ protected:
   virtual ~TelephonyParent() {}
 
   virtual void
-  ActorDestroy(ActorDestroyReason why);
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
   RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActor, const IPCTelephonyRequest& aRequest) MOZ_OVERRIDE;
@@ -98,7 +98,7 @@ protected:
   virtual ~TelephonyRequestParent() {}
 
   virtual void
-  ActorDestroy(ActorDestroyReason why);
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   nsresult
   SendResponse(const IPCTelephonyResponse& aResponse);

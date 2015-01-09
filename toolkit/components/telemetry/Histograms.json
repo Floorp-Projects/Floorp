@@ -7132,5 +7132,12 @@
     "n_buckets": 50,
     "high": 86400,
     "description": "Stumbler: The time between receiving passive locations."
+  },
+  "DATA_STORAGE_ENTRIES": {
+    "expires_in_version": "default",
+    "kind": "linear",
+    "high": "1024",
+    "n_buckets": 16,
+    "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   }
 }

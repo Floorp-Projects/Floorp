@@ -62,7 +62,7 @@ function cert_from_file(filename) {
 }
 
 function load_cert(cert_name, trust_string) {
-  var cert_filename = cert_name + ".der";
+  let cert_filename = cert_name + ".der";
   addCertFromFile(certdb, "test_cert_eku/" + cert_filename, trust_string);
   return cert_from_file(cert_filename);
 }
@@ -174,7 +174,6 @@ def generate_test_eku():
     return outmap
 
 def generate_certs(do_cert_generation):
-    js_outfile = open("../test_cert_eku.js", 'w')
     ca_name = "ca"
     if do_cert_generation:
         [ca_key, ca_cert] = CertUtils.generate_cert_generic(
@@ -182,13 +181,15 @@ def generate_certs(do_cert_generation):
                               CA_basic_constraints)
     ee_ext_text = EE_basic_constraints + EE_full_ku
 
-    js_outfile.write(js_file_header)
-
     # now we do it again for valid basic constraints but strange eku/ku at the
     # intermediate layer
     eku_dict = generate_test_eku()
     print eku_dict
     for eku_name in (sorted(eku_dict.keys())):
+        # Divide the tests into multiple files to avoid time outs
+        js_outfile = open("../test_cert_eku-" + eku_name + ".js", "w")
+        js_outfile.write(js_file_header)
+
         # generate int
         int_name = "int-EKU-" + eku_name
         int_serial = random.randint(100, 40000000)
@@ -219,8 +220,8 @@ def generate_certs(do_cert_generation):
                 js_outfile.write(gen_ee_js_output(int_name, ee_base_name,
                                  cert_usage, ee_name))
 
-    js_outfile.write(js_file_footer)
-    js_outfile.close()
+        js_outfile.write(js_file_footer)
+        js_outfile.close()
 
 # By default, re-generate the certificates. Anything can be passed as a
 # command-line option to prevent this.

@@ -31,7 +31,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsIOService.h"
 #include "nsICachingChannel.h"
-
+#include "mozilla/LoadInfo.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -106,7 +106,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.entityID(), a.chooseApplicationCache(),
                        a.appCacheClientID(), a.allowSpdy(), a.fds(),
                        a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
-                       a.securityFlags(), a.contentPolicyType());
+                       a.securityFlags(), a.contentPolicyType(), a.innerWindowID());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -196,7 +196,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
                                  const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                                  const uint32_t&            aSecurityFlags,
-                                 const uint32_t&            aContentPolicyType)
+                                 const uint32_t&            aContentPolicyType,
+                                 const uint32_t&            aInnerWindowID)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -246,17 +247,14 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     loadFlags |= nsICachingChannel::LOAD_NO_NETWORK_IO;
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo =
+    new mozilla::LoadInfo(requestingPrincipal, triggeringPrincipal,
+                          aSecurityFlags, aContentPolicyType,
+                          aInnerWindowID);
+
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
-                                            uri,
-                                            requestingPrincipal,
-                                            triggeringPrincipal,
-                                            aSecurityFlags,
-                                            aContentPolicyType,
-                                            nullptr,   // loadGroup
-                                            nullptr,   // aCallbacks
-                                            loadFlags,
-                                            ios);
+  rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo,
+                             nullptr, nullptr, loadFlags, ios);
 
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);

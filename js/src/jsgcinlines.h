@@ -444,7 +444,7 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots)
 static inline bool
 PossiblyFail()
 {
-    JS_OOM_POSSIBLY_FAIL();
+    JS_OOM_POSSIBLY_FAIL_BOOL();
     return true;
 }
 

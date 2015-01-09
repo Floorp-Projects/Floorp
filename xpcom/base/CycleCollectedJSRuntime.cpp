@@ -1025,7 +1025,7 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
   JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);
 
   JS::PrepareForFullGC(mJSRuntime);
-  JS::GCForReason(mJSRuntime, gcreason);
+  JS::GCForReason(mJSRuntime, GC_NORMAL, gcreason);
 }
 
 void
@@ -1265,7 +1265,6 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   switch (aStatus) {
     case JSGC_BEGIN:
       nsCycleCollector_prepareForGarbageCollection();
-      mZonesWaitingForGC.Clear();
       break;
     case JSGC_END: {
 #ifdef MOZ_CRASHREPORTER
@@ -1303,22 +1302,4 @@ CycleCollectedJSRuntime::OnLargeAllocationFailure()
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reporting);
   CustomLargeAllocationFailureCallback();
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reported);
-}
-
-static PLDHashOperator
-PrepareWaitingZoneForGC(nsPtrHashKey<JS::Zone>* aZoneEntry, void*)
-{
-  JS::PrepareZoneForGC(aZoneEntry->GetKey());
-  return PL_DHASH_NEXT;
-}
-
-void
-CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
-{
-  if (mZonesWaitingForGC.Count() == 0) {
-    JS::PrepareForFullGC(Runtime());
-  } else {
-    mZonesWaitingForGC.EnumerateEntries(PrepareWaitingZoneForGC, nullptr);
-    mZonesWaitingForGC.Clear();
-  }
 }

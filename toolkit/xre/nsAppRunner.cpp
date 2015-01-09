@@ -160,10 +160,6 @@
 #include "nsIRemoteService.h"
 #endif
 
-#ifdef NS_TRACE_MALLOC
-#include "nsTraceMalloc.h"
-#endif
-
 #if defined(DEBUG) && defined(XP_WIN32)
 #include <malloc.h>
 #endif
@@ -224,8 +220,7 @@ static char **gQtOnlyArgv;
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
-  || defined(NS_TRACE_MALLOC)
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
 #define CLEANUP_MEMORY 1
 #define PANGO_ENABLE_BACKEND
 #include <pango/pangofc-fontmap.h>
@@ -3327,10 +3322,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     *aExitFlag = true;
     return 0;
   }
-    
-#ifdef NS_TRACE_MALLOC
-  gArgc = NS_TraceMallocStartupArgs(gArgc, gArgv);
-#endif
 
   rv = XRE_InitCommandLine(gArgc, gArgv);
   NS_ENSURE_SUCCESS(rv, 1);

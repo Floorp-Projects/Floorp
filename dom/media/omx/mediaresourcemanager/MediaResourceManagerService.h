@@ -99,7 +99,7 @@ private:
     // Request operations.
     bool hasRequest(ResourceType type);
     uint32_t countRequests(ResourceType type);
-    const sp<IBinder>& nextRequest(ResourceType type);
+    sp<IBinder> nextRequest(ResourceType type);
     status_t enqueueRequest(const sp<IBinder>& client, ResourceType type);
     status_t dequeueRequest(ResourceType type);
     status_t forgetClient(const sp<IBinder>& client, ResourceType type);

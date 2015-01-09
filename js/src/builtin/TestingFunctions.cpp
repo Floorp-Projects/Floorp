@@ -238,10 +238,8 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     else
         JS::PrepareForFullGC(cx->runtime());
 
-    if (shrinking)
-        JS::ShrinkingGC(cx->runtime(), JS::gcreason::API);
-    else
-        JS::GCForReason(cx->runtime(), JS::gcreason::API);
+    JSGCInvocationKind gckind = shrinking ? GC_SHRINK : GC_NORMAL;
+    JS::GCForReason(cx->runtime(), gckind, JS::gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC

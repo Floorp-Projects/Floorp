@@ -15,13 +15,10 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
-#include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
 #include "jit/x86/BaselineHelpers-x86.h"
 
 #include "jsscriptinlines.h"
-
-#include "jit/ExecutionMode-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -354,7 +351,7 @@ JitRuntime::generateInvalidator(JSContext *cx)
 }
 
 JitCode *
-JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
+JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
 
@@ -425,7 +422,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Note that this assumes the function is JITted.
     masm.andl(Imm32(CalleeTokenMask), eax);
     masm.loadPtr(Address(eax, JSFunction::offsetOfNativeOrScript()), eax);
-    masm.loadBaselineOrIonRaw(eax, eax, mode, nullptr);
+    masm.loadBaselineOrIonRaw(eax, eax, nullptr);
     masm.call(eax);
     uint32_t returnOffset = masm.currentOffset();
 
@@ -516,31 +513,6 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.jmp(bailoutTail);
 }
 
-static void
-GenerateParallelBailoutThunk(MacroAssembler &masm, uint32_t frameClass)
-{
-    // As GenerateBailoutThunk, except we return an error immediately. We do
-    // the bailout dance so that we can walk the stack and have accurate
-    // reporting of frame information.
-
-    PushBailoutFrame(masm, frameClass, eax);
-
-    // Parallel bailout is like parallel failure in that we unwind all the way
-    // to the entry frame. Reserve space for the frame pointer of the entry frame.
-    masm.reserveStack(sizeof(uint8_t *));
-    masm.movePtr(esp, ebx);
-
-    masm.setupUnalignedABICall(2, ecx);
-    masm.passABIArg(eax);
-    masm.passABIArg(ebx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, BailoutPar));
-
-    // Get the frame pointer of the entry frame and return.
-    masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    masm.loadPtr(Address(esp, 0), esp);
-    masm.ret();
-}
-
 JitCode *
 JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
 {
@@ -564,20 +536,10 @@ JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
 }
 
 JitCode *
-JitRuntime::generateBailoutHandler(JSContext *cx, ExecutionMode mode)
+JitRuntime::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
-
-    switch (mode) {
-      case SequentialExecution:
-        GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
-        break;
-      case ParallelExecution:
-        GenerateParallelBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
-        break;
-      default:
-        MOZ_CRASH("No such execution mode");
-    }
+    GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
 
     Linker linker(masm);
     JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
@@ -618,7 +580,8 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     //  +0  returnAddress
     //
     // We're aligned to an exit frame, so link it up.
-    masm.enterExitFrameAndLoadContext(&f, cxreg, regs.getAny(), f.executionMode);
+    masm.enterExitFrame(&f);
+    masm.loadJSContext(cxreg);
 
     // Save the current stack pointer as the base for copying arguments.
     Register argsBase = InvalidReg;
@@ -704,11 +667,11 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Test for failure.
     switch (f.failType()) {
       case Type_Object:
-        masm.branchTestPtr(Assembler::Zero, eax, eax, masm.failureLabel(f.executionMode));
+        masm.branchTestPtr(Assembler::Zero, eax, eax, masm.failureLabel());
         break;
       case Type_Bool:
         masm.testb(eax, eax);
-        masm.j(Assembler::Zero, masm.failureLabel(f.executionMode));
+        masm.j(Assembler::Zero, masm.failureLabel());
         break;
       default:
         MOZ_CRASH("unknown failure kind");

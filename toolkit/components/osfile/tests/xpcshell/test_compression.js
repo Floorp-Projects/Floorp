@@ -12,19 +12,21 @@ function run_test() {
 
 add_task(function test_compress_lz4() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "compression.lz");
-  let array = new Uint8Array(1024);
+  let length = 1024;
+  let array = new Uint8Array(length);
   for (let i = 0; i < array.byteLength; ++i) {
     array[i] = i;
   }
+  let arrayAsString = Array.prototype.join.call(array);
 
   do_print("Writing data with lz4 compression");
   let bytes = yield OS.File.writeAtomic(path, array, { compression: "lz4" });
-  do_print("Compressed " + array.byteLength + " bytes into " + bytes);
+  do_print("Compressed " + length + " bytes into " + bytes);
 
   do_print("Reading back with lz4 decompression");
   let decompressed = yield OS.File.read(path, { compression: "lz4" });
   do_print("Decompressed into " + decompressed.byteLength + " bytes");
-  do_check_eq(Array.prototype.join.call(array), Array.prototype.join.call(decompressed));
+  do_check_eq(arrayAsString, Array.prototype.join.call(decompressed));
 });
 
 add_task(function test_uncompressed() {

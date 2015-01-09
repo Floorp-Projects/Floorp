@@ -259,8 +259,8 @@ SimpleTest.ok = function (condition, name, diag) {
         SimpleTest.num_failed++;
         test.result = !test.result;
       }
-      var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
-      var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+      var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+      var failureInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
     } else {
       var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
@@ -787,7 +787,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
           focused = (focusedWindow() == childDesiredWindow);
           if (!focused) {
               info("must wait for focus");
-              desiredWindow.addEventListener("focus", focusedOrLoaded, true);
+              childDesiredWindow.addEventListener("focus", focusedOrLoaded, true);
               if (isChildProcess) {
                   childDesiredWindow.focus();
               }

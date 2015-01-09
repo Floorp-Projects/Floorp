@@ -167,6 +167,9 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   // Grab overflow frames from prev-in-flow and its own.
   MoveOverflowToChildList();
 
+  // Clear leadings
+  mBStartLeading = mBEndLeading = 0;
+
   // Begin the span for the ruby frame
   WritingMode frameWM = aReflowState.GetWritingMode();
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
@@ -394,6 +397,14 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     RubyUtils::SetReservedISize(aBaseContainer, deltaISize);
     aReflowState.mLineLayout->AdvanceICoord(deltaISize);
   }
+
+  // Set block leadings of the base container
+  LogicalMargin leadings(lineWM, offsetRect - baseRect);
+  NS_ASSERTION(leadings.BStart(lineWM) >= 0 && leadings.BEnd(lineWM) >= 0,
+               "Leadings should be non-negative (because adding "
+               "ruby annotation can only increase the size)");
+  mBStartLeading = std::max(mBStartLeading, leadings.BStart(lineWM));
+  mBEndLeading = std::max(mBEndLeading, leadings.BEnd(lineWM));
 }
 
 nsRubyBaseContainerFrame*

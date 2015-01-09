@@ -270,7 +270,7 @@ add_test(function test_icc_unlock_card_lock_depersonalization() {
   let ril = context.RIL;
   let buf = context.Buf;
 
-  function do_test(aLock, aPassword) {
+  function do_test(aPassword) {
     buf.sendParcel = function fakeSendParcel() {
       // Request Type.
       do_check_eq(this.readInt32(), REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE);
@@ -279,32 +279,18 @@ add_test(function test_icc_unlock_card_lock_depersonalization() {
       this.readInt32();
 
       // Data
-      do_check_eq(this.readInt32(), GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[aLock]);
-      do_check_eq(this.readString(), aPassword);
+      let parcel = this.readStringList();
+      do_check_eq(parcel.length, 1);
+      do_check_eq(parcel[0], aPassword);
     };
 
     ril.iccUnlockCardLock({
-      lockType: aLock,
+      lockType: GECKO_CARDLOCK_NCK,
       password: aPassword
     });
   }
 
-  do_test(GECKO_CARDLOCK_NCK, "12345678");
-  do_test(GECKO_CARDLOCK_NCK1, "12345678");
-  do_test(GECKO_CARDLOCK_NCK2, "12345678");
-  do_test(GECKO_CARDLOCK_HNCK, "12345678");
-  do_test(GECKO_CARDLOCK_CCK, "12345678");
-  do_test(GECKO_CARDLOCK_SPCK, "12345678");
-  do_test(GECKO_CARDLOCK_RCCK, "12345678");
-  do_test(GECKO_CARDLOCK_RSPCK, "12345678");
-  do_test(GECKO_CARDLOCK_NCK_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_NCK1_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_NCK2_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_HNCK_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_CCK_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_SPCK_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_RCCK_PUK, "12345678");
-  do_test(GECKO_CARDLOCK_RSPCK_PUK, "12345678");
+  do_test("12345678");
 
   run_next_test();
 });
