@@ -3,19 +3,13 @@
   <title>Test for plugin child widgets not being messed up by scrolling</title>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
   <link rel="stylesheet" type="text/css"
           href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body onload="setTimeout(runTests, 0)">
 <script type="application/javascript">
-var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                        .getService(SpecialPowers.Ci.nsIPluginHost);
-var pluginTags = pluginHost.getPluginTags();
-for (var tag of pluginTags) {
-  if (tag.name == "Test Plug-in") {
-    tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
-  }
-}
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 </script>
 
 <p id="display">
