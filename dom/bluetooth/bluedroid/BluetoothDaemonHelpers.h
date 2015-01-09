@@ -421,6 +421,9 @@ PackPDU(BluetoothScanMode aIn, BluetoothDaemonPDU& aPDU);
 nsresult
 PackPDU(ControlPlayStatus aIn, BluetoothDaemonPDU& aPDU);
 
+nsresult
+PackPDU(BluetoothTransport aIn, BluetoothDaemonPDU& aPDU);
+
 /* |PackConversion| is a helper for packing converted values. Pass
  * an instance of this structure to |PackPDU| to convert a value from
  * the input type to the output type and and write it to the PDU.
