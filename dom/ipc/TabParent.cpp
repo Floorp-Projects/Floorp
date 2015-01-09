@@ -142,21 +142,27 @@ private:
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mTabParent);
         MOZ_ASSERT(mEventTarget);
-        MOZ_ASSERT(mFD);
 
         nsRefPtr<TabParent> tabParent;
         mTabParent.swap(tabParent);
 
         using mozilla::ipc::FileDescriptor;
 
-        FileDescriptor::PlatformHandleType handle =
-            FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
+        FileDescriptor fd;
+        if (mFD) {
+            FileDescriptor::PlatformHandleType handle =
+                FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
+            fd = FileDescriptor(handle);
+        }
 
         // Our TabParent may have been destroyed already.  If so, don't send any
         // fds over, just go back to the IO thread and close them.
         if (!tabParent->IsDestroyed()) {
-          mozilla::unused << tabParent->SendCacheFileDescriptor(mPath,
-                                                                FileDescriptor(handle));
+            mozilla::unused << tabParent->SendCacheFileDescriptor(mPath, fd);
+        }
+
+        if (!mFD) {
+            return;
         }
 
         nsCOMPtr<nsIEventTarget> eventTarget;
