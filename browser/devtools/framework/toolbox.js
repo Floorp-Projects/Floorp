@@ -1503,7 +1503,9 @@ Toolbox.prototype = {
     if (!this._initInspector) {
       this._initInspector = Task.spawn(function*() {
         this._inspector = InspectorFront(this._target.client, this._target.form);
-        this._walker = yield this._inspector.getWalker();
+        this._walker = yield this._inspector.getWalker(
+          {showAllAnonymousContent: Services.prefs.getBoolPref("devtools.inspector.showAllAnonymousContent")}
+        );
         this._selection = new Selection(this._walker);
 
         if (this.highlighterUtils.isRemoteHighlightable()) {
