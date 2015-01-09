@@ -113,6 +113,7 @@ class Test:
                                         # limits is not considered a failure.
         self.valgrind = False  # True means run under valgrind
         self.tz_pacific = False # True means force Pacific time for the test
+        self.test_also_noasmjs = False # True means run with and without asm.js enabled.
         self.expect_error = '' # Errors to expect and consider passing
         self.expect_status = 0 # Exit status to expect from shell
 
@@ -125,9 +126,27 @@ class Test:
         t.allow_overrecursed = self.allow_overrecursed
         t.valgrind = self.valgrind
         t.tz_pacific = self.tz_pacific
+        t.test_also_noasmjs = self.test_also_noasmjs
         t.expect_error = self.expect_error
         t.expect_status = self.expect_status
         return t
+
+    def copy_and_extend_jitflags(self, variant):
+        t = self.copy()
+        t.jitflags.extend(variant)
+        return t
+
+    def copy_variants(self, variants):
+        # If the tests are flagged with the |jit-test| test-also-noasmjs flags, then
+        # we duplicate the variants such that the test can be used both with the
+        # interpreter and asmjs.  This is a simple way to check for differential
+        # behaviour.
+        if self.test_also_noasmjs:
+            variants = variants + [['--no-asmjs']]
+
+        # For each list of jit flags, make a copy of the test.
+        return [ self.copy_and_extend_jitflags(v) for v in variants ]
+
 
     COOKIE = '|jit-test|'
     CacheDir = JS_CACHE_DIR
@@ -175,6 +194,8 @@ class Test:
                         test.valgrind = options.valgrind
                     elif name == 'tz-pacific':
                         test.tz_pacific = True
+                    elif name == 'test-also-noasmjs':
+                        test.test_also_noasmjs = True
                     elif name == 'ion-eager':
                         test.jitflags.append('--ion-eager')
                     elif name == 'dump-bytecode':
