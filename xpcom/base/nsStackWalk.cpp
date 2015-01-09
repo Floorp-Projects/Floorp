@@ -305,24 +305,12 @@ EnsureWalkThreadReady()
 static void
 WalkStackMain64(struct WalkStackData* aData)
 {
-  // Get the context information for the thread. That way we will
-  // know where our sp, fp, pc, etc. are and can fill in the
-  // STACKFRAME64 with the initial values.
-  CONTEXT context;
-  HANDLE myProcess = aData->process;
-  HANDLE myThread = aData->thread;
-  DWORD64 addr;
-  DWORD64 spaddr;
-  STACKFRAME64 frame64;
-  // skip our own stack walking frames
-  int skip = (aData->walkCallingThread ? 3 : 0) + aData->skipFrames;
-  BOOL ok;
-
   // Get a context for the specified thread.
+  CONTEXT context;
   if (!aData->platformData) {
     memset(&context, 0, sizeof(CONTEXT));
     context.ContextFlags = CONTEXT_FULL;
-    if (!GetThreadContext(myThread, &context)) {
+    if (!GetThreadContext(aData->thread, &context)) {
       if (aData->walkCallingThread) {
         PrintError("GetThreadContext");
       }
@@ -332,45 +320,45 @@ WalkStackMain64(struct WalkStackData* aData)
     context = *static_cast<CONTEXT*>(aData->platformData);
   }
 
-  // Setup initial stack frame to walk from
+#if defined(_M_IX86) || defined(_M_IA64)
+  // Setup initial stack frame to walk from.
+  STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
 #ifdef _M_IX86
   frame64.AddrPC.Offset    = context.Eip;
   frame64.AddrStack.Offset = context.Esp;
   frame64.AddrFrame.Offset = context.Ebp;
-#elif defined _M_AMD64
-  frame64.AddrPC.Offset    = context.Rip;
-  frame64.AddrStack.Offset = context.Rsp;
-  frame64.AddrFrame.Offset = context.Rbp;
 #elif defined _M_IA64
   frame64.AddrPC.Offset    = context.StIIP;
   frame64.AddrStack.Offset = context.SP;
   frame64.AddrFrame.Offset = context.RsBSP;
-#else
-#error "Should not have compiled this code"
 #endif
   frame64.AddrPC.Mode      = AddrModeFlat;
   frame64.AddrStack.Mode   = AddrModeFlat;
   frame64.AddrFrame.Mode   = AddrModeFlat;
   frame64.AddrReturn.Mode  = AddrModeFlat;
+#endif
 
-  // Now walk the stack
-  while (1) {
+  // Skip our own stack walking frames.
+  int skip = (aData->walkCallingThread ? 3 : 0) + aData->skipFrames;
 
-    // debug routines are not threadsafe, so grab the lock.
+  // Now walk the stack.
+  while (true) {
+    DWORD64 addr;
+    DWORD64 spaddr;
+
+#if defined(_M_IX86) || defined(_M_IA64)
+    // 32-bit frame unwinding.
+    // Debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
-    ok = StackWalk64(
-#ifdef _M_AMD64
-      IMAGE_FILE_MACHINE_AMD64,
-#elif defined _M_IA64
+    BOOL ok = StackWalk64(
+#if defined _M_IA64
       IMAGE_FILE_MACHINE_IA64,
 #elif defined _M_IX86
       IMAGE_FILE_MACHINE_I386,
-#else
-#error "Should not have compiled this code"
 #endif
-      myProcess,
-      myThread,
+      aData->process,
+      aData->thread,
       &frame64,
       &context,
       nullptr,
@@ -391,7 +379,42 @@ WalkStackMain64(struct WalkStackData* aData)
       }
     }
 
-    if (!ok || (addr == 0)) {
+    if (!ok) {
+      break;
+    }
+
+#elif defined(_M_AMD64)
+    // 64-bit frame unwinding.
+    // Try to look up unwind metadata for the current function.
+    ULONG64 imageBase;
+    PRUNTIME_FUNCTION runtimeFunction =
+      RtlLookupFunctionEntry(context.Rip, &imageBase, NULL);
+
+    if (!runtimeFunction) {
+      // Alas, this is probably a JIT frame, for which we don't generate unwind
+      // info and so we have to give up.
+      break;
+    }
+
+    PVOID dummyHandlerData;
+    ULONG64 dummyEstablisherFrame;
+    RtlVirtualUnwind(UNW_FLAG_NHANDLER,
+                     imageBase,
+                     context.Rip,
+                     runtimeFunction,
+                     &context,
+                     &dummyHandlerData,
+                     &dummyEstablisherFrame,
+                     nullptr);
+
+    addr = context.Rip;
+    spaddr = context.Rsp;
+
+#else
+#error "unknown platform"
+#endif
+
+    if (addr == 0) {
       break;
     }
 
@@ -413,11 +436,12 @@ WalkStackMain64(struct WalkStackData* aData)
       break;
     }
 
+#if defined(_M_IX86) || defined(_M_IA64)
     if (frame64.AddrReturn.Offset == 0) {
       break;
     }
+#endif
   }
-  return;
 }
 
 static unsigned int WINAPI
