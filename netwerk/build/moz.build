@@ -58,11 +58,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         '../system/android',
     ]
 
-elif CONFIG['OS_ARCH'] == 'Linux':
-    LOCAL_INCLUDES += [
-        '../system/linux',
-    ]
-
 if CONFIG['NECKO_COOKIES']:
     LOCAL_INCLUDES += [
         '../cookie',
