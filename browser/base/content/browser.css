@@ -417,7 +417,6 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
 
 #PopupSearchAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-search-autocomplete-result-popup");
-  margin-left: -23px;
 }
 
 /* Overlay a badge on top of the icon of additional open search providers
