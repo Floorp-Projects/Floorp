@@ -3,6 +3,7 @@
 
 const searchbar = document.getElementById("searchbar");
 const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid", "searchbar-search-button");
+const goButton = document.getAnonymousElementByAttribute(searchbar, "anonid", "search-go-button");
 const textbox = searchbar._textbox;
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 
@@ -317,4 +318,20 @@ add_task(function* refocus_window_doesnt_open_popup_keyboard() {
 
   searchPopup.removeEventListener("popupshowing", listener, false);
   textbox.value = "";
+});
+
+// Clicking the search go button shouldn't open the popup
+add_no_popup_task(function* search_go_doesnt_open_popup() {
+  gBrowser.selectedTab = gBrowser.addTab();
+
+  gURLBar.focus();
+  textbox.value = "foo";
+  searchbar.inputChanged();
+
+  let promise = promiseOnLoad();
+  EventUtils.synthesizeMouseAtCenter(goButton, {});
+  yield promise;
+
+  textbox.value = "";
+  gBrowser.removeCurrentTab();
 });
