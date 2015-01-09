@@ -96,13 +96,25 @@ typedef int64_t GMPTimestamp;
 // Callbacks to be called from the CDM. Threadsafe.
 class GMPDecryptorCallback {
 public:
-  // Resolves a promise for a session created.
-  // Passes the session id to be exposed to JavaScript.
-  // Must be called before SessionMessage().
+
+  // The GMPDecryptor should call this in response to a call to
+  // GMPDecryptor::CreateSession(). The GMP host calls CreateSession() when
+  // MediaKeySession.generateRequest() is called by JavaScript.
+  // After CreateSession() is called, the GMPDecryptor should call
+  // GMPDecryptorCallback::SetSessionId() to set the sessionId exposed to
+  // JavaScript on the MediaKeySession on which the generateRequest() was
+  // called. SetSessionId() must be called before
+  // GMPDecryptorCallback::SessionMessage() will work.
   // aSessionId must be null terminated.
-  virtual void ResolveNewSessionPromise(uint32_t aPromiseId,
-                                        const char* aSessionId,
-                                        uint32_t aSessionIdLength) = 0;
+  // Note: pass the aCreateSessionToken from the CreateSession() call,
+  // and then once the session has sent any messages required for the
+  // license request to be sent, then resolve the aPromiseId that was passed
+  // to GMPDecryptor::CreateSession().
+  // Note: GMPDecryptor::LoadSession() does *not* need to call SetSessionId()
+  // for GMPDecryptorCallback::SessionMessage() to work.
+  virtual void SetSessionId(uint32_t aCreateSessionToken,
+                            const char* aSessionId,
+                            uint32_t aSessionIdLength) = 0;
 
   // Resolves a promise for a session loaded.
   // Resolves to false if we don't have any session data stored for the given
@@ -122,7 +134,7 @@ public:
                              const char* aMessage,
                              uint32_t aMessageLength) = 0;
 
-  // Called by the CDM when it has a message for session |session_id|.
+  // Called by the CDM when it has a message for a session.
   // Length parameters should not include null termination.
   // aSessionId must be null terminated.
   virtual void SessionMessage(const char* aSessionId,
@@ -201,7 +213,7 @@ enum GMPSessionType {
   kGMPSessionInvalid = 2 // Must always be last.
 };
 
-#define GMP_API_DECRYPTOR "eme-decrypt"
+#define GMP_API_DECRYPTOR "eme-decrypt-v2"
 
 // API exposed by plugin library to manage decryption sessions.
 // When the Host requests this by calling GMPGetAPIFunc().
@@ -213,18 +225,40 @@ public:
 
   // Sets the callback to use with the decryptor to return results
   // to Gecko.
-  virtual void Init(GMPDecryptorCallback* aCallback) = 0;
-
-  // Requests the creation of a session given |aType| and |aInitData|.
-  // Decryptor should callback GMPDecryptorCallback::SessionCreated()
-  // with the web session ID on success, or SessionError() on failure,
-  // and then call KeyIdUsable() as keys for that session become
-  // usable.
   //
   // The CDM must also call GMPDecryptorCallback::SetCapabilities()
   // exactly once during start up, to inform Gecko whether to use the CDM
   // in decrypt or decrypt-and-decode mode.
-  virtual void CreateSession(uint32_t aPromiseId,
+  //
+  // Note: GMPDecryptorCallback::SetCapabilities() must be called before
+  // Gecko will send any samples for decryption to the GMP.
+  virtual void Init(GMPDecryptorCallback* aCallback) = 0;
+
+  // Initiates the creation of a session given |aType| and |aInitData|, and
+  // the generation of a license request message.
+  //
+  // This corresponds to a MediaKeySession.generateRequest() call in JS.
+  //
+  // The GMPDecryptor must do the following, in order, upon this method
+  // being called:
+  //
+  // 1. Generate a sessionId to expose to JS, and call
+  //    GMPDecryptorCallback::SetSessionId(aCreateSessionToken, sessionId...)
+  //    with the sessionId to be exposed to JS/EME on the MediaKeySession
+  //    object on which generateRequest() was called, and then
+  // 2. send any messages to JS/EME required to generate a license request
+  //    given the supplied initData, and then
+  // 3. generate a license request message, and send it to JS/EME, and then
+  // 4. call GMPDecryptorCallback::ResolvePromise().
+  //
+  // Note: GMPDecryptorCallback::SetSessionId(aCreateSessionToken, sessionId, ...)
+  // *must* be called before GMPDecryptorCallback::SendMessage(sessionId, ...)
+  // will work.
+  //
+  // If generating the request fails, reject aPromiseId by calling
+  // GMPDecryptorCallback::RejectPromise().
+  virtual void CreateSession(uint32_t aCreateSessionToken,
+                             uint32_t aPromiseId,
                              const char* aInitDataType,
                              uint32_t aInitDataTypeSize,
                              const uint8_t* aInitData,
@@ -232,11 +266,28 @@ public:
                              GMPSessionType aSessionType) = 0;
 
   // Loads a previously loaded persistent session.
+  //
+  // This corresponds to a MediaKeySession.load() call in JS.
+  //
+  // The GMPDecryptor must do the following, in order, upon this method
+  // being called:
+  //
+  // 1. Send any messages to JS/EME, or read from storage, whatever is
+  //    required to load the session, and then
+  // 2. if there is no session with the given sessionId loadable, call
+  //    ResolveLoadSessionPromise(aPromiseId, false), otherwise
+  // 2. mark the session's keys as usable, and then
+  // 3. update the session's expiration, and then
+  // 4. call GMPDecryptorCallback::ResolveLoadSessionPromise(aPromiseId, true).
+  //
+  // If loading the session fails due to error, reject aPromiseId by calling
+  // GMPDecryptorCallback::RejectPromise().
   virtual void LoadSession(uint32_t aPromiseId,
                            const char* aSessionId,
                            uint32_t aSessionIdLength) = 0;
 
   // Updates the session with |aResponse|.
+  // This corresponds to a MediaKeySession.update() call in JS.
   virtual void UpdateSession(uint32_t aPromiseId,
                              const char* aSessionId,
                              uint32_t aSessionIdLength,
@@ -244,16 +295,19 @@ public:
                              uint32_t aResponseSize) = 0;
 
   // Releases the resources (keys) for the specified session.
+  // This corresponds to a MediaKeySession.close() call in JS.
   virtual void CloseSession(uint32_t aPromiseId,
                             const char* aSessionId,
                             uint32_t aSessionIdLength) = 0;
 
   // Removes the resources (keys) for the specified session.
+  // This corresponds to a MediaKeySession.remove() call in JS.
   virtual void RemoveSession(uint32_t aPromiseId,
                              const char* aSessionId,
                              uint32_t aSessionIdLength) = 0;
 
   // Resolve/reject promise on completion.
+  // This corresponds to a MediaKeySession.setServerCertificate() call in JS.
   virtual void SetServerCertificate(uint32_t aPromiseId,
                                     const uint8_t* aServerCert,
                                     uint32_t aServerCertSize) = 0;

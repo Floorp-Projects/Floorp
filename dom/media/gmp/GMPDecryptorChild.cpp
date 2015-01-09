@@ -49,12 +49,12 @@ GMPDecryptorChild::Init(GMPDecryptor* aSession)
 }
 
 void
-GMPDecryptorChild::ResolveNewSessionPromise(uint32_t aPromiseId,
-                                            const char* aSessionId,
-                                            uint32_t aSessionIdLength)
+GMPDecryptorChild::SetSessionId(uint32_t aCreateSessionToken,
+                                const char* aSessionId,
+                                uint32_t aSessionIdLength)
 {
-  CALL_ON_GMP_THREAD(SendResolveNewSessionPromise,
-                     aPromiseId, nsAutoCString(aSessionId, aSessionIdLength));
+  CALL_ON_GMP_THREAD(SendSetSessionId,
+                     aCreateSessionToken, nsAutoCString(aSessionId, aSessionIdLength));
 }
 
 void
@@ -209,7 +209,8 @@ GMPDecryptorChild::RecvInit()
 }
 
 bool
-GMPDecryptorChild::RecvCreateSession(const uint32_t& aPromiseId,
+GMPDecryptorChild::RecvCreateSession(const uint32_t& aCreateSessionToken,
+                                     const uint32_t& aPromiseId,
                                      const nsCString& aInitDataType,
                                      const nsTArray<uint8_t>& aInitData,
                                      const GMPSessionType& aSessionType)
@@ -218,7 +219,8 @@ GMPDecryptorChild::RecvCreateSession(const uint32_t& aPromiseId,
     return false;
   }
 
-  mSession->CreateSession(aPromiseId,
+  mSession->CreateSession(aCreateSessionToken,
+                          aPromiseId,
                           aInitDataType.get(),
                           aInitDataType.Length(),
                           aInitData.Elements(),
