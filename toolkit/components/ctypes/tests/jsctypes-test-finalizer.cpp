@@ -3,7 +3,7 @@
 #include "jsctypes-test.h"
 #include "jsctypes-test-finalizer.h"
 
-#if defined(XP_WIN)
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif // defined(XP_WIN)
 
