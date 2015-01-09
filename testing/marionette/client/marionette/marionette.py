@@ -990,6 +990,17 @@ class Marionette(object):
         response = self._send_message("close", "ok")
         return response
 
+    def close_chrome_window(self):
+        """Close the currently selected chrome window, ending the session
+        if it's the last window open.
+
+        On B2G this method is a noop and will return immediately.
+
+        """
+
+        response = self._send_message("closeChromeWindow", "ok")
+        return response
+
     def set_context(self, context):
         '''
         Sets the context that Marionette commands are running in.
