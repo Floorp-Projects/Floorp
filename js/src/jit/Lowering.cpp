@@ -4179,9 +4179,21 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     ins->setInWorklistUnchecked();
 #endif
 
+    // If we added a Nop for this instruction, we'll also add a Mop, so that
+    // that live-ranges for fixed register defs, which with LSRA extend through
+    // the Nop so that they can extend through the OsiPoint don't, with their
+    // one-extra extension, extend into a position where they use the input
+    // move group for the following instruction.
+    bool needsMop = !current->instructions().empty() && current->rbegin()->isNop();
+
     // If no safepoint was created, there's no need for an OSI point.
     if (LOsiPoint *osiPoint = popOsiPoint()) {
         if (!add(osiPoint))
+            return false;
+    }
+
+    if (needsMop) {
+        if (!add(new(alloc()) LMop))
             return false;
     }
 
