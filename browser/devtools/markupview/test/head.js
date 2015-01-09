@@ -32,6 +32,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.markup.pagesize");
   Services.prefs.clearUserPref("dom.webcomponents.enabled");
+  Services.prefs.clearUserPref("devtools.inspector.showAllAnonymousContent");
 });
 
 // Auto close the toolbox and close the test tabs when the test ends
