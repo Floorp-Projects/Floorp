@@ -54,8 +54,8 @@ class StringBuffer
     /* Number of reserve()'d chars, see inflateChars. */
     size_t reserved_;
 
-    StringBuffer(const StringBuffer &other) MOZ_DELETE;
-    void operator=(const StringBuffer &other) MOZ_DELETE;
+    StringBuffer(const StringBuffer &other) = delete;
+    void operator=(const StringBuffer &other) = delete;
 
     MOZ_ALWAYS_INLINE bool isLatin1() const { return cb.constructed<Latin1CharBuffer>(); }
     MOZ_ALWAYS_INLINE bool isTwoByte() const { return !isLatin1(); }

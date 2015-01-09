@@ -908,7 +908,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
         RootedValue v(cx);
         if (desc.hasValue()) {
             uint32_t newLen;
-            if (!CanonicalizeArrayLengthValue<SequentialExecution>(cx, desc.value(), &newLen))
+            if (!CanonicalizeArrayLengthValue(cx, desc.value(), &newLen))
                 return false;
             v.setNumber(newLen);
         } else {
@@ -932,7 +932,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
                 attrs = attrs | JSPROP_READONLY;
         }
 
-        return ArraySetLength<SequentialExecution>(cx, arr, id, attrs, v, throwError);
+        return ArraySetLength(cx, arr, id, attrs, v, throwError);
     }
 
     /* Step 3. */
@@ -3117,7 +3117,7 @@ js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp)
 }
 
 static MOZ_ALWAYS_INLINE bool
-LookupPropertyPureInline(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+LookupPropertyPureInline(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
                          Shape **propp)
 {
     if (!obj->isNative())
@@ -3197,7 +3197,7 @@ NativeGetPureInline(NativeObject *pobj, Shape *shape, Value *vp)
 }
 
 bool
-js::LookupPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+js::LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **objp,
                        Shape **propp)
 {
     return LookupPropertyPureInline(cx, obj, id, objp, propp);
@@ -3214,7 +3214,7 @@ js::LookupPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObje
  *  - The property has a getter.
  */
 bool
-js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
+js::GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     /* Deal with native objects. */
     NativeObject *obj2;
@@ -3258,7 +3258,7 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
 
 static bool
 MOZ_ALWAYS_INLINE
-GetElementPure(ThreadSafeContext *cx, JSObject *obj, uint32_t index, Value *vp)
+GetElementPure(ExclusiveContext *cx, JSObject *obj, uint32_t index, Value *vp)
 {
     if (index <= JSID_INT_MAX)
         return GetPropertyPure(cx, obj, INT_TO_JSID(index), vp);
@@ -3271,7 +3271,7 @@ GetElementPure(ThreadSafeContext *cx, JSObject *obj, uint32_t index, Value *vp)
  * side-effect might have occurred.
  */
 bool
-js::GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Value &prop,
+js::GetObjectElementOperationPure(ExclusiveContext *cx, JSObject *obj, const Value &prop,
                                   Value *vp)
 {
     uint32_t index;
@@ -3290,15 +3290,8 @@ js::GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Va
 }
 
 bool
-JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
+JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
 {
-    if (cxArg->isForkJoinContext())
-        return cxArg->asForkJoinContext()->reportError(report);
-
-    if (!cxArg->isJSContext())
-        return true;
-
-    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, val, js::NullPtr(),
@@ -3306,15 +3299,8 @@ JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
 }
 
 bool
-JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned report)
+JSObject::reportNotConfigurable(JSContext *cx, jsid id, unsigned report)
 {
-    if (cxArg->isForkJoinContext())
-        return cxArg->asForkJoinContext()->reportError(report);
-
-    if (!cxArg->isJSContext())
-        return true;
-
-    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
                                     JSDVG_IGNORE_STACK, val, js::NullPtr(),
@@ -3322,15 +3308,8 @@ JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned repo
 }
 
 bool
-JSObject::reportNotExtensible(ThreadSafeContext *cxArg, unsigned report)
+JSObject::reportNotExtensible(JSContext *cx, unsigned report)
 {
-    if (cxArg->isForkJoinContext())
-        return cxArg->asForkJoinContext()->reportError(report);
-
-    if (!cxArg->isJSContext())
-        return true;
-
-    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, ObjectValue(*this));
     return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                     JSDVG_IGNORE_STACK, val, js::NullPtr(),

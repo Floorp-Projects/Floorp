@@ -47,7 +47,7 @@ var testData = {
   'origin-when-crossorigin':  { 'csp': "script-src * 'unsafe-inline'; referrer origin-when-crossorigin",
           'expected': {  'sameorigin': 'full',
                         'crossorigin': 'origin',
-                          'downgrade': 'none' }},
+                          'downgrade': 'origin' }},
 
   'unsafe-url':  { 'csp': "script-src * 'unsafe-inline'; referrer unsafe-url",
           'expected': {  'sameorigin': 'full',

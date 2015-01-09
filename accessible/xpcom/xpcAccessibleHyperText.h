@@ -42,8 +42,8 @@ protected:
 private:
   HyperTextAccessible* Intl() { return mIntl->AsHyperText(); }
 
-  xpcAccessibleHyperText(const xpcAccessibleHyperText&) MOZ_DELETE;
-  xpcAccessibleHyperText& operator =(const xpcAccessibleHyperText&) MOZ_DELETE;
+  xpcAccessibleHyperText(const xpcAccessibleHyperText&) = delete;
+  xpcAccessibleHyperText& operator =(const xpcAccessibleHyperText&) = delete;
 };
 
 } // namespace a11y

@@ -165,8 +165,8 @@ struct UncopyableValue
   Status GetStatus() { return mStatus; }
 
 private:
-  UncopyableValue(const UncopyableValue& aOther) MOZ_DELETE;
-  UncopyableValue& operator=(const UncopyableValue& aOther) MOZ_DELETE;
+  UncopyableValue(const UncopyableValue& aOther) = delete;
+  UncopyableValue& operator=(const UncopyableValue& aOther) = delete;
 
   Status mStatus;
 };
@@ -196,8 +196,8 @@ struct UnmovableValue
   Status GetStatus() { return mStatus; }
 
 private:
-  UnmovableValue(UnmovableValue&& aOther) MOZ_DELETE;
-  UnmovableValue& operator=(UnmovableValue&& aOther) MOZ_DELETE;
+  UnmovableValue(UnmovableValue&& aOther) = delete;
+  UnmovableValue& operator=(UnmovableValue&& aOther) = delete;
 
   Status mStatus;
 };
@@ -221,10 +221,10 @@ struct UncopyableUnmovableValue
   Status GetStatus() { return mStatus; }
 
 private:
-  UncopyableUnmovableValue(const UncopyableUnmovableValue& aOther) MOZ_DELETE;
-  UncopyableUnmovableValue& operator=(const UncopyableUnmovableValue& aOther) MOZ_DELETE;
-  UncopyableUnmovableValue(UncopyableUnmovableValue&& aOther) MOZ_DELETE;
-  UncopyableUnmovableValue& operator=(UncopyableUnmovableValue&& aOther) MOZ_DELETE;
+  UncopyableUnmovableValue(const UncopyableUnmovableValue& aOther) = delete;
+  UncopyableUnmovableValue& operator=(const UncopyableUnmovableValue& aOther) = delete;
+  UncopyableUnmovableValue(UncopyableUnmovableValue&& aOther) = delete;
+  UncopyableUnmovableValue& operator=(UncopyableUnmovableValue&& aOther) = delete;
 
   Status mStatus;
 };

@@ -34,7 +34,7 @@ using mozilla::PodZero;
 using mozilla::RotateLeft;
 
 bool
-ShapeTable::init(ThreadSafeContext *cx, Shape *lastProp)
+ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
 {
     uint32_t sizeLog2 = CeilingLog2Size(entryCount);
     uint32_t size = JS_BIT(sizeLog2);
@@ -103,7 +103,7 @@ Shape::insertIntoDictionary(HeapPtrShape *dictp)
 }
 
 bool
-Shape::makeOwnBaseShape(ThreadSafeContext *cx)
+Shape::makeOwnBaseShape(ExclusiveContext *cx)
 {
     MOZ_ASSERT(!base()->isOwned());
     MOZ_ASSERT(cx->isThreadLocal(this));
@@ -142,7 +142,7 @@ Shape::handoffTableTo(Shape *shape)
 }
 
 /* static */ bool
-Shape::hashify(ThreadSafeContext *cx, Shape *shape)
+Shape::hashify(ExclusiveContext *cx, Shape *shape)
 {
     MOZ_ASSERT(!shape->hasTable());
 
@@ -262,7 +262,7 @@ ShapeTable::fixupAfterMovingGC()
 #endif
 
 bool
-ShapeTable::change(int log2Delta, ThreadSafeContext *cx)
+ShapeTable::change(int log2Delta, ExclusiveContext *cx)
 {
     MOZ_ASSERT(entries);
 
@@ -301,7 +301,7 @@ ShapeTable::change(int log2Delta, ThreadSafeContext *cx)
 }
 
 bool
-ShapeTable::grow(ThreadSafeContext *cx)
+ShapeTable::grow(ExclusiveContext *cx)
 {
     MOZ_ASSERT(needsToGrow());
 
@@ -345,7 +345,7 @@ Shape::replaceLastProperty(ExclusiveContext *cx, StackBaseShape &base,
  * one of lastProperty() or lastProperty()->parent.
  */
 /* static */ Shape *
-NativeObject::getChildPropertyOnDictionary(ThreadSafeContext *cx, HandleNativeObject obj,
+NativeObject::getChildPropertyOnDictionary(ExclusiveContext *cx, HandleNativeObject obj,
                                            HandleShape parent, StackShape &child)
 {
     /*
@@ -417,28 +417,8 @@ NativeObject::getChildProperty(ExclusiveContext *cx,
     return shape;
 }
 
-/* static */ Shape *
-NativeObject::lookupChildProperty(ThreadSafeContext *cx,
-                                  HandleNativeObject obj, HandleShape parent, StackShape &unrootedChild)
-{
-    RootedGeneric<StackShape*> child(cx, &unrootedChild);
-    MOZ_ASSERT(cx->isThreadLocal(obj));
-
-    RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, *child));
-
-    if (!obj->inDictionaryMode()) {
-        shape = cx->compartment_->propertyTree.lookupChild(cx, parent, *child);
-        if (!shape)
-            return nullptr;
-        if (!setLastProperty(cx, obj, shape))
-            return nullptr;
-    }
-
-    return shape;
-}
-
 bool
-js::NativeObject::toDictionaryMode(ThreadSafeContext *cx)
+js::NativeObject::toDictionaryMode(ExclusiveContext *cx)
 {
     MOZ_ASSERT(!inDictionaryMode());
 
@@ -522,8 +502,8 @@ NativeObject::addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId
     if (obj->inDictionaryMode())
         spp = obj->lastProperty()->table().search(id, true);
 
-    return addPropertyInternal<SequentialExecution>(cx, obj, id, getter, setter, slot, attrs,
-                                                    flags, spp, allowDictionary);
+    return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags, spp,
+                               allowDictionary);
 }
 
 static bool
@@ -538,19 +518,8 @@ ShouldConvertToDictionary(JSObject *obj)
     return obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT;
 }
 
-template <ExecutionMode mode>
-static inline UnownedBaseShape *
-GetOrLookupUnownedBaseShape(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
-                            StackBaseShape &base)
-{
-    if (mode == ParallelExecution)
-        return BaseShape::lookupUnowned(cx, base);
-    return BaseShape::getUnowned(cx->asExclusiveContext(), base);
-}
-
-template <ExecutionMode mode>
 /* static */ Shape *
-NativeObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+NativeObject::addPropertyInternal(ExclusiveContext *cx,
                                   HandleNativeObject obj, HandleId id,
                                   PropertyOp getter, StrictPropertyOp setter,
                                   uint32_t slot, unsigned attrs,
@@ -610,14 +579,14 @@ NativeObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveC
         } else {
             StackBaseShape base(last->base());
             base.flags |= BaseShape::INDEXED;
-            nbase = GetOrLookupUnownedBaseShape<mode>(cx, base);
+            nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return nullptr;
         }
 
         StackShape child(nbase, id, slot, attrs, flags);
         child.updateGetterSetter(getter, setter);
-        shape = getOrLookupChildProperty<mode>(cx, obj, last, child);
+        shape = getChildProperty(cx, obj, last, child);
     }
 
     if (shape) {
@@ -640,21 +609,6 @@ NativeObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveC
     obj->checkShapeConsistency();
     return nullptr;
 }
-
-template /* static */ Shape *
-NativeObject::addPropertyInternal<SequentialExecution>(ExclusiveContext *cx,
-                                                       HandleNativeObject obj, HandleId id,
-                                                       PropertyOp getter, StrictPropertyOp setter,
-                                                       uint32_t slot, unsigned attrs,
-                                                       unsigned flags, Shape **spp,
-                                                       bool allowDictionary);
-template /* static */ Shape *
-NativeObject::addPropertyInternal<ParallelExecution>(ForkJoinContext *cx,
-                                                     HandleNativeObject obj, HandleId id,
-                                                     PropertyOp getter, StrictPropertyOp setter,
-                                                     uint32_t slot, unsigned attrs,
-                                                     unsigned flags, Shape **spp,
-                                                     bool allowDictionary);
 
 JSObject *
 js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
@@ -695,7 +649,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
         if (indexed) {
             StackBaseShape base(nbase);
             base.flags |= BaseShape::INDEXED;
-            nbase = GetOrLookupUnownedBaseShape<SequentialExecution>(cx, base);
+            nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return nullptr;
         }
@@ -717,7 +671,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
  * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
  */
 static inline bool
-CheckCanChangeAttrs(ThreadSafeContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
+CheckCanChangeAttrs(ExclusiveContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
 {
     if (shape->configurable())
         return true;
@@ -737,10 +691,8 @@ CheckCanChangeAttrs(ThreadSafeContext *cx, JSObject *obj, Shape *shape, unsigned
     return true;
 }
 
-template <ExecutionMode mode>
 /* static */ Shape *
-NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
-                          HandleNativeObject obj, HandleId id,
+NativeObject::putProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
                           PropertyOp getter, StrictPropertyOp setter,
                           uint32_t slot, unsigned attrs, unsigned flags)
 {
@@ -771,11 +723,7 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
      * shape table.
      */
     Shape **spp;
-    RootedShape shape(cx, (mode == ParallelExecution
-                           ? Shape::searchThreadLocal(cx, obj->lastProperty(), id, &spp,
-                                                      cx->isThreadLocal(obj->lastProperty()))
-                           : Shape::search(cx->asExclusiveContext(), obj->lastProperty(), id,
-                                           &spp, true)));
+    RootedShape shape(cx, Shape::search(cx, obj->lastProperty(), id, &spp, true));
     if (!shape) {
         /*
          * You can't add properties to a non-extensible object, but you can change
@@ -783,14 +731,8 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
          */
         bool extensible;
 
-        if (mode == ParallelExecution) {
-            if (obj->is<ProxyObject>())
-                return nullptr;
-            extensible = obj->nonProxyIsExtensible();
-        } else {
-            if (!JSObject::isExtensible(cx->asExclusiveContext(), obj, &extensible))
-                return nullptr;
-        }
+        if (!JSObject::isExtensible(cx, obj, &extensible))
+            return nullptr;
 
         if (!extensible) {
             if (cx->isJSContext())
@@ -798,8 +740,8 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
             return nullptr;
         }
 
-        return addPropertyInternal<mode>(cx, obj, id, getter, setter, slot, attrs, flags,
-                                         spp, true);
+        return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags,
+                                   spp, true);
     }
 
     /* Property exists: search must have returned a valid *spp. */
@@ -825,7 +767,7 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
         StackBaseShape base(obj->lastProperty()->base());
         if (indexed)
             base.flags |= BaseShape::INDEXED;
-        nbase = GetOrLookupUnownedBaseShape<mode>(cx, base);
+        nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return nullptr;
     }
@@ -901,7 +843,7 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
          */
         StackBaseShape base(obj->lastProperty()->base());
 
-        UnownedBaseShape *nbase = GetOrLookupUnownedBaseShape<mode>(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return nullptr;
 
@@ -911,7 +853,7 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
         StackShape child(nbase, id, slot, attrs, flags);
         child.updateGetterSetter(getter, setter);
         RootedShape parent(cx, shape->parent);
-        Shape *newShape = getOrLookupChildProperty<mode>(cx, obj, parent, child);
+        Shape *newShape = getChildProperty(cx, obj, parent, child);
 
         if (!newShape) {
             obj->checkShapeConsistency();
@@ -940,23 +882,9 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
     return shape;
 }
 
-template /* static */ Shape *
-NativeObject::putProperty<SequentialExecution>(ExclusiveContext *cx,
-                                               HandleNativeObject obj, HandleId id,
-                                               PropertyOp getter, StrictPropertyOp setter,
-                                               uint32_t slot, unsigned attrs,
-                                               unsigned flags);
-template /* static */ Shape *
-NativeObject::putProperty<ParallelExecution>(ForkJoinContext *cx,
-                                             HandleNativeObject obj, HandleId id,
-                                             PropertyOp getter, StrictPropertyOp setter,
-                                             uint32_t slot, unsigned attrs,
-                                             unsigned flags);
-
-template <ExecutionMode mode>
 /* static */ Shape *
-NativeObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
-                             HandleNativeObject obj, HandleShape shape, unsigned attrs,
+NativeObject::changeProperty(ExclusiveContext *cx, HandleNativeObject obj,
+                             HandleShape shape, unsigned attrs,
                              unsigned mask, PropertyOp getter, StrictPropertyOp setter)
 {
     MOZ_ASSERT(cx->isThreadLocal(obj));
@@ -971,12 +899,7 @@ NativeObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContex
     MOZ_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
                !(attrs & JSPROP_SHARED));
 
-    if (mode == ParallelExecution) {
-        if (!types::IsTypePropertyIdMarkedNonData(obj, shape->propid()))
-            return nullptr;
-    } else {
-        types::MarkTypePropertyNonData(cx->asExclusiveContext(), obj, shape->propid());
-    }
+    types::MarkTypePropertyNonData(cx, obj, shape->propid());
 
     if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
         return nullptr;
@@ -991,23 +914,12 @@ NativeObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContex
      * putProperty won't re-allocate it.
      */
     RootedId propid(cx, shape->propid());
-    Shape *newShape = putProperty<mode>(cx, obj, propid, getter, setter,
-                                        shape->maybeSlot(), attrs, shape->flags);
+    Shape *newShape = putProperty(cx, obj, propid, getter, setter,
+                                  shape->maybeSlot(), attrs, shape->flags);
 
     obj->checkShapeConsistency();
     return newShape;
 }
-
-template /* static */ Shape *
-NativeObject::changeProperty<SequentialExecution>(ExclusiveContext *cx,
-                                                  HandleNativeObject obj, HandleShape shape,
-                                                  unsigned attrs, unsigned mask,
-                                                  PropertyOp getter, StrictPropertyOp setter);
-template /* static */ Shape *
-NativeObject::changeProperty<ParallelExecution>(ForkJoinContext *cx,
-                                                HandleNativeObject obj, HandleShape shape,
-                                                unsigned attrs, unsigned mask,
-                                                PropertyOp getter, StrictPropertyOp setter);
 
 bool
 NativeObject::removeProperty(ExclusiveContext *cx, jsid id_)
@@ -1175,17 +1087,14 @@ NativeObject::rollbackProperties(ExclusiveContext *cx, HandleNativeObject obj, u
 }
 
 Shape *
-NativeObject::replaceWithNewEquivalentShape(ThreadSafeContext *cx, Shape *oldShape, Shape *newShape,
+NativeObject::replaceWithNewEquivalentShape(ExclusiveContext *cx, Shape *oldShape, Shape *newShape,
                                             bool accessorShape)
 {
     MOZ_ASSERT(cx->isThreadLocal(this));
     MOZ_ASSERT(cx->isThreadLocal(oldShape));
     MOZ_ASSERT(cx->isInsideCurrentCompartment(oldShape));
     MOZ_ASSERT_IF(oldShape != lastProperty(),
-                  inDictionaryMode() &&
-                  ((cx->isExclusiveContext()
-                    ? lookup(cx->asExclusiveContext(), oldShape->propidRef())
-                    : lookupPure(oldShape->propidRef())) == oldShape));
+                  inDictionaryMode() && lookup(cx, oldShape->propidRef()) == oldShape);
 
     NativeObject *self = this;
 
@@ -1471,18 +1380,6 @@ BaseShape::getUnowned(ExclusiveContext *cx, StackBaseShape &base)
         return nullptr;
 
     return nbase;
-}
-
-/* static */ UnownedBaseShape *
-BaseShape::lookupUnowned(ThreadSafeContext *cx, const StackBaseShape &base)
-{
-    BaseShapeSet &table = cx->compartment_->baseShapes;
-
-    if (!table.initialized())
-        return nullptr;
-
-    BaseShapeSet::Ptr p = table.readonlyThreadsafeLookup(&base);
-    return *p;
 }
 
 void

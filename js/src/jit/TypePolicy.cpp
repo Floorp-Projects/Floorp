@@ -1052,7 +1052,7 @@ namespace {
 // main use in the macro below is explicitly qualified so as not to consult
 // this scope and find this function.)
 inline TypePolicy *
-thisTypePolicy() MOZ_DELETE;
+thisTypePolicy() = delete;
 
 static MIRType
 thisTypeSpecialization()

@@ -131,8 +131,8 @@ public:
 
 private:
 
-    nsTemplateMatch(const nsTemplateMatch& aMatch) MOZ_DELETE;
-    void operator=(const nsTemplateMatch& aMatch) MOZ_DELETE;
+    nsTemplateMatch(const nsTemplateMatch& aMatch) = delete;
+    void operator=(const nsTemplateMatch& aMatch) = delete;
 };
 
 #endif // nsTemplateMatch_h__

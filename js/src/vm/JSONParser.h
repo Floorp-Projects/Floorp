@@ -175,8 +175,8 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
 
     JSObject *createFinishedObject(PropertyVector &properties);
 
-    JSONParserBase(const JSONParserBase &other) MOZ_DELETE;
-    void operator=(const JSONParserBase &other) MOZ_DELETE;
+    JSONParserBase(const JSONParserBase &other) = delete;
+    void operator=(const JSONParserBase &other) = delete;
 };
 
 template <typename CharT>
@@ -231,8 +231,8 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
     void getTextPosition(uint32_t *column, uint32_t *line);
 
   private:
-    JSONParser(const JSONParser &other) MOZ_DELETE;
-    void operator=(const JSONParser &other) MOZ_DELETE;
+    JSONParser(const JSONParser &other) = delete;
+    void operator=(const JSONParser &other) = delete;
 };
 
 } /* namespace js */

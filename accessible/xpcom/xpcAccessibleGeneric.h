@@ -66,8 +66,8 @@ private:
   friend class xpcAccessibleSelectable;
   friend class xpcAccessibleValue;
 
-  xpcAccessibleGeneric(const xpcAccessibleGeneric&) MOZ_DELETE;
-  xpcAccessibleGeneric& operator =(const xpcAccessibleGeneric&) MOZ_DELETE;
+  xpcAccessibleGeneric(const xpcAccessibleGeneric&) = delete;
+  xpcAccessibleGeneric& operator =(const xpcAccessibleGeneric&) = delete;
 };
 
 inline Accessible*

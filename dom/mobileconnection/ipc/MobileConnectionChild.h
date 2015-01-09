@@ -41,7 +41,7 @@ public:
   Shutdown();
 
 private:
-  MobileConnectionChild() MOZ_DELETE;
+  MobileConnectionChild() = delete;
 
   // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionChild()
