@@ -1,6 +1,8 @@
-This copy of STLport was taken from the Android NDK r8e.
-Android specific changes are listed in README.android.
-The libs/ directory containing prebuilt static libraries was removed.
+This copy of STLport was taken from the Android NDK git repository:
+https://android.googlesource.com/platform/ndk.git
+under sources/cxx-stl/stlport/.
+The last changes to that directory come from commit ba4baa4
+
 The overrides/ directory contains Mozilla-specific overrides to the standard
   C++ headers found in the NDK.
 

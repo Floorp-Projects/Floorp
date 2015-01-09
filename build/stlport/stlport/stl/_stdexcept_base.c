@@ -64,7 +64,7 @@ __Named_exception::__Named_exception(const __Named_exception& __x) {
 
 __Named_exception& __Named_exception::operator = (const __Named_exception& __x) {
   size_t __size = strlen(__x._M_name) + 1;
-  size_t __buf_size = _M_name != _M_static_name ? *(__REINTERPRET_CAST(size_t*, &_M_static_name[0])) : _S_bufsize;
+  size_t __buf_size = _M_name != _M_static_name ? *(__REINTERPRET_CAST(size_t*, &_M_static_name[0])) : static_cast<size_t>(_S_bufsize);
   if (__size > __buf_size) {
     // Being here necessarily mean that we need to allocate a buffer:
     if (_M_name != _M_static_name) free(_M_name);
