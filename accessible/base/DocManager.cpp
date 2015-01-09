@@ -549,5 +549,5 @@ DocManager::RemoteDocAdded(DocAccessibleParent* aDoc)
   MOZ_ASSERT(!sRemoteDocuments->Contains(aDoc),
       "How did we already have the doc!");
   sRemoteDocuments->AppendElement(aDoc);
-  ProxyCreated(aDoc);
+  ProxyCreated(aDoc, 0);
 }
