@@ -343,12 +343,7 @@
                 get isAudioOnly() { return this._isAudioOnly; },
                 set isAudioOnly(val) {
                     this._isAudioOnly = val;
-                    if (this._isAudioOnly) {
-                        this.controlBar.setAttribute("audio-only", true);
-                    } else {
-                        this.controlBar.removeAttribute("audio-only");
-                    }
-                    this.adjustControlSize();
+                    this.setFullscreenButtonState();
 
                     if (!this.isTopLevelSyntheticDocument)
                         return;
@@ -1065,9 +1060,12 @@
 
                 setFullscreenButtonState : function () {
                     if (this.isAudioOnly || !document.mozFullScreenEnabled) {
-                        this.fullscreenButton.hidden = true;
+                        this.controlBar.setAttribute("fullscreen-unavailable", true);
+                        this.adjustControlSize();
                         return;
                     }
+                    this.controlBar.removeAttribute("fullscreen-unavailable");
+                    this.adjustControlSize();
 
                     var attrName = this.isVideoInFullScreen() ? "exitfullscreenlabel" : "enterfullscreenlabel";
                     var value = this.fullscreenButton.getAttribute(attrName);
@@ -1392,8 +1390,8 @@
                                               this._volumeControlWidth +
                                               this._fullscreenButtonWidth;
 
-                    let isAudioOnly = this.isAudioOnly;
-                    if (isAudioOnly) {
+                    let isFullscreenUnavailable = this.controlBar.hasAttribute("fullscreen-unavailable");
+                    if (isFullscreenUnavailable) {
                         // When the fullscreen button is hidden we add margin-end to the volume stack.
                         minWidthAllControls -= this._fullscreenButtonWidth - this._volumeStackMarginEnd;
                     }
@@ -1401,6 +1399,7 @@
                     let minHeightForControlBar = this._controlBarHeight;
                     let minWidthOnlyPlayPause = this._playButtonWidth + this._muteButtonWidth;
 
+                    let isAudioOnly = this.isAudioOnly;
                     let videoHeight = isAudioOnly ? minHeightForControlBar : this.video.clientHeight;
                     let videoWidth = isAudioOnly ? minWidthAllControls : this.video.clientWidth;
 

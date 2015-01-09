@@ -45,6 +45,10 @@
   background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
 }
 
+.controlBar[fullscreen-unavailable] .fullscreenButton {
+  display: none;
+}
+
 .playButton {
   background: url("chrome://browser/skin/images/pause-hdpi.png") no-repeat center;
 }
@@ -55,7 +59,7 @@
  * is hidden by videocontrols.xml, and that alters the position of the
  * play button.  This workaround moves it back to center.
  */
-.controlBar.audio-only .playButton {
+.controlBar[fullscreen-unavailable] .playButton {
   transform: translateX(28px);
 }
 
