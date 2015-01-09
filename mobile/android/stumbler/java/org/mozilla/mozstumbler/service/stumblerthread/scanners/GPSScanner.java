@@ -15,10 +15,10 @@ import android.location.LocationProvider;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.AppGlobals.ActiveOrPassiveStumbling;
 import org.mozilla.mozstumbler.service.Prefs;
+import org.mozilla.mozstumbler.service.utils.TelemetryWrapper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -48,7 +48,7 @@ public class GPSScanner implements LocationListener {
     private Location mLocation = new Location("internal");
     private boolean mAutoGeofencing;
     private boolean mIsPassiveMode;
-
+    private long mTelemetry_lastStartedMs;
     private final ScanManager mScanManager;
 
     public GPSScanner(Context context, ScanManager scanManager) {
@@ -82,9 +82,13 @@ public class GPSScanner implements LocationListener {
             return;
         }
 
-        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER,
-                                               0,
-                                               0, this);
+        locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, this);
+
+        final int timeDiffSec = Long.valueOf((System.currentTimeMillis() - mTelemetry_lastStartedMs) / 1000).intValue();
+        if (mTelemetry_lastStartedMs > 0 && timeDiffSec > 0) {
+            TelemetryWrapper.addToHistogram(AppGlobals.TELEMETRY_TIME_BETWEEN_STARTS_SEC, timeDiffSec);
+        }
+        mTelemetry_lastStartedMs = System.currentTimeMillis();
     }
 
     private void startActiveMode() {
@@ -195,13 +199,14 @@ public class GPSScanner implements LocationListener {
             return;
         }
 
+        final long timeDeltaMs = location.getTime() - mLocation.getTime();
+
         // Seem to get greater likelihood of non-fused location with higher update freq.
         // Check dist and time threshold here, not set on the listener.
         if (mIsPassiveMode) {
-            final long timeDelta = location.getTime() - mLocation.getTime();
             final boolean hasMoved = location.distanceTo(mLocation) > PASSIVE_GPS_MOVEMENT_MIN_DELTA_M;
 
-            if (timeDelta < PASSIVE_GPS_MIN_UPDATE_FREQ_MS || !hasMoved) {
+            if (timeDeltaMs < PASSIVE_GPS_MIN_UPDATE_FREQ_MS || !hasMoved) {
                 return;
             }
         }
@@ -227,6 +232,11 @@ public class GPSScanner implements LocationListener {
 
         if (mIsPassiveMode) {
             mScanManager.newPassiveGpsLocation();
+        }
+
+        if (timeDeltaMs > 0) {
+            TelemetryWrapper.addToHistogram(AppGlobals.TELEMETRY_TIME_BETWEEN_RECEIVED_LOCATIONS_SEC,
+                    Long.valueOf(timeDeltaMs).intValue() / 1000);
         }
     }
 
