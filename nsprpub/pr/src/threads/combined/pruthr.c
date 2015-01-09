@@ -73,13 +73,13 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
 #ifndef HAVE_CUSTOM_USER_THREADS
     stack = PR_NEWZAP(PRThreadStack);
 #ifdef HAVE_STACK_GROWING_UP
-    stack->stackTop = (char*) ((((long)&type) >> _pr_pageShift)
+    stack->stackTop = (char*) ((((PRWord)&type) >> _pr_pageShift)
                   << _pr_pageShift);
 #else
 #if defined(SOLARIS) || defined (UNIXWARE) && defined (USR_SVR4_THREADS)
     stack->stackTop = (char*) &thread;
 #else
-    stack->stackTop = (char*) ((((long)&type + _pr_pageSize - 1)
+    stack->stackTop = (char*) ((((PRWord)&type + _pr_pageSize - 1)
                 >> _pr_pageShift) << _pr_pageShift);
 #endif
 #endif
@@ -174,12 +174,12 @@ static void _PR_InitializeNativeStack(PRThreadStack *ts)
         ** Setup stackTop and stackBottom values.
         */
 #ifdef HAVE_STACK_GROWING_UP
-    ts->allocBase = (char*) ((((long)&ts) >> _pr_pageShift)
+    ts->allocBase = (char*) ((((PRWord)&ts) >> _pr_pageShift)
                   << _pr_pageShift);
         ts->stackBottom = ts->allocBase + ts->stackSize;
         ts->stackTop = ts->allocBase;
 #else
-        ts->allocBase = (char*) ((((long)&ts + _pr_pageSize - 1)
+        ts->allocBase = (char*) ((((PRWord)&ts + _pr_pageSize - 1)
                 >> _pr_pageShift) << _pr_pageShift);
         ts->stackTop    = ts->allocBase;
         ts->stackBottom = ts->allocBase - ts->stackSize;

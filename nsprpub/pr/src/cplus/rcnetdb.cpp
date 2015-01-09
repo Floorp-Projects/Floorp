@@ -35,7 +35,7 @@ RCNetAddr::RCNetAddr(RCNetAddr::HostValue host, PRUint16 port): RCBase()
     {
         case RCNetAddr::any: how = PR_IpAddrAny; break;
         case RCNetAddr::loopback: how = PR_IpAddrLoopback; break;
-        default: PR_ASSERT(!"This can't happen -- and did!");
+        default: PR_NOT_REACHED("This can't happen -- and did!");
     }
     (void)PR_InitializeNetAddr(how, port, &address);
 }  /* RCNetAddr::RCNetAddr */
