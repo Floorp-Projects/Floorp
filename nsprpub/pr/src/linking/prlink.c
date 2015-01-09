@@ -1036,7 +1036,7 @@ PR_UnloadLibrary(PRLibrary *lib)
          * fail (the library is not on the _pr_loadmap list),
          * but don't wipe out an error from dlclose/shl_unload.
          */
-        PR_ASSERT(!"_pr_loadmap and lib->refCount inconsistent");
+        PR_NOT_REACHED("_pr_loadmap and lib->refCount inconsistent");
         if (result == 0) {
             PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
             status = PR_FAILURE;

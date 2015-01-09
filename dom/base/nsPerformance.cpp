@@ -185,11 +185,11 @@ DOMTimeMilliSec
 nsPerformanceTiming::RedirectStart()
 {
   if (!IsInitialized()) {
-    return mZeroTime;
+    return 0;
   }
   // We have to check if all the redirect URIs had the same origin (since there
   // is no check in RedirectStartHighRes())
-  if (mAllRedirectsSameOrigin) {
+  if (mAllRedirectsSameOrigin && mRedirectCount) {
     return static_cast<int64_t>(RedirectStartHighRes());
   }
   return 0;
@@ -218,11 +218,11 @@ DOMTimeMilliSec
 nsPerformanceTiming::RedirectEnd()
 {
   if (!IsInitialized()) {
-    return mZeroTime;
+    return 0;
   }
   // We have to check if all the redirect URIs had the same origin (since there
   // is no check in RedirectEndHighRes())
-  if (mAllRedirectsSameOrigin) {
+  if (mAllRedirectsSameOrigin && mRedirectCount) {
     return static_cast<int64_t>(RedirectEndHighRes());
   }
   return 0;

@@ -15,6 +15,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 // Socket module
 //
 
+const int BluetoothDaemonSocketModule::MAX_NUM_CLIENTS = 1;
+
 // Commands
 //
 

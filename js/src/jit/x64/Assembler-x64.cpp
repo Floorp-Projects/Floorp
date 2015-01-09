@@ -34,7 +34,7 @@ ABIArgGenerator::next(MIRType type)
             // On Win64, >64 bit args need to be passed by reference, but asm.js
             // doesn't allow passing SIMD values to FFIs. The only way to reach
             // here is asm to asm calls, so we can break the ABI here.
-            stackOffset_ = AlignBytes(stackOffset_, SimdStackAlignment);
+            stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
             current_ = ABIArg(stackOffset_);
             stackOffset_ += Simd128DataSize;
         } else {
@@ -86,7 +86,7 @@ ABIArgGenerator::next(MIRType type)
       case MIRType_Int32x4:
       case MIRType_Float32x4:
         if (floatRegIndex_ == NumFloatArgRegs) {
-            stackOffset_ = AlignBytes(stackOffset_, SimdStackAlignment);
+            stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
             current_ = ABIArg(stackOffset_);
             stackOffset_ += Simd128DataSize;
             break;

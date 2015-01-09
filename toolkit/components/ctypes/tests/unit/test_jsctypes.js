@@ -1753,7 +1753,6 @@ function run_PointerType_tests() {
   let z = ctypes.int32_t.array(0)().address();
   do_check_eq(z.contents.length, 0);
 
-  // Check that you can use an ArrayBuffer or a typed array as a pointer
   let c_arraybuffer = new ArrayBuffer(256);
   let typed_array_samples =
        [
@@ -1766,6 +1765,8 @@ function run_PointerType_tests() {
          [new Float32Array(c_arraybuffer), ctypes.float32_t],
          [new Float64Array(c_arraybuffer), ctypes.float64_t]
         ];
+
+  // Check that you can convert ArrayBuffer or typed array to a C array
   for (let i = 0; i < typed_array_samples.length; ++i) {
     for (let j = 0; j < typed_array_samples.length; ++j) {
       let view = typed_array_samples[i][0];
@@ -1775,31 +1776,11 @@ function run_PointerType_tests() {
 
       if (i != j) {
         do_print("Checking that typed array " + (view.constructor.name) +
-                 " canNOT be converted to " + item_type + " pointer/array");
-        do_check_throws(function() { item_type.ptr(view); }, TypeError);
+                 " can NOT be converted to " + item_type + " array");
         do_check_throws(function() { array_type(view); }, TypeError);
-
       } else {
         do_print("Checking that typed array " + (view.constructor.name) +
-                 " can be converted to " + item_type + " pointer/array");
-        // Fill buffer using view
-        for (let k = 0; k < number_of_items; ++k) {
-          view[k] = k;
-        }
-
-        // Convert ArrayBuffer to pointer then array and check contents
-        let c_ptr = item_type.ptr(c_arraybuffer);
-        let c_array = ctypes.cast(c_ptr, array_type.ptr).contents;
-        for (let k = 0; k < number_of_items; ++k) {
-          do_check_eq(c_array[k], view[k]);
-        }
-
-        // Convert view to pointer then array and check contents
-        c_ptr = item_type.ptr(view);
-        c_array = ctypes.cast(c_ptr, array_type.ptr).contents;
-        for (let k = 0; k < number_of_items; ++k) {
-          do_check_eq(c_array[k], view[k]);
-        }
+                 " can be converted to " + item_type + " array");
 
         // Convert ArrayBuffer to array of the right size and check contents
         c_array = array_type(c_arraybuffer);
@@ -1827,13 +1808,22 @@ function run_PointerType_tests() {
         for (let k = 1; k < number_of_items; ++k) {
           do_check_eq(c_array[k - 1], view[k]);
         }
-
-        // Convert array to void*
-        ctypes.voidptr_t(c_arraybuffer);
-
-        // Convert view to void*
-        ctypes.voidptr_t(view);
       }
+    }
+  }
+
+  // Check that you can't use an ArrayBuffer or a typed array as a pointer
+  for (let i = 0; i < typed_array_samples.length; ++i) {
+    for (let j = 0; j < typed_array_samples.length; ++j) {
+      let view = typed_array_samples[i][0];
+      let item_type = typed_array_samples[j][1];
+
+      do_print("Checking that typed array " + (view.constructor.name) +
+               " can NOT be converted to " + item_type + " pointer/array");
+      do_check_throws(function() { item_type.ptr(c_arraybuffer); }, TypeError);
+      do_check_throws(function() { item_type.ptr(view); }, TypeError);
+      do_check_throws(function() { ctypes.voidptr_t(c_arraybuffer); }, TypeError);
+      do_check_throws(function() { ctypes.voidptr_t(view); }, TypeError);
     }
   }
 }

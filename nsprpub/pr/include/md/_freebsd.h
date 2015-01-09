@@ -25,6 +25,12 @@
 #define _PR_SI_ARCHITECTURE "ia64"
 #elif defined(__amd64__)
 #define _PR_SI_ARCHITECTURE "amd64"
+#elif defined(__powerpc64__)
+#define _PR_SI_ARCHITECTURE "powerpc64"
+#elif defined(__powerpc__)
+#define _PR_SI_ARCHITECTURE "powerpc"
+#elif defined(__arm__)
+#define _PR_SI_ARCHITECTURE "arm"
 #else
 #error "Unknown CPU architecture"
 #endif

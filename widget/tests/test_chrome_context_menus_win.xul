@@ -10,7 +10,9 @@
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="utils.js"></script>
 <script>
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
     SimpleTest.waitForExplicitFinish();
 
     var w = window.open('chrome_context_menus_win.xul', '_blank', 'chrome,resizable=yes,width=600,height=600');

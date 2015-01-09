@@ -212,6 +212,9 @@ public:
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
                                       uint16_t aNumPackets) MOZ_OVERRIDE;
 
+  virtual void EnergyInfoNotification(
+    const BluetoothActivityEnergyInfo& aInfo) MOZ_OVERRIDE;
+
 protected:
   static nsresult StartGonkBluetooth();
   static nsresult StopGonkBluetooth();

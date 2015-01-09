@@ -28,9 +28,12 @@ public:
     OPCODE_DISCONNECT = 0x02
   };
 
+  static const int MAX_NUM_CLIENTS;
+
   virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
 
   virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
+                                  uint32_t aMaxNumClients,
                                   BluetoothSetupResultHandler* aRes) = 0;
 
   virtual nsresult UnregisterModule(uint8_t aId,
@@ -102,14 +105,23 @@ protected:
                                          const nsAString&>
     AudioStateNotification;
 
-  class AudioStateInitOp;
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         nsString, uint32_t, uint8_t,
+                                         const nsAString&, uint32_t, uint8_t>
+    AudioConfigNotification;
+
   class ConnectionStateInitOp;
+  class AudioStateInitOp;
+  class AudioConfigInitOp;
 
   void ConnectionStateNtf(const BluetoothDaemonPDUHeader& aHeader,
                           BluetoothDaemonPDU& aPDU);
 
   void AudioStateNtf(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU);
+
+  void AudioConfigNtf(const BluetoothDaemonPDUHeader& aHeader,
+                      BluetoothDaemonPDU& aPDU);
 
   void HandleNtf(const BluetoothDaemonPDUHeader& aHeader,
                  BluetoothDaemonPDU& aPDU,
