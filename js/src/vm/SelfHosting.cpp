@@ -780,46 +780,6 @@ intrinsic_IsWeakSet(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/* These wrappers are needed in order to recognize the function
- * pointers within the JIT, and the raw js:: functions can't be used
- * directly because they take a ThreadSafeContext* argument.
- */
-bool
-js::intrinsic_ObjectIsTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsTransparentTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTransparentTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsOpaqueTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTypeDescr(cx, argc, vp);
-}
-
-bool
-js::intrinsic_TypeDescrIsSimpleType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsSimpleType(cx, argc, vp);
-}
-
-bool
-js::intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsArrayType(cx, argc, vp);
-}
-
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -993,72 +953,36 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
-    JS_FN("NewOpaqueTypedObject",
-          js::NewOpaqueTypedObject,
-          1, 0),
-    JS_FN("NewDerivedTypedObject",
-          js::NewDerivedTypedObject,
-          3, 0),
-    JS_FN("TypedObjectBuffer",
-          TypedObject::GetBuffer,
-          1, 0),
-    JS_FN("TypedObjectByteOffset",
-          TypedObject::GetByteOffset,
-          1, 0),
-    JS_FNINFO("AttachTypedObject",
-              JSNativeThreadSafeWrapper<js::AttachTypedObject>,
-              &js::AttachTypedObjectJitInfo, 3, 0),
-    JS_FNINFO("SetTypedObjectOffset",
-              intrinsic_SetTypedObjectOffset,
-              &js::intrinsic_SetTypedObjectOffsetJitInfo, 2, 0),
-    JS_FNINFO("ObjectIsTypeDescr",
-              intrinsic_ObjectIsTypeDescr,
-              &js::ObjectIsTypeDescrJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsTypedObject",
-              intrinsic_ObjectIsTypedObject,
-              &js::ObjectIsTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsTransparentTypedObject",
-              intrinsic_ObjectIsTransparentTypedObject,
-              &js::ObjectIsTransparentTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("TypedObjectIsAttached",
-              JSNativeThreadSafeWrapper<js::TypedObjectIsAttached>,
-              &js::TypedObjectIsAttachedJitInfo, 1, 0),
-    JS_FNINFO("TypedObjectTypeDescr",
-              JSNativeThreadSafeWrapper<js::TypedObjectTypeDescr>,
-              &js::TypedObjectTypeDescrJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsOpaqueTypedObject",
-              intrinsic_ObjectIsOpaqueTypedObject,
-              &js::ObjectIsOpaqueTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsArrayType",
-              intrinsic_TypeDescrIsArrayType,
-              &js::TypeDescrIsArrayTypeJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsSimpleType",
-              intrinsic_TypeDescrIsSimpleType,
-              &js::TypeDescrIsSimpleTypeJitInfo, 1, 0),
-    JS_FNINFO("ClampToUint8",
-              JSNativeThreadSafeWrapper<js::ClampToUint8>,
-              &js::ClampToUint8JitInfo, 1, 0),
-    JS_FN("GetTypedObjectModule", js::GetTypedObjectModule, 0, 0),
-    JS_FN("GetFloat32x4TypeDescr", js::GetFloat32x4TypeDescr, 0, 0),
-    JS_FN("GetInt32x4TypeDescr", js::GetInt32x4TypeDescr, 0, 0),
+    JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),
+    JS_FN("NewDerivedTypedObject",          js::NewDerivedTypedObject, 3, 0),
+    JS_FN("TypedObjectBuffer",              TypedObject::GetBuffer, 1, 0),
+    JS_FN("TypedObjectByteOffset",          TypedObject::GetByteOffset, 1, 0),
+    JS_FN("AttachTypedObject",              js::AttachTypedObject, 3, 0),
+    JS_FN("SetTypedObjectOffset",           js::SetTypedObjectOffset, 2, 0),
+    JS_FN("ObjectIsTypeDescr"    ,          js::ObjectIsTypeDescr, 1, 0),
+    JS_FN("ObjectIsTypedObject",            js::ObjectIsTypedObject, 1, 0),
+    JS_FN("ObjectIsTransparentTypedObject", js::ObjectIsTransparentTypedObject, 1, 0),
+    JS_FN("TypedObjectIsAttached",          js::TypedObjectIsAttached, 1, 0),
+    JS_FN("TypedObjectTypeDescr",           js::TypedObjectTypeDescr, 1, 0),
+    JS_FN("ObjectIsOpaqueTypedObject",      js::ObjectIsOpaqueTypedObject, 1, 0),
+    JS_FN("TypeDescrIsArrayType",           js::TypeDescrIsArrayType, 1, 0),
+    JS_FN("TypeDescrIsSimpleType",          js::TypeDescrIsSimpleType, 1, 0),
+    JS_FN("ClampToUint8",                   js::ClampToUint8, 1, 0),
+    JS_FN("GetTypedObjectModule",           js::GetTypedObjectModule, 0, 0),
+    JS_FN("GetFloat32x4TypeDescr",          js::GetFloat32x4TypeDescr, 0, 0),
+    JS_FN("GetInt32x4TypeDescr",            js::GetInt32x4TypeDescr, 0, 0),
 
-#define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)               \
-    JS_FNINFO("Store_" #_name,                                                \
-              JSNativeThreadSafeWrapper<js::StoreScalar##_type::Func>,        \
-              &js::StoreScalar##_type::JitInfo, 3, 0),                        \
-    JS_FNINFO("Load_" #_name,                                                 \
-              JSNativeThreadSafeWrapper<js::LoadScalar##_type::Func>,         \
-              &js::LoadScalar##_type::JitInfo, 3, 0),
+#define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \
+    JS_FN("Store_" #_name, js::StoreScalar##_type::Func, 3, 0),         \
+    JS_FN("Load_" #_name,  js::LoadScalar##_type::Func, 3, 0),
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+#undef LOAD_AND_STORE_SCALAR_FN_DECLS
 
-#define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)              \
-    JS_FNINFO("Store_" #_name,                                                  \
-              JSNativeThreadSafeWrapper<js::StoreReference##_type::Func>,       \
-              &js::StoreReference##_type::JitInfo, 3, 0),                       \
-    JS_FNINFO("Load_" #_name,                                                   \
-              JSNativeThreadSafeWrapper<js::LoadReference##_type::Func>,        \
-              &js::LoadReference##_type::JitInfo, 3, 0),
+#define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)      \
+    JS_FN("Store_" #_name, js::StoreReference##_type::Func, 3, 0),      \
+    JS_FN("Load_" #_name,  js::LoadReference##_type::Func, 3, 0),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
+#undef LOAD_AND_STORE_REFERENCE_FN_DECLS
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
