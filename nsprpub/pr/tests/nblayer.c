@@ -104,7 +104,7 @@ static void PR_CALLBACK Client(void *arg)
             ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
             if ((1 != ready)  /* if not 1, then we're dead */
             || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                { PR_ASSERT(!"Whoa!"); break; }
+                { PR_NOT_REACHED("Whoa!"); break; }
             if (verbosity > quiet)
                 PR_fprintf(
                     logFile, "Client connect 'in progress' [0x%x]\n",
@@ -143,7 +143,7 @@ static void PR_CALLBACK Client(void *arg)
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
                 if ((1 != ready)  /* if not 1, then we're dead */
                 || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                    { PR_ASSERT(!"Whoa!"); break; }
+                    { PR_NOT_REACHED("Whoa!"); break; }
             }
             else break;
         } while (bytes_sent < sizeof(buffer));
@@ -171,7 +171,7 @@ static void PR_CALLBACK Client(void *arg)
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
                 if ((1 != ready)  /* if not 1, then we're dead */
                 || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                    { PR_ASSERT(!"Whoa!"); break; }
+                    { PR_NOT_REACHED("Whoa!"); break; }
             }
             else break;
         } while (bytes_read < bytes_sent);
@@ -213,7 +213,7 @@ static void PR_CALLBACK Server(void *arg)
             ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
             if ((1 != ready)  /* if not 1, then we're dead */
             || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                { PR_ASSERT(!"Whoa!"); break; }
+                { PR_NOT_REACHED("Whoa!"); break; }
         }
     } while (NULL == service);
     PR_ASSERT(NULL != service);
@@ -244,7 +244,7 @@ static void PR_CALLBACK Server(void *arg)
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
                 if ((1 != ready)  /* if not 1, then we're dead */
                 || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                    { PR_ASSERT(!"Whoa!"); break; }
+                    { PR_NOT_REACHED("Whoa!"); break; }
             }
             else break;
         } while (bytes_read < sizeof(buffer));
@@ -273,7 +273,7 @@ static void PR_CALLBACK Server(void *arg)
                     ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
                     if ((1 != ready)  /* if not 1, then we're dead */
                     || (0 == (polldesc.in_flags & polldesc.out_flags)))
-                        { PR_ASSERT(!"Whoa!"); break; }
+                        { PR_NOT_REACHED("Whoa!"); break; }
                 }
                 else break;
             } while (bytes_sent < bytes_read);
@@ -329,7 +329,7 @@ static PRInt16 PR_CALLBACK MyPoll(
             default: break;
         }
     }
-    else PR_ASSERT(!"How'd I get here?");
+    else PR_NOT_REACHED("How'd I get here?");
     new_flags = (fd->lower->methods->poll)(fd->lower, my_flags, out_flags);
     if (verbosity > chatty)
         PR_fprintf(

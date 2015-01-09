@@ -506,7 +506,7 @@ static void PR_CALLBACK ServerThread(void *arg)
         {
             if (PR_PENDING_INTERRUPT_ERROR == PR_GetError()) break;
             PL_PrintError("Accept failed");
-            MW_ASSERT(!"Accept failed");
+            MW_ASSERT(PR_FALSE && "Accept failed");
         }
         else
         {
