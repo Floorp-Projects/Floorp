@@ -40,10 +40,6 @@ public:
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
   virtual void FinishInternal() MOZ_OVERRIDE;
-  virtual nsresult AllocateFrame() MOZ_OVERRIDE;
-
-protected:
-  virtual bool NeedsNewFrame() const MOZ_OVERRIDE;
 
 private:
   // Writes to the contained decoder and sets the appropriate errors
@@ -83,7 +79,6 @@ private:
   uint32_t mRowBytes; // How many bytes of the row were already received
   int32_t mOldLine;   // Previous index of the line
   nsRefPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
-  RawAccessFrameRef mRefForContainedDecoder; // Avoid locking off-main-thread
 
   char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
   IconDirEntry mDirEntry; // Holds a decoded dir entry
