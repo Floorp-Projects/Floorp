@@ -7,14 +7,10 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 this.EXPORTED_SYMBOLS = [
-  "GraphCursor",
-  "GraphSelection",
-  "GraphSelectionDragger",
-  "GraphSelectionResizer",
   "AbstractCanvasGraph",
   "LineGraphWidget",
   "BarGraphWidget",
@@ -97,23 +93,28 @@ const BAR_GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50; // ms
 /**
  * Small data primitives for all graphs.
  */
-this.GraphCursor = function() {
-  this.x = null;
-  this.y = null;
+this.GraphCursor = function() {};
+this.GraphSelection = function() {};
+this.GraphSelectionDragger = function() {};
+this.GraphSelectionResizer = function() {};
+
+GraphCursor.prototype = {
+  x: null,
+  y: null
 };
 
-this.GraphSelection = function() {
-  this.start = null;
-  this.end = null;
+GraphSelection.prototype = {
+  start: null,
+  end: null
 };
 
-this.GraphSelectionDragger = function() {
-  this.origin = null;
-  this.anchor = new GraphSelection();
+GraphSelectionDragger.prototype = {
+  origin: null,
+  anchor: new GraphSelection()
 };
 
-this.GraphSelectionResizer = function() {
-  this.margin = null;
+GraphSelectionResizer.prototype = {
+  margin: null
 };
 
 /**
@@ -243,11 +244,6 @@ AbstractCanvasGraph.prototype = {
 
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
-
-    this._cursor = null;
-    this._selection = null;
-    this._selectionDragger = null;
-    this._selectionResizer = null;
 
     this._data = null;
     this._mask = null;
@@ -896,9 +892,6 @@ AbstractCanvasGraph.prototype = {
 
   /**
    * Gets the offset of this graph's container relative to the owner window.
-   *
-   * @return object
-   *         The { left, top } offset.
    */
   _getContainerOffset: function() {
     let node = this._canvas;
