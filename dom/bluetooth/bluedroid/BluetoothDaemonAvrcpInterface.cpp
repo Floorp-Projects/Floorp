@@ -14,6 +14,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 // AVRCP module
 //
 
+const int BluetoothDaemonAvrcpModule::MAX_NUM_CLIENTS = 1;
+
 BluetoothAvrcpNotificationHandler*
   BluetoothDaemonAvrcpModule::sNotificationHandler;
 
@@ -887,7 +889,8 @@ BluetoothDaemonAvrcpInterface::Init(
   }
 
   nsresult rv = mModule->RegisterModule(
-    BluetoothDaemonAvrcpModule::SERVICE_ID, 0x00, res);
+    BluetoothDaemonAvrcpModule::SERVICE_ID,
+    BluetoothDaemonAvrcpModule::MAX_NUM_CLIENTS, 0x00, res);
 
   if (NS_FAILED(rv) && aRes) {
     DispatchError(aRes, STATUS_FAIL);
