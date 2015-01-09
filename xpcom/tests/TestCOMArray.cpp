@@ -35,8 +35,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // IFoo implementation
-  NS_IMETHOD_(MozExternalRefCountType) RefCnt() { return mRefCnt; }
-  NS_IMETHOD_(int32_t) ID() { return mID; }
+  NS_IMETHOD_(MozExternalRefCountType) RefCnt() MOZ_OVERRIDE { return mRefCnt; }
+  NS_IMETHOD_(int32_t) ID() MOZ_OVERRIDE { return mID; }
 
   static int32_t gCount;
 

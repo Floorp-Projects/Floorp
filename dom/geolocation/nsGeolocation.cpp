@@ -133,7 +133,7 @@ public:
     MOZ_COUNT_CTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
+  NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -159,7 +159,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString& aName)
+  NS_IMETHOD HandleError(const nsAString& aName) MOZ_OVERRIDE
   {
     if (aName.EqualsASCII(GEO_SETTINGS_ENABLED)) {
       GPSLOG("Unable to get value for '" GEO_SETTINGS_ENABLED "'");

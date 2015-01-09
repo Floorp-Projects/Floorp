@@ -36,10 +36,8 @@ self.onmessage = function(msg) {
               })(),
       type: OS.Shared.Type.char.in_ptr,
       check: function check_ArrayBuffer(candidate, prefix) {
-        let cast = ctypes.cast(candidate, ctypes.uint8_t.ptr);
         for (let i = 0; i < 15; ++i) {
-          is(cast.contents, i % 256, prefix + "Checking that the contents of the ArrayBuffer were preserved");
-          cast = cast.increment();
+          is(candidate[i], i % 256, prefix + "Checking that the contents of the ArrayBuffer were preserved");
         }
       }},
     { typename: "OS.Shared.Type.char.in_ptr",
@@ -106,6 +104,11 @@ self.onmessage = function(msg) {
       return;
     }
 
+    if ("data" in serialized) {
+      // Unwrap from `Meta`
+      serialized = serialized.data;
+    }
+
     // 2. Test deserialization
     let deserialized;
     try {
@@ -120,7 +123,8 @@ self.onmessage = function(msg) {
     }
 
     // 3. Local test deserialized value
-    info("Running test on deserialized value " + serialized);
+    info("Running test on deserialized value " + deserialized +
+      " aka " + JSON.stringify(deserialized));
     check(deserialized, "Local test: ");
 
     // 4. Test sending serialized

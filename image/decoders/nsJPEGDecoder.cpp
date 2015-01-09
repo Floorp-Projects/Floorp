@@ -190,8 +190,7 @@ nsJPEGDecoder::FinishInternal()
 }
 
 void
-nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
-                             DecodeStrategy)
+nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   mSegment = (const JOCTET*)aBuffer;
   mSegmentLen = aCount;

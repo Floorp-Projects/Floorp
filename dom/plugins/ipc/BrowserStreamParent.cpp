@@ -13,7 +13,7 @@
 
 // How much data are we willing to send across the wire
 // in one chunk?
-static const int32_t kSendDataChunk = 0x4000;
+static const int32_t kSendDataChunk = 0xffff;
 
 namespace mozilla {
 namespace plugins {

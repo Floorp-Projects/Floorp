@@ -100,11 +100,6 @@ public:
   void SetAnimationMode(uint16_t aAnimationMode);
 
   /**
-   * Set the area to refresh when we loop around to the first frame.
-   */
-  void SetFirstFrameRefreshArea(const nsIntRect& aRect);
-
-  /**
    * Union the area to refresh when we loop around to the first frame with this
    * rect.
    */

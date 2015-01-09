@@ -62,23 +62,24 @@ AbstractFile.prototype = {
       options = clone(maybeBytes);
       maybeBytes = null;
     } else {
-      options = clone(options || {});
+      options = options || {};
     }
-    if(!("bytes" in options)) {
-      options.bytes = maybeBytes == null ? this.stat().size : maybeBytes;
+    let bytes = options.bytes || undefined;
+    if (bytes === undefined) {
+      bytes = maybeBytes == null ? this.stat().size : maybeBytes;
     }
-    let buffer = new Uint8Array(options.bytes);
-    let {ptr, bytes} = SharedAll.normalizeToPointer(buffer, options.bytes);
+    let buffer = new Uint8Array(bytes);
     let pos = 0;
     while (pos < bytes) {
-      let chunkSize = this._read(ptr, bytes - pos, options);
+      let length = bytes - pos;
+      let view = new DataView(buffer.buffer, pos, length);
+      let chunkSize = this._read(view, length, options);
       if (chunkSize == 0) {
         break;
       }
       pos += chunkSize;
-      ptr = SharedAll.offsetBy(ptr, chunkSize);
     }
-    if (pos == options.bytes) {
+    if (pos == bytes) {
       return buffer;
     } else {
       return buffer.subarray(0, pos);
@@ -91,27 +92,24 @@ AbstractFile.prototype = {
    * Note that, by default, this function may perform several I/O
    * operations to ensure that the buffer is fully written.
    *
-   * @param {Typed array | C pointer} buffer The buffer in which the
-   * the bytes are stored. The buffer must be large enough to
-   * accomodate |bytes| bytes.
+   * @param {Typed array} buffer The buffer in which the the bytes are
+   * stored. The buffer must be large enough to accomodate |bytes| bytes.
    * @param {*=} options Optionally, an object that may contain the
    * following fields:
    * - {number} bytes The number of |bytes| to write from the buffer. If
-   * unspecified, this is |buffer.byteLength|. Note that |bytes| is required
-   * if |buffer| is a C pointer.
+   * unspecified, this is |buffer.byteLength|.
    *
    * @return {number} The number of bytes actually written.
    */
   write: function write(buffer, options = {}) {
-
-    let {ptr, bytes} =
-      SharedAll.normalizeToPointer(buffer, ("bytes" in options) ? options.bytes : undefined);
-
+    let bytes =
+      SharedAll.normalizeBufferArgs(buffer, ("bytes" in options) ? options.bytes : undefined);
     let pos = 0;
     while (pos < bytes) {
-      let chunkSize = this._write(ptr, bytes - pos, options);
+      let length = bytes - pos;
+      let view = new DataView(buffer.buffer, buffer.byteOffset + pos, length);
+      let chunkSize = this._write(view, length, options);
       pos += chunkSize;
-      ptr = SharedAll.offsetBy(ptr, chunkSize);
     }
     return pos;
   }

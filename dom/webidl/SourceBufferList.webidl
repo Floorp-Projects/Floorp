@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="media.mediasource.enabled"]
+[Func="mozilla::dom::MediaSource::Enabled"]
 interface SourceBufferList : EventTarget {
   readonly attribute unsigned long length;
   getter SourceBuffer (unsigned long index);

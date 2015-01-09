@@ -647,10 +647,6 @@ File.prototype = {
       options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
     }
-    // Note: Type.void_t.out_ptr.toMsg ensures that
-    // - the buffer is effectively shared (not neutered) between both
-    //   threads;
-    // - we take care of any |byteOffset|.
     return Scheduler.post("File_prototype_write",
       [this._fdmsg,
        Type.void_t.in_ptr.toMsg(buffer),
@@ -1162,10 +1158,6 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   if (isTypedArray(buffer) && (!("bytes" in options))) {
     options.bytes = buffer.byteLength;
   };
-  // Note: Type.void_t.out_ptr.toMsg ensures that
-  // - the buffer is effectively shared (not neutered) between both
-  //   threads;
-  // - we take care of any |byteOffset|.
   let refObj = {};
   TelemetryStopwatch.start("OSFILE_WRITEATOMIC_JANK_MS", refObj);
   let promise = Scheduler.post("writeAtomic",

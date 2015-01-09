@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -202,6 +203,9 @@ DataStorage::Reader::Run()
         }
       }
     } while (true);
+
+    Telemetry::Accumulate(Telemetry::DATA_STORAGE_ENTRIES,
+                          mDataStorage->mPersistentDataTable.Count());
   }
 
   return NS_OK;

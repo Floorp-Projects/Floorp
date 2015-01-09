@@ -56,7 +56,7 @@ public:
    *
    * Notifications Sent: TODO
    */
-  void Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  void Write(const char* aBuffer, uint32_t aCount);
 
   /**
    * Informs the decoder that all the data has been written.
@@ -159,6 +159,11 @@ public:
   bool HasSize() const { return mImageMetadata.HasSize(); }
   void SetSizeOnImage();
 
+  void SetSize(const nsIntSize& aSize, const Orientation& aOrientation)
+  {
+    PostSize(aSize.width, aSize.height, aOrientation);
+  }
+
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
@@ -175,13 +180,8 @@ public:
                     uint32_t width, uint32_t height,
                     gfx::SurfaceFormat format,
                     uint8_t palette_depth = 0);
-
   virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
 
-  // Returns true if we may have stored data that we need to flush now that we
-  // have a new frame to decode into. Callers can use Write() to actually
-  // flush the data; see the documentation for that method.
-  bool NeedsToFlushData() const { return mNeedsToFlushData; }
 
   // Try to allocate a frame as described in mNewFrameData and return the
   // status code from that attempt. Clears mNewFrameData.
@@ -207,8 +207,7 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
-    DecodeStrategy aStrategy);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
 
   /*
@@ -265,6 +264,32 @@ protected:
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
 
+  // Returns true if we may have stored data that we need to flush now that we
+  // have a new frame to decode into. Callers can use Write() to actually
+  // flush the data; see the documentation for that method.
+  bool NeedsToFlushData() const { return mNeedsToFlushData; }
+
+  /**
+   * Ensures that a given frame number exists with the given parameters, and
+   * returns a RawAccessFrameRef for that frame.
+   * It is not possible to create sparse frame arrays; you can only append
+   * frames to the current frame array, or if there is only one frame in the
+   * array, replace that frame.
+   * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
+   */
+  RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
+                                const nsIntRect& aFrameRect,
+                                uint32_t aDecodeFlags,
+                                gfx::SurfaceFormat aFormat,
+                                uint8_t aPaletteDepth,
+                                imgFrame* aPreviousFrame);
+
+  RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
+                                     const nsIntRect& aFrameRect,
+                                     uint32_t aDecodeFlags,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint8_t aPaletteDepth,
+                                     imgFrame* aPreviousFrame);
   /*
    * Member variables.
    *

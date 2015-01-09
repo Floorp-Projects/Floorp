@@ -173,7 +173,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
 
     rv = req->Init(docPrincipal, context,
                    scriptObject ? scriptObject : doc->GetScopeObject(),
-                   nullptr);
+                   nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = req->Open(NS_LITERAL_CSTRING("GET"), uriStr, true,

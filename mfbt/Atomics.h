@@ -42,14 +42,7 @@
 #  elif MOZ_USING_LIBCXX && defined(__clang__)
 #    define MOZ_HAVE_CXX11_ATOMICS
 #  endif
-/*
- * Although Visual Studio 2012's CRT supports <atomic>, its atomic load
- * implementation unnecessarily uses an atomic intrinsic for the less
- * restrictive memory orderings, which can be prohibitively expensive.
- * Therefore, we require at least Visual Studio 2013 for using the CRT
- * (bug 1061764).
- */
-#elif defined(_MSC_VER) && _MSC_VER >= 1800
+#elif defined(_MSC_VER)
 #  if defined(DEBUG)
      /*
       * Provide our own failure code since we're having trouble linking to

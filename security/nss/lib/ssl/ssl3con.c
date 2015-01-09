@@ -904,7 +904,7 @@ ssl3_NegotiateVersion(sslSocket *ss, SSL3ProtocolVersion peerVersion,
 
     if (peerVersion < ss->vrange.min ||
 	(peerVersion > ss->vrange.max && !allowLargerPeerVersion)) {
-	PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
+	PORT_SetError(SSL_ERROR_UNSUPPORTED_VERSION);
 	return SECFailure;
     }
 
@@ -6287,7 +6287,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (rv != SECSuccess) {
     	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version 
 						   : handshake_failure;
-	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
+	errCode = SSL_ERROR_UNSUPPORTED_VERSION;
 	goto alert_loser;
     }
     isTLS = (ss->version > SSL_LIBRARY_VERSION_3_0);
@@ -7699,7 +7699,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     if (rv != SECSuccess) {
     	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version 
 	                                           : handshake_failure;
-	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
+	errCode = SSL_ERROR_UNSUPPORTED_VERSION;
 	goto alert_loser;
     }
 
@@ -8472,8 +8472,9 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length)
     rv = ssl3_NegotiateVersion(ss, version, PR_TRUE);
     if (rv != SECSuccess) {
 	/* send back which ever alert client will understand. */
-    	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version : handshake_failure;
-	errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
+	desc = (version > SSL_LIBRARY_VERSION_3_0) ? protocol_version
+	                                           : handshake_failure;
+	errCode = SSL_ERROR_UNSUPPORTED_VERSION;
 	goto alert_loser;
     }
 

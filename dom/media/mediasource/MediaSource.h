@@ -60,6 +60,8 @@ public:
 
   void EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv);
   static bool IsTypeSupported(const GlobalObject&, const nsAString& aType);
+
+  static bool Enabled(JSContext* cx, JSObject* aGlobal);
   /** End WebIDL Methods. */
 
   NS_DECL_ISUPPORTS_INHERITED

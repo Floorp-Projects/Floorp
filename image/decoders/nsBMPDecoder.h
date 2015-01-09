@@ -50,8 +50,8 @@ public:
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
     bool HasAlphaData() const;
 
-    virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
-                               DecodeStrategy aStrategy) MOZ_OVERRIDE;
+    virtual void WriteInternal(const char* aBuffer,
+                               uint32_t aCount) MOZ_OVERRIDE;
     virtual void FinishInternal() MOZ_OVERRIDE;
 
 private:
@@ -93,6 +93,9 @@ private:
     /// Set mBIH from the raw data in mRawBuf, converting from little-endian
     /// data to native data as necessary
     void ProcessInfoHeader();
+
+    /// True if we've already processed the BMP header.
+    bool mProcessedHeader;
 
     // Stores whether the image data may store alpha data, or if
     // the alpha data is unspecified and filled with a padding byte of 0.
