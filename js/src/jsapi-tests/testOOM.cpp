@@ -17,7 +17,7 @@ BEGIN_TEST(testOOM)
     return true;
 }
 
-virtual JSRuntime * createRuntime() MOZ_OVERRIDE
+virtual JSRuntime * createRuntime()
 {
     JSRuntime *rt = JS_NewRuntime(0);
     if (!rt)

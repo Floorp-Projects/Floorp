@@ -52,7 +52,7 @@ BEGIN_TEST(testGCOutOfMemory)
     return true;
 }
 
-virtual JSRuntime * createRuntime() MOZ_OVERRIDE {
+virtual JSRuntime * createRuntime() {
     JSRuntime *rt = JS_NewRuntime(768 * 1024);
     if (!rt)
         return nullptr;
@@ -60,7 +60,7 @@ virtual JSRuntime * createRuntime() MOZ_OVERRIDE {
     return rt;
 }
 
-virtual void destroyRuntime() MOZ_OVERRIDE {
+virtual void destroyRuntime() {
     JS_DestroyRuntime(rt);
 }
 
