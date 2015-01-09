@@ -266,11 +266,6 @@ let gFxAccounts = {
       Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
       return;
     }
-    if (gBrowser.currentURI.spec.split("?")[0] == "about:accounts") {
-      // If the current tab is about:accounts, assume the user just completed a
-      // migration step and don't bother them with a redundant notification.
-      return;
-    }
     let note = null;
     switch (this._migrationInfo.state) {
       case this.fxaMigrator.STATE_USER_FXA: {
