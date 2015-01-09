@@ -55,6 +55,7 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:WriteNDEFResponse",
   "NFC:MakeReadOnlyResponse",
   "NFC:FormatResponse",
+  "NFC:TransceiveResponse",
   "NFC:ConnectResponse",
   "NFC:CloseResponse",
   "NFC:CheckP2PRegistrationResponse",
@@ -174,6 +175,18 @@ NfcContentHelper.prototype = {
     });
   },
 
+  transceive: function transceive(sessionToken, technology, command, callback) {
+    let requestId = callback.getCallbackId();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("NFC:Transceive", {
+      requestId: requestId,
+      sessionToken: sessionToken,
+      technology: technology,
+      command: command
+    });
+  },
+
   connect: function connect(techType, sessionToken, callback) {
     let requestId = callback.getCallbackId();
     this._requestMap[requestId] = callback;
@@ -279,6 +292,9 @@ NfcContentHelper.prototype = {
         break;
       case "NFC:CheckP2PRegistrationResponse":
         this.handleCheckP2PRegistrationResponse(result);
+        break;
+      case "NFC:TransceiveResponse":
+        this.handleTransceiveResponse(result);
         break;
       case "NFC:ConnectResponse": // Fall through.
       case "NFC:CloseResponse":
@@ -393,6 +409,23 @@ NfcContentHelper.prototype = {
     // Privilaged status API. Always fire success to avoid using exposed props.
     // The receiver must check the boolean mapped status code to handle.
     callback.notifySuccessWithBoolean(!result.errorMsg);
+  },
+
+  handleTransceiveResponse: function handleTransceiveResponse(result) {
+    let requestId = result.requestId;
+    let callback = this._requestMap[requestId];
+    if (!callback) {
+      debug("not firing message handleTransceiveResponse for id: " + requestId);
+      return;
+    }
+    delete this._requestMap[requestId];
+
+    if (result.errorMsg) {
+      callback.notifyError(result.errorMsg);
+      return;
+    }
+
+    callback.notifySuccessWithByteArray(result.response);
   },
 };
 

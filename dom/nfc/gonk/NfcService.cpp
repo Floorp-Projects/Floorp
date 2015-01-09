@@ -198,6 +198,12 @@ public:
       event.mPayload.Value().Init(Uint8Array::Create(cx, mEvent.mPayload.Length(), mEvent.mPayload.Elements()));
     }
 
+    if (mEvent.mResponse.Length() > 0) {
+      event.mResponse.Construct();
+      event.mResponse.Value().Init(
+        Uint8Array::Create(cx, mEvent.mResponse.Length(), mEvent.mResponse.Elements()));
+    }
+
 #undef COPY_FIELD
 #undef COPY_OPT_FIELD
 

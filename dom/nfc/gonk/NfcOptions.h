@@ -38,6 +38,16 @@ struct CommandOptions
     COPY_OPT_FIELD(mTechType, 0)
     COPY_OPT_FIELD(mIsP2P, false)
 
+    mTechnology = aOther.mTechnology.WasPassed() ?
+                    static_cast<int32_t>(aOther.mTechnology.Value()) :
+                    -1;
+
+    if (aOther.mCommand.WasPassed()) {
+      dom::Uint8Array const & currentValue = aOther.mCommand.InternalValue();
+      currentValue.ComputeLengthAndData();
+      mCommand.AppendElements(currentValue.Data(), currentValue.Length());
+    }
+
     if (!aOther.mRecords.WasPassed()) {
       return;
     }
@@ -80,6 +90,8 @@ struct CommandOptions
   int32_t mTechType;
   bool mIsP2P;
   nsTArray<NDEFRecordStruct> mRecords;
+  int32_t mTechnology;
+  nsTArray<uint8_t> mCommand;
 };
 
 struct EventOptions
@@ -112,6 +124,7 @@ struct EventOptions
   int32_t mOriginIndex;
   nsTArray<uint8_t> mAid;
   nsTArray<uint8_t> mPayload;
+  nsTArray<uint8_t> mResponse;
 };
 
 } // namespace mozilla

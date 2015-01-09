@@ -1,7 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This is testing the "normal" timer-based timeout for the location search.
+// This is testing the long, last-resort XHR-based timeout for the location
+// search.
 
 function startServer(continuePromise) {
   let srv = new HttpServer();
@@ -22,9 +23,10 @@ function startServer(continuePromise) {
   return srv;
 }
 
-function getProbeSum(probe, sum) {
+function verifyProbeSum(probe, sum) {
   let histogram = Services.telemetry.getHistogramById(probe);
-  return histogram.snapshot().sum;
+  let snapshot = histogram.snapshot();
+  equal(snapshot.sum, sum, probe);
 }
 
 function run_test() {
@@ -54,7 +56,9 @@ function run_test() {
   let server = startServer(continuePromise);
   let url = "http://localhost:" + server.identity.primaryPort + "/lookup_country";
   Services.prefs.setCharPref("browser.search.geoip.url", url);
-  Services.prefs.setIntPref("browser.search.geoip.timeout", 50);
+  // The timeout for the timer.
+  Services.prefs.setIntPref("browser.search.geoip.timeout", 10);
+  let promiseXHRStarted = waitForSearchNotification("geoip-lookup-xhr-starting");
   Services.search.init(() => {
     try {
       Services.prefs.getCharPref("browser.search.countryCode");
@@ -67,29 +71,35 @@ function run_test() {
     let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
     let snapshot = histogram.snapshot();
     deepEqual(snapshot.counts, [0,1,0]);
-    // should not yet have SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS recorded as our
+
+    // should not have SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS recorded as our
     // test server is still blocked on our promise.
-    equal(getProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS"), 0);
+    verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
 
-    waitForSearchNotification("geoip-lookup-xhr-complete").then(() => {
-      // now we *should* have a report of how long the response took even though
-      // it timed out.
-      // The telemetry "sum" will be the actual time in ms - just check it's non-zero.
-      ok(getProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS") != 0);
-      // should have reported the fetch ended up being successful
-      checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS);
+    promiseXHRStarted.then(xhr => {
+      // Set the timeout on the xhr object to an extremely low value, so it
+      // should timeout immediately.
+      xhr.timeout = 10;
+      // wait for the xhr timeout to fire.
+      waitForSearchNotification("geoip-lookup-xhr-complete").then(() => {
+        // should have the XHR timeout recorded.
+        checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
+        // still should not have a report of how long the response took as we
+        // only record that on success responses.
+        verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
+        // and we don't know the country code.
+        try {
+          Services.prefs.getCharPref("browser.search.countryCode");
+          ok(false, "not expecting countryCode to be set");
+        } catch (ex) {}
 
-      // and should have the result of the response that finally came in, and
-      // everything dependent should also be updated.
-      equal(Services.prefs.getCharPref("browser.search.countryCode"), "AU");
-      equal(Services.prefs.getBoolPref("browser.search.isUS"), false);
+        // unblock the server even though nothing is listening.
+        resolveContinuePromise();
 
-      do_test_finished();
-      server.stop(run_next_test);
+        do_test_finished();
+        server.stop(run_next_test);
+      });
     });
-    // now tell the server to send its response.  That will end up causing the
-    // search service to notify of that the response was received.
-    resolveContinuePromise();
   });
   do_test_pending();
 }

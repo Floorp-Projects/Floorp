@@ -52,7 +52,7 @@ add_task(function* test_escape() {
     search: "match",
     matches: [ { uri: uri1, title: "title1" },
                { uri: uri3, title: "matchme2" },
-               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "tag" ] },
+               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "title1" } ]
   });
 
@@ -61,7 +61,7 @@ add_task(function* test_escape() {
     search: "dont",
     matches: [ { uri: uri2, title: "title1" },
                { uri: uri4, title: "dontmatchme3" },
-               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "tag" ] } ]
+               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Match 'match' at the beginning or after / or on a CamelCase");
@@ -69,8 +69,8 @@ add_task(function* test_escape() {
     search: "2",
     matches: [ { uri: uri3, title: "matchme2" },
                { uri: uri4, title: "dontmatchme3" },
-               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "tag" ] },
-               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "tag" ] } ]
+               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] } ]
   });
 
   do_log_info("Match 't' at the beginning or after /");
@@ -80,8 +80,8 @@ add_task(function* test_escape() {
                { uri: uri2, title: "title1" },
                { uri: uri3, title: "matchme2" },
                { uri: uri4, title: "dontmatchme3" },
-               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "tag" ] },
-               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "tag" ] },
+               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "title1" } ]
   });
 
@@ -98,8 +98,8 @@ add_task(function* test_escape() {
                { uri: uri2, title: "title1" },
                { uri: uri3, title: "matchme2" },
                { uri: uri4, title: "dontmatchme3" },
-               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "tag" ] },
-               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "tag" ] },
+               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
                { uri: uri7, title: "!@#$%^&*()_+{}|:<>?word" },
                { uri: uri8, title: katakana.join("") },
                { uri: uri9, title: ideograph.join("") },
@@ -164,8 +164,8 @@ add_task(function* test_escape() {
                { uri: uri2, title: "title1" },
                { uri: uri3, title: "matchme2" },
                { uri: uri4, title: "dontmatchme3" },
-               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "tag" ] },
-               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "tag" ] },
+               { uri: uri5, title: "title1", tags: [ "matchme2" ], style: [ "bookmark-tag" ] },
+               { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] },
                { uri: uri10, title: "title1" } ]
   });
 

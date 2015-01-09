@@ -98,8 +98,9 @@ FontInspector.prototype = {
 
     this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
 
-    let fillStyle = (Services.prefs.getCharPref("devtools.theme") == "light") ?
-        "black" : "white";
+    // Assume light theme colors as the default (see also bug 1118179).
+    let fillStyle = (Services.prefs.getCharPref("devtools.theme") == "dark") ?
+        "white" : "black";
     let options = {
       includePreviews: true,
       previewFillStyle: fillStyle
