@@ -316,9 +316,6 @@ public:
                    bool* aHasUnlimStoragePerm);
 
   static bool
-  IsOriginWhitelistedForPersistentStorage(const nsACString& aOrigin);
-
-  static bool
   IsTreatedAsPersistent(PersistenceType aPersistenceType,
                         bool aIsApp);
 
