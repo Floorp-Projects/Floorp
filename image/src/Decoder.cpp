@@ -235,13 +235,11 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   if (NS_FAILED(frame->InitForDecoder(imageSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult))) {
     NS_WARNING("imgFrame::Init should succeed");
-    frame->Abort();
     return RawAccessFrameRef();
   }
 
   RawAccessFrameRef ref = frame->RawAccessRef();
   if (!ref) {
-    frame->Abort();
     return RawAccessFrameRef();
   }
 
@@ -252,7 +250,6 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
                                           aFrameNum),
                          Lifetime::Persistent);
   if (!succeeded) {
-    ref->Abort();
     return RawAccessFrameRef();
   }
 
@@ -396,10 +393,6 @@ void
 Decoder::PostDataError()
 {
   mDataError = true;
-
-  if (mInFrame && mCurrentFrame) {
-    mCurrentFrame->Abort();
-  }
 }
 
 void
@@ -412,10 +405,6 @@ Decoder::PostDecoderError(nsresult aFailureCode)
   // XXXbholley - we should report the image URI here, but imgContainer
   // needs to know its URI first
   NS_WARNING("Image decoding error - This is probably a bug!");
-
-  if (mInFrame && mCurrentFrame) {
-    mCurrentFrame->Abort();
-  }
 }
 
 } // namespace image
