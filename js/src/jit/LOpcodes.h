@@ -10,6 +10,7 @@
 #define LIR_COMMON_OPCODE_LIST(_)   \
     _(Label)                        \
     _(Nop)                          \
+    _(Mop)                          \
     _(OsiPoint)                     \
     _(MoveGroup)                    \
     _(Integer)                      \
