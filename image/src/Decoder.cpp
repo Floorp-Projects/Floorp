@@ -28,7 +28,6 @@ Decoder::Decoder(RasterImage &aImage)
   , mChunkCount(0)
   , mDecodeFlags(0)
   , mBytesDecoded(0)
-  , mSendPartialInvalidations(false)
   , mDecodeDone(false)
   , mDataError(false)
   , mFrameCount(0)
@@ -366,12 +365,6 @@ Decoder::PostFrameStop(Opacity aFrameOpacity /* = Opacity::TRANSPARENT */,
   mCurrentFrame->Finish(aFrameOpacity, aDisposalMethod, aTimeout, aBlendMethod);
 
   mProgress |= FLAG_FRAME_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
-
-  // If we're not sending partial invalidations, then we send an invalidation
-  // here when the first frame is complete.
-  if (!mSendPartialInvalidations && !mIsAnimated) {
-    mInvalidRect.UnionRect(mInvalidRect, mCurrentFrame->GetRect());
-  }
 }
 
 void
@@ -381,12 +374,9 @@ Decoder::PostInvalidation(nsIntRect& aRect)
   NS_ABORT_IF_FALSE(mInFrame, "Can't invalidate when not mid-frame!");
   NS_ABORT_IF_FALSE(mCurrentFrame, "Can't invalidate when not mid-frame!");
 
-  // Record this invalidation, unless we're not sending partial invalidations
-  // or we're past the first frame.
-  if (mSendPartialInvalidations && !mIsAnimated) {
-    mInvalidRect.UnionRect(mInvalidRect, aRect);
-    mCurrentFrame->ImageUpdated(aRect);
-  }
+  // Account for the new region
+  mInvalidRect.UnionRect(mInvalidRect, aRect);
+  mCurrentFrame->ImageUpdated(aRect);
 }
 
 void
