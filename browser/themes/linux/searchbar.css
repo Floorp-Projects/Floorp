@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#PopupSearchAutoComplete {
+  -moz-margin-start: -24px;
+}
+
 .searchbar-textbox {
   min-height: 22px;
   background-color: -moz-field;
@@ -24,7 +28,6 @@
   height: 16px;
   width: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  -moz-margin-start: 2px;
 }
 
 .searchbar-engine-button {
@@ -72,14 +75,12 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .searchbar-search-button-container {
   -moz-box-align: center;
-  padding: 2px 3px;
-  -moz-padding-end: 2px;
 }
 
 .searchbar-search-button {
   list-style-image: url("chrome://browser/skin/search-indicator.png");
   -moz-image-region: rect(0, 20px, 20px, 0);
-  margin: -2px -2px;
+  -moz-margin-start: 2px;
 }
 
 .searchbar-search-button[addengines="true"] {
@@ -240,7 +241,7 @@ searchbar[oneoffui] .searchbar-engine-button {
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image {
-  -moz-padding-start: 6px;
+  -moz-padding-start: 5px;
   width: 14px;
   height: 14px;
 }

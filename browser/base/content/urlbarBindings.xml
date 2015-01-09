@@ -1127,21 +1127,26 @@
                                                              "search-panel-one-offs-header")
         header.collapsed = list.collapsed = !engines.length;
 
-        if (!engines.length)
-          return;
-
         // 49px is the min-width of each search engine button,
         // adapt this const when changing the css.
         // It's actually 48px + 1px of right border.
         const ENGINE_WIDTH = 49;
-
         let panel = document.getElementById("PopupSearchAutoComplete");
-        // The + 23 is because the panel width only spans to the textbox
-        // size, but we also want it to include the magnifier icon's width.
-        let minWidth = parseInt(panel.width) + 23;
-        // Ensure the panel is wide enough to fit at least 3 engines.
-        minWidth = Math.max(minWidth, ENGINE_WIDTH * 3);
+        // The panel width only spans to the textbox size, but we also want it
+        // to include the magnifier icon's width.
+        let ltr = getComputedStyle(this).direction == "ltr";
+        let magnifierWidth = parseInt(getComputedStyle(panel)[
+                               ltr ? "marginLeft" : "marginRight"
+                             ]) * -1;
+        let minWidth = parseInt(panel.width) + magnifierWidth;
+        if (engines.length) {
+          // Ensure the panel is wide enough to fit at least 3 engines.
+          minWidth = Math.max(minWidth, ENGINE_WIDTH * 3);
+        }
         panel.setAttribute("style", "min-width: " + minWidth + "px");
+
+        if (!engines.length)
+          return;
 
         let panelWidth = parseInt(panel.clientWidth);
         // The + 1 is because the last button doesn't have a right border.
