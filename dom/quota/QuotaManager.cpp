@@ -796,6 +796,20 @@ SanitizeOriginString(nsCString& aOrigin)
   aOrigin.ReplaceChar(kReplaceChars, '+');
 }
 
+// The first prompt and quota tracking is not required for these origins in
+// persistent storage.
+bool
+IsPersistentOriginWhitelisted(const nsACString& aOrigin)
+{
+  if (aOrigin.EqualsLiteral(kChromeOrigin) ||
+      aOrigin.EqualsLiteral(kAboutHomeOrigin) ||
+      StringBeginsWith(aOrigin, nsDependentCString(kIndexedDBOriginPrefix))) {
+    return true;
+  }
+
+  return false;
+}
+
 nsresult
 CloneStoragePath(nsIFile* aBaseDir,
                  const nsACString& aStorageName,
@@ -2709,21 +2723,6 @@ QuotaManager::GetInfoForChrome(nsACString* aGroup,
 
 // static
 bool
-QuotaManager::IsOriginWhitelistedForPersistentStorage(const nsACString& aOrigin)
-{
-  // The first prompt and quota tracking is not required for these origins in
-  // persistent storage.
-  if (aOrigin.EqualsLiteral(kChromeOrigin) ||
-      aOrigin.EqualsLiteral(kAboutHomeOrigin) ||
-      StringBeginsWith(aOrigin, nsDependentCString(kIndexedDBOriginPrefix))) {
-    return true;
-  }
-
-  return false;
-}
-
-// static
-bool
 QuotaManager::IsTreatedAsPersistent(PersistenceType aPersistenceType,
                                     bool aIsApp)
 {
@@ -2745,7 +2744,7 @@ QuotaManager::IsFirstPromptRequired(PersistenceType aPersistenceType,
     return false;
   }
 
-  return !IsOriginWhitelistedForPersistentStorage(aOrigin);
+  return !IsPersistentOriginWhitelisted(aOrigin);
 }
 
 // static
@@ -2759,7 +2758,7 @@ QuotaManager::IsQuotaEnforced(PersistenceType aPersistenceType,
     return true;
   }
 
-  if (IsOriginWhitelistedForPersistentStorage(aOrigin)) {
+  if (IsPersistentOriginWhitelisted(aOrigin)) {
     return false;
   }
 
@@ -3136,9 +3135,8 @@ QuotaManager::LockedQuotaIsLifted()
   MOZ_ASSERT(mCurrentWindowIndex != BAD_TLS_INDEX);
 
 #if 1
-  // XXX We disabled the second (quota) prompt. All related code is going away
-  //     soon.
-  return true;
+  // XXX For now we always fail the quota prompt.
+  return false;
 #else
   nsPIDOMWindow* window =
     static_cast<nsPIDOMWindow*>(PR_GetThreadPrivate(mCurrentWindowIndex));
@@ -4778,8 +4776,7 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
       }
 
       // Move whitelisted origins to new persistent storage.
-      if (QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                           originProps.mSpec)) {
+      if (IsPersistentOriginWhitelisted(originProps.mSpec)) {
         if (!permanentStorageDir) {
           permanentStorageDir =
             do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);

@@ -10852,14 +10852,6 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     return rv;
   }
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT &&
-      !QuotaManager::IsOriginWhitelistedForPersistentStorage(aOrigin) &&
-      !aIsApp) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-#endif
-
   PermissionRequestBase::PermissionValue permission;
 
   if (QuotaManager::IsFirstPromptRequired(persistenceType, origin, isApp)) {
