@@ -182,6 +182,13 @@ loop.shared.views.FeedbackView = (function(l10n) {
 
     componentDidMount: function() {
       this._timer = setInterval(function() {
+      if (this.state.countdown == 1) {
+        clearInterval(this._timer);
+        if (this.props.onAfterFeedbackReceived) {
+          this.props.onAfterFeedbackReceived();
+        }
+        return;
+      }
         this.setState({countdown: this.state.countdown - 1});
       }.bind(this), 1000);
     },
@@ -193,12 +200,6 @@ loop.shared.views.FeedbackView = (function(l10n) {
     },
 
     render: function() {
-      if (this.state.countdown < 1) {
-        clearInterval(this._timer);
-        if (this.props.onAfterFeedbackReceived) {
-          this.props.onAfterFeedbackReceived();
-        }
-      }
       return (
         <FeedbackLayout title={l10n.get("feedback_thank_you_heading")}>
           <p className="info thank-you">{
