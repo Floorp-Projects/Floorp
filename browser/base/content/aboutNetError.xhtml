@@ -156,6 +156,30 @@
           errDesc.id = "errorLongDesc";
         }
 
+        if (err == "nssFailure2" &&
+            sd.textContent.contains("ssl_error_unsupported_version")) {
+          var ssl3ErrorTitle = document.getElementById("et_ssl3");
+          var ssl3ErrorDesc = document.getElementById("ed_ssl3");
+          var ssl3ShortDesc = document.getElementById("esd_ssl3");
+          var learnMoreText = document.getElementById("learn_more_ssl3");
+
+          errTitle.parentNode.replaceChild(ssl3ErrorTitle, errTitle);
+          ssl3ErrorTitle.id = "errorTitleText";
+          ssl3ErrorTitle.setAttribute("sslv3", "true");
+          errTitle = ssl3ErrorTitle;
+
+          sd.innerHTML = ssl3ShortDesc.innerHTML;
+          sd.querySelector('span').textContent = location.hostname;
+
+          errDesc.parentNode.replaceChild(ssl3ErrorDesc, errDesc);
+          ssl3ErrorDesc.id = "errorLongDesc";
+          ssl3ErrorDesc.querySelector('span').textContent = "ssl_error_unsupported_version";
+
+          var retryBtn = document.getElementById("errorTryAgain");
+          retryBtn.textContent = learnMoreText.textContent;
+          retryBtn.setAttribute("onclick", "learnMoreSSLV3()");
+        }
+
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
         errContainer.parentNode.removeChild(errContainer);
@@ -194,7 +218,7 @@
 
         window.addEventListener("AboutNetErrorOptions", function(evt) {
         // Pinning errors are of type nssFailure2 (don't ask me why)
-          if (getErrorCode() == "nssFailure2") {
+          if (getErrorCode() == "nssFailure2" && !errTitle.hasAttribute("sslv3")) {
           // TODO: and the pref is set...
             var options = JSON.parse(evt.detail);
             if (options && options.enabled) {
@@ -324,6 +348,11 @@
         return haystack.slice(-needle.length) == needle;
       }
 
+      function learnMoreSSLV3() {
+        location.href = "https://support.mozilla.org/kb/how-resolve-sslv3-error-messages-firefox";
+        // Ensure users don't re-click the button:
+        e.target.disabled = true;
+      }
     ]]></script>
   </head>
 
@@ -356,6 +385,7 @@
         <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
+        <h1 id="et_ssl3">&oldSecurityProtocol.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -382,6 +412,9 @@
         <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
+        <div id="esd_ssl3">&oldSecurityProtocol.longDesc2;</div>
+        <div id="ed_ssl3">&oldSecurityProtocol.advancedInfo;</div>
+        <div id="learn_more_ssl3">&oldSecurityProtocol.learnMore;</div>
       </div>
     </div>
 

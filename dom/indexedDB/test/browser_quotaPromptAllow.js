@@ -12,7 +12,6 @@ function test()
 {
   waitForExplicitFinish();
   requestLongerTimeout(10);
-  PopupNotifications.transitionsEnabled = false;
   setPermission(testPageURL, "indexedDB");
   removePermission(testPageURL, "indexedDB-unlimited");
   Services.prefs.setIntPref("dom.indexedDB.warningQuota", 2);
@@ -110,7 +109,6 @@ function test2()
             unregisterAllPopupEventHandlers();
             removePermission(testPageURL, "indexedDB");
             Services.prefs.clearUserPref("dom.indexedDB.warningQuota");
-            PopupNotifications.transitionsEnabled = true;
             executeSoon(finish);
           });
           executeSoon(function() { dispatchEvent("indexedDB-done"); });
