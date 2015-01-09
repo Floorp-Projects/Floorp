@@ -75,7 +75,7 @@ function Waterfall(parent, container, blueprint) {
 
   // Lazy require is a bit slow, and these are hot objects.
   this._l10n = L10N;
-  this._blueprint = blueprint
+  this._blueprint = blueprint;
   this._setNamedTimeout = setNamedTimeout;
   this._clearNamedTimeout = clearNamedTimeout;
 

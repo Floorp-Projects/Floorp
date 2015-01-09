@@ -20,7 +20,9 @@ function run_test() {
     removeCacheFile();
   });
 
-  // from server-locations.txt, we choose a URL without a cert.
+  // this will cause an "unknown host" error, but not report an external
+  // network connection in the tests (note that the hosts listed in
+  // server-locations.txt are *not* loaded for xpcshell tests...)
   let url = "https://nocert.example.com:443";
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.search.init(() => {
@@ -28,15 +30,15 @@ function run_test() {
       Services.prefs.getCharPref("browser.search.countryCode");
       ok(false, "not expecting countryCode to be set");
     } catch (ex) {}
-    // should be no success recorded.
-    let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_SUCCESS");
-    let snapshot = histogram.snapshot();
-    equal(snapshot.sum, 0);
-
-    // should be no timeout either.
-    histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIMEOUT");
-    snapshot = histogram.snapshot();
-    equal(snapshot.sum, 0);
+    // should have an error recorded.
+    checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.ERROR);
+    // but false values for timeout and forced-sync-init.
+    for (let hid of ["SEARCH_SERVICE_COUNTRY_TIMEOUT",
+                     "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
+      let histogram = Services.telemetry.getHistogramById(hid);
+      let snapshot = histogram.snapshot();
+      deepEqual(snapshot.counts, [1,0,0]); // boolean probe so 3 buckets, expect 1 result for |0|.
+    }
 
     do_test_finished();
     run_next_test();
