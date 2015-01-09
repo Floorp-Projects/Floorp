@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# We need to build a 64-bits binary during a 32-bits build. This requires
+# a different compiler and different library paths. Until the build system
+# supports this natively.
+
+# Some Make magic to avoid CXX and LIB being evaluated when nothing
+# is built in this directory
+lazy = $(if $(___$(1)),,$(eval ___$(1) := $(2)))$(___$(1))
+
+# We could use the `which` python module, but it needs more code to handle
+# the situation where CXX points to an absolute path. But using the shell
+# which returns a msys path, while we need a windows path. So force msys
+# to do the conversion for us by calling python with an environment variable
+# with the result of the call to `which`. Then munge that path to add the
+# x64 cross-compiler path.
+ifdef MOZ_USING_COMPILER_WRAPPER
+ORIG_CXX := cl
+else
+ORIG_CXX := $(CXX)
+endif
+CXX = $(call lazy,CXX,"$$(subst amd64_x86/x86_amd64/,amd64/,$$(shell CL=`which "$(ORIG_CXX)"` $(PYTHON) -c 'import os; print os.path.dirname(os.environ["CL"])')/x86_amd64/cl.exe)")
+
+MOZ_WINCONSOLE = 0
+
+include $(topsrcdir)/config/config.mk
+
+# Munge the LIB variable to contain paths to the x64 CRT and system libraries.
+# Unconveniently, none of the paths have the same convention, including the
+# compiler path above.
+LIB = $(call lazy,LIB,$$(shell python -c 'import os; print ";".join(s.lower().replace(os.sep, "/").replace("/vc/lib", "/vc/lib/amd64").replace("/um/x86", "/um/x64") for s in os.environ["LIB"].split(";"))'))
+
+CXXFLAGS := $(filter-out -arch:IA32,$(CXXFLAGS))
+
+# OS_COMPILE_CXXFLAGS includes mozilla-config.h, which contains x86-specific
+# defines breaking the build.
+OS_COMPILE_CXXFLAGS :=
+
+# LNK1246: '/SAFESEH' not compatible with 'x64' target machine
+LDFLAGS := $(filter-out -SAFESEH,$(LDFLAGS))
