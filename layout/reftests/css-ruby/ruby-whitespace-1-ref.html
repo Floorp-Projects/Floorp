@@ -1,15 +1,9 @@
 <html>
 <meta charset="UTF-8">
 <head>
+<link rel="stylesheet" href="common.css">
 <style>
 body { line-height: 5em; }
-ruby { display: ruby; }
-rb   { display: ruby-base; white-space: nowrap; }
-rp   { display: none; }
-rt   { display: ruby-text; white-space: nowrap; font-size: 50%; }
-rbc  { display: ruby-base-container; }
-rtc  { display: ruby-text-container; }
-ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
 </style>
 </head>
 <body>
@@ -25,7 +19,7 @@ ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
 
 <p>
   <ruby><rbc><rb>Base one</rb><rb><span>  </span></rb><rb>Base three</rb></rbc
-    ><rtc><rt>Text one</rt><rt><span>  </span></rt><rt>Text three</rt></rtc></ruby>
+    ><rtc pseudo><rt>Text one</rt><rt pseudo><span>  </span></rt><rt>Text three</rt></rtc></ruby>
 </p>
 
 <p>
@@ -35,7 +29,7 @@ ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
     ><rtc><rt><span>  </span></rt><rt><span>     </span></rt><rt>Text three</rt></rtc
     ><rbc><rb><span>  </span></rb></rbc
     ><rbc><rb>Base one</rb><rb><span>   </span></rb><rb>Base three</rb></rbc
-    ><rtc><rt>Text one</rt><rt>Text two/three</rt></rtc></ruby>
+    ><rtc><rt>Text one</rt><rt></rt><rt>Text two/three</rt></rtc></ruby>
 </p>
 
 </body>

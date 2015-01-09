@@ -23,6 +23,7 @@
 #include "nsIFile.h"
 #include "plbase64.h"
 #include "nsIXULRuntime.h"
+#include "imgLoader.h"
 
 #include "nsIGfxInfo.h"
 #include "GfxDriverInfo.h"
@@ -384,6 +385,17 @@ gfxWindowsPlatform::UpdateRenderMode()
 /* Pick the default render mode for
  * desktop.
  */
+    if (DidRenderingDeviceReset()) {
+      mD3D11DeviceInitialized = false;
+      mD3D11Device = nullptr;
+      mD3D11ContentDevice = nullptr;
+      mAdapter = nullptr;
+
+      imgLoader::Singleton()->ClearCache(true);
+      imgLoader::Singleton()->ClearCache(false);
+      Factory::SetDirect3D11Device(nullptr);
+    }
+
     mRenderMode = RENDER_GDI;
 
     bool isVistaOrHigher = IsVistaOrLater();
@@ -1035,7 +1047,22 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
 bool
 gfxWindowsPlatform::DidRenderingDeviceReset()
 {
-  return GetD3D10Device() && GetD3D10Device()->GetDeviceRemovedReason() != S_OK;
+  if (mD3D11Device) {
+    if (mD3D11Device->GetDeviceRemovedReason() != S_OK) {
+      return true;
+    }
+  }
+  if (mD3D11ContentDevice) {
+    if (mD3D11ContentDevice->GetDeviceRemovedReason() != S_OK) {
+      return true;
+    }
+  }
+  if (GetD3D10Device()) {
+    if (GetD3D10Device()->GetDeviceRemovedReason() != S_OK) {
+      return true;
+    }
+  }
+  return false;
 }
 
 gfxFontFamily *

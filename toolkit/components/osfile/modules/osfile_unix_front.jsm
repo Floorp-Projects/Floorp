@@ -112,7 +112,7 @@
      /**
       * Write some bytes to a file.
       *
-      * @param {C pointer} buffer A buffer holding the data that must be
+      * @param {Typed array} buffer A buffer holding the data that must be
       * written.
       * @param {number} nbytes The number of bytes to write. It must not
       * exceed the size of |buffer| in bytes.

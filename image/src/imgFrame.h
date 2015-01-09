@@ -10,9 +10,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/VolatileBuffer.h"
 #include "gfxDrawable.h"
 #include "imgIContainer.h"
+#include "MainThreadUtils.h"
 
 namespace mozilla {
 namespace image {
@@ -20,6 +22,88 @@ namespace image {
 class ImageRegion;
 class DrawableFrameRef;
 class RawAccessFrameRef;
+
+MOZ_BEGIN_ENUM_CLASS(BlendMethod, int8_t)
+  // All color components of the frame, including alpha, overwrite the current
+  // contents of the frame's output buffer region.
+  SOURCE,
+
+  // The frame should be composited onto the output buffer based on its alpha,
+  // using a simple OVER operation.
+  OVER
+MOZ_END_ENUM_CLASS(BlendMethod)
+
+MOZ_BEGIN_ENUM_CLASS(DisposalMethod, int8_t)
+  CLEAR_ALL = -1,  // Clear the whole image, revealing what's underneath.
+  NOT_SPECIFIED,   // Leave the frame and let the new frame draw on top.
+  KEEP,            // Leave the frame and let the new frame draw on top.
+  CLEAR,           // Clear the frame's area, revealing what's underneath.
+  RESTORE_PREVIOUS // Restore the previous (composited) frame.
+MOZ_END_ENUM_CLASS(DisposalMethod)
+
+MOZ_BEGIN_ENUM_CLASS(Opacity, uint8_t)
+  OPAQUE,
+  SOME_TRANSPARENCY
+MOZ_END_ENUM_CLASS(Opacity)
+
+
+/**
+ * AnimationData contains all of the information necessary for using an imgFrame
+ * as part of an animation.
+ *
+ * It includes pointers to the raw image data of the underlying imgFrame, but
+ * does not own that data. A RawAccessFrameRef for the underlying imgFrame must
+ * outlive the AnimationData for it to remain valid.
+ */
+struct AnimationData
+{
+  AnimationData(uint8_t* aRawData, uint32_t aPaletteDataLength,
+                int32_t aRawTimeout, const nsIntRect& aRect,
+                BlendMethod aBlendMethod, DisposalMethod aDisposalMethod,
+                bool aHasAlpha)
+    : mRawData(aRawData)
+    , mPaletteDataLength(aPaletteDataLength)
+    , mRawTimeout(aRawTimeout)
+    , mRect(aRect)
+    , mBlendMethod(aBlendMethod)
+    , mDisposalMethod(aDisposalMethod)
+    , mHasAlpha(aHasAlpha)
+  { }
+
+  uint8_t* mRawData;
+  uint32_t mPaletteDataLength;
+  int32_t mRawTimeout;
+  nsIntRect mRect;
+  BlendMethod mBlendMethod;
+  DisposalMethod mDisposalMethod;
+  bool mHasAlpha;
+};
+
+/**
+ * ScalingData contains all of the information necessary for performing
+ * high-quality (CPU-based) scaling an imgFrame.
+ *
+ * It includes pointers to the raw image data of the underlying imgFrame, but
+ * does not own that data. A RawAccessFrameRef for the underlying imgFrame must
+ * outlive the ScalingData for it to remain valid.
+ */
+struct ScalingData
+{
+  ScalingData(uint8_t* aRawData,
+              gfx::IntSize aSize,
+              uint32_t aBytesPerRow,
+              gfx::SurfaceFormat aFormat)
+    : mRawData(aRawData)
+    , mSize(aSize)
+    , mBytesPerRow(aBytesPerRow)
+    , mFormat(aFormat)
+  { }
+
+  uint8_t* mRawData;
+  gfx::IntSize mSize;
+  uint32_t mBytesPerRow;
+  gfx::SurfaceFormat mFormat;
+};
 
 class imgFrame
 {
@@ -47,7 +131,8 @@ public:
   nsresult InitForDecoder(const nsIntSize& aImageSize,
                           const nsIntRect& aRect,
                           SurfaceFormat aFormat,
-                          uint8_t aPaletteDepth = 0);
+                          uint8_t aPaletteDepth = 0,
+                          bool aNonPremult = false);
 
   nsresult InitForDecoder(const nsIntSize& aSize,
                           SurfaceFormat aFormat,
@@ -94,65 +179,60 @@ public:
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
+  /**
+   * Mark this imgFrame as completely decoded, and set final options.
+   *
+   * @param aFrameOpacity    Whether this imgFrame is opaque.
+   * @param aDisposalMethod  For animation frames, how this imgFrame is cleared
+   *                         from the compositing frame before the next frame is
+   *                         displayed.
+   * @param aRawTimeout      For animation frames, the timeout in milliseconds
+   *                         before the next frame is displayed. This timeout is
+   *                         not necessarily the timeout that will actually be
+   *                         used; see FrameAnimator::GetTimeoutForFrame.
+   * @param aBlendMethod     For animation frames, a blending method to be used
+   *                         when compositing this frame.
+   */
+  void Finish(Opacity aFrameOpacity, DisposalMethod aDisposalMethod,
+              int32_t aRawTimeout, BlendMethod aBlendMethod);
+
   IntSize GetImageSize() { return mImageSize; }
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
-  int32_t GetStride() const;
-  SurfaceFormat GetFormat() const;
-  uint32_t GetImageBytesPerRow() const;
-  uint32_t GetImageDataLength() const;
-  bool GetIsPaletted() const;
-  bool GetHasAlpha() const;
   void GetImageData(uint8_t **aData, uint32_t *length) const;
   uint8_t* GetImageData() const;
+
+  bool GetIsPaletted() const;
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
   uint32_t* GetPaletteData() const;
-  uint8_t* GetRawData() const;
+  uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
-  int32_t GetRawTimeout() const;
-  void SetRawTimeout(int32_t aTimeout);
+  /**
+   * Get the SurfaceFormat for this imgFrame.
+   *
+   * This should only be used for assertions.
+   */
+  SurfaceFormat GetFormat() const;
 
-  int32_t GetFrameDisposalMethod() const;
-  void SetFrameDisposalMethod(int32_t aFrameDisposalMethod);
-  int32_t GetBlendMethod() const;
-  void SetBlendMethod(int32_t aBlendMethod);
+  AnimationData GetAnimationData() const;
+  ScalingData GetScalingData() const;
+
   bool ImageComplete() const;
-
-  void SetHasNoAlpha();
-  void SetAsNonPremult(bool aIsNonPremult);
 
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
   void SetOptimizable();
 
+  Color SinglePixelColor() const;
+  bool IsSinglePixel() const;
+
   TemporaryRef<SourceSurface> GetSurface();
   TemporaryRef<DrawTarget> GetDrawTarget();
 
-  Color
-  SinglePixelColor()
-  {
-    return mSinglePixelColor;
-  }
-
-  bool IsSinglePixel()
-  {
-    return mSinglePixel;
-  }
-
-  TemporaryRef<SourceSurface> CachedSurface();
-
   size_t SizeOfExcludingThis(gfxMemoryLocation aLocation,
                              MallocSizeOf aMallocSizeOf) const;
-
-  uint8_t GetPaletteDepth() const { return mPaletteDepth; }
-  uint32_t PaletteDataLength() const {
-    if (!mPaletteDepth)
-      return 0;
-
-    return ((1 << mPaletteDepth) * sizeof(uint32_t));
-  }
 
 private: // methods
 
@@ -161,6 +241,23 @@ private: // methods
   nsresult LockImageData();
   nsresult UnlockImageData();
   nsresult Optimize();
+  nsresult Deoptimize();
+
+  void AssertImageDataLocked() const;
+
+  bool ImageCompleteInternal() const;
+  nsresult ImageUpdatedInternal(const nsIntRect& aUpdateRect);
+  void GetImageDataInternal(uint8_t **aData, uint32_t *length) const;
+  uint32_t GetImageBytesPerRow() const;
+  uint32_t GetImageDataLength() const;
+  int32_t GetStride() const;
+  TemporaryRef<SourceSurface> GetSurfaceInternal();
+
+  uint32_t PaletteDataLength() const
+  {
+    return mPaletteDepth ? (1 << mPaletteDepth) * sizeof(uint32_t)
+                         : 0;
+  }
 
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;
@@ -181,46 +278,65 @@ private: // methods
                                       SourceSurface*     aSurface);
 
 private: // data
+  friend class DrawableFrameRef;
+  friend class RawAccessFrameRef;
+  friend class UnlockImageDataRunnable;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Thread-safe mutable data, protected by mMutex.
+  //////////////////////////////////////////////////////////////////////////////
+
+  mutable Mutex mMutex;
+
   RefPtr<DataSourceSurface> mImageSurface;
   RefPtr<SourceSurface> mOptSurface;
+
+  RefPtr<VolatileBuffer> mVBuf;
+  VolatileBufferPtr<uint8_t> mVBufPtr;
+
+  nsIntRect mDecoded;
+
+  //! Number of RawAccessFrameRefs currently alive for this imgFrame.
+  int32_t mLockCount;
+
+  //! Raw timeout for this frame. (See FrameAnimator::GetTimeoutForFrame.)
+  int32_t mTimeout; // -1 means display forever.
+
+  DisposalMethod mDisposalMethod;
+  BlendMethod    mBlendMethod;
+  SurfaceFormat  mFormat;
+
+  bool mHasNoAlpha;
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Effectively const data, only mutated in the Init methods.
+  //////////////////////////////////////////////////////////////////////////////
 
   IntSize      mImageSize;
   IntSize      mSize;
   nsIntPoint   mOffset;
-
-  nsIntRect    mDecoded;
-
-  mutable Mutex mDecodedMutex;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
   // The paletted data comes first, then the image data itself.
   // Total length is PaletteDataLength() + GetImageDataLength().
   uint8_t*     mPalettedImageData;
+  uint8_t      mPaletteDepth;
+
+  bool mNonPremult;
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Main-thread-only mutable data.
+  //////////////////////////////////////////////////////////////////////////////
 
   // Note that the data stored in gfx::Color is *non-alpha-premultiplied*.
   Color        mSinglePixelColor;
 
-  int32_t      mTimeout; // -1 means display forever
-  int32_t      mDisposalMethod;
-
-  /** Indicates how many readers currently have locked this frame */
-  int32_t mLockCount;
-
-  RefPtr<VolatileBuffer> mVBuf;
-  VolatileBufferPtr<uint8_t> mVBufPtr;
-
-  SurfaceFormat mFormat;
-  uint8_t      mPaletteDepth;
-  int8_t       mBlendMethod;
   bool mSinglePixel;
   bool mCompositingFailed;
-  bool mHasNoAlpha;
-  bool mNonPremult;
   bool mOptimizable;
-
-  friend class DrawableFrameRef;
-  friend class RawAccessFrameRef;
 };
 
 /**

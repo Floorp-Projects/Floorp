@@ -74,7 +74,7 @@ enum Tag
   GENERALIZED_TIME = UNIVERSAL | 0x18,
 };
 
-MOZILLA_PKIX_ENUM_CLASS EmptyAllowed { No = 0, Yes = 1 };
+enum class EmptyAllowed { No = 0, Yes = 1 };
 
 Result ReadTagAndGetValue(Reader& input, /*out*/ uint8_t& tag,
                           /*out*/ Input& value);
@@ -474,7 +474,7 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-MOZILLA_PKIX_ENUM_CLASS Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
+enum class Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
 // X.509 Certificate and OCSP ResponseData both use this
 // "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with

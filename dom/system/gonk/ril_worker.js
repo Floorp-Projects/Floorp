@@ -616,23 +616,25 @@ RilObject.prototype = {
         this.enterICCPUK2(options);
         break;
       case GECKO_CARDLOCK_NCK:
+      case GECKO_CARDLOCK_NSCK:
       case GECKO_CARDLOCK_NCK1:
       case GECKO_CARDLOCK_NCK2:
       case GECKO_CARDLOCK_HNCK:
       case GECKO_CARDLOCK_CCK:
       case GECKO_CARDLOCK_SPCK:
+      case GECKO_CARDLOCK_PCK:
       case GECKO_CARDLOCK_RCCK:
       case GECKO_CARDLOCK_RSPCK:
       case GECKO_CARDLOCK_NCK_PUK:
+      case GECKO_CARDLOCK_NSCK_PUK:
       case GECKO_CARDLOCK_NCK1_PUK:
       case GECKO_CARDLOCK_NCK2_PUK:
       case GECKO_CARDLOCK_HNCK_PUK:
       case GECKO_CARDLOCK_CCK_PUK:
       case GECKO_CARDLOCK_SPCK_PUK:
+      case GECKO_CARDLOCK_PCK_PUK:
       case GECKO_CARDLOCK_RCCK_PUK: // Fall through.
       case GECKO_CARDLOCK_RSPCK_PUK:
-        options.personlization =
-          GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[options.lockType];
         this.enterDepersonalization(options);
         break;
       default:
@@ -690,7 +692,7 @@ RilObject.prototype = {
   enterDepersonalization: function(options) {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE, options);
-    Buf.writeInt32(options.personlization);
+    Buf.writeInt32(1);
     Buf.writeString(options.password);
     Buf.sendParcel();
   },
@@ -863,8 +865,11 @@ RilObject.prototype = {
       case GECKO_CARDLOCK_PUK:
       case GECKO_CARDLOCK_PUK2:
       case GECKO_CARDLOCK_NCK:
+      case GECKO_CARDLOCK_NSCK:
       case GECKO_CARDLOCK_CCK: // Fall through.
       case GECKO_CARDLOCK_SPCK:
+      // TODO: Bug 1116072: identify the mapping between RIL_PERSOSUBSTATE_SIM_SIM
+      //       @ ril.h and TS 27.007, clause 8.65 for GECKO_CARDLOCK_SPCK.
         options.selCode = GECKO_CARDLOCK_TO_SEL_CODE[options.lockType];
         break;
       default:
@@ -1501,6 +1506,22 @@ RilObject.prototype = {
     Buf.writeInt32(1);
     Buf.writeInt32(options.channel);
     Buf.sendParcel();
+  },
+
+  /**
+   * Get UICC service state
+   */
+  getIccServiceState: function(options) {
+    switch (options.service) {
+      case GECKO_CARDSERVICE_FDN:
+        let ICCUtilsHelper = this.context.ICCUtilsHelper;
+        options.result = ICCUtilsHelper.isICCServiceAvailable("FDN");
+        break;
+      default:
+        options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+        break;
+    }
+    this.sendChromeMessage(options);
   },
 
   /**
@@ -4110,7 +4131,7 @@ RilObject.prototype = {
 
   _addVoiceCall: function(newCall) {
     newCall.number = this._formatInternationalNumber(newCall.number, newCall.toa);
-    newCall.isOutgoing = !(newCall.state == CALL_STATE_INCOMING);
+    newCall.isOutgoing = !newCall.isMT;
     newCall.isConference = false;
 
     this.currentCalls[newCall.callIndex] = newCall;

@@ -397,6 +397,9 @@ this.NetUtil = {
      *        Any of the content types defined in nsIContentPolicy.idl
      * @return an nsIChannel object.
      *
+     * Keep in mind that URIs coming from a webpage should *never* use the
+     * systemPrincipal as the loadingPrincipal.
+     *
      * Note: As an interim we have newChannel as well as newChannel2.
      *       Once Bug 1087720 (which converts all js callers to use
      *       newChannel2) lands, we can remove newChannel completely.

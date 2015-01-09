@@ -32,10 +32,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef NS_TRACE_MALLOC
-#include "nsTraceMalloc.h"
-#endif
-
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/PoisonIOInterposer.h"
 
@@ -1022,14 +1018,6 @@ NS_LogInit()
 #ifdef NS_IMPL_REFCNT_LOGGING
   if (++gInitCount) {
     nsTraceRefcnt::SetActivityIsLegal(true);
-  }
-#endif
-
-#ifdef NS_TRACE_MALLOC
-  // XXX we don't have to worry about shutting down trace-malloc; it
-  // handles this itself, through an atexit() callback.
-  if (!NS_TraceMallocHasStarted()) {
-    NS_TraceMallocStartup(-1);  // -1 == no logging
   }
 #endif
 }

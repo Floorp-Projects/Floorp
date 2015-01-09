@@ -212,13 +212,13 @@ nsCertTree::getCacheEntry(void *cache, void *aCert)
   PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
   CompareCacheHashEntryPtr *entryPtr = 
     static_cast<CompareCacheHashEntryPtr*>
-               (PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
+               (PL_DHashTableAdd(&aCompareCache, aCert));
   return entryPtr ? entryPtr->entry : nullptr;
 }
 
 void nsCertTree::RemoveCacheEntry(void *key)
 {
-  PL_DHashTableOperate(&mCompareCache, key, PL_DHASH_REMOVE);
+  PL_DHashTableRemove(&mCompareCache, key);
 }
 
 // CountOrganizations

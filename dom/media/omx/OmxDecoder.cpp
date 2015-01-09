@@ -33,10 +33,10 @@
 #include "OMXCodecProxy.h"
 #include "OmxDecoder.h"
 
-#define LOG_TAG "OmxDecoder"
 #include <android/log.h>
-#define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define OD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "OmxDecoder", __VA_ARGS__)
 
+#undef LOG
 #ifdef PR_LOGGING
 PRLogModuleInfo *gOmxDecoderLog;
 #define LOG(type, msg...) PR_LOG(gOmxDecoderLog, type, (msg))
@@ -65,13 +65,13 @@ OmxDecoder::OmxDecoder(MediaResource *aResource,
   mAudioChannels(-1),
   mAudioSampleRate(-1),
   mDurationUs(-1),
+  mVideoLastFrameTime(-1),
   mVideoBuffer(nullptr),
   mAudioBuffer(nullptr),
   mIsVideoSeeking(false),
   mAudioMetadataRead(false),
   mAudioPaused(false),
-  mVideoPaused(false),
-  mVideoLastFrameTime(-1)
+  mVideoPaused(false)
 {
   mLooper = new ALooper;
   mLooper->setName("OmxDecoder");
@@ -119,7 +119,6 @@ bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
   }
 #endif
 
-  const char* extractorMime;
   sp<MetaData> meta = extractor->getMetaData();
 
   ssize_t audioTrackIndex = -1;
@@ -177,7 +176,6 @@ bool OmxDecoder::EnsureMetadata() {
   }
   if (mAudioTrack.get()) {
     durationUs = -1;
-    const char* audioMime;
     sp<MetaData> meta = mAudioTrack->getFormat();
 
     if ((durationUs == -1) && meta->findInt64(kKeyDuration, &durationUs)) {
@@ -604,7 +602,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
         }
         continue;
       } else if (err != OK) {
-        ALOG("Unexpected error when seeking to %lld", aTimeUs);
+        OD_LOG("Unexpected error when seeking to %lld", aTimeUs);
         break;
       }
       // For some codecs, the length of first decoded frame after seek is 0.

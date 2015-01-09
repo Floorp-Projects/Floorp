@@ -19,10 +19,14 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/mozalloc.h"
 #include "nsContentTypeParser.h"
+#include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIRunnable.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -304,6 +308,49 @@ MediaSource::IsTypeSupported(const GlobalObject&, const nsAString& aType)
   MSE_API("MediaSource::IsTypeSupported(aType=%s)%s",
           NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "" : " [not supported]");
   return NS_SUCCEEDED(rv);
+}
+
+/* static */ bool
+MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Don't use aGlobal across Preferences stuff, which the static
+  // analysis thinks can GC.
+  JS::Rooted<JSObject*> global(cx, aGlobal);
+
+  bool enabled = Preferences::GetBool("media.mediasource.enabled");
+  if (!enabled) {
+    return false;
+  }
+
+  // Check whether it's enabled everywhere or just YouTube.
+  bool restrict = Preferences::GetBool("media.mediasource.youtubeonly", false);
+  if (!restrict) {
+    return true;
+  }
+
+  // We want to restrict to YouTube only.  We define that as the
+  // origin being https://*.youtube.com.
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(global);
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(principal->GetURI(getter_AddRefs(uri))) || !uri) {
+    return false;
+  }
+
+  bool isHttps = false;
+  if (NS_FAILED(uri->SchemeIs("https", &isHttps)) || !isHttps) {
+    return false;
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldServ =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(tldServ, false);
+
+  nsAutoCString eTLDplusOne;
+  return
+    NS_SUCCEEDED(tldServ->GetBaseDomain(uri, 0, eTLDplusOne)) &&
+    eTLDplusOne.EqualsLiteral("youtube.com");
 }
 
 bool

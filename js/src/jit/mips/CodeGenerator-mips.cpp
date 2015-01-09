@@ -168,7 +168,7 @@ CodeGeneratorMIPS::generateOutOfLineCode()
         // the same.
         masm.move32(Imm32(frameSize()), ra);
 
-        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler(gen->info().executionMode());
+        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler();
 
         masm.branch(handler);
     }
@@ -2150,16 +2150,4 @@ CodeGeneratorMIPS::visitNegF(LNegF *ins)
     FloatRegister output = ToFloatRegister(ins->output());
 
     masm.as_negs(output, input);
-}
-
-void
-CodeGeneratorMIPS::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-JitCode *
-JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
-{
-    MOZ_CRASH("NYI");
 }

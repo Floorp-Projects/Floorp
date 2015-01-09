@@ -97,7 +97,7 @@ public:
 
   // It adds aBuffer to current preview image and sends this image to MediaStreamDirectListener
   // via AppendToTrack(). Due to MediaBuffer is limited resource, it will clear
-  // image's MediaBuffer by calling GonkCameraImage::ClearBuffer() before leaving
+  // image's MediaBuffer by calling GonkCameraImage::ClearMediaBuffer() before leaving
   // this function.
   nsresult OnNewMediaBufferFrame(android::MediaBuffer* aBuffer);
 

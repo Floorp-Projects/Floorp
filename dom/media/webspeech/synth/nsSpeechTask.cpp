@@ -68,7 +68,7 @@ public:
     }
   }
 
-  virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked)
+  virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) MOZ_OVERRIDE
   {
     if (aBlocked == MediaStreamListener::UNBLOCKED && !mStarted) {
       mStarted = true;

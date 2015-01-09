@@ -962,7 +962,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // means, there has already been data transfered.
 
     ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-    PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_ADD);
+    PL_DHashTableAdd(&mTransferringRequests, aRequest);
     
     return NS_OK;
   }
@@ -975,10 +975,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     { /* scope for the ReentrantMonitorAutoEnter */
       ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-      PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
+      PLDHashEntryHdr *entry = PL_DHashTableLookup(&mTransferringRequests, aRequest);
       if (PL_DHASH_ENTRY_IS_BUSY(entry))
       {
-        PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_REMOVE);
+        PL_DHashTableRemove(&mTransferringRequests, aRequest);
 
         requestHasTransferedData = true;
       }

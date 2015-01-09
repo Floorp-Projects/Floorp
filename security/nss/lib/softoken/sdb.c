@@ -1691,8 +1691,6 @@ void sdb_SetForkState(PRBool forked)
  */
 static const char INIT_CMD[] =
  "CREATE TABLE %s (id PRIMARY KEY UNIQUE ON CONFLICT ABORT%s)";
-static const char ALTER_CMD[] = 
- "ALTER TABLE %s ADD COLUMN a%x";
 
 CK_RV 
 sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,

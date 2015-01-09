@@ -3777,10 +3777,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
           NSPoint point = [NSEvent mouseLocation];
           FlipCocoaScreenCoordinate(point);
           nsIntPoint pos(point.x, point.y);
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, &pos, nullptr);
+          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, &pos, nullptr);
         }
         else {
-          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
+          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
         }
       }
     }

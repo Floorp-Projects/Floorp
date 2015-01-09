@@ -196,7 +196,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer)
+  Notify(nsITimer* aTimer) MOZ_OVERRIDE
   {
     // Notify mock EIT broadcasting.
     nsITVProgramData** programDataList =
@@ -242,7 +242,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer)
+  Notify(nsITimer* aTimer) MOZ_OVERRIDE
   {
     return mSourceListener->NotifyChannelScanComplete(mTunerId, mSourceType);
   }

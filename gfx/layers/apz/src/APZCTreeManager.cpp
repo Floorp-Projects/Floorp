@@ -6,6 +6,7 @@
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
+#include "HitTestingTreeNode.h"         // for HitTestingTreeNode
 #include "InputBlockState.h"            // for InputBlockState
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
@@ -27,8 +28,14 @@
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "LayersLogging.h"              // for Stringify
 
-#define APZCTM_LOG(...)
-// #define APZCTM_LOG(...) printf_stderr("APZCTM: " __VA_ARGS__)
+#define ENABLE_APZCTM_LOGGING 0
+// #define ENABLE_APZCTM_LOGGING 1
+
+#if ENABLE_APZCTM_LOGGING
+#  define APZCTM_LOG(...) printf_stderr("APZCTM: " __VA_ARGS__)
+#else
+#  define APZCTM_LOG(...)
+#endif
 
 namespace mozilla {
 namespace layers {
@@ -57,9 +64,16 @@ struct APZCTreeManager::TreeBuildingState {
   const APZPaintLogHelper mPaintLogger;
 
   // State that is updated as we perform the tree build
-  nsTArray< nsRefPtr<AsyncPanZoomController> > mApzcsToDestroy;
+
+  // A list of nodes that need to be destroyed at the end of the tree building.
+  // This is initialized with all nodes in the old tree, and nodes are removed
+  // from it as we reuse them in the new tree.
+  nsTArray<nsRefPtr<HitTestingTreeNode>> mNodesToDestroy;
+
+  // This map is populated as we place APZCs into the new tree. Its purpose is
+  // to facilitate re-using the same APZC for different layers that scroll
+  // together (and thus have the same ScrollableLayerGuid).
   std::map<ScrollableLayerGuid, AsyncPanZoomController*> mApzcMap;
-  nsTArray<EventRegions> mEventRegions;
 };
 
 /*static*/ const ScreenMargin
@@ -126,23 +140,23 @@ APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-/* Flatten the tree of APZC instances into the given nsTArray */
+/* Flatten the tree of nodes into the given nsTArray */
 static void
-Collect(AsyncPanZoomController* aApzc, nsTArray< nsRefPtr<AsyncPanZoomController> >* aCollection)
+Collect(HitTestingTreeNode* aNode, nsTArray<nsRefPtr<HitTestingTreeNode>>* aCollection)
 {
-  if (aApzc) {
-    aCollection->AppendElement(aApzc);
-    Collect(aApzc->GetLastChild(), aCollection);
-    Collect(aApzc->GetPrevSibling(), aCollection);
+  if (aNode) {
+    aCollection->AppendElement(aNode);
+    Collect(aNode->GetLastChild(), aCollection);
+    Collect(aNode->GetPrevSibling(), aCollection);
   }
 }
 
 void
-APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
-                                             Layer* aRoot,
-                                             bool aIsFirstPaint,
-                                             uint64_t aOriginatingLayersId,
-                                             uint32_t aPaintSequenceNumber)
+APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
+                                      Layer* aRoot,
+                                      bool aIsFirstPaint,
+                                      uint64_t aOriginatingLayersId,
+                                      uint32_t aPaintSequenceNumber)
 {
   if (AsyncPanZoomController::GetThreadAssertionsEnabled()) {
     Compositor::AssertOnCompositorThread();
@@ -175,36 +189,53 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   // we are sure that the layer was removed and not just transplanted elsewhere. Doing that
   // as part of a recursive tree walk is hard and so maintaining a list and removing
   // APZCs that are still alive is much simpler.
-  Collect(mRootApzc, &state.mApzcsToDestroy);
-  mRootApzc = nullptr;
+  Collect(mRootNode, &state.mNodesToDestroy);
+  mRootNode = nullptr;
 
   if (aRoot) {
     mApzcTreeLog << "[start]\n";
     LayerMetricsWrapper root(aRoot);
-    UpdatePanZoomControllerTree(state, root,
-                                // aCompositor is null in gtest scenarios
-                                aCompositor ? aCompositor->RootLayerTreeId() : 0,
-                                Matrix4x4(), nullptr, nullptr, nsIntRegion());
+    UpdateHitTestingTree(state, root,
+                         // aCompositor is null in gtest scenarios
+                         aCompositor ? aCompositor->RootLayerTreeId() : 0,
+                         Matrix4x4(), nullptr, nullptr);
     mApzcTreeLog << "[end]\n";
   }
-  MOZ_ASSERT(state.mEventRegions.Length() == 0);
 
-  for (size_t i = 0; i < state.mApzcsToDestroy.Length(); i++) {
-    APZCTM_LOG("Destroying APZC at %p\n", state.mApzcsToDestroy[i].get());
-    state.mApzcsToDestroy[i]->Destroy();
+  for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
+    APZCTM_LOG("Destroying node at %p with APZC %p\n",
+        state.mNodesToDestroy[i].get(),
+        state.mNodesToDestroy[i]->GetApzc());
+    state.mNodesToDestroy[i]->Destroy();
   }
+
+#if ENABLE_APZCTM_LOGGING
+  // Make the hit-test tree line up with the layer dump
+  printf_stderr("APZCTreeManager (%p)\n", this);
+  mRootNode->Dump("  ");
+#endif
 }
 
+// Compute the clip region to be used for a layer with an APZC. This function
+// is only called for layers which actually have scrollable metrics and an APZC.
 static nsIntRegion
-ComputeTouchSensitiveRegion(GeckoContentController* aController,
-                            const FrameMetrics& aMetrics,
-                            const nsIntRegion& aObscured)
+ComputeClipRegion(GeckoContentController* aController,
+                  const LayerMetricsWrapper& aLayer)
 {
-  // Use the composition bounds as the hit test region.
+  nsIntRegion clipRegion;
+  if (aLayer.GetClipRect()) {
+    clipRegion = nsIntRegion(*aLayer.GetClipRect());
+  } else {
+    // if there is no clip on this layer (which should only happen for the
+    // root scrollable layer in a process) fall back to using the comp
+    // bounds which should be equivalent.
+    clipRegion = nsIntRegion(ParentLayerIntRect::ToUntyped(
+        RoundedToInt(aLayer.Metrics().mCompositionBounds)));
+  }
+
   // Optionally, the GeckoContentController can provide a touch-sensitive
   // region that constrains all frames associated with the controller.
   // In this case we intersect the composition bounds with that region.
-  ParentLayerRect visible(aMetrics.mCompositionBounds);
   CSSRect touchSensitiveRegion;
   if (aController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
     // Here we assume 'touchSensitiveRegion' is in the CSS pixels of the
@@ -214,19 +245,19 @@ ComputeTouchSensitiveRegion(GeckoContentController* aController,
     // this approximation may not be accurate in the presence of a css-driven
     // resolution.
     LayoutDeviceToParentLayerScale parentCumulativeResolution =
-          aMetrics.GetCumulativeResolution()
-        / ParentLayerToLayerScale(aMetrics.mPresShellResolution);
-    visible = visible.Intersect(touchSensitiveRegion
-                                * aMetrics.GetDevPixelsPerCSSPixel()
-                                * parentCumulativeResolution);
+          aLayer.Metrics().GetCumulativeResolution()
+        / ParentLayerToLayerScale(aLayer.Metrics().mPresShellResolution);
+    // Not sure what rounding option is the most correct here, but if we ever
+    // figure it out we can change this. For now I'm rounding in to minimize
+    // the chances of getting a complex region.
+    nsIntRect extraClip = ParentLayerIntRect::ToUntyped(RoundedIn(
+        touchSensitiveRegion
+        * aLayer.Metrics().GetDevPixelsPerCSSPixel()
+        * parentCumulativeResolution));
+    clipRegion.AndWith(extraClip);
   }
 
-  // Not sure what rounding option is the most correct here, but if we ever
-  // figure it out we can change this. For now I'm rounding in to minimize
-  // the chances of getting a complex region.
-  nsIntRegion unobscured;
-  unobscured.Sub(ParentLayerIntRect::ToUntyped(RoundedIn(visible)), aObscured);
-  return unobscured;
+  return clipRegion;
 }
 
 void
@@ -241,26 +272,79 @@ APZCTreeManager::PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                << metrics.GetContentDescription().get();
 }
 
-AsyncPanZoomController*
-APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
+void
+APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
+                                  HitTestingTreeNode* aParent,
+                                  HitTestingTreeNode* aNextSibling)
+{
+  if (aNextSibling) {
+    aNextSibling->SetPrevSibling(aNode);
+  } else if (aParent) {
+    aParent->SetLastChild(aNode);
+  } else {
+    MOZ_ASSERT(!mRootNode);
+    mRootNode = aNode;
+    aNode->MakeRoot();
+  }
+}
+
+static EventRegions
+GetEventRegions(const LayerMetricsWrapper& aLayer)
+{
+  if (gfxPrefs::LayoutEventRegionsEnabled()) {
+    return aLayer.GetEventRegions();
+  }
+  return EventRegions(aLayer.GetVisibleRegion());
+}
+
+already_AddRefed<HitTestingTreeNode>
+APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
+                                     AsyncPanZoomController* aApzc)
+{
+  // Find a node without an APZC and return it. Note that unless the layer tree
+  // actually changes, this loop should generally do an early-return on the
+  // first iteration, so it should be cheap in the common case.
+  for (size_t i = 0; i < aState.mNodesToDestroy.Length(); i++) {
+    nsRefPtr<HitTestingTreeNode> node = aState.mNodesToDestroy[i];
+    if (!node->IsPrimaryHolder()) {
+      aState.mNodesToDestroy.RemoveElement(node);
+      node->RecycleWith(aApzc);
+      return node.forget();
+    }
+  }
+  nsRefPtr<HitTestingTreeNode> node = new HitTestingTreeNode(aApzc, false);
+  return node.forget();
+}
+
+HitTestingTreeNode*
+APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                      const FrameMetrics& aMetrics,
                                      uint64_t aLayersId,
                                      const gfx::Matrix4x4& aAncestorTransform,
-                                     const nsIntRegion& aObscured,
-                                     AsyncPanZoomController* aParent,
-                                     AsyncPanZoomController* aNextSibling,
+                                     HitTestingTreeNode* aParent,
+                                     HitTestingTreeNode* aNextSibling,
                                      TreeBuildingState& aState)
 {
+  bool needsApzc = true;
   if (!aMetrics.IsScrollable()) {
-    return nullptr;
+    needsApzc = false;
   }
   if (gfxPrefs::LayoutEventRegionsEnabled() && aLayer.IsScrollInfoLayer()) {
-    return nullptr;
+    needsApzc = false;
   }
 
   const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
   if (!(state && state->mController.get())) {
-    return nullptr;
+    needsApzc = false;
+  }
+
+  nsRefPtr<HitTestingTreeNode> node = nullptr;
+  if (!needsApzc) {
+    node = RecycleOrCreateNode(aState, nullptr);
+    AttachNodeToTree(node, aParent, aNextSibling);
+    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(),
+        aLayer.GetClipRect() ? Some(nsIntRegion(*aLayer.GetClipRect())) : Nothing());
+    return node;
   }
 
   AsyncPanZoomController* apzc = nullptr;
@@ -294,25 +378,36 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
       apzc = nullptr;
     }
 
-    // If the layer doesn't have an APZC already, try to find one of our
-    // pre-existing ones that matches. In particular, if we find an APZC whose
-    // ScrollableLayerGuid is the same, then we know what happened is that the
-    // layout of the page changed causing the layer tree to be rebuilt, but the
-    // underlying content for which the APZC was originally created is still
-    // there. So it makes sense to pick up that APZC instance again and use it here.
-    if (apzc == nullptr) {
-      for (size_t i = 0; i < aState.mApzcsToDestroy.Length(); i++) {
-        if (aState.mApzcsToDestroy.ElementAt(i)->Matches(guid)) {
-          apzc = aState.mApzcsToDestroy.ElementAt(i);
-          break;
+    // See if we can find an APZC from the previous tree that matches the
+    // ScrollableLayerGuid from this layer. If there is one, then we know that
+    // the layout of the page changed causing the layer tree to be rebuilt, but
+    // the underlying content for the APZC is still there somewhere. Therefore,
+    // we want to find the APZC instance and continue using it here.
+    //
+    // We particularly want to find the primary-holder node from the previous
+    // tree that matches, because we don't want that node to get destroyed. If
+    // it does get destroyed, then the APZC will get destroyed along with it by
+    // definition, but we want to keep that APZC around in the new tree.
+    // We leave non-primary-holder nodes in the destroy list because we don't
+    // care about those nodes getting destroyed.
+    for (size_t i = 0; i < aState.mNodesToDestroy.Length(); i++) {
+      nsRefPtr<HitTestingTreeNode> n = aState.mNodesToDestroy[i];
+      if (n->IsPrimaryHolder() && n->GetApzc() && n->GetApzc()->Matches(guid)) {
+        node = n;
+        if (apzc != nullptr) {
+          // If there is an APZC already then it should match the one from the
+          // old primary-holder node
+          MOZ_ASSERT(apzc == node->GetApzc());
         }
+        apzc = node->GetApzc();
+        break;
       }
     }
 
-    // The APZC we get off the layer may have been destroyed previously if the layer was inactive
-    // or omitted from the layer tree for whatever reason from a layers update. If it later comes
-    // back it will have a reference to a destroyed APZC and so we need to throw that out and make
-    // a new one.
+    // The APZC we get off the layer may have been destroyed previously if the
+    // layer was inactive or omitted from the layer tree for whatever reason
+    // from a layers update. If it later comes back it will have a reference to
+    // a destroyed APZC and so we need to throw that out and make a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
       apzc = MakeAPZCInstance(aLayersId, state->mController);
@@ -320,41 +415,37 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
       if (state->mCrossProcessParent != nullptr) {
         apzc->ShareFrameMetricsAcrossProcesses();
       }
+      MOZ_ASSERT(node == nullptr);
+      node = new HitTestingTreeNode(apzc, true);
     } else {
-      // If there was already an APZC for the layer clear the tree pointers
-      // so that it doesn't continue pointing to APZCs that should no longer
+      // If we are re-using a node for this layer clear the tree pointers
+      // so that it doesn't continue pointing to nodes that might no longer
       // be in the tree. These pointers will get reset properly as we continue
-      // building the tree. Also remove it from the set of APZCs that are going
+      // building the tree. Also remove it from the set of nodes that are going
       // to be destroyed, because it's going to remain active.
-      aState.mApzcsToDestroy.RemoveElement(apzc);
-      apzc->SetPrevSibling(nullptr);
-      apzc->SetLastChild(nullptr);
+      aState.mNodesToDestroy.RemoveElement(node);
+      node->SetPrevSibling(nullptr);
+      node->SetLastChild(nullptr);
     }
+
     APZCTM_LOG("Using APZC %p for layer %p with identifiers %" PRId64 " %" PRId64 "\n", apzc, aLayer.GetLayer(), aLayersId, aMetrics.GetScrollId());
 
     apzc->NotifyLayersUpdated(aMetrics,
         aState.mIsFirstPaint && (aLayersId == aState.mOriginatingLayersId));
 
-    nsIntRegion unobscured;
-    if (!gfxPrefs::LayoutEventRegionsEnabled()) {
-      unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
-    }
-    apzc->SetLayerHitTestData(EventRegions(unobscured), aAncestorTransform);
-    APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
-        Stringify(unobscured).c_str(), apzc);
+    // Since this is the first time we are encountering an APZC with this guid,
+    // the node holding it must be the primary holder. It may be newly-created
+    // or not, depending on whether it went through the newApzc branch above.
+    MOZ_ASSERT(node->IsPrimaryHolder() && node->GetApzc() && node->GetApzc()->Matches(guid));
+
+    nsIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
+    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(), Some(clipRegion));
+    apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
 
     // Bind the APZC instance into the tree of APZCs
-    if (aNextSibling) {
-      aNextSibling->SetPrevSibling(apzc);
-    } else if (aParent) {
-      aParent->SetLastChild(apzc);
-    } else {
-      MOZ_ASSERT(!mRootApzc);
-      mRootApzc = apzc;
-      apzc->MakeRoot();
-    }
+    AttachNodeToTree(node, aParent, aNextSibling);
 
     // For testing, log the parent scroll id of every APZC that has a
     // parent. This allows test code to reconstruct the APZC tree.
@@ -385,49 +476,46 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
       }
     }
 
+    // Add a guid -> APZC mapping for the newly created APZC.
     insertResult.first->second = apzc;
   } else {
     // We already built an APZC earlier in this tree walk, but we have another layer
     // now that will also be using that APZC. The hit-test region on the APZC needs
     // to be updated to deal with the new layer's hit region.
-    // FIXME: Combining this hit test region to the existing hit test region has a bit
-    // of a problem, because it assumes the z-index of this new region is the same as
-    // the z-index of the old region (from the previous layer with the same scrollid)
-    // when in fact that may not be the case.
-    // Consider the case where we have three layers: A, B, and C. A is at the top in
-    // z-order and C is at the bottom. A and C share a scrollid and scroll together; but
-    // B has a different scrollid and scrolls independently. Depending on how B moves
-    // and the async transform on it, a larger/smaller area of C may be unobscured.
-    // However, when we combine the hit regions of A and C here we are ignoring the async
-    // async transform and so we basically assume the same amount of C is always visible
-    // on top of B. Fixing this doesn't appear to be very easy so I'm leaving it for
-    // now in the hopes that we won't run into this problem a lot.
-    if (!gfxPrefs::LayoutEventRegionsEnabled()) {
-      nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
-      apzc->AddHitTestRegions(EventRegions(unobscured));
-      APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
-    }
+
+    node = RecycleOrCreateNode(aState, apzc);
+    AttachNodeToTree(node, aParent, aNextSibling);
+
+    // Even though different layers associated with a given APZC may be at
+    // different levels in the layer tree (e.g. one being an uncle of another),
+    // we require from Layout that the CSS transforms up to their common
+    // ancestor be the same.
+    MOZ_ASSERT(aAncestorTransform == apzc->GetAncestorTransform());
+
+    nsIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
+    node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(), Some(clipRegion));
   }
 
-  return apzc;
+  return node;
 }
 
-AsyncPanZoomController*
-APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
-                                             const LayerMetricsWrapper& aLayer,
-                                             uint64_t aLayersId,
-                                             const gfx::Matrix4x4& aAncestorTransform,
-                                             AsyncPanZoomController* aParent,
-                                             AsyncPanZoomController* aNextSibling,
-                                             const nsIntRegion& aObscured)
+HitTestingTreeNode*
+APZCTreeManager::UpdateHitTestingTree(TreeBuildingState& aState,
+                                      const LayerMetricsWrapper& aLayer,
+                                      uint64_t aLayersId,
+                                      const gfx::Matrix4x4& aAncestorTransform,
+                                      HitTestingTreeNode* aParent,
+                                      HitTestingTreeNode* aNextSibling)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
   mApzcTreeLog << aLayer.Name() << '\t';
 
-  AsyncPanZoomController* apzc = PrepareAPZCForLayer(aLayer,
+  HitTestingTreeNode* node = PrepareNodeForLayer(aLayer,
         aLayer.Metrics(), aLayersId, aAncestorTransform,
-        aObscured, aParent, aNextSibling, aState);
+        aParent, aNextSibling, aState);
+  MOZ_ASSERT(node);
+  AsyncPanZoomController* apzc = node->GetApzc();
   aLayer.SetApzc(apzc);
 
   mApzcTreeLog << '\n';
@@ -445,149 +533,20 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
     ancestorTransform = ancestorTransform * aAncestorTransform;
   }
 
+  // Note that |node| at this point will not have any children, otherwise we
+  // we would have to set next to node->GetFirstChild().
+  MOZ_ASSERT(!node->GetFirstChild());
+  aParent = node;
+  HitTestingTreeNode* next = nullptr;
+
   uint64_t childLayersId = (aLayer.AsRefLayer() ? aLayer.AsRefLayer()->GetReferentId() : aLayersId);
-
-  nsIntRegion obscured;
-  if (aLayersId == childLayersId) {
-    // If the child layer is in the same process, transform
-    // aObscured from aLayer's ParentLayerPixels to aLayer's LayerPixels,
-    // which are the children layers' ParentLayerPixels.
-    // If we cross a process boundary, we assume that we can start with
-    // an empty obscured region because nothing in the parent process will
-    // obscure the child process. This may be false. However, not doing this
-    // definitely runs into a problematic case where the B2G notification
-    // bar and the keyboard get merged into a single layer that obscures
-    // all child processes, even though visually they do not. We'd probably
-    // have to check for mask layers and so on in order to properly handle
-    // that case.
-    obscured = aObscured;
-    obscured.Transform(To3DMatrix(transform).Inverse());
-  }
-
-  // If there's no APZC at this level, any APZCs for our child layers will
-  // have our siblings as their siblings, and our parent as their parent.
-  AsyncPanZoomController* next = aNextSibling;
-  if (apzc) {
-    // Otherwise, use this APZC as the parent going downwards, and start off
-    // with its first child as the next sibling
-    aParent = apzc;
-    next = apzc->GetFirstChild();
-  }
-
-  // In our recursive downward traversal, track event regions for layers once
-  // we encounter an APZC. Push a new empty region on the mEventRegions stack
-  // which will accumulate the hit area of descendants of aLayer. In general,
-  // the mEventRegions stack is used to accumulate event regions from descendant
-  // layers because the event regions for a layer don't include those of its
-  // children.
-  if (gfxPrefs::LayoutEventRegionsEnabled() && (apzc || aState.mEventRegions.Length() > 0)) {
-    aState.mEventRegions.AppendElement(EventRegions());
-  }
-
   for (LayerMetricsWrapper child = aLayer.GetLastChild(); child; child = child.GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
-    next = UpdatePanZoomControllerTree(aState, child, childLayersId,
-                                       ancestorTransform, aParent, next,
-                                       obscured);
-
-    // Each layer obscures its previous siblings, so we augment the obscured
-    // region as we loop backwards through the children.
-    nsIntRegion childRegion;
-    if (gfxPrefs::LayoutEventRegionsEnabled()) {
-      childRegion = child.GetEventRegions().mHitRegion;
-    } else {
-      childRegion = child.GetVisibleRegion();
-    }
-    childRegion.Transform(gfx::To3DMatrix(child.GetTransform()));
-    if (child.GetClipRect()) {
-      childRegion.AndWith(*child.GetClipRect());
-    }
-
-    obscured.OrWith(childRegion);
+    next = UpdateHitTestingTree(aState, child, childLayersId,
+                                ancestorTransform, aParent, next);
   }
 
-  if (gfxPrefs::LayoutEventRegionsEnabled() && aState.mEventRegions.Length() > 0) {
-    // At this point in the code, aState.mEventRegions.LastElement() contains
-    // the accumulated regions of the non-APZC descendants of |aLayer|. This
-    // happened in the loop above while we iterated through the descendants of
-    // |aLayer|. Note that it only includes the non-APZC descendants, because
-    // if a layer has an APZC, we simply store the regions from that subtree on
-    // that APZC and don't propagate them upwards in the tree. Because of the
-    // way we do hit-testing (where the deepest matching APZC is used) it should
-    // still be ok if we did propagate those regions upwards and included them
-    // in all the ancestor APZCs.
-    //
-    // Also at this point in the code the |obscured| region includes the hit
-    // regions of children of |aLayer| as well as the hit regions of |aLayer|'s
-    // younger uncles (i.e. the next-sibling chain of |aLayer|'s parent).
-    // When we compute the unobscured regions below, we subtract off the
-    // |obscured| region, but it would also be ok to do this before the above
-    // loop. At that point |obscured| would only have the uncles' hit regions
-    // and not the children. The reason this is ok is again because of the way
-    // we do hit-testing (where the deepest APZC is used) it doesn't matter if
-    // we count the children as obscuring the parent or not.
-
-    EventRegions unobscured;
-    unobscured.Sub(aLayer.GetEventRegions(), obscured);
-    APZCTM_LOG("Picking up unobscured hit region %s from layer %p\n", Stringify(unobscured).c_str(), aLayer.GetLayer());
-
-    // Take the hit region of the |aLayer|'s subtree (which has already been
-    // transformed into the coordinate space of |aLayer|) and...
-    EventRegions subtreeEventRegions = aState.mEventRegions.LastElement();
-    aState.mEventRegions.RemoveElementAt(aState.mEventRegions.Length() - 1);
-    // ... combine it with the hit region for this layer, and then ...
-    subtreeEventRegions.OrWith(unobscured);
-    // ... transform it up to the parent layer's coordinate space.
-    subtreeEventRegions.Transform(To3DMatrix(aLayer.GetTransform()));
-    if (aLayer.GetClipRect()) {
-      subtreeEventRegions.AndWith(*aLayer.GetClipRect());
-    }
-
-    APZCTM_LOG("After processing layer %p the subtree hit region is %s\n", aLayer.GetLayer(), Stringify(subtreeEventRegions).c_str());
-
-    // If we have an APZC at this level, intersect the subtree hit region with
-    // the touch-sensitive region and add it to the APZ's hit test regions.
-    if (apzc) {
-      APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(subtreeEventRegions).c_str(), apzc);
-      const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
-      MOZ_ASSERT(state);
-      MOZ_ASSERT(state->mController.get());
-      CSSRect touchSensitiveRegion;
-      if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
-        // Here we assume 'touchSensitiveRegion' is in the CSS pixels of the
-        // parent frame. To convert it to ParentLayer pixels, we therefore need
-        // the cumulative resolution of the parent frame. We approximate this as
-        // the quotient of our cumulative resolution and our pres shell
-        // resolution; this approximation may not be accurate in the presence of
-        // a css-driven resolution.
-        LayoutDeviceToParentLayerScale parentCumulativeResolution =
-            aLayer.Metrics().GetCumulativeResolution()
-            / ParentLayerToLayerScale(aLayer.Metrics().mPresShellResolution);
-        subtreeEventRegions.AndWith(ParentLayerIntRect::ToUntyped(
-            RoundedIn(touchSensitiveRegion
-                    * aLayer.Metrics().GetDevPixelsPerCSSPixel()
-                    * parentCumulativeResolution)));
-      }
-      apzc->AddHitTestRegions(subtreeEventRegions);
-    } else {
-      // If we don't have an APZC at this level, carry the subtree hit region
-      // up to the parent.
-      MOZ_ASSERT(aState.mEventRegions.Length() > 0);
-      aState.mEventRegions.LastElement().OrWith(subtreeEventRegions);
-    }
-  }
-
-  // Return the APZC that should be the sibling of other APZCs as we continue
-  // moving towards the first child at this depth in the layer tree.
-  // If this layer doesn't have an APZC, we promote any APZCs in the subtree
-  // upwards. Otherwise we fall back to the aNextSibling that was passed in.
-  if (apzc) {
-    return apzc;
-  }
-  if (next) {
-    return next;
-  }
-  return aNextSibling;
+  return node;
 }
 
 nsEventStatus
@@ -723,9 +682,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     // the event we send to gecko because we don't know the layer to untransform with
     // respect to.
     MonitorAutoLock lock(mTreeLock);
-    for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-      FlushRepaintsRecursively(apzc);
-    }
+    FlushRepaintsRecursively(mRootNode);
   }
 
   apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutHitResult);
@@ -1007,8 +964,8 @@ APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId,
     target = GetTargetAPZC(aTargets[0]);
   }
   for (size_t i = 1; i < aTargets.Length(); i++) {
-    nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aTargets[i]);
-    target = GetMultitouchTarget(target, apzc2);
+    nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aTargets[i]);
+    target = GetMultitouchTarget(target, apzc);
   }
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
@@ -1016,46 +973,55 @@ APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId,
 void
 APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aTarget)
 {
-  nsRefPtr<AsyncPanZoomController> target = GetTargetAPZC(aTarget);
-  mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aTarget);
+  mInputQueue->SetConfirmedTargetApzc(aInputBlockId, apzc);
 }
 
 void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const ZoomConstraints& aConstraints)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
+  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+
   // For a given layers id, non-root APZCs inherit the zoom constraints
   // of their root.
-  if (apzc && apzc->IsRootForLayersId()) {
+  if (node && node->GetApzc()->IsRootForLayersId()) {
     MonitorAutoLock lock(mTreeLock);
-    UpdateZoomConstraintsRecursively(apzc.get(), aConstraints);
+    UpdateZoomConstraintsRecursively(node.get(), aConstraints);
   }
 }
 
 void
-APZCTreeManager::UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
+APZCTreeManager::UpdateZoomConstraintsRecursively(HitTestingTreeNode* aNode,
                                                   const ZoomConstraints& aConstraints)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  aApzc->UpdateZoomConstraints(aConstraints);
-  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+  if (aNode->IsPrimaryHolder()) {
+    MOZ_ASSERT(aNode->GetApzc());
+    aNode->GetApzc()->UpdateZoomConstraints(aConstraints);
+  }
+  for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
     // We can have subtrees with their own layers id - leave those alone.
-    if (!child->IsRootForLayersId()) {
-      UpdateZoomConstraintsRecursively(child, aConstraints);
+    if (child->GetApzc() && child->GetApzc()->IsRootForLayersId()) {
+      continue;
     }
+    UpdateZoomConstraintsRecursively(child, aConstraints);
   }
 }
 
 void
-APZCTreeManager::FlushRepaintsRecursively(AsyncPanZoomController* aApzc)
+APZCTreeManager::FlushRepaintsRecursively(HitTestingTreeNode* aNode)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  aApzc->FlushRepaintForNewInputBlock();
-  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    FlushRepaintsRecursively(child);
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    if (node->IsPrimaryHolder()) {
+      MOZ_ASSERT(node->GetApzc());
+      node->GetApzc()->FlushRepaintForNewInputBlock();
+    }
+    FlushRepaintsRecursively(node->GetLastChild());
   }
 }
 
@@ -1076,12 +1042,19 @@ APZCTreeManager::ClearTree()
   // This can be done as part of a tree walk but it's easier to
   // just re-use the Collect method that we need in other places.
   // If this is too slow feel free to change it to a recursive walk.
-  nsTArray< nsRefPtr<AsyncPanZoomController> > apzcsToDestroy;
-  Collect(mRootApzc, &apzcsToDestroy);
-  for (size_t i = 0; i < apzcsToDestroy.Length(); i++) {
-    apzcsToDestroy[i]->Destroy();
+  nsTArray<nsRefPtr<HitTestingTreeNode>> nodesToDestroy;
+  Collect(mRootNode, &nodesToDestroy);
+  for (size_t i = 0; i < nodesToDestroy.Length(); i++) {
+    nodesToDestroy[i]->Destroy();
   }
-  mRootApzc = nullptr;
+  mRootNode = nullptr;
+}
+
+nsRefPtr<HitTestingTreeNode>
+APZCTreeManager::GetRootNode() const
+{
+  MonitorAutoLock lock(mTreeLock);
+  return mRootNode;
 }
 
 /**
@@ -1220,17 +1193,21 @@ APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
+APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid,
+                               GuidComparator aComparator)
+{
+  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, aComparator);
+  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+  nsRefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
+  return apzc.forget();
+}
+
+already_AddRefed<HitTestingTreeNode>
+APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
+                               GuidComparator aComparator)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<AsyncPanZoomController> target;
-  // The root may have siblings, check those too
-  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-    target = FindTargetAPZC(apzc, aGuid);
-    if (target) {
-      break;
-    }
-  }
+  nsRefPtr<HitTestingTreeNode> target = FindTargetNode(mRootNode, aGuid, aComparator);
   return target.forget();
 }
 
@@ -1238,23 +1215,24 @@ already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, HitTestResult* aOutHitResult)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<AsyncPanZoomController> target;
-  // The root may have siblings, so check those too
   HitTestResult hitResult = NoApzcHit;
-  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-    target = GetAPZCAtPoint(apzc, aPoint.ToUnknownPoint(), &hitResult);
-    // If we hit an overscrolled APZC, 'target' will be nullptr but it's still
-    // a hit so we don't search further siblings.
-    if (target || (hitResult == OverscrolledApzc)) {
-      break;
-    }
-  }
+  ParentLayerPoint point = ViewAs<ParentLayerPixel>(aPoint,
+    PixelCastJustification::ScreenIsParentLayerForRoot);
+  nsRefPtr<AsyncPanZoomController> target = GetAPZCAtPoint(mRootNode, point, &hitResult);
+
   // If we are in an overscrolled APZC, we should be returning nullptr.
   MOZ_ASSERT(!(target && (hitResult == OverscrolledApzc)));
   if (aOutHitResult) {
     *aOutHitResult = hitResult;
   }
   return target.forget();
+}
+
+static bool
+GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne, const ScrollableLayerGuid& aTwo)
+{
+  return aOne.mLayersId == aTwo.mLayersId
+      && aOne.mScrollId == aTwo.mScrollId;
 }
 
 nsRefPtr<const OverscrollHandoffChain>
@@ -1308,7 +1286,9 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
       }
     }
     if (!scrollParent) {
-      scrollParent = FindTargetAPZC(parent, apzc->GetScrollHandoffParentId());
+      ScrollableLayerGuid guid(parent->GetGuid().mLayersId, 0, apzc->GetScrollHandoffParentId());
+      nsRefPtr<AsyncPanZoomController> scrollParentPtr = GetTargetAPZC(guid, &GuidComparatorIgnoringPresShell);
+      scrollParent = scrollParentPtr.get();
     }
     apzc = scrollParent;
   }
@@ -1326,122 +1306,129 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   return result;
 }
 
-/* Find the apzc in the subtree rooted at aApzc that has the same layers id as
-   aApzc, and that has the given scroll id. Generally this function should be called
-   with aApzc being the root of its layers id subtree. */
-AsyncPanZoomController*
-APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::ViewID aScrollId)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  if (aApzc->GetGuid().mScrollId == aScrollId) {
-    return aApzc;
-  }
-  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    if (child->GetGuid().mLayersId != aApzc->GetGuid().mLayersId) {
-      continue;
-    }
-    AsyncPanZoomController* match = FindTargetAPZC(child, aScrollId);
-    if (match) {
-      return match;
-    }
-  }
-
-  return nullptr;
-}
-
-AsyncPanZoomController*
-APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid)
+HitTestingTreeNode*
+APZCTreeManager::FindTargetNode(HitTestingTreeNode* aNode,
+                                const ScrollableLayerGuid& aGuid,
+                                GuidComparator aComparator)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    AsyncPanZoomController* match = FindTargetAPZC(child, aGuid);
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    HitTestingTreeNode* match = FindTargetNode(node->GetLastChild(), aGuid, aComparator);
     if (match) {
       return match;
     }
-  }
 
-  if (aApzc->Matches(aGuid)) {
-    return aApzc;
+    bool matches = false;
+    if (node->GetApzc()) {
+      if (aComparator) {
+        matches = aComparator(aGuid, node->GetApzc()->GetGuid());
+      } else {
+        matches = node->GetApzc()->Matches(aGuid);
+      }
+    }
+    if (matches) {
+      return node;
+    }
   }
   return nullptr;
 }
 
 AsyncPanZoomController*
-APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
-                                const Point& aHitTestPoint,
+APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
+                                const ParentLayerPoint& aHitTestPoint,
                                 HitTestResult* aOutHitResult)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
-  // explained in the comment above GetScreenToApzcTransform. This function will recurse with aApzc at L and P, and the
-  // comments explain what values are stored in the variables at these two levels. All the comments
-  // use standard matrix notation where the leftmost matrix in a multiplication is applied first.
-
-  // ancestorUntransform takes points from aApzc's parent APZC's CSS-transformed layer coordinates
-  // to aApzc's parent layer's layer coordinates.
-  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
-  //   and RC.Inverse() * QC.Inverse()                               at recursion level for P.
-  Matrix4x4 ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
-
-  // Hit testing for this layer takes place in our parent layer coordinates,
-  // since the composition bounds (used to initialize the visible rect against
-  // which we hit test are in those coordinates).
-  Point4D hitTestPointForThisLayer = ancestorUntransform.ProjectPoint(aHitTestPoint);
-  APZCTM_LOG("Untransformed %f %f to transient coordinates %f %f for hit-testing APZC %p\n",
-           aHitTestPoint.x, aHitTestPoint.y,
-           hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
-
-  // childUntransform takes points from aApzc's parent APZC's CSS-transformed layer coordinates
-  // to aApzc's CSS-transformed layer coordinates.
-  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() at L
-  //   and RC.Inverse() * QC.Inverse() * PA.Inverse()                               at P.
-  Matrix4x4 childUntransform = ancestorUntransform * Matrix4x4(aApzc->GetCurrentAsyncTransform()).Inverse();
-  Point4D hitTestPointForChildLayers = childUntransform.ProjectPoint(aHitTestPoint);
-  APZCTM_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
-           aHitTestPoint.x, aHitTestPoint.y,
-           hitTestPointForChildLayers.x, hitTestPointForChildLayers.y, aApzc);
-
-  AsyncPanZoomController* result = nullptr;
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  if (hitTestPointForChildLayers.HasPositiveWCoord()) {
-    for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-      AsyncPanZoomController* match = GetAPZCAtPoint(child, hitTestPointForChildLayers.As2DPoint(), aOutHitResult);
+  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
+    AsyncPanZoomController* apzc = node->GetApzc();
+
+    if (node->IsOutsideClip(aHitTestPoint)) {
+      // If the point being tested is outside the clip region for this node
+      // then we don't need to test against this node or any of its children.
+      // Just skip it and move on.
+      APZCTM_LOG("Point %f %f outside clip for node %p\n",
+        aHitTestPoint.x, aHitTestPoint.y, node);
+      continue;
+    }
+
+    AsyncPanZoomController* result = nullptr;
+
+    // First check the subtree rooted at this node, because deeper nodes
+    // are more "in front".
+    Maybe<LayerPoint> hitTestPointForChildLayers = node->Untransform(aHitTestPoint);
+    if (hitTestPointForChildLayers) {
+      ParentLayerPoint childPoint = ViewAs<ParentLayerPixel>(hitTestPointForChildLayers.ref(),
+        PixelCastJustification::MovingDownToChildren);
+      result = GetAPZCAtPoint(node->GetLastChild(), childPoint, aOutHitResult);
       if (*aOutHitResult == OverscrolledApzc) {
         // We matched an overscrolled APZC, abort.
         return nullptr;
       }
-      if (match) {
-        result = match;
-        break;
+    }
+
+    // If we didn't match anything in the subtree, check |node|.
+    if (!result) {
+      APZCTM_LOG("Testing ParentLayer point %s (Layer %s) against node %p\n",
+          Stringify(aHitTestPoint).c_str(),
+          hitTestPointForChildLayers ? Stringify(hitTestPointForChildLayers.ref()).c_str() : "nil",
+          node);
+      HitTestResult hitResult = node->HitTest(aHitTestPoint);
+      if (hitResult != HitTestResult::NoApzcHit) {
+        result = node->GetNearestContainingApzc();
+        APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
+             result, node, hitResult);
+        MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
+        // If event regions are disabled, *aOutHitResult will be ApzcHitRegion
+        *aOutHitResult = hitResult;
       }
     }
-  }
-  if (!result && hitTestPointForThisLayer.HasPositiveWCoord()) {
-    ParentLayerPoint point = ParentLayerPoint::FromUnknownPoint(hitTestPointForThisLayer.As2DPoint());
-    if (aApzc->HitRegionContains(point)) {
-      APZCTM_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n",
-                 hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
-      result = aApzc;
-      // If event regions are disabled, *aOutHitResult will be ApzcHitRegion
-      *aOutHitResult = (aApzc->DispatchToContentRegionContains(point) ? ApzcContentRegion : ApzcHitRegion);
+
+    // If we are overscrolled, and the point matches us or one of our children,
+    // the result is inside an overscrolled APZC, inform our caller of this
+    // (callers typically ignore events targeted at overscrolled APZCs).
+    if (result && apzc && apzc->IsOverscrolled()) {
+      APZCTM_LOG("Result is inside overscrolled APZC %p\n", apzc);
+      *aOutHitResult = OverscrolledApzc;
+      return nullptr;
+    }
+
+    if (result) {
+      if (!gfxPrefs::LayoutEventRegionsEnabled()) {
+        // When event-regions are disabled, we treat scrollinfo layers as
+        // regular scrollable layers. Unfortunately, their "hit region" (which
+        // we create from the composition bounds) is their full area, and they
+        // sit on top of their non-scrollinfo siblings. This means they will get
+        // a HitTestingTreeNode with a hit region that will aggressively match
+        // any input events that might be directed to sub-APZCs of their non-
+        // scrollinfo siblings. Therefore, we need to keep looping through to
+        // see if there are any other non-scrollinfo siblings that have children
+        // that match this input. If so, they should take priority. With event-
+        // regions enabled we use the actual regions from the layer, which are
+        // empty, and so this is unnecessary.
+        AsyncPanZoomController* prevSiblingApzc = nullptr;
+        for (HitTestingTreeNode* n = node->GetPrevSibling(); n; n = n->GetPrevSibling()) {
+          if (n->GetApzc()) {
+            prevSiblingApzc = n->GetApzc();
+            break;
+          }
+        }
+        if (result == prevSiblingApzc) {
+          APZCTM_LOG("Continuing search past probable scrollinfo info layer\n");
+          continue;
+        }
+      }
+
+      return result;
     }
   }
 
-  // If we are overscrolled, and the point matches us or one of our children,
-  // the result is inside an overscrolled APZC, inform our caller of this
-  // (callers typically ignore events targeted at overscrolled APZCs).
-  if (result && aApzc->IsOverscrolled()) {
-    *aOutHitResult = OverscrolledApzc;
-    result = nullptr;
-  }
-
-  return result;
+  return nullptr;
 }
 
 /* The methods GetScreenToApzcTransform() and GetApzcToGeckoTransform() return
