@@ -17,6 +17,7 @@ public:
   static std::string GetNewSessionId(GMPSessionType aSessionType);
 
   static bool DeferCreateSessionIfNotReady(ClearKeyDecryptionManager* aInstance,
+                                           uint32_t aCreateSessionToken,
                                            uint32_t aPromiseId,
                                            const uint8_t* aInitData,
                                            uint32_t aInitDataSize,

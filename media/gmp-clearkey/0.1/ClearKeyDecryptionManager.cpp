@@ -111,7 +111,8 @@ ClearKeyDecryptionManager::Init(GMPDecryptorCallback* aCallback)
 }
 
 void
-ClearKeyDecryptionManager::CreateSession(uint32_t aPromiseId,
+ClearKeyDecryptionManager::CreateSession(uint32_t aCreateSessionToken,
+                                         uint32_t aPromiseId,
                                          const char* aInitDataType,
                                          uint32_t aInitDataTypeSize,
                                          const uint8_t* aInitData,
@@ -128,6 +129,7 @@ ClearKeyDecryptionManager::CreateSession(uint32_t aPromiseId,
   }
 
   if (ClearKeyPersistence::DeferCreateSessionIfNotReady(this,
+                                                        aCreateSessionToken,
                                                         aPromiseId,
                                                         aInitData,
                                                         aInitDataSize,
@@ -139,7 +141,7 @@ ClearKeyDecryptionManager::CreateSession(uint32_t aPromiseId,
   MOZ_ASSERT(mSessions.find(sessionId) == mSessions.end());
 
   ClearKeySession* session = new ClearKeySession(sessionId, mCallback, aSessionType);
-  session->Init(aPromiseId, aInitData, aInitDataSize);
+  session->Init(aCreateSessionToken, aPromiseId, aInitData, aInitDataSize);
   mSessions[sessionId] = session;
 
   const vector<KeyId>& sessionKeys = session->GetKeyIds();
@@ -216,11 +218,6 @@ ClearKeyDecryptionManager::PersistentSessionDataLoaded(GMPErr aStatus,
                                                  kGMPPersistentSession);
   mSessions[aSessionId] = session;
 
-  // TODO: currently we have to resolve the load-session promise before we
-  // can mark the keys as usable. We should really do this before marking
-  // the keys usable, but we need to fix Gecko first.
-  mCallback->ResolveLoadSessionPromise(aPromiseId, true);
-
   uint32_t numKeys = aKeyDataSize / (2 * CLEARKEY_KEY_LEN);
   for (uint32_t i = 0; i < numKeys; i ++) {
     const uint8_t* base = aKeyData + 2 * CLEARKEY_KEY_LEN * i;
@@ -240,6 +237,8 @@ ClearKeyDecryptionManager::PersistentSessionDataLoaded(GMPErr aStatus,
     mCallback->KeyIdUsable(aSessionId.c_str(), aSessionId.size(),
                            &keyId[0], keyId.size());
   }
+
+  mCallback->ResolveLoadSessionPromise(aPromiseId, true);
 }
 
 void
