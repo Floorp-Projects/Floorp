@@ -72,6 +72,22 @@ extern PRThread *gSocketThread;
 using namespace mozilla;
 using namespace mozilla::net;
 
+static void
+ReleaseListenerAndContext(nsCOMPtr<nsIWebSocketListener>& aListener,
+                          nsCOMPtr<nsISupports>& aContext)
+{
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+
+  if (aListener) {
+    NS_ProxyRelease(mainThread, aListener, false);
+  }
+
+  if (aContext) {
+    NS_ProxyRelease(mainThread, aContext, false);
+  }
+}
+
 namespace mozilla {
 namespace net {
 
@@ -555,9 +571,9 @@ class CallOnMessageAvailable MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnMessageAvailable(WebSocketChannel *aChannel,
-                         nsCString        &aData,
-                         int32_t           aLen)
+  CallOnMessageAvailable(WebSocketChannel* aChannel,
+                         nsACString& aData,
+                         int32_t aLen)
     : mChannel(aChannel),
       mData(aData),
       mLen(aLen) {}
@@ -566,10 +582,14 @@ public:
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
-    if (mLen < 0)
-      mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
-    else
-      mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext, mData);
+    if (mChannel->mListener) {
+      if (mLen < 0) {
+        mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
+      } else {
+        mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext, mData);
+      }
+    }
+
     return NS_OK;
   }
 
@@ -591,10 +611,16 @@ class CallOnStop MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnStop(WebSocketChannel *aChannel,
-             nsresult          aReason)
+  // CallOnStop steals mListener and mContext from the aChannel in order to
+  // release them on the main thread when needed.
+  CallOnStop(WebSocketChannel* aChannel,
+             nsresult aReason)
     : mChannel(aChannel),
-      mReason(aReason) {}
+      mReason(aReason)
+  {
+    mListener.swap(mChannel->mListener);
+    mContext.swap(mChannel->mContext);
+  }
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
@@ -602,11 +628,11 @@ public:
 
     nsWSAdmissionManager::OnStopSession(mChannel, mReason);
 
-    if (mChannel->mListener) {
-      mChannel->mListener->OnStop(mChannel->mContext, mReason);
-      mChannel->mListener = nullptr;
-      mChannel->mContext = nullptr;
+    if (mListener) {
+      mListener->OnStop(mContext, mReason);
+      ReleaseListenerAndContext(mListener, mContext);
     }
+
     return NS_OK;
   }
 
@@ -614,6 +640,8 @@ private:
   ~CallOnStop() {}
 
   nsRefPtr<WebSocketChannel>        mChannel;
+  nsCOMPtr<nsIWebSocketListener>    mListener;
+  nsCOMPtr<nsISupports>             mContext;
   nsresult                          mReason;
 };
 NS_IMPL_ISUPPORTS(CallOnStop, nsIRunnable)
@@ -627,9 +655,9 @@ class CallOnServerClose MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnServerClose(WebSocketChannel *aChannel,
-                    uint16_t          aCode,
-                    nsCString        &aReason)
+  CallOnServerClose(WebSocketChannel* aChannel,
+                    uint16_t aCode,
+                    nsACString& aReason)
     : mChannel(aChannel),
       mCode(aCode),
       mReason(aReason) {}
@@ -638,7 +666,9 @@ public:
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
-    mChannel->mListener->OnServerClose(mChannel->mContext, mCode, mReason);
+    if (mChannel->mListener) {
+      mChannel->mListener->OnServerClose(mChannel->mContext, mCode, mReason);
+    }
     return NS_OK;
   }
 
@@ -658,8 +688,8 @@ NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 class CallAcknowledge MOZ_FINAL : public nsCancelableRunnable
 {
 public:
-  CallAcknowledge(WebSocketChannel *aChannel,
-                  uint32_t          aSize)
+  CallAcknowledge(WebSocketChannel* aChannel,
+                  uint32_t aSize)
     : mChannel(aChannel),
       mSize(aSize) {}
 
@@ -668,7 +698,9 @@ public:
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     LOG(("WebSocketChannel::CallAcknowledge: Size %u\n", mSize));
-    mChannel->mListener->OnAcknowledge(mChannel->mContext, mSize);
+    if (mChannel->mListener) {
+      mChannel->mListener->OnAcknowledge(mChannel->mContext, mSize);
+    }
     return NS_OK;
   }
 
@@ -1174,17 +1206,7 @@ WebSocketChannel::~WebSocketChannel()
     NS_ProxyRelease(mainThread, forgettable, false);
   }
 
-  if (mListener) {
-    nsIWebSocketListener *forgettableListener;
-    mListener.forget(&forgettableListener);
-    NS_ProxyRelease(mainThread, forgettableListener, false);
-  }
-
-  if (mContext) {
-    nsISupports *forgettableContext;
-    mContext.forget(&forgettableContext);
-    NS_ProxyRelease(mainThread, forgettableContext, false);
-  }
+  ReleaseListenerAndContext(mListener, mContext);
 
   if (mLoadGroup) {
     nsILoadGroup *forgettableGroup;
@@ -2265,8 +2287,17 @@ WebSocketChannel::StopSession(nsresult reason)
 
   if (!mCalledOnStop) {
     mCalledOnStop = 1;
-    mTargetThread->Dispatch(new CallOnStop(this, reason),
-                            NS_DISPATCH_NORMAL);
+
+    nsWSAdmissionManager::OnStopSession(this, reason);
+
+    nsRefPtr<CallOnStop> runnable = new CallOnStop(this, reason);
+
+    // CallOnStop steals mListener and mContext in order to release them on the
+    // main thread when needed.
+    MOZ_ASSERT(!mListener);
+    MOZ_ASSERT(!mContext);
+
+    mTargetThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 }
 
