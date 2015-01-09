@@ -14,8 +14,7 @@
 #endif
 
 #if MOZ_IS_GCC
-#if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0) \
-    && defined(__ARM_EABI__) && !defined(__ARM_PCS_VFP) && !defined(__ARM_PCS)
+#if defined(__ARM_EABI__) && !defined(__ARM_PCS_VFP) && !defined(__ARM_PCS)
 #error "Can't identify floating point calling conventions.\nPlease ensure that your toolchain defines __ARM_PCS or __ARM_PCS_VFP."
 #endif
 #endif
