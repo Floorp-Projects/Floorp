@@ -827,7 +827,10 @@ let FlameGraphUtils = {
 
       // Previous frames at stack depths greater than the current sample's
       // maximum need to be nullified. It's nonsensical to reuse them.
-      prevFrames.length = frameIndex;
+      for (let i = frameIndex; i < prevFrames.length; i++) {
+        prevFrames[i] = null;
+      }
+
       prevTime = time;
     }
 
