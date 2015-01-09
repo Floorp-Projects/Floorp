@@ -20,6 +20,8 @@ class BlutoothDaemonInterface;
 class BluetoothDaemonSocketModule
 {
 public:
+  static const int MAX_NUM_CLIENTS;
+
   virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
 
   // Commands

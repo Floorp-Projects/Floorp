@@ -14,6 +14,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 // A2DP module
 //
 
+const int BluetoothDaemonA2dpModule::MAX_NUM_CLIENTS = 1;
+
 BluetoothA2dpNotificationHandler*
   BluetoothDaemonA2dpModule::sNotificationHandler;
 
@@ -342,7 +344,7 @@ BluetoothDaemonA2dpInterface::Init(
   }
 
   nsresult rv = mModule->RegisterModule(BluetoothDaemonA2dpModule::SERVICE_ID,
-                                        0x00, res);
+    0x00, BluetoothDaemonA2dpModule::MAX_NUM_CLIENTS, res);
   if (NS_FAILED(rv) && aRes) {
     DispatchError(aRes, STATUS_FAIL);
   }
