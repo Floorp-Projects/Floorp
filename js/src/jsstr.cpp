@@ -4442,7 +4442,7 @@ js_strcmp(const char16_t *lhs, const char16_t *rhs)
 }
 
 UniquePtr<char[], JS::FreePolicy>
-js::DuplicateString(js::ThreadSafeContext *cx, const char *s)
+js::DuplicateString(js::ExclusiveContext *cx, const char *s)
 {
     size_t n = strlen(s) + 1;
     auto ret = cx->make_pod_array<char>(n);
@@ -4453,7 +4453,7 @@ js::DuplicateString(js::ThreadSafeContext *cx, const char *s)
 }
 
 UniquePtr<char16_t[], JS::FreePolicy>
-js::DuplicateString(js::ThreadSafeContext *cx, const char16_t *s)
+js::DuplicateString(js::ExclusiveContext *cx, const char16_t *s)
 {
     size_t n = js_strlen(s) + 1;
     auto ret = cx->make_pod_array<char16_t>(n);
@@ -4482,7 +4482,7 @@ template const char16_t *
 js_strchr_limit(const char16_t *s, char16_t c, const char16_t *limit);
 
 char16_t *
-js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
+js::InflateString(ExclusiveContext *cx, const char *bytes, size_t *lengthp)
 {
     size_t nchars;
     char16_t *chars;
