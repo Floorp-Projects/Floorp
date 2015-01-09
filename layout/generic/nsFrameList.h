@@ -448,7 +448,7 @@ public:
   };
 
 private:
-  void operator delete(void*) MOZ_DELETE;
+  void operator delete(void*) = delete;
 
 #ifdef DEBUG_FRAME_LIST
   void VerifyList() const;

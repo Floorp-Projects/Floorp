@@ -631,7 +631,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
   let notifications = [];
   let bindingArrays = new Map();
 
-  for each (let change in aChanges) {
+  for (let change of aChanges) {
     let operation = change.op;
     delete change.op;
     let stmt;
@@ -787,7 +787,7 @@ this.FormHistory = {
         let formHistoryFields = dbSchema.tables.moz_formhistory;
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           let result = {};
-          for each (let field in aSelectTerms) {
+          for (let field of aSelectTerms) {
             result[field] = row.getResultByName(field);
           }
 
@@ -860,7 +860,7 @@ this.FormHistory = {
     if (!("length" in aChanges))
       aChanges = [aChanges];
 
-    for each (let change in aChanges) {
+    for (let change of aChanges) {
       switch (change.op) {
         case "remove":
           validateSearchData(change, "Remove");

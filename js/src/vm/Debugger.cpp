@@ -2895,13 +2895,16 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
     obj->setReservedSlot(JSSLOT_DEBUG_MEMORY_INSTANCE, NullValue());
 
-    /* Construct the underlying C++ object. */
-    auto dbg = cx->make_unique<Debugger>(cx, obj.get());
-    if (!dbg || !dbg->init(cx))
-        return false;
+    Debugger *debugger;
+    {
+        /* Construct the underlying C++ object. */
+        auto dbg = cx->make_unique<Debugger>(cx, obj.get());
+        if (!dbg || !dbg->init(cx))
+            return false;
 
-    Debugger *debugger = dbg.release();
-    obj->setPrivate(debugger); // owns the released pointer
+        debugger = dbg.release();
+        obj->setPrivate(debugger); // owns the released pointer
+    }
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < args.length(); i++) {

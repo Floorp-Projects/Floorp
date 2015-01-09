@@ -61,9 +61,9 @@ public:
     /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider);
 
 private:
-  uiaRawElmProvider() MOZ_DELETE;
-  uiaRawElmProvider& operator =(const uiaRawElmProvider&) MOZ_DELETE;
-  uiaRawElmProvider(const uiaRawElmProvider&) MOZ_DELETE;
+  uiaRawElmProvider() = delete;
+  uiaRawElmProvider& operator =(const uiaRawElmProvider&) = delete;
+  uiaRawElmProvider(const uiaRawElmProvider&) = delete;
 
 protected:
   nsRefPtr<AccessibleWrap> mAcc;

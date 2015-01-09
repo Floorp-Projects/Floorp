@@ -163,7 +163,7 @@ CodeGenerator::~CodeGenerator()
     js_delete(scriptCounts_);
 }
 
-typedef bool (*StringToNumberFn)(ThreadSafeContext *, JSString *, double *);
+typedef bool (*StringToNumberFn)(ExclusiveContext *, JSString *, double *);
 static const VMFunction StringToNumberInfo = FunctionInfo<StringToNumberFn>(StringToNumber);
 
 void
@@ -814,7 +814,7 @@ CodeGenerator::emitIntToString(Register input, Register output, Label *ool)
     masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
 }
 
-typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
+typedef JSFlatString *(*IntToStringFn)(ExclusiveContext *, int);
 static const VMFunction IntToStringInfo = FunctionInfo<IntToStringFn>(Int32ToString<CanGC>);
 
 void
@@ -831,7 +831,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
+typedef JSString *(*DoubleToStringFn)(ExclusiveContext *, double);
 static const VMFunction DoubleToStringInfo = FunctionInfo<DoubleToStringFn>(NumberToString<CanGC>);
 
 void
@@ -2388,7 +2388,7 @@ CodeGenerator::visitMaybeToDoubleElement(LMaybeToDoubleElement *lir)
     masm.bind(&done);
 }
 
-typedef bool (*CopyElementsForWriteFn)(ThreadSafeContext *, NativeObject *);
+typedef bool (*CopyElementsForWriteFn)(ExclusiveContext *, NativeObject *);
 static const VMFunction CopyElementsForWriteInfo =
     FunctionInfo<CopyElementsForWriteFn>(NativeObject::CopyElementsForWrite);
 
@@ -5281,7 +5281,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     testObjectEmulatesUndefined(objreg, equal, unequal, ToRegister(lir->temp()), ool);
 }
 
-typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
+typedef JSString *(*ConcatStringsFn)(ExclusiveContext *, HandleString, HandleString);
 static const VMFunction ConcatStringsInfo = FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>);
 
 void

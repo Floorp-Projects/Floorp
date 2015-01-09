@@ -416,8 +416,8 @@ class AtomDecls
     LifoAlloc &alloc;
     AtomDefnListMap  *map;
 
-    AtomDecls(const AtomDecls &other) MOZ_DELETE;
-    void operator=(const AtomDecls &other) MOZ_DELETE;
+    AtomDecls(const AtomDecls &other) = delete;
+    void operator=(const AtomDecls &other) = delete;
 
   public:
     explicit AtomDecls(ExclusiveContext *cx, LifoAlloc &alloc) : cx(cx),

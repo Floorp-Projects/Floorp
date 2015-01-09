@@ -597,7 +597,7 @@ public:
     }
   }
 
-  virtual void Stop()
+  virtual void Stop() MOZ_OVERRIDE
   {
     if (mSourceStream) {
       mSourceStream->EndAllTrackAndFinish();
@@ -608,7 +608,7 @@ public:
   // single-source trackunion like we have here, the TrackUnion will assign trackids
   // that match the source's trackids, so we can avoid needing a mapping function.
   // XXX This will not handle more complex cases well.
-  virtual void StopTrack(TrackID aTrackID)
+  virtual void StopTrack(TrackID aTrackID) MOZ_OVERRIDE
   {
     if (mSourceStream) {
       mSourceStream->EndTrack(aTrackID);
@@ -681,12 +681,12 @@ public:
     GetStream()->AsProcessedStream()->ForwardTrackEnabled(aID, aEnabled);
   }
 
-  virtual DOMLocalMediaStream* AsDOMLocalMediaStream()
+  virtual DOMLocalMediaStream* AsDOMLocalMediaStream() MOZ_OVERRIDE
   {
     return this;
   }
 
-  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID)
+  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) MOZ_OVERRIDE
   {
     // MediaEngine supports only one video and on video track now and TrackID is
     // fixed in MediaEngine.

@@ -54,30 +54,30 @@ protected:
   ~OggReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
-  virtual nsresult ResetDecode();
-  virtual bool DecodeAudioData();
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
+  virtual nsresult ResetDecode() MOZ_OVERRIDE;
+  virtual bool DecodeAudioData() MOZ_OVERRIDE;
 
   // If the Theora granulepos has not been captured, it may read several packets
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold);
+                                  int64_t aTimeThreshold) MOZ_OVERRIDE;
 
-  virtual bool HasAudio() {
+  virtual bool HasAudio() MOZ_OVERRIDE {
     return (mVorbisState != 0 && mVorbisState->mActive) ||
            (mOpusState != 0 && mOpusState->mActive);
   }
 
-  virtual bool HasVideo() {
+  virtual bool HasVideo() MOZ_OVERRIDE {
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags);
+                                MetadataTags** aTags) MOZ_OVERRIDE;
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime) MOZ_OVERRIDE;
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 

@@ -59,8 +59,8 @@ protected:
   nsresult ForceAsyncFailWithCodeInternal(const char* aFile, int aLine);
 
 private:
-  TestGonkCameraControl(const TestGonkCameraControl&) MOZ_DELETE;
-  TestGonkCameraControl& operator=(const TestGonkCameraControl&) MOZ_DELETE;
+  TestGonkCameraControl(const TestGonkCameraControl&) = delete;
+  TestGonkCameraControl& operator=(const TestGonkCameraControl&) = delete;
 };
 
 #define ForceMethodFailWithCode() ForceMethodFailWithCodeInternal(__FILE__, __LINE__)

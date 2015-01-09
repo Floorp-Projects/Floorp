@@ -63,8 +63,8 @@ public:
 private: 
   ~nsHTMLCSSStyleSheet();
 
-  nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy) MOZ_DELETE;
-  nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) MOZ_DELETE;
+  nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy) = delete;
+  nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy) = delete;
 
 protected:
   nsDataHashtable<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;

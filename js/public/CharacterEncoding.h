@@ -14,7 +14,7 @@
 #include "js/Utility.h"
 
 namespace js {
-struct ThreadSafeContext;
+class ExclusiveContext;
 }
 
 class JSFlatString;
@@ -176,12 +176,12 @@ class ConstTwoByteChars : public mozilla::RangedPtr<const char16_t>
  * This method cannot trigger GC.
  */
 extern Latin1CharsZ
-LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx,
+LossyTwoByteCharsToNewLatin1CharsZ(js::ExclusiveContext *cx,
                                    const mozilla::Range<const char16_t> tbchars);
 
 template <typename CharT>
 extern UTF8CharsZ
-CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars);
+CharsToNewUTF8CharsZ(js::ExclusiveContext *cx, const mozilla::Range<const CharT> chars);
 
 uint32_t
 Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length);

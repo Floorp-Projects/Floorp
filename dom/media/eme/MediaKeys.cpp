@@ -208,6 +208,28 @@ MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode)
 }
 
 void
+MediaKeys::OnSessionIdReady(MediaKeySession* aSession)
+{
+  if (!aSession) {
+    NS_WARNING("Invalid MediaKeySession passed to OnSessionIdReady()");
+    return;
+  }
+  if (mKeySessions.Contains(aSession->GetSessionId())) {
+    NS_WARNING("MediaKeySession's made ready multiple times!");
+    return;
+  }
+  if (mPendingSessions.Contains(aSession->Token())) {
+    NS_WARNING("MediaKeySession made ready when it wasn't waiting to be ready!");
+    return;
+  }
+  if (aSession->GetSessionId().IsEmpty()) {
+    NS_WARNING("MediaKeySession with invalid sessionId passed to OnSessionIdReady()");
+    return;
+  }
+  mKeySessions.Put(aSession->GetSessionId(), aSession);
+}
+
+void
 MediaKeys::ResolvePromise(PromiseId aId)
 {
   nsRefPtr<Promise> promise(RetrievePromise(aId));
@@ -346,42 +368,10 @@ MediaKeys::CreateSession(SessionType aSessionType,
                                                           aSessionType,
                                                           aRv);
 
+  // Add session to the set of sessions awaiting their sessionId being ready.
+  mPendingSessions.Put(session->Token(), session);
+
   return session.forget();
-}
-
-void
-MediaKeys::OnSessionPending(PromiseId aId, MediaKeySession* aSession)
-{
-  MOZ_ASSERT(mPromises.Contains(aId));
-  MOZ_ASSERT(!mPendingSessions.Contains(aId));
-  mPendingSessions.Put(aId, aSession);
-}
-
-void
-MediaKeys::OnSessionCreated(PromiseId aId, const nsAString& aSessionId)
-{
-  nsRefPtr<Promise> promise(RetrievePromise(aId));
-  if (!promise) {
-    NS_WARNING("MediaKeys tried to resolve a non-existent promise");
-    return;
-  }
-  MOZ_ASSERT(mPendingSessions.Contains(aId));
-
-  nsRefPtr<MediaKeySession> session;
-  bool gotSession = mPendingSessions.Get(aId, getter_AddRefs(session));
-  // Session has completed creation/loading, remove it from mPendingSessions,
-  // and resolve the promise with it. We store it in mKeySessions, so we can
-  // find it again if we need to send messages to it etc.
-  mPendingSessions.Remove(aId);
-  if (!gotSession || !session) {
-    NS_WARNING("Received activation for non-existent session!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-
-  session->Init(aSessionId);
-  mKeySessions.Put(aSessionId, session);
-  promise->MaybeResolve(session);
 }
 
 void
@@ -392,24 +382,6 @@ MediaKeys::OnSessionLoaded(PromiseId aId, bool aSuccess)
     NS_WARNING("MediaKeys tried to resolve a non-existent promise");
     return;
   }
-  MOZ_ASSERT(mPendingSessions.Contains(aId));
-
-  nsRefPtr<MediaKeySession> session;
-  bool gotSession = mPendingSessions.Get(aId, getter_AddRefs(session));
-  // Session has completed creation/loading, remove it from mPendingSessions,
-  // and resolve the promise with it. We store it in mKeySessions, so we can
-  // find it again if we need to send messages to it etc.
-  mPendingSessions.Remove(aId);
-  if (!gotSession || !session) {
-    NS_WARNING("Received activation for non-existent session!");
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-
-  MOZ_ASSERT(!session->GetSessionId().IsEmpty() &&
-             !mKeySessions.Contains(session->GetSessionId()));
-
-  mKeySessions.Put(session->GetSessionId(), session);
   promise->MaybeResolve(aSuccess);
 }
 
@@ -426,6 +398,15 @@ MediaKeys::GetSession(const nsAString& aSessionId)
 {
   nsRefPtr<MediaKeySession> session;
   mKeySessions.Get(aSessionId, getter_AddRefs(session));
+  return session.forget();
+}
+
+already_AddRefed<MediaKeySession>
+MediaKeys::GetPendingSession(uint32_t aToken)
+{
+  nsRefPtr<MediaKeySession> session;
+  mPendingSessions.Get(aToken, getter_AddRefs(session));
+  mPendingSessions.Remove(aToken);
   return session.forget();
 }
 

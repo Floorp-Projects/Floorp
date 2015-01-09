@@ -251,8 +251,8 @@ class InstructionDataMap
 // Common superclass for register allocators.
 class RegisterAllocator
 {
-    void operator=(const RegisterAllocator &) MOZ_DELETE;
-    RegisterAllocator(const RegisterAllocator &) MOZ_DELETE;
+    void operator=(const RegisterAllocator &) = delete;
+    RegisterAllocator(const RegisterAllocator &) = delete;
 
   protected:
     // Context

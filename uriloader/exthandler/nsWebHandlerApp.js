@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cc = Components.classes;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsWebHandler class
@@ -80,7 +82,12 @@ nsWebHandlerApp.prototype = {
     if (aWindowContext) {
 
       // create a channel from this URI
-      var channel = ioService.newChannelFromURI(uriToSend);
+      var channel = ioService.newChannelFromURI2(uriToSend,
+                                                 null,      // aLoadingNode
+                                                 Services.scriptSecurityManager.getSystemPrincipal(),
+                                                 null,      // aTriggeringPrincipal
+                                                 Ci.nsILoadInfo.SEC_NORMAL,
+                                                 Ci.nsIContentPolicy.TYPE_OTHER);
       channel.loadFlags = Ci.nsIChannel.LOAD_DOCUMENT_URI;
 
       // load the channel

@@ -21,7 +21,7 @@ class GlobalObject;
 
 class CSS {
 private:
-  CSS() MOZ_DELETE;
+  CSS() = delete;
 
 public:
   static bool Supports(const GlobalObject& aGlobal,
