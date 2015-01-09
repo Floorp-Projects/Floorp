@@ -188,6 +188,7 @@ public:
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) MOZ_OVERRIDE;
   NS_IMETHOD ForceNoIntercept() MOZ_OVERRIDE;
   NS_IMETHOD GetTopWindowURI(nsIURI **aTopWindowURI) MOZ_OVERRIDE;
+  NS_IMETHOD ContinueBeginConnect() MOZ_OVERRIDE;
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
