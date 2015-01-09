@@ -236,9 +236,9 @@ fi
 dnl ==============================================================
 dnl Get mozilla version from central milestone file
 dnl ==============================================================
-MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
-MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
-MOZILLA_SYMBOLVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -symbolversion`
+MOZILLA_VERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --uaversion`
+MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --symbolversion`
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
@@ -1700,7 +1700,7 @@ ia64*-hpux*)
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
         RC='$(WINDRES)'
         # Use static libgcc and libstdc++
-        LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++"
+        LDFLAGS="$LDFLAGS -static"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly

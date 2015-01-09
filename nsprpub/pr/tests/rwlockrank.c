@@ -22,7 +22,7 @@ static void rwtest(void *args)
     PR_RWLock_Rlock(rwlock1);
     PR_RWLock_Unlock(rwlock1);
 
-    // Test correct lock rank.
+    /* Test correct lock rank. */
     PR_RWLock_Rlock(rwlock1);
     PR_RWLock_Rlock(rwlock2);
     PR_RWLock_Unlock(rwlock2);
@@ -41,7 +41,7 @@ static void rwtest(void *args)
     PR_RWLock_Unlock(rwlock1);
 
 #if 0
-    // Test incorrect lock rank.
+    /* Test incorrect lock rank. */
     PR_RWLock_Rlock(rwlock2);
     PR_RWLock_Rlock(rwlock1);
     PR_RWLock_Unlock(rwlock1);
