@@ -202,6 +202,9 @@ function SetupEME(test, token, params)
     }, false);
   });
 
+  // Finish the test when error is encountered.
+  v.onerror = bail(token + " got error event");
+
   var onSetKeysFail = (params && params.onSetKeysFail)
     ? params.onSetKeysFail
     : bail(token + " Failed to set MediaKeys on <video> element");
