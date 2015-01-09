@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: append data and check that mediasource duration got updated</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var updateCount = 0;
+var durationChangeCount = 0;
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
+      sb.addEventListener("updateend", function () {
+        updateCount++;
+        if (updateCount == 1) {
+          v.addEventListener("loadedmetadata", function () {
+            v.addEventListener("durationchange", function () {
+              durationChangeCount++;
+              if (durationChangeCount == 1) {
+                sb.addEventListener('updateend', function(e) {
+                  sb.removeEventListener('updateend', arguments.callee);
+                  sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+                });
+              }
+            });
+            // Set mediasource duration to 0, so future appendBuffer
+            // will update the mediasource duration
+            // setting ms.duration will fire updatestart/update/updateend
+            //  event as per w3c spec
+            ms.duration = 0;
+          });
+        }
+      });
+    });
+  });
+
+  v.addEventListener("loadeddata", function () {
+    // XXX: Duration should be exactly 4.0, see bug 1065207.
+    is(durationChangeCount, 2, "durationchange not fired as many times as expected");
+    ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
