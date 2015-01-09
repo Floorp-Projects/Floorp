@@ -127,52 +127,91 @@ static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
  * Shapes use multiplicative hashing, but specialized to
  * minimize footprint.
  */
-struct ShapeTable {
-    static const uint32_t HASH_BITS     = mozilla::tl::BitSize<HashNumber>::value;
+class ShapeTable {
+  public:
+    friend class NativeObject;
     static const uint32_t MIN_ENTRIES   = 11;
+
+  private:
+    static const uint32_t HASH_BITS     = mozilla::tl::BitSize<HashNumber>::value;
 
     // This value is low because it's common for a ShapeTable to be created
     // with an entryCount of zero.
     static const uint32_t MIN_SIZE_LOG2 = 2;
     static const uint32_t MIN_SIZE      = JS_BIT(MIN_SIZE_LOG2);
 
-    int             hashShift;          /* multiplicative hash shift */
+    int             hashShift_;         /* multiplicative hash shift */
 
-    uint32_t        entryCount;         /* number of entries in table */
-    uint32_t        removedCount;       /* removed entry sentinels in table */
-    uint32_t        freelist;           /* SHAPE_INVALID_SLOT or head of slot
+    uint32_t        entryCount_;        /* number of entries in table */
+    uint32_t        removedCount_;      /* removed entry sentinels in table */
+
+    uint32_t        freeList_;          /* SHAPE_INVALID_SLOT or head of slot
                                            freelist in owning dictionary-mode
                                            object */
-    js::Shape       **entries;          /* table of ptrs to shared tree nodes */
 
+    js::Shape       **entries_;         /* table of ptrs to shared tree nodes */
+
+  public:
     explicit ShapeTable(uint32_t nentries)
-      : hashShift(HASH_BITS - MIN_SIZE_LOG2),
-        entryCount(nentries),
-        removedCount(0),
-        freelist(SHAPE_INVALID_SLOT)
+      : hashShift_(HASH_BITS - MIN_SIZE_LOG2),
+        entryCount_(nentries),
+        removedCount_(0),
+        freeList_(SHAPE_INVALID_SLOT),
+        entries_(nullptr)
     {
         /* NB: entries is set by init, which must be called. */
     }
 
     ~ShapeTable() {
-        js_free(entries);
+        js_free(entries_);
     }
 
-    /* By definition, hashShift = HASH_BITS - log2(capacity). */
-    uint32_t capacity() const { return JS_BIT(HASH_BITS - hashShift); }
+    uint32_t entryCount() const { return entryCount_; }
+
+    uint32_t freeList() const { return freeList_; }
+    void setFreeList(uint32_t slot) { freeList_ = slot; }
 
     /*
      * This counts the ShapeTable object itself (which must be
      * heap-allocated) and its |entries| array.
      */
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(this) + mallocSizeOf(entries);
+        return mallocSizeOf(this) + mallocSizeOf(entries_);
     }
+
+    /*
+     * NB: init and change are fallible but do not report OOM, so callers can
+     * cope or ignore. They do however use the context's calloc method in
+     * order to update the malloc counter on success.
+     */
+    bool init(ExclusiveContext *cx, Shape *lastProp);
+    bool change(int log2Delta, ExclusiveContext *cx);
+    Shape **search(jsid id, bool adding);
+
+#ifdef JSGC_COMPACTING
+    /* Update entries whose shapes have been moved */
+    void fixupAfterMovingGC();
+#endif
+
+  private:
+    void decEntryCount() {
+        MOZ_ASSERT(entryCount_ > 0);
+        entryCount_--;
+    }
+    void incEntryCount() {
+        entryCount_++;
+    }
+    void incRemovedCount() {
+        removedCount_++;
+    }
+
+    /* By definition, hashShift = HASH_BITS - log2(capacity). */
+    uint32_t capacity() const { return JS_BIT(HASH_BITS - hashShift_); }
 
     /* Whether we need to grow.  We want to do this if the load factor is >= 0.75 */
     bool needsToGrow() const {
         uint32_t size = capacity();
-        return entryCount + removedCount >= size - (size >> 2);
+        return entryCount_ + removedCount_ >= size - (size >> 2);
     }
 
     /*
@@ -181,20 +220,6 @@ struct ShapeTable {
      * table invalid.  Don't call this unless needsToGrow() is true.
      */
     bool grow(ExclusiveContext *cx);
-
-    /*
-     * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do however use the context's calloc method in
-     * order to update the malloc counter on success.
-     */
-    bool            init(ExclusiveContext *cx, Shape *lastProp);
-    bool            change(int log2Delta, ExclusiveContext *cx);
-    Shape           **search(jsid id, bool adding);
-
-#ifdef JSGC_COMPACTING
-    /* Update entries whose shapes have been moved */
-    void            fixupAfterMovingGC();
-#endif
 };
 
 /*
@@ -956,7 +981,7 @@ class Shape : public gc::TenuredCell
 
     uint32_t entryCount() {
         if (hasTable())
-            return table().entryCount;
+            return table().entryCount();
         uint32_t count = 0;
         for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront())
             ++count;
