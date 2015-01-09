@@ -526,7 +526,7 @@ var gCookiesWindow = {
   },
 
   onCookieSelected: function () {
-    var properties, item;
+    var item;
     var seln = this._tree.view.selection;
     if (!this._view._filtered)
       item = this._view._getItemAtIndex(seln.currentIndex);
@@ -543,15 +543,12 @@ var gCookiesWindow = {
       for (var j = min.value; j <= max.value; ++j) {
         item = this._view._getItemAtIndex(j);
         if (!item) continue;
-        if (item.container && !item.open)
+        if (item.container)
           selectedCookieCount += item.cookies.length;
         else if (!item.container)
           ++selectedCookieCount;
       }
     }
-    var item = this._view._getItemAtIndex(seln.currentIndex);
-    if (item && seln.count == 1 && item.container && item.open)
-      selectedCookieCount += 2;
 
     let buttonLabel = this._bundle.getString("removeSelectedCookies");
     let removeSelectedCookies = document.getElementById("removeSelectedCookies");
