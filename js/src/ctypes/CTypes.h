@@ -10,6 +10,7 @@
 #include "jsalloc.h"
 #include "prlink.h"
 
+#include "ctypes/typedefs.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/String.h"
@@ -224,7 +225,8 @@ enum ABICode {
 enum TypeCode {
   TYPE_void_t,
 #define DEFINE_TYPE(name, type, ffiType) TYPE_##name,
-#include "ctypes/typedefs.h"
+  CTYPES_FOR_EACH_TYPE(DEFINE_TYPE)
+#undef DEFINE_TYPE
   TYPE_pointer,
   TYPE_function,
   TYPE_array,
