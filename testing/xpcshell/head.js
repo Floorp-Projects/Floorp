@@ -1417,5 +1417,6 @@ try {
       .getService(Components.interfaces.nsIPrefBranch);
 
     prefs.setCharPref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
+    prefs.setCharPref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
   }
 } catch (e) { }
