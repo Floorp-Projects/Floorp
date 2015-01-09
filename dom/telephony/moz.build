@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsITelephonyCallInfo.idl',
     'nsITelephonyService.idl',
 ]
 
@@ -22,8 +23,10 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.telephony += [
     'ipc/TelephonyChild.h',
+    'ipc/TelephonyIPCSerializer.h',
     'ipc/TelephonyParent.h',
     'TelephonyCallback.h',
+    'TelephonyCallInfo.h',
     'TelephonyCommon.h',
     'TelephonyDialCallback.h',
 ]
@@ -39,6 +42,7 @@ UNIFIED_SOURCES += [
     'TelephonyCallback.cpp',
     'TelephonyCallGroup.cpp',
     'TelephonyCallId.cpp',
+    'TelephonyCallInfo.cpp',
     'TelephonyDialCallback.cpp',
     'USSDSession.cpp',
 ]

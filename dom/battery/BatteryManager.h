@@ -33,7 +33,7 @@ public:
   void Shutdown();
 
   // For IObserver.
-  void Notify(const hal::BatteryInformation& aBatteryInfo);
+  void Notify(const hal::BatteryInformation& aBatteryInfo) MOZ_OVERRIDE;
 
   /**
    * WebIDL Interface

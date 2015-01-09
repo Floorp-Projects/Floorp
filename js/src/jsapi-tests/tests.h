@@ -428,7 +428,7 @@ class AutoLeaveZeal
         JS_GetGCZeal(cx_, &zeal_, &frequency_);
         JS_SetGCZeal(cx_, 0, 0);
         JS::PrepareForFullGC(JS_GetRuntime(cx_));
-        JS::ShrinkingGC(JS_GetRuntime(cx_), JS::gcreason::DEBUG_GC);
+        JS::GCForReason(JS_GetRuntime(cx_), GC_SHRINK, JS::gcreason::DEBUG_GC);
     }
     ~AutoLeaveZeal() {
         JS_SetGCZeal(cx_, zeal_, frequency_);

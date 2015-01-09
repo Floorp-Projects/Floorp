@@ -782,6 +782,7 @@ public:
 
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager() MOZ_OVERRIDE;
 
+  static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   virtual mozilla::dom::AnimationTimeline* Timeline() MOZ_OVERRIDE;
 
   virtual nsresult SetSubDocumentFor(Element* aContent,

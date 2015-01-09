@@ -460,6 +460,23 @@ of the attribute codes:
       </varlistentry>
 
       <varlistentry>
+        <term>-Z hashAlg</term>
+        <listitem>
+        <para>Specify the hash algorithm to use with the -C, -S or -R command options. Possible keywords:</para>
+        <itemizedlist>
+          <listitem><para>MD2</para></listitem>
+          <listitem><para>MD4</para></listitem>
+          <listitem><para>MD5</para></listitem>
+          <listitem><para>SHA1</para></listitem>
+          <listitem><para>SHA224</para></listitem>
+          <listitem><para>SHA256</para></listitem>
+          <listitem><para>SHA384</para></listitem>
+          <listitem><para>SHA512</para></listitem>
+        </itemizedlist>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-0 SSO_password</term>
         <listitem><para>Set a site security officer password on a token.</para></listitem>
       </varlistentry>

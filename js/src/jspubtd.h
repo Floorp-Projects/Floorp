@@ -146,9 +146,9 @@ struct Runtime
     js::gc::StoreBuffer *gcStoreBufferPtr_;
 
   public:
-    explicit Runtime(js::gc::StoreBuffer *storeBuffer)
+    Runtime()
       : needsIncrementalBarrier_(false)
-      , gcStoreBufferPtr_(storeBuffer)
+      , gcStoreBufferPtr_(nullptr)
     {}
 
     bool needsIncrementalBarrier() const {
@@ -159,6 +159,11 @@ struct Runtime
 
     static JS::shadow::Runtime *asShadowRuntime(JSRuntime *rt) {
         return reinterpret_cast<JS::shadow::Runtime*>(rt);
+    }
+
+  protected:
+    void setGCStoreBufferPtr(js::gc::StoreBuffer *storeBuffer) {
+        gcStoreBufferPtr_ = storeBuffer;
     }
 
     /* Allow inlining of PersistentRooted constructors and destructors. */

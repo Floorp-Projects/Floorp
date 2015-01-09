@@ -10,6 +10,7 @@
 // makes the totally unsafe. However we're only using the demuxer in a single
 // thread.
 
+namespace stagefright {
 static inline int32_t
 android_atomic_dec(volatile int32_t* aValue)
 {
@@ -46,6 +47,7 @@ android_atomic_cmpxchg(int32_t aOld, int32_t aNew, volatile int32_t* aValue)
     return *aValue = aNew;
   }
   return aOld;
+}
 }
 
 #endif

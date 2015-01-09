@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaEngineGonkVideoSource.h"
 
+#undef LOG_TAG
 #define LOG_TAG "MediaEngineGonkVideoSource"
 
 #include <utils/Log.h>
@@ -23,6 +24,7 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace android;
 
+#undef LOG
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
@@ -800,7 +802,7 @@ MediaEngineGonkVideoSource::OnNewMediaBufferFrame(MediaBuffer* aBuffer)
       // MediaEngineGonkVideoSource expects that GrallocImage is GonkCameraImage.
       // See Bug 938034.
       GonkCameraImage* cameraImage = static_cast<GonkCameraImage*>(mImage.get());
-      cameraImage->SetBuffer(aBuffer);
+      cameraImage->SetMediaBuffer(aBuffer);
     } else {
       LOG(("mImage is non-GrallocImage"));
     }
@@ -821,7 +823,7 @@ MediaEngineGonkVideoSource::OnNewMediaBufferFrame(MediaBuffer* aBuffer)
       GonkCameraImage* cameraImage = static_cast<GonkCameraImage*>(mImage.get());
       // Clear MediaBuffer immediately, it prevents MediaBuffer is kept in
       // MediaStreamGraph thread.
-      cameraImage->ClearBuffer();
+      cameraImage->ClearMediaBuffer();
     }
   }
 

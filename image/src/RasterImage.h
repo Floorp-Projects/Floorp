@@ -18,7 +18,6 @@
 #define mozilla_imagelib_RasterImage_h_
 
 #include "Image.h"
-#include "FrameBlender.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
 #include "nsIProperties.h"
@@ -178,7 +177,12 @@ public:
   /* Triggers discarding. */
   void Discard();
 
-  /* Callbacks for decoders */
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Decoder callbacks.
+  //////////////////////////////////////////////////////////////////////////////
+
+  void OnAddedFrame(uint32_t aNewFrameCount, const nsIntRect& aNewRefreshArea);
 
   /** Sets the size and inherent orientation of the container. This should only
    * be called by the decoder. This function may be called multiple times, but
@@ -187,28 +191,18 @@ public:
   nsresult SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation);
 
   /**
-   * Ensures that a given frame number exists with the given parameters, and
-   * returns a RawAccessFrameRef for that frame.
-   * It is not possible to create sparse frame arrays; you can only append
-   * frames to the current frame array, or if there is only one frame in the
-   * array, replace that frame.
-   * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
-   */
-  RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
-                                const nsIntRect& aFrameRect,
-                                uint32_t aDecodeFlags,
-                                gfx::SurfaceFormat aFormat,
-                                uint8_t aPaletteDepth,
-                                imgFrame* aPreviousFrame);
-
-  /* notification that the entire image has been decoded */
-  void DecodingComplete(imgFrame* aFinalFrame);
-
-  /**
    * Number of times to loop the image.
    * @note -1 means forever.
    */
   void     SetLoopCount(int32_t aLoopCount);
+
+  /* notification that the entire image has been decoded */
+  void DecodingComplete(imgFrame* aFinalFrame);
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Network callbacks.
+  //////////////////////////////////////////////////////////////////////////////
 
   /* Add compressed source data to the imgContainer.
    *
@@ -310,12 +304,6 @@ private:
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                  MallocSizeOf aMallocSizeOf) const;
 
-  RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
-                                     const nsIntRect& aFrameRect,
-                                     uint32_t aDecodeFlags,
-                                     gfx::SurfaceFormat aFormat,
-                                     uint8_t aPaletteDepth,
-                                     imgFrame* aPreviousFrame);
   nsresult DoImageDataComplete();
 
   already_AddRefed<layers::Image> GetCurrentImage();
@@ -348,11 +336,9 @@ private: // data
   // and imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION.
   uint32_t                   mFrameDecodeFlags;
 
-  //! All the frames of the image.
-  Maybe<FrameBlender>       mFrameBlender;
-
   nsCOMPtr<nsIProperties>   mProperties;
 
+  //! All the frames of the image.
   // IMPORTANT: if you use mAnim in a method, call EnsureImageIsDecoded() first to ensure
   // that the frames actually exist (they may have been discarded to save memory, or
   // we maybe decoding on draw).
@@ -440,8 +426,8 @@ private: // data
   nsresult WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
-  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
-  nsresult DecodeSomeData(size_t aMaxBytes, DecodeStrategy aStrategy);
+  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount);
+  nsresult DecodeSomeData(size_t aMaxBytes);
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 

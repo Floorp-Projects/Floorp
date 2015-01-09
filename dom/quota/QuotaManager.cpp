@@ -225,7 +225,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run();
+  Run() MOZ_OVERRIDE;
 
   void
   AdvanceState()
@@ -299,7 +299,7 @@ public:
                      nsIUsageCallback* aCallback);
 
   NS_IMETHOD
-  Run();
+  Run() MOZ_OVERRIDE;
 
   void
   AdvanceState()
@@ -369,7 +369,7 @@ public:
   { }
 
   NS_IMETHOD
-  Run();
+  Run() MOZ_OVERRIDE;
 
   void
   AdvanceState()

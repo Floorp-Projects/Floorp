@@ -150,9 +150,9 @@ class AlertServiceObserver: public nsIObserver
   void Disconnect() { mNotification = nullptr; }
 
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject,
-          const char *aTopic,
-          const char16_t *aData)
+  Observe(nsISupports* aSubject,
+          const char* aTopic,
+          const char16_t* aData) MOZ_OVERRIDE
   {
 
     // forward to parent

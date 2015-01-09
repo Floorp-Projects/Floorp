@@ -104,14 +104,8 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
     def test_execute_async_unload(self):
         pass
 
-    def test_same_context(self):
-        pass
-
     def test_execute_permission(self):
         self.assertEqual(5, self.marionette.execute_async_script("""
 var c = Components.classes;
 marionetteScriptFinished(5);
 """))
-
-    def test_sandbox_reuse(self):
-        pass

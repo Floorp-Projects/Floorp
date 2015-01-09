@@ -28,8 +28,7 @@ public:
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal() MOZ_OVERRIDE;
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
-                             DecodeStrategy aStrategy) MOZ_OVERRIDE;
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
   virtual Telemetry::ID SpeedHistogram() MOZ_OVERRIDE;
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
@@ -98,8 +97,8 @@ public:
     AnimFrameInfo(png_structp aPNG, png_infop aInfo);
 #endif
 
-    FrameBlender::FrameDisposalMethod mDispose;
-    FrameBlender::FrameBlendMethod mBlend;
+    DisposalMethod mDispose;
+    BlendMethod mBlend;
     int32_t mTimeout;
   };
 

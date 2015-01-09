@@ -48,6 +48,7 @@
 #include "HalLog.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/battery/Constants.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
@@ -529,7 +530,7 @@ GetCurrentBatteryCharge(int* aCharge)
 static bool
 GetCurrentBatteryCharging(int* aCharging)
 {
-  static const int BATTERY_NOT_CHARGING = 0;
+  static const DebugOnly<int> BATTERY_NOT_CHARGING = 0;
   static const int BATTERY_CHARGING_USB = 1;
   static const int BATTERY_CHARGING_AC  = 2;
 
@@ -1313,8 +1314,8 @@ EnsureKernelLowMemKillerParamsSet()
   nsAutoCString adjParams;
   nsAutoCString minfreeParams;
 
-  int32_t lowerBoundOfNextOomScoreAdj = OOM_SCORE_ADJ_MIN - 1;
-  int32_t lowerBoundOfNextKillUnderKB = 0;
+  DebugOnly<int32_t> lowerBoundOfNextOomScoreAdj = OOM_SCORE_ADJ_MIN - 1;
+  DebugOnly<int32_t> lowerBoundOfNextKillUnderKB = 0;
   int32_t countOfLowmemorykillerParametersSets = 0;
 
   long page_size = sysconf(_SC_PAGESIZE);

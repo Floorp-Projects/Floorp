@@ -42,8 +42,10 @@ public:
 
   void SetSize(int32_t width, int32_t height, Orientation orientation)
   {
-    mSize.emplace(nsIntSize(width, height));
-    mOrientation.emplace(orientation);
+    if (!HasSize()) {
+      mSize.emplace(nsIntSize(width, height));
+      mOrientation.emplace(orientation);
+    }
   }
 
   bool HasSize() const { return mSize.isSome(); }

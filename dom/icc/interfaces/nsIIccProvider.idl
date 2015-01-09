@@ -58,7 +58,7 @@ interface nsIIccChannelCallback : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(bf985ee1-14c9-43c6-a471-8ab52fb24b0d)]
+[scriptable, uuid(a203cd2e-2280-4d8e-a687-42b745d322c1)]
 interface nsIIccProvider : nsISupports
 {
   // MUST match enum IccCardState in MozIcc.webidl!
@@ -101,22 +101,26 @@ interface nsIIccProvider : nsISupports
   const unsigned long CARD_LOCK_TYPE_PUK = 2;
   const unsigned long CARD_LOCK_TYPE_PUK2 = 3;
   const unsigned long CARD_LOCK_TYPE_NCK = 4;
-  const unsigned long CARD_LOCK_TYPE_NCK1 = 5;
-  const unsigned long CARD_LOCK_TYPE_NCK2 = 6;
-  const unsigned long CARD_LOCK_TYPE_HNCK = 7;
-  const unsigned long CARD_LOCK_TYPE_CCK = 8;
-  const unsigned long CARD_LOCK_TYPE_SPCK = 9;
-  const unsigned long CARD_LOCK_TYPE_RCCK = 10;
-  const unsigned long CARD_LOCK_TYPE_RSPCK = 11;
-  const unsigned long CARD_LOCK_TYPE_NCK_PUK = 12;
-  const unsigned long CARD_LOCK_TYPE_NCK1_PUK = 13;
-  const unsigned long CARD_LOCK_TYPE_NCK2_PUK = 14;
-  const unsigned long CARD_LOCK_TYPE_HNCK_PUK = 15;
-  const unsigned long CARD_LOCK_TYPE_CCK_PUK = 16;
-  const unsigned long CARD_LOCK_TYPE_SPCK_PUK = 17;
-  const unsigned long CARD_LOCK_TYPE_RCCK_PUK = 18;
-  const unsigned long CARD_LOCK_TYPE_RSPCK_PUK = 19;
-  const unsigned long CARD_LOCK_TYPE_FDN = 20;
+  const unsigned long CARD_LOCK_TYPE_NSCK = 5;
+  const unsigned long CARD_LOCK_TYPE_NCK1 = 6;
+  const unsigned long CARD_LOCK_TYPE_NCK2 = 7;
+  const unsigned long CARD_LOCK_TYPE_HNCK = 8;
+  const unsigned long CARD_LOCK_TYPE_CCK = 9;
+  const unsigned long CARD_LOCK_TYPE_SPCK = 10;
+  const unsigned long CARD_LOCK_TYPE_PCK = 11;
+  const unsigned long CARD_LOCK_TYPE_RCCK = 12;
+  const unsigned long CARD_LOCK_TYPE_RSPCK = 13;
+  const unsigned long CARD_LOCK_TYPE_NCK_PUK = 14;
+  const unsigned long CARD_LOCK_TYPE_NSCK_PUK = 15;
+  const unsigned long CARD_LOCK_TYPE_NCK1_PUK = 16;
+  const unsigned long CARD_LOCK_TYPE_NCK2_PUK = 17;
+  const unsigned long CARD_LOCK_TYPE_HNCK_PUK = 18;
+  const unsigned long CARD_LOCK_TYPE_CCK_PUK = 19;
+  const unsigned long CARD_LOCK_TYPE_SPCK_PUK = 20;
+  const unsigned long CARD_LOCK_TYPE_PCK_PUK = 21;
+  const unsigned long CARD_LOCK_TYPE_RCCK_PUK = 22;
+  const unsigned long CARD_LOCK_TYPE_RSPCK_PUK = 23;
+  const unsigned long CARD_LOCK_TYPE_FDN = 24;
 
   // MUST match with enum IccContactType in MozIcc.webidl
   const unsigned long CARD_CONTACT_TYPE_ADN = 0;
@@ -127,6 +131,9 @@ interface nsIIccProvider : nsISupports
   const unsigned long CARD_MVNO_TYPE_IMSI = 0;
   const unsigned long CARD_MVNO_TYPE_SPN = 1;
   const unsigned long CARD_MVNO_TYPE_GID = 2;
+
+  // MUST match with enum IccService in MozIcc.webidl
+  const unsigned long CARD_SERVICE_FDN = 0;
 
   /**
    * Called when a content process registers receiving unsolicited messages from
@@ -239,4 +246,8 @@ interface nsIIccProvider : nsISupports
                              in nsIDOMWindow window,
                              in unsigned long mvnoType,
                              in DOMString mvnoData);
+
+  nsISupports getServiceState(in unsigned long clientId,
+                              in nsIDOMWindow window,
+                              in unsigned long service);
 };

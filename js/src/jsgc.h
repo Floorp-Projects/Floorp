@@ -903,17 +903,6 @@ TraceRuntime(JSTracer *trc);
 extern void
 ReleaseAllJITCode(FreeOp *op);
 
-/*
- * Kinds of js_GC invocation.
- */
-typedef enum JSGCInvocationKind {
-    /* Normal invocation. */
-    GC_NORMAL           = 0,
-
-    /* Minimize GC triggers and release empty GC chunks right away. */
-    GC_SHRINK             = 1
-} JSGCInvocationKind;
-
 extern void
 PrepareForDebugGC(JSRuntime *rt);
 
