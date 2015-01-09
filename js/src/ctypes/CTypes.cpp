@@ -2216,7 +2216,7 @@ ConvertToJS(JSContext* cx,
 // ctypes.int8_t, UInt8Array to ctypes.uint8_t, etc.
 bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext *cx) {
   TypeCode baseTypeCode = CType::GetTypeCode(baseType);
-  if (baseTypeCode == TYPE_void_t) {
+  if (baseTypeCode == TYPE_void_t || baseTypeCode == TYPE_char) {
     return true;
   }
   TypeCode elementTypeCode;
@@ -2249,6 +2249,7 @@ bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext 
   default:
     return false;
   }
+
   return elementTypeCode == baseTypeCode;
 }
 
@@ -2451,9 +2452,13 @@ ImplicitConvert(JSContext* cx,
       }
       break;
     } else if (val.isObject() && JS_IsArrayBufferObject(valObj)) {
-      // Convert ArrayBuffer to pointer without any copy. Just as with C
-      // arrays, we make no effort to keep the ArrayBuffer alive. This
-      // functionality will be removed for all but arguments in bug 1080262.
+      // Convert ArrayBuffer to pointer without any copy. This is only valid
+      // when converting an argument to a function call, as it is possible for
+      // the pointer to be invalidated by anything that runs JS code. (It is
+      // invalid to invoke JS code from a ctypes function call.)
+      if (!isArgument) {
+        return TypeError(cx, "arraybuffer pointer", val);
+      }
       void* ptr;
       {
           JS::AutoCheckCannotGC nogc;
@@ -2464,11 +2469,14 @@ ImplicitConvert(JSContext* cx,
       }
       *static_cast<void**>(buffer) = ptr;
       break;
-    } if (val.isObject() && JS_IsArrayBufferViewObject(valObj)) {
-      // Same as ArrayBuffer, above, though note that this will take the offset
-      // of the view into account.
+    } else if (val.isObject() && JS_IsArrayBufferViewObject(valObj)) {
+      // Same as ArrayBuffer, above, though note that this will take the
+      // offset of the view into account.
       if(!CanConvertTypedArrayItemTo(baseType, valObj, cx)) {
         return TypeError(cx, "typed array with the appropriate type", val);
+      }
+      if (!isArgument) {
+        return TypeError(cx, "typed array pointer", val);
       }
       void* ptr;
       {

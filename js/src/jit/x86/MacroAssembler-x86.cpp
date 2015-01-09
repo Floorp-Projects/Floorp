@@ -187,7 +187,7 @@ MacroAssemblerX86::finish()
 
     // SIMD memory values must be suitably aligned.
     if (!simds_.empty())
-        masm.align(SimdStackAlignment);
+        masm.align(SimdMemoryAlignment);
     for (size_t i = 0; i < simds_.length(); i++) {
         CodeLabel cl(simds_[i].uses);
         SimdData &v = simds_[i];

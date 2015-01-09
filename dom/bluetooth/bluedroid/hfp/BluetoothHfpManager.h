@@ -77,6 +77,8 @@ class BluetoothHfpManager : public BluetoothHfpManagerBase
 public:
   BT_DECL_HFP_MGR_BASE
 
+  static const int MAX_NUM_CLIENTS;
+
   void OnConnectError();
   void OnDisconnectError();
 
@@ -117,19 +119,24 @@ public:
                                    const nsAString& aBdAddress) MOZ_OVERRIDE;
   void AudioStateNotification(BluetoothHandsfreeAudioState aState,
                               const nsAString& aBdAddress) MOZ_OVERRIDE;
-  void AnswerCallNotification() MOZ_OVERRIDE;
-  void HangupCallNotification() MOZ_OVERRIDE;
+  void AnswerCallNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void HangupCallNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
   void VolumeNotification(BluetoothHandsfreeVolumeType aType,
-                          int aVolume) MOZ_OVERRIDE;
-  void DtmfNotification(char aDtmf) MOZ_OVERRIDE;
-  void CallHoldNotification(BluetoothHandsfreeCallHoldType aChld) MOZ_OVERRIDE;
-  void DialCallNotification(const nsAString& aNumber) MOZ_OVERRIDE;
-  void CnumNotification() MOZ_OVERRIDE;
-  void CindNotification() MOZ_OVERRIDE;
-  void CopsNotification() MOZ_OVERRIDE;
-  void ClccNotification() MOZ_OVERRIDE;
-  void UnknownAtNotification(const nsACString& aAtString) MOZ_OVERRIDE;
-  void KeyPressedNotification() MOZ_OVERRIDE;
+                          int aVolume,
+                          const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void DtmfNotification(char aDtmf,
+                        const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
+                            const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void DialCallNotification(const nsAString& aNumber,
+                            const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void CnumNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void CindNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void CopsNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void ClccNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void UnknownAtNotification(const nsACString& aAtString,
+                             const nsAString& aBdAddress) MOZ_OVERRIDE;
+  void KeyPressedNotification(const nsAString& aBdAddress) MOZ_OVERRIDE;
 
 private:
   class GetVolumeTask;

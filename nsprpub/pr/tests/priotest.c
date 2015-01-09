@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
     PR_ProcessExit((failed) ? 1 : 0);
 
-	PR_ASSERT(!"You can't get here -- but you did!");
+	PR_NOT_REACHED("You can't get here -- but you did!");
 	return 1;  /* or here */
 
 }  /* main */

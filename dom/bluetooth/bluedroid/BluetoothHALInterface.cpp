@@ -176,6 +176,11 @@ struct BluetoothCallback
                                             BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
+  typedef BluetoothNotificationHALRunnable1<NotificationHandlerWrapper, void,
+                                            BluetoothActivityEnergyInfo,
+                                            const BluetoothActivityEnergyInfo&>
+    EnergyInfoNotification;
+
   // Bluedroid callbacks
 
   static const bt_property_t*
@@ -313,7 +318,56 @@ struct BluetoothCallback
       &BluetoothNotificationHandler::LeTestModeNotification,
       aStatus, aNumPackets);
   }
+
+#if ANDROID_VERSION >= 21
+  static void
+  EnergyInfo(bt_activity_energy_info* aEnergyInfo)
+  {
+    if (NS_WARN_IF(!aEnergyInfo)) {
+      return;
+    }
+
+    EnergyInfoNotification::Dispatch(
+      &BluetoothNotificationHandler::EnergyInfoNotification,
+      *aEnergyInfo);
+  }
+#endif
 };
+
+#if ANDROID_VERSION >= 21
+struct BluetoothOsCallout
+{
+  static bool
+  SetWakeAlarm(uint64_t aDelayMilliseconds,
+               bool aShouldWake,
+               void (* aAlarmCallback)(void*),
+               void* aData)
+  {
+    // FIXME: need to be implemented in later patches
+    // HAL wants to manage an wake_alarm but Gecko cannot fulfill it for now.
+    // Simply pass the request until a proper implementation has been added.
+    return true;
+  }
+
+  static int
+  AcquireWakeLock(const char* aLockName)
+  {
+    // FIXME: need to be implemented in later patches
+    // HAL wants to manage an wake_lock but Gecko cannot fulfill it for now.
+    // Simply pass the request until a proper implementation has been added.
+    return BT_STATUS_SUCCESS;
+  }
+
+  static int
+  ReleaseWakeLock(const char* aLockName)
+  {
+    // FIXME: need to be implemented in later patches
+    // HAL wants to manage an wake_lock but Gecko cannot fulfill it for now.
+    // Simply pass the request until a proper implementation has been added.
+    return BT_STATUS_SUCCESS;
+  }
+};
+#endif
 
 // Interface
 //
@@ -409,13 +463,34 @@ BluetoothHALInterface::Init(
     BluetoothCallback::ThreadEvt,
     BluetoothCallback::DutModeRecv,
 #if ANDROID_VERSION >= 18
-    BluetoothCallback::LeTestMode
+    BluetoothCallback::LeTestMode,
+#endif
+#if ANDROID_VERSION >= 21
+    BluetoothCallback::EnergyInfo
 #endif
   };
+
+#if ANDROID_VERSION >= 21
+  static bt_os_callouts_t sBluetoothOsCallouts = {
+    sizeof(sBluetoothOsCallouts),
+    BluetoothOsCallout::SetWakeAlarm,
+    BluetoothOsCallout::AcquireWakeLock,
+    BluetoothOsCallout::ReleaseWakeLock
+  };
+#endif
 
   sNotificationHandler = aNotificationHandler;
 
   int status = mInterface->init(&sBluetoothCallbacks);
+
+#if ANDROID_VERSION >= 21
+  if (status == BT_STATUS_SUCCESS) {
+    status = mInterface->set_os_callouts(&sBluetoothOsCallouts);
+    if (status != BT_STATUS_SUCCESS) {
+      mInterface->cleanup();
+    }
+  }
+#endif
 
   if (aRes) {
     DispatchBluetoothHALResult(aRes, &BluetoothResultHandler::Init,
@@ -665,13 +740,22 @@ BluetoothHALInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 
 void
 BluetoothHALInterface::CreateBond(const nsAString& aBdAddr,
+                                  BluetoothTransport aTransport,
                                   BluetoothResultHandler* aRes)
 {
   bt_bdaddr_t bdAddr;
   int status;
 
+#if ANDROID_VERSION >= 21
+  int transport = 0; /* TRANSPORT_AUTO */
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
+      NS_SUCCEEDED(Convert(aTransport, transport))) {
+    status = mInterface->create_bond(&bdAddr, transport);
+#else
   if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
     status = mInterface->create_bond(&bdAddr);
+#endif
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
@@ -719,6 +803,33 @@ BluetoothHALInterface::CancelBond(const nsAString& aBdAddr,
   if (aRes) {
     DispatchBluetoothHALResult(aRes,
                                &BluetoothResultHandler::CancelBond,
+                               ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+/* Connection */
+
+void
+BluetoothHALInterface::GetConnectionState(const nsAString& aBdAddr,
+                                          BluetoothResultHandler* aRes)
+{
+  int status;
+
+#if ANDROID_VERSION >= 21
+  bt_bdaddr_t bdAddr;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->get_connection_state(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothHALResult(aRes,
+                               &BluetoothResultHandler::GetConnectionState,
                                ConvertDefault(status, STATUS_FAIL));
   }
 }
@@ -827,6 +938,23 @@ BluetoothHALInterface::LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
   if (aRes) {
     DispatchBluetoothHALResult(aRes,
                                &BluetoothResultHandler::LeTestMode,
+                               ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+/* Energy Information */
+void
+BluetoothHALInterface::ReadEnergyInfo(BluetoothResultHandler* aRes)
+{
+#if ANDROID_VERSION >= 21
+  int status = mInterface->read_energy_info();
+#else
+  int status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothHALResult(aRes,
+                               &BluetoothResultHandler::ReadEnergyInfo,
                                ConvertDefault(status, STATUS_FAIL));
   }
 }
