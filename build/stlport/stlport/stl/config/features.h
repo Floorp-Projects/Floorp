@@ -308,8 +308,7 @@
 /* Some compiler support 0 size array so we use negative size array to generate
  * a compilation time error.
  */
-//#  define _STLP_STATIC_ASSERT(expr) typedef char __static_assert[expr ? 1 : -1];
-#  define _STLP_STATIC_ASSERT(expr) static_assert(expr, "static_assert failed");
+#  define _STLP_STATIC_ASSERT(expr) typedef char __static_assert[expr ? 1 : -1];
 #endif
 
 /* apple mpw exception handling bug */
