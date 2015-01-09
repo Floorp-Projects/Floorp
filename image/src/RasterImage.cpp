@@ -1489,7 +1489,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Initialize the decoder
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
-  mDecoder->SetSendPartialInvalidations(!mHasBeenDecoded);
   mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
@@ -2392,6 +2391,16 @@ RasterImage::FinishedSomeDecoding(ShutdownReason aReason /* = ShutdownReason::DO
     }
   }
 
+  if (GetCurrentFrameIndex() > 0) {
+    // Don't send invalidations for animated frames after the first; let
+    // RequestRefresh take care of that.
+    invalidRect = nsIntRect();
+  }
+  if (mHasBeenDecoded && !invalidRect.IsEmpty()) {
+    // Don't send partial invalidations if we've been decoded before.
+    invalidRect = mDecoded ? GetFirstFrameRect()
+                           : nsIntRect();
+  }
   if (!invalidRect.IsEmpty() && wasDefaultFlags) {
     // Update our image container since we're invalidating.
     UpdateImageContainer();
