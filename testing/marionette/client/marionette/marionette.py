@@ -896,7 +896,7 @@ class Marionette(object):
         return self.window
 
     @property
-    def chrome_window_handle(self):
+    def current_chrome_window_handle(self):
         """Get the current chrome window's handle. Corresponds to
         a chrome window that may itself contain tabs identified by
         window_handles.
@@ -909,7 +909,7 @@ class Marionette(object):
         :rtype: string
 
         """
-        self.chrome_window = self._send_message("getChromeWindowHandle", "value")
+        self.chrome_window = self._send_message("getCurrentChromeWindowHandle", "value")
         return self.chrome_window
 
 
