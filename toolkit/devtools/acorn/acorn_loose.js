@@ -40,12 +40,13 @@
 
   var options, input, fetchToken, context;
 
+  acorn.defaultOptions.tabSize = 4;
+
   exports.parse_dammit = function(inpt, opts) {
     if (!opts) opts = {};
     input = String(inpt);
-    options = opts;
-    if (!opts.tabSize) opts.tabSize = 4;
-    fetchToken = acorn.tokenize(inpt, opts);
+    fetchToken = acorn.tokenize(input, opts);
+    options = fetchToken.options;
     sourceFile = options.sourceFile || null;
     context = [];
     nextLineStart = 0;
@@ -57,15 +58,14 @@
   var lastEnd, token = {start: 0, end: 0}, ahead = [];
   var curLineStart, nextLineStart, curIndent, lastEndLoc, sourceFile;
 
-  function next() {
+  function next(forceRegexp) {
     lastEnd = token.end;
     if (options.locations)
       lastEndLoc = token.endLoc;
+    if (forceRegexp)
+      ahead.length = 0;
 
-    if (ahead.length)
-      token = ahead.shift();
-    else
-      token = readToken();
+    token = ahead.shift() || readToken(forceRegexp);
 
     if (token.start >= nextLineStart) {
       while (token.start >= nextLineStart) {
@@ -76,23 +76,33 @@
     }
   }
 
-  function readToken() {
+  function readToken(forceRegexp) {
     for (;;) {
       try {
-        return fetchToken();
+        var tok = fetchToken(forceRegexp);
+        if (tok.type === tt.dot && input.substr(tok.end, 1) === '.') {
+          tok = fetchToken();
+          tok.start--;
+          tok.type = tt.ellipsis;
+        }
+        return tok;
       } catch(e) {
         if (!(e instanceof SyntaxError)) throw e;
 
         // Try to skip some text, based on the error message, and then continue
         var msg = e.message, pos = e.raisedAt, replace = true;
         if (/unterminated/i.test(msg)) {
-          pos = lineEnd(e.pos);
+          pos = lineEnd(e.pos + 1);
           if (/string/.test(msg)) {
             replace = {start: e.pos, end: pos, type: tt.string, value: input.slice(e.pos + 1, pos)};
           } else if (/regular expr/i.test(msg)) {
             var re = input.slice(e.pos, pos);
             try { re = new RegExp(re); } catch(e) {}
             replace = {start: e.pos, end: pos, type: tt.regexp, value: re};
+          } else if (/template/.test(msg)) {
+            replace = {start: e.pos, end: pos,
+                       type: input.charAt(e.pos) == "`" ? tt.template : tt.templateContinued,
+                       value: input.slice(e.pos + 1, pos)};
           } else {
             replace = false;
           }
@@ -106,6 +116,8 @@
         } else if (/unexpected character/i.test(msg)) {
           pos++;
           replace = false;
+        } else if (/regular expression/i.test(msg)) {
+          replace = true;
         } else {
           throw e;
         }
@@ -123,28 +135,23 @@
   }
 
   function resetTo(pos) {
-    var ch = input.charAt(pos - 1);
-    var reAllowed = !ch || /[\[\{\(,;:?\/*=+\-~!|&%^<>]/.test(ch) ||
-      /[enwfd]/.test(ch) && /\b(keywords|case|else|return|throw|new|in|(instance|type)of|delete|void)$/.test(input.slice(pos - 10, pos));
-    fetchToken.jumpTo(pos, reAllowed);
-  }
-
-  function copyToken(token) {
-    var copy = {start: token.start, end: token.end, type: token.type, value: token.value};
-    if (options.locations) {
-      copy.startLoc = token.startLoc;
-      copy.endLoc = token.endLoc;
+    for (;;) {
+      try {
+        var ch = input.charAt(pos - 1);
+        var reAllowed = !ch || /[\[\{\(,;:?\/*=+\-~!|&%^<>]/.test(ch) ||
+          /[enwfd]/.test(ch) && /\b(keywords|case|else|return|throw|new|in|(instance|type)of|delete|void)$/.test(input.slice(pos - 10, pos));
+        return fetchToken.jumpTo(pos, reAllowed);
+      } catch(e) {
+        if (!(e instanceof SyntaxError && /unterminated comment/i.test(e.message))) throw e;
+        pos = lineEnd(e.pos + 1);
+        if (pos >= input.length) return;
+      }
     }
-    return copy;
   }
 
   function lookAhead(n) {
-    // Copy token objects, because fetchToken will overwrite the one
-    // it returns, and in this case we still need it
-    if (!ahead.length)
-      token = copyToken(token);
     while (n > ahead.length)
-      ahead.push(copyToken(readToken()));
+      ahead.push(readToken());
     return ahead[n-1];
   }
 
@@ -193,31 +200,46 @@
     return true;
   }
 
-  function node_t(start) {
+  function Node(start) {
     this.type = null;
     this.start = start;
     this.end = null;
   }
+  Node.prototype = acorn.Node.prototype;
 
-  function node_loc_t(start) {
+  function SourceLocation(start) {
     this.start = start || token.startLoc || {line: 1, column: 0};
     this.end = null;
     if (sourceFile !== null) this.source = sourceFile;
   }
 
   function startNode() {
-    var node = new node_t(token.start);
+    var node = new Node(token.start);
     if (options.locations)
-      node.loc = new node_loc_t();
+      node.loc = new SourceLocation();
     if (options.directSourceFile)
       node.sourceFile = options.directSourceFile;
+    if (options.ranges)
+      node.range = [token.start, 0];
     return node;
   }
 
-  function startNodeFrom(other) {
-    var node = new node_t(other.start);
-    if (options.locations)
-      node.loc = new node_loc_t(other.loc.start);
+  function storeCurrentPos() {
+    return options.locations ? [token.start, token.startLoc] : token.start;
+  }
+
+  function startNodeAt(pos) {
+    var node;
+    if (options.locations) {
+      node = new Node(pos[0]);
+      node.loc = new SourceLocation(pos[1]);
+    } else {
+      node = new Node(pos);
+    }
+    if (options.directSourceFile)
+      node.sourceFile = options.directSourceFile;
+    if (options.ranges)
+      node.range = [pos[0], 0];
     return node;
   }
 
@@ -226,24 +248,23 @@
     node.end = lastEnd;
     if (options.locations)
       node.loc.end = lastEndLoc;
+    if (options.ranges)
+      node.range[1] = lastEnd;
     return node;
   }
 
-  function getDummyLoc() {
-    if (options.locations) {
-      var loc = new node_loc_t();
-      loc.end = loc.start;
-      return loc;
-    }
-  };
+  function finishNodeAt(node, type, pos) {
+    if (options.locations) { node.loc.end = pos[1]; pos = pos[0]; }
+    node.type = type;
+    node.end = pos;
+    if (options.ranges) node.range[1] = pos;
+    return node;
+  }
 
   function dummyIdent() {
-    var dummy = new node_t(token.start);
-    dummy.type = "Identifier";
-    dummy.end = token.start;
+    var dummy = startNode();
     dummy.name = "✖";
-    dummy.loc = getDummyLoc();
-    return dummy;
+    return finishNode(dummy, "Identifier");
   }
   function isDummy(node) { return node.name == "✖"; }
 
@@ -251,6 +272,8 @@
     if (token.type === type) {
       next();
       return true;
+    } else {
+      return false;
     }
   }
 
@@ -258,7 +281,7 @@
     return (token.type === tt.eof || token.type === tt.braceR || newline.test(input.slice(lastEnd, token.start)));
   }
   function semicolon() {
-    eat(tt.semi);
+    return eat(tt.semi);
   }
 
   function expect(type) {
@@ -274,26 +297,46 @@
   }
 
   function checkLVal(expr) {
-    if (expr.type === "Identifier" || expr.type === "MemberExpression") return expr;
-    return dummyIdent();
+    if (!expr) return expr;
+    switch (expr.type) {
+      case "Identifier":
+      case "MemberExpression":
+      case "ObjectPattern":
+      case "ArrayPattern":
+      case "SpreadElement":
+      case "AssignmentPattern":
+        return expr;
+
+      default:
+        return dummyIdent();
+    }
   }
 
   function parseTopLevel() {
-    var node = startNode();
+    var node = startNodeAt(options.locations ? [0, acorn.getLineInfo(input, 0)] : 0);
     node.body = [];
     while (token.type !== tt.eof) node.body.push(parseStatement());
+    lastEnd = token.end;
+    lastEndLoc = token.endLoc;
     return finishNode(node, "Program");
   }
 
   function parseStatement() {
+    if (token.type === tt.slash || token.type === tt.assign && token.value === "/=")
+      next(true);
+
     var starttype = token.type, node = startNode();
 
     switch (starttype) {
     case tt._break: case tt._continue:
       next();
       var isBreak = starttype === tt._break;
-      node.label = token.type === tt.name ? parseIdent() : null;
-      semicolon();
+      if (semicolon() || canInsertSemicolon()) {
+        node.label = null;
+      } else {
+        node.label = token.type === tt.name ? parseIdent() : null;
+        semicolon();
+      }
       return finishNode(node, isBreak ? "BreakStatement" : "ContinueStatement");
 
     case tt._debugger:
@@ -313,16 +356,17 @@
       pushCx();
       expect(tt.parenL);
       if (token.type === tt.semi) return parseFor(node, null);
-      if (token.type === tt._var) {
-        var init = startNode();
-        next();
-        parseVar(init, true);
-        if (init.declarations.length === 1 && eat(tt._in))
+      if (token.type === tt._var || token.type === tt._let) {
+        var init = parseVar(true);
+        if (init.declarations.length === 1 && (token.type === tt._in || token.type === tt.name && token.value === "of")) {
           return parseForIn(node, init);
+        }
         return parseFor(node, init);
       }
       var init = parseExpression(false, true);
-      if (eat(tt._in)) {return parseForIn(node, checkLVal(init));}
+      if (token.type === tt._in || token.type === tt.name && token.value === "of") {
+        return parseForIn(node, checkLVal(init));
+      }
       return parseFor(node, init);
 
     case tt._function:
@@ -399,10 +443,9 @@
       return finishNode(node, "TryStatement");
 
     case tt._var:
-      next();
-      node = parseVar(node);
-      semicolon();
-      return node;
+    case tt._let:
+    case tt._const:
+      return parseVar();
 
     case tt._while:
       next();
@@ -422,6 +465,15 @@
     case tt.semi:
       next();
       return finishNode(node, "EmptyStatement");
+
+    case tt._class:
+      return parseObj(true, true);
+
+    case tt._import:
+      return parseImport();
+
+    case tt._export:
+      return parseExport();
 
     default:
       var expr = parseExpression();
@@ -466,36 +518,41 @@
   }
 
   function parseForIn(node, init) {
+    var type = token.type === tt._in ? "ForInStatement" : "ForOfStatement";
+    next();
     node.left = init;
     node.right = parseExpression();
     popCx();
     expect(tt.parenR);
     node.body = parseStatement();
-    return finishNode(node, "ForInStatement");
+    return finishNode(node, type);
   }
 
-  function parseVar(node, noIn) {
+  function parseVar(noIn) {
+    var node = startNode();
+    node.kind = token.type.keyword;
+    next();
     node.declarations = [];
-    node.kind = "var";
-    while (token.type === tt.name) {
+    do {
       var decl = startNode();
-      decl.id = parseIdent();
+      decl.id = options.ecmaVersion >= 6 ? toAssignable(parseExprAtom()) : parseIdent();
       decl.init = eat(tt.eq) ? parseExpression(true, noIn) : null;
       node.declarations.push(finishNode(decl, "VariableDeclarator"));
-      if (!eat(tt.comma)) break;
-    }
+    } while (eat(tt.comma));
     if (!node.declarations.length) {
       var decl = startNode();
       decl.id = dummyIdent();
       node.declarations.push(finishNode(decl, "VariableDeclarator"));
     }
+    if (!noIn) semicolon();
     return finishNode(node, "VariableDeclaration");
   }
 
   function parseExpression(noComma, noIn) {
+    var start = storeCurrentPos();
     var expr = parseMaybeAssign(noIn);
     if (!noComma && token.type === tt.comma) {
-      var node = startNodeFrom(expr);
+      var node = startNodeAt(start);
       node.expressions = [expr];
       while (eat(tt.comma)) node.expressions.push(parseMaybeAssign(noIn));
       return finishNode(node, "SequenceExpression");
@@ -513,11 +570,12 @@
   }
 
   function parseMaybeAssign(noIn) {
+    var start = storeCurrentPos();
     var left = parseMaybeConditional(noIn);
     if (token.type.isAssign) {
-      var node = startNodeFrom(left);
+      var node = startNodeAt(start);
       node.operator = token.value;
-      node.left = checkLVal(left);
+      node.left = token.type === tt.eq ? toAssignable(left) : checkLVal(left);
       next();
       node.right = parseMaybeAssign(noIn);
       return finishNode(node, "AssignmentExpression");
@@ -526,9 +584,10 @@
   }
 
   function parseMaybeConditional(noIn) {
+    var start = storeCurrentPos();
     var expr = parseExprOps(noIn);
     if (eat(tt.question)) {
-      var node = startNodeFrom(expr);
+      var node = startNodeAt(start);
       node.test = expr;
       node.consequent = parseExpression(true);
       node.alternate = expect(tt.colon) ? parseExpression(true, noIn) : dummyIdent();
@@ -538,25 +597,28 @@
   }
 
   function parseExprOps(noIn) {
+    var start = storeCurrentPos();
     var indent = curIndent, line = curLineStart;
-    return parseExprOp(parseMaybeUnary(noIn), -1, noIn, indent, line);
+    return parseExprOp(parseMaybeUnary(noIn), start, -1, noIn, indent, line);
   }
 
-  function parseExprOp(left, minPrec, noIn, indent, line) {
+  function parseExprOp(left, start, minPrec, noIn, indent, line) {
     if (curLineStart != line && curIndent < indent && tokenStartsLine()) return left;
     var prec = token.type.binop;
     if (prec != null && (!noIn || token.type !== tt._in)) {
       if (prec > minPrec) {
-        var node = startNodeFrom(left);
+        var node = startNodeAt(start);
         node.left = left;
         node.operator = token.value;
         next();
-        if (curLineStart != line && curIndent < indent && tokenStartsLine())
+        if (curLineStart != line && curIndent < indent && tokenStartsLine()) {
           node.right = dummyIdent();
-        else
-          node.right = parseExprOp(parseMaybeUnary(noIn), prec, noIn, indent, line);
-        var node = finishNode(node, /&&|\|\|/.test(node.operator) ? "LogicalExpression" : "BinaryExpression");
-        return parseExprOp(node, minPrec, noIn, indent, line);
+        } else {
+          var rightStart = storeCurrentPos();
+          node.right = parseExprOp(parseMaybeUnary(noIn), rightStart, prec, noIn, indent, line);
+        }
+        finishNode(node, /&&|\|\|/.test(node.operator) ? "LogicalExpression" : "BinaryExpression");
+        return parseExprOp(node, start, minPrec, noIn, indent, line);
       }
     }
     return left;
@@ -564,17 +626,25 @@
 
   function parseMaybeUnary(noIn) {
     if (token.type.prefix) {
-      var node = startNode(), update = token.type.isUpdate;
+      var node = startNode(), update = token.type.isUpdate, nodeType;
+      if (token.type === tt.ellipsis) {
+        nodeType = "SpreadElement";
+      } else {
+        nodeType = update ? "UpdateExpression" : "UnaryExpression";
+        node.operator = token.value;
+        node.prefix = true;
+      }
       node.operator = token.value;
       node.prefix = true;
       next();
       node.argument = parseMaybeUnary(noIn);
       if (update) node.argument = checkLVal(node.argument);
-      return finishNode(node, update ? "UpdateExpression" : "UnaryExpression");
+      return finishNode(node, nodeType);
     }
+    var start = storeCurrentPos();
     var expr = parseExprSubscripts();
     while (token.type.postfix && !canInsertSemicolon()) {
-      var node = startNodeFrom(expr);
+      var node = startNodeAt(start);
       node.operator = token.value;
       node.prefix = false;
       node.argument = checkLVal(expr);
@@ -585,10 +655,11 @@
   }
 
   function parseExprSubscripts() {
-    return parseSubscripts(parseExprAtom(), false, curIndent, curLineStart);
+    var start = storeCurrentPos();
+    return parseSubscripts(parseExprAtom(), start, false, curIndent, curLineStart);
   }
 
-  function parseSubscripts(base, noCalls, startIndent, line) {
+  function parseSubscripts(base, start, noCalls, startIndent, line) {
     for (;;) {
       if (curLineStart != line && curIndent <= startIndent && tokenStartsLine()) {
         if (token.type == tt.dot && curIndent == startIndent)
@@ -598,18 +669,18 @@
       }
 
       if (eat(tt.dot)) {
-        var node = startNodeFrom(base);
+        var node = startNodeAt(start);
         node.object = base;
         if (curLineStart != line && curIndent <= startIndent && tokenStartsLine())
           node.property = dummyIdent();
         else
-          node.property = parsePropertyName() || dummyIdent();
+          node.property = parsePropertyAccessor() || dummyIdent();
         node.computed = false;
         base = finishNode(node, "MemberExpression");
       } else if (token.type == tt.bracketL) {
         pushCx();
         next();
-        var node = startNodeFrom(base);
+        var node = startNodeAt(start);
         node.object = base;
         node.property = parseExpression();
         node.computed = true;
@@ -618,10 +689,15 @@
         base = finishNode(node, "MemberExpression");
       } else if (!noCalls && token.type == tt.parenL) {
         pushCx();
-        var node = startNodeFrom(base);
+        var node = startNodeAt(start);
         node.callee = base;
         node.arguments = parseExprList(tt.parenR);
         base = finishNode(node, "CallExpression");
+      } else if (token.type == tt.template) {
+        var node = startNodeAt(start);
+        node.tag = base;
+        node.quasi = parseTemplate();
+        base = finishNode(node, "TaggedTemplateExpression");
       } else {
         return base;
       }
@@ -634,9 +710,22 @@
       var node = startNode();
       next();
       return finishNode(node, "ThisExpression");
+
     case tt.name:
-      return parseIdent();
-    case tt.num: case tt.string: case tt.regexp:
+      var start = storeCurrentPos();
+      var id = parseIdent();
+      return eat(tt.arrow) ? parseArrowExpression(startNodeAt(start), [id]) : id;
+
+    case tt.regexp:
+      var node = startNode();
+      var val = token.value;
+      node.regex = {pattern: val.pattern, flags: val.flags};
+      node.value = val.value;
+      node.raw = input.slice(token.start, token.end);
+      next();
+      return finishNode(node, "Literal");
+
+    case tt.num: case tt.string:
       var node = startNode();
       node.value = token.value;
       node.raw = input.slice(token.start, token.end);
@@ -651,22 +740,31 @@
       return finishNode(node, "Literal");
 
     case tt.parenL:
-      var tokStart1 = token.start;
+      var start = storeCurrentPos();
       next();
       var val = parseExpression();
-      val.start = tokStart1;
-      val.end = token.end;
       expect(tt.parenR);
+      if (eat(tt.arrow)) {
+        return parseArrowExpression(startNodeAt(start), val.expressions || (isDummy(val) ? [] : [val]));
+      }
+      if (options.preserveParens) {
+        var par = startNodeAt(start);
+        par.expression = val;
+        val = finishNode(par, "ParenthesizedExpression");
+      }
       return val;
 
     case tt.bracketL:
       var node = startNode();
       pushCx();
-      node.elements = parseExprList(tt.bracketR);
+      node.elements = parseExprList(tt.bracketR, true);
       return finishNode(node, "ArrayExpression");
 
     case tt.braceL:
       return parseObj();
+
+    case tt._class:
+      return parseObj(true);
 
     case tt._function:
       var node = startNode();
@@ -676,6 +774,21 @@
     case tt._new:
       return parseNew();
 
+    case tt._yield:
+      var node = startNode();
+      next();
+      if (semicolon() || canInsertSemicolon()) {
+        node.delegate = false;
+        node.argument = null;
+      } else {
+        node.delegate = eat(tt.star);
+        node.argument = parseExpression(true);
+      }
+      return finishNode(node, "YieldExpression");
+
+    case tt.template:
+      return parseTemplate();
+
     default:
       return dummyIdent();
     }
@@ -684,7 +797,8 @@
   function parseNew() {
     var node = startNode(), startIndent = curIndent, line = curLineStart;
     next();
-    node.callee = parseSubscripts(parseExprAtom(), true, startIndent, line);
+    var start = storeCurrentPos();
+    node.callee = parseSubscripts(parseExprAtom(), start, true, startIndent, line);
     if (token.type == tt.parenL) {
       pushCx();
       node.arguments = parseExprList(tt.parenR);
@@ -694,41 +808,135 @@
     return finishNode(node, "NewExpression");
   }
 
-  function parseObj() {
-    var node = startNode();
-    node.properties = [];
-    pushCx();
+  function parseTemplateElement() {
+    var elem = startNodeAt(options.locations ? [token.start + 1, token.startLoc.offset(1)] : token.start + 1);
+    elem.value = token.value;
+    elem.tail = input.charCodeAt(token.end - 1) !== 123; // '{'
+    var endOff = elem.tail ? 1 : 2;
+    var endPos = options.locations ? [token.end - endOff, token.endLoc.offset(-endOff)] : token.end - endOff;
     next();
-    var propIndent = curIndent, line = curLineStart;
-    while (!closes(tt.braceR, propIndent, line)) {
-      var name = parsePropertyName();
-      if (!name) { if (isDummy(parseExpression(true))) next(); eat(tt.comma); continue; }
-      var prop = {key: name}, isGetSet = false, kind;
-      if (eat(tt.colon)) {
-        prop.value = parseExpression(true);
-        kind = prop.kind = "init";
-      } else if (options.ecmaVersion >= 5 && prop.key.type === "Identifier" &&
-                 (prop.key.name === "get" || prop.key.name === "set")) {
-        isGetSet = true;
-        kind = prop.kind = prop.key.name;
-        prop.key = parsePropertyName() || dummyIdent();
-        prop.value = parseFunction(startNode(), false);
-      } else {
-        next();
-        eat(tt.comma);
-        continue;
-      }
-
-      node.properties.push(prop);
-      eat(tt.comma);
-    }
-    popCx();
-    eat(tt.braceR);
-    return finishNode(node, "ObjectExpression");
+    return finishNodeAt(elem, "TemplateElement", endPos);
   }
 
-  function parsePropertyName() {
-    if (token.type === tt.num || token.type === tt.string) return parseExprAtom();
+  function parseTemplate() {
+    var node = startNode();
+    node.expressions = [];
+    var curElt = parseTemplateElement();
+    node.quasis = [curElt];
+    while (!curElt.tail) {
+      var next = parseExpression();
+      if (isDummy(next)) {
+        node.quasis[node.quasis.length - 1].tail = true;
+        break;
+      }
+      node.expressions.push(next);
+      if (token.type === tt.templateContinued) {
+        node.quasis.push(curElt = parseTemplateElement());
+      } else {
+        curElt = startNode();
+        curElt.value = {cooked: "", raw: ""};
+        curElt.tail = true;
+        node.quasis.push(curElt);
+      }
+    }
+    return finishNode(node, "TemplateLiteral");
+  }
+
+  function parseObj(isClass, isStatement) {
+    var node = startNode();
+    if (isClass) {
+      next();
+      if (token.type === tt.name) node.id = parseIdent();
+      else if (isStatement) node.id = dummyIdent();
+      node.superClass = eat(tt._extends) ? parseExpression() : null;
+      node.body = startNode();
+      node.body.body = [];
+    } else {
+      node.properties = [];
+    }
+    pushCx();
+    var indent = curIndent + 1, line = curLineStart;
+    eat(tt.braceL);
+    if (curIndent + 1 < indent) { indent = curIndent; line = curLineStart; }
+    while (!closes(tt.braceR, indent, line)) {
+      var prop = startNode(), isGenerator;
+      if (options.ecmaVersion >= 6) {
+        if (isClass) {
+          if (prop['static'] = (token.type === tt.name && token.value === "static")) next();
+        } else {
+          prop.method = false;
+          prop.shorthand = false;
+        }
+        isGenerator = eat(tt.star);
+      }
+      parsePropertyName(prop);
+      if (isDummy(prop.key)) { if (isDummy(parseExpression(true))) next(); eat(tt.comma); continue; }
+      if (!isClass && eat(tt.colon)) {
+        prop.kind = "init";
+        prop.value = parseExpression(true);
+      } else if (options.ecmaVersion >= 6 && (token.type === tt.parenL || token.type === tt.braceL)) {
+        if (isClass) {
+          prop.kind = "";
+        } else {
+          prop.kind = "init";
+          prop.method = true;
+        }
+        prop.value = parseMethod(isGenerator);
+      } else if (options.ecmaVersion >= 5 && prop.key.type === "Identifier" &&
+                 (prop.key.name === "get" || prop.key.name === "set") &&
+                 (token.type != tt.comma && token.type != tt.braceR)) {
+        prop.kind = prop.key.name;
+        parsePropertyName(prop);
+        prop.value = parseMethod(false);
+      } else if (isClass) {
+        prop.kind = "";
+        prop.value = parseMethod(isGenerator);
+      } else {
+        prop.kind = "init";
+        prop.value = options.ecmaVersion >= 6 ? prop.key : dummyIdent();
+        prop.shorthand = true;
+      }
+
+      if (isClass) {
+        node.body.body.push(finishNode(prop, "MethodDefinition"));
+        semicolon();
+      } else {
+        node.properties.push(finishNode(prop, "Property"));
+        eat(tt.comma);
+      }
+    }
+    popCx();
+    if (!eat(tt.braceR)) {
+      // If there is no closing brace, make the node span to the start
+      // of the next token (this is useful for Tern)
+      lastEnd = token.start;
+      if (options.locations) lastEndLoc = token.startLoc;
+    }
+    if (isClass) {
+      semicolon();
+      finishNode(node.body, "ClassBody");
+      return finishNode(node, isStatement ? "ClassDeclaration" : "ClassExpression");
+    } else {
+      return finishNode(node, "ObjectExpression");
+    }
+  }
+
+  function parsePropertyName(prop) {
+    if (options.ecmaVersion >= 6) {
+      if (eat(tt.bracketL)) {
+        prop.computed = true;
+        prop.key = parseExpression();
+        expect(tt.bracketR);
+        return;
+      } else {
+        prop.computed = false;
+      }
+    }
+    var key = (token.type === tt.num || token.type === tt.string) ? parseExprAtom() : parseIdent();
+    prop.key = key || dummyIdent();
+  }
+
+  function parsePropertyAccessor() {
     if (token.type === tt.name || token.type.keyword) return parseIdent();
   }
 
@@ -739,28 +947,211 @@
     return finishNode(node, "Identifier");
   }
 
+  function initFunction(node) {
+    node.id = null;
+    node.params = [];
+    if (options.ecmaVersion >= 6) {
+      node.defaults = [];
+      node.rest = null;
+      node.generator = false;
+      node.expression = false;
+    }
+  }
+
+  // Convert existing expression atom to assignable pattern
+  // if possible.
+
+  function toAssignable(node) {
+    if (options.ecmaVersion >= 6 && node) {
+      switch (node.type) {
+        case "ObjectExpression":
+          node.type = "ObjectPattern";
+          var props = node.properties;
+          for (var i = 0; i < props.length; i++) {
+            props[i].value = toAssignable(props[i].value);
+          }
+          break;
+
+        case "ArrayExpression":
+          node.type = "ArrayPattern";
+          var elms = node.elements;
+          for (var i = 0; i < elms.length; i++) {
+            elms[i] = toAssignable(elms[i]);
+          }
+          break;
+
+        case "SpreadElement":
+          node.argument = toAssignable(node.argument);
+          break;
+
+        case "AssignmentExpression":
+          if (node.operator === "=")
+            node.type = "AssignmentPattern";
+          break;
+      }
+    }
+    return checkLVal(node);
+  }
+
+  function parseFunctionParams(node, params) {
+    var defaults = [], hasDefaults = false;
+
+    if (!params) {
+      pushCx();
+      params = parseExprList(tt.parenR);
+    }
+    for (var i = 0; i < params.length; i++) {
+      var param = params[i], defValue = null;
+      if (param.type === "AssignmentExpression") {
+        defValue = param.right;
+        param = param.left;
+      }
+      param = toAssignable(param);
+      if (param.type === "SpreadElement") {
+        param = param.argument;
+        if (i === params.length - 1) {
+          node.rest = param;
+          continue;
+        }
+      }
+      node.params.push(param);
+      defaults.push(defValue);
+      if (defValue) hasDefaults = true;
+    }
+
+    if (hasDefaults) node.defaults = defaults;
+  }
+
   function parseFunction(node, isStatement) {
+    initFunction(node);
+    if (options.ecmaVersion >= 6) {
+      node.generator = eat(tt.star);
+    }
     if (token.type === tt.name) node.id = parseIdent();
     else if (isStatement) node.id = dummyIdent();
-    else node.id = null;
-    node.params = [];
-    pushCx();
-    expect(tt.parenL);
-    while (token.type == tt.name) {
-      node.params.push(parseIdent());
-      eat(tt.comma);
-    }
-    popCx();
-    eat(tt.parenR);
+    parseFunctionParams(node);
     node.body = parseBlock();
     return finishNode(node, isStatement ? "FunctionDeclaration" : "FunctionExpression");
   }
 
-  function parseExprList(close) {
-    var indent = curIndent, line = curLineStart, elts = [], continuedLine = nextLineStart;
+  function parseMethod(isGenerator) {
+    var node = startNode();
+    initFunction(node);
+    parseFunctionParams(node);
+    node.generator = isGenerator || false;
+    node.expression = options.ecmaVersion >= 6 && token.type !== tt.braceL;
+    node.body = node.expression ? parseExpression(true) : parseBlock();
+    return finishNode(node, "FunctionExpression");
+  }
+
+  function parseArrowExpression(node, params) {
+    initFunction(node);
+    parseFunctionParams(node, params);
+    node.expression = token.type !== tt.braceL;
+    node.body = node.expression ? parseExpression(true) : parseBlock();
+    return finishNode(node, "ArrowFunctionExpression");
+  }
+
+  function parseExport() {
+    var node = startNode();
+    next();
+    node['default'] = eat(tt._default);
+    node.specifiers = node.source = null;
+    if (node['default']) {
+      node.declaration = parseExpression();
+      semicolon();
+    } else if (token.type.keyword) {
+      node.declaration = parseStatement();
+    } else {
+      node.declaration = null;
+      parseSpecifierList(node, "Export");
+    }
+    semicolon();
+    return finishNode(node, "ExportDeclaration");
+  }
+
+  function parseImport() {
+    var node = startNode();
+    next();
+    if (token.type === tt.string) {
+      node.specifiers = [];
+      node.source = parseExprAtom();
+      node.kind = '';
+    } else {
+      if (token.type === tt.name && token.value !== "from") {
+        var elt = startNode();
+        elt.id = parseIdent();
+        elt.name = null;
+        elt['default'] = true;
+        finishNode(elt, "ImportSpecifier");
+        eat(tt.comma);
+      }
+      parseSpecifierList(node, "Import");
+      var specs = node.specifiers;
+      for (var i = 0; i < specs.length; i++) specs[i]['default'] = false;
+      if (elt) node.specifiers.unshift(elt);
+    }
+    semicolon();
+    return finishNode(node, "ImportDeclaration");
+  }
+
+  function parseSpecifierList(node, prefix) {
+    var elts = node.specifiers = [];
+    if (token.type === tt.star) {
+      var elt = startNode();
+      next();
+      if (token.type === tt.name && token.value === "as") {
+        next();
+        elt.name = parseIdent();
+      }
+      elts.push(finishNode(elt, prefix + "BatchSpecifier"));
+    } else {
+      var indent = curIndent, line = curLineStart, continuedLine = nextLineStart;
+      pushCx();
+      eat(tt.braceL);
+      if (curLineStart > continuedLine) continuedLine = curLineStart;
+      while (!closes(tt.braceR, indent + (curLineStart <= continuedLine ? 1 : 0), line)) {
+        var elt = startNode();
+        if (token.type === tt.star) {
+          next();
+          if (token.type === tt.name && token.value === "as") {
+            next();
+            elt.name = parseIdent();
+          }
+          finishNode(elt, prefix + "BatchSpecifier");
+        } else {
+          if (token.type === tt.name && token.value === "from") break;
+          elt.id = parseIdent();
+          if (token.type === tt.name && token.value === "as") {
+            next();
+            elt.name = parseIdent();
+          } else {
+            elt.name = null;
+          }
+          finishNode(elt, prefix + "Specifier");
+        }
+        elts.push(elt);
+        eat(tt.comma);
+      }
+      eat(tt.braceR);
+      popCx();
+    }
+    if (token.type === tt.name && token.value === "from") {
+      next();
+      node.source = parseExprAtom();
+    } else {
+      node.source = null;
+    }
+  }
+
+  function parseExprList(close, allowEmpty) {
+    var indent = curIndent, line = curLineStart, elts = [];
     next(); // Opening bracket
-    if (curLineStart > continuedLine) continuedLine = curLineStart;
-    while (!closes(close, indent + (curLineStart <= continuedLine ? 1 : 0), line)) {
+    while (!closes(close, indent + 1, line)) {
+      if (eat(tt.comma)) {
+        elts.push(allowEmpty ? null : dummyIdent());
+        continue;
+      }
       var elt = parseExpression(true);
       if (isDummy(elt)) {
         if (closes(close, indent, line)) break;
@@ -768,10 +1159,15 @@
       } else {
         elts.push(elt);
       }
-      while (eat(tt.comma)) {}
+      eat(tt.comma);
     }
     popCx();
-    eat(close);
+    if (!eat(close)) {
+      // If there is no closing brace, make the node span to the start
+      // of the next token (this is useful for Tern)
+      lastEnd = token.start;
+      if (options.locations) lastEndLoc = token.startLoc;
+    }
     return elts;
   }
 });

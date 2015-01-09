@@ -307,11 +307,32 @@ if (typeof Components === "object") {
   const xpcInspector = Cc["@mozilla.org/jsinspector;1"].
                        getService(Ci.nsIJSInspector);
 
-  this.worker = new WorkerDebuggerLoader({
+  let worker = this.worker = new WorkerDebuggerLoader({
     createSandbox: createSandbox,
     globals: {
       "isWorker": true,
       "reportError": Cu.reportError,
+      "loader": {
+        lazyGetter: function (aObject, aName, aLambda) {
+          Object.defineProperty(aObject, aName, {
+            get: function () {
+              delete aObject[aName];
+              return aObject[aName] = aLambda.apply(aObject);
+            },
+            configurable: true,
+            enumerable: true
+          });
+        },
+        lazyImporter: function () { throw new Error("Can't import JSM from worker debugger server") },
+        lazyServiceGetter: function () { throw new Error("Can't import XPCOM from worker debugger server") },
+        lazyRequireGetter: function (obj, property, module, destructure) {
+          Object.defineProperty(obj, property, {
+            get: () => destructure
+              ? worker.require(module)[property]
+              : worker.require(module || property)
+          });
+        }
+      }
     },
     loadInSandbox: loadInSandbox,
     modules: {
