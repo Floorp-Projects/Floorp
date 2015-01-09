@@ -292,8 +292,8 @@ private:
     return aNode;
   }
 
-  SplayTree(const SplayTree&) MOZ_DELETE;
-  void operator=(const SplayTree&) MOZ_DELETE;
+  SplayTree(const SplayTree&) = delete;
+  void operator=(const SplayTree&) = delete;
 };
 
 }  /* namespace mozilla */

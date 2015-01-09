@@ -19,10 +19,10 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  virtual AudioStreamTrack* AsAudioStreamTrack() { return this; }
+  virtual AudioStreamTrack* AsAudioStreamTrack() MOZ_OVERRIDE { return this; }
 
   // WebIDL
-  virtual void GetKind(nsAString& aKind) { aKind.AssignLiteral("audio"); }
+  virtual void GetKind(nsAString& aKind) MOZ_OVERRIDE { aKind.AssignLiteral("audio"); }
 };
 
 }

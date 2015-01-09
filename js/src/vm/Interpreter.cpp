@@ -312,12 +312,8 @@ SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Mutable
 
     bool strict = op == JSOP_STRICTSETPROP;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper<SequentialExecution>(cx,
-                                                             obj.as<NativeObject>(),
-                                                             obj.as<NativeObject>(),
-                                                             id,
-                                                             baseops::Qualified,
-                                                             rref, strict))
+        if (!baseops::SetPropertyHelper(cx, obj.as<NativeObject>(), obj.as<NativeObject>(),
+                                        id, baseops::Qualified, rref, strict))
         {
             return false;
         }

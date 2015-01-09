@@ -134,9 +134,9 @@ protected:
   {
   }
 private:
-  DOMMatrixReadOnly() MOZ_DELETE;
-  DOMMatrixReadOnly(const DOMMatrixReadOnly&) MOZ_DELETE;
-  DOMMatrixReadOnly& operator=(const DOMMatrixReadOnly&) MOZ_DELETE;
+  DOMMatrixReadOnly() = delete;
+  DOMMatrixReadOnly(const DOMMatrixReadOnly&) = delete;
+  DOMMatrixReadOnly& operator=(const DOMMatrixReadOnly&) = delete;
 };
 
 class DOMMatrix MOZ_FINAL : public DOMMatrixReadOnly

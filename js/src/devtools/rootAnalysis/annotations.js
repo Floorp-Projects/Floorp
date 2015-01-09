@@ -200,7 +200,7 @@ function isRootedTypeName(name)
     return false;
 }
 
-function isRootedPointerTypeName(name)
+function stripUCSAndNamespace(name)
 {
     if (name.startsWith('struct '))
         name = name.substr(7);
@@ -216,11 +216,26 @@ function isRootedPointerTypeName(name)
         name = name.substr(4);
     if (name.startsWith('mozilla::dom::'))
         name = name.substr(14);
+    if (name.startsWith('mozilla::'))
+        name = name.substr(9);
+
+    return name;
+}
+
+function isRootedPointerTypeName(name)
+{
+    name = stripUCSAndNamespace(name);
 
     if (name.startsWith('MaybeRooted<'))
         return /\(js::AllowGC\)1u>::RootType/.test(name);
 
     return name.startsWith('Rooted') || name.startsWith('PersistentRooted');
+}
+
+function isUnsafeStorage(typeName)
+{
+    typeName = stripUCSAndNamespace(typeName);
+    return typeName.startsWith('UniquePtr<');
 }
 
 function isSuppressConstructor(name)

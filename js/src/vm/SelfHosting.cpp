@@ -304,122 +304,6 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#ifdef DEBUG
-/*
- * Dump(val): Dumps a value for debugging, even in parallel mode.
- */
-bool
-intrinsic_Dump(ThreadSafeContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    js_DumpValue(args[0]);
-    if (args[0].isObject()) {
-        fprintf(stderr, "\n");
-        js_DumpObject(&args[0].toObject());
-    }
-    args.rval().setUndefined();
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(intrinsic_Dump_jitInfo, intrinsic_Dump_jitInfo,
-                                      intrinsic_Dump);
-
-bool
-intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isString());
-
-    AutoCheckCannotGC nogc;
-    ScopedThreadSafeStringInspector inspector(args[0].toString());
-    if (!inspector.ensureChars(cx, nogc))
-        return false;
-
-    ScopedJSFreePtr<char> bytes;
-    if (inspector.hasLatin1Chars())
-        bytes = JS::CharsToNewUTF8CharsZ(cx, inspector.latin1Range()).c_str();
-    else
-        bytes = JS::CharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str();
-
-    parallel::Spew(parallel::SpewOps, bytes);
-
-    args.rval().setUndefined();
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(intrinsic_ParallelSpew_jitInfo, intrinsic_ParallelSpew_jitInfo,
-                                      intrinsic_ParallelSpew);
-#endif
-
-/*
- * ForkJoin(func, sliceStart, sliceEnd, mode, updatable): Invokes |func| many times in parallel.
- *
- * If "func" will update a pre-existing object then that object /must/ be passed
- * as the object "updatable".  It is /not/ correct to pass an object that
- * references the updatable objects indirectly.
- *
- * See ForkJoin.cpp for details and ParallelArray.js for examples.
- */
-static bool
-intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return ForkJoin(cx, args);
-}
-
-/*
- * ForkJoinWorkerNumWorkers(): Returns the number of workers in the fork join
- * thread pool, including the main thread.
- */
-static bool
-intrinsic_ForkJoinNumWorkers(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(cx->runtime()->threadPool.numWorkers());
-    return true;
-}
-
-/*
- * ForkJoinGetSlice(id): Returns the id of the next slice to be worked
- * on.
- *
- * Acts as the identity function when called from outside of a ForkJoin
- * thread. This odd API is because intrinsics must be called during the
- * parallel warm up phase to populate observed type sets, so we must call it
- * even during sequential execution. But since there is no thread pool during
- * sequential execution, the selfhosted code is responsible for computing the
- * next sequential slice id and passing it in itself.
- */
-bool
-js::intrinsic_ForkJoinGetSlice(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isInt32());
-    args.rval().set(args[0]);
-    return true;
-}
-
-static bool
-intrinsic_ForkJoinGetSlicePar(ForkJoinContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isInt32());
-
-    uint16_t sliceId;
-    if (cx->getSlice(&sliceId))
-        args.rval().setInt32(sliceId);
-    else
-        args.rval().setInt32(ThreadPool::MAX_SLICE_ID);
-
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL(intrinsic_ForkJoinGetSlice_jitInfo,
-                           intrinsic_ForkJoinGetSlicePar);
-
 /*
  * NewDenseArray(length): Allocates and returns a new dense array with
  * the given length where all values are initialized to holes.
@@ -896,99 +780,6 @@ intrinsic_IsWeakSet(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/*
- * ParallelTestsShouldPass(): Returns false if we are running in a
- * mode (such as --ion-eager) that is known to cause additional
- * bailouts or disqualifications for parallel array tests.
- *
- * This is needed because the parallel tests generally assert that,
- * under normal conditions, they will run without bailouts or
- * compilation failures, but this does not hold under "stress-testing"
- * conditions like --ion-eager or --no-ti.  However, running the tests
- * under those conditions HAS exposed bugs and thus we do not wish to
- * disable them entirely.  Instead, we simply disable the assertions
- * that state that no bailouts etc should occur.
- */
-static bool
-intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(ParallelTestsShouldPass(cx));
-    return true;
-}
-
-/*
- * ShouldForceSequential(): Returns true if parallel ops should take
- * the sequential fallback path.
- */
-bool
-js::intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(cx->runtime()->forkJoinWarmup ||
-                           InParallelSection());
-    return true;
-}
-
-bool
-js::intrinsic_InParallelSection(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(false);
-    return true;
-}
-
-static bool
-intrinsic_InParallelSectionPar(ForkJoinContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(true);
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL(intrinsic_InParallelSection_jitInfo,
-                           intrinsic_InParallelSectionPar);
-
-/* These wrappers are needed in order to recognize the function
- * pointers within the JIT, and the raw js:: functions can't be used
- * directly because they take a ThreadSafeContext* argument.
- */
-bool
-js::intrinsic_ObjectIsTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsTransparentTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTransparentTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsOpaqueTypedObject(cx, argc, vp);
-}
-
-bool
-js::intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::ObjectIsTypeDescr(cx, argc, vp);
-}
-
-bool
-js::intrinsic_TypeDescrIsSimpleType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsSimpleType(cx, argc, vp);
-}
-
-bool
-js::intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsArrayType(cx, argc, vp);
-}
-
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -1159,91 +950,39 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsWeakSet",               intrinsic_IsWeakSet,               1,0),
 
-    JS_FN("ForkJoin",                intrinsic_ForkJoin,                5,0),
-    JS_FN("ForkJoinNumWorkers",      intrinsic_ForkJoinNumWorkers,      0,0),
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
-    JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
-    JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
-    JS_FNINFO("ClearThreadLocalArenas",
-              intrinsic_ClearThreadLocalArenas,
-              &intrinsic_ClearThreadLocalArenasInfo, 0,0),
-    JS_FNINFO("SetForkJoinTargetRegion",
-              intrinsic_SetForkJoinTargetRegion,
-              &intrinsic_SetForkJoinTargetRegionInfo, 2, 0),
-    JS_FNINFO("ForkJoinGetSlice",
-              intrinsic_ForkJoinGetSlice,
-              &intrinsic_ForkJoinGetSlice_jitInfo, 1, 0),
-    JS_FNINFO("InParallelSection",
-              intrinsic_InParallelSection,
-              &intrinsic_InParallelSection_jitInfo, 0, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
-    JS_FN("NewOpaqueTypedObject",
-          js::NewOpaqueTypedObject,
-          1, 0),
-    JS_FN("NewDerivedTypedObject",
-          js::NewDerivedTypedObject,
-          3, 0),
-    JS_FN("TypedObjectBuffer",
-          TypedObject::GetBuffer,
-          1, 0),
-    JS_FN("TypedObjectByteOffset",
-          TypedObject::GetByteOffset,
-          1, 0),
-    JS_FNINFO("AttachTypedObject",
-              JSNativeThreadSafeWrapper<js::AttachTypedObject>,
-              &js::AttachTypedObjectJitInfo, 3, 0),
-    JS_FNINFO("SetTypedObjectOffset",
-              intrinsic_SetTypedObjectOffset,
-              &js::intrinsic_SetTypedObjectOffsetJitInfo, 2, 0),
-    JS_FNINFO("ObjectIsTypeDescr",
-              intrinsic_ObjectIsTypeDescr,
-              &js::ObjectIsTypeDescrJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsTypedObject",
-              intrinsic_ObjectIsTypedObject,
-              &js::ObjectIsTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsTransparentTypedObject",
-              intrinsic_ObjectIsTransparentTypedObject,
-              &js::ObjectIsTransparentTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("TypedObjectIsAttached",
-              JSNativeThreadSafeWrapper<js::TypedObjectIsAttached>,
-              &js::TypedObjectIsAttachedJitInfo, 1, 0),
-    JS_FNINFO("TypedObjectTypeDescr",
-              JSNativeThreadSafeWrapper<js::TypedObjectTypeDescr>,
-              &js::TypedObjectTypeDescrJitInfo, 1, 0),
-    JS_FNINFO("ObjectIsOpaqueTypedObject",
-              intrinsic_ObjectIsOpaqueTypedObject,
-              &js::ObjectIsOpaqueTypedObjectJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsArrayType",
-              intrinsic_TypeDescrIsArrayType,
-              &js::TypeDescrIsArrayTypeJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsSimpleType",
-              intrinsic_TypeDescrIsSimpleType,
-              &js::TypeDescrIsSimpleTypeJitInfo, 1, 0),
-    JS_FNINFO("ClampToUint8",
-              JSNativeThreadSafeWrapper<js::ClampToUint8>,
-              &js::ClampToUint8JitInfo, 1, 0),
-    JS_FN("GetTypedObjectModule", js::GetTypedObjectModule, 0, 0),
-    JS_FN("GetFloat32x4TypeDescr", js::GetFloat32x4TypeDescr, 0, 0),
-    JS_FN("GetInt32x4TypeDescr", js::GetInt32x4TypeDescr, 0, 0),
+    JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),
+    JS_FN("NewDerivedTypedObject",          js::NewDerivedTypedObject, 3, 0),
+    JS_FN("TypedObjectBuffer",              TypedObject::GetBuffer, 1, 0),
+    JS_FN("TypedObjectByteOffset",          TypedObject::GetByteOffset, 1, 0),
+    JS_FN("AttachTypedObject",              js::AttachTypedObject, 3, 0),
+    JS_FN("SetTypedObjectOffset",           js::SetTypedObjectOffset, 2, 0),
+    JS_FN("ObjectIsTypeDescr"    ,          js::ObjectIsTypeDescr, 1, 0),
+    JS_FN("ObjectIsTypedObject",            js::ObjectIsTypedObject, 1, 0),
+    JS_FN("ObjectIsTransparentTypedObject", js::ObjectIsTransparentTypedObject, 1, 0),
+    JS_FN("TypedObjectIsAttached",          js::TypedObjectIsAttached, 1, 0),
+    JS_FN("TypedObjectTypeDescr",           js::TypedObjectTypeDescr, 1, 0),
+    JS_FN("ObjectIsOpaqueTypedObject",      js::ObjectIsOpaqueTypedObject, 1, 0),
+    JS_FN("TypeDescrIsArrayType",           js::TypeDescrIsArrayType, 1, 0),
+    JS_FN("TypeDescrIsSimpleType",          js::TypeDescrIsSimpleType, 1, 0),
+    JS_FN("ClampToUint8",                   js::ClampToUint8, 1, 0),
+    JS_FN("GetTypedObjectModule",           js::GetTypedObjectModule, 0, 0),
+    JS_FN("GetFloat32x4TypeDescr",          js::GetFloat32x4TypeDescr, 0, 0),
+    JS_FN("GetInt32x4TypeDescr",            js::GetInt32x4TypeDescr, 0, 0),
 
-#define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)               \
-    JS_FNINFO("Store_" #_name,                                                \
-              JSNativeThreadSafeWrapper<js::StoreScalar##_type::Func>,        \
-              &js::StoreScalar##_type::JitInfo, 3, 0),                        \
-    JS_FNINFO("Load_" #_name,                                                 \
-              JSNativeThreadSafeWrapper<js::LoadScalar##_type::Func>,         \
-              &js::LoadScalar##_type::JitInfo, 3, 0),
+#define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \
+    JS_FN("Store_" #_name, js::StoreScalar##_type::Func, 3, 0),         \
+    JS_FN("Load_" #_name,  js::LoadScalar##_type::Func, 3, 0),
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+#undef LOAD_AND_STORE_SCALAR_FN_DECLS
 
-#define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)              \
-    JS_FNINFO("Store_" #_name,                                                  \
-              JSNativeThreadSafeWrapper<js::StoreReference##_type::Func>,       \
-              &js::StoreReference##_type::JitInfo, 3, 0),                       \
-    JS_FNINFO("Load_" #_name,                                                   \
-              JSNativeThreadSafeWrapper<js::LoadReference##_type::Func>,        \
-              &js::LoadReference##_type::JitInfo, 3, 0),
+#define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)      \
+    JS_FN("Store_" #_name, js::StoreReference##_type::Func, 3, 0),      \
+    JS_FN("Load_" #_name,  js::LoadReference##_type::Func, 3, 0),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
+#undef LOAD_AND_STORE_REFERENCE_FN_DECLS
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
@@ -1263,16 +1002,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
-
-#ifdef DEBUG
-    JS_FNINFO("Dump",
-              JSNativeThreadSafeWrapper<intrinsic_Dump>,
-              &intrinsic_Dump_jitInfo, 1,0),
-
-    JS_FNINFO("ParallelSpew",
-              JSNativeThreadSafeWrapper<intrinsic_ParallelSpew>,
-              &intrinsic_ParallelSpew_jitInfo, 1,0),
-#endif
 
     JS_FS_END
 };

@@ -49,7 +49,7 @@ private:
   ~MobileMessageThread() {}
 
   // Don't try to use the default constructor.
-  MobileMessageThread() MOZ_DELETE;
+  MobileMessageThread() = delete;
 
   ThreadData mData;
 };

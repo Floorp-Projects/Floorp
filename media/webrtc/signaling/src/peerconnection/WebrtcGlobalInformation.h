@@ -39,10 +39,10 @@ public:
   static void StoreLongTermICEStatistics(PeerConnectionImpl& aPc);
 
 private:
-  WebrtcGlobalInformation() MOZ_DELETE;
-  WebrtcGlobalInformation(const WebrtcGlobalInformation& aOrig) MOZ_DELETE;
+  WebrtcGlobalInformation() = delete;
+  WebrtcGlobalInformation(const WebrtcGlobalInformation& aOrig) = delete;
   WebrtcGlobalInformation& operator=(
-    const WebrtcGlobalInformation& aRhs) MOZ_DELETE;
+    const WebrtcGlobalInformation& aRhs) = delete;
 };
 
 } // namespace dom

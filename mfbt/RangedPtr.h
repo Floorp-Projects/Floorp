@@ -275,8 +275,8 @@ public:
   }
 
 private:
-  RangedPtr() MOZ_DELETE;
-  T* operator&() MOZ_DELETE;
+  RangedPtr() = delete;
+  T* operator&() = delete;
 };
 
 } /* namespace mozilla */

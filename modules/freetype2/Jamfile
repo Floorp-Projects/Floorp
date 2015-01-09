@@ -195,7 +195,7 @@ rule RefDoc
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.3 --output=$(DOC_DIR) $(FT2_INCLUDE)/*.h $(FT2_INCLUDE)/config/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.5 --output=$(DOC_DIR) $(FT2_INCLUDE)/*.h $(FT2_INCLUDE)/config/*.h
 }
 
 RefDoc  refdoc ;

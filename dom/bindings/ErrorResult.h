@@ -158,7 +158,7 @@ private:
 
   // Not to be implemented, to make sure people always pass this by
   // reference, not by value.
-  ErrorResult(const ErrorResult&) MOZ_DELETE;
+  ErrorResult(const ErrorResult&) = delete;
 };
 
 /******************************************************************************

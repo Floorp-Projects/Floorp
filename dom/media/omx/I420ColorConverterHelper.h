@@ -55,8 +55,8 @@ private:
 
   bool ensureLoaded();
 
-  I420ColorConverterHelper(const I420ColorConverterHelper &) MOZ_DELETE;
-  const I420ColorConverterHelper &operator=(const I420ColorConverterHelper &) MOZ_DELETE;
+  I420ColorConverterHelper(const I420ColorConverterHelper &) = delete;
+  const I420ColorConverterHelper &operator=(const I420ColorConverterHelper &) = delete;
 };
 
 } // namespace android

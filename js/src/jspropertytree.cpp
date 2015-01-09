@@ -193,36 +193,6 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
     return shape;
 }
 
-Shape *
-PropertyTree::lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape &child)
-{
-    /* Keep this in sync with the logic of getChild above. */
-    Shape *shape = nullptr;
-
-    MOZ_ASSERT(parent);
-
-    KidsPointer *kidp = &parent->kids;
-    if (kidp->isShape()) {
-        Shape *kid = kidp->toShape();
-        if (kid->matches(child))
-            shape = kid;
-    } else if (kidp->isHash()) {
-        if (KidsHash::Ptr p = kidp->toHash()->readonlyThreadsafeLookup(child))
-            shape = *p;
-    } else {
-        return nullptr;
-    }
-
-    if (shape) {
-        DebugOnly<JS::Zone *> zone = shape->arenaHeader()->zone;
-        MOZ_ASSERT(!zone->needsIncrementalBarrier());
-        MOZ_ASSERT(!(zone->isGCSweeping() && !shape->isMarked() &&
-                     !shape->arenaHeader()->allocatedDuringIncremental));
-    }
-
-    return shape;
-}
-
 void
 Shape::sweep()
 {

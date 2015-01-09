@@ -31,9 +31,9 @@ public:
   void Init(GMPDecryptor* aSession);
 
   // GMPDecryptorCallback
-  virtual void ResolveNewSessionPromise(uint32_t aPromiseId,
-                                        const char* aSessionId,
-                                        uint32_t aSessionIdLength) MOZ_OVERRIDE;
+  virtual void SetSessionId(uint32_t aCreateSessionToken,
+                            const char* aSessionId,
+                            uint32_t aSessionIdLength) MOZ_OVERRIDE;
   virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
                                          bool aSuccess) MOZ_OVERRIDE;
   virtual void ResolvePromise(uint32_t aPromiseId) MOZ_OVERRIDE;
@@ -90,7 +90,8 @@ private:
   // GMPDecryptorChild
   virtual bool RecvInit() MOZ_OVERRIDE;
 
-  virtual bool RecvCreateSession(const uint32_t& aPromiseId,
+  virtual bool RecvCreateSession(const uint32_t& aCreateSessionToken,
+                                 const uint32_t& aPromiseId,
                                  const nsCString& aInitDataType,
                                  const nsTArray<uint8_t>& aInitData,
                                  const GMPSessionType& aSessionType) MOZ_OVERRIDE;
@@ -110,7 +111,7 @@ private:
 
   virtual bool RecvDecrypt(const uint32_t& aId,
                            const nsTArray<uint8_t>& aBuffer,
-                           const GMPDecryptionData& aMetadata);
+                           const GMPDecryptionData& aMetadata) MOZ_OVERRIDE;
 
   // Resolve/reject promise on completion.
   virtual bool RecvSetServerCertificate(const uint32_t& aPromiseId,

@@ -178,6 +178,11 @@ public:
     virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) MOZ_OVERRIDE;
+    virtual bool RecvNotifyIMEEditorRect(const nsIntRect& aRect) MOZ_OVERRIDE;
+    virtual bool RecvNotifyIMEPositionChange(
+                   const nsIntRect& aEditoRect,
+                   const InfallibleTArray<nsIntRect>& aCompositionRects,
+                   const nsIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition) MOZ_OVERRIDE;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
@@ -398,6 +403,7 @@ protected:
     InfallibleTArray<nsIntRect> mIMECompositionRects;
     uint32_t mIMECaretOffset;
     nsIntRect mIMECaretRect;
+    nsIntRect mIMEEditorRect;
 
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;

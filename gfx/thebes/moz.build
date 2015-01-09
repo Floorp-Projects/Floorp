@@ -52,6 +52,7 @@ EXPORTS += [
     'gfxVR.h',
     'GraphicsFilter.h',
     'RoundedRect.h',
+    'SoftwareVsyncSource.h',
     'VsyncSource.h',
 ]
 
@@ -245,6 +246,7 @@ UNIFIED_SOURCES += [
     'gfxUtils.cpp',
     'gfxVR.cpp',
     'nsUnicodeRange.cpp',
+    'SoftwareVsyncSource.cpp',
     'VsyncSource.cpp',
 ]
 

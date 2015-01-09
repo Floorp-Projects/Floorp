@@ -448,6 +448,8 @@ PuppetWidget::NotifyIME(const IMENotification& aIMENotification)
       return NotifyIMEOfUpdateComposition();
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return NotifyIMEOfMouseButtonEvent(aIMENotification);
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      return NotifyIMEOfPositionChange();
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -530,6 +532,7 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
     IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
     notification.mSelectionChangeData.mCausedByComposition = false;
     NotifyIMEOfSelectionChange(notification); // Update selection
+    NotifyIMEOfEditorRect();
   } else {
     mIMELastBlurSeqno = chromeSeqno;
   }
@@ -545,36 +548,108 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
 
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
-  nsRefPtr<TextComposition> textComposition =
-    IMEStateManager::GetTextCompositionFor(this);
-  NS_ENSURE_TRUE(textComposition, NS_ERROR_FAILURE);
-
-  nsEventStatus status;
-  nsTArray<nsIntRect> textRectArray(textComposition->String().Length());
-  uint32_t startOffset = textComposition->NativeOffsetOfStartComposition();
-  uint32_t endOffset = textComposition->String().Length() + startOffset;
-  for (uint32_t i = startOffset; i < endOffset; i++) {
-    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
-    InitEvent(textRect, nullptr);
-    textRect.InitForQueryTextRect(i, 1);
-    DispatchEvent(&textRect, status);
-    NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
-
-    textRectArray.AppendElement(textRect.mReply.mRect);
+  uint32_t startOffset;
+  uint32_t targetCauseOffset;
+  nsAutoTArray<nsIntRect, 16> textRectArray;
+  if (!GetCompositionRects(startOffset,
+                           textRectArray,
+                           targetCauseOffset)) {
+    return NS_ERROR_FAILURE;
   }
-
-  uint32_t targetCauseOffset = textComposition->OffsetOfTargetClause();
-  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
-  InitEvent(caretRect, nullptr);
-  caretRect.InitForQueryCaretRect(targetCauseOffset);
-  DispatchEvent(&caretRect, status);
-  NS_ENSURE_TRUE(caretRect.mSucceeded, NS_ERROR_FAILURE);
+  nsIntRect caretRect;
+  GetCaretRect(caretRect, targetCauseOffset);
 
   mTabChild->SendNotifyIMESelectedCompositionRect(startOffset,
                                                   textRectArray,
                                                   targetCauseOffset,
-                                                  caretRect.mReply.mRect);
+                                                  caretRect);
   return NS_OK;
+}
+
+bool
+PuppetWidget::GetCompositionRects(uint32_t& aStartOffset,
+                                  nsTArray<nsIntRect>& aTextRectArray,
+                                  uint32_t& aTargetCauseOffset)
+{
+  nsRefPtr<TextComposition> textComposition =
+    IMEStateManager::GetTextCompositionFor(this);
+  NS_ENSURE_TRUE(textComposition, false);
+
+  nsEventStatus status;
+  aTextRectArray.SetCapacity(textComposition->String().Length());
+  aStartOffset = textComposition->NativeOffsetOfStartComposition();
+  aTargetCauseOffset = textComposition->OffsetOfTargetClause();
+  uint32_t endOffset = textComposition->String().Length() + aStartOffset;
+  for (uint32_t i = aStartOffset; i < endOffset; i++) {
+    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
+    InitEvent(textRect, nullptr);
+    textRect.InitForQueryTextRect(i, 1);
+    DispatchEvent(&textRect, status);
+    NS_ENSURE_TRUE(textRect.mSucceeded, false);
+
+    aTextRectArray.AppendElement(textRect.mReply.mRect);
+  }
+  return true;
+}
+
+uint32_t
+PuppetWidget::GetCaretOffset()
+{
+  nsEventStatus status;
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  InitEvent(selection, nullptr);
+  DispatchEvent(&selection, status);
+  NS_ENSURE_TRUE(selection.mSucceeded, 0);
+
+  return selection.mReply.mOffset;
+}
+
+bool
+PuppetWidget::GetCaretRect(nsIntRect& aCaretRect, uint32_t aCaretOffset)
+{
+  nsEventStatus status;
+  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
+  InitEvent(caretRect, nullptr);
+  caretRect.InitForQueryCaretRect(aCaretOffset);
+  DispatchEvent(&caretRect, status);
+  NS_ENSURE_TRUE(caretRect.mSucceeded, false);
+
+  aCaretRect = caretRect.mReply.mRect;
+
+  return true;
+}
+
+nsresult
+PuppetWidget::NotifyIMEOfEditorRect()
+{
+#ifndef MOZ_CROSS_PROCESS_IME
+  return NS_OK;
+#endif
+  if (NS_WARN_IF(!mTabChild)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIntRect rect;
+  if (!GetEditorRect(rect)) {
+    return NS_ERROR_FAILURE;
+  }
+  mTabChild->SendNotifyIMEEditorRect(rect);
+  return NS_OK;
+}
+
+bool
+PuppetWidget::GetEditorRect(nsIntRect& aRect)
+{
+  nsEventStatus status;
+  WidgetQueryContentEvent editorRectEvent(true, NS_QUERY_EDITOR_RECT, this);
+  InitEvent(editorRectEvent);
+  DispatchEvent(&editorRectEvent, status);
+  if (NS_WARN_IF(!editorRectEvent.mSucceeded)) {
+    return false;
+  }
+  aRect = editorRectEvent.mReply.mRect;
+
+  return true;
 }
 
 nsIMEUpdatePreference
@@ -584,7 +659,8 @@ PuppetWidget::GetIMEUpdatePreference()
   // e10s requires IME information cache into TabParent
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
-                               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE);
+                               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
+                               nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE );
 #else
   // B2G doesn't handle IME as widget-level.
   return nsIMEUpdatePreference();
@@ -673,6 +749,40 @@ PuppetWidget::NotifyIMEOfMouseButtonEvent(
   }
 
   return consumedByIME ? NS_SUCCESS_EVENT_CONSUMED : NS_OK;
+}
+
+nsresult
+PuppetWidget::NotifyIMEOfPositionChange()
+{
+#ifndef MOZ_CROSS_PROCESS_IME
+  return NS_OK;
+#endif
+  if (NS_WARN_IF(!mTabChild)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIntRect editorRect;
+  if (!GetEditorRect(editorRect)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t startOffset;
+  uint32_t targetCauseOffset;
+  nsAutoTArray<nsIntRect, 16> textRectArray;
+  if (!GetCompositionRects(startOffset,
+                           textRectArray,
+                           targetCauseOffset)) {
+    // no composition string, get caret offset by NS_QUERY_SELECTED_TEXT
+    targetCauseOffset = GetCaretOffset();
+  }
+
+  nsIntRect caretRect;
+  GetCaretRect(caretRect, targetCauseOffset);
+  if (!mTabChild->SendNotifyIMEPositionChange(editorRect, textRectArray,
+                                              caretRect)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

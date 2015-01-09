@@ -39,8 +39,8 @@ protected:
   virtual ~xpcAccessibleSelectable() {}
 
 private:
-  xpcAccessibleSelectable(const xpcAccessibleSelectable&) MOZ_DELETE;
-  xpcAccessibleSelectable& operator =(const xpcAccessibleSelectable&) MOZ_DELETE;
+  xpcAccessibleSelectable(const xpcAccessibleSelectable&) = delete;
+  xpcAccessibleSelectable& operator =(const xpcAccessibleSelectable&) = delete;
 
   Accessible* Intl();
 };

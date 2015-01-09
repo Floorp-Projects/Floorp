@@ -142,7 +142,7 @@ if test "$echo_cflags" = "yes" ; then
 fi
 
 if test "$echo_libs" = "yes" ; then
-  libs="%LIBS_CONFIG%"
+  libs="-lfreetype"
   staticlibs="%LIBSSTATIC_CONFIG%"
   if test "$show_static" = "yes" ; then
     libs="$staticlibs"

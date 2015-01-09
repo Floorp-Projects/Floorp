@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef GFX_VSYNCSOURCE_H
+#define GFX_VSYNCSOURCE_H
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
@@ -26,8 +29,8 @@ public:
       virtual ~Display();
       void AddCompositorVsyncDispatcher(mozilla::CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
       void RemoveCompositorVsyncDispatcher(mozilla::CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-      // Notified when this display's vsync occurs, on the hardware vsync thread
-      void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp);
+      // Notified when this display's vsync occurs, on the vsync thread
+      virtual void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp);
 
       // These should all only be called on the main thread
       virtual void EnableVsync() = 0;
@@ -48,3 +51,5 @@ protected:
 }; // VsyncSource
 } // gfx
 } // mozilla
+
+#endif /* GFX_VSYNCSOURCE_H */

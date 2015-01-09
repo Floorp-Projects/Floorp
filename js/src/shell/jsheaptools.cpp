@@ -102,8 +102,8 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
         bool marked;
 
       private:
-        Node(const Node &) MOZ_DELETE;
-        Node &operator=(const Node &) MOZ_DELETE;
+        Node(const Node &) = delete;
+        Node &operator=(const Node &) = delete;
     };
 
     /* Metadata for a heap edge we have traversed. */

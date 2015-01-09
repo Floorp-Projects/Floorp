@@ -35,8 +35,8 @@ protected:
   virtual ~xpcAccessibleHyperLink() {}
 
 private:
-  xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) MOZ_DELETE;
-  xpcAccessibleHyperLink& operator =(const xpcAccessibleHyperLink&) MOZ_DELETE;
+  xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) = delete;
+  xpcAccessibleHyperLink& operator =(const xpcAccessibleHyperLink&) = delete;
 
   Accessible* Intl();
 };

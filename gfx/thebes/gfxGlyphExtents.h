@@ -137,8 +137,8 @@ private:
 
 private:
     // not implemented:
-    gfxGlyphExtents(const gfxGlyphExtents& aOther) MOZ_DELETE;
-    gfxGlyphExtents& operator=(const gfxGlyphExtents& aOther) MOZ_DELETE;
+    gfxGlyphExtents(const gfxGlyphExtents& aOther) = delete;
+    gfxGlyphExtents& operator=(const gfxGlyphExtents& aOther) = delete;
 };
 
 #endif
