@@ -358,6 +358,8 @@ nsFrameSelection::nsFrameSelection()
   
   mHint = CARET_ASSOCIATE_BEFORE;
   mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
+  mKbdBidiLevel = NSBIDI_LTR;
+
   mDragSelectingCells = false;
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
@@ -5920,6 +5922,15 @@ Selection::SelectionLanguageChange(bool aLangRTL)
 {
   if (!mFrameSelection)
     return NS_ERROR_NOT_INITIALIZED; // Can't do selection
+
+  // if the direction of the language hasn't changed, nothing to do
+  nsBidiLevel kbdBidiLevel = aLangRTL ? NSBIDI_RTL : NSBIDI_LTR;
+  if (kbdBidiLevel == mFrameSelection->mKbdBidiLevel) {
+    return NS_OK;
+  }
+
+  mFrameSelection->mKbdBidiLevel = kbdBidiLevel;
+
   nsresult result;
   nsIFrame *focusFrame = 0;
 
@@ -5963,7 +5974,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
     //  (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
       level = std::min(levelBefore, levelAfter);
-    if (IS_LEVEL_RTL(level) == aLangRTL)
+    if (IS_SAME_DIRECTION(level, kbdBidiLevel))
       mFrameSelection->SetCaretBidiLevel(level);
     else
       mFrameSelection->SetCaretBidiLevel(level + 1);
@@ -5971,7 +5982,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   else {
     // if cursor is between characters with opposite orientations, changing the keyboard language must change
     //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
-    if (IS_LEVEL_RTL(levelBefore) == aLangRTL)
+    if (IS_SAME_DIRECTION(levelBefore, kbdBidiLevel))
       mFrameSelection->SetCaretBidiLevel(levelBefore);
     else
       mFrameSelection->SetCaretBidiLevel(levelAfter);
