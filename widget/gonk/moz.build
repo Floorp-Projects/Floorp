@@ -59,7 +59,6 @@ SOURCES += [
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
     'OrientationObserver.cpp',
-    'ParentProcessController.cpp',
     'ProcessOrientation.cpp',
     'WidgetTraceEvent.cpp'
 ]
