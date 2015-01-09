@@ -3,58 +3,121 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.3 API Reference</title>
+<title>FreeType-2.5.5 API Reference</title>
 <style type="text/css">
-  body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
-         color: #000000;
-         background: #FFFFFF; }
-
-  p { text-align: justify; }
-  h1 { text-align: center; }
-  li { text-align: justify; }
-  td { padding: 0 0.5em 0 0.5em; }
-  td.left { padding: 0 0.5em 0 0.5em;
-            text-align: left; }
-
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
   a:hover { color: #FF0000; }
+
+  body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
+         color: #000000;
+         background: #FFFFFF;
+         width: 87%;
+         margin: auto; }
+
+  div.section { width: 75%;
+                margin: auto; }
+  div.section hr { margin: 4ex 0 1ex 0; }
+  div.section h4 { background-color: #EEEEFF;
+                   font-size: medium;
+                   font-style: oblique;
+                   font-weight: bold;
+                   margin: 3ex 0 1.5ex 9%;
+                   padding: 0.3ex 0 0.3ex 1%; }
+  div.section p { margin: 1.5ex 0 1.5ex 10%; }
+  div.section pre { margin: 3ex 0 3ex 9%;
+                    background-color: #D6E8FF;
+                    padding: 2ex 0 2ex 1%; }
+  div.section table.fields { width: 90%;
+                             margin: 1.5ex 0 1.5ex 10%; }
+  div.section table.toc { width: 95%;
+                          margin: 1.5ex 0 1.5ex 5%; }
+  div.timestamp { text-align: center;
+                  font-size: 69%;
+                  margin: 1.5ex 0 1.5ex 0; }
+
+  h1 { text-align: center; }
+  h3 { font-size: medium;
+       margin: 4ex 0 1.5ex 0; }
+
+  p { text-align: justify; }
+
+  pre.colored { color: blue; }
 
   span.keyword { font-family: monospace;
                  text-align: left;
                  white-space: pre;
                  color: darkblue; }
 
-  pre.colored { color: blue; }
+  table.fields td.val { font-weight: bold;
+                        text-align: right;
+                        width: 30%;
+                        vertical-align: baseline;
+                        padding: 1ex 1em 1ex 0; }
+  table.fields td.desc { vertical-align: baseline;
+                         padding: 1ex 0 1ex 1em; }
+  table.fields td.desc p:first-child { margin: 0; }
+  table.fields td.desc p { margin: 1.5ex 0 0 0; }
+  table.index { margin: 6ex auto 6ex auto;
+                border: 0;
+                border-collapse: separate;
+                border-spacing: 1em 0.3ex; }
+  table.index tr { padding: 0; }
+  table.index td { padding: 0; }
+  table.index-toc-link { width: 100%;
+                         border: 0;
+                         border-spacing: 0;
+                         margin: 1ex 0 1ex 0; }
+  table.index-toc-link td.left { padding: 0 0.5em 0 0.5em;
+                                 font-size: 83%;
+                                 text-align: left; }
+  table.index-toc-link td.middle { padding: 0 0.5em 0 0.5em;
+                                   font-size: 83%;
+                                   text-align: center; }
+  table.index-toc-link td.right { padding: 0 0.5em 0 0.5em;
+                                  font-size: 83%;
+                                  text-align: right; }
+  table.synopsis { margin: 6ex auto 6ex auto;
+                   border: 0;
+                   border-collapse: separate;
+                   border-spacing: 2em 0.6ex; }
+  table.synopsis tr { padding: 0; }
+  table.synopsis td { padding: 0; }
+  table.toc td.link { width: 30%;
+                      text-align: right;
+                      vertical-align: baseline;
+                      padding: 1ex 1em 1ex 0; }
+  table.toc td.desc { vertical-align: baseline;
+                      padding: 1ex 0 1ex 1em;
+                      text-align: left; }
+  table.toc td.desc p:first-child { margin: 0;
+                                    text-align: left; }
+  table.toc td.desc p { margin: 1.5ex 0 0 0;
+                        text-align: left; }
 
-  ul.empty { list-style-type: none; }
 </style>
 </head>
 <body>
 
-<table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.3 API Reference</h1></center>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
+<h1>FreeType-2.5.5 API Reference</h1>
 
-<center><h1>
-The auto-hinter
-</h1></center>
+<h1>The auto-hinter</h1>
 <h2>Synopsis</h2>
-<table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td></td><td><a href="#default-script">default-script</a></td></tr>
-<tr><td></td><td><a href="#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></td><td></td><td><a href="#increase-x-height">increase-x-height</a></td></tr>
-<tr><td></td><td><a href="#FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></td><td></td><td><a href="#FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></td></tr>
-<tr><td></td><td><a href="#fallback-script">fallback-script</a></td><td></td><td></td></tr>
-</table><br><br>
+<table class="synopsis">
+<tr><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td><a href="#default-script">default-script</a></td></tr>
+<tr><td><a href="#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></td><td><a href="#increase-x-height">increase-x-height</a></td></tr>
+<tr><td><a href="#FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></td><td><a href="#FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></td></tr>
+<tr><td><a href="#fallback-script">fallback-script</a></td><td></td></tr>
+</table>
 
-<table align=center width="87%"><tr><td>
+
 <p>While FreeType's auto-hinter doesn't expose API functions by itself, it is possible to control its behaviour with <a href="ft2-module_management.html#FT_Property_Set">FT_Property_Set</a> and <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a>. The following lists the available properties together with the necessary macros and structures.</p>
 <p>Note that the auto-hinter's module name is &lsquo;autofitter&rsquo; for historical reasons.</p>
-</td></tr></table><br>
-<table align=center width="75%"><tr><td>
-<h4><a name="glyph-to-script-map">glyph-to-script-map</a></h4>
-<table align=center width="87%"><tr><td>
+
+<div class="section">
+<h3 id="glyph-to-script-map">glyph-to-script-map</h3>
+
 <p><b>Experimental</b> <b>only</b></p>
 <p>The auto-hinter provides various script modules to hint glyphs. Examples of supported scripts are Latin or CJK. Before a glyph is auto-hinted, the Unicode character map of the font gets examined, and the script is then determined based on Unicode character ranges, see below.</p>
 <p>OpenType fonts, however, often provide much more glyphs than character codes (small caps, superscripts, ligatures, swashes, etc.), to be controlled by so-called &lsquo;features&rsquo;. Handling OpenType features can be quite complicated and thus needs a separate library on top of FreeType.</p>
@@ -78,39 +141,29 @@ The auto-hinter
 
   FT_Load_Glyph( face, ..., FT_LOAD_FORCE_AUTOHINT );
 </pre>
-</td></tr></table><br>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></h4>
-<table align=center width="87%"><tr><td>
-Defined in FT_AUTOHINTER_H (ftautoh.h).
-</td></tr></table><br>
-<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
-#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_NONE</a>   0
-#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_LATIN</a>  1
-#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_CJK</a>    2
-#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_INDIC</a>  3
+<div class="section">
+<h3 id="FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</h3>
+<p>Defined in FT_AUTOHINTER_H (ftautoh.h).</p>
+<pre>
+#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_NONE">FT_AUTOHINTER_SCRIPT_NONE</a>   0
+#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_LATIN">FT_AUTOHINTER_SCRIPT_LATIN</a>  1
+#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_CJK">FT_AUTOHINTER_SCRIPT_CJK</a>    2
+#define <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_INDIC">FT_AUTOHINTER_SCRIPT_INDIC</a>  3
+</pre>
 
-</pre></table><br>
-<table align=center width="87%"><tr><td>
 <p><b>Experimental</b> <b>only</b></p>
 <p>A list of constants used for the <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a> property to specify the script submodule the auto-hinter should use for hinting a particular glyph.</p>
-</td></tr></table><br>
-<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>values</b></em></td></tr><tr><td>
-<p></p>
-<table cellpadding=3 border=0>
-<tr valign=top><td colspan=0><b>FT_AUTOHINTER_SCRIPT_NONE</b></td></tr>
-<tr valign=top><td></td><td>
+
+<h4>values</h4>
+<table class="fields">
+<tr><td class="val" id="FT_AUTOHINTER_SCRIPT_NONE">FT_AUTOHINTER_SCRIPT_NONE</td><td class="desc">
 <p>Don't auto-hint this glyph.</p>
 </td></tr>
-<tr valign=top><td colspan=0><b>FT_AUTOHINTER_SCRIPT_LATIN</b></td></tr>
-<tr valign=top><td></td><td>
+<tr><td class="val" id="FT_AUTOHINTER_SCRIPT_LATIN">FT_AUTOHINTER_SCRIPT_LATIN</td><td class="desc">
 <p>Apply the latin auto-hinter. For the auto-hinter, &lsquo;latin&rsquo; is a very broad term, including Cyrillic and Greek also since characters from those scripts share the same design constraints.</p>
 <p>By default, characters from the following Unicode ranges are assigned to this submodule.</p>
 <pre class="colored">
@@ -145,8 +198,7 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
 </pre>
 <p></p>
 </td></tr>
-<tr valign=top><td colspan=0><b>FT_AUTOHINTER_SCRIPT_CJK</b></td></tr>
-<tr valign=top><td></td><td>
+<tr><td class="val" id="FT_AUTOHINTER_SCRIPT_CJK">FT_AUTOHINTER_SCRIPT_CJK</td><td class="desc">
 <p>Apply the CJK auto-hinter, covering Chinese, Japanese, Korean, old Vietnamese, and some other scripts.</p>
 <p>By default, characters from the following Unicode ranges are assigned to this submodule.</p>
 <pre class="colored">
@@ -185,8 +237,7 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
 </pre>
 <p></p>
 </td></tr>
-<tr valign=top><td colspan=0><b>FT_AUTOHINTER_SCRIPT_INDIC</b></td></tr>
-<tr valign=top><td></td><td>
+<tr><td class="val" id="FT_AUTOHINTER_SCRIPT_INDIC">FT_AUTOHINTER_SCRIPT_INDIC</td><td class="desc">
 <p>Apply the indic auto-hinter, covering all major scripts from the Indian sub-continent and some other related scripts like Thai, Lao, or Tibetan.</p>
 <p>By default, characters from the following Unicode ranges are assigned to this submodule.</p>
 <pre class="colored">
@@ -201,41 +252,31 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
 <p>Note that currently Indic support is rudimentary only, missing blue zone support.</p>
 </td></tr>
 </table>
-</td></tr></table>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></h4>
-<table align=center width="87%"><tr><td>
-Defined in FT_AUTOHINTER_H (ftautoh.h).
-</td></tr></table><br>
-<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
-   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Prop_GlyphToScriptMap_
-   {
-     <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face;
-     <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>*  map;
+<div class="section">
+<h3 id="FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</h3>
+<p>Defined in FT_AUTOHINTER_H (ftautoh.h).</p>
+<pre>
+  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Prop_GlyphToScriptMap_
+  {
+    <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face;
+    <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>*  map;
 
-   } <b>FT_Prop_GlyphToScriptMap</b>;
+  } <b>FT_Prop_GlyphToScriptMap</b>;
+</pre>
 
-</pre></table><br>
-<table align=center width="87%"><tr><td>
 <p><b>Experimental</b> <b>only</b></p>
 <p>The data exchange structure for the <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a> property.</p>
-</td></tr></table><br>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="fallback-script">fallback-script</a></h4>
-<table align=center width="87%"><tr><td>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="fallback-script">fallback-script</h3>
+
 <p><b>Experimental</b> <b>only</b></p>
 <p>If no auto-hinter script module can be assigned to a glyph, a fallback script gets assigned to it (see also the <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a> property). By default, this is <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_CJK</a>. Using the &lsquo;fallback-script&rsquo; property, this fallback value can be changed.</p>
 <pre class="colored">
@@ -248,20 +289,17 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
   FT_Property_Set( library, "autofitter",
                             "fallback-script", &amp;fallback_script );
 </pre>
-</td></tr></table><br>
-<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+
+<h4>note</h4>
 <p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
 <p>It's important to use the right timing for changing this value: The creation of the glyph-to-script map that eventually uses the fallback script value gets triggered either by setting or reading a face-specific property like <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a>, or by auto-hinting any glyph from that face. In particular, if you have already created an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure but not loaded any glyph (using the auto-hinter), a change of the fallback script will affect this face.</p>
-</td></tr></table>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="default-script">default-script</a></h4>
-<table align=center width="87%"><tr><td>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="default-script">default-script</h3>
+
 <p><b>Experimental</b> <b>only</b></p>
 <p>If Freetype gets compiled with FT_CONFIG_OPTION_USE_HARFBUZZ to make the HarfBuzz library access OpenType features for getting better glyph coverages, this property sets the (auto-fitter) script to be used for the default (OpenType) script data of a font's GSUB table. Features for the default script are intended for all scripts not explicitly handled in GSUB; an example is a &lsquo;dlig&rsquo; feature, containing the combination of the characters &lsquo;T&rsquo;, &lsquo;E&rsquo;, and &lsquo;L&rsquo; to form a &lsquo;TEL&rsquo; ligature.</p>
 <p>By default, this is <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_LATIN</a>. Using the &lsquo;default-script&rsquo; property, this default value can be changed.</p>
@@ -275,20 +313,17 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
   FT_Property_Set( library, "autofitter",
                             "default-script", &amp;default_script );
 </pre>
-</td></tr></table><br>
-<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+
+<h4>note</h4>
 <p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
 <p>It's important to use the right timing for changing this value: The creation of the glyph-to-script map that eventually uses the default script value gets triggered either by setting or reading a face-specific property like <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a>, or by auto-hinting any glyph from that face. In particular, if you have already created an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure but not loaded any glyph (using the auto-hinter), a change of the default script will affect this face.</p>
-</td></tr></table>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="increase-x-height">increase-x-height</a></h4>
-<table align=center width="87%"><tr><td>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="increase-x-height">increase-x-height</h3>
+
 <p>For ppem values in the range 6&nbsp;&lt;= ppem &lt;= &lsquo;increase-x-height&rsquo;, round up the font's x&nbsp;height much more often than normally. If the value is set to&nbsp;0, which is the default, this feature is switched off. Use this property to improve the legibility of small font sizes if necessary.</p>
 <pre class="colored">
   FT_Library               library;
@@ -306,40 +341,30 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
   FT_Property_Set( library, "autofitter",
                             "increase-x-height", &amp;prop );
 </pre>
-</td></tr></table><br>
-<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+
+<h4>note</h4>
 <p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
 <p>Set this value right after calling <a href="ft2-base_interface.html#FT_Set_Char_Size">FT_Set_Char_Size</a>, but before loading any glyph (using the auto-hinter).</p>
-</td></tr></table>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<table align=center width="75%"><tr><td>
-<h4><a name="FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></h4>
-<table align=center width="87%"><tr><td>
-Defined in FT_AUTOHINTER_H (ftautoh.h).
-</td></tr></table><br>
-<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
-   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Prop_IncreaseXHeight_
-   {
-     <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face;
-     <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>  limit;
+<div class="section">
+<h3 id="FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</h3>
+<p>Defined in FT_AUTOHINTER_H (ftautoh.h).</p>
+<pre>
+  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Prop_IncreaseXHeight_
+  {
+    <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face;
+    <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>  limit;
 
-   } <b>FT_Prop_IncreaseXHeight</b>;
+  } <b>FT_Prop_IncreaseXHeight</b>;
+</pre>
 
-</pre></table><br>
-<table align=center width="87%"><tr><td>
 <p>The data exchange structure for the <a href="ft2-auto_hinter.html#increase-x-height">increase-x-height</a> property.</p>
-</td></tr></table><br>
-</td></tr></table>
-<hr width="75%">
-<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
-<td width="100%"></td>
-<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 </body>
 </html>
