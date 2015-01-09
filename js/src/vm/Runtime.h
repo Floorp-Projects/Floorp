@@ -51,7 +51,7 @@
 namespace js {
 
 class PerThreadData;
-struct ThreadSafeContext;
+class ExclusiveContext;
 class AutoKeepAtoms;
 #ifdef JS_TRACE_LOGGING
 class TraceLoggerThread;
@@ -65,13 +65,13 @@ extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
 struct DtoaState;
 
 extern void
-js_ReportOutOfMemory(js::ThreadSafeContext *cx);
+js_ReportOutOfMemory(js::ExclusiveContext *cx);
 
 extern void
-js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
+js_ReportAllocationOverflow(js::ExclusiveContext *maybecx);
 
 extern void
-js_ReportOverRecursed(js::ThreadSafeContext *cx);
+js_ReportOverRecursed(js::ExclusiveContext *cx);
 
 namespace js {
 
