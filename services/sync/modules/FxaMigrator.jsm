@@ -370,9 +370,26 @@ Migrator.prototype = {
   // we'll move to either the STATE_USER_FXA_VERIFIED state or we'll just
   // complete the migration if they login as an already verified user.
   createFxAccount: Task.async(function* (win) {
+    let {url, options} = yield this.getFxAccountCreationOptions();
+    win.switchToTabHavingURI(url, true, options);
+    // An FxA observer will fire when the user completes this, which will
+    // cause us to move to the next "user blocked" state and notify via our
+    // observer notification.
+  }),
+
+  // Returns an object with properties "url" and "options", suitable for
+  // opening FxAccounts to create/signin to FxA suitable for the migration
+  // state.  The caller of this is responsible for the actual opening of the
+  // page.
+  // This should only be called while we are in the STATE_USER_FXA state.  When
+  // the user completes the creation we'll see an ONLOGIN_NOTIFICATION
+  // notification from FxA and we'll move to either the STATE_USER_FXA_VERIFIED
+  // state or we'll just complete the migration if they login as an already
+  // verified user.
+  getFxAccountCreationOptions: Task.async(function* (win) {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("getFxAccountCreationOptions called in an unexpected state: ${}", this._state);
     }
     // We need to obtain the sentinel and apply any prefs that might be
     // specified *before* attempting to setup FxA as the prefs might
@@ -387,16 +404,17 @@ Migrator.prototype = {
     // See if we can find a default account name to use.
     let email = yield this._getDefaultAccountName(sentinel);
     let tail = email ? "&email=" + encodeURIComponent(email) : "";
+    // A special flag so server-side metrics can tell this is part of migration.
+    tail += "&migration=sync11";
     // We want to ask FxA to offer a "Customize Sync" checkbox iff any engines
     // are disabled.
     let customize = !this._allEnginesEnabled();
     tail += "&customizeSync=" + customize;
 
-    win.switchToTabHavingURI("about:accounts?action=" + action + tail, true,
-                             {ignoreFragment: true, replaceQueryString: true});
-    // An FxA observer will fire when the user completes this, which will
-    // cause us to move to the next "user blocked" state and notify via our
-    // observer notification.
+    return {
+      url: "about:accounts?action=" + action + tail,
+      options: {ignoreFragment: true, replaceQueryString: true}
+    };
   }),
 
   // Ask the FxA servers to re-send a verification mail for the currently
@@ -407,7 +425,7 @@ Migrator.prototype = {
   resendVerificationMail: Task.async(function * (win) {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA_VERIFIED) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("resendVerificationMail called in an unexpected state: ${}", this._state);
     }
     let ok = true;
     try {
@@ -442,7 +460,7 @@ Migrator.prototype = {
   forgetFxAccount: Task.async(function * () {
     // warn if we aren't in the expected state - but go ahead anyway!
     if (this._state != this.STATE_USER_FXA_VERIFIED) {
-      this.log.warn("createFxAccount called in an unexpected state: ${}", this._state);
+      this.log.warn("forgetFxAccount called in an unexpected state: ${}", this._state);
     }
     return fxAccounts.signOut();
   }),
