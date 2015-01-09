@@ -18,12 +18,14 @@ enum NfcRequest {
   WriteNDEFReq,
   MakeReadOnlyReq,
   FormatReq,
+  TransceiveReq,
 };
 
 enum NfcResponse {
   GeneralRsp = 1000,
   ChangeRFStateRsp,
   ReadNDEFRsp,
+  TransceiveRsp
 };
 
 enum NfcNotification {
