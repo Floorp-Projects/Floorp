@@ -21,15 +21,6 @@
 
 struct DtoaState;
 
-extern void
-js_ReportOutOfMemory(js::ThreadSafeContext *cx);
-
-extern void
-js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
-
-extern void
-js_ReportOverRecursed(js::ThreadSafeContext *cx);
-
 namespace js {
 
 namespace jit {
@@ -273,7 +264,7 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 
     void reportAllocationOverflow() {
-        js_ReportAllocationOverflow(this);
+        js_ReportAllocationOverflow(asExclusiveContext());
     }
 
     // Accessors for immutable runtime data.
