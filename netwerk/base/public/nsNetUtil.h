@@ -995,12 +995,9 @@ NS_NewLoadGroup(nsILoadGroup      **result,
     return rv;
 }
 
-// Create a new nsILoadGroup that will match the given principal.  Also,
-// if a base laod group is provided, populate the nsILoadContext of the
-// new group with information from the existing context.
+// Create a new nsILoadGroup that will match the given principal.
 nsresult
-NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal,
-                nsILoadGroup* aOptionalBase = nullptr);
+NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal);
 
 // Determine if the given loadGroup/principal pair will produce a principal
 // with similar permissions when passed to NS_NewChannel().  This checks for
