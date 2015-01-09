@@ -11,6 +11,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const UPDATE_URL_PREF = "browser.webapps.updateCheckUrl";
 
 Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -137,30 +138,29 @@ this.WebappManager = {
       [p + "=" + encodeURIComponent(params[p]) for (p in params)].join("&");
     debug("downloading APK from " + generatorUrl.spec);
 
-    let file = Cc["@mozilla.org/download-manager;1"].
-               getService(Ci.nsIDownloadManager).
-               defaultDownloadsDirectory.
-               clone();
-    file.append(aManifestUrl.replace(/[^a-zA-Z0-9]/gi, "") + ".apk");
-    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-    debug("downloading APK to " + file.path);
+    Downloads.getSystemDownloadsDirectory().then(function(downloadsDir) {
+      let file = new FileUtils.File(downloadsDir);
+      file.append(aManifestUrl.replace(/[^a-zA-Z0-9]/gi, "") + ".apk");
+      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+      debug("downloading APK to " + file.path);
 
-    let worker = new ChromeWorker("resource://gre/modules/WebappManagerWorker.js");
-    worker.onmessage = function(event) {
-      let { type, message } = event.data;
+      let worker = new ChromeWorker("resource://gre/modules/WebappManagerWorker.js");
+      worker.onmessage = function(event) {
+        let { type, message } = event.data;
 
-      worker.terminate();
+        worker.terminate();
 
-      if (type == "success") {
-        deferred.resolve(file.path);
-      } else { // type == "failure"
-        debug("error downloading APK: " + message);
-        deferred.reject(message);
+        if (type == "success") {
+          deferred.resolve(file.path);
+        } else { // type == "failure"
+          debug("error downloading APK: " + message);
+          deferred.reject(message);
+        }
       }
-    }
 
-    // Trigger the download.
-    worker.postMessage({ url: generatorUrl.spec, path: file.path });
+      // Trigger the download.
+      worker.postMessage({ url: generatorUrl.spec, path: file.path });
+    });
 
     return deferred.promise;
   },
