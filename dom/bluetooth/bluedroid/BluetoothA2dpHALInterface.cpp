@@ -75,6 +75,12 @@ struct BluetoothA2dpHALCallback
     BluetoothA2dpAudioState, const nsAString&>
     AudioStateNotification;
 
+  typedef BluetoothNotificationHALRunnable3<
+    A2dpNotificationHandlerWrapper, void,
+    nsString, uint32_t, uint8_t,
+    const nsAString&, uint32_t, uint8_t>
+    AudioConfigNotification;
+
   // Bluedroid A2DP callbacks
 
   static void
