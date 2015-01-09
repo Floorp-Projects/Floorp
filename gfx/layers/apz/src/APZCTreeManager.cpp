@@ -575,8 +575,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
 
         transformToApzc = GetScreenToApzcTransform(apzc);
-        wheelInput.mLocalOrigin =
-          TransformTo<ParentLayerPixel>(transformToApzc, wheelInput.mOrigin);
+        wheelInput.TransformToLocal(transformToApzc);
 
         result = mInputQueue->ReceiveInputEvent(
           apzc,
@@ -597,10 +596,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
         transformToApzc = GetScreenToApzcTransform(apzc);
-        panInput.mLocalPanStartPoint = TransformTo<ParentLayerPixel>(
-            transformToApzc, panInput.mPanStartPoint);
-        panInput.mLocalPanDisplacement = TransformVector<ParentLayerPixel>(
-            transformToApzc, panInput.mPanDisplacement, panInput.mPanStartPoint);
+        panInput.TransformToLocal(transformToApzc);
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -622,8 +618,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
         transformToApzc = GetScreenToApzcTransform(apzc);
-        pinchInput.mLocalFocusPoint = TransformTo<ParentLayerPixel>(
-            transformToApzc, pinchInput.mFocusPoint);
+        pinchInput.TransformToLocal(transformToApzc);
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -643,8 +638,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
         transformToApzc = GetScreenToApzcTransform(apzc);
-        tapInput.mLocalPoint = TransformTo<ParentLayerPixel>(
-            transformToApzc, tapInput.mPoint);
+        tapInput.TransformToLocal(transformToApzc);
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -776,11 +770,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     // This ensures that the sequence of touch points an APZC sees in an
     // input block are all in the same coordinate space.
     Matrix4x4 transformToApzc = mCachedTransformToApzcForInputBlock;
-    for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
-      SingleTouchData& touchData = aInput.mTouches[i];
-      touchData.mLocalScreenPoint = TransformTo<ParentLayerPixel>(
-          transformToApzc, ScreenPoint(touchData.mScreenPoint));
-    }
+    aInput.TransformToLocal(transformToApzc);
     result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
         /* aTargetConfirmed = */ mHitResultForInputBlock == ApzcHitRegion,
         aInput, aOutInputBlockId);
