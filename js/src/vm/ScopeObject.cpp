@@ -1574,7 +1574,7 @@ class DebugScopeProxy : public BaseProxyHandler
     }
 
     bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                  MutableHandle<PropertyDescriptor> desc) const MOZ_OVERRIDE
+                                  MutableHandle<PropertyDescriptor> desc) const
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &debugScope->scope());
@@ -1732,7 +1732,7 @@ class DebugScopeProxy : public BaseProxyHandler
                                      JS_PROPERTYOP_SETTER(desc.setter()));
     }
 
-    bool ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const MOZ_OVERRIDE
+    bool ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props) const
     {
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
