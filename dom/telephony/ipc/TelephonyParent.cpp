@@ -72,9 +72,33 @@ TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActo
       return true;
     }
 
+    case IPCTelephonyRequest::TConferenceCallRequest: {
+      const ConferenceCallRequest& request = aRequest.get_ConferenceCallRequest();
+      service->ConferenceCall(request.clientId(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TSeparateCallRequest: {
+      const SeparateCallRequest& request = aRequest.get_SeparateCallRequest();
+      service->SeparateCall(request.clientId(), request.callIndex(), actor);
+      return true;
+    }
+
     case IPCTelephonyRequest::THangUpConferenceRequest: {
       const HangUpConferenceRequest& request = aRequest.get_HangUpConferenceRequest();
       service->HangUpConference(request.clientId(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::THoldConferenceRequest: {
+      const HoldConferenceRequest& request = aRequest.get_HoldConferenceRequest();
+      service->HoldConference(request.clientId(), actor);
+      return true;
+    }
+
+    case IPCTelephonyRequest::TResumeConferenceRequest: {
+      const ResumeConferenceRequest& request = aRequest.get_ResumeConferenceRequest();
+      service->ResumeConference(request.clientId(), actor);
       return true;
     }
 
@@ -173,51 +197,6 @@ TelephonyParent::RecvUnregisterListener()
   NS_ENSURE_TRUE(service, true);
 
   mRegistered = !NS_SUCCEEDED(service->UnregisterListener(this));
-  return true;
-}
-
-bool
-TelephonyParent::RecvConferenceCall(const uint32_t& aClientId)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->ConferenceCall(aClientId);
-  return true;
-}
-
-bool
-TelephonyParent::RecvSeparateCall(const uint32_t& aClientId,
-                                  const uint32_t& aCallIndex)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->SeparateCall(aClientId, aCallIndex);
-  return true;
-}
-
-bool
-TelephonyParent::RecvHoldConference(const uint32_t& aClientId)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->HoldConference(aClientId);
-  return true;
-}
-
-bool
-TelephonyParent::RecvResumeConference(const uint32_t& aClientId)
-{
-  nsCOMPtr<nsITelephonyService> service =
-    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(service, true);
-
-  service->ResumeConference(aClientId);
   return true;
 }
 
