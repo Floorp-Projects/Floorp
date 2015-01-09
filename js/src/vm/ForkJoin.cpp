@@ -1283,7 +1283,6 @@ class ParallelIonInvoke
     }
 
     bool invoke(ForkJoinContext *cx) {
-        JitActivation activation(cx);
         Value result = Int32Value(argc_);
         CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
                             nullptr, 0, &result);

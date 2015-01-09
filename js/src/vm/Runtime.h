@@ -477,8 +477,7 @@ void DisableExtraThreads();
  * Encapsulates portions of the runtime/context that are tied to a
  * single active thread.  Instances of this structure can occur for
  * the main thread as |JSRuntime::mainThread|, for select operations
- * performed off thread, such as parsing, and for Parallel JS worker
- * threads.
+ * performed off thread, such as parsing.
  */
 class PerThreadData : public PerThreadDataFriendFields
 {
