@@ -327,6 +327,16 @@ SourceBuffer::AbortUpdating()
 }
 
 void
+SourceBuffer::CheckEndTime()
+{
+  // Check if we need to update mMediaSource duration
+  double endTime = GetBufferedEnd();
+  if (endTime > mMediaSource->Duration()) {
+    mMediaSource->SetDuration(endTime);
+  }
+}
+
+void
 SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
   MSE_DEBUG("SourceBuffer(%p)::AppendData(aLength=%u)", this, aLength);
@@ -348,6 +358,8 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   if (mTrackBuffer->HasInitSegment()) {
     mMediaSource->QueueInitializationEvent();
   }
+
+  CheckEndTime();
 
   // Run the final step of the buffer append algorithm asynchronously to
   // ensure the SourceBuffer's updating flag transition behaves as required
