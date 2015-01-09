@@ -138,7 +138,8 @@ CDMProxy::OnCDMCreated(uint32_t aPromiseId)
 }
 
 void
-CDMProxy::CreateSession(dom::SessionType aSessionType,
+CDMProxy::CreateSession(uint32_t aCreateSessionToken,
+                        dom::SessionType aSessionType,
                         PromiseId aPromiseId,
                         const nsAString& aInitDataType,
                         nsTArray<uint8_t>& aInitData)
@@ -148,6 +149,7 @@ CDMProxy::CreateSession(dom::SessionType aSessionType,
 
   nsAutoPtr<CreateSessionData> data(new CreateSessionData());
   data->mSessionType = aSessionType;
+  data->mCreateSessionToken = aCreateSessionToken;
   data->mPromiseId = aPromiseId;
   data->mInitDataType = NS_ConvertUTF16toUTF8(aInitDataType);
   data->mInitData = Move(aInitData);
@@ -174,7 +176,8 @@ CDMProxy::gmp_CreateSession(nsAutoPtr<CreateSessionData> aData)
     RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  mCDM->CreateSession(aData->mPromiseId,
+  mCDM->CreateSession(aData->mCreateSessionToken,
+                      aData->mPromiseId,
                       aData->mInitDataType,
                       aData->mInitData,
                       ToGMPSessionType(aData->mSessionType));
@@ -384,14 +387,16 @@ CDMProxy::GetNodeId() const
 }
 
 void
-CDMProxy::OnResolveNewSessionPromise(uint32_t aPromiseId,
-                                     const nsAString& aSessionId)
+CDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
+                         const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {
     return;
   }
-  mKeys->OnSessionCreated(aPromiseId, aSessionId);
+
+  nsRefPtr<dom::MediaKeySession> session(mKeys->GetPendingSession(aCreateSessionToken));
+  session->SetSessionId(aSessionId);
 }
 
 void

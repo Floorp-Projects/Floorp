@@ -143,8 +143,8 @@ public:
   }
 
 private:
-  FFTBlock(const FFTBlock& other) MOZ_DELETE;
-  void operator=(const FFTBlock& other) MOZ_DELETE;
+  FFTBlock(const FFTBlock& other) = delete;
+  void operator=(const FFTBlock& other) = delete;
 
   void EnsureFFT()
   {

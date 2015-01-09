@@ -14,7 +14,7 @@
 using namespace js;
 
 Latin1CharsZ
-JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx,
+JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ExclusiveContext *cx,
                                        const mozilla::Range<const char16_t> tbchars)
 {
     MOZ_ASSERT(cx);
@@ -134,7 +134,7 @@ JS::DeflateStringToUTF8Buffer(JSFlatString *src, mozilla::RangedPtr<char> dst)
 
 template <typename CharT>
 UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars)
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext *cx, const mozilla::Range<const CharT> chars)
 {
     MOZ_ASSERT(cx);
 
@@ -155,10 +155,10 @@ JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const C
 }
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const Latin1Char> chars);
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext *cx, const mozilla::Range<const Latin1Char> chars);
 
 template UTF8CharsZ
-JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const char16_t> chars);
+JS::CharsToNewUTF8CharsZ(js::ExclusiveContext *cx, const mozilla::Range<const char16_t> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 

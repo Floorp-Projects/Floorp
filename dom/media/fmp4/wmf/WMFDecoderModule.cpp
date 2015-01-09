@@ -12,6 +12,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
 #include "WMFMediaDataDecoder.h"
+#include "nsIWindowsRegKey.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 
@@ -105,6 +107,45 @@ WMFDecoderModule::SupportsAudioMimeType(const char* aMimeType)
 {
   return !strcmp(aMimeType, "audio/mp4a-latm") ||
          !strcmp(aMimeType, "audio/mpeg");
+}
+
+static bool
+ClassesRootRegKeyExists(const nsAString& aRegKeyPath)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
+                    aRegKeyPath,
+                    nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  regKey->Close();
+
+  return true;
+}
+
+/* static */ bool
+WMFDecoderModule::HasH264()
+{
+  // CLSID_CMSH264DecoderMFT
+  return ClassesRootRegKeyExists(
+    NS_LITERAL_STRING("CLSID\\{32D186A7-218F-4C75-8876-DD77273A8999}"));
+}
+
+/* static */ bool
+WMFDecoderModule::HasAAC()
+{
+  // CLSID_CMSAACDecMFT
+  return ClassesRootRegKeyExists(
+    NS_LITERAL_STRING("CLSID\\{62CE7E72-4C71-4D20-B15D-452831A87D9D}"));
 }
 
 } // namespace mozilla

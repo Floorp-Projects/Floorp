@@ -38,8 +38,8 @@ protected:
 private:
   ApplicationAccessible* Intl() { return mIntl->AsApplication(); }
 
-  xpcAccessibleApplication(const xpcAccessibleApplication&) MOZ_DELETE;
-  xpcAccessibleApplication& operator =(const xpcAccessibleApplication&) MOZ_DELETE;
+  xpcAccessibleApplication(const xpcAccessibleApplication&) = delete;
+  xpcAccessibleApplication& operator =(const xpcAccessibleApplication&) = delete;
 };
 
 } // namespace a11y

@@ -218,8 +218,8 @@ public:
     { mStartContainer = aContainer; mStartOffset = aOffset; }
 
 private:
-  TextRange(const TextRange& aRange) MOZ_DELETE;
-  TextRange& operator=(const TextRange& aRange) MOZ_DELETE;
+  TextRange(const TextRange& aRange) = delete;
+  TextRange& operator=(const TextRange& aRange) = delete;
 
   friend class HyperTextAccessible;
   friend class xpcAccessibleTextRange;

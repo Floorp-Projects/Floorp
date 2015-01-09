@@ -251,8 +251,6 @@ GetAccService()
 inline bool
 IPCAccessibilityActive()
 {
-  // XXX temporarily disable ipc accessibility because of crashes.
-return false;
 #ifdef MOZ_B2G
   return false;
 #else

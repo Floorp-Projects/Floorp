@@ -1489,6 +1489,36 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
 }
 
 bool
+TabParent::RecvNotifyIMEEditorRect(const nsIntRect& aRect)
+{
+  mIMEEditorRect = aRect;
+  return true;
+}
+
+bool
+TabParent::RecvNotifyIMEPositionChange(
+             const nsIntRect& aEditorRect,
+             const InfallibleTArray<nsIntRect>& aCompositionRects,
+             const nsIntRect& aCaretRect)
+{
+  mIMEEditorRect = aEditorRect;
+  mIMECompositionRects = aCompositionRects;
+  mIMECaretRect = aCaretRect;
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  const nsIMEUpdatePreference updatePreference =
+    widget->GetIMEUpdatePreference();
+  if (updatePreference.WantPositionChanged()) {
+    widget->NotifyIME(IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
+  }
+  return true;
+}
+
+bool
 TabParent::RecvRequestFocus(const bool& aCanRaise)
 {
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
@@ -1633,6 +1663,8 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
  *   Cocoa widget always queries selected offset, so it works on it.
  *
  * For NS_QUERY_CARET_RECT, fail if cached offset isn't equals to input
+ *
+ * For NS_QUERY_EDITOR_RECT, always success
  */
 bool
 TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
@@ -1714,6 +1746,12 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
 
       aEvent.mReply.mOffset = mIMECaretOffset;
       aEvent.mReply.mRect = mIMECaretRect - GetChildProcessOffset();
+      aEvent.mSucceeded = true;
+    }
+    break;
+  case NS_QUERY_EDITOR_RECT:
+    {
+      aEvent.mReply.mRect = mIMEEditorRect - GetChildProcessOffset();
       aEvent.mSucceeded = true;
     }
     break;

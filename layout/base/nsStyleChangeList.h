@@ -65,7 +65,7 @@ protected:
   nsStyleChangeData   mBuffer[kStyleChangeBufferSize];
 
 private:
-  nsStyleChangeList(const nsStyleChangeList&) MOZ_DELETE;
+  nsStyleChangeList(const nsStyleChangeList&) = delete;
 };
 
 

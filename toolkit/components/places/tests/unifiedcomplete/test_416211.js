@@ -16,7 +16,7 @@ add_task(function* test_tag_match_has_bookmark_title() {
                 tags: [ "superTag" ]});
   yield check_autocomplete({
     search: "superTag",
-    matches: [ { uri: uri, title: "Bookmark title", tags: [ "superTag" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri, title: "Bookmark title", tags: [ "superTag" ], style: [ "bookmark-tag" ] } ]
   });
   yield cleanup();
 });

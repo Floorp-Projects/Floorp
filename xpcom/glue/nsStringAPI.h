@@ -1107,7 +1107,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 class nsDependentCString : public nsCString
@@ -1131,7 +1131,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 
@@ -1184,7 +1184,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 class NS_ConvertUTF8toUTF16 : public nsString
@@ -1205,7 +1205,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 class NS_ConvertUTF16toUTF8 : public nsCString
@@ -1226,7 +1226,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 class NS_LossyConvertUTF16toASCII : public nsCString
@@ -1247,7 +1247,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 
@@ -1389,7 +1389,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 class nsDependentCSubstring : public nsCStringContainer
@@ -1422,7 +1422,7 @@ public:
   }
 
 private:
-  self_type& operator=(const self_type& aString) MOZ_DELETE;
+  self_type& operator=(const self_type& aString) = delete;
 };
 
 

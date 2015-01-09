@@ -372,8 +372,8 @@ public:
   PRLock* mLock;
 
 private:
-  DeadlockDetector(const DeadlockDetector& aDD) MOZ_DELETE;
-  DeadlockDetector& operator=(const DeadlockDetector& aDD) MOZ_DELETE;
+  DeadlockDetector(const DeadlockDetector& aDD) = delete;
+  DeadlockDetector& operator=(const DeadlockDetector& aDD) = delete;
 };
 
 

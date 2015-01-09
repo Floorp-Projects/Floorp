@@ -30,7 +30,7 @@ class MutatingRopeSegmentRange;
 
 template <AllowGC allowGC>
 extern JSString *
-ConcatStrings(ThreadSafeContext *cx,
+ConcatStrings(ExclusiveContext *cx,
               typename MaybeRooted<JSString*, allowGC>::HandleType left,
               typename MaybeRooted<JSString*, allowGC>::HandleType right);
 
@@ -125,10 +125,10 @@ js_strncpy(char16_t *dst, const char16_t *src, size_t nelem)
 namespace js {
 
 extern mozilla::UniquePtr<char[], JS::FreePolicy>
-DuplicateString(ThreadSafeContext *cx, const char *s);
+DuplicateString(ExclusiveContext *cx, const char *s);
 
 extern mozilla::UniquePtr<char16_t[], JS::FreePolicy>
-DuplicateString(ThreadSafeContext *cx, const char16_t *s);
+DuplicateString(ExclusiveContext *cx, const char16_t *s);
 
 /*
  * Convert a non-string value to a string, returning null after reporting an
@@ -184,7 +184,7 @@ EqualStrings(JSContext *cx, JSString *str1, JSString *str2, bool *result);
 
 /* Use the infallible method instead! */
 extern bool
-EqualStrings(JSContext *cx, JSLinearString *str1, JSLinearString *str2, bool *result) MOZ_DELETE;
+EqualStrings(JSContext *cx, JSLinearString *str1, JSLinearString *str2, bool *result) = delete;
 
 /* EqualStrings is infallible on linear strings. */
 extern bool
@@ -264,7 +264,7 @@ SubstringKernel(JSContext *cx, HandleString str, int32_t beginInt, int32_t lengt
  * appended, but it is not included in the length.
  */
 extern char16_t *
-InflateString(ThreadSafeContext *cx, const char *bytes, size_t *length);
+InflateString(ExclusiveContext *cx, const char *bytes, size_t *length);
 
 /*
  * Inflate bytes to JS chars in an existing buffer. 'dst' must be large

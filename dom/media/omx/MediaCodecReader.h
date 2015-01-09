@@ -165,8 +165,8 @@ protected:
 
   private:
     // Forbidden
-    Track(const Track &rhs) MOZ_DELETE;
-    const Track &operator=(const Track&) MOZ_DELETE;
+    Track(const Track &rhs) = delete;
+    const Track &operator=(const Track&) = delete;
   };
 
   // Receive a message from MessageHandler.
@@ -202,9 +202,9 @@ private:
 
   private:
     // Forbidden
-    MessageHandler() MOZ_DELETE;
-    MessageHandler(const MessageHandler& rhs) MOZ_DELETE;
-    const MessageHandler& operator=(const MessageHandler& rhs) MOZ_DELETE;
+    MessageHandler() = delete;
+    MessageHandler(const MessageHandler& rhs) = delete;
+    const MessageHandler& operator=(const MessageHandler& rhs) = delete;
 
     MediaCodecReader *mReader;
   };
@@ -223,9 +223,9 @@ private:
 
   private:
     // Forbidden
-    VideoResourceListener() MOZ_DELETE;
-    VideoResourceListener(const VideoResourceListener& rhs) MOZ_DELETE;
-    const VideoResourceListener& operator=(const VideoResourceListener& rhs) MOZ_DELETE;
+    VideoResourceListener() = delete;
+    VideoResourceListener(const VideoResourceListener& rhs) = delete;
+    const VideoResourceListener& operator=(const VideoResourceListener& rhs) = delete;
 
     MediaCodecReader* mReader;
   };
@@ -243,8 +243,8 @@ private:
 
   private:
     // Forbidden
-    AudioTrack(const AudioTrack &rhs) MOZ_DELETE;
-    const AudioTrack &operator=(const AudioTrack &rhs) MOZ_DELETE;
+    AudioTrack(const AudioTrack &rhs) = delete;
+    const AudioTrack &operator=(const AudioTrack &rhs) = delete;
   };
 
   struct VideoTrack : public Track
@@ -263,8 +263,8 @@ private:
 
   private:
     // Forbidden
-    VideoTrack(const VideoTrack &rhs) MOZ_DELETE;
-    const VideoTrack &operator=(const VideoTrack &rhs) MOZ_DELETE;
+    VideoTrack(const VideoTrack &rhs) = delete;
+    const VideoTrack &operator=(const VideoTrack &rhs) = delete;
   };
 
   struct CodecBufferInfo
@@ -291,9 +291,9 @@ private:
 
   private:
     // Forbidden
-    SignalObject() MOZ_DELETE;
-    SignalObject(const SignalObject &rhs) MOZ_DELETE;
-    const SignalObject &operator=(const SignalObject &rhs) MOZ_DELETE;
+    SignalObject() = delete;
+    SignalObject(const SignalObject &rhs) = delete;
+    const SignalObject &operator=(const SignalObject &rhs) = delete;
 
     Monitor mMonitor;
     bool mSignaled;
@@ -312,9 +312,9 @@ private:
 
   private:
     // Forbidden
-    ParseCachedDataRunnable() MOZ_DELETE;
-    ParseCachedDataRunnable(const ParseCachedDataRunnable &rhs) MOZ_DELETE;
-    const ParseCachedDataRunnable &operator=(const ParseCachedDataRunnable &rhs) MOZ_DELETE;
+    ParseCachedDataRunnable() = delete;
+    ParseCachedDataRunnable(const ParseCachedDataRunnable &rhs) = delete;
+    const ParseCachedDataRunnable &operator=(const ParseCachedDataRunnable &rhs) = delete;
 
     nsRefPtr<MediaCodecReader> mReader;
     nsAutoArrayPtr<const char> mBuffer;
@@ -334,9 +334,9 @@ private:
 
   private:
     // Forbidden
-    ProcessCachedDataTask() MOZ_DELETE;
-    ProcessCachedDataTask(const ProcessCachedDataTask &rhs) MOZ_DELETE;
-    const ProcessCachedDataTask &operator=(const ProcessCachedDataTask &rhs) MOZ_DELETE;
+    ProcessCachedDataTask() = delete;
+    ProcessCachedDataTask(const ProcessCachedDataTask &rhs) = delete;
+    const ProcessCachedDataTask &operator=(const ProcessCachedDataTask &rhs) = delete;
 
     nsRefPtr<MediaCodecReader> mReader;
     int64_t mOffset;
@@ -344,8 +344,8 @@ private:
   friend class ProcessCachedDataTask;
 
   // Forbidden
-  MediaCodecReader() MOZ_DELETE;
-  const MediaCodecReader& operator=(const MediaCodecReader& rhs) MOZ_DELETE;
+  MediaCodecReader() = delete;
+  const MediaCodecReader& operator=(const MediaCodecReader& rhs) = delete;
 
   bool ReallocateResources();
   void ReleaseCriticalResources();

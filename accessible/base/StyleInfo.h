@@ -32,9 +32,9 @@ public:
   static void FormatTextDecorationStyle(uint8_t aValue, nsAString& aFormattedValue);
 
 private:
-  StyleInfo() MOZ_DELETE;
-  StyleInfo(const StyleInfo&) MOZ_DELETE;
-  StyleInfo& operator = (const StyleInfo&) MOZ_DELETE;
+  StyleInfo() = delete;
+  StyleInfo(const StyleInfo&) = delete;
+  StyleInfo& operator = (const StyleInfo&) = delete;
 
   void Margin(Side aSide, nsAString& aValue);
 

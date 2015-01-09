@@ -86,10 +86,10 @@ protected:
   ~nsDOMCameraManager();
 
 private:
-  nsDOMCameraManager() MOZ_DELETE;
+  nsDOMCameraManager() = delete;
   explicit nsDOMCameraManager(nsPIDOMWindow* aWindow);
-  nsDOMCameraManager(const nsDOMCameraManager&) MOZ_DELETE;
-  nsDOMCameraManager& operator=(const nsDOMCameraManager&) MOZ_DELETE;
+  nsDOMCameraManager(const nsDOMCameraManager&) = delete;
+  nsDOMCameraManager& operator=(const nsDOMCameraManager&) = delete;
 
 protected:
   uint64_t mWindowId;
