@@ -65,39 +65,39 @@ var gcTypes = {}; // map from parent struct => Set of GC typed children
 var gcPointers = {}; // map from parent struct => Set of GC typed children
 var gcFields = {};
 
-function addGCType(name, child, why)
+function addGCType(typeName, child, why)
 {
     if (!why)
         why = '<annotation>';
     if (!child)
         child = 'annotation';
 
-    if (isRootedTypeName(name))
+    if (isRootedTypeName(typeName))
         return;
 
-    if (!(name in gcTypes))
-        gcTypes[name] = Set();
-    gcTypes[name].add(why);
+    if (!(typeName in gcTypes))
+        gcTypes[typeName] = Set();
+    gcTypes[typeName].add(why);
 
-    if (!(name in gcFields))
-        gcFields[name] = Map();
-    gcFields[name].set(why, child);
+    if (!(typeName in gcFields))
+        gcFields[typeName] = Map();
+    gcFields[typeName].set(why, child);
 
-    if (name in structureParents) {
-        for (var field of structureParents[name]) {
-            var [ holder, fieldName ] = field;
-            addGCType(holder, name, fieldName);
+    if (typeName in structureParents) {
+        for (var field of structureParents[typeName]) {
+            var [ holderType, fieldName ] = field;
+            addGCType(holderType, typeName, fieldName);
         }
     }
-    if (name in pointerParents) {
-        for (var field of pointerParents[name]) {
-            var [ holder, fieldName ] = field;
-            addGCPointer(holder, name, fieldName);
+    if (typeName in pointerParents) {
+        for (var field of pointerParents[typeName]) {
+            var [ holderType, fieldName ] = field;
+            addGCPointer(holderType, typeName, fieldName);
         }
     }
 }
 
-function addGCPointer(name, child, why)
+function addGCPointer(typeName, child, why)
 {
     if (!why)
         why = '<annotation>';
@@ -105,21 +105,21 @@ function addGCPointer(name, child, why)
         child = 'annotation';
 
     // Ignore types that are properly rooted.
-    if (isRootedPointerTypeName(name))
+    if (isRootedPointerTypeName(typeName))
         return;
 
-    if (!(name in gcPointers))
-        gcPointers[name] = Set();
-    gcPointers[name].add(why);
+    if (!(typeName in gcPointers))
+        gcPointers[typeName] = Set();
+    gcPointers[typeName].add(why);
 
-    if (!(name in gcFields))
-        gcFields[name] = Map();
-    gcFields[name].set(why, child);
+    if (!(typeName in gcFields))
+        gcFields[typeName] = Map();
+    gcFields[typeName].set(why, child);
 
-    if (name in structureParents) {
-        for (var field of structureParents[name]) {
+    if (typeName in structureParents) {
+        for (var field of structureParents[typeName]) {
             var [ holder, fieldName ] = field;
-            addGCPointer(holder, name, fieldName);
+            addGCPointer(holder, typeName, fieldName);
         }
     }
 }
