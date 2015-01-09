@@ -5386,14 +5386,31 @@ ConcatFatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register
     masm.branchIfRope(lhs, failure);
     masm.branchIfRope(rhs, failure);
 
-    // Allocate a JSFatInlineString.
-    masm.newGCFatInlineString(output, temp1, failure);
+    // Allocate a JSInlineString or JSFatInlineString.
+    size_t maxLengthInline = isTwoByte
+                             ? JSInlineString::MAX_LENGTH_TWO_BYTE
+                             : JSInlineString::MAX_LENGTH_LATIN1;
+    Label isFat, allocDone;
+    masm.branch32(Assembler::Above, temp2, Imm32(maxLengthInline), &isFat);
+    {
+        uint32_t flags = JSString::INIT_INLINE_FLAGS;
+        if (!isTwoByte)
+            flags |= JSString::LATIN1_CHARS_BIT;
+        masm.newGCString(output, temp1, failure);
+        masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+        masm.jump(&allocDone);
+    }
+    masm.bind(&isFat);
+    {
+        uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
+        if (!isTwoByte)
+            flags |= JSString::LATIN1_CHARS_BIT;
+        masm.newGCFatInlineString(output, temp1, failure);
+        masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+    }
+    masm.bind(&allocDone);
 
-    // Store length and flags.
-    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
-    if (!isTwoByte)
-        flags |= JSString::LATIN1_CHARS_BIT;
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+    // Store length.
     masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
     // Load chars pointer in temp2.
