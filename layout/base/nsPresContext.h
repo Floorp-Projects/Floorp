@@ -1162,11 +1162,12 @@ public:
   void StopRestyleLogging() { mRestyleLoggingEnabled = false; }
 #endif
 
+  void InvalidatePaintedLayers();
+
 protected:
   // May be called multiple times (unlink, destructor)
   void Destroy();
 
-  void InvalidatePaintedLayers();
   void AppUnitsPerDevPixelChanged();
 
   void HandleRebuildUserFontSet() {

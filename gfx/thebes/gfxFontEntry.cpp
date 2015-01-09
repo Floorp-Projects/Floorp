@@ -1461,10 +1461,10 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
     }
 
     bool needsBold;
-    gfxFontStyle normal;
-    gfxFontEntry *fe = FindFontForStyle(
-                  (aMatchData->mStyle == nullptr) ? *aMatchData->mStyle : normal,
-                  needsBold);
+    gfxFontEntry *fe =
+        FindFontForStyle(aMatchData->mStyle ? *aMatchData->mStyle
+                                            : gfxFontStyle(),
+                         needsBold);
 
     if (fe && !fe->SkipDuringSystemFallback()) {
         int32_t rank = 0;
