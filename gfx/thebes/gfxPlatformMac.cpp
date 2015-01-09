@@ -418,14 +418,7 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
                               const CVTimeStamp* aOutputTime,
                               CVOptionFlags aFlagsIn,
                               CVOptionFlags* aFlagsOut,
-                              void* aDisplayLinkContext)
-{
-  VsyncSource::Display* display = (VsyncSource::Display*) aDisplayLinkContext;
-  int64_t timestamp = aOutputTime->hostTime;
-  mozilla::TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(timestamp);
-  display->NotifyVsync(vsyncTime);
-  return kCVReturnSuccess;
-}
+                              void* aDisplayLinkContext);
 
 class OSXVsyncSource MOZ_FINAL : public VsyncSource
 {
@@ -439,7 +432,6 @@ public:
     return mGlobalDisplay;
   }
 
-protected:
   class OSXDisplay MOZ_FINAL : public VsyncSource::Display
   {
   public:
@@ -471,6 +463,7 @@ protected:
         return;
       }
 
+      mPreviousTimestamp = TimeStamp::Now();
       if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
         NS_WARNING("Could not activate the display link");
         mDisplayLink = nullptr;
@@ -494,6 +487,13 @@ protected:
       return mDisplayLink != nullptr;
     }
 
+    // The vsync timestamps given by the CVDisplayLinkCallback are
+    // in the future for the NEXT frame. Large parts of Gecko, such
+    // as animations assume a timestamp at either now or in the past.
+    // Normalize the timestamps given to the VsyncDispatchers to the vsync
+    // that just occured, not the vsync that is upcoming.
+    TimeStamp mPreviousTimestamp;
+
   private:
     // Manages the display link render thread
     CVDisplayLinkRef   mDisplayLink;
@@ -506,6 +506,26 @@ private:
 
   OSXDisplay mGlobalDisplay;
 }; // OSXVsyncSource
+
+static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
+                              const CVTimeStamp* aNow,
+                              const CVTimeStamp* aOutputTime,
+                              CVOptionFlags aFlagsIn,
+                              CVOptionFlags* aFlagsOut,
+                              void* aDisplayLinkContext)
+{
+  // Executed on OS X hardware vsync thread
+  OSXVsyncSource::OSXDisplay* display = (OSXVsyncSource::OSXDisplay*) aDisplayLinkContext;
+  int64_t nextVsyncTimestamp = aOutputTime->hostTime;
+  mozilla::TimeStamp nextVsync = mozilla::TimeStamp::FromSystemTime(nextVsyncTimestamp);
+
+  mozilla::TimeStamp previousVsync = display->mPreviousTimestamp;
+  display->mPreviousTimestamp = nextVsync;
+  MOZ_ASSERT(TimeStamp::Now() > previousVsync);
+
+  display->NotifyVsync(previousVsync);
+  return kCVReturnSuccess;
+}
 
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatformMac::CreateHardwareVsyncSource()

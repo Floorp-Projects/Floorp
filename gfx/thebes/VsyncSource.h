@@ -30,6 +30,14 @@ public:
       void AddCompositorVsyncDispatcher(mozilla::CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
       void RemoveCompositorVsyncDispatcher(mozilla::CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
       // Notified when this display's vsync occurs, on the vsync thread
+      // The aVsyncTimestamp should normalize to the Vsync time that just occured
+      // However, different platforms give different vsync notification times.
+      // b2g - The vsync timestamp of the previous frame that was just displayed
+      // OSX - The vsync timestamp of the upcoming frame, in the future
+      // TODO: Windows / Linux. DOCUMENT THIS WHEN IMPLEMENTING ON THOSE PLATFORMS
+      // Android: TODO
+      // All platforms should normalize to the vsync that just occured.
+      // Large parts of Gecko assume TimeStamps should not be in the future such as animations
       virtual void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp);
 
       // These should all only be called on the main thread
