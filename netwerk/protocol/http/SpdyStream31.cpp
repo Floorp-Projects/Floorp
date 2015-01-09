@@ -42,8 +42,7 @@ SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
   : mStreamID(0)
   , mSession(spdySession)
   , mUpstreamState(GENERATING_SYN_STREAM)
-  , mRequestHeadersDone(0)
-  , mSynFrameGenerated(0)
+  , mSynFrameComplete(0)
   , mSentFinOnData(0)
   , mTransaction(httpTransaction)
   , mSocketTransport(spdySession->SocketTransport())
@@ -56,7 +55,6 @@ SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
   , mSentWaitingFor(0)
   , mReceivedData(0)
   , mSetTCPSocketBuffer(0)
-  , mCountAsActive(0)
   , mTxInlineFrameSize(SpdySession31::kDefaultBufferSize)
   , mTxInlineFrameUsed(0)
   , mTxStreamFrameSize(0)
@@ -131,7 +129,7 @@ SpdyStream31::ReadSegments(nsAHttpSegmentReader *reader,
     // If not, mark the stream for callback when writing can proceed.
     if (NS_SUCCEEDED(rv) &&
         mUpstreamState == GENERATING_SYN_STREAM &&
-        !mRequestHeadersDone)
+        !mSynFrameComplete)
       mSession->TransactionHasDataToWrite(this);
 
     // mTxinlineFrameUsed represents any queued un-sent frame. It might
@@ -261,11 +259,10 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
                                       uint32_t *countUsed)
 {
   // Returns NS_OK even if the headers are incomplete
-  // set mRequestHeadersDone flag if they are complete
+  // set mSynFrameComplete flag if they are complete
 
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(mUpstreamState == GENERATING_SYN_STREAM);
-  MOZ_ASSERT(!mRequestHeadersDone);
 
   LOG3(("SpdyStream31::ParseHttpRequestHeaders %p avail=%d state=%x",
         this, avail, mUpstreamState));
@@ -291,7 +288,7 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   uint32_t oldLen = mFlatHttpRequestHeaders.Length();
   mFlatHttpRequestHeaders.SetLength(endHeader + 2);
   *countUsed = avail - (oldLen - endHeader) + 4;
-  mRequestHeadersDone = 1;
+  mSynFrameComplete = 1;
 
   nsAutoCString hostHeader;
   nsAutoCString hashkey;
@@ -333,24 +330,15 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
       // There is probably pushed data buffered so trigger a read manually
       // as we can't rely on future network events to do it
       mSession->ConnectPushedStream(this);
-      mSynFrameGenerated = 1;
       return NS_OK;
     }
   }
-  return NS_OK;
-}
 
-nsresult
-SpdyStream31::GenerateSynFrame()
-{
   // It is now OK to assign a streamID that we are assured will
   // be monotonically increasing amongst syn-streams on this
   // session
   mStreamID = mSession->RegisterStreamID(this);
   MOZ_ASSERT(mStreamID & 1, "Spdy Stream Channel ID must be odd");
-  MOZ_ASSERT(!mSynFrameGenerated);
-
-  mSynFrameGenerated = 1;
 
   if (mStreamID >= 0x80000000) {
     // streamID must fit in 31 bits. This is theoretically possible
@@ -519,8 +507,6 @@ SpdyStream31::GenerateSynFrame()
   CompressToFrame(NS_LITERAL_CSTRING(":version"));
   CompressToFrame(versionHeader);
 
-  nsAutoCString hostHeader;
-  mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
   CompressToFrame(NS_LITERAL_CSTRING(":host"));
   CompressToFrame(hostHeader);
 
@@ -1469,26 +1455,12 @@ SpdyStream31::OnReadSegment(const char *buf,
     // the number of those bytes that we consume (i.e. the portion that are
     // header bytes)
 
-    if (!mRequestHeadersDone) {
-      if (NS_FAILED(rv = ParseHttpRequestHeaders(buf, count, countRead))) {
-        return rv;
-      }
-    }
-
-    if (mRequestHeadersDone && !mSynFrameGenerated) {
-      if (!mSession->TryToActivate(this)) {
-        LOG3(("SpdyStream31::OnReadSegment %p cannot activate now. queued.\n", this));
-        return NS_OK;
-      }
-      if (NS_FAILED(rv = GenerateSynFrame())) {
-        return rv;
-      }
-    }
-
-    LOG3(("ParseHttpRequestHeaders %p used %d of %d. "
-          "requestheadersdone = %d mSynFrameGenerated = %d\n",
-          this, *countRead, count, mRequestHeadersDone, mSynFrameGenerated));
-    if (mSynFrameGenerated) {
+    rv = ParseHttpRequestHeaders(buf, count, countRead);
+    if (NS_FAILED(rv))
+      return rv;
+    LOG3(("ParseHttpRequestHeaders %p used %d of %d. complete = %d",
+          this, *countRead, count, mSynFrameComplete));
+    if (mSynFrameComplete) {
       AdjustInitialWindow();
       rv = TransmitFrame(nullptr, nullptr, true);
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {

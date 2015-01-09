@@ -178,13 +178,10 @@ protected:
   // The HTTP/2 state for the stream from section 5.1
   enum stateType mState;
 
-  // Flag is set when all http request headers have been read ID is not stable
-  uint32_t                     mRequestHeadersDone   : 1;
+  // Flag is set when all http request headers have been read and ID is stable
+  uint32_t                     mAllHeadersSent       : 1;
 
-  // Flag is set when ID is stable and concurrency limits are met
-  uint32_t                     mOpenGenerated        : 1;
-
-  // Flag is set when all http response headers have been read
+  // Flag is set when all http request headers have been read and ID is stable
   uint32_t                     mAllHeadersReceived   : 1;
 
   void     ChangeState(enum upstreamStateType);
@@ -193,8 +190,6 @@ private:
   friend class nsAutoPtr<Http2Stream>;
 
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
-  nsresult GenerateOpen();
-
   void     AdjustPushedPriority();
   void     AdjustInitialWindow();
   nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
