@@ -329,6 +329,14 @@ public:
   int32_t GetLastTouchIdentifier() const;
 
   /**
+   * Returns the matrix that transforms points from global screen space into
+   * this APZC's ParentLayer space.
+   * To respect the lock ordering, mMonitor must NOT be held when calling
+   * this function (since this function acquires the tree lock).
+   */
+  Matrix4x4 GetTransformToThis() const;
+
+  /**
    * Convert the vector |aVector|, rooted at the point |aAnchor|, from
    * this APZC's ParentLayer coordinates into screen coordinates.
    * The anchor is necessary because with 3D tranforms, the location of the
