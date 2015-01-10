@@ -1506,6 +1506,8 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
     if (aMethod == SEND_SHUTDOWN_MESSAGE) {
         if (mIPCOpen && !mShutdownPending && SendShutdown()) {
             mShutdownPending = true;
+            // Start the force-kill timer if we haven't already.
+            StartForceKillTimer();
         }
 
         // If call was not successful, the channel must have been broken
@@ -1923,8 +1925,16 @@ ContentParent::NotifyTabDestroying(PBrowserParent* aTab)
     // We're dying now, so prevent this content process from being
     // recycled during its shutdown procedure.
     MarkAsDead();
+    StartForceKillTimer();
+}
 
-    MOZ_ASSERT(!mForceKillTimer);
+void
+ContentParent::StartForceKillTimer()
+{
+    if (mForceKillTimer || !mIPCOpen) {
+        return;
+    }
+
     int32_t timeoutSecs =
         Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
     if (timeoutSecs > 0) {
