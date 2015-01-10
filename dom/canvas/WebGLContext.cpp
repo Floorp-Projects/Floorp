@@ -202,7 +202,6 @@ WebGLContextOptions::WebGLContextOptions()
 
 WebGLContext::WebGLContext()
     : WebGLContextUnchecked(nullptr)
-    , mBypassShaderValidation(false)
     , mNeedsFakeNoAlpha(false)
 {
     mGeneration = 0;
@@ -215,6 +214,8 @@ WebGLContext::WebGLContext()
     mPixelStoreFlipY = false;
     mPixelStorePremultiplyAlpha = false;
     mPixelStoreColorspaceConversion = BROWSER_DEFAULT_WEBGL;
+
+    mShaderValidation = true;
 
     mFakeBlackStatus = WebGLContextFakeBlackStatus::NotNeeded;
 
@@ -329,7 +330,6 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundTransformFeedbackBuffer = nullptr;
     mBoundUniformBuffer = nullptr;
     mCurrentProgram = nullptr;
-    mActiveProgramLinkInfo = nullptr;
     mBoundFramebuffer = nullptr;
     mActiveOcclusionQuery = nullptr;
     mBoundRenderbuffer = nullptr;

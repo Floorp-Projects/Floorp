@@ -152,8 +152,6 @@ WebGLContext::InitWebGL2()
     auto xfBuffers = new WebGLRefPtr<WebGLBuffer>[mGLMaxTransformFeedbackSeparateAttribs];
     mBoundTransformFeedbackBuffers.reset(xfBuffers);
 
-    mBypassShaderValidation = true;
-
     return true;
 }
 
