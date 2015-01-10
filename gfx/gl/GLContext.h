@@ -2015,7 +2015,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fShaderSource(GLuint shader, GLsizei count, const GLchar** strings, const GLint* lengths) {
+    void fShaderSource(GLuint shader, GLsizei count, const GLchar* const* strings, const GLint* lengths) {
         BEFORE_GL_CALL;
         mSymbols.fShaderSource(shader, count, strings, lengths);
         AFTER_GL_CALL;

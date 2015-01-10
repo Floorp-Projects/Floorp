@@ -396,7 +396,7 @@ WebGL2Context::GetUniformIndices(WebGLProgram* program,
     if (!uniformNames.Length())
         return;
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
     size_t count = uniformNames.Length();
     nsTArray<GLuint>& arr = retval.SetValue();
 
@@ -431,7 +431,7 @@ WebGL2Context::GetActiveUniforms(WebGLProgram* program,
     if (!count)
         return;
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
     nsTArray<GLint>& arr = retval.SetValue();
     arr.SetLength(count);
 
@@ -450,17 +450,14 @@ WebGL2Context::GetUniformBlockIndex(WebGLProgram* program,
     if (!ValidateObject("getUniformBlockIndex: program", program))
         return 0;
 
-    if (!ValidateGLSLVariableName(uniformBlockName, "getUniformBlockIndex"))
-        return 0;
+    // Leave this unchecked for now.
 
-    NS_LossyConvertUTF16toASCII cname(uniformBlockName);
-    nsCString mappedName;
-    program->MapIdentifier(cname, &mappedName);
+    const NS_LossyConvertUTF16toASCII cname(uniformBlockName);
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
 
     MakeContextCurrent();
-    return gl->fGetUniformBlockIndex(progname, mappedName.get());
+    return gl->fGetUniformBlockIndex(progname, cname.BeginReading());
 }
 
 static bool
@@ -501,7 +498,7 @@ WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* progr
     if (!ValidateObject("getActiveUniformBlockParameter: program", program))
         return;
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
     GLint param = 0;
 
     MakeContextCurrent();
@@ -551,7 +548,7 @@ WebGL2Context::GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBl
     if (!ValidateObject("getActiveUniformBlockName: program", program))
         return;
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
     GLchar nameBuffer[WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH];
     GLsizei length = 0;
 
@@ -574,7 +571,7 @@ WebGL2Context::UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockInd
     if (!ValidateObject("uniformBlockBinding: program", program))
         return;
 
-    GLuint progname = program->GLName();
+    GLuint progname = program->mGLName;
 
     MakeContextCurrent();
     gl->fUniformBlockBinding(progname, uniformBlockIndex, uniformBlockBinding);
