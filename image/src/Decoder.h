@@ -32,7 +32,22 @@ public:
   void Init();
 
   /**
+   * Initializes a decoder whose image and observer is already being used by a
+   * parent decoder. Decoders may not be re-initialized.
+   *
+   * Notifications Sent: TODO
+   */
+  void InitSharedDecoder(uint8_t* aImageData, uint32_t aImageDataLength,
+                         uint32_t* aColormap, uint32_t aColormapSize,
+                         RawAccessFrameRef&& aFrameRef);
+
+  /**
    * Writes data to the decoder.
+   *
+   * If aBuffer is null and aCount is 0, Write() flushes any buffered data to
+   * the decoder. Data is buffered if the decoder wasn't able to completely
+   * decode it because it needed a new frame.  If it's necessary to flush data,
+   * NeedsToFlushData() will return true.
    *
    * @param aBuffer buffer containing the data to be written
    * @param aCount the number of bytes to write
@@ -49,6 +64,14 @@ public:
    * Notifications Sent: TODO
    */
   void Finish(ShutdownReason aReason);
+
+  /**
+   * Informs the shared decoder that all the data has been written.
+   * Should only be used if InitSharedDecoder was useed
+   *
+   * Notifications Sent: TODO
+   */
+  void FinishSharedDecoder();
 
   /**
    * Gets the invalidation region accumulated by the decoder so far, and clears
@@ -133,14 +156,36 @@ public:
   void SetDecodeFlags(uint32_t aFlags) { mDecodeFlags = aFlags; }
   uint32_t GetDecodeFlags() { return mDecodeFlags; }
 
-  nsIntSize GetSize() const { return mImageMetadata.GetSize(); }
   bool HasSize() const { return mImageMetadata.HasSize(); }
   void SetSizeOnImage();
+
+  void SetSize(const nsIntSize& aSize, const Orientation& aOrientation)
+  {
+    PostSize(aSize.width, aSize.height, aOrientation);
+  }
 
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
   ImageMetadata& GetImageMetadata() { return mImageMetadata; }
+
+  // Tell the decoder infrastructure to allocate a frame. By default, frame 0
+  // is created as an ARGB frame with no offset and with size width * height.
+  // If decoders need something different, they must ask for it.
+  // This is called by decoders when they need a new frame. These decoders
+  // must then save the data they have been sent but not yet processed and
+  // return from WriteInternal. When the new frame is created, WriteInternal
+  // will be called again with nullptr and 0 as arguments.
+  void NeedNewFrame(uint32_t frameNum, uint32_t x_offset, uint32_t y_offset,
+                    uint32_t width, uint32_t height,
+                    gfx::SurfaceFormat format,
+                    uint8_t palette_depth = 0);
+  virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
+
+
+  // Try to allocate a frame as described in mNewFrameData and return the
+  // status code from that attempt. Clears mNewFrameData.
+  virtual nsresult AllocateFrame();
 
   already_AddRefed<imgFrame> GetCurrentFrame()
   {
@@ -155,8 +200,6 @@ public:
   }
 
 protected:
-  friend class nsICODecoder;
-
   virtual ~Decoder();
 
   /*
@@ -221,26 +264,32 @@ protected:
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
 
+  // Returns true if we may have stored data that we need to flush now that we
+  // have a new frame to decode into. Callers can use Write() to actually
+  // flush the data; see the documentation for that method.
+  bool NeedsToFlushData() const { return mNeedsToFlushData; }
+
   /**
-   * Allocates a new frame, making it our new current frame if successful.
-   *
-   * The @aFrameNum parameter only exists as a sanity check; it's illegal to
-   * create a new frame anywhere but immediately after the existing frames.
-   *
+   * Ensures that a given frame number exists with the given parameters, and
+   * returns a RawAccessFrameRef for that frame.
+   * It is not possible to create sparse frame arrays; you can only append
+   * frames to the current frame array, or if there is only one frame in the
+   * array, replace that frame.
    * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
    */
-  nsresult AllocateFrame(uint32_t aFrameNum,
-                         const nsIntRect& aFrameRect,
-                         gfx::SurfaceFormat aFormat,
-                         uint8_t aPaletteDepth = 0);
+  RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
+                                const nsIntRect& aFrameRect,
+                                uint32_t aDecodeFlags,
+                                gfx::SurfaceFormat aFormat,
+                                uint8_t aPaletteDepth,
+                                imgFrame* aPreviousFrame);
 
-  RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
-                                          const nsIntRect& aFrameRect,
-                                          uint32_t aDecodeFlags,
-                                          gfx::SurfaceFormat aFormat,
-                                          uint8_t aPaletteDepth,
-                                          imgFrame* aPreviousFrame);
-
+  RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
+                                     const nsIntRect& aFrameRect,
+                                     uint32_t aDecodeFlags,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint8_t aPaletteDepth,
+                                     imgFrame* aPreviousFrame);
   /*
    * Member variables.
    *
@@ -270,6 +319,27 @@ private:
 
   nsresult mFailCode;
 
+  struct NewFrameData
+  {
+    NewFrameData() { }
+
+    NewFrameData(uint32_t aFrameNum, const nsIntRect& aFrameRect,
+                 gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth)
+      : mFrameNum(aFrameNum)
+      , mFrameRect(aFrameRect)
+      , mFormat(aFormat)
+      , mPaletteDepth(aPaletteDepth)
+    { }
+
+    uint32_t mFrameNum;
+    nsIntRect mFrameRect;
+    gfx::SurfaceFormat mFormat;
+    uint8_t mPaletteDepth;
+  };
+
+  NewFrameData mNewFrameData;
+  bool mNeedsNewFrame;
+  bool mNeedsToFlushData;
   bool mInitialized;
   bool mSizeDecode;
   bool mInFrame;
