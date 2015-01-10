@@ -179,47 +179,52 @@ AndroidBridge::Init(JNIEnv *jEnv)
     mHasNativeWindowAccess = false;
     mHasNativeWindowFallback = false;
 
-    initInit();
-
 #ifdef MOZ_WEBSMS_BACKEND
-    mAndroidSmsMessageClass = getClassGlobalRef("android/telephony/SmsMessage");
-    jCalculateLength = getStaticMethod("calculateLength", "(Ljava/lang/CharSequence;Z)[I");
+    AutoJNIClass smsMessage(jEnv, "android/telephony/SmsMessage");
+    mAndroidSmsMessageClass = smsMessage.getGlobalRef();
+    jCalculateLength = smsMessage.getStaticMethod("calculateLength", "(Ljava/lang/CharSequence;Z)[I");
 #endif
 
-    jStringClass = getClassGlobalRef("java/lang/String");
+    AutoJNIClass string(jEnv, "java/lang/String");
+    jStringClass = string.getGlobalRef();
 
     if (!GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &mAPIVersion, jEnv)) {
         ALOG_BRIDGE("Failed to find API version");
     }
 
-    jSurfaceClass = getClassGlobalRef("android/view/Surface");
+    AutoJNIClass surface(jEnv, "android/view/Surface");
+    jSurfaceClass = surface.getGlobalRef();
     if (mAPIVersion <= 8 /* Froyo */) {
-        jSurfacePointerField = getField("mSurface", "I");
+        jSurfacePointerField = surface.getField("mSurface", "I");
     } else if (mAPIVersion > 8 && mAPIVersion < 19 /* KitKat */) {
-        jSurfacePointerField = getField("mNativeSurface", "I");
+        jSurfacePointerField = surface.getField("mNativeSurface", "I");
     } else {
         // We don't know how to get this, just set it to 0
         jSurfacePointerField = 0;
     }
 
-    jclass eglClass = getClassGlobalRef("com/google/android/gles_jni/EGLSurfaceImpl");
+    AutoJNIClass egl(jEnv, "com/google/android/gles_jni/EGLSurfaceImpl");
+    jclass eglClass = egl.getGlobalRef();
     if (eglClass) {
         // The pointer type moved to a 'long' in Android L, API version 20
         const char* jniType = mAPIVersion >= 20 ? "J" : "I";
-        jEGLSurfacePointerField = getField("mEGLSurface", jniType);
+        jEGLSurfacePointerField = egl.getField("mEGLSurface", jniType);
     } else {
         jEGLSurfacePointerField = 0;
     }
 
-    jChannels = getClassGlobalRef("java/nio/channels/Channels");
-    jChannelCreate = jEnv->GetStaticMethodID(jChannels, "newChannel", "(Ljava/io/InputStream;)Ljava/nio/channels/ReadableByteChannel;");
+    AutoJNIClass channels(jEnv, "java/nio/channels/Channels");
+    jChannels = channels.getGlobalRef();
+    jChannelCreate = channels.getStaticMethod("newChannel", "(Ljava/io/InputStream;)Ljava/nio/channels/ReadableByteChannel;");
 
-    jReadableByteChannel = getClassGlobalRef("java/nio/channels/ReadableByteChannel");
-    jByteBufferRead = jEnv->GetMethodID(jReadableByteChannel, "read", "(Ljava/nio/ByteBuffer;)I");
+    AutoJNIClass readableByteChannel(jEnv, "java/nio/channels/ReadableByteChannel");
+    jReadableByteChannel = readableByteChannel.getGlobalRef();
+    jByteBufferRead = readableByteChannel.getMethod("read", "(Ljava/nio/ByteBuffer;)I");
 
-    jInputStream = getClassGlobalRef("java/io/InputStream");
-    jClose = jEnv->GetMethodID(jInputStream, "close", "()V");
-    jAvailable = jEnv->GetMethodID(jInputStream, "available", "()I");
+    AutoJNIClass inputStream(jEnv, "java/io/InputStream");
+    jInputStream = inputStream.getGlobalRef();
+    jClose = inputStream.getMethod("close", "()V");
+    jAvailable = inputStream.getMethod("available", "()I");
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -767,18 +772,14 @@ AndroidBridge::GetStaticIntField(const char *className, const char *fieldName, i
         jEnv = GetJNIEnv();
     }
 
-    initInit();
-    getClassGlobalRef(className);
-    jfieldID field = getStaticField(fieldName, "I");
+    AutoJNIClass cls(jEnv, className);
+    jfieldID field = cls.getStaticField(fieldName, "I");
 
     if (!field) {
-        jEnv->DeleteGlobalRef(jClass);
         return false;
     }
 
-    *aInt = static_cast<int32_t>(jEnv->GetStaticIntField(jClass, field));
-
-    jEnv->DeleteGlobalRef(jClass);
+    *aInt = static_cast<int32_t>(jEnv->GetStaticIntField(cls.getRawRef(), field));
     return true;
 }
 
@@ -795,17 +796,14 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
     }
 
     AutoLocalJNIFrame jniFrame(jEnv, 1);
-    initInit();
-    getClassGlobalRef(className);
-    jfieldID field = getStaticField(fieldName, "Ljava/lang/String;");
+    AutoJNIClass cls(jEnv, className);
+    jfieldID field = cls.getStaticField(fieldName, "Ljava/lang/String;");
 
     if (!field) {
-        jEnv->DeleteGlobalRef(jClass);
         return false;
     }
 
-    jstring jstr = (jstring) jEnv->GetStaticObjectField(jClass, field);
-    jEnv->DeleteGlobalRef(jClass);
+    jstring jstr = (jstring) jEnv->GetStaticObjectField(cls.getRawRef(), field);
     if (!jstr)
         return false;
 
