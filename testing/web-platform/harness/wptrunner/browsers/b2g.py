@@ -36,7 +36,7 @@ def check_args(**kwargs):
     pass
 
 
-def browser_kwargs(**kwargs):
+def browser_kwargs(test_environment, **kwargs):
     return {"prefs_root": kwargs["prefs_root"],
             "no_backup": kwargs.get("b2g_no_backup", False)}
 
