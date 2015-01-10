@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1419896968000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1420836752000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -866,6 +866,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i816" id="noOpus@outlook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i528" id="008abed2-b43a-46c9-9a5b-a771c87b82da@1ad61d53-2bdc-4484-a26b-b888ecae1906.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1108,6 +1114,12 @@
     </emItem>
       <emItem  blockID="i674" id="crossriderapp12555@crossrider.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i812" id="{1e4ea5fc-09e5-4f45-a43b-c048304899fc}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2059,6 +2071,12 @@
     </emItem>
       <emItem  blockID="i91" id="crossriderapp4926@crossrider.com">
                         <versionRange  minVersion="0" maxVersion="0.81.43" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i814" id="liiros@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
