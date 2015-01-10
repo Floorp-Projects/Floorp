@@ -46,6 +46,7 @@ protected:
     GLContext* const mGL;
 public:
     const gfx::IntSize mSize;
+    const GLsizei mSamples;
     const GLuint mFB;
 protected:
     const GLuint mColorMSRB;
@@ -54,12 +55,14 @@ protected:
 
     DrawBuffer(GLContext* gl,
                const gfx::IntSize& size,
+               GLsizei samples,
                GLuint fb,
                GLuint colorMSRB,
                GLuint depthRB,
                GLuint stencilRB)
         : mGL(gl)
         , mSize(size)
+        , mSamples(samples)
         , mFB(fb)
         , mColorMSRB(colorMSRB)
         , mDepthRB(depthRB)
@@ -196,6 +199,13 @@ public:
 
     GLuint ReadFB() const {
         return mRead->mFB;
+    }
+
+    GLsizei Samples() const {
+        if (!mDraw)
+            return 1;
+
+        return mDraw->mSamples;
     }
 
     void DeletingFB(GLuint fb);
