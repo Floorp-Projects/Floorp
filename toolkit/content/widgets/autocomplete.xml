@@ -355,7 +355,6 @@
 
       <method name="closePopup">
         <body><![CDATA[
-          this.popup.setAttribute("consumeoutsideclicks", "false");
           this.popup.closePopup();
         ]]></body>
       </method>
@@ -372,7 +371,6 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
-              popup.setAttribute("consumeoutsideclicks", "false");
               popup.removeEventListener("popuphiding", onHide, false);
             }
             popup.addEventListener("popuphiding", onHide, false);
@@ -392,7 +390,6 @@
           // Ensure that we have focus.
           if (!this.focused)
             this.focus();
-          this.popup.setAttribute("consumeoutsideclicks", "true");
           this.attachController();
           this.mController.startSearch("");
         ]]></body>
@@ -613,7 +610,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true" level="top" consumeoutsideclicks="false">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1" seltype="single">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
@@ -966,7 +963,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true" level="top" consumeoutsideclicks="false">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>
         <children/>
