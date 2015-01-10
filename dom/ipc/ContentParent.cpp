@@ -587,6 +587,7 @@ static uint64_t gContentChildID = 1;
 
 static const char* sObserverTopics[] = {
     "xpcom-shutdown",
+    "profile-before-change",
     NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
     "child-memory-reporter-request",
     "memory-pressure",
@@ -1503,7 +1504,7 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
     // other methods. We first call Shutdown() in the child. After the child is
     // ready, it calls FinishShutdown() on us. Then we close the channel.
     if (aMethod == SEND_SHUTDOWN_MESSAGE) {
-        if (mIPCOpen && SendShutdown()) {
+        if (mIPCOpen && !mShutdownPending && SendShutdown()) {
             mShutdownPending = true;
         }
 
@@ -1774,8 +1775,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         mForceKillTimer = nullptr;
     }
 
-    // Signal shutdown completion regardless of error state,
-    // so we can finish waiting in the xpcom-shutdown observer.
+    // Signal shutdown completion regardless of error state, so we can
+    // finish waiting in the xpcom-shutdown/profile-before-change observer.
     mIPCOpen = false;
 
     if (why == NormalShutdown && !mCalledClose) {
@@ -2745,10 +2746,10 @@ ContentParent::Observe(nsISupports* aSubject,
                        const char* aTopic,
                        const char16_t* aData)
 {
-    if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        if (!mShutdownPending && mIPCOpen) {
-            ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
-        }
+    if (mSubprocess && (!strcmp(aTopic, "profile-before-change") ||
+                        !strcmp(aTopic, "xpcom-shutdown"))) {
+        // Okay to call ShutDownProcess multiple times.
+        ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
 
         // Wait for shutdown to complete, so that we receive any shutdown
         // data (e.g. telemetry) from the child before we quit.
