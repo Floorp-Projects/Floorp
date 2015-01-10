@@ -18,16 +18,13 @@ SimpleTest.waitForExplicitFinish();
 
 let gCurrentTestCase = -1;
 const HPKP_PREF = "security.cert_pinning.process_headers_from_non_builtin_roots";
+
+// Static pins tested by unit/test_security-info-static-hpkp.js.
 const TEST_CASES = [
   {
     desc: "no Public Key Pinning",
     url: "https://example.com",
     usesPinning: false,
-  },
-  {
-    desc: "static Public Key Pinning",
-    url: "https://include-subdomains.pinning.example.com/",
-    usesPinning: true,
   },
   {
     desc: "dynamic Public Key Pinning with this request",
