@@ -339,7 +339,7 @@ void
 GeckoTouchDispatcher::DispatchMouseEvent(MultiTouchInput& aMultiTouch,
                                          bool aForwardToChildren)
 {
-  WidgetMouseEvent mouseEvent = ToWidgetMouseEvent(aMultiTouch, nullptr);
+  WidgetMouseEvent mouseEvent = aMultiTouch.ToWidgetMouseEvent(nullptr);
   if (mouseEvent.message == NS_EVENT_NULL) {
     return;
   }
@@ -400,49 +400,6 @@ GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
     bool forwardToChildren = status != nsEventStatus_eConsumeNoDefault;
     DispatchMouseEvent(aMultiTouch, forwardToChildren);
   }
-}
-
-WidgetMouseEvent
-GeckoTouchDispatcher::ToWidgetMouseEvent(const MultiTouchInput& aMultiTouch,
-                                         nsIWidget* aWidget) const
-{
-  NS_ABORT_IF_FALSE(NS_IsMainThread(),
-                    "Can only convert To WidgetMouseEvent on main thread");
-
-  uint32_t mouseEventType = NS_EVENT_NULL;
-  switch (aMultiTouch.mType) {
-    case MultiTouchInput::MULTITOUCH_START:
-      mouseEventType = NS_MOUSE_BUTTON_DOWN;
-      break;
-    case MultiTouchInput::MULTITOUCH_MOVE:
-      mouseEventType = NS_MOUSE_MOVE;
-      break;
-    case MultiTouchInput::MULTITOUCH_CANCEL:
-    case MultiTouchInput::MULTITOUCH_END:
-      mouseEventType = NS_MOUSE_BUTTON_UP;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetMouseEvent");
-      break;
-  }
-
-  WidgetMouseEvent event(true, mouseEventType, aWidget,
-                         WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-
-  const SingleTouchData& firstTouch = aMultiTouch.mTouches[0];
-  event.refPoint.x = firstTouch.mScreenPoint.x;
-  event.refPoint.y = firstTouch.mScreenPoint.y;
-
-  event.time = aMultiTouch.mTime;
-  event.button = WidgetMouseEvent::eLeftButton;
-  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  event.modifiers = aMultiTouch.modifiers;
-
-  if (mouseEventType != NS_MOUSE_MOVE) {
-    event.clickCount = 1;
-  }
-
-  return event;
 }
 
 } // namespace mozilla

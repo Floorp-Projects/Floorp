@@ -216,6 +216,7 @@ public:
 
   explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
+  WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
 
   // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
   // on the B2G emulator we can only receive mouse events, but we need to be
