@@ -261,6 +261,9 @@ protected:
   // actual overscroll amount.
   ParentLayerCoord ApplyResistance(ParentLayerCoord aOverscroll) const;
 
+  // Helper function for SampleOverscrollAnimation().
+  void StepOverscrollAnimation(double aStepDurationMilliseconds);
+
   // Convert a velocity from global inches/ms into ParentLayerCoords/ms.
   float ToLocalVelocity(float aVelocityInchesPerMs) const;
 };

@@ -2252,7 +2252,7 @@ this.DOMApplicationRegistry = {
 
             // For hosted apps and hosted apps with appcache, use the
             // manifest "as is".
-            if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+            if (this.kTrustedHosted !== this.appKind(app, manifest)) {
               this.updateHostedApp(aData, id, app, oldManifest, manifest);
               return;
             }
