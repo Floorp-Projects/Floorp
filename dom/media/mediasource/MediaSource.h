@@ -113,8 +113,6 @@ private:
   // MediaSourceDecoder uses DurationChange to set the duration
   // without hitting the checks in SetDuration.
   friend class mozilla::MediaSourceDecoder;
-  // SourceBuffer uses SetDuration
-  friend class mozilla::dom::SourceBuffer;
 
   ~MediaSource();
 
@@ -127,9 +125,6 @@ private:
   void DurationChange(double aOldDuration, double aNewDuration);
 
   void InitializationEvent();
-
-  // SetDuration with no checks.
-  void SetDuration(double aDuration);
 
   nsRefPtr<SourceBufferList> mSourceBuffers;
   nsRefPtr<SourceBufferList> mActiveSourceBuffers;

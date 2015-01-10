@@ -178,7 +178,7 @@ void
 MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f, ErrorResult)", this, aDuration);
+  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f)", this, aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -188,14 +188,6 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  SetDuration(aDuration);
-}
-
-void
-MediaSource::SetDuration(double aDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f)", this, aDuration);
   mDecoder->SetMediaSourceDuration(aDuration);
 }
 
