@@ -17,14 +17,14 @@ using namespace jit;
 
 using mozilla::FloorLog2;
 
-bool
-SafepointWriter::init(TempAllocator &alloc, uint32_t slotCount)
-{
-    frameSlots_ = BitSet::New(alloc, slotCount / sizeof(intptr_t));
-    if (!frameSlots_)
-        return false;
+SafepointWriter::SafepointWriter(uint32_t slotCount)
+  : frameSlots_(slotCount / sizeof(intptr_t))
+{ }
 
-    return true;
+bool
+SafepointWriter::init(TempAllocator &alloc)
+{
+    return frameSlots_.init(alloc);
 }
 
 uint32_t
@@ -129,9 +129,9 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 }
 
 static void
-MapSlotsToBitset(BitSet *set, CompactBufferWriter &stream, uint32_t nslots, uint32_t *slots)
+MapSlotsToBitset(BitSet &set, CompactBufferWriter &stream, uint32_t nslots, uint32_t *slots)
 {
-    set->clear();
+    set.clear();
 
     for (uint32_t i = 0; i < nslots; i++) {
         // Slots are represented at a distance from |fp|. We divide by the
@@ -140,11 +140,11 @@ MapSlotsToBitset(BitSet *set, CompactBufferWriter &stream, uint32_t nslots, uint
         // so we subtract 1 to pack the bitset.
         MOZ_ASSERT(slots[i] % sizeof(intptr_t) == 0);
         MOZ_ASSERT(slots[i] / sizeof(intptr_t) > 0);
-        set->insert(slots[i] / sizeof(intptr_t) - 1);
+        set.insert(slots[i] / sizeof(intptr_t) - 1);
     }
 
-    size_t count = set->rawLength();
-    const uint32_t *words = set->raw();
+    size_t count = set.rawLength();
+    const uint32_t *words = set.raw();
     for (size_t i = 0; i < count; i++)
         stream.writeUnsigned(words[i]);
 }

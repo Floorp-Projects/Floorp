@@ -6936,7 +6936,7 @@ CodeGenerator::generate()
     if (!snapshots_.init())
         return false;
 
-    if (!safepoints_.init(gen->alloc(), graph.totalSlotCount()))
+    if (!safepoints_.init(gen->alloc()))
         return false;
 
     if (!generatePrologue())
