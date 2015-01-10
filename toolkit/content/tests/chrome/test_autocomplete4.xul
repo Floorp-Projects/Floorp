@@ -151,6 +151,14 @@ const tests = [
     result: "Result",
     start: 6, end: 6
   },
+
+  { desc: "RIGHT key complete from middle",
+    key: "VK_RIGHT",
+    forceComplete: true,
+    completeFromMiddle: true,
+    result: "Result",
+    start: 6, end: 6
+  },
 ];
 
 function nextTest() {
@@ -177,19 +185,42 @@ function nextTest() {
 
 function runCurrentTest() {
   var autocomplete = $("autocomplete");
-
   autocomplete.focus();
 
-  synthesizeKey("r", {});
-  synthesizeKey("e", {});
+  if (!currentTest.completeFromMiddle) {
+    synthesizeKey("r", {});
+    synthesizeKey("e", {});
+  }
+  else {
+    synthesizeKey("l", {});
+    synthesizeKey("t", {});
+  }
 }
 
 function searchComplete() {
   var autocomplete = $("autocomplete");
+  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete ? true : false);
+
+  if (currentTest.completeFromMiddle) {
+    if (!currentTest.forceComplete) {
+      synthesizeKey(currentTest.key, {});
+    }
+    else if (!/ >> /.test(autocomplete.value)) {
+      // At this point we should have a value like "lt >> Result" showing.
+      throw new Error("Expected an middle-completed value, got " + autocomplete.value);
+    }
+
+    // For forceComplete a blur should cause a value from the results to get
+    // completed to. E.g. "lt >> Result" will turn into "Result".
+    if (currentTest.forceComplete)
+      autocomplete.blur();
+
+    checkResult();
+    return;
+  }
+
   is(autocomplete.value, "result",
      "Test '" + currentTest.desc + "': autocomplete.value should equal 'result'");
-
-  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete ? true : false);
 
   if (autocomplete.selectionStart == 2) {  // Finished inserting "re" string.
     if (currentTest.removeSelection) {

@@ -500,16 +500,27 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
       else if (shouldComplete) {
         // We usually try to preserve the casing of what user has typed, but
         // if he wants to autocomplete, we will replace the value with the
-        // actual autocomplete result.
+        // actual autocomplete result. Note that the autocomplete input can also
+        // be showing e.g. "bar >> foo bar" if the search matched "bar", a
+        // word not at the start of the full value "foo bar".
         // The user wants explicitely to use that result, so this ensures
         // association of the result with the autocompleted text.
         nsAutoString value;
         nsAutoString inputValue;
         input->GetTextValue(inputValue);
-        if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value)) &&
-            value.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
-          input->SetTextValue(value);
-          input->SelectTextRange(value.Length(), value.Length());
+        if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value))) {
+          nsAutoString suggestedValue;
+          int32_t pos = inputValue.Find(" >> ");
+          if (pos > 0) {
+            inputValue.Right(suggestedValue, inputValue.Length() - pos - 4);
+          } else {
+            suggestedValue = inputValue;
+          }
+
+          if (value.Equals(suggestedValue, nsCaseInsensitiveStringComparator())) {
+            input->SetTextValue(value);
+            input->SelectTextRange(value.Length(), value.Length());
+          }
         }
       }
       // Close the pop-up even if nothing was selected
@@ -1285,19 +1296,52 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
     }
 
     if (forceComplete && value.IsEmpty()) {
-      // Since nothing was selected, and forceComplete is specified, that means
-      // we have to find the first default match and enter it instead
+      // See if inputValue is one of the autocomplete results. It can be an
+      // identical value, or if it matched the middle of a result it can be
+      // something like "bar >> foobar" (user entered bar and foobar is
+      // the result value).
+      // If the current search matches one of the autocomplete results, we
+      // should use that result, and not overwrite it with the default value.
+      // It's indeed possible EnterMatch gets called a second time (for example
+      // by the blur handler) and it should not overwrite the current match.
+      nsAutoString inputValue;
+      input->GetTextValue(inputValue);
+      nsAutoString suggestedValue;
+      int32_t pos = inputValue.Find(" >> ");
+      if (pos > 0) {
+        inputValue.Right(suggestedValue, inputValue.Length() - pos - 4);
+      } else {
+        suggestedValue = inputValue;
+      }
+
+      nsAutoString defaultValue;
       for (uint32_t i = 0; i < mResults.Length(); ++i) {
         nsIAutoCompleteResult *result = mResults[i];
-
         if (result) {
-          int32_t defaultIndex;
-          result->GetDefaultIndex(&defaultIndex);
-          if (defaultIndex >= 0) {
-            result->GetFinalCompleteValueAt(defaultIndex, value);
-            break;
+          if (defaultValue.IsEmpty()) {
+            int32_t defaultIndex;
+            result->GetDefaultIndex(&defaultIndex);
+            if (defaultIndex >= 0) {
+              result->GetFinalCompleteValueAt(defaultIndex, defaultValue);
+            }
+          }
+
+          uint32_t matchCount = 0;
+          result->GetMatchCount(&matchCount);
+          for (uint32_t j = 0; j < matchCount; ++j) {
+            nsAutoString matchValue;
+            result->GetFinalCompleteValueAt(j, matchValue);
+            if (suggestedValue.Equals(matchValue, nsCaseInsensitiveStringComparator())) {
+              value = matchValue;
+              break;
+            }
           }
         }
+      }
+      if (value.IsEmpty()) {
+        // Since nothing was selected, and forceComplete is specified, that means
+        // we have to enter the first default match instead.
+        value = defaultValue;
       }
     }
   }
