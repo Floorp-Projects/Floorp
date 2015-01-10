@@ -27,11 +27,11 @@ namespace android {
 
 StaticRefPtr<APZCCallbackHandler> APZCCallbackHandler::sInstance;
 
-NativePanZoomController*
-APZCCallbackHandler::SetNativePanZoomController(jobject obj)
+NativePanZoomController::LocalRef
+APZCCallbackHandler::SetNativePanZoomController(NativePanZoomController::Param obj)
 {
-    NativePanZoomController* old = mNativePanZoomController;
-    mNativePanZoomController = NativePanZoomController::Wrap(obj);
+    NativePanZoomController::LocalRef old = mNativePanZoomController;
+    mNativePanZoomController = obj;
     return old;
 }
 

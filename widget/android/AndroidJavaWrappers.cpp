@@ -14,7 +14,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::widget::android;
 
 jclass AndroidGeckoEvent::jGeckoEventClass = 0;
 jfieldID AndroidGeckoEvent::jActionField = 0;
@@ -122,7 +121,6 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidRect::InitRectClass(jEnv);
     AndroidRectF::InitRectFClass(jEnv);
     AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
-    InitStubs(jEnv);
 }
 
 void
