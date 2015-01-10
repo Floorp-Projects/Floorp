@@ -2,10 +2,6 @@ Can't find hash in builtin certs for Chrome nickname RapidSSL, inserting GOOGLE_
 Can't find hash in builtin certs for Chrome nickname Entrust_G2, inserting GOOGLE_PIN_Entrust_G2
 Can't find hash in builtin certs for Chrome nickname Entrust_SSL, inserting GOOGLE_PIN_Entrust_SSL
 Can't find hash in builtin certs for Chrome nickname GTECyberTrustGlobalRoot, inserting GOOGLE_PIN_GTECyberTrustGlobalRoot
-Can't find hash in builtin certs for Chrome nickname Tor2web, inserting GOOGLE_PIN_Tor2web
-Can't find hash in builtin certs for Chrome nickname AlphaSSL_G2, inserting GOOGLE_PIN_AlphaSSL_G2
-Can't find hash in builtin certs for Chrome nickname CryptoCat1, inserting GOOGLE_PIN_CryptoCat1
-Can't find hash in builtin certs for Chrome nickname Libertylavabitcom, inserting GOOGLE_PIN_Libertylavabitcom
 Can't find hash in builtin certs for Chrome nickname EntrustRootEC1, inserting GOOGLE_PIN_EntrustRootEC1
 Can't find hash in builtin certs for Chrome nickname GoDaddySecure, inserting GOOGLE_PIN_GoDaddySecure
 Can't find hash in builtin certs for Chrome nickname ThawtePremiumServer, inserting GOOGLE_PIN_ThawtePremiumServer
@@ -16,9 +12,6 @@ Writing pinset google
 Writing pinset tor
 Writing pinset twitterCom
 Writing pinset twitterCDN
-Writing pinset tor2web
-Writing pinset cryptoCat
-Writing pinset lavabit
 Writing pinset dropbox
 Writing pinset facebook
 Writing pinset spideroak
