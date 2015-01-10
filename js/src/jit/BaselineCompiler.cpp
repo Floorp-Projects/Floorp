@@ -3569,7 +3569,8 @@ typedef bool (*InterpretResumeFn)(JSContext *, HandleObject, HandleValue, Handle
                                   MutableHandleValue);
 static const VMFunction InterpretResumeInfo = FunctionInfo<InterpretResumeFn>(jit::InterpretResume);
 
-typedef bool (*GeneratorThrowFn)(JSContext *, BaselineFrame *, HandleObject, HandleValue, uint32_t);
+typedef bool (*GeneratorThrowFn)(JSContext *, BaselineFrame *, Handle<GeneratorObject*>,
+                                 HandleValue, uint32_t);
 static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrClose, TailCall);
 
 bool
@@ -3601,15 +3602,8 @@ BaselineCompiler::emit_JSOP_RESUME()
     masm.loadPtr(Address(scratch1, JSScript::offsetOfBaselineScript()), scratch1);
     masm.branchPtr(Assembler::BelowOrEqual, scratch1, ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
 
-    // Determine the resume address based on the yieldIndex and the
-    // yieldIndex -> native table in the BaselineScript.
-    Register scratch2 = regs.takeAny();
-    masm.load32(Address(scratch1, BaselineScript::offsetOfYieldEntriesOffset()), scratch2);
-    masm.addPtr(scratch2, scratch1);
-    masm.unboxInt32(Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()), scratch2);
-    masm.loadPtr(BaseIndex(scratch1, scratch2, ScaleFromElemWidth(sizeof(uintptr_t))), scratch1);
-
     // Push |undefined| for all formals.
+    Register scratch2 = regs.takeAny();
     Label loop, loopDone;
     masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch2);
     masm.bind(&loop);
@@ -3707,6 +3701,13 @@ BaselineCompiler::emit_JSOP_RESUME()
     masm.pushValue(retVal);
 
     if (resumeKind == GeneratorObject::NEXT) {
+        // Determine the resume address based on the yieldIndex and the
+        // yieldIndex -> native table in the BaselineScript.
+        masm.load32(Address(scratch1, BaselineScript::offsetOfYieldEntriesOffset()), scratch2);
+        masm.addPtr(scratch2, scratch1);
+        masm.unboxInt32(Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()), scratch2);
+        masm.loadPtr(BaseIndex(scratch1, scratch2, ScaleFromElemWidth(sizeof(uintptr_t))), scratch1);
+
         // Mark as running and jump to the generator's JIT code.
         masm.storeValue(Int32Value(GeneratorObject::YIELD_INDEX_RUNNING),
                         Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()));
@@ -3715,10 +3716,9 @@ BaselineCompiler::emit_JSOP_RESUME()
         MOZ_ASSERT(resumeKind == GeneratorObject::THROW || resumeKind == GeneratorObject::CLOSE);
 
         // Update the frame's frameSize field.
-        Register scratch3 = regs.takeAny();
         masm.computeEffectiveAddress(Address(BaselineFrameReg, BaselineFrame::FramePointerOffset),
                                      scratch2);
-        masm.movePtr(scratch2, scratch3);
+        masm.movePtr(scratch2, scratch1);
         masm.subPtr(BaselineStackReg, scratch2);
         masm.store32(scratch2, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
         masm.loadBaselineFramePtr(BaselineFrameReg, scratch2);
@@ -3734,16 +3734,15 @@ BaselineCompiler::emit_JSOP_RESUME()
             return false;
 
         // Create the frame descriptor.
-        masm.subPtr(BaselineStackReg, scratch3);
-        masm.makeFrameDescriptor(scratch3, JitFrame_BaselineJS);
+        masm.subPtr(BaselineStackReg, scratch1);
+        masm.makeFrameDescriptor(scratch1, JitFrame_BaselineJS);
 
-        // Push the frame descriptor and the native address of the op after the
-        // YIELD. The frame iteration code relies on this address to determine
-        // where we threw the exception.
-        masm.push(scratch3);
+        // Push the frame descriptor and a dummy return address (it doesn't
+        // matter what we push here, frame iterators will use the frame pc
+        // set in jit::GeneratorThrowOrClose).
         masm.push(scratch1);
+        masm.push(ImmWord(0));
         masm.jump(code);
-        regs.add(scratch3);
     }
 
     // If the generator script has no JIT code, call into the VM.
