@@ -1486,6 +1486,11 @@ public:
                                           nsFontMetrics& aFontMetrics,
                                           nsRenderingContext& aContext);
 
+  static bool StringWidthIsGreaterThan(const nsString& aString,
+                                       nsFontMetrics& aFontMetrics,
+                                       nsRenderingContext& aContext,
+                                       nscoord aWidth);
+
   static nsBoundingMetrics AppUnitBoundsOfString(const char16_t* aString,
                                                  uint32_t aLength,
                                                  nsFontMetrics& aFontMetrics,
