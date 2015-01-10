@@ -15,6 +15,7 @@
 #include "nsCOMArray.h"
 
 #include "GeneratedJNIWrappers.h"
+#include "AndroidJavaWrappers.h"
 
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
@@ -137,7 +138,7 @@ public:
         return pthread_equal(pthread_self(), sJavaUiThread);
     }
 
-    static void ConstructBridge(JNIEnv *jEnv);
+    static void ConstructBridge(JNIEnv *jEnv, jni::Object::Param clsLoader);
 
     static AndroidBridge *Bridge() {
         return sBridge;
@@ -187,7 +188,7 @@ public:
     bool GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResult);
     bool GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId, uint32_t aFrameId, nsCString & aResult);
 
-    nsresult CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jobject buffer, bool &shouldStore);
+    nsresult CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, jni::Object::Param buffer, bool &shouldStore);
     void GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort);
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
@@ -195,8 +196,8 @@ public:
     bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical,
                                    mozilla::ParentLayerPoint& aScrollOffset, mozilla::CSSToParentLayerScale& aZoom);
 
-    void SetLayerClient(JNIEnv* env, jobject jobj);
-    mozilla::widget::android::GeckoLayerClient* GetLayerClient() { return mLayerClient; }
+    void SetLayerClient(widget::GeckoLayerClient::Param jobj);
+    const widget::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }
 
     bool GetHandlersForURL(const nsAString& aURL,
                            nsIMutableArray* handlersArray = nullptr,
@@ -333,11 +334,11 @@ public:
     static jmethodID GetMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);
     static jmethodID GetStaticMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);
 
-    static jobject ChannelCreate(jobject);
+    static jni::Object::LocalRef ChannelCreate(jni::Object::Param);
 
-    static void InputStreamClose(jobject obj);
-    static uint32_t InputStreamAvailable(jobject obj);
-    static nsresult InputStreamRead(jobject obj, char *aBuf, uint32_t aCount, uint32_t *aRead);
+    static void InputStreamClose(jni::Object::Param obj);
+    static uint32_t InputStreamAvailable(jni::Object::Param obj);
+    static nsresult InputStreamRead(jni::Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead);
 
     static nsresult GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath);
 
@@ -353,7 +354,7 @@ protected:
     JNIEnv *mJNIEnv;
     pthread_t mThread;
 
-    mozilla::widget::android::GeckoLayerClient *mLayerClient;
+    widget::GeckoLayerClient::GlobalRef mLayerClient;
 
     // the android.telephony.SmsMessage class
     jclass mAndroidSmsMessageClass;
@@ -362,7 +363,7 @@ protected:
     ~AndroidBridge();
 
     void InitStubs(JNIEnv *jEnv);
-    bool Init(JNIEnv *jEnv);
+    bool Init(JNIEnv *jEnv, jni::Object::Param clsLoader);
 
     bool mOpenedGraphicsLibraries;
     void OpenGraphicsLibraries();
@@ -404,10 +405,13 @@ protected:
     jclass jLayerView;
 
     jfieldID jEGLSurfacePointerField;
-    mozilla::widget::android::GLController *mGLControllerObj;
+    widget::GLController::GlobalRef mGLControllerObj;
 
     // some convinient types to have around
     jclass jStringClass;
+
+    jni::Object::GlobalRef mClassLoader;
+    jmethodID mClassLoaderLoadClass;
 
     // calls we've dlopened from libjnigraphics.so
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);

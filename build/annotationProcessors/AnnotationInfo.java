@@ -22,7 +22,7 @@ public class AnnotationInfo {
         narrowChars = aNarrowChars;
         catchException = aCatchException;
 
-        if (!noThrow && catchException) {
+        if (noThrow && catchException) {
             // It doesn't make sense to have these together
             throw new IllegalArgumentException("noThrow and catchException are not allowed together");
         }
