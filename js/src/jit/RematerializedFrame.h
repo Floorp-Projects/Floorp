@@ -50,15 +50,17 @@ class RematerializedFrame
     Value slots_[1];
 
     RematerializedFrame(JSContext *cx, uint8_t *top, unsigned numActualArgs,
-                        InlineFrameIterator &iter);
+                        InlineFrameIterator &iter, MaybeReadFallback &fallback);
 
   public:
-    static RematerializedFrame *New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter);
+    static RematerializedFrame *New(JSContext *cx, uint8_t *top, InlineFrameIterator &iter,
+                                    MaybeReadFallback &fallback);
 
     // Rematerialize all remaining frames pointed to by |iter| into |frames|
     // in older-to-younger order, e.g., frames[0] is the oldest frame.
     static bool RematerializeInlineFrames(JSContext *cx, uint8_t *top,
                                           InlineFrameIterator &iter,
+                                          MaybeReadFallback &fallback,
                                           Vector<RematerializedFrame *> &frames);
 
     // Free a vector of RematerializedFrames; takes care to call the
