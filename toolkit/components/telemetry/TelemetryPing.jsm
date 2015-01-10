@@ -214,7 +214,6 @@ this.TelemetryPing = Object.freeze({
    */
   reset: function() {
     this.uninstall();
-    Impl._clientID = null;
     return this.setup();
   },
   /**
@@ -223,7 +222,6 @@ this.TelemetryPing = Object.freeze({
   setup: function() {
     return Impl.setupChromeProcess(true);
   },
-
   /**
    * Used only for testing purposes.
    */
@@ -233,13 +231,6 @@ this.TelemetryPing = Object.freeze({
     } catch (ex) {
       // Ignore errors
     }
-  },
-
-  /**
-   * Used only for testing purposes.
-   */
-  shutdown: function() {
-    return Impl.shutdown(true);
   },
   /**
    * Descriptive metadata
@@ -1034,7 +1025,10 @@ let Impl = {
     AsyncShutdown.sendTelemetry.addBlocker(
       "Telemetry: shutting down",
       function condition(){
-        this.shutdown();
+        this.uninstall();
+        if (Telemetry.canSend) {
+          return this.savePendingPings();
+        }
       }.bind(this));
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
@@ -1181,6 +1175,7 @@ let Impl = {
 #ifdef MOZ_WIDGET_ANDROID
     Services.obs.removeObserver(this, "application-background", false);
 #endif
+    this._clientID = null;
   },
 
   getPayload: function getPayload() {
@@ -1312,17 +1307,5 @@ let Impl = {
 
   get clientID() {
     return this._clientID;
-  },
-
-  /**
-   * This tells TelemetryPing to uninitialize and save any pending pings.
-   * @param testing Optional. If true, always saves the ping whether Telemetry
-   *                can send pings or not, which is used for testing.
-   */
-  shutdown: function(testing = false) {
-    this.uninstall();
-    if (Telemetry.canSend || testing) {
-      return this.savePendingPings();
-    }
   },
 };
