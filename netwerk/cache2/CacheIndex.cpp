@@ -2201,9 +2201,10 @@ CacheIndex::ParseRecords()
 
   if (pos != mRWBufPos) {
     memmove(mRWBuf, mRWBuf + pos, mRWBufPos - pos);
-    mRWBufPos -= pos;
-    pos = 0;
   }
+
+  mRWBufPos -= pos;
+  pos = 0;
 
   int64_t fileOffset = sizeof(CacheIndexHeader) +
                        mSkipEntries * sizeof(CacheIndexRecord) + mRWBufPos;
@@ -2286,7 +2287,7 @@ CacheIndex::StartReadingJournal()
 void
 CacheIndex::ParseJournal()
 {
-  LOG(("CacheIndex::ParseRecords()"));
+  LOG(("CacheIndex::ParseJournal()"));
 
   nsresult rv;
 
@@ -2322,9 +2323,10 @@ CacheIndex::ParseJournal()
 
   if (pos != mRWBufPos) {
     memmove(mRWBuf, mRWBuf + pos, mRWBufPos - pos);
-    mRWBufPos -= pos;
-    pos = 0;
   }
+
+  mRWBufPos -= pos;
+  pos = 0;
 
   int64_t fileOffset = mSkipEntries * sizeof(CacheIndexRecord) + mRWBufPos;
 
