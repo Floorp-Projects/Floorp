@@ -41,7 +41,7 @@ def executor_kwargs(http_server_url, **kwargs):
 
 
 def env_options():
-    return {"host": "localhost",
+    return {"host": "web-platform.test",
             "bind_hostname": "true",
             "required_files": required_files}
 
