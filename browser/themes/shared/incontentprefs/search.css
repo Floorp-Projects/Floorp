@@ -43,3 +43,11 @@
   height: 2px;
   -moz-margin-start: 0;
 }
+
+#engineShown {
+  min-width: 26px;
+}
+
+#addEnginesBox {
+  margin-bottom: 1em;
+}
