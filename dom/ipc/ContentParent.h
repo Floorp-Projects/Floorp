@@ -465,6 +465,9 @@ private:
     // manager and null out mMessageManager.
     void ShutDownMessageManager();
 
+    // Start the force-kill timer on shutdown.
+    void StartForceKillTimer();
+
     static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
     PCompositorParent*
