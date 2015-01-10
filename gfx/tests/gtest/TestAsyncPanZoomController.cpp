@@ -2659,7 +2659,7 @@ TEST_F(APZEventRegionsTester, Obscuration) {
   HitTestResult result;
   nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(ScreenPoint(50, 75), &result);
   EXPECT_EQ(child, hit.get());
-  EXPECT_EQ(HitTestResult::ApzcHitRegion, result);
+  EXPECT_EQ(HitTestResult::HitLayer, result);
 }
 
 TEST_F(APZEventRegionsTester, Bug1119497) {
@@ -2669,10 +2669,10 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
 
   HitTestResult result;
   nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(ScreenPoint(50, 50), &result);
-  // We should hit layers[2], so |result| will be ApzcHitRegion but there's no
+  // We should hit layers[2], so |result| will be HitLayer but there's no
   // actual APZC in that parent chain, so |hit| should be nullptr.
   EXPECT_EQ(nullptr, hit.get());
-  EXPECT_EQ(HitTestResult::ApzcHitRegion, result);
+  EXPECT_EQ(HitTestResult::HitLayer, result);
 }
 
 class TaskRunMetrics {
