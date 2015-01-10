@@ -144,4 +144,12 @@ path.coverer {
     <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
   </g>
 
+  <!-- Column 5: test stroke-dasharray -->
+
+  <g transform="translate(525,25)">
+    <circle cy="0" r="8"/>
+    <circle cy="40" r="8"/>
+    <circle cy="80" r="8"/>
+    <path class="circles-expected" d="M0,0v81" stroke-dasharray="0 40" />
+  </g>
 </svg>
