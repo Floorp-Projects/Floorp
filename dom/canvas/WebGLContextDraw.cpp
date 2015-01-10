@@ -14,7 +14,6 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLShader.h"
 #include "WebGLTexture.h"
-#include "WebGLUniformInfo.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
@@ -410,11 +409,15 @@ void WebGLContext::Draw_cleanup()
 bool
 WebGLContext::ValidateBufferFetching(const char* info)
 {
+    MOZ_ASSERT(mCurrentProgram);
+    // Note that mCurrentProgram->IsLinked() is NOT GUARANTEED.
+    MOZ_ASSERT(mActiveProgramLinkInfo);
+
 #ifdef DEBUG
     GLint currentProgram = 0;
     MakeContextCurrent();
     gl->fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);
-    MOZ_ASSERT(GLuint(currentProgram) == mCurrentProgram->GLName(),
+    MOZ_ASSERT(GLuint(currentProgram) == mCurrentProgram->mGLName,
                "WebGL: current program doesn't agree with GL state");
 #endif
 
@@ -441,7 +444,7 @@ WebGLContext::ValidateBufferFetching(const char* info)
 
         // If the attrib is not in use, then we don't have to validate
         // it, just need to make sure that the binding is non-null.
-        if (!mCurrentProgram->IsAttribInUse(i))
+        if (!mActiveProgramLinkInfo->HasActiveAttrib(i))
             continue;
 
         // the base offset
@@ -498,12 +501,13 @@ WebGLVertexAttrib0Status
 WebGLContext::WhatDoesVertexAttrib0Need()
 {
     MOZ_ASSERT(mCurrentProgram);
+    MOZ_ASSERT(mActiveProgramLinkInfo);
 
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
         mBoundVertexArray->IsAttribArrayEnabled(0) &&
-        !mCurrentProgram->IsAttribInUse(0))
+        !mActiveProgramLinkInfo->HasActiveAttrib(0))
     {
         return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
     }
@@ -515,7 +519,7 @@ WebGLContext::WhatDoesVertexAttrib0Need()
         return WebGLVertexAttrib0Status::Default;
     }
 
-    return mCurrentProgram->IsAttribInUse(0)
+    return mActiveProgramLinkInfo->HasActiveAttrib(0)
            ? WebGLVertexAttrib0Status::EmulatedInitializedArray
            : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
 }

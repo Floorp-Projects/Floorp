@@ -19,6 +19,7 @@
 #include "WebGLObjectModel.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
+#include "WebGLShaderValidator.h"
 #include "WebGLStrongTypes.h"
 #include <stdarg.h>
 
@@ -94,6 +95,10 @@ template<typename> struct Nullable;
 
 namespace gfx {
 class SourceSurface;
+}
+
+namespace webgl {
+struct LinkedProgramInfo;
 }
 
 WebGLTexelFormat GetWebGLTexelFormat(TexInternalFormat format);
@@ -374,7 +379,9 @@ public:
     void ClearStencil(GLint v);
     void ColorMask(WebGLboolean r, WebGLboolean g, WebGLboolean b, WebGLboolean a);
     void CompileShader(WebGLShader* shader);
-    void CompressedTexImage2D(GLenum texImageTarget, GLint level,
+    void CompileShaderANGLE(WebGLShader* shader);
+    void CompileShaderBypass(WebGLShader* shader, const nsCString& shaderSource);
+    void CompressedTexImage2D(GLenum target, GLint level,
                               GLenum internalformat, GLsizei width,
                               GLsizei height, GLint border,
                               const dom::ArrayBufferView& view);
@@ -835,8 +842,10 @@ public:
                                const float* data);
 
     void UseProgram(WebGLProgram* prog);
+
     bool ValidateAttribArraySetter(const char* name, uint32_t count,
                                    uint32_t arrayLength);
+    bool ValidateUniformLocation(WebGLUniformLocation* loc, const char* funcName);
     bool ValidateUniformSetter(WebGLUniformLocation* loc, uint8_t setterSize,
                                GLenum setterType, const char* info,
                                GLuint* out_rawLoc);
@@ -1116,8 +1125,9 @@ protected:
     GLenum mUnderlyingGLError;
     GLenum GetAndFlushUnderlyingGLErrors();
 
-    // whether shader validation is supported
-    bool mShaderValidation;
+    bool mBypassShaderValidation;
+
+    webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
     // some GL constants
     int32_t mGLMaxVertexAttribs;
@@ -1140,6 +1150,10 @@ protected:
 public:
     GLuint MaxVertexAttribs() const {
         return mGLMaxVertexAttribs;
+    }
+
+    GLuint GLMaxTextureUnits() const {
+        return mGLMaxTextureUnits;
     }
 
 
@@ -1223,10 +1237,6 @@ protected:
                                WebGLintptr byteOffset, const char* info);
     bool ValidateStencilParamsForDrawCall();
 
-    bool ValidateGLSLVariableName(const nsAString& name, const char* info);
-    bool ValidateGLSLCharacter(char16_t c);
-    bool ValidateGLSLString(const nsAString& string, const char* info);
-
     bool ValidateCopyTexImage(GLenum internalFormat, WebGLTexImageFunc func,
                               WebGLTexDimensions dims);
 
@@ -1272,6 +1282,10 @@ protected:
                                       uint32_t byteLength,
                                       WebGLTexImageFunc func,
                                       WebGLTexDimensions dims);
+
+    bool ValidateUniformLocationForProgram(WebGLUniformLocation* location,
+                                           WebGLProgram* program,
+                                           const char* funcName);
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -1401,6 +1415,7 @@ protected:
     nsTArray<WebGLRefPtr<WebGLTexture> > mBound3DTextures;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
+    RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
     uint32_t mMaxFramebufferColorAttachments;
 
@@ -1590,7 +1605,7 @@ WebGLContext::ValidateObjectAssumeNonNull(const char* info, ObjectType* object)
         return false;
 
     if (object->IsDeleted()) {
-        ErrorInvalidValue("%s: deleted object passed as argument", info);
+        ErrorInvalidValue("%s: Deleted object passed as argument.", info);
         return false;
     }
 
