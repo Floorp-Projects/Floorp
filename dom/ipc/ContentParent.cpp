@@ -1500,6 +1500,14 @@ ContentParent::TransformPreallocatedIntoBrowser(ContentParent* aOpener)
 void
 ContentParent::ShutDownProcess(ShutDownMethod aMethod)
 {
+#ifdef MOZ_NUWA_PROCESS
+    if (aMethod == SEND_SHUTDOWN_MESSAGE && IsNuwaProcess()) {
+        // We shouldn't send shutdown messages to frozen Nuwa processes,
+        // so just close the channel.
+        aMethod = CLOSE_CHANNEL;
+    }
+#endif
+
     // Shutting down by sending a shutdown message works differently than the
     // other methods. We first call Shutdown() in the child. After the child is
     // ready, it calls FinishShutdown() on us. Then we close the channel.
