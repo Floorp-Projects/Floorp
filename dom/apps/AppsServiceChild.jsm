@@ -354,6 +354,15 @@ this.DOMApplicationRegistry = {
     aCallback(res);
   },
 
+  getAdditionalLanguages: function(aManifestURL) {
+    for (let id in this.webapps) {
+      if (this.webapps[id].manifestURL == aManifestURL) {
+        return this.webapps[id].additionalLanguages || {};
+      }
+    }
+    return {};
+  },
+
   /**
    * nsIAppsService API
    */
