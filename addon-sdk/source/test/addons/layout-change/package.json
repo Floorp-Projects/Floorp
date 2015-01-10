@@ -1,4 +1,7 @@
 {
-  "id": "test-layout-change",
-  "ignore-deprecated-path": true
+  "id": "test-layout-change@jetpack",
+  "name": "test-layout-change",
+  "ignore-deprecated-path": true,
+  "version": "0.0.2",
+  "main": "./lib/main.js"
 }

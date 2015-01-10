@@ -20,6 +20,7 @@ const tabs = require("sdk/tabs/utils");
 const { merge } = require("sdk/util/object");
 const unload = require("sdk/system/unload");
 const fixtures = require("./fixtures");
+const packaging = require("@loader/options");
 
 let jetpackID = "testID";
 try {
@@ -1207,5 +1208,11 @@ exports.testWideWidget = function testWideWidget(assert) {
   assert.notEqual(widgetNode, null,
     "regular size widget are in the UI");
 };
+
+if (packaging.isNative) {
+  module.exports = {
+    "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
+  };
+}
 
 require("sdk/test").run(exports);

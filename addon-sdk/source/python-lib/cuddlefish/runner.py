@@ -418,6 +418,10 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     if enable_e10s:
         preferences['browser.tabs.remote.autostart'] = True
+    else:
+        preferences['browser.tabs.remote.autostart'] = False
+        preferences['browser.tabs.remote.autostart.1'] = False
+        preferences['browser.tabs.remote.autostart.2'] = False
 
     # For now, only allow running on Mobile with --force-mobile argument
     if app_type in ["fennec-on-device"] and not enable_mobile:
