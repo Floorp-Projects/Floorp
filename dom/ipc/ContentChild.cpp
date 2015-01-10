@@ -2496,11 +2496,10 @@ ContentChild::RecvShutdown()
     if (os) {
         os->NotifyObservers(this, "content-child-shutdown", nullptr);
     }
-    // Let the parent know we're done and let it close the channel.
-    // Both sides will clean up even if an error occurs here.
-    MessageLoop::current()->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &ContentChild::SendFinishShutdown));
+
+    // Ignore errors here. If this fails, the parent will kill us after a
+    // timeout.
+    unused << SendFinishShutdown();
     return true;
 }
 
