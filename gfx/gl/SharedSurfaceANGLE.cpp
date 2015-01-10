@@ -159,7 +159,7 @@ void
 SharedSurface_ANGLEShareHandle::ProducerAcquireImpl()
 {
     if (mKeyedMutex) {
-        HRESULT hr = mKeyedMutex->AcquireSync(0, INFINITE);
+        HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
         if (hr == WAIT_TIMEOUT) {
             MOZ_CRASH();
         }
