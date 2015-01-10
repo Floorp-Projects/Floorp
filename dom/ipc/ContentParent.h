@@ -813,7 +813,7 @@ private:
     bool mCalledKillHard;
     bool mCreatedPairedMinidumps;
     bool mShutdownPending;
-    bool mShutdownComplete;
+    bool mIPCOpen;
 
     friend class CrashReporterParent;
 
