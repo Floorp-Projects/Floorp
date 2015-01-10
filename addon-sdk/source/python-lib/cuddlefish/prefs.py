@@ -36,17 +36,23 @@ DEFAULT_COMMON_PREFS = {
 
     # shut up some warnings on `about:` page
     'app.releaseNotesURL': 'http://localhost/app-dummy/',
-    'app.vendorURL': 'http://localhost/app-dummy/'
+    'app.vendorURL': 'http://localhost/app-dummy/',
+
+    # Don't prompt about e10s
+    'browser.displayedE10SPrompt.1': 5
 }
 
 DEFAULT_NO_CONNECTIONS_PREFS = {
     'toolkit.telemetry.enabled': False,
+    'toolkit.telemetry.server': 'https://localhost/telemetry-dummy/',
     'app.update.auto' : False,
     'app.update.url': 'http://localhost/app-dummy/update',
+    # Make sure GMPInstallManager won't hit the network.
     'media.gmp-gmpopenh264.autoupdate' : False,
     'media.gmp-manager.cert.checkAttributes' : False,
     'media.gmp-manager.cert.requireBuiltIn' : False,
     'media.gmp-manager.url' : 'http://localhost/media-dummy/gmpmanager',
+    'media.gmp-manager.url.override': 'http://localhost/dummy-gmp-manager.xml',
     'browser.newtab.url' : 'about:blank',
     'browser.search.update': False,
     'browser.safebrowsing.enabled' : False,
@@ -54,9 +60,12 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.safebrowsing.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.reportURL': 'http://localhost/safebrowsing-dummy/report',
     'browser.safebrowsing.malware.reportURL': 'http://localhost/safebrowsing-dummy/malwarereport',
+    'browser.trackingprotection.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
+    'browser.trackingprotection.updateURL': 'http://localhost/safebrowsing-dummy/update',
 
     # Disable app update
     'app.update.enabled' : False,
+    'app.update.staging.enabled': False,
 
     # Disable about:newtab content fetch and ping
     'browser.newtabpage.directory.source': 'data:application/json,{"jetpack":1}',
@@ -64,9 +73,31 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
 
     # Point update checks to a nonexistent local URL for fast failures.
     'extensions.update.url' : 'http://localhost/extensions-dummy/updateURL',
+    'extensions.update.background.url': 'http://localhost/extensions-dummy/updateBackgroundURL',
     'extensions.blocklist.url' : 'http://localhost/extensions-dummy/blocklistURL',
     # Make sure opening about:addons won't hit the network.
-    'extensions.webservice.discoverURL' : 'http://localhost/extensions-dummy/discoveryURL'
+    'extensions.webservice.discoverURL' : 'http://localhost/extensions-dummy/discoveryURL',
+    'extensions.getAddons.maxResults': 0,
+
+    # Disable webapp updates.  Yes, it is supposed to be an integer.
+    'browser.webapps.checkForUpdates': 0,
+
+    # Location services
+    'geo.wifi.uri': 'http://localhost/location-dummy/locationURL',
+    'browser.search.geoip.url': 'http://localhost/location-dummy/locationURL',
+
+    # Tell the search service we are running in the US.  This also has the
+    # desired side-effect of preventing our geoip lookup.
+    'browser.search.isUS' : True,
+    'browser.search.countryCode' : 'US',
+
+    'geo.wifi.uri' : 'http://localhost/extensions-dummy/geowifiURL',
+    'geo.wifi.scan' : False,
+
+    # We don't want to hit the real Firefox Accounts server for tests.  We don't
+    # actually need a functioning FxA server, so just set it to something that
+    # resolves and accepts requests, even if they all fail.
+    'identity.fxaccounts.auth.uri': 'http://localhost/fxa-dummy/'
 }
 
 DEFAULT_FENNEC_PREFS = {
@@ -78,6 +109,7 @@ DEFAULT_FENNEC_PREFS = {
 DEFAULT_FIREFOX_PREFS = {
     'browser.startup.homepage' : 'about:blank',
     'startup.homepage_welcome_url' : 'about:blank',
+    'devtools.browsertoolbox.panel': 'jsdebugger',
     'devtools.errorconsole.enabled' : True,
     'devtools.chrome.enabled' : True,
 
@@ -145,6 +177,69 @@ DEFAULT_THUNDERBIRD_PREFS = {
 }
 
 DEFAULT_TEST_PREFS = {
+    'browser.console.showInPanel': True,
+    'browser.startup.page': 0,
+    'browser.firstrun.show.localepicker': False,
+    'browser.firstrun.show.uidiscovery': False,
+    'browser.ui.layout.tablet': 0,
+    'dom.disable_open_during_load': False,
+    'dom.experimental_forms': True,
+    'dom.forms.number': True,
+    'dom.forms.color': True,
+    'dom.max_script_run_time': 0,
+    'hangmonitor.timeout': 0,
+    'dom.max_chrome_script_run_time': 0,
+    'dom.popup_maximum': -1,
+    'dom.send_after_paint_to_content': True,
+    'dom.successive_dialog_time_limit': 0,
+    'browser.shell.checkDefaultBrowser': False,
+    'shell.checkDefaultClient': False,
+    'browser.warnOnQuit': False,
+    'accessibility.typeaheadfind.autostart': False,
+    'browser.EULA.override': True,
+    'gfx.color_management.force_srgb': True,
+    'network.manage-offline-status': False,
+    # Disable speculative connections so they aren't reported as leaking when they're hanging around.
+    'network.http.speculative-parallel-limit': 0,
+    'test.mousescroll': True,
+    # Need to client auth test be w/o any dialogs
+    'security.default_personal_cert': 'Select Automatically',
+    'network.http.prompt-temp-redirect': False,
+    'security.warn_viewing_mixed': False,
+    'browser.panorama.experienced_first_run': True,
+    # Set a future policy version to avoid the telemetry prompt.
+    'toolkit.telemetry.prompted': 999,
+    'toolkit.telemetry.notifiedOptOut': 999,
+    'extensions.defaultProviders.enabled': True,
+    'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
+    'layout.css.report_errors': True,
+    'layout.css.grid.enabled': True,
+    'layout.spammy_warnings.enabled': False,
+    'dom.mozSettings.enabled': True,
+    # Make sure the disk cache doesn't get auto disabled
+    'network.http.bypass-cachelock-threshold': 200000,
+    # Always use network provider for geolocation tests
+    # so we bypass the OSX dialog raised by the corelocation provider
+    'geo.provider.testing': True,
+    # Background thumbnails in particular cause grief, and disabling thumbnails
+    # in general can't hurt - we re-enable them when tests need them.
+    'browser.pagethumbnails.capturing_disabled': True,
+    # Indicate that the download panel has been shown once so that whichever
+    # download test runs first doesn't show the popup inconsistently.
+    'browser.download.panel.shown': True,
+    # Assume the about:newtab page's intro panels have been shown to not depend on
+    # which test runs first and happens to open about:newtab
+    'browser.newtabpage.introShown': True,
+    # Disable useragent updates.
+    'general.useragent.updates.enabled': False,
+    'dom.mozApps.debug': True,
+    'dom.apps.customization.enabled': True,
+    'media.eme.enabled': True,
+    # Don't forceably kill content processes after a timeout
+    'dom.ipc.tabs.shutdownTimeoutSecs': 0,
+    # Don't show the search first run UI by default
+    'browser.search.highlightCount': 0,
     'general.useragent.locale': "en-US",
-    'intl.locale.matchOS': "en-US"
+    'intl.locale.matchOS': "en-US",
+    'dom.indexedDB.experimental': True
 }

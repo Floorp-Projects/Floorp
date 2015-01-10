@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 const { on, emit } = require("sdk/event/core");
@@ -56,7 +55,7 @@ exports["test map events"] = function(assert) {
 exports["test map emits"] = $.emits(function(input, assert) {
   let output = map(input, inc);
   assert(output,  [1, 2, 3], [2, 3, 4], "this is `output` & evens passed");
-});;
+});
 
 exports["test map reg once"] = $.registerOnce(function(input, assert) {
   assert(map(input, inc),  [1, 2, 3], [2, 3, 4],
@@ -279,4 +278,4 @@ exports['test stripListeners'] = function (assert) {
   function noop2 () {}
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

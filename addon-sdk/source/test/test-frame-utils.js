@@ -56,4 +56,4 @@ exports['test frame with js enabled'] = function(assert, done) {
   });
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

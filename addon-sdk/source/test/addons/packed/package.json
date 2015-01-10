@@ -1,4 +1,6 @@
 {
-  "id": "test-url",
-  "unpack": false
+  "id": "test-url@jetpack",
+  "unpack": false,
+  "main": "./main.js",
+  "version": "0.0.1"
 }

@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Cc, Ci, Cu } = require("chrome");
 const prefs = require("sdk/preferences/service");
 const Branch = prefs.Branch;
-const { Cc, Ci, Cu } = require("chrome");
 const BundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
 
 const specialChars = "!@#$%^&*()_-=+[]{}~`\'\"<>,./?;:";
@@ -35,41 +35,42 @@ exports.testGetAndSet = function(assert) {
 
   assert.equal(
       prefs.keys("test_set_get_pref").sort().toString(),
-      ["test_set_get_pref.integer","test_set_get_pref"].sort().toString());
+      ["test_set_get_pref.integer","test_set_get_pref"].sort().toString(),
+      "the key list is correct");
 
   prefs.set("test_set_get_number_pref", 42);
   assert.throws(
-    function() { prefs.set("test_set_get_number_pref", 3.14159); },
+    () => prefs.set("test_set_get_number_pref", 3.14159),
     /cannot store non-integer number: 3.14159/,
     "setting a float preference should raise an error"
   );
-  assert.equal(prefs.get("test_set_get_number_pref"), 42,
-                   "bad-type write attempt should not overwrite");
+  assert.equal(prefs.get("test_set_get_number_pref"),
+               42,
+               "bad-type write attempt should not overwrite");
 
-  // 0x80000000 (no), 0x7fffffff (yes), -0x80000000 (yes), -0x80000001 (no)
+  // 0x80000000 (bad), 0x7fffffff (ok), -0x80000000 (ok), -0x80000001 (bad)
   assert.throws(
-    function() { prefs.set("test_set_get_number_pref", Math.pow(2, 31)); },
-    new RegExp("you cannot set the test_set_get_number_pref pref to the number " +
-     "2147483648, as number pref values must be in the signed 32\\-bit " +
-     "integer range \\-\\(2\\^31\\) to 2\\^31\\-1.  To store numbers outside that " +
-     "range, store them as strings."),
-    "setting an int pref outside the range -(2^31) to 2^31-1 shouldn't work"
+    () => prefs.set("test_set_get_number_pref", 0x80000000),
+    /32\-bit/,
+    "setting an int pref above 2^31-1 shouldn't work"
   );
+
   assert.equal(prefs.get("test_set_get_number_pref"), 42,
                    "out-of-range write attempt should not overwrite 1");
-  prefs.set("test_set_get_number_pref", Math.pow(2, 31)-1);
-  assert.equal(prefs.get("test_set_get_number_pref"), 0x7fffffff,
-                   "in-range write attempt should work 1");
-  prefs.set("test_set_get_number_pref", -Math.pow(2, 31));
-  assert.equal(prefs.get("test_set_get_number_pref"), -0x80000000,
-                   "in-range write attempt should work 2");
+
+  prefs.set("test_set_get_number_pref", 0x7fffffff);
+  assert.equal(prefs.get("test_set_get_number_pref"),
+               0x7fffffff,
+               "in-range write attempt should work 1");
+
+  prefs.set("test_set_get_number_pref", -0x80000000);
+  assert.equal(prefs.get("test_set_get_number_pref"),
+               -0x80000000,
+               "in-range write attempt should work 2");
   assert.throws(
-    function() { prefs.set("test_set_get_number_pref", -0x80000001); },
-    new RegExp("you cannot set the test_set_get_number_pref pref to the number " +
-     "\\-2147483649, as number pref values must be in the signed 32-bit " +
-     "integer range \\-\\(2\\^31\\) to 2\\^31\\-1.  To store numbers outside that " +
-     "range, store them as strings."),
-    "setting an int pref outside the range -(2^31) to 2^31-1 shouldn't work"
+    () => prefs.set("test_set_get_number_pref", -0x80000001),
+    /32\-bit/,
+    "setting an int pref below -(2^31) shouldn't work"
   );
   assert.equal(prefs.get("test_set_get_number_pref"), -0x80000000,
                    "out-of-range write attempt should not overwrite 2");
@@ -88,16 +89,14 @@ exports.testGetAndSet = function(assert) {
                    String.fromCharCode(960),
                    "set/get unicode preference should work");
 
-  var unsupportedValues = [null, [], undefined];
-  unsupportedValues.forEach(
-    function(value) {
-      assert.throws(
-        function() { prefs.set("test_set_pref", value); },
-        new RegExp("can't set pref test_set_pref to value '" + value + "'; " +
-         "it isn't a string, integer, or boolean"),
-        "Setting a pref to " + uneval(value) + " should raise error"
-      );
-    });
+  [ null, [], undefined ].forEach((value) => {
+    assert.throws(
+      () => prefs.set("test_set_pref", value),
+      new RegExp("can't set pref test_set_pref to value '" + value + "'; " +
+       "it isn't a string, number, or boolean", "i"),
+      "Setting a pref to " + uneval(value) + " should raise error"
+    );
+  });
 };
 
 exports.testPrefClass = function(assert) {
@@ -135,11 +134,11 @@ exports.testSpecialChars = function(assert) {
   let chars = specialChars.split('');
   const ROOT = "test.";
 
-  chars.forEach(function(char) {
+  chars.forEach((char) => {
     let rand = Math.random() + "";
-    prefs.set(ROOT+char, rand);
+    prefs.set(ROOT + char, rand);
     assert.equal(prefs.get(ROOT+char), rand, "setting pref with a name that is a special char, " + char + ", worked!");
   });
 };
 
-require('sdk/test').run(exports);
+require("sdk/test").run(exports);

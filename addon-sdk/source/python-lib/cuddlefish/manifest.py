@@ -417,6 +417,9 @@ class ManifestBuilder:
                         # test-securable-module.js, and the modules/red.js
                         # that it imports, both do that intentionally
                         continue
+                    if reqname.endswith(".jsm"):
+                        # ignore JSM modules
+                        continue
                     if not self.abort_on_missing:
                         # print a warning, but tolerate missing modules
                         # unless cfx --abort-on-missing-module flag was set
@@ -802,4 +805,3 @@ if __name__ == '__main__':
             sys.exit(1)
         print "requires: %s" % (",".join(sorted(requires.keys())))
         print "locations: %s" % locations
-

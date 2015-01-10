@@ -109,7 +109,7 @@ exports.testSimplePrefs = function(assert) {
   let { preferences } = packageJSON('simple-prefs');
   let branch = prefsrv.getDefaultBranch('extensions.' + preferencesBranch);
 
-  function assertPref(setting, name, type, title) {
+  function assertPref(setting, name, type, title, description = null) {
     assert.equal(setting.getAttribute('data-jetpack-id'), id,
                  "setting 'data-jetpack-id' attribute correct");
     assert.equal(setting.getAttribute('pref'), 'extensions.' + id + '.' + name,
@@ -120,6 +120,14 @@ exports.testSimplePrefs = function(assert) {
                  "setting 'type' attribute correct");
     assert.equal(setting.getAttribute('title'), title,
                  "setting 'title' attribute correct");
+    if (description) {
+      assert.equal(setting.getAttribute('desc'), description,
+                 "setting 'desc' attribute correct");
+    }
+    else {
+      assert.ok(!setting.hasAttribute('desc'),
+                 "setting 'desc' attribute is not present");
+    }
   }
 
   function assertOption(option, value, label) {
@@ -131,7 +139,7 @@ exports.testSimplePrefs = function(assert) {
   injectOptions(preferences, preferencesBranch, document, parent);
   assert.equal(parent.children.length, 8, "Eight setting elements injected");
 
-  assertPref(parent.children[0], 'test', 'bool', 't\u00EBst');
+  assertPref(parent.children[0], 'test', 'bool', 't\u00EBst', 'descr\u00EFpti\u00F6n');
   assertPref(parent.children[1], 'test2', 'string', 't\u00EBst');
   assertPref(parent.children[2], 'test3', 'menulist', '"><test');
   assertPref(parent.children[3], 'test4', 'radio', 't\u00EBst');

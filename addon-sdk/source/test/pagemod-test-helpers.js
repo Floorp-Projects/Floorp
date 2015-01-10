@@ -7,33 +7,37 @@ const { Cc, Ci } = require("chrome");
 const { setTimeout } = require("sdk/timers");
 const { Loader } = require("sdk/test/loader");
 const { openTab, getBrowserForTab, closeTab } = require("sdk/tabs/utils");
+const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 const { merge } = require("sdk/util/object");
 const httpd = require("./lib/httpd");
+const { cleanUI } = require("sdk/test/utils");
 
 const PORT = 8099;
 const PATH = '/test-contentScriptWhen.html';
 
-// an evil function enables the creation of tests
-// that depend on delicate event timing. do not use.
-exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions,
-                                           testCallback, timeout) {
-
-  var wm = Cc['@mozilla.org/appshell/window-mediator;1']
-           .getService(Ci.nsIWindowMediator);
-  var browserWindow = wm.getMostRecentWindow("navigator:browser");
-
+function createLoader () {
   let options = merge({}, require('@loader/options'),
                       { prefixURI: require('./fixtures').url() });
+  return Loader(module, null, options);
+}
+exports.createLoader = createLoader;
 
-  let loader = Loader(module, null, options);
-  let pageMod = loader.require("sdk/page-mod");
-
-  var pageMods = [new pageMod.PageMod(opts) for each(opts in pageModOptions)];
-
-  let newTab = openTab(browserWindow, testURL, {
+function openNewTab(url) {
+  return openTab(getMostRecentBrowserWindow(), url, {
     inBackground: false
   });
-  var b = getBrowserForTab(newTab);
+}
+exports.openNewTab = openNewTab;
+
+// an evil function enables the creation of tests
+// that depend on delicate event timing. do not use.
+function testPageMod(assert, done, testURL, pageModOptions,
+                                           testCallback, timeout) {
+  let loader = createLoader();
+  let { PageMod } = loader.require("sdk/page-mod");
+  let pageMods = [new PageMod(opts) for each (opts in pageModOptions)];
+  let newTab = openNewTab(testURL);
+  let b = getBrowserForTab(newTab);
 
   function onPageLoad() {
     b.removeEventListener("load", onPageLoad, true);
@@ -42,7 +46,7 @@ exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions
     // If we delay even more contentScriptWhen:'end', we may want to modify
     // this code again.
     setTimeout(testCallback, timeout,
-      b.contentWindow.wrappedJSObject, 
+      b.contentWindow.wrappedJSObject,
       function () {
         pageMods.forEach(function(mod) mod.destroy());
         // XXX leaks reported if we don't close the tab?
@@ -56,6 +60,7 @@ exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions
 
   return pageMods;
 }
+exports.testPageMod = testPageMod;
 
 /**
  * helper function that creates a PageMod and calls back the appropriate handler
@@ -77,7 +82,7 @@ exports.handleReadyState = function(url, contentScriptWhen, callbacks) {
         let type = 'on' + readyState[0].toUpperCase() + readyState.substr(1);
 
         if (type in callbacks)
-          callbacks[type](tab); 
+          callbacks[type](tab);
 
         pagemod.destroy();
         loader.unload();
@@ -88,7 +93,7 @@ exports.handleReadyState = function(url, contentScriptWhen, callbacks) {
 
 // serves a slow page which takes 1.5 seconds to load,
 // 0.5 seconds in each readyState: uninitialized, loading, interactive.
-exports.contentScriptWhenServer = function() {
+function contentScriptWhenServer() {
   const URL = 'http://localhost:' + PORT + PATH;
 
   const HTML = `/* polyglot js
@@ -109,3 +114,4 @@ exports.contentScriptWhenServer = function() {
   srv.URL = URL;
   return srv;
 }
+exports.contentScriptWhenServer = contentScriptWhenServer;

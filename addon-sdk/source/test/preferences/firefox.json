@@ -1,0 +1,10 @@
+{
+  "browser.startup.homepage": "about:blank",
+  "startup.homepage_welcome_url": "about:blank",
+  "devtools.browsertoolbox.panel": "jsdebugger",
+  "devtools.errorconsole.enabled": true,
+  "devtools.chrome.enabled": true,
+  "urlclassifier.updateinterval": 172800,
+  "browser.safebrowsing.provider.0.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
+  "browser.safebrowsing.provider.0.updateURL": "http://localhost/safebrowsing-dummy/update"
+}

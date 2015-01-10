@@ -18,6 +18,7 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { partial } = require('sdk/lang/functional');
 const { wait } = require('./event/helpers');
 const { gc } = require('sdk/test/memory');
+const packaging = require("@loader/options");
 
 const openBrowserWindow = partial(open, null, {features: {toolbar: true}});
 const openPrivateBrowserWindow = partial(open, null,
@@ -1346,4 +1347,11 @@ exports['test buttons can have anchored panels'] = function(assert, done) {
   b1.click();
 }
 
-require('sdk/test').run(exports);
+
+if (packaging.isNative) {
+  module.exports = {
+    "test skip on jpm": (assert) => assert.pass("skipping this file with jpm")
+  };
+}
+
+require("sdk/test").run(module.exports);

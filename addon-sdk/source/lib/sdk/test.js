@@ -8,10 +8,10 @@ module.metadata = {
 };
 
 const { Cu } = require("chrome");
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("resource://gre/modules/Task.jsm", {});
 const { defer } = require("sdk/core/promise");
 const BaseAssert = require("sdk/test/assert").Assert;
-const { isFunction, isObject } = require("sdk/lang/type");
+const { isFunction, isObject, isGenerator } = require("sdk/lang/type");
 const { extend } = require("sdk/util/object");
 
 exports.Assert = BaseAssert;
@@ -49,10 +49,10 @@ function defineTestSuite(target, suite, prefix) {
 
           // If test function is a generator use a task JS to allow yield-ing
           // style test runs.
-          if (test.isGenerator && test.isGenerator()) {
+          if (isGenerator(test)) {
             options.waitUntilDone();
             Task.spawn(test.bind(null, assert)).
-                then(null, assert.fail).
+                catch(assert.fail).
                 then(assert.end);
           }
 
@@ -60,7 +60,6 @@ function defineTestSuite(target, suite, prefix) {
           // it means that test is async and second argument is a callback
           // to notify that test is finished.
           else if (1 < test.length) {
-
             // Letting test runner know that test is executed async and
             // creating a callback function that CommonJS tests will call
             // once it's done.

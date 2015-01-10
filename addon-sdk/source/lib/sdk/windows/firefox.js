@@ -9,7 +9,6 @@ const { Cc, Ci, Cr } = require('chrome'),
       { EventEmitter } = require('../deprecated/events'),
       { WindowTabs, WindowTabTracker } = require('./tabs-firefox'),
       { WindowDom } = require('./dom'),
-      { WindowLoader } = require('./loader'),
       { isBrowser, getWindowDocShell, isFocused,
         windows: windowIterator, isWindowPrivate } = require('../window/utils'),
       { Options } = require('../tabs/common'),
@@ -23,7 +22,10 @@ const { windowNS } = require('../window/namespace');
 const { isPrivateBrowsingSupported } = require('../self');
 const { ignoreWindow, isPrivate } = require('sdk/private-browsing/utils');
 const { viewFor } = require('../view/core');
-
+const { openDialog } = require('../window/utils');
+const ON_LOAD = 'load',
+      ON_UNLOAD = 'unload',
+      STATE_LOADED = 'complete';
 /**
  * Window trait composes safe wrappers for browser window that are E10S
  * compatible.
@@ -33,12 +35,96 @@ const BrowserWindowTrait = Trait.compose(
   WindowDom.resolve({ close: '_close' }),
   WindowTabs,
   WindowTabTracker,
-  WindowLoader,
   /* WindowSidebars, */
   Trait.compose({
     _emit: Trait.required,
     _close: Trait.required,
-    _load: Trait.required,
+    /**
+     * Private window who's load event is being tracked. Once window is loaded
+     * `_onLoad` is called.
+     * @type {nsIWindow}
+     */
+    get _window() this.__window,
+    set _window(window) {
+      let _window = this.__window;
+      if (!window) window = null;
+
+      if (window !== _window) {
+        if (_window) {
+          if (this.__unloadListener)
+            _window.removeEventListener(ON_UNLOAD, this.__unloadListener, false);
+
+          if (this.__loadListener)
+            _window.removeEventListener(ON_LOAD, this.__loadListener, false);
+        }
+
+        if (window) {
+          window.addEventListener(
+            ON_UNLOAD,
+            this.__unloadListener ||
+              (this.__unloadListener = this._unloadListener.bind(this))
+            ,
+            false
+          );
+
+          this.__window = window;
+
+          // If window is not loaded yet setting up a listener.
+          if (STATE_LOADED != window.document.readyState) {
+            window.addEventListener(
+              ON_LOAD,
+              this.__loadListener ||
+                (this.__loadListener = this._loadListener.bind(this))
+              ,
+              false
+            );
+          }
+          else { // If window is loaded calling listener next turn of event loop.
+            this._onLoad(window)
+          }
+        }
+        else {
+          this.__window = null;
+        }
+      }
+    },
+    __window: null,
+    /**
+     * Internal method used for listening 'load' event on the `_window`.
+     * Method takes care of removing itself from 'load' event listeners once
+     * event is being handled.
+     */
+    _loadListener: function _loadListener(event) {
+      let window = this._window;
+      if (!event.target || event.target.defaultView != window) return;
+      window.removeEventListener(ON_LOAD, this.__loadListener, false);
+      this._onLoad(window);
+    },
+    __loadListener: null,
+    /**
+     * Internal method used for listening 'unload' event on the `_window`.
+     * Method takes care of removing itself from 'unload' event listeners once
+     * event is being handled.
+     */
+    _unloadListener: function _unloadListener(event) {
+      let window = this._window;
+      if (!event.target
+        || event.target.defaultView != window
+        || STATE_LOADED != window.document.readyState
+      ) return;
+      window.removeEventListener(ON_UNLOAD, this.__unloadListener, false);
+      this._onUnload(window);
+    },
+    __unloadListener: null,
+    _load: function _load() {
+      if (this.__window)
+        return;
+
+      this._window = openDialog({
+        private: this._isPrivate,
+        args: this._tabOptions.map(function(options) options.url).join("|")
+      });
+    },
     /**
      * Constructor returns wrapper of the specified chrome window.
      * @param {nsIWindow} window

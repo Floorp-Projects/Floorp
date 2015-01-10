@@ -50,7 +50,8 @@ function getPreferedLocales(caseSensitve) {
     addLocale(browserUiLocale);
 
   // Third priority is the list of locales used for web content
-  let contentLocales = prefs.get(PREF_ACCEPT_LANGUAGES, "");
+  let contentLocales = prefs.getLocalized(PREF_ACCEPT_LANGUAGES, "") ||
+                       prefs.get(PREF_ACCEPT_LANGUAGES, "");
   if (contentLocales) {
     // This list is a string of locales seperated by commas.
     // There is spaces after commas, so strip each item

@@ -2,11 +2,12 @@
     "id": "{34a1eae1-c20a-464f-9b0e-000000000000}",
     "fullName": "curly ID test",
     "author": "Tomislav Jovanovic",
-
     "preferences": [{
         "name": "test13",
         "type": "integer",
         "title": "test13",
         "value": 26
-    }]
+    }],
+    "main": "./lib/main.js",
+    "version": "0.0.1"
 }

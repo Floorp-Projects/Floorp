@@ -249,4 +249,4 @@ exports["test direct messaging"] = function* (assert) {
   yield wait(t1, "detach");
 };
 
-require("sdk/test").run(exports);
+require("sdk/test").run(module.exports);

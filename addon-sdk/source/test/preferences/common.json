@@ -1,0 +1,16 @@
+{
+  "browser.dom.window.dump.enabled": true,
+  "javascript.options.showInConsole": true,
+  "devtools.debugger.remote-enabled": true,
+  "extensions.sdk.console.logLevel": "info",
+  "extensions.checkCompatibility.nightly": false,
+  "extensions.update.enabled": false,
+  "lightweightThemes.update.enabled": false,
+  "extensions.update.notifyUser": false,
+  "extensions.enabledScopes": 5,
+  "extensions.getAddons.cache.enabled": false,
+  "extensions.installDistroAddons": false,
+  "extensions.autoDisableScopes": 10,
+  "app.releaseNotesURL": "http://localhost/app-dummy/",
+  "app.vendorURL": "http://localhost/app-dummy/"
+}

@@ -3,7 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var { actionButton, toggleButton, icon } = require("main");
+try {
+  // CFX use case..
+  var { actionButton, toggleButton, icon } = require("main");
+}
+catch (e) {
+  // JPM use case..
+  let mainURI = "../lib/main";
+  var { actionButton, toggleButton, icon } = require(mainURI);
+}
 var self = require("sdk/self");
 
 exports.testActionButton = function(assert) {

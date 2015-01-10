@@ -76,4 +76,4 @@ exports.testIterable = function(test) {
     test.equal(rules[i], ['*.mozilla.org', 'data:*', 'http://addons.mozilla.org'][i]);
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

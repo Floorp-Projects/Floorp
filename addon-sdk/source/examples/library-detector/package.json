@@ -1,9 +1,10 @@
 {
-    "name": "library-detector-sdk",
-    "license": "MPL 2.0",
-    "author": "",
-    "version": "0.1",
-    "title": "library-detector-sdk",
-    "id": "jid1-R4rSVNkBANnvGQ",
-    "description": "a basic add-on"
+  "name": "library-detector-sdk",
+  "license": "MPL 2.0",
+  "author": "",
+  "version": "0.1.1",
+  "title": "library-detector-sdk",
+  "id": "jid1-R4rSVNkBANnvGQ@jetpack",
+  "description": "a basic add-on",
+  "main": "./lib/main.js"
 }

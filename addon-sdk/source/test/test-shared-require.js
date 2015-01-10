@@ -1,10 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
 const { Cu } = require("chrome");
 
 const requireURI = require.resolve("toolkit/require.js");
-
-
 
 const jsm = Cu.import(requireURI, {});
 
@@ -32,4 +33,4 @@ exports.testSameRequire = (assert) => {
                "require function is same in both contexts");
 };
 
-require("test").run(exports)
+require("sdk/test").run(exports)

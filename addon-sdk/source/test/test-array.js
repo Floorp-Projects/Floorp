@@ -100,4 +100,4 @@ exports.testFind = function(assert) {
   assert.equal(array.find([2, 4, 6, 8], isOdd, null), null);
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

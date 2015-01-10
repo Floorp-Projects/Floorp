@@ -21,7 +21,6 @@ const { WindowTracker, browserWindowIterator } = require("./deprecated/window-ut
 const { isBrowser, getInnerId } = require("./window/utils");
 const { Ci, Cc, Cu } = require("chrome");
 const { MatchPattern } = require("./util/match-pattern");
-const { Worker } = require("./content/worker");
 const { EventTarget } = require("./event/target");
 const { emit } = require('./event/core');
 const { when } = require('./system/unload');

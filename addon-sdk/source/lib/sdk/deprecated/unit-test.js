@@ -10,7 +10,7 @@ module.metadata = {
 const memory = require("./memory");
 const timer = require("../timers");
 const cfxArgs = require("../test/options");
-const { getTabs, closeTab, getURI } = require("../tabs/utils");
+const { getTabs, closeTab, getURI, getTabId, getSelectedTab } = require("../tabs/utils");
 const { windows, isBrowser, getMostRecentBrowserWindow } = require("../window/utils");
 const { defer, all, Debugging: PromiseDebugging, resolve } = require("../core/promise");
 const { getInnerId } = require("../window/utils");
@@ -35,10 +35,16 @@ const findAndRunTests = function findAndRunTests(options) {
 exports.findAndRunTests = findAndRunTests;
 
 let runnerWindows = new WeakMap();
+let runnerTabs = new WeakMap();
 
 const TestRunner = function TestRunner(options) {
   options = options || {};
-  runnerWindows.set(this, getInnerId(getMostRecentBrowserWindow()));
+
+  // remember the id's for the open window and tab
+  let window = getMostRecentBrowserWindow();
+  runnerWindows.set(this, getInnerId(window));
+  runnerTabs.set(this, getTabId(getSelectedTab(window)));
+
   this.fs = options.fs;
   this.console = options.console || console;
   memory.track(this);
@@ -318,15 +324,26 @@ TestRunner.prototype = {
     return all(winPromises).then(() => {
       let browserWins = wins.filter(isBrowser);
       let tabs = browserWins.reduce((tabs, window) => tabs.concat(getTabs(window)), []);
-
-      if (wins.length != 1 || getInnerId(wins[0]) !== runnerWindows.get(this))
-        this.fail("Should not be any unexpected windows open");
-
+      let newTabID = getTabId(getSelectedTab(wins[0]));
+      let oldTabID = runnerTabs.get(this);
       let hasMoreTabsOpen = browserWins.length && tabs.length != 1;
-      if (hasMoreTabsOpen)
-        this.fail("Should not be any unexpected tabs open");
+      let failure = false;
 
-      if (hasMoreTabsOpen || wins.length != 1) {
+      if (wins.length != 1 || getInnerId(wins[0]) !== runnerWindows.get(this)) {
+        failure = true;
+        this.fail("Should not be any unexpected windows open");
+      }
+      else if (hasMoreTabsOpen) {
+        failure = true;
+        this.fail("Should not be any unexpected tabs open");
+      }
+      else if (oldTabID != newTabID) {
+        failure = true;
+        runnerTabs.set(this, newTabID);
+        this.fail("Should not be any new tabs left open, old id: " + oldTabID + " new id: " + newTabID);
+      }
+
+      if (failure) {
         console.log("Windows open:");
         for (let win of wins) {
           if (isBrowser(win)) {
@@ -356,7 +373,7 @@ TestRunner.prototype = {
         timer.setTimeout(_ => onDone(this));
       }
     }).
-    catch(e => console.exception(e));
+    catch(console.exception);
   },
 
   // Set of assertion functions to wait for an assertion to become true

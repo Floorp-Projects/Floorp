@@ -84,7 +84,7 @@ def validate_resource_hostname(name):
     """
 
     # See https://bugzilla.mozilla.org/show_bug.cgi?id=568131 for details.
-    if not name.islower():
+    if not name.lower() == name:
         raise ValueError("""Error: the name of your package contains upper-case letters.
 Package names can contain only lower-case letters, numbers, underscores, and dashes.
 Current package name: %s""" % name)

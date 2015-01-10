@@ -14,7 +14,7 @@ const { getAttachEventType, WorkerHost } = require('./content/utils');
 const { Class } = require('./core/heritage');
 const { Disposable } = require('./core/disposable');
 const { WeakReference } = require('./core/reference');
-const { Worker } = require('./content/worker-parent');
+const { Worker } = require('./content/worker');
 const { EventTarget } = require('./event/target');
 const { on, emit, once, setListeners } = require('./event/core');
 const { on: domOn, removeListener: domOff } = require('./dom/events');
@@ -189,6 +189,10 @@ function applyOnExistingDocuments (mod) {
   getTabs().forEach(tab => {
     // Fake a newly created document
     let window = getTabContentWindow(tab);
+    // on startup with e10s, contentWindow might not exist yet,
+    // in which case we will get notified by "document-element-inserted".
+    if (!window || !window.frames)
+      return;
     let uri = getTabURI(tab);
     if (has(mod.attachTo, "top") && modMatchesURI(mod, uri))
       onContent(mod, window);
@@ -216,7 +220,7 @@ function createWorker (mod, window) {
     // page-mod's "attach" event needs a worker
     if (event === 'attach')
       emit(mod, event, worker)
-    else 
+    else
       emit(mod, event, ...args);
   })
   once(worker, 'detach', () => worker.destroy());
