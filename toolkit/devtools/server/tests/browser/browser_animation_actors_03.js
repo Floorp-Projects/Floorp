@@ -45,6 +45,7 @@ function* playerStateIsCorrect(walker, front) {
 
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
   let [player] = yield front.getAnimationPlayersForNode(node);
+  yield player.ready();
   let state = player.initialState;
 
   is(state.name, "move", "Name is correct");
@@ -70,6 +71,7 @@ function* playerStateIsCorrect(walker, front) {
   node = yield walker.querySelector(walker.rootNode, ".multiple-animations");
   // Checking the 2nd player
   [, player] = yield front.getAnimationPlayersForNode(node);
+  yield player.ready();
   state = player.initialState;
 
   is(state.name, "glow", "The 2nd animation's name is correct");
