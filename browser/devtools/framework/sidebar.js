@@ -257,7 +257,10 @@ ToolSidebar.prototype = {
 
     this._tabbox.tabpanels.removeEventListener("select", this, true);
 
-    while (this._tabbox.tabpanels.hasChildNodes()) {
+    // Note that we check for the existence of this._tabbox.tabpanels at each
+    // step as the container window may have been closed by the time one of the
+    // panel's destroy promise resolves.
+    while (this._tabbox.tabpanels && this._tabbox.tabpanels.hasChildNodes()) {
       let panel = this._tabbox.tabpanels.firstChild;
       let win = panel.firstChild.contentWindow;
       if ("destroy" in win) {
@@ -266,7 +269,7 @@ ToolSidebar.prototype = {
       panel.remove();
     }
 
-    while (this._tabbox.tabs.hasChildNodes()) {
+    while (this._tabbox.tabs && this._tabbox.tabs.hasChildNodes()) {
       this._tabbox.tabs.removeChild(this._tabbox.tabs.firstChild);
     }
 
