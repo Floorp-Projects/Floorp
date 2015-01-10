@@ -598,14 +598,11 @@ WebGLContext::EnumName(GLenum glenum)
         XX(DEPTH_COMPONENT32);
         XX(DEPTH_STENCIL);
         XX(DEPTH24_STENCIL8);
-        XX(DRAW_FRAMEBUFFER);
         XX(ETC1_RGB8_OES);
         XX(FLOAT);
-        XX(FRAMEBUFFER);
         XX(HALF_FLOAT);
         XX(LUMINANCE);
         XX(LUMINANCE_ALPHA);
-        XX(READ_FRAMEBUFFER);
         XX(RGB);
         XX(RGB16F);
         XX(RGB32F);
@@ -774,6 +771,8 @@ WebGLContext::EnumName(GLenum glenum)
         XX(DEPTH_STENCIL_ATTACHMENT);
         XX(UNSIGNED_NORMALIZED);
         XX(DRAW_FRAMEBUFFER_BINDING);
+        XX(READ_FRAMEBUFFER);
+        XX(DRAW_FRAMEBUFFER);
         XX(READ_FRAMEBUFFER_BINDING);
         XX(RENDERBUFFER_SAMPLES);
         XX(FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER);
@@ -1029,21 +1028,10 @@ WebGLContext::AssertCachedBindings()
     }
 
     // Bound object state
-    if (IsWebGL2()) {
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
-                                             : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, bound);
+    GLuint bound = mBoundFramebuffer ? mBoundFramebuffer->GLName() : 0;
+    AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
 
-        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->GLName() : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_READ_FRAMEBUFFER_BINDING, bound);
-    } else {
-        MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
-                                             : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
-    }
-
-    GLuint bound = mCurrentProgram ? mCurrentProgram->GLName : 0;
+    bound = mCurrentProgram ? mCurrentProgram->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_CURRENT_PROGRAM, bound);
 
     // Textures
