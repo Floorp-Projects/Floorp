@@ -1353,7 +1353,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return true;
 
             if (bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT) {
-                if (script->bodyLevelLocalIsAliased(bi.localIndex()))
+                if (script->bindingIsAliased(bi))
                     return true;
 
                 uint32_t i = bi.frameIndex();
