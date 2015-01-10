@@ -509,8 +509,8 @@ nsVolumeService::UpdateVolumeIOThread(const Volume* aVolume)
       aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get(),
       aVolume->MountGeneration(), (int)aVolume->IsMountLocked(),
       (int)aVolume->MediaPresent(), (int)aVolume->IsSharing(),
-      (int)aVolume->IsFormatting(), (int)mVolume->IsUnmounting(),
-      (int)aVolume->IsRemovable(), (int)mVolume->IsHotSwappable());
+      (int)aVolume->IsFormatting(), (int)aVolume->IsUnmounting(),
+      (int)aVolume->IsRemovable(), (int)aVolume->IsHotSwappable());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   NS_DispatchToMainThread(new UpdateVolumeRunnable(this, aVolume));
 }

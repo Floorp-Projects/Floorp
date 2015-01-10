@@ -700,18 +700,49 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   // zoomed since the last paint. Because the scrollbar was sized and positioned based
   // on the painted content, we need to adjust it based on asyncTransform so that
   // it reflects what the user is actually seeing now.
-  // - The scroll thumb needs to be scaled in the direction of scrolling by the inverse
-  //   of the asyncTransform scale (representing the zoom). This is because zooming
-  //   in decreases the fraction of the whole scrollable rect that is in view.
-  // - It needs to be translated in opposite direction of the asyncTransform
-  //   translation (representing the scroll). This is because scrolling down, which
-  //   translates the layer content up, should result in moving the scroll thumb down.
-  //   The amount of the translation to the scroll thumb should be such that the ratio
-  //   of the translation to the size of the scroll port is the same as the ratio
-  //   of the scroll amount to the size of the scrollable rect.
   Matrix4x4 scrollbarTransform;
   if (aScrollbar->GetScrollbarDirection() == Layer::VERTICAL) {
-    float scale = metrics.CalculateCompositedSizeInCssPixels().height / metrics.GetScrollableRect().height;
+    const ParentLayerCoord asyncScrollY = asyncTransform._42;
+    const float asyncZoomY = asyncTransform._22;
+
+    // The scroll thumb needs to be scaled in the direction of scrolling by the
+    // inverse of the async zoom. This is because zooming in decreases the
+    // fraction of the whole srollable rect that is in view.
+    const float yScale = 1.f / asyncZoomY;
+
+    // Note: |metrics.GetZoom()| doesn't yet include the async zoom, so
+    // |metrics.CalculateCompositedSizeInCssPixels()| would not give a correct
+    // result.
+    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().scale * asyncZoomY);
+    const CSSCoord compositedHeight = (metrics.mCompositionBounds / effectiveZoom).height;
+    const CSSCoord scrollableHeight = metrics.GetScrollableRect().height;
+
+    // The scroll thumb needs to be translated in opposite direction of the
+    // async scroll. This is because scrolling down, which translates the layer
+    // content up, should result in moving the scroll thumb down.
+    // The amount of the translation should be such that the ratio of the
+    // translation to the size of the scroll port is the same as the ratio of
+    // the scroll amount of the size of the scrollable rect.
+    const float ratio = compositedHeight / scrollableHeight;
+    ParentLayerCoord yTranslation = -asyncScrollY * ratio;
+
+    // The scroll thumb additionally needs to be translated to compensate for
+    // the scale applied above. The origin with respect to which the scale is
+    // applied is the origin of the entire scrollbar, rather than the origin of
+    // the scroll thumb (meaning, for a vertical scrollbar it's at the top of
+    // the composition bounds). This means that empty space above the thumb
+    // is scaled too, effectively translating the thumb. We undo that
+    // translation here.
+    // (One can think of the adjustment being done to the translation here as
+    // a change of basis. We have a method to help with that,
+    // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
+    // cleaner in this case).
+    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().y / scrollableHeight) * compositedHeight;
+    const CSSCoord thumbOriginScaled = thumbOrigin * yScale;
+    const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
+    const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
+    yTranslation -= thumbOriginDeltaPL;
+
     if (aScrollbarIsDescendant) {
       // In cases where the scrollbar is a descendant of the content, the
       // scrollbar gets painted at the same resolution as the content. Since the
@@ -720,18 +751,39 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
       // aScrollbarIsDescendant hunk below we apply a resolution-cancelling
       // transform which ensures the scroll thumb isn't actually rendered
       // at a larger scale.
-      scale *= metrics.mPresShellResolution;
+      yTranslation *= metrics.mPresShellResolution;
     }
-    scrollbarTransform.PostScale(1.f, 1.f / asyncTransform._22, 1.f);
-    scrollbarTransform.PostTranslate(0, -asyncTransform._42 * scale, 0);
+
+    scrollbarTransform.PostScale(1.f, yScale, 1.f);
+    scrollbarTransform.PostTranslate(0, yTranslation, 0);
   }
   if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
-    float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.GetScrollableRect().width;
+    // See detailed comments under the VERTICAL case.
+
+    const ParentLayerCoord asyncScrollX = asyncTransform._41;
+    const float asyncZoomX = asyncTransform._11;
+
+    const float xScale = 1.f / asyncZoomX;
+
+    const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().scale * asyncZoomX);
+    const CSSCoord compositedWidth = (metrics.mCompositionBounds / effectiveZoom).width;
+    const CSSCoord scrollableWidth = metrics.GetScrollableRect().width;
+
+    const float ratio = compositedWidth / scrollableWidth;
+    ParentLayerCoord xTranslation = -asyncScrollX * ratio;
+
+    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x / scrollableWidth) * compositedWidth;
+    const CSSCoord thumbOriginScaled = thumbOrigin * xScale;
+    const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
+    const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
+    xTranslation -= thumbOriginDeltaPL;
+
     if (aScrollbarIsDescendant) {
-      scale *= metrics.mPresShellResolution;
+      xTranslation *= metrics.mPresShellResolution;
     }
-    scrollbarTransform.PostScale(1.f / asyncTransform._11, 1.f, 1.f);
-    scrollbarTransform.PostTranslate(-asyncTransform._41 * scale, 0, 0);
+
+    scrollbarTransform.PostScale(xScale, 1.f, 1.f);
+    scrollbarTransform.PostTranslate(xTranslation, 0, 0);
   }
 
   Matrix4x4 transform = scrollbarTransform * aScrollbar->GetTransform();
