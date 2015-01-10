@@ -159,6 +159,14 @@ const tests = [
     result: "Result",
     start: 6, end: 6
   },
+  {
+    desc: "RIGHT key w/ minResultsForPopup=2",
+    key: "VK_RIGHT",
+    removeSelection: false,
+    minResultsForPopup: 2,
+    result: "Result",
+    start: 6, end: 6
+  },
 ];
 
 function nextTest() {
@@ -185,6 +193,11 @@ function nextTest() {
 
 function runCurrentTest() {
   var autocomplete = $("autocomplete");
+  if ("minResultsForPopup" in currentTest)
+    autocomplete.setAttribute("minresultsforpopup", currentTest.minResultsForPopup)
+  else
+    autocomplete.removeAttribute("minresultsforpopup");
+
   autocomplete.focus();
 
   if (!currentTest.completeFromMiddle) {

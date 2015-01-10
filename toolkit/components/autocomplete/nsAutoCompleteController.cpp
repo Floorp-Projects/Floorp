@@ -484,7 +484,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
     // The user hit a text-navigation key.
     bool isOpen = false;
     input->GetPopupOpen(&isOpen);
-    if (isOpen) {
+
+    // If minresultsforpopup > 1 and there's less matches than the minimum
+    // required, the popup is not open, but the search suggestion is showing
+    // inline, so we should proceed as if we had the popup.
+    uint32_t minResultsForPopup;
+    input->GetMinResultsForPopup(&minResultsForPopup);
+    if (isOpen || (mRowCount > 0 && mRowCount < minResultsForPopup)) {
       int32_t selectedIndex;
       popup->GetSelectedIndex(&selectedIndex);
       bool shouldComplete;
