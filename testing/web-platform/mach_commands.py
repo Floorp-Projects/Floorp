@@ -39,10 +39,25 @@ class WebPlatformTestsRunner(MozbuildObject):
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
 
         if kwargs["binary"] is None:
-            kwargs["binary"] = os.path.join(self.get_binary_path('app'))
+            kwargs["binary"] = self.get_binary_path('app')
 
         if kwargs["prefs_root"] is None:
             kwargs["prefs_root"] = os.path.join(self.topobjdir, '_tests', 'web-platform', "prefs")
+
+        if kwargs["certutil_binary"] is None:
+            kwargs["certutil_binary"] = self.get_binary_path('certutil')
+
+        here = os.path.split(__file__)[0]
+
+        if kwargs["ssl_type"] in (None, "pregenerated"):
+            if kwargs["ca_cert_path"] is None:
+                kwargs["ca_cert_path"] = os.path.join(here, "certs", "cacert.pem")
+
+            if kwargs["host_key_path"] is None:
+                kwargs["host_key_path"] = os.path.join(here, "certs", "web-platform.test.key")
+
+            if kwargs["host_cert_path"] is None:
+                kwargs["host_cert_path"] = os.path.join(here, "certs", "web-platform.test.pem")
 
         kwargs["capture_stdio"] = True
 
