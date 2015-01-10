@@ -590,8 +590,6 @@ class GeckoInputConnection
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
         else if (mIMETypeHint.equalsIgnoreCase("email"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-        else if (mIMETypeHint.equalsIgnoreCase("search"))
-            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMETypeHint.equalsIgnoreCase("tel"))
             outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
         else if (mIMETypeHint.equalsIgnoreCase("number") ||
@@ -636,7 +634,8 @@ class GeckoInputConnection
             outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
         else if (mIMEActionHint.equalsIgnoreCase("next"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
-        else if (mIMEActionHint.equalsIgnoreCase("search"))
+        else if (mIMEActionHint.equalsIgnoreCase("search") ||
+                 mIMETypeHint.equalsIgnoreCase("search"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMEActionHint.equalsIgnoreCase("send"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
