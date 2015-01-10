@@ -46,8 +46,8 @@ namespace mozilla {
 
 MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
-  , mLastAudioTime(-1)
-  , mLastVideoTime(-1)
+  , mLastAudioTime(0)
+  , mLastVideoTime(0)
   , mPendingSeekTime(-1)
   , mPendingStartTime(-1)
   , mPendingEndTime(-1)
