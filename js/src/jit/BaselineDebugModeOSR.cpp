@@ -193,7 +193,9 @@ CollectJitStackScripts(JSContext *cx, const Debugger::ExecutionObservableSet &ob
                 break;
             }
 
-            if (BaselineDebugModeOSRInfo *info = iter.baselineFrame()->getDebugModeOSRInfo()) {
+            BaselineFrame *frame = iter.baselineFrame();
+
+            if (BaselineDebugModeOSRInfo *info = frame->getDebugModeOSRInfo()) {
                 // If patching a previously patched yet unpopped frame, we can
                 // use the BaselineDebugModeOSRInfo on the frame directly to
                 // patch. Indeed, we cannot use iter.returnAddressToFp(), as
@@ -203,24 +205,22 @@ CollectJitStackScripts(JSContext *cx, const Debugger::ExecutionObservableSet &ob
                 // See cases F and G in PatchBaselineFramesForDebugMode.
                 if (!entries.append(DebugModeOSREntry(script, info)))
                     return false;
+            } else if (frame->isDebuggerHandlingException() && frame->maybeOverridePc()) {
+                // We are in the middle of handling an exception and the frame
+                // has an override pc. This happens since we could have bailed
+                // out in place from Ion after a throw, settling on the pc which
+                // may have no ICEntry (e.g., Ion is free to insert resume
+                // points after non-effectful ops for better register
+                // allocation).
+                uint32_t offset = script->pcToOffset(frame->overridePc());
+                if (!entries.append(DebugModeOSREntry(script, offset)))
+                    return false;
             } else {
+                // The frame must be settled on a pc with an ICEntry.
                 uint8_t *retAddr = iter.returnAddressToFp();
-                if (iter.baselineFrame()->isDebuggerHandlingException()) {
-                    // We are in the middle of handling an exception. This
-                    // happens since we could have bailed out in place from
-                    // Ion after a throw, settling on the pc which may have no
-                    // ICEntry (e.g., Ion is free to insert resume points
-                    // after non-effectful ops for better register
-                    // allocation).
-                    jsbytecode *pc = script->baselineScript()->pcForNativeAddress(script, retAddr);
-                    if (!entries.append(DebugModeOSREntry(script, script->pcToOffset(pc))))
-                        return false;
-                } else {
-                    // Normally, the frame is settled on a pc with an ICEntry.
-                    ICEntry &icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
-                    if (!entries.append(DebugModeOSREntry(script, icEntry)))
-                        return false;
-                }
+                ICEntry &icEntry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
+                if (!entries.append(DebugModeOSREntry(script, icEntry)))
+                    return false;
             }
 
             if (entries.back().needsRecompileInfo()) {
@@ -423,15 +423,14 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
                 //
                 // We are recompiling on-stack scripts from inside the
                 // exception handler, by way of an onExceptionUnwind
-                // invocation, on a pc without an ICEntry. Since execution
-                // cannot continue after the exception anyways, it doesn't
-                // matter what we patch the resume address with, nor do we
-                // need to fix up the stack and register state.
+                // invocation, on a pc without an ICEntry. This means the
+                // frame must have an override pc.
                 //
-                // So that frame iterators may continue working, we patch the
-                // resume address.
+                // Patch the resume address to nullptr, to ensure the old
+                // address is not used anywhere.
                 MOZ_ASSERT(iter.baselineFrame()->isDebuggerHandlingException());
-                uint8_t *retAddr = bl->nativeCodeForPC(script, pc);
+                MOZ_ASSERT(iter.baselineFrame()->overridePc() == pc);
+                uint8_t *retAddr = nullptr;
                 SpewPatchBaselineFrameFromExceptionHandler(prev->returnAddress(), retAddr,
                                                            script, pc);
                 DebugModeOSRVolatileJitFrameIterator::forwardLiveIterators(
@@ -482,12 +481,6 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
                 // callVMs which can trigger debug mode OSR are the *only*
                 // callVMs generated for their respective pc locations in the
                 // baseline JIT code.
-                //
-                // Get the slot info for the next pc, but ignore the code
-                // address. We get the code address from the
-                // return-from-callVM entry instead.
-                (void) bl->maybeNativeCodeForPC(script, pc + GetBytecodeLength(pc),
-                                                &recompInfo->slotInfo);
                 ICEntry &callVMEntry = bl->callVMEntryFromPCOffset(pcOffset);
                 recompInfo->resumeAddr = bl->returnAddressForIC(callVMEntry);
                 popFrameReg = false;
@@ -537,6 +530,7 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
 
             prev->setReturnAddress(reinterpret_cast<uint8_t *>(handlerAddr));
             iter.baselineFrame()->setDebugModeOSRInfo(recompInfo);
+            iter.baselineFrame()->setOverridePc(recompInfo->pc);
 
             entryIndex++;
             break;
@@ -954,6 +948,9 @@ static void
 FinishBaselineDebugModeOSR(BaselineFrame *frame)
 {
     frame->deleteDebugModeOSRInfo();
+
+    // We will return to JIT code now so we have to clear the override pc.
+    frame->clearOverridePc();
 }
 
 void

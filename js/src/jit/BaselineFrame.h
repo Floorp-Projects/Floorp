@@ -66,14 +66,16 @@ class BaselineFrame
         // slot. See PatchBaselineFramesForDebugMode.
         HAS_DEBUG_MODE_OSR_INFO = 1 << 10,
 
-        // Frame has had its scope chain unwound to a pc during exception
-        // handling that is different from its current pc.
+        // This flag is intended for use whenever the frame is settled on a
+        // native code address without a corresponding ICEntry. In this case,
+        // the frame contains an explicit bytecode offset for frame iterators.
         //
-        // This flag is intended for use in the DebugEpilogue. Once it is set,
-        // the only way to clear it is to pop the frame. Do *not* set this if
-        // we will resume execution on the frame, such as in a catch or
-        // finally block.
-        HAS_UNWOUND_SCOPE_OVERRIDE_PC = 1 << 11,
+        // There can also be an override pc if the frame has had its scope chain
+        // unwound to a pc during exception handling that is different from its
+        // current pc.
+        //
+        // This flag should never be set when we're executing JIT code.
+        HAS_OVERRIDE_PC = 1 << 11,
 
         // Frame has called out to Debugger code from
         // HandleExceptionBaseline. This is set for debug mode OSR sanity
@@ -100,7 +102,7 @@ class BaselineFrame
     JSScript *evalScript_;                // If isEvalFrame(), the current eval script.
     ArgumentsObject *argsObj_;            // If HAS_ARGS_OBJ, the arguments object.
     void *unused;                         // See static assertion re: sizeof, below.
-    uint32_t unwoundScopeOverrideOffset_; // If HAS_UNWOUND_SCOPE_OVERRIDE_PC.
+    uint32_t overrideOffset_;             // If HAS_OVERRIDE_PC, the bytecode offset.
     uint32_t flags_;
 
   public:
@@ -341,20 +343,25 @@ class BaselineFrame
 
     void deleteDebugModeOSRInfo();
 
-    jsbytecode *unwoundScopeOverridePc() {
-        MOZ_ASSERT(flags_ & HAS_UNWOUND_SCOPE_OVERRIDE_PC);
-        return script()->offsetToPC(unwoundScopeOverrideOffset_);
+    // See the HAS_OVERRIDE_PC comment.
+    jsbytecode *overridePc() const {
+        MOZ_ASSERT(flags_ & HAS_OVERRIDE_PC);
+        return script()->offsetToPC(overrideOffset_);
     }
 
-    jsbytecode *getUnwoundScopeOverridePc() {
-        if (flags_ & HAS_UNWOUND_SCOPE_OVERRIDE_PC)
-            return unwoundScopeOverridePc();
+    jsbytecode *maybeOverridePc() const {
+        if (flags_ & HAS_OVERRIDE_PC)
+            return overridePc();
         return nullptr;
     }
 
-    void setUnwoundScopeOverridePc(jsbytecode *pc) {
-        flags_ |= HAS_UNWOUND_SCOPE_OVERRIDE_PC;
-        unwoundScopeOverrideOffset_ = script()->pcToOffset(pc);
+    void setOverridePc(jsbytecode *pc) {
+        flags_ |= HAS_OVERRIDE_PC;
+        overrideOffset_ = script()->pcToOffset(pc);
+    }
+
+    void clearOverridePc() {
+        flags_ &= ~HAS_OVERRIDE_PC;
     }
 
     void trace(JSTracer *trc, JitFrameIterator &frame);
