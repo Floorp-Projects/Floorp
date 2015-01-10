@@ -197,7 +197,7 @@ bool Axis::IsInUnderscroll() const {
   return mInUnderscroll;
 }
 
-bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
+void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
   // Apply spring physics to the overscroll as time goes on.
   // Note: this method of sampling isn't perfectly smooth, as it assumes
   // a constant velocity over 'aDelta', instead of an accelerating velocity.
@@ -218,10 +218,10 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
   // Apply spring force.
   float springForce = -1 * kSpringStiffness * mOverscroll;
   // Assume unit mass, so force = acceleration.
-  mVelocity += springForce * aDelta.ToMilliseconds();
+  mVelocity += springForce * aStepDurationMilliseconds;
 
   // Apply dampening.
-  mVelocity *= pow(double(1 - kSpringFriction), aDelta.ToMilliseconds());
+  mVelocity *= pow(double(1 - kSpringFriction), aStepDurationMilliseconds);
   AXIS_LOG("%p|%s sampled overscroll animation, leaving velocity at %f\n",
     mAsyncPanZoomController, Name(), mVelocity);
 
@@ -230,13 +230,33 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
   // we are currently in a state where we have overshot and the spring is
   // displaced in the other direction.
   float oldOverscroll = mOverscroll;
-  mOverscroll += (mVelocity * aDelta.ToMilliseconds());
+  mOverscroll += (mVelocity * aStepDurationMilliseconds);
   bool signChange = (oldOverscroll * mOverscroll) < 0;
   if (signChange) {
     // If the sign of mOverscroll changed, we have either entered underscroll
     // or exited it.
     mInUnderscroll = !mInUnderscroll;
   }
+}
+
+bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
+  // We approximate the curve traced out by the velocity of the spring
+  // over time by breaking up the curve into small segments over which we
+  // consider the velocity to be constant. If the animation is sampled
+  // sufficiently often, then treating |aDelta| as a single segment of this
+  // sort would be fine, but the frequency at which the animation is sampled
+  // can be affected by external factors, and as the segment size grows larger,
+  // the approximation gets worse and the approximated curve can even diverge
+  // (i.e. oscillate forever, with displacements of increasing absolute value)!
+  // To avoid this, we break up |aDelta| into smaller segments of length 1 ms
+  // each, and a segment of any remaining fractional milliseconds.
+  double milliseconds = aDelta.ToMilliseconds();
+  int wholeMilliseconds = (int) aDelta.ToMilliseconds();
+  double fractionalMilliseconds = milliseconds - wholeMilliseconds;
+  for (int i = 0; i < wholeMilliseconds; ++i) {
+    StepOverscrollAnimation(1);
+  }
+  StepOverscrollAnimation(fractionalMilliseconds);
 
   // If both the velocity and the displacement fall below a threshold, stop
   // the animation so we don't continue doing tiny oscillations that aren't
