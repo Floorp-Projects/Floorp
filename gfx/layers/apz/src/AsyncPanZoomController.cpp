@@ -1757,22 +1757,21 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
 }
 
 
+Matrix4x4 AsyncPanZoomController::GetTransformToThis() const {
+  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+    return treeManagerLocal->GetScreenToApzcTransform(this);
+  }
+  return Matrix4x4();
+}
+
 ScreenPoint AsyncPanZoomController::ToScreenCoordinates(const ParentLayerPoint& aVector,
                                                         const ParentLayerPoint& aAnchor) const {
-  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    Matrix4x4 apzcToScreen = treeManagerLocal->GetScreenToApzcTransform(this).Inverse();
-    return TransformVector<ScreenPixel>(apzcToScreen, aVector, aAnchor);
-  }
-  return ViewAs<ScreenPixel>(aVector, PixelCastJustification::TransformNotAvailable);
+  return TransformVector<ScreenPixel>(GetTransformToThis().Inverse(), aVector, aAnchor);
 }
 
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPoint& aVector,
                                                                   const ScreenPoint& aAnchor) const {
-  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    Matrix4x4 transform = treeManagerLocal->GetScreenToApzcTransform(this);
-    return TransformVector<ParentLayerPixel>(transform, aVector, aAnchor);
-  }
-  return ViewAs<ParentLayerPixel>(aVector, PixelCastJustification::TransformNotAvailable);
+  return TransformVector<ParentLayerPixel>(GetTransformToThis(), aVector, aAnchor);
 }
 
 ScreenCoord AsyncPanZoomController::PanDistance() const {
