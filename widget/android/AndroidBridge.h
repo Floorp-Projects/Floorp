@@ -28,6 +28,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Types.h"
+#include "mozilla/jni/Utils.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
@@ -37,9 +38,6 @@ class nsWindow;
 class nsIDOMMozSmsMessage;
 class nsIObserver;
 class Task;
-
-/* See the comment in AndroidBridge about this function before using it */
-extern "C" MOZ_EXPORT JNIEnv * GetJNIForThread();
 
 extern bool mozilla_AndroidBridge_SetMainThread(pthread_t);
 
@@ -166,29 +164,16 @@ public:
 
     static bool ThrowException(JNIEnv *aEnv, const char *aClass,
                                const char *aMessage) {
-        MOZ_ASSERT(aEnv, "Invalid thread JNI env");
-        jclass cls = aEnv->FindClass(aClass);
-        MOZ_ASSERT(cls, "Cannot find exception class");
-        bool ret = !aEnv->ThrowNew(cls, aMessage);
-        aEnv->DeleteLocalRef(cls);
-        return ret;
+
+        return jni::ThrowException(aEnv, aClass, aMessage);
     }
 
     static bool ThrowException(JNIEnv *aEnv, const char *aMessage) {
-        return ThrowException(aEnv, "java/lang/Exception", aMessage);
+        return jni::ThrowException(aEnv, aMessage);
     }
 
     static void HandleUncaughtException(JNIEnv *aEnv) {
-        MOZ_ASSERT(aEnv);
-        if (!aEnv->ExceptionCheck()) {
-            return;
-        }
-        jthrowable e = aEnv->ExceptionOccurred();
-        MOZ_ASSERT(e);
-        aEnv->ExceptionClear();
-        mozilla::widget::android::GeckoAppShell::HandleUncaughtException(nullptr, e);
-        // Should be dead by now...
-        MOZ_CRASH("Failed to handle uncaught exception");
+        jni::HandleUncaughtException(aEnv);
     }
 
     // The bridge needs to be constructed via ConstructBridge first,
@@ -557,7 +542,7 @@ public:
 
     bool CheckForException() {
         if (mJNIEnv->ExceptionCheck()) {
-            AndroidBridge::HandleUncaughtException(mJNIEnv);
+            jni::HandleUncaughtException(mJNIEnv);
             return true;
         }
         return false;
