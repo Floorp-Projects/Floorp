@@ -129,6 +129,7 @@ class WebIDLCodegenManager(LoggingMixin):
     GLOBAL_DECLARE_FILES = {
         'FeatureList.h',
         'GeneratedAtomList.h',
+        'GeneratedEventList.h',
         'PrototypeList.h',
         'RegisterBindings.h',
         'RegisterWorkerBindings.h',
@@ -175,6 +176,7 @@ class WebIDLCodegenManager(LoggingMixin):
         self._input_paths = set(input_paths)
         self._exported_stems = set(exported_stems)
         self._generated_events_stems = set(generated_events_stems)
+        self._generated_events_stems_as_array = generated_events_stems;
         self._example_interfaces = set(example_interfaces)
         self._exported_header_dir = exported_header_dir
         self._codegen_dir = codegen_dir
@@ -324,7 +326,8 @@ class WebIDLCodegenManager(LoggingMixin):
                 parser.parse(data, path)
 
         self._parser_results = parser.finish()
-        self._config = Configuration(self._config_path, self._parser_results)
+        self._config = Configuration(self._config_path, self._parser_results,
+                                     self._generated_events_stems_as_array)
         self._input_hashes = hashes
 
     def _write_global_derived(self):
