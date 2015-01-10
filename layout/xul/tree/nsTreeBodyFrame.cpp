@@ -1319,15 +1319,16 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
-  nscoord width = nsLayoutUtils::AppUnitWidthOfStringBidi(aText, this,
-                                                          aFontMetrics,
-                                                          aRenderingContext);
   nscoord maxWidth = aTextRect.width;
+  bool widthIsGreater = nsLayoutUtils::StringWidthIsGreaterThan(aText,
+                                                                aFontMetrics,
+                                                                aRenderingContext,
+                                                                maxWidth);
 
   if (aColumn->Overflow()) {
     DebugOnly<nsresult> rv;
     nsTreeColumn* nextColumn = aColumn->GetNext();
-    while (nextColumn && width > maxWidth) {
+    while (nextColumn && widthIsGreater) {
       while (nextColumn) {
         nscoord width;
         rv = nextColumn->GetWidthInTwips(this, &width);
@@ -1351,6 +1352,10 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           NS_ASSERTION(NS_SUCCEEDED(rv), "nextColumn is invalid");
 
           maxWidth += width;
+          widthIsGreater = nsLayoutUtils::StringWidthIsGreaterThan(aText,
+                                                                   aFontMetrics,
+                                                                   aRenderingContext,
+                                                                   maxWidth);
 
           nextColumn = nextColumn->GetNext();
         }
@@ -1361,7 +1366,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     }
   }
 
-  if (width > maxWidth) {
+  nscoord width;
+  if (widthIsGreater) {
     // See if the width is even smaller than the ellipsis
     // If so, clear the text completely.
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
@@ -1458,10 +1464,10 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
         break;
       }
     }
-
-    width = nsLayoutUtils::AppUnitWidthOfStringBidi(aText, this, aFontMetrics,
-                                                    aRenderingContext);
   }
+
+  width = nsLayoutUtils::AppUnitWidthOfStringBidi(aText, this, aFontMetrics,
+                                                  aRenderingContext);
 
   switch (aColumn->GetTextAlignment()) {
     case NS_STYLE_TEXT_ALIGN_RIGHT: {
