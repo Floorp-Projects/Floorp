@@ -460,4 +460,4 @@ exports["test throttle"] = (assert, done) => {
   new Array(11).join(0).split("").forEach(fn);
 };
 
-require('test').run(exports);
+require('sdk/test').run(exports);

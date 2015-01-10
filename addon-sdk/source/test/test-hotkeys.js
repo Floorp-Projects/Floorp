@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 const { Hotkey } = require("sdk/hotkeys");
@@ -139,7 +138,7 @@ exports["test no exception on unmodified keypress"] = function(assert) {
 exports["test hotkey: automatic destroy"] = function(assert, done) {
   // Hacky way to be able to create unloadable modules via makeSandboxedLoader.
   let loader = Loader(module);
-  
+
   var called = false;
   var element = loader.require("sdk/deprecated/window-utils").activeBrowserWindow.document.documentElement;
   var hotkey = loader.require("sdk/hotkeys").Hotkey({
@@ -148,17 +147,17 @@ exports["test hotkey: automatic destroy"] = function(assert, done) {
       called = true;
     }
   });
-  
+
   // Unload the module so that previous hotkey is automatically destroyed
   loader.unload();
-  
+
   // Ensure that the hotkey is really destroyed
   keyDown(element, "accel-shift-x");
-  
+
   timer.setTimeout(function () {
     assert.ok(!called, "Hotkey is destroyed and not called.");
     done();
   }, 0);
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);
