@@ -2489,6 +2489,21 @@ ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
     return true;
 }
 
+bool
+ContentChild::RecvShutdown()
+{
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+        os->NotifyObservers(this, "content-child-shutdown", nullptr);
+    }
+    // Let the parent know we're done and let it close the channel.
+    // Both sides will clean up even if an error occurs here.
+    MessageLoop::current()->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ContentChild::SendFinishShutdown));
+    return true;
+}
+
 PBrowserOrId
 ContentChild::GetBrowserOrId(TabChild* aTabChild)
 {
