@@ -379,9 +379,15 @@ class CompileInfo
 
         uint32_t local = index - firstLocalSlot();
         if (local < nlocals()) {
-            // First, check if this local is body-level.
+            // First, check if this local is body-level. If we have a slot for
+            // it, it is by definition unaliased. Aliased body-level locals do
+            // not have fixed slots on the frame and live in the CallObject.
+            //
+            // Note that this is not true for lexical (block-scoped)
+            // bindings. Such bindings, even when aliased, may be considered
+            // part of the "fixed" part (< nlocals()) of the frame.
             if (local < nbodyfixed())
-                return script()->bodyLevelLocalIsAliased(local);
+                return false;
 
             // Otherwise, it might be part of a block scope.
             for (; staticScope; staticScope = staticScope->enclosingNestedScope()) {
