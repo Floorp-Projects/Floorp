@@ -92,6 +92,7 @@
   <project name="platform/libcore" path="libcore" revision="30841f9fba9ccd5c54f4f079f495994db97f283e"/>
   <project name="platform/ndk" path="ndk" revision="9f555971e1481854d5b4dc11b3e6af9fff4f241f"/>
   <project name="platform/prebuilt" path="prebuilt" revision="447ea790fcc957dde59730ecc2a65ca263bdc733"/>
+  <project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" revision="d9735fc81434f2af2c44d86ca57740c673c8d9bc"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="7772cad4823f1f427ce1d4df84a55982386d6d18"/>
   <project name="platform/system/core" path="system/core" revision="bf1970408676ce570b8f4dc3efa038e47552137f"/>
   <project name="platform/system/extras" path="system/extras" revision="01db6c1254e1407740a543f24317fc540fc4c049"/>
