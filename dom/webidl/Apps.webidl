@@ -9,6 +9,18 @@ dictionary InstallParameters {
   sequence<DOMString> categories = [];
 };
 
+dictionary LanguageDesc {
+  DOMString target;
+  DOMString version;
+  DOMString name;
+};
+
+enum LocaleResourceType {
+  "binary",
+  "json",
+  "text"
+};
+
 [NoInterfaceObject, NavigatorProperty="mozApps",
  JSImplementation="@mozilla.org/webapps;1"]
 interface DOMApplicationsRegistry {
@@ -19,6 +31,17 @@ interface DOMApplicationsRegistry {
   DOMRequest getSelf();
   DOMRequest getInstalled();
   DOMRequest checkInstalled(DOMString manifestUrl);
+
+  // Language pack API.
+  // These promises will be rejected if the page is not in an app context,
+  // i.e. they are implicitely acting on getSelf().
+  Promise<MozMap<sequence<LanguageDesc>>> getAdditionalLanguages();
+  // Resolves to a different object depending on the dataType value.
+  Promise<any>
+    getLocalizationResource(DOMString language,
+                            DOMString version,
+                            DOMString path,
+                            LocaleResourceType dataType);
 };
 
 [JSImplementation="@mozilla.org/webapps/application;1", ChromeOnly]
@@ -71,18 +94,18 @@ interface DOMApplication : EventTarget {
    * https://wiki.mozilla.org/WebAPI/Inter_App_Communication_Alt_proposal
    *
    */
-   Promise<MozInterAppConnection> connect(DOMString keyword, optional any rules);
+  Promise<MozInterAppConnection> connect(DOMString keyword, optional any rules);
 
-   Promise<sequence<MozInterAppMessagePort>> getConnections();
+  Promise<sequence<MozInterAppMessagePort>> getConnections();
 
-    // Receipts handling functions.
-    DOMRequest addReceipt(optional DOMString receipt);
-    DOMRequest removeReceipt(optional DOMString receipt);
-    DOMRequest replaceReceipt(optional DOMString oldReceipt,
-                              optional DOMString newReceipt);
+  // Receipts handling functions.
+  DOMRequest addReceipt(optional DOMString receipt);
+  DOMRequest removeReceipt(optional DOMString receipt);
+  DOMRequest replaceReceipt(optional DOMString oldReceipt,
+                            optional DOMString newReceipt);
 
-    // Export this app as a shareable Blob.
-    Promise<Blob> export();
+  // Export this app as a shareable Blob.
+  Promise<Blob> export();
 };
 
 [JSImplementation="@mozilla.org/webapps/manager;1",
