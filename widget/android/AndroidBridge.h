@@ -451,6 +451,46 @@ public:
     int64_t RunDelayedUiThreadTasks();
 };
 
+class AutoJNIClass {
+private:
+    JNIEnv* const mEnv;
+    const jclass mClass;
+
+public:
+    AutoJNIClass(JNIEnv* jEnv, const char* name)
+        : mEnv(jEnv)
+        , mClass(AndroidBridge::GetClassGlobalRef(jEnv, name))
+    {}
+
+    ~AutoJNIClass() {
+        mEnv->DeleteGlobalRef(mClass);
+    }
+
+    jclass getRawRef() const {
+        return mClass;
+    }
+
+    jclass getGlobalRef() const {
+        return static_cast<jclass>(mEnv->NewGlobalRef(mClass));
+    }
+
+    jfieldID getField(const char* name, const char* type) const {
+        return AndroidBridge::GetFieldID(mEnv, mClass, name, type);
+    }
+
+    jfieldID getStaticField(const char* name, const char* type) const {
+        return AndroidBridge::GetStaticFieldID(mEnv, mClass, name, type);
+    }
+
+    jmethodID getMethod(const char* name, const char* type) const {
+        return AndroidBridge::GetMethodID(mEnv, mClass, name, type);
+    }
+
+    jmethodID getStaticMethod(const char* name, const char* type) const {
+        return AndroidBridge::GetStaticMethodID(mEnv, mClass, name, type);
+    }
+};
+
 class AutoJObject {
 public:
     AutoJObject(JNIEnv* aJNIEnv = nullptr) : mObject(nullptr)
