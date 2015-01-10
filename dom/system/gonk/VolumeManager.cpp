@@ -388,7 +388,7 @@ VolumeManager::WriteCommandData()
     Restart();
     return;
   }
-  DBG("Wrote %ld bytes (of %d)", bytesWritten, cmd->BytesRemaining());
+  DBG("Wrote %d bytes (of %d)", bytesWritten, cmd->BytesRemaining());
   cmd->ConsumeBytes(bytesWritten);
   if (cmd->BytesRemaining() == 0) {
     return;

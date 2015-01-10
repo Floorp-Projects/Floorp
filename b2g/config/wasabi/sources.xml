@@ -17,7 +17,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="2c7d14040149e1f9b1bb3972ff150be0472fa6b6"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="f5e481d4caf9ffa561720a6fc9cf521a28bd8439"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="cd63c7ae655ee08ffac32ce36a188f8fefc4b272"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -26,7 +26,7 @@
   <project name="gonk-patches" path="patches" remote="b2g" revision="223a2421006e8f5da33f516f6891c87cae86b0f6"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
-  <project name="platform/bionic" path="bionic" revision="cd5dfce80bc3f0139a56b58aca633202ccaee7f8"/>
+  <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="e0a9ac010df3afaa47ba107192c05ac8b5516435"/>
   <project name="platform/development" path="development" revision="a384622f5fcb1d2bebb9102591ff7ae91fe8ed2d"/>
   <project name="device/common" path="device/common" revision="7c65ea240157763b8ded6154a17d3c033167afb7"/>
@@ -92,6 +92,7 @@
   <project name="platform/libcore" path="libcore" revision="30841f9fba9ccd5c54f4f079f495994db97f283e"/>
   <project name="platform/ndk" path="ndk" revision="9f555971e1481854d5b4dc11b3e6af9fff4f241f"/>
   <project name="platform/prebuilt" path="prebuilt" revision="447ea790fcc957dde59730ecc2a65ca263bdc733"/>
+  <project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" revision="d9735fc81434f2af2c44d86ca57740c673c8d9bc"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="7772cad4823f1f427ce1d4df84a55982386d6d18"/>
   <project name="platform/system/core" path="system/core" revision="bf1970408676ce570b8f4dc3efa038e47552137f"/>
   <project name="platform/system/extras" path="system/extras" revision="01db6c1254e1407740a543f24317fc540fc4c049"/>
