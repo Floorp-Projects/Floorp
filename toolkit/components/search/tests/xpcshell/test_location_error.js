@@ -20,10 +20,11 @@ function run_test() {
     removeCacheFile();
   });
 
-  // An unknown URL scheme will cause our error handler to be hit.
-  let url = "unknown-scheme://something";
+  // this will cause an "unknown host" error, but not report an external
+  // network connection in the tests (note that the hosts listed in
+  // server-locations.txt are *not* loaded for xpcshell tests...)
+  let url = "https://nocert.example.com:443";
   Services.prefs.setCharPref("browser.search.geoip.url", url);
-
   Services.search.init(() => {
     try {
       Services.prefs.getCharPref("browser.search.countryCode");
