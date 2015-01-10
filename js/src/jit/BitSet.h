@@ -18,7 +18,7 @@ namespace jit {
 // set operations such as intersection, difference, and union.
 // N.B. All set operations must be performed on sets with the same number
 // of bits.
-class BitSet : private TempObject
+class BitSet
 {
   public:
     static const size_t BitsPerWord = 8 * sizeof(uint32_t);
@@ -28,10 +28,6 @@ class BitSet : private TempObject
     }
 
   private:
-    explicit BitSet(unsigned int numBits) :
-        bits_(nullptr),
-        numBits_(numBits) {}
-
     uint32_t *bits_;
     const unsigned int numBits_;
 
@@ -47,12 +43,17 @@ class BitSet : private TempObject
         return RawLengthForBits(numBits_);
     }
 
-    bool init(TempAllocator &alloc);
+    BitSet(const BitSet &) = delete;
+    void operator=(const BitSet &) = delete;
 
   public:
     class Iterator;
 
-    static BitSet *New(TempAllocator &alloc, unsigned int numBits);
+    explicit BitSet(unsigned int numBits) :
+        bits_(nullptr),
+        numBits_(numBits) {}
+
+    bool init(TempAllocator &alloc);
 
     unsigned int getNumBits() const {
         return numBits_;
@@ -78,7 +79,7 @@ class BitSet : private TempObject
     }
 
     // O(numBits): Insert every element of the given set into this set.
-    void insertAll(const BitSet *other);
+    void insertAll(const BitSet &other);
 
     // O(1): Remove the given value from this set.
     void remove(unsigned int value) {
@@ -89,14 +90,14 @@ class BitSet : private TempObject
     }
 
     // O(numBits): Remove the every element of the given set from this set.
-    void removeAll(const BitSet *other);
+    void removeAll(const BitSet &other);
 
     // O(numBits): Intersect this set with the given set.
-    void intersect(const BitSet *other);
+    void intersect(const BitSet &other);
 
     // O(numBits): Intersect this set with the given set; return whether the
     // intersection caused the set to change.
-    bool fixedPointIntersect(const BitSet *other);
+    bool fixedPointIntersect(const BitSet &other);
 
     // O(numBits): Does inplace complement of the set.
     void complement();
@@ -159,7 +160,7 @@ class BitSet::Iterator
         return more();
     }
 
-    inline Iterator& operator++(int dummy) {
+    inline void operator++() {
         MOZ_ASSERT(more());
         MOZ_ASSERT(index_ < set_.numBits_);
 
@@ -167,7 +168,6 @@ class BitSet::Iterator
         value_ >>= 1;
 
         skipEmpty();
-        return *this;
     }
 
     unsigned int operator *() {
