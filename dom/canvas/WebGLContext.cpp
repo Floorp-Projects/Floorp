@@ -330,7 +330,8 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundUniformBuffer = nullptr;
     mCurrentProgram = nullptr;
     mActiveProgramLinkInfo = nullptr;
-    mBoundFramebuffer = nullptr;
+    mBoundDrawFramebuffer = nullptr;
+    mBoundReadFramebuffer = nullptr;
     mActiveOcclusionQuery = nullptr;
     mBoundRenderbuffer = nullptr;
     mBoundVertexArray = nullptr;
@@ -1887,7 +1888,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mBoundTransformFeedbackBuffer,
   mBoundUniformBuffer,
   mCurrentProgram,
-  mBoundFramebuffer,
+  mBoundDrawFramebuffer,
+  mBoundReadFramebuffer,
   mBoundRenderbuffer,
   mBoundVertexArray,
   mDefaultVertexArray,
