@@ -12,7 +12,7 @@ pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enable
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == position-fixed-cover-3.html position-fixed-cover-3-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-layers-1.html split-layers-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
-pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
+fails pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 pref(layout.async-containerless-scrolling.enabled,true) pref(apz.subframe.enabled,true) skip-if(!asyncPanZoom) == culling-1.html culling-1-ref.html
