@@ -59,8 +59,12 @@ public:
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                                  uint32_t aCount)
   {
-    return NS_OK;
+    uint32_t bytesRead = 0;
+    nsresult rv = ReadAt(aOffset, aBuffer, aCount, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return bytesRead == aCount ? NS_OK : NS_ERROR_FAILURE;
   }
+
   virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
   virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE;
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
