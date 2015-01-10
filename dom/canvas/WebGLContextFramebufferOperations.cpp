@@ -29,8 +29,8 @@ WebGLContext::Clear(GLbitfield mask)
         GenerateWarning("Calling gl.clear() with RASTERIZER_DISCARD enabled has no effects.");
     }
 
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments())
+    if (mBoundFramebuffer) {
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
 
         gl->fClear(mask);
@@ -131,11 +131,12 @@ WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 
     const size_t buffersLength = buffers.Length();
 
-    if (!buffersLength) {
+    if (buffersLength == 0) {
         return ErrorInvalidValue("drawBuffers: invalid <buffers> (buffers must not be empty)");
     }
 
-    if (!mBoundDrawFramebuffer) {
+    if (mBoundFramebuffer == 0)
+    {
         // OK: we are rendering in the default framebuffer
 
         /* EXT_draw_buffers :

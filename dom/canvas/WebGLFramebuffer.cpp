@@ -455,8 +455,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(FBAttachment attachPoint,
                                           RBTarget rbtarget,
                                           WebGLRenderbuffer* rb)
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
 
     if (!mContext->ValidateObjectAllowNull("framebufferRenderbuffer: renderbuffer",
                                            rb))
@@ -497,8 +496,7 @@ WebGLFramebuffer::FramebufferTexture2D(FBAttachment attachPoint,
                                        TexImageTarget texImageTarget,
                                        WebGLTexture* tex, GLint level)
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
 
     if (!mContext->ValidateObjectAllowNull("framebufferTexture2D: texture",
                                            tex))
@@ -566,7 +564,7 @@ WebGLFramebuffer::GetAttachmentOrNull(FBAttachment attachPoint)
         break;
     }
 
-    if (!mContext->ValidateFramebufferAttachment(this, attachPoint.get(),
+    if (!mContext->ValidateFramebufferAttachment(attachPoint.get(),
                                                  "getAttachmentOrNull"))
     {
         return nullptr;
@@ -595,7 +593,7 @@ WebGLFramebuffer::GetAttachment(FBAttachment attachPoint) const
         break;
     }
 
-    if (!mContext->ValidateFramebufferAttachment(this, attachPoint.get(),
+    if (!mContext->ValidateFramebufferAttachment(attachPoint.get(),
                                                  "getAttachment"))
     {
         MOZ_ASSERT(false);
@@ -768,8 +766,7 @@ WebGLFramebuffer::RectangleObject() const
 FBStatus
 WebGLFramebuffer::PrecheckFramebufferStatus() const
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
 
     if (!HasDefinedAttachments())
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT; // No attachments
@@ -812,9 +809,7 @@ WebGLFramebuffer::HasCompletePlanes(GLbitfield mask)
     if (CheckFramebufferStatus() != LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return false;
 
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
-
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
     bool hasPlanes = true;
     if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
         hasPlanes &= ColorAttachmentCount() &&
@@ -837,8 +832,7 @@ WebGLFramebuffer::HasCompletePlanes(GLbitfield mask)
 bool
 WebGLFramebuffer::CheckAndInitializeAttachments()
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
 
     if (CheckFramebufferStatus() != LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return false;

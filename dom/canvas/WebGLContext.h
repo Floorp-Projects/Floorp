@@ -317,8 +317,7 @@ public:
     uint32_t Generation() { return mGeneration.value(); }
 
     // Returns null if the current bound FB is not likely complete.
-    const WebGLRectangleObject* CurValidDrawFBRectObject() const;
-    const WebGLRectangleObject* CurValidReadFBRectObject() const;
+    const WebGLRectangleObject* CurValidFBRectObject() const;
 
     static const size_t kMaxColorAttachments = 16;
 
@@ -423,8 +422,7 @@ public:
                               GLint level);
 
     // Framebuffer validation
-    bool ValidateFramebufferAttachment(const WebGLFramebuffer* fb,
-                                       GLenum attachment, const char* funcName);
+    bool ValidateFramebufferAttachment(GLenum attachment, const char* funcName);
 
     void FrontFace(GLenum mode);
     void GenerateMipmap(GLenum target);
@@ -1421,10 +1419,7 @@ protected:
 
     uint32_t mMaxFramebufferColorAttachments;
 
-    bool ValidateFramebufferTarget(GLenum target, const char* const info);
-
-    WebGLRefPtr<WebGLFramebuffer> mBoundDrawFramebuffer;
-    WebGLRefPtr<WebGLFramebuffer> mBoundReadFramebuffer;
+    WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
     WebGLRefPtr<WebGLTransformFeedback> mBoundTransformFeedback;
     WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
