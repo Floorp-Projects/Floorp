@@ -49,7 +49,7 @@ SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
              this, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
 
-  return ReadInternal(aBuffer, aCount, aBytes, /* aMayBlock = */ !aBytes);
+  return ReadInternal(aBuffer, aCount, aBytes, /* aMayBlock = */ true);
 }
 
 nsresult
@@ -97,7 +97,7 @@ SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, ui
   SBR_DEBUG("SourceBufferResource(%p)::ReadAt(aOffset=%lld, aBuffer=%p, aCount=%u, aBytes=%p)",
             this, aOffset, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  return ReadAtInternal(aOffset, aBuffer, aCount, aBytes, /* aMayBlock = */ !aBytes);
+  return ReadAtInternal(aOffset, aBuffer, aCount, aBytes, /* aMayBlock = */ true);
 }
 
 nsresult
