@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Langpack Test : getAdditionalLanguages()</title>
+    <script>
+function run() {
+  navigator.mozApps.getAdditionalLanguages().then(languages => {
+    alert(JSON.stringify(languages));
+  });
+}
+    </script>
+  </head>
+  <body onload="run()">
+    <h1>Langpack Test : getAdditionalLanguages()</h1>
+  </body>
+</html>
