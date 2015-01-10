@@ -26,7 +26,7 @@
   <project name="gonk-patches" path="patches" remote="b2g" revision="223a2421006e8f5da33f516f6891c87cae86b0f6"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
-  <project name="platform/bionic" path="bionic" revision="cd5dfce80bc3f0139a56b58aca633202ccaee7f8"/>
+  <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="e0a9ac010df3afaa47ba107192c05ac8b5516435"/>
   <project name="platform/development" path="development" revision="a384622f5fcb1d2bebb9102591ff7ae91fe8ed2d"/>
   <project name="device/common" path="device/common" revision="7c65ea240157763b8ded6154a17d3c033167afb7"/>
