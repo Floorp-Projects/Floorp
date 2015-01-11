@@ -20,6 +20,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
 const L10N = new ViewHelpers.L10N();
 
+const GRAPH_RESIZE_EVENTS_DRAIN = 100; // ms
+
 const GRAPH_WHEEL_ZOOM_SENSITIVITY = 0.00035;
 const GRAPH_WHEEL_SCROLL_SENSITIVITY = 0.5;
 const GRAPH_MIN_SELECTION_WIDTH = 10; // ms
@@ -132,16 +134,21 @@ function FlameGraph(parent, sharpness) {
     this._averageCharWidth = this._calcAverageCharWidth();
     this._overflowCharWidth = this._getTextWidth(this.overflowChar);
 
+    this._onAnimationFrame = this._onAnimationFrame.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
     this._onMouseWheel = this._onMouseWheel.bind(this);
-    this._onAnimationFrame = this._onAnimationFrame.bind(this);
+    this._onResize = this._onResize.bind(this);
+    this.refresh = this.refresh.bind(this);
 
     container.addEventListener("mousemove", this._onMouseMove);
     container.addEventListener("mousedown", this._onMouseDown);
     container.addEventListener("mouseup", this._onMouseUp);
     container.addEventListener("MozMousePixelScroll", this._onMouseWheel);
+
+    let ownerWindow = this._parent.ownerDocument.defaultView;
+    ownerWindow.addEventListener("resize", this._onResize);
 
     this._animationId = this._window.requestAnimationFrame(this._onAnimationFrame);
 
@@ -178,6 +185,9 @@ FlameGraph.prototype = {
     container.removeEventListener("mousedown", this._onMouseDown);
     container.removeEventListener("mouseup", this._onMouseUp);
     container.removeEventListener("MozMousePixelScroll", this._onMouseWheel);
+
+    let ownerWindow = this._parent.ownerDocument.defaultView;
+    ownerWindow.removeEventListener("resize", this._onResize);
 
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
@@ -242,6 +252,14 @@ FlameGraph.prototype = {
   }),
 
   /**
+   * Gets whether or not this graph has a data source.
+   * @return boolean
+   */
+  hasData: function() {
+    return !!this._data;
+  },
+
+  /**
    * Gets the start or end of this graph's selection, i.e. the 'data window'.
    * @return number
    */
@@ -250,6 +268,32 @@ FlameGraph.prototype = {
   },
   getDataWindowEnd: function() {
     return this._selection.end;
+  },
+
+  /**
+   * Updates this graph to reflect the new dimensions of the parent node.
+   */
+  refresh: function() {
+    let bounds = this._parent.getBoundingClientRect();
+    let newWidth = this.fixedWidth || bounds.width;
+    let newHeight = this.fixedHeight || bounds.height;
+
+    // Prevent redrawing everything if the graph's width & height won't change.
+    if (this._width == newWidth * this._pixelRatio &&
+        this._height == newHeight * this._pixelRatio) {
+      this.emit("refresh-cancelled");
+      return;
+    }
+
+    bounds.width = newWidth;
+    bounds.height = newHeight;
+    this._iframe.setAttribute("width", bounds.width);
+    this._iframe.setAttribute("height", bounds.height);
+    this._width = this._canvas.width = bounds.width * this._pixelRatio;
+    this._height = this._canvas.height = bounds.height * this._pixelRatio;
+
+    this._shouldRedraw = true;
+    this.emit("refresh");
   },
 
   /**
@@ -743,6 +787,15 @@ FlameGraph.prototype = {
     }
 
     return { left: x, top: y };
+  },
+
+  /**
+   * Listener for the "resize" event on the graph's parent node.
+   */
+  _onResize: function() {
+    if (this.hasData()) {
+      setNamedTimeout(this._uid, GRAPH_RESIZE_EVENTS_DRAIN, this.refresh);
+    }
   }
 };
 

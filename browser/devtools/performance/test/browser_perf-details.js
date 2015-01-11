@@ -25,6 +25,13 @@ function spawnTest () {
   is(viewName, "waterfall", "DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, doc, "waterfall");
 
+  // Select flamegraph view
+  viewChanged = onceSpread(DetailsView, EVENTS.DETAILS_VIEW_SELECTED);
+  command($("toolbarbutton[data-view='flamegraph']"));
+  [_, viewName] = yield viewChanged;
+  is(viewName, "flamegraph", "DETAILS_VIEW_SELECTED fired with view name");
+  checkViews(DetailsView, doc, "flamegraph");
+
   yield teardown(panel);
   finish();
 }
