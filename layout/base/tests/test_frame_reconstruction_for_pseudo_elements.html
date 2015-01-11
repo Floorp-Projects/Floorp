@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1110277
   SimpleTest.waitForExplicitFinish();
 
   function run() {
-    runtest("first line test", "#firstlinetest > .testspan", { todo: true });
+    runtest("first line test", "#firstlinetest > .testspan", {});
     runtest("after test", "#aftertest > .testspan", { todo: true });
     SimpleTest.finish();
   }
