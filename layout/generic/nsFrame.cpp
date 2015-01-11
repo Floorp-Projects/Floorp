@@ -538,6 +538,8 @@ nsFrame::Init(nsIContent*       aContent,
                        NS_FRAME_MAY_BE_TRANSFORMED |
                        NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  } else {
+    PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
     nsFrameState state = GetParent()->GetStateBits();
@@ -4432,6 +4434,8 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
   }
+
+  aPresContext->ReflowedFrame();
 }
 
 void
