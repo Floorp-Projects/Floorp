@@ -935,26 +935,14 @@
 }
 
 .line-graph-widget-tooltip[type=maximum] {
-  left: -1px;
+  left: 14px;
 }
 
 .line-graph-widget-tooltip[type=minimum] {
-  left: -1px;
+  left: 14px;
 }
 
 .line-graph-widget-tooltip[type=average] {
-  right: -1px;
-}
-
-.line-graph-widget-tooltip[type=maximum][with-arrows=true] {
-  left: 14px;
-}
-
-.line-graph-widget-tooltip[type=minimum][with-arrows=true] {
-  left: 14px;
-}
-
-.line-graph-widget-tooltip[type=average][with-arrows=true] {
   right: 4px;
 }
 
