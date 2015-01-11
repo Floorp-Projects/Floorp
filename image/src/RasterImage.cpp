@@ -1474,32 +1474,32 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
   CONTAINER_ENSURE_TRUE(type != eDecoderType_unknown, NS_IMAGELIB_ERROR_NO_DECODER);
 
-  // Instantiate the appropriate decoder
+  // Instantiate the appropriate decoder.
   switch (type) {
     case eDecoderType_png:
-      mDecoder = new nsPNGDecoder(*this);
+      mDecoder = new nsPNGDecoder(this);
       break;
     case eDecoderType_gif:
-      mDecoder = new nsGIFDecoder2(*this);
+      mDecoder = new nsGIFDecoder2(this);
       break;
     case eDecoderType_jpeg:
       // If we have all the data we don't want to waste cpu time doing
-      // a progressive decode
-      mDecoder = new nsJPEGDecoder(*this,
+      // a progressive decode.
+      mDecoder = new nsJPEGDecoder(this,
                                    mHasBeenDecoded ? Decoder::SEQUENTIAL :
                                                      Decoder::PROGRESSIVE);
       break;
     case eDecoderType_bmp:
-      mDecoder = new nsBMPDecoder(*this);
+      mDecoder = new nsBMPDecoder(this);
       break;
     case eDecoderType_ico:
-      mDecoder = new nsICODecoder(*this);
+      mDecoder = new nsICODecoder(this);
       break;
     case eDecoderType_icon:
-      mDecoder = new nsIconDecoder(*this);
+      mDecoder = new nsIconDecoder(this);
       break;
     default:
-      NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
+      MOZ_ASSERT_UNREACHABLE("Unknown decoder type");
   }
 
   // Initialize the decoder
