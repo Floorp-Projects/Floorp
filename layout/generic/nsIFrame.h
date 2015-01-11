@@ -871,6 +871,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
 
   nsTArray<nsIContent*>* GetGenConPseudos() {
+    NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(this),
+                 "should only call on first continuation/ib-sibling");
     const FramePropertyDescriptor* prop = GenConProperty();
     return static_cast<nsTArray<nsIContent*>*>(Properties().Get(prop));
   }
