@@ -58,7 +58,7 @@ public:
   void OnVideoDecoded(VideoData* aSample);
   void OnVideoNotDecoded(NotDecodedReason aReason);
 
-  void OnSeekCompleted();
+  void OnSeekCompleted(int64_t aTime);
   void OnSeekFailed(nsresult aResult);
 
   virtual bool IsWaitForDataSupported() MOZ_OVERRIDE { return true; }

@@ -52,7 +52,7 @@ public:
 
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
-  typedef MediaPromise<bool, nsresult> SeekPromise;
+  typedef MediaPromise<int64_t, nsresult> SeekPromise;
   typedef MediaPromise<MediaData::Type, WaitForDataRejectValue> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)

@@ -529,7 +529,7 @@ AppleMP3Reader::Seek(int64_t aTime,
 
   ResetDecode();
 
-  return SeekPromise::CreateAndResolve(true, __func__);
+  return SeekPromise::CreateAndResolve(aTime, __func__);
 }
 
 void

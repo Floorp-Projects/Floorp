@@ -1464,7 +1464,7 @@ OggReader::Seek(int64_t aTarget,
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(true, __func__);
+    return SeekPromise::CreateAndResolve(aTarget, __func__);
   }
 }
 

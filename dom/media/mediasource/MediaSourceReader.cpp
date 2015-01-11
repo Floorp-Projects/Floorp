@@ -611,7 +611,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 }
 
 void
-MediaSourceReader::OnSeekCompleted()
+MediaSourceReader::OnSeekCompleted(int64_t aTime)
 {
   mPendingSeeks--;
   FinalizeSeek();
@@ -637,7 +637,7 @@ MediaSourceReader::FinalizeSeek()
     if (NS_FAILED(mSeekResult)) {
       mSeekPromise.Reject(mSeekResult, __func__);
     } else {
-      mSeekPromise.Resolve(true, __func__);
+      mSeekPromise.Resolve(mPendingSeekTime, __func__);
     }
     mSeekResult = NS_OK;
   }
