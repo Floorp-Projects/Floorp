@@ -44,9 +44,9 @@
     </toolbar>
 
     <vbox id="overview-pane">
-      <hbox id="time-framerate"/>
       <hbox id="markers-overview"/>
       <hbox id="memory-overview"/>
+      <hbox id="time-framerate"/>
     </vbox>
 
     <toolbar id="details-toolbar" class="devtools-toolbar">
