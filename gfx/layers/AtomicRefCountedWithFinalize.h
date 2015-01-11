@@ -7,7 +7,6 @@
 #define MOZILLA_ATOMICREFCOUNTEDWITHFINALIZE_H_
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/Likely.h"
 #include "MainThreadUtils.h"
 #include "base/message_loop.h"

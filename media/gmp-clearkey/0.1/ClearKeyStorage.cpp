@@ -8,7 +8,6 @@
 #include "gmp-task-utils.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/ArrayUtils.h"
 
 #include <vector>

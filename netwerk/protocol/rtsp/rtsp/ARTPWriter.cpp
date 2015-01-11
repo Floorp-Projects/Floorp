@@ -31,7 +31,6 @@
 #include <media/stagefright/MetaData.h>
 #include <utils/ByteOrder.h>
 
-#include "mozilla/NullPtr.h"
 #include "NetworkActivityMonitor.h"
 
 using namespace mozilla::net;

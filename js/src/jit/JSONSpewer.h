@@ -7,8 +7,6 @@
 #ifndef jit_JSONSpewer_h
 #define jit_JSONSpewer_h
 
-#include "mozilla/NullPtr.h"
-
 #include <stdio.h>
 
 #include "js/TypeDecls.h"

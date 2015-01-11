@@ -36,7 +36,6 @@
 #include <media/stagefright/OMXCodec.h>
 #endif
 
-#include "mozilla/NullPtr.h"
 #include "prnetdb.h"
 #include "prerr.h"
 

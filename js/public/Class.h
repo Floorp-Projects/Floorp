@@ -10,7 +10,6 @@
 #define js_Class_h
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/NullPtr.h"
 
 #include "jstypes.h"
 

@@ -11,7 +11,6 @@
 #include <fcntl.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 
 #include "PlatformMacros.h"
 #include "AutoObjectMapper.h"

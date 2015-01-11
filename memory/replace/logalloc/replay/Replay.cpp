@@ -23,7 +23,6 @@ typedef int ssize_t;
 #include <cstring>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 #include "FdPrintf.h"
 
 static void
