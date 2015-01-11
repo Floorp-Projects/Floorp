@@ -906,17 +906,20 @@ MP4Reader::Seek(int64_t aTime,
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  int64_t seekTime = aTime;
   mQueuedVideoSample = nullptr;
   if (mDemuxer->HasValidVideo()) {
-    mDemuxer->SeekVideo(aTime);
+    mDemuxer->SeekVideo(seekTime);
     mQueuedVideoSample = PopSampleLocked(kVideo);
+    if (mQueuedVideoSample) {
+      seekTime = mQueuedVideoSample->composition_timestamp;
+    }
   }
   if (mDemuxer->HasValidAudio()) {
-    mDemuxer->SeekAudio(
-      mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
+    mDemuxer->SeekAudio(seekTime);
   }
   LOG("MP4Reader::Seek(%lld) exit", aTime);
-  return SeekPromise::CreateAndResolve(true, __func__);
+  return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
 
 void
