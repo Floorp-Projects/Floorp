@@ -814,7 +814,7 @@ GStreamerReader::Seek(int64_t aTarget,
   gst_message_unref(message);
   LOG(PR_LOG_DEBUG, "seek completed");
 
-  return SeekPromise::CreateAndResolve(true, __func__);
+  return SeekPromise::CreateAndResolve(aTarget, __func__);
 }
 
 nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered)
