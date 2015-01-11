@@ -1171,7 +1171,10 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
 nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
                                         nsIContent* aContent)
 {
-  nsContainerFrame* genConParentFrame = aFrame->GetContentInsertionFrame();
+  // We need to call GetGenConPseudos() on the first continuation/ib-split.
+  // Find it, for symmetry with GetAfterFrameForContent.
+  nsContainerFrame* genConParentFrame =
+    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
   if (!genConParentFrame) {
     return nullptr;
   }
@@ -1207,7 +1210,10 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
                                        nsIContent* aContent)
 {
-  nsContainerFrame* genConParentFrame = aFrame->GetContentInsertionFrame();
+  // We need to call GetGenConPseudos() on the first continuation,
+  // but callers are likely to pass the last.
+  nsContainerFrame* genConParentFrame =
+    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
   if (!genConParentFrame) {
     return nullptr;
   }
@@ -1224,8 +1230,13 @@ nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
   // If the last child frame is a pseudo-frame, then try that.
   // Note that the frame we create for the generated content is also a
   // pseudo-frame and so don't drill down in that case.
+  genConParentFrame = aFrame->GetContentInsertionFrame();
+  if (!genConParentFrame) {
+    return nullptr;
+  }
   nsIFrame* lastParentContinuation =
-    nsLayoutUtils::LastContinuationWithChild(genConParentFrame);
+    LastContinuationWithChild(static_cast<nsContainerFrame*>(
+      LastContinuationOrIBSplitSibling(genConParentFrame)));
   nsIFrame* childFrame =
     lastParentContinuation->GetLastChild(nsIFrame::kPrincipalList);
   if (childFrame &&
