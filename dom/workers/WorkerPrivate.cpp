@@ -525,8 +525,8 @@ struct MainThreadWorkerStructuredCloneCallbacks
         FileImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
 
-        if (blobImpl->IsCCed()) {
-          NS_WARNING("Cycle collected blob objects are not supported!");
+        if (!blobImpl->MayBeClonedToOtherThreads()) {
+          NS_WARNING("Not all the blob implementations can be sent between threads.");
         } else if (WriteBlobOrFile(aCx, aWriter, blobImpl, *clonedObjects)) {
           return true;
         }
