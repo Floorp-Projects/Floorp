@@ -42,13 +42,16 @@
 /* Details Panel */
 
 #select-waterfall-view {
-  list-style-image: url(performance-icons.svg#waterfall);
+  list-style-image: url(performance-icons.svg#details-waterfall);
 }
 
 #select-calltree-view {
-  list-style-image: url(performance-icons.svg#call-tree);
+  list-style-image: url(performance-icons.svg#details-call-tree);
 }
 
+#select-flamegraph-view {
+  list-style-image: url(performance-icons.svg#details-flamegraph);
+}
 
 /* Profile call tree */
 

@@ -7,35 +7,36 @@
     display: none;
   }
 </style>
-<g id="call-tree">
-  <rect x="1px" y="3.5px" width="14px" height="2px" rx="1" ry="1"/>
-  <rect x="1px" y="7.5px" width="7px" height="2px" rx="1" ry="1"/>
-  <rect x="11px" y="7.5px" width="4px" height="2px" rx="1" ry="1"/>
-  <rect x="4px" y="11.5px" width="4px" height="2px" rx="1" ry="1"/>
+<g id="overview-markers">
+  <rect x="0px" y="3px" width="5px" height="2.5px" rx="1" ry="1"/>
+  <rect x="7px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
+  <rect x="0px" y="7px" width="9px" height="2.5px" rx="1" ry="1"/>
+  <rect x="10px" y="7px" width="6px" height="2.5px" rx="1" ry="1"/>
+  <rect x="4px" y="11px" width="5px" height="2.5px" rx="1" ry="1"/>
+  <rect x="12px" y="11px" width="4px" height="2.5px" rx="1" ry="1"/>
 </g>
-<g id="flamechart">
-  <rect x="1px" y="3px" width="14px" height="4px" style="shape-rendering: crispEdges"/>
-  <rect x="1px" y="5px" width="3px" height="5px" rx="1" ry="1"/>
-  <rect x="4px" y="5px" width="3px" height="10px" rx="1" ry="1"/>
-  <rect x="7px" y="5px" width="5px" height="3px" rx="1" ry="1"/>
-  <rect x="12px" y="5px" width="3px" height="7px" rx="1" ry="1"/>
+<g id="overview-frames">
+  <rect x="1px" y="4px" width="2px" height="12px" rx="1" ry="1"/>
+  <rect x="5px" y="12px" width="2px" height="4px" rx="1" ry="1"/>
+  <rect x="9px" y="9px" width="2px" height="7px" rx="1" ry="1"/>
+  <rect x="13px" y="7px" width="2px" height="9px" rx="1" ry="1"/>
 </g>
-<g id="frame">
-  <rect x="1px" y="4px" width="2px" height="13px" rx="1" ry="1"/>
-  <rect x="5px" y="12px" width="2px" height="5px" rx="1" ry="1"/>
-  <rect x="9px" y="9px" width="2px" height="8px" rx="1" ry="1"/>
-  <rect x="13px" y="7px" width="2px" height="10px" rx="1" ry="1"/>
-</g>
-<g id="markers">
-  <path d="m2.1,2.1h9.6c.6,0 1.1,.5 1.1,1.1 0,.6-.5,1.1-1.1,1.1h-9.6c-.6,0-1.1-.5-1.1-1.1 .1-.6 .5-1.1 1.1-1.1z"/>
-  <path d="m7.4,5.3h7.4c.6,0 1.1,.5 1.1,1.1 0,.6-.5,1.1-1.1,1.1h-7.4c-.5-.1-1-.5-1-1.1 0-.6 .5-1.1 1-1.1z"/>
-  <path d="m5.3,8.5h3.2c.6,0 1.1,.5 1.1,1.1 0,.6-.5,1.1-1.1,1.1h-3.2c-.6,0-1.1-.5-1.1-1.1 .1-.6 .5-1.1 1.1-1.1z"/>
-  <path d="m4.3,11.7h2.1c.6,0 1.1,.5 1.1,1.1 0,.6-.5,1.1-1.1,1.1h-2.1c-.6,0-1.1-.5-1.1-1.1 0-.6 .5-1.1 1.1-1.1z"/>
-  <path d="m4.3,11.7h2.1c.6,0 1.1,.5 1.1,1.1 0,.6-.5,1.1-1.1,1.1h-2.1c-.6,0-1.1-.5-1.1-1.1 0-.6 .5-1.1 1.1-1.1z" style="transform: translateX(7px)"/>
-</g>
-<g id="waterfall">
-  <rect x="1px" y="3px" width="8px" height="2.5px" rx="1" ry="1"/>
+<g id="details-waterfall">
+  <rect x="0px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
   <rect x="5px" y="7px" width="8px" height="2.5px" rx="1" ry="1"/>
-  <rect x="7px" y="11.5px" width="8px" height="2.5px" rx="1" ry="1"/>
+  <rect x="7px" y="11px" width="9px" height="2.5px" rx="1" ry="1"/>
+</g>
+<g id="details-call-tree">
+  <rect x="0px" y="3px" width="16px" height="2px"/>
+  <rect x="3px" y="6px" width="7px" height="2px"/>
+  <rect x="6px" y="9px" width="6px" height="2px"/>
+  <rect x="9px" y="12px" width="5px" height="2px"/>
+</g>
+<g id="details-flamegraph">
+  <rect x="0px" y="3px" width="16px" height="2px"/>
+  <rect x="0px" y="6px" width="8px" height="2px"/>
+  <rect x="10px" y="6px" width="6px" height="2px"/>
+  <rect x="2px" y="9px" width="6px" height="2px"/>
+  <rect x="5px" y="12px" width="3px" height="2px"/>
 </g>
 </svg>
