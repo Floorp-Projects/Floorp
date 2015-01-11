@@ -17,6 +17,8 @@ devtools.lazyRequireGetter(this, "EventEmitter",
 devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 
+devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+  "devtools/timeline/global", true);
 devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
 devtools.lazyRequireGetter(this, "PerformanceIO",
@@ -33,13 +35,17 @@ devtools.lazyRequireGetter(this, "CallView",
   "devtools/profiler/tree-view", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
-devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/timeline/global", true);
+
 
 devtools.lazyImporter(this, "CanvasGraphUtils",
   "resource:///modules/devtools/Graphs.jsm");
 devtools.lazyImporter(this, "LineGraphWidget",
   "resource:///modules/devtools/Graphs.jsm");
+
+devtools.lazyImporter(this, "FlameGraphUtils",
+  "resource:///modules/devtools/FlameGraph.jsm");
+devtools.lazyImporter(this, "FlameGraph",
+  "resource:///modules/devtools/FlameGraph.jsm");
 
 // Events emitted by various objects in the panel.
 const EVENTS = {
@@ -84,7 +90,10 @@ const EVENTS = {
   SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger",
 
   // Emitted by the WaterfallView when it has been rendered
-  WATERFALL_RENDERED: "Performance:UI:WaterfallRendered"
+  WATERFALL_RENDERED: "Performance:UI:WaterfallRendered",
+
+  // Emitted by the FlameGraphView when it has been rendered
+  FLAMEGRAPH_RENDERED: "Performance:UI:FlameGraphRendered"
 };
 
 // Constant defining the end time for a recording that hasn't finished
