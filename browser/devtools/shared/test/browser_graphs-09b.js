@@ -31,8 +31,8 @@ function* performTest() {
 function* testGraph(graph) {
   yield graph.setDataWhenReady(TEST_DATA);
 
-  is(graph._gutter.hidden, true,
-    "The gutter should be hidden because the tooltips don't have arrows.");
+  is(graph._gutter.hidden, false,
+    "The gutter should be visible even if the tooltips don't have arrows.");
   is(graph._maxTooltip.hidden, false,
     "The max tooltip should not be hidden.");
   is(graph._avgTooltip.hidden, false,

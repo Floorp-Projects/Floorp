@@ -1456,7 +1456,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._maxTooltip.hidden = this._showMax === false || !totalTicks || distanceMinMax < LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
     this._avgTooltip.hidden = this._showAvg === false || !totalTicks;
     this._minTooltip.hidden = this._showMin === false || !totalTicks;
-    this._gutter.hidden = (this._showMin === false && this._showMax === false) || !totalTicks || !this.withTooltipArrows;
+    this._gutter.hidden = (this._showMin === false && this._showAvg === false && this._showMax === false) || !totalTicks;
 
     this._maxGutterLine.hidden = this._showMax === false;
     this._avgGutterLine.hidden = this._showAvg === false;
