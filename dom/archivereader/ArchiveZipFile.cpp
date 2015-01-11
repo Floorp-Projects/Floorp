@@ -362,13 +362,15 @@ ArchiveZipFileImpl::GetInternalStream(nsIInputStream** aStream)
     return NS_ERROR_FAILURE;
   }
 
-  uint64_t size;
-  nsresult rv = mArchiveReader->GetSize(&size);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  uint64_t size = mFileImpl->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.ErrorCode();
+  }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  rv = mArchiveReader->GetInputStream(getter_AddRefs(inputStream));
-  if (NS_FAILED(rv) || !inputStream) {
+  rv = mFileImpl->GetInternalStream(getter_AddRefs(inputStream));
+  if (NS_WARN_IF(rv.Failed()) || !inputStream) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -384,20 +386,6 @@ ArchiveZipFileImpl::GetInternalStream(nsIInputStream** aStream)
   return NS_OK;
 }
 
-void
-ArchiveZipFileImpl::Unlink()
-{
-  ArchiveZipFileImpl* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mArchiveReader);
-}
-
-void
-ArchiveZipFileImpl::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
-  ArchiveZipFileImpl* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArchiveReader);
-}
-
 already_AddRefed<mozilla::dom::FileImpl>
 ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 uint64_t aLength,
@@ -406,7 +394,7 @@ ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
 {
   nsRefPtr<FileImpl> impl =
     new ArchiveZipFileImpl(mFilename, mContentType, aStart, mLength, mCentral,
-                           mArchiveReader);
+                           mFileImpl);
   return impl.forget();
 }
 
