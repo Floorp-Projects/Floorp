@@ -222,7 +222,6 @@ function triggerInputChange() {
 }
 
 registerCleanupFunction(function() {
-  removeTab(gBrowser.selectedTab);
   gClient = null;
   gThreadClient = null;
   gInput = null;

@@ -147,6 +147,5 @@ function closeConnection() {
 }
 
 registerCleanupFunction(function() {
-  removeTab(gBrowser.selectedTab);
   gClient = null;
 });
