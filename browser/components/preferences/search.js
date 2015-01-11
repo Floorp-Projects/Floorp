@@ -180,6 +180,11 @@ var gSearchPane = {
       Services.search.currentEngine =
         document.getElementById("defaultEngine").selectedItem.engine;
     }
+  },
+
+  loadAddEngines: function () {
+    window.opener.BrowserSearch.loadAddEngines();
+    window.document.documentElement.acceptDialog();
   }
 };
 
