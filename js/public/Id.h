@@ -20,8 +20,6 @@
 // A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
 // JS_IdToValue must be used instead.
 
-#include "mozilla/NullPtr.h"
-
 #include "jstypes.h"
 
 #include "js/HeapAPI.h"

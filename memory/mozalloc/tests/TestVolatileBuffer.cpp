@@ -4,7 +4,6 @@
 
 #include "TestHarness.h"
 #include "mozilla/VolatileBuffer.h"
-#include "mozilla/NullPtr.h"
 #include <string.h>
 
 #if defined(ANDROID)

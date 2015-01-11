@@ -7,7 +7,6 @@
 #ifndef ArchiveReader_h__
 #define ArchiveReader_h__
 
-#include "mozilla/NullPtr.h"
 #include <stdio.h>
 #include "mar.h"
 

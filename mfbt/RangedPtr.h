@@ -15,7 +15,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 
 #include <stdint.h>
 

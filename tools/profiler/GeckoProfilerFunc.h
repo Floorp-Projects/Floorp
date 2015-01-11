@@ -6,7 +6,6 @@
 #ifndef PROFILER_FUNCS_H
 #define PROFILER_FUNCS_H
 
-#include "mozilla/NullPtr.h"
 #include "js/TypeDecls.h"
 #include "js/ProfilingStack.h"
 #include <stdint.h>
