@@ -92,10 +92,28 @@ InvokeAndRetry(ThisType* aThisVal, ReturnType(ThisType::*aMethod)(), MP4Stream* 
       return result;
     }
     prevFailure = failure;
-    nsAutoArrayPtr<uint8_t> dummyBuffer(new uint8_t[failure.mCount]);
-    size_t ignored;
+
+    // Our goal here is to forcibly read the data we want into the cache: since
+    // the stream is pinned, the data is guaranteed to stay in the cache once
+    // it's there, which means that retrying the non-blocking read from inside
+    // the demuxer should succeed.
+    //
+    // But there's one wrinkle: if we read less than an entire cache line and
+    // the data ends up in MediaCacheStream's mPartialBlockBuffer, the data can
+    // be returned by a blocking read but never actually committed to the cache,
+    // and abandoned by a subsequent seek (possibly by another stream accessing
+    // the same underlying resource).
+    //
+    // The way to work around this problem is to round our "priming" read up to the
+    // size of an entire cache block. Note that this may hit EOS for bytes that the
+    // original demuxer read never actually requested. This is OK though because the
+    // call to BlockingReadAt will still return true (just with a less-than-expected
+    // number of actually read bytes, which we ignore).
+    size_t bufferSize = failure.mCount + (MediaCacheStream::BLOCK_SIZE - failure.mCount % MediaCacheStream::BLOCK_SIZE);
+    nsAutoArrayPtr<uint8_t> dummyBuffer(new uint8_t[bufferSize]);
     MonitorAutoUnlock unlock(*aMonitor);
-    if (!stream->BlockingReadAt(failure.mOffset, dummyBuffer, failure.mCount, &ignored)) {
+    size_t ignored;
+    if (NS_WARN_IF(!stream->BlockingReadAt(failure.mOffset, dummyBuffer, bufferSize, &ignored))) {
       return result;
     }
   }
