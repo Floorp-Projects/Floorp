@@ -304,22 +304,19 @@ public:
 
   Mutex& GetMutex() { return mMutex; }
 
-  InsertOutcome Insert(imgFrame*         aSurface,
-                       const Cost        aCost,
-                       const ImageKey    aImageKey,
-                       const SurfaceKey& aSurfaceKey,
-                       Lifetime          aLifetime)
+  bool Insert(imgFrame*         aSurface,
+              const Cost        aCost,
+              const ImageKey    aImageKey,
+              const SurfaceKey& aSurfaceKey,
+              Lifetime          aLifetime)
   {
-    // If this is a duplicate surface, refuse to replace the original.
-    if (MOZ_UNLIKELY(Lookup(aImageKey, aSurfaceKey))) {
-      return InsertOutcome::FAILURE_ALREADY_PRESENT;
-    }
+    MOZ_ASSERT(!Lookup(aImageKey, aSurfaceKey),
+               "Inserting a duplicate surface into the SurfaceCache");
 
     // If this is bigger than we can hold after discarding everything we can,
     // refuse to cache it.
-    if (MOZ_UNLIKELY(!CanHoldAfterDiscarding(aCost))) {
-      return InsertOutcome::FAILURE;
-    }
+    if (!CanHoldAfterDiscarding(aCost))
+      return false;
 
     // Remove elements in order of cost until we can fit this in the cache. Note
     // that locked surfaces aren't in mCosts, so we never remove them here.
@@ -344,7 +341,7 @@ public:
     if (cache->IsLocked() && aLifetime == Lifetime::Persistent) {
       surface->SetLocked(true);
       if (!surface->IsLocked()) {
-        return InsertOutcome::FAILURE;
+        return false;
       }
     }
 
@@ -353,7 +350,7 @@ public:
     cache->Insert(aSurfaceKey, surface);
     StartTracking(surface);
 
-    return InsertOutcome::SUCCESS;
+    return true;
   }
 
   void Remove(CachedSurface* aSurface)
@@ -798,14 +795,14 @@ SurfaceCache::Lookup(const ImageKey    aImageKey,
   return sInstance->Lookup(aImageKey, aSurfaceKey);
 }
 
-/* static */ InsertOutcome
+/* static */ bool
 SurfaceCache::Insert(imgFrame*         aSurface,
                      const ImageKey    aImageKey,
                      const SurfaceKey& aSurfaceKey,
                      Lifetime          aLifetime)
 {
   if (!sInstance) {
-    return InsertOutcome::FAILURE;
+    return false;
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
@@ -822,16 +819,6 @@ SurfaceCache::CanHold(const IntSize& aSize)
 
   Cost cost = ComputeCost(aSize);
   return sInstance->CanHold(cost);
-}
-
-/* static */ bool
-SurfaceCache::CanHold(size_t aSize)
-{
-  if (!sInstance) {
-    return false;
-  }
-
-  return sInstance->CanHold(aSize);
 }
 
 /* static */ void

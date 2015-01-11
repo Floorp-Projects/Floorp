@@ -36,10 +36,7 @@ RunOnThreadInternal(nsIEventTarget *thread, nsIRunnable *runnable, uint32_t flag
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // we're going to destroy the runnable on this thread!
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!on) {
       return thread->Dispatch(runnable_ref, flags);
     }

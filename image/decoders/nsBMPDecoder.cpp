@@ -38,7 +38,7 @@ GetBMPLog()
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
+nsBMPDecoder::nsBMPDecoder(RasterImage& aImage)
   : Decoder(aImage)
   , mPos(0)
   , mLOH(WIN_V3_HEADER_LENGTH)
@@ -439,15 +439,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           return;
         }
       }
-
-      MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-      nsresult rv = AllocateFrame(0, nsIntRect(nsIntPoint(), GetSize()),
-                                  gfx::SurfaceFormat::B8G8R8A8);
-      if (NS_FAILED(rv)) {
+      if (!mImageData) {
+        PostDecoderError(NS_ERROR_FAILURE);
         return;
       }
-
-      MOZ_ASSERT(mImageData, "Should have a buffer now");
 
       // Prepare for transparency
       if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
