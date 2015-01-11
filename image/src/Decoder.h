@@ -22,7 +22,7 @@ class Decoder
 {
 public:
 
-  explicit Decoder(RasterImage& aImage);
+  explicit Decoder(RasterImage* aImage);
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
@@ -160,6 +160,11 @@ public:
 
   ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
+  /**
+   * Returns a weak pointer to the image associated with this decoder.
+   */
+  RasterImage* GetImage() const { MOZ_ASSERT(mImage); return mImage.get(); }
+
   already_AddRefed<imgFrame> GetCurrentFrame()
   {
     nsRefPtr<imgFrame> frame = mCurrentFrame.get();
@@ -263,7 +268,7 @@ protected:
    * Member variables.
    *
    */
-  RasterImage &mImage;
+  nsRefPtr<RasterImage> mImage;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
