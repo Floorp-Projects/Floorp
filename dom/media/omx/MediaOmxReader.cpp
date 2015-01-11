@@ -570,7 +570,7 @@ MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int6
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
   }
 
-  return SeekPromise::CreateAndResolve(true, __func__);
+  return SeekPromise::CreateAndResolve(mAudioSeekTimeUs, __func__);
 }
 
 void MediaOmxReader::SetIdle() {

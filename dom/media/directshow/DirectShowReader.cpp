@@ -377,7 +377,7 @@ DirectShowReader::Seek(int64_t aTargetUs,
   if (NS_FAILED(res)) {
     return SeekPromise::CreateAndReject(res, __func__);
   } else {
-    return SeekPromise::CreateAndResolve(true, __func__);
+    return SeekPromise::CreateAndResolve(aTargetUs, __func__);
   }
 }
 
