@@ -933,9 +933,9 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
     return;
   }
 
-  MOZ_ASSERT((mFrameCount == 1 && aNewFrameCount == 1) ||
-             mFrameCount < aNewFrameCount,
-             "Frame count running backwards");
+  MOZ_ASSERT(aNewFrameCount <= mFrameCount ||
+             aNewFrameCount == mFrameCount + 1,
+             "Skipped a frame?");
 
   mFrameCount = aNewFrameCount;
 
@@ -1003,7 +1003,7 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
 }
 
 void
-RasterImage::DecodingComplete(imgFrame* aFinalFrame)
+RasterImage::DecodingComplete(imgFrame* aFinalFrame, bool aIsAnimated)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1019,13 +1019,29 @@ RasterImage::DecodingComplete(imgFrame* aFinalFrame)
 
   // If there's only 1 frame, mark it as optimizable. Optimizing animated images
   // is not supported. Optimizing transient images isn't worth it.
-  if (GetNumFrames() == 1 && !mTransient && aFinalFrame) {
+  if (!aIsAnimated && !mTransient && aFinalFrame) {
     aFinalFrame->SetOptimizable();
   }
 
-  if (mAnim) {
-    mAnim->SetDoneDecoding(true);
+  if (aIsAnimated) {
+    if (mAnim) {
+      mAnim->SetDoneDecoding(true);
+    } else {
+      NS_DispatchToMainThread(
+        NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded));
+    }
   }
+}
+
+void
+RasterImage::MarkAnimationDecoded()
+{
+  NS_ASSERTION(mAnim, "No FrameAnimator in MarkAnimationDecoded - bad event order");
+  if (!mAnim) {
+    return;
+  }
+
+  mAnim->SetDoneDecoding(true);
 }
 
 NS_IMETHODIMP
@@ -1480,15 +1496,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   // Initialize the decoder
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
-  if (!aDoSizeDecode) {
-    // We already have the size; tell the decoder so it can preallocate a
-    // frame.  By default, we create an ARGB frame with no offset. If decoders
-    // need a different type, they need to ask for it themselves.
-    mDecoder->SetSize(mSize, mOrientation);
-    mDecoder->NeedNewFrame(0, 0, 0, mSize.width, mSize.height,
-                           SurfaceFormat::B8G8R8A8);
-    mDecoder->AllocateFrame();
-  }
   mDecoder->Init();
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 

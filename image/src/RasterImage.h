@@ -197,7 +197,8 @@ public:
   void     SetLoopCount(int32_t aLoopCount);
 
   /* notification that the entire image has been decoded */
-  void DecodingComplete(imgFrame* aFinalFrame);
+  void DecodingComplete(imgFrame* aFinalFrame, bool aIsAnimated);
+  void MarkAnimationDecoded();
 
 
   //////////////////////////////////////////////////////////////////////////////
