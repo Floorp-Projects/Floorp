@@ -1173,6 +1173,9 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
+// Disable Flash protected mode to reduce hang/crash rates.
+pref("dom.ipc.plugins.flash.disable-protected-mode", true);
+
 #ifdef XP_MACOSX
 // On mac, the default pref is per-architecture
 pref("dom.ipc.plugins.enabled.i386", true);
