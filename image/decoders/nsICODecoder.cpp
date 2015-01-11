@@ -82,10 +82,13 @@ nsICODecoder::FinishInternal()
 
   // Finish the internally used decoder as well
   if (mContainedDecoder) {
-    mContainedDecoder->FinishSharedDecoder();
+    if (!mContainedDecoder->HasError()) {
+      mContainedDecoder->FinishInternal();
+    }
     mDecodeDone = mContainedDecoder->GetDecodeDone();
     mProgress |= mContainedDecoder->TakeProgress();
     mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
+    mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
   }
 }
 
@@ -342,9 +345,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     if (mIsPNG) {
       mContainedDecoder = new nsPNGDecoder(mImage);
       mContainedDecoder->SetSizeDecode(IsSizeDecode());
-      mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
-                                           mColormap, mColormapSize,
-                                           Move(mRefForContainedDecoder));
+      mContainedDecoder->Init();
       if (!WriteToContainedDecoder(mSignature, PNGSIGNATURESIZE)) {
         return;
       }
@@ -420,9 +421,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     mContainedDecoder = bmpDecoder;
     bmpDecoder->SetUseAlphaData(true);
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
-    mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
-                                         mColormap, mColormapSize,
-                                         Move(mRefForContainedDecoder));
+    mContainedDecoder->Init();
 
     // The ICO format when containing a BMP does not include the 14 byte
     // bitmap file header. To use the code of the BMP decoder we need to
@@ -623,36 +622,6 @@ nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
   memcpy(&aTarget.mImageOffset, mDirEntryArray + 12,
          sizeof(aTarget.mImageOffset));
   aTarget.mImageOffset = LittleEndian::readUint32(&aTarget.mImageOffset);
-}
-
-bool
-nsICODecoder::NeedsNewFrame() const
-{
-  if (mContainedDecoder) {
-    return mContainedDecoder->NeedsNewFrame();
-  }
-
-  return Decoder::NeedsNewFrame();
-}
-
-nsresult
-nsICODecoder::AllocateFrame()
-{
-  nsresult rv;
-
-  if (mContainedDecoder) {
-    rv = mContainedDecoder->AllocateFrame();
-    mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
-    mProgress |= mContainedDecoder->TakeProgress();
-    mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
-    return rv;
-  }
-
-  // Grab a strong ref that we'll later hand over to the contained decoder. This
-  // lets us avoid creating a RawAccessFrameRef off-main-thread.
-  rv = Decoder::AllocateFrame();
-  mRefForContainedDecoder = GetCurrentFrameRef();
-  return rv;
 }
 
 } // namespace image
