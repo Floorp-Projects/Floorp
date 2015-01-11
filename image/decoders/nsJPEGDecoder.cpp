@@ -84,7 +84,7 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 #define MAX_JPEG_MARKER_LENGTH  (((uint32_t)1 << 16) - 1)
 
 
-nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
+nsJPEGDecoder::nsJPEGDecoder(RasterImage& aImage,
                              Decoder::DecodeStyle aDecodeStyle)
  : Decoder(aImage)
  , mDecodeStyle(aDecodeStyle)
@@ -237,7 +237,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return; // I/O suspension
       }
 
-      int sampleSize = mImage->GetRequestedSampleSize();
+      int sampleSize = mImage.GetRequestedSampleSize();
       if (sampleSize > 0) {
         mInfo.scale_num = 1;
         mInfo.scale_denom = sampleSize;
@@ -386,17 +386,13 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     mInfo.buffered_image = mDecodeStyle == PROGRESSIVE &&
                            jpeg_has_multiple_scans(&mInfo);
 
-    MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-    nsresult rv = AllocateFrame(0, nsIntRect(nsIntPoint(), GetSize()),
-                                gfx::SurfaceFormat::B8G8R8A8);
-    if (NS_FAILED(rv)) {
+    if (!mImageData) {
       mState = JPEG_ERROR;
+      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       PR_LOG(GetJPEGDecoderAccountingLog(), PR_LOG_DEBUG,
              ("} (could not initialize image frame)"));
       return;
     }
-
-    MOZ_ASSERT(mImageData, "Should have a buffer now");
 
     PR_LOG(GetJPEGDecoderAccountingLog(), PR_LOG_DEBUG,
            ("        JPEGDecoderAccounting: nsJPEGDecoder::"

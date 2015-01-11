@@ -23,7 +23,7 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
 
-  explicit nsGIFDecoder2(RasterImage* aImage);
+  explicit nsGIFDecoder2(RasterImage& aImage);
   ~nsGIFDecoder2();
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
@@ -35,7 +35,7 @@ private:
   // frame size information, etc.
 
   void      BeginGIF();
-  nsresult  BeginImageFrame(uint16_t aDepth);
+  void      BeginImageFrame(uint16_t aDepth);
   void      EndImageFrame();
   void      FlushImageData();
   void      FlushImageData(uint32_t fromRow, uint32_t rows);
