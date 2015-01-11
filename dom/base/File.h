@@ -34,17 +34,9 @@ class nsIFile;
 class nsIInputStream;
 class nsIClassInfo;
 
-#define PIFILEIMPL_IID \
-  { 0x218ee173, 0xf44f, 0x4d30, \
-    { 0xab, 0x0c, 0xd6, 0x66, 0xea, 0xc2, 0x84, 0x47 } }
-
-class PIFileImpl : public nsISupports
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(PIFILEIMPL_IID)
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(PIFileImpl, PIFILEIMPL_IID)
+#define FILEIMPL_IID \
+  { 0xbccb3275, 0x6778, 0x4ac5, \
+    { 0xaf, 0x03, 0x90, 0xed, 0x37, 0xad, 0xdf, 0x5d } }
 
 namespace mozilla {
 namespace dom {
@@ -230,9 +222,10 @@ private:
 
 // This is the abstract class for any File backend. It must be nsISupports
 // because this class must be ref-counted and it has to work with IPC.
-class FileImpl : public PIFileImpl
+class FileImpl : public nsISupports
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(FILEIMPL_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
 
   FileImpl() {}
@@ -305,6 +298,8 @@ public:
 protected:
   virtual ~FileImpl() {}
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(FileImpl, FILEIMPL_IID)
 
 class FileImplBase : public FileImpl
 {
