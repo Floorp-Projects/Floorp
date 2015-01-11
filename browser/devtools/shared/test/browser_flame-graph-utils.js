@@ -15,11 +15,10 @@ let test = Task.async(function*() {
 function* performTest() {
   let out = FlameGraphUtils.createFlameGraphDataFromSamples(TEST_DATA);
 
-  dump(">>> " + out + "\n");
-  dump(">>> " + out.toSource() + "\n");
-
   ok(out, "Some data was outputted properly");
   is(out.length, 10, "The outputted length is correct.");
+
+  info("Got flame graph data:\n" + out.toSource() + "\n");
 
   for (let i = 0; i < out.length; i++) {
     let found = out[i];

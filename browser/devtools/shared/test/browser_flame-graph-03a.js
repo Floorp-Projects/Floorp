@@ -46,43 +46,43 @@ function testGraph(graph) {
   scroll(graph, 200, HORIZONTAL_AXIS, 10);
   is(graph.getDataWindowStart() | 0, 100,
     "The selection start boundary is correct (2).");
-  is(graph.getDataWindowEnd() | 0, 300,
+  is(graph.getDataWindowEnd() | 0, 200,
     "The selection end boundary is correct (2).");
 
   scroll(graph, -200, HORIZONTAL_AXIS, 10);
-  is(graph.getDataWindowStart() | 0, 0,
+  is(graph.getDataWindowStart() | 0, 50,
     "The selection start boundary is correct (3).");
-  is(graph.getDataWindowEnd() | 0, 200,
+  is(graph.getDataWindowEnd() | 0, 150,
     "The selection end boundary is correct (3).");
 
   scroll(graph, 200, VERTICAL_AXIS, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 0,
+  is(graph.getDataWindowStart() | 0, 46,
     "The selection start boundary is correct (4).");
-  is(graph.getDataWindowEnd() | 0, 207,
+  is(graph.getDataWindowEnd() | 0, 153,
     "The selection end boundary is correct (4).");
 
   scroll(graph, -200, VERTICAL_AXIS, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 7,
+  is(graph.getDataWindowStart() | 0, 50,
     "The selection start boundary is correct (5).");
-  is(graph.getDataWindowEnd() | 0, 199,
+  is(graph.getDataWindowEnd() | 0, 149,
     "The selection end boundary is correct (5).");
 
   dragStart(graph, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 7,
+  is(graph.getDataWindowStart() | 0, 50,
     "The selection start boundary is correct (6).");
-  is(graph.getDataWindowEnd() | 0, 199,
+  is(graph.getDataWindowEnd() | 0, 149,
     "The selection end boundary is correct (6).");
 
   hover(graph, TEST_WIDTH / 2 - 10);
-  is(graph.getDataWindowStart() | 0, 16,
+  is(graph.getDataWindowStart() | 0, 55,
     "The selection start boundary is correct (7).");
-  is(graph.getDataWindowEnd() | 0, 209,
+  is(graph.getDataWindowEnd() | 0, 154,
     "The selection end boundary is correct (7).");
 
   dragStop(graph, 10);
-  is(graph.getDataWindowStart() | 0, 93,
+  is(graph.getDataWindowStart() | 0, 95,
     "The selection start boundary is correct (8).");
-  is(graph.getDataWindowEnd() | 0, 286,
+  is(graph.getDataWindowEnd() | 0, 194,
     "The selection end boundary is correct (8).");
 }
 
