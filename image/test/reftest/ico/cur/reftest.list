@@ -1,4 +1,4 @@
 # ICO BMP and PNG mixed tests
 
-random == wrapper.html?pointer.cur wrapper.html?pointer.png
+== wrapper.html?pointer.cur wrapper.html?pointer.png
 

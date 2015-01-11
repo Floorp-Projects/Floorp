@@ -3791,6 +3791,9 @@ pref("image.mem.allow_locking_in_content_processes", true);
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 16384);
 
+// The longest time we can spend in an iteration of an async decode
+pref("image.mem.max_ms_before_yield", 5);
+
 // Minimum timeout for expiring unused images from the surface cache, in
 // milliseconds. This controls how long we store cached temporary surfaces.
 pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60ms
