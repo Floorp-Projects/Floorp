@@ -245,13 +245,13 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  bool succeeded =
+  InsertOutcome outcome =
     SurfaceCache::Insert(frame, ImageKey(&mImage),
                          RasterSurfaceKey(imageSize.ToIntSize(),
                                           aDecodeFlags,
                                           aFrameNum),
                          Lifetime::Persistent);
-  if (!succeeded) {
+  if (outcome != InsertOutcome::SUCCESS) {
     ref->Abort();
     return RawAccessFrameRef();
   }
