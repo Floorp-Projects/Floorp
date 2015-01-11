@@ -53,8 +53,6 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mPendingEndTime(-1)
   , mPendingCurrentTime(-1)
   , mWaitingForSeekData(false)
-  , mPendingSeeks(0)
-  , mSeekResult(NS_OK)
   , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
@@ -594,16 +592,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   // to complete (and they would have been accounted for already).
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-    if (!mWaitingForSeekData) {
-      mWaitingForSeekData = true;
-      if (mAudioTrack) {
-        mPendingSeeks++;
-      }
-      if (mVideoTrack) {
-        mPendingSeeks++;
-      }
-    }
+    mWaitingForSeekData = true;
   }
 
   AttemptSeek();
@@ -611,36 +600,40 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 }
 
 void
-MediaSourceReader::OnSeekCompleted(int64_t aTime)
+MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 {
-  mPendingSeeks--;
-  FinalizeSeek();
+  mPendingSeekTime = aTime;
+  if (mAudioTrack) {
+    mAudioIsSeeking = true;
+    SwitchAudioReader(mPendingSeekTime);
+    mAudioReader->Seek(mPendingSeekTime,
+                       mPendingStartTime,
+                       mPendingEndTime,
+                       mPendingCurrentTime)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnAudioSeekCompleted,
+                       &MediaSourceReader::OnSeekFailed);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
+    return;
+  }
+  mSeekPromise.Resolve(mPendingSeekTime, __func__);
+}
+
+void
+MediaSourceReader::OnAudioSeekCompleted(int64_t aTime)
+{
+  mSeekPromise.Resolve(mPendingSeekTime, __func__);
 }
 
 void
 MediaSourceReader::OnSeekFailed(nsresult aResult)
 {
-  mPendingSeeks--;
   // Keep the most recent failed result (if any)
   if (NS_FAILED(aResult)) {
-    mSeekResult = aResult;
+    mSeekPromise.Reject(aResult, __func__);
+    return;
   }
-  FinalizeSeek();
-}
-
-void
-MediaSourceReader::FinalizeSeek()
-{
-  // Only dispatch the final event onto the state machine
-  // since it's only expecting one response.
-  if (!mPendingSeeks) {
-    if (NS_FAILED(mSeekResult)) {
-      mSeekPromise.Reject(mSeekResult, __func__);
-    } else {
-      mSeekPromise.Resolve(mPendingSeekTime, __func__);
-    }
-    mSeekResult = NS_OK;
-  }
+  mSeekPromise.Resolve(mPendingSeekTime, __func__);
 }
 
 void
@@ -664,18 +657,6 @@ MediaSourceReader::AttemptSeek()
   mLastAudioTime = mPendingSeekTime;
   mLastVideoTime = mPendingSeekTime;
 
-  if (mAudioTrack) {
-    mAudioIsSeeking = true;
-    SwitchAudioReader(mPendingSeekTime);
-    mAudioReader->Seek(mPendingSeekTime,
-                       mPendingStartTime,
-                       mPendingEndTime,
-                       mPendingCurrentTime)
-                ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::OnSeekCompleted,
-                       &MediaSourceReader::OnSeekFailed);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
-  }
   if (mVideoTrack) {
     mVideoIsSeeking = true;
     SwitchVideoReader(mPendingSeekTime);
@@ -684,10 +665,13 @@ MediaSourceReader::AttemptSeek()
                        mPendingEndTime,
                        mPendingCurrentTime)
                 ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::OnSeekCompleted,
+                       &MediaSourceReader::OnVideoSeekCompleted,
                        &MediaSourceReader::OnSeekFailed);
     MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
+  } else {
+    OnVideoSeekCompleted(mPendingSeekTime);
   }
+
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mWaitingForSeekData = false;
