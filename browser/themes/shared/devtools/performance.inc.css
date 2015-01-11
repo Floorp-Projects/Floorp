@@ -334,21 +334,18 @@
 #waterfall-details {
   -moz-padding-start: 8px;
   -moz-padding-end: 8px;
-  padding-top: 8vh;
+  padding-top: 2vh;
   overflow: auto;
 }
 
 .marker-details-bullet {
   width: 8px;
   height: 8px;
-  margin: 0 8px;
   border: 1px solid;
   border-radius: 1px;
 }
 
-.marker-details-start,
-.marker-details-end,
-.marker-details-duration {
+#waterfall-details > * {
   padding-top: 3px;
 }
 
