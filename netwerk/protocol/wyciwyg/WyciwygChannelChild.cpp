@@ -649,8 +649,9 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   mListenerContext = aContext;
   mIsPending = true;
 
-  if (mLoadGroup)
+  if (mLoadGroup) {
     mLoadGroup->AddRequest(this, nullptr);
+  }
 
   URIParams originalURI;
   SerializeURI(mOriginalURI, originalURI);
@@ -660,7 +661,10 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  SendAsyncOpen(originalURI, mLoadFlags, IPC::SerializedLoadContext(this), tabChild);
+  PBrowserOrId browser = static_cast<ContentChild*>(Manager()->Manager())
+                         ->GetBrowserOrId(tabChild);
+
+  SendAsyncOpen(originalURI, mLoadFlags, IPC::SerializedLoadContext(this), browser);
 
   mSentAppData = true;
   mState = WCC_OPENED;
