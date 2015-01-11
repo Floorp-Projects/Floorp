@@ -142,10 +142,7 @@ public:
 
   // Compute the difference between this our progress and aProgress. This allows
   // callers to predict whether SyncNotifyProgress will send any notifications.
-  Progress Difference(Progress aProgress) const
-  {
-    return ~mProgress & aProgress;
-  }
+  Progress Difference(Progress aProgress) const;
 
   // Update our state to incorporate the changes in aProgress and synchronously
   // notify our observers.
