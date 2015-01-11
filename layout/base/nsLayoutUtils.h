@@ -1254,6 +1254,13 @@ public:
   FirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
+   * Get the last frame in the continuation-plus-ib-split-sibling chain
+   * containing aFrame.
+   */
+  static nsIFrame*
+  LastContinuationOrIBSplitSibling(nsIFrame *aFrame);
+
+  /**
    * Is FirstContinuationOrIBSplitSibling(aFrame) going to return
    * aFrame?
    */
