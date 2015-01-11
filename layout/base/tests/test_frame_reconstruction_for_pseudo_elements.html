@@ -35,12 +35,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1110277
   SimpleTest.waitForExplicitFinish();
 
   function run() {
-    runtest("first line test", "#firstlinetest > .testspan", {});
-    runtest("after test", "#aftertest > .testspan", { todo: true });
+    runtest("first line test", "#firstlinetest > .testspan");
+    runtest("after test", "#aftertest > .testspan");
     SimpleTest.finish();
   }
 
-  function runtest(description, selector, flags) {
+  function runtest(description, selector) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
     var span = document.querySelector(selector);
     var cs = getComputedStyle(span, "");
@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1110277
     var endcolor = cs.color;
     var endcount = utils.framesConstructed;
     is(endcolor, "rgb(0, 0, 255)", description + ": final color");
-    (flags.todo ? todo_is : is)(endcount, startcount,
+    is(endcount, startcount,
        description + ": should not do frame construction")
   }
 
