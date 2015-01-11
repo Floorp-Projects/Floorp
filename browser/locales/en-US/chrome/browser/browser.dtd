@@ -422,6 +422,11 @@ These should match what Safari and other Apple applications use on OS X Lion. --
      search providers:  "Search for <used typed keywords> with:" -->
 <!ENTITY searchFor.label              "Search for ">
 <!ENTITY searchWith.label             " with:">
+<!-- LOCALIZATION NOTE (searchWithHeader.label):
+     The wording of this string should be as close as possible to
+     searchFor.label and searchWith.label. This string will be used instead of
+     them when the user has not typed any keyword. -->
+<!ENTITY searchWithHeader.label       "Search with:">
 <!ENTITY changeSearchSettings.button  "Change Search Settings">
 
 <!ENTITY tabView.commandkey           "e">
