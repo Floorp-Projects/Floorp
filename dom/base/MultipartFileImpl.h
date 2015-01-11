@@ -111,6 +111,8 @@ public:
     mIsFromNsIFile = aValue;
   }
 
+  virtual bool MayBeClonedToOtherThreads() const MOZ_OVERRIDE;
+
 protected:
   virtual ~MultipartFileImpl() {}
 
