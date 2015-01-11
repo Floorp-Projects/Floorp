@@ -352,3 +352,15 @@ MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
 
   InitializeChromeFile(aWindow, file, aBag, false, aRv);
 }
+
+bool
+MultipartFileImpl::MayBeClonedToOtherThreads() const
+{
+  for (uint32_t i = 0; i < mBlobImpls.Length(); ++i) {
+    if (!mBlobImpls[i]->MayBeClonedToOtherThreads()) {
+      return false;
+    }
+  }
+
+  return true;
+}

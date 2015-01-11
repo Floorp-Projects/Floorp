@@ -215,7 +215,7 @@ private:
   // It's thread-safe and not CC-able and it's the only element that is moved
   // between threads.
   // Note: we should not store any other state in this class!
-  const nsRefPtr<FileImpl> mImpl;
+  nsRefPtr<FileImpl> mImpl;
 
   nsCOMPtr<nsISupports> mParent;
 };
@@ -286,13 +286,10 @@ public:
 
   virtual bool IsFile() const = 0;
 
-  // These 2 methods are used when the implementation has to CC something.
-  virtual void Unlink() = 0;
-  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) = 0;
-
-  virtual bool IsCCed() const
+  // True if this implementation can be sent to other threads.
+  virtual bool MayBeClonedToOtherThreads() const
   {
-    return false;
+    return true;
   }
 
 protected:
@@ -459,9 +456,6 @@ public:
   {
     return mLength == UINT64_MAX;
   }
-
-  virtual void Unlink() {}
-  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) {}
 
 protected:
   virtual ~FileImplBase() {}

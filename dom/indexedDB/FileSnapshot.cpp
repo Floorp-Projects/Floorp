@@ -31,7 +31,6 @@ FileImplSnapshot::FileImplSnapshot(const nsAString& aName,
                  aMetadataParams->Size(),
                  aMetadataParams->LastModified())
   , mFile(aFile)
-  , mFileHandle(aFileHandle)
   , mWholeFile(true)
 {
   AssertSanity();
@@ -43,6 +42,9 @@ FileImplSnapshot::FileImplSnapshot(const nsAString& aName,
   MOZ_ASSERT(aFileInfo);
 
   mFileInfos.AppendElement(aFileInfo);
+
+  mFileHandle =
+    do_GetWeakReference(NS_ISUPPORTS_CAST(EventTarget*, aFileHandle));
 }
 
 // Create slice
@@ -88,39 +90,19 @@ FileImplSnapshot::AssertSanity()
 
 NS_IMPL_ISUPPORTS_INHERITED(FileImplSnapshot, FileImpl, PIFileImplSnapshot)
 
-void
-FileImplSnapshot::Unlink()
-{
-  AssertSanity();
-
-  FileImplSnapshot* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileHandle);
-}
-
-void
-FileImplSnapshot::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
-  AssertSanity();
-
-  FileImplSnapshot* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileHandle);
-}
-
-bool
-FileImplSnapshot::IsCCed() const
-{
-  AssertSanity();
-
-  return true;
-}
-
 nsresult
 FileImplSnapshot::GetInternalStream(nsIInputStream** aStream)
 {
   AssertSanity();
 
-  nsresult rv = mFileHandle->OpenInputStream(mWholeFile, mStart, mLength,
-                                             aStream);
+  nsCOMPtr<EventTarget> et = do_QueryReferent(mFileHandle);
+  nsRefPtr<IDBFileHandle> fileHandle = static_cast<IDBFileHandle*>(et.get());
+  if (!fileHandle) {
+    return NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR;
+  }
+
+  nsresult rv = fileHandle->OpenInputStream(mWholeFile, mStart, mLength,
+                                            aStream);
   if (NS_FAILED(rv)) {
     return rv;
   }
