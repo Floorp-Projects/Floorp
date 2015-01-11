@@ -2,6 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// ES6 draft rev30 (2014/12/24) 22.2.3.6 %TypedArray%.prototype.entries()
+function TypedArrayEntries() {
+    // Step 1.
+    var O = this;
+
+    // Step 2-3.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayEntries");
+    }
+
+    // Step 4-6. Bug 1101256: detachment checks
+
+    // Step 7.
+    return CreateArrayIterator(O, ITEM_KIND_KEY_AND_VALUE);
+}
+
 // ES6 draft rev30 (2014/12/24) 22.2.3.7 %TypedArray%.prototype.every(callbackfn[, thisArg]).
 function TypedArrayEvery(callbackfn, thisArg = undefined) {
     // This function is not generic.
@@ -251,6 +267,22 @@ function TypedArrayJoin(separator) {
     return R;
 }
 
+// ES6 draft rev30 (2014/12/24) 22.2.3.15 %TypedArray%.prototype.keys()
+function TypedArrayKeys() {
+    // Step 1.
+    var O = this;
+
+    // Step 2-3.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayKeys");
+    }
+
+    // Step 4-6. Bug 1101256: detachment checks
+
+    // Step 7.
+    return CreateArrayIterator(O, ITEM_KIND_KEY);
+}
+
 // ES6 draft rev29 (2014/12/06) 22.2.3.16 %TypedArray%.prototype.lastIndexOf(searchElement [,fromIndex]).
 function TypedArrayLastIndexOf(searchElement, fromIndex = undefined) {
     // This function is not generic.
@@ -441,6 +473,22 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
 
     // Step 10.
     return false;
+}
+
+// ES6 draft rev30 (2014/12/24) 22.2.3.30 %TypedArray%.prototype.values()
+function TypedArrayValues() {
+    // Step 1.
+    var O = this;
+
+    // Step 2-3.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayValues");
+    }
+
+    // Step 4-6. Bug 1101256: detachment checks
+
+    // Step 7.
+    return CreateArrayIterator(O, ITEM_KIND_VALUE);
 }
 
 // Proposed for ES7:
