@@ -90,8 +90,6 @@ MP4Sample* SampleIterator::GetNext()
     return nullptr;
   }
 
-  Next();
-
   nsAutoPtr<MP4Sample> sample(new MP4Sample());
   sample->decode_timestamp = s->mDecodeTime;
   sample->composition_timestamp = s->mCompositionRange.start;
@@ -130,6 +128,8 @@ MP4Sample* SampleIterator::GetNext()
       sample->crypto.iv_size = 16;
     }
   }
+
+  Next();
 
   return sample.forget();
 }
