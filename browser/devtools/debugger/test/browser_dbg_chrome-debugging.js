@@ -89,7 +89,6 @@ function resumeAndCloseConnection() {
 }
 
 registerCleanupFunction(function() {
-  removeTab(gBrowser.selectedTab);
   gClient = null;
   gThreadClient = null;
   gAttached = null;
