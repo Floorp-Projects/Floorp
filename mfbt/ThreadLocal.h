@@ -29,7 +29,6 @@ __declspec(dllimport) unsigned long __stdcall TlsAlloc();
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {

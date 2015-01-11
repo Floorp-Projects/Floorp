@@ -7,7 +7,6 @@
 #include "GMPLoader.h"
 #include <stdio.h>
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 

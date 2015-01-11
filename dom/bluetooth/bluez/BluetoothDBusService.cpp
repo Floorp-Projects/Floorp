@@ -46,7 +46,6 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/unused.h"
 
