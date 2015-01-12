@@ -1565,6 +1565,14 @@ class CGAddPropertyHook(CGAbstractClassHook):
             """)
 
 
+def DeferredFinalizeSmartPtr(descriptor):
+    if descriptor.nativeOwnership == 'owned':
+        smartPtr = 'nsAutoPtr'
+    else:
+        smartPtr = 'nsRefPtr'
+    return smartPtr
+
+
 def finalizeHook(descriptor, hookName, freeOp):
     finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
     if descriptor.wrapperCache:
@@ -1573,8 +1581,8 @@ def finalizeHook(descriptor, hookName, freeOp):
         finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
     if descriptor.isGlobal():
         finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
-    finalize += ("AddForDeferredFinalization<%s>(self);\n" %
-                 descriptor.nativeType)
+    finalize += ("AddForDeferredFinalization<%s, %s >(self);\n" %
+                 (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 
@@ -3057,35 +3065,50 @@ class CGConstructorEnabled(CGAbstractMethod):
 
 
 def CreateBindingJSObject(descriptor, properties):
-    objDecl = "BindingJSObjectCreator<%s> creator(aCx);\n" % descriptor.nativeType
-
     # We don't always need to root obj, but there are a variety
     # of cases where we do, so for simplicity, just always root it.
+    objDecl = "JS::Rooted<JSObject*> obj(aCx);\n"
     if descriptor.proxy:
         create = dedent(
             """
-            creator.CreateProxyObject(aCx, &Class.mBase, DOMProxyHandler::getInstance(),
-                                      proto, global, aObject, aReflector);
-            if (!aReflector) {
-              return false;
+            JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
+            js::ProxyOptions options;
+            options.setClass(&Class.mBase);
+            obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
+                                 proxyPrivateVal, proto, global, options);
+            if (!obj) {
+              return nullptr;
             }
 
             """)
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             create += dedent("""
-                js::SetProxyExtra(aReflector, JSPROXYSLOT_EXPANDO,
+                js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO,
                                   JS::PrivateValue(&aObject->mExpandoAndGeneration));
 
                 """)
     else:
         create = dedent(
             """
-            creator.CreateObject(aCx, Class.ToJSClass(), proto, global, aObject, aReflector);
-            if (!aReflector) {
-              return false;
+            obj = JS_NewObject(aCx, Class.ToJSClass(), proto, global);
+            if (!obj) {
+              return nullptr;
             }
+
+            js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
             """)
-    return objDecl + create
+    create = objDecl + create
+
+    if descriptor.nativeOwnership == 'refcounted':
+        create += "NS_ADDREF(aObject);\n"
+    else:
+        create += dedent("""
+            // Make sure the native objects inherit from NonRefcountedDOMObject so that we
+            // log their ctor and dtor.
+            MustInheritFromNonRefcountedDOMObject(aObject);
+            *aTookOwnership = true;
+            """)
+    return create
 
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
@@ -3158,7 +3181,7 @@ def InitUnforgeableProperties(descriptor, properties):
             "// by the interface prototype object.\n")
     else:
         unforgeableProperties = CGWrapper(
-            InitUnforgeablePropertiesOnObject(descriptor, "aReflector", properties, "false"),
+            InitUnforgeablePropertiesOnObject(descriptor, "obj", properties, "nullptr"),
             pre=(
                 "// Important: do unforgeable property setup after we have handed\n"
                 "// over ownership of the C++ object to obj as needed, so that if\n"
@@ -3196,9 +3219,9 @@ def InitMemberSlots(descriptor, wrapperCache):
         clearWrapper = "  aCache->ClearWrapper();\n"
     else:
         clearWrapper = ""
-    return ("if (!UpdateMemberSlots(aCx, aReflector, aObject)) {\n"
+    return ("if (!UpdateMemberSlots(aCx, obj, aObject)) {\n"
             "%s"
-            "  return false;\n"
+            "  return nullptr;\n"
             "}\n" % clearWrapper)
 
 
@@ -3212,9 +3235,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
-                Argument('nsWrapperCache*', 'aCache'),
-                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
+                Argument('nsWrapperCache*', 'aCache')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.properties = properties
 
     def definition_body(self):
@@ -3227,31 +3249,33 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             JS::Rooted<JSObject*> parent(aCx, WrapNativeParent(aCx, aObject->GetParentObject()));
             if (!parent) {
-              return false;
+              return nullptr;
             }
 
             // That might have ended up wrapping us already, due to the wonders
-            // of XBL.  Check for that, and bail out as needed.
-            aReflector.set(aCache->GetWrapper());
-            if (aReflector) {
-              return true;
+            // of XBL.  Check for that, and bail out as needed.  Scope so we don't
+            // collide with the "obj" we declare in CreateBindingJSObject.
+            {
+              JSObject* obj = aCache->GetWrapper();
+              if (obj) {
+                return obj;
+              }
             }
 
             JSAutoCompartment ac(aCx, parent);
             JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(parent));
             JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
-              return false;
+              return nullptr;
             }
 
             $*{createObject}
 
             $*{unforgeable}
 
-            aCache->SetWrapper(aReflector);
+            aCache->SetWrapper(obj);
             $*{slots}
-            creator.InitializationSucceeded();
-            return true;
+            return obj;
             """,
             assertion=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
@@ -3269,10 +3293,7 @@ class CGWrapMethod(CGAbstractMethod):
                                   inline=True, templateArgs=["class T"])
 
     def definition_body(self):
-        return dedent("""
-            JS::Rooted<JSObject*> reflector(aCx);
-            return Wrap(aCx, aObject, aObject, &reflector) ? reflector.get() : nullptr;
-            """)
+        return "return Wrap(aCx, aObject, aObject);\n"
 
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
@@ -3286,9 +3307,10 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument(descriptor.nativeType + '*', 'aObject'),
-                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
+                Argument(descriptor.nativeType + '*', 'aObject')]
+        if descriptor.nativeOwnership == 'owned':
+            args.append(Argument('bool*', 'aTookOwnership'))
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.properties = properties
 
     def definition_body(self):
@@ -3299,7 +3321,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
             JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, global);
             if (!proto) {
-              return false;
+              return nullptr;
             }
 
             $*{createObject}
@@ -3307,8 +3329,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
-            creator.InitializationSucceeded();
-            return true;
+            return obj;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
@@ -3330,9 +3351,8 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                 Argument('nsWrapperCache*', 'aCache'),
                 Argument('JS::CompartmentOptions&', 'aOptions'),
                 Argument('JSPrincipals*', 'aPrincipal'),
-                Argument('bool', 'aInitStandardClasses'),
-                Argument('JS::MutableHandle<JSObject*>', 'aReflector')]
-        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'bool', args)
+                Argument('bool', 'aInitStandardClasses')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.descriptor = descriptor
         self.properties = properties
 
@@ -3348,7 +3368,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
 
         if self.descriptor.workers:
             fireOnNewGlobal = """// XXXkhuey can't do this yet until workers can lazy resolve.
-// JS_FireOnNewGlobalObject(aCx, aReflector);
+// JS_FireOnNewGlobalObject(aCx, obj);
 """
         else:
             fireOnNewGlobal = ""
@@ -3359,6 +3379,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
+            JS::Rooted<JSObject*> obj(aCx);
             CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
@@ -3366,24 +3387,24 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                                              aOptions,
                                              aPrincipal,
                                              aInitStandardClasses,
-                                             aReflector);
-            if (!aReflector) {
-              return false;
+                                             &obj);
+            if (!obj) {
+              return nullptr;
             }
 
-            // aReflector is a new global, so has a new compartment.  Enter it
+            // obj is a new global, so has a new compartment.  Enter it
             // before doing anything with it.
-            JSAutoCompartment ac(aCx, aReflector);
+            JSAutoCompartment ac(aCx, obj);
 
-            if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
-              return false;
+            if (!DefineProperties(aCx, obj, ${properties}, ${chromeProperties})) {
+              return nullptr;
             }
             $*{unforgeable}
 
             $*{slots}
             $*{fireOnNewGlobal}
 
-            return true;
+            return obj;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
@@ -4683,6 +4704,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                            isMember or
                            isCallbackReturnValue)
 
+        if forceOwningType and descriptor.nativeOwnership == 'owned':
+            raise TypeError("Interface %s has 'owned' nativeOwnership, so we "
+                            "don't know how to keep it alive in %s" %
+                            (descriptor.interface.identifier.name,
+                             sourceDescription))
+
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
 
@@ -4706,8 +4733,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = "NonNull<" + typeName + ">"
 
         templateBody = ""
-        if forceOwningType:
-            templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
         if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
@@ -5744,11 +5769,15 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
         if not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
+                assert descriptor.nativeOwnership != 'owned'
                 wrapMethod = "GetOrCreateDOMReflector"
             else:
                 if not returnsNewObject:
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
-                wrapMethod = "WrapNewBindingNonWrapperCachedObject"
+                if descriptor.nativeOwnership == 'owned':
+                    wrapMethod = "WrapNewBindingNonWrapperCachedOwnedObject"
+                else:
+                    wrapMethod = "WrapNewBindingNonWrapperCachedObject"
             wrap = "%s(cx, ${obj}, %s, ${jsvalHandle})" % (wrapMethod, result)
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
@@ -6069,8 +6098,11 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
         conversion = None
-        if isMember:
-            result = CGGeneric("StrongPtrForMember<%s>::Type" % result.define())
+        if descriptorProvider.getDescriptor(
+                returnType.unroll().inner.identifier.name).nativeOwnership == 'owned':
+            result = CGTemplatedType("nsAutoPtr", result)
+        elif isMember:
+            result = CGTemplatedType("nsRefPtr", result)
         else:
             conversion = CGGeneric("StrongOrRawPtr<%s>" % result.define())
             result = CGGeneric("auto")
@@ -6661,7 +6693,8 @@ class CGPerSignatureCall(CGThing):
 
         returnsNewObject = memberReturnsNewObject(self.idlNode)
         if (returnsNewObject and
-            self.returnType.isGeckoInterface()):
+            self.returnType.isGeckoInterface() and
+            not self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'):
             wrapCode += dedent(
                 """
                 static_assert(!IsPointer<decltype(result)>::value,
@@ -10961,17 +10994,16 @@ class CGDescriptor(CGThing):
 
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
+        if descriptor.nativeOwnership == 'owned' and (
+                descriptor.interface.hasChildInterfaces() or
+                descriptor.interface.parent):
+            raise TypeError("Owned interface cannot have a parent or children")
+
         self._deps = descriptor.interface.getDeps()
 
         cgThings = []
         cgThings.append(CGGeneric(declare="typedef %s NativeType;\n" %
                                   descriptor.nativeType))
-        parent = descriptor.interface.parent
-        if parent:
-            cgThings.append(CGGeneric("static_assert(IsRefcounted<NativeType>::value == IsRefcounted<%s::NativeType>::value,\n"
-                                      "              \"Can't inherit from an interface with a different ownership model.\");\n" %
-                                      toBindingNamespace(descriptor.parentPrototypeName)))
-
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
         (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasLenientSetter,
@@ -12181,10 +12213,7 @@ class CGBindingRoot(CGThing):
     declare or define to generate header or cpp code (respectively).
     """
     def __init__(self, config, prefix, webIDLFile):
-        bindingHeaders = dict.fromkeys((
-            'mozilla/dom/NonRefcountedDOMObject.h',
-            ),
-            True)
+        bindingHeaders = {}
         bindingDeclareHeaders = dict.fromkeys((
             'mozilla/dom/BindingDeclarations.h',
             'mozilla/dom/Nullable.h',
@@ -12226,6 +12255,8 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["mozilla/Preferences.h"] = any(
             descriptorRequiresPreferences(d) for d in descriptors)
+        bindingHeaders["mozilla/dom/NonRefcountedDOMObject.h"] = any(
+            d.nativeOwnership == 'owned' for d in descriptors)
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
             d.concrete and d.proxy for d in descriptors)
 
@@ -13035,30 +13066,40 @@ class CGExampleClass(CGBindingImplClass):
                                     CGExampleMethod, CGExampleGetter, CGExampleSetter,
                                     wantGetParent=descriptor.wrapperCache)
 
+        self.refcounted = descriptor.nativeOwnership == "refcounted"
+
         self.parentIface = descriptor.interface.parent
         if self.parentIface:
             self.parentDesc = descriptor.getDescriptor(
                 self.parentIface.identifier.name)
             bases = [ClassBase(self.nativeLeafName(self.parentDesc))]
         else:
-            bases = [ ClassBase("nsISupports /* or NonRefcountedDOMObject if this is a non-refcounted object */") ]
-            if descriptor.wrapperCache:
-                bases.append(ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */"))
+            bases = []
+            if self.refcounted:
+                bases.append(ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"))
+                if descriptor.wrapperCache:
+                    bases.append(ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */"))
+            else:
+                bases.append(ClassBase("NonRefcountedDOMObject"))
 
-        destructorVisibility = "protected"
-        if self.parentIface:
-            extradeclarations = (
-                "public:\n"
-                "  NS_DECL_ISUPPORTS_INHERITED\n"
-                "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(%s, %s)\n"
-                "\n" % (self.nativeLeafName(descriptor),
-                        self.nativeLeafName(self.parentDesc)))
+        if self.refcounted:
+            destructorVisibility = "protected"
+            if self.parentIface:
+                extradeclarations = (
+                    "public:\n"
+                    "  NS_DECL_ISUPPORTS_INHERITED\n"
+                    "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(%s, %s)\n"
+                    "\n" % (self.nativeLeafName(descriptor),
+                            self.nativeLeafName(self.parentDesc)))
+            else:
+                extradeclarations = (
+                    "public:\n"
+                    "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
+                    "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+                    "\n" % self.nativeLeafName(descriptor))
         else:
-            extradeclarations = (
-                "public:\n"
-                "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
-                "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
-                "\n" % self.nativeLeafName(descriptor))
+            destructorVisibility = "public"
+            extradeclarations = ""
 
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
@@ -13076,42 +13117,54 @@ class CGExampleClass(CGBindingImplClass):
 
     def define(self):
         # Just override CGClass and do our own thing
-        ctordtor = dedent("""
-            ${nativeType}::${nativeType}()
-            {
-                // Add |MOZ_COUNT_CTOR(${nativeType});| for a non-refcounted object.
-            }
+        if self.refcounted:
+            ctordtor = dedent("""
+                ${nativeType}::${nativeType}()
+                {
+                }
 
-            ${nativeType}::~${nativeType}()
-            {
-                // Add |MOZ_COUNT_DTOR(${nativeType});| for a non-refcounted object.
-            }
-            """)
-
-        if self.parentIface:
-            ccImpl = dedent("""
-
-                // Only needed for refcounted objects.
-                NS_IMPL_CYCLE_COLLECTION_INHERITED_0(${nativeType}, ${parentType})
-                NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
-                NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
-                NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
-                NS_INTERFACE_MAP_END_INHERITING(${parentType})
-
+                ${nativeType}::~${nativeType}()
+                {
+                }
                 """)
         else:
-            ccImpl = dedent("""
+            ctordtor = dedent("""
+                ${nativeType}::${nativeType}()
+                {
+                  MOZ_COUNT_CTOR(${nativeType});
+                }
 
-                // Only needed for refcounted objects.
-                NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
-                NS_IMPL_CYCLE_COLLECTING_ADDREF(${nativeType})
-                NS_IMPL_CYCLE_COLLECTING_RELEASE(${nativeType})
-                NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
-                  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-                  NS_INTERFACE_MAP_ENTRY(nsISupports)
-                NS_INTERFACE_MAP_END
-
+                ${nativeType}::~${nativeType}()
+                {
+                  MOZ_COUNT_DTOR(${nativeType});
+                }
                 """)
+
+        if self.refcounted:
+            if self.parentIface:
+                ccImpl = dedent("""
+
+                    NS_IMPL_CYCLE_COLLECTION_INHERITED_0(${nativeType}, ${parentType})
+                    NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
+                    NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
+                    NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
+                    NS_INTERFACE_MAP_END_INHERITING(${parentType})
+
+                    """)
+            else:
+                ccImpl = dedent("""
+
+                    NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
+                    NS_IMPL_CYCLE_COLLECTING_ADDREF(${nativeType})
+                    NS_IMPL_CYCLE_COLLECTING_RELEASE(${nativeType})
+                    NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
+                      NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+                      NS_INTERFACE_MAP_ENTRY(nsISupports)
+                    NS_INTERFACE_MAP_END
+
+                    """)
+        else:
+            ccImpl = ""
 
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
             JSObject*

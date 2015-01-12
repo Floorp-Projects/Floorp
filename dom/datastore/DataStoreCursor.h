@@ -33,7 +33,7 @@ public:
   static already_AddRefed<DataStoreCursor> Constructor(GlobalObject& aGlobal,
                                                        ErrorResult& aRv);
 
-  bool WrapObject(JSContext *aCx, JS::MutableHandle<JSObject*> aReflector);
+  JSObject* WrapObject(JSContext *aCx);
 
   // WebIDL (public APIs)
 
