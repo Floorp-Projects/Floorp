@@ -135,16 +135,6 @@ nsAlertsIconListener::OnLoadComplete(imgIRequest* aRequest)
     mIconRequest = nullptr;
   }
 
-  nsCOMPtr<imgIContainer> image;
-  rv = aRequest->GetImage(getter_AddRefs(image));
-  MOZ_ASSERT(image);
-
-  // Ask the image to decode at it's intrinsic size.
-  int32_t width = 0, height = 0;
-  image->GetWidth(&width);
-  image->GetHeight(&height);
-  image->RequestDecodeForSize(nsIntSize(width, height), imgIContainer::FLAG_NONE);
-
   return NS_OK;
 }
 
@@ -236,6 +226,8 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl, bool aInPrivateB
                                    getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv))
     return rv;
+
+  mIconRequest->StartDecoding();
 
   return NS_OK;
 }
