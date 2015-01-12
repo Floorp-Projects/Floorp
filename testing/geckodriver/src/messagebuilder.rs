@@ -1,11 +1,12 @@
 use regex::{Regex, Captures};
 
-use hyper::method::{Method, Get, Post, Delete};
+use hyper::method::Method;
+use hyper::method::Method::{Get, Post, Delete};
 
 use command::{WebDriverMessage};
 use common::{WebDriverResult, WebDriverError, ErrorStatus};
 
-#[deriving(Clone)]
+#[derive(Clone, Copy)]
 pub enum MatchType {
     NewSession,
     DeleteSession,
@@ -51,7 +52,7 @@ pub enum MatchType {
     TakeScreenshot
 }
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct RequestMatcher {
     method: Method,
     path_regexp: Regex,
@@ -82,16 +83,16 @@ impl RequestMatcher {
                 if !component.ends_with("}") {
                     panic!("Invalid url pattern")
                 }
-                rv.push_str(format!("(?P<{}>[^/]+)/", component[1..component.len()-1])[]);
+                rv.push_str(format!("(?P<{}>[^/]+)/", &component[1..component.len()-1]).as_slice());
             } else {
-                rv.push_str(format!("{}/", component)[]);
+                rv.push_str(format!("{}/", component).as_slice());
             }
         }
         //Remove the trailing /
         rv.pop();
         rv.push_str("$");
         //This will fail at runtime if the regexp is invalid
-        Regex::new(rv[]).unwrap()
+        Regex::new(rv.as_slice()).unwrap()
     }
 }
 
@@ -123,7 +124,7 @@ impl MessageBuilder {
             }
         }
         Err(WebDriverError::new(error,
-                                format!("{} {} did not match a known command", method, path)[]))
+                                format!("{} {} did not match a known command", method, path).as_slice()))
     }
 
     pub fn add(&mut self, method: Method, path: &str, match_type: MatchType) {

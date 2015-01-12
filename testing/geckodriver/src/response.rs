@@ -3,7 +3,7 @@ use serialize::json::ToJson;
 
 use common::Nullable;
 
-#[deriving(Show)]
+#[derive(Show)]
 pub enum WebDriverResponse {
     NewSession(NewSessionResponse),
     DeleteSession,
@@ -18,17 +18,17 @@ impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
         match self {
             WebDriverResponse::NewSession(x) => json::encode(&x),
-            WebDriverResponse::DeleteSession => "".into_string(),
+            WebDriverResponse::DeleteSession => "".to_string(),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
             WebDriverResponse::ElementRect(x) => json::encode(&x),
             WebDriverResponse::Cookie(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
-            WebDriverResponse::Void => "".into_string()
+            WebDriverResponse::Void => "".to_string()
         }
     }
 }
 
-#[deriving(Encodable, Show)]
+#[derive(Encodable, Show)]
 pub struct NewSessionResponse {
     sessionId: String,
     value: json::Json
@@ -43,7 +43,7 @@ impl NewSessionResponse {
     }
 }
 
-#[deriving(Encodable, Show)]
+#[derive(Encodable, Show)]
 pub struct ValueResponse {
     value: json::Json
 }
@@ -56,7 +56,7 @@ impl ValueResponse {
     }
 }
 
-#[deriving(Encodable, Show)]
+#[derive(Encodable, Show)]
 pub struct WindowSizeResponse {
     width: u64,
     height: u64
@@ -71,7 +71,7 @@ impl WindowSizeResponse {
     }
 }
 
-#[deriving(Encodable, Show)]
+#[derive(Encodable, Show)]
 pub struct ElementRectResponse {
     x: u64,
     y: u64,
@@ -90,7 +90,7 @@ impl ElementRectResponse {
     }
 }
 
-#[deriving(Encodable, PartialEq, Show)]
+#[derive(Encodable, PartialEq, Show)]
 pub struct Date(u64);
 
 impl Date {
@@ -107,7 +107,7 @@ impl ToJson for Date {
 }
 
 //TODO: some of these fields are probably supposed to be optional
-#[deriving(Encodable, PartialEq, Show)]
+#[derive(Encodable, PartialEq, Show)]
 pub struct Cookie {
     name: String,
     value: String,
@@ -135,7 +135,7 @@ impl Cookie {
     }
 }
 
-#[deriving(Encodable, Show)]
+#[derive(Encodable, Show)]
 pub struct CookieResponse {
     value: Vec<Cookie>
 }

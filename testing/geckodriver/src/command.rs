@@ -1,4 +1,4 @@
-use std::collections::TreeMap;
+use std::collections::BTreeMap;
 use serialize::json;
 use serialize::json::{ToJson, Json};
 use regex::Captures;
@@ -79,7 +79,7 @@ impl WebDriverMessage {
                                                          format!("Failed to decode request body as json: {}", body).as_slice()))
             }
         } else {
-            json::Null
+            Json::Null
         };
         let command = match match_type {
             MatchType::NewSession => WebDriverCommand::NewSession,
@@ -124,53 +124,93 @@ impl WebDriverMessage {
                 WebDriverCommand::FindElements(parameters)
             },
             MatchType::IsDisplayed => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsDisplayed(element)
             },
             MatchType::IsSelected => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsSelected(element)
             },
             MatchType::GetElementAttribute => {
-                let element = WebElement::new(params.name("elementId").to_string());
-                let attr = params.name("name").to_string();
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                let attr = try_opt!(params.name("name"),
+                                    ErrorStatus::InvalidArgument,
+                                    "Missing name parameter").to_string();
                 WebDriverCommand::GetElementAttribute(element, attr)
             },
             MatchType::GetCSSValue => {
-                let element = WebElement::new(params.name("elementId").to_string());
-                let property = params.name("propertyName").to_string();
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                let property = try_opt!(params.name("propertyName"),
+                                        ErrorStatus::InvalidArgument,
+                                        "Missing propertyName parameter").to_string();
                 WebDriverCommand::GetCSSValue(element, property)
             },
             MatchType::GetElementText => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementText(element)
             },
             MatchType::GetElementTagName => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementTagName(element)
             },
             MatchType::GetElementRect => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementRect(element)
             },
             MatchType::IsEnabled => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsEnabled(element)
             },
             MatchType::ElementClick => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementClick(element)
             },
             MatchType::ElementTap => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementTap(element)
             },
             MatchType::ElementClear => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementClear(element)
             },
             MatchType::ElementSendKeys => {
-                let element = WebElement::new(params.name("elementId").to_string());
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
                 let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ElementSendKeys(element, parameters)
             },
@@ -212,16 +252,13 @@ impl WebDriverMessage {
     }
 
     fn get_session_id(params: &Captures) -> Option<String> {
-        match params.name("sessionId") {
-            "" => None,
-            x => Some(x.to_string())
-        }
+        params.name("sessionId").map(|x| x.to_string())
     }
 }
 
 impl ToJson for WebDriverMessage {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         let parameters = match self.command {
             WebDriverCommand::NewSession |
             WebDriverCommand::DeleteSession | WebDriverCommand::GetCurrentUrl |
@@ -256,12 +293,12 @@ impl ToJson for WebDriverMessage {
         if parameters.is_some() {
             data.insert("parameters".to_string(), parameters.unwrap());
         }
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
 trait Parameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<Self>;
+    fn from_json(body: &Json) -> WebDriverResult<Self>;
 }
 
 #[deriving(PartialEq)]
@@ -270,7 +307,7 @@ pub struct GetParameters {
 }
 
 impl Parameters for GetParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<GetParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<GetParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
                             "Message body was not an object");
         let url = try_opt!(
@@ -286,10 +323,10 @@ impl Parameters for GetParameters {
 }
 
 impl ToJson for GetParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("url".to_string(), self.url.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -300,7 +337,7 @@ pub struct TimeoutsParameters {
 }
 
 impl Parameters for TimeoutsParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<TimeoutsParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<TimeoutsParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
                             "Message body was not an object");
         let type_ = try_opt!(
@@ -324,11 +361,11 @@ impl Parameters for TimeoutsParameters {
 }
 
 impl ToJson for TimeoutsParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("type".to_string(), self.type_.to_json());
         data.insert("ms".to_string(), self.ms.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -339,7 +376,7 @@ pub struct WindowSizeParameters {
 }
 
 impl Parameters for WindowSizeParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<WindowSizeParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<WindowSizeParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
                             "Message body was not an object");
         let height = try_opt!(
@@ -362,11 +399,11 @@ impl Parameters for WindowSizeParameters {
 }
 
 impl ToJson for WindowSizeParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("width".to_string(), self.width.to_json());
         data.insert("height".to_string(), self.height.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -376,7 +413,7 @@ pub struct SwitchToWindowParameters {
 }
 
 impl Parameters for SwitchToWindowParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<SwitchToWindowParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<SwitchToWindowParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
                             "Message body was not an object");
         let handle = try_opt!(
@@ -392,10 +429,10 @@ impl Parameters for SwitchToWindowParameters {
 }
 
 impl ToJson for SwitchToWindowParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("handle".to_string(), self.handle.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -406,7 +443,7 @@ pub struct LocatorParameters {
 }
 
 impl Parameters for LocatorParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<LocatorParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<LocatorParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
                             "Message body was not an object");
 
@@ -420,7 +457,7 @@ impl Parameters for LocatorParameters {
                      ErrorStatus::InvalidArgument,
                      "Missing 'using' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "Could not convert using to string").into_string();
+            "Could not convert using to string").to_string();
 
         return Ok(LocatorParameters {
             using: using,
@@ -430,11 +467,11 @@ impl Parameters for LocatorParameters {
 }
 
 impl ToJson for LocatorParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("using".to_string(), self.using.to_json());
         data.insert("value".to_string(), self.value.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -444,7 +481,7 @@ pub struct SwitchToFrameParameters {
 }
 
 impl Parameters for SwitchToFrameParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<SwitchToFrameParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<SwitchToFrameParameters> {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::UnknownError,
                             "Message body was not an object");
@@ -459,10 +496,10 @@ impl Parameters for SwitchToFrameParameters {
 }
 
 impl ToJson for SwitchToFrameParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("id".to_string(), self.id.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -472,7 +509,7 @@ pub struct SendKeysParameters {
 }
 
 impl Parameters for SendKeysParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<SendKeysParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<SendKeysParameters> {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
@@ -480,7 +517,7 @@ impl Parameters for SendKeysParameters {
                                       ErrorStatus::InvalidArgument,
                                       "Missing 'value' parameter").as_string(),
                              ErrorStatus::InvalidArgument,
-                             "'value' not a string").into_string();
+                             "'value' not a string").to_string();
 
         Ok(SendKeysParameters {
             value: value
@@ -489,21 +526,21 @@ impl Parameters for SendKeysParameters {
 }
 
 impl ToJson for SendKeysParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("value".to_string(), self.value.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
 #[deriving(PartialEq)]
 pub struct JavascriptCommandParameters {
     script: String,
-    args: Nullable<Vec<json::Json>>
+    args: Nullable<Vec<Json>>
 }
 
 impl Parameters for JavascriptCommandParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<JavascriptCommandParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<JavascriptCommandParameters> {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
@@ -535,15 +572,15 @@ impl Parameters for JavascriptCommandParameters {
 }
 
 impl ToJson for JavascriptCommandParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         //TODO: Wrap script so that it becomes marionette-compatible
         data.insert("script".to_string(), self.script.to_json());
         data.insert("args".to_string(), self.args.to_json());
         data.insert("newSandbox".to_string(), false.to_json());
         data.insert("specialPowers".to_string(), false.to_json());
-        data.insert("scriptTimeout".to_string(), json::Json::Null);
-        json::Object(data)
+        data.insert("scriptTimeout".to_string(), Json::Null);
+        Json::Object(data)
     }
 }
 
@@ -553,7 +590,7 @@ pub struct GetCookieParameters {
 }
 
 impl Parameters for GetCookieParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<GetCookieParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<GetCookieParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let name_json = try_opt!(data.get("name"),
@@ -564,7 +601,7 @@ impl Parameters for GetCookieParameters {
             |x| {
                 Ok(try_opt!(x.as_string(),
                             ErrorStatus::InvalidArgument,
-                            "Failed to convert name to String").into_string())
+                            "Failed to convert name to String").to_string())
             }));
         return Ok(GetCookieParameters {
             name: name
@@ -573,10 +610,10 @@ impl Parameters for GetCookieParameters {
 }
 
 impl ToJson for GetCookieParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("name".to_string(), self.name.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -593,7 +630,7 @@ pub struct AddCookieParameters {
 }
 
 impl Parameters for AddCookieParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<AddCookieParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<AddCookieParameters> {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
@@ -602,14 +639,14 @@ impl Parameters for AddCookieParameters {
                      ErrorStatus::InvalidArgument,
                      "Missing 'name' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "'name' is not a string").into_string();
+            "'name' is not a string").to_string();
 
         let value = try_opt!(
             try_opt!(data.get("value"),
                      ErrorStatus::InvalidArgument,
                      "Missing 'value' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "'value' is not a string").into_string();
+            "'value' is not a string").to_string();
 
         let path = match data.get("path") {
             Some(path_json) => {
@@ -618,7 +655,7 @@ impl Parameters for AddCookieParameters {
                     |x| {
                         Ok(try_opt!(x.as_string(),
                                     ErrorStatus::InvalidArgument,
-                                    "Failed to convert path to String").into_string())
+                                    "Failed to convert path to String").to_string())
                     }))
             },
             None => Nullable::Null
@@ -631,7 +668,7 @@ impl Parameters for AddCookieParameters {
                     |x| {
                         Ok(try_opt!(x.as_string(),
                                     ErrorStatus::InvalidArgument,
-                                    "Failed to convert domain to String").into_string())
+                                    "Failed to convert domain to String").to_string())
                     }))
             },
             None => Nullable::Null
@@ -692,8 +729,8 @@ impl Parameters for AddCookieParameters {
 }
 
 impl ToJson for AddCookieParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("name".to_string(), self.name.to_json());
         data.insert("value".to_string(), self.value.to_json());
         data.insert("path".to_string(), self.path.to_json());
@@ -702,7 +739,7 @@ impl ToJson for AddCookieParameters {
         data.insert("maxAge".to_string(), self.maxAge.to_json());
         data.insert("secure".to_string(), self.secure.to_json());
         data.insert("httpOnly".to_string(), self.httpOnly.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -712,7 +749,7 @@ pub struct SendAlertTextParameters {
 }
 
 impl Parameters for SendAlertTextParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<SendAlertTextParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<SendAlertTextParameters> {
         let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let keys = try_opt!(
@@ -720,7 +757,7 @@ impl Parameters for SendAlertTextParameters {
                      ErrorStatus::InvalidArgument,
                      "Missing 'handle' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "'keysToSend' not a string").into_string();
+            "'keysToSend' not a string").to_string();
         return Ok(SendAlertTextParameters {
             keysToSend: keys
         })
@@ -728,10 +765,10 @@ impl Parameters for SendAlertTextParameters {
 }
 
 impl ToJson for SendAlertTextParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("keysToSend".to_string(), self.keysToSend.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -741,7 +778,7 @@ pub struct TakeScreenshotParameters {
 }
 
 impl Parameters for TakeScreenshotParameters {
-    fn from_json(body: &json::Json) -> WebDriverResult<TakeScreenshotParameters> {
+    fn from_json(body: &Json) -> WebDriverResult<TakeScreenshotParameters> {
         let data = try_opt!(body.as_object(),
                             ErrorStatus::InvalidArgument,
                             "Message body was not an object");
@@ -761,9 +798,9 @@ impl Parameters for TakeScreenshotParameters {
 }
 
 impl ToJson for TakeScreenshotParameters {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("element".to_string(), self.element.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
