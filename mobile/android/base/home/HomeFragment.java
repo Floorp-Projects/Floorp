@@ -17,8 +17,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
@@ -326,7 +326,6 @@ public abstract class HomeFragment extends Fragment {
         private final String mUrl;
         private final RemoveItemType mType;
         private final int mPosition;
-        private final BrowserDB mDB;
 
         /**
          * Remove bookmark/history/reading list type item by url, and also unpin the
@@ -339,7 +338,6 @@ public abstract class HomeFragment extends Fragment {
             mUrl = url;
             mType = type;
             mPosition = position;
-            mDB = GeckoProfile.get(context).getDB();
         }
 
         @Override
@@ -347,23 +345,23 @@ public abstract class HomeFragment extends Fragment {
             ContentResolver cr = mContext.getContentResolver();
 
             if (mPosition > -1) {
-                mDB.unpinSite(cr, mPosition);
-                if (mDB.hideSuggestedSite(mUrl)) {
+                BrowserDB.unpinSite(cr, mPosition);
+                if (BrowserDB.hideSuggestedSite(mUrl)) {
                     cr.notifyChange(SuggestedSites.CONTENT_URI, null);
                 }
             }
 
             switch(mType) {
                 case BOOKMARKS:
-                    mDB.removeBookmarksWithURL(cr, mUrl);
+                    BrowserDB.removeBookmarksWithURL(cr, mUrl);
                     break;
 
                 case HISTORY:
-                    mDB.removeHistoryEntry(cr, mUrl);
+                    BrowserDB.removeHistoryEntry(cr, mUrl);
                     break;
 
                 case READING_LIST:
-                    mDB.removeReadingListItemWithURL(cr, mUrl);
+                    BrowserDB.removeReadingListItemWithURL(cr, mUrl);
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
                     break;
 

@@ -13,7 +13,6 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -192,17 +191,15 @@ public class HistoryPanel extends HomeFragment {
     private static class HistoryCursorLoader extends SimpleCursorLoader {
         // Max number of history results
         private static final int HISTORY_LIMIT = 100;
-        private final BrowserDB mDB;
 
         public HistoryCursorLoader(Context context) {
             super(context);
-            mDB = GeckoProfile.get(context).getDB();
         }
 
         @Override
         public Cursor loadCursor() {
             final ContentResolver cr = getContext().getContentResolver();
-            return mDB.getRecentHistory(cr, HISTORY_LIMIT);
+            return BrowserDB.getRecentHistory(cr, HISTORY_LIMIT);
         }
     }
 

@@ -29,7 +29,6 @@ public class testClearPrivateData extends PixelTest {
         String blank1 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         String blank2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
-
         inputAndLoadUrl(blank1);
         verifyUrlBarTitle(blank1);
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
@@ -61,7 +60,6 @@ public class testClearPrivateData extends PixelTest {
         String shareStrings[] = {"Share your location with", "Share", "Don't share", "There are no settings to clear"};
         String titleGeolocation = StringHelper.ROBOCOP_GEOLOCATION_TITLE;
         String url = getAbsoluteUrl(StringHelper.ROBOCOP_GEOLOCATION_URL);
-
         loadCheckDismiss(shareStrings[1], url, shareStrings[0]);
         checkOption(shareStrings[1], "Clear");
         checkOption(shareStrings[3], "Cancel");
@@ -74,7 +72,6 @@ public class testClearPrivateData extends PixelTest {
         String passwordStrings[] = {"Save password", "Save", "Don't save"};
         String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
         String loginUrl = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_URL);
-
         loadCheckDismiss(passwordStrings[1], loginUrl, passwordStrings[0]);
         checkOption(passwordStrings[1], "Clear");
         loadCheckDismiss(passwordStrings[2], loginUrl, passwordStrings[0]);
@@ -113,7 +110,6 @@ public class testClearPrivateData extends PixelTest {
             selectMenuItem(StringHelper.PAGE_LABEL);
             mAsserter.ok(waitForText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the submenu to open", "Submenu was opened");
         }
-
         mSolo.clickOnText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]);
         mAsserter.ok(waitForText(option), "Verify that the option: " + option + " is in the list", "The option is in the list. There are settings to clear");
         mSolo.clickOnButton(button);

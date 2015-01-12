@@ -18,9 +18,9 @@ import java.util.Locale;
 import java.util.Vector;
 
 import android.support.v4.app.Fragment;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -30,8 +30,8 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.Favicons;
@@ -93,7 +93,6 @@ import org.mozilla.gecko.widget.GeckoActionProvider;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -615,8 +614,7 @@ public class BrowserApp extends GeckoApp
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
-        final BrowserDB db = getProfile().getDB();
-        db.setSuggestedSites(suggestedSites);
+        BrowserDB.setSuggestedSites(suggestedSites);
 
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
@@ -1513,13 +1511,16 @@ public class BrowserApp extends GeckoApp
             }
 
         } else if ("Telemetry:Gather".equals(event)) {
-            final BrowserDB db = getProfile().getDB();
-            final ContentResolver cr = getContentResolver();
-            Telemetry.addToHistogram("PLACES_PAGES_COUNT", db.getCount(cr, "history"));
-            Telemetry.addToHistogram("PLACES_BOOKMARKS_COUNT", db.getCount(cr, "bookmarks"));
-            Telemetry.addToHistogram("FENNEC_FAVICONS_COUNT", db.getCount(cr, "favicons"));
-            Telemetry.addToHistogram("FENNEC_THUMBNAILS_COUNT", db.getCount(cr, "thumbnails"));
-            Telemetry.addToHistogram("FENNEC_READING_LIST_COUNT", db.getCount(getContentResolver(), "readinglist"));
+            Telemetry.addToHistogram("PLACES_PAGES_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "history"));
+            Telemetry.addToHistogram("PLACES_BOOKMARKS_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "bookmarks"));
+            Telemetry.addToHistogram("FENNEC_FAVICONS_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "favicons"));
+            Telemetry.addToHistogram("FENNEC_THUMBNAILS_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "thumbnails"));
+            Telemetry.addToHistogram("FENNEC_READING_LIST_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "readinglist"));
             Telemetry.addToHistogram("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
             if (Versions.feature16Plus) {
                 Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
@@ -2013,7 +2014,6 @@ public class BrowserApp extends GeckoApp
         }
 
         // Otherwise, check for a bookmark keyword.
-        final BrowserDB db = getProfile().getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -2029,7 +2029,7 @@ public class BrowserApp extends GeckoApp
                     keywordSearch = url.substring(index + 1);
                 }
 
-                final String keywordUrl = db.getUrlForKeyword(getContentResolver(), keyword);
+                final String keywordUrl = BrowserDB.getUrlForKeyword(getContentResolver(), keyword);
 
                 // If there isn't a bookmark keyword, load the url. This may result in a query
                 // using the default search engine.
@@ -2079,22 +2079,17 @@ public class BrowserApp extends GeckoApp
      * @param query
      *        a search query to store. We won't store empty queries.
      */
-    private void storeSearchQuery(final String query) {
+    private void storeSearchQuery(String query) {
         if (TextUtils.isEmpty(query)) {
             return;
         }
 
-        final GeckoProfile profile = getProfile();
-        // Don't bother storing search queries in guest mode
-        if (profile.inGuestMode()) {
-            return;
-        }
-
-        final BrowserDB db = profile.getDB();
+        final ContentValues values = new ContentValues();
+        values.put(SearchHistory.QUERY, query);
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                db.getSearches().insert(getContentResolver(), query);
+                getContentResolver().insert(SearchHistory.CONTENT_URI, values);
             }
         });
     }
@@ -3143,23 +3138,22 @@ public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl(final EventCallback callback) {
-        final BrowserDB db = getProfile().getDB();
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground() {
                 // Get the most recent URL stored in browser history.
-                final Cursor c = db.getRecentHistory(getContentResolver(), 1);
-                if (c == null) {
-                    return "";
-                }
+                String url = "";
+                Cursor c = null;
                 try {
+                    c = BrowserDB.getRecentHistory(getContentResolver(), 1);
                     if (c.moveToFirst()) {
-                        return c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                        url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
                     }
-                    return "";
                 } finally {
-                    c.close();
+                    if (c != null)
+                        c.close();
                 }
+                return url;
             }
 
             @Override
@@ -3253,20 +3247,6 @@ public class BrowserApp extends GeckoApp
     @Override
     protected String getDefaultProfileName() throws NoMozillaDirectoryException {
         return GeckoProfile.getDefaultProfileName(this);
-    }
-
-    // We want a real BrowserDB.
-    @Override
-    protected BrowserDB.Factory getBrowserDBFactory() {
-        return new BrowserDB.Factory() {
-            @Override
-            public BrowserDB get(String profileName, File profileDir) {
-                // Note that we don't use the profile directory -- we
-                // send operations to the ContentProvider, which does
-                // its own thing.
-                return new LocalBrowserDB(profileName);
-            }
-        };
     }
 
     /**
