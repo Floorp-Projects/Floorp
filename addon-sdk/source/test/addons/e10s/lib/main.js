@@ -11,10 +11,6 @@ const { version, platform } = require('sdk/system');
 const { when } = require('sdk/system/unload');
 const tabs = require('sdk/tabs');
 
-const SKIPPING_TESTS = {
-  "test skip": (assert) => assert.pass("nothing to test here")
-};
-
 exports.testTabIsRemote = function(assert, done) {
   const url = 'data:text/html,test-tab-is-remote';
   let tab = openTab(getMostRecentBrowserWindow(), url);
@@ -54,7 +50,7 @@ function replaceWindow(remote) {
 
 // bug 1054482 - e10s test addons time out on linux
 if (platform === 'linux') {
-  module.exports = SKIPPING_TESTS;
+  module.exports = {};
   require('sdk/test/runner').runTestsFromModule(module);
 }
 else {

@@ -412,8 +412,7 @@ assert.equal(failures.length, 0, failures.join(''));
 if (isWindows) {
   // windows
   assert.equal(path.sep, '\\');
-}
-else {
+} else {
   // posix
   assert.equal(path.sep, '/');
 }
@@ -422,12 +421,11 @@ else {
 if (isWindows) {
   // windows
   assert.equal(path.delimiter, ';');
-}
-else {
+} else {
   // posix
   assert.equal(path.delimiter, ':');
 }
 
 };
 
-require('sdk/test').run(exports);
+require('test').run(exports);

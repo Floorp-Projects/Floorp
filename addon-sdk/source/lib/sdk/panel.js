@@ -15,10 +15,12 @@ module.metadata = {
 
 const { Ci } = require("chrome");
 const { setTimeout } = require('./timers');
+const { isPrivateBrowsingSupported } = require('./self');
+const { isWindowPBSupported } = require('./private-browsing/utils');
 const { Class } = require("./core/heritage");
 const { merge } = require("./util/object");
 const { WorkerHost } = require("./content/utils");
-const { Worker } = require("./deprecated/sync-worker");
+const { Worker } = require("./content/worker");
 const { Disposable } = require("./core/disposable");
 const { WeakReference } = require('./core/reference');
 const { contract: loaderContract } = require("./content/loader");
@@ -153,7 +155,7 @@ const Panel = Class({
 
     // Load panel content.
     domPanel.setURL(view, model.contentURL);
-
+    
     // Allow context menu
     domPanel.allowContextMenu(view, model.contextMenu);
 
@@ -193,7 +195,7 @@ const Panel = Class({
 
   /* Public API: Panel.position */
   get position() modelFor(this).position,
-
+  
   /* Public API: Panel.contextMenu */
   get contextMenu() modelFor(this).contextMenu,
   set contextMenu(allow) {
@@ -201,7 +203,7 @@ const Panel = Class({
     model.contextMenu = panelContract({ contextMenu: allow }).contextMenu;
     domPanel.allowContextMenu(viewFor(this), model.contextMenu);
   },
-
+    
   get contentURL() modelFor(this).contentURL,
   set contentURL(value) {
     let model = modelFor(this);

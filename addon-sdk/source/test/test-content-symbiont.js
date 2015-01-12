@@ -182,4 +182,4 @@ exports["test:content/content deprecation"] = function(assert) {
   setPref(DEPRECATE_PREF, pref);
 }
 
-require("sdk/test").run(exports);
+require("test").run(exports);

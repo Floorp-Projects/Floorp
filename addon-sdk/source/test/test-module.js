@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 /** Disabled because of Bug 672199
@@ -33,4 +34,4 @@ exports["test can't override exported property"] = function(assert) {
   assert.equal(hotkeys.Hotkey, Hotkey, "exports can't be overriden");
 };
 
-require("sdk/test").run(exports);
+require("test").run(exports);
