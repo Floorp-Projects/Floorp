@@ -122,11 +122,29 @@ MediaSourceReader::RequestAudioData()
     return p;
   }
   mAudioIsSeeking = false;
-  SwitchAudioReader(mLastAudioTime);
+  if (SwitchAudioReader(mLastAudioTime)) {
+    mAudioReader->Seek(mLastAudioTime, 0, 0, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::RequestAudioDataComplete,
+                       &MediaSourceReader::RequestAudioDataFailed);
+  } else {
+    RequestAudioDataComplete(0);
+  }
+  return p;
+}
+
+void
+MediaSourceReader::RequestAudioDataComplete(int64_t aTime)
+{
   mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
                                          &MediaSourceReader::OnAudioDecoded,
                                          &MediaSourceReader::OnAudioNotDecoded);
-  return p;
+}
+
+void
+MediaSourceReader::RequestAudioDataFailed(nsresult aResult)
+{
+  OnAudioNotDecoded(DECODE_ERROR);
 }
 
 void
@@ -202,9 +220,10 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
   if (SwitchAudioReader(mLastAudioTime, EOS_FUZZ_US)) {
-    mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
-                                           &MediaSourceReader::OnAudioDecoded,
-                                           &MediaSourceReader::OnAudioNotDecoded);
+    mAudioReader->Seek(mLastAudioTime, 0, 0, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::RequestAudioDataComplete,
+                       &MediaSourceReader::RequestAudioDataFailed);
     return;
   }
 
@@ -237,12 +256,32 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropVideoBeforeThreshold = true;
   }
   mVideoIsSeeking = false;
-  SwitchVideoReader(mLastVideoTime);
+  if (SwitchVideoReader(mLastVideoTime)) {
+    mVideoReader->Seek(mLastVideoTime, 0, 0, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::RequestVideoDataComplete,
+                       &MediaSourceReader::RequestVideoDataFailed);
+  } else {
+    mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+  }
 
-  mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+  return p;
+}
+
+void
+MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
+{
+  mVideoReader->RequestVideoData(false, 0)
               ->Then(GetTaskQueue(), __func__, this,
                      &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
-  return p;
+}
+
+void
+MediaSourceReader::RequestVideoDataFailed(nsresult aResult)
+{
+  OnVideoNotDecoded(DECODE_ERROR);
 }
 
 void
@@ -292,10 +331,10 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
   if (SwitchVideoReader(mLastVideoTime, EOS_FUZZ_US)) {
-    mVideoReader->RequestVideoData(false, 0)
+    mVideoReader->Seek(mLastVideoTime, 0, 0, 0)
                 ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::OnVideoDecoded,
-                       &MediaSourceReader::OnVideoNotDecoded);
+                       &MediaSourceReader::RequestVideoDataComplete,
+                       &MediaSourceReader::RequestVideoDataFailed);
     return;
   }
 
