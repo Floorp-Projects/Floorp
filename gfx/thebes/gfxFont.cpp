@@ -3454,7 +3454,7 @@ gfxFont::CreateVerticalMetrics()
             // Redistribute space between ascent/descent because we want a
             // centered vertical baseline by default.
             gfxFloat halfExtent = 0.5 * gfxFloat(mFUnitsConvFactor) *
-                (int16_t(vhea->ascender) - int16_t(vhea->descender));
+                (int16_t(vhea->ascender) + std::abs(int16_t(vhea->descender)));
             metrics->maxAscent = halfExtent;
             metrics->maxDescent = halfExtent;
             SET_SIGNED(externalLeading, vhea->lineGap);
