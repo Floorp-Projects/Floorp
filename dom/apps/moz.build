@@ -34,7 +34,6 @@ EXTRA_JS_MODULES += [
     'AppsServiceChild.jsm',
     'FreeSpaceWatcher.jsm',
     'InterAppCommService.jsm',
-    'Langpacks.jsm',
     'OfflineCacheInstaller.jsm',
     'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',

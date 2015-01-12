@@ -20,9 +20,7 @@
 
 var props = {
   checkInstalled: "function",
-  getAdditionalLanguages: "function",
   getInstalled: "function",
-  getLocalizationResource: "function",
   getSelf: "function",
   install: "function",
   installPackage: "function",

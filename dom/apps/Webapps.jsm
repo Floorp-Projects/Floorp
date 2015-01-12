@@ -81,9 +81,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "ScriptPreloader",
                                   "resource://gre/modules/ScriptPreloader.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Langpacks",
-                                  "resource://gre/modules/Langpacks.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "TrustedHostedAppsUtils",
                                   "resource://gre/modules/TrustedHostedAppsUtils.jsm");
 
@@ -246,9 +243,6 @@ this.DOMApplicationRegistry = {
                                       ["webapps", "webapps.json"], true).path;
 
     this.loadAndUpdateApps();
-
-    Langpacks.registerRegistryFunctions(this.broadcastMessage.bind(this),
-                                        this._appIdForManifestURL.bind(this));
   },
 
   // loads the current registry, that could be empty on first run.
@@ -430,7 +424,6 @@ this.DOMApplicationRegistry = {
         }
         app.kind = this.appKind(app, aResult.manifest);
         UserCustomizations.register(aResult.manifest, app);
-        Langpacks.register(app, aResult.manifest);
       });
 
       // Nothing else to do but notifying we're ready.
@@ -1156,7 +1149,6 @@ this.DOMApplicationRegistry = {
         this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
         UserCustomizations.register(manifest, app);
-        Langpacks.register(app, manifest);
       });
       this._safeToClone.resolve();
       this._registerActivitiesForApps(appsToRegister, aRunUpdate);
@@ -1528,8 +1520,6 @@ this.DOMApplicationRegistry = {
     this.safeToClone.then( () => {
       for (let id in this.webapps) {
         tmp.push({ id: id });
-        this.webapps[id].additionalLanguages =
-          Langpacks.getAdditionalLanguages(this.webapps[id].manifestURL).langs;
       }
       this._readManifests(tmp).then(
         function(manifests) {
@@ -1974,10 +1964,6 @@ this.DOMApplicationRegistry = {
 
     // Update the asm.js scripts we need to compile.
     yield ScriptPreloader.preload(app, newManifest);
-
-    // Update langpack information.
-    Langpacks.register(app, newManifest);
-
     yield this._saveApps();
     // Update the handlers and permissions for this app.
     this.updateAppHandlers(oldManifest, newManifest, app);
@@ -2095,13 +2081,11 @@ this.DOMApplicationRegistry = {
       this.notifyAppsRegistryReady();
     }
 
-    // Update user customizations and langpacks.
+    // Update user customizations.
     if (aOldManifest) {
       UserCustomizations.unregister(aOldManifest, aApp);
-      Langpacks.unregister(aApp, aOldManifest);
     }
     UserCustomizations.register(aNewManifest, aApp);
-    Langpacks.register(aApp, aNewManifest);
   },
 
   checkForUpdate: function(aData, aMm) {
@@ -3201,9 +3185,6 @@ this.DOMApplicationRegistry = {
     // Check if we have asm.js code to preload for this application.
     yield ScriptPreloader.preload(aNewApp, aManifest);
 
-    // Update langpack information.
-    yield Langpacks.register(aNewApp, aManifest);
-
     this.broadcastMessage("Webapps:FireEvent", {
       eventType: ["downloadsuccess", "downloadapplied"],
       manifestURL: aNewApp.manifestURL
@@ -4113,7 +4094,6 @@ this.DOMApplicationRegistry = {
       this._unregisterActivities(aApp.manifest, aApp);
     }
     UserCustomizations.unregister(aApp.manifest, aApp);
-    Langpacks.unregister(aApp, aApp.manifest);
 
     let dir = this._getAppDir(id);
     try {
