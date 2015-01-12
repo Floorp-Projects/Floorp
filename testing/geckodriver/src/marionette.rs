@@ -1,5 +1,5 @@
-use serialize::json;
-use serialize::json::{Json, ToJson};
+use rustc_serialize::json;
+use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::io::{IoResult, TcpStream, IoError};
 
@@ -29,7 +29,7 @@ pub struct MarionetteSession {
 }
 
 fn object_from_json(data: &str) -> WebDriverResult<BTreeMap<String, Json>> {
-    Ok(try_opt!(try!(json:: from_str(data)).as_object(),
+    Ok(try_opt!(try!(Json::from_str(data)).as_object(),
                 ErrorStatus::UnknownError,
                 "Expected a json object").clone())
 }

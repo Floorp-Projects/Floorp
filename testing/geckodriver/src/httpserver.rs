@@ -82,7 +82,9 @@ impl Dispatcher {
                         },
                         _ => {}
                     }
-                    resp_chan.send(resp);
+                    if resp_chan.send(resp).is_err() {
+                        error!("Sending response to the main thread failed");
+                    };
                 },
                 Ok(DispatchMessage::Quit) => {
                     break;
