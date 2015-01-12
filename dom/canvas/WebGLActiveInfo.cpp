@@ -11,11 +11,10 @@
 
 namespace mozilla {
 
-bool
-WebGLActiveInfo::WrapObject(JSContext* aCx,
-                            JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+WebGLActiveInfo::WrapObject(JSContext* cx)
 {
-    return dom::WebGLActiveInfoBinding::Wrap(aCx, this, aReflector);
+    return dom::WebGLActiveInfoBinding::Wrap(cx, this);
 }
 
 } // namespace mozilla

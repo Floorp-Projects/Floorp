@@ -247,10 +247,10 @@ IDBKeyRange::DropJSObjects()
   mozilla::DropJSObjects(this);
 }
 
-bool
-IDBKeyRange::WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+IDBKeyRange::WrapObject(JSContext* aCx)
 {
-  return IDBKeyRangeBinding::Wrap(aCx, this, aReflector);
+  return IDBKeyRangeBinding::Wrap(aCx, this);
 }
 
 void

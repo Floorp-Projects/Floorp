@@ -69,7 +69,7 @@ public:
     }
     // The XPCOM Detach() is fine for our purposes
 
-    bool WrapObject(JSContext *cx, JS::MutableHandle<JSObject*> aReflector);
+    JSObject* WrapObject(JSContext *cx);
 
 private:
     virtual ~NodeIterator();

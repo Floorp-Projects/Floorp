@@ -46,10 +46,10 @@ URL::URL(nsIURI* aURI)
 {
 }
 
-bool
-URL::WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+URL::WrapObject(JSContext* aCx)
 {
-  return URLBinding::Wrap(aCx, this, aReflector);
+  return URLBinding::Wrap(aCx, this);
 }
 
 /* static */ already_AddRefed<URL>

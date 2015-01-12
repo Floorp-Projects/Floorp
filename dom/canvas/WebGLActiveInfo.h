@@ -35,7 +35,7 @@ public:
         retval = mName;
     }
 
-    bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+    JSObject* WrapObject(JSContext* cx);
 
    NS_INLINE_DECL_REFCOUNTING(WebGLActiveInfo)
 

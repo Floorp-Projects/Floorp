@@ -572,10 +572,10 @@ URL::~URL()
   }
 }
 
-bool
-URL::WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+URL::WrapObject(JSContext* aCx)
 {
-  return URLBinding_workers::Wrap(aCx, this, aReflector);
+  return URLBinding_workers::Wrap(aCx, this);
 }
 
 void

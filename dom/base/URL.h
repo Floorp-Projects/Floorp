@@ -43,8 +43,8 @@ public:
   explicit URL(nsIURI* aURI);
 
   // WebIDL methods
-  bool
-  WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  JSObject*
+  WrapObject(JSContext* aCx);
 
   static already_AddRefed<URL>
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,

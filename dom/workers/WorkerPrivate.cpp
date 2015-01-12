@@ -6253,10 +6253,8 @@ WorkerPrivate::CreateGlobalScope(JSContext* aCx)
     globalScope = new DedicatedWorkerGlobalScope(this);
   }
 
-  JS::Rooted<JSObject*> global(aCx);
-  if (!globalScope->WrapGlobalObject(aCx, &global)) {
-    return nullptr;
-  }
+  JS::Rooted<JSObject*> global(aCx, globalScope->WrapGlobalObject(aCx));
+  NS_ENSURE_TRUE(global, nullptr);
 
   JSAutoCompartment ac(aCx, global);
 

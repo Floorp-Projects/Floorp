@@ -108,10 +108,10 @@ ImageData::DropData()
   }
 }
 
-bool
-ImageData::WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+ImageData::WrapObject(JSContext* cx)
 {
-  return ImageDataBinding::Wrap(aCx, this, aReflector);
+  return ImageDataBinding::Wrap(cx, this);
 }
 
 } // namespace dom

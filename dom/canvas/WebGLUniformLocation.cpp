@@ -12,11 +12,10 @@
 
 namespace mozilla {
 
-bool
-WebGLUniformLocation::WrapObject(JSContext* aCx,
-                                 JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+WebGLUniformLocation::WrapObject(JSContext* cx)
 {
-    return dom::WebGLUniformLocationBinding::Wrap(aCx, this, aReflector);
+    return dom::WebGLUniformLocationBinding::Wrap(cx, this);
 }
 
 WebGLUniformLocation::WebGLUniformLocation(WebGLContext* context,
