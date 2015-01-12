@@ -90,11 +90,11 @@ public class GeckoApplication extends Application
             GeckoAppShell.sendEventToGecko(GeckoEvent.createAppBackgroundingEvent());
             mPausedGecko = true;
 
-            final BrowserDB db = GeckoProfile.get(this).getDB();
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    db.expireHistory(getContentResolver(), BrowserContract.ExpirePriority.NORMAL);
+                    BrowserDB.expireHistory(getContentResolver(),
+                                            BrowserContract.ExpirePriority.NORMAL);
                 }
             });
         }

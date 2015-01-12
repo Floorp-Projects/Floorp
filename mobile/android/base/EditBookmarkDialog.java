@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -141,11 +141,10 @@ public class EditBookmarkDialog {
      */
     public void show(final String url) {
         final ContentResolver cr = mContext.getContentResolver();
-        final BrowserDB db = GeckoProfile.get(mContext).getDB();
         (new UIAsyncTask.WithoutParams<Bookmark>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Bookmark doInBackground() {
-                final Cursor cursor = db.getBookmarkForUrl(cr, url);
+                final Cursor cursor = BrowserDB.getBookmarkForUrl(cr, url);
                 if (cursor == null) {
                     return null;
                 }
@@ -200,7 +199,6 @@ public class EditBookmarkDialog {
         locationText.setText(url);
         keywordText.setText(keyword);
 
-        final BrowserDB db = GeckoProfile.get(mContext).getDB();
         editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int whichButton) {
@@ -209,8 +207,7 @@ public class EditBookmarkDialog {
                     public Void doInBackground() {
                         String newUrl = locationText.getText().toString().trim();
                         String newKeyword = keywordText.getText().toString().trim();
-
-                        db.updateBookmark(context.getContentResolver(), id, newUrl, nameText.getText().toString(), newKeyword);
+                        BrowserDB.updateBookmark(context.getContentResolver(), id, newUrl, nameText.getText().toString(), newKeyword);
                         return null;
                     }
 

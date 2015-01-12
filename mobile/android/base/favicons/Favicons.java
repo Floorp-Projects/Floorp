@@ -299,13 +299,11 @@ public class Favicons {
      * Helper method to determine the URL of the Favicon image for a given page URL by querying the
      * history database. Should only be called from the background thread - does database access.
      *
-     * @param db The LocalBrowserDB to use when accessing favicons.
-     * @param cr A ContentResolver to run queries through.
      * @param pageURL The URL of a webpage with a Favicon.
      * @return The URL of the Favicon used by that webpage, according to either the History database
      *         or a somewhat educated guess.
      */
-    public static String getFaviconURLForPageURL(final BrowserDB db, final ContentResolver cr, final String pageURL) {
+    public static String getFaviconURLForPageURL(Context context, String pageURL) {
         // Attempt to determine the Favicon URL from the Tabs datastructure. Can dodge having to use
         // the database sometimes by doing this.
         String targetURL;
@@ -318,7 +316,8 @@ public class Favicons {
         }
 
         // Try to find the faviconURL in the history and/or bookmarks table.
-        targetURL = db.getFaviconURLFromPageURL(cr, pageURL);
+        final ContentResolver resolver = context.getContentResolver();
+        targetURL = BrowserDB.getFaviconURLFromPageURL(resolver, pageURL);
         if (targetURL != null) {
             return targetURL;
         }
