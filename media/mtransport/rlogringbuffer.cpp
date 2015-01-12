@@ -16,7 +16,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h" // Pinch hitting for <utility> and std::move
 #include "mozilla/Mutex.h"
-#include "mozilla/NullPtr.h"
 #include <vector>
 
 extern "C" {

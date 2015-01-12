@@ -1507,27 +1507,32 @@ void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide, int8_t aVerticalSi
   }
 }
 
-bool nsMenuPopupFrame::ConsumeOutsideClicks()
+ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks()
 {
   // If the popup has explicitly set a consume mode, honor that.
   if (mConsumeRollupEvent != PopupBoxObject::ROLLUP_DEFAULT) {
-    return (mConsumeRollupEvent == PopupBoxObject::ROLLUP_CONSUME);
+    return (mConsumeRollupEvent == PopupBoxObject::ROLLUP_CONSUME) ?
+           ConsumeOutsideClicks_True : ConsumeOutsideClicks_ParentOnly;
   }
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
                             nsGkAtoms::_true, eCaseMatters)) {
-    return true;
+    return ConsumeOutsideClicks_True;
   }
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
                             nsGkAtoms::_false, eCaseMatters)) {
-    return false;
+    return ConsumeOutsideClicks_ParentOnly;
+  }
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
+                            nsGkAtoms::never, eCaseMatters)) {
+    return ConsumeOutsideClicks_Never;
   }
 
   nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
   if (parentContent) {
     dom::NodeInfo *ni = parentContent->NodeInfo();
     if (ni->Equals(nsGkAtoms::menulist, kNameSpaceID_XUL)) {
-      return true;  // Consume outside clicks for combo boxes on all platforms
+      return ConsumeOutsideClicks_True;  // Consume outside clicks for combo boxes on all platforms
     }
 #if defined(XP_WIN)
     // Don't consume outside clicks for menus in Windows
@@ -1540,19 +1545,19 @@ bool nsMenuPopupFrame::ConsumeOutsideClicks()
                                      nsGkAtoms::menu, eCaseMatters) ||
           parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                      nsGkAtoms::menuButton, eCaseMatters)))) {
-      return false;
+      return ConsumeOutsideClicks_Never;
     }
 #endif
     if (ni->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL)) {
       // Don't consume outside clicks for autocomplete widget
       if (parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                      nsGkAtoms::autocomplete, eCaseMatters)) {
-        return false;
+        return ConsumeOutsideClicks_Never;
       }
     }
   }
 
-  return true;
+  return ConsumeOutsideClicks_True;
 }
 
 // XXXroc this is megalame. Fossicking around for a frame of the right

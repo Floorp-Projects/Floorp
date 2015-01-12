@@ -13,7 +13,15 @@
 
 var counter = 0;
 
-function cors(desc, url) {
+function cors(desc, scheme, subdomain, port) {
+    if (!scheme) {
+        var url = "";
+    } else {
+        if (!port) {
+            port = location.port;
+        }
+        var url = scheme + "://" + (subdomain ? subdomain + "." : "") + location.hostname + ":" + port + dirname(location.pathname)
+    }
     async_test(desc).step(function() {
         var client = new XMLHttpRequest();
         this.count = counter++;
@@ -42,31 +50,14 @@ function cors(desc, url) {
     });
 }
 
-cors("Same domain basic usage", "");
-cors("Cross domain basic usage", CROSSDOMAIN);
-cors("Same domain different port",
-        "http://" + location.hostname + ":" + PORT + dirname(location.pathname));
+cors("Same domain basic usage");
+cors("Cross domain basic usage", "http", "www1");
+cors("Same domain different port", "http", undefined, PORT);
 
-cors("Cross domain different port",
-        "http://" + SUBDOMAIN + "." + location.hostname + ":"
-        + PORT + dirname(location.pathname));
+cors("Cross domain different port", "http", "www1", PORT);
 
-/* Disable HTTPS tests until this is better supported
+cors("Cross domain different protocol", "https", "www1", PORTS);
 
-XXX HTTPS
-
-cors("Same domain different protocol",
-        'https://' + location.host + dirname(location.pathname));
-
-cors("Cross domain different protocol",
-        CROSSDOMAIN.replace("http:", "https:"));
-
-cors("Same domain different protocol different port",
-        "https://" + location.hostname + ":" + PORTS + dirname(location.pathname));
-
-cors("Cross domain different protocol different port",
-        "https://" + SUBDOMAIN + "." + location.hostname + ":"
-        + PORTS + dirname(location.pathname));
-*/
+cors("Same domain different protocol different port", "https", undefined, PORTS);
 
 </script>

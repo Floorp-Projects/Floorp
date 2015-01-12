@@ -42,7 +42,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include "mozilla/NullPtr.h"
 
 gboolean save_to_stdout(const gchar *buf, gsize count,
                         GError **error, gpointer data)

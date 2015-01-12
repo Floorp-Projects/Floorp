@@ -12,7 +12,6 @@
 #ifndef mozilla_AllocPolicy_h
 #define mozilla_AllocPolicy_h
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/TemplateLib.h"
 
 #include <stddef.h>

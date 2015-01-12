@@ -1269,17 +1269,19 @@ nsUrlClassifierDBService::Init()
   return NS_OK;
 }
 
-static void BuildTables(bool aTrackingProtectionEnabled, nsCString &tables)
+void
+nsUrlClassifierDBService::BuildTables(bool aTrackingProtectionEnabled,
+                                      nsCString &tables)
 {
   nsAutoCString malware;
   // LookupURI takes a comma-separated list already.
   Preferences::GetCString(MALWARE_TABLE_PREF, &malware);
-  if (!malware.IsEmpty()) {
+  if (mCheckMalware && !malware.IsEmpty()) {
     tables.Append(malware);
   }
   nsAutoCString phishing;
   Preferences::GetCString(PHISH_TABLE_PREF, &phishing);
-  if (!phishing.IsEmpty()) {
+  if (mCheckPhishing && !phishing.IsEmpty()) {
     tables.Append(',');
     tables.Append(phishing);
   }

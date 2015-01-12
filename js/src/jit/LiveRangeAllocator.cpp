@@ -499,7 +499,7 @@ LiveRangeAllocator<VREG, forLSRA>::init()
     if (!RegisterAllocator::init())
         return false;
 
-    liveIn = mir->allocate<BitSet*>(graph.numBlockIds());
+    liveIn = mir->allocate<BitSet>(graph.numBlockIds());
     if (!liveIn)
         return false;
 
@@ -595,8 +595,8 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         return false;
 
     Vector<MBasicBlock *, 1, SystemAllocPolicy> loopWorkList;
-    BitSet *loopDone = BitSet::New(alloc(), graph.numBlockIds());
-    if (!loopDone)
+    BitSet loopDone(graph.numBlockIds());
+    if (!loopDone.init(alloc()))
         return false;
 
     for (size_t i = graph.numBlocks(); i > 0; i--) {
@@ -606,17 +606,17 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         LBlock *block = graph.getBlock(i - 1);
         MBasicBlock *mblock = block->mir();
 
-        BitSet *live = BitSet::New(alloc(), graph.numVirtualRegisters());
-        if (!live)
+        BitSet &live = liveIn[mblock->id()];
+        new (&live) BitSet(graph.numVirtualRegisters());
+        if (!live.init(alloc()))
             return false;
-        liveIn[mblock->id()] = live;
 
         // Propagate liveIn from our successors to us
         for (size_t i = 0; i < mblock->lastIns()->numSuccessors(); i++) {
             MBasicBlock *successor = mblock->lastIns()->getSuccessor(i);
             // Skip backedges, as we fix them up at the loop header.
             if (mblock->id() < successor->id())
-                live->insertAll(liveIn[successor->id()]);
+                live.insertAll(liveIn[successor->id()]);
         }
 
         // Add successor phis
@@ -626,13 +626,13 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                 LPhi *phi = phiSuccessor->getPhi(j);
                 LAllocation *use = phi->getOperand(mblock->positionInPhiSuccessor());
                 uint32_t reg = use->toUse()->virtualRegister();
-                live->insert(reg);
+                live.insert(reg);
             }
         }
 
         // Variables are assumed alive for the entire block, a define shortens
         // the interval to the point of definition.
-        for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
+        for (BitSet::Iterator liveRegId(live); liveRegId; ++liveRegId) {
             if (!vregs[*liveRegId].getInterval(0)->addRangeAtHead(entryOf(block),
                                                                   exitOf(block).next()))
             {
@@ -715,7 +715,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     if (!interval->addRangeAtHead(from, from.next()))
                         return false;
                 }
-                live->remove(def->virtualRegister());
+                live.remove(def->virtualRegister());
             }
 
             for (size_t i = 0; i < ins->numTemps(); i++) {
@@ -852,7 +852,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                         return false;
                     interval->addUse(new(alloc()) UsePosition(use, to));
 
-                    live->insert(use->virtualRegister());
+                    live.insert(use->virtualRegister());
                 }
             }
         }
@@ -862,8 +862,8 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         // contain any phi outputs.
         for (unsigned int i = 0; i < block->numPhis(); i++) {
             LDefinition *def = block->getPhi(i)->getDef(0);
-            if (live->contains(def->virtualRegister())) {
-                live->remove(def->virtualRegister());
+            if (live.contains(def->virtualRegister())) {
+                live.remove(def->virtualRegister());
             } else {
                 // This is a dead phi, so add a dummy range over all phis. This
                 // can go away if we have an earlier dead code elimination pass.
@@ -888,16 +888,16 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                 CodePosition from = entryOf(loopBlock->lir());
                 CodePosition to = exitOf(loopBlock->lir()).next();
 
-                for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
+                for (BitSet::Iterator liveRegId(live); liveRegId; ++liveRegId) {
                     if (!vregs[*liveRegId].getInterval(0)->addRange(from, to))
                         return false;
                 }
 
                 // Fix up the liveIn set to account for the new interval
-                liveIn[loopBlock->id()]->insertAll(live);
+                liveIn[loopBlock->id()].insertAll(live);
 
                 // Make sure we don't visit this node again
-                loopDone->insert(loopBlock->id());
+                loopDone.insert(loopBlock->id());
 
                 // If this is the loop header, any predecessors are either the
                 // backedge or out of the loop, so skip any predecessors of
@@ -905,7 +905,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                 if (loopBlock != mblock) {
                     for (size_t i = 0; i < loopBlock->numPredecessors(); i++) {
                         MBasicBlock *pred = loopBlock->getPredecessor(i);
-                        if (loopDone->contains(pred->id()))
+                        if (loopDone.contains(pred->id()))
                             continue;
                         if (!loopWorkList.append(pred))
                             return false;
@@ -932,10 +932,10 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             }
 
             // Clear the done set for other loops
-            loopDone->clear();
+            loopDone.clear();
         }
 
-        MOZ_ASSERT_IF(!mblock->numPredecessors(), live->empty());
+        MOZ_ASSERT_IF(!mblock->numPredecessors(), live.empty());
     }
 
     validateVirtualRegisters();

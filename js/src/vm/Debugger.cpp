@@ -3722,35 +3722,48 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "findAllGlobals", args, dbg);
 
+    AutoObjectVector globals(cx);
+
+    {
+        // Accumulate the list of globals before wrapping them, because
+        // wrapping can GC and collect compartments from under us, while
+        // iterating.
+        JS::AutoCheckCannotGC nogc;
+
+        for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
+            if (c->options().invisibleToDebugger())
+                continue;
+
+            c->scheduledForDestruction = false;
+
+            GlobalObject *global = c->maybeGlobal();
+
+            if (cx->runtime()->isSelfHostingGlobal(global))
+                continue;
+
+            if (global) {
+                /*
+                 * We pulled |global| out of nowhere, so it's possible that it was
+                 * marked gray by XPConnect. Since we're now exposing it to JS code,
+                 * we need to mark it black.
+                 */
+                JS::ExposeObjectToActiveJS(global);
+                if (!globals.append(global))
+                    return false;
+            }
+        }
+    }
+
     RootedObject result(cx, NewDenseEmptyArray(cx));
     if (!result)
         return false;
 
-    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-        if (c->options().invisibleToDebugger())
-            continue;
-
-        c->scheduledForDestruction = false;
-
-        GlobalObject *global = c->maybeGlobal();
-
-        if (cx->runtime()->isSelfHostingGlobal(global))
-            continue;
-
-        if (global) {
-            /*
-             * We pulled |global| out of nowhere, so it's possible that it was
-             * marked gray by XPConnect. Since we're now exposing it to JS code,
-             * we need to mark it black.
-             */
-            JS::ExposeObjectToActiveJS(global);
-
-            RootedValue globalValue(cx, ObjectValue(*global));
-            if (!dbg->wrapDebuggeeValue(cx, &globalValue))
-                return false;
-            if (!NewbornArrayPush(cx, result, globalValue))
-                return false;
-        }
+    for (size_t i = 0; i < globals.length(); i++) {
+        RootedValue globalValue(cx, ObjectValue(*globals[i]));
+        if (!dbg->wrapDebuggeeValue(cx, &globalValue))
+            return false;
+        if (!NewbornArrayPush(cx, result, globalValue))
+            return false;
     }
 
     args.rval().setObject(*result);

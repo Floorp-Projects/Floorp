@@ -14,7 +14,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/NullPtr.h"
 
 #include <cmath>
 #include <cstring>

@@ -60,7 +60,6 @@ private:
   void SendTouchEvent(MultiTouchInput& aData);
   void DispatchMouseEvent(MultiTouchInput& aMultiTouch,
                           bool aForwardToChildren);
-  WidgetMouseEvent ToWidgetMouseEvent(const MultiTouchInput& aData, nsIWidget* aWidget) const;
 
   // mTouchQueueLock are used to protect the vector below
   // as it is accessed on the vsync thread and main thread

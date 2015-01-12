@@ -142,21 +142,27 @@ private:
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mTabParent);
         MOZ_ASSERT(mEventTarget);
-        MOZ_ASSERT(mFD);
 
         nsRefPtr<TabParent> tabParent;
         mTabParent.swap(tabParent);
 
         using mozilla::ipc::FileDescriptor;
 
-        FileDescriptor::PlatformHandleType handle =
-            FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
+        FileDescriptor fd;
+        if (mFD) {
+            FileDescriptor::PlatformHandleType handle =
+                FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
+            fd = FileDescriptor(handle);
+        }
 
         // Our TabParent may have been destroyed already.  If so, don't send any
         // fds over, just go back to the IO thread and close them.
         if (!tabParent->IsDestroyed()) {
-          mozilla::unused << tabParent->SendCacheFileDescriptor(mPath,
-                                                                FileDescriptor(handle));
+            mozilla::unused << tabParent->SendCacheFileDescriptor(mPath, fd);
+        }
+
+        if (!mFD) {
+            return;
         }
 
         nsCOMPtr<nsIEventTarget> eventTarget;
@@ -171,7 +177,8 @@ private:
         }
     }
 
-    void OpenFile()
+    // Helper method to avoid gnarly control flow for failures.
+    void OpenFileImpl()
     {
         MOZ_ASSERT(!NS_IsMainThread());
         MOZ_ASSERT(!mFD);
@@ -185,10 +192,21 @@ private:
         NS_ENSURE_SUCCESS_VOID(rv);
 
         mFD = fd;
+    }
+
+    void OpenFile()
+    {
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        OpenFileImpl();
 
         if (NS_FAILED(NS_DispatchToMainThread(this))) {
             NS_WARNING("Failed to dispatch to main thread!");
 
+            // Intentionally leak the runnable (but not the fd) rather
+            // than crash when trying to release a main thread object
+            // off the main thread.
+            mTabParent.forget();
             CloseFile();
         }
     }
@@ -2177,7 +2195,11 @@ TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
                                           ScrollableLayerGuid* aOutTargetGuid,
                                           uint64_t* aOutInputBlockId)
 {
-  if (aEvent.mClass == eWheelEventClass) {
+  if (aEvent.mClass == eWheelEventClass
+#ifdef MOZ_WIDGET_GONK
+      || aEvent.mClass == eTouchEventClass
+#endif
+     ) {
     // Wheel events must be sent to APZ directly from the widget. New APZ-
     // aware events should follow suit and move there as well. However, we
     // do need to inform the child process of the correct target and block
