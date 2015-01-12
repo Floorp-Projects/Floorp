@@ -13,7 +13,8 @@
 #include "nsRubyTextContainerFrame.h"
 #include "nsRubyBaseFrame.h"
 #include "nsRubyTextFrame.h"
-#include "RubyReflowState.h"
+
+#define RTC_ARRAY_SIZE 1
 
 /**
  * Factory function.
