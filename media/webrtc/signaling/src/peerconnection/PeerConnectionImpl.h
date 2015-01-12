@@ -251,7 +251,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 #ifdef MOZILLA_INTERNAL_API
-  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
+  virtual JSObject* WrapObject(JSContext* cx);
 #endif
 
   static already_AddRefed<PeerConnectionImpl>

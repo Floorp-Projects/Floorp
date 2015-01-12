@@ -17,29 +17,38 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-VRFieldOfView*
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRFieldOfView, mParent)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRFieldOfView, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRFieldOfView, Release)
+
+already_AddRefed<VRFieldOfView>
 VRFieldOfView::Constructor(const GlobalObject& aGlobal, const VRFieldOfViewInit& aParams,
                            ErrorResult& aRV)
 {
-  return new VRFieldOfView(aParams.mUpDegrees, aParams.mRightDegrees,
-                           aParams.mDownDegrees, aParams.mLeftDegrees);
+  nsRefPtr<VRFieldOfView> obj =
+    new VRFieldOfView(aGlobal.GetAsSupports(),
+                      aParams.mUpDegrees, aParams.mRightDegrees,
+                      aParams.mDownDegrees, aParams.mLeftDegrees);
+  return obj.forget();
 }
 
-VRFieldOfView*
+already_AddRefed<VRFieldOfView>
 VRFieldOfView::Constructor(const GlobalObject& aGlobal,
                            double aUpDegrees, double aRightDegrees,
                            double aDownDegrees, double aLeftDegrees,
                            ErrorResult& aRV)
 {
-  return new VRFieldOfView(aUpDegrees, aRightDegrees, aDownDegrees,
-                           aLeftDegrees);
+  nsRefPtr<VRFieldOfView> obj =
+    new VRFieldOfView(aGlobal.GetAsSupports(),
+                      aUpDegrees, aRightDegrees,
+                      aDownDegrees, aLeftDegrees);
+  return obj.forget();
 }
 
-bool
-VRFieldOfView::WrapObject(JSContext* aCx,
-                          JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+VRFieldOfView::WrapObject(JSContext* aCx)
 {
-  return VRFieldOfViewBinding::Wrap(aCx, this, aReflector);
+  return VRFieldOfViewBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRPositionState, mParent)
@@ -200,17 +209,17 @@ public:
     return obj.forget();
   }
 
-  virtual VRFieldOfView* GetCurrentEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual already_AddRefed<VRFieldOfView> GetCurrentEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
   {
     return CopyFieldOfView(mHMD->GetEyeFOV(EyeToEye(aEye)));
   }
 
-  virtual VRFieldOfView* GetRecommendedEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual already_AddRefed<VRFieldOfView> GetRecommendedEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
   {
     return CopyFieldOfView(mHMD->GetRecommendedEyeFOV(EyeToEye(aEye)));
   }
 
-  virtual VRFieldOfView* GetMaximumEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
+  virtual already_AddRefed<VRFieldOfView> GetMaximumEyeFieldOfView(VREye aEye) MOZ_OVERRIDE
   {
     return CopyFieldOfView(mHMD->GetMaximumEyeFOV(EyeToEye(aEye)));
   }
@@ -226,11 +235,13 @@ public:
   }
 
 protected:
-  VRFieldOfView*
+  already_AddRefed<VRFieldOfView>
   CopyFieldOfView(const gfx::VRFieldOfView& aSrc)
   {
-    return new VRFieldOfView(aSrc.upDegrees, aSrc.rightDegrees,
-                             aSrc.downDegrees, aSrc.leftDegrees);
+    nsRefPtr<VRFieldOfView> obj =
+      new VRFieldOfView(mParent, aSrc.upDegrees, aSrc.rightDegrees,
+                        aSrc.downDegrees, aSrc.leftDegrees);
+    return obj.forget();
   }
 };
 

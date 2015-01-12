@@ -57,8 +57,8 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  virtual bool
-  WrapGlobalObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) = 0;
+  virtual JSObject*
+  WrapGlobalObject(JSContext* aCx) = 0;
 
   virtual JSObject*
   GetGlobalJSObject(void) MOZ_OVERRIDE
@@ -148,9 +148,8 @@ class DedicatedWorkerGlobalScope MOZ_FINAL : public WorkerGlobalScope
 public:
   explicit DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate);
 
-  virtual bool
-  WrapGlobalObject(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aReflector) MOZ_OVERRIDE;
+  virtual JSObject*
+  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
@@ -170,9 +169,8 @@ public:
   SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                           const nsCString& aName);
 
-  virtual bool
-  WrapGlobalObject(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aReflector) MOZ_OVERRIDE;
+  virtual JSObject*
+  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void GetName(DOMString& aName) const
   {
@@ -196,9 +194,8 @@ public:
 
   ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsACString& aScope);
 
-  virtual bool
-  WrapGlobalObject(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aReflector) MOZ_OVERRIDE;
+  virtual JSObject*
+  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
 
   void
   GetScope(DOMString& aScope) const
