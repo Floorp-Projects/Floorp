@@ -20,8 +20,7 @@ namespace layers {
 class BasicContainerLayer : public ContainerLayer, public BasicImplData {
 public:
   explicit BasicContainerLayer(BasicLayerManager* aManager) :
-    ContainerLayer(aManager,
-                   static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    ContainerLayer(aManager, static_cast<BasicImplData*>(this))
   {
     MOZ_COUNT_CTOR(BasicContainerLayer);
     mSupportsComponentAlphaChildren = true;

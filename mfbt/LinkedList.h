@@ -64,7 +64,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/NullPtr.h"
 
 #ifdef __cplusplus
 
@@ -117,8 +116,8 @@ private:
 
 public:
   LinkedListElement()
-    : mNext(MOZ_THIS_IN_INITIALIZER_LIST()),
-      mPrev(MOZ_THIS_IN_INITIALIZER_LIST()),
+    : mNext(this),
+      mPrev(this),
       mIsSentinel(false)
   { }
 
@@ -236,8 +235,8 @@ private:
   };
 
   explicit LinkedListElement(NodeKind nodeKind)
-    : mNext(MOZ_THIS_IN_INITIALIZER_LIST()),
-      mPrev(MOZ_THIS_IN_INITIALIZER_LIST()),
+    : mNext(this),
+      mPrev(this),
       mIsSentinel(nodeKind == NODE_KIND_SENTINEL)
   { }
 

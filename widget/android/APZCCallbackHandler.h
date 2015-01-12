@@ -7,6 +7,7 @@
 #define APZCCallbackHandler_h__
 
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "GeneratedJNIWrappers.h"
 #include "nsIDOMWindowUtils.h"
@@ -20,7 +21,7 @@ class APZCCallbackHandler MOZ_FINAL : public mozilla::layers::GeckoContentContro
 {
 private:
     static StaticRefPtr<APZCCallbackHandler> sInstance;
-    NativePanZoomController* mNativePanZoomController;
+    NativePanZoomController::GlobalRef mNativePanZoomController;
 
 private:
     APZCCallbackHandler()
@@ -37,7 +38,7 @@ public:
         return sInstance.get();
     }
 
-    NativePanZoomController* SetNativePanZoomController(jobject obj);
+    NativePanZoomController::LocalRef SetNativePanZoomController(NativePanZoomController::Param obj);
     void NotifyDefaultPrevented(uint64_t aInputBlockId, bool aDefaultPrevented);
 
 public: // GeckoContentController methods

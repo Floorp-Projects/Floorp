@@ -63,19 +63,14 @@ using mozilla::RotateLeft;
 
 typedef Rooted<GlobalObject *> RootedGlobalObject;
 
-/* static */ uint32_t
-Bindings::argumentsVarIndex(ExclusiveContext *cx, InternalBindingsHandle bindings,
-                            uint32_t *unaliasedSlot)
+/* static */ BindingIter
+Bindings::argumentsBinding(ExclusiveContext *cx, InternalBindingsHandle bindings)
 {
     HandlePropertyName arguments = cx->names().arguments;
     BindingIter bi(bindings);
     while (bi->name() != arguments)
         bi++;
-
-    if (unaliasedSlot)
-        *unaliasedSlot = bi->aliased() ? UINT32_MAX : bi.frameIndex();
-
-    return bi.localIndex();
+    return bi;
 }
 
 bool
@@ -3553,10 +3548,9 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
      */
 
     InternalBindingsHandle bindings(script, &script->bindings);
-    uint32_t unaliasedSlot;
-    const uint32_t var = Bindings::argumentsVarIndex(cx, bindings, &unaliasedSlot);
+    BindingIter bi = Bindings::argumentsBinding(cx, bindings);
 
-    if (script->varIsAliased(var)) {
+    if (script->bindingIsAliased(bi)) {
         /*
          * Scan the script to find the slot in the call object that 'arguments'
          * is assigned to.
@@ -3573,8 +3567,8 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
         if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(ScopeCoordinate(pc))))
             frame.callObj().as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), cx->names().arguments, ObjectValue(*argsobj));
     } else {
-        if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(unaliasedSlot)))
-            frame.unaliasedLocal(unaliasedSlot) = ObjectValue(*argsobj);
+        if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(bi.frameIndex())))
+            frame.unaliasedLocal(bi.frameIndex()) = ObjectValue(*argsobj);
     }
 }
 
@@ -3651,21 +3645,22 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 }
 
 bool
-JSScript::varIsAliased(uint32_t varSlot)
+JSScript::bindingIsAliased(const BindingIter &bi)
 {
-    return bodyLevelLocalIsAliased(varSlot);
-}
-
-bool
-JSScript::bodyLevelLocalIsAliased(uint32_t localSlot)
-{
-    return bindings.bindingIsAliased(bindings.numArgs() + localSlot);
+    return bindings.bindingIsAliased(bi.i_);
 }
 
 bool
 JSScript::formalIsAliased(unsigned argSlot)
 {
+    MOZ_ASSERT(argSlot < bindings.numArgs());
     return bindings.bindingIsAliased(argSlot);
+}
+
+bool
+JSScript::cookieIsAliased(const frontend::UpvarCookie &cookie)
+{
+    return bindings.bindingIsAliased(bindings.numArgs() + cookie.slot());
 }
 
 bool

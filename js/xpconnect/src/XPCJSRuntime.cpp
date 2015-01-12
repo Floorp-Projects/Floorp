@@ -3156,7 +3156,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryBytes),
-   mJSContextStack(new XPCJSContextStack(MOZ_THIS_IN_INITIALIZER_LIST())),
+   mJSContextStack(new XPCJSContextStack(this)),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
    mResolveName(JSID_VOID),
@@ -3177,10 +3177,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mVariantRoots(nullptr),
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
-   mWatchdogManager(new WatchdogManager(MOZ_THIS_IN_INITIALIZER_LIST())),
-   mUnprivilegedJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
-   mPrivilegedJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
-   mCompilationScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
+   mWatchdogManager(new WatchdogManager(this)),
+   mUnprivilegedJunkScope(this->Runtime(), nullptr),
+   mPrivilegedJunkScope(this->Runtime(), nullptr),
+   mCompilationScope(this->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
     // these jsids filled in later when we have a JSContext to work with.

@@ -1008,9 +1008,9 @@ BacktrackingAllocator::resolveControlFlow()
         }
 
         // Resolve split intervals with moves
-        BitSet *live = liveIn[mSuccessor->id()];
+        BitSet &live = liveIn[mSuccessor->id()];
 
-        for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
+        for (BitSet::Iterator liveRegId(live); liveRegId; ++liveRegId) {
             VirtualRegister &reg = vregs[*liveRegId];
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {

@@ -11,7 +11,6 @@
 
 #include <cctype>
 
-#include "mozilla/NullPtr.h"
 #include "crashreporter.h"
 #include "crashreporter_gtk_common.h"
 

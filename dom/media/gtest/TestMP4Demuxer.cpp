@@ -24,7 +24,7 @@ public:
   explicit MP4DemuxerBinding(const char* aFileName = "dash_dashinit.mp4")
     : resource(new MockMediaResource(aFileName))
     , mMonitor("TestMP4Demuxer monitor")
-    , demuxer(new MP4Demuxer(new MP4Stream(resource, &mMonitor), 0, &mMonitor))
+    , demuxer(new MP4Demuxer(new MP4Stream(resource), 0, &mMonitor))
   {
     EXPECT_EQ(NS_OK, resource->Open(nullptr));
   }

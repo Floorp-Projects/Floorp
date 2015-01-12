@@ -87,7 +87,7 @@ UDPSocketParent::Init(const nsACString& aFilter)
       nsresult rv = filterHandler->NewFilter(getter_AddRefs(mFilter));
       if (NS_FAILED(rv)) {
         printf_stderr("Cannot create filter that content specified. "
-                      "filter name: %s, error code: %d.", aFilter.BeginReading(), rv);
+                      "filter name: %s, error code: %u.", aFilter.BeginReading(),  static_cast<uint32_t>(rv));
         return false;
       }
     } else {

@@ -652,8 +652,6 @@ class InlineFrameIterator
 
         // Read the scope chain.
         if (scopeChain) {
-            MOZ_ASSERT(!fallback.canRecoverResults());
-            JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
             Value scopeChainValue = s.maybeRead(fallback);
             *scopeChain = computeScopeChain(scopeChainValue, fallback, hasCallObj);
         } else {
@@ -719,14 +717,8 @@ class InlineFrameIterator
 
         // At this point we've read all the formals in s, and can read the
         // locals.
-        for (unsigned i = 0; i < script()->nfixed(); i++) {
-            // We have to use maybeRead here, some of these might be recover
-            // instructions, and currently InlineFrameIter does not support
-            // recovering slots.
-            //
-            // FIXME bug 1029963.
+        for (unsigned i = 0; i < script()->nfixed(); i++)
             localOp(s.maybeRead(fallback));
-        }
     }
 
     template <class Op>

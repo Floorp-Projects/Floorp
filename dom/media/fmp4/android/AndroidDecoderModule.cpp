@@ -24,25 +24,25 @@
 
 using namespace mozilla;
 using namespace mozilla::gl;
-using namespace mozilla::widget::android::sdk;
+using namespace mozilla::widget::sdk;
 
 namespace mozilla {
 
-static MediaCodec* CreateDecoder(JNIEnv* aEnv, const char* aMimeType)
+static MediaCodec::LocalRef CreateDecoder(const char* aMimeType)
 {
   if (!aMimeType) {
     return nullptr;
   }
 
-  jobject decoder = MediaCodec::CreateDecoderByType(nsCString(aMimeType));
-
-  return new MediaCodec(decoder, aEnv);
+  MediaCodec::LocalRef codec;
+  NS_ENSURE_SUCCESS(MediaCodec::CreateDecoderByType(aMimeType, &codec), nullptr);
+  return codec;
 }
 
 class VideoDataDecoder : public MediaCodecDataDecoder {
 public:
   VideoDataDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                   MediaFormat* aFormat, MediaDataDecoderCallback* aCallback,
+                   MediaFormat::Param aFormat, MediaDataDecoderCallback* aCallback,
                    layers::ImageContainer* aImageContainer)
     : MediaCodecDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mime_type, aFormat, aCallback)
     , mImageContainer(aImageContainer)
@@ -108,7 +108,7 @@ public:
     return eglImage;
   }
 
-  virtual nsresult PostOutput(BufferInfo* aInfo, MediaFormat* aFormat, Microseconds aDuration) MOZ_OVERRIDE {
+  virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat, Microseconds aDuration) MOZ_OVERRIDE {
     VideoInfo videoInfo;
     videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
 
@@ -143,13 +143,23 @@ public:
     layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
     typedImg->SetData(data);
 
-    bool isSync = !!(MediaCodec::getBUFFER_FLAG_SYNC_FRAME() & aInfo->getFlags());
+    nsresult rv;
+    int32_t flags;
+    NS_ENSURE_SUCCESS(rv = aInfo->Flags(&flags), rv);
 
-    nsRefPtr<VideoData> v = VideoData::CreateFromImage(videoInfo, mImageContainer, aInfo->getOffset(),
-                                                       aInfo->getPresentationTimeUs(),
+    bool isSync = !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME);
+
+    int32_t offset;
+    NS_ENSURE_SUCCESS(rv = aInfo->Offset(&offset), rv);
+
+    int64_t presentationTimeUs;
+    NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
+
+    nsRefPtr<VideoData> v = VideoData::CreateFromImage(videoInfo, mImageContainer, offset,
+                                                       presentationTimeUs,
                                                        aDuration,
                                                        img, isSync,
-                                                       aInfo->getPresentationTimeUs(),
+                                                       presentationTimeUs,
                                                        gfx::IntRect(0, 0,
                                                          mConfig.display_width,
                                                          mConfig.display_height));
@@ -174,23 +184,53 @@ protected:
 };
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
+private:
+  uint8_t csd0[2];
+
 public:
-  AudioDataDecoder(const char* aMimeType, MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
-  : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aMimeType, aFormat, aCallback)
+  AudioDataDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig, MediaFormat::Param aFormat, MediaDataDecoderCallback* aCallback)
+    : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mime_type, aFormat, aCallback)
   {
+    JNIEnv* env = GetJNIForThread();
+
+    jni::Object::LocalRef buffer(env);
+    NS_ENSURE_SUCCESS_VOID(aFormat->GetByteBuffer(NS_LITERAL_STRING("csd-0"), &buffer));
+
+    if (!buffer) {
+      csd0[0] = (*aConfig.audio_specific_config)[0];
+      csd0[1] = (*aConfig.audio_specific_config)[1];
+
+      buffer = jni::Object::LocalRef::Adopt(env, env->NewDirectByteBuffer(csd0, 2));
+      NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer));
+    }
   }
 
-  nsresult Output(BufferInfo* aInfo, void* aBuffer, MediaFormat* aFormat, Microseconds aDuration) {
+  nsresult Output(BufferInfo::Param aInfo, void* aBuffer, MediaFormat::Param aFormat, Microseconds aDuration) {
     // The output on Android is always 16-bit signed
 
-    uint32_t numChannels = aFormat->GetInteger(NS_LITERAL_CSTRING("channel-count"));
-    uint32_t sampleRate = aFormat->GetInteger(NS_LITERAL_CSTRING("sample-rate"));
-    uint32_t numFrames = (aInfo->getSize() / numChannels) / 2;
+    nsresult rv;
+    int32_t numChannels;
+    NS_ENSURE_SUCCESS(rv =
+        aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &numChannels), rv);
 
-    AudioDataValue* audio = new AudioDataValue[aInfo->getSize()];
-    PodCopy(audio, static_cast<AudioDataValue*>(aBuffer), aInfo->getSize());
+    int32_t sampleRate;
+    NS_ENSURE_SUCCESS(rv =
+        aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"), &sampleRate), rv);
 
-    nsRefPtr<AudioData> data = new AudioData(aInfo->getOffset(), aInfo->getPresentationTimeUs(),
+    int32_t size;
+    NS_ENSURE_SUCCESS(rv = aInfo->Size(&size), rv);
+
+    const int32_t numFrames = (size / numChannels) / 2;
+    AudioDataValue* audio = new AudioDataValue[size];
+    PodCopy(audio, static_cast<AudioDataValue*>(aBuffer), size);
+
+    int32_t offset;
+    NS_ENSURE_SUCCESS(rv = aInfo->Offset(&offset), rv);
+
+    int64_t presentationTimeUs;
+    NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
+
+    nsRefPtr<AudioData> data = new AudioData(offset, presentationTimeUs,
                                              aDuration,
                                              numFrames,
                                              audio,
@@ -203,11 +243,7 @@ public:
 
 
 bool AndroidDecoderModule::SupportsAudioMimeType(const char* aMimeType) {
-  JNIEnv* env = GetJNIForThread();
-  MediaCodec* decoder = CreateDecoder(env, aMimeType);
-  bool supports = (decoder != nullptr);
-  delete decoder;
-  return supports;
+  return static_cast<bool>(CreateDecoder(aMimeType));
 }
 
 already_AddRefed<MediaDataDecoder>
@@ -218,19 +254,13 @@ AndroidDecoderModule::CreateVideoDecoder(
                                 MediaTaskQueue* aVideoTaskQueue,
                                 MediaDataDecoderCallback* aCallback)
 {
-  jobject jFormat = MediaFormat::CreateVideoFormat(nsCString(aConfig.mime_type),
-                                                   aConfig.display_width,
-                                                   aConfig.display_height);
+  MediaFormat::LocalRef format;
 
-  if (!jFormat) {
-    return nullptr;
-  }
-
-  MediaFormat* format = MediaFormat::Wrap(jFormat);
-
-  if (!format) {
-    return nullptr;
-  }
+  NS_ENSURE_SUCCESS(MediaFormat::CreateVideoFormat(
+      aConfig.mime_type,
+      aConfig.display_width,
+      aConfig.display_height,
+      &format), nullptr);
 
   nsRefPtr<MediaDataDecoder> decoder =
     new VideoDataDecoder(aConfig, format, aCallback, aImageContainer);
@@ -245,34 +275,16 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 {
   MOZ_ASSERT(aConfig.bits_per_sample == 16, "We only handle 16-bit audio!");
 
-  jobject jFormat = MediaFormat::CreateAudioFormat(nsCString(aConfig.mime_type),
-                                                   aConfig.samples_per_second,
-                                                   aConfig.channel_count);
+  MediaFormat::LocalRef format;
 
-  if (jFormat == nullptr)
-    return nullptr;
-
-  MediaFormat* format = MediaFormat::Wrap(jFormat);
-
-  if(format == nullptr)
-    return nullptr;
-
-  JNIEnv* env = GetJNIForThread();
-
-  if (!format->GetByteBuffer(NS_LITERAL_CSTRING("csd-0"))) {
-    uint8_t* csd0 = new uint8_t[2];
-
-    csd0[0] = (*aConfig.audio_specific_config)[0];
-    csd0[1] = (*aConfig.audio_specific_config)[1];
-
-    jobject buffer = env->NewDirectByteBuffer(csd0, 2);
-    format->SetByteBuffer(NS_LITERAL_CSTRING("csd-0"), buffer);
-
-    env->DeleteLocalRef(buffer);
-  }
+  NS_ENSURE_SUCCESS(MediaFormat::CreateAudioFormat(
+      aConfig.mime_type,
+      aConfig.samples_per_second,
+      aConfig.channel_count,
+      &format), nullptr);
 
   nsRefPtr<MediaDataDecoder> decoder =
-    new AudioDataDecoder(aConfig.mime_type, format, aCallback);
+    new AudioDataDecoder(aConfig, format, aCallback);
 
   return decoder.forget();
 
@@ -286,7 +298,7 @@ nsresult AndroidDecoderModule::Shutdown()
 
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
                                              const char* aMimeType,
-                                             MediaFormat* aFormat,
+                                             MediaFormat::Param aFormat,
                                              MediaDataDecoderCallback* aCallback)
   : mType(aType)
   , mMimeType(strdup(aMimeType))
@@ -304,55 +316,28 @@ MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
 
 MediaCodecDataDecoder::~MediaCodecDataDecoder()
 {
-  JNIEnv* env = GetJNIForThread();
-
   Shutdown();
-
-  if (mInputBuffers) {
-    env->DeleteGlobalRef(mInputBuffers);
-    mInputBuffers = nullptr;
-  }
-
-  if (mOutputBuffers) {
-    env->DeleteGlobalRef(mOutputBuffers);
-    mOutputBuffers = nullptr;
-  }
 }
 
 nsresult MediaCodecDataDecoder::Init()
 {
-  return InitDecoder();
+  return InitDecoder(nullptr);
 }
 
-nsresult MediaCodecDataDecoder::InitDecoder(jobject aSurface)
+nsresult MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
 {
-  JNIEnv* env = GetJNIForThread();
-  mDecoder = CreateDecoder(env, mMimeType);
+  mDecoder = CreateDecoder(mMimeType);
   if (!mDecoder) {
     mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 
-  nsresult res;
-  mDecoder->Configure(mFormat->wrappedObject(), aSurface, nullptr, 0, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  nsresult rv;
+  NS_ENSURE_SUCCESS(rv = mDecoder->Configure(mFormat, aSurface, nullptr, 0), rv);
+  NS_ENSURE_SUCCESS(rv = mDecoder->Start(), rv);
 
-  mDecoder->Start(&res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  res = ResetInputBuffers();
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  res = ResetOutputBuffers();
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  NS_ENSURE_SUCCESS(rv = ResetInputBuffers(), rv);
+  NS_ENSURE_SUCCESS(rv = ResetOutputBuffers(), rv);
 
   NS_NewNamedThread("MC Decoder", getter_AddRefs(mThread),
                     NS_NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop));
@@ -377,10 +362,10 @@ void MediaCodecDataDecoder::DecoderLoop()
   bool draining = false;
   bool waitingEOF = false;
 
-  JNIEnv* env = GetJNIForThread();
+  AutoLocalJNIFrame frame(GetJNIForThread(), 1);
   mp4_demuxer::MP4Sample* sample = nullptr;
 
-  nsAutoPtr<MediaFormat> outputFormat;
+  MediaFormat::LocalRef outputFormat(frame.GetEnv());
   nsresult res;
 
   for (;;) {
@@ -420,61 +405,69 @@ void MediaCodecDataDecoder::DecoderLoop()
     if (draining && !waitingEOF) {
       MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
 
-      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
+      int32_t inputIndex;
+      res = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &inputIndex);
       HANDLE_DECODER_ERROR();
 
       if (inputIndex >= 0) {
-        mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0, MediaCodec::getBUFFER_FLAG_END_OF_STREAM(), &res);
+        res = mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+        HANDLE_DECODER_ERROR();
+
         waitingEOF = true;
       }
     }
 
     if (sample) {
       // We have a sample, try to feed it to the decoder
-      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
+      int inputIndex;
+      res = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &inputIndex);
       HANDLE_DECODER_ERROR();
 
       if (inputIndex >= 0) {
-        jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
-        void* directBuffer = env->GetDirectBufferAddress(buffer);
+        auto buffer = jni::Object::LocalRef::Adopt(
+            frame.GetEnv()->GetObjectArrayElement(mInputBuffers.Get(), inputIndex));
+        void* directBuffer = frame.GetEnv()->GetDirectBufferAddress(buffer.Get());
 
-        // We're feeding this to the decoder, so remove it from the queue
-        mMonitor.Lock();
-        mQueue.pop();
-        mMonitor.Unlock();
-
-        MOZ_ASSERT(env->GetDirectBufferCapacity(buffer) >= sample->size,
+        MOZ_ASSERT(frame.GetEnv()->GetDirectBufferCapacity(buffer.Get()) >= sample->size,
           "Decoder buffer is not large enough for sample");
+
+        {
+          // We're feeding this to the decoder, so remove it from the queue
+          MonitorAutoLock lock(mMonitor);
+          mQueue.pop();
+        }
 
         PodCopy((uint8_t*)directBuffer, sample->data, sample->size);
 
-        mDecoder->QueueInputBuffer(inputIndex, 0, sample->size, sample->composition_timestamp, 0, &res);
+        res = mDecoder->QueueInputBuffer(inputIndex, 0, sample->size,
+                                         sample->composition_timestamp, 0);
         HANDLE_DECODER_ERROR();
 
         mDurations.push(sample->duration);
-
         delete sample;
         sample = nullptr;
-
         outputDone = false;
-        env->DeleteLocalRef(buffer);
       }
     }
 
     if (!outputDone) {
-      BufferInfo bufferInfo;
-
-      int outputStatus = mDecoder->DequeueOutputBuffer(bufferInfo.wrappedObject(), DECODER_TIMEOUT, &res);
+      BufferInfo::LocalRef bufferInfo;
+      res = BufferInfo::New(&bufferInfo);
       HANDLE_DECODER_ERROR();
 
-      if (outputStatus == MediaCodec::getINFO_TRY_AGAIN_LATER()) {
+      int32_t outputStatus;
+      res = mDecoder->DequeueOutputBuffer(bufferInfo, DECODER_TIMEOUT, &outputStatus);
+      HANDLE_DECODER_ERROR();
+
+      if (outputStatus == MediaCodec::INFO_TRY_AGAIN_LATER) {
         // We might want to call mCallback->InputExhausted() here, but there seems to be
         // some possible bad interactions here with the threading
-      } else if (outputStatus == MediaCodec::getINFO_OUTPUT_BUFFERS_CHANGED()) {
+      } else if (outputStatus == MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
         res = ResetOutputBuffers();
         HANDLE_DECODER_ERROR();
-      } else if (outputStatus == MediaCodec::getINFO_OUTPUT_FORMAT_CHANGED()) {
-        outputFormat = new MediaFormat(mDecoder->GetOutputFormat(), GetJNIForThread());
+      } else if (outputStatus == MediaCodec::INFO_OUTPUT_FORMAT_CHANGED) {
+        res = mDecoder->GetOutputFormat(ReturnTo(&outputFormat));
+        HANDLE_DECODER_ERROR();
       } else if (outputStatus < 0) {
         NS_WARNING("unknown error from decoder!");
         mCallback->Error();
@@ -482,8 +475,12 @@ void MediaCodecDataDecoder::DecoderLoop()
         // Don't break here just in case it's recoverable. If it's not, others stuff will fail later and
         // we'll bail out.
       } else {
+        int32_t flags;
+        res = bufferInfo->Flags(&flags);
+        HANDLE_DECODER_ERROR();
+
         // We have a valid buffer index >= 0 here
-        if (bufferInfo.getFlags() & MediaCodec::getBUFFER_FLAG_END_OF_STREAM()) {
+        if (flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) {
           if (draining) {
             draining = false;
             waitingEOF = false;
@@ -511,21 +508,18 @@ void MediaCodecDataDecoder::DecoderLoop()
           mDurations.pop();
         }
 
-        jobject buffer = env->GetObjectArrayElement(mOutputBuffers, outputStatus);
+        auto buffer = jni::Object::LocalRef::Adopt(
+            frame.GetEnv()->GetObjectArrayElement(mOutputBuffers.Get(), outputStatus));
         if (buffer) {
           // The buffer will be null on Android L if we are decoding to a Surface
-          void* directBuffer = env->GetDirectBufferAddress(buffer);
-          Output(&bufferInfo, directBuffer, outputFormat, duration);
+          void* directBuffer = frame.GetEnv()->GetDirectBufferAddress(buffer.Get());
+          Output(bufferInfo, directBuffer, outputFormat, duration);
         }
 
         // The Surface will be updated at this point (for video)
         mDecoder->ReleaseOutputBuffer(outputStatus, true);
 
-        PostOutput(&bufferInfo, outputFormat, duration);
-
-        if (buffer) {
-          env->DeleteLocalRef(buffer);
-        }
+        PostOutput(bufferInfo, outputFormat, duration);
       }
     }
   }
@@ -533,10 +527,9 @@ void MediaCodecDataDecoder::DecoderLoop()
   Cleanup();
 
   // We're done
-  mMonitor.Lock();
+  MonitorAutoLock lock(mMonitor);
   mStopping = false;
   mMonitor.Notify();
-  mMonitor.Unlock();
 }
 
 void MediaCodecDataDecoder::ClearQueue()
@@ -561,36 +554,12 @@ nsresult MediaCodecDataDecoder::Input(mp4_demuxer::MP4Sample* aSample) {
 
 nsresult MediaCodecDataDecoder::ResetInputBuffers()
 {
-  JNIEnv* env = GetJNIForThread();
-
-  if (mInputBuffers) {
-    env->DeleteGlobalRef(mInputBuffers);
-  }
-
-  nsresult res;
-  mInputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetInputBuffers(&res));
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  return NS_OK;
+  return mDecoder->GetInputBuffers(ReturnTo(&mInputBuffers));
 }
 
 nsresult MediaCodecDataDecoder::ResetOutputBuffers()
 {
-  JNIEnv* env = GetJNIForThread();
-
-  if (mOutputBuffers) {
-    env->DeleteGlobalRef(mOutputBuffers);
-  }
-
-  nsresult res;
-  mOutputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetOutputBuffers(&res));
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  return NS_OK;
+  return mDecoder->GetOutputBuffers(ReturnTo(&mOutputBuffers));
 }
 
 nsresult MediaCodecDataDecoder::Flush() {

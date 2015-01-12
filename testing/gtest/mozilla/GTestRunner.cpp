@@ -6,7 +6,6 @@
 #include "GTestRunner.h"
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif

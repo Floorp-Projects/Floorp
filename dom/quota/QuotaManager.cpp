@@ -58,6 +58,8 @@
 #include "UsageInfo.h"
 #include "Utilities.h"
 
+#define BAD_TLS_INDEX ((uint32_t) -1)
+
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
 #define DEFAULT_THREAD_TIMEOUT_MS 30000

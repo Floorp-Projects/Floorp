@@ -7,7 +7,6 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/TypedEnum.h"
 
 #include "jsbytecode.h"

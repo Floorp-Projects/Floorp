@@ -50,20 +50,17 @@ anp_system_getApplicationDataDirectory()
   return anp_system_getApplicationDataDirectory(nullptr);
 }
 
-jclass anp_system_loadJavaClass(NPP instance, const char* classNameStr)
+jclass anp_system_loadJavaClass(NPP instance, const char* className)
 {
   LOG("%s", __PRETTY_FUNCTION__);
 
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
   mozilla::PluginPRLibrary* lib = static_cast<mozilla::PluginPRLibrary*>(pinst->GetPlugin()->GetLibrary());
 
-  NS_ConvertUTF8toUTF16 className(classNameStr);
+  nsCString libName;
+  lib->GetLibraryPath(libName);
 
-  nsCString libNameUtf8;
-  lib->GetLibraryPath(libNameUtf8);
-  NS_ConvertUTF8toUTF16 libName(libNameUtf8);
-
-  return mozilla::widget::android::GeckoAppShell::LoadPluginClass(className, libName);
+  return mozilla::widget::GeckoAppShell::LoadPluginClass(className, libName).Forget();
 }
 
 void anp_system_setPowerState(NPP instance, ANPPowerState powerState)

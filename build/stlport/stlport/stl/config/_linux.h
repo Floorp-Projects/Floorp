@@ -115,6 +115,7 @@
       ((defined(__sparc) || defined(__sparcv9) || defined(__sparcv8plus)) && !defined ( __WORD64 ) && !defined(__arch64__)) /* ? */ || \
       (defined(_MIPS_SIM) && (_MIPS_SIM == _ABIO32)) || \
       defined(__arm__) || \
+      defined(__le32__) || \
       defined(__sh__)
  /* #  if defined(__NO_LONG_DOUBLE_MATH) */
 #    define _STLP_NO_LONG_DOUBLE

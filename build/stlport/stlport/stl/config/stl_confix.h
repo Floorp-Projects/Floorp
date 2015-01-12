@@ -80,7 +80,7 @@
 /* __EDG_VERSION__ is an official EDG macro, compilers based
  * on EDG have to define it. */
 #if defined (__EDG_VERSION__)
-#  if (__EDG_VERSION__ >= 244) && !defined (_STLP_HAS_INCLUDE_NEXT)
+#  if (__EDG_VERSION__ >= 244) && !defined (_STLP_HAS_INCLUDE_NEXT) && !defined(__ANDROID__)
 #    define _STLP_HAS_INCLUDE_NEXT
 #  endif
 #  if (__EDG_VERSION__ <= 240) && !defined (_STLP_DONT_RETURN_VOID)

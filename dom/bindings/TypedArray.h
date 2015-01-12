@@ -136,7 +136,6 @@ private:
   TypedArray_base(const TypedArray_base&) = delete;
 };
 
-
 template<typename T,
          JSObject* UnwrapArray(JSObject*),
          T* GetData(JSObject*, const JS::AutoCheckCannotGC&),
@@ -301,16 +300,14 @@ class MOZ_STACK_CLASS RootedTypedArray : public ArrayType,
 public:
   explicit RootedTypedArray(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
     ArrayType(),
-    TypedArrayRooter<ArrayType>(cx,
-                                MOZ_THIS_IN_INITIALIZER_LIST()
+    TypedArrayRooter<ArrayType>(cx, this
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
   {
   }
 
   RootedTypedArray(JSContext* cx, JSObject* obj MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
     ArrayType(obj),
-    TypedArrayRooter<ArrayType>(cx,
-                                MOZ_THIS_IN_INITIALIZER_LIST()
+    TypedArrayRooter<ArrayType>(cx, this
                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
   {
   }

@@ -11,7 +11,6 @@
 // at your own risk.
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/PodOperations.h"
 
 #include <string.h>

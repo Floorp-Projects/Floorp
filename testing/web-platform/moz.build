@@ -13,3 +13,9 @@ TEST_HARNESS_FILES['web-platform'] += [
     'tests/**',
     'wptrunner.ini'
 ]
+
+TEST_HARNESS_FILES['web-platform'].certs = [
+    'certs/cacert.pem',
+    'certs/web-platform.test.key',
+    'certs/web-platform.test.pem',
+]

@@ -12,7 +12,6 @@
 
 #include "nsStyleConsts.h"
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/Attributes.h"
 
 #include "nsCSSValue.h"

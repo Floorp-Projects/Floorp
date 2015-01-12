@@ -273,7 +273,7 @@ void BuildJavaThreadJSObject(JSStreamWriter& b)
             firstRun = false;
 
             double sampleTime =
-              mozilla::widget::android::GeckoJavaSampler::GetSampleTimeJavaProfiling(0, sampleId);
+              mozilla::widget::GeckoJavaSampler::GetSampleTimeJavaProfiling(0, sampleId);
 
             b.BeginObject();
               b.NameValue("time", sampleTime);
@@ -350,11 +350,11 @@ void TableTicker::StreamJSObject(JSStreamWriter& b)
 
   #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
       if (ProfileJava()) {
-        mozilla::widget::android::GeckoJavaSampler::PauseJavaProfiling();
+        mozilla::widget::GeckoJavaSampler::PauseJavaProfiling();
 
         BuildJavaThreadJSObject(b);
 
-        mozilla::widget::android::GeckoJavaSampler::UnpauseJavaProfiling();
+        mozilla::widget::GeckoJavaSampler::UnpauseJavaProfiling();
       }
   #endif
 

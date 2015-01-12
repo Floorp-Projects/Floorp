@@ -289,9 +289,11 @@ public:
     return true;
   }
 
+  // Gaps of up to 20ms (marginally longer than a single frame at 60fps) are considered
+  // to be sequential frames.
   int64_t GetRoundingError()
   {
-    return 1000;
+    return 20000;
   }
 
 private:

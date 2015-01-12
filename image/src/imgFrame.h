@@ -8,8 +8,8 @@
 #define imgFrame_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/TypedEnum.h"
 #include "mozilla/VolatileBuffer.h"
 #include "gfxDrawable.h"
@@ -182,6 +182,9 @@ public:
   /**
    * Mark this imgFrame as completely decoded, and set final options.
    *
+   * You must always call either Finish() or Abort() before releasing the last
+   * RawAccessFrameRef pointing to an imgFrame.
+   *
    * @param aFrameOpacity    Whether this imgFrame is opaque.
    * @param aDisposalMethod  For animation frames, how this imgFrame is cleared
    *                         from the compositing frame before the next frame is
@@ -193,8 +196,34 @@ public:
    * @param aBlendMethod     For animation frames, a blending method to be used
    *                         when compositing this frame.
    */
-  void Finish(Opacity aFrameOpacity, DisposalMethod aDisposalMethod,
-              int32_t aRawTimeout, BlendMethod aBlendMethod);
+  void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
+              DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
+              int32_t aRawTimeout = 0,
+              BlendMethod aBlendMethod = BlendMethod::OVER);
+
+  /**
+   * Mark this imgFrame as aborted. This informs the imgFrame that if it isn't
+   * completely decoded now, it never will be.
+   *
+   * You must always call either Finish() or Abort() before releasing the last
+   * RawAccessFrameRef pointing to an imgFrame.
+   */
+  void Abort();
+
+  /**
+   * Returns true if this imgFrame is completely decoded.
+   */
+  bool IsImageComplete() const;
+
+  /**
+   * Blocks until this imgFrame is either completely decoded, or is marked as
+   * aborted.
+   *
+   * Note that calling this on the main thread _blocks the main thread_. Be very
+   * careful in your use of this method to avoid excessive main thread jank or
+   * deadlock.
+   */
+  void WaitUntilComplete() const;
 
   IntSize GetImageSize() { return mImageSize; }
   nsIntRect GetRect() const;
@@ -217,8 +246,6 @@ public:
 
   AnimationData GetAnimationData() const;
   ScalingData GetScalingData() const;
-
-  bool ImageComplete() const;
 
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
@@ -245,7 +272,7 @@ private: // methods
 
   void AssertImageDataLocked() const;
 
-  bool ImageCompleteInternal() const;
+  bool IsImageCompleteInternal() const;
   nsresult ImageUpdatedInternal(const nsIntRect& aUpdateRect);
   void GetImageDataInternal(uint8_t **aData, uint32_t *length) const;
   uint32_t GetImageBytesPerRow() const;
@@ -283,10 +310,10 @@ private: // data
   friend class UnlockImageDataRunnable;
 
   //////////////////////////////////////////////////////////////////////////////
-  // Thread-safe mutable data, protected by mMutex.
+  // Thread-safe mutable data, protected by mMonitor.
   //////////////////////////////////////////////////////////////////////////////
 
-  mutable Mutex mMutex;
+  mutable Monitor mMonitor;
 
   RefPtr<DataSourceSurface> mImageSurface;
   RefPtr<SourceSurface> mOptSurface;
@@ -307,6 +334,7 @@ private: // data
   SurfaceFormat  mFormat;
 
   bool mHasNoAlpha;
+  bool mAborted;
 
 
   //////////////////////////////////////////////////////////////////////////////

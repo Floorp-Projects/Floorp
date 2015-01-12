@@ -5789,6 +5789,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 static void
 AddGenConPseudoToFrame(nsIFrame* aOwnerFrame, nsIContent* aContent)
 {
+  NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aOwnerFrame),
+               "property should only be set on first continuation/ib-sibling");
+
   typedef nsAutoTArray<nsIContent*, 2> T;
   const FramePropertyDescriptor* prop = nsIFrame::GenConProperty();
   FrameProperties props = aOwnerFrame->Properties();

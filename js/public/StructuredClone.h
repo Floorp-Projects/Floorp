@@ -7,8 +7,6 @@
 #ifndef js_StructuredClone_h
 #define js_StructuredClone_h
 
-#include "mozilla/NullPtr.h"
-
 #include <stdint.h>
 
 #include "jstypes.h"

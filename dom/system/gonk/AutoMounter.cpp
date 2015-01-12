@@ -1059,15 +1059,16 @@ AutoMounter::UpdateState()
           vol->StartUnmount(mResponseCallback);
           return; // UpdateState will be called again when the Unmount command completes
         }
-        case nsIVolume::STATE_IDLE: {
-          LOG("UpdateState: Volume %s is nsIVolume::STATE_IDLE", vol->NameStr());
+        case nsIVolume::STATE_IDLE:
+        case nsIVolume::STATE_MOUNT_FAIL: {
+          LOG("UpdateState: Volume %s is %s", vol->NameStr(), vol->StateStr());
           if (vol->IsFormatting() && !vol->IsFormatRequested()) {
             vol->SetFormatRequested(false);
             LOG("UpdateState: Mounting %s", vol->NameStr());
             vol->StartMount(mResponseCallback);
             break;
           }
-          if (tryToShare && vol->IsSharingEnabled()) {
+          if (tryToShare && vol->IsSharingEnabled() && volState == nsIVolume::STATE_IDLE) {
             // Volume is unmounted. We can go ahead and share.
             LOG("UpdateState: Sharing %s", vol->NameStr());
             vol->StartShare(mResponseCallback);

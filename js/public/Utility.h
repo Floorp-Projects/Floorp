@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"

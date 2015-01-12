@@ -8,7 +8,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/NullPtr.h"
 
 class WriteRecordClient : public GMPRecordClient {
 public:

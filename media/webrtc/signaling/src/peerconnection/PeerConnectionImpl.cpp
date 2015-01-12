@@ -201,14 +201,14 @@ public:
       JSErrorResult rv;
       mObserver->OnAddTrack(*tracks[i], rv);
       if (rv.Failed()) {
-        CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
-                    rv.ErrorCode());
+        CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %u", i,
+                    static_cast<uint32_t>(rv.ErrorCode()));
       }
     }
     JSErrorResult rv;
     mObserver->OnAddStream(*aStream, rv);
     if (rv.Failed()) {
-      CSFLogError(logTag, ": OnAddStream() failed! Error: %d", rv.ErrorCode());
+      CSFLogError(logTag, ": OnAddStream() failed! Error: %u", static_cast<uint32_t>(rv.ErrorCode()));
     }
   }
 private:
@@ -754,7 +754,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 class CompareCodecPriority {
   public:
-    explicit CompareCodecPriority(int32_t preferredCodec) {
+    void SetPreferredCodec(int32_t preferredCodec) {
       // This pref really ought to be a string, preferably something like
       // "H264" or "VP8" instead of a payload type.
       // Bug 1101259.
@@ -763,15 +763,29 @@ class CompareCodecPriority {
       mPreferredCodec = os.str();
     }
 
+    void AddHardwareCodec(const std::string& codec) {
+      mHardwareCodecs.insert(codec);
+    }
+
     bool operator()(JsepCodecDescription* lhs,
                     JsepCodecDescription* rhs) const {
-      return !mPreferredCodec.empty() &&
-             lhs->mDefaultPt == mPreferredCodec &&
-             rhs->mDefaultPt != mPreferredCodec;
+      if (!mPreferredCodec.empty() &&
+          lhs->mDefaultPt == mPreferredCodec &&
+          rhs->mDefaultPt != mPreferredCodec) {
+        return true;
+      }
+
+      if (mHardwareCodecs.count(lhs->mDefaultPt) &&
+          !mHardwareCodecs.count(rhs->mDefaultPt)) {
+        return true;
+      }
+
+      return false;
     }
 
   private:
     std::string mPreferredCodec;
+    std::set<std::string> mHardwareCodecs;
 };
 
 nsresult
@@ -835,7 +849,10 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   bool h264Enabled = hardwareH264Supported || softwareH264Enabled;
 
-  auto codecs = mJsepSession->Codecs();
+  auto& codecs = mJsepSession->Codecs();
+
+  // We use this to sort the list of codecs once everything is configured
+  CompareCodecPriority comparator;
 
   // Set parameters
   for (auto i = codecs.begin(); i != codecs.end(); ++i) {
@@ -877,6 +894,10 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
               // hardware.
               videoCodec.mEnabled = false;
             }
+
+            if (hardwareH264Supported) {
+              comparator.AddHardwareCodec(videoCodec.mDefaultPt);
+            }
           } else if (codec.mName == "VP8") {
             int32_t maxFs = 0;
             branch->GetIntPref("media.navigator.video.max_fs", &maxFs);
@@ -907,9 +928,10 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
                      &preferredCodec);
 
   if (preferredCodec) {
-    CompareCodecPriority comparator(preferredCodec);
-    std::stable_sort(codecs.begin(), codecs.end(), comparator);
+    comparator.SetPreferredCodec(preferredCodec);
   }
+
+  std::stable_sort(codecs.begin(), codecs.end(), comparator);
 
   return NS_OK;
 }

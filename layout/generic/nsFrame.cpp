@@ -538,6 +538,8 @@ nsFrame::Init(nsIContent*       aContent,
                        NS_FRAME_MAY_BE_TRANSFORMED |
                        NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  } else {
+    PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
     nsFrameState state = GetParent()->GetStateBits();
@@ -2020,7 +2022,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-  if (isTransformed || useOpacity || useBlendMode || usingSVGEffects || useStickyPosition) {
+  if (isTransformed || useBlendMode || usingSVGEffects || useStickyPosition) {
     // We don't need to pass ancestor clipping down to our children;
     // everything goes inside a display item's child list, and the display
     // item itself will be clipped.
@@ -2136,6 +2138,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * effects, wrap it up in an opacity item.
    */
   else if (useOpacity && !resultList.IsEmpty()) {
+    // Don't clip nsDisplayOpacity items. We clip their descendants instead.
+    // The clip we would set on an element with opacity would clip
+    // all descendant content, but some should not be clipped.
+    DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
+    opacityClipState.Clear();
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
   }
@@ -4432,6 +4439,8 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
   }
+
+  aPresContext->ReflowedFrame();
 }
 
 void

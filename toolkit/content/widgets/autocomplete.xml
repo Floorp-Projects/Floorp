@@ -309,16 +309,6 @@
                 onset="this.setAttribute('disablekeynavigation', val); return val;"
                 onget="return this.getAttribute('disablekeynavigation') == 'true';"/>
 
-      <!-- option to completely ignore any blur events while
-           searches are still going on.  This is useful so that nothing
-           gets autopicked if the window is required to lose focus for
-           some reason (eg in LDAP autocomplete, another window may be
-           brought up so that the user can enter a password to authenticate
-           to an LDAP server).  -->
-      <property name="ignoreBlurWhileSearching"
-                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
-                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
-
       <!-- option to highlight entries that don't have any matches -->
       <property name="highlightNonMatches"
                 onset="this.setAttribute('highlightnonmatches', val); return val;"
@@ -336,12 +326,8 @@
 
       <method name="detachController">
         <body><![CDATA[
-          try {
-            if  (this.mController.input == this)
+          if (this.mController.input == this)
             this.mController.input = null;
-          } catch (ex) {
-            // nothing really to do.
-          }
         ]]></body>
       </method>
 
@@ -355,7 +341,6 @@
 
       <method name="closePopup">
         <body><![CDATA[
-          this.popup.setAttribute("consumeoutsideclicks", "false");
           this.popup.closePopup();
         ]]></body>
       </method>
@@ -372,7 +357,6 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
-              popup.setAttribute("consumeoutsideclicks", "false");
               popup.removeEventListener("popuphiding", onHide, false);
             }
             popup.addEventListener("popuphiding", onHide, false);
@@ -392,7 +376,6 @@
           // Ensure that we have focus.
           if (!this.focused)
             this.focus();
-          this.popup.setAttribute("consumeoutsideclicks", "true");
           this.attachController();
           this.mController.startSearch("");
         ]]></body>
@@ -601,8 +584,13 @@
       <handler event="focus" phase="capturing"
                action="this.attachController();"/>
 
-      <handler event="blur" phase="capturing"
-               action="if (!this._dontBlur) this.detachController();"/>
+      <handler event="blur" phase="capturing"><![CDATA[
+        if (!this._dontBlur) {
+          if (this.forceComplete && this.mController.matchCount >= 1)
+            this.mController.handleEnter(false);
+          this.detachController();
+        }
+      ]]></handler>
     </handlers>
   </binding>
 
@@ -613,7 +601,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true" level="top" consumeoutsideclicks="false">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1" seltype="single">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
@@ -966,7 +954,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true" level="top" consumeoutsideclicks="false">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>
         <children/>

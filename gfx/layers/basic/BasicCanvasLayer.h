@@ -23,21 +23,20 @@ class BasicCanvasLayer : public CopyableCanvasLayer,
 {
 public:
   explicit BasicCanvasLayer(BasicLayerManager* aLayerManager) :
-    CopyableCanvasLayer(aLayerManager,
-                        static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    CopyableCanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
   { }
-  
+
   virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
-  
+
   virtual void Paint(gfx::DrawTarget* aDT,
                      const gfx::Point& aDeviceOffset,
                      Layer* aMaskLayer) MOZ_OVERRIDE;
- 
+
 protected:
   BasicLayerManager* BasicManager()
   {

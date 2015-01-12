@@ -114,7 +114,11 @@ static bool LockD3DTexture(T* aTexture)
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
   // Textures created by the DXVA decoders don't have a mutex for synchronization
   if (mutex) {
-    HRESULT hr = mutex->AcquireSync(0, INFINITE);
+    HRESULT hr = mutex->AcquireSync(0, 10000);
+    if (hr == WAIT_TIMEOUT) {
+      MOZ_CRASH();
+    }
+
     if (FAILED(hr)) {
       NS_WARNING("Failed to lock the texture");
       return false;
@@ -758,7 +762,11 @@ SyncObjectD3D11::FinalizeFrame()
   if (mD3D10SyncedTextures.size()) {
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D10Texture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-    mutex->AcquireSync(0, INFINITE);
+    hr = mutex->AcquireSync(0, 10000);
+
+    if (hr == WAIT_TIMEOUT) {
+      MOZ_CRASH();
+    }
 
     D3D10_BOX box;
     box.front = box.top = box.left = 0;
@@ -778,7 +786,11 @@ SyncObjectD3D11::FinalizeFrame()
   if (mD3D11SyncedTextures.size()) {
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D11Texture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-    mutex->AcquireSync(0, INFINITE);
+    hr = mutex->AcquireSync(0, 10000);
+
+    if (hr == WAIT_TIMEOUT) {
+      MOZ_CRASH();
+    }
 
     D3D11_BOX box;
     box.front = box.top = box.left = 0;
