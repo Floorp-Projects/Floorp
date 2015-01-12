@@ -20,6 +20,11 @@ loop.conversationViews = (function(mozL10n) {
   // This duplicates a similar function in contacts.jsx that isn't used in the
   // conversation window. If we get too many of these, we might want to consider
   // finding a logical place for them to be shared.
+
+  // XXXdmose this code is already out of sync with the code in contacts.jsx
+  // which, unlike this code, now has unit tests.  We should totally do the
+  // above.
+
   function _getPreferredEmail(contact) {
     // A contact may not contain email addresses, but only a phone number.
     if (!contact.email || contact.email.length === 0) {
@@ -761,6 +766,25 @@ loop.conversationViews = (function(mozL10n) {
       return React.createElement("p", {className: "error"}, mozL10n.get("unable_retrieve_url"));
     },
 
+    _getTitleMessage: function() {
+      var callStateReason =
+        this.props.store.getStoreState("callStateReason");
+
+      if (callStateReason === "reject" || callStateReason === "busy" ||
+          callStateReason === "setup") {
+        var contactDisplayName = _getContactDisplayName(this.props.contact);
+        if (contactDisplayName.length) {
+          return mozL10n.get(
+            "contact_unavailable_title",
+            {"contactName": contactDisplayName});
+        }
+
+        return mozL10n.get("generic_contact_unavailable_title");
+      } else {
+        return mozL10n.get("generic_failure_title");
+      }
+    },
+
     retryCall: function() {
       this.props.dispatcher.dispatch(new sharedActions.RetryCall());
     },
@@ -784,7 +808,7 @@ loop.conversationViews = (function(mozL10n) {
     render: function() {
       return (
         React.createElement("div", {className: "call-window"}, 
-          React.createElement("h2", null, mozL10n.get("generic_failure_title")), 
+          React.createElement("h2", null,  this._getTitleMessage() ), 
 
           React.createElement("p", {className: "btn-label"}, mozL10n.get("generic_failure_with_reason2")), 
 
@@ -1048,6 +1072,7 @@ loop.conversationViews = (function(mozL10n) {
     CallIdentifierView: CallIdentifierView,
     ConversationDetailView: ConversationDetailView,
     CallFailedView: CallFailedView,
+    _getContactDisplayName: _getContactDisplayName,
     GenericFailureView: GenericFailureView,
     IncomingCallView: IncomingCallView,
     IncomingConversationView: IncomingConversationView,
