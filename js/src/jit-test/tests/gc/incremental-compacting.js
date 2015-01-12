@@ -1,6 +1,9 @@
 // Exercise incremental compacting GC
 // Run with MOZ_GCTIMER to see the timings
 
+if (!("gcstate" in this))
+    quit();
+
 function testCompacting(zoneCount, objectCount, sliceCount)
 {
     // Allocate objectCount objects in zoneCount zones
