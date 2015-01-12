@@ -431,6 +431,9 @@ private: // data
   // Determines whether we can perform an HQ scale with the given parameters.
   bool CanScale(GraphicsFilter aFilter, const nsIntSize& aSize, uint32_t aFlags);
 
+  // Determines whether we can downscale during decode with the given parameters.
+  bool CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags);
+
   // Called by the HQ scaler when a new scaled frame is ready.
   void NotifyNewScaledFrame();
 
