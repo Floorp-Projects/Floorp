@@ -7,8 +7,8 @@ package org.mozilla.gecko;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mozilla.gecko.TabsAccessor.RemoteClient;
-import org.mozilla.gecko.TabsAccessor.RemoteTab;
+import org.mozilla.gecko.db.RemoteClient;
+import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.home.TwoLinePageRow;
 
 import android.content.Context;
@@ -47,7 +47,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
     public RemoteTabsExpandableListAdapter(int groupLayoutId, int childLayoutId, List<RemoteClient> clients) {
         this.groupLayoutId = groupLayoutId;
         this.childLayoutId = childLayoutId;
-        this.clients = new ArrayList<TabsAccessor.RemoteClient>();
+        this.clients = new ArrayList<RemoteClient>();
         if (clients != null) {
             this.clients.addAll(clients);
         }
@@ -125,7 +125,11 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
 
         final TextView lastModifiedView = (TextView) view.findViewById(R.id.last_synced);
         final long now = System.currentTimeMillis();
-        lastModifiedView.setText(TabsAccessor.getLastSyncedString(context, now, client.lastModified));
+
+        // It's OK to access the DB on the main thread here, as we're just
+        // getting a string.
+        final GeckoProfile profile = GeckoProfile.get(context);
+        lastModifiedView.setText(profile.getDB().getTabsAccessor().getLastSyncedString(context, now, client.lastModified));
 
         // These views exists only in some of our group views: they are present
         // for the home panel groups and not for the tabs panel groups.

@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -152,7 +153,8 @@ public final class BitmapUtils {
                      }
                  }
              });
-         ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
+         final GeckoProfile profile = GeckoProfile.get(context);
+         ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab, profile.getDB());
     }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
