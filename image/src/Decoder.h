@@ -115,6 +115,24 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
+  /**
+   * Set whether should send partial invalidations.
+   *
+   * If @aSend is true, we'll send partial invalidations when decoding the first
+   * frame of the image, so image notifications observers will be able to
+   * gradually draw in the image as it downloads.
+   *
+   * If @aSend is false (the default), we'll only send an invalidation when we
+   * complete the first frame.
+   *
+   * This must be called before Init() is called.
+   */
+  void SetSendPartialInvalidations(bool aSend)
+  {
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
+    mSendPartialInvalidations = aSend;
+  }
+
   size_t BytesDecoded() const { return mBytesDecoded; }
 
   // The amount of time we've spent inside Write() so far for this decoder.
@@ -311,6 +329,7 @@ protected:
 
   uint32_t mDecodeFlags;
   size_t mBytesDecoded;
+  bool mSendPartialInvalidations;
   bool mDecodeDone;
   bool mDataError;
 
