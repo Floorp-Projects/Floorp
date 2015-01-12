@@ -125,6 +125,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   padding: 2px 3px;
 }
 
+toolbarbutton.bookmark-item:not(.subviewbutton):not(:hover):not(:active):not([open]) {
+  color: inherit;
+}
+
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active,
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;

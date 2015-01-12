@@ -1,0 +1,51 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Gamepad.timestamp</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript" src="mock_gamepad.js"></script>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+                                      4, // buttons
+                                      2);// axes
+
+var timea=0;
+window.addEventListener("gamepadbuttondown", buttonpresshandler);
+
+var firstPress = true;
+GamepadService.newButtonEvent(index, 0, true);
+GamepadService.newButtonEvent(index, 0, true);
+
+function cleanup(){
+  SpecialPowers.executeSoon(function() {
+    GamepadService.removeGamepad(index);
+    SimpleTest.finish();
+  });
+}
+
+function buttonpresshandler(e) {
+  if(timea == 0){
+    timea = e.gamepad.timestamp;
+  }
+  else{
+    ok(timea <= e.gamepad.timestamp);
+  }
+  GamepadService.newButtonEvent(index, 0, false);
+  if (!firstPress) {
+    SpecialPowers.executeSoon(cleanup);
+  }
+  else {
+    firstPress = false;
+  }
+}
+
+</script>
+</body>
+</html>

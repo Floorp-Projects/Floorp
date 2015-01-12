@@ -23,12 +23,6 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
- * CID and Contract ID of our implementation of nsIDownloadManagerUI.
- */
-const kDownloadsUICid = Components.ID("{4d99321e-d156-455b-81f7-e7aa2308134f}");
-const kDownloadsUIContractId = "@mozilla.org/download-manager-ui;1";
-
-/**
  * CID and Contract ID of the JavaScript implementation of nsITransfer.
  */
 const kTransferCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
@@ -54,18 +48,6 @@ DownloadsStartup.prototype = {
 
   observe: function DS_observe(aSubject, aTopic, aData)
   {
-    if (aTopic != "profile-after-change") {
-      Cu.reportError("Unexpected observer notification.");
-      return;
-    }
-
-    // Override Toolkit's nsIDownloadManagerUI implementation with our own.
-    // This must be done at application startup and not in the manifest to
-    // ensure that our implementation overrides the original one.
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
-                      .registerFactory(kDownloadsUICid, "",
-                                       kDownloadsUIContractId, null);
-
     // Override Toolkit's nsITransfer implementation with the one from the
     // JavaScript API for downloads.
     Components.manager.QueryInterface(Ci.nsIComponentRegistrar)

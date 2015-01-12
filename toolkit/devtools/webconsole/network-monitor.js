@@ -160,10 +160,25 @@ NetworkResponseListener.prototype = {
   onStartRequest: function NRL_onStartRequest(aRequest)
   {
     this.request = aRequest;
+    this._getSecurityInfo();
     this._findOpenResponse();
     // Asynchronously wait for the data coming from the request.
     this.setAsyncListener(this.sink.inputStream, this);
   },
+
+  /**
+   * Parse security state of this request and report it to the client.
+   */
+  _getSecurityInfo: DevToolsUtils.makeInfallible(function NRL_getSecurityInfo() {
+    // Take the security information from the original nsIHTTPChannel instead of
+    // the nsIRequest received in onStartRequest. If response to this request
+    // was a redirect from http to https, the request object seems to contain
+    // security info for the https request after redirect.
+    let secinfo = this.httpActivity.channel.securityInfo;
+    let info = NetworkHelper.parseSecurityInfo(secinfo, this.request);
+
+    this.httpActivity.owner.addSecurityInfo(info);
+  }),
 
   /**
    * Handle the onStopRequest by closing the sink output stream.
@@ -1160,8 +1175,8 @@ NetworkEventActorProxy.prototype = {
 (function() {
   // Listeners for new network event data coming from the NetworkMonitor.
   let methods = ["addRequestHeaders", "addRequestCookies", "addRequestPostData",
-                 "addResponseStart", "addResponseHeaders", "addResponseCookies",
-                 "addResponseContent", "addEventTimings"];
+                 "addResponseStart", "addSecurityInfo", "addResponseHeaders",
+                 "addResponseCookies", "addResponseContent", "addEventTimings"];
   let factory = NetworkEventActorProxy.methodFactory;
   for (let method of methods) {
     NetworkEventActorProxy.prototype[method] = factory(method);

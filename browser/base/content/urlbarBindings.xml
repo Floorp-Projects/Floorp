@@ -988,13 +988,18 @@
         </xul:treecols>
         <xul:treechildren class="autocomplete-treebody"/>
       </xul:tree>
-      <xul:hbox anonid="search-panel-one-offs-header"
+      <xul:deck anonid="search-panel-one-offs-header"
+                selectedIndex="0"
                 class="search-panel-header search-panel-current-input"
                 xbl:inherits="hidden=showonlysettings">
-        <xul:label anonid="searchbar-oneoffheader-before" value="&searchFor.label;"/>
-        <xul:label anonid="searchbar-oneoffheader-searchtext" flex="1" crop="end" class="search-panel-input-value"/>
-        <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value="&searchWith.label;"/>
-      </xul:hbox>
+        <xul:label anonid="searchbar-oneoffheader-search" value="&searchWithHeader.label;"/>
+        <xul:hbox anonid="search-panel-searchforwith"
+                  class="search-panel-current-input">
+          <xul:label anonid="searchbar-oneoffheader-before" value="&searchFor.label;"/>
+          <xul:label anonid="searchbar-oneoffheader-searchtext" flex="1" crop="end" class="search-panel-input-value"/>
+          <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value="&searchWith.label;"/>
+        </xul:hbox>
+      </xul:deck>
       <xul:description anonid="search-panel-one-offs"
                        class="search-panel-one-offs"
                        xbl:inherits="hidden=showonlysettings"/>
@@ -1059,12 +1064,20 @@
         let headerSearchText =
           document.getAnonymousElementByAttribute(this, "anonid",
                                                   "searchbar-oneoffheader-searchtext");
+        let headerPanel =
+          document.getAnonymousElementByAttribute(this, "anonid",
+                                                  "search-panel-one-offs-header");
         let textbox = searchbar.textbox;
         let self = this;
         let inputHandler = function() {
           headerSearchText.setAttribute("value", textbox.value);
-          if (textbox.value)
+          if (textbox.value) {
             self.removeAttribute("showonlysettings");
+            headerPanel.selectedIndex = 1;
+          }
+          else {
+            headerPanel.selectedIndex = 0;
+          }
         };
         textbox.addEventListener("input", inputHandler);
         this.addEventListener("popuphiding", function hiding() {

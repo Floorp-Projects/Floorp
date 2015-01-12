@@ -579,7 +579,7 @@ public:
 
   VideoTrackList* VideoTracks();
 
-  TextTrackList* TextTracks();
+  TextTrackList* GetTextTracks();
 
   already_AddRefed<TextTrack> AddTextTrack(TextTrackKind aKind,
                                            const nsAString& aLabel,

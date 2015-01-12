@@ -4193,6 +4193,36 @@ CodeGenerator::visitNewTypedObject(LNewTypedObject *lir)
     masm.bind(ool->rejoin());
 }
 
+void
+CodeGenerator::visitSimdBox(LSimdBox *lir)
+{
+    FloatRegister in = ToFloatRegister(lir->input());
+    Register object = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+    InlineTypedObject *templateObject = lir->mir()->templateObject();
+    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+    MIRType type = lir->mir()->input()->type();
+
+    // :TODO: We cannot spill SIMD registers (Bug 1112164) from safepoints, thus
+    // we cannot use the same oolCallVM as visitNewTypedObject for allocating
+    // SIMD Typed Objects if we are at the end of the nursery. (Bug 1119303)
+    Label bail;
+    masm.createGCObject(object, temp, templateObject, initialHeap, &bail);
+    bailoutFrom(&bail, lir->snapshot());
+
+    Address objectData(object, InlineTypedObject::offsetOfDataStart());
+    switch (type) {
+      case MIRType_Int32x4:
+        masm.storeUnalignedInt32x4(in, objectData);
+        break;
+      case MIRType_Float32x4:
+        masm.storeUnalignedFloat32x4(in, objectData);
+        break;
+      default:
+        MOZ_CRASH("Unknown SIMD kind when generating code for SimdBox.");
+    }
+}
+
 typedef js::DeclEnvObject *(*NewDeclEnvObjectFn)(JSContext *, HandleFunction, gc::InitialHeap);
 static const VMFunction NewDeclEnvObjectInfo =
     FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject);

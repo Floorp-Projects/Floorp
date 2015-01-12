@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: redo
+Version: 1.4
+Summary: Utilities to retry Python callables.
+Home-page: https://github.com/bhearsum/redo
+Author: Ben Hearsum
+Author-email: ben@hearsum.ca
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

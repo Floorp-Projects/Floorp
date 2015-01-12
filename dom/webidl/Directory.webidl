@@ -35,7 +35,7 @@ interface Directory {
    * @return If succeeds, the promise is resolved with the new created
    * File object. Otherwise, rejected with a DOM error.
    */
-  [NewObject, Throws]
+  [NewObject]
   Promise<File> createFile(DOMString path, optional CreateFileOptions options);
 
   /*
@@ -47,7 +47,7 @@ interface Directory {
    * @return If succeeds, the promise is resolved with the new created
    * Directory object. Otherwise, rejected with a DOM error.
    */
-  [NewObject, Throws]
+  [NewObject]
   Promise<Directory> createDirectory(DOMString path);
 
   /*
@@ -58,7 +58,7 @@ interface Directory {
    * with a File or Directory object, depending on the entry's type. Otherwise,
    * rejected with a DOM error.
    */
-  [NewObject, Throws]
+  [NewObject]
   Promise<(File or Directory)> get(DOMString path);
 
   /*
@@ -72,7 +72,7 @@ interface Directory {
    * exist, the promise is resolved with boolean false. If the target did exist
    * and was successfully deleted, the promise is resolved with boolean true.
    */
-  [NewObject, Throws]
+  [NewObject]
   Promise<boolean> remove((DOMString or File or Directory) path);
 
   /*
@@ -86,7 +86,7 @@ interface Directory {
    * resolved with boolean false. If the target did exist and was successfully
    * deleted, the promise is resolved with boolean true.
    */
-  [NewObject, Throws]
+  [NewObject]
   Promise<boolean> removeDeep((DOMString or File or Directory) path);
 };
 
