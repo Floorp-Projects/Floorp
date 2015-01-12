@@ -328,18 +328,11 @@ Decoder::FinishSharedDecoder()
 }
 
 nsresult
-Decoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
+Decoder::AllocateFrame()
 {
   MOZ_ASSERT(mNeedsNewFrame);
 
-  nsIntSize targetSize = aTargetSize;
-  if (targetSize == nsIntSize()) {
-    MOZ_ASSERT(HasSize());
-    targetSize = mImageMetadata.GetSize();
-  }
-
   mCurrentFrame = EnsureFrame(mNewFrameData.mFrameNum,
-                              targetSize,
                               mNewFrameData.mFrameRect,
                               mDecodeFlags,
                               mNewFrameData.mFormat,
@@ -373,7 +366,6 @@ Decoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
 
 RawAccessFrameRef
 Decoder::EnsureFrame(uint32_t aFrameNum,
-                     const nsIntSize& aTargetSize,
                      const nsIntRect& aFrameRect,
                      uint32_t aDecodeFlags,
                      SurfaceFormat aFormat,
@@ -391,8 +383,8 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
 
   // Adding a frame that doesn't already exist. This is the normal case.
   if (aFrameNum == mFrameCount) {
-    return InternalAddFrame(aFrameNum, aTargetSize, aFrameRect, aDecodeFlags,
-                            aFormat, aPaletteDepth, aPreviousFrame);
+    return InternalAddFrame(aFrameNum, aFrameRect, aDecodeFlags, aFormat,
+                            aPaletteDepth, aPreviousFrame);
   }
 
   // We're replacing a frame. It must be the first frame; there's no reason to
@@ -423,7 +415,7 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
   bool nonPremult =
     aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   if (NS_FAILED(aPreviousFrame->ReinitForDecoder(oldSize, aFrameRect, aFormat,
-                                                 aPaletteDepth, nonPremult))) {
+                                               aPaletteDepth, nonPremult))) {
     NS_WARNING("imgFrame::ReinitForDecoder should succeed");
     mFrameCount = 0;
     aPreviousFrame->Abort();
@@ -435,7 +427,6 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
 
 RawAccessFrameRef
 Decoder::InternalAddFrame(uint32_t aFrameNum,
-                          const nsIntSize& aTargetSize,
                           const nsIntRect& aFrameRect,
                           uint32_t aDecodeFlags,
                           SurfaceFormat aFormat,
@@ -447,13 +438,15 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  if (aTargetSize.width <= 0 || aTargetSize.height <= 0 ||
+  MOZ_ASSERT(mImageMetadata.HasSize());
+  nsIntSize imageSize(mImageMetadata.GetWidth(), mImageMetadata.GetHeight());
+  if (imageSize.width <= 0 || imageSize.height <= 0 ||
       aFrameRect.width <= 0 || aFrameRect.height <= 0) {
     NS_WARNING("Trying to add frame with zero or negative size");
     return RawAccessFrameRef();
   }
 
-  if (!SurfaceCache::CanHold(aTargetSize.ToIntSize())) {
+  if (!SurfaceCache::CanHold(imageSize.ToIntSize())) {
     NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
     return RawAccessFrameRef();
   }
@@ -461,7 +454,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
   nsRefPtr<imgFrame> frame = new imgFrame();
   bool nonPremult =
     aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-  if (NS_FAILED(frame->InitForDecoder(aTargetSize, aFrameRect, aFormat,
+  if (NS_FAILED(frame->InitForDecoder(imageSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
@@ -475,7 +468,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
 
   InsertOutcome outcome =
     SurfaceCache::Insert(frame, ImageKey(mImage.get()),
-                         RasterSurfaceKey(aTargetSize.ToIntSize(),
+                         RasterSurfaceKey(imageSize.ToIntSize(),
                                           aDecodeFlags,
                                           aFrameNum),
                          Lifetime::Persistent);
@@ -611,7 +604,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity /* = Opacity::TRANSPARENT */,
 }
 
 void
-Decoder::PostInvalidation(const nsIntRect& aRect)
+Decoder::PostInvalidation(nsIntRect& aRect)
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Can't invalidate when not mid-frame!");

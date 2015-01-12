@@ -40,8 +40,7 @@ public:
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
   virtual void FinishInternal() MOZ_OVERRIDE;
-  virtual nsresult AllocateFrame(const nsIntSize& aTargetSize
-                                   /* = nsIntSize() */) MOZ_OVERRIDE;
+  virtual nsresult AllocateFrame() MOZ_OVERRIDE;
 
 protected:
   virtual bool NeedsNewFrame() const MOZ_OVERRIDE;

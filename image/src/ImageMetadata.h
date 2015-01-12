@@ -51,7 +51,6 @@ public:
   bool HasSize() const { return mSize.isSome(); }
   bool HasOrientation() const { return mOrientation.isSome(); }
 
-  nsIntSize GetSize() const { return *mSize; }
   int32_t GetWidth() const { return mSize->width; }
   int32_t GetHeight() const { return mSize->height; }
   Orientation GetOrientation() const { return *mOrientation; }
