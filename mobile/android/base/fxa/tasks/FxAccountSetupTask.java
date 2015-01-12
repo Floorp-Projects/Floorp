@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.fxa.tasks;
 
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import org.mozilla.gecko.background.common.log.Logger;
@@ -43,13 +44,16 @@ public abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerR
   protected final CountDownLatch latch = new CountDownLatch(1);
   protected final InnerRequestDelegate<T> innerDelegate = new InnerRequestDelegate<T>(latch);
 
+  protected final Map<String, String> queryParameters;
+
   protected final RequestDelegate<T> delegate;
 
-  public FxAccountSetupTask(Context context, ProgressDisplay progressDisplay, FxAccountClient client, RequestDelegate<T> delegate) {
+  public FxAccountSetupTask(Context context, ProgressDisplay progressDisplay, FxAccountClient client, Map<String, String> queryParameters, RequestDelegate<T> delegate) {
     this.context = context;
     this.client = client;
     this.delegate = delegate;
     this.progressDisplay = progressDisplay;
+    this.queryParameters = queryParameters;
   }
 
   @Override

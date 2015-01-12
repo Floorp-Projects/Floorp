@@ -221,7 +221,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     FxAccountClient client = new FxAccountClient20(serverURI, executor);
     try {
       hideRemoteError();
-      new FxAccountCreateAccountTask(this, this, email, passwordStretcher, client, delegate).execute();
+      new FxAccountCreateAccountTask(this, this, email, passwordStretcher, client, getQueryParameters(), delegate).execute();
     } catch (Exception e) {
       showRemoteError(e, R.string.fxaccount_create_account_unknown_error);
     }
