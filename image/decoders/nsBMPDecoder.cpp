@@ -38,7 +38,7 @@ GetBMPLog()
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
 #define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
 
-nsBMPDecoder::nsBMPDecoder(RasterImage& aImage)
+nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mPos(0)
   , mLOH(WIN_V3_HEADER_LENGTH)

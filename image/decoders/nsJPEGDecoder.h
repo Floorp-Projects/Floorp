@@ -52,7 +52,7 @@ struct Orientation;
 class nsJPEGDecoder : public Decoder
 {
 public:
-  nsJPEGDecoder(RasterImage& aImage, Decoder::DecodeStyle aDecodeStyle);
+  nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
   virtual void InitInternal() MOZ_OVERRIDE;
