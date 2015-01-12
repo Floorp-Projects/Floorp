@@ -13680,7 +13680,7 @@ nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
         *aOut = tabChild->IsAsyncPanZoomEnabled();
         return NS_OK;
     }
-    *aOut = false;
+    *aOut = Preferences::GetBool("layers.async-pan-zoom.enabled", false);
     return NS_OK;
 }
 

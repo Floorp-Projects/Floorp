@@ -7647,15 +7647,8 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
 /* static */ bool
 nsLayoutUtils::WantSubAPZC()
 {
-  // TODO Turn this on for inprocess OMTC on all platforms
-  bool wantSubAPZC = gfxPrefs::AsyncPanZoomEnabled() &&
-                     gfxPrefs::APZSubframeEnabled();
-#ifdef MOZ_WIDGET_GONK
-  if (XRE_GetProcessType() != GeckoProcessType_Content) {
-    wantSubAPZC = false;
-  }
-#endif
-  return wantSubAPZC;
+  return gfxPrefs::AsyncPanZoomEnabled() &&
+         gfxPrefs::APZSubframeEnabled();
 }
 
 /* static */ bool
