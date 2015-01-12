@@ -96,4 +96,4 @@ exports.testSerialization = function (assert, done) {
   }
 };
 
-require('sdk/test').run(exports);
+require('test').run(exports);

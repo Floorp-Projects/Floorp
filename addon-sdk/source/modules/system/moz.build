@@ -6,4 +6,5 @@
 
 EXTRA_JS_MODULES.sdk.system += [
     'Startup.js',
+    'XulApp.js',
 ]

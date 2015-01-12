@@ -16,13 +16,11 @@ const targetFor = target => {
   return devtools.TargetFactory.forTab(target);
 };
 
-const getId = id => ((id.prototype && id.prototype.id) || id.id || id);
-
 const getCurrentPanel = toolbox => toolbox.getCurrentPanel();
 exports.getCurrentPanel = getCurrentPanel;
 
 const openToolbox = (id, tab) => {
-  id = getId(id);
+  id = id.prototype.id || id.id || id;
   return gDevTools.showToolbox(targetFor(tab), id);
 };
 exports.openToolbox = openToolbox;
@@ -34,7 +32,7 @@ const getToolbox = tab => gDevTools.getToolbox(targetFor(tab));
 exports.getToolbox = getToolbox;
 
 const openToolboxPanel = (id, tab) => {
-  id = getId(id);
+  id = id.prototype.id || id.id || id;
   return gDevTools.showToolbox(targetFor(tab), id).then(getCurrentPanel);
 };
 exports.openToolboxPanel = openToolboxPanel;

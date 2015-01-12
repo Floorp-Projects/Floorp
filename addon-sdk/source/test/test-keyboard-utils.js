@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const utils = require("sdk/keyboard/utils");
@@ -13,7 +14,7 @@ exports["test toString"] = function(assert) {
     key: "B",
     modifiers: [ "Shift", "Ctrl" ]
   }), "Shift-Ctrl-B", "toString does not normalizes JSON");
-
+  
   assert.equal(utils.toString({
     key: "C",
     modifiers: [],
@@ -25,7 +26,7 @@ exports["test toString"] = function(assert) {
     method: { value: function() {} }
   })), "alt-d", "Works with non-json objects");
 
-  assert.equal(utils.toString({
+  assert.equal(utils.toString({ 
     modifiers: [ "shift", "alt" ]
   }), "shift-alt-", "works with only modifiers");
 };
@@ -58,4 +59,4 @@ exports["test normalize"] = function assert(assert) {
   }, "throws if contains more then on non-modifier key");
 };
 
-require("sdk/test").run(exports);
+require("test").run(exports);

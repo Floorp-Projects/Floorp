@@ -27,7 +27,8 @@ exports["test xulapp"] = function(assert) {
                 "is('" + name + "') is true or false.");
   }
 
-  var apps = ["Firefox", "Mozilla", "SeaMonkey", "Fennec", "Thunderbird"];
+  var apps = ["Firefox", "Mozilla", "Sunbird", "SeaMonkey",
+              "Fennec", "Thunderbird"];
 
   apps.forEach(testSupport);
 
@@ -141,4 +142,4 @@ exports["test not satisfies version range"] = function (assert) {
   });
 }
 
-require("sdk/test").run(exports);
+require("test").run(exports);

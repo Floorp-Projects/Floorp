@@ -2,7 +2,5 @@
   "id": "test-developers@jetpack",
   "title": "Test developers package key",
   "author": "Erik Vold",
-  "developers": [ "A", "B" ],
-  "main": "./main.js",
-  "version": "0.0.1"
+  "developers": [ "A", "B" ]
 }

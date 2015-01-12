@@ -20,8 +20,6 @@ const { object } = require("sdk/util/sequence");
 const { CustomizationInput } = require("sdk/input/customizable-ui");
 const { OutputPort } = require("sdk/output/system");
 const output = new OutputPort({ id: "toolbar-change" });
-const { cleanUI } = require('sdk/test/utils');
-const tabs = require("sdk/tabs");
 
 const wait = (toolbar, event) => {
   let { promise, resolve } = defer();
@@ -224,8 +222,6 @@ exports["test multiple windows & toolbars"] = function*(assert) {
   yield wait(t2, "detach");
 
   assert.ok(!isAttached(t2, w1), "toolbar was removed");
-
-  yield cleanUI();
 };
 
 exports["test toolbar persistence"] = function*(assert) {
@@ -267,8 +263,6 @@ exports["test toolbar persistence"] = function*(assert) {
   t3.destroy();
 
   yield wait(t3, "detach");
-
-  yield cleanUI();
 };
 
 
@@ -297,7 +291,7 @@ exports["test toolbar unload"] = function*(assert) {
   assert.ok(!isAttached(t1, w1) && !isAttached(t1, w2),
             "detached from both windows on unload");
 
-  yield cleanUI();
+  yield close(w2);
 };
 
 exports["test toolbar close button"] = function*(assert) {
@@ -321,7 +315,7 @@ exports["test toolbar close button"] = function*(assert) {
 
   t1.destroy();
   yield wait(t1, "detach");
-  yield cleanUI();
+  yield close(w2);
 };
 
 exports["test title change"] = function*(assert) {
@@ -361,7 +355,7 @@ exports["test title change"] = function*(assert) {
 
   t1.destroy();
   yield wait(t1, "detach");
-  yield cleanUI();
+  yield close(w2);
 };
 
 exports["test toolbar is not customizable"] = function*(assert, done) {
@@ -371,15 +365,6 @@ exports["test toolbar is not customizable"] = function*(assert, done) {
   const customized = defer();
   const customizedEnd = defer();
 
-  // open a new tab so that the customize tab replaces it
-  // and does not replace the start tab.
-  yield new Promise(resolve => {
-    tabs.open({
-      url: "about:blank",
-      onReady: resolve
-    });
-  });
-
   new Reactor({ onStep: value => {
     if (value[outerId] === true)
       customized.resolve();
@@ -388,6 +373,7 @@ exports["test toolbar is not customizable"] = function*(assert, done) {
   }}).run(input);
 
   const toolbar = new Toolbar({ title: "foo" });
+
   yield wait(toolbar, "attach");
 
   let view = document.getElementById(toolbar.id);
@@ -441,8 +427,6 @@ exports["test toolbar is not customizable"] = function*(assert, done) {
     "The inner toolbar is visible.");
 
   toolbar.destroy();
-
-  yield cleanUI();
 };
 
 exports["test button are attached to toolbar"] = function*(assert) {
@@ -488,8 +472,6 @@ exports["test button are attached to toolbar"] = function*(assert) {
     "buttons are placed in the correct toolbar");
 
   toolbar.destroy();
-
-  yield cleanUI();
 };
 
-require("sdk/test").run(module.exports);
+require("sdk/test").run(exports);

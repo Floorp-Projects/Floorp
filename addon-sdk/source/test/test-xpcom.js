@@ -220,4 +220,4 @@ exports["test unload"] = function(assert) {
                    'component was manually unregistered on unload');
 };
 
-require("sdk/test").run(exports);
+require("test").run(exports);

@@ -202,4 +202,4 @@ exports['test nested in colon'] = function(assert) {
   assert.deepEqual({}, qs.parse(), 'parse undefined');
 };
 
-require("sdk/test").run(exports);
+require("test").run(exports);

@@ -1,8 +1,6 @@
 {
-  "id": "content-permissions@jetpack",
+  "id": "content-permissions",
   "permissions": {
     "unsafe-content-script": true
-  },
-  "main": "./main.js",
-  "version": "0.0.1"
+  }
 }

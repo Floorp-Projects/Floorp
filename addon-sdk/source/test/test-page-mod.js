@@ -4,8 +4,7 @@
 "use strict";
 
 const { PageMod } = require("sdk/page-mod");
-const { testPageMod, handleReadyState, openNewTab,
-        contentScriptWhenServer, createLoader } = require("./pagemod-test-helpers");
+const { testPageMod, handleReadyState, contentScriptWhenServer } = require("./pagemod-test-helpers");
 const { Loader } = require('sdk/test/loader');
 const tabs = require("sdk/tabs");
 const { setTimeout } = require("sdk/timers");
@@ -17,11 +16,10 @@ const xulApp = require("sdk/system/xul-app");
 const { isPrivateBrowsingSupported } = require('sdk/self');
 const { isPrivate } = require('sdk/private-browsing');
 const { openWebpage } = require('./private-browsing/helper');
-const { isTabPBSupported, isWindowPBSupported } = require('sdk/private-browsing/utils');
+const { isTabPBSupported, isWindowPBSupported, isGlobalPBSupported } = require('sdk/private-browsing/utils');
 const promise = require("sdk/core/promise");
 const { pb } = require('./private-browsing/helper');
 const { URL } = require("sdk/url");
-const { defer, all } = require('sdk/core/promise');
 
 const { waitUntil } = require("sdk/test/utils");
 const data = require("./fixtures");
@@ -29,12 +27,12 @@ const data = require("./fixtures");
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { require: devtoolsRequire } = devtools;
 const contentGlobals = devtoolsRequire("devtools/server/content-globals");
-const { cleanUI } = require("sdk/test/utils");
 
 const testPageURI = data.url("test.html");
 
 // The following adds Debugger constructor to the global namespace.
-const { addDebuggerToGlobal } = require('resource://gre/modules/jsdebugger.jsm');
+const { addDebuggerToGlobal } =
+  Cu.import('resource://gre/modules/jsdebugger.jsm', {});
 addDebuggerToGlobal(this);
 
 function Isolate(worker) {
@@ -1430,6 +1428,48 @@ exports["test page-mod on private tab"] = function (assert, done) {
   }, fail);
 }
 
+exports["test page-mod on private tab in global pb"] = function (assert, done) {
+  if (!isGlobalPBSupported) {
+    assert.pass();
+    return done();
+  }
+
+  let privateUri = "data:text/html;charset=utf-8," +
+                   "<iframe%20src=\"data:text/html;charset=utf-8,frame\"/>";
+
+  let pageMod = new PageMod({
+    include: privateUri,
+    onAttach: function(worker) {
+      assert.equal(worker.tab.url,
+                       privateUri,
+                       "page-mod should attach");
+      assert.equal(isPrivateBrowsingSupported,
+                       false,
+                       "private browsing is not supported");
+      assert.ok(isPrivate(worker),
+                  "The worker is really non-private");
+      assert.ok(isPrivate(worker.tab),
+                  "The document is really non-private");
+      pageMod.destroy();
+
+      worker.tab.close(function() {
+        pb.once('stop', function() {
+          assert.pass('global pb stop');
+          done();
+        });
+        pb.deactivate();
+      });
+    }
+  });
+
+  let page1;
+  pb.once('start', function() {
+    assert.pass('global pb start');
+    tabs.open({ url: privateUri });
+  });
+  pb.activate();
+}
+
 // Bug 699450: Calling worker.tab.close() should not lead to exception
 exports.testWorkerTabClose = function(assert, done) {
   let callbackDone;
@@ -1637,29 +1677,33 @@ exports.testConsole = function(assert, done) {
   let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
 }
 
-exports.testSyntaxErrorInContentScript = function *(assert) {
+exports.testSyntaxErrorInContentScript = function(assert, done) {
   const url = "data:text/html;charset=utf-8,testSyntaxErrorInContentScript";
-  const loader = createLoader();
-  const { PageMod } = loader.require("sdk/page-mod");
-  let attached = defer();
-  let errored = defer();
+  let hitError = null;
+  let attached = false;
 
-  let mod = PageMod({
-    include: url,
-    contentScript: 'console.log(23',
-    onAttach: attached.resolve,
-    onError: errored.resolve
-  });
-  openNewTab(url);
+  testPageMod(assert, done, url, [{
+      include: url,
+      contentScript: 'console.log(23',
 
-  yield attached.promise;
-  let hitError = yield errored.promise;
+      onAttach: function() {
+        attached = true;
+      },
 
-  assert.notStrictEqual(hitError, null, "The syntax error was reported.");
-  assert.equal(hitError.name, "SyntaxError", "The error thrown should be a SyntaxError");
+      onError: function(e) {
+        hitError = e;
+      }
+    }],
 
-  loader.unload();
-  yield cleanUI();
+    function(win, done) {
+      assert.ok(attached, "The worker was attached.");
+      assert.notStrictEqual(hitError, null, "The syntax error was reported.");
+      if (hitError)
+        assert.equal(hitError.name, "SyntaxError", "The error thrown should be a SyntaxError");
+      done();
+    },
+    300
+  );
 };
 
 require('sdk/test').run(exports);

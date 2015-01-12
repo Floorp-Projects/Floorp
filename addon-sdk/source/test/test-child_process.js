@@ -539,7 +539,7 @@ exports.testFork = function (assert) {
 
 after(exports, cleanUp);
 
-require("sdk/test").run(exports);
+require("test").run(exports);
 
 // Test disabled because of bug 979675
 module.exports = {};

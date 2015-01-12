@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 // Skipping due to window creation being unsupported in Fennec
@@ -20,7 +21,6 @@ const { set: setPref } = require("sdk/preferences/service");
 const { isArray } = require("sdk/lang/type");
 const { URL } = require('sdk/url');
 const fixtures = require("./fixtures");
-const system = require("sdk/system/events");
 
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
@@ -334,8 +334,6 @@ exports["test:content is wrapped"] = WorkerTest(
   }
 );
 
-// ContentWorker is not for chrome
-/*
 exports["test:chrome is unwrapped"] = function(assert, done) {
   let window = makeWindow();
 
@@ -356,7 +354,6 @@ exports["test:chrome is unwrapped"] = function(assert, done) {
 
   });
 }
-*/
 
 exports["test:nothing is leaked to content script"] = WorkerTest(
   DEFAULT_CONTENT_URL,
@@ -385,19 +382,19 @@ exports["test:nothing is leaked to content script"] = WorkerTest(
 exports["test:ensure console.xxx works in cs"] = WorkerTest(
   DEFAULT_CONTENT_URL,
   function(assert, browser, done) {
-    const EXPECTED = ["time", "log", "info", "warn", "error", "error", "timeEnd"];
+    let { loader } = LoaderWithHookedConsole(module, onMessage);
 
+    // Intercept all console method calls
     let calls = [];
-    let levels = [];
-
-    system.on('console-api-log-event', onMessage);
-
-    function onMessage({ subject }) {
-      calls.push(subject.wrappedJSObject.arguments[0]);
-      levels.push(subject.wrappedJSObject.level);
+    function onMessage(type, msg) {
+      assert.equal(type, msg,
+        "console.xxx(\"xxx\"), i.e. message is equal to the " +
+        "console method name we are calling");
+      calls.push(msg);
     }
 
-    let worker =  Worker({
+    // Finally, create a worker that will call all console methods
+    let worker =  loader.require("sdk/content/worker").Worker({
       window: browser.contentWindow,
       contentScript: "new " + function WorkerScope() {
         console.time("time");
@@ -406,21 +403,17 @@ exports["test:ensure console.xxx works in cs"] = WorkerTest(
         console.warn("warn");
         console.error("error");
         console.debug("debug");
-        console.exception("error");
+        console.exception("exception");
         console.timeEnd("timeEnd");
         self.postMessage();
       },
       onMessage: function() {
-        system.off('console-api-log-event', onMessage);
-
+        // Ensure that console methods are called in the same execution order
+        const EXPECTED_CALLS = ["time", "log", "info", "warn", "error",
+          "debug", "exception", "timeEnd"];
         assert.equal(JSON.stringify(calls),
-          JSON.stringify(EXPECTED),
+          JSON.stringify(EXPECTED_CALLS),
           "console methods have been called successfully, in expected order");
-
-        assert.equal(JSON.stringify(levels),
-          JSON.stringify(EXPECTED),
-          "console messages have correct log levels, in expected order");
-
         done();
       }
     });
@@ -763,19 +756,17 @@ exports["test:check worker API with page history"] = WorkerTest(
         browser.removeEventListener("pagehide", onpagehide, false);
         // Now any event sent to this worker should throw
 
-        setTimeout(_ => {
-          assert.throws(
-              function () { worker.postMessage("data"); },
-              /The page is currently hidden and can no longer be used/,
-              "postMessage should throw when the page is hidden in history"
-              );
+        assert.throws(
+            function () { worker.postMessage("data"); },
+            /The page is currently hidden and can no longer be used/,
+            "postMessage should throw when the page is hidden in history"
+            );
 
-          assert.throws(
-              function () { worker.port.emit("event"); },
-              /The page is currently hidden and can no longer be used/,
-              "port.emit should throw when the page is hidden in history"
-              );
-        })
+        assert.throws(
+            function () { worker.port.emit("event"); },
+            /The page is currently hidden and can no longer be used/,
+            "port.emit should throw when the page is hidden in history"
+            );
 
         // Display the page with attached content script back in order to resume
         // its timeout and receive the expected message.
@@ -895,18 +886,15 @@ exports["test:console method log functions properly"] = WorkerTest(
   function(assert, browser, done) {
     let logs = [];
 
-    system.on('console-api-log-event', onMessage);
-
-    function onMessage({ subject }) {
-      logs.push(clean(subject.wrappedJSObject.arguments[0]));
-    }
-
     let clean = message =>
           message.trim().
           replace(/[\r\n]/g, " ").
           replace(/ +/g, " ");
 
-    let worker =  Worker({
+    let onMessage = (type, message) => logs.push(clean(message));
+    let { loader } = LoaderWithHookedConsole(module, onMessage);
+
+    let worker =  loader.require("sdk/content/worker").Worker({
       window: browser.contentWindow,
       contentScript: "new " + function WorkerScope() {
         console.log(Function);
@@ -916,8 +904,6 @@ exports["test:console method log functions properly"] = WorkerTest(
         self.postMessage();
       },
       onMessage: () => {
-        system.off('console-api-log-event', onMessage);
-
         assert.deepEqual(logs, [
           "function Function() { [native code] }",
           "(foo) => foo * foo",
@@ -978,4 +964,4 @@ exports["test:destroy unbinds listeners from port"] = WorkerTest(
 );
 
 
-require("sdk/test").run(exports);
+require("test").run(exports);

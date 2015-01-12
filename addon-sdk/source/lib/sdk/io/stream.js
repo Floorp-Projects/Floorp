@@ -192,10 +192,8 @@ const InputStream = Class({
   },
   resume: function resume() {
     this.paused = false;
-    if (nsIInputStreamPump(this).isPending()) {
-        nsIInputStreamPump(this).resume();
-        emit(this, "resume");
-    }
+    nsIInputStreamPump(this).resume();
+    emit(this, "resume");
   },
   close: function close() {
     this.readable = false;

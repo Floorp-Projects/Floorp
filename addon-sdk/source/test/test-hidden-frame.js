@@ -68,4 +68,4 @@ exports["test unload detaches panels"] = function(assert, done) {
   }
 };
 
-require("sdk/test").run(exports);
+require("test").run(exports);

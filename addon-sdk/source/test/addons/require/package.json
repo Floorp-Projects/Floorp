@@ -1,8 +1,5 @@
 {
-  "id": "test-require@jetpack",
-  "name": "test-require",
+  "id": "test-require",
   "packages": "packages",
-  "ignore-deprecated-path": true,
-  "main": "./main.js",
-  "version": "0.0.1"
+  "ignore-deprecated-path": true
 }

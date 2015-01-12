@@ -20,7 +20,7 @@ let { merge } = require('../util/object');
 let { setTimeout, clearTimeout } = require('../timers');
 let isWindows = platform.indexOf('win') === 0;
 
-let processes = new WeakMap();
+let processes = WeakMap();
 
 
 /**

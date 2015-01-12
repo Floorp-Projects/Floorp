@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Class } = require("../../core/heritage");
+const { Trait } = require("../light-traits");
 const { removeListener, on } = require("../../dom/events");
 
 /**
@@ -15,7 +15,7 @@ const { removeListener, on } = require("../../dom/events");
  * `supportedEventsTypes` and function for handling all those events as
  * `handleEvent` property.
  */
-exports.DOMEventAssembler = Class({
+exports.DOMEventAssembler = Trait({
   /**
    * Function that is supposed to handle all the supported events (that are
    * present in the `supportedEventsTypes`) from all the observed
@@ -23,16 +23,12 @@ exports.DOMEventAssembler = Class({
    * @param {Event} event
    *    Event being dispatched.
    */
-  handleEvent() {
-    throw new TypeError("Instance of DOMEventAssembler must implement `handleEvent` method");
-  },
+  handleEvent: Trait.required,
   /**
    * Array of supported event names.
    * @type {String[]}
    */
-  get supportedEventsTypes() {
-    throw new TypeError("Instance of DOMEventAssembler must implement `handleEvent` field");
-  },
+  supportedEventsTypes: Trait.required,
   /**
    * Adds `eventTarget` to the list of observed `eventTarget`s. Listeners for
    * supported events will be registered on the given `eventTarget`.

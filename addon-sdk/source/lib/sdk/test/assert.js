@@ -78,9 +78,9 @@ Assert.prototype = {
       if ('operator' in e) {
         message += [
           " -",
-          source(e.actual),
+          source(e.expected),
           e.operator,
-          source(e.expected)
+          source(e.actual)
         ].join(" ");
       }
     }
@@ -89,7 +89,6 @@ Assert.prototype = {
   },
   pass: function pass(message) {
     this._log.pass(message);
-    return true;
   },
   error: function error(e) {
     this._log.exception(e);
@@ -102,11 +101,10 @@ Assert.prototype = {
         message: message,
         operator: "=="
       });
-      return false;
     }
-
-    this.pass(message);
-    return true;
+    else {
+      this.pass(message);
+    }
   },
 
   /**
@@ -117,16 +115,15 @@ Assert.prototype = {
   equal: function equal(actual, expected, message) {
     if (actual == expected) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "=="
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "=="
+      });
+    }
   },
 
   /**
@@ -138,16 +135,15 @@ Assert.prototype = {
   notEqual: function notEqual(actual, expected, message) {
     if (actual != expected) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "!=",
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "!=",
+      });
+    }
   },
 
   /**
@@ -158,16 +154,15 @@ Assert.prototype = {
    deepEqual: function deepEqual(actual, expected, message) {
     if (isDeepEqual(actual, expected)) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "deepEqual"
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "deepEqual"
+      });
+    }
   },
 
   /**
@@ -179,16 +174,15 @@ Assert.prototype = {
   notDeepEqual: function notDeepEqual(actual, expected, message) {
     if (!isDeepEqual(actual, expected)) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "notDeepEqual"
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "notDeepEqual"
+      });
+    }
   },
 
   /**
@@ -200,16 +194,15 @@ Assert.prototype = {
   strictEqual: function strictEqual(actual, expected, message) {
     if (actual === expected) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "==="
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "==="
+      });
+    }
   },
 
   /**
@@ -221,16 +214,15 @@ Assert.prototype = {
   notStrictEqual: function notStrictEqual(actual, expected, message) {
     if (actual !== expected) {
       this.pass(message);
-      return true;
     }
-
-    this.fail({
-      actual: actual,
-      expected: expected,
-      message: message,
-      operator: "!=="
-    });
-    return false;
+    else {
+      this.fail({
+        actual: actual,
+        expected: expected,
+        message: message,
+        operator: "!=="
+      })
+    }
   },
 
   /**
@@ -283,36 +275,35 @@ Assert.prototype = {
     if (threw && (isUndefined(Error) ||
                  // If passed `Error` is RegExp using it's test method to
                  // assert thrown exception message.
-                 (isRegExp(Error) && (Error.test(exception.message) || Error.test(exception.toString()))) ||
+                 (isRegExp(Error) && Error.test(exception.message)) ||
                  // If passed `Error` is a constructor function testing if
                  // thrown exception is an instance of it.
                  (isFunction(Error) && instanceOf(exception, Error))))
     {
       this.pass(message);
-      return true;
     }
 
     // Otherwise we report assertion failure.
-    let failure = {
-      message: message,
-      operator: "matches"
-    };
+    else {
+      let failure = {
+        message: message,
+        operator: "throws"
+      };
 
-    if (exception) {
-      failure.actual = exception.message || exception.toString();
+      if (exception)
+        failure.actual = exception;
+
+      if (Error)
+        failure.expected = Error;
+
+      this.fail(failure);
     }
-
-    if (Error) {
-      failure.expected = Error.toString();
-    }
-
-    this.fail(failure);
-    return false;
   }
 };
 exports.Assert = Assert;
 
 function isDeepEqual(actual, expected) {
+
   // 7.1. All identical values are equivalent, as determined by ===.
   if (actual === expected) {
     return true;
