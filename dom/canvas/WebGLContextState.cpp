@@ -74,15 +74,15 @@ bool
 WebGLContext::GetStencilBits(GLint* out_stencilBits)
 {
     *out_stencilBits = 0;
-    if (mBoundFramebuffer) {
-        if (mBoundFramebuffer->HasDepthStencilConflict()) {
+    if (mBoundDrawFramebuffer) {
+        if (mBoundDrawFramebuffer->HasDepthStencilConflict()) {
             // Error, we don't know which stencil buffer's bits to use
             ErrorInvalidFramebufferOperation("getParameter: framebuffer has two stencil buffers bound");
             return false;
         }
 
-        if (mBoundFramebuffer->StencilAttachment().IsDefined() ||
-            mBoundFramebuffer->DepthStencilAttachment().IsDefined())
+        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined() ||
+            mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
         {
             *out_stencilBits = 8;
         }
@@ -150,7 +150,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                    pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers))
         {
-            if (mBoundFramebuffer) {
+            if (mBoundDrawFramebuffer) {
                 GLint iv = 0;
                 gl->fGetIntegerv(pname, &iv);
                 return JS::Int32Value(iv);
@@ -190,6 +190,10 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             case LOCAL_GL_TEXTURE_BINDING_3D: {
                 return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(), rv);
             }
+
+            // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
+            case LOCAL_GL_READ_FRAMEBUFFER_BINDING:
+                return WebGLObjectAsJSValue(cx, mBoundReadFramebuffer.get(), rv);
         }
     }
 
@@ -509,8 +513,9 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return WebGLObjectAsJSValue(cx, mBoundRenderbuffer.get(), rv);
         }
 
+        // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
         case LOCAL_GL_FRAMEBUFFER_BINDING: {
-            return WebGLObjectAsJSValue(cx, mBoundFramebuffer.get(), rv);
+            return WebGLObjectAsJSValue(cx, mBoundDrawFramebuffer.get(), rv);
         }
 
         case LOCAL_GL_CURRENT_PROGRAM: {
