@@ -710,6 +710,8 @@ pref("canvas.path.enabled", true);
 // further checks.
 pref("accessibility.force_disabled", 0);
 
+pref("accessibility.ipc_architecture.enabled", true);
+
 #ifdef XP_WIN
 // Some accessibility tools poke at windows in the plugin process during setup
 // which can cause hangs.  To hack around this set accessibility.delay_plugins
