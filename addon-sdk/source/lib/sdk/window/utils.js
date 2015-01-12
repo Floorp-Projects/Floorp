@@ -26,9 +26,7 @@ const FM = Cc["@mozilla.org/focus-manager;1"].
 const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 
 const BROWSER = 'navigator:browser',
-      URI_BROWSER = Cc['@mozilla.org/preferences-service;1'].
-                    getService(Ci.nsIPrefService).
-                    getBranch(null).getCharPref('browser.chromeURL'),
+      URI_BROWSER = 'chrome://browser/content/browser.xul',
       NAME = '_blank',
       FEATURES = 'chrome,all,dialog=no,non-private';
 

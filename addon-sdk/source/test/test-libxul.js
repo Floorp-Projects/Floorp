@@ -15,4 +15,4 @@ exports.test = function(assert) {
   assert.ok(lib != null, "linked to libxul successfully");
 };
 
-require('sdk/test').run(exports);
+require('test').run(exports);

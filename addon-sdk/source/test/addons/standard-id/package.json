@@ -1,13 +1,12 @@
 {
-    "id": "standard-id@jetpack",
+    "id": "standard-id",
     "fullName": "standard ID test",
     "author": "Tomislav Jovanovic",
+
     "preferences": [{
         "name": "test13",
         "type": "integer",
         "title": "test13",
         "value": 26
-    }],
-    "main": "./lib/main.js",
-    "version": "0.0.1"
+    }]
 }

@@ -15,7 +15,6 @@ const { browserWindows } = require('sdk/windows');
 const { set: setPref } = require("sdk/preferences/service");
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 const fixtures = require("../fixtures");
-const { base64jpeg } = fixtures;
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
@@ -918,23 +917,13 @@ exports['test window focus changes active tab'] = function(assert, done) {
       focus(win2).then(function() {
         tabs.on("activate", function onActivate(tab) {
           tabs.removeListener("activate", onActivate);
+          assert.pass("activate was called on windows focus change.");
+          assert.equal(tab.url, url1, 'the activated tab url is correct');
 
-          if (tab.readyState === 'uninitialized') {
-            tab.once('ready', whenReady);
-          }
-          else {
-            whenReady(tab);
-          }
-
-          function whenReady(tab) {
-            assert.pass("activate was called on windows focus change.");
-            assert.equal(tab.url, url1, 'the activated tab url is correct');
-
-            return close(win2).then(function() {
-              assert.pass('window 2 was closed');
-              return close(win1);
-            }).then(done).then(null, assert.fail);
-          }
+          return close(win2).then(function() {
+            assert.pass('window 2 was closed');
+            return close(win1);
+          }).then(done).then(null, assert.fail);
         });
 
         win1.focus();
@@ -1020,7 +1009,7 @@ exports.testOnLoadEventWithImage = function(assert, done) {
   let count = 0;
 
   tabs.open({
-    url: base64jpeg,
+    url: fixtures.url('Firefox.jpg'),
     inBackground: true,
     onLoad: function(tab) {
       if (++count > 1) {
@@ -1089,4 +1078,4 @@ function openBrowserWindow(callback, url) {
   return window;
 }
 
-require("sdk/test").run(exports);
+require('sdk/test').run(exports);

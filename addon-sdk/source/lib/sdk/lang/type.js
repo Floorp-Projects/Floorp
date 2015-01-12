@@ -108,18 +108,6 @@ function isObject(value) {
 exports.isObject = isObject;
 
 /**
- * Detect whether a value is a generator.
- *
- * @param aValue
- *        The value to identify.
- * @return A boolean indicating whether the value is a generator.
- */
-function isGenerator(aValue) {
-  return !!(aValue && aValue.isGenerator && aValue.isGenerator());
-}
-exports.isGenerator = isGenerator;
-
-/**
  * Returns true if `value` is an Array.
  * @examples
  *    isArray([1, 2, 3])  // true

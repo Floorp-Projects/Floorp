@@ -7,7 +7,5 @@
         "type": "integer",
         "title": "test",
         "value": 5
-    }],
-    "main": "./lib/main.js",
-    "version": "0.0.1"
+    }]
 }

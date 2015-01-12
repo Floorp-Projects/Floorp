@@ -438,8 +438,7 @@ var POINTLESS_ERRORS = [
   'file: "chrome://browser/content/',
   'file: "chrome://global/content/',
   '[JavaScript Warning: "The character encoding of a framed document was ' +
-    'not declared.',
-  'file: "chrome://browser/skin/'
+    'not declared.'
 ];
 
 var consoleListener = {
