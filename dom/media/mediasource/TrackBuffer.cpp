@@ -251,7 +251,7 @@ TrackBuffer::EvictData(uint32_t aThreshold)
   }
 
   int64_t toEvict = totalSize - aThreshold;
-  if (toEvict <= 0) {
+  if (toEvict <= 0 || mInitializedDecoders.IsEmpty()) {
     return false;
   }
 
