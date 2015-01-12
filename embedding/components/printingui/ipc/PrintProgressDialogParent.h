@@ -29,26 +29,26 @@ public:
   virtual bool
   RecvStateChange(
           const long& stateFlags,
-          const nsresult& status) MOZ_OVERRIDE;
+          const nsresult& status);
 
   virtual bool
   RecvProgressChange(
           const long& curSelfProgress,
           const long& maxSelfProgress,
           const long& curTotalProgress,
-          const long& maxTotalProgress) MOZ_OVERRIDE;
+          const long& maxTotalProgress);
 
   virtual bool
-  RecvDocTitleChange(const nsString& newTitle) MOZ_OVERRIDE;
+  RecvDocTitleChange(const nsString& newTitle);
 
   virtual bool
-  RecvDocURLChange(const nsString& newURL) MOZ_OVERRIDE;
+  RecvDocURLChange(const nsString& newURL);
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy);
 
   virtual bool
-  Recv__delete__() MOZ_OVERRIDE;
+  Recv__delete__();
 
 private:
   virtual ~PrintProgressDialogParent();
