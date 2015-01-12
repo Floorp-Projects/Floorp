@@ -204,7 +204,7 @@ public:
       if (succeeded) {
         // Mark the frame as complete and discardable.
         mDstRef->ImageUpdated(mDstRef->GetRect());
-        MOZ_ASSERT(mDstRef->ImageComplete(),
+        MOZ_ASSERT(mDstRef->IsImageComplete(),
                    "Incomplete, but just updated the entire frame");
       }
 
@@ -551,7 +551,8 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     mFrameCount = 0;
     WantDecodedFrames(aFlags, aShouldSyncNotify);
 
-    // See if we managed to redecode enough to get the frame we want.
+    // If we were able to sync decode, we should already have the frame. If we
+    // had to decode asynchronously, maybe we've gotten lucky.
     ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
 
     if (!ref) {
@@ -565,6 +566,14 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   }
 
   MOZ_ASSERT(!ref || !ref->GetIsPaletted(), "Should not have paletted frame");
+
+  // Sync decoding guarantees that we got the frame, but if it's owned by an
+  // async decoder that's currently running, the contents of the frame may not
+  // be available yet. Make sure we get everything.
+  if (ref && mHasSourceData && aShouldSyncNotify &&
+      (aFlags & FLAG_SYNC_DECODE)) {
+    ref->WaitUntilComplete();
+  }
 
   return ref;
 }
@@ -1911,7 +1920,7 @@ RasterImage::RequestScale(imgFrame* aFrame,
                           const nsIntSize& aSize)
 {
   // We don't scale frames which aren't fully decoded.
-  if (!aFrame->ImageComplete()) {
+  if (!aFrame->IsImageComplete()) {
     return;
   }
 
@@ -1960,7 +1969,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
       // to aFrameRef below.
       RequestScale(aFrameRef.get(), aFlags, aSize);
     }
-    if (frameRef && !frameRef->ImageComplete()) {
+    if (frameRef && !frameRef->IsImageComplete()) {
       frameRef.reset();  // We're still scaling, so we can't use this yet.
     }
   }
@@ -2467,7 +2476,7 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
                                             DecodeFlags(aFlags),
                                             0));
 
-    if (frameRef && frameRef->ImageComplete()) {
+    if (frameRef && frameRef->IsImageComplete()) {
         return destSize;  // We have an existing HQ scale for this size.
     }
     if (!frameRef) {
