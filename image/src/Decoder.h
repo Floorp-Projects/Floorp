@@ -128,6 +128,24 @@ public:
   }
 
   /**
+   * If this decoder supports downscale-during-decode, sets the target size that
+   * this image should be decoded to.
+   *
+   * If this decoder *doesn't* support downscale-during-decode, returns
+   * NS_ERROR_NOT_AVAILABLE. If the provided size is unacceptable, returns
+   * another error.
+   *
+   * Returning NS_OK from this method is a promise that the decoder will decode
+   * the image to the requested target size unless it encounters an error.
+   *
+   * This must be called before Init() is called.
+   */
+  virtual nsresult SetTargetSize(const nsIntSize& aSize)
+  {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  /**
    * Set whether should send partial invalidations.
    *
    * If @aSend is true, we'll send partial invalidations when decoding the first
