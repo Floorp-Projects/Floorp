@@ -340,7 +340,7 @@ AndroidMediaReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, 
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
   }
 
-  return SeekPromise::CreateAndResolve(true, __func__);
+  return SeekPromise::CreateAndResolve(mAudioSeekTimeUs, __func__);
 }
 
 AndroidMediaReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :

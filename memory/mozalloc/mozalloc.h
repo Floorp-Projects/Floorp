@@ -21,7 +21,6 @@
 
 #if defined(__cplusplus)
 #include "mozilla/fallible.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/TemplateLib.h"
 #endif
 #include "mozilla/Attributes.h"

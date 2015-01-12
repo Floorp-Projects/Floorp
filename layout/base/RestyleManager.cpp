@@ -3676,8 +3676,9 @@ ElementRestyler::MaybeReframeForBeforePseudo(nsIFrame* aGenConParentFrame,
        ((cif = aGenConParentFrame->GetContentInsertionFrame()) &&
         (cif->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)))) {
     // Check for a ::before pseudo style and the absence of a ::before content,
-    // but only if aFrame is null or is the first continuation.
-    if (!aFrame || !aFrame->GetPrevContinuation()) {
+    // but only if aFrame is null or is the first continuation/ib-split.
+    if (!aFrame ||
+        nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame)) {
       // Checking for a ::before frame is cheaper than getting the
       // ::before style context.
       if (!nsLayoutUtils::GetBeforeFrameForContent(aGenConParentFrame, aContent) &&
@@ -3722,8 +3723,9 @@ ElementRestyler::MaybeReframeForAfterPseudo(nsIFrame* aGenConParentFrame,
        ((cif = aGenConParentFrame->GetContentInsertionFrame()) &&
         (cif->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)))) {
     // Check for an ::after pseudo style and the absence of an ::after content,
-    // but only if aFrame is null or is the last continuation.
-    if (!aFrame || !aFrame->GetNextContinuation()) {
+    // but only if aFrame is null or is the last continuation/ib-split.
+    if (!aFrame ||
+        !nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) {
       // Checking for an ::after frame is cheaper than getting the
       // ::after style context.
       if (!nsLayoutUtils::GetAfterFrameForContent(aGenConParentFrame, aContent) &&

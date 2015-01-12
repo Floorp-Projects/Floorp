@@ -4,12 +4,9 @@
 
 /* compile-time and runtime tests for whether to use various ARM extensions */
 
-#include "mozilla/NullPtr.h"
-
 #include "arm.h"
 
 #if defined(MOZILLA_ARM_HAVE_CPUID_DETECTION)
-namespace {
 
 // arm.h has parallel #ifs which declare MOZILLA_ARM_HAVE_CPUID_DETECTION.
 // We don't check it here so that we get compile errors if it's defined, but
@@ -218,8 +215,6 @@ check_neon(void)
 #    endif
 
 #  endif // defined(__linux__) || defined(ANDROID)
-
-}
 
 namespace mozilla {
   namespace arm_private {

@@ -53,7 +53,7 @@ ChildProcessHost::ChildProcessHost(ProcessType type)
       ChildProcessInfo(type),
       ALLOW_THIS_IN_INITIALIZER_LIST(listener_(this)),
       opening_channel_(false),
-      process_event_(NULL) {
+      process_event_(nullptr) {
   Singleton<ChildProcessList>::get()->push_back(this);
 }
 

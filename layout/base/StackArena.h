@@ -8,7 +8,6 @@
 #include "nsError.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 

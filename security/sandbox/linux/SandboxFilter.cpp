@@ -17,7 +17,6 @@
 #include <unistd.h>
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/NullPtr.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/services/linux_syscalls.h"
 

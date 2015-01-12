@@ -588,8 +588,12 @@ ShadowRoot::IsPooledNode(nsIContent* aContent, nsIContent* aContainer,
     return false;
   }
 
-  if (aContainer == aHost) {
-    // Any other child nodes of the host will end up in the pool.
+  if (aContainer == aHost &&
+      nsContentUtils::IsInSameAnonymousTree(aContainer, aContent)) {
+    // Children of the host will end up in the pool. We check to ensure
+    // that the content is in the same anonymous tree as the container
+    // because anonymous content may report its container as the host
+    // but it may not be in the host's child list.
     return true;
   }
 

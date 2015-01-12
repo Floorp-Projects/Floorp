@@ -52,7 +52,7 @@
 
 // The system math library doesn't have long double variants, e.g
 // sinl, cosl, etc
-#define _STLP_NO_VENDOR_MATH_L 1
+#define _STLP_NO_VENDOR_MATH_L
 
 // Include most of the gcc settings.
 #include <stl/config/_gcc.h>

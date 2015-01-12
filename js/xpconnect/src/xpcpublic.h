@@ -30,10 +30,6 @@ class nsIPrincipal;
 class nsScriptNameSpaceManager;
 class nsIMemoryReporterCallback;
 
-#ifndef BAD_TLS_INDEX
-#define BAD_TLS_INDEX ((uint32_t) -1)
-#endif
-
 namespace xpc {
 
 class Scriptability {

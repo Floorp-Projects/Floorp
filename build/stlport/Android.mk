@@ -1,14 +1,14 @@
 LOCAL_PATH := $(call my-dir)
 
 # Normally, we distribute the NDK with prebuilt binaries of STLport
-# in $LOCAL_PATH/<abi>/. However,
+# in $LOCAL_PATH/libs/<abi>/. However,
 #
 
 STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
 ifndef STLPORT_FORCE_REBUILD
-  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static.a)))
+  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
-    $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
+    $(call __ndk_info,You might want to use $$NDK/build/tools/build-cxx-stl.sh --stl=stlport)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
     STLPORT_FORCE_REBUILD := true
   endif
@@ -65,6 +65,10 @@ libstlport_c_includes := $(libstlport_path)/stlport
 include $(dir $(LOCAL_PATH))/gabi++/sources.mk
 
 libstlport_c_includes += $(libgabi++_c_includes)
+ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
+libgabi++_src_files := src/delete.cc \
+                       src/new.cc
+endif
 
 ifneq ($(STLPORT_FORCE_REBUILD),true)
 
@@ -72,14 +76,28 @@ $(call ndk_log,Using prebuilt STLport libraries)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
+# For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
+ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+ifneq (arm,$(LOCAL_ARM_MODE))
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/thumb/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
+endif
+endif
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
+# For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
+$(info TARGET_ARCH_ABI=$(TARGET_ARCH_ABI))
+$(info LOCAL_ARM_MODE=$(LOCAL_ARM_MODE))
+ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+ifneq (arm,$(LOCAL_ARM_MODE))
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/thumb/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
+endif
+endif
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_SHARED_LIBRARY)

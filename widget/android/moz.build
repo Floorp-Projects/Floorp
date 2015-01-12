@@ -6,6 +6,7 @@
 
 DIRS += [
     'bindings',
+    'jni',
 ]
 
 XPIDL_SOURCES += [

@@ -105,9 +105,9 @@ GeneratorObject::finalSuspend(JSContext *cx, HandleObject obj)
 }
 
 bool
-js::GeneratorThrowOrClose(JSContext *cx, HandleObject obj, HandleValue arg, uint32_t resumeKind)
+js::GeneratorThrowOrClose(JSContext *cx, Handle<GeneratorObject*> genObj, HandleValue arg,
+                          uint32_t resumeKind)
 {
-    GeneratorObject *genObj = &obj->as<GeneratorObject>();
     if (resumeKind == GeneratorObject::THROW) {
         cx->setPendingException(arg);
         genObj->setRunning();

@@ -1287,6 +1287,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
   backBuffer->SetWaste(tileRegion.Area() * mResolution * mResolution);
   backBuffer->Unlock();
+  backBuffer->SyncWithObject(mCompositableClient->GetForwarder()->GetSyncObject());
 
   if (createdTextureClient) {
     if (!mCompositableClient->AddTextureClient(backBuffer)) {

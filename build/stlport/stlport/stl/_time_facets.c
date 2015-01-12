@@ -151,7 +151,6 @@ __get_formatted_time _STLP_WEAK (_InIt1 __first,  _InIt1 __last,
                                  _Ch*, const _TimeInfo& __table,
                                  const ios_base& __s, ios_base::iostate& __err, tm* __t) {
   const ctype<_Ch>& __ct = use_facet<ctype<_Ch> >(__s.getloc());
-  typedef basic_string<_Ch, char_traits<_Ch>, allocator<_Ch> > string_type;
   size_t offset;
 
   while (__first != __last && __format != __format_end) {
