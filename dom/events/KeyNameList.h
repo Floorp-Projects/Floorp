@@ -29,6 +29,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Unidentified)
  * Our Internal Key Values (must have "Moz" prefix)
  *****************************************************************************/
 DEFINE_KEYNAME_INTERNAL(PrintableKey, "MozPrintableKey")
+DEFINE_KEYNAME_INTERNAL(HomeScreen, "MozHomeScreen")
 
 /******************************************************************************
  * Modifier Keys
