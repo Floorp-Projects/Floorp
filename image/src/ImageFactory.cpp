@@ -45,7 +45,8 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
 
   // We default to the static globals.
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
-  bool doDecodeOnDraw = gfxPrefs::ImageMemDecodeOnDraw();
+  bool doDecodeOnDraw = gfxPrefs::ImageMemDecodeOnDraw() &&
+                        gfxPrefs::AsyncPanZoomEnabled();
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
@@ -73,6 +74,11 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   // decoder. Disable everything for this case.
   if (isMultiPart) {
     isDiscardable = doDecodeOnDraw = doDownscaleDuringDecode = false;
+  }
+
+  // We don't want decode-on-draw without downscale-during-decode.
+  if (!doDownscaleDuringDecode) {
+    doDecodeOnDraw = false;
   }
 
   // We have all the information we need.
