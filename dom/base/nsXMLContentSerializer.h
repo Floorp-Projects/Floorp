@@ -294,6 +294,16 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   virtual void MaybeEnterInPreContent(nsIContent* aNode);
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode);
 
+  bool ShouldMaintainPreLevel() const;
+  int32_t PreLevel() const {
+    MOZ_ASSERT(ShouldMaintainPreLevel());
+    return mPreLevel;
+  }
+  int32_t& PreLevel() {
+    MOZ_ASSERT(ShouldMaintainPreLevel());
+    return mPreLevel;
+  }
+
   int32_t mPrefixIndex;
 
   struct NameSpaceDecl {
@@ -361,6 +371,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   bool          mBodyOnly;
   int32_t       mInBody;
 
+private:
   // number of nested elements which have preformated content
   int32_t       mPreLevel;
 };
