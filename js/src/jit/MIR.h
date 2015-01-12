@@ -2963,7 +2963,7 @@ class MSimdBox
         return initialHeap_;
     }
 
-    AliasSet getAliasSet() const {
+    AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::None();
     }
 };
