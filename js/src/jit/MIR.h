@@ -1319,7 +1319,8 @@ class MConstant : public MNullaryInstruction
 // Generic constructor of SIMD valuesX4.
 class MSimdValueX4
   : public MQuaternaryInstruction,
-    public NoTypePolicy::Data
+    public Mix4Policy<SimdScalarPolicy<0>, SimdScalarPolicy<1>,
+                      SimdScalarPolicy<2>, SimdScalarPolicy<3> >::Data
 {
   protected:
     MSimdValueX4(MIRType type, MDefinition *x, MDefinition *y, MDefinition *z, MDefinition *w)
@@ -1327,11 +1328,6 @@ class MSimdValueX4
     {
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(SimdTypeToLength(type) == 4);
-        mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
-        MOZ_ASSERT(scalarType == x->type());
-        MOZ_ASSERT(scalarType == y->type());
-        MOZ_ASSERT(scalarType == z->type());
-        MOZ_ASSERT(scalarType == w->type());
 
         setMovable();
         setResultType(type);
@@ -1344,6 +1340,17 @@ class MSimdValueX4
                              MDefinition *y, MDefinition *z, MDefinition *w)
     {
         return new(alloc) MSimdValueX4(type, x, y, z, w);
+    }
+
+    static MSimdValueX4 *NewAsmJS(TempAllocator &alloc, MIRType type, MDefinition *x,
+                                  MDefinition *y, MDefinition *z, MDefinition *w)
+    {
+        mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
+        MOZ_ASSERT(scalarType == x->type());
+        MOZ_ASSERT(scalarType == y->type());
+        MOZ_ASSERT(scalarType == z->type());
+        MOZ_ASSERT(scalarType == w->type());
+        return MSimdValueX4::New(alloc, type, x, y, z, w);
     }
 
     bool canConsumeFloat32(MUse *use) const {
@@ -2902,6 +2909,56 @@ class MTypedObjectDescr
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+// Generic way for constructing a SIMD object in IonMonkey, this instruction
+// takes as argument a SIMD instruction and returns a new SIMD object which
+// corresponds to the MIRType of its operand.
+class MSimdBox
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+  protected:
+    AlwaysTenured<InlineTypedObject *> templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MSimdBox(types::CompilerConstraintList *constraints,
+             MDefinition *op,
+             InlineTypedObject *templateObject,
+             gc::InitialHeap initialHeap)
+      : MUnaryInstruction(op),
+        templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        MOZ_ASSERT(IsSimdType(op->type()));
+        setMovable();
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdBox)
+
+    static MSimdBox *New(TempAllocator &alloc,
+                         types::CompilerConstraintList *constraints,
+                         MDefinition *op,
+                         InlineTypedObject *templateObject,
+                         gc::InitialHeap initialHeap)
+    {
+        return new(alloc) MSimdBox(constraints, op, templateObject, initialHeap);
+    }
+
+    InlineTypedObject *templateObject() const {
+        return templateObject_;
+    }
+
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

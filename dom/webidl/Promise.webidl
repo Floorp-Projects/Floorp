@@ -27,23 +27,23 @@ interface _Promise {
   // the proto of a promise object or someone screws up and manages to create a
   // Promise object in this scope without having resolved the interface object
   // first.
-  [NewObject, Throws]
+  [NewObject]
   static Promise<any> resolve(optional any value);
-  [NewObject, Throws]
+  [NewObject]
   static Promise<void> reject(optional any value);
 
   // The [TreatNonCallableAsNull] annotation is required since then() should do
   // nothing instead of throwing errors when non-callable arguments are passed.
-  [NewObject, Throws]
+  [NewObject]
   Promise<any> then([TreatNonCallableAsNull] optional AnyCallback? fulfillCallback = null,
                     [TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
-  [NewObject, Throws]
+  [NewObject]
   Promise<any> catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
-  [NewObject, Throws]
+  [NewObject]
   static Promise<any> all(sequence<any> iterable);
 
-  [NewObject, Throws]
+  [NewObject]
   static Promise<any> race(sequence<any> iterable);
 };
