@@ -7520,7 +7520,8 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
   //   left & right node are same type
   nsCOMPtr<nsIDOMNode> rightParent;
   nsCOMPtr<nsINode> parent = nodeLeft->GetParentNode();
-  int32_t parOffset = parent ? parent->IndexOf(nodeLeft) : -1;
+  NS_ENSURE_TRUE(parent, ::DOMPoint());
+  int32_t parOffset = parent->IndexOf(nodeLeft);
   aNodeRight->GetParentNode(getter_AddRefs(rightParent));
 
   // if they don't have the same parent, first move the 'right' node 
