@@ -69,7 +69,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(14ea6fa5-183e-4409-ac88-110bd2e05292)]
+[scriptable, builtinclass, uuid(4adb4c92-284d-4f5a-85e7-e924ec57510f)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -345,10 +345,26 @@ interface imgIContainer : nsISupports
   void requestDecode();
 
   /*
-   * This is equivalent to requestDecode() but it also decodes some of the
-   * image.
+   * This is equivalent to requestDecode() but it also synchronously decodes
+   * images that can be decoded "quickly" according to some heuristic.
    */
   [noscript] void startDecoding();
+
+  /*
+   * This method is equivalent to requestDecode(), but enables the caller to
+   * provide more detailed information about the decode request.
+   *
+   * @param aSize The size to which the image should be scaled while decoding,
+   *              if possible. If the image cannot be scaled to this size while
+   *              being decoded, it will be decoded at its intrinsic size.
+   * @param aFlags Flags of the FLAG_* variety. Only the decode flags
+   *               (FLAG_DECODE_*) and FLAG_SYNC_DECODE (which will
+   *               synchronously decode images that can be decoded "quickly",
+   *               just like startDecoding() does) are accepted; others will be
+   *               ignored.
+   */
+  [noscript] void requestDecodeForSize([const] in nsIntSize aSize,
+                                       in uint32_t aFlags);
 
   /*
    * Returns true if no more decoding can be performed on this image. Images
