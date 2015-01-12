@@ -1886,37 +1886,31 @@ public class GeckoAppShell
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists() ||
                           (new File("/system/lib/hw/gralloc.tegra3.so")).exists();
         if (isTegra) {
-            // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
-            File vfile = new File("/proc/version");
-            FileReader vreader = null;
-            try {
-                if (vfile.canRead()) {
-                    vreader = new FileReader(vfile);
-                    String version = new BufferedReader(vreader).readLine();
-                    if (version.indexOf("CM9") != -1 ||
-                        version.indexOf("cyanogen") != -1 ||
-                        version.indexOf("Nova") != -1)
-                    {
-                        Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
-                        return null;
-                    }
-                }
-            } catch (IOException ex) {
-                // nothing
-            } finally {
-                try {
-                    if (vreader != null) {
-                        vreader.close();
-                    }
-                } catch (IOException ex) {
-                    // nothing
-                }
-            }
-
             // disable on KitKat (bug 957694)
             if (Versions.feature19Plus) {
                 Log.w(LOGTAG, "Blocking plugins because of Tegra (bug 957694)");
                 return null;
+            }
+
+            // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
+            final File vfile = new File("/proc/version");
+            try {
+                if (vfile.canRead()) {
+                    final BufferedReader reader = new BufferedReader(new FileReader(vfile));
+                    try {
+                        final String version = reader.readLine();
+                        if (version.indexOf("CM9") != -1 ||
+                            version.indexOf("cyanogen") != -1 ||
+                            version.indexOf("Nova") != -1) {
+                            Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
+                            return null;
+                        }
+                    } finally {
+                      reader.close();
+                    }
+                }
+            } catch (IOException ex) {
+                // Do nothing.
             }
         }
 
