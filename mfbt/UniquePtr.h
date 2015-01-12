@@ -669,84 +669,11 @@ struct UniqueSelector<T[N]>
 // literal nullptr to MakeUnique will not work on some platforms.  See Move.h
 // for more details.
 
-template<typename T>
+template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject
-MakeUnique()
+MakeUnique(Args&&... aArgs)
 {
-  return UniquePtr<T>(new T());
-}
-
-template<typename T, typename A1>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& aA1)
-{
-  return UniquePtr<T>(new T(Forward<A1>(aA1)));
-}
-
-template<typename T, typename A1, typename A2>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& aA1, A2&& aA2)
-{
-  return UniquePtr<T>(new T(Forward<A1>(aA1), Forward<A2>(aA2)));
-}
-
-template<typename T, typename A1, typename A2, typename A3>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3)
-{
-  return UniquePtr<T>(new T(Forward<A1>(aA1), Forward<A2>(aA2),
-                            Forward<A3>(aA3)));
-}
-
-template<typename T, typename A1, typename A2, typename A3, typename A4>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4)
-{
-  return UniquePtr<T>(new T(Forward<A1>(aA1), Forward<A2>(aA2),
-                            Forward<A3>(aA3), Forward<A4>(aA4)));
-}
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4, A5&& aA5)
-{
-  return UniquePtr<T>(new T(Forward<A1>(aA1), Forward<A2>(aA2),
-                            Forward<A3>(aA3), Forward<A4>(aA4),
-                            Forward<A5>(aA5)));
-}
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6)
-{
-  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
-                            Forward<A3>(a3), Forward<A4>(a4),
-                            Forward<A5>(a5), Forward<A6>(a6)));
-}
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6, typename A7>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6, A7&& a7)
-{
-  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
-                            Forward<A3>(a3), Forward<A4>(a4),
-                            Forward<A5>(a5), Forward<A6>(a6),
-                            Forward<A7>(a7)));
-}
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6, typename A7, typename A8>
-typename detail::UniqueSelector<T>::SingleObject
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6, A7&& a7,
-           A8&& a8)
-{
-  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
-                            Forward<A3>(a3), Forward<A4>(a4),
-                            Forward<A5>(a5), Forward<A6>(a6),
-                            Forward<A7>(a7), Forward<A8>(a8)));
+  return UniquePtr<T>(new T(Forward<Args>(aArgs)...));
 }
 
 template<typename T>
@@ -757,48 +684,9 @@ MakeUnique(decltype(sizeof(int)) aN)
   return UniquePtr<T>(new ArrayType[aN]());
 }
 
-template<typename T>
+template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::KnownBound
-MakeUnique() = delete;
-
-template<typename T, typename A1>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& aA1) = delete;
-
-template<typename T, typename A1, typename A2>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& aA1, A2&& aA2) = delete;
-
-template<typename T, typename A1, typename A2, typename A3>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3) = delete;
-
-template<typename T, typename A1, typename A2, typename A3, typename A4>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4) = delete;
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4, A5&& aA5) = delete;
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5,
-           A6&& a6) = delete;
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6, typename A7>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6,
-           A7&& a7) = delete;
-
-template<typename T, typename A1, typename A2, typename A3, typename A4,
-         typename A5, typename A6, typename A7, typename A8>
-typename detail::UniqueSelector<T>::KnownBound
-MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6,
-           A7&& a7, A8&& a8) = delete;
+MakeUnique(Args&&... aArgs) = delete;
 
 } // namespace mozilla
 
