@@ -119,7 +119,6 @@ public:
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext) MOZ_OVERRIDE;
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) MOZ_OVERRIDE;
-    NS_IMETHOD ContinueBeginConnect();
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value) MOZ_OVERRIDE;
     // nsIClassOfService
@@ -466,9 +465,6 @@ private:
     nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
     Http2PushedStream                 *mPushedStream;
-    // True if the channel's principal was found on a phishing, malware, or
-    // tracking (if tracking protection is enabled) blocklist
-    bool                              mLocalBlocklist;
 
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);

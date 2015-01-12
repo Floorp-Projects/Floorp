@@ -20,6 +20,6 @@ interface MediaKeys {
   [NewObject, Throws]
   MediaKeySession createSession(optional SessionType sessionType = "temporary");
 
-  [NewObject, Throws]
+  [NewObject]
   Promise<void> setServerCertificate((ArrayBufferView or ArrayBuffer) serverCertificate);
 };

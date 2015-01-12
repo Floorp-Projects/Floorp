@@ -4522,6 +4522,23 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FS_HELP_END
 };
 
+static const JSFunctionSpecWithHelp console_functions[] = {
+    JS_FN_HELP("log", Print, 0, 0,
+"log([exp ...])",
+"  Evaluate and print expressions to stdout.\n"
+"  This function is an alias of the print() function."),
+    JS_FS_HELP_END
+};
+
+bool
+DefineConsole(JSContext *cx, HandleObject global)
+{
+    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    return obj &&
+           JS_DefineFunctionsWithHelp(cx, obj, console_functions) &&
+           JS_DefineProperty(cx, global, "console", obj, 0);
+}
+
 #ifdef MOZ_PROFILING
 # define PROFILING_FUNCTION_COUNT 5
 # ifdef MOZ_CALLGRIND
@@ -5218,6 +5235,8 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
             if (!JS_DefineFunctionsWithHelp(cx, glob, fuzzing_unsafe_functions))
                 return nullptr;
             if (!js::DefineOS(cx, glob))
+                return nullptr;
+            if (!DefineConsole(cx, glob))
                 return nullptr;
         }
 

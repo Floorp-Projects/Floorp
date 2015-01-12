@@ -1,0 +1,4 @@
+Redo - Utilities to retry Python callables
+******************************************
+
+Redo provides various means to add seamless retriability to any Python callable. Redo includes a plain function (redo.retry), a decorator (redo.retriable), and a context manager (redo.retrying) to enable you to integrate it in the best possible way for your project. As a bonus, a standalone interface is also included ("retry"). For details and sample invocations have a look at the docstrings in redo/__init__.py.
