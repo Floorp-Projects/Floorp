@@ -251,12 +251,6 @@ public:
     PostSize(aSize.width, aSize.height, aOrientation);
   }
 
-  nsIntSize GetSize() const
-  {
-    MOZ_ASSERT(HasSize());
-    return mImageMetadata.GetSize();
-  }
-
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
