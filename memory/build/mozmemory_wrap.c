@@ -169,4 +169,10 @@ wcsdup_impl(const wchar_t *src)
     wcsncpy(dst, src, len + 1);
   return dst;
 }
+
+void *
+_aligned_malloc(size_t size, size_t alignment)
+{
+  return memalign_impl(alignment, size);
+}
 #endif /* XP_WIN */
