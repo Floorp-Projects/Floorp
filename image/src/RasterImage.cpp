@@ -1334,10 +1334,12 @@ RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
     // We already have the size; tell the decoder so it can preallocate a
     // frame.  By default, we create an ARGB frame with no offset. If decoders
     // need a different type, they need to ask for it themselves.
+    // XXX(seth): Note that we call SetSize() and NeedNewFrame() with the
+    // image's intrinsic size, but AllocateFrame with our target size.
     decoder->SetSize(mSize, mOrientation);
     decoder->NeedNewFrame(0, 0, 0, aSize->width, aSize->height,
                           SurfaceFormat::B8G8R8A8);
-    decoder->AllocateFrame();
+    decoder->AllocateFrame(*aSize);
   }
   decoder->SetIterator(mSourceBuffer->Iterator());
 

@@ -277,7 +277,7 @@ public:
 
   // Try to allocate a frame as described in mNewFrameData and return the
   // status code from that attempt. Clears mNewFrameData.
-  virtual nsresult AllocateFrame();
+  virtual nsresult AllocateFrame(const nsIntSize& aTargetSize = nsIntSize());
 
   already_AddRefed<imgFrame> GetCurrentFrame()
   {
@@ -352,7 +352,7 @@ protected:
 
   // Called by the decoders when they have a region to invalidate. We may not
   // actually pass these invalidations on right away.
-  void PostInvalidation(nsIntRect& aRect);
+  void PostInvalidation(const nsIntRect& aRect);
 
   // Called by the decoders when they have successfully decoded the image. This
   // may occur as the result of the decoder getting to the appropriate point in
@@ -379,9 +379,14 @@ protected:
    * It is not possible to create sparse frame arrays; you can only append
    * frames to the current frame array, or if there is only one frame in the
    * array, replace that frame.
+   * @aTargetSize specifies the target size we're decoding to. If we're not
+   * downscaling during decode, this will always be the same as the image's
+   * intrinsic size.
+   *
    * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
    */
   RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
+                                const nsIntSize& aTargetSize,
                                 const nsIntRect& aFrameRect,
                                 uint32_t aDecodeFlags,
                                 gfx::SurfaceFormat aFormat,
@@ -389,6 +394,7 @@ protected:
                                 imgFrame* aPreviousFrame);
 
   RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
+                                     const nsIntSize& aTargetSize,
                                      const nsIntRect& aFrameRect,
                                      uint32_t aDecodeFlags,
                                      gfx::SurfaceFormat aFormat,
