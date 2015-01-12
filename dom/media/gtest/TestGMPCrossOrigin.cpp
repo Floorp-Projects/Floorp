@@ -120,25 +120,18 @@ GetGMPThread()
   return thread.forget();
 }
 
+/**
+ * Enumerate files under |aPath| (non-recursive).
+ */
 template<typename T>
 static nsresult
-EnumerateDir(const nsACString& aDir, T&& aDirIter)
+EnumerateDir(nsIFile* aPath, T&& aDirIter)
 {
-  nsRefPtr<GeckoMediaPluginService> service =
-    GeckoMediaPluginService::GetGeckoMediaPluginService();
-  MOZ_ASSERT(service);
-
-  // $profileDir/gmp/
-  nsCOMPtr<nsIFile> path;
-  nsresult rv = service->GetStorageDir(getter_AddRefs(path));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // $profileDir/gmp/$aDir/
-  rv = path->AppendNative(aDir);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Iterate all sub-folders of $profileDir/gmp/$aDir/
   nsCOMPtr<nsISimpleEnumerator> iter;
-  rv = path->GetDirectoryEntries(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aPath->GetDirectoryEntries(getter_AddRefs(iter));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   bool hasMore = false;
   while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
@@ -147,13 +140,42 @@ EnumerateDir(const nsACString& aDir, T&& aDirIter)
     if (NS_FAILED(rv)) {
       continue;
     }
+
     nsCOMPtr<nsIFile> entry(do_QueryInterface(supports, &rv));
     if (NS_FAILED(rv)) {
       continue;
     }
+
     aDirIter(entry);
   }
   return NS_OK;
+}
+
+/**
+ * Enumerate files under $profileDir/gmp/$aDir/ (non-recursive).
+ */
+template<typename T>
+static nsresult
+EnumerateGMPStorageDir(const nsACString& aDir, T&& aDirIter)
+{
+  nsRefPtr<GeckoMediaPluginService> service =
+    GeckoMediaPluginService::GetGeckoMediaPluginService();
+  MOZ_ASSERT(service);
+
+  // $profileDir/gmp/
+  nsCOMPtr<nsIFile> path;
+  nsresult rv = service->GetStorageDir(getter_AddRefs(path));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // $profileDir/gmp/$aDir/
+  rv = path->AppendNative(aDir);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return EnumerateDir(path, aDirIter);
 }
 
 class GMPShutdownObserver : public nsIRunnable
@@ -227,9 +249,10 @@ class ClearGMPStorageTask : public nsIRunnable
                           , public nsIObserver {
 public:
   ClearGMPStorageTask(nsIRunnable* Continuation,
-                      nsIThread* aTarget)
+                      nsIThread* aTarget, PRTime aSince)
     : mContinuation(Continuation)
     , mTarget(aTarget)
+    , mSince(aSince)
   {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -241,7 +264,12 @@ public:
     EXPECT_TRUE(observerService);
     observerService->AddObserver(this, "gmp-clear-storage-complete", false);
     if (observerService) {
-      observerService->NotifyObservers(nullptr, "browser:purge-session-history", nullptr);
+      nsAutoString str;
+      if (mSince >= 0) {
+        str.AppendInt(static_cast<int64_t>(mSince));
+      }
+      observerService->NotifyObservers(
+          nullptr, "browser:purge-session-history", str.Data());
     }
     return NS_OK;
   }
@@ -264,15 +292,17 @@ private:
   virtual ~ClearGMPStorageTask() {}
   nsRefPtr<nsIRunnable> mContinuation;
   nsCOMPtr<nsIThread> mTarget;
+  const PRTime mSince;
 };
 
 NS_IMPL_ISUPPORTS(ClearGMPStorageTask, nsIRunnable, nsIObserver)
 
 static void
 ClearGMPStorage(nsIRunnable* aContinuation,
-                nsIThread* aTarget)
+                nsIThread* aTarget, PRTime aSince = -1)
 {
-  nsRefPtr<ClearGMPStorageTask> task(new ClearGMPStorageTask(aContinuation, aTarget));
+  nsRefPtr<ClearGMPStorageTask> task(
+      new ClearGMPStorageTask(aContinuation, aTarget, aSince));
   NS_DispatchToMainThread(task, NS_DISPATCH_NORMAL);
 }
 
@@ -508,7 +538,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     nsAutoPtr<NodeInfo> siteInfo(
         new NodeInfo(NS_LITERAL_CSTRING("example1.com")));
     // Collect nodeIds that are expected to remain for later comparison.
-    EnumerateDir(NS_LITERAL_CSTRING("id"), NodeIdCollector(siteInfo));
+    EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), NodeIdCollector(siteInfo));
     // Invoke "Forget this site" on the main thread.
     NS_DispatchToMainThread(NS_NewRunnableMethodWithArg<nsAutoPtr<NodeInfo>>(
         this, &GMPStorageTest::TestForgetThisSite_Forget, siteInfo));
@@ -571,13 +601,174 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   };
 
   void TestForgetThisSite_Verify(nsAutoPtr<NodeInfo> aSiteInfo) {
-    nsresult rv = EnumerateDir(
+    nsresult rv = EnumerateGMPStorageDir(
         NS_LITERAL_CSTRING("id"), NodeIdVerifier(aSiteInfo));
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
-    rv = EnumerateDir(
+    rv = EnumerateGMPStorageDir(
         NS_LITERAL_CSTRING("storage"), StorageVerifier(aSiteInfo));
     EXPECT_TRUE(NS_SUCCEEDED(rv));
+  }
+
+  /**
+   * 1. Generate some storage data.
+   * 2. Find the max mtime |t| in $profileDir/gmp/id/.
+   * 3. Pass |t| to clear recent history.
+   * 4. Check if all directories in $profileDir/gmp/id/ and
+   *    $profileDir/gmp/storage are removed.
+   */
+  void TestClearRecentHistory1() {
+    AssertIsOnGMPThread();
+    EXPECT_TRUE(IsGMPStorageIsEmpty());
+
+    // Generate storage data for some site.
+    CreateDecryptor(NS_LITERAL_STRING("example1.com"),
+                    NS_LITERAL_STRING("example2.com"),
+                    false);
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory1_Clear);
+    Expect(NS_LITERAL_CSTRING("test-storage complete"), r);
+    Update(NS_LITERAL_CSTRING("test-storage"));
+
+  }
+
+  /**
+   * 1. Generate some storage data.
+   * 2. Find the max mtime |t| in $profileDir/gmp/storage/.
+   * 3. Pass |t| to clear recent history.
+   * 4. Check if all directories in $profileDir/gmp/id/ and
+   *    $profileDir/gmp/storage are removed.
+   */
+  void TestClearRecentHistory2() {
+    AssertIsOnGMPThread();
+    EXPECT_TRUE(IsGMPStorageIsEmpty());
+
+    // Generate storage data for some site.
+    CreateDecryptor(NS_LITERAL_STRING("example1.com"),
+                    NS_LITERAL_STRING("example2.com"),
+                    false);
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory2_Clear);
+    Expect(NS_LITERAL_CSTRING("test-storage complete"), r);
+    Update(NS_LITERAL_CSTRING("test-storage"));
+
+  }
+
+  /**
+   * 1. Generate some storage data.
+   * 2. Find the max mtime |t| in $profileDir/gmp/storage/.
+   * 3. Pass |t+1| to clear recent history.
+   * 4. Check if all directories in $profileDir/gmp/id/ and
+   *    $profileDir/gmp/storage remain unchanged.
+   */
+  void TestClearRecentHistory3() {
+    AssertIsOnGMPThread();
+    EXPECT_TRUE(IsGMPStorageIsEmpty());
+
+    // Generate storage data for some site.
+    CreateDecryptor(NS_LITERAL_STRING("example1.com"),
+                    NS_LITERAL_STRING("example2.com"),
+                    false);
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory3_Clear);
+    Expect(NS_LITERAL_CSTRING("test-storage complete"), r);
+    Update(NS_LITERAL_CSTRING("test-storage"));
+
+  }
+
+  class MaxMTimeFinder {
+  public:
+    MaxMTimeFinder() : mMaxTime(0) {}
+    void operator()(nsIFile* aFile) {
+      PRTime lastModified;
+      nsresult rv = aFile->GetLastModifiedTime(&lastModified);
+      if (NS_SUCCEEDED(rv) && lastModified > mMaxTime) {
+        mMaxTime = lastModified;
+      }
+      EnumerateDir(aFile, *this);
+    }
+    PRTime GetResult() const { return mMaxTime; }
+  private:
+    PRTime mMaxTime;
+  };
+
+  void TestClearRecentHistory1_Clear() {
+    MaxMTimeFinder f;
+    nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), f);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory_CheckEmpty);
+    nsCOMPtr<nsIThread> t(GetGMPThread());
+    ClearGMPStorage(r, t, f.GetResult());
+  }
+
+  void TestClearRecentHistory2_Clear() {
+    MaxMTimeFinder f;
+    nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), f);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory_CheckEmpty);
+    nsCOMPtr<nsIThread> t(GetGMPThread());
+    ClearGMPStorage(r, t, f.GetResult());
+  }
+
+  void TestClearRecentHistory3_Clear() {
+    MaxMTimeFinder f;
+    nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), f);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+        this, &GMPStorageTest::TestClearRecentHistory_CheckNonEmpty);
+    nsCOMPtr<nsIThread> t(GetGMPThread());
+    ClearGMPStorage(r, t, f.GetResult() + 1);
+  }
+
+  class FileCounter {
+  public:
+    FileCounter() : mCount(0) {}
+    void operator()(nsIFile* aFile) {
+      ++mCount;
+    }
+    int GetCount() const { return mCount; }
+  private:
+    int mCount;
+  };
+
+  void TestClearRecentHistory_CheckEmpty() {
+    FileCounter c1;
+    nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), c1);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    // There should be no files under $profileDir/gmp/id/
+    EXPECT_EQ(c1.GetCount(), 0);
+
+    FileCounter c2;
+    rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), c2);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    // There should be no files under $profileDir/gmp/storage/
+    EXPECT_EQ(c2.GetCount(), 0);
+
+    SetFinished();
+  }
+
+  void TestClearRecentHistory_CheckNonEmpty() {
+    FileCounter c1;
+    nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), c1);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    // There should be one directory under $profileDir/gmp/id/
+    EXPECT_EQ(c1.GetCount(), 1);
+
+    FileCounter c2;
+    rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), c2);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    // There should be one directory under $profileDir/gmp/storage/
+    EXPECT_EQ(c2.GetCount(), 1);
+
+    SetFinished();
   }
 
   void TestCrossOriginStorage() {
@@ -989,6 +1180,21 @@ TEST(GeckoMediaPlugins, GMPStorageBasic) {
 TEST(GeckoMediaPlugins, GMPStorageForgetThisSite) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestForgetThisSite);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageClearRecentHistory1) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestClearRecentHistory1);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageClearRecentHistory2) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestClearRecentHistory2);
+}
+
+TEST(GeckoMediaPlugins, GMPStorageClearRecentHistory3) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestClearRecentHistory3);
 }
 
 TEST(GeckoMediaPlugins, GMPStorageCrossOrigin) {
