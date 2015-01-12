@@ -1,6 +1,6 @@
 use core::num::ToPrimitive;
-use serialize::json::{Json, ToJson, ParserError};
-use serialize::{json, Encodable, Encoder};
+use rustc_serialize::json::{Json, ToJson, ParserError};
+use rustc_serialize::{Encodable, Encoder};
 use std::collections::BTreeMap;
 use std::error::{Error, FromError};
 
@@ -46,7 +46,7 @@ impl WebDriverError {
     pub fn new(status: ErrorStatus, message: &str) -> WebDriverError {
         WebDriverError {
             status: status,
-            message: message.to_string().clone()
+            message: message.to_string()
         }
     }
 

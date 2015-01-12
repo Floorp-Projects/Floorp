@@ -1,5 +1,5 @@
-use serialize::json;
-use serialize::json::ToJson;
+use rustc_serialize::json;
+use rustc_serialize::json::ToJson;
 
 use common::Nullable;
 
@@ -28,7 +28,7 @@ impl WebDriverResponse {
     }
 }
 
-#[derive(Encodable, Show)]
+#[derive(RustcEncodable, Show)]
 pub struct NewSessionResponse {
     sessionId: String,
     value: json::Json
@@ -43,7 +43,7 @@ impl NewSessionResponse {
     }
 }
 
-#[derive(Encodable, Show)]
+#[derive(RustcEncodable, Show)]
 pub struct ValueResponse {
     value: json::Json
 }
@@ -56,7 +56,7 @@ impl ValueResponse {
     }
 }
 
-#[derive(Encodable, Show)]
+#[derive(RustcEncodable, Show)]
 pub struct WindowSizeResponse {
     width: u64,
     height: u64
@@ -71,7 +71,7 @@ impl WindowSizeResponse {
     }
 }
 
-#[derive(Encodable, Show)]
+#[derive(RustcEncodable, Show)]
 pub struct ElementRectResponse {
     x: u64,
     y: u64,
@@ -90,7 +90,7 @@ impl ElementRectResponse {
     }
 }
 
-#[derive(Encodable, PartialEq, Show)]
+#[derive(RustcEncodable, PartialEq, Show)]
 pub struct Date(u64);
 
 impl Date {
@@ -107,7 +107,7 @@ impl ToJson for Date {
 }
 
 //TODO: some of these fields are probably supposed to be optional
-#[derive(Encodable, PartialEq, Show)]
+#[derive(RustcEncodable, PartialEq, Show)]
 pub struct Cookie {
     name: String,
     value: String,
@@ -135,7 +135,7 @@ impl Cookie {
     }
 }
 
-#[derive(Encodable, Show)]
+#[derive(RustcEncodable, Show)]
 pub struct CookieResponse {
     value: Vec<Cookie>
 }

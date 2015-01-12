@@ -1,12 +1,14 @@
-#![feature(slicing_syntax)]
-#![feature(unboxed_closures)]
+//Until it's clear what the unstable things are replaced by
+#![allow(unstable)]
+#![allow(non_snake_case)]
 
+
+#[macro_use] extern crate log;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate core;
 extern crate getopts;
 extern crate hyper;
-#[macro_use] extern crate log;
 extern crate regex;
-extern crate serialize;
 
 use getopts::{usage,optflag, getopts, OptGroup};
 use httpserver::start;

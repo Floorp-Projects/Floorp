@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
-use serialize::json;
-use serialize::json::{ToJson, Json};
+use rustc_serialize::json::{ToJson, Json};
 use regex::Captures;
 
 use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId, LocatorStrategy};
@@ -8,7 +7,7 @@ use response::Date; //TODO: Put all these types in a specific file
 use messagebuilder::MatchType;
 
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub enum WebDriverCommand {
     NewSession,
     DeleteSession,
@@ -55,7 +54,7 @@ pub enum WebDriverCommand {
     TakeScreenshot(TakeScreenshotParameters)
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct WebDriverMessage {
     pub session_id: Option<String>,
     pub command: WebDriverCommand
@@ -73,7 +72,7 @@ impl WebDriverMessage {
         let session_id = WebDriverMessage::get_session_id(params);
         let body_data = if body != "" {
             debug!("Got request body {}", body);
-            match json::from_str(body) {
+            match Json::from_str(body) {
                 Ok(x) => x,
                 Err(_) => return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                                          format!("Failed to decode request body as json: {}", body).as_slice()))
@@ -301,7 +300,7 @@ trait Parameters {
     fn from_json(body: &Json) -> WebDriverResult<Self>;
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct GetParameters {
     url: String
 }
@@ -330,7 +329,7 @@ impl ToJson for GetParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct TimeoutsParameters {
     type_: String,
     ms: u64
@@ -369,7 +368,7 @@ impl ToJson for TimeoutsParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct WindowSizeParameters {
     width: u64,
     height: u64
@@ -407,7 +406,7 @@ impl ToJson for WindowSizeParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct SwitchToWindowParameters {
     handle: String
 }
@@ -436,7 +435,7 @@ impl ToJson for SwitchToWindowParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct LocatorParameters {
     using: LocatorStrategy,
     value: String
@@ -475,7 +474,7 @@ impl ToJson for LocatorParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct SwitchToFrameParameters {
     pub id: FrameId
 }
@@ -503,7 +502,7 @@ impl ToJson for SwitchToFrameParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct SendKeysParameters {
     pub value: String
 }
@@ -533,7 +532,7 @@ impl ToJson for SendKeysParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct JavascriptCommandParameters {
     script: String,
     args: Nullable<Vec<Json>>
@@ -584,7 +583,7 @@ impl ToJson for JavascriptCommandParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct GetCookieParameters {
     name: Nullable<String>
 }
@@ -617,7 +616,7 @@ impl ToJson for GetCookieParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct AddCookieParameters {
     pub name: String,
     pub value: String,
@@ -743,7 +742,7 @@ impl ToJson for AddCookieParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct SendAlertTextParameters {
     keysToSend: String
 }
@@ -772,7 +771,7 @@ impl ToJson for SendAlertTextParameters {
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct TakeScreenshotParameters {
     pub element: Nullable<WebElement>
 }
