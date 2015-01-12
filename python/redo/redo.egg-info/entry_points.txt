@@ -1,0 +1,3 @@
+[console_scripts]
+retry = redo.cmd:main
+

@@ -304,6 +304,19 @@ class ObjectPolicy MOZ_FINAL : public TypePolicy
 // a primitive, we use ValueToNonNullObject.
 typedef ObjectPolicy<0> SingleObjectPolicy;
 
+// Convert an operand to have a type identical to the scalar type of the
+// returned type of the instruction.
+template <unsigned Op>
+class SimdScalarPolicy MOZ_FINAL : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE {
+        return staticAdjustInputs(alloc, def);
+    }
+};
+
 template <unsigned Op>
 class BoxPolicy MOZ_FINAL : public TypePolicy
 {
