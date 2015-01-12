@@ -1258,7 +1258,7 @@ Geolocation::Update(nsIDOMGeoPosition *aSomewhere)
     if (coords) {
       double accuracy = -1;
       coords->GetAccuracy(&accuracy);
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::GEOLOCATION_ACCURACY, accuracy);
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::GEOLOCATION_ACCURACY_EXPONENTIAL, accuracy);
     }
   }
 
