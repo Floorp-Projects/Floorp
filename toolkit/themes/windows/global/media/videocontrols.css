@@ -92,7 +92,7 @@
   background-clip: content-box;
 }
 
-.controlBar[audio-only] > .volumeStack {
+.controlBar[fullscreen-unavailable] > .volumeStack {
   /* This value is duplicated in the videocontrols.xml adjustControlSize function. */
   -moz-margin-end: 8px;
 }
