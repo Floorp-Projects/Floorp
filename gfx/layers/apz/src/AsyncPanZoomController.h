@@ -253,9 +253,9 @@ public:
 
   /**
    * Handler for events which should not be intercepted by the touch listener.
-   * Does the work for ReceiveInputEvent().
    */
-  nsEventStatus HandleInputEvent(const InputData& aEvent);
+  nsEventStatus HandleInputEvent(const InputData& aEvent,
+                                 const Matrix4x4& aTransformToApzc);
 
   /**
    * Handler for gesture events.
