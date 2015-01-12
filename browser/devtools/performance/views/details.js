@@ -15,7 +15,8 @@ let DetailsView = {
    */
   viewIndexes: {
     waterfall: 0,
-    calltree: 1
+    calltree: 1,
+    flamegraph: 2
   },
 
   /**
@@ -32,6 +33,7 @@ let DetailsView = {
 
     yield CallTreeView.initialize();
     yield WaterfallView.initialize();
+    yield FlameGraphView.initialize();
 
     this.selectView(DEFAULT_DETAILS_SUBVIEW);
   }),
@@ -46,6 +48,7 @@ let DetailsView = {
 
     yield CallTreeView.destroy();
     yield WaterfallView.destroy();
+    yield FlameGraphView.destroy();
   }),
 
   /**
@@ -59,10 +62,11 @@ let DetailsView = {
     this.el.selectedIndex = this.viewIndexes[selectedView];
 
     for (let button of $$("toolbarbutton[data-view]", $("#details-toolbar"))) {
-      if (button.getAttribute("data-view") === selectedView)
+      if (button.getAttribute("data-view") === selectedView) {
         button.setAttribute("checked", true);
-      else
+      } else {
         button.removeAttribute("checked");
+      }
     }
 
     this.emit(EVENTS.DETAILS_VIEW_SELECTED, selectedView);

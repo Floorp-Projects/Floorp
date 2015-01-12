@@ -5896,6 +5896,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Font Inspector been opened?"
   },
+  "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Animation Inspector been opened?"
+  },
   "DEVTOOLS_JSDEBUGGER_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -6035,6 +6040,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Font Inspector?"
+  },
+  "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Animation Inspector?"
   },
   "DEVTOOLS_JSDEBUGGER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -6193,6 +6203,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the font inspector been active (seconds)"
+  },
+  "DEVTOOLS_ANIMATIONINSPECTOR_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the animation inspector been active (seconds)"
   },
   "DEVTOOLS_JSDEBUGGER_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",

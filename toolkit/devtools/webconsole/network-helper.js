@@ -56,6 +56,7 @@
 
 const {components, Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+loader.lazyImporter(this, "DevToolsUtils", "resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 /**
  * Helper object for networking stuff.
@@ -478,6 +479,207 @@ let NetworkHelper = {
 
       default:
         return false;
+    }
+  },
+
+  /**
+   * Takes a securityInfo object of nsIRequest, the nsIRequest itself and
+   * extracts security information from them.
+   *
+   * @param object securityInfo
+   *        The securityInfo object of a request. If null channel is assumed
+   *        to be insecure.
+   * @param nsIRequest request
+   *        The nsIRequest object for the request used to dig more information
+   *        about this request.
+   *
+   * @return object
+   *         Returns an object containing following members:
+   *          - state: The security of the connection used to fetch this
+   *                   request. Has one of following string values:
+   *                    * "insecure": the connection was not secure (only http)
+   *                    * "broken": secure connection failed (e.g. expired cert)
+   *                    * "secure": the connection was properly secured.
+   *          If state == broken:
+   *            - errorMessage: full error message from nsITransportSecurityInfo.
+   *          If state == secure:
+   *            - protocolVersion: one of SSLv3, TLSv1, TLSv1.1, TLSv1.2.
+   *            - cipherSuite: the cipher suite used in this connection.
+   *            - cert: information about certificate used in this connection.
+   *                    See parseCertificateInfo for the contents.
+   *            - hsts: true if host uses Strict Transport Security, false otherwise
+   *            - hpkp: true if host uses Public Key Pinning, false otherwise
+   */
+  parseSecurityInfo: function NH_parseSecurityInfo(securityInfo, request) {
+    const info = {
+      state: "insecure",
+    };
+
+    // The request did not contain any security info.
+    if (!securityInfo) {
+      return info;
+    }
+
+    /**
+     * Different scenarios to consider here and how they are handled:
+     * - request is HTTP, the connection is not secure
+     *   => securityInfo is null
+     *      => state === "insecure"
+     *
+     * - request is HTTPS, the connection is secure
+     *   => .securityState has STATE_IS_SECURE flag
+     *      => state === "secure"
+     *
+     * - request is HTTPS, the connection has security issues
+     *   => .securityState has STATE_IS_INSECURE flag
+     *   => .errorCode is an NSS error code.
+     *      => state === "broken"
+     *
+     * - request is HTTPS, the connection was terminated before the security
+     *   could be validated
+     *   => .securityState has STATE_IS_INSECURE flag
+     *   => .errorCode is NOT an NSS error code.
+     *   => .errorMessage is not available.
+     *      => state === "insecure"
+     *
+     * - request is HTTPS but it uses a weak cipher or old protocol, see
+     *   http://hg.mozilla.org/mozilla-central/annotate/def6ed9d1c1a/
+     *   security/manager/ssl/src/nsNSSCallbacks.cpp#l1233
+     * - request is mixed content (which makes no sense whatsoever)
+     *   => .securityState has STATE_IS_BROKEN flag
+     *   => .errorCode is NOT an NSS error code
+     *   => .errorMessage is not available
+     *      => state === "insecure"
+     */
+
+    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+    securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
+
+    const wpl = Ci.nsIWebProgressListener;
+    const NSSErrorsService = Cc['@mozilla.org/nss_errors_service;1']
+                               .getService(Ci.nsINSSErrorsService);
+    const SSLStatus = securityInfo.SSLStatus;
+
+    if (securityInfo.securityState & wpl.STATE_IS_SECURE) {
+      // The connection is secure.
+      info.state = "secure";
+
+      // Cipher suite.
+      info.cipherSuite = SSLStatus.cipherName;
+
+      // Protocol version.
+      info.protocolVersion = this.formatSecurityProtocol(SSLStatus.protocolVersion);
+
+      // Certificate.
+      info.cert = this.parseCertificateInfo(SSLStatus.serverCert);
+
+      // HSTS and HPKP if available.
+      if (request.URI) {
+        const sss = Cc["@mozilla.org/ssservice;1"]
+                      .getService(Ci.nsISiteSecurityService);
+
+        request.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+
+        // SiteSecurityService uses different storage if the channel is
+        // private. Thus we must give isSecureHost correct flags or we
+        // might get incorrect results.
+        let flags = (request.isChannelPrivate) ?
+                      Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
+
+        let host = request.URI.host;
+
+        info.hsts = sss.isSecureHost(sss.HEADER_HSTS, host, flags);
+        info.hpkp = sss.isSecureHost(sss.HEADER_HPKP, host, flags);
+      } else {
+        DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
+          "Could not get HSTS/HPKP status as request.URI not available.");
+        info.hsts = false;
+        info.hpkp = false;
+      }
+
+    } else if (NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
+      // The connection failed.
+      info.state = "broken";
+      info.errorMessage = securityInfo.errorMessage;
+    } else {
+      // Connection has securityInfo, it is not secure and there's no problems
+      // to report. Mark the request as insecure.
+      return info;
+    }
+
+    return info;
+  },
+
+  /**
+   * Takes an nsIX509Cert and returns an object with certificate information.
+   *
+   * @param nsIX509Cert cert
+   *        The certificate to extract the information from.
+   * @return object
+   *         An object with following format:
+   *           {
+   *             subject: { commonName, organization, organizationalUnit },
+   *             issuer: { commonName, organization, organizationUnit },
+   *             validity: { start, end },
+   *             fingerprint: { sha1, sha256 }
+   *           }
+   */
+  parseCertificateInfo: function NH_parseCertifificateInfo(cert) {
+    let info = {};
+    if (cert) {
+      info.subject = {
+        commonName: cert.commonName,
+        organization: cert.organization,
+        organizationalUnit: cert.organizationalUnit,
+      };
+
+      info.issuer = {
+        commonName: cert.issuerCommonName,
+        organization: cert.issuerOrganization,
+        organizationUnit: cert.issuerOrganizationUnit,
+      };
+
+      info.validity = {
+        start: cert.validity.notBeforeLocalDay,
+        end: cert.validity.notAfterLocalDay,
+      };
+
+      info.fingerprint = {
+        sha1: cert.sha1Fingerprint,
+        sha256: cert.sha256Fingerprint,
+      };
+    } else {
+      DevToolsUtils.reportException("NetworkHelper.parseCertificateInfo",
+        "Secure connection established without certificate.");
+    }
+
+    return info;
+  },
+
+  /**
+   * Takes protocolVersion of SSLStatus object and returns human readable
+   * description.
+   *
+   * @param Number version
+   *        One of nsISSLStatus version constants.
+   * @return string
+   *         One of SSLv3, TLSv1, TLSv1.1, TLSv1.2 if @param version is valid,
+   *         Unknown otherwise.
+   */
+  formatSecurityProtocol: function NH_formatSecurityProtocol(version) {
+    switch (version) {
+      case Ci.nsISSLStatus.SSL_VERSION_3:
+        return "SSLv3";
+      case Ci.nsISSLStatus.TLS_VERSION_1:
+        return "TLSv1";
+      case Ci.nsISSLStatus.TLS_VERSION_1_1:
+        return "TLSv1.1";
+      case Ci.nsISSLStatus.TLS_VERSION_1_2:
+        return "TLSv1.2";
+      default:
+        DevToolsUtils.reportException("NetworkHelper.formatSecurityProtocol",
+          "protocolVersion " + version + " is unknown.");
+        return "Unknown";
     }
   },
 };
