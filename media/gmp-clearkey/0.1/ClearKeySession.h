@@ -32,7 +32,7 @@ public:
 
   void AddKeyId(const KeyId& aKeyId);
 
-  const std::string Id() const { return mSessionId; }
+  const std::string& Id() const { return mSessionId; }
 
 private:
   const std::string mSessionId;
