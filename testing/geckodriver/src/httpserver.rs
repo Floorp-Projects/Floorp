@@ -1,16 +1,19 @@
 use std::io::net::ip::IpAddr;
+use std::num::FromPrimitive;
 use std::sync::Mutex;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread::Thread;
 
 use hyper::header::common::ContentLength;
-use hyper::method::Post;
+use hyper::method::Method;
 use hyper::server::{Server, Handler, Request, Response};
-use hyper::uri::AbsolutePath;
+use hyper::uri::RequestUri::AbsolutePath;
 
-use response::WebDriverResponse;
-use messagebuilder::{get_builder, MessageBuilder};
-use marionette::MarionetteConnection;
 use command::WebDriverMessage;
 use common::WebDriverResult;
+use marionette::MarionetteConnection;
+use messagebuilder::{get_builder, MessageBuilder};
+use response::WebDriverResponse;
 
 enum DispatchMessage {
     HandleWebDriver(WebDriverMessage, Sender<WebDriverResult<WebDriverResponse>>),
@@ -31,7 +34,7 @@ impl Dispatcher {
     fn run(&mut self, msg_chan: Receiver<DispatchMessage>) {
         loop {
             match msg_chan.recv() {
-                DispatchMessage::HandleWebDriver(msg, resp_chan) => {
+                Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
                     match msg.session_id {
                         Some(ref x) => {
                             match self.connection {
@@ -71,7 +74,7 @@ impl Dispatcher {
                         let mut connection = self.connection.as_mut().unwrap();
                         connection.send_message(&msg)
                     };
-                    debug!("{}", resp);
+                    debug!("{:?}", resp);
                     match resp {
                         Ok(WebDriverResponse::DeleteSession) => {
                             debug!("Deleting session");
@@ -81,9 +84,10 @@ impl Dispatcher {
                     }
                     resp_chan.send(resp);
                 },
-                DispatchMessage::Quit => {
+                Ok(DispatchMessage::Quit) => {
                     break;
-                }
+                },
+                Err(_) => panic!("Error receiving message in handler")
             }
         }
     }
@@ -118,28 +122,48 @@ impl Handler for MarionetteHandler {
         let mut res = res;
 
         let body = match req.method {
-            Post => req.read_to_string().unwrap(),
+            Method::Post => req.read_to_string().unwrap(),
             _ => "".to_string()
         };
-        debug!("Got request {} {}", req.method, req.uri);
+        debug!("Got request {} {:?}", req.method, req.uri);
         match req.uri {
             AbsolutePath(path) => {
                 let msg_result = {
                     // The fact that this locks for basically the whole request doesn't
                     // matter as long as we are only handling one request at a time.
-                    let builder = self.builder.lock();
-                    builder.from_http(req.method, path[], body[])
+                    match self.builder.lock() {
+                        Ok(ref builder) => {
+                            builder.from_http(req.method, path.as_slice(), body.as_slice())
+                        },
+                        Err(_) => return
+                    }
                 };
                 let (status, resp_body) = match msg_result {
                     Ok(message) => {
                         let (send_res, recv_res) = channel();
-                        {
-                            let c = self.chan.lock();
-                            c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                        match self.chan.lock() {
+                            Ok(ref c) => {
+                                let res = c.send(DispatchMessage::HandleWebDriver(message,
+                                                                                  send_res));
+                                match res {
+                                    Ok(x) => x,
+                                    Err(_) => {
+                                        error!("Something terrible happened");
+                                        return
+                                    }
+                                }
+                            },
+                            Err(_) => {
+                                error!("Something terrible happened");
+                                return
+                            }
                         }
                         match recv_res.recv() {
-                            Ok(response) => (200, response.to_json_string()),
-                            Err(err) => (err.http_status(), err.to_json_string()),
+                            Ok(data) => match data {
+                                Ok(response) => (200, response.to_json_string()),
+                                Err(err) => (err.http_status(), err.to_json_string()),
+                            },
+                            Err(_) => panic!("Error reading response")
                         }
                     },
                     Err(err) => {
@@ -155,9 +179,9 @@ impl Handler for MarionetteHandler {
                 }
                 {
                     let status_code = res.status_mut();
-                    *status_code = FromPrimitive::from_int(status).unwrap();
+                    *status_code = FromPrimitive::from_u32(status).unwrap();
                 }
-                res.headers_mut().set(ContentLength(resp_body.len()));
+                res.headers_mut().set(ContentLength(resp_body.len() as u64));
                 let mut stream = res.start();
                 stream.write_str(resp_body.as_slice()).unwrap();
                 stream.unwrap().end().unwrap();
@@ -173,7 +197,7 @@ pub fn start(ip_address: IpAddr, port: u16) {
 
     let (msg_send, msg_recv) = channel();
 
-    spawn(proc() {
+    Thread::spawn(move || {
         dispatcher.run(msg_recv);
     });
     let builder = get_builder();

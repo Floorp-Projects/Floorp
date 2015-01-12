@@ -1,19 +1,17 @@
 #![feature(slicing_syntax)]
-#![feature(phase)]
-#![feature(macro_rules)]
 #![feature(unboxed_closures)]
-#![feature(if_let)]
 
 extern crate core;
 extern crate getopts;
 extern crate hyper;
-#[phase(plugin, link)] extern crate log;
+#[macro_use] extern crate log;
 extern crate regex;
 extern crate serialize;
 
 use getopts::{usage,optflag, getopts, OptGroup};
 use httpserver::start;
 use std::io::net::ip::SocketAddr;
+use std::str::FromStr;
 use std::io;
 use std::os;
 
@@ -41,7 +39,7 @@ fn err(msg: String) {
 }
 
 fn print_usage(opts: &[OptGroup]) {
-    let shorts: Vec<_> = opts.iter().map(|opt| opt.short_name.as_slice()).collect();
+    let shorts: Vec<String> = opts.iter().map(|opt| opt.short_name.to_string()).collect();
     let msg = format!("usage: {} [-{}] [ADDRESS]", os::args()[0], shorts.concat());
     io::stderr().write_line(usage(msg.as_slice(), opts).as_slice()).unwrap();
 }
@@ -54,13 +52,13 @@ fn parse_addr(s: String) -> Result<SocketAddr, String> {
         parts[0] = "127.0.0.1";
     }
     let full_addr = parts.connect(":");
-    match from_str::<SocketAddr>(full_addr.as_slice()) {
+    match FromStr::from_str(full_addr.as_slice()) {
         Some(addr) => Ok(addr),
         None => Err(format!("illegal address: {}", s))
     }
 }
 
-fn run(args: Vec<String>) -> int {
+fn run(args: Vec<String>) -> Result<(), isize> {
     let opts = [
         optflag("q", "", "make the program quiet, only printing warnings"),
         optflag("v", "", "show version information"),
@@ -70,16 +68,16 @@ fn run(args: Vec<String>) -> int {
         Ok(m) => m,
         Err(f) => {
             err(format!("{}", f));
-            return 0;
+            return Ok(())
         }
     };
 
     if matches.opt_present("v") {
         println!("wires version {}", VERSION);
-        return 0;
+        return Ok(())
     } else if matches.opt_present("h") {
         print_usage(&opts);
-        return 127;
+        return Err(127);
     }
 
     let addr_str = if matches.free.len() == 1 {
@@ -87,7 +85,7 @@ fn run(args: Vec<String>) -> int {
     } else if matches.free.len() > 1 {
         err(format!("got {} positional arguments, expected 1", matches.free.len()));
         print_usage(&opts);
-        return 1;
+        return Err(1);
     } else {
         DEFAULT_ADDR.to_string()
     };
@@ -95,16 +93,15 @@ fn run(args: Vec<String>) -> int {
         Ok(x) => x,
         Err(e) => {
             err(format!("{}", e));
-            return 1;
+            return Err(1);
         }
     };
 
     start(addr.ip, addr.port);
-    return 0;
+    return Ok(());
 }
 
 fn main() {
     let args = os::args();
-    let s = run(args);
-    os::set_exit_status(s);
+    run(args).unwrap_or_else(|x| os::set_exit_status(x));
 }

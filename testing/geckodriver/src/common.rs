@@ -1,12 +1,12 @@
-use core::u16;
+use core::num::ToPrimitive;
+use serialize::json::{Json, ToJson, ParserError};
 use serialize::{json, Encodable, Encoder};
-use serialize::json::{ToJson, ParserError};
-use std::collections::TreeMap;
+use std::collections::BTreeMap;
 use std::error::{Error, FromError};
 
 static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 pub enum ErrorStatus {
     ElementNotSelectable,
     ElementNotVisible,
@@ -36,7 +36,7 @@ pub enum ErrorStatus {
 
 pub type WebDriverResult<T> = Result<T, WebDriverError>;
 
-#[deriving(Show)]
+#[derive(Show)]
 pub struct WebDriverError {
     pub status: ErrorStatus,
     pub message: String
@@ -79,11 +79,11 @@ impl WebDriverError {
         }
     }
 
-    pub fn http_status(&self) -> int {
+    pub fn http_status(&self) -> u32 {
         match self.status {
-            ErrorStatus::UnknownPath => 404,
-            ErrorStatus::UnknownMethod => 405,
-            _ => 500
+            ErrorStatus::UnknownPath => 404u32,
+            ErrorStatus::UnknownMethod => 405u32,
+            _ => 500u32
         }
     }
 
@@ -93,11 +93,11 @@ impl WebDriverError {
 }
 
 impl ToJson for WebDriverError {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert("status".to_string(), self.status_code().to_json());
         data.insert("error".to_string(), self.message.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
@@ -117,12 +117,12 @@ impl Error for WebDriverError {
 
 impl FromError<ParserError> for WebDriverError {
     fn from_error(err: ParserError) -> WebDriverError {
-        let msg = format!("{}", err);
+        let msg = format!("{:?}", err);
         WebDriverError::new(ErrorStatus::UnknownError, msg.as_slice())
     }
 }
 
-#[deriving(PartialEq, Clone, Show)]
+#[derive(PartialEq, Clone, Show)]
 pub enum Nullable<T: ToJson> {
     Value(T),
     Null
@@ -146,7 +146,7 @@ impl<T: ToJson> Nullable<T> {
 
 impl<T: ToJson> Nullable<T> {
     //This is not very pretty
-    pub fn from_json<F: FnOnce(&json::Json) -> WebDriverResult<T>>(value: &json::Json, f: F) -> WebDriverResult<Nullable<T>> {
+    pub fn from_json<F: FnOnce(&Json) -> WebDriverResult<T>>(value: &Json, f: F) -> WebDriverResult<Nullable<T>> {
         if value.is_null() {
             Ok(Nullable::Null)
         } else {
@@ -156,24 +156,24 @@ impl<T: ToJson> Nullable<T> {
 }
 
 impl<T: ToJson> ToJson for Nullable<T> {
-    fn to_json(&self) -> json::Json {
+    fn to_json(&self) -> Json {
         match *self {
             Nullable::Value(ref x) => x.to_json(),
-            Nullable::Null => json::Json::Null
+            Nullable::Null => Json::Null
         }
     }
 }
 
-impl<S: Encoder<E>, E, T: ToJson> Encodable<S, E> for Nullable<T> {
-    fn encode(&self, s: &mut S) -> Result<(), E> {
+impl<T: ToJson> Encodable for Nullable<T> {
+    fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
         match *self {
             Nullable::Value(ref x) => x.to_json().encode(s),
-            Nullable::Null => s.emit_nil()
+            Nullable::Null => s.emit_option_none()
         }
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub struct WebElement {
     pub id: String
 }
@@ -185,7 +185,7 @@ impl WebElement {
         }
     }
 
-    pub fn from_json(data: &json::Json) -> WebDriverResult<WebElement> {
+    pub fn from_json(data: &Json) -> WebDriverResult<WebElement> {
         let object = try_opt!(data.as_object(),
                               ErrorStatus::InvalidArgument,
                               "Could not convert webelement to object");
@@ -195,21 +195,21 @@ impl WebElement {
 
         let id = try_opt!(id_value.as_string(),
                           ErrorStatus::InvalidArgument,
-                          "Could not convert web element to string").into_string();
+                          "Could not convert web element to string").to_string();
 
         Ok(WebElement::new(id))
     }
 }
 
 impl ToJson for WebElement {
-    fn to_json(&self) -> json::Json {
-        let mut data = TreeMap::new();
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
         data.insert(ELEMENT_KEY.to_string(), self.id.to_json());
-        json::Object(data)
+        Json::Object(data)
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub enum FrameId {
     Short(u16),
     Element(WebElement),
@@ -217,16 +217,16 @@ pub enum FrameId {
 }
 
 impl FrameId {
-    pub fn from_json(data: &json::Json) -> WebDriverResult<FrameId> {
+    pub fn from_json(data: &Json) -> WebDriverResult<FrameId> {
         match data {
-            &json::Json::U64(x) => {
+            &Json::U64(x) => {
                 let id = try_opt!(x.to_u16(),
                                   ErrorStatus::NoSuchFrame,
                                   "frame id out of range");
                 Ok(FrameId::Short(id))
             },
-            &json::Json::Null => Ok(FrameId::Null),
-            &json::Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
+            &Json::Null => Ok(FrameId::Null),
+            &Json::String(ref x) => Ok(FrameId::Element(WebElement::new(x.clone()))),
             _ => Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
                                          "frame id has unexpected type"))
         }
@@ -234,22 +234,22 @@ impl FrameId {
 }
 
 impl ToJson for FrameId {
-    fn to_json(&self) -> json::Json {
+    fn to_json(&self) -> Json {
         match *self {
             FrameId::Short(x) => {
-                json::Json::U64(x as u64)
+                Json::U64(x as u64)
             },
             FrameId::Element(ref x) => {
-                json::Json::String(x.id.clone())
+                Json::String(x.id.clone())
             },
             FrameId::Null => {
-                json::Json::Null
+                Json::Null
             }
         }
     }
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq)]
 pub enum LocatorStrategy {
     CSSSelector,
     LinkText,
@@ -258,7 +258,7 @@ pub enum LocatorStrategy {
 }
 
 impl LocatorStrategy {
-    pub fn from_json(body: &json::Json) -> WebDriverResult<LocatorStrategy> {
+    pub fn from_json(body: &Json) -> WebDriverResult<LocatorStrategy> {
         match try_opt!(body.as_string(),
                        ErrorStatus::InvalidArgument,
                        "Cound not convert strategy to string") {
@@ -273,12 +273,12 @@ impl LocatorStrategy {
 }
 
 impl ToJson for LocatorStrategy {
-    fn to_json(&self) -> json::Json {
-        json::Json::String(match *self {
+    fn to_json(&self) -> Json {
+        Json::String(match *self {
             LocatorStrategy::CSSSelector => "css selector",
             LocatorStrategy::LinkText => "link text",
             LocatorStrategy::PartialLinkText => "partial link text",
             LocatorStrategy::XPath => "xpath"
-        }.into_string())
+        }.to_string())
     }
 }
