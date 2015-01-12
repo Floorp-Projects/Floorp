@@ -73,7 +73,7 @@
 }
 
 /* Ruby */
-@supports(display:ruby) {
+@supports (display:ruby) {
   *|*::-moz-ruby {
     display: ruby;
   }
