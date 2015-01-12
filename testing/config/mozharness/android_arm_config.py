@@ -105,8 +105,8 @@ config = {
                 "--apk=%(installer_path)s", "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
                 "--manifest=tests/xpcshell.ini",
+                "--log-raw=%(raw_log_file)s",
                 # Bug 1064002 - Land once mozharness changes land
-                #"--log-raw=%(raw_log_file)s",
                 #"--total-chunks=3",
             ],
         },
