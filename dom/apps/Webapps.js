@@ -44,18 +44,11 @@ WebappsRegistry.prototype = {
 
   receiveMessage: function(aMessage) {
     let msg = aMessage.json;
-    let req;
-    if (msg.oid === this._id) {
-      if (aMessage.name == "Webapps:GetLocalizationResource:Return") {
-        req = this.takePromiseResolver(msg.requestID);
-      } else {
-        req = this.getRequest(msg.requestID);
-      }
-      if (!req) {
-        return;
-      }
-    }
-
+    if (msg.oid != this._id)
+      return
+    let req = this.getRequest(msg.requestID);
+    if (!req)
+      return;
     let app = msg.app;
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
@@ -84,26 +77,6 @@ WebappsRegistry.prototype = {
       case "Webapps:GetInstalled:Return:OK":
         this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
-        break;
-      case "Webapps:AdditionalLanguageChange":
-        // Check if the current page is from the app receiving the event.
-        let manifestURL = AppsUtils.getAppManifestURLFromWindow(this._window);
-        if (manifestURL && manifestURL == msg.manifestURL) {
-          // Let's dispatch an "additionallanguageschange" event on the document.
-          let doc = this._window.document;
-          let event = doc.createEvent("CustomEvent");
-          event.initCustomEvent("additionallanguageschange", true, true,
-                                Cu.cloneInto(msg.languages, this._window));
-          doc.dispatchEvent(event);
-        }
-        break;
-      case "Webapps:GetLocalizationResource:Return":
-        this.removeMessageListeners(["Webapps:GetLocalizationResource:Return"]);
-        if (msg.error) {
-          req.reject(new this._window.DOMError(msg.error));
-        } else {
-          req.resolve(Cu.cloneInto(msg.data, this._window));
-        }
         break;
     }
     this.removeRequest(msg.requestID);
@@ -258,8 +231,7 @@ WebappsRegistry.prototype = {
   uninit: function() {
     this._mgmt = null;
     cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
-                          ["Webapps:Install:Return:OK",
-                           "Webapps:AdditionalLanguageChange"]);
+                          ["Webapps:Install:Return:OK"]);
   },
 
   installPackage: function(aURL, aParams) {
@@ -276,69 +248,19 @@ WebappsRegistry.prototype = {
     return request;
   },
 
-  _getCurrentAppManifestURL: function() {
-    let appId = this._window.document.nodePrincipal.appId;
-    if (appId === Ci.nsIScriptSecurityManager.NO_APP_ID) {
-      return null;
-    }
-
-    return appsService.getManifestURLByLocalId(appId);
-  },
-
-  getAdditionalLanguages: function() {
-    let manifestURL = AppsUtils.getAppManifestURLFromWindow(this._window);
-
-    return new this._window.Promise((aResolve, aReject) => {
-      if (!manifestURL) {
-        aReject("NotInApp");
-      } else {
-        let langs = DOMApplicationRegistry.getAdditionalLanguages(manifestURL);
-        aResolve(Cu.cloneInto(langs, this._window));
-      }
-    });
-  },
-
-  getLocalizationResource: function(aLanguage, aVersion, aPath, aType) {
-    let manifestURL = AppsUtils.getAppManifestURLFromWindow(this._window);
-
-    if (!manifestURL) {
-      return new Promise((aResolve, aReject) => {
-        aReject("NotInApp");
-      });
-    }
-
-    this.addMessageListeners(["Webapps:GetLocalizationResource:Return"]);
-    return this.createPromise((aResolve, aReject) => {
-      cpmm.sendAsyncMessage("Webapps:GetLocalizationResource", {
-        manifestURL: manifestURL,
-        lang: aLanguage,
-        version: aVersion,
-        path: aPath,
-        dataType: aType,
-        oid: this._id,
-        requestID: this.getPromiseResolverId({
-          resolve: aResolve,
-          reject: aReject
-        })
-      });
-    });
-  },
-
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
     const prefs = new Preferences();
 
     this._window = aWindow;
 
-    this.initDOMRequestHelper(aWindow, ["Webapps:Install:Return:OK",
-                                        "Webapps:AdditionalLanguageChange"]);
+    this.initDOMRequestHelper(aWindow, "Webapps:Install:Return:OK");
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     this._id = util.outerWindowID;
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
-                          { messages: ["Webapps:Install:Return:OK",
-                                       "Webapps:AdditionalLanguageChange"]});
+                          { messages: ["Webapps:Install:Return:OK"]});
 
     let principal = aWindow.document.nodePrincipal;
     let appId = principal.appId;
