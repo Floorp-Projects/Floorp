@@ -74,10 +74,10 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mIgnoreAudioOutputFormat(false)
   , mStartTime(-1)
   , mHitAudioDecodeError(false)
+  , mShutdown(false)
   , mTaskQueueIsBorrowed(false)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
-  , mShutdown(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   EnsureMediaPromiseLog();

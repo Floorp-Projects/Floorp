@@ -7,7 +7,6 @@
 #ifndef mozilla_Range_h
 #define mozilla_Range_h
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/RangedPtr.h"
 
 #include <stddef.h>

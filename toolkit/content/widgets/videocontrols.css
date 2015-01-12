@@ -21,6 +21,10 @@
   -moz-user-focus: none;
 }
 
+.controlBar[fullscreen-unavailable] > .fullscreenButton {
+  display: none;
+}
+
 .mediaControlsFrame {
   direction: ltr;
   /* Prevent unwanted style inheritance. See bug 554717. */

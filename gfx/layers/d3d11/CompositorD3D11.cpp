@@ -1098,7 +1098,11 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
 
   MOZ_ASSERT(mutex);
-  mutex->AcquireSync(0, INFINITE);
+  HRESULT hr = mutex->AcquireSync(0, 10000);
+  if (hr == WAIT_TIMEOUT) {
+    MOZ_CRASH();
+  }
+
   mutex->ReleaseSync(0);
 }
 

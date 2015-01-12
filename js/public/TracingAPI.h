@@ -7,8 +7,6 @@
 #ifndef js_TracingAPI_h
 #define js_TracingAPI_h
 
-#include "mozilla/NullPtr.h"
-
 #include "jsalloc.h"
 #include "jspubtd.h"
 

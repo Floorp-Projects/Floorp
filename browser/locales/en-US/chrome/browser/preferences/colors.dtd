@@ -6,12 +6,12 @@
 <!ENTITY  window.width                    "38em">
 <!ENTITY  window.macWidth                 "41em">
 
-<!ENTITY  allowPagesToUseColors.label           "Allow pages to choose their own colors, instead of my selections above:">
-<!ENTITY  allowPagesToUseColors.accesskey       "A">
+<!ENTITY  overridePageColors.label        "Override the colors specified by the page with my selections above:">
+<!ENTITY  overridePageColors.accesskey    "O">
 
-<!ENTITY  allowPagesToUseColors.automatic.label "Automatic">
-<!ENTITY  allowPagesToUseColors.always.label    "Always">
-<!ENTITY  allowPagesToUseColors.never.label     "Never">
+<!ENTITY  overridePageColors.always.label "Always">
+<!ENTITY  overridePageColors.auto.label   "Only with High Contrast themes">
+<!ENTITY  overridePageColors.never.label  "Never">
 
 <!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">

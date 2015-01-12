@@ -2269,12 +2269,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     }
 
     case kJavaContext_ANPGetValue: {
-      jobject ret = mozilla::widget::android::GeckoAppShell::GetContext();
+      auto ret = widget::GeckoAppShell::GetContext();
       if (!ret)
         return NPERR_GENERIC_ERROR;
 
-      int32_t* i  = reinterpret_cast<int32_t*>(result);
-      *i = reinterpret_cast<int32_t>(ret);
+      *static_cast<jobject*>(result) = ret.Forget();
       return NPERR_NO_ERROR;
     }
 

@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <utility>
 
-#include "mozilla/NullPtr.h"
 #include "sandbox/linux/seccomp-bpf/codegen.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 

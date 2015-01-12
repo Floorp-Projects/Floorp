@@ -1171,7 +1171,10 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
 nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
                                         nsIContent* aContent)
 {
-  nsContainerFrame* genConParentFrame = aFrame->GetContentInsertionFrame();
+  // We need to call GetGenConPseudos() on the first continuation/ib-split.
+  // Find it, for symmetry with GetAfterFrameForContent.
+  nsContainerFrame* genConParentFrame =
+    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
   if (!genConParentFrame) {
     return nullptr;
   }
@@ -1207,7 +1210,10 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
                                        nsIContent* aContent)
 {
-  nsContainerFrame* genConParentFrame = aFrame->GetContentInsertionFrame();
+  // We need to call GetGenConPseudos() on the first continuation,
+  // but callers are likely to pass the last.
+  nsContainerFrame* genConParentFrame =
+    FirstContinuationOrIBSplitSibling(aFrame)->GetContentInsertionFrame();
   if (!genConParentFrame) {
     return nullptr;
   }
@@ -1224,8 +1230,13 @@ nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
   // If the last child frame is a pseudo-frame, then try that.
   // Note that the frame we create for the generated content is also a
   // pseudo-frame and so don't drill down in that case.
+  genConParentFrame = aFrame->GetContentInsertionFrame();
+  if (!genConParentFrame) {
+    return nullptr;
+  }
   nsIFrame* lastParentContinuation =
-    nsLayoutUtils::LastContinuationWithChild(genConParentFrame);
+    LastContinuationWithChild(static_cast<nsContainerFrame*>(
+      LastContinuationOrIBSplitSibling(genConParentFrame)));
   nsIFrame* childFrame =
     lastParentContinuation->GetLastChild(nsIFrame::kPrincipalList);
   if (childFrame &&
@@ -3907,6 +3918,25 @@ nsLayoutUtils::FirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
   return result;
 }
 
+nsIFrame*
+nsLayoutUtils::LastContinuationOrIBSplitSibling(nsIFrame *aFrame)
+{
+  nsIFrame *result = aFrame->FirstContinuation();
+  if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
+    while (true) {
+      nsIFrame *f = static_cast<nsIFrame*>
+        (result->Properties().Get(nsIFrame::IBSplitSibling()));
+      if (!f)
+        break;
+      result = f;
+    }
+  }
+
+  result = result->LastContinuation();
+
+  return result;
+}
+
 bool
 nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
 {
@@ -5119,6 +5149,28 @@ nsLayoutUtils::AppUnitWidthOfStringBidi(const char16_t* aString,
   aFontMetrics.SetTextOrientation(aFrame->StyleVisibility()->mTextOrientation);
   return nsLayoutUtils::AppUnitWidthOfString(aString, aLength, aFontMetrics,
                                              aContext);
+}
+
+bool
+nsLayoutUtils::StringWidthIsGreaterThan(const nsString& aString,
+                                        nsFontMetrics& aFontMetrics,
+                                        nsRenderingContext& aContext,
+                                        nscoord aWidth)
+{
+  const char16_t *string = aString.get();
+  uint32_t length = aString.Length();
+  uint32_t maxChunkLength = GetMaxChunkLength(aFontMetrics);
+  nscoord width = 0;
+  while (length > 0) {
+    int32_t len = FindSafeLength(string, length, maxChunkLength);
+    width += aFontMetrics.GetWidth(string, len, &aContext);
+    if (width > aWidth) {
+      return true;
+    }
+    length -= len;
+    string += len;
+  }
+  return false;
 }
 
 nsBoundingMetrics

@@ -17,18 +17,6 @@ namespace mozilla {
 
 typedef std::queue<mp4_demuxer::MP4Sample*> SampleQueue;
 
-namespace widget {
-namespace android {
-namespace sdk {
-  class MediaCodec;
-  class MediaFormat;
-  class ByteBuffer;
-}
-}
-}
-
-class MediaCodecDataDecoder;
-
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
   virtual nsresult Shutdown() MOZ_OVERRIDE;
@@ -57,7 +45,7 @@ public:
 
   MediaCodecDataDecoder(MediaData::Type aType,
                         const char* aMimeType,
-                        mozilla::widget::android::sdk::MediaFormat* aFormat,
+                        widget::sdk::MediaFormat::Param aFormat,
                         MediaDataDecoderCallback* aCallback);
 
   virtual ~MediaCodecDataDecoder();
@@ -74,14 +62,14 @@ protected:
   MediaData::Type mType;
 
   nsAutoPtr<char> mMimeType;
-  nsAutoPtr<mozilla::widget::android::sdk::MediaFormat> mFormat;
+  widget::sdk::MediaFormat::GlobalRef mFormat;
 
   MediaDataDecoderCallback* mCallback;
 
-  nsAutoPtr<mozilla::widget::android::sdk::MediaCodec> mDecoder;
+  widget::sdk::MediaCodec::GlobalRef mDecoder;
 
-  jobjectArray mInputBuffers;
-  jobjectArray mOutputBuffers;
+  jni::ObjectArray::GlobalRef mInputBuffers;
+  jni::ObjectArray::GlobalRef mOutputBuffers;
 
   nsCOMPtr<nsIThread> mThread;
 
@@ -94,10 +82,10 @@ protected:
   SampleQueue mQueue;
   std::queue<Microseconds> mDurations;
 
-  virtual nsresult InitDecoder(jobject aSurface = nullptr);
+  virtual nsresult InitDecoder(widget::sdk::Surface::Param aSurface);
 
-  virtual nsresult Output(mozilla::widget::android::sdk::BufferInfo* aInfo, void* aBuffer, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
-  virtual nsresult PostOutput(mozilla::widget::android::sdk::BufferInfo* aInfo, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult Output(widget::sdk::BufferInfo::Param aInfo, void* aBuffer, widget::sdk::MediaFormat::Param aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult PostOutput(widget::sdk::BufferInfo::Param aInfo, widget::sdk::MediaFormat::Param aFormat, Microseconds aDuration) { return NS_OK; }
   virtual void Cleanup() {};
 
   nsresult ResetInputBuffers();

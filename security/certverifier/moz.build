@@ -35,6 +35,7 @@ CXXFLAGS += ['-Wall']
 if CONFIG['_MSC_VER']:
   # -Wall with Visual C++ enables too many problematic warnings
   CXXFLAGS += [
+    '-wd4355', # 'this' used in base member initializer list
     '-wd4480', # nonstandard extension used: specifying underlying type for
                # enum 'enum'
     '-wd4481', # nonstandard extension used: override specifier 'keyword'

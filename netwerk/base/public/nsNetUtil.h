@@ -189,7 +189,7 @@ NS_NewFileURI(nsIURI* *result,
 
 /*
 * How to create a new Channel, using NS_NewChannel,
-* NS_NewChannelWithTriggeringPrincipal, NS_OpenURI,
+* NS_NewChannelWithTriggeringPrincipal,
 * NS_NewInputStreamChannel, NS_NewChannelInternal
 * and it's variations:
 *
@@ -447,189 +447,6 @@ NS_NewChannel(nsIChannel**           outChannel,
                                aCallbacks,
                                aLoadFlags,
                                aIoService);
-}
-
-// Use this function with CAUTION. It creates a stream that blocks when you
-// Read() from it and blocking the UI thread is a bad idea. If you don't want
-// to implement a full blown asynchronous consumer (via nsIStreamListener) look
-// at nsIStreamLoader instead.
-inline nsresult
-NS_OpenURIInternal(nsIInputStream**       outStream,
-                   nsIURI*                aUri,
-                   nsINode*               aLoadingNode,
-                   nsIPrincipal*          aLoadingPrincipal,
-                   nsIPrincipal*          aTriggeringPrincipal,
-                   nsSecurityFlags        aSecurityFlags,
-                   nsContentPolicyType    aContentPolicyType,
-                   nsILoadGroup*          aLoadGroup = nullptr,
-                   nsIInterfaceRequestor* aCallbacks = nullptr,
-                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-                   nsIIOService*          aIoService = nullptr,  // pass in nsIIOService to optimize callers
-                   nsIChannel**           outChannel = nullptr)
-{
-  NS_ASSERTION(aLoadingPrincipal, "Can not create channel without a loading Principal!");
-
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                                      aUri,
-                                      aLoadingNode,
-                                      aLoadingPrincipal,
-                                      aTriggeringPrincipal,
-                                      aSecurityFlags,
-                                      aContentPolicyType,
-                                      aLoadGroup,
-                                      aCallbacks,
-                                      aLoadFlags,
-                                      aIoService);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIInputStream *stream;
-  rv = channel->Open(&stream);
-  NS_ENSURE_SUCCESS(rv, rv);
-  *outStream = stream;
-  if (outChannel) {
-    *outChannel = nullptr;
-     channel.swap(*outChannel);
-  }
-  return NS_OK;
-}
-
-inline nsresult /* NS_OpenURIprincipal */
-NS_OpenURI(nsIInputStream**       outStream,
-           nsIURI*                aUri,
-           nsIPrincipal*          aLoadingPrincipal,
-           nsSecurityFlags        aSecurityFlags,
-           nsContentPolicyType    aContentPolicyType,
-           nsILoadGroup*          aLoadGroup = nullptr,
-           nsIInterfaceRequestor* aCallbacks = nullptr,
-           nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-           nsIIOService*          aIoService = nullptr,
-           nsIChannel**           outChannel = nullptr)
-{
-  return NS_OpenURIInternal(outStream,
-                            aUri,
-                            nullptr, // aLoadingNode
-                            aLoadingPrincipal,
-                            nullptr, // aTriggeringPrincipal
-                            aSecurityFlags,
-                            aContentPolicyType,
-                            aLoadGroup,
-                            aCallbacks,
-                            aLoadFlags,
-                            aIoService,
-                            outChannel);
-}
-
-inline nsresult /* NS_OpenURIWithTriggeringPrincipalAndNode */
-NS_OpenURIWithTriggeringPrincipal(nsIInputStream**       outStream,
-                                  nsIURI*                aUri,
-                                  nsINode*               aLoadingNode,
-                                  nsIPrincipal*          aTriggeringPrincipal,
-                                  nsSecurityFlags        aSecurityFlags,
-                                  nsContentPolicyType    aContentPolicyType,
-                                  nsILoadGroup*          aLoadGroup = nullptr,
-                                  nsIInterfaceRequestor* aCallbacks = nullptr,
-                                  nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-                                  nsIIOService*          aIoService = nullptr,
-                                  nsIChannel**           outChannel = nullptr)
-{
-  MOZ_ASSERT(aLoadingNode);
-  NS_ASSERTION(aTriggeringPrincipal, "Can not open uri without a triggering Principal!");
-  return NS_OpenURIInternal(outStream,
-                            aUri,
-                            aLoadingNode,
-                            aLoadingNode->NodePrincipal(),
-                            aTriggeringPrincipal,
-                            aSecurityFlags,
-                            aContentPolicyType,
-                            aLoadGroup,
-                            aCallbacks,
-                            aLoadFlags,
-                            aIoService,
-                            outChannel);
-}
-
-inline nsresult
-NS_OpenURIInternal(nsIStreamListener*     aListener,
-                   nsISupports*           aContext,
-                   nsIURI*                aUri,
-                   nsILoadInfo*           aLoadInfo,
-                   nsILoadGroup*          aLoadGroup = nullptr,
-                   nsIInterfaceRequestor* aCallbacks = nullptr,
-                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-                   nsIIOService*          aIoService = nullptr)
-{
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                                      aUri,
-                                      aLoadInfo,
-                                      aLoadGroup,
-                                      aCallbacks,
-                                      aLoadFlags,
-                                      aIoService);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return channel->AsyncOpen(aListener, aContext);
-}
-
-inline nsresult
-NS_OpenURIInternal(nsIStreamListener*     aListener,
-                   nsISupports*           aContext,
-                   nsIURI*                aUri,
-                   nsINode*               aLoadingNode,
-                   nsIPrincipal*          aLoadingPrincipal,
-                   nsIPrincipal*          aTriggeringPrincipal,
-                   nsSecurityFlags        aSecurityFlags,
-                   nsContentPolicyType    aContentPolicyType,
-                   nsILoadGroup*          aLoadGroup = nullptr,
-                   nsIInterfaceRequestor* aCallbacks = nullptr,
-                   nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-                   nsIIOService*          aIoService = nullptr)
-{
-  NS_ASSERTION(aLoadingPrincipal, "Can not create channel without a loading Principal!");
-
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new mozilla::LoadInfo(aLoadingPrincipal,
-                          aTriggeringPrincipal,
-                          aLoadingNode,
-                          aSecurityFlags,
-                          aContentPolicyType);
-  if (!loadInfo) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  return NS_OpenURIInternal(aListener,
-                            aContext,
-                            aUri,
-                            loadInfo,
-                            aLoadGroup,
-                            aCallbacks,
-                            aLoadFlags,
-                            aIoService);
-}
-
-inline nsresult
-NS_OpenURI(nsIStreamListener*     aListener,
-           nsISupports*           aContext,
-           nsIURI*                aUri,
-           nsIPrincipal*          aLoadingPrincipal,
-           nsSecurityFlags        aSecurityFlags,
-           nsContentPolicyType    aContentPolicyType,
-           nsILoadGroup*          aLoadGroup = nullptr,
-           nsIInterfaceRequestor* aCallbacks = nullptr,
-           nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
-           nsIIOService*          aIoService = nullptr)
-{
-  return NS_OpenURIInternal(aListener,
-                            aContext,
-                            aUri,
-                            nullptr, // aLoadingNode
-                            aLoadingPrincipal,
-                            nullptr, // aTriggeringPrincipal
-                            aSecurityFlags,
-                            aContentPolicyType,
-                            aLoadGroup,
-                            aCallbacks,
-                            aLoadFlags,
-                            aIoService);
 }
 
 inline nsresult
@@ -1744,27 +1561,29 @@ NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties** outResult,
                                    nsContentPolicyType       aContentPolicyType,
                                    nsIIOService*             aIoService = nullptr)
 {
-    nsCOMPtr<nsIInputStream> in;
-    nsresult rv = NS_OpenURI(getter_AddRefs(in),
-                             aUri,
-                             aLoadingPrincipal,
-                             nsILoadInfo::SEC_NORMAL,
-                             aContentPolicyType,
-                             nullptr,     // aLoadGroup
-                             nullptr,     // aCallbacks
-                             nsIRequest::LOAD_NORMAL, //aLoadFlags
-                             aIoService);
-
+    nsCOMPtr<nsIChannel> channel;
+    nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                                aUri,
+                                aLoadingPrincipal,
+                                nsILoadInfo::SEC_NORMAL,
+                                aContentPolicyType,
+                                nullptr,     // aLoadGroup
+                                nullptr,     // aCallbacks
+                                nsIRequest::LOAD_NORMAL,
+                                aIoService);
     NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIInputStream> in;
+    rv = channel->Open(getter_AddRefs(in));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIPersistentProperties> properties =
       do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = properties->Load(in);
-    if (NS_SUCCEEDED(rv)) {
-      *outResult = nullptr;
-      properties.swap(*outResult);
-    }
-    return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    properties.swap(*outResult);
+    return NS_OK;
  }
 
 inline nsresult

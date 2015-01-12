@@ -448,14 +448,14 @@ function ThreadActor(aParent, aGlobal)
     autoBlackBox: false
   };
 
-  this.breakpointActorMap = new BreakpointActorMap();
-  this.sourceActorStore = new SourceActorStore();
-  this.blackBoxedSources = new Set(["self-hosted"]);
-  this.prettyPrintedSources = new Map();
+  this.breakpointActorMap = new BreakpointActorMap;
+  this.sourceActorStore = new SourceActorStore;
+  this.blackBoxedSources = new Set;
+  this.prettyPrintedSources = new Map;
 
   // A map of actorID -> actor for breakpoints created and managed by the
   // server.
-  this._hiddenBreakpoints = new Map();
+  this._hiddenBreakpoints = new Map;
 
   this.global = aGlobal;
 

@@ -49,4 +49,7 @@ def load_product(config, product):
         cls = getattr(module, cls_name)
         executor_classes[test_type] = cls
 
-    return check_args, browser_cls, browser_kwargs, executor_classes, executor_kwargs, env_options
+    return (check_args,
+            browser_cls, browser_kwargs,
+            executor_classes, executor_kwargs,
+            env_options)

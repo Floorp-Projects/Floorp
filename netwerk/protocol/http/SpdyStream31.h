@@ -55,9 +55,6 @@ public:
   void SetRecvdData(bool aStatus) { mReceivedData = aStatus ? 1 : 0; }
   bool RecvdData() { return mReceivedData; }
 
-  void SetCountAsActive(bool aStatus) { mCountAsActive = aStatus ? 1 : 0; }
-  bool CountAsActive() { return mCountAsActive; }
-
   void UpdateTransportSendEvents(uint32_t count);
   void UpdateTransportReadEvents(uint32_t count);
 
@@ -121,11 +118,8 @@ protected:
   // sending_request_body for each SPDY chunk in the upload.
   enum stateType mUpstreamState;
 
-  // Flag is set when all http request headers have been read
-  uint32_t                     mRequestHeadersDone   : 1;
-
-  // Flag is set when stream ID is stable
-  uint32_t                     mSynFrameGenerated    : 1;
+  // Flag is set when all http request headers have been read and ID is stable
+  uint32_t                     mSynFrameComplete     : 1;
 
   // Flag is set when a FIN has been placed on a data or syn packet
   // (i.e after the client has closed)
@@ -141,8 +135,6 @@ private:
                                           void *);
 
   nsresult ParseHttpRequestHeaders(const char *, uint32_t, uint32_t *);
-  nsresult GenerateSynFrame();
-
   void     AdjustInitialWindow();
   nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
   void     GenerateDataFrameHeader(uint32_t, bool);
@@ -192,9 +184,6 @@ private:
 
   // Flag is set after TCP send autotuning has been disabled
   uint32_t                     mSetTCPSocketBuffer   : 1;
-
-  // Flag is set when stream is counted towards MAX_CONCURRENT streams in session
-  uint32_t                     mCountAsActive        : 1;
 
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.

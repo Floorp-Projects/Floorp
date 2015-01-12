@@ -95,7 +95,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 //   src/common/arm_ex_reader.cc
 
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 
 #include "LulExidxExt.h"
 

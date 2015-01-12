@@ -36,8 +36,7 @@ class ClientCanvasLayer : public CopyableCanvasLayer,
   typedef CanvasClient::CanvasClientType CanvasClientType;
 public:
   explicit ClientCanvasLayer(ClientLayerManager* aLayerManager) :
-    CopyableCanvasLayer(aLayerManager,
-                        static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    CopyableCanvasLayer(aLayerManager, static_cast<ClientLayer*>(this))
   {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }

@@ -317,7 +317,7 @@ public:
     mNextSibling(nullptr),
     mPreviousSibling(nullptr),
     mFirstChild(nullptr),
-    mSubtreeRoot(MOZ_THIS_IN_INITIALIZER_LIST()),
+    mSubtreeRoot(this),
     mSlots(nullptr)
   {
   }

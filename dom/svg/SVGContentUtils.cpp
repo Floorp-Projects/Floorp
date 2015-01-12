@@ -138,11 +138,23 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
     totalLengthOfGaps += origTotalLengthOfDashes;
   }
 
-  if (totalLengthOfDashes <= 0 || totalLengthOfGaps <= 0) {
-    if (totalLengthOfGaps > 0 && totalLengthOfDashes <= 0) {
-      return eNoStroke;
-    }
+  // Stroking using dashes is much slower than stroking a continuous line
+  // (see bug 609361 comment 40), and much, much slower than not stroking the
+  // line at all. Here we check for cases when the dash pattern causes the
+  // stroke to essentially be continuous or to be nonexistent in which case
+  // we can avoid expensive stroking operations (the underlying platform
+  // graphics libraries don't seem to optimize for this).
+  if (totalLengthOfDashes <= 0 && totalLengthOfGaps <= 0) {
+    return eNoStroke;
+  }
+  if (totalLengthOfGaps <= 0) {
     return eContinuousStroke;
+  }
+  // We can only return eNoStroke if the value of stroke-linecap isn't
+  // adding caps to zero length dashes.
+  if (totalLengthOfDashes <= 0 &&
+      aStyleSVG->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_BUTT) {
+    return eNoStroke;
   }
 
   if (aContextPaint && aStyleSVG->mStrokeDashoffsetFromObject) {

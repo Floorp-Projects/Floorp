@@ -35,9 +35,7 @@ public:
 
   explicit ClientPaintedLayer(ClientLayerManager* aLayerManager,
                              LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE) :
-    PaintedLayer(aLayerManager,
-                static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()),
-                aCreationHint),
+    PaintedLayer(aLayerManager, static_cast<ClientLayer*>(this), aCreationHint),
     mContentClient(nullptr)
   {
     MOZ_COUNT_CTOR(ClientPaintedLayer);

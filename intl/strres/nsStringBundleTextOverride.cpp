@@ -146,16 +146,19 @@ nsStringBundleTextOverride::Init()
     
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), customStringsURLSpec);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER);
+
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIInputStream> in;
-    rv = NS_OpenURI(getter_AddRefs(in),
-                    uri,
-                    nsContentUtils::GetSystemPrincipal(),
-                    nsILoadInfo::SEC_NORMAL,
-                    nsIContentPolicy::TYPE_OTHER);
-
-    if (NS_FAILED(rv)) return rv;
+    rv = channel->Open(getter_AddRefs(in));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
     mValues = do_CreateInstance(kPersistentPropertiesCID, &rv);

@@ -125,7 +125,7 @@ UNIFIED_SOURCES += [
 # new usage of NS_StackWalk it will cause a link error, which is better than having
 # NS_StackWalk silently return garbage at runtime.
 if CONFIG['MOZ_STACKWALKING']:
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'nsStackWalk.cpp',
     ]
 

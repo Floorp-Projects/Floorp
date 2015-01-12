@@ -202,10 +202,13 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
       *aLastRolledUp = first->Content();
     }
 
-    consume = item->Frame()->ConsumeOutsideClicks();
-    // If the click was over the anchor, always consume the click. This way,
-    // clicking on a menu doesn't reopen the menu.
-    if (!consume && pos) {
+    ConsumeOutsideClicksResult consumeResult = item->Frame()->ConsumeOutsideClicks();
+    consume = (consumeResult == ConsumeOutsideClicks_True);
+
+    // If ConsumeOutsideClicks_ParentOnly was returned, then only consume the
+    // click is it was over the anchor. This way, clicking on a menu doesn't
+    // reopen the menu.
+    if (consumeResult == ConsumeOutsideClicks_ParentOnly && pos) {
       nsCOMPtr<nsIContent> anchor = item->Frame()->GetAnchor();
 
       // Check if the anchor has indicated another node to use for checking

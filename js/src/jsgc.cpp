@@ -7021,7 +7021,7 @@ JS::AutoAssertNoAlloc::~AutoAssertNoAlloc()
 JS::AutoAssertGCCallback::AutoAssertGCCallback(JSObject *obj)
   : AutoSuppressGCAnalysis()
 {
-    MOZ_ASSERT(obj->runtimeFromMainThread()->isHeapMajorCollecting());
+    MOZ_ASSERT(obj->runtimeFromMainThread()->isHeapCollecting());
 }
 
 JS_FRIEND_API(const char *)

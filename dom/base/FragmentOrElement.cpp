@@ -154,7 +154,8 @@ nsIContent::GetFlattenedTreeParent() const
 {
   nsIContent* parent = GetParent();
 
-  if (nsContentUtils::HasDistributedChildren(parent)) {
+  if (parent && nsContentUtils::HasDistributedChildren(parent) &&
+      nsContentUtils::IsInSameAnonymousTree(parent, this)) {
     // This node is distributed to insertion points, thus we
     // need to consult the destination insertion points list to
     // figure out where this node was inserted in the flattened tree.
@@ -2109,7 +2110,7 @@ private:
     uint32_t mLength;
   };
 public:
-  StringBuilder() : mLast(MOZ_THIS_IN_INITIALIZER_LIST()), mLength(0)
+  StringBuilder() : mLast(this), mLength(0)
   {
     MOZ_COUNT_CTOR(StringBuilder);
   }

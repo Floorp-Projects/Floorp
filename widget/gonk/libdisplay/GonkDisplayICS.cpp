@@ -24,7 +24,6 @@
 #include <fcntl.h>
 
 #include "mozilla/FileUtils.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/FileUtils.h"
 
 #include "BootAnimation.h"

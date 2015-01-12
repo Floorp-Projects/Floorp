@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#PopupSearchAutoComplete {
+  -moz-margin-start: -25px;
+}
+
 .searchbar-dropmarker-image {
   --searchbar-dropmarker-url: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
 }
@@ -21,7 +25,6 @@
   width: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-  -moz-margin-start: 2px;
 }
 
 .searchbar-engine-button {
@@ -83,14 +86,14 @@
 
 .searchbar-search-button-container {
   -moz-box-align: center;
-  padding: 3px 4px;
-  -moz-padding-end: 2px;
 }
 
 .searchbar-search-button {
   list-style-image: url("chrome://browser/skin/search-indicator.png");
   -moz-image-region: rect(0, 20px, 20px, 0);
-  margin: -2px -2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  -moz-margin-start: 4px;
 }
 
 .searchbar-search-button[addengines="true"] {

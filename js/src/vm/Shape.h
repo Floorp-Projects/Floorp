@@ -179,7 +179,7 @@ class ShapeTable {
     static const uint32_t MIN_SIZE_LOG2 = 2;
     static const uint32_t MIN_SIZE      = JS_BIT(MIN_SIZE_LOG2);
 
-    int             hashShift_;         /* multiplicative hash shift */
+    uint32_t        hashShift_;         /* multiplicative hash shift */
 
     uint32_t        entryCount_;        /* number of entries in table */
     uint32_t        removedCount_;      /* removed entry sentinels in table */
@@ -233,15 +233,21 @@ class ShapeTable {
 #endif
 
   private:
+    Entry &getEntry(uint32_t i) const {
+        MOZ_ASSERT(i < capacity());
+        return entries_[i];
+    }
     void decEntryCount() {
         MOZ_ASSERT(entryCount_ > 0);
         entryCount_--;
     }
     void incEntryCount() {
         entryCount_++;
+        MOZ_ASSERT(entryCount_ + removedCount_ <= capacity());
     }
     void incRemovedCount() {
         removedCount_++;
+        MOZ_ASSERT(entryCount_ + removedCount_ <= capacity());
     }
 
     /* By definition, hashShift = HASH_BITS - log2(capacity). */

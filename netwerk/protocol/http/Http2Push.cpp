@@ -166,8 +166,7 @@ Http2PushedStream::ReadSegments(nsAHttpSegmentReader *,
 
   // the write side of a pushed transaction just involves manipulating a little state
   SetSentFin(true);
-  Http2Stream::mRequestHeadersDone = 1;
-  Http2Stream::mOpenGenerated = 1;
+  Http2Stream::mAllHeadersSent = 1;
   Http2Stream::ChangeState(UPSTREAM_COMPLETE);
   *count = 0;
   return NS_OK;
@@ -354,13 +353,13 @@ Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
     mIsDone = true;
   }
 
-  if (Available() || mIsDone) {
+  if (Available()) {
     Http2Stream *consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(("Http2PushTransactionBuffer::WriteSegments notifying connection "
-            "consumer data available 0x%X [%u] done=%d\n",
-            mPushStream->StreamID(), Available(), mIsDone));
+            "consumer data available 0x%X [%u]\n",
+            mPushStream->StreamID(), Available()));
       mPushStream->ConnectPushedStream(consumer);
     }
   }

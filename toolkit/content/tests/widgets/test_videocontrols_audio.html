@@ -37,8 +37,8 @@
   }
 
   function loadedmetadata(event) {
-    var fullscreenButton = findElementByAttribute(video, 'class', 'fullscreenButton');
-    is(fullscreenButton.hidden, true, 'Fullscreen button is hidden');
+    var controlBar = findElementByAttribute(video, "class", "controlBar");
+    is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
     SimpleTest.finish();
   }
 

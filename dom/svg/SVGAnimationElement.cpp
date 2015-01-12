@@ -34,7 +34,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGAnimationElement,
 
 SVGAnimationElement::SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGAnimationElementBase(aNodeInfo),
-    mHrefTarget(MOZ_THIS_IN_INITIALIZER_LIST())
+    mHrefTarget(this)
 {
 }
 

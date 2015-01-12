@@ -256,9 +256,9 @@ LinearScanAllocator::resolveControlFlow()
         }
 
         // Resolve split intervals with moves
-        BitSet *live = liveIn[mSuccessor->id()];
+        BitSet &live = liveIn[mSuccessor->id()];
 
-        for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
+        for (BitSet::Iterator liveRegId(live); liveRegId; ++liveRegId) {
             LinearScanVirtualRegister *vreg = &vregs[*liveRegId];
             LiveInterval *to = vreg->intervalFor(entryOf(successor));
             MOZ_ASSERT(to);

@@ -761,3 +761,37 @@ marquee[direction="up"], marquee[direction="down"] {
   marquee { -moz-binding: none; }
 
 }
+
+/* Ruby */
+
+@supports (display: ruby) {
+  ruby {
+    display: ruby;
+  }
+  rb {
+    display: ruby-base;
+    white-space: nowrap;
+  }
+  rp {
+    display: none;
+  }
+  rt {
+    display: ruby-text;
+    font-variant-east-asian: ruby;
+    text-emphasis: none;
+  }
+  rtc {
+    display: ruby-text-container;
+  }
+  rtc, rt {
+    white-space: nowrap;
+    font-size: 50%;
+    line-height: 1;
+  }
+  rtc > rt {
+    font-size: inherit;
+  }
+  ruby, rb, rt, rbc, rtc {
+    unicode-bidi: isolate;
+  }
+}

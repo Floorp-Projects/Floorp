@@ -50,7 +50,6 @@ struct ReplaceMallocBridge;
 
 #ifdef __cplusplus
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/Types.h"
 
 #ifndef REPLACE_MALLOC_IMPL

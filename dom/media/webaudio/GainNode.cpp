@@ -125,8 +125,7 @@ GainNode::GainNode(AudioContext* aContext)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
-  , mGain(new AudioParam(MOZ_THIS_IN_INITIALIZER_LIST(),
-                         SendGainToStream, 1.0f))
+  , mGain(new AudioParam(this, SendGainToStream, 1.0f))
 {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
@@ -166,4 +165,3 @@ GainNode::SendGainToStream(AudioNode* aNode)
 
 }
 }
-

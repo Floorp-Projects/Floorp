@@ -52,6 +52,8 @@ const BadCertHost sBadCertHosts[] =
   { "include-subdomains.pinning.example.com", "localhostAndExampleCom" },
   { "good.include-subdomains.pinning.example.com", "localhostAndExampleCom" },
   { "bad.include-subdomains.pinning.example.com", "otherIssuerEE" },
+  { "bad.include-subdomains.pinning.example.com.", "otherIssuerEE" },
+  { "bad.include-subdomains.pinning.example.com..", "otherIssuerEE" },
   { "exclude-subdomains.pinning.example.com", "localhostAndExampleCom" },
   { "sub.exclude-subdomains.pinning.example.com", "otherIssuerEE" },
   { "test-mode.pinning.example.com", "otherIssuerEE" },

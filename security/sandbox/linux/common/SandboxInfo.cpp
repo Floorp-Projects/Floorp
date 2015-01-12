@@ -12,7 +12,6 @@
 
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 

@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import subprocess
 
+import mozinfo
 from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
@@ -28,6 +30,8 @@ __wptrunner__ = {"product": "firefox",
 
 def check_args(**kwargs):
     require_arg(kwargs, "binary")
+    if kwargs["ssl_type"] != "none":
+        require_arg(kwargs, "certutil_binary")
 
 
 def browser_kwargs(**kwargs):
@@ -35,8 +39,10 @@ def browser_kwargs(**kwargs):
             "prefs_root": kwargs["prefs_root"],
             "debug_args": kwargs["debug_args"],
             "interactive": kwargs["interactive"],
-            "symbols_path":kwargs["symbols_path"],
-            "stackwalk_binary":kwargs["stackwalk_binary"]}
+            "symbols_path": kwargs["symbols_path"],
+            "stackwalk_binary": kwargs["stackwalk_binary"],
+            "certutil_binary": kwargs["certutil_binary"],
+            "ca_certificate_path": kwargs["ssl_env"].ca_cert_path()}
 
 
 def executor_kwargs(http_server_url, **kwargs):
@@ -46,17 +52,20 @@ def executor_kwargs(http_server_url, **kwargs):
 
 
 def env_options():
-    return {"host": "localhost",
+    return {"host": "127.0.0.1",
             "external_host": "web-platform.test",
-            "bind_hostname": "true",
-            "required_files": required_files}
+            "bind_hostname": "false",
+            "required_files": required_files,
+            "certificate_domain": "web-platform.test",
+            "encrypt_after_connect": True}
 
 
 class FirefoxBrowser(Browser):
     used_ports = set()
 
     def __init__(self, logger, binary, prefs_root, debug_args=None, interactive=None,
-                 symbols_path=None, stackwalk_binary=None):
+                 symbols_path=None, stackwalk_binary=None, certutil_binary=None,
+                 ca_certificate_path=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -68,6 +77,8 @@ class FirefoxBrowser(Browser):
         self.profile = None
         self.symbols_path = symbols_path
         self.stackwalk_binary = stackwalk_binary
+        self.ca_certificate_path = ca_certificate_path
+        self.certutil_binary = certutil_binary
 
     def start(self):
         self.marionette_port = get_free_port(2828, exclude=self.used_ports)
@@ -92,6 +103,9 @@ class FirefoxBrowser(Browser):
         self.profile.set_preferences({"marionette.defaultPrefs.enabled": True,
                                       "marionette.defaultPrefs.port": self.marionette_port,
                                       "dom.disable_open_during_load": False})
+
+        if self.ca_certificate_path is not None:
+            self.setup_ssl()
 
         self.runner = FirefoxRunner(profile=self.profile,
                                     binary=self.binary,
@@ -152,6 +166,50 @@ class FirefoxBrowser(Browser):
 
     def log_crash(self, process, test):
         dump_dir = os.path.join(self.profile.profile, "minidumps")
-        mozcrash.log_crashes(self.logger, dump_dir, symbols_path=self.symbols_path,
+
+        mozcrash.log_crashes(self.logger,
+                             dump_dir,
+                             symbols_path=self.symbols_path,
                              stackwalk_binary=self.stackwalk_binary,
-                             process=process, test=test)
+                             process=process,
+                             test=test)
+
+    def setup_ssl(self):
+        """Create a certificate database to use in the test profile. This is configured
+        to trust the CA Certificate that has signed the web-platform.test server
+        certificate."""
+
+        self.logger.info("Setting up ssl")
+
+        # Make sure the certutil libraries from the source tree are loaded when using a
+        # local copy of certutil
+        # TODO: Maybe only set this if certutil won't launch?
+        env = os.environ.copy()
+        certutil_dir = os.path.dirname(self.binary)
+        env["LD_LIBRARY_PATH"] = certutil_dir
+        env["PATH"] = os.path.pathsep.join([certutil_dir, env["PATH"]])
+
+        def certutil(*args):
+            cmd = [self.certutil_binary] + list(args)
+            self.logger.process_output("certutil",
+                                       subprocess.check_output(cmd,
+                                                               env=env,
+                                                               stderr=subprocess.STDOUT),
+                                       " ".join(cmd))
+
+        pw_path = os.path.join(self.profile.profile, ".crtdbpw")
+        with open(pw_path, "w") as f:
+            # Use empty password for certificate db
+            f.write("\n")
+
+        cert_db_path = self.profile.profile
+
+        # Create a new certificate db
+        certutil("-N", "-d", cert_db_path, "-f", pw_path)
+
+        # Add the CA certificate to the database and mark as trusted to issue server certs
+        certutil("-A", "-d", cert_db_path, "-f", pw_path, "-t", "CT,,",
+                 "-n", "web-platform-tests", "-i", self.ca_certificate_path)
+
+        # List all certs in the database
+        certutil("-L", "-d", cert_db_path)
