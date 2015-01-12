@@ -38,6 +38,7 @@ NS_VolumeStateStr(int32_t aState)
     case nsIVolume::STATE_SHARED:     return "Shared";
     case nsIVolume::STATE_SHAREDMNT:  return "Shared-Mounted";
     case nsIVolume::STATE_CHECKMNT:   return "Check-Mounted";
+    case nsIVolume::STATE_MOUNT_FAIL: return "Mount-Fail";
   }
   return "???";
 }
