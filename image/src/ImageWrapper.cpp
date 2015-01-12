@@ -224,12 +224,6 @@ ImageWrapper::StartDecoding()
   return mInnerImage->StartDecoding();
 }
 
-NS_IMETHODIMP
-ImageWrapper::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
-{
-  return mInnerImage->RequestDecodeForSize(aSize, aFlags);
-}
-
 bool
 ImageWrapper::IsDecoded()
 {
