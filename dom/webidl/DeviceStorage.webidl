@@ -86,7 +86,7 @@ interface DeviceStorage : EventTarget {
   // Indicates if the storage area denoted by storageName is removable
   readonly attribute boolean isRemovable;
 
-  [NewObject, Throws]
+  [NewObject]
   // XXXbz what type does this really return?
   Promise<any> getRoot();
 };
