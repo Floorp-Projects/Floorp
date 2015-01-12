@@ -2469,19 +2469,19 @@ let DefaultBrowserCheck = {
       let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
       let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
                                                          [brandShortName]);
-      let dontAskLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
-                                                        [brandShortName]);
+      let askLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
+                                                    [brandShortName]);
 
       let ps = Services.prompt;
-      let dontAsk = { value: false };
+      let shouldAsk = { value: true };
       let buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
                         (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1) +
                         ps.BUTTON_POS_0_DEFAULT;
       let rv = ps.confirmEx(win, promptTitle, promptMessage, buttonFlags,
-                            yesButton, notNowButton, null, dontAskLabel, dontAsk);
+                            yesButton, notNowButton, null, askLabel, shouldAsk);
       if (rv == 0) {
         this.setAsDefault();
-      } else if (dontAsk.value) {
+      } else if (!shouldAsk.value) {
         ShellService.shouldCheckDefaultBrowser = false;
       }
     }
