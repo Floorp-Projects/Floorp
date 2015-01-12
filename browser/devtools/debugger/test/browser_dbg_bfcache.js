@@ -12,24 +12,19 @@ const TAB_URL_2 = EXAMPLE_URL + "doc_recursion-stack.html";
 let gTab, gDebuggee, gPanel, gDebugger;
 let gSources;
 
-function test() {
-  initDebugger(TAB_URL_1).then(([aTab, aDebuggee, aPanel]) => {
-    gTab = aTab;
-    gDebuggee = aDebuggee;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gSources = gDebugger.DebuggerView.Sources;
+const test = Task.async(function* () {
+  info("Starting browser_dbg_bfcache.js's `test`.");
 
-    testFirstPage()
-      .then(testLocationChange)
-      .then(testBack)
-      .then(testForward)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
-}
+  ([gTab, gDebuggee, gPanel]) = yield initDebugger(TAB_URL_1);
+  gDebugger = gPanel.panelWin;
+  gSources = gDebugger.DebuggerView.Sources;
+
+  yield testFirstPage();
+  yield testLocationChange();
+  yield testBack();
+  yield testForward();
+  return closeDebuggerAndFinish(gPanel);
+});
 
 function testFirstPage() {
   info("Testing first page.");
@@ -38,33 +33,35 @@ function testFirstPage() {
   // this function to return first.
   executeSoon(() => gDebuggee.firstCall());
 
-  return waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(() => {
-    validateFirstPage();
-  });
+  return waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
+    .then(validateFirstPage);
 }
 
 function testLocationChange() {
   info("Navigating to a different page.");
 
-  return navigateActiveTabTo(gPanel, TAB_URL_2, gDebugger.EVENTS.SOURCES_ADDED).then(() => {
-    validateSecondPage();
-  });
+  return navigateActiveTabTo(gPanel,
+                             TAB_URL_2,
+                             gDebugger.EVENTS.SOURCES_ADDED)
+    .then(validateSecondPage);
 }
 
 function testBack() {
   info("Going back.");
 
-  return navigateActiveTabInHistory(gPanel, "back", gDebugger.EVENTS.SOURCES_ADDED).then(() => {
-    validateFirstPage();
-  });
+  return navigateActiveTabInHistory(gPanel,
+                                    "back",
+                                    gDebugger.EVENTS.SOURCES_ADDED)
+    .then(validateFirstPage);
 }
 
 function testForward() {
   info("Going forward.");
 
-  return navigateActiveTabInHistory(gPanel, "forward", gDebugger.EVENTS.SOURCES_ADDED).then(() => {
-    validateSecondPage();
-  });
+  return navigateActiveTabInHistory(gPanel,
+                                    "forward",
+                                    gDebugger.EVENTS.SOURCES_ADDED)
+    .then(validateSecondPage);
 }
 
 function validateFirstPage() {
