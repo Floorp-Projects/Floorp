@@ -129,13 +129,15 @@ IDBFactory::CreateForWindow(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aWindow->IsInnerWindow());
   MOZ_ASSERT(aFactory);
 
-  if (NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = AllowedForWindowInternal(aWindow, getter_AddRefs(principal));
+
+  if (!(NS_SUCCEEDED(rv) && nsContentUtils::IsSystemPrincipal(principal)) &&
+      NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
     *aFactory = nullptr;
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = AllowedForWindowInternal(aWindow, getter_AddRefs(principal));
   if (rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
     NS_WARNING("IndexedDB is not permitted in a third-party window.");
     *aFactory = nullptr;
@@ -261,8 +263,10 @@ IDBFactory::CreateForMainThreadJSInternal(
                                        IDBFactory** aFactory)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipalInfo);
 
-  if (NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
+  if (aPrincipalInfo->type() != PrincipalInfo::TSystemPrincipalInfo &&
+      NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
     *aFactory = nullptr;
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }

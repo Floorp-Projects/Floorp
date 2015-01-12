@@ -36,6 +36,9 @@ browser.jar:
     content/browser/devtools/fontinspector/font-inspector.js           (fontinspector/font-inspector.js)
     content/browser/devtools/fontinspector/font-inspector.xhtml        (fontinspector/font-inspector.xhtml)
     content/browser/devtools/fontinspector/font-inspector.css          (fontinspector/font-inspector.css)
+    content/browser/devtools/animationinspector/animation-controller.js (animationinspector/animation-controller.js)
+    content/browser/devtools/animationinspector/animation-panel.js     (animationinspector/animation-panel.js)
+    content/browser/devtools/animationinspector/animation-inspector.xhtml (animationinspector/animation-inspector.xhtml)
     content/browser/devtools/codemirror/codemirror.js                  (sourceeditor/codemirror/codemirror.js)
     content/browser/devtools/codemirror/codemirror.css                 (sourceeditor/codemirror/codemirror.css)
     content/browser/devtools/codemirror/javascript.js                  (sourceeditor/codemirror/mode/javascript.js)
@@ -94,6 +97,7 @@ browser.jar:
     content/browser/devtools/performance/views/details.js              (performance/views/details.js)
     content/browser/devtools/performance/views/details-call-tree.js    (performance/views/details-call-tree.js)
     content/browser/devtools/performance/views/details-waterfall.js    (performance/views/details-waterfall.js)
+    content/browser/devtools/performance/views/details-flamegraph.js   (performance/views/details-flamegraph.js)
 #endif
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)
