@@ -2913,7 +2913,7 @@ class FunctionCompiler
             return nullptr;
 
         MOZ_ASSERT(IsSimdType(type));
-        T *ins = T::New(alloc(), type, x, y, z, w);
+        T *ins = T::NewAsmJS(alloc(), type, x, y, z, w);
         curBlock_->add(ins);
         return ins;
     }

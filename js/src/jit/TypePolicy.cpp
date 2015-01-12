@@ -522,6 +522,36 @@ template bool NoFloatPolicyAfter<2>::adjustInputs(TempAllocator &alloc, MInstruc
 
 template <unsigned Op>
 bool
+SimdScalarPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+    MIRType scalarType = SimdTypeToScalarType(ins->type());
+
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == scalarType)
+        return true;
+
+    MInstruction *replace;
+    if (scalarType == MIRType_Int32) {
+        replace = MTruncateToInt32::New(alloc, in);
+    } else {
+        MOZ_ASSERT(scalarType == MIRType_Float32);
+        replace = MToFloat32::New(alloc, in);
+    }
+
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool SimdScalarPolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+template bool SimdScalarPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+template bool SimdScalarPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+template bool SimdScalarPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+
+template <unsigned Op>
+bool
 BoxPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MDefinition *in = ins->getOperand(Op);
@@ -997,6 +1027,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >)   \
     _(Mix3Policy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >)   \
     _(Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>) \
+    _(Mix4Policy<SimdScalarPolicy<0>, SimdScalarPolicy<1>, SimdScalarPolicy<2>, SimdScalarPolicy<3> >) \
     _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >)                        \
     _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1> >)   \
     _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1> >)            \

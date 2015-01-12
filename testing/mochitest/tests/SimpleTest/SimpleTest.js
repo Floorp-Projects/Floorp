@@ -971,8 +971,8 @@ SimpleTest.finish = function() {
     if (SimpleTest.expected == 'fail' && SimpleTest.num_failed <= 0) {
         msg = 'We expected at least one failure';
         var test = {'result': false, 'name': 'fail-if condition in manifest', 'diag': msg};
-        var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
-        var failureInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+        var successInfo = {status:"FAIL", expected:"FAIL", message:"TEST-KNOWN-FAIL"};
+        var failureInfo = {status:"PASS", expected:"FAIL", message:"TEST-UNEXPECTED-PASS"};
 
         SimpleTest._logResult(test, successInfo, failureInfo);
         SimpleTest._tests.push(test);

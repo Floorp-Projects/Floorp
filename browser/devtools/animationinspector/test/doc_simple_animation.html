@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    .ball {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #f06;
+
+      position: absolute;
+    }
+
+    .still {
+      top: 50px;
+      left: 50px;
+    }
+
+    .animated {
+      top: 200px;
+      left: 200px;
+
+      animation: simple-animation 2s infinite alternate;
+    }
+
+    .multi {
+      top: 100px;
+      left: 400px;
+
+      animation: simple-animation 2s infinite alternate,
+                 other-animation 5s infinite alternate;
+    }
+
+    @keyframes simple-animation {
+      100% {
+        transform: translateX(300px);
+      }
+    }
+
+    @keyframes other-animation {
+      100% {
+        background: blue;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Comment node -->
+  <div class="ball still"></div>
+  <div class="ball animated"></div>
+  <div class="ball multi"></div>
+</body>
+</html>

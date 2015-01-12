@@ -21,9 +21,8 @@ loader.lazyRequireGetter(this, "L10N",
   "devtools/timeline/global", true);
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
-const OVERVIEW_ROW_HEIGHT = 11; // row height
+const OVERVIEW_ROW_HEIGHT = 11; // px
 
-const OVERVIEW_BODY_HEIGHT = 55; // 11px * 5 groups
 const OVERVIEW_SELECTION_LINE_COLOR = "#666";
 const OVERVIEW_CLIPHEAD_LINE_COLOR = "#555";
 

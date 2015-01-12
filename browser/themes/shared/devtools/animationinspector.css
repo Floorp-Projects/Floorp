@@ -1,0 +1,149 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* The error message, shown when an invalid/unanimated element is selected */
+
+#error-message {
+  margin-top: 10%;
+  text-align: center;
+
+  /* The error message is hidden by default */
+  display: none;
+}
+
+/* Element picker button */
+
+#element-picker {
+  position: relative;
+}
+
+#element-picker::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -8px;
+  background-image: url("chrome://browser/skin/devtools/command-pick.png");
+}
+
+#element-picker[checked]::before {
+  background-position: -48px 0;
+  filter: none; /* Icon is blue when checked, don't invert for light theme */
+}
+
+@media (min-resolution: 2dppx) {
+  #element-picker::before {
+    background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
+    background-size: 64px;
+  }
+}
+
+/* Animation title gutter, contains the name, duration, iteration */
+
+.animation-title {
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-content-color3);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 1px 4px;
+  word-wrap: break-word;
+  overflow: auto;
+}
+
+.animation-title .meta-data {
+  float: right;
+}
+
+.animation-title strong {
+  margin: 0 .5em;
+}
+
+/* Timeline wiget */
+
+.timeline {
+  height: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.timeline .playback-controls {
+  width: 50px;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Playback control buttons */
+
+.timeline .playback-controls button {
+  flex-grow: 1;
+  border-width: 0 1px 0 0;
+}
+
+/* Play/pause button */
+
+.timeline .toggle::before {
+  background-image: url(debugger-pause.png);
+}
+
+.paused .timeline .toggle::before {
+  background-image: url(debugger-play.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .timeline .toggle::before {
+    background-image: url(debugger-pause@2x.png);
+  }
+
+  .paused .timeline .toggle::before {
+    background-image: url(debugger-play@2x.png);
+  }
+}
+
+/* Slider (input type range) container */
+
+.timeline .sliders-container {
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+  border-width: 1px 0;
+}
+
+.timeline .sliders-container .current-time {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline .sliders-container .current-time::-moz-range-thumb {
+  height: 100%;
+  width: 4px;
+  border-radius: 0;
+  border: none;
+  background: var(--theme-highlight-blue);
+}
+
+.timeline .sliders-container .current-time::-moz-range-track {
+  width: 100%;
+  height: 50px;
+  background: transparent;
+}
+
+/* Current time label */
+
+.timeline .time-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  border-left: 1px solid var(--theme-splitter-color);
+  background: var(--theme-toolbar-background);
+}

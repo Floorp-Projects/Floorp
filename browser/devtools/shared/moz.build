@@ -22,6 +22,7 @@ EXTRA_JS_MODULES.devtools += [
     'widgets/AbstractTreeItem.jsm',
     'widgets/BreadcrumbsWidget.jsm',
     'widgets/Chart.jsm',
+    'widgets/FlameGraph.jsm',
     'widgets/Graphs.jsm',
     'widgets/GraphsWorker.js',
     'widgets/SideMenuWidget.jsm',
