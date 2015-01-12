@@ -1006,7 +1006,9 @@ enum NewObjectKind {
 inline gc::InitialHeap
 GetInitialHeap(NewObjectKind newKind, const Class *clasp)
 {
-    if (clasp->finalize || newKind != GenericObject)
+    if (newKind != GenericObject)
+        return gc::TenuredHeap;
+    if (clasp->finalize && !(clasp->flags & JSCLASS_FINALIZE_FROM_NURSERY))
         return gc::TenuredHeap;
     return gc::DefaultHeap;
 }

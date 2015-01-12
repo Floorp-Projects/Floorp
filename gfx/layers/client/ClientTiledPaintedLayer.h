@@ -102,6 +102,11 @@ private:
   bool UseFastPath();
 
   /**
+   * Check if the layer is being scrolled by APZ on the compositor.
+   */
+  bool IsScrollingOnCompositor(const FrameMetrics& aParentMetrics);
+
+  /**
    * Helper function to do the high-precision paint.
    * This function returns true if it updated the paint buffer.
    */

@@ -12,7 +12,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Endian.h"
-#include "mozilla/NullPtr.h"
 #include "openaes/oaes_lib.h"
 
 using namespace std;

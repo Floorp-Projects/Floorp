@@ -407,7 +407,10 @@ struct IMEState {
 };
 
 struct InputContext {
-  InputContext() : mNativeIMEContext(nullptr) {}
+  InputContext()
+    : mNativeIMEContext(nullptr)
+    , mMayBeIMEUnaware(false)
+  {}
 
   bool IsPasswordEditor() const
   {
@@ -429,6 +432,11 @@ struct InputContext {
      SetInputContext().  If there is only one context in the process, this may
      be nullptr. */
   void* mNativeIMEContext;
+
+  /* True if the webapp may be unaware of IME events such as input event or
+   * composiion events. This enables a key-events-only mode on Android for
+   * compatibility with webapps relying on key listeners. */
+  bool mMayBeIMEUnaware;
 };
 
 struct InputContextAction {

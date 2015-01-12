@@ -119,8 +119,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
 
                     // If the method name was not explicitly given in the annotation generate one...
                     if (stubName.isEmpty()) {
-                        String aMethodName = candidateElement.getName();
-                        stubName = aMethodName.substring(0, 1).toUpperCase() + aMethodName.substring(1);
+                        stubName = Utils.getNativeName(candidateElement);
                     }
 
                     AnnotationInfo annotationInfo = new AnnotationInfo(
@@ -130,11 +129,15 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                 }
             }
 
-            // If no annotation found, we might be expected to generate anyway using default arguments,
-            // thanks to the "Generate everything" annotation.
+            // If no annotation found, we might be expected to generate anyway
+            // using default arguments, thanks to the "Generate everything" annotation.
             if (mIterateEveryEntry) {
                 AnnotationInfo annotationInfo = new AnnotationInfo(
-                    candidateElement.getName(), false, false, false, false);
+                    Utils.getNativeName(candidateElement),
+                    /* multithreaded */ true,
+                    /* noThrow */ false,
+                    /* narrowChars */ false,
+                    /* catchException */ false);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }

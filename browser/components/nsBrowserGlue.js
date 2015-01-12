@@ -2408,28 +2408,28 @@ let DefaultBrowserCheck = {
   },
 
   prompt: function(win) {
-    let brandBundle = win.document.getElementById("bundle_brand");
-    let shellBundle = win.document.getElementById("bundle_shell");
-
-    let brandShortName = brandBundle.getString("brandShortName");
-    let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage2",
-                                                       [brandShortName]);
-
-    let yesButton = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
-                                                   [brandShortName]);
-
-    let notNowButton = shellBundle.getString("setDefaultBrowserNotNow.label");
-    let notNowButtonKey = shellBundle.getString("setDefaultBrowserNotNow.accesskey");
-
-    let neverLabel = shellBundle.getString("setDefaultBrowserNever.label");
-    let neverKey = shellBundle.getString("setDefaultBrowserNever.accesskey");
-
     let useNotificationBar = Services.prefs.getBoolPref("browser.defaultbrowser.notificationbar");
+
+    let brandBundle = win.document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+
+    let shellBundle = win.document.getElementById("bundle_shell");
+    let buttonPrefix = "setDefaultBrowser" + (useNotificationBar ? "" : "Alert");
+    let yesButton = shellBundle.getFormattedString(buttonPrefix + "Confirm.label",
+                                                   [brandShortName]);
+    let notNowButton = shellBundle.getString(buttonPrefix + "NotNow.label");
+
     if (useNotificationBar) {
+      let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage2",
+                                                         [brandShortName]);
       let optionsMessage = shellBundle.getString("setDefaultBrowserOptions.label");
       let optionsKey = shellBundle.getString("setDefaultBrowserOptions.accesskey");
 
+      let neverLabel = shellBundle.getString("setDefaultBrowserNever.label");
+      let neverKey = shellBundle.getString("setDefaultBrowserNever.accesskey");
+
       let yesButtonKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
+      let notNowButtonKey = shellBundle.getString("setDefaultBrowserNotNow.accesskey");
 
       let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
 
@@ -2467,6 +2467,10 @@ let DefaultBrowserCheck = {
     } else {
       // Modal prompt
       let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+      let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
+                                                         [brandShortName]);
+      let dontAskLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
+                                                        [brandShortName]);
 
       let ps = Services.prompt;
       let dontAsk = { value: false };
@@ -2474,7 +2478,7 @@ let DefaultBrowserCheck = {
                         (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1) +
                         ps.BUTTON_POS_0_DEFAULT;
       let rv = ps.confirmEx(win, promptTitle, promptMessage, buttonFlags,
-                            yesButton, notNowButton, null, neverLabel, dontAsk);
+                            yesButton, notNowButton, null, dontAskLabel, dontAsk);
       if (rv == 0) {
         this.setAsDefault();
       } else if (dontAsk.value) {

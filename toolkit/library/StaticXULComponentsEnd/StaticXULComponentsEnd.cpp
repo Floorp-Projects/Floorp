@@ -1,5 +1,4 @@
 #include "mozilla/Module.h"
-#include "mozilla/NullPtr.h"
 
 /* Ensure end_kPStaticModules is at the end of the .kPStaticModules section
  * on Windows. Somehow, placing the object last is not enough with PGO/LTCG. */

@@ -289,15 +289,10 @@ nsBaseChannel::ClassifyURI()
     return;
   }
 
-  nsresult rv;
-
   if (mLoadFlags & LOAD_CLASSIFY_URI) {
     nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
     if (classifier) {
-      rv = classifier->Start(this);
-      if (NS_FAILED(rv)) {
-        Cancel(rv);
-      }
+      classifier->Start(this);
     } else {
       Cancel(NS_ERROR_OUT_OF_MEMORY);
     }

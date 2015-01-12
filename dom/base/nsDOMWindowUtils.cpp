@@ -3992,6 +3992,30 @@ nsDOMWindowUtils::AskPermission(nsIContentPermissionRequest* aRequest)
   return nsContentPermissionUtils::AskPermission(aRequest, window->GetCurrentInnerWindow());
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFramesConstructed(uint64_t* aResult)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = presContext->FramesConstructedCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFramesReflowed(uint64_t* aResult)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = presContext->FramesReflowedCount();
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)

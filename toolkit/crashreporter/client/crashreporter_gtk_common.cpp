@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "mozilla/NullPtr.h"
 #include "common/linux/http_upload.h"
 #include "crashreporter.h"
 #include "crashreporter_gtk_common.h"

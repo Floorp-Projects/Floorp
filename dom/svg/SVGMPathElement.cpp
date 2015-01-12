@@ -57,7 +57,7 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(SVGMPathElementBase)
 // Constructor
 SVGMPathElement::SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGMPathElementBase(aNodeInfo),
-    mHrefTarget(MOZ_THIS_IN_INITIALIZER_LIST())
+    mHrefTarget(this)
 {
 }
 

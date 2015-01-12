@@ -74,6 +74,11 @@
   var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
     feedbackClient: stageFeedbackApiClient
   });
+  var conversationStore = new loop.store.ConversationStore(dispatcher, {
+    client: {},
+    mozLoop: navigator.mozLoop,
+    sdkDriver: {}
+  });
 
   // Local mocks
 
@@ -376,13 +381,14 @@
             <Example summary="Call Failed" dashed="true"
                      style={{width: "260px", height: "265px"}}>
               <div className="fx-embedded">
-                <CallFailedView dispatcher={dispatcher} />
+                <CallFailedView dispatcher={dispatcher} store={conversationStore} />
               </div>
             </Example>
             <Example summary="Call Failed — with call URL error" dashed="true"
                      style={{width: "260px", height: "265px"}}>
               <div className="fx-embedded">
-                <CallFailedView dispatcher={dispatcher} emailLinkError={true} />
+                <CallFailedView dispatcher={dispatcher} emailLinkError={true}
+                                store={conversationStore} />
               </div>
             </Example>
           </Section>

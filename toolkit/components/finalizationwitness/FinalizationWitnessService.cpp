@@ -12,7 +12,6 @@
 
 #include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
-#include "mozilla/NullPtr.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 

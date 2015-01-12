@@ -324,11 +324,16 @@ class OSXBootstrapper(BaseBootstrapper):
     def ensure_homebrew_mobile_android_packages(self):
         import android
 
+        # If we're run from a downloaded bootstrap.py, then android-ndk.rb is
+        # fetched into a temporary directory.  This finds that directory.
+        import inspect
+        path_to_android = os.path.abspath(os.path.dirname(inspect.getfile(android)))
+
         # We don't need wget because we install the Android SDK and NDK from
         # packages.  If we used the android.py module, we'd need wget.
         packages = [
             ('android-sdk', 'android-sdk'),
-            ('android-ndk', 'android-ndk-r8e.rb'), # This is a locally provided brew formula!
+            ('android-ndk', os.path.join(path_to_android, 'android-ndk.rb')), # This is a locally provided brew formula!
             ('ant', 'ant'),
             ('brew-cask', 'caskroom/cask/brew-cask'), # For installing Java later.
         ]

@@ -23,12 +23,11 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-class ClientImageLayer : public ImageLayer, 
+class ClientImageLayer : public ImageLayer,
                          public ClientLayer {
 public:
   explicit ClientImageLayer(ClientLayerManager* aLayerManager)
-    : ImageLayer(aLayerManager,
-                 static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+    : ImageLayer(aLayerManager, static_cast<ClientLayer*>(this))
     , mImageClientTypeContainer(CompositableType::UNKNOWN)
   {
     MOZ_COUNT_CTOR(ClientImageLayer);
@@ -182,5 +181,6 @@ ClientLayerManager::CreateImageLayer()
   CREATE_SHADOW(Image);
   return layer.forget();
 }
+
 }
 }

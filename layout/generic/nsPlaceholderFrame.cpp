@@ -194,7 +194,7 @@ nsPlaceholderFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
 
-  nsIContent* parentContent = mContent ? mContent->GetParent() : nullptr;
+  nsIContent* parentContent = mContent ? mContent->GetFlattenedTreeParent() : nullptr;
   if (parentContent) {
     nsStyleContext* sc =
       PresContext()->FrameManager()->GetDisplayContentsStyleFor(parentContent);

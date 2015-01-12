@@ -279,7 +279,7 @@
 .call-window h2 {
   font-size: 1.5em;
   font-weight: normal;
-
+  text-align: center;
   /* compensate for reset.css overriding this; values borrowed from
      Firefox Mac html.css */
   margin: 0.83em 0;

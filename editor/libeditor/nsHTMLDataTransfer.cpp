@@ -1083,12 +1083,15 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     nsCOMPtr<nsIInputStream> imageStream;
     if (insertAsImage) {
       NS_ASSERTION(fileURI, "The file URI should be retrieved earlier");
-      rv = NS_OpenURI(getter_AddRefs(imageStream),
-                      fileURI,
-                      nsContentUtils::GetSystemPrincipal(),
-                      nsILoadInfo::SEC_NORMAL,
-                      nsIContentPolicy::TYPE_OTHER);
 
+      nsCOMPtr<nsIChannel> channel;
+      rv = NS_NewChannel(getter_AddRefs(channel),
+                         fileURI,
+                         nsContentUtils::GetSystemPrincipal(),
+                         nsILoadInfo::SEC_NORMAL,
+                         nsIContentPolicy::TYPE_OTHER);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = channel->Open(getter_AddRefs(imageStream));
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       imageStream = do_QueryInterface(aObject);

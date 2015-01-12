@@ -154,37 +154,70 @@ js::Nursery::leaveZealMode() {
 }
 #endif // JS_GC_ZEAL
 
+void
+js::Nursery::verifyFinalizerList()
+{
+#ifdef DEBUG
+    for (ListItem *current = finalizers_; current; current = current->next()) {
+        JSObject *obj = current->get();
+        RelocationOverlay *overlay = RelocationOverlay::fromCell(obj);
+        if (overlay->isForwarded())
+            obj = static_cast<JSObject *>(overlay->forwardingAddress());
+        MOZ_ASSERT(obj);
+        MOZ_ASSERT(obj->type());
+        MOZ_ASSERT(obj->type()->clasp());
+        MOZ_ASSERT(obj->type()->clasp()->finalize);
+        MOZ_ASSERT(obj->type()->clasp()->flags & JSCLASS_FINALIZE_FROM_NURSERY);
+    }
+#endif // DEBUG
+}
+
 JSObject *
-js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
+js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic, const js::Class *clasp)
 {
     /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
+    verifyFinalizerList();
 
-    /* Attempt to allocate slots contiguously after object, if possible. */
-    if (numDynamic && numDynamic <= MaxNurserySlots) {
-        size_t totalSize = size + sizeof(HeapSlot) * numDynamic;
-        JSObject *obj = static_cast<JSObject *>(allocate(totalSize));
-        if (obj) {
-            obj->setInitialSlotsMaybeNonNative(reinterpret_cast<HeapSlot *>(size_t(obj) + size));
-            TraceNurseryAlloc(obj, size);
-            return obj;
-        }
-        /* If we failed to allocate as a block, retry with out-of-line slots. */
-    }
-
-    HeapSlot *slots = nullptr;
-    if (numDynamic) {
-        slots = allocateHugeSlots(cx->zone(), numDynamic);
-        if (MOZ_UNLIKELY(!slots))
+    /* If we have a finalizer, get space for the list entry. */
+    ListItem *listEntry = nullptr;
+    if (clasp->finalize) {
+        listEntry = static_cast<ListItem *>(allocate(sizeof(ListItem)));
+        if (!listEntry)
             return nullptr;
     }
 
+    /* Make the object allocation. */
     JSObject *obj = static_cast<JSObject *>(allocate(size));
+    if (!obj)
+        return nullptr;
 
-    if (obj)
-        obj->setInitialSlotsMaybeNonNative(slots);
-    else
-        freeSlots(slots);
+    /* If we want external slots, add them. */
+    HeapSlot *slots = nullptr;
+    if (numDynamic) {
+        /* Try to allocate in the nursery first. */
+        if (numDynamic <= MaxNurserySlots)
+            slots = static_cast<HeapSlot *>(allocate(numDynamic * sizeof(HeapSlot)));
+
+        /* If we are out of space or too large, use the malloc heap. */
+        if (!slots)
+            slots = allocateHugeSlots(cx->zone(), numDynamic);
+
+        /* It is safe to leave the allocated object uninitialized, since we do
+         * not visit unallocated things. */
+        if (!slots)
+            return nullptr;
+    }
+
+    /* Always initialize the slots field to match the JIT behavior. */
+    obj->setInitialSlotsMaybeNonNative(slots);
+
+    /* If we have a finalizer, link it into the finalizer list. */
+    if (clasp->finalize) {
+        MOZ_ASSERT(listEntry);
+        new (listEntry) ListItem(finalizers_, obj);
+        finalizers_ = listEntry;
+    }
 
     TraceNurseryAlloc(obj, size);
     return obj;
@@ -407,7 +440,8 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 
     AllocKind kind = GetGCObjectFixedSlotsKind(obj->as<NativeObject>().numFixedSlots());
     MOZ_ASSERT(!IsBackgroundFinalized(kind));
-    MOZ_ASSERT(CanBeFinalizedInBackground(kind, obj->getClass()));
+    if (!CanBeFinalizedInBackground(kind, obj->getClass()))
+        return kind;
     return GetBackgroundAllocKind(kind);
 }
 
@@ -591,6 +625,7 @@ js::Nursery::markSlot(MinorCollectionTracer *trc, HeapSlot *slotp)
 void *
 js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
 {
+
     AllocKind dstKind = GetObjectAllocKindForCopy(*this, src);
     Zone *zone = src->zone();
     JSObject *dst = reinterpret_cast<JSObject *>(allocateFromTenured(zone, dstKind));
@@ -829,6 +864,23 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     forwardedBuffers.finish();
     TIME_END(updateJitActivations);
 
+    // Sweep.
+    TIME_START(runFinalizers);
+    runFinalizers();
+    TIME_END(runFinalizers);
+
+    TIME_START(freeHugeSlots);
+    freeHugeSlots();
+    TIME_END(freeHugeSlots);
+
+    TIME_START(sweep);
+    sweep();
+    TIME_END(sweep);
+
+    TIME_START(clearStoreBuffer);
+    rt->gc.storeBuffer.clear();
+    TIME_END(clearStoreBuffer);
+
     // Resize the nursery.
     TIME_START(resize);
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
@@ -852,19 +904,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     }
     TIME_END(pretenure);
 
-    // Sweep.
-    TIME_START(freeHugeSlots);
-    freeHugeSlots();
-    TIME_END(freeHugeSlots);
-
-    TIME_START(sweep);
-    sweep();
-    TIME_END(sweep);
-
-    TIME_START(clearStoreBuffer);
-    rt->gc.storeBuffer.clear();
-    TIME_END(clearStoreBuffer);
-
     // We ignore gcMaxBytes when allocating for minor collection. However, if we
     // overflowed, we disable the nursery. The next time we allocate, we'll fail
     // because gcBytes >= gcMaxBytes.
@@ -880,13 +919,13 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn resize pretnr frSlts clrSB  sweep\n");
+                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr\n");
             printedHeader = true;
         }
 
 #define FMT " %6" PRIu64
         fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
                 js::gcstats::ExplainReason(reason),
                 promotionRate * 100,
                 numActiveChunks_,
@@ -905,11 +944,12 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
                 TIME_TOTAL(collectToFP),
                 TIME_TOTAL(sweepArrayBufferViewList),
                 TIME_TOTAL(updateJitActivations),
-                TIME_TOTAL(resize),
-                TIME_TOTAL(pretenure),
+                TIME_TOTAL(runFinalizers),
                 TIME_TOTAL(freeHugeSlots),
                 TIME_TOTAL(clearStoreBuffer),
-                TIME_TOTAL(sweep));
+                TIME_TOTAL(sweep),
+                TIME_TOTAL(resize),
+                TIME_TOTAL(pretenure));
 #undef FMT
     }
 }
@@ -925,6 +965,21 @@ js::Nursery::freeHugeSlots()
     for (HugeSlotsSet::Range r = hugeSlots.all(); !r.empty(); r.popFront())
         fop->free_(r.front());
     hugeSlots.clear();
+}
+
+void
+js::Nursery::runFinalizers()
+{
+    verifyFinalizerList();
+
+    FreeOp *fop = runtime()->defaultFreeOp();
+    for (ListItem *current = finalizers_; current; current = current->next()) {
+        JSObject *obj = current->get();
+        RelocationOverlay *overlay = RelocationOverlay::fromCell(obj);
+        if (!overlay->isForwarded())
+            obj->getClass()->finalize(fop, obj);
+    }
+    finalizers_ = nullptr;
 }
 
 void

@@ -246,7 +246,7 @@ class InlineList : protected InlineListNode<T>
     typedef InlineListNode<T> Node;
 
   public:
-    InlineList() : InlineListNode<T>(MOZ_THIS_IN_INITIALIZER_LIST(), MOZ_THIS_IN_INITIALIZER_LIST())
+    InlineList() : InlineListNode<T>(this, this)
     { }
 
   public:

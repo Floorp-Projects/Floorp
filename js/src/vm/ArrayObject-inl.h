@@ -43,7 +43,7 @@ ArrayObject::createArrayInternal(ExclusiveContext *cx, gc::AllocKind kind, gc::I
     MOZ_ASSERT(shape->numFixedSlots() == 0);
 
     size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), type->clasp());
-    JSObject *obj = NewGCObject<CanGC>(cx, kind, nDynamicSlots, heap);
+    JSObject *obj = NewGCObject<CanGC>(cx, kind, nDynamicSlots, heap, type->clasp());
     if (!obj)
         return nullptr;
 

@@ -61,7 +61,7 @@ static_assert(FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE == 250,
 //-----------------------------------------------------------------------------
 
 HttpChannelChild::HttpChannelChild()
-  : HttpAsyncAborter<HttpChannelChild>(MOZ_THIS_IN_INITIALIZER_LIST())
+  : HttpAsyncAborter<HttpChannelChild>(this)
   , mIsFromCache(false)
   , mCacheEntryAvailable(false)
   , mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME)

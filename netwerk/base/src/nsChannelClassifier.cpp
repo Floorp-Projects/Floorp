@@ -49,7 +49,8 @@ NS_IMPL_ISUPPORTS(nsChannelClassifier,
                   nsIURIClassifierCallback)
 
 nsChannelClassifier::nsChannelClassifier()
-  : mIsAllowListed(false)
+  : mIsAllowListed(false),
+    mSuspendedChannel(false)
 {
 #if defined(PR_LOGGING)
     if (!gChannelClassifierLog)
@@ -209,8 +210,20 @@ nsChannelClassifier::NotifyTrackingProtectionDisabled(nsIChannel *aChannel)
     return NS_OK;
 }
 
-nsresult
+void
 nsChannelClassifier::Start(nsIChannel *aChannel)
+{
+  mChannel = aChannel;
+  nsresult rv = StartInternal(aChannel);
+  if (NS_FAILED(rv)) {
+    // If we aren't getting a callback for any reason, assume a good verdict and
+    // make sure we resume the channel if necessary.
+    OnClassifyComplete(NS_OK);
+  }
+}
+
+nsresult
+nsChannelClassifier::StartInternal(nsIChannel *aChannel)
 {
     // Should only be called in the parent process.
     MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
@@ -220,12 +233,12 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
     nsresult status;
     aChannel->GetStatus(&status);
     if (NS_FAILED(status))
-        return NS_OK;
+        return status;
 
     // Don't bother to run the classifier on a cached load that was
-    // previously classified.
+    // previously classified as good.
     if (HasBeenClassified(aChannel)) {
-        return NS_OK;
+        return NS_ERROR_UNEXPECTED;
     }
 
     nsCOMPtr<nsIURI> uri;
@@ -238,32 +251,32 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
                              nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
+    if (hasFlags) return NS_ERROR_UNEXPECTED;
 
     rv = NS_URIChainHasFlags(uri,
                              nsIProtocolHandler::URI_IS_LOCAL_FILE,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
+    if (hasFlags) return NS_ERROR_UNEXPECTED;
 
     rv = NS_URIChainHasFlags(uri,
                              nsIProtocolHandler::URI_IS_UI_RESOURCE,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
+    if (hasFlags) return NS_ERROR_UNEXPECTED;
 
     rv = NS_URIChainHasFlags(uri,
                              nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
+    if (hasFlags) return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
     if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
         rv == NS_ERROR_NOT_AVAILABLE) {
         // no URI classifier, ignore this failure.
-        return NS_OK;
+        return NS_ERROR_NOT_AVAILABLE;
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -282,7 +295,9 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
 
     rv = uriClassifier->Classify(principal, trackingProtectionEnabled, this,
                                  &expectCallback);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     if (expectCallback) {
         // Suspend the channel, it will be resumed when we get the classifier
@@ -292,14 +307,16 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
             // Some channels (including nsJSChannel) fail on Suspend.  This
             // shouldn't be fatal, but will prevent malware from being
             // blocked on these channels.
-            return NS_OK;
+            LOG(("nsChannelClassifier[%p]: Couldn't suspend channel", this));
+            return rv;
         }
 
-        mSuspendedChannel = aChannel;
-#ifdef DEBUG
+        mSuspendedChannel = true;
         LOG(("nsChannelClassifier[%p]: suspended channel %p",
-             this, mSuspendedChannel.get()));
-#endif
+             this, mChannel.get()));
+    } else {
+        LOG(("nsChannelClassifier[%p]: not expecting callback", this));
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -318,8 +335,7 @@ nsChannelClassifier::MarkEntryClassified(nsresult status)
         return;
     }
 
-    nsCOMPtr<nsICachingChannel> cachingChannel =
-        do_QueryInterface(mSuspendedChannel);
+    nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(mChannel);
     if (!cachingChannel) {
         return;
     }
@@ -444,17 +460,18 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
     // Should only be called in the parent process.
     MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
+    LOG(("nsChannelClassifier[%p]:OnClassifyComplete", this));
     if (mSuspendedChannel) {
         MarkEntryClassified(aErrorCode);
 
         if (NS_FAILED(aErrorCode)) {
 #ifdef DEBUG
             nsCOMPtr<nsIURI> uri;
-            mSuspendedChannel->GetURI(getter_AddRefs(uri));
+            mChannel->GetURI(getter_AddRefs(uri));
             nsCString spec;
             uri->GetSpec(spec);
             LOG(("nsChannelClassifier[%p]: cancelling channel %p for %s "
-                 "with error code: %x", this, mSuspendedChannel.get(),
+                 "with error code: %x", this, mChannel.get(),
                  spec.get(), aErrorCode));
 #endif
 
@@ -462,18 +479,23 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
             // Do update the security state of the document and fire a security
             // change event.
             if (aErrorCode == NS_ERROR_TRACKING_URI) {
-              SetBlockedTrackingContent(mSuspendedChannel);
+              SetBlockedTrackingContent(mChannel);
             }
 
-            mSuspendedChannel->Cancel(aErrorCode);
-          }
-#ifdef DEBUG
+            mChannel->Cancel(aErrorCode);
+        }
         LOG(("nsChannelClassifier[%p]: resuming channel %p from "
-             "OnClassifyComplete", this, mSuspendedChannel.get()));
-#endif
-        mSuspendedChannel->Resume();
-        mSuspendedChannel = nullptr;
+             "OnClassifyComplete", this, mChannel.get()));
+        mChannel->Resume();
     }
+    nsresult rv;
+    nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(mChannel, &rv);
+    // Even if we have cancelled the channel, we need to call
+    // ContinueBeginConnect so that we abort appropriately.
+    if (NS_SUCCEEDED(rv)) {
+        channel->ContinueBeginConnect();
+    }
+    mChannel = nullptr;
 
     return NS_OK;
 }
