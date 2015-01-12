@@ -5,12 +5,14 @@
  */
 package org.mozilla.gecko.db;
 
-import java.util.List;
-import java.util.Map;
+import android.content.ContentResolver;
+import android.database.Cursor;
 
 import org.json.JSONObject;
 
-import android.content.ContentResolver;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface URLMetadata {
     public Map<String, Object> fromJSON(JSONObject obj);
