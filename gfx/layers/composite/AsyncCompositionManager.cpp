@@ -633,13 +633,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     const FrameMetrics& bottom = LayerMetricsWrapper::BottommostScrollableMetrics(aLayer);
     MOZ_ASSERT(bottom.IsScrollable());  // must be true because hasAsyncTransform is true
 
-    // Apply resolution scaling to the old transform - the layer tree as it is
-    // doesn't have the necessary transform to display correctly. We use the
-    // bottom-most scrollable metrics because that should have the most accurate
-    // cumulative resolution for aLayer.
-    LayoutDeviceToLayerScale resolution = bottom.GetCumulativeResolution();
-    oldTransform.PreScale(resolution.scale, resolution.scale, 1);
-
     // For the purpose of aligning fixed and sticky layers, we disregard
     // the overscroll transform as well as any OMTA transform when computing the
     // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
@@ -966,10 +959,6 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   SetShadowTransform(aLayer, oldTransform * treeTransform);
   NS_ASSERTION(!aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation(),
                "overwriting animated transform!");
-
-  // Apply resolution scaling to the old transform - the layer tree as it is
-  // doesn't have the necessary transform to display correctly.
-  oldTransform.PreScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1);
 
   // Make sure that overscroll and under-zoom are represented in the old
   // transform so that fixed position content moves and scales accordingly.
