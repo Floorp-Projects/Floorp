@@ -4,7 +4,7 @@
 // Tests that text metrics in the flame graph widget work properly.
 
 let HTML_NS = "http://www.w3.org/1999/xhtml";
-let FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 9; // px
+let FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 8; // px
 let FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY = "sans-serif";
 let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 let {FlameGraph} = Cu.import("resource:///modules/devtools/FlameGraph.jsm", {});
