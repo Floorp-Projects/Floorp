@@ -8,18 +8,9 @@ package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.History;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.Telemetry;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.util.Log;
-
-import java.util.List;
-import java.util.HashMap;
-import java.util.HashSet;
 
 // Holds metadata info about urls. Supports some helper functions for getting back a HashMap of key value data.
 public class URLMetadataTable extends BaseTable {
