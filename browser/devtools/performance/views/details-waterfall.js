@@ -16,26 +16,26 @@ let WaterfallView = {
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
 
-    this.graph = new Waterfall($("#waterfall-graph"), $("#details-pane"), TIMELINE_BLUEPRINT);
-    this.markerDetails = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
+    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#details-pane"), TIMELINE_BLUEPRINT);
+    this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
 
-    this.graph.on("selected", this._onMarkerSelected);
-    this.graph.on("unselected", this._onMarkerSelected);
-    this.markerDetails.on("resize", this._onResize);
+    this.waterfall.on("selected", this._onMarkerSelected);
+    this.waterfall.on("unselected", this._onMarkerSelected);
+    this.details.on("resize", this._onResize);
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
 
-    this.graph.recalculateBounds();
+    this.waterfall.recalculateBounds();
   }),
 
   /**
    * Unbinds events.
    */
   destroy: function () {
-    this.graph.off("selected", this._onMarkerSelected);
-    this.graph.off("unselected", this._onMarkerSelected);
-    this.markerDetails.off("resize", this._onResize);
+    this.waterfall.off("selected", this._onMarkerSelected);
+    this.waterfall.off("unselected", this._onMarkerSelected);
+    this.details.off("resize", this._onResize);
 
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
@@ -48,7 +48,8 @@ let WaterfallView = {
     let { startTime, endTime } = PerformanceController.getInterval();
     let markers = PerformanceController.getMarkers();
 
-    this.graph.setData(markers, startTime, startTime, endTime);
+    this.waterfall.setData(markers, startTime, startTime, endTime);
+
     this.emit(EVENTS.WATERFALL_RENDERED);
   },
 
@@ -56,7 +57,7 @@ let WaterfallView = {
    * Called when recording starts.
    */
   _onRecordingStarted: function () {
-    this.graph.clearView();
+    this.waterfall.clearView();
   },
 
   /**
@@ -72,14 +73,14 @@ let WaterfallView = {
    */
   _onMarkerSelected: function (event, marker) {
     if (event === "selected") {
-      this.markerDetails.render({
+      this.details.render({
         toolbox: gToolbox,
         marker: marker,
         frames: PerformanceController.getFrames()
       });
     }
     if (event === "unselected") {
-      this.markerDetails.empty();
+      this.details.empty();
     }
   },
 
@@ -87,7 +88,7 @@ let WaterfallView = {
    * Called when the marker details view is resized.
    */
   _onResize: function () {
-    this.graph.recalculateBounds();
+    this.waterfall.recalculateBounds();
     this.render();
   }
 };
