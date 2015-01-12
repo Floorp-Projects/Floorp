@@ -421,7 +421,18 @@ ContentClientRemoteBuffer::Dump(std::stringstream& aStream,
                                 bool aDumpHtml)
 {
   // TODO We should combine the OnWhite/OnBlack here an just output a single image.
+  aStream << "\n" << aPrefix << "Surface: ";
   CompositableClient::DumpTextureClient(aStream, mTextureClient);
+}
+
+void
+ContentClientDoubleBuffered::Dump(std::stringstream& aStream,
+                                const char* aPrefix,
+                                bool aDumpHtml)
+{
+  // TODO We should combine the OnWhite/OnBlack here an just output a single image.
+  aStream << "\n" << aPrefix << "Surface: ";
+  CompositableClient::DumpTextureClient(aStream, mFrontClient);
 }
 
 void

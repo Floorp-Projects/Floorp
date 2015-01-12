@@ -347,6 +347,9 @@ public:
     return TextureInfo(CompositableType::CONTENT_DOUBLE, mTextureFlags);
   }
 
+  virtual void Dump(std::stringstream& aStream,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
 protected:
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
 
