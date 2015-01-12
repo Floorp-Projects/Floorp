@@ -125,16 +125,8 @@ public abstract class GeckoApp
     LocationListener,
     NativeEventListener,
     SensorEventListener,
-    Tabs.OnTabsChangedListener {
-
-    protected GeckoApp() {
-        // We need to do this before any access to the profile; it controls
-        // which database class is used.
-        // We thus need to do this before our GeckoView is inflated, because
-        // GeckoView implicitly accesses the profile.
-        GeckoProfile.setBrowserDBFactory(getBrowserDBFactory());
-    }
-
+    Tabs.OnTabsChangedListener
+{
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
@@ -237,8 +229,6 @@ public abstract class GeckoApp
     public SharedPreferences getSharedPreferences() {
         return GeckoSharedPrefs.forApp(this);
     }
-
-    protected abstract BrowserDB.Factory getBrowserDBFactory();
 
     @Override
     public Activity getActivity() {
@@ -533,13 +523,7 @@ public abstract class GeckoApp
     }
 
     void handleClearHistory() {
-        final BrowserDB db = getProfile().getDB();
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                db.clearHistory(getContentResolver());
-            }
-        });
+        BrowserDB.clearHistory(getContentResolver());
     }
 
     public void addTab() { }
@@ -574,11 +558,10 @@ public abstract class GeckoApp
             final String url = message.getString("url");
             final String title = message.getString("title");
             final Context context = this;
-            final BrowserDB db = getProfile().getDB();
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    db.addBookmark(getContentResolver(), title, url);
+                    BrowserDB.addBookmark(getContentResolver(), title, url);
                     ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -1499,6 +1482,8 @@ public abstract class GeckoApp
         Tabs.registerOnTabsChangedListener(this);
 
         initializeChrome();
+
+        BrowserDB.initialize(getProfile().getName());
 
         // If we are doing a restore, read the session data and send it to Gecko
         if (!mIsRestoringActivity) {

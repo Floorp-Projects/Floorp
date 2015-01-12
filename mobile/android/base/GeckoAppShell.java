@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -2302,24 +2301,20 @@ public class GeckoAppShell
 
     @WrapElementForJNI(stubName = "MarkURIVisited")
     static void markUriVisited(final String uri) {
-        final Context context = getContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                GlobalHistory.getInstance().add(context, db, uri);
+                GlobalHistory.getInstance().add(uri);
             }
         });
     }
 
     @WrapElementForJNI(stubName = "SetURITitle")
     static void setUriTitle(final String uri, final String title) {
-        final Context context = getContext();
-        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
+                GlobalHistory.getInstance().update(uri, title);
             }
         });
     }

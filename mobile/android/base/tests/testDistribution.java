@@ -17,9 +17,9 @@ import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.ReferrerDescriptor;
@@ -131,7 +131,7 @@ public class testDistribution extends ContentProviderTest {
         clearDistributionPref();
         Distribution dist = initDistribution(mockPackagePath);
         SuggestedSites suggestedSites = new SuggestedSites(mActivity, dist);
-        GeckoProfile.get(mActivity).getDB().setSuggestedSites(suggestedSites);
+        BrowserDB.setSuggestedSites(suggestedSites);
 
         // Test tiles uploading for an en-US OS locale with no app locale.
         setOSLocale(Locale.US);
