@@ -29,6 +29,6 @@ dictionary MediaKeySystemOptions {
 [Pref="media.eme.enabled"]
 interface MediaKeySystemAccess {
   readonly    attribute DOMString keySystem;
-  [NewObject, Throws]
+  [NewObject]
   Promise<MediaKeys> createMediaKeys();
 };
