@@ -102,8 +102,8 @@ public:
   }
 
   // nsContentSink methods
-  virtual void UpdateChildCounts();
-  virtual nsresult FlushTags();
+  virtual void UpdateChildCounts() MOZ_OVERRIDE;
+  virtual nsresult FlushTags() MOZ_OVERRIDE;
 
 protected:
 

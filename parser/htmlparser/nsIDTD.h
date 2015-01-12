@@ -127,12 +127,12 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
-    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode);\
-    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink);\
-    NS_IMETHOD_(bool) CanContain(int32_t aParent,int32_t aChild) const;\
-    NS_IMETHOD_(bool) IsContainer(int32_t aTag) const;\
-    NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD_(int32_t) GetType();\
-    NS_IMETHOD_(nsDTDMode) GetMode() const;
+    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext, nsITokenizer* aTokenizer, nsIContentSink* aSink) MOZ_OVERRIDE;\
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode) MOZ_OVERRIDE;\
+    NS_IMETHOD BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink) MOZ_OVERRIDE;\
+    NS_IMETHOD_(bool) CanContain(int32_t aParent,int32_t aChild) const MOZ_OVERRIDE;\
+    NS_IMETHOD_(bool) IsContainer(int32_t aTag) const MOZ_OVERRIDE;\
+    NS_IMETHOD_(void)  Terminate() MOZ_OVERRIDE;\
+    NS_IMETHOD_(int32_t) GetType() MOZ_OVERRIDE;\
+    NS_IMETHOD_(nsDTDMode) GetMode() const MOZ_OVERRIDE;
 #endif /* nsIDTD_h___ */

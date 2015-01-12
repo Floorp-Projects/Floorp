@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
 
       Promise.all([global, window, group]).then(function () {
         opener.setTimeout("next()");
-        window.close();
+        self.close();
       });
     }
 
