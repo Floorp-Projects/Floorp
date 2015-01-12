@@ -7,6 +7,7 @@
 #include "MP4Reader.h"
 #include "MP4Stream.h"
 #include "MediaResource.h"
+#include "nsPrintfCString.h"
 #include "nsSize.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
@@ -88,32 +89,18 @@ InvokeAndRetry(ThisType* aThisVal, ReturnType(ThisType::*aMethod)(), MP4Stream* 
       return result;
     }
     MP4Stream::ReadRecord failure(-1, 0);
-    if (!stream->LastReadFailed(&failure) || failure == prevFailure) {
+    if (NS_WARN_IF(!stream->LastReadFailed(&failure))) {
       return result;
     }
-    prevFailure = failure;
 
-    // Our goal here is to forcibly read the data we want into the cache: since
-    // the stream is pinned, the data is guaranteed to stay in the cache once
-    // it's there, which means that retrying the non-blocking read from inside
-    // the demuxer should succeed.
-    //
-    // But there's one wrinkle: if we read less than an entire cache line and
-    // the data ends up in MediaCacheStream's mPartialBlockBuffer, the data can
-    // be returned by a blocking read but never actually committed to the cache,
-    // and abandoned by a subsequent seek (possibly by another stream accessing
-    // the same underlying resource).
-    //
-    // The way to work around this problem is to round our "priming" read up to the
-    // size of an entire cache block. Note that this may hit EOS for bytes that the
-    // original demuxer read never actually requested. This is OK though because the
-    // call to BlockingReadAt will still return true (just with a less-than-expected
-    // number of actually read bytes, which we ignore).
-    size_t bufferSize = failure.mCount + (MediaCacheStream::BLOCK_SIZE - failure.mCount % MediaCacheStream::BLOCK_SIZE);
-    nsAutoArrayPtr<uint8_t> dummyBuffer(new uint8_t[bufferSize]);
-    MonitorAutoUnlock unlock(*aMonitor);
-    size_t ignored;
-    if (NS_WARN_IF(!stream->BlockingReadAt(failure.mOffset, dummyBuffer, bufferSize, &ignored))) {
+    if (NS_WARN_IF(failure == prevFailure)) {
+      NS_WARNING(nsPrintfCString("Failed reading the same block twice: offset=%lld, count=%lu",
+                                 failure.mOffset, failure.mCount).get());
+      return result;
+    }
+
+    prevFailure = failure;
+    if (NS_WARN_IF(!stream->BlockingReadIntoCache(failure.mOffset, failure.mCount, aMonitor))) {
       return result;
     }
   }

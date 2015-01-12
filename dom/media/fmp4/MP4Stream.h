@@ -12,6 +12,7 @@
 #include "MediaResource.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Monitor.h"
 
 namespace mozilla {
 
@@ -21,7 +22,7 @@ class MP4Stream : public mp4_demuxer::Stream {
 public:
   explicit MP4Stream(MediaResource* aResource);
   virtual ~MP4Stream();
-  bool BlockingReadAt(int64_t aOffset, void* aBuffer, size_t aCount, size_t* aBytesRead);
+  bool BlockingReadIntoCache(int64_t aOffset, size_t aCount, Monitor* aToUnlock);
   virtual bool ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
                       size_t* aBytesRead) MOZ_OVERRIDE;
   virtual bool CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
@@ -44,12 +45,35 @@ public:
     return false;
   }
 
-  void Pin() { mResource->Pin(); }
-  void Unpin() { mResource->Unpin(); }
+  void Pin()
+  {
+    mResource->Pin();
+    ++mPinCount;
+  }
+
+  void Unpin()
+  {
+    mResource->Unpin();
+    MOZ_ASSERT(mPinCount);
+    --mPinCount;
+    if (mPinCount == 0) {
+      mCache.Clear();
+    }
+  }
 
 private:
   nsRefPtr<MediaResource> mResource;
   Maybe<ReadRecord> mFailedRead;
+  uint32_t mPinCount;
+
+  struct CacheBlock {
+    CacheBlock(int64_t aOffset, size_t aCount)
+      : mOffset(aOffset), mCount(aCount), mBuffer(new uint8_t[aCount]) {}
+    int64_t mOffset;
+    size_t mCount;
+    nsAutoArrayPtr<uint8_t> mBuffer;
+  };
+  nsTArray<CacheBlock> mCache;
 };
 
 }
