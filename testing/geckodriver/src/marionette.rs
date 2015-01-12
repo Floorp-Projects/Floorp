@@ -1,6 +1,6 @@
-use serialize::json::{Json, ToJson};
 use serialize::json;
-use std::collections::TreeMap;
+use serialize::json::{Json, ToJson};
+use std::collections::BTreeMap;
 use std::io::{IoResult, TcpStream, IoError};
 
 use command::{WebDriverMessage};
@@ -28,8 +28,8 @@ pub struct MarionetteSession {
     pub to: String
 }
 
-fn object_from_json(data: &str) -> WebDriverResult<TreeMap<String, Json>> {
-    Ok(try_opt!(try!(json::from_str(data)).as_object(),
+fn object_from_json(data: &str) -> WebDriverResult<BTreeMap<String, Json>> {
+    Ok(try_opt!(try!(json:: from_str(data)).as_object(),
                 ErrorStatus::UnknownError,
                 "Expected a json object").clone())
 }
@@ -52,7 +52,7 @@ impl MarionetteSession {
         Ok(Json::Object(data))
     }
 
-    pub fn update(&mut self, msg: &WebDriverMessage, resp: &TreeMap<String, Json>) -> WebDriverResult<()> {
+    pub fn update(&mut self, msg: &WebDriverMessage, resp: &BTreeMap<String, Json>) -> WebDriverResult<()> {
         match msg.command {
             NewSession => {
                 let session_id = try_opt!(
@@ -83,7 +83,7 @@ impl MarionetteSession {
                 ErrorStatus::UnknownError,
                 "Error status isn't an integer");
             let status = self.error_from_code(status_code);
-            let default_msg = Json::String("Unknown error".into_string());
+            let default_msg = Json::String("Unknown error".to_string());
             let err_msg = try_opt!(
                 error.get("message").unwrap_or(&default_msg).as_string(),
                 ErrorStatus::UnknownError,
@@ -189,13 +189,13 @@ impl MarionetteSession {
                                  ErrorStatus::UnknownError,
                                  "Failed to find name field").as_string(),
                         ErrorStatus::UnknownError,
-                        "Failed to interpret name as string").into_string();
+                        "Failed to interpret name as string").to_string();
                     let value = try_opt!(
                         try_opt!(x.find("value"),
                                  ErrorStatus::UnknownError,
                                  "Failed to find value field").as_string(),
                         ErrorStatus::UnknownError,
-                        "Failed to interpret value as string").into_string();
+                        "Failed to interpret value as string").to_string();
                     let path = try!(
                         Nullable::from_json(try_opt!(x.find("path"),
                                                      ErrorStatus::UnknownError,
@@ -203,7 +203,7 @@ impl MarionetteSession {
                                             |x| {
                                                 Ok((try_opt!(x.as_string(),
                                                              ErrorStatus::UnknownError,
-                                                             "Failed to interpret path as String")).into_string())
+                                                             "Failed to interpret path as String")).to_string())
                                             }));
                     let domain = try!(
                         Nullable::from_json(try_opt!(x.find("domain"),
@@ -212,7 +212,7 @@ impl MarionetteSession {
                                             |x| {
                                                 Ok((try_opt!(x.as_string(),
                                                              ErrorStatus::UnknownError,
-                                                             "Failed to interpret domain as String")).into_string())
+                                                             "Failed to interpret domain as String")).to_string())
                                             }));
                     let expiry = try!(
                         Nullable::from_json(try_opt!(x.find("expiry"),
@@ -252,7 +252,7 @@ impl MarionetteSession {
                              ErrorStatus::InvalidSessionId,
                              "Failed to find sessionId field").as_string(),
                     ErrorStatus::InvalidSessionId,
-                    "sessionId was not a string").into_string();
+                    "sessionId was not a string").to_string();
 
                 let value = try_opt!(
                     try_opt!(json_data.get("value"),
@@ -262,7 +262,7 @@ impl MarionetteSession {
                     "value field was not an Object");
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
-                    session_id, json::Object(value.clone())))
+                    session_id, Json::Object(value.clone())))
             }
             DeleteSession => {
                 WebDriverResponse::DeleteSession
@@ -315,7 +315,7 @@ impl MarionetteConnection {
     pub fn connect(&mut self) -> Result<(), IoError> {
         try!(self.read_resp());
         //Would get traits and application type here
-        let mut msg = TreeMap::new();
+        let mut msg = BTreeMap::new();
         msg.insert("name".to_string(), "getMarionetteID".to_json());
         msg.insert("to".to_string(), "root".to_json());
         match self.send(&msg.to_json()) {
@@ -366,13 +366,13 @@ impl MarionetteConnection {
     }
 
     fn read_resp(&mut self) -> Result<String, IoError> {
-        let mut bytes = 0u;
+        let mut bytes = 0us;
         loop {
             let byte = try!(self.stream.read_byte()) as char;
             match byte {
                 '0'...'9' => {
                     bytes = bytes * 10;
-                    bytes += byte as uint - '0' as uint;
+                    bytes += byte as usize - '0' as usize;
                 },
                 ':' => {
                     break
@@ -416,13 +416,13 @@ impl ToMarionette for WebDriverMessage {
             IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
             IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
             GetElementAttribute(ref e, ref x) => {
-                let mut data = TreeMap::new();
+                let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("name".to_string(), x.to_json());
                 (Some("getElementAttribute"), Some(Ok(Json::Object(data))))
             },
             GetCSSValue(ref e, ref x) => {
-                let mut data = TreeMap::new();
+                let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("name".to_string(), x.to_json());
                 (Some("getElementValueOfCSSProperty"), Some(Ok(Json::Object(data))))
@@ -435,7 +435,7 @@ impl ToMarionette for WebDriverMessage {
             ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
             ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
             ElementSendKeys(ref e, ref x) => {
-                let mut data = TreeMap::new();
+                let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("value".to_string(), x.value.to_json());
                 (Some("sendKeysToElement"), Some(Ok(Json::Object(data))))
@@ -455,16 +455,16 @@ impl ToMarionette for WebDriverMessage {
                             ErrorStatus::UnsupportedOperation,
                             "Operation not supported");
 
-        let parameters = try!(opt_parameters.unwrap_or(Ok(Json::Object(TreeMap::new()))));
+        let parameters = try!(opt_parameters.unwrap_or(Ok(Json::Object(BTreeMap::new()))));
 
-        let mut data = TreeMap::new();
+        let mut data = BTreeMap::new();
         data.insert("name".to_string(), name.to_json());
         data.insert("parameters".to_string(), parameters.to_json());
         match self.session_id {
             Some(ref x) => data.insert("sessionId".to_string(), x.to_json()),
             None => None
         };
-        Ok(json::Object(data))
+        Ok(Json::Object(data))
     }
 }
 
@@ -500,9 +500,9 @@ impl ToMarionette for LocatorParameters {
 
 impl ToMarionette for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        let mut data = TreeMap::new();
+        let mut data = BTreeMap::new();
         data.insert("id".to_string(), try!(self.id.to_marionette()));
-        Ok(json::Object(data))
+        Ok(Json::Object(data))
     }
 }
 
@@ -520,7 +520,7 @@ impl ToMarionette for GetCookieParameters {
 
 impl ToMarionette for AddCookieParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        let mut cookie = TreeMap::new();
+        let mut cookie = BTreeMap::new();
         cookie.insert("name".to_string(), self.name.to_json());
         cookie.insert("value".to_string(), self.value.to_json());
         if self.path.is_value() {
@@ -537,29 +537,29 @@ impl ToMarionette for AddCookieParameters {
         }
         cookie.insert("secure".to_string(), self.secure.to_json());
         cookie.insert("httpOnly".to_string(), self.httpOnly.to_json());
-        let mut data = TreeMap::new();
-        data.insert("cookie".into_string(), Json::Object(cookie));
-        Ok(json::Object(data))
+        let mut data = BTreeMap::new();
+        data.insert("cookie".to_string(), Json::Object(cookie));
+        Ok(Json::Object(data))
     }
 }
 
 impl ToMarionette for TakeScreenshotParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        let mut data = TreeMap::new();
+        let mut data = BTreeMap::new();
         let element = match self.element {
             Nullable::Null => Json::Null,
             Nullable::Value(ref x) => try!(x.to_marionette())
         };
-        data.insert("element".into_string(), element);
+        data.insert("element".to_string(), element);
         Ok(Json::Object(data))
     }
 }
 
 impl ToMarionette for WebElement {
     fn to_marionette(&self) -> WebDriverResult<Json> {
-        let mut data = TreeMap::new();
+        let mut data = BTreeMap::new();
         data.insert("id".to_string(), self.id.to_json());
-        Ok(json::Object(data))
+        Ok(Json::Object(data))
     }
 }
 
