@@ -3492,6 +3492,19 @@ IMEInputHandler::IsFocused()
 }
 
 bool
+IMEInputHandler::IsOrWouldBeFocused()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NS_ENSURE_TRUE(!Destroyed(), false);
+  NSWindow* window = [mView window];
+  NS_ENSURE_TRUE(window, false);
+  return [window firstResponder] == mView;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+}
+
+bool
 IMEInputHandler::IsIMEOpened()
 {
   TISInputSourceWrapper tis;
