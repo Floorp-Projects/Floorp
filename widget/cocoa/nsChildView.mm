@@ -1623,7 +1623,7 @@ nsChildView::SetInputContext(const InputContext& aContext,
 {
   NS_ENSURE_TRUE_VOID(mTextInputHandler);
 
-  if (mTextInputHandler->IsFocused()) {
+  if (mTextInputHandler->IsOrWouldBeFocused()) {
     if (aContext.IsPasswordEditor()) {
       TextInputHandler::EnableSecureEventInput();
     } else {
