@@ -668,6 +668,15 @@ pref("ui.scrolling.fling_accel_interval", -1);
 pref("ui.scrolling.fling_accel_base_multiplier", -1);
 pref("ui.scrolling.fling_accel_supplemental_multiplier", -1);
 
+// Prefs for fling curving
+pref("ui.scrolling.fling_curve_function_x1", -1);
+pref("ui.scrolling.fling_curve_function_y1", -1);
+pref("ui.scrolling.fling_curve_function_x2", -1);
+pref("ui.scrolling.fling_curve_function_y2", -1);
+pref("ui.scrolling.fling_curve_threshold_velocity", -1);
+pref("ui.scrolling.fling_curve_max_velocity", -1);
+pref("ui.scrolling.fling_curve_newton_iterations", -1);
+
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
 pref("accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement,Landmark,ListItem");
