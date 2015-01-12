@@ -5,10 +5,12 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(946B5334-6EC9-11E4-8689-F3061E5D46B0)]
+[scriptable, uuid(EE752CB8-8FD7-11E4-A602-70221D5D46B0)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
+  // Note: Changes made to the STATE_xxx names should also be reflected in the
+  //       NS_VolumeStateStr function found in Volume.cpp
   const long STATE_INIT        = -1;
   const long STATE_NOMEDIA     = 0;
   const long STATE_IDLE        = 1;
@@ -20,6 +22,7 @@ interface nsIVolume : nsISupports
   const long STATE_SHARED      = 7;
   const long STATE_SHAREDMNT   = 8;
   const long STATE_CHECKMNT    = 100;
+  const long STATE_MOUNT_FAIL  = 101;
 
   // The name of the volume. Often there is only one volume, called sdcard.
   // But some phones support multiple volumes.
