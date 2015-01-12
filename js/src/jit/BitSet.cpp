@@ -9,15 +9,6 @@
 using namespace js;
 using namespace js::jit;
 
-BitSet *
-BitSet::New(TempAllocator &alloc, unsigned int numBits)
-{
-    BitSet *result = new(alloc) BitSet(numBits);
-    if (!result->init(alloc))
-        return nullptr;
-    return result;
-}
-
 bool
 BitSet::init(TempAllocator &alloc)
 {
@@ -45,56 +36,56 @@ BitSet::empty() const
 }
 
 void
-BitSet::insertAll(const BitSet *other)
+BitSet::insertAll(const BitSet &other)
 {
     MOZ_ASSERT(bits_);
-    MOZ_ASSERT(other->numBits_ == numBits_);
-    MOZ_ASSERT(other->bits_);
+    MOZ_ASSERT(other.numBits_ == numBits_);
+    MOZ_ASSERT(other.bits_);
 
     uint32_t *bits = bits_;
-    const uint32_t *otherBits = other->bits_;
+    const uint32_t *otherBits = other.bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++)
         bits[i] |= otherBits[i];
 }
 
 void
-BitSet::removeAll(const BitSet *other)
+BitSet::removeAll(const BitSet &other)
 {
     MOZ_ASSERT(bits_);
-    MOZ_ASSERT(other->numBits_ == numBits_);
-    MOZ_ASSERT(other->bits_);
+    MOZ_ASSERT(other.numBits_ == numBits_);
+    MOZ_ASSERT(other.bits_);
 
     uint32_t *bits = bits_;
-    const uint32_t *otherBits = other->bits_;
+    const uint32_t *otherBits = other.bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++)
         bits[i] &= ~otherBits[i];
 }
 
 void
-BitSet::intersect(const BitSet *other)
+BitSet::intersect(const BitSet &other)
 {
     MOZ_ASSERT(bits_);
-    MOZ_ASSERT(other->numBits_ == numBits_);
-    MOZ_ASSERT(other->bits_);
+    MOZ_ASSERT(other.numBits_ == numBits_);
+    MOZ_ASSERT(other.bits_);
 
     uint32_t *bits = bits_;
-    const uint32_t *otherBits = other->bits_;
+    const uint32_t *otherBits = other.bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++)
         bits[i] &= otherBits[i];
 }
 
 // returns true if the intersection caused the contents of the set to change.
 bool
-BitSet::fixedPointIntersect(const BitSet *other)
+BitSet::fixedPointIntersect(const BitSet &other)
 {
     MOZ_ASSERT(bits_);
-    MOZ_ASSERT(other->numBits_ == numBits_);
-    MOZ_ASSERT(other->bits_);
+    MOZ_ASSERT(other.numBits_ == numBits_);
+    MOZ_ASSERT(other.bits_);
 
     bool changed = false;
 
     uint32_t *bits = bits_;
-    const uint32_t *otherBits = other->bits_;
+    const uint32_t *otherBits = other.bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++) {
         uint32_t old = bits[i];
         bits[i] &= otherBits[i];

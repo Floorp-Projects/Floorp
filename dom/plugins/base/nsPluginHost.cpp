@@ -580,8 +580,7 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
     }
   }
 
-  // if we don't have a target, just create a stream.  This does
-  // NS_OpenURI()!
+  // if we don't have a target, just create a stream.
   if (streamListener)
     rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), instance,
                             streamListener,

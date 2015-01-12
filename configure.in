@@ -290,6 +290,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_FMP4=
+        MOZ_B2G_CAMERA=1
         MOZ_B2G_BT=1
         MOZ_B2G_BT_BLUEDROID=1
         if test -d "$gonkdir/system/bluetoothd"; then
@@ -3385,6 +3386,19 @@ MOZ_CHECK_HEADERS(alloca.h)
 AC_CHECK_FUNCS(strndup posix_memalign memalign)
 
 AC_CHECK_FUNCS(malloc_usable_size)
+MALLOC_USABLE_SIZE_CONST_PTR=const
+MOZ_CHECK_HEADERS([malloc.h], [
+  AC_MSG_CHECKING([whether malloc_usable_size definition can use const argument])
+  AC_TRY_COMPILE([#include <malloc.h>
+                  #include <stddef.h>
+                  size_t malloc_usable_size(const void *ptr);],
+                  [return malloc_usable_size(0);],
+                  AC_MSG_RESULT([yes]),
+                  AC_MSG_RESULT([no])
+                  MALLOC_USABLE_SIZE_CONST_PTR=)
+])
+AC_DEFINE_UNQUOTED([MALLOC_USABLE_SIZE_CONST_PTR],[$MALLOC_USABLE_SIZE_CONST_PTR])
+
 
 dnl In newer bionic headers, valloc is built but not defined,
 dnl so we check more carefully here.

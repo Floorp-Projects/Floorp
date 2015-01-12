@@ -1254,6 +1254,13 @@ public:
   FirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
+   * Get the last frame in the continuation-plus-ib-split-sibling chain
+   * containing aFrame.
+   */
+  static nsIFrame*
+  LastContinuationOrIBSplitSibling(nsIFrame *aFrame);
+
+  /**
    * Is FirstContinuationOrIBSplitSibling(aFrame) going to return
    * aFrame?
    */
@@ -1485,6 +1492,11 @@ public:
                                           const nsIFrame* aFrame,
                                           nsFontMetrics& aFontMetrics,
                                           nsRenderingContext& aContext);
+
+  static bool StringWidthIsGreaterThan(const nsString& aString,
+                                       nsFontMetrics& aFontMetrics,
+                                       nsRenderingContext& aContext,
+                                       nscoord aWidth);
 
   static nsBoundingMetrics AppUnitBoundsOfString(const char16_t* aString,
                                                  uint32_t aLength,

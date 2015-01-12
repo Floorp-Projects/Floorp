@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include "typedefs.h"
 
 #if defined(XP_WIN)
 #define snprintf _snprintf
@@ -43,39 +44,47 @@ test_void_t_cdecl()
   return;
 }
 
-#define FUNCTION_TESTS(name, type, ffiType, suffix)                            \
+// The "AndUnderscore" bit here is an unfortunate hack: the first argument to
+// DEFINE_CDECL_FUNCTIONS and DEFINE_STDCALL_FUNCTIONS, in addition to being a
+// type, may also be a *macro* on NetBSD -- #define int8_t __int8_t and so on.
+// See <http://mail-index.netbsd.org/tech-toolchain/2014/12/18/msg002479.html>.
+// And unfortunately, passing that macro as an argument to this macro causes it
+// to be expanded -- producing get___int8_t_cdecl() and so on.  Concatenating
+// int8_t with _ slightly muddies this code but inhibits expansion. See also
+// bug 1113379.
+#define FUNCTION_TESTS(nameAndUnderscore, type, ffiType, suffix)               \
 type ABI                                                                       \
-get_##name##_##suffix()                                                        \
+get_##nameAndUnderscore##suffix()                                              \
 {                                                                              \
   return ValueTraits<type>::literal();                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-set_##name##_##suffix(type x)                                                  \
+set_##nameAndUnderscore##suffix(type x)                                        \
 {                                                                              \
   return x;                                                                    \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_##name##_##suffix(type x, type y)                                          \
+sum_##nameAndUnderscore##suffix(type x, type y)                                \
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_alignb_##name##_##suffix(char a, type x, char b, type y, char c)           \
+sum_alignb_##nameAndUnderscore##suffix(char a, type x, char b, type y, char c)\
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_alignf_##name##_##suffix(float a, type x, float b, type y, float c)        \
+sum_alignf_##nameAndUnderscore##suffix(float a, type x, float b, type y, float c)\
 {                                                                              \
   return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
 type ABI                                                                       \
-sum_many_##name##_##suffix(                                                    \
+sum_many_##nameAndUnderscore##suffix(                                          \
   type a, type b, type c, type d, type e, type f, type g, type h, type i,      \
   type j, type k, type l, type m, type n, type o, type p, type q, type r)      \
 {                                                                              \
@@ -84,8 +93,9 @@ sum_many_##name##_##suffix(                                                    \
 }
 
 #define ABI /* cdecl */
-#define DEFINE_TYPE(x, y, z) FUNCTION_TESTS(x, y, z, cdecl)
-#include "typedefs.h"
+#define DEFINE_CDECL_FUNCTIONS(x, y, z) FUNCTION_TESTS(x##_, y, z, cdecl)
+CTYPES_FOR_EACH_TYPE(DEFINE_CDECL_FUNCTIONS)
+#undef DEFINE_CDECL_FUNCTIONS
 #undef ABI
 
 #if defined(_WIN32)
@@ -98,13 +108,14 @@ test_void_t_stdcall()
 }
 
 #define ABI NS_STDCALL
-#define DEFINE_TYPE(x, y, z) FUNCTION_TESTS(x, y, z, stdcall)
-#include "typedefs.h"
+#define DEFINE_STDCALL_FUNCTIONS(x, y, z) FUNCTION_TESTS(x##_, y, z, stdcall)
+CTYPES_FOR_EACH_TYPE(DEFINE_STDCALL_FUNCTIONS)
+#undef DEFINE_STDCALL_FUNCTIONS
 #undef ABI
 
 #endif /* defined(_WIN32) */
 
-#define DEFINE_TYPE(name, type, ffiType)                                       \
+#define DEFINE_CDECL_TYPE_STATS(name, type, ffiType)                           \
 struct align_##name {                                                          \
   char x;                                                                      \
   type y;                                                                      \
@@ -127,7 +138,8 @@ get_##name##_stats(size_t* align, size_t* size, size_t* nalign, size_t* nsize, \
   offsets[1] = offsetof(nested_##name, b);                                     \
   offsets[2] = offsetof(nested_##name, c);                                     \
 }
-#include "typedefs.h"
+CTYPES_FOR_EACH_TYPE(DEFINE_CDECL_TYPE_STATS)
+#undef DEFINE_CDECL_TYPE_STATS
 
 template <typename T>
 int32_t StrLen(const T* string)

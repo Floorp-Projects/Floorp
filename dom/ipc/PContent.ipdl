@@ -542,6 +542,13 @@ child:
       returns (nsCString aProfile);
 
     NuwaFreeze();
+
+    /**
+     * Notify the child to shutdown. The child will in turn call FinishShutdown
+     * and let the parent close the channel.
+     */
+    async Shutdown();
+
 parent:
     /**
      * Tell the parent process a new accessible document has been created.
@@ -876,6 +883,12 @@ parent:
      * offline-apps.allow_by_default is set to true.
      */
     SetOfflinePermission(Principal principal);
+
+    /**
+     * Notifies the parent to continue shutting down after the child performs
+     * its shutdown tasks.
+     */
+    async FinishShutdown();
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

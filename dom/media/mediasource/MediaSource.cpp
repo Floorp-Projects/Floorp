@@ -31,6 +31,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
+#include "nsServiceManagerUtils.h"
 
 struct JSContext;
 class JSObject;

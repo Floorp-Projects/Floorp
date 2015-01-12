@@ -30,7 +30,6 @@
 
 #include <arpa/inet.h>
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/mozalloc.h"
 #include "nsTArray.h"
 #include "prnetdb.h"

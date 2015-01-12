@@ -4,6 +4,7 @@
 *~
 MANIFEST.json
 \#*
+_certs
 config.json
 node_modules
 scratch

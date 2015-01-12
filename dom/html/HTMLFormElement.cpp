@@ -88,7 +88,7 @@ bool HTMLFormElement::gPasswordManagerInitialized = false;
 
 HTMLFormElement::HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mControls(new HTMLFormControlsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
+    mControls(new HTMLFormControlsCollection(this)),
     mSelectedRadioButtons(2),
     mRequiredRadioButtonCounts(2),
     mValueMissingRadioGroups(2),

@@ -5,10 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
+interface nsIGlobalObject;
 
-[uuid(729cfcad-11b4-4338-b97e-5c023ae295fa)]
+[uuid(48d7f7fd-bb85-4c04-9b8b-5cd9131acdef)]
 interface nsIDOMCrypto : nsISupports
 {
-  [notxpcom] void init(in nsIDOMWindow window);
+  [notxpcom] void init(in nsIGlobalObject parent);
 };

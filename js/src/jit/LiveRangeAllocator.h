@@ -604,7 +604,7 @@ class LiveRangeAllocator : protected RegisterAllocator
 {
   protected:
     // Computed inforamtion
-    BitSet **liveIn;
+    BitSet *liveIn;
     VirtualRegisterMap<VREG> vregs;
     mozilla::Array<LiveInterval *, AnyRegister::Total> fixedIntervals;
 

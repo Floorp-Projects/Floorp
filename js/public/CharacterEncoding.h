@@ -7,7 +7,6 @@
 #ifndef js_CharacterEncoding_h
 #define js_CharacterEncoding_h
 
-#include "mozilla/NullPtr.h"
 #include "mozilla/Range.h"
 
 #include "js/TypeDecls.h"

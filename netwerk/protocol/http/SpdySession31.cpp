@@ -379,15 +379,14 @@ SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
 
   mStreamTransactionHash.Put(aHttpTransaction, stream);
 
-  mReadyForWrite.Push(stream);
-  SetWriteCallbacks();
-
-  // Kick off the SYN transmit without waiting for the poll loop
-  // This won't work for stream id=1 because there is no segment reader
-  // yet.
-  if (mSegmentReader) {
-    uint32_t countRead;
-    ReadSegments(nullptr, kDefaultBufferSize, &countRead);
+  if (RoomForMoreConcurrent()) {
+    LOG3(("SpdySession31::AddStream %p stream %p activated immediately.",
+          this, stream));
+    ActivateStream(stream);
+  }
+  else {
+    LOG3(("SpdySession31::AddStream %p stream %p queued.", this, stream));
+    mQueuedStreams.Push(stream);
   }
 
   if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
@@ -401,14 +400,33 @@ SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
 }
 
 void
-SpdySession31::QueueStream(SpdyStream31 *stream)
+SpdySession31::ActivateStream(SpdyStream31 *stream)
 {
-  // will be removed via processpending or a shutdown path
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-  MOZ_ASSERT(!stream->CountAsActive());
+  MOZ_ASSERT(!stream->StreamID() || (stream->StreamID() & 1),
+             "Do not activate pushed streams");
 
-  LOG3(("SpdySession31::QueueStream %p stream %p queued.", this, stream));
-  mQueuedStreams.Push(stream);
+  nsAHttpTransaction *trans = stream->Transaction();
+  if (!trans || !trans->IsNullTransaction() || trans->QuerySpdyConnectTransaction()) {
+    ++mConcurrent;
+    if (mConcurrent > mConcurrentHighWater) {
+      mConcurrentHighWater = mConcurrent;
+    }
+    LOG3(("SpdySession31::AddStream %p activating stream %p Currently %d "
+          "streams in session, high water mark is %d",
+          this, stream, mConcurrent, mConcurrentHighWater));
+  }
+
+  mReadyForWrite.Push(stream);
+  SetWriteCallbacks();
+
+  // Kick off the SYN transmit without waiting for the poll loop
+  // This won't work for stream id=1 because there is no segment reader
+  // yet.
+  if (mSegmentReader) {
+    uint32_t countRead;
+    ReadSegments(nullptr, kDefaultBufferSize, &countRead);
+  }
 }
 
 void
@@ -416,15 +434,13 @@ SpdySession31::ProcessPending()
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-  SpdyStream31 *stream;
-  while (RoomForMoreConcurrent() &&
-         (stream = static_cast<SpdyStream31 *>(mQueuedStreams.PopFront()))) {
-
-    LOG3(("SpdySession31::ProcessPending %p stream %p woken from queue.",
+  while (RoomForMoreConcurrent()) {
+    SpdyStream31 *stream = static_cast<SpdyStream31 *>(mQueuedStreams.PopFront());
+    if (!stream)
+      return;
+    LOG3(("SpdySession31::ProcessPending %p stream %p activated from queue.",
           this, stream));
-    MOZ_ASSERT(!stream->CountAsActive());
-    mReadyForWrite.Push(stream);
-    SetWriteCallbacks();
+    ActivateStream(stream);
   }
 }
 
@@ -545,60 +561,18 @@ SpdySession31::ResetDownstreamState()
   mInputFrameDataStream = nullptr;
 }
 
-// return true if activated (and counted against max)
-// otherwise return false and queue
-bool
-SpdySession31::TryToActivate(SpdyStream31 *aStream)
-{
-  if (!RoomForMoreConcurrent()) {
-    LOG3(("SpdySession31::TryToActivate %p stream=%p no room for more concurrent "
-          "streams %d\n", this, aStream));
-    QueueStream(aStream);
-    return false;
-  }
-  IncrementConcurrent(aStream);
-  return true;
-}
-
-void
-SpdySession31::IncrementConcurrent(SpdyStream31 *stream)
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-  MOZ_ASSERT(!stream->StreamID() || (stream->StreamID() & 1),
-             "Do not activate pushed streams");
-
-  nsAHttpTransaction *trans = stream->Transaction();
-  if (!trans || !trans->IsNullTransaction() || trans->QuerySpdyConnectTransaction()) {
-
-    MOZ_ASSERT(!stream->CountAsActive());
-    stream->SetCountAsActive(true);
-    ++mConcurrent;
-
-    if (mConcurrent > mConcurrentHighWater) {
-      mConcurrentHighWater = mConcurrent;
-    }
-    LOG3(("SpdySession31::AddStream %p counting stream %p Currently %d "
-          "streams in session, high water mark is %d",
-          this, stream, mConcurrent, mConcurrentHighWater));
-  }
-}
-
 void
 SpdySession31::DecrementConcurrent(SpdyStream31 *aStream)
 {
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  uint32_t id = aStream->StreamID();
 
-  if (!aStream->CountAsActive()) {
-    return;
-  }
+  if (id && !(id & 0x1))
+    return; // pushed streams aren't counted in concurrent limit
 
   MOZ_ASSERT(mConcurrent);
-  aStream->SetCountAsActive(false);
   --mConcurrent;
-
   LOG3(("DecrementConcurrent %p id=0x%X concurrent=%d\n",
-        this, aStream->StreamID(), mConcurrent));
-
+        this, id, mConcurrent));
   ProcessPending();
 }
 
@@ -1440,7 +1414,6 @@ SpdySession31::HandleSettings(SpdySession31 *self)
     case SETTINGS_TYPE_MAX_CONCURRENT:
       self->mMaxConcurrent = value;
       Telemetry::Accumulate(Telemetry::SPDY_SETTINGS_MAX_STREAMS, value);
-      self->ProcessPending();
       break;
 
     case SETTINGS_TYPE_CWND:

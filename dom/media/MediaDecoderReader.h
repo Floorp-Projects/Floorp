@@ -52,7 +52,7 @@ public:
 
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
-  typedef MediaPromise<bool, nsresult> SeekPromise;
+  typedef MediaPromise<int64_t, nsresult> SeekPromise;
   typedef MediaPromise<MediaData::Type, WaitForDataRejectValue> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
@@ -300,6 +300,7 @@ protected:
   // replace this with a promise-y mechanism as we make this stuff properly
   // async.
   bool mHitAudioDecodeError;
+  bool mShutdown;
 
 private:
   // Promises used only for the base-class (sync->async adapter) implementation
@@ -314,7 +315,6 @@ private:
   // "discontinuity" in the stream. For example after a seek.
   bool mAudioDiscontinuity;
   bool mVideoDiscontinuity;
-  bool mShutdown;
 };
 
 } // namespace mozilla

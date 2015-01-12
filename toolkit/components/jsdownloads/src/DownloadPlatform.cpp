@@ -84,7 +84,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
 #ifdef MOZ_WIDGET_ANDROID
       if (addToRecentDocs) {
-        mozilla::widget::android::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
+        mozilla::widget::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
       }
 #else
       if (addToRecentDocs && !aIsPrivate) {

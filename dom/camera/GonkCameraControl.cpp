@@ -40,6 +40,7 @@
 #include "AutoRwLock.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkRecorderProfiles.h"
+#include "GrallocImages.h"
 #include "CameraCommon.h"
 #include "GonkCameraParameters.h"
 #include "DeviceStorageFileDescriptor.h"

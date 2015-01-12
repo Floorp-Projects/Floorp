@@ -19,7 +19,6 @@
 
 #include "replace_malloc.h"
 #include "FdPrintf.h"
-#include "mozilla/NullPtr.h"
 
 #include "base/lock.h"
 
