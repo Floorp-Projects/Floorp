@@ -1425,7 +1425,8 @@ nsDisplayImage::GetContainer(LayerManager* aManager,
                              nsDisplayListBuilder* aBuilder)
 {
   nsRefPtr<ImageContainer> container;
-  mImage->GetImageContainer(aManager, getter_AddRefs(container));
+  nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return container.forget();
 }
 
