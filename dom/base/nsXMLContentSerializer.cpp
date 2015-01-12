@@ -74,9 +74,9 @@ nsXMLContentSerializer::~nsXMLContentSerializer()
 NS_IMPL_ISUPPORTS(nsXMLContentSerializer, nsIContentSerializer)
 
 NS_IMETHODIMP 
-nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                             const char* aCharSet, bool aIsCopying,
-                             bool aRewriteEncodingDeclaration)
+nsXMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
+                             uint32_t aWrapColumn, const char* aCharSet,
+                             bool aIsCopying, bool aRewriteEncodingDeclaration)
 {
   mPrefixIndex = 0;
   mColPos = 0;
