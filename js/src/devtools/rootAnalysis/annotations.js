@@ -281,3 +281,8 @@ function isOverridableField(initialCSU, csu, field)
 
     return true;
 }
+
+function isGCPointer(typeName)
+{
+    return typeName.indexOf("CompartmentsIter") != -1;
+}
