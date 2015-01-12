@@ -24,7 +24,6 @@
 #endif
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/AutoRestore.h"        // for AutoRestore
-#include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/gfx/2D.h"          // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -89,16 +88,6 @@ CompositorParent::LayerTreeState::LayerTreeState()
 
 typedef map<uint64_t, CompositorParent::LayerTreeState> LayerTreeMap;
 static LayerTreeMap sIndirectLayerTrees;
-static StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
-
-static void EnsureLayerTreeMapReady()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!sIndirectLayerTreesLock) {
-    sIndirectLayerTreesLock = new Monitor("IndirectLayerTree");
-    mozilla::ClearOnShutdown(&sIndirectLayerTreesLock);
-  }
-}
 
 /**
   * A global map referencing each compositor by ID.
@@ -395,12 +384,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(SetThreadPriority));
 
   mRootLayerTreeID = AllocateLayerTreeId();
-
-  EnsureLayerTreeMapReady();
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
-  }
+  sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
 
   if (gfxPrefs::AsyncPanZoomEnabled()) {
     mApzcTreeManager = new APZCTreeManager();
@@ -449,10 +433,7 @@ CompositorParent::Destroy()
     mApzcTreeManager->ClearTree();
     mApzcTreeManager = nullptr;
   }
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    sIndirectLayerTrees.erase(mRootLayerTreeID);
-  }
+  sIndirectLayerTrees.erase(mRootLayerTreeID);
   if (mCompositorVsyncObserver) {
     mCompositorVsyncObserver->UnobserveVsync();
     mCompositorVsyncObserver = nullptr;
@@ -473,7 +454,6 @@ CompositorParent::RecvWillStop()
 
   // Ensure that the layer manager is destroyed before CompositorChild.
   if (mLayerManager) {
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
     for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
          it != sIndirectLayerTrees.end(); it++)
     {
@@ -605,10 +585,7 @@ CompositorParent::ActorDestroy(ActorDestroyReason why)
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-    { // scope lock
-      MonitorAutoLock lock(*sIndirectLayerTreesLock);
-      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
-    }
+    sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
     mCompositionManager = nullptr;
     mCompositor = nullptr;
   }
@@ -1121,7 +1098,6 @@ void
 CompositorParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
                                  APZTestData* aOutData)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
 }
 
@@ -1169,7 +1145,6 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
       mLayerManager = layerManager;
       MOZ_ASSERT(compositor);
       mCompositor = compositor;
-      MonitorAutoLock lock(*sIndirectLayerTreesLock);
       sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = layerManager;
       return;
     }
@@ -1255,7 +1230,6 @@ CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 void
 CompositorParent::NotifyChildCreated(const uint64_t& aChild)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aChild].mParent = this;
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
@@ -1264,7 +1238,6 @@ bool
 CompositorParent::RecvAdoptChild(const uint64_t& child)
 {
   NotifyChildCreated(child);
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   if (sIndirectLayerTrees[child].mLayerTree) {
     sIndirectLayerTrees[child].mLayerTree->mLayerManager = mLayerManager;
   }
@@ -1286,7 +1259,6 @@ CompositorParent::AllocateLayerTreeId()
 static void
 EraseLayerState(uint64_t aId)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees.erase(aId);
 }
 
@@ -1306,7 +1278,6 @@ UpdateControllerForLayersId(uint64_t aLayersId,
                             GeckoContentController* aController)
 {
   // Adopt ref given to us by SetControllerForLayerTree()
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aLayersId].mController =
     already_AddRefed<GeckoContentController>(aController);
 }
@@ -1316,15 +1287,12 @@ ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(uint64_t aLayersId,
                                                          GeckoContentController* aController)
     : mLayersId(aLayersId)
 {
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aLayersId].mRoot = aRoot;
   sIndirectLayerTrees[aLayersId].mController = aController;
 }
 
 ScopedLayerTreeRegistration::~ScopedLayerTreeRegistration()
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees.erase(mLayersId);
 }
 
@@ -1495,7 +1463,6 @@ CompositorParent::DidComposite()
     mPendingTransaction = 0;
   }
 
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
        it != sIndirectLayerTrees.end(); it++) {
     LayerTreeState* lts = &it->second;
@@ -1558,7 +1525,6 @@ CompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdM
 static void
 UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aId].mRoot = aRoot;
   sIndirectLayerTrees[aId].mTargetConfig = aTargetConfig;
 }
@@ -1566,13 +1532,17 @@ UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig
 /* static */ CompositorParent::LayerTreeState*
 CompositorParent::GetIndirectShadowTree(uint64_t aId)
 {
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aId);
   if (sIndirectLayerTrees.end() == cit) {
     return nullptr;
   }
   return &cit->second;
+}
+
+static void
+RemoveIndirectTree(uint64_t aId)
+{
+  sIndirectLayerTrees.erase(aId);
 }
 
 bool
@@ -1597,9 +1567,6 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
                                                            bool *aSuccess)
 {
   MOZ_ASSERT(aId != 0);
-
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
 
   CompositorParent::LayerTreeState* state = nullptr;
   LayerTreeMap::iterator itr = sIndirectLayerTrees.find(aId);
@@ -1631,7 +1598,7 @@ bool
 CrossProcessCompositorParent::DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers)
 {
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
-  EraseLayerState(slp->GetId());
+  RemoveIndirectTree(slp->GetId());
   static_cast<LayerTransactionParent*>(aLayers)->ReleaseIPDLReference();
   return true;
 }
@@ -1639,7 +1606,6 @@ CrossProcessCompositorParent::DeallocPLayerTransactionParent(PLayerTransactionPa
 bool
 CrossProcessCompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
        it != sIndirectLayerTrees.end(); it++) {
     CompositorParent::LayerTreeState* lts = &it->second;
@@ -1693,7 +1659,6 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 void
 CrossProcessCompositorParent::DidComposite(uint64_t aId)
 {
-  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree;
   if (layerTree && layerTree->GetPendingTransactionId()) {
     unused << SendDidComposite(aId, layerTree->GetPendingTransactionId());
@@ -1706,12 +1671,7 @@ CrossProcessCompositorParent::ForceComposite(LayerTransactionParent* aLayerTree)
 {
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
-  CompositorParent* parent;
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    parent = sIndirectLayerTrees[id].mParent;
-  }
-  parent->ForceComposite(aLayerTree);
+  sIndirectLayerTrees[id].mParent->ForceComposite(aLayerTree);
 }
 
 bool
@@ -1749,7 +1709,6 @@ CrossProcessCompositorParent::GetAPZTestData(const LayerTransactionParent* aLaye
 {
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   *aOutData = sIndirectLayerTrees[id].mApzTestData;
 }
 
