@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import java.util.Map;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
@@ -50,5 +52,12 @@ public class FxAccountFinishMigratingActivity extends FxAccountAbstractUpdateCre
     // the soft keyboard not being shown for the started activity. Why, Android, why?
     successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
     return successIntent;
+  }
+
+  @Override
+  protected Map<String, String> getQueryParameters() {
+    final Map<String, String> queryParameters = super.getQueryParameters();
+    queryParameters.put("migration", "sync11");
+    return queryParameters;
   }
 }
