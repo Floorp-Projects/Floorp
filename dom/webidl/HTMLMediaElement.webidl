@@ -91,7 +91,7 @@ interface HTMLMediaElement : HTMLElement {
   [Pref="media.track.enabled"]
   readonly attribute VideoTrackList videoTracks;
   [Pref="media.webvtt.enabled"]
-  readonly attribute TextTrackList textTracks;
+  readonly attribute TextTrackList? textTracks;
   [Pref="media.webvtt.enabled"]
   TextTrack addTextTrack(TextTrackKind kind,
                          optional DOMString label = "",
