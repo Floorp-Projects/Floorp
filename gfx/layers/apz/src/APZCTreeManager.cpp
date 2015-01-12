@@ -560,7 +560,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
     *aOutInputBlockId = InputBlockState::NO_BLOCK_ID;
   }
   nsEventStatus result = nsEventStatus_eIgnore;
-  Matrix4x4 transformToApzc;
   HitTestResult hitResult = NoApzcHit;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
@@ -574,9 +573,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
 
-        transformToApzc = GetScreenToApzcTransform(apzc);
-        wheelInput.TransformToLocal(transformToApzc);
-
         result = mInputQueue->ReceiveInputEvent(
           apzc,
           /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -584,7 +580,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 transformToGecko = transformToApzc * GetApzcToGeckoTransform(apzc);
+        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
+                                   * GetApzcToGeckoTransform(apzc);
         wheelInput.mOrigin =
           TransformTo<ScreenPixel>(transformToGecko, wheelInput.mOrigin);
       }
@@ -595,8 +592,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
-        transformToApzc = GetScreenToApzcTransform(apzc);
-        panInput.TransformToLocal(transformToApzc);
+
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -604,7 +600,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 transformToGecko = transformToApzc * GetApzcToGeckoTransform(apzc);
+        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
+                                   * GetApzcToGeckoTransform(apzc);
         panInput.mPanStartPoint = TransformTo<ScreenPixel>(
             transformToGecko, panInput.mPanStartPoint);
         panInput.mPanDisplacement = TransformVector<ScreenPixel>(
@@ -617,8 +614,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
-        transformToApzc = GetScreenToApzcTransform(apzc);
-        pinchInput.TransformToLocal(transformToApzc);
+
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -626,7 +622,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 outTransform = transformToApzc * GetApzcToGeckoTransform(apzc);
+        Matrix4x4 outTransform = GetScreenToApzcTransform(apzc)
+                               * GetApzcToGeckoTransform(apzc);
         pinchInput.mFocusPoint = TransformTo<ScreenPixel>(
             outTransform, pinchInput.mFocusPoint);
       }
@@ -637,8 +634,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
-        transformToApzc = GetScreenToApzcTransform(apzc);
-        tapInput.TransformToLocal(transformToApzc);
+
         result = mInputQueue->ReceiveInputEvent(
             apzc,
             /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
@@ -646,7 +642,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 outTransform = transformToApzc * GetApzcToGeckoTransform(apzc);
+        Matrix4x4 outTransform = GetScreenToApzcTransform(apzc)
+                               * GetApzcToGeckoTransform(apzc);
         tapInput.mPoint = TransformTo<ScreenPixel>(outTransform, tapInput.mPoint);
       }
       break;
@@ -728,13 +725,6 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       mApzcForInputBlock = apzc;
     }
 
-    if (mApzcForInputBlock) {
-      // Cache apz transform so it can be used for future events in this block.
-      mCachedTransformToApzcForInputBlock = GetScreenToApzcTransform(mApzcForInputBlock);
-    } else {
-      // Reset the cached apz transform
-      mCachedTransformToApzcForInputBlock = Matrix4x4();
-    }
   } else if (mApzcForInputBlock) {
     APZCTM_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
   }
@@ -766,19 +756,14 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     MOZ_ASSERT(mHitResultForInputBlock == ApzcHitRegion || mHitResultForInputBlock == ApzcContentRegion);
 
     mApzcForInputBlock->GetGuid(aOutTargetGuid);
-    // For computing the input for the APZC, used the cached transform.
-    // This ensures that the sequence of touch points an APZC sees in an
-    // input block are all in the same coordinate space.
-    Matrix4x4 transformToApzc = mCachedTransformToApzcForInputBlock;
-    aInput.TransformToLocal(transformToApzc);
     result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
         /* aTargetConfirmed = */ mHitResultForInputBlock == ApzcHitRegion,
         aInput, aOutInputBlockId);
 
-    // For computing the event to pass back to Gecko, use the up-to-date transforms.
-    // This ensures that transformToApzc and transformToGecko are in sync
-    // (note that transformToGecko isn't cached).
-    transformToApzc = GetScreenToApzcTransform(mApzcForInputBlock);
+    // For computing the event to pass back to Gecko, use up-to-date transforms
+    // (i.e. not anything cached in an input block).
+    // This ensures that transformToApzc and transformToGecko are in sync.
+    Matrix4x4 transformToApzc = GetScreenToApzcTransform(mApzcForInputBlock);
     Matrix4x4 transformToGecko = GetApzcToGeckoTransform(mApzcForInputBlock);
     Matrix4x4 outTransform = transformToApzc * transformToGecko;
     for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
