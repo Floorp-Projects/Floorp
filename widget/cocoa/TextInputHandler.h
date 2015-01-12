@@ -830,7 +830,16 @@ public:
   void SetIMEOpenState(bool aOpen);
   void SetASCIICapableOnly(bool aASCIICapableOnly);
 
+  /**
+   * True if OSX believes that our view has keyboard focus.
+   */
   bool IsFocused();
+
+  /**
+   * True if our view has keyboard focus (and our window is key), or if
+   * it would have keyboard focus if our window were key.
+   */
+  bool IsOrWouldBeFocused();
 
   static CFArrayRef CreateAllIMEModeList();
   static void DebugPrintAllIMEModes();
