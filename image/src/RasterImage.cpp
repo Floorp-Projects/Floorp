@@ -1175,12 +1175,6 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
   return rv;
 }
 
-/* static */ already_AddRefed<nsIEventTarget>
-RasterImage::GetEventTarget()
-{
-  return DecodePool::Singleton()->GetEventTarget();
-}
-
 nsresult
 RasterImage::SetSourceSizeHint(uint32_t aSizeHint)
 {
