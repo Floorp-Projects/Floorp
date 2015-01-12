@@ -67,6 +67,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mForceBreakFrameOffset(-1),
     mMinLineBSize(0),
     mTextIndent(0),
+    mRubyReflowState(nullptr),
     mFirstLetterStyleOK(false),
     mIsTopOfPage(false),
     mImpactedByFloats(false),
@@ -252,21 +253,6 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   pfd->mAscent = 0;
   pfd->mSpan = psd;
   psd->mFrame = pfd;
-  nsIFrame* frame = mBlockReflowState->frame;
-  if (frame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
-    // Ruby text container won't be reflowed via ReflowFrame, hence the
-    // relative positioning information should be recorded here.
-    MOZ_ASSERT(mBaseLineLayout != this);
-    pfd->mRelativePos =
-      mBlockReflowState->mStyleDisplay->IsRelativelyPositionedStyle();
-    if (pfd->mRelativePos) {
-      MOZ_ASSERT(
-        mBlockReflowState->GetWritingMode() == frame->GetWritingMode(),
-        "mBlockReflowState->frame == frame, "
-        "hence they should have identical writing mode");
-      pfd->mOffsets = mBlockReflowState->ComputedLogicalOffsets();
-    }
-  }
 }
 
 void
@@ -689,7 +675,6 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   WritingMode frameWM = aFrame->GetWritingMode();
   WritingMode lineWM = mRootSpan->mWritingMode;
   pfd->mBounds = LogicalRect(lineWM);
-  pfd->mOverflowAreas.Clear();
   pfd->mMargin = LogicalMargin(lineWM);
   pfd->mBorderPadding = LogicalMargin(lineWM);
   pfd->mOffsets = LogicalMargin(frameWM);
@@ -885,6 +870,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                               aFrame, availSize);
     nsHTMLReflowState& reflowState = *reflowStateHolder;
     reflowState.mLineLayout = this;
+    if (mRubyReflowState) {
+      reflowState.mRubyReflowState = mRubyReflowState;
+      mRubyReflowState = nullptr;
+    }
     reflowState.mFlags.mIsTopOfPage = mIsTopOfPage;
     if (reflowState.ComputedISize() == NS_UNCONSTRAINEDSIZE) {
       reflowState.AvailableISize() = availableSpaceOnLine;
@@ -3032,45 +3021,6 @@ nsLineLayout::RelativePositionFrames(nsOverflowAreas& aOverflowAreas)
   RelativePositionFrames(mRootSpan, aOverflowAreas);
 }
 
-// This method applies any relative positioning to the given frame.
-void
-nsLineLayout::ApplyRelativePositioning(PerFrameData* aPFD)
-{
-  if (!aPFD->mRelativePos) {
-    return;
-  }
-
-  nsIFrame* frame = aPFD->mFrame;
-  WritingMode frameWM = frame->GetWritingMode();
-  LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
-  // right and bottom are handled by
-  // nsHTMLReflowState::ComputeRelativeOffsets
-  nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
-                                              aPFD->mOffsets, &origin,
-                                              mContainerWidth);
-  frame->SetPosition(frameWM, origin, mContainerWidth);
-}
-
-// This method do relative positioning for ruby annotations.
-void
-nsLineLayout::RelativePositionAnnotations(PerSpanData* aRubyPSD,
-                                          nsOverflowAreas& aOverflowAreas)
-{
-  MOZ_ASSERT(aRubyPSD->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
-  for (PerFrameData* pfd = aRubyPSD->mFirstFrame; pfd; pfd = pfd->mNext) {
-    MOZ_ASSERT(pfd->mFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
-    for (PerFrameData* rtc = pfd->mNextAnnotation;
-         rtc; rtc = rtc->mNextAnnotation) {
-      nsIFrame* rtcFrame = rtc->mFrame;
-      MOZ_ASSERT(rtcFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
-      ApplyRelativePositioning(rtc);
-      nsOverflowAreas rtcOverflowAreas;
-      RelativePositionFrames(rtc->mSpan, rtcOverflowAreas);
-      aOverflowAreas.UnionWith(rtcOverflowAreas + rtcFrame->GetPosition());
-    }
-  }
-}
-
 void
 nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas)
 {
@@ -3109,7 +3059,16 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
     nsIFrame* frame = pfd->mFrame;
 
     // Adjust the origin of the frame
-    ApplyRelativePositioning(pfd);
+    if (pfd->mRelativePos) {
+      WritingMode frameWM = frame->GetWritingMode();
+      LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
+      // right and bottom are handled by
+      // nsHTMLReflowState::ComputeRelativeOffsets
+      nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
+                                                  pfd->mOffsets, &origin,
+                                                  mContainerWidth);
+      frame->SetPosition(frameWM, origin, mContainerWidth);
+    }
 
     // We must position the view correctly before positioning its
     // descendants so that widgets are positioned properly (since only
@@ -3163,11 +3122,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
                                                  NS_FRAME_NO_MOVE_VIEW);
 
     overflowAreas.UnionWith(r + frame->GetPosition());
-  }
-
-  // Also compute relative position in the annotations.
-  if (psd->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame) {
-    RelativePositionAnnotations(psd, overflowAreas);
   }
 
   // If we just computed a spans combined area, we need to update its
