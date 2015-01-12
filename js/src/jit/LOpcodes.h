@@ -17,6 +17,7 @@
     _(Pointer)                      \
     _(Double)                       \
     _(Float32)                      \
+    _(SimdBox)                      \
     _(SimdSplatX4)                  \
     _(Int32x4)                      \
     _(Float32x4)                    \

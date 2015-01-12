@@ -151,9 +151,36 @@
   text-align: start;
 }
 
-.requests-menu-domain {
+.requests-menu-security-and-domain {
   width: 14vw;
   min-width: 10em;
+}
+
+.requests-security-state-icon {
+  -moz-margin-end: 4px;
+  -moz-image-region:rect(0px, 16px, 16px, 0px);
+}
+
+.requests-security-state-icon:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.requests-security-state-icon:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+.security-state-insecure {
+  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
+}
+
+.security-state-secure {
+  cursor: pointer;
+  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
+}
+
+.security-state-broken {
+  cursor: pointer;
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
 }
 
 .requests-menu-type {
@@ -533,6 +560,19 @@ label.requests-menu-status-code {
   transition: transform 0.2s ease-out;
 }
 
+/* Security tabpanel */
+.security-info-section {
+  -moz-padding-start: 1em;
+}
+
+#security-tabpanel {
+  overflow: auto;
+}
+
+#security-error-message {
+  white-space: pre-wrap;
+}
+
 /* Custom request form */
 
 #custom-pane {
@@ -778,7 +818,7 @@ label.requests-menu-status-code {
     width: 30vw;
   }
 
-  .requests-menu-domain {
+  .requests-menu-security-and-domain {
     width: 30vw;
   }
 

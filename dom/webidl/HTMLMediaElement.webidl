@@ -91,7 +91,7 @@ interface HTMLMediaElement : HTMLElement {
   [Pref="media.track.enabled"]
   readonly attribute VideoTrackList videoTracks;
   [Pref="media.webvtt.enabled"]
-  readonly attribute TextTrackList textTracks;
+  readonly attribute TextTrackList? textTracks;
   [Pref="media.webvtt.enabled"]
   TextTrack addTextTrack(TextTrackKind kind,
                          optional DOMString label = "",
@@ -151,7 +151,7 @@ partial interface HTMLMediaElement {
   readonly attribute MediaKeys? mediaKeys;
 
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
-  [Pref="media.eme.enabled", Throws, NewObject]
+  [Pref="media.eme.enabled", NewObject]
   Promise<void> setMediaKeys(MediaKeys? mediaKeys);
 
   [Pref="media.eme.enabled"]

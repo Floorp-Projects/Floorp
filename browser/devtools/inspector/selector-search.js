@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
+
 const promise = require("resource://gre/modules/Promise.jsm").Promise;
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
@@ -265,7 +267,7 @@ SelectorSearch.prototype = {
       }
       this.searchBox.classList.add("devtools-no-search-result");
       return this.showSuggestions();
-    }).then(() => this.emit("processing-done"));
+    }).then(() => this.emit("processing-done"), Cu.reportError);
   },
 
   /**

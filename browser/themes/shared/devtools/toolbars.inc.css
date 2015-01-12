@@ -244,6 +244,67 @@
   -moz-margin-start: 1px;
 }
 
+/* HTML buttons, similar to toolbar buttons, but work in HTML documents */
+
+.devtools-button {
+  border: 0 solid var(--theme-splitter-color);
+  background: var(--theme-toolbar-background);
+  margin: 0;
+  padding: 0;
+  min-width: 32px;
+  min-height: 18px;
+  /* The icon is absolutely positioned in the button using ::before */
+  position: relative;
+}
+
+.devtools-button[standalone] {
+  min-height: 32px;
+  border-width: 1px;
+}
+
+/* Button States */
+.theme-dark .devtools-button:not([disabled]):hover {
+  background: rgba(0, 0, 0, .3); /* Splitters */
+}
+.theme-light .devtools-button:not([disabled]):hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .devtools-button:not([disabled]):hover:active {
+  background: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-button:not([disabled]):hover:active {
+  background: rgba(170, 170, 170, .4); /* Splitters */
+}
+
+/* Menu type buttons and checked states */
+.theme-dark .devtools-button[checked] {
+  background: rgba(29, 79, 115, .7) !important; /* Select highlight blue */
+  color: var(--theme-selection-color);
+}
+
+.theme-light .devtools-button[checked] {
+  background: rgba(76, 158, 217, .2) !important; /* Select highlight blue */
+}
+
+.devtools-button::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -8px;
+  background-repeat: no-repeat;
+}
+
+@media (min-resolution: 2dppx) {
+  .devtools-button::before {
+    background-size: 32px;
+  }
+}
+
 /* Text input */
 
 .devtools-textinput,
@@ -822,7 +883,8 @@
 .theme-light #canvas-debugging-empty-notice-button .button-icon,
 .theme-light #requests-menu-perf-notice-button .button-icon,
 .theme-light #requests-menu-network-summary-button .button-icon,
-.theme-light .event-tooltip-debugger-icon {
+.theme-light .event-tooltip-debugger-icon,
+.theme-light .devtools-button::before {
   filter: url(filters.svg#invert);
 }
 

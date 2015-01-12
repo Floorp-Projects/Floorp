@@ -24,7 +24,8 @@
 
 import sys, os
 from optparse import OptionParser
-from subprocess import PIPE, Popen, check_call
+from subprocess import check_call, check_output
+import redo
 
 def RequireEnvironmentVariable(v):
     """Return the value of the environment variable named v, or print
@@ -82,12 +83,12 @@ def DoSSHCommand(command, user, host, port=None, ssh_key=None):
     cmdline = ["ssh"]
     AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key)
     cmdline.extend(["%s@%s" % (user, host), command])
-    cmd = Popen(cmdline, stdout=PIPE)
-    retcode = cmd.wait()
-    if retcode != 0:
-        raise Exception("Command %s returned non-zero exit code: %i" % \
-          (cmdline, retcode))
-    return cmd.stdout.read().strip()
+
+    with redo.retrying(check_output, sleeptime=10) as f:
+        output = f(cmdline).strip()
+        return output
+
+    raise Exception("Command %s returned non-zero exit code" % cmdline)
 
 def DoSCPFile(file, remote_path, user, host, port=None, ssh_key=None):
     """Upload file to user@host:remote_path using scp. Optionally use
@@ -96,7 +97,11 @@ def DoSCPFile(file, remote_path, user, host, port=None, ssh_key=None):
     AppendOptionalArgsToSSHCommandline(cmdline, port, ssh_key)
     cmdline.extend([WindowsPathToMsysPath(file),
                     "%s@%s:%s" % (user, host, remote_path)])
-    check_call(cmdline)
+    with redo.retrying(check_call, sleeptime=10) as f:
+        f(cmdline)
+        return
+
+    raise Exception("Command %s returned non-zero exit code" % cmdline)
 
 def GetRemotePath(path, local_file, base_path):
     """Given a remote path to upload to, a full path to a local file, and an

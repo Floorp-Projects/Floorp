@@ -124,9 +124,9 @@ def install(src, dest):
 
         return install_dir
 
-    except Exception:
+    except Exception, ex:
         cls, exc, trbk = sys.exc_info()
-        error = InstallError('Failed to install "%s"' % src)
+        error = InstallError('Failed to install "%s (%s)"' % src, str(ex))
         raise InstallError, error, trbk
 
     finally:
@@ -213,9 +213,9 @@ def uninstall(install_folder):
                     if time.time() > end_time:
                         raise Exception('Failure removing uninstall folder.')
 
-            except Exception:
+            except Exception, ex:
                 cls, exc, trbk = sys.exc_info()
-                error = UninstallError('Failed to uninstall %s' % install_folder)
+                error = UninstallError('Failed to uninstall %s (%s)' % install_folder, str(ex))
                 raise UninstallError, error, trbk
 
             finally:

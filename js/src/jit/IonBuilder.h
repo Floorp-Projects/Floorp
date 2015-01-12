@@ -785,6 +785,7 @@ class IonBuilder
     bool elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefinition* id,
                                                      ScalarTypeDescr::Type *arrayType);
     InliningStatus inlineConstructTypedObject(CallInfo &callInfo, TypeDescr *target);
+    InliningStatus inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *target);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
