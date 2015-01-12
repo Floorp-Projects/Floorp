@@ -17,7 +17,7 @@ interface nsILoadContext;
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
  */
-[scriptable, uuid(35c1f231-582b-4315-a26c-a1227e3539b4)]
+[scriptable, uuid(cd9a4e8d-5d59-4917-8adc-894b90fd6319)]
 interface nsIWebBrowserPersist : nsICancelable
 {
   /** No special persistence behaviour. */
