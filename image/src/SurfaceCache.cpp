@@ -824,16 +824,6 @@ SurfaceCache::CanHold(const IntSize& aSize)
   return sInstance->CanHold(cost);
 }
 
-/* static */ bool
-SurfaceCache::CanHold(size_t aSize)
-{
-  if (!sInstance) {
-    return false;
-  }
-
-  return sInstance->CanHold(aSize);
-}
-
 /* static */ void
 SurfaceCache::LockImage(Image* aImageKey)
 {
