@@ -10,15 +10,9 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let unsafeAboutModule = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  newChannel: function (aURI) {
-    let chan = Services.io.newChannel2("about:blank",
-                                       null,
-                                       null,
-                                       null,      // aLoadingNode
-                                       Services.scriptSecurityManager.getSystemPrincipal(),
-                                       null,      // aTriggeringPrincipal
-                                       Ci.nsILoadInfo.SEC_NORMAL,
-                                       Ci.nsIContentPolicy.TYPE_OTHER);
+  newChannel: function (aURI, aLoadInfo) {
+    var uri = Services.io.newURI("about:blank", null, null);
+    let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },
