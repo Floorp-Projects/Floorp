@@ -9115,7 +9115,7 @@ GetTemplateObjectForClassHook(JSContext *cx, JSNative hook, CallArgs &args,
         return true;
     }
 
-    if (hook == SimdTypeDescr::call) {
+    if (hook == SimdTypeDescr::call && JitSupportsSimd()) {
         Rooted<SimdTypeDescr *> descr(cx, &args.callee().as<SimdTypeDescr>());
         JSObject *obj = TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap);
         if (!obj)
