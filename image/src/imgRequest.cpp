@@ -9,7 +9,6 @@
 
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
-#include "DecodePool.h"
 #include "ProgressTracker.h"
 #include "ImageFactory.h"
 #include "Image.h"
@@ -695,13 +694,14 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIThreadRetargetableRequest> retargetable =
     do_QueryInterface(aRequest);
-  if (httpChannel && retargetable) {
+  if (httpChannel && retargetable &&
+      ImageFactory::CanRetargetOnDataAvailable(mURI, mIsMultiPartChannel)) {
     nsAutoCString mimeType;
     nsresult rv = httpChannel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
-      // Retarget OnDataAvailable to the DecodePool's IO thread.
-      nsCOMPtr<nsIEventTarget> target =
-        DecodePool::Singleton()->GetIOEventTarget();
+      // Image object not created until OnDataAvailable, so forward to static
+      // DecodePool directly.
+      nsCOMPtr<nsIEventTarget> target = RasterImage::GetEventTarget();
       rv = retargetable->RetargetDeliveryTo(target);
     }
     PR_LOG(GetImgLog(), PR_LOG_WARNING,
