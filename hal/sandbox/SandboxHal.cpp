@@ -570,7 +570,7 @@ public:
     return true;
   }
 
-  void Notify(const NetworkInformation& aNetworkInfo) MOZ_OVERRIDE {
+  void Notify(const NetworkInformation& aNetworkInfo) {
     unused << SendNotifyNetworkChange(aNetworkInfo);
   }
 
@@ -612,7 +612,7 @@ public:
     return true;
   }
 
-  void Notify(const ScreenConfiguration& aScreenConfiguration) MOZ_OVERRIDE {
+  void Notify(const ScreenConfiguration& aScreenConfiguration) {
     unused << SendNotifyScreenConfigurationChange(aScreenConfiguration);
   }
 
@@ -778,7 +778,7 @@ public:
     return true;
   }
   
-  void Notify(const SensorData& aSensorData) MOZ_OVERRIDE {
+  void Notify(const SensorData& aSensorData) {
     unused << SendNotifySensorChange(aSensorData);
   }
 
@@ -817,7 +817,7 @@ public:
     return true;
   }
   
-  void Notify(const WakeLockInformation& aWakeLockInfo) MOZ_OVERRIDE
+  void Notify(const WakeLockInformation& aWakeLockInfo)
   {
     unused << SendNotifyWakeLockChange(aWakeLockInfo);
   }
@@ -837,7 +837,7 @@ public:
     return true;
   }
 
-  void Notify(const SwitchEvent& aSwitchEvent) MOZ_OVERRIDE
+  void Notify(const SwitchEvent& aSwitchEvent)
   {
     unused << SendNotifySwitchChange(aSwitchEvent);
   }
@@ -850,12 +850,12 @@ public:
     return true;
   }
 
-  void Notify(const int64_t& aClockDeltaMS) MOZ_OVERRIDE
+  void Notify(const int64_t& aClockDeltaMS)
   {
     unused << SendNotifySystemClockChange(aClockDeltaMS);
   }
 
-  void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) MOZ_OVERRIDE
+  void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
   {
     unused << SendNotifySystemTimezoneChange(aSystemTimezoneChangeInfo);
   }
@@ -938,14 +938,14 @@ public:
   }
 
   virtual bool
-  RecvNotifySystemClockChange(const int64_t& aClockDeltaMS) MOZ_OVERRIDE {
+  RecvNotifySystemClockChange(const int64_t& aClockDeltaMS) {
     hal::NotifySystemClockChange(aClockDeltaMS);
     return true;
   }
 
   virtual bool
   RecvNotifySystemTimezoneChange(
-    const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) MOZ_OVERRIDE {
+    const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) {
     hal::NotifySystemTimezoneChange(aSystemTimezoneChangeInfo);
     return true;
   }
