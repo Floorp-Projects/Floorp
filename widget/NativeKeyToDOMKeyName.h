@@ -1289,6 +1289,13 @@ KEY_MAP_GTK     (VideoModeNext, GDK_Next_VMode)
 KEY_MAP_WIN     (ZoomToggle, VK_ZOOM)
 KEY_MAP_QT      (ZoomToggle, Qt::Key_Zoom)
 
+/******************************************************************************
+ * Keys not defined by any standards
+ ******************************************************************************/
+
+// HomeScreen
+KEY_MAP_ANDROID (HomeScreen, AKEYCODE_HOME)
+
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN
 #undef KEY_MAP_WIN_KOR

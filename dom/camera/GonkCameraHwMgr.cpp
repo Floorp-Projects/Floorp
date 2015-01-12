@@ -183,7 +183,13 @@ GonkCameraHardware::Init()
 
 #if defined(MOZ_WIDGET_GONK)
 
-#if ANDROID_VERSION >= 19
+#if ANDROID_VERSION >= 21
+  sp<IGraphicBufferProducer> producer;
+  sp<IGonkGraphicBufferConsumer> consumer;
+  GonkBufferQueue::createBufferQueue(&producer, &consumer);
+  mNativeWindow = new GonkNativeWindow(consumer, GonkCameraHardware::MIN_UNDEQUEUED_BUFFERS);
+  mCamera->setPreviewTarget(producer);
+#elif ANDROID_VERSION >= 19
   mNativeWindow = new GonkNativeWindow(GonkCameraHardware::MIN_UNDEQUEUED_BUFFERS);
   sp<GonkBufferQueue> bq = mNativeWindow->getBufferQueue();
   bq->setSynchronousMode(false);

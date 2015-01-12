@@ -1154,7 +1154,11 @@ status_t GonkRecorder::setupMediaSource(
             return err;
         }
         *mediaSource = cameraSource;
+#if ANDROID_VERSION >= 21
+    } else if (mVideoSource == VIDEO_SOURCE_SURFACE) {
+#else
     } else if (mVideoSource == VIDEO_SOURCE_GRALLOC_BUFFER) {
+#endif
         return BAD_VALUE;
     } else {
         return INVALID_OPERATION;

@@ -2195,7 +2195,11 @@ TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
                                           ScrollableLayerGuid* aOutTargetGuid,
                                           uint64_t* aOutInputBlockId)
 {
-  if (aEvent.mClass == eWheelEventClass) {
+  if (aEvent.mClass == eWheelEventClass
+#ifdef MOZ_WIDGET_GONK
+      || aEvent.mClass == eTouchEventClass
+#endif
+     ) {
     // Wheel events must be sent to APZ directly from the widget. New APZ-
     // aware events should follow suit and move there as well. However, we
     // do need to inform the child process of the correct target and block
