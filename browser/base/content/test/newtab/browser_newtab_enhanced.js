@@ -37,8 +37,8 @@ function runTests() {
   yield setLinks("-1");
 
   // Test with enhanced = false
-  NewTabUtils.allPages.enhanced = false;
   yield addNewTabPageTab();
+  yield customizeNewTabPage("classic");
   let {type, enhanced, title} = getData(0);
   is(type, "organic", "directory link is organic");
   isnot(enhanced, "", "directory link has enhanced image");
@@ -47,8 +47,8 @@ function runTests() {
   is(getData(1), null, "history link pushed out by directory link");
 
   // Test with enhanced = true
-  NewTabUtils.allPages.enhanced = true;
   yield addNewTabPageTab();
+  yield customizeNewTabPage("enhanced");
   ({type, enhanced, title} = getData(0));
   is(type, "organic", "directory link is still organic");
   isnot(enhanced, "", "directory link still has enhanced image");
@@ -67,12 +67,15 @@ function runTests() {
   is(getData(1), null, "directory link pushed out by pinned history link");
 
   // Test pinned link with enhanced = false
-  NewTabUtils.allPages.enhanced = false;
   yield addNewTabPageTab();
+  yield customizeNewTabPage("classic");
   ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
   is(title, "site#-1");
 
   is(getData(1), null, "directory link still pushed out by pinned history link");
+
+  ok(getContentDocument().getElementById("newtab-intro-what"),
+     "'What is this page?' link exists");
 }
