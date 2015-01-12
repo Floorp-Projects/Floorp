@@ -638,12 +638,12 @@ nsICODecoder::NeedsNewFrame() const
 }
 
 nsresult
-nsICODecoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
+nsICODecoder::AllocateFrame()
 {
   nsresult rv;
 
   if (mContainedDecoder) {
-    rv = mContainedDecoder->AllocateFrame(aTargetSize);
+    rv = mContainedDecoder->AllocateFrame();
     mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
     mProgress |= mContainedDecoder->TakeProgress();
     mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
@@ -652,7 +652,7 @@ nsICODecoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
 
   // Grab a strong ref that we'll later hand over to the contained decoder. This
   // lets us avoid creating a RawAccessFrameRef off-main-thread.
-  rv = Decoder::AllocateFrame(aTargetSize);
+  rv = Decoder::AllocateFrame();
   mRefForContainedDecoder = GetCurrentFrameRef();
   return rv;
 }
