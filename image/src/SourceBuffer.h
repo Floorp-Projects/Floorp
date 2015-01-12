@@ -268,32 +268,40 @@ private:
     explicit Chunk(size_t aCapacity)
       : mCapacity(aCapacity)
       , mLength(0)
-      , mData(MakeUnique<char[]>(mCapacity))
     {
       MOZ_ASSERT(aCapacity > 0, "Creating zero-capacity chunk");
+      mData = static_cast<char*>(nsTArrayFallibleAllocator::Malloc(aCapacity));
     }
+
+    ~Chunk()
+    {
+      nsTArrayFallibleAllocator::Free(mData);
+    }
+    
 
     Chunk(Chunk&& aOther)
       : mCapacity(aOther.mCapacity)
       , mLength(aOther.mLength)
-      , mData(Move(aOther.mData))
+      , mData(aOther.mData)
     {
       aOther.mCapacity = aOther.mLength = 0;
+      aOther.mData = nullptr;
     }
 
     Chunk& operator=(Chunk&& aOther)
     {
       mCapacity = aOther.mCapacity;
       mLength = aOther.mLength;
-      mData = Move(aOther.mData);
+      mData = aOther.mData;
       aOther.mCapacity = aOther.mLength = 0;
+      aOther.mData = nullptr;
       return *this;
     }
 
     bool AllocationFailed() const { return !mData; }
     size_t Capacity() const { return mCapacity; }
     size_t Length() const { return mLength; }
-    char* Data() const { return mData.get(); }
+    char* Data() const { return mData; }
 
     void AddLength(size_t aAdditionalLength)
     {
@@ -307,7 +315,7 @@ private:
 
     size_t mCapacity;
     size_t mLength;
-    UniquePtr<char[]> mData;
+    char* mData;
   };
 
   nsresult AppendChunk(Maybe<Chunk>&& aChunk);

@@ -107,9 +107,10 @@ SourceBuffer::FibonacciCapacityWithMinimum(size_t aMinCapacity)
 {
   mMutex.AssertCurrentThreadOwns();
 
-  // We grow the source buffer using a Fibonacci growth rate.
-
   size_t length = mChunks.Length();
+
+#if defined(MOZILLA_IMAGELIB_SOURCEBUFFER_USE_FIBONACCI)
+  // We grow the source buffer using a Fibonacci growth rate.
 
   if (length == 0) {
     return aMinCapacity;
@@ -121,6 +122,15 @@ SourceBuffer::FibonacciCapacityWithMinimum(size_t aMinCapacity)
 
   return max(mChunks[length - 1].Capacity() + mChunks[length - 2].Capacity(),
              aMinCapacity);
+#else
+  // We grow the source buffer using a slow exponential rate - 1.25x.
+
+  if (length == 0) {
+    return aMinCapacity;
+  }
+
+  return max(size_t(mChunks[length - 1].Capacity() * 1.25), aMinCapacity);
+#endif
 }
 
 void
@@ -310,14 +320,7 @@ SourceBuffer::SizeOfIncludingThisWithComputedFallback(MallocSizeOf
   n += mChunks.SizeOfExcludingThis(aMallocSizeOf);
 
   for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
-    size_t chunkSize = aMallocSizeOf(mChunks[i].Data());
-
-    if (chunkSize == 0) {
-      // We're on a platform where moz_malloc_size_of always returns 0.
-      chunkSize = mChunks[i].Capacity();
-    }
-
-    n += chunkSize;
+    n += mChunks[i].Capacity();
   }
 
   return n;
