@@ -7,6 +7,7 @@ dictionary DeviceStorageEnumerationParameters {
   Date since;
 };
 
+[Pref="device.storage.enabled"]
 interface DeviceStorage : EventTarget {
   attribute EventHandler onchange;
 
