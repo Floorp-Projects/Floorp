@@ -3799,8 +3799,11 @@ function toJavaScriptConsole()
 
 function BrowserDownloadsUI()
 {
-  Cc["@mozilla.org/download-manager-ui;1"].
-  getService(Ci.nsIDownloadManagerUI).show(window);
+  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+    openUILinkIn("about:downloads", "tab");
+  } else {
+    PlacesCommandHook.showPlacesOrganizer("Downloads");
+  }
 }
 
 function toOpenWindowByType(inType, uri, features)
