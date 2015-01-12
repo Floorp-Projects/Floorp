@@ -36,13 +36,18 @@ hnjFopen(const char* aURISpec, const char* aMode)
         return nullptr;
     }
 
-    nsCOMPtr<nsIInputStream> instream;
-    rv = NS_OpenURI(getter_AddRefs(instream),
-                    uri,
-                    nsContentUtils::GetSystemPrincipal(),
-                    nsILoadInfo::SEC_NORMAL,
-                    nsIContentPolicy::TYPE_OTHER);
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER);
+    if (NS_FAILED(rv)) {
+        return nullptr;
+    }
 
+    nsCOMPtr<nsIInputStream> instream;
+    rv = channel->Open(getter_AddRefs(instream));
     if (NS_FAILED(rv)) {
         return nullptr;
     }
