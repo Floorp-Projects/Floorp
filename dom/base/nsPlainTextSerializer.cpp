@@ -119,10 +119,12 @@ NS_IMPL_ISUPPORTS(nsPlainTextSerializer,
 
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                            const char* aCharSet, bool aIsCopying,
-                            bool aIsWholeDocument)
+nsPlainTextSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
+                            uint32_t aWrapColumn, const char* aCharSet,
+                            bool aIsCopying, bool aIsWholeDocument)
 {
+  MOZ_ASSERT(aDocument);
+
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
   if (aFlags & nsIDocumentEncoder::OutputFormatFlowed) {
@@ -186,6 +188,10 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
 
   // XXX We should let the caller decide whether to do this or not
   mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
+
+  // Flush the styles on the document to ensure that we read the correct style
+  // information when determining whether an element is preformatted.
+  aDocument->FlushPendingNotifications(Flush_Style);
 
   return NS_OK;
 }

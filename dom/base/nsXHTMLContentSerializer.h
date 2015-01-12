@@ -26,9 +26,9 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   nsXHTMLContentSerializer();
   virtual ~nsXHTMLContentSerializer();
 
-  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
-                  const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
+  NS_IMETHOD Init(nsIDocument* aDocument, uint32_t flags,
+                  uint32_t aWrapColumn, const char* aCharSet,
+                  bool aIsCopying, bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
 
   NS_IMETHOD AppendText(nsIContent* aText,
                         int32_t aStartOffset,
