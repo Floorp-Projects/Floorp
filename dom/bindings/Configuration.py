@@ -285,6 +285,18 @@ class DescriptorProvider:
         """
         return self.config.getDescriptor(interfaceName, self.workers)
 
+def methodReturnsJSObject(method):
+    assert method.isMethod()
+    if method.returnsPromise():
+        return True
+
+    for signature in method.signatures():
+        returnType = signature[0]
+        if returnType.isObject() or returnType.isSpiderMonkeyInterface():
+            return True
+
+    return False
+
 class Descriptor(DescriptorProvider):
     """
     Represents a single descriptor for an interface. See Bindings.conf.
@@ -622,6 +634,11 @@ class Descriptor(DescriptorProvider):
         name = member.identifier.name
         throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
         if member.isMethod():
+            # JSObject-returning [NewObject] methods must be fallible,
+            # since they have to (fallibly) allocate the new JSObject.
+            if (member.getExtendedAttribute("NewObject") and
+                methodReturnsJSObject(member)):
+                throws = True
             attrs = self.extendedAttributes['all'].get(name, [])
             maybeAppendInfallibleToAttrs(attrs, throws)
             return attrs
