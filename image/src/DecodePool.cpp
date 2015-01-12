@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
+#include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
 
@@ -180,7 +181,7 @@ DecodePool::Singleton()
 }
 
 DecodePool::DecodePool()
-  : mThreadPoolMutex("Thread Pool")
+  : mMutex("image::DecodePool")
 {
   mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
   MOZ_RELEASE_ASSERT(mThreadPool,
@@ -204,6 +205,11 @@ DecodePool::DecodePool()
   }
 #endif
 
+  // Initialize the I/O thread.
+  nsresult rv = NS_NewNamedThread("ImageIO", getter_AddRefs(mIOThread));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv) && mIOThread,
+                     "Should successfully create image I/O thread");
+
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {
     obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
@@ -221,15 +227,20 @@ DecodePool::Observe(nsISupports*, const char* aTopic, const char16_t*)
   MOZ_ASSERT(strcmp(aTopic, "xpcom-shutdown-threads") == 0, "Unexpected topic");
 
   nsCOMPtr<nsIThreadPool> threadPool;
+  nsCOMPtr<nsIThread> ioThread;
 
   {
-    MutexAutoLock threadPoolLock(mThreadPoolMutex);
-    threadPool = mThreadPool;
-    mThreadPool = nullptr;
+    MutexAutoLock lock(mMutex);
+    threadPool.swap(mThreadPool);
+    ioThread.swap(mIOThread);
   }
 
   if (threadPool) {
     threadPool->Shutdown();
+  }
+
+  if (ioThread) {
+    ioThread->Shutdown();
   }
 
   return NS_OK;
@@ -244,7 +255,7 @@ DecodePool::AsyncDecode(Decoder* aDecoder)
 
   // Dispatch to the thread pool if it exists. If it doesn't, we're currently
   // shutting down, so it's OK to just drop the job on the floor.
-  MutexAutoLock threadPoolLock(mThreadPoolMutex);
+  MutexAutoLock threadPoolLock(mMutex);
   if (mThreadPool) {
     mThreadPool->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
   }
@@ -274,8 +285,16 @@ DecodePool::SyncDecodeIfPossible(Decoder* aDecoder)
 already_AddRefed<nsIEventTarget>
 DecodePool::GetEventTarget()
 {
-  MutexAutoLock threadPoolLock(mThreadPoolMutex);
+  MutexAutoLock threadPoolLock(mMutex);
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mThreadPool);
+  return target.forget();
+}
+
+already_AddRefed<nsIEventTarget>
+DecodePool::GetIOEventTarget()
+{
+  MutexAutoLock threadPoolLock(mMutex);
+  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mIOThread);
   return target.forget();
 }
 
