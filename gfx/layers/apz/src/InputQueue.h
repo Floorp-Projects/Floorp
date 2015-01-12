@@ -98,7 +98,7 @@ private:
 
   TouchBlockState* StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
                                       bool aTargetConfirmed,
-                                      bool aCopyAllowedTouchBehaviorFromCurrent);
+                                      bool aCopyPropertiesFromCurrent);
 
   /**
    * If animations are present for the current pending input block, cancel
@@ -127,11 +127,11 @@ private:
   void SweepDepletedBlocks();
 
   /**
-   * Processes the current block if it's ready for handling.
+   * Processes the current block if it's ready for handling, using the block's
+   * target APZC.
    */
-  bool MaybeHandleCurrentBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
-                                      CancelableBlockState* block,
-                                      const InputData& aEvent);
+  bool MaybeHandleCurrentBlock(CancelableBlockState* block,
+                               const InputData& aEvent);
 
   void ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
   void MainThreadTimeout(const uint64_t& aInputBlockId);
