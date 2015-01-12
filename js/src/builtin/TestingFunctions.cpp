@@ -993,49 +993,17 @@ static const JSClass FinalizeCounterClass = {
     finalize_counter_finalize
 };
 
-static const JSClass NurseryFinalizeCounterClass = {
-    "NurseryFinalizeCounter", JSCLASS_IS_ANONYMOUS | JSCLASS_FINALIZE_FROM_NURSERY,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
-    finalize_counter_finalize
-};
-
 static bool
 MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool isNursery = false;
-    if (args.length() > 0) {
-        if (!args[0].isString()) {
-            JS_ReportError(cx, "first argument must be unset or a string.");
-            return false;
-        }
-        bool isTenured;
-        if (!JS_StringEqualsAscii(cx, args[0].toString(), "nursery", &isNursery))
-            return false;
-        if (!JS_StringEqualsAscii(cx, args[0].toString(), "tenured", &isTenured))
-            return false;
-        if (!isNursery && !isTenured) {
-            JS_ReportError(cx, "first argument must be either 'nursery' or 'tenured'.");
-            return false;
-        }
-        MOZ_ASSERT(isNursery != isTenured);
-    }
-
     RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
     if (!scope)
         return false;
 
-    const JSClass *clasp = isNursery ? &NurseryFinalizeCounterClass : &FinalizeCounterClass;
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, clasp, JS::NullPtr(), scope);
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, JS::NullPtr(), scope);
     if (!obj)
         return false;
-    MOZ_ASSERT(isNursery == IsInsideNursery(obj));
 
     args.rval().setObject(*obj);
     return true;
@@ -2292,11 +2260,9 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  debuggee."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
-"makeFinalizeObserver(['nursery'|'tenured'])",
+"makeFinalizeObserver()",
 "  Get a special object whose finalization increases the counter returned\n"
-"  by the finalizeCount function. Pass an optional string of 'nursery' or\n"
-"  'tenured' (default of 'tenured') to the function to select a target heap\n"
-"  for the allocation."),
+"  by the finalizeCount function."),
 
     JS_FN_HELP("finalizeCount", FinalizeCount, 0, 0,
 "finalizeCount()",

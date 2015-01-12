@@ -20,6 +20,7 @@ var index = GamepadService.addGamepad("test gamepad", // id
 // Press a button
 GamepadService.newButtonEvent(index, 0, true);
 function connecthandler(e) {
+  ok(e.gamepad.timestamp <= performance.now());
   is(e.gamepad.id, "test gamepad", "correct gamepad name");
   is(e.gamepad.mapping, "standard", "standard mapping");
   is(e.gamepad.buttons.length, 4, "correct number of buttons");

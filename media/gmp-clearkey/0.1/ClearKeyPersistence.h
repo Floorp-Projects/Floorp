@@ -8,7 +8,7 @@
 #include <string>
 #include "gmp-decryption.h"
 
-class ClearKeyDecryptionManager;
+class ClearKeySessionManager;
 
 class ClearKeyPersistence {
 public:
@@ -16,21 +16,21 @@ public:
 
   static std::string GetNewSessionId(GMPSessionType aSessionType);
 
-  static bool DeferCreateSessionIfNotReady(ClearKeyDecryptionManager* aInstance,
+  static bool DeferCreateSessionIfNotReady(ClearKeySessionManager* aInstance,
                                            uint32_t aCreateSessionToken,
                                            uint32_t aPromiseId,
                                            const uint8_t* aInitData,
                                            uint32_t aInitDataSize,
                                            GMPSessionType aSessionType);
 
-  static bool DeferLoadSessionIfNotReady(ClearKeyDecryptionManager* aInstance,
+  static bool DeferLoadSessionIfNotReady(ClearKeySessionManager* aInstance,
                                          uint32_t aPromiseId,
                                          const char* aSessionId,
                                          uint32_t aSessionIdLength);
 
   static bool IsPersistentSessionId(const std::string& aSid);
 
-  static void LoadSessionData(ClearKeyDecryptionManager* aInstance,
+  static void LoadSessionData(ClearKeySessionManager* aInstance,
                               const std::string& aSid,
                               uint32_t aPromiseId);
 
