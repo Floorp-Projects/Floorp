@@ -34,6 +34,7 @@
 #include "gfxContext.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
@@ -347,8 +348,7 @@ RasterImage::Init(const char* aMimeType,
   }
 
   // Create the initial size decoder.
-  nsresult rv = Decode(DecodeStrategy::ASYNC, DECODE_FLAGS_DEFAULT,
-                       /* aDoSizeDecode = */ true);
+  nsresult rv = Decode(DecodeStrategy::ASYNC, Nothing(), DECODE_FLAGS_DEFAULT);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -519,11 +519,18 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
                               aFlags ^ FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
   }
 
+  if (!ref && !mHasSize) {
+    // We can't request a decode without knowing our intrinsic size. Give up.
+    return DrawableFrameRef();
+  }
+
   if (!ref) {
     // The OS threw this frame away. We need to redecode if we can.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
-    WantDecodedFrames(aFlags, aShouldSyncNotify);
+    // XXX(seth): We'll add downscale-during-decode-related logic here in a
+    // later part, but for now we just use our intrinsic size.
+    WantDecodedFrames(mSize, aFlags, aShouldSyncNotify);
 
     // If we were able to sync decode, we should already have the frame. If we
     // had to decode asynchronously, maybe we've gotten lucky.
@@ -1134,8 +1141,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
     // We need to guarantee that we've gotten the image's size, or at least
     // determined that we won't be able to get it, before we deliver the load
     // event. That means we have to do a synchronous size decode here.
-    Decode(DecodeStrategy::SYNC_IF_POSSIBLE, DECODE_FLAGS_DEFAULT,
-           /* aDoSizeDecode = */ true);
+    Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Nothing(), DECODE_FLAGS_DEFAULT);
   }
 
   // Determine our final status, giving precedence to Necko failure codes. We
@@ -1261,13 +1267,16 @@ RasterImage::CanDiscard() {
 
 // Sets up a decoder for this image.
 already_AddRefed<Decoder>
-RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
+RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
 {
   // Make sure we actually get size before doing a full decode.
-  if (aDoSizeDecode) {
-    MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
-  } else {
+  if (aSize) {
     MOZ_ASSERT(mHasSize, "Must do a size decode before a full decode!");
+    MOZ_ASSERT(mDownscaleDuringDecode || *aSize == mSize,
+               "Can only decode to our intrinsic size if we're not allowed to "
+               "downscale-during-decode");
+  } else {
+    MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
   }
 
   // Figure out which decoder we want.
@@ -1308,27 +1317,36 @@ RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
-  decoder->SetSizeDecode(aDoSizeDecode);
+  decoder->SetSizeDecode(!aSize);
   decoder->SetSendPartialInvalidations(!mHasBeenDecoded);
   decoder->SetImageIsTransient(mTransient);
   decoder->SetDecodeFlags(DecodeFlags(aFlags));
-  if (!aDoSizeDecode) {
+  if (aSize) {
     // We already have the size; tell the decoder so it can preallocate a
     // frame.  By default, we create an ARGB frame with no offset. If decoders
     // need a different type, they need to ask for it themselves.
     decoder->SetSize(mSize, mOrientation);
-    decoder->NeedNewFrame(0, 0, 0, mSize.width, mSize.height,
+    decoder->NeedNewFrame(0, 0, 0, aSize->width, aSize->height,
                           SurfaceFormat::B8G8R8A8);
     decoder->AllocateFrame();
   }
   decoder->SetIterator(mSourceBuffer->Iterator());
+
+  // Set a target size for downscale-during-decode if applicable.
+  if (mDownscaleDuringDecode && aSize && *aSize != mSize) {
+    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aSize);
+    MOZ_ASSERT(nsresult(rv) != NS_ERROR_NOT_AVAILABLE,
+               "We're downscale-during-decode but decoder doesn't support it?");
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  }
+
   decoder->Init();
 
   if (NS_FAILED(decoder->GetDecoderError())) {
     return nullptr;
   }
 
-  if (!aDoSizeDecode) {
+  if (!aSize) {
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
     mDecodeCount++;
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(mDecodeCount);
@@ -1348,12 +1366,13 @@ RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
 }
 
 void
-RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
+RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
+                               bool aShouldSyncNotify)
 {
   if (aShouldSyncNotify) {
     // We can sync notify, which means we can also sync decode.
     if (aFlags & FLAG_SYNC_DECODE) {
-      Decode(DecodeStrategy::SYNC_IF_POSSIBLE, aFlags);
+      Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Some(aSize), aFlags);
       return;
     }
 
@@ -1361,12 +1380,12 @@ RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
     // case that we're redecoding an image (see bug 845147).
     Decode(mHasBeenDecoded ? DecodeStrategy::ASYNC
                            : DecodeStrategy::SYNC_FOR_SMALL_IMAGES,
-           aFlags);
+           Some(aSize), aFlags);
     return;
   }
 
   // We can't sync notify, so do an async decode.
-  Decode(DecodeStrategy::ASYNC, aFlags);
+  Decode(DecodeStrategy::ASYNC, Some(aSize), aFlags);
 }
 
 //******************************************************************************
@@ -1431,30 +1450,30 @@ RasterImage::IsDecoded()
 
 NS_IMETHODIMP
 RasterImage::Decode(DecodeStrategy aStrategy,
-                    uint32_t aFlags,
-                    bool aDoSizeDecode /* = false */)
+                    const Maybe<nsIntSize>& aSize,
+                    uint32_t aFlags)
 {
-  MOZ_ASSERT(aDoSizeDecode || NS_IsMainThread());
+  MOZ_ASSERT(!aSize || NS_IsMainThread());
 
   if (mError) {
     return NS_ERROR_FAILURE;
   }
 
   // If we don't have a size yet, we can't do any other decoding.
-  if (!mHasSize && !aDoSizeDecode) {
+  if (!mHasSize && aSize) {
     mWantFullDecode = true;
     return NS_OK;
   }
 
   // Create a decoder.
-  nsRefPtr<Decoder> decoder = CreateDecoder(aDoSizeDecode, aFlags);
+  nsRefPtr<Decoder> decoder = CreateDecoder(aSize, aFlags);
   if (!decoder) {
     return NS_ERROR_FAILURE;
   }
 
   // Send out early notifications right away. (Unless this is a size decode,
   // which doesn't send out any notifications until the end.)
-  if (!aDoSizeDecode) {
+  if (aSize) {
     NotifyProgress(decoder->TakeProgress(),
                    decoder->TakeInvalidRect(),
                    decoder->GetDecodeFlags());
