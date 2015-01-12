@@ -7,6 +7,7 @@ package org.mozilla.gecko.fxa.activities;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -564,5 +565,11 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
   protected void setCustomServerViewVisibility(int visibility) {
     ensureFindViewById(null, R.id.account_server_layout, "account server layout").setVisibility(visibility);
     ensureFindViewById(null, R.id.sync_server_layout, "sync server layout").setVisibility(visibility);
+  }
+
+  protected Map<String, String> getQueryParameters() {
+    final Map<String, String> queryParameters = new HashMap<>();
+    queryParameters.put("service", "sync");
+    return queryParameters;
   }
 }

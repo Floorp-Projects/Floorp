@@ -31,7 +31,7 @@ public class FxAccountUnlockCodeResender {
     protected final byte[] emailUTF8;
 
     public FxAccountUnlockCodeTask(Context context, byte[] emailUTF8, FxAccountClient client, RequestDelegate<Void> delegate) {
-      super(context, null, client, delegate);
+      super(context, null, client, null, delegate);
       this.emailUTF8 = emailUTF8;
     }
 

@@ -161,7 +161,7 @@ public abstract class FxAccountAbstractUpdateCredentialsActivity extends FxAccou
     try {
       hideRemoteError();
       RequestDelegate<LoginResponse> delegate = new UpdateCredentialsDelegate(email, passwordStretcher, serverURI);
-      new FxAccountSignInTask(this, this, email, passwordStretcher, client, delegate).execute();
+      new FxAccountSignInTask(this, this, email, passwordStretcher, client, getQueryParameters(), delegate).execute();
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Got exception updating credentials for account.", e);
       showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
