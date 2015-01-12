@@ -326,12 +326,26 @@ private:
   // Decoding.
   //////////////////////////////////////////////////////////////////////////////
 
-  already_AddRefed<Decoder> CreateDecoder(bool aDoSizeDecode, uint32_t aFlags);
+  /**
+   * Creates and runs a decoder, either synchronously or asynchronously
+   * according to @aStrategy. Passes the provided target size @aSize and decode
+   * flags @aFlags to CreateDecoder. If a size decode is desired, pass Nothing
+   * for @aSize.
+   */
+  NS_IMETHOD Decode(DecodeStrategy aStrategy,
+                    const Maybe<nsIntSize>& aSize,
+                    uint32_t aFlags);
 
-  void WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
+  /**
+   * Creates a new decoder with a target size of @aSize and decode flags
+   * specified by @aFlags. If a size decode is desired, pass Nothing() for
+   * @aSize.
+   */
+  already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
+                                          uint32_t aFlags);
 
-  NS_IMETHOD Decode(DecodeStrategy aStrategy, uint32_t aFlags,
-                    bool aDoSizeDecode = false);
+  void WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
+                         bool aShouldSyncNotify);
 
 private: // data
   nsIntSize                  mSize;
