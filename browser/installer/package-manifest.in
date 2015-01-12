@@ -377,7 +377,6 @@
 @RESPATH@/browser/components/nsSetDefaultBrowser.js
 @RESPATH@/browser/components/BrowserDownloads.manifest
 @RESPATH@/browser/components/DownloadsStartup.js
-@RESPATH@/browser/components/DownloadsUI.js
 @RESPATH@/browser/components/BrowserPlaces.manifest
 @RESPATH@/browser/components/devtools-clhandler.manifest
 @RESPATH@/browser/components/devtools-clhandler.js
@@ -413,8 +412,6 @@
 #endif
 @RESPATH@/components/nsHelperAppDlg.manifest
 @RESPATH@/components/nsHelperAppDlg.js
-@RESPATH@/components/nsDownloadManagerUI.manifest
-@RESPATH@/components/nsDownloadManagerUI.js
 @RESPATH@/components/NetworkGeolocationProvider.manifest
 @RESPATH@/components/NetworkGeolocationProvider.js
 @RESPATH@/browser/components/nsSidebar.manifest
