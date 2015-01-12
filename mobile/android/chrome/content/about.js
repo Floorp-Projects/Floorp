@@ -98,6 +98,10 @@ function init() {
   let downloadingSpan = document.getElementById("update-message-downloading");
   let downloadedSpan = document.getElementById("update-message-downloaded");
 
+  updateLink.onclick = checkForUpdates;
+  foundSpan.onclick = downloadUpdate;
+  downloadedSpan.onclick = installUpdate;
+
   function showCheckAction() {
     checkingSpan.style.display = "none";
     noneSpan.style.display = "none";

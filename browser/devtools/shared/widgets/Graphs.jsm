@@ -7,10 +7,14 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 
 this.EXPORTED_SYMBOLS = [
+  "GraphCursor",
+  "GraphSelection",
+  "GraphSelectionDragger",
+  "GraphSelectionResizer",
   "AbstractCanvasGraph",
   "LineGraphWidget",
   "BarGraphWidget",
@@ -93,28 +97,23 @@ const BAR_GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50; // ms
 /**
  * Small data primitives for all graphs.
  */
-this.GraphCursor = function() {};
-this.GraphSelection = function() {};
-this.GraphSelectionDragger = function() {};
-this.GraphSelectionResizer = function() {};
-
-GraphCursor.prototype = {
-  x: null,
-  y: null
+this.GraphCursor = function() {
+  this.x = null;
+  this.y = null;
 };
 
-GraphSelection.prototype = {
-  start: null,
-  end: null
+this.GraphSelection = function() {
+  this.start = null;
+  this.end = null;
 };
 
-GraphSelectionDragger.prototype = {
-  origin: null,
-  anchor: new GraphSelection()
+this.GraphSelectionDragger = function() {
+  this.origin = null;
+  this.anchor = new GraphSelection();
 };
 
-GraphSelectionResizer.prototype = {
-  margin: null
+this.GraphSelectionResizer = function() {
+  this.margin = null;
 };
 
 /**
@@ -244,6 +243,11 @@ AbstractCanvasGraph.prototype = {
 
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
+
+    this._cursor = null;
+    this._selection = null;
+    this._selectionDragger = null;
+    this._selectionResizer = null;
 
     this._data = null;
     this._mask = null;
@@ -892,6 +896,9 @@ AbstractCanvasGraph.prototype = {
 
   /**
    * Gets the offset of this graph's container relative to the owner window.
+   *
+   * @return object
+   *         The { left, top } offset.
    */
   _getContainerOffset: function() {
     let node = this._canvas;
@@ -1449,7 +1456,7 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._maxTooltip.hidden = this._showMax === false || !totalTicks || distanceMinMax < LINE_GRAPH_MIN_MAX_TOOLTIP_DISTANCE;
     this._avgTooltip.hidden = this._showAvg === false || !totalTicks;
     this._minTooltip.hidden = this._showMin === false || !totalTicks;
-    this._gutter.hidden = (this._showMin === false && this._showMax === false) || !totalTicks || !this.withTooltipArrows;
+    this._gutter.hidden = (this._showMin === false && this._showAvg === false && this._showMax === false) || !totalTicks;
 
     this._maxGutterLine.hidden = this._showMax === false;
     this._avgGutterLine.hidden = this._showAvg === false;

@@ -664,9 +664,18 @@ pref("ui.scrolling.negate_wheel_scrollY", true);
 pref("ui.scrolling.gamepad_dead_zone", 115);
 
 // Prefs for fling acceleration
-pref("ui.scrolling.fling_accel_interval", 500);
-pref("ui.scrolling.fling_accel_base_multiplier", "1.0");
-pref("ui.scrolling.fling_accel_supplemental_multiplier", "1.0");
+pref("ui.scrolling.fling_accel_interval", -1);
+pref("ui.scrolling.fling_accel_base_multiplier", -1);
+pref("ui.scrolling.fling_accel_supplemental_multiplier", -1);
+
+// Prefs for fling curving
+pref("ui.scrolling.fling_curve_function_x1", -1);
+pref("ui.scrolling.fling_curve_function_y1", -1);
+pref("ui.scrolling.fling_curve_function_x2", -1);
+pref("ui.scrolling.fling_curve_function_y2", -1);
+pref("ui.scrolling.fling_curve_threshold_velocity", -1);
+pref("ui.scrolling.fling_curve_max_velocity", -1);
+pref("ui.scrolling.fling_curve_newton_iterations", -1);
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);

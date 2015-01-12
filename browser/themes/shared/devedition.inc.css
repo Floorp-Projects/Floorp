@@ -250,7 +250,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   -moz-image-region: rect(0, 54px, 18px, 36px);
 }
 
-.search-go-button {
+searchbar:not([oneoffui]) .search-go-button {
    /* !important is needed because searchbar.css is loaded after this */
   -moz-image-region: auto !important;
   list-style-image: var(--search-button-image);

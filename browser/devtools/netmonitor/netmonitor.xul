@@ -11,6 +11,8 @@
 <!DOCTYPE window [
   <!ENTITY % netmonitorDTD SYSTEM "chrome://browser/locale/devtools/netmonitor.dtd">
   %netmonitorDTD;
+  <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
+  %certManagerDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -82,10 +84,10 @@
                 </button>
               </hbox>
               <hbox id="requests-menu-domain-header-box"
-                    class="requests-menu-header requests-menu-domain"
+                    class="requests-menu-header requests-menu-security-and-domain"
                     align="center">
                 <button id="requests-menu-domain-button"
-                        class="requests-menu-header-button requests-menu-domain"
+                        class="requests-menu-header-button requests-menu-security-and-domain"
                         data-key="domain"
                         label="&netmonitorUI.toolbar.domain;"
                         flex="1">
@@ -170,8 +172,13 @@
                        crop="end"
                        flex="1"/>
               </hbox>
-              <label class="plain requests-menu-subitem requests-menu-domain"
-                     crop="end"/>
+              <hbox class="requests-menu-subitem requests-menu-security-and-domain"
+                    align="center">
+                <image class="requests-security-state-icon" />
+                <label class="plain requests-menu-domain"
+                       crop="end"
+                       flex="1"/>
+              </hbox>
               <label class="plain requests-menu-subitem requests-menu-type"
                      crop="end"/>
               <label class="plain requests-menu-subitem requests-menu-size"
@@ -266,6 +273,8 @@
                    label="&netmonitorUI.tab.response;"/>
               <tab id="timings-tab"
                    label="&netmonitorUI.tab.timings;"/>
+              <tab id="security-tab"
+                   label="&netmonitorUI.tab.security;"/>
               <tab id="preview-tab"
                    label="&netmonitorUI.tab.preview;"/>
             </tabs>
@@ -459,6 +468,194 @@
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
                 </vbox>
+              </tabpanel>
+              <tabpanel id="security-tabpanel"
+                        class="tabpanel-content">
+                  <vbox id="security-error"
+                        class="tabpanel-summary-container"
+                        flex="1">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.security.error;"/>
+                    <description id="security-error-message" flex="1"/>
+                  </vbox>
+                  <vbox id="security-information"
+                        flex="1">
+                    <vbox id="security-info-connection"
+                          class="tabpanel-summary-container">
+                      <label class="plain tabpanel-summary-label"
+                             value="&netmonitorUI.security.connection;"/>
+                      <vbox class="security-info-section">
+                        <hbox id="security-protocol-version"
+                              class="tabpanel-summary-container"
+                              align="center">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&netmonitorUI.security.protocolVersion;"/>
+                          <label id="security-protocol-version-value"
+                                 class="plain tabpanel-summary-value devtools-monospace"
+                                 crop="end"
+                                 flex="1"/>
+                        </hbox>
+                        <hbox id="security-ciphersuite"
+                              class="tabpanel-summary-container"
+                              align="center">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&netmonitorUI.security.cipherSuite;"/>
+                          <label id="security-ciphersuite-value"
+                                 class="plain tabpanel-summary-value devtools-monospace"
+                                 crop="end"
+                                 flex="1"/>
+                        </hbox>
+                      </vbox>
+                    </vbox>
+                    <vbox id="security-info-domain"
+                          class="tabpanel-summary-container">
+                      <label class="plain tabpanel-summary-label"
+                             id="security-info-host-header"/>
+                      <vbox class="security-info-section">
+                        <hbox id="security-http-strict-transport-security"
+                              class="tabpanel-summary-container"
+                              align="center">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&netmonitorUI.security.hsts;"/>
+                          <label id="security-http-strict-transport-security-value"
+                                 class="plain tabpanel-summary-value devtools-monospace"
+                                 crop="end"
+                                 flex="1"/>
+                        </hbox>
+                        <hbox id="security-public-key-pinning"
+                              class="tabpanel-summary-container"
+                              align="center">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&netmonitorUI.security.hpkp;"/>
+                          <label id="security-public-key-pinning-value"
+                                 class="plain tabpanel-summary-value devtools-monospace"
+                                 crop="end"
+                                 flex="1"/>
+                        </hbox>
+                      </vbox>
+                    </vbox>
+                    <vbox id="security-info-certificate"
+                          class="tabpanel-summary-container">
+                        <label class="plain tabpanel-summary-label"
+                               value="&netmonitorUI.security.certificate;"/>
+                      <vbox class="security-info-section">
+                        <vbox class="tabpanel-summary-container">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&certmgr.subjectinfo.label;" flex="1"/>
+                        </vbox>
+                        <vbox class="security-info-section">
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.cn;:"/>
+                            <label id="security-cert-subject-cn"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.o;:"/>
+                            <label id="security-cert-subject-o"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.ou;:"/>
+                            <label id="security-cert-subject-ou"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                        </vbox>
+                        <vbox class="tabpanel-summary-container">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&certmgr.issuerinfo.label;" flex="1"/>
+                        </vbox>
+                        <vbox class="security-info-section">
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.cn;:"/>
+                            <label id="security-cert-issuer-cn"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.o;:"/>
+                            <label id="security-cert-issuer-o"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.ou;:"/>
+                            <label id="security-cert-issuer-ou"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                        </vbox>
+                        <vbox class="tabpanel-summary-container">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&certmgr.periodofvalidity.label;" flex="1"/>
+                        </vbox>
+                        <vbox class="security-info-section">
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.begins;:"/>
+                            <label id="security-cert-validity-begins"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.expires;:"/>
+                            <label id="security-cert-validity-expires"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                        </vbox>
+                        <vbox class="tabpanel-summary-container">
+                          <label class="plain tabpanel-summary-label"
+                                 value="&certmgr.fingerprints.label;" flex="1"/>
+                        </vbox>
+                        <vbox class="security-info-section">
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.sha256fingerprint;:"/>
+                            <label id="security-cert-sha256-fingerprint"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                          <hbox class="tabpanel-summary-container"
+                                align="center">
+                            <label class="plain tabpanel-summary-label"
+                                   value="&certmgr.certdetail.sha1fingerprint;:"/>
+                            <label id="security-cert-sha1-fingerprint"
+                                   class="plain tabpanel-summary-value devtools-monospace"
+                                   crop="end"
+                                   flex="1"/>
+                          </hbox>
+                        </vbox>
+                      </vbox>
+                    </vbox>
+                  </vbox>
               </tabpanel>
               <tabpanel id="preview-tabpanel"
                         class="tabpanel-content">
