@@ -61,10 +61,12 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
-                              const char* aCharSet, bool aIsCopying,
-                              bool aRewriteEncodingDeclaration)
+nsXHTMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
+                               uint32_t aWrapColumn, const char* aCharSet,
+                               bool aIsCopying, bool aRewriteEncodingDeclaration)
 {
+  MOZ_ASSERT(aDocument);
+
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
   // compatibility with the existing calling code
@@ -74,7 +76,8 @@ nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   }
 
   nsresult rv;
-  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aRewriteEncodingDeclaration);
+  rv = nsXMLContentSerializer::Init(aDocument, aFlags, aWrapColumn, aCharSet,
+                                    aIsCopying, aRewriteEncodingDeclaration);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRewriteEncodingDeclaration = aRewriteEncodingDeclaration;
@@ -89,6 +92,13 @@ nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   if (mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities) {
     mEntityConverter = do_CreateInstance(NS_ENTITYCONVERTER_CONTRACTID);
   }
+
+  // Flush the styles on the document to ensure that we read the correct style
+  // information when determining whether an element is preformatted.
+  if (ShouldMaintainPreLevel()) {
+    aDocument->FlushPendingNotifications(Flush_Style);
+  }
+
   return NS_OK;
 }
 
