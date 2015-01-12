@@ -849,7 +849,7 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
                    paddedRecoversSize +
                    paddedBailoutSize +
                    paddedConstantsSize +
-                   paddedSafepointIndicesSize+
+                   paddedSafepointIndicesSize +
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
                    paddedRuntimeSize +

@@ -48,6 +48,8 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
 const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
+const SESSION_RECORDER_EXPECTED = HAS_DATAREPORTINGSERVICE &&
+                                  Preferences.get(PREF_FHR_SERVICE_ENABLED, true);
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
@@ -55,7 +57,6 @@ let gHttpServer = new HttpServer();
 let gServerStarted = false;
 let gRequestIterator = null;
 let gDataReportingClientID = null;
-let gOrigFhrServiceEnabled = true;
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
   () => Cc["@mozilla.org/datareporting/service;1"]
@@ -225,7 +226,7 @@ function checkPayload(request, reason, successfulPings) {
   do_check_true(payload.simpleMeasurements.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
 
   let activeTicks = payload.simpleMeasurements.activeTicks;
-  do_check_true(HAS_DATAREPORTINGSERVICE ? activeTicks >= 0 : activeTicks == -1);
+  do_check_true(SESSION_RECORDER_EXPECTED ? activeTicks >= 0 : activeTicks == -1);
 
   do_check_eq(payload.simpleMeasurements.failedProfileLockCount,
               FAILED_PROFILE_LOCK_ATTEMPTS);
@@ -439,13 +440,6 @@ function run_test() {
     // If we can't test gfxInfo, that's fine, we'll note it later.
   }
 
-  // make sure getSessionRecorder() can be called before the DRS init.
-  // It's not a requirement that it returns undefined, but that's how it behaves
-  // now - so just let this test fail if this behavior changes.
-  if (HAS_DATAREPORTINGSERVICE) {
-    do_check_true(gDatareportingService.getSessionRecorder() === undefined);
-  }
-
   // Addon manager needs a profile directory
   do_get_profile();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -456,10 +450,6 @@ function run_test() {
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
   if (HAS_DATAREPORTINGSERVICE) {
-    // Initially disable FHR to verify that activeTicks ends up as -1
-    gOrigFhrServiceEnabled = Services.prefs.getBoolPref(PREF_FHR_SERVICE_ENABLED, true);
-    Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, false);
-
     gDatareportingService.observe(null, "app-startup", null);
     gDatareportingService.observe(null, "profile-after-change", null);
   }
@@ -513,17 +503,17 @@ function actualTest() {
 add_task(function* asyncSetup() {
   yield TelemetryPing.setup();
 
-  // When FHR is disabled or no DRS, the payload's activeTicks should be -1.
-  do_check_true(TelemetryPing.getPayload().simpleMeasurements.activeTicks == -1);
+  if (HAS_DATAREPORTINGSERVICE) {
+    // force getSessionRecorder()==undefined to check the payload's activeTicks
+    gDatareportingService.simulateNoSessionRecorder();
+  }
+
+  // When no DRS or no DRS.getSessionRecorder(), activeTicks should be -1.
+  do_check_eq(TelemetryPing.getPayload().simpleMeasurements.activeTicks, -1);
 
   if (HAS_DATAREPORTINGSERVICE) {
-    // after we got the no-FHR activeTicks, re-enable FHR and re-init the DRS.
-    // Note: this relies on the fact that the data reporting service reinitializes
-    // itself when calling its 'observe' method, without checking if it's already
-    // initialized. If this DRS behavior changes, this test would need to be adapted.
-    Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, gOrigFhrServiceEnabled);
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
+    // Restore normal behavior for getSessionRecorder()
+    gDatareportingService.simulateRestoreSessionRecorder();
 
     gDataReportingClientID = yield gDatareportingService.getClientID();
 
