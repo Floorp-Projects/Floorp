@@ -4,6 +4,11 @@
 
 #include "nsIIccService.idl"
 
+%{C++
+#define GONK_ICC_SERVICE_CONTRACTID \
+        "@mozilla.org/icc/gonkiccservice;1"
+%}
+
 [scriptable, uuid(a037b8a2-b027-11e4-9496-c3b7af59a512)]
 interface nsIGonkIccService : nsIIccService
 {
