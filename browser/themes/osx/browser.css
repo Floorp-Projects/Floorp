@@ -3092,6 +3092,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   opacity: .9;
 }
 
+/*
+ * Force the overlay to create a new stacking context so it always appears on
+ * top of the icon.
+ */
+.tab-icon-overlay {
+  opacity: 0.9999;
+}
+
 .tab-label:not([selected="true"]) {
   opacity: .7;
 }

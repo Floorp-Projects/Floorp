@@ -1116,7 +1116,7 @@ var gBrowserInit = {
 #endif
     }, false, true);
 
-    gBrowser.addEventListener("AboutTabCrashedTryAgain", function(event) {
+    gBrowser.addEventListener("AboutTabCrashedMessage", function(event) {
       let ownerDoc = event.originalTarget;
 
       if (!ownerDoc.documentURI.startsWith("about:tabcrashed")) {
@@ -1134,8 +1134,16 @@ var gBrowserInit = {
         TabCrashReporter.submitCrashReport(browser);
       }
 #endif
+
       let tab = gBrowser.getTabForBrowser(browser);
-      SessionStore.reviveCrashedTab(tab);
+      switch (event.detail.message) {
+      case "closeTab":
+        gBrowser.removeTab(tab, { animate: true });
+        break;
+      case "restoreTab":
+        SessionStore.reviveCrashedTab(tab);
+        break;
+      }
     }, false, true);
 
     let uriToLoad = this._getUriToLoad();
