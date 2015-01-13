@@ -243,7 +243,7 @@ bool nsContentUtils::sFullscreenApiIsContentOnly = false;
 bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsExperimentalAutocompleteEnabled = false;
-bool nsContentUtils::sEncodeURLHash = true;
+bool nsContentUtils::sEncodeDecodeURLHash = false;
 
 uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
@@ -521,8 +521,8 @@ nsContentUtils::Init()
   Preferences::AddBoolVarCache(&sIsExperimentalAutocompleteEnabled,
                                "dom.forms.autocomplete.experimental", false);
 
-  Preferences::AddBoolVarCache(&sEncodeURLHash,
-                               "dom.url.encode_hash", true);
+  Preferences::AddBoolVarCache(&sEncodeDecodeURLHash,
+                               "dom.url.encode_decode_hash", false);
 
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
