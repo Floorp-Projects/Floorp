@@ -6,6 +6,7 @@ include protocol PBackgroundIDBFactory;
 include protocol PBackgroundTest;
 include protocol PBlob;
 include protocol PFileDescriptorSet;
+include protocol PVsync;
 
 include DOMTypes;
 include PBackgroundIDBSharedTypes;
@@ -19,12 +20,15 @@ sync protocol PBackground
   manages PBackgroundTest;
   manages PBlob;
   manages PFileDescriptorSet;
+  manages PVsync;
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   PBackgroundTest(nsCString testArg);
 
   PBackgroundIDBFactory(LoggingInfo loggingInfo);
+
+  PVsync();
 
 both:
   PBlob(BlobConstructorParams params);
