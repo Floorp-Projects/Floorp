@@ -82,6 +82,7 @@ this.TabCrashReporter = {
         if (this.browserMap.get(browser) == childID) {
           this.browserMap.delete(browser);
           browser.contentDocument.documentElement.classList.remove("crashDumpAvailable");
+          browser.contentDocument.documentElement.classList.add("crashDumpSubmitted");
         }
       }
     }
