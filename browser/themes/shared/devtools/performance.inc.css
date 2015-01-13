@@ -276,7 +276,8 @@
 }
 
 .waterfall-header-name {
-  padding: 4px;
+  padding: 2px 4px;
+  font-size: 90%;
 }
 
 .waterfall-header-tick {
