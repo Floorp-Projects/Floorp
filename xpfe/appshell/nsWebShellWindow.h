@@ -47,20 +47,20 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIBaseWindow
-  NS_IMETHOD Destroy();
+  NS_IMETHOD Destroy() MOZ_OVERRIDE;
 
   // nsIWidgetListener
-  virtual nsIXULWindow* GetXULWindow() { return this; }
-  virtual nsIPresShell* GetPresShell();
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y);
-  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
-  virtual bool RequestWindowClose(nsIWidget* aWidget);
-  virtual void SizeModeChanged(nsSizeMode sizeMode);
-  virtual void OSToolbarButtonPressed();
+  virtual nsIXULWindow* GetXULWindow() MOZ_OVERRIDE { return this; }
+  virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
+  virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
+  virtual void SizeModeChanged(nsSizeMode sizeMode) MOZ_OVERRIDE;
+  virtual void OSToolbarButtonPressed() MOZ_OVERRIDE;
   virtual bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
-                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
-  virtual void WindowActivated();
-  virtual void WindowDeactivated();
+                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow) MOZ_OVERRIDE;
+  virtual void WindowActivated() MOZ_OVERRIDE;
+  virtual void WindowDeactivated() MOZ_OVERRIDE;
 
 protected:
   friend class mozilla::WebShellWindowTimerCallback;
