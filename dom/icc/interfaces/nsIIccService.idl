@@ -63,6 +63,15 @@ interface nsIIccCallback : nsISupports
   void notifyCardLockError(in DOMString aErrorMsg, in long aRetryCount);
 };
 
+%{C++
+#define ICC_SERVICE_CID \
+  { 0xbab0277a, 0x900e, 0x11e4, { 0x80, 0xc7, 0xdb, 0xd7, 0xad, 0x05, 0x24, 0x01 } }
+#define ICC_SERVICE_CONTRACTID \
+  "@mozilla.org/icc/iccservice;1"
+
+template<typename T> struct already_AddRefed;
+%}
+
 /**
  * XPCOM Service for the selection of the ICC to be accessed.
  */
@@ -79,6 +88,11 @@ interface nsIIccService : nsISupports
    */
   nsIIcc getIccByServiceId(in unsigned long aServiceId);
 };
+
+%{C++
+already_AddRefed<nsIIccService>
+NS_CreateIccService();
+%}
 
 /**
  * XPCOM component that provides the access to the selected ICC.
