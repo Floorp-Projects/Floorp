@@ -729,6 +729,47 @@ protected:
   uint32_t mNextDriverIndex;
 };
 
+// The PBackground protocol connection callback. It will be called when
+// PBackground is ready. Then we create the PVsync sub-protocol for our
+// vsync-base RefreshTimer.
+class VsyncChildCreateCallback MOZ_FINAL : public nsIIPCBackgroundChildCreateCallback
+{
+  NS_DECL_ISUPPORTS
+
+public:
+  VsyncChildCreateCallback()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  static void CreateVsyncActor(PBackgroundChild* aPBackgroundChild)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aPBackgroundChild);
+
+    layout::PVsyncChild* actor = aPBackgroundChild->SendPVsyncConstructor();
+    layout::VsyncChild* child = static_cast<layout::VsyncChild*>(actor);
+    nsRefreshDriver::PVsyncActorCreated(child);
+  }
+
+private:
+  virtual ~VsyncChildCreateCallback() {}
+
+  virtual void ActorCreated(PBackgroundChild* aPBackgroundChild) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aPBackgroundChild);
+    CreateVsyncActor(aPBackgroundChild);
+  }
+
+  virtual void ActorFailed() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_CRASH("Failed To Create VsyncChild Actor");
+  }
+}; // VsyncChildCreateCallback
+NS_IMPL_ISUPPORTS(VsyncChildCreateCallback, nsIIPCBackgroundChildCreateCallback)
+
 } // namespace mozilla
 
 static RefreshDriverTimer* sRegularRateTimer;
@@ -739,6 +780,49 @@ static int32_t sHighPrecisionTimerRequests = 0;
 // a bare pointer to avoid introducing a static constructor
 static nsITimer *sDisableHighPrecisionTimersTimer = nullptr;
 #endif
+
+static RefreshDriverTimer*
+CreateVsyncRefreshTimer()
+{
+  // Sometimes, gfxPrefs is not initialized here. Make sure the gfxPrefs is
+  // ready.
+  gfxPrefs::GetSingleton();
+
+  if (!gfxPrefs::VsyncAlignedRefreshDriver()) {
+    return nullptr;
+  }
+
+  if (XRE_IsParentProcess()) {
+    // Make sure all vsync systems are ready.
+    gfxPlatform::GetPlatform();
+    // In parent process, we don't need to use ipc. We can create the
+    // VsyncRefreshDriverTimer directly.
+    return new VsyncRefreshDriverTimer();
+  }
+
+  // For ChildProcess case.
+  // Create the PVsync actor for vsync-base refresh timer.
+  // PBackgroundChild is created asynchronously. If PBackgroundChild is still
+  // unavailable, setup VsyncChildCreateCallback callback to handle the async
+  // connect. We will still use software timer before PVsync ready, and change
+  // to use hw timer when the connection is done. Please check
+  // VsyncChildCreateCallback::CreateVsyncActor() and
+  // nsRefreshDriver::PVsyncActorCreated().
+  PBackgroundChild* backgroundChild = BackgroundChild::GetForCurrentThread();
+  if (backgroundChild) {
+    // If we already have PBackgroundChild, create the
+    // child VsyncRefreshDriverTimer here.
+    VsyncChildCreateCallback::CreateVsyncActor(backgroundChild);
+    return sRegularRateTimer;
+  }
+  // Setup VsyncChildCreateCallback callback
+  nsRefPtr<nsIIPCBackgroundChildCreateCallback> callback = new VsyncChildCreateCallback();
+  if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(callback))) {
+    MOZ_CRASH("PVsync actor create failed!");
+  }
+  return nullptr;
+}
+
 static uint32_t
 GetFirstFrameDelay(imgIRequest* req)
 {
@@ -851,8 +935,12 @@ nsRefreshDriver::ChooseTimer() const
   if (!sRegularRateTimer) {
     bool isDefault = true;
     double rate = GetRegularTimerInterval(&isDefault);
+
+    // Try to use vsync-base refresh timer first.
+    sRegularRateTimer = CreateVsyncRefreshTimer();
+
 #ifdef XP_WIN
-    if (PreciseRefreshDriverTimerWindowsDwmVsync::IsSupported()) {
+    if (!sRegularRateTimer && PreciseRefreshDriverTimerWindowsDwmVsync::IsSupported()) {
       sRegularRateTimer = new PreciseRefreshDriverTimerWindowsDwmVsync(rate, isDefault);
     }
 #endif
