@@ -46,6 +46,12 @@ CodeGeneratorX86Shared::generatePrologue()
 
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
+
+#ifdef JS_TRACE_LOGGING
+    emitTracelogScriptStart();
+    emitTracelogStartEvent(TraceLogger_IonMonkey);
+#endif
+
     return true;
 }
 
@@ -57,10 +63,8 @@ CodeGeneratorX86Shared::generateEpilogue()
     masm.bind(&returnLabel_);
 
 #ifdef JS_TRACE_LOGGING
-    if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger_IonMonkey);
-        emitTracelogScriptStop();
-    }
+    emitTracelogStopEvent(TraceLogger_IonMonkey);
+    emitTracelogScriptStop();
 #endif
 
     // Pop the stack we allocated at the start of the function.

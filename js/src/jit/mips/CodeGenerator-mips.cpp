@@ -48,6 +48,12 @@ CodeGeneratorMIPS::generatePrologue()
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
     masm.checkStackAlignment();
+
+#ifdef JS_TRACE_LOGGING
+    emitTracelogScriptStart();
+    emitTracelogStartEvent(TraceLogger::IonMonkey);
+#endif
+
     return true;
 }
 
@@ -58,10 +64,8 @@ CodeGeneratorMIPS::generateEpilogue()
     masm.bind(&returnLabel_);
 
 #ifdef JS_TRACE_LOGGING
-    if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger::IonMonkey);
-        emitTracelogScriptStop();
-    }
+    emitTracelogStopEvent(TraceLogger::IonMonkey);
+    emitTracelogScriptStop();
 #endif
 
     masm.freeStack(frameSize());
