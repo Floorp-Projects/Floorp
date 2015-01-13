@@ -25,6 +25,9 @@ assertIteratorResult(it.next.call(g.it4), 5, false)
 // StarGenerator.throw
 assertThrowsValue(() => it.throw.call(g.it4, 8), 8);
 
+// StarGenerator.return
+assertIteratorResult(it.return.call(g.it4, 8), 8, true);
+
 // Other objects should throw.
 try {
     it.next.call([]);
