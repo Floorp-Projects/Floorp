@@ -51,7 +51,7 @@ function createTestArray() {
 }
 
 function log(msg) {
-  //dump(msg + "\n");
+  info(msg);
   var l = document.getElementById('log');
   l.innerHTML += msg + "<br>";
 }
@@ -71,7 +71,15 @@ function finish(v) {
 
 function listener(evt) {
   var v = evt.target;
-  //log(filename(v.name) + ' got event ' + evt.type);
+  log(filename(v.name) + ': got ' + evt.type);
+
+  // On slow machines like B2G emulator, progress timer could time out before
+  // receiving any HTTP notification. We will ignore the 'stalled' event to
+  // pass the tests.
+  if (evt.type == 'stalled') {
+    return;
+  }
+
   ok(v.eventNum < gExpectedEvents.length, filename(v.name)  + " Too many events received");
   var expected = (v.eventNum < gExpectedEvents.length) ? gExpectedEvents[v.eventNum] : "NoEvent";
   is(evt.type, expected, filename(v.name) + " Events received in wrong order");
