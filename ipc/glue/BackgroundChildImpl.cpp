@@ -11,6 +11,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
+#include "mozilla/layout/VsyncChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -182,6 +183,21 @@ BackgroundChildImpl::DeallocPFileDescriptorSetChild(
   MOZ_ASSERT(aActor);
 
   delete static_cast<FileDescriptorSetChild*>(aActor);
+  return true;
+}
+
+BackgroundChildImpl::PVsyncChild*
+BackgroundChildImpl::AllocPVsyncChild()
+{
+  return new mozilla::layout::VsyncChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPVsyncChild(PVsyncChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<mozilla::layout::VsyncChild*>(aActor);
   return true;
 }
 
