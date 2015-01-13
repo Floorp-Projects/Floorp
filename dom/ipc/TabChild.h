@@ -575,6 +575,7 @@ private:
 
     nsresult
     ProvideWindowCommon(nsIDOMWindow* aOpener,
+                        bool aIframeMoz,
                         uint32_t aChromeFlags,
                         bool aCalledFromJS,
                         bool aPositionSpecified,
