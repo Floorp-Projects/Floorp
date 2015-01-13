@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for requestSync - wakeUp</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="common_basic.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var oneShotCounter = 0;
+  var multiShotCounter = 0;
+
+  function maybeDone() {
+    if (oneShotCounter == 1 && multiShotCounter == 3) {
+      runTests();
+    }
+  }
+
+  function setMessageHandler() {
+    navigator.mozSetMessageHandler('request-sync', function(e) {
+      ok(true, "One event has been received!");
+
+      if (e.task == "oneShot") {
+        is(e.data, 42, "e.data is correct");
+        is(e.lastSync, 0, "e.lastSync is correct");
+        is(e.oneShot, true, "e.oneShot is correct");
+        is(e.minInterval, 2, "e.minInterval is correct");
+        is(e.wifiOnly, false, "e.wifiOnly is correct");
+
+        is(++oneShotCounter, 1, "Only 1 shot should be received here");
+        maybeDone();
+      }
+
+      else if (e.task == "multiShots") {
+        is(e.data, 'hello world!', "e.data is correct");
+
+        if (multiShotCounter == 0) {
+          is(e.lastSync, 0, "e.lastSync is correct");
+        } else {
+          isnot(e.lastSync, 0, "e.lastSync is correct");
+        }
+
+        is(e.oneShot, false, "e.oneShot is correct");
+        is(e.minInterval, 3, "e.minInterval is correct");
+        is(e.wifiOnly, false, "e.wifiOnly is correct");
+
+        ++multiShotCounter;
+        maybeDone();
+      }
+
+      else {
+        ok(false, "Unknown event has been received!");
+      }
+    });
+
+    runTests();
+  }
+
+  function test_register_oneShot() {
+    navigator.sync.register('oneShot', { minInterval: 2,
+                                         oneShot: true,
+                                         data: 42,
+                                         wifiOnly: false,
+                                         wakeUpPage: location.href }).then(
+    function() {
+      ok(true, "navigator.sync.register() oneShot done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_register_multiShots() {
+    navigator.sync.register('multiShots', { minInterval: 3,
+                                            oneShot: false,
+                                            data: 'hello world!',
+                                            wifiOnly: false,
+                                            wakeUpPage: location.href }).then(
+    function() {
+      ok(true, "navigator.sync.register() multiShots done");
+      runTests();
+    }, genericError);
+  }
+
+  function test_wait() {
+    // nothing to do here.
+  }
+
+  var tests = [
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.requestSync.enabled", true],
+                                         ["dom.requestSync.minInterval", 1],
+                                         ["dom.ignore_webidl_scope_checks", true]]}, runTests);
+    },
+
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "requestsync-manager", "allow": 1, "context": document } ], runTests);
+    },
+
+    function() {
+      if (SpecialPowers.isMainProcess()) {
+        SpecialPowers.Cu.import("resource://gre/modules/RequestSyncService.jsm");
+      }
+      runTests();
+    },
+
+    setMessageHandler,
+
+    test_register_oneShot,
+    test_register_multiShots,
+
+    test_wait,
+  ];
+
+  function runTests() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+  </script>
+</body>
+</html>

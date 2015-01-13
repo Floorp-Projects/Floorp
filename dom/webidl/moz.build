@@ -340,6 +340,8 @@ WEBIDL_FILES = [
     'Range.webidl',
     'Rect.webidl',
     'Request.webidl',
+    'RequestSyncManager.webidl',
+    'RequestSyncScheduler.webidl',
     'ResourceStats.webidl',
     'ResourceStatsManager.webidl',
     'Response.webidl',
