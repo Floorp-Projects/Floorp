@@ -59,6 +59,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ProcessHangMonitor",
+                                  "resource:///modules/ProcessHangMonitor.jsm");
+
 #ifdef NIGHTLY_BUILD
 XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
                                   "resource://shumway/ShumwayUtils.jsm");
@@ -759,6 +762,8 @@ BrowserGlue.prototype = {
       temp.WinTaskbarJumpList.startup();
     }
 #endif
+
+    ProcessHangMonitor.init();
 
     // A channel for "remote troubleshooting" code...
     let channel = new WebChannel("remote-troubleshooting", "remote-troubleshooting");

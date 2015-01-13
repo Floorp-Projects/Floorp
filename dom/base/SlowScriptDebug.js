@@ -16,6 +16,9 @@ SlowScriptDebug.prototype = {
 
   get activationHandler()   { return this._activationHandler; },
   set activationHandler(cb) { return this._activationHandler = cb; },
+
+  get remoteActivationHandler()   { return this._remoteActivationHandler; },
+  set remoteActivationHandler(cb) { return this._remoteActivationHandler = cb; },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SlowScriptDebug]);
