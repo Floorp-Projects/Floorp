@@ -15,7 +15,7 @@
   var multiShotCounter = 0;
 
   function maybeDone() {
-    if (oneShotCounter == 1 && multiShotCounter == 3) {
+    if (oneShotCounter == 1 && multiShotCounter == 5) {
       runTests();
     }
   }
@@ -57,7 +57,18 @@
           }));
         } else if (multiShotCounter == 2) {
           // The second time we don't reply at all.
+          info("Setting a promise object without resolving it.");
           navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {}));
+        } else if (multiShotCounter == 3) {
+          info("Throwing an exception.");
+          // Now we throw an exception
+          SimpleTest.expectUncaughtException();
+          throw "Booom!";
+        } else {
+          info("Setting a promise object and reject it.");
+          navigator.mozSetMessageHandlerPromise(new Promise(function(a, b) {
+            setTimeout(b, 0);
+          }));
         }
 
         maybeDone();

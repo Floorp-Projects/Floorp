@@ -470,7 +470,7 @@ SystemMessageInternal.prototype = {
                                          true,
                                          null);
 
-          this._rejectPendingPromises(manifestURL);
+          this._rejectPendingPromisesFromManifestURL(manifestURL);
         }
         break;
       }
@@ -482,7 +482,7 @@ SystemMessageInternal.prototype = {
                                        msg.manifestURL,
                                        false,
                                        msg.pageURL);
-        this._rejectPendingPromises(msg.manifestURL);
+        this._rejectPendingPromisesFromManifestURL(msg.manifestURL);
         break;
       }
       case "SystemMessageManager:GetPendingMessages":
@@ -554,10 +554,14 @@ SystemMessageInternal.prototype = {
       {
         debug("received SystemMessageManager:HandleMessageDone " + msg.type +
           " with msgID " + msg.msgID + " for " + msg.pageURL +
-          " @ " + msg.manifestURL);
+          " @ " + msg.manifestURL + " - promise rejected: " + msg.rejected);
 
-        // Maybe this should resolve a pending promise.
-        this._resolvePendingPromises(msg.msgID);
+        // Maybe this should resolve/reject a pending promise.
+        if (msg.rejected) {
+          this._rejectPendingPromises(msg.msgID);
+        } else {
+          this._resolvePendingPromises(msg.msgID);
+        }
 
         // A page has finished handling some of its system messages, so we try
         // to release the CPU wake lock we acquired on behalf of that page.
@@ -644,7 +648,7 @@ SystemMessageInternal.prototype = {
           }
         }
 
-        this._rejectPendingPromises(manifestURL);
+        this._rejectPendingPromisesFromManifestURL(manifestURL);
 
         debug("Finish updating registered pages for an uninstalled app.");
         break;
@@ -789,7 +793,20 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _rejectPendingPromises: function(aManifestURL) {
+  _rejectPendingPromises: function(aMessageID) {
+    if (!this._pendingPromises.has(aMessageID)) {
+      debug("Unknown pendingPromise messageID. This seems a bug!!");
+      return;
+    }
+
+    let obj = this._pendingPromises.get(aMessageID);
+    if (!--obj.counter) {
+      obj.rejectPromiseCb();
+      this._pendingPromises.delete(aMessageID);
+    }
+  },
+
+  _rejectPendingPromisesFromManifestURL: function(aManifestURL) {
     for (var [i, obj] of this._pendingPromises) {
       if (obj.manifestURL == aManifestURL) {
         obj.rejectPromiseCb();
