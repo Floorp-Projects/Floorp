@@ -12,13 +12,14 @@ interface nsIRequest;
 interface nsIDOMElement;
 interface nsIInputStream;
 interface nsIDocShell;
+interface nsITabParent;
 
 /**
  * The nsIXULBrowserWindow supplies the methods that may be called from the
  * internals of the browser area to tell the containing xul window to update
  * its ui. 
  */
-[scriptable, uuid(162d3378-a7d5-410c-8635-fe80e32020fc)]
+[scriptable, uuid(db89f748-9736-40b2-a172-3928aa1194b2)]
 interface nsIXULBrowserWindow : nsISupports
 {
   /**
@@ -39,6 +40,14 @@ interface nsIXULBrowserWindow : nsISupports
                                 in nsIURI linkURI,
                                 in nsIDOMNode linkNode,
                                 in boolean isAppTab);
+
+  /**
+   * Find the initial browser of the window and set its remote attribute.
+   * This can be used to ensure that there is a remote browser in a new
+   * window when it first spawns.
+   *
+   */
+  nsITabParent forceInitialBrowserRemote();
 
   /**
    * Determines whether a load should continue.
