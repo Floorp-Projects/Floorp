@@ -450,7 +450,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
   return true;
 }
 
-class MOZ_STACK_CLASS TabParent::AutoUseNewTab MOZ_FINAL
+struct MOZ_STACK_CLASS TabParent::AutoUseNewTab MOZ_FINAL
 {
 public:
   AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew)
