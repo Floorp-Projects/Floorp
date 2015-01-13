@@ -1029,14 +1029,14 @@ class LInstructionHelper : public LInstruction
         temps_[index] = a;
     }
 
-    size_t numSuccessors() const {
+    size_t numSuccessors() const MOZ_OVERRIDE {
         return 0;
     }
-    MBasicBlock *getSuccessor(size_t i) const {
+    MBasicBlock *getSuccessor(size_t i) const MOZ_OVERRIDE {
         MOZ_ASSERT(false);
         return nullptr;
     }
-    void setSuccessor(size_t i, MBasicBlock *successor) {
+    void setSuccessor(size_t i, MBasicBlock *successor) MOZ_OVERRIDE {
         MOZ_ASSERT(false);
     }
 

@@ -240,7 +240,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this.selectionStripesColor = setAlpha("#fff", 0.1);
     this.headerBackgroundColor = getColor("body-background", theme);
     this.headerTextColor = getColor("body-color", theme);
-    this.headerTimelineStrokeColor = setAlpha(getColor("body-color-alt", theme), 0.1);
+    this.headerTimelineStrokeColor = setAlpha(getColor("body-color-alt", theme), 0.25);
     this.alternatingBackgroundColor = setAlpha(getColor("body-color", theme), 0.05);
   }
 });

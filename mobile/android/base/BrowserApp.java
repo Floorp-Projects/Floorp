@@ -59,6 +59,8 @@ import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
+import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -169,6 +171,9 @@ public class BrowserApp extends GeckoApp
 
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
+
+    @RobocopTarget
+    public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
 
     public static final String PREF_STARTPANE_ENABLED = "startpane_enabled";
 
@@ -682,20 +687,26 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Check and show Onboarding start pane if Firefox has never been launched and
+     * Check and show onboarding start pane if the browser has never been launched and
      * is not opening an external link from another application.
      *
      * @param context Context of application; used to show Start Pane if appropriate
-     * @param intentAction Intent that launched this activity
+     * @param intent Intent that launched this activity
      */
-    private void checkStartPane(Context context, String intentAction) {
+    private void checkStartPane(Context context, SafeIntent intent) {
+        if (intent.getBooleanExtra(EXTRA_SKIP_STARTPANE, false)) {
+            // Note that we don't set the pref, so subsequent launches can result
+            // in the start pane being shown.
+            return;
+        }
+
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
 
             if (prefs.getBoolean(PREF_STARTPANE_ENABLED, false)) {
-                if (!Intent.ACTION_VIEW.equals(intentAction)) {
+                if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     final DialogFragment dialog = new StartPane();
                     dialog.show(getSupportFragmentManager(), ONBOARD_STARTPANE_TAG);
                 }
@@ -741,8 +752,8 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onAttachedToWindow() {
-        // We can't show Onboarding until Gecko has finished initialization (bug 1077583).
-        checkStartPane(this, getIntent().getAction());
+        // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
+        checkStartPane(this, new SafeIntent(getIntent()));
     }
 
     @Override
