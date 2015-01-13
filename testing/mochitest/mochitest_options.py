@@ -659,9 +659,8 @@ class MochitestOptions(optparse.OptionParser):
             "geckomediaplugin": 20000, # GMP rarely gets a log, but when it does, it leaks a little.
         }
 
-        # Bug 1051230 - Leak logging does not yet work for tab processes on desktop.
         # Bug 1065098 - The geckomediaplugin process fails to produce a leak log for some reason.
-        options.ignoreMissingLeaks = ["tab", "geckomediaplugin"]
+        options.ignoreMissingLeaks = ["geckomediaplugin"]
 
         return options
 
@@ -871,7 +870,7 @@ class B2GOptions(MochitestOptions):
         options.ignoreMissingLeaks.append("default")
 
         # Bug 1070068 - Leak logging does not work for tab processes on B2G.
-        assert "tab" in options.ignoreMissingLeaks, "Ignore failures for tab processes on B2G"
+        options.ignoreMissingLeaks.append("tab")
 
         return options
 
