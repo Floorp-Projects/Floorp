@@ -2205,7 +2205,6 @@ nsFrameLoader::TryRemoteBrowser()
                                    eCaseMatters)) {
       unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
     }
-    parentDocShell->SetOpenedRemote(mRemoteBrowser);
   }
   return true;
 }

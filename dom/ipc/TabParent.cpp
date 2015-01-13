@@ -647,11 +647,22 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
   nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(window);
   NS_ENSURE_TRUE(pwindow, false);
 
-  nsRefPtr<nsIDocShell> newDocShell = pwindow->GetDocShell();
-  NS_ENSURE_TRUE(newDocShell, false);
+  nsCOMPtr<nsIDocShell> windowDocShell = pwindow->GetDocShell();
+  NS_ENSURE_TRUE(windowDocShell, false);
 
-  nsCOMPtr<nsITabParent> newRemoteTab = newDocShell->GetOpenedRemote();
-  NS_ENSURE_TRUE(newRemoteTab, false);
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  windowDocShell->GetTreeOwner(getter_AddRefs(treeOwner));
+
+  nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(treeOwner);
+  NS_ENSURE_TRUE(xulWin, false);
+
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWin;
+  xulWin->GetXULBrowserWindow(getter_AddRefs(xulBrowserWin));
+  NS_ENSURE_TRUE(xulBrowserWin, false);
+
+  nsCOMPtr<nsITabParent> newRemoteTab;
+  rv = xulBrowserWin->ForceInitialBrowserRemote(getter_AddRefs(newRemoteTab));
+  NS_ENSURE_SUCCESS(rv, false);
 
   MOZ_ASSERT(TabParent::GetFrom(newRemoteTab) == newTab);
 
