@@ -200,6 +200,11 @@ menuitem[command="placesCmd_open:window"] {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 
+#placesContext_open\:newprivatewindow,
+menuitem[command="placesCmd_open:privatewindow"] {
+  list-style-image: url("chrome://browser/skin/Privacy-16.png");
+}
+
 #placesContext_open\:newtab,
 menuitem[command="placesCmd_open:tab"] {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
