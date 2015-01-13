@@ -124,10 +124,6 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsRubyTextContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  // All rt children have already been reflowed. All we need to do is
-  // to report complete and return the desired size provided by the
-  // ruby base container.
-
   // Although a ruby text container may have continuations, returning
   // NS_FRAME_COMPLETE here is still safe, since its parent, ruby frame,
   // ignores the status, and continuations of the ruby base container
@@ -135,4 +131,16 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   aDesiredSize.SetSize(lineWM, mLineSize);
+
+  if (lineWM.IsVerticalRL()) {
+    nscoord deltaWidth = -mLineSize.Width(lineWM);
+    LogicalPoint translation(lineWM, 0, deltaWidth);
+
+    for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+      MOZ_ASSERT(child->GetType() == nsGkAtoms::rubyTextFrame);
+      child->MovePositionBy(lineWM, translation);
+      nsContainerFrame::PlaceFrameView(child);
+    }
+  }
 }
