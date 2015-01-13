@@ -171,8 +171,9 @@ pref("dom.webcrypto.enabled", true);
 // Whether the UndoManager API is enabled
 pref("dom.undo_manager.enabled", false);
 
-// Whether URL,nsLocation,Link::GetHash should be percent encoded.
-pref("dom.url.encode_hash", true);
+// Whether URL,nsLocation,Link::GetHash should be percent encoded
+// in setter and percent decoded in getter (old behaviour = true)
+pref("dom.url.encode_decode_hash", false);
 
 // Whether to run add-on code in different compartments from browser code. This
 // causes a separate compartment for each (addon, global) combination, which may

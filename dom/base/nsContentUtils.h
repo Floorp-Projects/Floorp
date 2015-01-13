@@ -1860,9 +1860,13 @@ public:
     return sIsResourceTimingEnabled;
   }
 
-  static bool ShouldEncodeURLHash()
+  /*
+   * Returns true if URL setters should percent encode the Hash/Ref segment
+   * and getters should return the percent decoded value of the segment
+   */
+  static bool EncodeDecodeURLHash()
   {
-    return sEncodeURLHash;
+    return sEncodeDecodeURLHash;
   }
 
   /**
@@ -2328,7 +2332,7 @@ private:
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
-  static bool sEncodeURLHash;
+  static bool sEncodeDecodeURLHash;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
