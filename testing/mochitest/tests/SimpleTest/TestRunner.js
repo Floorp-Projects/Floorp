@@ -911,8 +911,8 @@ TestRunner.updateUI = function(tests) {
   }
 
   // Set the table values
-  var testPath = $('current-test-path');
-  var row = !!testPath ? $("tr-" + testPath.innerHTML) : null;
+  var trID = "tr-" + $('current-test-path').innerHTML;
+  var row = $(trID);
 
   // Only update the row if it actually exists (autoUI)
   if (row != null) {
