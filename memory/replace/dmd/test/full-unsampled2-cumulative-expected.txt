@@ -11,7 +11,7 @@ Invocation {
 
 Cumulative {
   1 block in heap block record 1 of 16
-  8,192 bytes (4,097 requested / 4,095 slop)
+  8,192 bytes (7,169 requested / 1,023 slop)
   47.10% of the heap (47.10% cumulative)
   Allocated at {
     #01: ... DMD.cpp ...
