@@ -46,8 +46,10 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mSession(session)
   , mUpstreamState(GENERATING_HEADERS)
   , mState(IDLE)
-  , mAllHeadersSent(0)
+  , mRequestHeadersDone(0)
+  , mOpenGenerated(0)
   , mAllHeadersReceived(0)
+  , mQueued(0)
   , mTransaction(httpTransaction)
   , mSocketTransport(session->SocketTransport())
   , mSegmentReader(nullptr)
@@ -154,7 +156,7 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
     // If not, mark the stream for callback when writing can proceed.
     if (NS_SUCCEEDED(rv) &&
         mUpstreamState == GENERATING_HEADERS &&
-        !mAllHeadersSent)
+        !mRequestHeadersDone)
       mSession->TransactionHasDataToWrite(this);
 
     // mTxinlineFrameUsed represents any queued un-sent frame. It might
@@ -169,10 +171,24 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
     if (rv == NS_BASE_STREAM_WOULD_BLOCK && !mTxInlineFrameUsed)
       mRequestBlockedOnRead = 1;
 
+    // A transaction that had already generated its headers before it was
+    // queued at the session level (due to concurrency concerns) may not call
+    // onReadSegment off the ReadSegments() stack above.
+    if (mUpstreamState == GENERATING_HEADERS && NS_SUCCEEDED(rv)) {
+      LOG3(("Http2Stream %p ReadSegments forcing OnReadSegment call\n", this));
+      uint32_t wasted = 0;
+      mSegmentReader = reader;
+      OnReadSegment("", 0, &wasted);
+      mSegmentReader = nullptr;
+    }
+
     // If the sending flow control window is open (!mBlockedOnRwin) then
     // continue sending the request
-    if (!mBlockedOnRwin &&
+    if (!mBlockedOnRwin && mUpstreamState != GENERATING_HEADERS &&
         !mTxInlineFrameUsed && NS_SUCCEEDED(rv) && (!*countRead)) {
+      MOZ_ASSERT(!mQueued);
+      MOZ_ASSERT(mRequestHeadersDone);
+      MOZ_ASSERT(mOpenGenerated);
       LOG3(("Http2Stream::ReadSegments %p 0x%X: Sending request data complete, "
             "mUpstreamState=%x\n",this, mStreamID, mUpstreamState));
       if (mSentFin) {
@@ -303,16 +319,17 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
                                      uint32_t *countUsed)
 {
   // Returns NS_OK even if the headers are incomplete
-  // set mAllHeadersSent flag if they are complete
+  // set mRequestHeadersDone flag if they are complete
 
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(mUpstreamState == GENERATING_HEADERS);
+  MOZ_ASSERT(!mRequestHeadersDone);
 
   LOG3(("Http2Stream::ParseHttpRequestHeaders %p avail=%d state=%x",
         this, avail, mUpstreamState));
 
   mFlatHttpRequestHeaders.Append(buf, avail);
-  nsHttpRequestHead *head = mTransaction->RequestHead();
+  const nsHttpRequestHead *head = mTransaction->RequestHead();
 
   // We can use the simple double crlf because firefox is the
   // only client we are parsing
@@ -333,7 +350,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   uint32_t oldLen = mFlatHttpRequestHeaders.Length();
   mFlatHttpRequestHeaders.SetLength(endHeader + 2);
   *countUsed = avail - (oldLen - endHeader) + 4;
-  mAllHeadersSent = 1;
+  mRequestHeadersDone = 1;
 
   nsAutoCString authorityHeader;
   nsAutoCString hashkey;
@@ -388,28 +405,32 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
       SetSentFin(true);
       AdjustPushedPriority();
 
-      // This stream has been activated (and thus counts against the concurrency
-      // limit intentionally), but will not be registered via
-      // RegisterStreamID (below) because of the push match.
-      // Release that semaphore count immediately (instead of waiting for
-      // cleanup stream) so we can initiate more pull streams.
-      mSession->MaybeDecrementConcurrent(this);
-
       // There is probably pushed data buffered so trigger a read manually
       // as we can't rely on future network events to do it
       mSession->ConnectPushedStream(this);
+      mOpenGenerated = 1;
       return NS_OK;
     }
   }
+  return NS_OK;
+}
 
+// This is really a headers frame, but open is pretty clear from a workflow pov
+nsresult
+Http2Stream::GenerateOpen()
+{
   // It is now OK to assign a streamID that we are assured will
   // be monotonically increasing amongst new streams on this
   // session
   mStreamID = mSession->RegisterStreamID(this);
   MOZ_ASSERT(mStreamID & 1, "Http2 Stream Channel ID must be odd");
-  LOG3(("Stream ID 0x%X [session=%p] for URI %s\n",
-        mStreamID, mSession,
-        nsCString(head->RequestURI()).get()));
+  MOZ_ASSERT(!mOpenGenerated);
+
+  mOpenGenerated = 1;
+
+  const nsHttpRequestHead *head = mTransaction->RequestHead();
+  LOG3(("Http2Stream %p Stream ID 0x%X [session=%p] for URI %s\n",
+        this, mStreamID, mSession, nsCString(head->RequestURI()).get()));
 
   if (mStreamID >= 0x80000000) {
     // streamID must fit in 31 bits. Evading This is theoretically possible
@@ -428,6 +449,9 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   // of HTTP/2 headers by writing to mTxInlineFrame{sz}
 
   nsCString compressedData;
+  nsAutoCString authorityHeader;
+  head->GetHeader(nsHttp::Host, authorityHeader);
+
   nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
   if (head->IsConnect()) {
     MOZ_ASSERT(mTransaction->QuerySpdyConnectTransaction());
@@ -440,6 +464,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     if (!ci) {
       return NS_ERROR_UNEXPECTED;
     }
+
     authorityHeader = ci->GetHost();
     authorityHeader.Append(':');
     authorityHeader.AppendInt(ci->Port());
@@ -1200,12 +1225,26 @@ Http2Stream::OnReadSegment(const char *buf,
     // the number of those bytes that we consume (i.e. the portion that are
     // header bytes)
 
-    rv = ParseHttpRequestHeaders(buf, count, countRead);
-    if (NS_FAILED(rv))
-      return rv;
-    LOG3(("ParseHttpRequestHeaders %p used %d of %d. complete = %d",
-          this, *countRead, count, mAllHeadersSent));
-    if (mAllHeadersSent) {
+    if (!mRequestHeadersDone) {
+      if (NS_FAILED(rv = ParseHttpRequestHeaders(buf, count, countRead))) {
+        return rv;
+      }
+    }
+
+    if (mRequestHeadersDone && !mOpenGenerated) {
+      if (!mSession->TryToActivate(this)) {
+        LOG3(("Http2Stream::OnReadSegment %p cannot activate now. queued.\n", this));
+        return NS_OK;
+      }
+      if (NS_FAILED(rv = GenerateOpen())) {
+        return rv;
+      }
+   }
+
+    LOG3(("ParseHttpRequestHeaders %p used %d of %d. "
+          "requestheadersdone = %d mOpenGenerated = %d\n",
+          this, *countRead, count, mRequestHeadersDone, mOpenGenerated));
+    if (mOpenGenerated) {
       SetHTTPState(OPEN);
       AdjustInitialWindow();
       // This version of TransmitFrame cannot block
