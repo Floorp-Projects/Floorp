@@ -180,8 +180,8 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
      * is more efficient to immediately undepend here.
      */
     bool useInline = baseArg->hasTwoByteChars()
-                     ? JSInlineString::twoByteLengthFits(length)
-                     : JSInlineString::latin1LengthFits(length);
+                     ? JSInlineString::lengthFits<char16_t>(length)
+                     : JSInlineString::lengthFits<JS::Latin1Char>(length);
     if (useInline) {
         js::RootedLinearString base(cx, baseArg);
         return baseArg->hasLatin1Chars()
@@ -273,68 +273,44 @@ JSFatInlineString::new_(js::ExclusiveContext *cx)
     return js::NewGCFatInlineString<allowGC>(cx);
 }
 
-MOZ_ALWAYS_INLINE char16_t *
-JSThinInlineString::initTwoByte(size_t length)
-{
-    MOZ_ASSERT(twoByteLengthFits(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_THIN_INLINE_FLAGS;
-    return d.inlineStorageTwoByte;
-}
-
-MOZ_ALWAYS_INLINE JS::Latin1Char *
-JSThinInlineString::initLatin1(size_t length)
-{
-    MOZ_ASSERT(latin1LengthFits(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_THIN_INLINE_FLAGS | LATIN1_CHARS_BIT;
-    return d.inlineStorageLatin1;
-}
-
-MOZ_ALWAYS_INLINE char16_t *
-JSFatInlineString::initTwoByte(size_t length)
-{
-    MOZ_ASSERT(twoByteLengthFits(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_FAT_INLINE_FLAGS;
-    return d.inlineStorageTwoByte;
-}
-
-MOZ_ALWAYS_INLINE JS::Latin1Char *
-JSFatInlineString::initLatin1(size_t length)
-{
-    MOZ_ASSERT(latin1LengthFits(length));
-    d.u1.length = length;
-    d.u1.flags = INIT_FAT_INLINE_FLAGS | LATIN1_CHARS_BIT;
-    return d.inlineStorageLatin1;
-}
-
 template<>
 MOZ_ALWAYS_INLINE JS::Latin1Char *
 JSThinInlineString::init<JS::Latin1Char>(size_t length)
 {
-    return initLatin1(length);
+    MOZ_ASSERT(lengthFits<JS::Latin1Char>(length));
+    d.u1.length = length;
+    d.u1.flags = INIT_THIN_INLINE_FLAGS | LATIN1_CHARS_BIT;
+    return d.inlineStorageLatin1;
 }
 
 template<>
 MOZ_ALWAYS_INLINE char16_t *
 JSThinInlineString::init<char16_t>(size_t length)
 {
-    return initTwoByte(length);
+    MOZ_ASSERT(lengthFits<char16_t>(length));
+    d.u1.length = length;
+    d.u1.flags = INIT_THIN_INLINE_FLAGS;
+    return d.inlineStorageTwoByte;
 }
 
 template<>
 MOZ_ALWAYS_INLINE JS::Latin1Char *
 JSFatInlineString::init<JS::Latin1Char>(size_t length)
 {
-    return initLatin1(length);
+    MOZ_ASSERT(lengthFits<JS::Latin1Char>(length));
+    d.u1.length = length;
+    d.u1.flags = INIT_FAT_INLINE_FLAGS | LATIN1_CHARS_BIT;
+    return d.inlineStorageLatin1;
 }
 
 template<>
 MOZ_ALWAYS_INLINE char16_t *
 JSFatInlineString::init<char16_t>(size_t length)
 {
-    return initTwoByte(length);
+    MOZ_ASSERT(lengthFits<char16_t>(length));
+    d.u1.length = length;
+    d.u1.flags = INIT_FAT_INLINE_FLAGS;
+    return d.inlineStorageTwoByte;
 }
 
 MOZ_ALWAYS_INLINE void

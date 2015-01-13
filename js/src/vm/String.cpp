@@ -482,8 +482,8 @@ js::ConcatStrings(ExclusiveContext *cx,
 
     bool isLatin1 = left->hasLatin1Chars() && right->hasLatin1Chars();
     bool canUseInline = isLatin1
-                        ? JSInlineString::latin1LengthFits(wholeLength)
-                        : JSInlineString::twoByteLengthFits(wholeLength);
+                        ? JSInlineString::lengthFits<Latin1Char>(wholeLength)
+                        : JSInlineString::lengthFits<char16_t>(wholeLength);
     if (canUseInline && cx->isJSContext()) {
         Latin1Char *latin1Buf;
         char16_t *twoByteBuf;
@@ -897,7 +897,7 @@ template <AllowGC allowGC>
 static JSFlatString *
 NewStringDeflated(ExclusiveContext *cx, const char16_t *s, size_t n)
 {
-    if (JSInlineString::latin1LengthFits(n))
+    if (JSInlineString::lengthFits<Latin1Char>(n))
         return NewInlineStringDeflated<allowGC>(cx, mozilla::Range<const char16_t>(s, n));
 
     ScopedJSFreePtr<Latin1Char> news(cx->pod_malloc<Latin1Char>(n + 1));
