@@ -130,6 +130,11 @@ public:
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif
 
+  virtual bool IsAsync() const MOZ_OVERRIDE {
+    return (!mAudioReader || mAudioReader->IsAsync()) &&
+           (!mVideoReader || mVideoReader->IsAsync());
+  }
+
 private:
   // Switch the current audio/video reader to the reader that
   // contains aTarget (or up to aError after target). Both
