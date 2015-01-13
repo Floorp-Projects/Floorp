@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import android.graphics.Bitmap;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
@@ -70,16 +68,26 @@ public class Tabs implements GeckoEventListener {
 
     private Context mAppContext;
     private ContentObserver mContentObserver;
+    private PersistTabsRunnable mPersistTabsRunnable;
 
-    private final Runnable mPersistTabsRunnable = new Runnable() {
+    private static class PersistTabsRunnable implements Runnable {
+        private final BrowserDB db;
+        private final Context context;
+        private final Iterable<Tab> tabs;
+
+        public PersistTabsRunnable(final Context context, Iterable<Tab> tabsInOrder) {
+            this.context = context;
+            this.db = GeckoProfile.get(context).getDB();
+            this.tabs = tabsInOrder;
+        }
+
         @Override
         public void run() {
             try {
-                final Context context = getAppContext();
                 boolean syncIsSetup = SyncAccounts.syncAccountsExist(context) ||
                                       FirefoxAccounts.firefoxAccountsExist(context);
                 if (syncIsSetup) {
-                    TabsAccessor.persistLocalTabs(getContentResolver(), getTabsInOrder());
+                    db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
                 }
             } catch (SecurityException se) {} // will fail without android.permission.GET_ACCOUNTS
         }
@@ -133,7 +141,9 @@ public class Tabs implements GeckoEventListener {
         mAccountManager.addOnAccountsUpdatedListener(mAccountListener, ThreadUtils.getBackgroundHandler(), false);
 
         if (mContentObserver != null) {
-            BrowserDB.registerBookmarkObserver(getContentResolver(), mContentObserver);
+            // It's safe to use the db here since we aren't doing any I/O.
+            final GeckoProfile profile = GeckoProfile.get(context);
+            profile.getDB().registerBookmarkObserver(getContentResolver(), mContentObserver);
         }
     }
 
@@ -180,7 +190,10 @@ public class Tabs implements GeckoEventListener {
                     }
                 }
             };
-            BrowserDB.registerBookmarkObserver(getContentResolver(), mContentObserver);
+
+            // It's safe to use the db here since we aren't doing any I/O.
+            final GeckoProfile profile = GeckoProfile.get(mAppContext);
+            profile.getDB().registerBookmarkObserver(getContentResolver(), mContentObserver);
         }
     }
 
@@ -531,11 +544,12 @@ public class Tabs implements GeckoEventListener {
 
     public void refreshThumbnails() {
         final ThumbnailHelper helper = ThumbnailHelper.getInstance();
+        final BrowserDB db = GeckoProfile.get(mAppContext).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 for (final Tab tab : mOrder) {
-                    helper.getAndProcessThumbnailFor(tab);
+                    helper.getAndProcessThumbnailFor(tab, db);
                 }
             }
         });
@@ -632,6 +646,9 @@ public class Tabs implements GeckoEventListener {
 
     // This method persists the current ordered list of tabs in our tabs content provider.
     public void persistAllTabs() {
+        // If there is already a mPersistTabsRunnable in progress, the backgroundThread will hold onto
+        // it and ensure these still happen in the correct order.
+        mPersistTabsRunnable = new PersistTabsRunnable(mAppContext, getTabsInOrder());
         ThreadUtils.postToBackgroundThread(mPersistTabsRunnable);
     }
 
@@ -641,8 +658,15 @@ public class Tabs implements GeckoEventListener {
      * those requests are removed.
      */
     private void queuePersistAllTabs() {
-        Handler backgroundHandler = ThreadUtils.getBackgroundHandler();
-        backgroundHandler.removeCallbacks(mPersistTabsRunnable);
+        final Handler backgroundHandler = ThreadUtils.getBackgroundHandler();
+
+        // Note: Its safe to modify the runnable here because all of the callers are on the same thread.
+        if (mPersistTabsRunnable != null) {
+            backgroundHandler.removeCallbacks(mPersistTabsRunnable);
+            mPersistTabsRunnable = null;
+        }
+
+        mPersistTabsRunnable = new PersistTabsRunnable(mAppContext, getTabsInOrder());
         backgroundHandler.postDelayed(mPersistTabsRunnable, PERSIST_TABS_AFTER_MILLISECONDS);
     }
 

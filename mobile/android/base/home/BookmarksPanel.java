@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import java.util.List;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
@@ -19,10 +20,8 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -176,31 +175,31 @@ public class BookmarksPanel extends HomeFragment {
     private static class BookmarksLoader extends SimpleCursorLoader {
         private final FolderInfo mFolderInfo;
         private final RefreshType mRefreshType;
+        private final BrowserDB mDB;
 
         public BookmarksLoader(Context context) {
-            super(context);
-            final Resources res = context.getResources();
-            final String title = res.getString(R.string.bookmarks_title);
-            mFolderInfo = new FolderInfo(Bookmarks.FIXED_ROOT_ID, title);
-            mRefreshType = RefreshType.CHILD;
+            this(context,
+                 new FolderInfo(Bookmarks.FIXED_ROOT_ID, context.getResources().getString(R.string.bookmarks_title)),
+                 RefreshType.CHILD);
         }
 
         public BookmarksLoader(Context context, FolderInfo folderInfo, RefreshType refreshType) {
             super(context);
             mFolderInfo = folderInfo;
             mRefreshType = refreshType;
+            mDB = GeckoProfile.get(context).getDB();
         }
 
         @Override
         public Cursor loadCursor() {
-            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderInfo.id);
+            return mDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderInfo.id);
         }
 
         @Override
         public void onContentChanged() {
             // Invalidate the cached value that keeps track of whether or
             // not desktop bookmarks exist.
-            BrowserDB.invalidateCachedState();
+            mDB.invalidate();
             super.onContentChanged();
         }
 

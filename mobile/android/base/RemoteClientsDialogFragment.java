@@ -8,7 +8,7 @@ package org.mozilla.gecko;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mozilla.gecko.TabsAccessor.RemoteClient;
+import org.mozilla.gecko.db.RemoteClient;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;

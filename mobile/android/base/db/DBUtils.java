@@ -6,10 +6,12 @@ package org.mozilla.gecko.db;
 
 import android.database.sqlite.SQLiteDatabase;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.Telemetry;
@@ -159,5 +161,16 @@ public class DBUtils {
         }
         builder.append(")");
         return builder.toString();
+    }
+
+    public static Uri appendProfile(final String profile, final Uri uri) {
+        return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, profile).build();
+    }
+
+    public static Uri appendProfileWithDefault(final String profile, final Uri uri) {
+        if (TextUtils.isEmpty(profile)) {
+            return appendProfile(GeckoProfile.DEFAULT_PROFILE, uri);
+        }
+        return appendProfile(profile, uri);
     }
 }

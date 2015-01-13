@@ -1,277 +1,186 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.db;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
-import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
-import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.util.StringUtils;
 
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 
 /**
- * A utility wrapper for accessing a static {@link LocalBrowserDB},
- * manually initialized with a particular profile, and similarly
- * managing a static instance of {@link SuggestedSites}.
+ * Interface for interactions with all databases. If you want an instance
+ * that implements this, you should go through GeckoProfile. E.g.,
+ * <code>GeckoProfile.get(context).getDB()</code>.
  *
- * Be careful using this class: if you're not BrowserApp, you probably
- * want to manually instantiate and use LocalBrowserDB itself.
- *
- * Also manages some flags.
+ * GeckoProfile itself will construct an appropriate subclass using
+ * a factory that the containing application can set with
+ * {@link GeckoProfile#setBrowserDBFactory(BrowserDB.Factory)}.
  */
-public class BrowserDB {
+public interface BrowserDB {
+    public interface Factory {
+        public BrowserDB get(String profileName, File profileDir);
+    }
+
     public static enum FilterFlags {
         EXCLUDE_PINNED_SITES
     }
 
-    private static volatile LocalBrowserDB sDb;
-    private static volatile SuggestedSites sSuggestedSites;
-    private static volatile boolean sAreContentProvidersEnabled = true;
+    public abstract Searches getSearches();
+    public abstract TabsAccessor getTabsAccessor();
+    public abstract URLMetadata getURLMetadata();
 
-    public static void initialize(String profile) {
-        sDb = new LocalBrowserDB(profile);
-    }
+    /**
+     * Add default bookmarks to the database.
+     * Takes an offset; returns a new offset.
+     */
+    public abstract int addDefaultBookmarks(Context context, ContentResolver cr, int offset);
 
-    public static int addDefaultBookmarks(Context context, ContentResolver cr, final int offset) {
-        return sDb.addDefaultBookmarks(context, cr, offset);
-    }
+    /**
+     * Add bookmarks from the provided distribution.
+     * Takes an offset; returns a new offset.
+     */
+    public abstract int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset);
 
-    public static int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset) {
-        return sDb.addDistributionBookmarks(cr, distribution, offset);
-    }
+    /**
+     * Invalidate cached data.
+     */
+    public abstract void invalidate();
 
-    public static void setSuggestedSites(SuggestedSites suggestedSites) {
-        sSuggestedSites = suggestedSites;
-    }
+    public abstract int getCount(ContentResolver cr, String database);
 
-    public static boolean hideSuggestedSite(String url) {
-        return sSuggestedSites.hideSite(url);
-    }
+    /**
+     * @return a cursor representing the contents of the DB filtered according to the arguments.
+     * Can return <code>null</code>. <code>CursorLoader</code> will handle this correctly.
+     */
+    public abstract Cursor filter(ContentResolver cr, CharSequence constraint,
+                                  int limit, EnumSet<BrowserDB.FilterFlags> flags);
 
-    public static void invalidateCachedState() {
-        sDb.invalidateCachedState();
-    }
+    /**
+     * @return a cursor over top sites (high-ranking bookmarks and history).
+     * Can return <code>null</code>.
+     */
+    public abstract Cursor getTopSites(ContentResolver cr, int limit);
 
-    @RobocopTarget
-    public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit,
-                                EnumSet<FilterFlags> flags) {
-        return sDb.filter(cr, constraint, limit, flags);
-    }
+    /**
+     * @return a cursor over top sites (high-ranking bookmarks and history).
+     * Can return <code>null</code>.
+     * Returns no more than <code>maxLimit</code> results.
+     */
+    public abstract Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit);
 
-    private static void appendUrlsFromCursor(List<String> urls, Cursor c) {
-        c.moveToPosition(-1);
-        while (c.moveToNext()) {
-            String url = c.getString(c.getColumnIndex(History.URL));
+    public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 
-            // Do a simpler check before decoding to avoid parsing
-            // all URLs unnecessarily.
-            if (StringUtils.isUserEnteredUrl(url)) {
-                url = StringUtils.decodeUserEnteredUrl(url);
-            }
+    public abstract void updateHistoryTitle(ContentResolver cr, String uri, String title);
 
-            urls.add(url);
-        };
-    }
+    /**
+     * Can return <code>null</code>.
+     */
+    public abstract Cursor getAllVisitedHistory(ContentResolver cr);
 
-    public static Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
-        // Note this is not a single query anymore, but actually returns a mixture
-        // of two queries, one for topSites and one for pinned sites.
-        Cursor pinnedSites = sDb.getPinnedSites(cr, minLimit);
+    /**
+     * Can return <code>null</code>.
+     */
+    public abstract Cursor getRecentHistory(ContentResolver cr, int limit);
 
-        int pinnedCount = pinnedSites.getCount();
-        Cursor topSites = sDb.getTopSites(cr, maxLimit - pinnedCount);
-        int topCount = topSites.getCount();
+    public abstract void expireHistory(ContentResolver cr, ExpirePriority priority);
 
-        Cursor suggestedSites = null;
-        if (sSuggestedSites != null) {
-            final int count = minLimit - pinnedCount - topCount;
-            if (count > 0) {
-                final List<String> excludeUrls = new ArrayList<String>(pinnedCount + topCount);
-                appendUrlsFromCursor(excludeUrls, pinnedSites);
-                appendUrlsFromCursor(excludeUrls, topSites);
+    public abstract void removeHistoryEntry(ContentResolver cr, String url);
 
-                suggestedSites = sSuggestedSites.get(count, excludeUrls);
-            }
-        }
+    public abstract void clearHistory(ContentResolver cr);
 
-        return new TopSitesCursorWrapper(pinnedSites, topSites, suggestedSites, minLimit);
-    }
 
-    public static void updateVisitedHistory(ContentResolver cr, String uri) {
-        if (sAreContentProvidersEnabled) {
-            sDb.updateVisitedHistory(cr, uri);
-        }
-    }
+    public abstract String getUrlForKeyword(ContentResolver cr, String keyword);
 
-    public static void updateHistoryTitle(ContentResolver cr, String uri, String title) {
-        if (sAreContentProvidersEnabled) {
-            sDb.updateHistoryTitle(cr, uri, title);
-        }
-    }
+    public abstract boolean isBookmark(ContentResolver cr, String uri);
+    public abstract void addBookmark(ContentResolver cr, String title, String uri);
+    public abstract Cursor getBookmarkForUrl(ContentResolver cr, String url);
+    public abstract void removeBookmarksWithURL(ContentResolver cr, String uri);
+    public abstract void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
+    public abstract void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
 
-    @RobocopTarget
-    public static Cursor getAllVisitedHistory(ContentResolver cr) {
-        return (sAreContentProvidersEnabled ? sDb.getAllVisitedHistory(cr) : null);
-    }
+    /**
+     * Can return <code>null</code>.
+     */
+    public abstract Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
 
-    public static Cursor getRecentHistory(ContentResolver cr, int limit) {
-        return sDb.getRecentHistory(cr, limit);
-    }
+    /**
+     * Can return <code>null</code>.
+     */
+    public abstract Cursor getReadingList(ContentResolver cr);
+    public abstract boolean isReadingListItem(ContentResolver cr, String uri);
+    public abstract void addReadingListItem(ContentResolver cr, ContentValues values);
+    public abstract void removeReadingListItemWithURL(ContentResolver cr, String uri);
 
-    public static void expireHistory(ContentResolver cr, ExpirePriority priority) {
-        if (sDb == null) {
-            return;
-        }
 
-        sDb.expireHistory(cr, priority == null ? ExpirePriority.NORMAL : priority);
-    }
-
-    @RobocopTarget
-    public static void removeHistoryEntry(ContentResolver cr, String url) {
-        sDb.removeHistoryEntry(cr, url);
-    }
-
-    @RobocopTarget
-    public static void clearHistory(ContentResolver cr) {
-        sDb.clearHistory(cr);
-    }
-
-    @RobocopTarget
-    public static Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
-        return sDb.getBookmarksInFolder(cr, folderId);
-    }
-
-    @RobocopTarget
-    public static Cursor getReadingList(ContentResolver cr) {
-        return sDb.getReadingList(cr);
-    }
-
-    public static String getUrlForKeyword(ContentResolver cr, String keyword) {
-        return sDb.getUrlForKeyword(cr, keyword);
-    }
-
-    @RobocopTarget
-    public static boolean isBookmark(ContentResolver cr, String uri) {
-        return (sAreContentProvidersEnabled && sDb.isBookmark(cr, uri));
-    }
-
-    public static boolean isReadingListItem(ContentResolver cr, String uri) {
-        return (sAreContentProvidersEnabled && sDb.isReadingListItem(cr, uri));
-    }
-
-    public static void addBookmark(ContentResolver cr, String title, String uri) {
-        sDb.addBookmark(cr, title, uri);
-    }
-
-    @RobocopTarget
-    public static void removeBookmarksWithURL(ContentResolver cr, String uri) {
-        sDb.removeBookmarksWithURL(cr, uri);
-    }
-
-    @RobocopTarget
-    public static void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
-        sDb.updateBookmark(cr, id, uri, title, keyword);
-    }
-
-    public static void addReadingListItem(ContentResolver cr, ContentValues values) {
-        sDb.addReadingListItem(cr, values);
-    }
-
-    public static void removeReadingListItemWithURL(ContentResolver cr, String uri) {
-        sDb.removeReadingListItemWithURL(cr, uri);
-    }
-
-    public static LoadFaviconResult getFaviconForFaviconUrl(ContentResolver cr, String faviconURL) {
-        return sDb.getFaviconForUrl(cr, faviconURL);
-    }
+    /**
+     * Get the favicon from the database, if any, associated with the given favicon URL. (That is,
+     * the URL of the actual favicon image, not the URL of the page with which the favicon is associated.)
+     * @param cr The ContentResolver to use.
+     * @param faviconURL The URL of the favicon to fetch from the database.
+     * @return The decoded Bitmap from the database, if any. null if none is stored.
+     */
+    public abstract LoadFaviconResult getFaviconForUrl(ContentResolver cr, String faviconURL);
 
     /**
      * Try to find a usable favicon URL in the history or bookmarks table.
      */
-    public static String getFaviconURLFromPageURL(ContentResolver cr, String url) {
-        return sDb.getFaviconURLFromPageURL(cr, url);
-    }
+    public abstract String getFaviconURLFromPageURL(ContentResolver cr, String uri);
 
-    public static void updateFaviconForUrl(ContentResolver cr, String pageUri, byte[] encodedFavicon, String faviconUri) {
-        sDb.updateFaviconForUrl(cr, pageUri, encodedFavicon, faviconUri);
-    }
+    public abstract void updateFaviconForUrl(ContentResolver cr, String pageUri, byte[] encodedFavicon, String faviconUri);
 
-    public static void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail) {
-        sDb.updateThumbnailForUrl(cr, uri, thumbnail);
-    }
+    public abstract byte[] getThumbnailForUrl(ContentResolver cr, String uri);
+    public abstract void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
-    @RobocopTarget
-    public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
-        return sDb.getThumbnailForUrl(cr, uri);
-    }
+    /**
+     * Query for non-null thumbnails matching the provided <code>urls</code>.
+     * The returned cursor will have no more than, but possibly fewer than,
+     * the requested number of thumbnails.
+     *
+     * Returns null if the provided list of URLs is empty or null.
+     */
+    public abstract Cursor getThumbnailsForUrls(ContentResolver cr,
+            List<String> urls);
 
-    public static Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
-        return sDb.getThumbnailsForUrls(cr, urls);
-    }
+    public abstract void removeThumbnails(ContentResolver cr);
 
-    @RobocopTarget
-    public static void removeThumbnails(ContentResolver cr) {
-        sDb.removeThumbnails(cr);
-    }
+    // Utility function for updating existing history using batch operations
+    public abstract void updateHistoryInBatch(ContentResolver cr,
+            Collection<ContentProviderOperation> operations, String url,
+            String title, long date, int visits);
 
-    public static void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
-        sDb.registerBookmarkObserver(cr, observer);
-    }
+    public abstract void updateBookmarkInBatch(ContentResolver cr,
+            Collection<ContentProviderOperation> operations, String url,
+            String title, String guid, long parent, long added, long modified,
+            long position, String keyword, int type);
 
-    public static int getCount(ContentResolver cr, String database) {
-        return sDb.getCount(cr, database);
-    }
+    public abstract void updateFaviconInBatch(ContentResolver cr,
+            Collection<ContentProviderOperation> operations, String url,
+            String faviconUrl, String faviconGuid, byte[] data);
 
-    public static void pinSite(ContentResolver cr, String url, String title, int position) {
-        sDb.pinSite(cr, url, title, position);
-    }
 
-    public static void unpinSite(ContentResolver cr, int position) {
-        sDb.unpinSite(cr, position);
-    }
+    public abstract Cursor getPinnedSites(ContentResolver cr, int limit);
+    public abstract void pinSite(ContentResolver cr, String url, String title, int position);
+    public abstract void unpinSite(ContentResolver cr, int position);
 
-    @RobocopTarget
-    public static Cursor getBookmarkForUrl(ContentResolver cr, String url) {
-        return sDb.getBookmarkForUrl(cr, url);
-    }
-
-    public static void setEnableContentProviders(boolean enableContentProviders) {
-        sAreContentProvidersEnabled = enableContentProviders;
-    }
-
-    public static boolean hasSuggestedImageUrl(String url) {
-        return sSuggestedSites.contains(url);
-    }
-
-    public static String getSuggestedImageUrlForUrl(String url) {
-        return sSuggestedSites.getImageUrlForUrl(url);
-    }
-
-    public static int getSuggestedBackgroundColorForUrl(String url) {
-        final String bgColor = sSuggestedSites.getBackgroundColorForUrl(url);
-        if (bgColor != null) {
-            return Color.parseColor(bgColor);
-        }
-
-        return 0;
-    }
-
-    public static int getTrackingIdForUrl(String url) {
-        return sSuggestedSites.getTrackingIdForUrl(url);
-    }
+    public abstract boolean hideSuggestedSite(String url);
+    public abstract void setSuggestedSites(SuggestedSites suggestedSites);
+    public abstract boolean hasSuggestedImageUrl(String url);
+    public abstract String getSuggestedImageUrlForUrl(String url);
+    public abstract int getSuggestedBackgroundColorForUrl(String url);
+    public abstract int getTrackingIdForUrl(String url);
 }
