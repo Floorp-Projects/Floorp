@@ -74,9 +74,9 @@ nsXMLContentSerializer::~nsXMLContentSerializer()
 NS_IMPL_ISUPPORTS(nsXMLContentSerializer, nsIContentSerializer)
 
 NS_IMETHODIMP 
-nsXMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
-                             uint32_t aWrapColumn, const char* aCharSet,
-                             bool aIsCopying, bool aRewriteEncodingDeclaration)
+nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
+                             const char* aCharSet, bool aIsCopying,
+                             bool aRewriteEncodingDeclaration)
 {
   mPrefixIndex = 0;
   mColPos = 0;
@@ -187,7 +187,7 @@ nsXMLContentSerializer::AppendText(nsIContent* aText,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToStringConvertLF(data, aStr);
   }
   else if (mDoFormat) {
@@ -214,7 +214,7 @@ nsXMLContentSerializer::AppendCDATASection(nsIContent* aCDATASection,
 
   NS_NAMED_LITERAL_STRING(cdata , "<![CDATA[");
 
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToString(cdata, aStr);
   }
   else if (mDoFormat) {
@@ -260,7 +260,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIContent* aPI,
   start.AppendLiteral("<?");
   start.Append(target);
 
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToString(start, aStr);
   }
   else if (mDoFormat) {
@@ -318,7 +318,7 @@ nsXMLContentSerializer::AppendComment(nsIContent* aComment,
 
   NS_NAMED_LITERAL_STRING(startComment, "<!--");
 
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToString(startComment, aStr);
   }
   else if (mDoFormat) {
@@ -693,7 +693,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     attrString.Append(sValue);
     attrString.Append(cDelimiter);
   }
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToStringConvertLF(attrString, aStr);
   }
   else if (mDoFormat) {
@@ -898,7 +898,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   nsIAtom *name = content->Tag();
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(content->GetNameSpaceID(), name);
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
+  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
     if (mColPos && lineBreakBeforeOpen) {
       AppendNewLineToString(aStr);
     }
@@ -939,7 +939,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 
   MaybeEnterInPreContent(content);
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
+  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
     IncrIndentation(name);
   }
 
@@ -949,8 +949,8 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   AppendEndOfElementStart(aOriginalElement, name, content->GetNameSpaceID(),
                           aStr);
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()
-    && LineBreakAfterOpen(content->GetNameSpaceID(), name)) {
+  if ((mDoFormat || forceFormat) && !mPreLevel 
+    && !mDoRaw && LineBreakAfterOpen(content->GetNameSpaceID(), name)) {
     AppendNewLineToString(aStr);
   }
 
@@ -987,7 +987,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
 
   nsIAtom *name = content->Tag();
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
+  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
     DecrIndentation(name);
   }
 
@@ -1009,7 +1009,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, false);
   NS_ASSERTION(!debugNeedToPushNamespace, "Can't push namespaces in closing tag!");
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
+  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
 
     bool lineBreakBeforeClose = LineBreakBeforeClose(content->GetNameSpaceID(), name);
 
@@ -1041,8 +1041,8 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
 
   MaybeLeaveFromPreContent(content);
 
-  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()
-      && LineBreakAfterClose(content->GetNameSpaceID(), name)) {
+  if ((mDoFormat || forceFormat) && !mPreLevel
+      && !mDoRaw && LineBreakAfterClose(content->GetNameSpaceID(), name)) {
     AppendNewLineToString(aStr);
   }
   else {
@@ -1217,12 +1217,11 @@ void
 nsXMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
   // support of the xml:space attribute
-  if (ShouldMaintainPreLevel() &&
-      aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
+  if (aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
     nsAutoString space;
     aNode->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space);
     if (space.EqualsLiteral("preserve"))
-      ++PreLevel();
+      ++mPreLevel;
   }
 }
 
@@ -1230,12 +1229,11 @@ void
 nsXMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
   // support of the xml:space attribute
-  if (ShouldMaintainPreLevel() &&
-      aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
+  if (aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
     nsAutoString space;
     aNode->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space);
     if (space.EqualsLiteral("preserve"))
-      --PreLevel();
+      --mPreLevel;
   }
 }
 
@@ -1444,7 +1442,7 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
       colPos = mColPos;
     }
     else {
-      if (mDoFormat && !mDoRaw && !PreLevel() && !onceAgainBecauseWeAddedBreakInFront) {
+      if (mDoFormat && !mPreLevel && !onceAgainBecauseWeAddedBreakInFront) {
         colPos = mIndent.Length();
       }
       else
@@ -1712,11 +1710,4 @@ nsXMLContentSerializer::AppendToStringWrapped(const nsASingleFragmentString& aSt
         mayIgnoreStartOfLineWhitespaceSequence, sequenceStartAfterAWhitespace, aOutputStr);
     }
   }
-}
-
-bool
-nsXMLContentSerializer::ShouldMaintainPreLevel() const
-{
-  // Only attempt to maintain the pre level for consumers who care about it.
-  return !mDoRaw || (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre);
 }

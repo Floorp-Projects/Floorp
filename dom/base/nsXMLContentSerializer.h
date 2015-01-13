@@ -32,9 +32,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIDocument* aDocument, uint32_t flags,
-                  uint32_t aWrapColumn, const char* aCharSet,
-                  bool aIsCopying, bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
+  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
+                  const char* aCharSet, bool aIsCopying,
+                  bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
                         int32_t aEndOffset, nsAString& aStr) MOZ_OVERRIDE;
@@ -294,16 +294,6 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   virtual void MaybeEnterInPreContent(nsIContent* aNode);
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode);
 
-  bool ShouldMaintainPreLevel() const;
-  int32_t PreLevel() const {
-    MOZ_ASSERT(ShouldMaintainPreLevel());
-    return mPreLevel;
-  }
-  int32_t& PreLevel() {
-    MOZ_ASSERT(ShouldMaintainPreLevel());
-    return mPreLevel;
-  }
-
   int32_t mPrefixIndex;
 
   struct NameSpaceDecl {
@@ -371,7 +361,6 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   bool          mBodyOnly;
   int32_t       mInBody;
 
-private:
   // number of nested elements which have preformated content
   int32_t       mPreLevel;
 };
