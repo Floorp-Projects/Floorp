@@ -147,6 +147,8 @@ struct Statistics
     int64_t clearMaxGCPauseAccumulator();
     int64_t getMaxGCPauseSinceClear();
 
+    static const size_t MAX_NESTING = 20;
+
   private:
     JSRuntime *runtime;
 
@@ -208,7 +210,6 @@ struct Statistics
     int64_t maxPauseInInterval;
 
     /* Phases that are currently on stack. */
-    static const size_t MAX_NESTING = 8;
     Phase phaseNesting[MAX_NESTING];
     size_t phaseNestingDepth;
 
