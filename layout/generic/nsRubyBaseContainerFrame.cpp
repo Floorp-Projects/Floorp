@@ -341,7 +341,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       "No line layout provided to RubyBaseContainerFrame reflow method.");
     return;
   }
-  MOZ_ASSERT(aReflowState.mRubyReflowState, "No ruby reflow state provided");
 
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
@@ -494,7 +493,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
     lineLayout->VerticalAlignLine();
     LogicalSize lineSize(lineWM, rtcISize, lineLayout->GetFinalLineBSize());
-    aReflowState.mRubyReflowState->SetTextContainerInfo(i, textContainer, lineSize);
+    textContainer->SetLineSize(lineSize);
     lineLayout->EndLineReflow();
   }
 
