@@ -51,10 +51,7 @@ CodeGeneratorARM::generatePrologue()
     masm.reserveStack(frameSize());
     masm.checkStackAlignment();
 
-#ifdef JS_TRACE_LOGGING
-    emitTracelogScriptStart();
-    emitTracelogStartEvent(TraceLogger_IonMonkey);
-#endif
+    emitTracelogIonStart();
 
     return true;
 }
@@ -65,10 +62,7 @@ CodeGeneratorARM::generateEpilogue()
     MOZ_ASSERT(!gen->compilingAsmJS());
     masm.bind(&returnLabel_);
 
-#ifdef JS_TRACE_LOGGING
-    emitTracelogStopEvent(TraceLogger_IonMonkey);
-    emitTracelogScriptStop();
-#endif
+    emitTracelogIonStop();
 
     masm.freeStack(frameSize());
     MOZ_ASSERT(masm.framePushed() == 0);
