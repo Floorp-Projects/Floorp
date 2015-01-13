@@ -6,56 +6,48 @@
 #ifndef WEBGL_UNIFORM_LOCATION_H_
 #define WEBGL_UNIFORM_LOCATION_H_
 
-#include "GLDefs.h"
-#include "mozilla/WeakPtr.h"
-#include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
-
-struct JSContext;
+#include "WebGLUniformInfo.h"
 
 namespace mozilla {
-class WebGLActiveInfo;
-class WebGLContext;
+
 class WebGLProgram;
 
-namespace webgl {
-struct LinkedProgramInfo;
-}
-
 class WebGLUniformLocation MOZ_FINAL
-    : public nsWrapperCache
-    , public WebGLContextBoundObject
+    : public WebGLContextBoundObject
 {
 public:
-    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLUniformLocation)
+    WebGLUniformLocation(WebGLContext* context, WebGLProgram* program,
+                         GLint location, const WebGLUniformInfo& info);
 
-    const WeakPtr<const webgl::LinkedProgramInfo> mLinkInfo;
-    const GLuint mLoc;
-    const WebGLActiveInfo* const mActiveInfo;
-
-    WebGLUniformLocation(WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
-                         GLuint loc, const WebGLActiveInfo* activeInfo);
-
-    bool ValidateForProgram(WebGLProgram* prog, WebGLContext* webgl,
-                            const char* funcName) const;
-    bool ValidateSamplerSetter(GLint value, WebGLContext* webgl,
-                               const char* funcName) const;
-    bool ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType,
-                             WebGLContext* webgl, const char* funcName) const;
-    bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize,
-                             WebGLContext* webgl, const char* funcName) const;
-
-    JS::Value GetUniform(JSContext* js, WebGLContext* webgl) const;
-
-    // Needed for certain helper functions like ValidateObject.
-    // `WebGLUniformLocation`s can't be 'Deleted' in the WebGL sense.
+    // needed for certain helper functions like ValidateObject.
+    // WebGLUniformLocation's can't be 'Deleted' in the WebGL sense.
     bool IsDeleted() const { return false; }
 
-    virtual JSObject* WrapObject(JSContext* js) MOZ_OVERRIDE;
+    const WebGLUniformInfo& Info() const { return mInfo; }
+
+    WebGLProgram* Program() const { return mProgram; }
+    GLint Location() const { return mLocation; }
+    uint32_t ProgramGeneration() const { return mProgramGeneration; }
+    int ElementSize() const { return mElementSize; }
+
+    JSObject* WrapObject(JSContext* cx);
+
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WebGLUniformLocation)
 
 protected:
-    ~WebGLUniformLocation();
+    ~WebGLUniformLocation() { }
+
+    // nsRefPtr, not WebGLRefPtr, so that we don't prevent the program from being explicitly deleted.
+    // we just want to avoid having a dangling pointer.
+    nsRefPtr<WebGLProgram> mProgram;
+
+    uint32_t mProgramGeneration;
+    GLint mLocation;
+    WebGLUniformInfo mInfo;
+    int mElementSize;
+    friend class WebGLProgram;
 };
 
 } // namespace mozilla
