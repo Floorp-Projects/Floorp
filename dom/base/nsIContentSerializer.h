@@ -19,17 +19,17 @@ class Element;
 } // namespace mozilla
 
 #define NS_ICONTENTSERIALIZER_IID \
-{ 0x18a66082, 0x793f, 0x47f4, \
-  { 0xa1, 0xf0, 0xf0, 0xe4, 0x22, 0x9e, 0x52, 0x79 } }
+{ 0xb1ee32f2, 0xb8c4, 0x49b9, \
+  { 0x93, 0xdf, 0xb6, 0xfa, 0xb5, 0xd5, 0x46, 0x88 } }
 
 class nsIContentSerializer : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
-  NS_IMETHOD Init(nsIDocument* aDoc, uint32_t flags,
-                  uint32_t aWrapColumn, const char* aCharSet,
-                  bool aIsCopying, bool aIsWholeDocument) = 0;
+  NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
+                  const char* aCharSet, bool aIsCopying,
+                  bool aIsWholeDocument) = 0;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
                         int32_t aEndOffset, nsAString& aStr) = 0;

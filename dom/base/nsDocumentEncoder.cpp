@@ -1076,8 +1076,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   nsCOMPtr<nsIAtom> charsetAtom;
   
   bool rewriteEncodingDeclaration = !(mSelection || mRange || mNode) && !(mFlags & OutputDontRewriteEncodingDeclaration);
-  mSerializer->Init(mDocument, mFlags, mWrapColumn, mCharset.get(),
-                    mIsCopying, rewriteEncodingDeclaration);
+  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying, rewriteEncodingDeclaration);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
