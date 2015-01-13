@@ -51,9 +51,10 @@ tabpanels {
   }
 }
 
-.tab-icon-image:not([src]):not([pinned]),
+.tab-icon-image:not([src]):not([pinned]):not([crashed]),
 .tab-throbber:not([busy]),
-.tab-throbber[busy] + .tab-icon-image {
+.tab-icon-image[busy],
+.tab-icon-overlay[busy] {
   display: none;
 }
 

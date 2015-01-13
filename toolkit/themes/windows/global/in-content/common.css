@@ -9,6 +9,7 @@ xul|caption {
 }
 
 xul|button,
+html|button,
 xul|colorpicker[type="button"],
 xul|menulist {
   margin: 2px 4px;
