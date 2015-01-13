@@ -47,6 +47,13 @@ function test_strict() {
   add_connection_test("bad.include-subdomains.pinning.example.com",
     getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
 
+  // Check that using a FQDN doesn't bypass pinning.
+  add_connection_test("bad.include-subdomains.pinning.example.com.",
+    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+  // For some reason this is also navigable (see bug 1118522).
+  add_connection_test("bad.include-subdomains.pinning.example.com..",
+    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+
   // These domains serve certs that match the pinset.
   add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
   add_connection_test("good.include-subdomains.pinning.example.com", Cr.NS_OK);
@@ -143,7 +150,7 @@ function check_pinning_telemetry() {
                          .snapshot();
   // Because all of our test domains are pinned to user-specified trust
   // anchors, effectively only strict mode and enforce test-mode get evaluated
-  do_check_eq(prod_histogram.counts[0], 4); // Failure count
+  do_check_eq(prod_histogram.counts[0], 6); // Failure count
   do_check_eq(prod_histogram.counts[1], 4); // Success count
   do_check_eq(test_histogram.counts[0], 2); // Failure count
   do_check_eq(test_histogram.counts[1], 0); // Success count
