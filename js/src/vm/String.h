@@ -791,9 +791,6 @@ class JSInlineString : public JSFlatString
         return d.inlineStorageTwoByte;
     }
 
-    static bool latin1LengthFits(size_t length);
-    static bool twoByteLengthFits(size_t length);
-
     template<typename CharT>
     static bool lengthFits(size_t length);
 
@@ -819,18 +816,8 @@ class JSThinInlineString : public JSInlineString
     template <js::AllowGC allowGC>
     static inline JSThinInlineString *new_(js::ExclusiveContext *cx);
 
-    inline char16_t *initTwoByte(size_t length);
-    inline JS::Latin1Char *initLatin1(size_t length);
-
     template <typename CharT>
     inline CharT *init(size_t length);
-
-    static bool latin1LengthFits(size_t length) {
-        return length <= MAX_LENGTH_LATIN1;
-    }
-    static bool twoByteLengthFits(size_t length) {
-        return length <= MAX_LENGTH_TWO_BYTE;
-    }
 
     template<typename CharT>
     static bool lengthFits(size_t length);
@@ -875,36 +862,8 @@ class JSFatInlineString : public JSInlineString
                                               INLINE_EXTENSION_CHARS_TWO_BYTE
                                               -1 /* null terminator */;
 
-    inline char16_t *initTwoByte(size_t length);
-    inline JS::Latin1Char *initLatin1(size_t length);
-
     template <typename CharT>
     inline CharT *init(size_t length);
-
-    static bool latin1LengthFits(size_t length) {
-        static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
-                      "fat inline strings' Latin1 characters don't exactly "
-                      "fill subsequent cells and thus are wasteful");
-        static_assert(MAX_LENGTH_LATIN1 + 1 ==
-                      (sizeof(JSFatInlineString) -
-                       offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char),
-                      "MAX_LENGTH_LATIN1 must be one less than inline Latin1 "
-                      "storage count");
-
-        return length <= MAX_LENGTH_LATIN1;
-    }
-    static bool twoByteLengthFits(size_t length) {
-        static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
-                      "fat inline strings' char16_t characters don't exactly "
-                      "fill subsequent cells and thus are wasteful");
-        static_assert(MAX_LENGTH_TWO_BYTE + 1 ==
-                      (sizeof(JSFatInlineString) -
-                       offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t),
-                      "MAX_LENGTH_TWO_BYTE must be one less than inline "
-                      "char16_t storage count");
-
-        return length <= MAX_LENGTH_TWO_BYTE;
-    }
 
     template<typename CharT>
     static bool lengthFits(size_t length);
@@ -1313,10 +1272,56 @@ JSRope::copyChars<char16_t>(js::ExclusiveContext *cx, js::ScopedJSFreePtr<char16
 
 template<>
 MOZ_ALWAYS_INLINE bool
+JSThinInlineString::lengthFits<JS::Latin1Char>(size_t length)
+{
+    return length <= MAX_LENGTH_LATIN1;
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
+JSThinInlineString::lengthFits<char16_t>(size_t length)
+{
+    return length <= MAX_LENGTH_TWO_BYTE;
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
+JSFatInlineString::lengthFits<JS::Latin1Char>(size_t length)
+{
+    static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
+                  "fat inline strings' Latin1 characters don't exactly "
+                  "fill subsequent cells and thus are wasteful");
+    static_assert(MAX_LENGTH_LATIN1 + 1 ==
+                  (sizeof(JSFatInlineString) -
+                   offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char),
+                  "MAX_LENGTH_LATIN1 must be one less than inline Latin1 "
+                  "storage count");
+
+    return length <= MAX_LENGTH_LATIN1;
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
+JSFatInlineString::lengthFits<char16_t>(size_t length)
+{
+    static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
+                  "fat inline strings' char16_t characters don't exactly "
+                  "fill subsequent cells and thus are wasteful");
+    static_assert(MAX_LENGTH_TWO_BYTE + 1 ==
+                  (sizeof(JSFatInlineString) -
+                   offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t),
+                  "MAX_LENGTH_TWO_BYTE must be one less than inline "
+                  "char16_t storage count");
+
+    return length <= MAX_LENGTH_TWO_BYTE;
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
 JSInlineString::lengthFits<JS::Latin1Char>(size_t length)
 {
     // If it fits in a fat inline string, it fits in any inline string.
-    return JSFatInlineString::latin1LengthFits(length);
+    return JSFatInlineString::lengthFits<JS::Latin1Char>(length);
 }
 
 template<>
@@ -1324,49 +1329,7 @@ MOZ_ALWAYS_INLINE bool
 JSInlineString::lengthFits<char16_t>(size_t length)
 {
     // If it fits in a fat inline string, it fits in any inline string.
-    return JSFatInlineString::twoByteLengthFits(length);
-}
-
-template<>
-MOZ_ALWAYS_INLINE bool
-JSThinInlineString::lengthFits<JS::Latin1Char>(size_t length)
-{
-    return latin1LengthFits(length);
-}
-
-template<>
-MOZ_ALWAYS_INLINE bool
-JSThinInlineString::lengthFits<char16_t>(size_t length)
-{
-    return twoByteLengthFits(length);
-}
-
-template<>
-MOZ_ALWAYS_INLINE bool
-JSFatInlineString::lengthFits<JS::Latin1Char>(size_t length)
-{
-    return latin1LengthFits(length);
-}
-
-template<>
-MOZ_ALWAYS_INLINE bool
-JSFatInlineString::lengthFits<char16_t>(size_t length)
-{
-    return twoByteLengthFits(length);
-}
-
-MOZ_ALWAYS_INLINE bool
-JSInlineString::latin1LengthFits(size_t length)
-{
-    // If it fits in a fat inline string, it fits in any inline string.
-    return JSFatInlineString::latin1LengthFits(length);
-}
-
-MOZ_ALWAYS_INLINE bool
-JSInlineString::twoByteLengthFits(size_t length)
-{
-    // If it fits in a fat inline string, it fits in any inline string.
-    return JSFatInlineString::twoByteLengthFits(length);
+    return JSFatInlineString::lengthFits<char16_t>(length);
 }
 
 template<>
