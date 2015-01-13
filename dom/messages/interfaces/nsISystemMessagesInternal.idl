@@ -9,7 +9,7 @@ interface nsIDOMWindow;
 
 // Implemented by the contract id @mozilla.org/system-message-internal;1
 
-[scriptable, uuid(6296a314-2abf-4cd0-9097-5e81ee6832e2)]
+[scriptable, uuid(54c8e274-decb-4258-9a24-4ebfcbf3d00a)]
 interface nsISystemMessagesInternal : nsISupports
 {
   /*
@@ -22,8 +22,11 @@ interface nsISystemMessagesInternal : nsISupports
    * @param manifestURI The webapp's manifest URI.
    * @param extra       Extra opaque information that will be passed around in the observer
    *                    notification to open the page.
+   * returns a Promise
    */
-  void sendMessage(in DOMString type, in jsval message, in nsIURI pageURI, in nsIURI manifestURI, [optional] in jsval extra);
+  nsISupports sendMessage(in DOMString type, in jsval message,
+                          in nsIURI pageURI, in nsIURI manifestURI,
+                          [optional] in jsval extra);
 
   /*
    * Allow any internal user to broadcast a message of a given type.
