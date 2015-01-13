@@ -14,6 +14,8 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
@@ -89,6 +91,46 @@ public final class GeckoProfile {
         UNDEFINED
     };
 
+    /**
+     * Warning: has a side-effect of setting sIsUsingCustomProfile.
+     * Can return null.
+     */
+    public static GeckoProfile getFromArgs(final Context context, final String args) {
+        if (args == null) {
+            return null;
+        }
+
+        String profileName = null;
+        String profilePath = null;
+        if (args.contains("-P")) {
+            final Pattern p = Pattern.compile("(?:-P\\s*)(\\w*)(\\s*)");
+            final Matcher m = p.matcher(args);
+            if (m.find()) {
+                profileName = m.group(1);
+            }
+        }
+
+        if (args.contains("-profile")) {
+            final Pattern p = Pattern.compile("(?:-profile\\s*)(\\S*)(\\s*)");
+            final Matcher m = p.matcher(args);
+            if (m.find()) {
+                profilePath =  m.group(1);
+            }
+
+            if (profileName == null) {
+                profileName = GeckoProfile.DEFAULT_PROFILE;
+            }
+
+            GeckoProfile.sIsUsingCustomProfile = true;
+        }
+
+        if (profileName == null && profilePath == null) {
+            return null;
+        }
+
+        return GeckoProfile.get(context, profileName, profilePath);
+    }
+
     public static GeckoProfile get(Context context) {
         boolean isGeckoApp = false;
         try {
@@ -112,11 +154,19 @@ public final class GeckoProfile {
         }
 
         if (GuestSession.shouldUse(context, args)) {
-            GeckoProfile p = GeckoProfile.getOrCreateGuestProfile(context);
+            final GeckoProfile p = GeckoProfile.getOrCreateGuestProfile(context);
             if (isGeckoApp) {
                 ((GeckoApp) context).mProfile = p;
             }
             return p;
+        }
+
+        final GeckoProfile fromArgs = GeckoProfile.getFromArgs(context, args);
+        if (fromArgs != null) {
+            if (isGeckoApp) {
+                ((GeckoApp) context).mProfile = fromArgs;
+            }
+            return fromArgs;
         }
 
         if (isGeckoApp) {

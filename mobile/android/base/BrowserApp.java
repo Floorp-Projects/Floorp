@@ -497,7 +497,13 @@ public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         final Intent intent = getIntent();
+
+        // Note that we're calling GeckoProfile.get *before GeckoApp.onCreate*.
+        // This means we're reliant on the logic in GeckoProfile to correctly
+        // look up our launch intent (via BrowserApp's Activity-ness) and pull
+        // out the arguments. Be careful if you change that!
         final GeckoProfile p = GeckoProfile.get(this);
+
         if (p != null && !p.inGuestMode()) {
             // This is *only* valid because we never want to use the guest mode
             // profile concurrently with a normal profile -- no syncing to it,
