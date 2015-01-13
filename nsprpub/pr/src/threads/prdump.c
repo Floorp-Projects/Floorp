@@ -87,7 +87,7 @@ void _PR_DumpThreads(PRFileDesc *fd)
     _PR_DumpThread(fd, t);
 
     _PR_DumpPrintf(fd, "Runnable Threads:\n");
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < PR_ARRAY_SIZE(_PR_RUNQ(t->cpu)); i++) {
         DumpThreadQueue(fd, &_PR_RUNQ(t->cpu)[i]);
     }
 
