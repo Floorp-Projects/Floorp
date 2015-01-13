@@ -484,6 +484,10 @@ private:
     AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
                            MOZ_OVERRIDE;
 
+    PProcessHangMonitorParent*
+    AllocPProcessHangMonitorParent(Transport* aTransport,
+                                   ProcessId aOtherProcess) MOZ_OVERRIDE;
+
     virtual bool RecvGetProcessAttributes(ContentParentId* aCpId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
@@ -838,6 +842,8 @@ private:
     static int32_t sNuwaPid;
     static bool sNuwaReady;
 #endif
+
+    PProcessHangMonitorParent* mHangMonitorActor;
 };
 
 } // namespace dom

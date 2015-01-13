@@ -21,6 +21,7 @@ include protocol PFileDescriptorSet;
 include protocol PFMRadio;
 include protocol PFileSystemRequest;
 include protocol PHal;
+include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PMemoryReportRequest;
 include protocol PMobileConnection;
@@ -345,6 +346,7 @@ prio(normal upto urgent) intr protocol PContent
     parent spawns PPluginModule;
 
     parent opens PCompositor;
+    parent opens PProcessHangMonitor;
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
     child opens PBackground;
