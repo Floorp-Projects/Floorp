@@ -4447,6 +4447,9 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
 
+// RequestSync API is disabled by default.
+pref("dom.requestSync.enabled", false);
+
 // Search service settings
 pref("browser.search.log", false);
 pref("browser.search.update", true);
