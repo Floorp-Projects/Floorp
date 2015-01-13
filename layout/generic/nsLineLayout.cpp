@@ -258,6 +258,21 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   pfd->mAscent = 0;
   pfd->mSpan = psd;
   psd->mFrame = pfd;
+  nsIFrame* frame = mBlockReflowState->frame;
+  if (frame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+    // Ruby text container won't be reflowed via ReflowFrame, hence the
+    // relative positioning information should be recorded here.
+    MOZ_ASSERT(mBaseLineLayout != this);
+    pfd->mRelativePos =
+      mBlockReflowState->mStyleDisplay->IsRelativelyPositionedStyle();
+    if (pfd->mRelativePos) {
+      MOZ_ASSERT(
+        mBlockReflowState->GetWritingMode() == frame->GetWritingMode(),
+        "mBlockReflowState->frame == frame, "
+        "hence they should have identical writing mode");
+      pfd->mOffsets = mBlockReflowState->ComputedLogicalOffsets();
+    }
+  }
 }
 
 void
@@ -692,6 +707,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   WritingMode frameWM = aFrame->GetWritingMode();
   WritingMode lineWM = mRootSpan->mWritingMode;
   pfd->mBounds = LogicalRect(lineWM);
+  pfd->mOverflowAreas.Clear();
   pfd->mMargin = LogicalMargin(lineWM);
   pfd->mBorderPadding = LogicalMargin(lineWM);
   pfd->mOffsets = LogicalMargin(frameWM);
@@ -3058,6 +3074,26 @@ nsLineLayout::ApplyRelativePositioning(PerFrameData* aPFD)
   frame->SetPosition(frameWM, origin, mContainerWidth);
 }
 
+// This method do relative positioning for ruby annotations.
+void
+nsLineLayout::RelativePositionAnnotations(PerSpanData* aRubyPSD,
+                                          nsOverflowAreas& aOverflowAreas)
+{
+  MOZ_ASSERT(aRubyPSD->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame);
+  for (PerFrameData* pfd = aRubyPSD->mFirstFrame; pfd; pfd = pfd->mNext) {
+    MOZ_ASSERT(pfd->mFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+    for (PerFrameData* rtc = pfd->mNextAnnotation;
+         rtc; rtc = rtc->mNextAnnotation) {
+      nsIFrame* rtcFrame = rtc->mFrame;
+      MOZ_ASSERT(rtcFrame->GetType() == nsGkAtoms::rubyTextContainerFrame);
+      ApplyRelativePositioning(rtc);
+      nsOverflowAreas rtcOverflowAreas;
+      RelativePositionFrames(rtc->mSpan, rtcOverflowAreas);
+      aOverflowAreas.UnionWith(rtcOverflowAreas + rtcFrame->GetPosition());
+    }
+  }
+}
+
 void
 nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas)
 {
@@ -3150,6 +3186,11 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
                                                  NS_FRAME_NO_MOVE_VIEW);
 
     overflowAreas.UnionWith(r + frame->GetPosition());
+  }
+
+  // Also compute relative position in the annotations.
+  if (psd->mFrame->mFrame->GetType() == nsGkAtoms::rubyFrame) {
+    RelativePositionAnnotations(psd, overflowAreas);
   }
 
   // If we just computed a spans combined area, we need to update its
