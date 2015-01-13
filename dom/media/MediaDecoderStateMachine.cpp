@@ -620,15 +620,20 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   // data to decode. If we're running low on downloaded data to decode,
   // we won't start keyframe skipping, as we'll be pausing playback to buffer
   // soon anyway and we'll want to be able to display frames immediately
-  // after buffering finishes.
-  bool isLowOnDecodedAudio = !mIsAudioPrerolling && IsAudioDecoding() &&
+  // after buffering finishes. We ignore the low audio calculations for
+  // readers that are async, as since their audio decode runs on a different
+  // task queue it should never run low and skipping won't help their decode.
+  bool isLowOnDecodedAudio = !mReader->IsAsync() &&
+                             !mIsAudioPrerolling && IsAudioDecoding() &&
                              (GetDecodedAudioDuration() <
                               mLowAudioThresholdUsecs * mPlaybackRate);
   bool isLowOnDecodedVideo = !mIsVideoPrerolling &&
                              (mDecodedVideoEndTime - GetClock() <
                               LOW_VIDEO_THRESHOLD_USECS * mPlaybackRate);
-  if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !HasLowUndecodedData()) {
-    DECODER_LOG("Skipping video decode to the next keyframe");
+  bool lowUndecoded = HasLowUndecodedData();
+  if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowUndecoded) {
+    DECODER_LOG("Skipping video decode to the next keyframe lowAudio=%d lowVideo=%d lowUndecoded=%d async=%d",
+                isLowOnDecodedAudio, isLowOnDecodedVideo, lowUndecoded, mReader->IsAsync());
     return true;
   }
 
@@ -1000,10 +1005,14 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
       ScheduleStateMachine();
     case DECODER_STATE_DECODING: {
       Push(video);
-      // If the requested video sample was slow to arrive, increase the
-      // amount of audio we buffer to ensure that we don't run out of audio.
-      // TODO: Detect when we're truly async, and don't do this if so, as
-      // it's not necessary.
+      // For non async readers, if the requested video sample was slow to
+      // arrive, increase the amount of audio we buffer to ensure that we
+      // don't run out of audio. This is unnecessary for async readers,
+      // since they decode audio and video on different threads so they
+      // are unlikely to run out of decoded audio.
+      if (mReader->IsAsync()) {
+        return;
+      }
       TimeDuration decodeTime = TimeStamp::Now() - mVideoDecodeStartTime;
       if (THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
           !HasLowUndecodedData())
