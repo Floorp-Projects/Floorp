@@ -22,8 +22,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/BinarySearch.h"
-#include "nsComputedDOMStyle.h"
-#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -120,12 +118,10 @@ NS_IMPL_ISUPPORTS(nsPlainTextSerializer,
 
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
-                            uint32_t aWrapColumn, const char* aCharSet,
-                            bool aIsCopying, bool aIsWholeDocument)
+nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
+                            const char* aCharSet, bool aIsCopying,
+                            bool aIsWholeDocument)
 {
-  MOZ_ASSERT(aDocument);
-
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
   if (aFlags & nsIDocumentEncoder::OutputFormatFlowed) {
@@ -189,10 +185,6 @@ nsPlainTextSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
 
   // XXX We should let the caller decide whether to do this or not
   mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
-
-  // Flush the styles on the document to ensure that we read the correct style
-  // information when determining whether an element is preformatted.
-  aDocument->FlushPendingNotifications(Flush_Style);
 
   return NS_OK;
 }
@@ -364,7 +356,6 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
 
   if (isContainer) {
     rv = DoOpenContainer(id);
-    mPreformatStack.push(IsElementPreformatted(mElement));
   }
   else {
     rv = DoAddLeaf(id);
@@ -398,7 +389,6 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
   rv = NS_OK;
   if (isContainer) {
     rv = DoCloseContainer(id);
-    mPreformatStack.pop();
   }
 
   mElement = nullptr;
@@ -1547,7 +1537,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_ASSERTION(mCurrentLine.IsEmpty() || IsInPre(),
+    NS_ASSERTION(mCurrentLine.IsEmpty(),
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();
@@ -1765,22 +1755,28 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
   return localName->IsStaticAtom() ? localName : nullptr;
 }
 
+/**
+ * Returns true if we currently are inside a <pre>. The check is done
+ * by traversing the tag stack looking for <pre> until we hit a block
+ * level tag which is assumed to override any <pre>:s below it in
+ * the stack. To do this correctly to a 100% would require access
+ * to style which we don't support in this converter.
+ */  
 bool
 nsPlainTextSerializer::IsInPre()
 {
-  return !mPreformatStack.empty() && mPreformatStack.top();
-}
-
-bool
-nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
-{
-  nsRefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
-                                                         nullptr);
-  if (styleContext) {
-    const nsStyleText* textStyle = styleContext->StyleText();
-    return textStyle->WhiteSpaceOrNewlineIsSignificant();
+  int32_t i = mTagStackIndex;
+  while(i > 0) {
+    if (mTagStack[i - 1] == nsGkAtoms::pre)
+      return true;
+    if (nsContentUtils::IsHTMLBlock(mTagStack[i - 1])) {
+      // We assume that every other block overrides a <pre>
+      return false;
+    }
+    --i;
   }
+
+  // Not a <pre> in the whole stack
   return false;
 }
 

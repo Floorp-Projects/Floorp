@@ -33,8 +33,6 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsParserConstants.h"
-#include "nsComputedDOMStyle.h"
-#include "mozilla/dom/Element.h"
 
 static const int32_t kLongLineLen = 128;
 
@@ -61,12 +59,10 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
-                               uint32_t aWrapColumn, const char* aCharSet,
-                               bool aIsCopying, bool aRewriteEncodingDeclaration)
+nsXHTMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
+                              const char* aCharSet, bool aIsCopying,
+                              bool aRewriteEncodingDeclaration)
 {
-  MOZ_ASSERT(aDocument);
-
   // The previous version of the HTML serializer did implicit wrapping
   // when there is no flags, so we keep wrapping in order to keep
   // compatibility with the existing calling code
@@ -76,8 +72,7 @@ nsXHTMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
   }
 
   nsresult rv;
-  rv = nsXMLContentSerializer::Init(aDocument, aFlags, aWrapColumn, aCharSet,
-                                    aIsCopying, aRewriteEncodingDeclaration);
+  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aRewriteEncodingDeclaration);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRewriteEncodingDeclaration = aRewriteEncodingDeclaration;
@@ -92,13 +87,6 @@ nsXHTMLContentSerializer::Init(nsIDocument* aDocument, uint32_t aFlags,
   if (mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities) {
     mEntityConverter = do_CreateInstance(NS_ENTITYCONVERTER_CONTRACTID);
   }
-
-  // Flush the styles on the document to ensure that we read the correct style
-  // information when determining whether an element is preformatted.
-  if (ShouldMaintainPreLevel()) {
-    aDocument->FlushPendingNotifications(Flush_Style);
-  }
-
   return NS_OK;
 }
 
@@ -143,7 +131,7 @@ nsXHTMLContentSerializer::AppendText(nsIContent* aText,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  if (mDoRaw || PreLevel() > 0) {
+  if (mPreLevel > 0 || mDoRaw) {
     AppendToStringConvertLF(data, aStr);
   }
   else if (mDoFormat) {
@@ -547,9 +535,8 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   int32_t namespaceID = aContent->GetNameSpaceID();
 
   if (namespaceID == kNameSpaceID_XHTML) {
-    if (name == nsGkAtoms::br &&
-        (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
-        PreLevel() > 0) {
+    if (name == nsGkAtoms::br && mPreLevel > 0 && 
+        (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
       AppendNewLineToString(aStr);
       return false;
     }
@@ -856,58 +843,39 @@ nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aNa
 void
 nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
-  if (!ShouldMaintainPreLevel() ||
-      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+
+  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 
   nsIAtom *name = aNode->Tag();
 
-  if (IsElementPreformatted(aNode) ||
+  if (name == nsGkAtoms::pre ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
       name == nsGkAtoms::noframes
       ) {
-    PreLevel()++;
+    mPreLevel++;
   }
 }
 
 void
 nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
-  if (!ShouldMaintainPreLevel() ||
-      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 
   nsIAtom *name = aNode->Tag();
-  if (IsElementPreformatted(aNode) ||
+  if (name == nsGkAtoms::pre ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
       name == nsGkAtoms::noframes
     ) {
-    --PreLevel();
+    --mPreLevel;
   }
-}
-
-bool
-nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
-{
-  MOZ_ASSERT(ShouldMaintainPreLevel(), "We should not be calling this needlessly");
-
-  if (!aNode->IsElement()) {
-    return false;
-  }
-  nsRefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aNode->AsElement(),
-                                                         nullptr, nullptr);
-  if (styleContext) {
-    const nsStyleText* textStyle = styleContext->StyleText();
-    return textStyle->WhiteSpaceOrNewlineIsSignificant();
-  }
-  return false;
 }
 
 void 
