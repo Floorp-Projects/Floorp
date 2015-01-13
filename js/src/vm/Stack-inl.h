@@ -775,6 +775,20 @@ AbstractFramePtr::setPrevUpToDate() const
     asRematerializedFrame()->setPrevUpToDate();
 }
 
+inline void
+AbstractFramePtr::unsetPrevUpToDate() const
+{
+    if (isInterpreterFrame()) {
+        asInterpreterFrame()->unsetPrevUpToDate();
+        return;
+    }
+    if (isBaselineFrame()) {
+        asBaselineFrame()->unsetPrevUpToDate();
+        return;
+    }
+    asRematerializedFrame()->unsetPrevUpToDate();
+}
+
 inline Value &
 AbstractFramePtr::thisValue() const
 {

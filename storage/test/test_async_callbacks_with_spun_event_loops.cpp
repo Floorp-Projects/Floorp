@@ -58,7 +58,7 @@ private:
   }
 
 public:
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet)
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) MOZ_OVERRIDE
   {
     sResult = true;
     spin_events_loop_until_true(&mCompleted);
@@ -68,7 +68,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(mozIStorageError* aError)
+  NS_IMETHOD HandleError(mozIStorageError* aError) MOZ_OVERRIDE
   {
     sError = true;
     spin_events_loop_until_true(&mCompleted);
@@ -78,7 +78,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     mCompleted = true;
     return NS_OK;

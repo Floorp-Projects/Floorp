@@ -25,7 +25,7 @@ class PrintProgressDialogChild MOZ_FINAL : public PPrintProgressDialogChild,
 public:
   MOZ_IMPLICIT PrintProgressDialogChild(nsIObserver* aOpenObserver);
 
-  virtual bool RecvDialogOpened();
+  virtual bool RecvDialogOpened() MOZ_OVERRIDE;
 
 private:
   virtual ~PrintProgressDialogChild();

@@ -3344,7 +3344,7 @@ TypeObject::print()
             fprintf(stderr, " noLengthOverflow");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
             fprintf(stderr, " iterated");
-        if (interpretedFunction)
+        if (maybeInterpretedFunction())
             fprintf(stderr, " ifun");
     }
 
@@ -3749,7 +3749,7 @@ JSFunction::setTypeForScriptedFunction(ExclusiveContext *cx, HandleFunction fun,
             return false;
 
         fun->setType(type);
-        type->interpretedFunction = fun;
+        type->setInterpretedFunction(fun);
     }
 
     return true;
@@ -4319,7 +4319,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     type->initSingleton(obj);
 
     if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted())
-        type->interpretedFunction = &obj->as<JSFunction>();
+        type->setInterpretedFunction(&obj->as<JSFunction>());
 
     obj->type_ = type;
 
@@ -4950,12 +4950,14 @@ TypeObject::fixupAfterMovingGC()
             if (IsForwarded(&typeDescr()))
                 addendum_ = Forwarded(&typeDescr());
             break;
+          case Addendum_InterpretedFunction:
+            if (IsForwarded(maybeInterpretedFunction()))
+                addendum_ = Forwarded(maybeInterpretedFunction());
+            break;
           default:
             MOZ_CRASH();
         }
     }
-    if (interpretedFunction && IsForwarded(interpretedFunction.get()))
-        interpretedFunction = Forwarded(interpretedFunction.get());
 }
 
 #endif // JSGC_COMPACTING

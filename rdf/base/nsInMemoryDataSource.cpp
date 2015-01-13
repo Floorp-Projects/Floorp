@@ -334,23 +334,31 @@ public:
 
     void
     SetForwardArcs(nsIRDFResource* u, Assertion* as) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mForwardArcs, u,
-                                                    as ? PL_DHASH_ADD : PL_DHASH_REMOVE);
-        if (as && hdr) {
-            Entry* entry = reinterpret_cast<Entry*>(hdr);
-            entry->mNode = u;
-            entry->mAssertions = as;
-        } }
+        if (as) {
+            Entry* entry = reinterpret_cast<Entry*>(PL_DHashTableAdd(&mForwardArcs, u));
+            if (entry) {
+                entry->mNode = u;
+                entry->mAssertions = as;
+            }
+        }
+        else {
+            PL_DHashTableRemove(&mForwardArcs, u);
+        }
+    }
 
     void
     SetReverseArcs(nsIRDFNode* v, Assertion* as) {
-        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mReverseArcs, v,
-                                                    as ? PL_DHASH_ADD : PL_DHASH_REMOVE);
-        if (as && hdr) {
-            Entry* entry = reinterpret_cast<Entry*>(hdr);
-            entry->mNode = v;
-            entry->mAssertions = as;
-        } }
+        if (as) {
+            Entry* entry = reinterpret_cast<Entry*>(PL_DHashTableAdd(&mReverseArcs, v));
+            if (entry) {
+                entry->mNode = v;
+                entry->mAssertions = as;
+            }
+        }
+        else {
+            PL_DHashTableRemove(&mReverseArcs, v);
+        }
+    }
 
 #ifdef PR_LOGGING
     void

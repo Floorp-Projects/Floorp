@@ -58,22 +58,35 @@ using namespace mozilla::gfx;
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum* baseType,
                                            GLint* unitSize);
 
-const WebGLRectangleObject*
-WebGLContext::CurValidFBRectObject() const
+static const WebGLRectangleObject*
+CurValidFBRectObject(const WebGLContext* webgl,
+                     const WebGLFramebuffer* boundFB)
 {
     const WebGLRectangleObject* rect = nullptr;
 
-    if (mBoundFramebuffer) {
+    if (boundFB) {
         // We don't really need to ask the driver.
         // Use 'precheck' to just check that our internal state looks good.
-        FBStatus precheckStatus = mBoundFramebuffer->PrecheckFramebufferStatus();
+        FBStatus precheckStatus = boundFB->PrecheckFramebufferStatus();
         if (precheckStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
-            rect = &mBoundFramebuffer->RectangleObject();
+            rect = &boundFB->RectangleObject();
     } else {
-        rect = static_cast<const WebGLRectangleObject*>(this);
+        rect = static_cast<const WebGLRectangleObject*>(webgl);
     }
 
     return rect;
+}
+
+const WebGLRectangleObject*
+WebGLContext::CurValidDrawFBRectObject() const
+{
+    return CurValidFBRectObject(this, mBoundDrawFramebuffer);
+}
+
+const WebGLRectangleObject*
+WebGLContext::CurValidReadFBRectObject() const
+{
+    return CurValidFBRectObject(this, mBoundReadFramebuffer);
 }
 
 //
@@ -164,8 +177,8 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     if (IsContextLost())
         return;
 
-    if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnum("bindFramebuffer: target must be GL_FRAMEBUFFER");
+    if (!ValidateFramebufferTarget(target, "bindFramebuffer"))
+        return;
 
     if (!ValidateObjectAllowDeletedOrNull("bindFramebuffer", wfb))
         return;
@@ -184,7 +197,20 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
         gl->fBindFramebuffer(target, framebuffername);
     }
 
-    mBoundFramebuffer = wfb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+        mBoundDrawFramebuffer = wfb;
+        mBoundReadFramebuffer = wfb;
+        break;
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        mBoundDrawFramebuffer = wfb;
+        break;
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        mBoundReadFramebuffer = wfb;
+        break;
+    default:
+        break;
+    }
 }
 
 void
@@ -351,30 +377,38 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
     if (IsContextLost())
         return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
 
-    if (target != LOCAL_GL_FRAMEBUFFER) {
-        ErrorInvalidEnum("checkFramebufferStatus: target must be FRAMEBUFFER");
+    if (!ValidateFramebufferTarget(target, "invalidateFramebuffer"))
         return 0;
+
+    WebGLFramebuffer* fb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        break;
+
+    default:
+        MOZ_CRASH("Bad target.");
     }
 
-    if (!mBoundFramebuffer)
+    if (!fb)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
-    return mBoundFramebuffer->CheckFramebufferStatus().get();
+    return fb->CheckFramebufferStatus().get();
 }
 
 void
-WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
-                                     GLint level,
+WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
                                      TexInternalFormat internalformat,
-                                     GLint xoffset,
-                                     GLint yoffset,
-                                     GLint x,
-                                     GLint y,
-                                     GLsizei width,
-                                     GLsizei height,
+                                     GLint xoffset, GLint yoffset, GLint x,
+                                     GLint y, GLsizei width, GLsizei height,
                                      bool sub)
 {
-    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
+    const WebGLRectangleObject* framebufferRect = CurValidReadFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
@@ -399,7 +433,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
     if (!ValidateCopyTexImage(internalformat.get(), func, dims))
         return;
 
-    if (!mBoundFramebuffer)
+    if (!mBoundReadFramebuffer)
         ClearBackbufferIfNeeded();
 
     MakeContextCurrent();
@@ -416,8 +450,8 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
     }
 
     TexType framebuffertype = LOCAL_GL_NONE;
-    if (mBoundFramebuffer) {
-        TexInternalFormat framebuffereffectiveformat = mBoundFramebuffer->ColorAttachment(0).EffectiveInternalFormat();
+    if (mBoundReadFramebuffer) {
+        TexInternalFormat framebuffereffectiveformat = mBoundReadFramebuffer->ColorAttachment(0).EffectiveInternalFormat();
         framebuffertype = TypeFromInternalFormat(framebuffereffectiveformat);
     } else {
         // FIXME - here we're assuming that the default framebuffer is backed by UNSIGNED_BYTE
@@ -541,7 +575,7 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
     if (!ValidateCopyTexImage(internalformat, func, dims))
         return;
 
-    if (!mBoundFramebuffer)
+    if (!mBoundReadFramebuffer)
         ClearBackbufferIfNeeded();
 
     CopyTexSubImage2D_base(rawTexImgTarget, level, internalformat, 0, 0, x, y, width, height, false);
@@ -605,7 +639,7 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    if (!mBoundFramebuffer)
+    if (!mBoundReadFramebuffer)
         ClearBackbufferIfNeeded();
 
     if (imageInfo.HasUninitializedImageData()) {
@@ -681,9 +715,18 @@ WebGLContext::DeleteFramebuffer(WebGLFramebuffer* fbuf)
 
     fbuf->RequestDelete();
 
-    if (mBoundFramebuffer == fbuf)
-        BindFramebuffer(LOCAL_GL_FRAMEBUFFER,
+    if (mBoundReadFramebuffer == mBoundDrawFramebuffer) {
+        if (mBoundDrawFramebuffer == fbuf) {
+            BindFramebuffer(LOCAL_GL_FRAMEBUFFER,
+                            static_cast<WebGLFramebuffer*>(nullptr));
+        }
+    } else if (mBoundDrawFramebuffer == fbuf) {
+        BindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER,
                         static_cast<WebGLFramebuffer*>(nullptr));
+    } else if (mBoundReadFramebuffer == fbuf) {
+        BindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER,
+                        static_cast<WebGLFramebuffer*>(nullptr));
+    }
 }
 
 void
@@ -698,8 +741,11 @@ WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer* rbuf)
     if (!rbuf || rbuf->IsDeleted())
         return;
 
-    if (mBoundFramebuffer)
-        mBoundFramebuffer->DetachRenderbuffer(rbuf);
+    if (mBoundDrawFramebuffer)
+        mBoundDrawFramebuffer->DetachRenderbuffer(rbuf);
+
+    if (mBoundReadFramebuffer)
+        mBoundReadFramebuffer->DetachRenderbuffer(rbuf);
 
     // Invalidate framebuffer status cache
     rbuf->NotifyFBsStatusChanged();
@@ -723,8 +769,11 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
     if (!tex || tex->IsDeleted())
         return;
 
-    if (mBoundFramebuffer)
-        mBoundFramebuffer->DetachTexture(tex);
+    if (mBoundDrawFramebuffer)
+        mBoundDrawFramebuffer->DetachTexture(tex);
+
+    if (mBoundReadFramebuffer)
+        mBoundReadFramebuffer->DetachTexture(tex);
 
     // Invalidate framebuffer status cache
     tex->NotifyFBsStatusChanged();
@@ -823,19 +872,41 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
     if (IsContextLost())
         return;
 
-    if (!mBoundFramebuffer)
-        return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
-
-    if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnumInfo("framebufferRenderbuffer: target", target);
-
-    if (rbtarget != LOCAL_GL_RENDERBUFFER)
-        return ErrorInvalidEnumInfo("framebufferRenderbuffer: renderbuffer target:", rbtarget);
-
-    if (!ValidateFramebufferAttachment(attachment, "framebufferRenderbuffer"))
+    if (!ValidateFramebufferTarget(target, "framebufferRenderbuffer"))
         return;
 
-    return mBoundFramebuffer->FramebufferRenderbuffer(attachment, rbtarget, wrb);
+    WebGLFramebuffer* fb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        break;
+
+    default:
+        MOZ_CRASH("Bad target.");
+    }
+
+    if (!fb) {
+        return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify"
+                                     " framebuffer 0.");
+    }
+
+    if (rbtarget != LOCAL_GL_RENDERBUFFER) {
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: rbtarget:",
+                                    rbtarget);
+    }
+
+    if (!ValidateFramebufferAttachment(fb, attachment,
+                                       "framebufferRenderbuffer"))
+    {
+        return;
+    }
+
+    fb->FramebufferRenderbuffer(attachment, rbtarget, wrb);
 }
 
 void
@@ -848,23 +919,41 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (IsContextLost())
         return;
 
-    if (!mBoundFramebuffer)
-        return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
+    if (!ValidateFramebufferTarget(target, "framebufferTexture2D"))
+        return;
 
-    if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
+    WebGLFramebuffer* fb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        break;
+
+    default:
+        MOZ_CRASH("Bad target.");
+    }
+
+    if (!fb) {
+        return ErrorInvalidOperation("framebufferTexture2D: cannot modify"
+                                     " framebuffer 0.");
+    }
 
     if (textarget != LOCAL_GL_TEXTURE_2D &&
         (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
          textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
     {
-        return ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
+        return ErrorInvalidEnumInfo("framebufferTexture2D: textarget:",
+                                    textarget);
     }
 
-    if (!ValidateFramebufferAttachment(attachment, "framebufferTexture2D"))
+    if (!ValidateFramebufferAttachment(fb, attachment, "framebufferTexture2D"))
         return;
 
-    return mBoundFramebuffer->FramebufferTexture2D(attachment, textarget, tobj, level);
+    fb->FramebufferTexture2D(attachment, textarget, tobj, level);
 }
 
 void
@@ -1148,25 +1237,42 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     if (IsContextLost())
         return JS::NullValue();
 
-    if (target != LOCAL_GL_FRAMEBUFFER) {
-        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: target", target);
+    if (!ValidateFramebufferTarget(target, "getFramebufferAttachmentParameter"))
+        return JS::NullValue();
+
+    WebGLFramebuffer* fb;
+    switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+        fb = mBoundDrawFramebuffer;
+        break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+        fb = mBoundReadFramebuffer;
+        break;
+
+    default:
+        MOZ_CRASH("Bad target.");
+    }
+
+    if (!fb) {
+        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query"
+                              " framebuffer 0.");
         return JS::NullValue();
     }
 
-    if (!mBoundFramebuffer) {
-        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query framebuffer 0");
+    if (!ValidateFramebufferAttachment(fb, attachment,
+                                       "getFramebufferAttachmentParameter"))
+    {
         return JS::NullValue();
     }
-
-    if (!ValidateFramebufferAttachment(attachment, "getFramebufferAttachmentParameter"))
-        return JS::NullValue();
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-        mBoundFramebuffer->EnsureColorAttachments(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
+        fb->EnsureColorAttachments(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
     MakeContextCurrent();
 
-    const WebGLFramebuffer::Attachment& fba = mBoundFramebuffer->GetAttachment(attachment);
+    const WebGLFramebuffer::Attachment& fba = fb->GetAttachment(attachment);
 
     if (fba.Renderbuffer()) {
         switch (pname) {
@@ -2256,7 +2362,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (pixels.IsNull())
         return ErrorInvalidValue("readPixels: null destination buffer");
 
-    const WebGLRectangleObject* framebufferRect = CurValidFBRectObject();
+    const WebGLRectangleObject* framebufferRect = CurValidReadFBRectObject();
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
@@ -2344,11 +2450,11 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     }
 
     bool isSourceTypeFloat = false;
-    if (mBoundFramebuffer &&
-        mBoundFramebuffer->ColorAttachmentCount() &&
-        mBoundFramebuffer->ColorAttachment(0).IsDefined())
+    if (mBoundReadFramebuffer &&
+        mBoundReadFramebuffer->ColorAttachmentCount() &&
+        mBoundReadFramebuffer->ColorAttachment(0).IsDefined())
     {
-        isSourceTypeFloat = mBoundFramebuffer->ColorAttachment(0).IsReadableFloat();
+        isSourceTypeFloat = mBoundReadFramebuffer->ColorAttachment(0).IsReadableFloat();
     }
 
     if (isReadTypeFloat != isSourceTypeFloat)
@@ -2357,13 +2463,13 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     // Check the format and type params to assure they are an acceptable pair (as per spec)
     MakeContextCurrent();
 
-    if (mBoundFramebuffer) {
+    if (mBoundReadFramebuffer) {
         // prevent readback of arbitrary video memory through uninitialized renderbuffers!
-        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
+        if (!mBoundReadFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
 
         GLenum readPlaneBits = LOCAL_GL_COLOR_BUFFER_BIT;
-        if (!mBoundFramebuffer->HasCompletePlanes(readPlaneBits)) {
+        if (!mBoundReadFramebuffer->HasCompletePlanes(readPlaneBits)) {
             return ErrorInvalidOperation("readPixels: Read source attachment doesn't have the"
                                          " correct color/depth/stencil type.");
         }
@@ -2486,8 +2592,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         return;
 
     bool needAlphaFilled;
-    if (mBoundFramebuffer) {
-        needAlphaFilled = !mBoundFramebuffer->ColorAttachment(0).HasAlpha();
+    if (mBoundReadFramebuffer) {
+        needAlphaFilled = !mBoundReadFramebuffer->ColorAttachment(0).HasAlpha();
     } else {
         needAlphaFilled = !mOptions.alpha;
     }

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that a video element captured to a stream mid-playback can be played to the end</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.style = "background-color:#aca;";
+  v.width = 160;
+  v.height = 120;
+
+  manager.started(token);
+
+  v.src = test.name;
+
+  v.ontimeupdate = function() {
+    if (v.currentTime < test.duration / 4) {
+      // Allow some time to pass before starting the capture.
+      return;
+    }
+    v.ontimeupdate = null;
+    v.mozCaptureStreamUntilEnded();
+    info(test.name + " capture started at " + v.currentTime + ". Duration=" + test.duration);
+  };
+
+  v.onended = function() {
+    ok(true, test.name + " ended");
+    removeNodeAndSource(v);
+    manager.finished(token);
+  };
+
+  document.body.appendChild(v);
+  v.play();
+}
+
+manager.runTests(gSmallTests, startTest);
+</script>
+</pre>
+</body>
+</html>

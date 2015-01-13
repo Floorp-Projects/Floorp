@@ -66,14 +66,6 @@ JSSHELL_BINS  = \
   $(DIST)/bin/$(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
   $(NULL)
 ifndef MOZ_NATIVE_NSPR
-ifeq ($(_MSC_VER),1600)
-JSSHELL_BINS += $(DIST)/bin/msvcr100.dll
-JSSHELL_BINS += $(DIST)/bin/msvcp100.dll
-endif
-ifeq ($(_MSC_VER),1700)
-JSSHELL_BINS += $(DIST)/bin/msvcr110.dll
-JSSHELL_BINS += $(DIST)/bin/msvcp110.dll
-endif
 ifeq ($(_MSC_VER),1800)
 JSSHELL_BINS += $(DIST)/bin/msvcr120.dll
 JSSHELL_BINS += $(DIST)/bin/msvcp120.dll

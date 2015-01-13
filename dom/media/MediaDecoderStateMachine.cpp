@@ -1189,7 +1189,13 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
   }
 
   mSyncPointInMediaStream = stream->GetLastOutputTime();
-  mSyncPointInDecodedStream = mStartTime + mPlayDuration;
+  TimeDuration timeSincePlayStart = mPlayStartTime.IsNull() ? TimeDuration(0) :
+                                    TimeStamp::Now() - mPlayStartTime;
+  mSyncPointInDecodedStream = mStartTime + mPlayDuration +
+                              timeSincePlayStart.ToMicroseconds();
+
+  DECODER_LOG("SetSyncPointForMediaStream MediaStream=%lldus, DecodedStream=%lldus",
+              mSyncPointInMediaStream, mSyncPointInDecodedStream);
 }
 
 void MediaDecoderStateMachine::ResyncMediaStreamClock()
@@ -1353,6 +1359,13 @@ void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
     // If mStopAudioThread is true then we're already stopping the audio sink
     // and since we set mAudioCaptured to true, nothing can start it again.
     ScheduleStateMachine();
+
+    if (HasAudio()) {
+      // The audio clock is active so force a resync now in case the audio
+      // clock is ahead of us (observed on Android), since after mAudioCaptured
+      // gets set can't call GetAudioClock().
+      ResyncAudioClock();
+    }
   }
   mAudioCaptured = aCaptured;
 }
@@ -1442,6 +1455,15 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
   DECODER_LOG("SetDormant=%d", aDormant);
 
   if (aDormant) {
+    if (mState == DECODER_STATE_SEEKING && !mQueuedSeekTarget.IsValid()) {
+      if (mSeekTarget.IsValid()) {
+        mQueuedSeekTarget = mSeekTarget;
+      } else if (mCurrentSeekTarget.IsValid()) {
+        mQueuedSeekTarget = mCurrentSeekTarget;
+      }
+    }
+    mSeekTarget.Reset();
+    mCurrentSeekTarget.Reset();
     ScheduleStateMachine();
     SetState(DECODER_STATE_DORMANT);
     mDecoder->GetReentrantMonitor().NotifyAll();
@@ -2916,16 +2938,15 @@ int64_t MediaDecoderStateMachine::GetClock() const
   int64_t clock_time = -1;
   if (!IsPlaying()) {
     clock_time = mPlayDuration + mStartTime;
-  } else if (mDecoder->GetDecodedStream()) {
-    clock_time = GetCurrentTimeViaMediaStreamSync();
   } else {
-    if (HasAudio() && !mAudioCompleted && !mAudioCaptured) {
+    if (mDecoder->GetDecodedStream()) {
+      clock_time = GetCurrentTimeViaMediaStreamSync();
+    } else if (HasAudio() && !mAudioCompleted && !mAudioCaptured) {
       clock_time = GetAudioClock();
     } else {
       // Audio is disabled on this system. Sync to the system clock.
       clock_time = GetVideoStreamPosition();
     }
-    // FIXME: This assertion should also apply the case of decoding to a stream.
     // Ensure the clock can never go backwards.
     NS_ASSERTION(GetMediaTime() <= clock_time || mPlaybackRate <= 0,
       "Clock should go forwards if the playback rate is > 0.");
@@ -2949,6 +2970,14 @@ void MediaDecoderStateMachine::AdvanceFrame()
   // state, per spec.
   if (mPlaybackRate == 0.0) {
     return;
+  }
+
+  DecodedStreamData* stream = mDecoder->GetDecodedStream();
+  if (stream && !stream->mStreamInitialized) {
+    // Output streams exist but are not initialized yet.
+    // Send the data we already have to allow stream clock to progress and
+    // avoid stalling playback.
+    SendStreamData();
   }
 
   const int64_t clock_time = GetClock();

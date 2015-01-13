@@ -23,10 +23,10 @@ public:
     NS_DECL_NSIPRINTINGPROMPTSERVICE
 
     virtual PPrintProgressDialogChild*
-    AllocPPrintProgressDialogChild();
+    AllocPPrintProgressDialogChild() MOZ_OVERRIDE;
 
     virtual bool
-    DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor);
+    DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor) MOZ_OVERRIDE;
 };
 
 #endif
