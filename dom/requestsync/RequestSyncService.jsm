@@ -14,6 +14,8 @@ const RSYNCDB_VERSION = 1;
 const RSYNCDB_NAME = "requestSync";
 const RSYNC_MIN_INTERVAL = 100;
 
+const RSYNC_OPERATION_TIMEOUT = 120000 // 2 minutes
+
 Cu.import('resource://gre/modules/IndexedDBHelper.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -55,6 +57,9 @@ this.RequestSyncService = {
   _registrations: {},
 
   _wifi: false,
+
+  _activeTask: null,
+  _queuedTasks: [],
 
   // Initialization of the RequestSyncService.
   init: function() {
@@ -232,9 +237,17 @@ this.RequestSyncService = {
   removeRegistrationInternal: function(aTaskName, aKey) {
     debug('removeRegistrationInternal');
 
-    if (this._registrations[aKey][aTaskName].timer) {
-      this._registrations[aKey][aTaskName].timer.cancel();
+    let obj = this._registrations[aKey][aTaskName];
+    if (obj.timer) {
+      obj.timer.cancel();
     }
+
+    // It can be that this task has been already schedulated.
+    this.removeTaskFromQueue(obj);
+
+    // It can be that this object is already in scheduled, or in the queue of a
+    // iDB transacation. In order to avoid rescheduling it, we must disable it.
+    obj.active = false;
 
     delete this._registrations[aKey][aTaskName];
 
@@ -243,6 +256,13 @@ this.RequestSyncService = {
       return;
     }
     delete this._registrations[aKey];
+  },
+
+  removeTaskFromQueue: function(aObj) {
+    let pos = this._queuedTasks.indexOf(aObj);
+    if (pos != -1) {
+      this._queuedTasks.splice(pos, 1);
+    }
   },
 
   // The communication from the exposed objects and the service is done using
@@ -510,6 +530,15 @@ this.RequestSyncService = {
   timeout: function(aObj) {
     debug("timeout");
 
+    if (this._activeTask) {
+      debug("queueing tasks");
+      // We have an active task, let's queue this as next task.
+      if (this._queuedTasks.indexOf(aObj) == -1) {
+        this._queuedTasks.push(aObj);
+      }
+      return;
+    }
+
     let app = appsService.getAppByLocalId(aObj.principal.appId);
     if (!app) {
       dump("ERROR!! RequestSyncService - Failed to retrieve app data from a principal.\n");
@@ -522,12 +551,13 @@ this.RequestSyncService = {
     let pageURL = Services.io.newURI(aObj.data.wakeUpPage, null, aObj.principal.URI);
 
     // Maybe need to be rescheduled?
-    if (this.needRescheduling('request-sync', manifestURL, pageURL)) {
+    if (this.hasPendingMessages('request-sync', manifestURL, pageURL)) {
       this.scheduleTimer(aObj);
       return;
     }
 
     aObj.timer = null;
+    this._activeTask = aObj;
 
     if (!manifestURL || !pageURL) {
       dump("ERROR!! RequestSyncService - Failed to create URI for the page or the manifest\n");
@@ -536,27 +566,86 @@ this.RequestSyncService = {
       return;
     }
 
-    // Sending the message.
-    systemMessenger.sendMessage('request-sync',
-                                this.createPartialTaskObject(aObj.data),
-                                pageURL, manifestURL);
+    // We don't want to run more than 1 task at the same time. We do this using
+    // the promise created by sendMessage(). But if the task takes more than
+    // RSYNC_OPERATION_TIMEOUT millisecs, we have to ignore the promise and
+    // continue processing other tasks.
 
-    // One shot? Then this is not active.
-    aObj.active = !aObj.data.oneShot;
-    aObj.data.lastSync = new Date();
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
+    let done = false;
     let self = this;
-    this.updateObjectInDB(aObj, function() {
-      // SchedulerTimer creates a timer and a nsITimer cannot be cloned. This
-      // is the reason why this operation has to be done after storing the aObj
-      // into IDB.
-      if (!aObj.data.oneShot) {
-        self.scheduleTimer(aObj);
+    function taskCompleted() {
+      debug("promise or timeout for task calls taskCompleted");
+
+      if (!done) {
+        done = true;
+        self.operationCompleted();
       }
+
+      timer.cancel();
+      timer = null;
+    }
+
+    timer.initWithCallback(function() {
+      debug("Task is taking too much, let's ignore the promise.");
+      taskCompleted();
+    }, RSYNC_OPERATION_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+
+    // Sending the message.
+    let promise =
+      systemMessenger.sendMessage('request-sync',
+                                  this.createPartialTaskObject(aObj.data),
+                                  pageURL, manifestURL);
+
+    promise.then(function() {
+      debug("promise resolved");
+      taskCompleted();
+    }, function() {
+      debug("promise rejected");
+      taskCompleted();
     });
   },
 
-  needRescheduling: function(aMessageName, aManifestURL, aPageURL) {
+  operationCompleted: function() {
+    debug("operationCompleted");
+
+    if (!this._activeTask) {
+      dump("ERROR!! RequestSyncService - OperationCompleted called without an active task\n");
+      return;
+    }
+
+    // One shot? Then this is not active.
+    this._activeTask.active = !this._activeTask.data.oneShot;
+    this._activeTask.data.lastSync = new Date();
+
+    let self = this;
+    this.updateObjectInDB(this._activeTask, function() {
+      // SchedulerTimer creates a timer and a nsITimer cannot be cloned. This
+      // is the reason why this operation has to be done after storing the task
+      // into IDB.
+      if (!self._activeTask.data.oneShot) {
+        self.scheduleTimer(self._activeTask);
+      }
+
+      self.processNextTask();
+    });
+  },
+
+  processNextTask: function() {
+    debug("processNextTask");
+
+    this._activeTask = null;
+
+    if (this._queuedTasks.length == 0) {
+      return;
+    }
+
+    let task = this._queuedTasks.shift();
+    this.timeout(task);
+  },
+
+  hasPendingMessages: function(aMessageName, aManifestURL, aPageURL) {
     let hasPendingMessages =
       cpmm.sendSyncMessage("SystemMessageManager:HasPendingMessages",
                            { type: aMessageName,
@@ -564,14 +653,7 @@ this.RequestSyncService = {
                              manifestURL: aManifestURL.spec })[0];
 
     debug("Pending messages: " + hasPendingMessages);
-
-    if (hasPendingMessages) {
-      return true;
-    }
-
-    // FIXME: other reasons?
-
-    return false;
+    return hasPendingMessages;
   },
 
   // Update the object into the database.
@@ -649,10 +731,14 @@ this.RequestSyncService = {
 
     if (!this._wifi) {
       // Disable all the wifiOnly tasks.
+      let self = this;
       this.forEachRegistration(function(aObj) {
         if (aObj.data.wifiOnly && aObj.timer) {
           aObj.timer.cancel();
           aObj.timer = null;
+
+          // It can be that this task has been already schedulated.
+          self.removeTaskFromQueue(aObj);
         }
       });
       return;
