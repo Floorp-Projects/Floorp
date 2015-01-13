@@ -85,6 +85,8 @@ browser.jar:
     content/browser/devtools/webaudioeditor/views/utils.js             (webaudioeditor/views/utils.js)
     content/browser/devtools/webaudioeditor/views/context.js           (webaudioeditor/views/context.js)
     content/browser/devtools/webaudioeditor/views/inspector.js         (webaudioeditor/views/inspector.js)
+    content/browser/devtools/webaudioeditor/views/properties.js        (webaudioeditor/views/properties.js)
+    content/browser/devtools/webaudioeditor/views/automation.js        (webaudioeditor/views/automation.js)
     content/browser/devtools/profiler.xul                              (profiler/profiler.xul)
     content/browser/devtools/profiler.js                               (profiler/profiler.js)
     content/browser/devtools/ui-recordings.js                          (profiler/ui-recordings.js)

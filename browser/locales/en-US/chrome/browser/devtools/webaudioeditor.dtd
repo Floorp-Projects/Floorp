@@ -27,6 +27,10 @@
   -  for the properties tab view. -->
 <!ENTITY webAudioEditorUI.tab.properties  "Parameters">
 
+<!-- LOCALIZATION NOTE (webAudioEditorUI.tab.automation): This is the label shown
+  -  for the automation tab view. -->
+<!ENTITY webAudioEditorUI.tab.automation  "Automation">
+
 <!-- LOCALIZATION NOTE (webAudioEditorUI.inspectorTitle): This is the title for the
   -  AudioNode inspector view. -->
 <!ENTITY webAudioEditorUI.inspectorTitle  "AudioNode Inspector">
@@ -38,3 +42,12 @@
 <!-- LOCALIZATION NOTE (webAudioEditorUI.propertiesEmpty): This is the title for the
   -  AudioNode inspector view properties tab empty message. -->
 <!ENTITY webAudioEditorUI.propertiesEmpty "Node does not have any properties.">
+
+<!-- LOCALIZATION NOTE (webAudioEditorUI.automationEmpty): This is the title for the
+  -  AudioNode inspector view automation tab empty message. -->
+<!ENTITY webAudioEditorUI.automationEmpty "Node does not have any AudioParams.">
+
+<!-- LOCALIZATION NOTE (webAudioEditorUI.automationNoEvents): This is the title for the
+  -  AudioNode inspector view automation tab message when there are no automation
+  -  events. -->
+<!ENTITY webAudioEditorUI.automationNoEvents "AudioParam does not have any automation events.">
