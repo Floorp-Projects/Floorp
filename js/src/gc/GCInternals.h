@@ -118,9 +118,7 @@ class AutoStopVerifyingBarriers
         gcstats::Phase outer = gc->stats.currentPhase();
         if (outer != gcstats::PHASE_NONE)
             gc->stats.endPhase(outer);
-        MOZ_ASSERT((gc->stats.currentPhase() == gcstats::PHASE_NONE) ||
-                   (gc->stats.currentPhase() == gcstats::PHASE_GC_BEGIN) ||
-                   (gc->stats.currentPhase() == gcstats::PHASE_GC_END));
+        MOZ_ASSERT(gc->stats.currentPhase() == gcstats::PHASE_NONE);
 
         if (restartPreVerifier)
             gc->startVerifyPreBarriers();
