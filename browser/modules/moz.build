@@ -27,7 +27,6 @@ EXTRA_JS_MODULES += [
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
     'PanelFrame.jsm',
-    'ProcessHangMonitor.jsm',
     'RemotePrompt.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
