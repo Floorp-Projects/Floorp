@@ -4,7 +4,7 @@
 // Tests that text metrics in the flame graph widget work properly.
 
 let HTML_NS = "http://www.w3.org/1999/xhtml";
-let FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 9; // px
+let FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 8; // px
 let FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY = "sans-serif";
 let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 let {FlameGraph} = Cu.import("resource:///modules/devtools/FlameGraph.jsm", {});
@@ -38,28 +38,33 @@ function testGraph(graph) {
   is(graph._overflowCharWidth, getCharWidth(L10N.ellipsis),
     "The ellipsis char width was calculated correctly.");
 
-  is(graph._getTextWidthApprox("This text is maybe overflowing"),
-    getAverageCharWidth() * 30,
+  let text = "This text is maybe overflowing";
+  let text1000px = graph._getFittedText(text, 1000);
+  let text50px = graph._getFittedText(text, 50);
+  let text10px = graph._getFittedText(text, 10);
+  let text1px = graph._getFittedText(text, 1);
+
+  is(graph._getTextWidthApprox(text), getAverageCharWidth() * text.length,
     "The approximate width was calculated correctly.");
 
-  is(graph._getFittedText("This text is maybe overflowing", 1000),
-    "This text is maybe overflowing",
+  info("Text at 1000px width: " + text1000px);
+  info("Text at 50px width  : " + text50px);
+  info("Text at 10px width  : " + text10px);
+  info("Text at 1px width   : " + text1px);
+
+  is(text1000px, text,
     "The fitted text for 1000px width is correct.");
 
-  isnot(graph._getFittedText("This text is maybe overflowing", 100),
-    "This text is maybe overflowing",
-    "The fitted text for 100px width is correct (1).");
+  isnot(text50px, text,
+    "The fitted text for 50px width is correct (1).");
 
-  ok(graph._getFittedText("This text is maybe overflowing", 100)
-    .contains(L10N.ellipsis),
-    "The fitted text for 100px width is correct (2).");
+  ok(text50px.contains(L10N.ellipsis),
+    "The fitted text for 50px width is correct (2).");
 
-  is(graph._getFittedText("This text is maybe overflowing", 10),
-    L10N.ellipsis,
+  is(graph._getFittedText(text, 10), L10N.ellipsis,
     "The fitted text for 10px width is correct.");
 
-  is(graph._getFittedText("This text is maybe overflowing", 1),
-    "",
+  is(graph._getFittedText(text, 1), "",
     "The fitted text for 1px width is correct.");
 }
 
