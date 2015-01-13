@@ -66,25 +66,25 @@ class nsChromeRegistryContent : public nsChromeRegistry
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, bool platform,
-                               bool contentaccessible);
+                               bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
                               char *const * argv, bool platform,
-                              bool contentaccessible);
+                              bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
                             char *const * argv, bool platform,
-                            bool contentaccessible);
+                            bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, bool platform,
-                               bool contentaccessible);
+                               bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
                              char *const * argv, bool platform,
-                             bool contentaccessible);
+                             bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, bool platform,
-                                bool contentaccessible);
+                                bool contentaccessible) MOZ_OVERRIDE;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, bool platform,
-                                bool contentaccessible);
+                                bool contentaccessible) MOZ_OVERRIDE;
 };
 
 #endif // nsChromeRegistryContent_h

@@ -327,36 +327,19 @@ public:
 
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
-  template<typename F>
-  void apply(F&& aFunc)
+  template<typename F, typename... Args>
+  void apply(F&& aFunc, Args&&... aArgs)
   {
     if (isSome()) {
-      aFunc(ref());
+      aFunc(ref(), Forward<Args>(aArgs)...);
     }
   }
 
-  template<typename F>
-  void apply(F&& aFunc) const
+  template<typename F, typename... Args>
+  void apply(F&& aFunc, Args&&... aArgs) const
   {
     if (isSome()) {
-      aFunc(ref());
-    }
-  }
-
-  /* Variant of |apply()| that takes an additional argument for the function. */
-  template<typename F, typename A>
-  void apply(F&& aFunc, A&& aArg)
-  {
-    if (isSome()) {
-      aFunc(ref(), Forward<A>(aArg));
-    }
-  }
-
-  template<typename F, typename A>
-  void apply(F&& aFunc, A&& aArg) const
-  {
-    if (isSome()) {
-      aFunc(ref(), Forward<A>(aArg));
+      aFunc(ref(), Forward<Args>(aArgs)...);
     }
   }
 
@@ -364,46 +347,23 @@ public:
    * If |isSome()|, runs the provided function and returns the result wrapped
    * in a Maybe. If |isNothing()|, returns an empty Maybe value.
    */
-  template<typename R>
-  Maybe<R> map(R(*aFunc)(T&))
+  template<typename R, typename... FArgs, typename... Args>
+  Maybe<R> map(R (*aFunc)(T&, FArgs...), Args&&... aArgs)
   {
     if (isSome()) {
       Maybe<R> val;
-      val.emplace(aFunc(ref()));
+      val.emplace(aFunc(ref(), Forward<Args>(aArgs)...));
       return val;
     }
     return Maybe<R>();
   }
 
-  template<typename R>
-  Maybe<R> map(R(*aFunc)(const T&)) const
+  template<typename R, typename... FArgs, typename... Args>
+  Maybe<R> map(R (*aFunc)(const T&, FArgs...), Args&&... aArgs) const
   {
     if (isSome()) {
       Maybe<R> val;
-      val.emplace(aFunc(ref()));
-      return val;
-    }
-    return Maybe<R>();
-  }
-
-  /* Variant of |map()| that takes an additional argument for the function. */
-  template<typename R, typename FA, typename A>
-  Maybe<R> map(R(*aFunc)(T&, FA), A&& aArg)
-  {
-    if (isSome()) {
-      Maybe<R> val;
-      val.emplace(aFunc(ref(), Forward<A>(aArg)));
-      return val;
-    }
-    return Maybe<R>();
-  }
-
-  template<typename R, typename FA, typename A>
-  Maybe<R> map(R(*aFunc)(const T&, FA), A&& aArg) const
-  {
-    if (isSome()) {
-      Maybe<R> val;
-      val.emplace(aFunc(ref(), Forward<A>(aArg)));
+      val.emplace(aFunc(ref(), Forward<Args>(aArgs)...));
       return val;
     }
     return Maybe<R>();
@@ -421,115 +381,12 @@ public:
   /*
    * Constructs a T value in-place in this empty Maybe<T>'s storage. The
    * arguments to |emplace()| are the parameters to T's constructor.
-   *
-   * WARNING: You can't pass a literal nullptr to these methods without
-   * hitting GCC 4.4-only (and hence B2G-only) compile errors.
    */
-  void emplace()
+  template<typename... Args>
+  void emplace(Args&&... aArgs)
   {
     MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T();
-    mIsSome = true;
-  }
-
-  template<typename T1>
-  void emplace(T1&& t1)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2>
-  void emplace(T1&& t1, T2&& t2)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3>
-  void emplace(T1&& t1, T2&& t2, T3&& t3)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, T6&& t6)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5), Forward<T6>(t6));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6, typename T7>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, T6&& t6,
-               T7&& t7)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5), Forward<T6>(t6),
-                              Forward<T7>(t7));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6, typename T7, typename T8>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, T6&& t6,
-               T7&& t7, T8&& t8)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5), Forward<T6>(t6),
-                              Forward<T7>(t7), Forward<T8>(t8));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6, typename T7, typename T8, typename T9>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, T6&& t6,
-               T7&& t7, T8&& t8, T9&& t9)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5), Forward<T6>(t6),
-                              Forward<T7>(t7), Forward<T8>(t8), Forward<T9>(t9));
-    mIsSome = true;
-  }
-
-  template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6, typename T7, typename T8, typename T9, typename T10>
-  void emplace(T1&& t1, T2&& t2, T3&& t3, T4&& t4, T5&& t5, T6&& t6,
-               T7&& t7, T8&& t8, T9&& t9, T10&& t10)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<T1>(t1), Forward<T2>(t2), Forward<T3>(t3),
-                              Forward<T4>(t4), Forward<T5>(t5), Forward<T6>(t6),
-                              Forward<T7>(t7), Forward<T8>(t8), Forward<T9>(t9),
-                              Forward<T1>(t10));
+    ::new (mStorage.addr()) T(Forward<Args>(aArgs)...);
     mIsSome = true;
   }
 };

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -347,7 +349,7 @@ $.new = function $_new(tag, textContentOrChildren, className, attributes) {
 };
 
 $.append = function $_append(parent, children) {
-  children.forEach(function (c) parent.appendChild(c));
+  children.forEach(c => parent.appendChild(c));
 };
 
 function stringBundle() {
@@ -359,7 +361,7 @@ function sortedArrayFromObject(obj) {
   let tuples = [];
   for (let prop in obj)
     tuples.push([prop, obj[prop]]);
-  tuples.sort(function ([prop1, v1], [prop2, v2]) prop1.localeCompare(prop2));
+  tuples.sort(([prop1, v1], [prop2, v2]) => prop1.localeCompare(prop2));
   return tuples;
 }
 

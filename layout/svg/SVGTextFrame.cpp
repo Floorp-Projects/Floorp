@@ -908,6 +908,10 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   gfxTextRun::Metrics metrics =
     textRun->MeasureText(offset, length, gfxFont::LOOSE_INK_EXTENTS,
                          nullptr, nullptr);
+  // Make sure it includes the font-box.
+  gfxRect fontBox(0, -metrics.mAscent,
+      metrics.mAdvanceWidth, metrics.mAscent + metrics.mDescent);
+  metrics.mBoundingBox.UnionRect(metrics.mBoundingBox, fontBox);
 
   // Determine the rectangle that covers the rendered run's fill,
   // taking into account the measured vertical overflow due to

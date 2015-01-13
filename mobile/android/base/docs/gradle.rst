@@ -45,7 +45,7 @@ How the Gradle project is laid out
 To the greatest extent possible, the Gradle configuration lives in the object
 directory.
 
-At the time of writing, their are three main sub-modules: *app*, *base*, and
+At the time of writing, there are three main sub-modules: *app*, *base*, and
 *thirdparty*, and several smaller sub-modules.
 
 *app* is the Fennec wrapper; it generates the **org.mozilla.fennec.R** resource

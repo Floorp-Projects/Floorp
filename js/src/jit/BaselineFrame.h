@@ -281,6 +281,9 @@ class BaselineFrame
     void setPrevUpToDate() {
         flags_ |= PREV_UP_TO_DATE;
     }
+    void unsetPrevUpToDate() {
+        flags_ &= ~PREV_UP_TO_DATE;
+    }
 
     bool isDebuggee() const {
         return flags_ & DEBUGGEE;

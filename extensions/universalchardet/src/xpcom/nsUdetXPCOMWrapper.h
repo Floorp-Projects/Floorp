@@ -29,12 +29,12 @@ class nsXPCOMDetector :
   NS_DECL_ISUPPORTS
   public:
     nsXPCOMDetector();
-    NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe);
-    NS_IMETHOD Done();
+    NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) MOZ_OVERRIDE;
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe) MOZ_OVERRIDE;
+    NS_IMETHOD Done() MOZ_OVERRIDE;
   protected:
     virtual ~nsXPCOMDetector();
-    virtual void Report(const char* aCharset);
+    virtual void Report(const char* aCharset) MOZ_OVERRIDE;
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
 };
@@ -49,10 +49,10 @@ class nsXPCOMStringDetector :
   public:
     nsXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
-                    const char** oCharset, nsDetectionConfident &oConf);
+                    const char** oCharset, nsDetectionConfident &oConf) MOZ_OVERRIDE;
   protected:
     virtual ~nsXPCOMStringDetector();
-    virtual void Report(const char* aCharset);
+    virtual void Report(const char* aCharset) MOZ_OVERRIDE;
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
     const char* mResult;

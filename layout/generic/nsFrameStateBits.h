@@ -408,6 +408,9 @@ FRAME_STATE_BIT(Text, 60, TEXT_IN_UNINFLATED_TEXTRUN_USER_DATA)
 
 FRAME_STATE_BIT(Text, 61, TEXT_HAS_FONT_INFLATION)
 
+// Set when this text frame contains nothing that will actually render
+FRAME_STATE_BIT(Text, 62, TEXT_NO_RENDERED_GLYPHS)
+
 // Whether this frame is cached in the Offset Frame Cache
 // (OffsetToFrameProperty)
 FRAME_STATE_BIT(Text, 63, TEXT_IN_OFFSET_CACHE)

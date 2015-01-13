@@ -62,12 +62,18 @@ protected:
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsRubyTextContainerFrameSuper(aContext) {}
+    : nsRubyTextContainerFrameSuper(aContext)
+    , mLineSize(mozilla::WritingMode(aContext)) {}
 
   void UpdateSpanFlag();
 
-  // For MoveOverflowToChildList
   friend class nsRubyBaseContainerFrame;
+  void SetLineSize(const mozilla::LogicalSize& aSize) { mLineSize = aSize; }
+
+  // The intended dimensions of the ruby text container. It is set by
+  // the corresponding ruby base container when the segment is reflowed,
+  // and used when the ruby text container is reflowed by its parent.
+  mozilla::LogicalSize mLineSize;
 };
 
 #endif /* nsRubyTextContainerFrame_h___ */

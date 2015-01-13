@@ -590,7 +590,7 @@ GenerateType3Msg(const nsString &domain,
     ucsDomainBuf = domain;
     domainPtr = ucsDomainBuf.get();
     domainLen = ucsDomainBuf.Length() * 2;
-    WriteUnicodeLE((void *) domainPtr, reinterpret_cast<const uint16_t*> domainPtr,
+    WriteUnicodeLE((void *) domainPtr, reinterpret_cast<const char16_t*> (domainPtr),
                    ucsDomainBuf.Length());
 #else
     domainPtr = domain.get();
@@ -613,7 +613,7 @@ GenerateType3Msg(const nsString &domain,
     ucsUserBuf = username;
     userPtr = ucsUserBuf.get();
     userLen = ucsUserBuf.Length() * 2;
-    WriteUnicodeLE((void *) userPtr, reinterpret_cast<const uint16_t*> userPtr,
+    WriteUnicodeLE((void *) userPtr, reinterpret_cast<const char16_t*> (userPtr),
                    ucsUserBuf.Length());
 #else
     userPtr = username.get();
@@ -641,7 +641,7 @@ GenerateType3Msg(const nsString &domain,
     hostPtr = ucsHostBuf.get();
     hostLen = ucsHostBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN
-    WriteUnicodeLE((void *) hostPtr, reinterpret_cast<const uint16_t*> hostPtr,
+    WriteUnicodeLE((void *) hostPtr, reinterpret_cast<const char16_t*> (hostPtr),
                    ucsHostBuf.Length());
 #endif
   }
@@ -684,14 +684,14 @@ GenerateType3Msg(const nsString &domain,
     userUpperPtr = ucsUserUpperBuf.get();
     userUpperLen = ucsUserUpperBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN
-    WriteUnicodeLE((void *) userUpperPtr, reinterpret_cast<const uint16_t*> (userUpperPtr),
+    WriteUnicodeLE((void *) userUpperPtr, reinterpret_cast<const char16_t*> (userUpperPtr),
                    ucsUserUpperBuf.Length());
 #endif
     ToUpperCase(domain, ucsDomainUpperBuf);
     domainUpperPtr = ucsDomainUpperBuf.get();
     domainUpperLen = ucsDomainUpperBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN
-    WriteUnicodeLE((void *) domainUpperPtr, reinterpret_cast<const uint16_t*> (domainUpperPtr),
+    WriteUnicodeLE((void *) domainUpperPtr, reinterpret_cast<const char16_t*> (domainUpperPtr),
                    ucsDomainUpperBuf.Length());
 #endif
 

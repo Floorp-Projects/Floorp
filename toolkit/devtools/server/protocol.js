@@ -997,7 +997,7 @@ let actorProto = function(actorProto) {
         try {
           args = spec.request.read(packet, this);
         } catch(ex) {
-          console.error("Error writing request: " + packet.type);
+          console.error("Error reading request: " + packet.type);
           throw ex;
         }
 

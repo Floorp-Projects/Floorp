@@ -14,7 +14,8 @@ XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
 
   function getNewTabPageURL() {
     if (PrivateBrowsingUtils.isWindowPrivate(window) &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        !PrivateBrowsingUtils.permanentPrivateBrowsing &&
+        !Services.prefs.prefHasUserValue(PREF)) {
       return "about:privatebrowsing";
     }
 

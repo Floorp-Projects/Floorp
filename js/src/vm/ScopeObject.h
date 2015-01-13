@@ -942,6 +942,7 @@ class DebugScopes
 
     static bool updateLiveScopes(JSContext *cx);
     static ScopeIterVal *hasLiveScope(ScopeObject &scope);
+    static void unsetPrevUpToDateUntil(JSContext *cx, AbstractFramePtr frame);
 
     // When a frame bails out from Ion to Baseline, there might be missing
     // scopes keyed on, and live scopes containing, the old

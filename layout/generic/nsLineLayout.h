@@ -27,10 +27,6 @@
 class nsFloatManager;
 struct nsStyleText;
 
-namespace mozilla {
-class RubyReflowState;
-}
-
 class nsLineLayout {
 public:
   /**
@@ -101,13 +97,6 @@ public:
   void SplitLineTo(int32_t aNewCount);
 
   bool IsZeroBSize();
-
-  // The ruby layout will be passed to the next frame to be reflowed
-  // via the HTML reflow state.
-  void SetRubyReflowState(mozilla::RubyReflowState* aRubyReflowState)
-  {
-    mRubyReflowState = aRubyReflowState;
-  }
 
   // Reflows the frame and returns the reflow status. aPushedFrame is true
   // if the frame is pushed to the next line because it doesn't fit.
@@ -385,13 +374,22 @@ protected:
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
 
-  // The line layout for the base text. It is usually same as |this|.
-  // It becomes different when the current line layout is for ruby
-  // annotations. All line layouts share the same base line layout
-  // when they are associated. The base line layout is responsible
-  // for managing the life cycle of per-frame data and per-span data,
-  // and handling floats.
+  // The line layout for the base text.  It is usually nullptr.
+  // It becomes not null when the current line layout is for ruby
+  // annotations. When there is nested ruby inside annotation, it
+  // forms a linked list from the inner annotation to the outermost
+  // line layout. The outermost line layout, which has this member
+  // being nullptr, is responsible for managing the life cycle of
+  // per-frame data and per-span data, and handling floats.
   nsLineLayout* const mBaseLineLayout;
+
+  nsLineLayout* GetOutermostLineLayout() {
+    nsLineLayout* lineLayout = this;
+    while (lineLayout->mBaseLineLayout) {
+      lineLayout = lineLayout->mBaseLineLayout;
+    }
+    return lineLayout;
+  }
 
   nsIFrame* mLastOptionalBreakFrame;
   nsIFrame* mForceBreakFrame;
@@ -565,10 +563,6 @@ protected:
   int32_t mLineNumber;
   mozilla::JustificationInfo mJustificationInfo;
 
-  // The ruby layout for the next frame to be reflowed.
-  // It is reset every time it is used.
-  mozilla::RubyReflowState* mRubyReflowState;
-
   int32_t mTotalPlacedFrames;
 
   nscoord mBStartEdge;
@@ -664,6 +658,11 @@ protected:
   void PlaceTopBottomFrames(PerSpanData* psd,
                             nscoord aDistanceFromStart,
                             nscoord aLineBSize);
+
+  void ApplyRelativePositioning(PerFrameData* aPFD);
+
+  void RelativePositionAnnotations(PerSpanData* aRubyPSD,
+                                   nsOverflowAreas& aOverflowAreas);
 
   void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 

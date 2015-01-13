@@ -1860,6 +1860,15 @@ public:
     return sIsResourceTimingEnabled;
   }
 
+  /*
+   * Returns true if URL setters should percent encode the Hash/Ref segment
+   * and getters should return the percent decoded value of the segment
+   */
+  static bool EncodeDecodeURLHash()
+  {
+    return sEncodeDecodeURLHash;
+  }
+
   /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
@@ -2323,6 +2332,7 @@ private:
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
+  static bool sEncodeDecodeURLHash;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

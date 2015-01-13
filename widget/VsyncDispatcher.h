@@ -40,11 +40,6 @@ public:
   CompositorVsyncDispatcher();
 
   // Called on the vsync thread when a hardware vsync occurs
-  // The aVsyncTimestamp can mean different things depending on the platform:
-  // b2g - The vsync timestamp of the previous frame that was just displayed
-  // OSX - The vsync timestamp of the upcoming frame
-  // TODO: Windows / Linux. DOCUMENT THIS WHEN IMPLEMENTING ON THOSE PLATFORMS
-  // Android: TODO
   void NotifyVsync(TimeStamp aVsyncTimestamp);
 
   // Compositor vsync observers must be added/removed on the compositor thread
