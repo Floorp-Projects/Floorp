@@ -69,6 +69,9 @@ public class LocalBrowserDB {
     // Sentinel value used to indicate a failure to locate an ID for a default favicon.
     private static final int FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
 
+    // Constant used to indicate that no folder was found for particular GUID.
+    private static final long FOLDER_NOT_FOUND = -1L;
+
     private static final boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
     protected static void debug(String message) {
         if (logDebug) {
@@ -155,8 +158,8 @@ public class LocalBrowserDB {
      * Takes an offset; returns a new offset.
      */
     public int addDefaultBookmarks(Context context, ContentResolver cr, final int offset) {
-        long folderID = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        if (folderID == -1L) {
+        final long folderID = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        if (folderID == FOLDER_NOT_FOUND) {
             Log.e(LOGTAG, "No mobile folder: cannot add default bookmarks.");
             return offset;
         }
@@ -263,8 +266,8 @@ public class LocalBrowserDB {
             return offset;
         }
 
-        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        if (folderId == -1L) {
+        final long folderID = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        if (folderID == FOLDER_NOT_FOUND) {
             Log.e(LOGTAG, "No mobile folder: cannot add distribution bookmarks.");
             return offset;
         }
@@ -292,7 +295,7 @@ public class LocalBrowserDB {
                     parent = Bookmarks.FIXED_PINNED_LIST_ID;
                     pos = pinnedPos++;
                 } else {
-                    parent = folderId;
+                    parent = folderID;
                     pos = mobilePos++;
                 }
 
@@ -844,7 +847,7 @@ public class LocalBrowserDB {
         try {
             final int col = c.getColumnIndexOrThrow(Bookmarks._ID);
             if (!c.moveToFirst() || c.isNull(col)) {
-                return -1;
+                return FOLDER_NOT_FOUND;
             }
 
             final long id = c.getLong(col);
