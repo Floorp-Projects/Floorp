@@ -38,11 +38,17 @@
     // overwrite the same registration.
     test_register,
 
-    test_managerRegistrations,
+    function() { test_managerRegistrations('wifiOnly', 0); },
     test_registrations,
 
     test_registrationEmpty,
     test_registration,
+
+    function() { test_managerSetPolicy('disabled', 123); },
+    function() { test_managerRegistrations('disabled', 123); },
+
+    function() { test_managerSetPolicy('enabled', 42); },
+    function() { test_managerRegistrations('enabled', 42); },
 
     test_unregister,
     test_unregisterDuplicate,
