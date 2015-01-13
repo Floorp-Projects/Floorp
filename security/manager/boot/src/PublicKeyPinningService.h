@@ -38,6 +38,13 @@ public:
    */
   static bool ChainMatchesPinset(const CERTCertList* certList,
                                  const nsTArray<nsCString>& aSHA256keys);
+
+  /**
+   * Given a hostname of potentially mixed case with potentially multiple
+   * trailing '.' (see bug 1118522), canonicalizes it to lowercase with no
+   * trailing '.'.
+   */
+  static nsAutoCString CanonicalizeHostname(const char* hostname);
 };
 
 }} // namespace mozilla::psm
