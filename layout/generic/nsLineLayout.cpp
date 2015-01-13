@@ -2878,7 +2878,14 @@ nsLineLayout::ExpandRubyBoxWithAnnotations(PerFrameData* aFrame,
     // Add one gap at each side of this annotation.
     computeState.mFirstParticipant->mJustificationAssignment.mGapsAtStart = 1;
     computeState.mLastParticipant->mJustificationAssignment.mGapsAtEnd = 1;
-    ExpandRubyBox(annotation, reservedISize, aContainerWidth);
+    nsIFrame* parentFrame = annotation->mFrame->GetParent();
+    nscoord containerWidth = parentFrame->GetRect().Width();
+    MOZ_ASSERT(containerWidth == aContainerWidth ||
+               parentFrame->GetType() == nsGkAtoms::rubyTextContainerFrame,
+               "Container width should only be different when the current "
+               "annotation is a ruby text frame, whose parent is not same "
+               "as its base frame.");
+    ExpandRubyBox(annotation, reservedISize, containerWidth);
     ExpandInlineRubyBoxes(annotation->mSpan);
   }
 }
