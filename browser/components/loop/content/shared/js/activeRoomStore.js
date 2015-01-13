@@ -279,6 +279,8 @@ loop.store.ActiveRoomStore = (function() {
      * granted and starts joining the room.
      */
     gotMediaPermission: function() {
+      this.setStoreState({roomState: ROOM_STATES.JOINING});
+
       this._mozLoop.rooms.join(this._storeState.roomToken,
         function(error, responseData) {
           if (error) {
@@ -461,7 +463,8 @@ loop.store.ActiveRoomStore = (function() {
         delete this._timeout;
       }
 
-      if (this._storeState.roomState === ROOM_STATES.JOINED ||
+      if (this._storeState.roomState === ROOM_STATES.JOINING ||
+          this._storeState.roomState === ROOM_STATES.JOINED ||
           this._storeState.roomState === ROOM_STATES.SESSION_CONNECTED ||
           this._storeState.roomState === ROOM_STATES.HAS_PARTICIPANTS) {
         this._mozLoop.rooms.leave(this._storeState.roomToken,
