@@ -112,7 +112,7 @@ Unreported {
 
 Once-reported {
   1 block in heap block record 1 of 11
-  8,192 bytes (4,097 requested / 4,095 slop)
+  8,192 bytes (7,169 requested / 1,023 slop)
   67.77% of the heap (67.77% cumulative)
   77.40% of once-reported (77.40% cumulative)
   Allocated at {
