@@ -21,6 +21,7 @@ from mach.decorators import (
 )
 
 from wptrunner import wptcommandline
+from update import updatecommandline
 
 # This should probably be consolidated with similar classes in other test
 # runners.
@@ -83,15 +84,20 @@ class WebPlatformTestsRunner(MozbuildObject):
 class WebPlatformTestsUpdater(MozbuildObject):
     """Update web platform tests."""
     def run_update(self, **kwargs):
-        from wptrunner import update
+        import update
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
+        updatecommandline.check_args(kwargs)
+        logger = update.setup_logging(kwargs, {})
 
-        wptcommandline.set_from_config(kwargs)
-        update.setup_logging(kwargs, {"mach": sys.stdout})
-
-        update.run_update(**kwargs)
+        try:
+            update.run_update(logger, **kwargs)
+        except:
+            import pdb
+            import traceback
+            traceback.print_exc()
+            pdb.post_mortem()
 
 class WebPlatformTestsReduce(WebPlatformTestsRunner):
 
@@ -127,17 +133,16 @@ class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests-update",
              category="testing",
-             conditions=[conditions.is_firefox],
-             parser=wptcommandline.create_parser_update())
+             parser=updatecommandline.create_parser())
     def update_web_platform_tests(self, **params):
         self.setup()
         self.virtualenv_manager.install_pip_package('html5lib==0.99')
+        self.virtualenv_manager.install_pip_package('requests')
         wpt_updater = self._spawn(WebPlatformTestsUpdater)
         return wpt_updater.run_update(**params)
 
     def setup(self):
         self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('py==1.4.14')
 
     @Command("web-platform-tests-reduce",
              category="testing",
