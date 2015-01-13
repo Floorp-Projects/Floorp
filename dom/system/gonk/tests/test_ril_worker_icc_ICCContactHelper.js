@@ -125,15 +125,219 @@ add_test(function test_read_icc_contacts() {
   let record = context.ICCRecordHelper;
   let contactHelper = context.ICCContactHelper;
   let ril = context.RIL;
+  let test_data = [
+    //Record 1.
+    {
+      comment: "Test read SIM adn contact",
+      rawData: {
+        simType: CARD_APPTYPE_SIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+      },
+      expectedContact: [{
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111"
+      }],
+    },
+    //Record 2.
+    {
+      comment: "Test read SIM fdn contact",
+      rawData: {
+        simType: CARD_APPTYPE_SIM,
+        contactType: GECKO_CARDCONTACT_TYPE_FDN,
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+      },
+      expectedContact: [{
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111"
+      }],
+    },
+    //Record 3.
+    {
+      comment: "Test read USIM adn contact",
+      rawData: {
+        simType: CARD_APPTYPE_USIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        pbrs: [{adn:{fileId: 0x6f3a}, email: {}, anr0: {}}],
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+        email: "hello@mail.com",
+        anr: "123456",
+      },
+      expectedContact: [{
+        pbrIndex: 0,
+        recordId: 1,
+        alphaId: "name",
+        number:  "111111",
+        email:   "hello@mail.com",
+        anr:     ["123456"]
+      }],
+    },
+    //Record 4.
+    {
+      comment: "Test read USIM adn contacts",
+      rawData: {
+        simType: CARD_APPTYPE_USIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        pbrs: [{adn:{fileId: 0x6f3a}, email: {}, anr0: {}},
+               {adn:{fileId: 0x6f3b}, email: {}, anr0: {}}],
+        adnLike: [{recordId: 1, alphaId: "name1", number: "111111"},
+                  {recordId: 2, alphaId: "name2", number: "222222"}],
+        email: "hello@mail.com",
+        anr: "123456",
+      },
+      expectedContact: [
+        {
+          pbrIndex: 0,
+          recordId: 1,
+          alphaId:  "name1",
+          number:   "111111",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 0,
+          recordId: 2,
+          alphaId:  "name2",
+          number:   "222222",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 1,
+          recordId: 1,
+          alphaId:  "name1",
+          number:   "111111",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 1,
+          recordId: 2,
+          alphaId:  "name2",
+          number:   "222222",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }
+      ],
+    },
+    //Record 5.
+    {
+      comment: "Test read USIM fdn contact",
+      rawData: {
+        simType: CARD_APPTYPE_USIM,
+        contactType: GECKO_CARDCONTACT_TYPE_FDN,
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+      },
+      expectedContact: [{
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111"
+      }],
+    },
+    //Record 6.
+    {
+      comment: "Test read RUIM adn contact",
+      rawData: {
+        simType: CARD_APPTYPE_RUIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+      },
+      expectedContact: [{
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111"
+      }],
+    },
+    //Record 7.
+    {
+      comment: "Test read RUIM fdn contact",
+      rawData: {
+        simType: CARD_APPTYPE_RUIM,
+        contactType: GECKO_CARDCONTACT_TYPE_FDN,
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+      },
+      expectedContact: [{
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111"
+      }],
+    },
+    //Record 8.
+    {
+      comment: "Test read RUIM adn contact with enhanced phone book",
+      rawData: {
+        simType: CARD_APPTYPE_RUIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        pbrs: [{adn:{fileId: 0x6f3a}, email: {}, anr0: {}}],
+        adnLike: [{recordId: 1, alphaId: "name", number: "111111"}],
+        email: "hello@mail.com",
+        anr: "123456",
+        enhancedPhoneBook: true,
+      },
+      expectedContact: [{
+        pbrIndex: 0,
+        recordId: 1,
+        alphaId:  "name",
+        number:   "111111",
+        email:    "hello@mail.com",
+        anr:      ["123456"]
+      }],
+    },
+    //Record 9.
+    {
+      comment: "Test read RUIM adn contacts with enhanced phone book",
+      rawData: {
+        simType: CARD_APPTYPE_RUIM,
+        contactType: GECKO_CARDCONTACT_TYPE_ADN,
+        pbrs: [{adn:{fileId: 0x6f3a}, email: {}, anr0: {}},
+               {adn:{fileId: 0x6f3b}, email: {}, anr0: {}}],
+        adnLike: [{recordId: 1, alphaId: "name1", number: "111111"},
+                  {recordId: 2, alphaId: "name2", number: "222222"}],
+        email: "hello@mail.com",
+        anr: "123456",
+        enhancedPhoneBook: true,
+      },
+      expectedContact: [
+        {
+          pbrIndex: 0,
+          recordId: 1,
+          alphaId:  "name1",
+          number:   "111111",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 0,
+          recordId: 2,
+          alphaId:  "name2",
+          number:   "222222",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 1,
+          recordId: 1,
+          alphaId:  "name1",
+          number:   "111111",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }, {
+          pbrIndex: 1,
+          recordId: 2,
+          alphaId:  "name2",
+          number:   "222222",
+          email:    "hello@mail.com",
+          anr:      ["123456"]
+        }
+      ],
+    },
+  ];
 
-  function do_test(aSimType, aContactType, aExpectedContact, aEnhancedPhoneBook) {
-    ril.appType = aSimType;
-    ril._isCdma = (aSimType === CARD_APPTYPE_RUIM);
-    ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ?
+  function do_test(aTestData, aExpectedContact) {
+    ril.appType = aTestData.simType;
+    ril._isCdma = (aTestData.simType === CARD_APPTYPE_RUIM);
+    ril.iccInfoPrivate.cst = (aTestData.enhancedPhoneBook) ?
                                     [0x20, 0x0C, 0x0, 0x0, 0x0]:
                                     [0x20, 0x00, 0x0, 0x0, 0x0];
 
-    ril.iccInfoPrivate.sst = (aSimType === CARD_APPTYPE_SIM)?
+    ril.iccInfoPrivate.sst = (aTestData.simType === CARD_APPTYPE_SIM)?
                                     [0x20, 0x0, 0x0, 0x0, 0x0]:
                                     [0x2, 0x0, 0x0, 0x0, 0x0];
 
@@ -143,30 +347,25 @@ add_test(function test_read_icc_contacts() {
     };
 
     record.readPBR = function readPBR(onsuccess, onerror) {
-      onsuccess([{adn:{fileId: 0x6f3a}, email: {}, anr0: {}}]);
+      onsuccess(JSON.parse(JSON.stringify(aTestData.pbrs)));
     };
 
     record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
-      onsuccess([{recordId: 1, alphaId: "name", number: "111111"}])
+      onsuccess(JSON.parse(JSON.stringify(aTestData.adnLike)));
     };
 
     record.readEmail = function readEmail(fileId, fileType, recordNumber, onsuccess, onerror) {
-      onsuccess("hello@mail.com");
+      onsuccess(aTestData.email);
     };
 
     record.readANR = function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
-      onsuccess("123456");
+      onsuccess(aTestData.anr);
     };
 
     let onsuccess = function onsuccess(contacts) {
-      let contact = contacts[0];
-      for (let key in contact) {
-        do_print("check " + key);
-        if (Array.isArray(contact[key])) {
-          do_check_eq(contact[key][0], aExpectedContact[key]);
-        } else {
-          do_check_eq(contact[key], aExpectedContact[key]);
-        }
+      for (let i = 0; i < contacts.length; i++) {
+        do_print("check contacts[" + i + "]:" + JSON.stringify(contacts[i]));
+        deepEqual(contacts[i], aExpectedContact[i]);
       }
     };
 
@@ -175,52 +374,13 @@ add_test(function test_read_icc_contacts() {
       do_check_true(false);
     };
 
-    contactHelper.readICCContacts(aSimType, aContactType, onsuccess, onerror);
+    contactHelper.readICCContacts(aTestData.simType, aTestData.contactType, onsuccess, onerror);
   }
 
-  let expectedContact1 = {
-    pbrIndex: 0,
-    recordId: 1,
-    alphaId:  "name",
-    number:   "111111"
-  };
-
-  let expectedContact2 = {
-    pbrIndex: 0,
-    recordId: 1,
-    alphaId:  "name",
-    number:   "111111",
-    email:    "hello@mail.com",
-    anr:      "123456"
-  };
-
-  // SIM
-  do_print("Test read SIM adn contacts");
-  do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact1);
-
-  do_print("Test read SIM fdn contacts");
-  do_test(CARD_APPTYPE_SIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
-
-  // USIM
-  do_print("Test read USIM adn contacts");
-  do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact2);
-
-  do_print("Test read USIM fdn contacts");
-  do_test(CARD_APPTYPE_USIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
-
-  // RUIM
-  do_print("Test read RUIM adn contacts");
-  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact1);
-
-  do_print("Test read RUIM fdn contacts");
-  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1);
-
-  // RUIM with enhanced phone book
-  do_print("Test read RUIM adn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_ADN, expectedContact2, true);
-
-  do_print("Test read RUIM fdn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, GECKO_CARDCONTACT_TYPE_FDN, expectedContact1, true);
+  for (let i = 0; i < test_data.length; i++) {
+    do_print(test_data[i].comment);
+    do_test(test_data[i].rawData, test_data[i].expectedContact);
+  }
 
   run_next_test();
 });
