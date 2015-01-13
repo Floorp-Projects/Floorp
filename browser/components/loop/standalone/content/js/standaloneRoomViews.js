@@ -94,6 +94,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
             )
           );
         }
+        case ROOM_STATES.JOINING:
         case ROOM_STATES.JOINED:
         case ROOM_STATES.SESSION_CONNECTED: {
           return (
@@ -294,7 +295,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     /**
-     * Watches for when we transition to JOINED room state, so we can request
+     * Watches for when we transition to MEDIA_WAIT room state, so we can request
      * user media access.
      *
      * @param  {Object} nextProps (Unused)
