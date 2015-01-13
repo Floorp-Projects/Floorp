@@ -1,12 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.tests;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.PrivateTab;
 import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.TabsAccessor;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.TabsProvider;
 
@@ -102,8 +106,10 @@ public class testFilterOpenTab extends ContentProviderTest {
             tabs.add(tab5);
             tabs.add(tab6);
 
-            // Persist the created tabs.
-            TabsAccessor.persistLocalTabs(mResolver, tabs);
+            // Persist the created tabs. Normally, you should be careful that you get a profile on the
+            // original thread, and do the work in a background one, but for testing we don't.
+            final DatabaseHelper helper = new DatabaseHelper(getActivity(), mAsserter);
+            helper.getProfileDB().getTabsAccessor().persistLocalTabs(mResolver, tabs);
 
             // Get the persisted tab and check if urls are filtered.
             Cursor c = getTabsFromLocalClient();

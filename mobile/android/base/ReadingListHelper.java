@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
@@ -14,13 +16,9 @@ import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -84,10 +82,11 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
         final ContentResolver cr = context.getContentResolver();
         final String url = message.optString("url");
 
+        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                if (BrowserDB.isReadingListItem(cr, url)) {
+                if (db.isReadingListItem(cr, url)) {
                     showToast(R.string.reading_list_duplicate, Toast.LENGTH_SHORT);
 
                 } else {
@@ -97,7 +96,7 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
                     values.put(ReadingListItems.LENGTH, message.optInt("length"));
                     values.put(ReadingListItems.EXCERPT, message.optString("excerpt"));
                     values.put(ReadingListItems.CONTENT_STATUS, message.optInt("status"));
-                    BrowserDB.addReadingListItem(cr, values);
+                    db.addReadingListItem(cr, values);
 
                     showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
                 }
@@ -112,10 +111,11 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * document head for display.
      */
     private void handleReaderModeFaviconRequest(final String url) {
+        final BrowserDB db = GeckoProfile.get(context).getDB();
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground() {
-                return Favicons.getFaviconURLForPageURL(context, url);
+                return Favicons.getFaviconURLForPageURL(db, context.getContentResolver(), url);
             }
 
             @Override
@@ -142,10 +142,11 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * or by tapping the readinglist-remove icon in the ReaderMode banner.
      */
     private void handleRemoveFromList(final String url) {
+        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                BrowserDB.removeReadingListItemWithURL(context.getContentResolver(), url);
+                db.removeReadingListItemWithURL(context.getContentResolver(), url);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", url));
                 showToast(R.string.page_removed, Toast.LENGTH_SHORT);
             }
@@ -157,11 +158,11 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * the proper ReaderMode banner icon (readinglist-add / readinglist-remove).
      */
     private void handleReadingListStatusRequest(final EventCallback callback, final String url) {
+        final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                final int inReadingList =
-                    BrowserDB.isReadingListItem(context.getContentResolver(), url) ? 1 : 0;
+                final int inReadingList = db.isReadingListItem(context.getContentResolver(), url) ? 1 : 0;
 
                 final JSONObject json = new JSONObject();
                 try {
