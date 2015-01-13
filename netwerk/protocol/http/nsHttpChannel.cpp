@@ -347,6 +347,7 @@ nsHttpChannel::Connect()
 
     // do not continue if asyncOpenCacheEntry is in progress
     if (AwaitingCacheCallbacks()) {
+        LOG(("nsHttpChannel::Connect %p AwaitingCacheCallbacks forces async\n", this));
         MOZ_ASSERT(NS_SUCCEEDED(rv), "Unexpected state");
         return NS_OK;
     }
