@@ -200,13 +200,20 @@ static void DestroyGlyphObserverList(void* aPropertyValue)
  */
 NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers, DestroyGlyphObserverList);
 
-#define TEXT_REFLOW_FLAGS    \
-  (TEXT_FIRST_LETTER|TEXT_START_OF_LINE|TEXT_END_OF_LINE|TEXT_HYPHEN_BREAK| \
-   TEXT_TRIMMED_TRAILING_WHITESPACE|TEXT_JUSTIFICATION_ENABLED| \
-   TEXT_HAS_NONCOLLAPSED_CHARACTERS|TEXT_SELECTION_UNDERLINE_OVERFLOWED)
+static const nsFrameState TEXT_REFLOW_FLAGS =
+   TEXT_FIRST_LETTER |
+   TEXT_START_OF_LINE |
+   TEXT_END_OF_LINE |
+   TEXT_HYPHEN_BREAK |
+   TEXT_TRIMMED_TRAILING_WHITESPACE |
+   TEXT_JUSTIFICATION_ENABLED |
+   TEXT_HAS_NONCOLLAPSED_CHARACTERS |
+   TEXT_SELECTION_UNDERLINE_OVERFLOWED |
+   TEXT_NO_RENDERED_GLYPHS;
 
-#define TEXT_WHITESPACE_FLAGS      (TEXT_IS_ONLY_WHITESPACE | \
-                                    TEXT_ISNOT_ONLY_WHITESPACE)
+static const nsFrameState TEXT_WHITESPACE_FLAGS =
+    TEXT_IS_ONLY_WHITESPACE |
+    TEXT_ISNOT_ONLY_WHITESPACE;
 
 /*
  * Some general notes
@@ -2742,6 +2749,8 @@ nsTextFrame::ClearMetrics(nsHTMLReflowMetrics& aMetrics)
   aMetrics.ClearSize();
   aMetrics.SetBlockStartAscent(0);
   mAscent = 0;
+
+  AddStateBits(TEXT_NO_RENDERED_GLYPHS);
 }
 
 static int32_t FindChar(const nsTextFragment* frag,
@@ -4650,8 +4659,9 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
-  if (NS_GET_A(StyleColor()->mColor) == 0 &&
-      !IsSVGText() && !IsSelected() && !StyleText()->HasTextShadow()) {
+  if (((GetStateBits() & TEXT_NO_RENDERED_GLYPHS) ||
+       (NS_GET_A(StyleColor()->mColor) == 0 && !StyleText()->HasTextShadow())) &&
+      aBuilder->IsForPainting() && !IsSVGText() && !IsSelected()) {
     TextDecorations textDecs;
     GetTextDecorations(PresContext(), eResolvedColors, textDecs);
     if (!textDecs.HasDecorationLines()) {
@@ -5695,36 +5705,22 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     // or from the ::-moz-selection pseudo-class if specified there
     nsCSSShadowArray* shadow = textStyle->GetTextShadow();
     GetSelectionTextShadow(this, type, aTextPaintStyle, &shadow);
-
-    // Draw shadows, if any
     if (shadow) {
-      gfxTextRun::Metrics shadowMetrics =
-        mTextRun->MeasureText(offset, length, gfxFont::LOOSE_INK_EXTENTS,
-                              nullptr, &aProvider);
-      if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-        AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
-                           gfxFont::LOOSE_INK_EXTENTS, aCtx);
+      nscoord leftEdge =  iOffset;
+      if (mTextRun->IsRightToLeft()) {
+        leftEdge -= mTextRun->GetAdvanceWidth(offset, length, &aProvider) +
+            hyphenWidth;
       }
-      for (uint32_t i = shadow->Length(); i > 0; --i) {
-        PaintOneShadow(offset, length,
-                       shadow->ShadowAt(i - 1), &aProvider,
-                       dirtyRect, aFramePt, textBaselinePt, aCtx,
-                       foreground, aClipEdges, 
-                       iOffset - (mTextRun->IsRightToLeft() ?
-                                  shadowMetrics.mBoundingBox.width : 0),
-                       shadowMetrics.mBoundingBox);
-      }
+      PaintShadows(shadow, offset, length, dirtyRect, aFramePt, textBaselinePt,
+          leftEdge, aProvider, foreground, aClipEdges, aCtx);
     }
 
     // Draw text segment
     gfxFloat advance;
-
     DrawText(aCtx, aDirtyRect, aFramePt, textBaselinePt,
              offset, length, aProvider, aTextPaintStyle, foreground, aClipEdges,
              advance, hyphenWidth > 0, nullptr, nullptr, aCallbacks);
-    if (hyphenWidth) {
-      advance += hyphenWidth;
-    }
+    advance += hyphenWidth;
     iterator.UpdateWithAdvance(advance);
   }
   return true;
@@ -6041,6 +6037,44 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 }
 
 void
+nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
+                          uint32_t aOffset, uint32_t aLength,
+                          const nsRect& aDirtyRect,
+                          const gfxPoint& aFramePt,
+                          const gfxPoint& aTextBaselinePt,
+                          nscoord aLeftEdgeOffset,
+                          PropertyProvider& aProvider,
+                          nscolor aForegroundColor,
+                          const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                          gfxContext* aCtx)
+{
+  if (!aShadow) {
+    return;
+  }
+
+  gfxTextRun::Metrics shadowMetrics =
+    mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
+                          nullptr, &aProvider);
+  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
+    AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
+                       gfxFont::LOOSE_INK_EXTENTS, aCtx);
+  }
+  // Add bounds of text decorations
+  gfxRect decorationRect(0, -shadowMetrics.mAscent,
+      shadowMetrics.mAdvanceWidth, shadowMetrics.mAscent + shadowMetrics.mDescent);
+  shadowMetrics.mBoundingBox.UnionRect(shadowMetrics.mBoundingBox,
+                                       decorationRect);
+  for (uint32_t i = aShadow->Length(); i > 0; --i) {
+    PaintOneShadow(aOffset, aLength,
+                   aShadow->ShadowAt(i - 1), &aProvider,
+                   aDirtyRect, aFramePt, aTextBaselinePt, aCtx,
+                   aForegroundColor, aClipEdges,
+                   aLeftEdgeOffset,
+                   shadowMetrics.mBoundingBox);
+  }
+}
+
+void
 nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                        const nsRect& aDirtyRect,
                        const nsCharClipDisplayItem& aItem,
@@ -6109,20 +6143,9 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   nscolor foregroundColor = textPaintStyle.GetTextColor();
   if (!aCallbacks) {
     const nsStyleText* textStyle = StyleText();
-    if (textStyle->HasTextShadow()) {
-      // Text shadow happens with the last value being painted at the back,
-      // ie. it is painted first.
-      gfxTextRun::Metrics shadowMetrics = 
-        mTextRun->MeasureText(startOffset, maxLength, gfxFont::LOOSE_INK_EXTENTS,
-                              nullptr, &provider);
-      for (uint32_t i = textStyle->mTextShadow->Length(); i > 0; --i) {
-        PaintOneShadow(startOffset, maxLength,
-                       textStyle->mTextShadow->ShadowAt(i - 1), &provider,
-                       aDirtyRect, framePt, textBaselinePt, ctx,
-                       foregroundColor, clipEdges,
-                       snappedLeftEdge, shadowMetrics.mBoundingBox);
-      }
-    }
+    PaintShadows(textStyle->mTextShadow, startOffset, maxLength,
+        aDirtyRect, framePt, textBaselinePt, snappedLeftEdge, provider,
+        foregroundColor, clipEdges, ctx);
   }
 
   gfxFloat advanceWidth;
@@ -8244,7 +8267,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   gfxFloat availWidth = aAvailableWidth;
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
-  int32_t unusedOffset;  
+  int32_t unusedOffset;
   gfxBreakPriority breakPriority;
   aLineLayout.GetLastOptionalBreakPosition(&unusedOffset, &breakPriority);
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
@@ -8307,6 +8330,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     // Fix up metrics to include hyphen
     AddHyphenToMetrics(this, mTextRun, &textMetrics, boundingBoxType, ctx);
     AddStateBits(TEXT_HYPHEN_BREAK | TEXT_HAS_NONCOLLAPSED_CHARACTERS);
+  }
+  if (textMetrics.mBoundingBox.IsEmpty()) {
+    AddStateBits(TEXT_NO_RENDERED_GLYPHS);
   }
 
   gfxFloat trimmableWidth = 0;

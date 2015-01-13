@@ -584,6 +584,17 @@ protected:
                       nscoord aLeftSideOffset,
                       gfxRect& aBoundingBox);
 
+  void PaintShadows(nsCSSShadowArray* aShadow,
+                    uint32_t aOffset, uint32_t aLength,
+                    const nsRect& aDirtyRect,
+                    const gfxPoint& aFramePt,
+                    const gfxPoint& aTextBaselinePt,
+                    nscoord aLeftEdgeOffset,
+                    PropertyProvider& aProvider,
+                    nscolor aForegroundColor,
+                    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                    gfxContext* aCtx);
+
   struct LineDecoration {
     nsIFrame* mFrame;
 

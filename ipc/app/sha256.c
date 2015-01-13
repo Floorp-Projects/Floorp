@@ -68,33 +68,11 @@ static const PRUint32 H256[8] = {
     0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 };
 
-#if (_MSC_VER >= 1300)
+#if defined(_MSC_VER)
 #include <stdlib.h>
 #pragma intrinsic(_byteswap_ulong)
 #define SHA_HTONL(x) _byteswap_ulong(x)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
-#elif defined(_MSC_VER) && defined(NSS_X86_OR_X64)
-#ifndef FORCEINLINE
-#if (_MSC_VER >= 1200)
-#define FORCEINLINE __forceinline
-#else
-#define FORCEINLINE __inline
-#endif
-#endif
-#define FASTCALL __fastcall
-
-static FORCEINLINE PRUint32 FASTCALL 
-swap4b(PRUint32 dwd) 
-{
-    __asm {
-    	mov   eax,dwd
-	bswap eax
-    }
-}
-
-#define SHA_HTONL(x) swap4b(x)
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
-
 #elif defined(__GNUC__) && defined(NSS_X86_OR_X64)
 static __inline__ PRUint32 swap4b(PRUint32 value)
 {
