@@ -8,3 +8,4 @@
 <!ENTITY tabCrashed.reportSent "Crash report already submitted; thank you for helping make &brandShortName; better!">
 <!ENTITY tabCrashed.closeTab "Close This Tab">
 <!ENTITY tabCrashed.restoreTab "Restore This Tab">
+<!ENTITY tabCrashed.restoreAll "Restore All Crashed Tabs">
