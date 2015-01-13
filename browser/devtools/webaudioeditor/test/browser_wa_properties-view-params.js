@@ -9,8 +9,8 @@
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_NODES_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  let gVars = PropertiesView._propsView;
 
   let started = once(gFront, "start-context");
 
@@ -30,7 +30,7 @@ add_task(function*() {
 
   for (let i = 0; i < types.length; i++) {
     click(panelWin, findGraphNode(panelWin, nodeIds[i]));
-    yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+    yield waitForInspectorRender(panelWin, EVENTS);
     checkVariableView(gVars, 0, NODE_DEFAULT_VALUES[types[i]], types[i]);
   }
 
