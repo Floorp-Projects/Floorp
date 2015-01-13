@@ -376,6 +376,12 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "strictContentSandbox",
           "help": "Run tests with a more strict content sandbox (Windows only).",
         }],
+        [["--nested_oop"],
+        { "action": "store_true",
+          "default": False,
+          "dest": "nested_oop",
+          "help": "Run tests with nested_oop preferences and test filtering enabled.",
+        }],
         [["--dmd-path"],
          { "action": "store",
            "default": None,
@@ -488,6 +494,7 @@ class MochitestOptions(optparse.OptionParser):
 
         mozinfo.update({"e10s": options.e10s}) # for test manifest parsing.
         mozinfo.update({"strictContentSandbox": options.strictContentSandbox}) # for test manifest parsing.
+        mozinfo.update({"nested_oop": options.nested_oop}) # for test manifest parsing.
 
         if options.app is None:
             if build_obj is not None:
@@ -641,6 +648,10 @@ class MochitestOptions(optparse.OptionParser):
             for f in ['/usr/bin/gst-launch-0.10', '/usr/bin/pactl']:
                 if not os.path.isfile(f):
                     self.error('Missing binary %s required for --use-test-media-devices')
+
+        if options.nested_oop:
+          if not options.e10s:
+            options.e10s = True
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
