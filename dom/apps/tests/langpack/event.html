@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Langpack Test : event</title>
+    <script>
+var baseURL = "http://mochi.test:8888/tests/dom/apps/tests/langpack/";
+var eventCount = 0;
+
+function languageChanged(evt) {
+  eventCount++;
+  alert(JSON.stringify(evt.detail));
+  if (eventCount == 1) {
+    var req = navigator.mozApps.install(baseURL + "lang2.webapp");
+  }
+}
+
+// Set up the event handler, and install an app.
+function run() {
+  document.addEventListener("additionallanguageschange", languageChanged);
+
+  navigator.mozApps.install(baseURL + "lang1.webapp");
+}
+    </script>
+  </head>
+  <body onload="run()">
+    <h1>Langpack Test : event</h1>
+  </body>
+</html>

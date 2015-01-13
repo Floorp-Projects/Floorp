@@ -10,17 +10,18 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteClientsDialogFragment;
 import org.mozilla.gecko.RemoteClientsDialogFragment.ChoiceMode;
 import org.mozilla.gecko.RemoteClientsDialogFragment.RemoteClientsListener;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
-import org.mozilla.gecko.TabsAccessor;
-import org.mozilla.gecko.TabsAccessor.RemoteClient;
-import org.mozilla.gecko.TabsAccessor.RemoteTab;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.RemoteClient;
+import org.mozilla.gecko.db.RemoteTab;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
@@ -30,7 +31,6 @@ import android.accounts.Account;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -382,25 +382,31 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
     }
 
     private static class RemoteTabsCursorLoader extends SimpleCursorLoader {
+        private final GeckoProfile mProfile;
+
         public RemoteTabsCursorLoader(Context context) {
             super(context);
+            mProfile = GeckoProfile.get(context);
         }
 
         @Override
         public Cursor loadCursor() {
-            return TabsAccessor.getRemoteTabsCursor(getContext());
+            return mProfile.getDB().getTabsAccessor().getRemoteTabsCursor(getContext());
         }
     }
 
     private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+        private BrowserDB mDB;    // Pseudo-final: set in onCreateLoader.
+
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            mDB = GeckoProfile.get(getActivity()).getDB();
             return new RemoteTabsCursorLoader(getActivity());
         }
 
         @Override
         public void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
-            final List<RemoteClient> clients = TabsAccessor.getClientsFromCursor(c);
+            final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
 
             // Filter the hidden clients out of the clients list. The clients
             // list is updated in place; the hidden clients list is built

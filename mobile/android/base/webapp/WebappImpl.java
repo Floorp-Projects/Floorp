@@ -18,6 +18,8 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.webapp.InstallHelper.InstallCallback;
@@ -61,10 +63,17 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     public boolean hasTabsSideBar() { return false; }
 
     @Override
-    public void onCreate(Bundle savedInstance)
-    {
+    public BrowserDB.Factory getBrowserDBFactory() {
+        return new BrowserDB.Factory() {
+            @Override
+            public BrowserDB get(String profileName, File profileDir) {
+                return new StubBrowserDB(profileName);
+            }
+        };
+    }
 
-        String action = getIntent().getAction();
+    @Override
+    public void onCreate(Bundle savedInstance) {
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             extras = savedInstance;
