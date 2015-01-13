@@ -8,8 +8,8 @@
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  let gVars = PropertiesView._propsView;
 
   let started = once(gFront, "start-context");
 
@@ -24,7 +24,7 @@ add_task(function*() {
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
   // Wait for the node to be set as well as the inspector to come fully into the view
   yield Promise.all([
-    once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET),
+    waitForInspectorRender(panelWin, EVENTS),
     once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
   ]);
 
@@ -37,17 +37,17 @@ add_task(function*() {
   }, "default loaded string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS),
   checkVariableView(gVars, 0, {
     "gain": 0
   }, "default loaded number");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS),
   yield setAndCheck(0, "type", "square", "square", "sets string as string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS),
   yield setAndCheck(0, "gain", "0.005", 0.005, "sets number as number");
   yield setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
   yield setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
