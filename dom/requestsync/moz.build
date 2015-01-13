@@ -6,6 +6,10 @@
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
+EXPORTS.mozilla.dom += [
+    'RequestSyncWifiService.h',
+]
+
 EXTRA_COMPONENTS += [
     'RequestSync.manifest',
     'RequestSyncManager.js',
@@ -15,3 +19,12 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'RequestSyncService.jsm',
 ]
+
+SOURCES += [
+    'RequestSyncWifiService.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FAIL_ON_WARNINGS = True
+FINAL_LIBRARY = 'xul'
