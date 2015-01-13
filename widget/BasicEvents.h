@@ -878,13 +878,13 @@ public:
 
   public:
 
-    MOZ_EXPLICIT_CONVERSION operator bool() const
+    explicit operator bool() const
     {
       return !mBuffer.IsEmpty();
     }
 
     template<typename T>
-    MOZ_EXPLICIT_CONVERSION operator const T*() const
+    explicit operator const T*() const
     {
       return mBuffer.IsEmpty()
              ? nullptr

@@ -81,7 +81,7 @@ public:
   MOZ_CONSTEXPR operator E() const { return mValue; }
 
   template<typename DestinationType>
-  MOZ_EXPLICIT_CONVERSION MOZ_CONSTEXPR
+  explicit MOZ_CONSTEXPR
   operator DestinationType() const { return DestinationType(mValue); }
 
   MOZ_CONSTEXPR bool operator !() const { return !bool(mValue); }
