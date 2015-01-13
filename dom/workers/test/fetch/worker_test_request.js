@@ -205,28 +205,6 @@ function testBodyExtraction() {
   })
 }
 
-// mode cannot be set to "CORS-with-forced-preflight" from javascript.
-function testModeCorsPreflightEnumValue() {
-  try {
-    var r = new Request(".", { mode: "cors-with-forced-preflight" });
-    ok(false, "Creating Request with mode cors-with-forced-preflight should fail.");
-  } catch(e) {
-    ok(true, "Creating Request with mode cors-with-forced-preflight should fail.");
-    // Also ensure that the error message matches error messages for truly
-    // invalid strings.
-    var invalidMode = "not-in-requestmode-enum";
-    var invalidExc;
-    try {
-      var r = new Request(".", { mode: invalidMode });
-    } catch(e) {
-      invalidExc = e;
-    }
-    var expectedMessage = invalidExc.message.replace(invalidMode, 'cors-with-forced-preflight');
-    is(e.message, expectedMessage,
-       "mode cors-with-forced-preflight should throw same error as invalid RequestMode strings.");
-  }
-}
-
 onmessage = function() {
   var done = function() { postMessage({ type: 'finish' }) }
 
@@ -236,7 +214,6 @@ onmessage = function() {
   testUrlFragment();
   testMethod();
   testBug1109574();
-  testModeCorsPreflightEnumValue();
 
   Promise.resolve()
     .then(testBodyCreation)
