@@ -243,6 +243,12 @@ public:
     mDecoder = nullptr;
   }
 
+  // Returns true if the reader implements RequestAudioData()
+  // and RequestVideoData() asynchronously, rather than using the
+  // implementation in this class to adapt the old synchronous to
+  // the newer async model.
+  virtual bool IsAsync() const { return false; }
+
 protected:
   virtual ~MediaDecoderReader();
 

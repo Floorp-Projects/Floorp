@@ -110,6 +110,8 @@ public:
 
   virtual android::sp<android::MediaSource> GetAudioOffloadTrack();
 
+  virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
+
 protected:
   struct TrackInputCopier
   {
