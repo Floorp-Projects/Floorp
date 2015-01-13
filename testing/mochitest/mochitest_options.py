@@ -655,7 +655,7 @@ class MochitestOptions(optparse.OptionParser):
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
-            "tab": 2000000, # See dependencies of bug 1051230.
+            "tab": 20000, # See dependencies of bug 1051230.
             "geckomediaplugin": 20000, # GMP rarely gets a log, but when it does, it leaks a little.
         }
 
