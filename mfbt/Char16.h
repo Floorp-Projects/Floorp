@@ -17,14 +17,15 @@
  * is a 16-bit code unit of a Unicode code point, not a "character".
  */
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER < 1900
    /*
     * C++11 says char16_t is a distinct builtin type, but Windows's yvals.h
-    * typedefs char16_t as an unsigned short. We would like to alias char16_t
-    * to Windows's 16-bit wchar_t so we can declare UTF-16 literals as constant
-    * expressions (and pass char16_t pointers to Windows APIs). We #define
-    * _CHAR16T here in order to prevent yvals.h from overriding our char16_t
-    * typedefs, which we set to wchar_t for C++ code.
+    * typedefs char16_t as an unsigned short prior to MSVC 2015, which
+    * implemented C++11's distinct char16_t type). We would like to alias
+    * char16_t to Windows's 16-bit wchar_t so we can declare UTF-16 literals as
+    * constant expressions (and pass char16_t pointers to Windows APIs). We
+    * #define _CHAR16T here in order to prevent yvals.h from overriding our
+    * char16_t typedefs, which we set to wchar_t for C++ code.
     *
     * In addition, #defining _CHAR16T will prevent yvals.h from defining a
     * char32_t type, so we have to undo that damage here and provide our own,
@@ -51,13 +52,14 @@ typedef unsigned int char32_t;
 # include <string>
   /**
    * Win32 API extensively uses wchar_t, which is represented by a separated
-   * builtin type than char16_t per spec. It's not the case for MSVC, but GCC
-   * follows the spec. We want to mix wchar_t and char16_t on Windows builds.
-   * This class is supposed to make it easier. It stores char16_t const pointer,
-   * but provides implicit casts for wchar_t as well. On other platforms, we
-   * simply use |typedef const char16_t* char16ptr_t|. Here, we want to make
-   * the class as similar to this typedef, including providing some casts that
-   * are allowed by the typedef.
+   * builtin type than char16_t per spec. It's not the case for MSVC prior to
+   * MSVC 2015, but other compilers follow the spec. We want to mix wchar_t and
+   * char16_t on Windows builds. This class is supposed to make it easier. It
+   * stores char16_t const pointer, but provides implicit casts for wchar_t as
+   * well. On other platforms, we simply use
+   * |typedef const char16_t* char16ptr_t|. Here, we want to make the class as
+   * similar to this typedef, including providing some casts that are allowed
+   * by the typedef.
    */
 class char16ptr_t
 {

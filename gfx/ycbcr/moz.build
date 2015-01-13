@@ -38,15 +38,9 @@ if CONFIG['INTEL_ARCHITECTURE']:
 
 if CONFIG['_MSC_VER']:
     if CONFIG['OS_TEST'] == 'x86_64':
-        if CONFIG['_MSC_VER'] == '1400':
-            # VC8 doesn't support some SSE2 built-in functions
-            SOURCES += [
-                'yuv_row_win.cpp',
-            ]
-        else:
-            SOURCES += [
-                'yuv_row_win64.cpp',
-            ]
+        SOURCES += [
+            'yuv_row_win64.cpp',
+        ]
     else:
         SOURCES += [
             'yuv_row_win.cpp',

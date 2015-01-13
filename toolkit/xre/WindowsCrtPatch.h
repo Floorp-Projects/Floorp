@@ -127,11 +127,7 @@ Init()
   MOZ_ASSERT(!GetModuleHandleA("msvcr120.dll"));
   MOZ_ASSERT(!GetModuleHandleA("msvcr120d.dll"));
 
-  // Temporary until we fully switch over to VS 2013:
-  MOZ_ASSERT(!GetModuleHandleA("msvcr100.dll"));
-  MOZ_ASSERT(!GetModuleHandleA("msvcr100d.dll"));
-
-#if defined(_M_IX86) && defined(_MSC_VER) && _MSC_VER >= 1800
+#if defined(_M_IX86) && defined(_MSC_VER)
   if (!mozilla::IsXPSP3OrLater()) {
     NtdllIntercept.Init("ntdll.dll");
     NtdllIntercept.AddHook("RtlImageNtHeader",

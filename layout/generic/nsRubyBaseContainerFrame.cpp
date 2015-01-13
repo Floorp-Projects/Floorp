@@ -341,7 +341,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       "No line layout provided to RubyBaseContainerFrame reflow method.");
     return;
   }
-  MOZ_ASSERT(aReflowState.mRubyReflowState, "No ruby reflow state provided");
 
   AutoTextContainerArray textContainers;
   GetTextContainers(textContainers);
@@ -393,14 +392,14 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     reflowState->mLineLayout = lineLayout;
 
     LogicalMargin borderPadding = reflowState->ComputedLogicalBorderPadding();
-    nscoord containerWidth =
-      reflowState->ComputedWidth() + borderPadding.LeftRight(lineWM);
-
+    // If the writing mode is vertical-rl, the horizontal position of
+    // rt frames will be updated when reflowing this text container,
+    // hence leave container width 0 here for now.
     lineLayout->BeginLineReflow(borderPadding.IStart(lineWM),
                                 borderPadding.BStart(lineWM),
                                 reflowState->ComputedISize(),
                                 NS_UNCONSTRAINEDSIZE,
-                                false, false, lineWM, containerWidth);
+                                false, false, lineWM, 0);
     lineLayout->AttachRootFrameToBaseLineLayout();
   }
 
@@ -494,7 +493,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
     lineLayout->VerticalAlignLine();
     LogicalSize lineSize(lineWM, rtcISize, lineLayout->GetFinalLineBSize());
-    aReflowState.mRubyReflowState->SetTextContainerInfo(i, textContainer, lineSize);
+    textContainer->SetLineSize(lineSize);
     lineLayout->EndLineReflow();
   }
 
