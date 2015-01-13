@@ -98,6 +98,15 @@ NfcCallback.prototype = {
                                          Ci.nsINfcRequestCallback]),
 };
 
+// Should be mapped to the NFCTagType defined in MozNFCTag.webidl.
+let TagType = {
+  TYPE1: "Type1",
+  TYPE2: "Type2",
+  TYPE3: "Type3",
+  TYPE4: "Type4",
+  MIFARE_CLASSIC: "MIFARE-Classic"
+};
+
 /**
  * Implementation of NFCTag.
  *
@@ -120,8 +129,9 @@ function MozNFCTagImpl(window, sessionToken, tagInfo, ndefInfo) {
     this.maxNDEFSize = ndefInfo.maxNDEFSize;
     this.isReadOnly = ndefInfo.isReadOnly;
     this.isFormatable = ndefInfo.isFormatable;
-    this.canBeMadeReadOnly = this.type == "type1" || this.type == "type2" ||
-                             this.type == "mifare_classic";
+    this.canBeMadeReadOnly = this.type == TagType.TYPE1 ||
+                             this.type == TagType.TYPE2 ||
+                             this.type == TagType.MIFARE_CLASSIC;
   }
 }
 MozNFCTagImpl.prototype = {
