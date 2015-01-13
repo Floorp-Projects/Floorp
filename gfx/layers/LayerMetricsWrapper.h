@@ -168,7 +168,7 @@ public:
     return mLayer != nullptr;
   }
 
-  explicit operator bool() const
+  MOZ_EXPLICIT_CONVERSION operator bool() const
   {
     return IsValid();
   }
