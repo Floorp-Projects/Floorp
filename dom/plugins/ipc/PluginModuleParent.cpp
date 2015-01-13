@@ -377,6 +377,7 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
         parent->mShutdown = true;
         return nullptr;
     }
+    parent->mIsFlashPlugin = aPluginTag->mIsFlashPlugin;
     if (!parent->mIsStartingAsync) {
         int32_t launchTimeoutSecs = Preferences::GetInt(kLaunchTimeoutPref, 0);
         if (!parent->mSubprocess->WaitUntilConnected(launchTimeoutSecs * 1000)) {
@@ -386,7 +387,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     }
     TimeStamp launchEnd = TimeStamp::Now();
     parent->mTimeBlocked = (launchEnd - launchStart);
-    parent->mIsFlashPlugin = aPluginTag->mIsFlashPlugin;
     return parent.forget();
 }
 
