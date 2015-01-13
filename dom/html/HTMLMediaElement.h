@@ -281,11 +281,6 @@ public:
 
   void NotifyMediaTrackEnabled(MediaTrack* aTrack);
 
-  /**
-   * Called when tracks become available to the source media stream.
-   */
-  void NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream);
-
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
   /**
@@ -617,7 +612,6 @@ protected:
   virtual ~HTMLMediaElement();
 
   class MediaLoadListener;
-  class MediaStreamTracksAvailableCallback;
   class StreamListener;
 
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
@@ -1041,9 +1035,6 @@ protected:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
-
-  // Last value passed from codec or stream source to UpdateReadyStateForData.
-  NextFrameStatus mLastNextFrameStatus;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
