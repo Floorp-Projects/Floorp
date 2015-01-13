@@ -16,6 +16,8 @@ loop.store.ROOM_STATES = {
     READY: "room-ready",
     // Obtaining media from the user
     MEDIA_WAIT: "room-media-wait",
+    // Joining the room is taking place
+    JOINING: "room-joining",
     // The room is known to be joined on the loop-server
     JOINED: "room-joined",
     // The room is connected to the sdk server.
