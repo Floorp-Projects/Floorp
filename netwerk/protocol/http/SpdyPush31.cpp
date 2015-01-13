@@ -282,13 +282,13 @@ SpdyPush31TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
     mIsDone = true;
   }
 
-  if (Available()) {
+  if (Available() || mIsDone) {
     SpdyStream31 *consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(("SpdyPush31TransactionBuffer::WriteSegments notifying connection "
-            "consumer data available 0x%X [%u]\n",
-            mPushStream->StreamID(), Available()));
+            "consumer data available 0x%X [%u] done=%d\n",
+            mPushStream->StreamID(), Available(), mIsDone));
       mPushStream->ConnectPushedStream(consumer);
     }
   }
