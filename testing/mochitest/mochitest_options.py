@@ -662,6 +662,10 @@ class MochitestOptions(optparse.OptionParser):
         # Bug 1065098 - The geckomediaplugin process fails to produce a leak log for some reason.
         options.ignoreMissingLeaks = ["geckomediaplugin"]
 
+        # Bug 1091917 - We exit early in tab processes on Windows, so we don't get leak logs yet.
+        if mozinfo.isWin:
+            options.ignoreMissingLeaks.append("tab")
+
         return options
 
 
