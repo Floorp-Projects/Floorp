@@ -20,8 +20,15 @@
 #include "base/string16.h"
 
 #if defined(COMPILER_MSVC) || (defined(ANDROID) && defined(_STLP_STD_NAME))
+#ifdef COMPILER_MSVC
+#pragma push_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
+#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
+#endif
 #include <hash_map>
 #include <hash_set>
+#ifdef COMPILER_MSVC
+#pragma pop_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
+#endif
 namespace base {
 #ifdef ANDROID
 using _STLP_STD_NAME::hash_map;
