@@ -47,8 +47,9 @@ def download(url, prefix, dest, force_suffix=True):
         name = os.path.join(dest, prefix + sep + str(counter) + ".log")
 
     with open(name, "wb") as f:
-        resp = requests.get(url)
-        f.write(resp.text.encode(resp.encoding))
+        resp = requests.get(url, stream=True)
+        for chunk in resp.iter_content(1024):
+            f.write(chunk)
 
 def get_blobber_url(branch, job):
     job_id = job[8]
@@ -63,7 +64,7 @@ def get_blobber_url(branch, job):
         try:
             details = job_data["blob"]["job_details"]
             for item in details:
-                if item["value"] == "wpt_structured_full.log":
+                if item["value"] == "wpt_raw.log":
                     return item["url"]
         except:
             return None
@@ -79,7 +80,7 @@ def get_structured_logs(branch, commit, dest=None):
             for group in platform["groups"]:
                 for job in group["jobs"]:
                     job_type_name = job[13]
-                    if job_type_name.startswith("W3C Web Platform") or job_type_name == "unknown":
+                    if job_type_name.startswith("W3C Web Platform"):
                         url = get_blobber_url(branch, job)
                         if url:
                             prefix = job[14] # platform
