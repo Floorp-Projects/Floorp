@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Build;
 import android.text.TextUtils;
 
 public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDatabaseHelper> {

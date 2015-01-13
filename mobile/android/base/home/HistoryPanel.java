@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -21,7 +22,6 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.util.EventCallback;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -30,14 +30,13 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
-import android.text.style.UnderlineSpan;
 import android.text.style.StyleSpan;
-import android.text.TextPaint;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -191,15 +190,17 @@ public class HistoryPanel extends HomeFragment {
     private static class HistoryCursorLoader extends SimpleCursorLoader {
         // Max number of history results
         private static final int HISTORY_LIMIT = 100;
+        private final BrowserDB mDB;
 
         public HistoryCursorLoader(Context context) {
             super(context);
+            mDB = GeckoProfile.get(context).getDB();
         }
 
         @Override
         public Cursor loadCursor() {
             final ContentResolver cr = getContext().getContentResolver();
-            return BrowserDB.getRecentHistory(cr, HISTORY_LIMIT);
+            return mDB.getRecentHistory(cr, HISTORY_LIMIT);
         }
     }
 
