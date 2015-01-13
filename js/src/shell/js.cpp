@@ -61,6 +61,7 @@
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Ion.h"
 #include "js/Debug.h"
+#include "js/GCAPI.h"
 #include "js/StructuredClone.h"
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
@@ -1670,8 +1671,8 @@ majorGC(JSRuntime *rt, JSGCStatus status, void *data)
 
     if (info->depth > 0) {
         info->depth--;
-        PrepareForFullGC(rt);
-        JS::GCForReason(rt, GC_NORMAL, gcreason::API);
+        JS::PrepareForFullGC(rt);
+        JS::GCForReason(rt, GC_NORMAL, JS::gcreason::API);
         info->depth++;
     }
 }
@@ -1690,7 +1691,7 @@ minorGC(JSRuntime *rt, JSGCStatus status, void *data)
 
     if (info->active) {
         info->active = false;
-        rt->gc.evictNursery(gcreason::DEBUG_GC);
+        rt->gc.evictNursery(JS::gcreason::DEBUG_GC);
         info->active = true;
     }
 }
