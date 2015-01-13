@@ -176,7 +176,7 @@ abstract class BaseTest extends BaseRobocopTest {
             mAsserter.endTest();
             // request a force quit of the browser and wait for it to take effect
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
-            mSolo.sleep(7000);
+            mSolo.sleep(120000);
             // if still running, finish activities as recommended by Robotium
             mSolo.finishOpenedActivities();
         } catch (Throwable e) {
