@@ -34,6 +34,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
+#include "nsILoadContext.h"
 #include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
@@ -1798,18 +1799,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
       if (!NS_ProcessNextEvent(thread))
         break;
     }
- }
-
-  // If aOpeningTab is not null, it means that we're creating a new window
-  // with a remote browser, which doesn't have a primary docshell. In that
-  // case, we check for the chrome window docshell and make sure that a new
-  // remote tab was opened and stashed in that docshell.
-  if (aOpeningTab) {
-    NS_ENSURE_STATE(xulWin->mDocShell);
-    NS_ENSURE_STATE(xulWin->mDocShell->GetOpenedRemote());
-  } else {
-    NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
   }
+
+  NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
 
   *_retval = newWindow;
   NS_ADDREF(*_retval);
