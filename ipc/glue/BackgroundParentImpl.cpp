@@ -11,6 +11,8 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
+#include "mozilla/layout/VsyncParent.h"
+#include "nsRefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
@@ -204,6 +206,32 @@ BackgroundParentImpl::DeallocPFileDescriptorSetParent(
   MOZ_ASSERT(aActor);
 
   delete static_cast<FileDescriptorSetParent*>(aActor);
+  return true;
+}
+
+BackgroundParentImpl::PVsyncParent*
+BackgroundParentImpl::AllocPVsyncParent()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  nsRefPtr<mozilla::layout::VsyncParent> actor =
+      mozilla::layout::VsyncParent::Create();
+  // There still has one ref-count after return, and it will be released in
+  // DeallocPVsyncParent().
+  return actor.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPVsyncParent(PVsyncParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // This actor already has one ref-count. Please check AllocPVsyncParent().
+  nsRefPtr<mozilla::layout::VsyncParent> actor =
+      dont_AddRef(static_cast<mozilla::layout::VsyncParent*>(aActor));
   return true;
 }
 
