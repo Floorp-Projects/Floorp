@@ -701,7 +701,7 @@ let CallsListView = Heritage.extend(WidgetMethods, {
     let dimensionsNode = $("#screenshot-dimensions");
     let actualWidth = (width / scaling) | 0;
     let actualHeight = (height / scaling) | 0;
-    dimensionsNode.setAttribute("value", actualWidth + " \u00D7 " + actualHeight);
+    dimensionsNode.setAttribute("value", actualWidth + " x " + actualHeight);
 
     window.emit(EVENTS.CALL_SCREENSHOT_DISPLAYED);
   },

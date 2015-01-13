@@ -413,7 +413,7 @@ LayoutView.prototype = {
       this._lastRequest = null;
       let width = layout.width;
       let height = layout.height;
-      let newLabel = width + "\u00D7" + height;
+      let newLabel = width + "x" + height;
       if (this.sizeHeadingLabel.textContent != newLabel) {
         this.sizeHeadingLabel.textContent = newLabel;
       }
@@ -464,7 +464,7 @@ LayoutView.prototype = {
       height -= this.map.borderTop.value + this.map.borderBottom.value +
                 this.map.paddingTop.value + this.map.paddingBottom.value;
 
-      let newValue = width + "\u00D7" + height;
+      let newValue = width + "x" + height;
       if (this.sizeLabel.textContent != newValue) {
         this.sizeLabel.textContent = newValue;
       }
