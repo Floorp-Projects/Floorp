@@ -27,11 +27,6 @@
 
 #if defined(__GNUC__) && !defined(__clang__)
 
-// GCC does not understand nullptr until 4.6
-#if __GNUC__ * 100 + __GNUC_MINOR__ < 406
-#define nullptr __null
-#endif
-
 // GCC does not understand final/override until 4.7
 #if __GNUC__ * 100 + __GNUC_MINOR__ < 407
 #define final
