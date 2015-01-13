@@ -12,9 +12,12 @@ logger = None
 def vcs(bin_name):
     def inner(command, *args, **kwargs):
         global logger
+
         if logger is None:
             logger = get_default_logger("vcs")
+
         repo = kwargs.pop("repo", None)
+        log_error = kwargs.pop("log_error", True)
         if kwargs:
             raise TypeError, kwargs
 
@@ -27,9 +30,10 @@ def vcs(bin_name):
         command_line = [bin_name, command] + args
         logger.debug(" ".join(command_line))
         try:
-            return subprocess.check_output(command_line, **proc_kwargs)
+            return subprocess.check_output(command_line, stderr=subprocess.STDOUT, **proc_kwargs)
         except subprocess.CalledProcessError as e:
-            logger.error(e.output)
+            if log_error:
+                logger.error(e.output)
             raise
     return inner
 

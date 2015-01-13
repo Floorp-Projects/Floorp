@@ -30,7 +30,7 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         self.result_data = None
         self.result_flag = threading.Event()
 
-        self.command = [self.binary, "--cpu", "--hard-fail",
+        self.command = [self.binary, "--cpu", "--hard-fail", "-z",
                         urlparse.urljoin(self.http_server_url, test.url)]
 
         if self.debug_args:
@@ -118,7 +118,7 @@ class ServoReftestExecutor(ProcessTestExecutor):
                 full_url = urlparse.urljoin(self.http_server_url, url)
 
                 with TempFilename(self.tempdir) as output_path:
-                    self.command = [self.binary, "--cpu", "--hard-fail", "--exit",
+                    self.command = [self.binary, "--cpu", "--hard-fail", "-z", "--exit",
                                     "--output=%s" % output_path, full_url]
 
                     timeout = test.timeout * self.timeout_multiplier
