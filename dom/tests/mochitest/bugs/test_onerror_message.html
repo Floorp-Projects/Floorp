@@ -29,7 +29,7 @@ var expected = [
 { name: "", message: "uncaught exception: [object Object]" },
 { name: "", message: "foo", filename: "baz", lineNumber: 123 },
 { name: "", message: "uncaught exception: [object Object]" },
-{ name: "InvalidStateError", message: "An attempt was made to use an object that is not, or is no longer, usable", filename: location, lineNumber: 60 },
+{ name: "InvalidStateError", message: "An attempt was made to use an object that is not, or is no longer, usable", filename: location, lineNumber: 62 },
 { name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 64 },
 { name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 66 }
 ];
@@ -57,9 +57,9 @@ window.onmessage = function(e) {
 			throw {name:3,message:4,lineNumber:123};
 		} else if (e.data == 7) {
 			var x = new XMLHttpRequest();
-			x.responseType = "arraybuffer";
 			x.open("GET", location, false);
 			var a = x.send();
+			x.responseType = "arraybuffer";
 		} else if (e.data == 8) {
 			throw new ReferenceError("xxx is not defined");
 		} else if (e.data == 9) {
