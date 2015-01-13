@@ -291,6 +291,14 @@ class MessageChannel : HasResultCodes
         mListener->OnExitedCall();
     }
 
+    void EnteredSyncSend() {
+        mListener->OnEnteredSyncSend();
+    }
+
+    void ExitedSyncSend() {
+        mListener->OnExitedSyncSend();
+    }
+
     MessageListener *Listener() const {
         return mListener.get();
     }
