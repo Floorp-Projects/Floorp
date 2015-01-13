@@ -197,6 +197,8 @@ def _emit_manifest_at(location, relative, test_list, depth):
             _emit_manifest_at(fullpath, relpath, test_list, depth + 1)
         else:
             numTestFiles += 1
+            if len(test_list) != 1:
+                import pdb; pdb.set_trace()
             assert len(test_list) == 1
             line = _build_manifest_script_entry(k, test_list[0])
             manifest.append(line)
