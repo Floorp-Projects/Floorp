@@ -23,6 +23,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/BinarySearch.h"
 #include "nsComputedDOMStyle.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
