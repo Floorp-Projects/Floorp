@@ -284,7 +284,7 @@ TraceLoggerGraph::startEvent(uint32_t id, uint64_t timestamp)
         return;
 
     if (!tree.hasSpaceForAdd()) {
-        if (!tree.ensureSpaceBeforeAdd()) {
+        if (tree.size() >= treeSizeFlushLimit() || !tree.ensureSpaceBeforeAdd()) {
             if (!flush()) {
                 fprintf(stderr, "TraceLogging: Couldn't write the data to disk.\n");
                 enabled = 0;
