@@ -65,10 +65,11 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
     ListenerAndContextContainer(nsIWebSocketListener* aListener,
                                 nsISupports* aContext);
 
-    ~ListenerAndContextContainer();
-
     nsCOMPtr<nsIWebSocketListener> mListener;
     nsCOMPtr<nsISupports>          mContext;
+
+  private:
+    ~ListenerAndContextContainer();
   };
 
  protected:
