@@ -23,14 +23,6 @@ pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes")
 // app.update.checkInstallTime is true.
 pref("app.update.checkInstallTime.days", 63);
 
-// code usage depends on contracts, please contact the Firefox module owner if you have questions
-pref("browser.search.param.yahoo-fr", "moz35");
-pref("browser.search.param.yahoo-fr-ja", "mozff");
-#ifdef MOZ_METRO
-pref("browser.search.param.ms-pc-metro", "MOZW");
-pref("browser.search.param.yahoo-fr-metro", "mozilla_metro_search");
-#endif
-
 // Number of usages of the web console or scratchpad.
 // If this is less than 5, then pasting code into the web console or scratchpad is disabled
 pref("devtools.selfxss.count", 0);
