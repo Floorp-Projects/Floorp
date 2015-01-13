@@ -125,26 +125,35 @@ ComputeLinearRGBLuminanceMask(const uint8_t *aSourceData,
 
       // unpremultiply
       if (a) {
-        uint8_t tempPixel[4];
-        memcpy(tempPixel, sourcePixel, 4);
-        if (a != 255) {
+        if (a == 255) {
+          /* sRGB -> linearRGB -> intensity */
+          *destPixel =
+            static_cast<uint8_t>
+                       ((gsRGBToLinearRGBMap[sourcePixel[GFX_ARGB32_OFFSET_R]] *
+                         redFactor +
+                         gsRGBToLinearRGBMap[sourcePixel[GFX_ARGB32_OFFSET_G]] *
+                         greenFactor +
+                         gsRGBToLinearRGBMap[sourcePixel[GFX_ARGB32_OFFSET_B]] *
+                         blueFactor) >> 8);
+        } else {
+          uint8_t tempPixel[4];
           tempPixel[GFX_ARGB32_OFFSET_B] =
-            (255 * tempPixel[GFX_ARGB32_OFFSET_B]) / a;
+            (255 * sourcePixel[GFX_ARGB32_OFFSET_B]) / a;
           tempPixel[GFX_ARGB32_OFFSET_G] =
-            (255 * tempPixel[GFX_ARGB32_OFFSET_G]) / a;
+            (255 * sourcePixel[GFX_ARGB32_OFFSET_G]) / a;
           tempPixel[GFX_ARGB32_OFFSET_R] =
-            (255 * tempPixel[GFX_ARGB32_OFFSET_R]) / a;
-        }
+            (255 * sourcePixel[GFX_ARGB32_OFFSET_R]) / a;
 
-        /* sRGB -> linearRGB -> intensity */
-        *destPixel =
-          static_cast<uint8_t>
-                     (((gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_R]] *
-                        redFactor +
-                        gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_G]] *
-                        greenFactor +
-                        gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_B]] *
-                        blueFactor) >> 8) * (a / 255.0f));
+          /* sRGB -> linearRGB -> intensity */
+          *destPixel =
+            static_cast<uint8_t>
+                       (((gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_R]] *
+                          redFactor +
+                          gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_G]] *
+                          greenFactor +
+                          gsRGBToLinearRGBMap[tempPixel[GFX_ARGB32_OFFSET_B]] *
+                          blueFactor) >> 8) * (a / 255.0f));
+        }
       } else {
         *destPixel = 0;
       }
