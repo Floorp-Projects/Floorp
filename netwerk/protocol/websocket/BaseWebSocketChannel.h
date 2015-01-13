@@ -57,11 +57,24 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
   virtual bool IsEncrypted() const = 0;
 
+  class ListenerAndContextContainer MOZ_FINAL
+  {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ListenerAndContextContainer)
+
+    ListenerAndContextContainer(nsIWebSocketListener* aListener,
+                                nsISupports* aContext);
+
+    ~ListenerAndContextContainer();
+
+    nsCOMPtr<nsIWebSocketListener> mListener;
+    nsCOMPtr<nsISupports>          mContext;
+  };
+
  protected:
   nsCOMPtr<nsIURI>                mOriginalURI;
   nsCOMPtr<nsIURI>                mURI;
-  nsCOMPtr<nsIWebSocketListener>  mListener;
-  nsCOMPtr<nsISupports>           mContext;
+  nsRefPtr<ListenerAndContextContainer> mListenerMT;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsILoadGroup>          mLoadGroup;
   nsCOMPtr<nsILoadInfo>           mLoadInfo;
