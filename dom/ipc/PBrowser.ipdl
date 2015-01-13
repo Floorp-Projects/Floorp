@@ -79,6 +79,12 @@ struct ShowInfo
   double defaultScale;
 };
 
+struct FrameScriptInfo
+{
+    nsString url;
+    bool runInGlobalScope;
+};
+
 prio(normal upto urgent) intr protocol PBrowser
 {
     manager PContent or PContentBridge;
@@ -117,7 +123,8 @@ parent:
 
     Event(RemoteDOMEvent aEvent);
 
-    intr CreateWindow(uint32_t aChromeFlags,
+    sync CreateWindow(PBrowser aNewTab,
+                      uint32_t aChromeFlags,
                       bool aCalledFromJS,
                       bool aPositionSpecified,
                       bool aSizeSpecified,
@@ -125,7 +132,7 @@ parent:
                       nsString aName,
                       nsString aFeatures,
                       nsString aBaseURI)
-      returns (bool windowIsNew, PBrowser window);
+      returns (bool windowOpened, FrameScriptInfo[] frameScripts);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)

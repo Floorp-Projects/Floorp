@@ -99,8 +99,8 @@ bool WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcoun
 
     MakeContextCurrent();
 
-    if (mBoundFramebuffer) {
-        if (!mBoundFramebuffer->CheckAndInitializeAttachments()) {
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments()) {
             ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
             return false;
         }
@@ -280,8 +280,8 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
 
     MakeContextCurrent();
 
-    if (mBoundFramebuffer) {
-        if (!mBoundFramebuffer->CheckAndInitializeAttachments()) {
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments()) {
             ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
             return false;
         }
@@ -370,7 +370,7 @@ void WebGLContext::Draw_cleanup()
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
 
-    if (!mBoundFramebuffer) {
+    if (!mBoundDrawFramebuffer) {
         Invalidate();
         mShouldPresent = true;
         MOZ_ASSERT(!mBackbufferNeedsClear);
@@ -388,7 +388,7 @@ void WebGLContext::Draw_cleanup()
     }
 
     // Let's check the viewport
-    const WebGLRectangleObject* rect = CurValidFBRectObject();
+    const WebGLRectangleObject* rect = CurValidDrawFBRectObject();
     if (rect) {
         if (mViewportWidth > rect->Width() ||
             mViewportHeight > rect->Height())

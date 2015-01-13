@@ -403,6 +403,8 @@ public:
     bool             mHasSpaceFeaturesKerning : 1;
     bool             mHasSpaceFeaturesNonKerning : 1;
     bool             mSkipDefaultFeatureSpaceCheck : 1;
+    bool             mSpaceGlyphIsInvisible : 1;
+    bool             mSpaceGlyphIsInvisibleInitialized : 1;
     bool             mHasGraphiteTables : 1;
     bool             mCheckedForGraphiteTables : 1;
     bool             mHasCmapTable : 1;
