@@ -202,6 +202,11 @@ class TraceLoggerGraph
     // Create a tree out of all the given events.
     void log(ContinuousSpace<EventEntry> &events);
 
+    static size_t treeSizeFlushLimit() {
+        // Allow tree size to grow to 100MB.
+        return 100 * 1024 * 1024 / sizeof(TreeEntry);
+    }
+
   private:
     bool failed;
     bool enabled;
