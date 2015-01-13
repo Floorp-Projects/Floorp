@@ -187,32 +187,11 @@ AddToHash(uint32_t aHash, uintptr_t aA)
   return detail::AddUintptrToHash<sizeof(uintptr_t)>(aHash, aA);
 }
 
-template<typename A, typename B>
+template<typename A, typename... Args>
 MOZ_WARN_UNUSED_RESULT uint32_t
-AddToHash(uint32_t aHash, A aA, B aB)
+AddToHash(uint32_t aHash, A aArg, Args... aArgs)
 {
-  return AddToHash(AddToHash(aHash, aA), aB);
-}
-
-template<typename A, typename B, typename C>
-MOZ_WARN_UNUSED_RESULT uint32_t
-AddToHash(uint32_t aHash, A aA, B aB, C aC)
-{
-  return AddToHash(AddToHash(aHash, aA, aB), aC);
-}
-
-template<typename A, typename B, typename C, typename D>
-MOZ_WARN_UNUSED_RESULT uint32_t
-AddToHash(uint32_t aHash, A aA, B aB, C aC, D aD)
-{
-  return AddToHash(AddToHash(aHash, aA, aB, aC), aD);
-}
-
-template<typename A, typename B, typename C, typename D, typename E>
-MOZ_WARN_UNUSED_RESULT uint32_t
-AddToHash(uint32_t aHash, A aA, B aB, C aC, D aD, E aE)
-{
-  return AddToHash(AddToHash(aHash, aA, aB, aC, aD), aE);
+  return AddToHash(AddToHash(aHash, aArg), aArgs...);
 }
 
 /**
@@ -222,39 +201,11 @@ AddToHash(uint32_t aHash, A aA, B aB, C aC, D aD, E aE)
  * much better than calling AddToHash(x, y), because AddToHash(x, y) assumes
  * that x has already been hashed.
  */
-template<typename A>
+template<typename... Args>
 MOZ_WARN_UNUSED_RESULT inline uint32_t
-HashGeneric(A aA)
+HashGeneric(Args... aArgs)
 {
-  return AddToHash(0, aA);
-}
-
-template<typename A, typename B>
-MOZ_WARN_UNUSED_RESULT inline uint32_t
-HashGeneric(A aA, B aB)
-{
-  return AddToHash(0, aA, aB);
-}
-
-template<typename A, typename B, typename C>
-MOZ_WARN_UNUSED_RESULT inline uint32_t
-HashGeneric(A aA, B aB, C aC)
-{
-  return AddToHash(0, aA, aB, aC);
-}
-
-template<typename A, typename B, typename C, typename D>
-MOZ_WARN_UNUSED_RESULT inline uint32_t
-HashGeneric(A aA, B aB, C aC, D aD)
-{
-  return AddToHash(0, aA, aB, aC, aD);
-}
-
-template<typename A, typename B, typename C, typename D, typename E>
-MOZ_WARN_UNUSED_RESULT inline uint32_t
-HashGeneric(A aA, B aB, C aC, D aD, E aE)
-{
-  return AddToHash(0, aA, aB, aC, aD, aE);
+  return AddToHash(0, aArgs...);
 }
 
 namespace detail {

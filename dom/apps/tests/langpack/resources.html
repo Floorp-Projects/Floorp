@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Langpack Test : resources</title>
+    <script>
+function success(data) {
+  return new Promise(function(resolve, reject) {
+    if (typeof data === "object") {
+      // Read what's inside the blob.
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        alert(e.target.result);
+        resolve();
+      };
+      reader.readAsText(data);
+    } else {
+      alert(data);
+      resolve();
+    }
+  });
+}
+
+function successJSON(data) {
+  return new Promise(function(resolve, reject) {
+    alert(JSON.stringify(data));
+    resolve();
+  });
+}
+
+function error(domError) {
+  return new Promise(function(resolve, reject) {
+    alert(domError.name);
+    resolve();
+  });
+}
+
+// Error: Bad resource.
+function test1() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.2", "./foo.html", "binary")
+                          .then(success, error);
+}
+
+// Error: Unknown locale.
+function test2() {
+  return navigator.mozApps.getLocalizationResource("es", "2.2", "./foo.html", "binary")
+                          .then(success, error);
+}
+
+// Error: Bad version.
+function test3() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.0", "./foo.html", "binary")
+                          .then(success, error);
+}
+
+// Error: Absolute url.
+function test4() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.2", "http://example.com/foo.html", "binary")
+                          .then(success, error);
+}
+
+// Ok, binary data.
+function test5() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.2", "./app.properties", "binary")
+                          .then(success, error);
+}
+
+// Ok, text data.
+function test6() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.2", "./app.properties", "text")
+                          .then(success, error);
+}
+
+// Ok, json data.
+function test7() {
+  return navigator.mozApps.getLocalizationResource("fr", "2.2", "./app.json", "json")
+                          .then(successJSON, error);
+}
+
+function run() {
+  test1().then(test2)
+         .then(test3)
+         .then(test4)
+         .then(test5)
+         .then(test6)
+         .then(test7);
+}
+    </script>
+  </head>
+  <body onload="run()">
+    <h1>Langpack Test : resources</h1>
+  </body>
+</html>

@@ -441,8 +441,10 @@ Link::GetHash(nsAString &_hash, ErrorResult& aError)
   nsAutoCString ref;
   nsresult rv = uri->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
-    NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
     _hash.Assign(char16_t('#'));
+    if (nsContentUtils::EncodeDecodeURLHash()) {
+      NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
+    }
     AppendUTF8toUTF16(ref, _hash);
   }
 }

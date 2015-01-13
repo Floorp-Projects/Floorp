@@ -473,8 +473,13 @@ class ShutdownLeaks(object):
       for url, count in self._zipLeakedWindows(test["leakedWindows"]):
         self.logger.warning("TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown [url = %s]" % (test["fileName"], count, url))
 
+      if test["leakedWindowsString"]:
+        self.logger.info("TEST-INFO | %s | windows(s) leaked: %s" % (test["fileName"], test["leakedWindowsString"]))
+
       if test["leakedDocShells"]:
         self.logger.warning("TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until shutdown" % (test["fileName"], len(test["leakedDocShells"])))
+        self.logger.info("TEST-INFO | %s | docShell(s) leaked: %s" % (test["fileName"],
+                                                                      ', '.join(["[pid = %s] [id = %s]" % x for x in test["leakedDocShells"]])))
 
   def _logWindow(self, line):
     created = line[:2] == "++"
@@ -486,7 +491,7 @@ class ShutdownLeaks(object):
       self.logger.warning("TEST-UNEXPECTED-FAIL | ShutdownLeaks | failed to parse line <%s>" % line)
       return
 
-    key = pid + "." + serial
+    key = (pid, serial)
 
     if self.currentTest:
       windows = self.currentTest["windows"]
@@ -507,7 +512,7 @@ class ShutdownLeaks(object):
       self.logger.warning("TEST-UNEXPECTED-FAIL | ShutdownLeaks | failed to parse line <%s>" % line)
       return
 
-    key = pid + "." + id
+    key = (pid, id)
 
     if self.currentTest:
       docShells = self.currentTest["docShells"]
@@ -528,7 +533,9 @@ class ShutdownLeaks(object):
     leakingTests = []
 
     for test in self.tests:
-      test["leakedWindows"] = [self.leakedWindows[id] for id in test["windows"] if id in self.leakedWindows]
+      leakedWindows = [id for id in test["windows"] if id in self.leakedWindows]
+      test["leakedWindows"] = [self.leakedWindows[id] for id in leakedWindows]
+      test["leakedWindowsString"] = ', '.join(["[pid = %s] [serial = %s]" % x for x in leakedWindows])
       test["leakedDocShells"] = [id for id in test["docShells"] if id in self.leakedDocShells]
       test["leakCount"] = len(test["leakedWindows"]) + len(test["leakedDocShells"])
 

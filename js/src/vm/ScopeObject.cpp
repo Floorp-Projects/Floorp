@@ -2385,6 +2385,31 @@ DebugScopes::hasLiveScope(ScopeObject &scope)
 }
 
 /* static */ void
+DebugScopes::unsetPrevUpToDateUntil(JSContext *cx, AbstractFramePtr until)
+{
+    // This is the one exception where fp->prevUpToDate() is cleared without
+    // popping the frame. When a frame is rematerialized, all frames younger
+    // than the rematerialized frame have their prevUpToDate set to
+    // false. This is because unrematerialized Ion frames have no usable
+    // AbstractFramePtr, and so are skipped by the updateLiveScopes. If in the
+    // future a frame suddenly gains a usable AbstractFramePtr via
+    // rematerialization, the prevUpToDate invariant will no longer hold.
+    for (AllFramesIter i(cx); !i.done(); ++i) {
+        if (!i.hasUsableAbstractFramePtr())
+            continue;
+
+        AbstractFramePtr frame = i.abstractFramePtr();
+        if (frame == until)
+            return;
+
+        if (frame.scopeChain()->compartment() != cx->compartment())
+            continue;
+
+        frame.unsetPrevUpToDate();
+    }
+}
+
+/* static */ void
 DebugScopes::forwardLiveFrame(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to)
 {
     DebugScopes *scopes = cx->compartment()->debugScopes;

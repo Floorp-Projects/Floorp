@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<title>Test link.hash attribute</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<a id="target1" href="http://www.example.com/#q=♥â¥#hello"></a>
+<a id="target2" href="http://www.example.com/#q=%E2%99%A5%C3%A2%C2%A5"></a>
+<a id="target3" href="http://www.example.com/#/search/%23important"></a>
+<a id="target4" href='http://www.example.com/#{"a":[13, 42], "b":{"key":"value"}}'></a>
+
+<pre id="test">
+
+<script>
+  // Tests Link::GetHash
+
+  // Check that characters aren't being encoded
+  var target = document.getElementById("target1");
+  is(target.hash, '#q=♥â¥#hello', 'Unexpected link hash');
+
+  // Check that encoded characters aren't being decoded
+  target = document.getElementById("target2");
+  is(target.hash, '#q=%E2%99%A5%C3%A2%C2%A5', 'Unexpected link hash');
+
+  // A more regular use case
+  target = document.getElementById("target3");
+  is(target.hash, '#/search/%23important', 'Unexpected link hash');
+
+  // Some JSON
+  target = document.getElementById("target4");
+  is(target.hash, '#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected link hash');
+</script>
+
+<script>
+  // Tests URL::GetHash
+
+  var url = new URL("http://www.example.com/#q=♥â¥#hello")
+  is(url.hash, '#q=♥â¥#hello', 'Unexpected url hash');
+
+  url = new URL("http://www.example.com/#q=%E2%99%A5%C3%A2%C2%A5")
+  is(url.hash, '#q=%E2%99%A5%C3%A2%C2%A5', 'Unexpected url hash');
+
+  url = new URL("http://www.example.com/#/search/%23important")
+  is(url.hash, '#/search/%23important', 'Unexpected url hash');
+
+  // Test getters and setters
+
+  url = new URL("http://www.example.com/");
+  url.hash = "#q=♥â¥#hello%E2%99%A5%C3%A2%C2%A5#/search/%23important"
+  is(url.hash, '#q=♥â¥#hello%E2%99%A5%C3%A2%C2%A5#/search/%23important', 'Unexpected url hash');
+
+  // codepath in nsStandardUrl::SetRef is different if the path is non-empty
+  url = new URL("http://www.example.com/test/");
+  url.hash = "#q=♥â¥#hello%E2%99%A5%C3%A2%C2%A5#/search/%23important"
+  is(url.hash, '#q=♥â¥#hello%E2%99%A5%C3%A2%C2%A5#/search/%23important', 'Unexpected url hash');
+
+  url = new URL("http://www.example.com/");
+  url.hash = '#{"a":[13, 42], "b":{"key":"value"}}';
+  is(target.hash, '#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected url hash');
+  var parsed = JSON.parse(target.hash.substring(1));
+  is(parsed.b.key, 'value', 'JSON not parsed correctly');
+
+  url = new URL("http://www.example.com/test/");
+  url.hash = '#{"a":[13, 42], "b":{"key":"value"}}';
+  is(target.hash, '#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected url hash');
+  parsed = JSON.parse(target.hash.substring(1));
+  is(parsed.b.key, 'value', 'JSON not parsed correctly');
+</script>
+
+<script>
+  // Tests nsLocation::GetHash
+
+  window.history.pushState(1, document.title, '#q=♥â¥#hello');
+  is(location.hash,'#q=♥â¥#hello', 'Unexpected location hash');
+
+  window.history.pushState(1, document.title, '#q=%E2%99%A5%C3%A2%C2%A5');
+  is(location.hash,'#q=%E2%99%A5%C3%A2%C2%A5', 'Unexpected location hash');
+
+  window.history.pushState(1, document.title, '#/search/%23important');
+  is(location.hash,'#/search/%23important', 'Unexpected location hash');
+
+  window.history.pushState(1, document.title, '#{"a":[13, 42], "b":{"key":"value"}}');
+  is(location.hash,'#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected location hash');
+</script>
+
+</pre>
+</body>
+</html>
