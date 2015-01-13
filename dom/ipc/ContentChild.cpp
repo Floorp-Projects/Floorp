@@ -24,7 +24,6 @@
 #include "mozilla/a11y/DocAccessibleChild.h"
 #endif
 #include "mozilla/Preferences.h"
-#include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
@@ -998,14 +997,6 @@ ContentChild::AllocPBackgroundChild(Transport* aTransport,
                                     ProcessId aOtherProcess)
 {
     return BackgroundChild::Alloc(aTransport, aOtherProcess);
-}
-
-PProcessHangMonitorChild*
-ContentChild::AllocPProcessHangMonitorChild(Transport* aTransport,
-                                            ProcessId aOtherProcess)
-{
-    nsRefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::GetOrCreate();
-    return monitor->CreateChild(aTransport, aOtherProcess);
 }
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
