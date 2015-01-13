@@ -16,6 +16,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
@@ -61,6 +62,7 @@ public class LoadFaviconTask {
     private String faviconURL;
     private final OnFaviconLoadedListener listener;
     private final int flags;
+    private final BrowserDB db;
 
     private final boolean onlyFromLocal;
     volatile boolean mCancelled;
@@ -81,6 +83,7 @@ public class LoadFaviconTask {
         id = nextFaviconLoadId.incrementAndGet();
 
         this.context = context;
+        db = GeckoProfile.get(context).getDB();
         this.pageUrl = pageURL;
         this.faviconURL = faviconURL;
         this.listener = listener;
@@ -90,13 +93,13 @@ public class LoadFaviconTask {
     }
 
     // Runs in background thread
-    private LoadFaviconResult loadFaviconFromDb() {
+    private LoadFaviconResult loadFaviconFromDb(final BrowserDB db) {
         ContentResolver resolver = context.getContentResolver();
-        return BrowserDB.getFaviconForFaviconUrl(resolver, faviconURL);
+        return db.getFaviconForUrl(resolver, faviconURL);
     }
 
     // Runs in background thread
-    private void saveFaviconToDb(final byte[] encodedFavicon) {
+    private void saveFaviconToDb(final BrowserDB db, final byte[] encodedFavicon) {
         if (encodedFavicon == null) {
             return;
         }
@@ -106,7 +109,7 @@ public class LoadFaviconTask {
         }
 
         ContentResolver resolver = context.getContentResolver();
-        BrowserDB.updateFaviconForUrl(resolver, pageUrl, encodedFavicon, faviconURL);
+        db.updateFaviconForUrl(resolver, pageUrl, encodedFavicon, faviconURL);
     }
 
     /**
@@ -301,7 +304,7 @@ public class LoadFaviconTask {
             Favicons.longRunningExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final Bitmap result = doInBackground();
+                    final Bitmap result = doInBackground(db);
 
                     ThreadUtils.getUiHandler().post(new Runnable() {
                        @Override
@@ -330,7 +333,7 @@ public class LoadFaviconTask {
         return mCancelled;
     }
 
-    Bitmap doInBackground() {
+    Bitmap doInBackground(final BrowserDB db) {
         if (isCancelled()) {
             return null;
         }
@@ -353,11 +356,12 @@ public class LoadFaviconTask {
         // If favicon is empty, fall back to the stored one.
         if (isEmpty) {
             // Try to get the favicon URL from the memory cache.
+            final ContentResolver cr = context.getContentResolver();
             storedFaviconUrl = Favicons.getFaviconURLForPageURLFromCache(pageUrl);
 
             // If that failed, try to get the URL from the database.
             if (storedFaviconUrl == null) {
-                storedFaviconUrl = Favicons.getFaviconURLForPageURL(context, pageUrl);
+                storedFaviconUrl = Favicons.getFaviconURLForPageURL(db, cr, pageUrl);
                 if (storedFaviconUrl != null) {
                     // If that succeeded, cache the URL loaded from the database in memory.
                     Favicons.putFaviconURLForPageURLInCache(pageUrl, storedFaviconUrl);
@@ -413,7 +417,7 @@ public class LoadFaviconTask {
         }
 
         // If there are no valid bitmaps decoded, the returned LoadFaviconResult is null.
-        LoadFaviconResult loadedBitmaps = loadFaviconFromDb();
+        LoadFaviconResult loadedBitmaps = loadFaviconFromDb(db);
         if (loadedBitmaps != null) {
             return pushToCacheAndGetResult(loadedBitmaps);
         }
@@ -443,7 +447,7 @@ public class LoadFaviconTask {
             // Fetching bytes to store can fail. saveFaviconToDb will
             // do the right thing, but we still choose to cache the
             // downloaded icon in memory.
-            saveFaviconToDb(loadedBitmaps.getBytesForDatabaseStorage());
+            saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
             return pushToCacheAndGetResult(loadedBitmaps);
         }
 
@@ -478,7 +482,7 @@ public class LoadFaviconTask {
         }
 
         if (loadedBitmaps != null) {
-            saveFaviconToDb(loadedBitmaps.getBytesForDatabaseStorage());
+            saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
             return pushToCacheAndGetResult(loadedBitmaps);
         }
 

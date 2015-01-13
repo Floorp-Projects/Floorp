@@ -115,6 +115,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static {
         sTables = new Table[] {
+            // See awful shortcut assumption hack in getURLMetadataTable.
             new URLMetadataTable()
         };
         // We will reuse this.
@@ -232,6 +233,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 URI_MATCHER.addURI(BrowserContract.AUTHORITY, type.name, type.id);
             }
         }
+    }
+
+    // Convenience accessor.
+    // Assumes structure of sTables!
+    private URLMetadataTable getURLMetadataTable() {
+        return (URLMetadataTable) sTables[0];
     }
 
     private static boolean hasFaviconsInProjection(String[] projection) {
@@ -1360,8 +1367,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         return deleteFavicons(uri, faviconSelection, null) +
                deleteThumbnails(uri, thumbnailSelection, null) +
-               URLMetadata.deleteUnused(getContext().getContentResolver(),
-                                        uri.getQueryParameter(BrowserContract.PARAM_PROFILE));
+               getURLMetadataTable().deleteUnused(getWritableDatabase(uri));
     }
 
     @Override

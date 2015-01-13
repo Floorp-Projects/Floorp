@@ -287,11 +287,13 @@ public class FennecNativeDriver implements Driver {
             log(LogLevel.ERROR, e);
         } finally {
             try {
-                br.close();
+                if (br != null) {
+                    br.close();
+                }
             } catch (IOException e) {
             }
         }
-        return text.toString();    
+        return text.toString();
     }
 
     /**
@@ -349,7 +351,7 @@ public class FennecNativeDriver implements Driver {
 
     public static void log(LogLevel level, String message, Throwable t) {
         if (mLogFile == null) {
-            assert(false);
+            throw new RuntimeException("No log file specified!");
         }
 
         if (level.isEnabled(mLogLevel)) {
@@ -365,11 +367,14 @@ public class FennecNativeDriver implements Driver {
             } catch (IOException ioe) {
                 Log.e("Robocop", "exception with file writer on: " + mLogFile);
             } finally {
-                pw.close();
+                if (pw != null) {
+                    pw.close();
+                }
             }
+
             // PrintWriter doesn't throw IOE but sets an error flag instead,
             // so check for that
-            if (pw.checkError()) {
+            if (pw != null && pw.checkError()) {
                 Log.e("Robocop", "exception with file writer on: " + mLogFile);
             }
         }
