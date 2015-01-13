@@ -101,6 +101,9 @@ public:
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
                                       ErrorResult& aRv) MOZ_OVERRIDE;
 
+  virtual nsresult
+  SetMutable(bool aMutable) MOZ_OVERRIDE;
+
   void SetName(const nsAString& aName)
   {
     mName = aName;

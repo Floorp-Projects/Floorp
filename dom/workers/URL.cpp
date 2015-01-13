@@ -81,6 +81,10 @@ public:
     mURL(aURL)
   {
     MOZ_ASSERT(aBlobImpl);
+
+    DebugOnly<bool> isMutable;
+    MOZ_ASSERT(NS_SUCCEEDED(aBlobImpl->GetMutable(&isMutable)));
+    MOZ_ASSERT(!isMutable);
   }
 
   bool
@@ -113,6 +117,10 @@ public:
         }
       }
     }
+
+    DebugOnly<bool> isMutable;
+    MOZ_ASSERT(NS_SUCCEEDED(mBlobImpl->GetMutable(&isMutable)));
+    MOZ_ASSERT(!isMutable);
 
     nsCOMPtr<nsIPrincipal> principal;
     nsIDocument* doc = nullptr;
@@ -892,8 +900,16 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
+  nsRefPtr<FileImpl> blobImpl = aBlob.Impl();
+  MOZ_ASSERT(blobImpl);
+
+  aRv = blobImpl->SetMutable(false);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
   nsRefPtr<CreateURLRunnable> runnable =
-    new CreateURLRunnable(workerPrivate, aBlob.Impl(), aOptions, aResult);
+    new CreateURLRunnable(workerPrivate, blobImpl, aOptions, aResult);
 
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);

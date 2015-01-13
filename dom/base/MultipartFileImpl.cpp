@@ -235,6 +235,36 @@ MultipartFileImpl::GetMozFullPathInternal(nsAString& aFilename,
   blobImpl->GetMozFullPathInternal(aFilename, aRv);
 }
 
+nsresult
+MultipartFileImpl::SetMutable(bool aMutable)
+{
+  nsresult rv;
+
+  // This looks a little sketchy since FileImpl objects are supposed to be
+  // threadsafe. However, we try to enforce that all FileImpl objects must be
+  // set to immutable *before* being passed to another thread, so this should
+  // be safe.
+  if (!aMutable && !mImmutable && !mBlobImpls.IsEmpty()) {
+    for (uint32_t index = 0, count = mBlobImpls.Length();
+         index < count;
+         index++) {
+      rv = mBlobImpls[index]->SetMutable(aMutable);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+
+  rv = FileImplBase::SetMutable(aMutable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT_IF(!aMutable, mImmutable);
+
+  return NS_OK;
+}
+
 void
 MultipartFileImpl::InitializeChromeFile(File& aBlob,
                                         const ChromeFilePropertyBag& aBag,
