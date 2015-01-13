@@ -104,6 +104,12 @@ function checkResponseXMLAccessThrows(xhr) {
   try { xhr.responseXML } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when accessing responseXML");
 }
+function checkSetResponseType(xhr, type) {
+  var didthrow = false;
+  try { xhr.responseType = type; } catch (e) { didthrow = true; }
+  ise(xhr.responseType, type, "responseType should be " + type);
+  ok(!didthrow, "should not have thrown when setting responseType");
+}
 function checkSetResponseTypeThrows(xhr, type) {
   var didthrow = false;
   try { xhr.responseType = type; } catch (e) { didthrow = true; }
@@ -114,6 +120,18 @@ function checkOpenThrows(xhr, method, url, async) {
   try { xhr.open(method, url, async); } catch (e) { didthrow = true; }
   ok(didthrow, "should have thrown when open is called");
 }
+
+// test if setting responseType before calling open() works
+xhr = new XMLHttpRequest();
+checkSetResponseType(xhr, "");
+checkSetResponseType(xhr, "text");
+checkSetResponseType(xhr, "document");
+checkSetResponseType(xhr, "arraybuffer");
+checkSetResponseType(xhr, "blob");
+checkSetResponseType(xhr, "json");
+checkSetResponseType(xhr, "moz-chunked-text");
+checkSetResponseType(xhr, "moz-chunked-arraybuffer");
+checkOpenThrows(xhr, "GET", "file_XHR_pass2.txt", false);
 
 // test response (sync, responseType is not changeable)
 xhr = new XMLHttpRequest();
