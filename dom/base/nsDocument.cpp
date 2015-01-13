@@ -5300,8 +5300,8 @@ nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
     return;
   }
 
-  // Iterate over know customContents to get and remove the right one
-  for (int32_t i = mAnonymousContents.Length() - 1; i >= 0; --i) {
+  // Iterate over mAnonymousContents to find and remove the given node.
+  for (size_t i = 0, len = mAnonymousContents.Length(); i < len; ++i) {
     if (mAnonymousContents[i] == &aContent) {
       // Get the node from the customContent
       nsCOMPtr<Element> node = aContent.GetContentNode();
