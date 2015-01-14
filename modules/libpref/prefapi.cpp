@@ -77,8 +77,6 @@ static bool         gShouldCleanupDeadNodes = false;
 
 
 static PLDHashTableOps     pref_HashTableOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
     PL_DHashStringKey,
     matchPrefEntry,
     PL_DHashMoveEntryStub,
