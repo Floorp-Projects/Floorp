@@ -5439,9 +5439,12 @@ ConcatInlineString(MacroAssembler &masm, Register lhs, Register rhs, Register ou
     masm.branchIfRope(rhs, failure);
 
     // Allocate a JSThinInlineString or JSFatInlineString.
-    size_t maxThinInlineLength = isTwoByte
-                                 ? JSThinInlineString::MAX_LENGTH_TWO_BYTE
-                                 : JSThinInlineString::MAX_LENGTH_LATIN1;
+    size_t maxThinInlineLength;
+    if (isTwoByte)
+        maxThinInlineLength = JSThinInlineString::MAX_LENGTH_TWO_BYTE;
+    else
+        maxThinInlineLength = JSThinInlineString::MAX_LENGTH_LATIN1;
+
     Label isFat, allocDone;
     masm.branch32(Assembler::Above, temp2, Imm32(maxThinInlineLength), &isFat);
     {
