@@ -18,9 +18,9 @@
 namespace js {
 
 // A base class used for types intended to be used in a parallel
-// fashion, such as the workers in the |ThreadPool| class.  Combines a
-// lock and a condition variable.  You can acquire the lock or signal
-// the condition variable using the |AutoLockMonitor| type.
+// fashion.  Combines a lock and a condition variable.  You can
+// acquire the lock or signal the condition variable using the
+// |AutoLockMonitor| type.
 
 class Monitor
 {

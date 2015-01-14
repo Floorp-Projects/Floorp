@@ -193,11 +193,6 @@ struct IonScript
     // Number of times this script bailed out without invalidation.
     uint32_t numBailouts_;
 
-    // Flag set when it is likely that one of our (transitive) call
-    // targets is not compiled.  Used in ForkJoin.cpp to decide when
-    // we should add call targets to the worklist.
-    mozilla::Atomic<bool, mozilla::Relaxed> hasUncompiledCallTarget_;
-
     // Flag set if IonScript was compiled with SPS profiling enabled.
     bool hasSPSInstrumentation_;
 
@@ -416,15 +411,6 @@ struct IonScript
     }
     bool bailoutExpected() const {
         return numBailouts_ > 0;
-    }
-    void setHasUncompiledCallTarget() {
-        hasUncompiledCallTarget_ = true;
-    }
-    void clearHasUncompiledCallTarget() {
-        hasUncompiledCallTarget_ = false;
-    }
-    bool hasUncompiledCallTarget() const {
-        return hasUncompiledCallTarget_;
     }
     void setHasSPSInstrumentation() {
         hasSPSInstrumentation_ = true;

@@ -564,9 +564,6 @@ JS_Init(void)
     if (!jit::InitializeIon())
         return false;
 
-    if (!ForkJoinContext::initializeTls())
-        return false;
-
 #if EXPOSE_INTL_API
     UErrorCode err = U_ZERO_ERROR;
     u_init(&err);

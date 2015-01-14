@@ -1005,7 +1005,7 @@ my_LargeAllocFailCallback(void *data)
     JSContext *cx = (JSContext*)data;
     JSRuntime *rt = cx->runtime();
 
-    if (InParallelSection() || !cx->allowGC())
+    if (!cx->isJSContext())
         return;
 
     MOZ_ASSERT(!rt->isHeapBusy());
