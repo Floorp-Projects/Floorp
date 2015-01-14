@@ -61,6 +61,7 @@ public:
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(RESPONSETAINT_BASIC)
+    , mCacheMode(RequestCache::Default)
     , mRedirectCount(0)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
@@ -84,13 +85,13 @@ public:
     , mHeaders(aOther.mHeaders)
     , mBodyStream(aOther.mBodyStream)
     , mContext(aOther.mContext)
-    , mOrigin(aOther.mOrigin)
     , mContextFrameType(aOther.mContextFrameType)
     , mReferrerType(aOther.mReferrerType)
     , mReferrerURL(aOther.mReferrerURL)
     , mMode(aOther.mMode)
     , mCredentialsMode(aOther.mCredentialsMode)
     , mResponseTainting(aOther.mResponseTainting)
+    , mCacheMode(aOther.mCacheMode)
     , mRedirectCount(aOther.mRedirectCount)
     , mAuthenticationFlag(aOther.mAuthenticationFlag)
     , mForceOriginHeader(aOther.mForceOriginHeader)
@@ -201,6 +202,12 @@ public:
     mResponseTainting = aTainting;
   }
 
+  RequestCache
+  GetCacheMode() const
+  {
+    return mCacheMode;
+  }
+
   nsContentPolicyType
   GetContext() const
   {
@@ -225,12 +232,6 @@ public:
     return mForceOriginHeader;
   }
 
-  void
-  GetOrigin(nsCString& aOrigin) const
-  {
-    aOrigin.Assign(mOrigin);
-  }
-
   bool
   SameOriginDataURL() const
   {
@@ -240,6 +241,8 @@ public:
   void
   SetBody(nsIInputStream* aStream)
   {
+    // A request's body may not be reset once set.
+    MOZ_ASSERT(!mBodyStream);
     mBodyStream = aStream;
   }
 
@@ -274,8 +277,6 @@ private:
   // but it is a good start.
   nsContentPolicyType mContext;
 
-  nsCString mOrigin;
-
   ContextFrameType mContextFrameType;
   ReferrerType mReferrerType;
 
@@ -285,6 +286,7 @@ private:
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
   ResponseTainting mResponseTainting;
+  RequestCache mCacheMode;
 
   uint32_t mRedirectCount;
 

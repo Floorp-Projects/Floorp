@@ -570,6 +570,8 @@ GCState(JSContext *cx, unsigned argc, jsval *vp)
         state = "mark";
     else if (globalState == gc::SWEEP)
         state = "sweep";
+    else if (globalState == gc::COMPACT)
+        state = "compact";
     else
         MOZ_CRASH("Unobserveable global GC state");
 
@@ -598,6 +600,48 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
 #endif /* JS_GC_ZEAL */
 
 static bool
+StartGC(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() > 2) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    SliceBudget budget;
+    if (args.length() >= 1) {
+        uint32_t work = 0;
+        if (!ToUint32(cx, args[0], &work))
+            return false;
+        budget = SliceBudget(WorkBudget(work));
+    }
+
+    bool shrinking = false;
+    if (args.length() >= 2) {
+        Value arg = args[1];
+        if (arg.isString()) {
+            if (!JS_StringEqualsAscii(cx, arg.toString(), "shrinking", &shrinking))
+                return false;
+        }
+    }
+
+    JSRuntime *rt = cx->runtime();
+    if (rt->gc.isIncrementalGCInProgress()) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Incremental GC already in progress");
+        return false;
+    }
+
+    JSGCInvocationKind gckind = shrinking ? GC_SHRINK : GC_NORMAL;
+    rt->gc.startDebugGC(gckind, budget);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 GCSlice(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -616,7 +660,12 @@ GCSlice(JSContext *cx, unsigned argc, Value *vp)
         budget = SliceBudget(WorkBudget(work));
     }
 
-    cx->runtime()->gc.gcDebugSlice(budget);
+    JSRuntime *rt = cx->runtime();
+    if (!rt->gc.isIncrementalGCInProgress())
+        rt->gc.startDebugGC(GC_NORMAL, budget);
+    else
+        rt->gc.debugGCSlice(budget);
+
     args.rval().setUndefined();
     return true;
 }
@@ -2190,7 +2239,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Run the garbage collector. When obj is given, GC only its compartment.\n"
 "  If 'compartment' is given, GC any compartments that were scheduled for\n"
 "  GC via schedulegc.\n"
-"  If 'shrinking' is passes as the optional second argument, perform a\n"
+"  If 'shrinking' is passed as the optional second argument, perform a\n"
 "  shrinking GC rather than a normal GC."),
 
     JS_FN_HELP("minorgc", ::MinorGC, 0, 0,
@@ -2305,9 +2354,15 @@ gc::ZealModeHelpText),
 "  If true, only allow determinstic GCs to run."),
 #endif
 
+    JS_FN_HELP("startgc", StartGC, 1, 0,
+"startgc([n [, 'shrinking']])",
+"  Start an incremental GC and run a slice that processes about n objects.\n"
+"  If 'shrinking' is passesd as the optional second argument, perform a\n"
+"  shrinking GC rather than a normal GC."),
+
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
-"gcslice(n)",
-"  Run an incremental GC slice that marks about n objects."),
+"gcslice([n])",
+"  Start or continue an an incremental GC, running a slice that processes about n objects."),
 
     JS_FN_HELP("validategc", ValidateGC, 1, 0,
 "validategc(true|false)",

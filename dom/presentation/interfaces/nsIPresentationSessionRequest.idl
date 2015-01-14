@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationDevice;
+interface nsIPresentationControlChannel;
+
+%{C++
+#define PRESENTATION_SESSION_REQUEST_TOPIC "presentation-session-request"
+%}
+
+/*
+ * The event of a device requesting for a presentation session. User can
+ * monitor the session request on every device by observing "presentation-sesion-request".
+ */
+[scriptable, uuid(d808a084-d0f8-455a-a8df-5879e05a755b)]
+interface nsIPresentationSessionRequest: nsISupports
+{
+  // The device which requesting the presentation session.
+  readonly attribute nsIPresentationDevice device;
+
+  // The URL requested to open by remote device.
+  readonly attribute DOMString url;
+
+  // The Id for representing this session.
+  readonly attribute DOMString presentationId;
+
+  // The control channel for this session.
+  readonly attribute nsIPresentationControlChannel controlChannel;
+};

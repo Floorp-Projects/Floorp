@@ -2562,6 +2562,13 @@ MacroAssemblerMIPSCompat::unboxNonDouble(const Address &src, Register dest)
 }
 
 void
+MacroAssemblerMIPSCompat::unboxNonDouble(const BaseIndex &src, Register dest)
+{
+    computeScaledAddress(src, SecondScratchReg);
+    ma_lw(dest, Address(SecondScratchReg, src.offset + PAYLOAD_OFFSET));
+}
+
+void
 MacroAssemblerMIPSCompat::unboxInt32(const ValueOperand &operand, Register dest)
 {
     ma_move(dest, operand.payloadReg());

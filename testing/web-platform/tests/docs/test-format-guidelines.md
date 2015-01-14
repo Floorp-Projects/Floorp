@@ -185,6 +185,28 @@ generation. This is supported through the
 [wptserve](http://github.com/w3c/wptserve) server. Several scenarios
 in particular are common:
 
+### Standalone workers tests
+
+Tests that only require assertions in a dedicated worker scope can use
+standalone workers tests. In this case, the test is a JavaScript file
+with extension `.worker.js` that imports `testharness.js`. The test can
+then use all the usual APIs, and can be run from the path to the
+JavaScript file with the `.js` removed.
+
+For example, one could write a test for the `Blob` constructor by
+creating a `FileAPI/Blob-constructor.worker.js` as follows:
+
+    importScripts("/resources/testharness.js");
+    test(function () {
+      var blob = new Blob();
+      assert_equals(blob.size, 0);
+      assert_equals(blob.type, "");
+      assert_false(blob.isClosed);
+    }, "The Blob constructor.");
+    done();
+
+This test could then be run from `FileAPI/Blob-constructor.worker`.
+
 ### Tests Involving Multiple Origins
 
 In the test environment, five subdomains are available; `www`, `www1`,

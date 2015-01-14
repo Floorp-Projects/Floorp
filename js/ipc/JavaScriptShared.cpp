@@ -81,7 +81,7 @@ ObjectToIdMap::ObjectToIdMap()
 ObjectToIdMap::~ObjectToIdMap()
 {
     if (table_) {
-        dom::AddForDeferredFinalization<Table, nsAutoPtr>(table_);
+        dom::AddForDeferredFinalization<Table>(table_);
         table_ = nullptr;
     }
 }

@@ -7,6 +7,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ForgetAboutSite",
                                   "resource://gre/modules/ForgetAboutSite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 // XXXmano: we should move most/all of these constants to PlacesUtils
 const ORGANIZER_ROOT_BOOKMARKS = "place:folder=BOOKMARKS_MENU&excludeItems=1&queryType=1";
@@ -178,6 +180,7 @@ PlacesController.prototype = {
       return false;
     case "placesCmd_open":
     case "placesCmd_open:window":
+    case "placesCmd_open:privatewindow":
     case "placesCmd_open:tab":
       var selectedNode = this._view.selectedNode;
       return selectedNode && PlacesUtils.nodeIsURI(selectedNode);
@@ -262,6 +265,9 @@ PlacesController.prototype = {
       break;
     case "placesCmd_open:window":
       PlacesUIUtils.openNodeIn(this._view.selectedNode, "window", this._view);
+      break;
+    case "placesCmd_open:privatewindow":
+      PlacesUIUtils.openNodeIn(this._view.selectedNode, "window", this._view, true);
       break;
     case "placesCmd_open:tab":
       PlacesUIUtils.openNodeIn(this._view.selectedNode, "tab", this._view);
@@ -601,7 +607,10 @@ PlacesController.prototype = {
         // We allow pasting into tag containers, so special case that.
         var hideIfNoIP = item.getAttribute("hideifnoinsertionpoint") == "true" &&
                          noIp && !(ip && ip.isTag && item.id == "placesContext_paste");
-        var shouldHideItem = hideIfNoIP || !this._shouldShowMenuItem(item, metadata);
+        var hideIfPrivate = item.getAttribute("hideifprivatebrowsing") == "true" &&
+                            PrivateBrowsingUtils.isWindowPrivate(window);
+        var shouldHideItem = hideIfNoIP || hideIfPrivate ||
+                             !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;
 
         if (!item.hidden) {
@@ -1690,6 +1699,7 @@ function goUpdatePlacesCommands() {
 
   updatePlacesCommand("placesCmd_open");
   updatePlacesCommand("placesCmd_open:window");
+  updatePlacesCommand("placesCmd_open:privatewindow");
   updatePlacesCommand("placesCmd_open:tab");
   updatePlacesCommand("placesCmd_new:folder");
   updatePlacesCommand("placesCmd_new:bookmark");
