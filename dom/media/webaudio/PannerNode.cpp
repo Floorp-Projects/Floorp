@@ -311,7 +311,7 @@ PannerNodeEngine::HRTFPanningFunction(const AudioChunk& aInput,
   ComputeAzimuthAndElevation(azimuth, elevation);
 
   AudioChunk input = aInput;
-  // Gain is applied before the delay and convolution of the HRTF
+  // Gain is applied before the delay and convolution of the HRTF.
   input.mVolume *= ComputeConeGain() * ComputeDistanceGain();
 
   mHRTFPanner->pan(azimuth, elevation, &input, aOutput);
@@ -471,7 +471,7 @@ PannerNodeEngine::ComputeDistanceGain()
 {
   ThreeDPoint distanceVec = mPosition - mListenerPosition;
   float distance = sqrt(distanceVec.DotProduct(distanceVec));
-  return (this->*mDistanceModelFunction)(distance);
+  return std::max(0.0f, (this->*mDistanceModelFunction)(distance));
 }
 
 float

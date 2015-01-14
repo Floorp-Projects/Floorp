@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test PannerNode outputs silence when the distance is greater than maxDist</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var types = [
+  "equalpower",
+  "HRTF"
+]
+
+var finished = types.length;
+
+function finish() {
+  if (!--finished) {
+    SimpleTest.finish();
+  }
+}
+
+function test(type) {
+  var ac = new OfflineAudioContext(1, 128, 44100);
+  var osc = ac.createOscillator();
+  var panner = ac.createPanner();
+
+  panner.distanceModel = "linear";
+  panner.maxDistance = 100;
+  panner.setPosition(0, 200, 0);
+  ac.listener.setPosition(0, 0, 0);
+
+  osc.connect(panner);
+  panner.connect(ac.destination);
+
+  osc.start();
+
+  ac.startRendering().then(function(buffer) {
+    var silence = true;
+    var array = buffer.getChannelData(0);
+    for (var i = 0; i < buffer.length; i++) {
+      if (array[i] != 0) {
+        ok(false, "Found noise in the buffer.");
+        silence = false;
+      }
+    }
+    ok(silence, "The buffer is silent.");
+    finish();
+  });
+}
+
+
+addLoadEvent(function() {
+  types.forEach(test);
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
