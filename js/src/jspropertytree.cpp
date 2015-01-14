@@ -196,9 +196,6 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
 void
 Shape::sweep()
 {
-    if (inDictionary())
-        return;
-
     /*
      * We detach the child from the parent if the parent is reachable.
      *
@@ -221,8 +218,14 @@ Shape::sweep()
      * Case 3: parent is marked and is in the same compartment - parent is
      *         stil reachable and we need to detach from it.
      */
-    if (parent && parent->isMarked() && parent->compartment() == compartment())
-        parent->removeChild(this);
+    if (parent && parent->isMarked() && parent->compartment() == compartment()) {
+        if (inDictionary()) {
+            if (parent->listp == &parent)
+                parent->listp = nullptr;
+        } else {
+            parent->removeChild(this);
+        }
+    }
 }
 
 void
