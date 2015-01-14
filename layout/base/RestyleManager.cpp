@@ -1479,13 +1479,14 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
 
-  mDoRebuildAllStyleData = false;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
 
   nsIPresShell* presShell = mPresContext->GetPresShell();
-  if (!presShell || !presShell->GetRootFrame())
+  if (!presShell || !presShell->GetRootFrame()) {
+    mDoRebuildAllStyleData = false;
     return;
+  }
 
   // Make sure that the viewmanager will outlive the presshell
   nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
@@ -1528,9 +1529,9 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 }
 
 void
-RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
+RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
-  BeginProcessingRestyles(aRestyleTracker);
+  MOZ_ASSERT(mIsProcessingRestyles);
 
   mInRebuildAllStyleData = true;
 
@@ -1538,7 +1539,7 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
   // so we can recalculate while maintaining rule tree immutability
   nsresult rv = mPresContext->StyleSet()->BeginReconstruct();
   if (NS_FAILED(rv)) {
-    return;
+    MOZ_CRASH("unable to rebuild style data");
   }
 
   nsRestyleHint restyleHint = mRebuildAllRestyleHint;
@@ -1571,16 +1572,22 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
     restyleHint = nsRestyleHint(0);
   }
 
-  // Recalculate all of the style contexts for the document
+  // Recalculate all of the style contexts for the document, from the
+  // root frame.  We can't do this with a change hint, since we can't
+  // post a change hint for the root frame.
   // Note that we can ignore the return value of ComputeStyleChangeFor
-  // because we never need to reframe the root frame
+  // because we never need to reframe the root frame.
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?  (We could do
   // roughly what we do for aRestyleHint above.)
-  // Note: The restyle tracker we pass in here doesn't matter.
   ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
                                changeHint, aRestyleTracker, restyleHint);
+}
 
+void
+RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
+{
+  BeginProcessingRestyles(aRestyleTracker);
   EndProcessingRestyles();
 }
 
@@ -1687,6 +1694,11 @@ RestyleManager::BeginProcessingRestyles(RestyleTracker& aRestyleTracker)
   mPresContext->FrameConstructor()->BeginUpdate();
 
   mInStyleRefresh = true;
+
+  if (ShouldStartRebuildAllFor(aRestyleTracker)) {
+    mDoRebuildAllStyleData = false;
+    StartRebuildAllStyleData(aRestyleTracker);
+  }
 }
 
 void
