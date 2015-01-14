@@ -278,7 +278,7 @@ public:
   // ProcessPendingRestyles calls into one of our RestyleTracker
   // objects.  It then calls back to these functions at the beginning
   // and end of its work.
-  void BeginProcessingRestyles();
+  void BeginProcessingRestyles(RestyleTracker& aRestyleTracker);
   void EndProcessingRestyles();
 
   // Update styles for animations that are running on the compositor and
