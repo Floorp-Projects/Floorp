@@ -20,6 +20,7 @@ namespace js {
 namespace frontend { struct Definition; }
 
 class StaticWithObject;
+class StaticEvalObject;
 
 /*****************************************************************************/
 
@@ -42,20 +43,6 @@ class StaticWithObject;
  * 'x', enclosed by a scope containing only the name 'f'. (This separate scope
  * is necessary due to the fact that declarations in the function scope shadow
  * (dynamically, in the case of 'eval') the lambda name.)
- *
- * There are two limitations to the current lexical nesting information:
- *
- *  - 'with' is completely absent; this isn't a problem for the current use
- *    cases since 'with' causes every static scope to be on the dynamic scope
- *    chain (so the debugger can find everything) and inhibits all upvar
- *    optimization.
- *
- *  - The "enclosing static scope" chain stops at 'eval'. For example in:
- *      let (x) { eval("function f() {}") }
- *    f does not have an enclosing static scope. This is fine for current uses
- *    for the same reason as 'with'.
- *
- * (See also AssertDynamicScopeMatchesStaticScope.)
  */
 template <AllowGC allowGC>
 class StaticScopeIter
@@ -73,7 +60,14 @@ class StaticScopeIter
         MOZ_ASSERT_IF(obj,
                       obj->is<StaticBlockObject>() ||
                       obj->is<StaticWithObject>() ||
+                      obj->is<StaticEvalObject>() ||
                       obj->is<JSFunction>());
+    }
+
+    StaticScopeIter(ExclusiveContext *cx, const StaticScopeIter<CanGC> &ssi)
+      : obj(cx, ssi.obj), onNamedLambda(ssi.onNamedLambda)
+    {
+        JS_STATIC_ASSERT(allowGC == CanGC);
     }
 
     explicit StaticScopeIter(JSObject *obj)
@@ -85,7 +79,16 @@ class StaticScopeIter
         MOZ_ASSERT_IF(obj,
                       obj->is<StaticBlockObject>() ||
                       obj->is<StaticWithObject>() ||
+                      obj->is<StaticEvalObject>() ||
                       obj->is<JSFunction>());
+    }
+
+    explicit StaticScopeIter(const StaticScopeIter<NoGC> &ssi)
+      : obj((ExclusiveContext *) nullptr, ssi.obj), onNamedLambda(ssi.onNamedLambda)
+    {
+        static_assert(allowGC == NoGC,
+                      "the constructor not taking a context should only be "
+                      "used in NoGC code");
     }
 
     bool done() const;
@@ -95,11 +98,12 @@ class StaticScopeIter
     bool hasDynamicScopeObject() const;
     Shape *scopeShape() const;
 
-    enum Type { WITH, BLOCK, FUNCTION, NAMED_LAMBDA };
+    enum Type { Function, Block, With, NamedLambda, Eval };
     Type type() const;
 
     StaticBlockObject &block() const;
     StaticWithObject &staticWith() const;
+    StaticEvalObject &eval() const;
     JSScript *funScript() const;
     JSFunction &fun() const;
 };
@@ -457,6 +461,35 @@ class DynamicWithObject : public NestedScopeObject
     }
 };
 
+// Static eval scope template objects on the static scope. Created at the
+// time of compiling the eval script, and set as its static enclosing scope.
+class StaticEvalObject : public NestedScopeObject
+{
+    static const uint32_t STRICT_SLOT = 1;
+
+  public:
+    static const unsigned RESERVED_SLOTS = 2;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+
+    static const Class class_;
+
+    static StaticEvalObject *create(JSContext *cx, HandleObject enclosing);
+
+    void setStrict() {
+        setReservedSlot(STRICT_SLOT, BooleanValue(true));
+    }
+
+    bool isStrict() const {
+        return getReservedSlot(STRICT_SLOT).isTrue();
+    }
+
+    // Indirect evals terminate in the global at run time, and has no static
+    // enclosing scope.
+    bool isDirect() const {
+        return getReservedSlot(SCOPE_CHAIN_SLOT).isObject();
+    }
+};
+
 class BlockObject : public NestedScopeObject
 {
   protected:
@@ -666,152 +699,119 @@ CloneNestedScopeObject(JSContext *cx, HandleObject enclosingScope, Handle<Nested
 
 /*****************************************************************************/
 
-class ScopeIterKey;
-class ScopeIterVal;
-
-/*
- * A scope iterator describes the active scopes enclosing the current point of
- * execution for a single frame, proceeding from inner to outer. Here, "frame"
- * means a single activation of: a function, eval, or global code. By design,
- * ScopeIter exposes *all* scopes, even those that have been optimized away
- * (i.e., no ScopeObject was created when entering the scope and thus there is
- * no ScopeObject on fp->scopeChain representing the scope).
- *
- * Note: ScopeIter iterates over all scopes *within* a frame which means that
- * all scopes are ScopeObjects. In particular, the GlobalObject enclosing
- * global code (and any random objects passed as scopes to Execute) will not
- * be included.
- */
+// A scope iterator describes the active scopes starting from a dynamic scope,
+// static scope pair. This pair may be derived from the current point of
+// execution in a frame. If derived in such a fashion, the ScopeIter tracks
+// whether the current scope is within the extent of this initial frame.
+// Here, "frame" means a single activation of: a function, eval, or global
+// code.
 class ScopeIter
 {
-    friend class ScopeIterKey;
-    friend class ScopeIterVal;
-
-  public:
-    enum Type { Call, Block, With, StrictEvalScope };
-
-  private:
-    JSContext *cx;
+    StaticScopeIter<CanGC> ssi_;
+    RootedObject scope_;
     AbstractFramePtr frame_;
-    RootedObject cur_;
-    Rooted<NestedScopeObject *> staticScope_;
-    Type type_;
-    bool hasScopeObject_;
 
     void settle();
 
-    /* ScopeIter does not have value semantics. */
+    // No value semantics.
     ScopeIter(const ScopeIter &si) = delete;
 
-    ScopeIter(JSContext *cx) = delete;
-
   public:
-
-    /* Constructing from a copy of an existing ScopeIter. */
-    ScopeIter(const ScopeIter &si, JSContext *cx
+    // Constructing from a copy of an existing ScopeIter.
+    ScopeIter(JSContext *cx, const ScopeIter &si
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /* Constructing from AbstractFramePtr places ScopeIter on the innermost scope. */
-    ScopeIter(AbstractFramePtr frame, jsbytecode *pc, JSContext *cx
+    // Constructing from a dynamic scope, static scope pair. All scopes are
+    // considered not to be withinInitialFrame, since no frame is given.
+    ScopeIter(JSContext *cx, JSObject *scope, JSObject *staticScope
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /*
-     * Without a stack frame, the resulting ScopeIter is done() with
-     * enclosingScope() as given.
-     */
-    ScopeIter(JSObject &enclosingScope, JSContext *cx
+    // Constructing from a frame. Places the ScopeIter on the innermost scope
+    // at pc.
+    ScopeIter(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    ScopeIter(const ScopeIterVal &hashVal, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
-    bool done() const { return !frame_; }
-
-    /* If done(): */
-
-    JSObject &enclosingScope() const { MOZ_ASSERT(done()); return *cur_; }
-
-    /* If !done(): */
-
+    inline bool done() const;
     ScopeIter &operator++();
 
-    AbstractFramePtr frame() const { MOZ_ASSERT(!done()); return frame_; }
-    Type type() const { MOZ_ASSERT(!done()); return type_; }
-    bool hasScopeObject() const { MOZ_ASSERT(!done()); return hasScopeObject_; }
-    ScopeObject &scope() const;
-    NestedScopeObject* staticScope() const { return staticScope_; }
+    // If done():
+    inline JSObject &enclosingScope() const;
 
-    StaticBlockObject &staticBlock() const {
-        MOZ_ASSERT(type() == Block);
-        return staticScope_->as<StaticBlockObject>();
-    }
+    // If !done():
+    enum Type { Call, Block, With, Eval };
+    Type type() const;
+
+    inline bool hasScopeObject() const;
+    inline bool canHaveScopeObject() const;
+    ScopeObject &scope() const;
+
+    JSObject *maybeStaticScope() const;
+    StaticBlockObject &staticBlock() const { return ssi_.block(); }
+    StaticWithObject &staticWith() const { return ssi_.staticWith(); }
+    StaticEvalObject &staticEval() const { return ssi_.eval(); }
+    JSFunction &fun() const { return ssi_.fun(); }
+
+    bool withinInitialFrame() const { return !!frame_; }
+    AbstractFramePtr initialFrame() const { MOZ_ASSERT(withinInitialFrame()); return frame_; }
+    AbstractFramePtr maybeInitialFrame() const { return frame_; }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class ScopeIterKey
+// The key in MissingScopeMap, used to map live frames to their synthesized
+// scopes.
+class MissingScopeKey
 {
-    friend class ScopeIterVal;
+    friend class LiveScopeVal;
 
     AbstractFramePtr frame_;
-    JSObject *cur_;
-    NestedScopeObject *staticScope_;
-    ScopeIter::Type type_;
-    bool hasScopeObject_;
+    JSObject *staticScope_;
 
   public:
-    explicit ScopeIterKey(const ScopeIter &si)
-      : frame_(si.frame()), cur_(si.cur_), staticScope_(si.staticScope_), type_(si.type_),
-        hasScopeObject_(si.hasScopeObject_) {}
+    MissingScopeKey(const ScopeIter &si)
+      : frame_(si.maybeInitialFrame()),
+        staticScope_(si.maybeStaticScope())
+    { }
 
     AbstractFramePtr frame() const { return frame_; }
-    JSObject *cur() const { return cur_; }
-    NestedScopeObject *staticScope() const { return staticScope_; }
-    ScopeIter::Type type() const { return type_; }
-    bool hasScopeObject() const { return hasScopeObject_; }
-    JSObject *enclosingScope() const { return cur_; }
-    JSObject *&enclosingScope() { return cur_; }
+    JSObject *staticScope() const { return staticScope_; }
 
-    void updateCur(JSObject *obj) { cur_ = obj; }
-    void updateStaticScope(NestedScopeObject *obj) { staticScope_ = obj; }
+    void updateStaticScope(JSObject *obj) { staticScope_ = obj; }
     void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 
-    /* For use as hash policy */
-    typedef ScopeIterKey Lookup;
-    static HashNumber hash(ScopeIterKey si);
-    static bool match(ScopeIterKey si1, ScopeIterKey si2);
-    bool operator!=(const ScopeIterKey &other) const {
-        return frame_ != other.frame_ ||
-               cur_ != other.cur_ ||
-               staticScope_ != other.staticScope_ ||
-               type_ != other.type_;
+    // For use as hash policy.
+    typedef MissingScopeKey Lookup;
+    static HashNumber hash(MissingScopeKey sk);
+    static bool match(MissingScopeKey sk1, MissingScopeKey sk2);
+    bool operator!=(const MissingScopeKey &other) const {
+        return frame_ != other.frame_ || staticScope_ != other.staticScope_;
     }
-    static void rekey(ScopeIterKey &k, const ScopeIterKey& newKey) {
+    static void rekey(MissingScopeKey &k, const MissingScopeKey& newKey) {
         k = newKey;
     }
 };
 
-class ScopeIterVal
+// The value in LiveScopeMap, mapped from by live scope objects.
+class LiveScopeVal
 {
-    friend class ScopeIter;
     friend class DebugScopes;
+    friend class MissingScopeKey;
 
     AbstractFramePtr frame_;
-    RelocatablePtrObject cur_;
-    RelocatablePtrNestedScopeObject staticScope_;
-    ScopeIter::Type type_;
-    bool hasScopeObject_;
+    RelocatablePtrObject staticScope_;
 
     void sweep();
-
     static void staticAsserts();
 
   public:
-    explicit ScopeIterVal(const ScopeIter &si)
-      : frame_(si.frame()), cur_(si.cur_), staticScope_(si.staticScope_), type_(si.type_),
-        hasScopeObject_(si.hasScopeObject_) {}
+    explicit LiveScopeVal(const ScopeIter &si)
+      : frame_(si.initialFrame()),
+        staticScope_(si.maybeStaticScope())
+    { }
 
     AbstractFramePtr frame() const { return frame_; }
+    JSObject *staticScope() const { return staticScope_; }
+
     void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 };
 
@@ -894,14 +894,11 @@ class DebugScopes
      * The map from live frames which have optimized-away scopes to the
      * corresponding debug scopes.
      */
-    typedef HashMap<ScopeIterKey,
+    typedef HashMap<MissingScopeKey,
                     ReadBarrieredDebugScopeObject,
-                    ScopeIterKey,
+                    MissingScopeKey,
                     RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
-    class MissingScopesRef;
-    static MOZ_ALWAYS_INLINE void missingScopesPostWriteBarrier(JSRuntime *rt, MissingScopeMap *map,
-                                                               const ScopeIterKey &key);
 
     /*
      * The map from scope objects of live frames to the live frame. This map
@@ -911,12 +908,12 @@ class DebugScopes
      * updates of liveScopes need only fill in the new scopes.
      */
     typedef HashMap<ScopeObject *,
-                    ScopeIterVal,
+                    LiveScopeVal,
                     DefaultHasher<ScopeObject *>,
                     RuntimeAllocPolicy> LiveScopeMap;
     LiveScopeMap liveScopes;
     static MOZ_ALWAYS_INLINE void liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map,
-                                                            ScopeObject *key);
+                                                             ScopeObject *key);
 
   public:
     explicit DebugScopes(JSContext *c);
@@ -941,7 +938,7 @@ class DebugScopes
     static bool addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope);
 
     static bool updateLiveScopes(JSContext *cx);
-    static ScopeIterVal *hasLiveScope(ScopeObject &scope);
+    static LiveScopeVal *hasLiveScope(ScopeObject &scope);
     static void unsetPrevUpToDateUntil(JSContext *cx, AbstractFramePtr frame);
 
     // When a frame bails out from Ion to Baseline, there might be missing
@@ -965,14 +962,19 @@ template<>
 inline bool
 JSObject::is<js::NestedScopeObject>() const
 {
-    return is<js::BlockObject>() || is<js::StaticWithObject>() || is<js::DynamicWithObject>();
+    return is<js::BlockObject>() ||
+           is<js::StaticWithObject>() ||
+           is<js::DynamicWithObject>() ||
+           is<js::StaticEvalObject>();
 }
 
 template<>
 inline bool
 JSObject::is<js::ScopeObject>() const
 {
-    return is<js::CallObject>() || is<js::DeclEnvObject>() || is<js::NestedScopeObject>() ||
+    return is<js::CallObject>() ||
+           is<js::DeclEnvObject>() ||
+           is<js::NestedScopeObject>() ||
            is<js::UninitializedLexicalObject>();
 }
 
@@ -1025,6 +1027,37 @@ NestedScopeObject::enclosingNestedScope() const
 {
     JSObject *obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
     return obj && obj->is<NestedScopeObject>() ? &obj->as<NestedScopeObject>() : nullptr;
+}
+
+inline bool
+ScopeIter::done() const
+{
+    return ssi_.done();
+}
+
+inline bool
+ScopeIter::hasScopeObject() const
+{
+    return ssi_.hasDynamicScopeObject();
+}
+
+inline bool
+ScopeIter::canHaveScopeObject() const
+{
+    // Non-strict eval scopes cannot have dynamic scope objects.
+    return !ssi_.done() && (type() != Eval || staticEval().isStrict());
+}
+
+inline JSObject &
+ScopeIter::enclosingScope() const
+{
+    // As an engine invariant (maintained internally and asserted by Execute),
+    // ScopeObjects and non-ScopeObjects cannot be interleaved on the scope
+    // chain; every scope chain must start with zero or more ScopeObjects and
+    // terminate with one or more non-ScopeObjects (viz., GlobalObject).
+    MOZ_ASSERT(done());
+    MOZ_ASSERT(!scope_->is<ScopeObject>());
+    return *scope_;
 }
 
 #ifdef DEBUG
