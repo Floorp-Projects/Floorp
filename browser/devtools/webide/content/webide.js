@@ -118,7 +118,7 @@ let UI = {
     this._telemetry.toolClosed("webide");
   },
 
-  canWindowClose: function() {
+  canCloseProject: function() {
     if (this.projecteditor) {
       return this.projecteditor.confirmUnsaved();
     }
@@ -154,6 +154,11 @@ let UI = {
         this.updateRuntimeButton();
         this.updateCommands();
         this.updateConnectionTelemetry();
+        break;
+      case "before-project":
+        if (!this.canCloseProject())  {
+          details.cancel();
+        }
         break;
       case "project":
         this._updatePromise = Task.spawn(function() {
@@ -971,7 +976,7 @@ let UI = {
 
 let Cmds = {
   quit: function() {
-    if (UI.canWindowClose()) {
+    if (UI.canCloseProject()) {
       window.close();
     }
   },

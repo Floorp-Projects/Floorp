@@ -10,7 +10,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const { require } = devtools;
 
 let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let { EventTarget } = require("sdk/event/target");
@@ -21,6 +22,8 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const Telemetry = require("devtools/shared/telemetry");
 const telemetry = new Telemetry();
+devtools.lazyImporter(this, "LineGraphWidget",
+  "resource:///modules/devtools/Graphs.jsm");
 
 // Override DOM promises with Promise.jsm helpers
 const { defer, all } = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
@@ -53,11 +56,17 @@ const EVENTS = {
   // When an audio node is finished loading in the Properties tab.
   UI_PROPERTIES_TAB_RENDERED: "WebAudioEditor:UIPropertiesTabRendered",
 
+  // When an audio node is finished loading in the Automation tab.
+  UI_AUTOMATION_TAB_RENDERED: "WebAudioEditor:UIAutomationTabRendered",
+
   // When the Audio Context graph finishes rendering.
   // Is called with two arguments, first representing number of nodes
   // rendered, second being the number of edge connections rendering (not counting
   // param edges), followed by the count of the param edges rendered.
-  UI_GRAPH_RENDERED: "WebAudioEditor:UIGraphRendered"
+  UI_GRAPH_RENDERED: "WebAudioEditor:UIGraphRendered",
+
+  // Called when the inspector splitter is moved and resized.
+  UI_INSPECTOR_RESIZE: "WebAudioEditor:UIInspectorResize"
 };
 
 /**

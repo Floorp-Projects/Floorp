@@ -140,7 +140,7 @@ exports.items = [
 
       let dirName = prefBranch.getComplexValue(PREF_DIR,
                                               Ci.nsISupportsString).data.trim();
-      return gcli.lookupFormat("cmdStatus2", [ dirName ]);
+      return gcli.lookupFormat("cmdStatus3", [ dirName ]);
     }
   },
   {

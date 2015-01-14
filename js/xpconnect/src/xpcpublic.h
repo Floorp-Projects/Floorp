@@ -139,6 +139,9 @@ XrayAwareCalleeGlobal(JSObject *fun);
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);
 
+uint64_t
+GetCompartmentCPOWMicroseconds(JSCompartment *compartment);
+
 } /* namespace xpc */
 
 namespace JS {
