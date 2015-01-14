@@ -31,8 +31,8 @@ protected:
   virtual ~MediaKeyMessageEvent();
   explicit MediaKeyMessageEvent(EventTarget* aOwner);
 
+  MediaKeyMessageType mMessageType;
   JS::Heap<JSObject*> mMessage;
-  nsString mDestinationURL;
 
 public:
   virtual MediaKeyMessageEvent* AsMediaKeyMessageEvent();
@@ -40,9 +40,9 @@ public:
   virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
 
   static already_AddRefed<MediaKeyMessageEvent>
-    Constructor(EventTarget* aOwner,
-                const nsAString& aURL,
-                const nsTArray<uint8_t>& aMessage);
+  Constructor(EventTarget* aOwner,
+              MediaKeyMessageType aMessageType,
+              const nsTArray<uint8_t>& aMessage);
 
   static already_AddRefed<MediaKeyMessageEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -50,11 +50,11 @@ public:
               const MediaKeyMessageEventInit& aEventInitDict,
               ErrorResult& aRv);
 
+  MediaKeyMessageType MessageType() const { return mMessageType; }
+
   void GetMessage(JSContext* cx,
                   JS::MutableHandle<JSObject*> aMessage,
                   ErrorResult& aRv);
-
-  void GetDestinationURL(nsString& aRetVal) const;
 
 private:
   nsTArray<uint8_t> mRawMessage;

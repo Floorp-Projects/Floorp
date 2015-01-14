@@ -30,8 +30,8 @@ public:
                              const nsCString& aSessionId) MOZ_OVERRIDE;
 
   virtual void SessionMessage(const nsCString& aSessionId,
-                              const nsTArray<uint8_t>& aMessage,
-                              const nsCString& aDestinationURL) MOZ_OVERRIDE;
+                              GMPSessionMessageType aMessageType,
+                              const nsTArray<uint8_t>& aMessage) MOZ_OVERRIDE;
 
   virtual void ExpirationChange(const nsCString& aSessionId,
                                 GMPTimestamp aExpiryTime) MOZ_OVERRIDE;

@@ -78,8 +78,8 @@ private:
                                  const nsCString& aMessage) MOZ_OVERRIDE;
 
   virtual bool RecvSessionMessage(const nsCString& aSessionId,
-                                  const nsTArray<uint8_t>& aMessage,
-                                  const nsCString& aDestinationURL) MOZ_OVERRIDE;
+                                  const GMPSessionMessageType& aMessageType,
+                                  const nsTArray<uint8_t>& aMessage) MOZ_OVERRIDE;
 
   virtual bool RecvExpirationChange(const nsCString& aSessionId,
                                     const double& aExpiryTime) MOZ_OVERRIDE;

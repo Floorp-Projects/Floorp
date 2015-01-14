@@ -83,16 +83,15 @@ GMPDecryptorChild::RejectPromise(uint32_t aPromiseId,
 void
 GMPDecryptorChild::SessionMessage(const char* aSessionId,
                                   uint32_t aSessionIdLength,
+                                  GMPSessionMessageType aMessageType,
                                   const uint8_t* aMessage,
-                                  uint32_t aMessageLength,
-                                  const char* aDestinationURL,
-                                  uint32_t aDestinationURLLength)
+                                  uint32_t aMessageLength)
 {
   nsTArray<uint8_t> msg;
   msg.AppendElements(aMessage, aMessageLength);
   CALL_ON_GMP_THREAD(SendSessionMessage,
-                     nsAutoCString(aSessionId, aSessionIdLength), msg,
-                     nsAutoCString(aDestinationURL, aDestinationURLLength));
+                     nsAutoCString(aSessionId, aSessionIdLength),
+                     aMessageType, msg);
 }
 
 void
