@@ -1582,17 +1582,21 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
                                changeHint, aRestyleTracker, restyleHint);
 
   EndProcessingRestyles();
+}
 
-  if (mInRebuildAllStyleData) {
-    // Tell the style set it's safe to destroy the old rule tree.  We
-    // must do this after the ProcessRestyledFrames call in case the
-    // change list has frame reconstructs in it (since frames to be
-    // reconstructed will still have their old style context pointers
-    // until they are destroyed).
-    mPresContext->StyleSet()->EndReconstruct();
+void
+RestyleManager::FinishRebuildAllStyleData()
+{
+  MOZ_ASSERT(mInRebuildAllStyleData, "bad caller");
 
-    mInRebuildAllStyleData = false;
-  }
+  // Tell the style set it's safe to destroy the old rule tree.  We
+  // must do this after the ProcessRestyledFrames call in case the
+  // change list has frame reconstructs in it (since frames to be
+  // reconstructed will still have their old style context pointers
+  // until they are destroyed).
+  mPresContext->StyleSet()->EndReconstruct();
+
+  mInRebuildAllStyleData = false;
 }
 
 void
@@ -1693,6 +1697,10 @@ RestyleManager::EndProcessingRestyles()
   // Set mInStyleRefresh to false now, since the EndUpdate call might
   // add more restyles.
   mInStyleRefresh = false;
+
+  if (mInRebuildAllStyleData) {
+    FinishRebuildAllStyleData();
+  }
 
   mPresContext->FrameConstructor()->EndUpdate();
 
