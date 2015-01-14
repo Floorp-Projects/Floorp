@@ -186,6 +186,18 @@ GetCurrentJSStack()
   return stack.forget();
 }
 
+AutoForceSetExceptionOnContext::AutoForceSetExceptionOnContext(JSContext* aCx)
+  : mCx(aCx)
+{
+  mOldValue = JS::ContextOptionsRef(mCx).autoJSAPIOwnsErrorReporting();
+  JS::ContextOptionsRef(mCx).setAutoJSAPIOwnsErrorReporting(true);
+}
+
+AutoForceSetExceptionOnContext::~AutoForceSetExceptionOnContext()
+{
+  JS::ContextOptionsRef(mCx).setAutoJSAPIOwnsErrorReporting(mOldValue);
+}
+
 namespace exceptions {
 
 class StackFrame : public nsIStackFrame
