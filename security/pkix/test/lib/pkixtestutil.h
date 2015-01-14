@@ -323,7 +323,8 @@ public:
 
   // The fields below are in the order that they appear in an OCSP response.
 
-  enum OCSPResponseStatus {
+  enum OCSPResponseStatus
+  {
     successful = 0,
     malformedRequest = 1,
     internalError = 2,
@@ -353,7 +354,8 @@ public:
 
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.
-  enum CertStatus {
+  enum CertStatus
+  {
     good = 0,
     revoked = 1,
     unknown = 2,
