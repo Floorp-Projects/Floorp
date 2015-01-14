@@ -1480,7 +1480,10 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
 
-  nsIPresShell* presShell = mPresContext->GetPresShell();
+  // Processing the style changes could cause a flush that propagates to
+  // the parent frame and thus destroys the pres shell, so we must hold
+  // a reference.
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell || !presShell->GetRootFrame()) {
     mDoRebuildAllStyleData = false;
     return;
@@ -1488,10 +1491,6 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   // Make sure that the viewmanager will outlive the presshell
   nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
-
-  // Processing the style changes could cause a flush that propagates to
-  // the parent frame and thus destroys the pres shell.
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(presShell);
 
   // We may reconstruct frames below and hence process anything that is in the
   // tree. We don't want to get notified to process those items again after.
