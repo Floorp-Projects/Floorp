@@ -7260,6 +7260,22 @@ DebuggerEnv_getInspectable(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerEnv_getOptimizedOut(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    NativeObject *envobj = DebuggerEnv_checkThis(cx, args, "get optimizedOut", false);
+    if (!envobj)
+        return false;
+    Rooted<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));
+    MOZ_ASSERT(env);
+    MOZ_ASSERT(!env->is<ScopeObject>());
+
+    args.rval().setBoolean(env->is<DebugScopeObject>() &&
+                           env->as<DebugScopeObject>().isOptimizedOut());
+    return true;
+}
+
+static bool
 DebuggerEnv_names(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGENV(cx, argc, vp, "names", args, envobj, env);
@@ -7404,6 +7420,7 @@ static const JSPropertySpec DebuggerEnv_properties[] = {
     JS_PSG("parent", DebuggerEnv_getParent, 0),
     JS_PSG("callee", DebuggerEnv_getCallee, 0),
     JS_PSG("inspectable", DebuggerEnv_getInspectable, 0),
+    JS_PSG("optimizedOut", DebuggerEnv_getOptimizedOut, 0),
     JS_PS_END
 };
 
