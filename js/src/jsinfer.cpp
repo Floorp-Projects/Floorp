@@ -255,6 +255,15 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
 
         Type type = GetValueType(value);
 
+        // Type set guards might miss when an object's type changes and its
+        // properties become unknown.
+        if (value.isObject() &&
+            !value.toObject().hasLazyType() &&
+            value.toObject().type()->flags() & OBJECT_FLAG_UNKNOWN_PROPERTIES)
+        {
+            return true;
+        }
+
         AutoEnterAnalysis enter(cx);
 
         /*
@@ -542,8 +551,13 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
             JS_STATIC_ASSERT(TYPE_FLAG_DOMOBJECT_COUNT_LIMIT >= TYPE_FLAG_OBJECT_COUNT_LIMIT);
             // Examining the entire type set is only required when we first hit
             // the normal object limit.
-            if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT && !isDOMClass())
-                goto unknownObject;
+            if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT) {
+                for (unsigned i = 0; i < objectCount; i++) {
+                    const Class *clasp = getObjectClass(i);
+                    if (clasp && !clasp->isDOMClass())
+                        goto unknownObject;
+                }
+            }
 
             // Make sure the newly added object is also a DOM object.
             if (!object->clasp()->isDOMClass())
@@ -1597,6 +1611,12 @@ TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags fla
 }
 
 bool
+TypeObjectKey::hasStableClassAndProto(CompilerConstraintList *constraints)
+{
+    return !hasFlags(constraints, OBJECT_FLAG_UNKNOWN_PROPERTIES);
+}
+
+bool
 TemporaryTypeSet::hasObjectFlags(CompilerConstraintList *constraints, TypeObjectFlags flags)
 {
     if (unknownObject())
@@ -2013,7 +2033,7 @@ TemporaryTypeSet::convertDoubleElements(CompilerConstraintList *constraints)
 }
 
 const Class *
-TemporaryTypeSet::getKnownClass()
+TemporaryTypeSet::getKnownClass(CompilerConstraintList *constraints)
 {
     if (unknownObject())
         return nullptr;
@@ -2026,16 +2046,28 @@ TemporaryTypeSet::getKnownClass()
         if (!nclasp)
             continue;
 
+        if (getObject(i)->unknownProperties())
+            return nullptr;
+
         if (clasp && clasp != nclasp)
             return nullptr;
         clasp = nclasp;
+    }
+
+    if (clasp) {
+        for (unsigned i = 0; i < count; i++) {
+            TypeObjectKey *type = getObject(i);
+            if (type && !type->hasStableClassAndProto(constraints))
+                return nullptr;
+        }
     }
 
     return clasp;
 }
 
 TemporaryTypeSet::ForAllResult
-TemporaryTypeSet::forAllClasses(bool (*func)(const Class* clasp))
+TemporaryTypeSet::forAllClasses(CompilerConstraintList *constraints,
+                                bool (*func)(const Class* clasp))
 {
     if (unknownObject())
         return ForAllResult::MIXED;
@@ -2049,14 +2081,18 @@ TemporaryTypeSet::forAllClasses(bool (*func)(const Class* clasp))
     for (unsigned i = 0; i < count; i++) {
         const Class *clasp = getObjectClass(i);
         if (!clasp)
+            continue;
+        if (!getObject(i)->hasStableClassAndProto(constraints))
             return ForAllResult::MIXED;
         if (func(clasp)) {
             true_results = true;
-            if (false_results) return ForAllResult::MIXED;
+            if (false_results)
+                return ForAllResult::MIXED;
         }
         else {
             false_results = true;
-            if (true_results) return ForAllResult::MIXED;
+            if (true_results)
+                return ForAllResult::MIXED;
         }
     }
 
@@ -2066,9 +2102,9 @@ TemporaryTypeSet::forAllClasses(bool (*func)(const Class* clasp))
 }
 
 Scalar::Type
-TemporaryTypeSet::getTypedArrayType()
+TemporaryTypeSet::getTypedArrayType(CompilerConstraintList *constraints)
 {
-    const Class *clasp = getKnownClass();
+    const Class *clasp = getKnownClass(constraints);
 
     if (clasp && IsTypedArrayClass(clasp))
         return (Scalar::Type) (clasp - &TypedArrayObject::classes[0]);
@@ -2076,9 +2112,9 @@ TemporaryTypeSet::getTypedArrayType()
 }
 
 Scalar::Type
-TemporaryTypeSet::getSharedTypedArrayType()
+TemporaryTypeSet::getSharedTypedArrayType(CompilerConstraintList *constraints)
 {
-    const Class *clasp = getKnownClass();
+    const Class *clasp = getKnownClass(constraints);
 
     if (clasp && IsSharedTypedArrayClass(clasp))
         return (Scalar::Type) (clasp - &SharedTypedArrayObject::classes[0]);
@@ -2086,7 +2122,7 @@ TemporaryTypeSet::getSharedTypedArrayType()
 }
 
 bool
-TypeSet::isDOMClass()
+TemporaryTypeSet::isDOMClass(CompilerConstraintList *constraints)
 {
     if (unknownObject())
         return false;
@@ -2094,7 +2130,9 @@ TypeSet::isDOMClass()
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         const Class *clasp = getObjectClass(i);
-        if (clasp && !clasp->isDOMClass())
+        if (!clasp)
+            continue;
+        if (!clasp->isDOMClass() || !getObject(i)->hasStableClassAndProto(constraints))
             return false;
     }
 
@@ -2102,7 +2140,7 @@ TypeSet::isDOMClass()
 }
 
 bool
-TemporaryTypeSet::maybeCallable()
+TemporaryTypeSet::maybeCallable(CompilerConstraintList *constraints)
 {
     if (!maybeObject())
         return false;
@@ -2113,7 +2151,11 @@ TemporaryTypeSet::maybeCallable()
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         const Class *clasp = getObjectClass(i);
-        if (clasp && (clasp->isProxy() || clasp->nonProxyCallable()))
+        if (!clasp)
+            continue;
+        if (clasp->isProxy() || clasp->nonProxyCallable())
+            return true;
+        if (!getObject(i)->hasStableClassAndProto(constraints))
             return true;
     }
 
@@ -2121,7 +2163,7 @@ TemporaryTypeSet::maybeCallable()
 }
 
 bool
-TemporaryTypeSet::maybeEmulatesUndefined()
+TemporaryTypeSet::maybeEmulatesUndefined(CompilerConstraintList *constraints)
 {
     if (!maybeObject())
         return false;
@@ -2135,7 +2177,11 @@ TemporaryTypeSet::maybeEmulatesUndefined()
         // it's a WrapperObject, see EmulatesUndefined. Since all wrappers are
         // proxies, we can just check for that.
         const Class *clasp = getObjectClass(i);
-        if (clasp && (clasp->emulatesUndefined() || clasp->isProxy()))
+        if (!clasp)
+            continue;
+        if (clasp->emulatesUndefined() || clasp->isProxy())
+            return true;
+        if (!getObject(i)->hasStableClassAndProto(constraints))
             return true;
     }
 
@@ -2143,7 +2189,7 @@ TemporaryTypeSet::maybeEmulatesUndefined()
 }
 
 JSObject *
-TemporaryTypeSet::getCommonPrototype()
+TemporaryTypeSet::getCommonPrototype(CompilerConstraintList *constraints)
 {
     if (unknownObject())
         return nullptr;
@@ -2156,7 +2202,7 @@ TemporaryTypeSet::getCommonPrototype()
         if (!object)
             continue;
 
-        if (!object->hasTenuredProto())
+        if (object->unknownProperties() || !object->hasTenuredProto())
             return nullptr;
 
         TaggedProto nproto = object->proto();
@@ -2168,6 +2214,13 @@ TemporaryTypeSet::getCommonPrototype()
                 return nullptr;
             proto = nproto.toObject();
         }
+    }
+
+    // Guard against mutating __proto__.
+    for (unsigned i = 0; i < count; i++) {
+        TypeObjectKey *object = getObject(i);
+        if (object)
+            JS_ALWAYS_TRUE(object->hasStableClassAndProto(constraints));
     }
 
     return proto;
@@ -2407,7 +2460,7 @@ bool
 types::TypeCanHaveExtraIndexedProperties(CompilerConstraintList *constraints,
                                          TemporaryTypeSet *types)
 {
-    const Class *clasp = types->getKnownClass();
+    const Class *clasp = types->getKnownClass(constraints);
 
     // Note: typed arrays have indexed properties not accounted for by type
     // information, though these are all in bounds and will be accounted for
@@ -2418,7 +2471,7 @@ types::TypeCanHaveExtraIndexedProperties(CompilerConstraintList *constraints,
     if (types->hasObjectFlags(constraints, types::OBJECT_FLAG_SPARSE_INDEXES))
         return true;
 
-    JSObject *proto = types->getCommonPrototype();
+    JSObject *proto = types->getCommonPrototype(constraints);
     if (!proto)
         return true;
 
@@ -2481,43 +2534,6 @@ TypeZone::addPendingRecompile(JSContext *cx, JSScript *script)
     // of any such callers.
     if (script->functionNonDelazifying() && !script->functionNonDelazifying()->hasLazyType())
         ObjectStateChange(cx, script->functionNonDelazifying()->type(), false);
-}
-
-void
-TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
-{
-    MOZ_ASSERT(this == &cx->compartment()->types);
-    MOZ_ASSERT(!(target->flags() & OBJECT_FLAG_SETS_MARKED_UNKNOWN));
-    MOZ_ASSERT(!target->singleton());
-    MOZ_ASSERT(target->unknownProperties());
-
-    AutoEnterAnalysis enter(cx);
-
-    /* Mark type sets which contain obj as having a generic object types. */
-
-    for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
-        TypeObject *object = i.get<TypeObject>();
-        unsigned count = object->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            Property *prop = object->getProperty(i);
-            if (prop && prop->types.hasType(Type::ObjectType(target)))
-                prop->types.addType(cx, Type::AnyObjectType());
-        }
-    }
-
-    for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->types()) {
-            unsigned count = TypeScript::NumTypeSets(script);
-            StackTypeSet *typeArray = script->types()->typeArray();
-            for (unsigned i = 0; i < count; i++) {
-                if (typeArray[i].hasType(Type::ObjectType(target)))
-                    typeArray[i].addType(cx, Type::AnyObjectType());
-            }
-        }
-    }
-
-    target->addFlags(OBJECT_FLAG_SETS_MARKED_UNKNOWN);
 }
 
 void
@@ -4071,7 +4087,7 @@ TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, b
     // to represent partially initialized objects.
     MOZ_ASSERT(prefixShape->slotSpan() > templateObject()->slotSpan());
 
-    TypeObjectFlags initialFlags = type->flags() & OBJECT_FLAG_UNKNOWN_MASK;
+    TypeObjectFlags initialFlags = type->flags() & OBJECT_FLAG_DYNAMIC_MASK;
 
     Rooted<TaggedProto> protoRoot(cx, type->proto());
     TypeObject *initialType =
@@ -4469,15 +4485,8 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSObject *as
         return nullptr;
 
     TypeObjectFlags initialFlags = 0;
-    if (!proto.isObject() || proto.toObject()->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN)) {
-        // The new type is not present in any type sets, so mark the object as
-        // unknown in all type sets it appears in. This allows the prototype of
-        // such objects to mutate freely without triggering an expensive walk of
-        // the compartment's type sets. (While scripts normally don't mutate
-        // __proto__, the browser will for proxies and such, and we need to
-        // accommodate this behavior).
-        initialFlags = OBJECT_FLAG_UNKNOWN_MASK | OBJECT_FLAG_SETS_MARKED_UNKNOWN;
-    }
+    if (!proto.isObject() || proto.toObject()->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN))
+        initialFlags = OBJECT_FLAG_DYNAMIC_MASK;
 
     Rooted<TaggedProto> protoRoot(this, proto);
     TypeObject *type = compartment()->types.newTypeObject(this, clasp, protoRoot, initialFlags);
