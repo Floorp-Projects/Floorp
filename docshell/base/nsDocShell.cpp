@@ -5804,8 +5804,7 @@ nsDocShell::SetPosition(int32_t x, int32_t y)
 NS_IMETHODIMP
 nsDocShell::GetPosition(int32_t * aX, int32_t * aY)
 {
-    int32_t dummyHolder;
-    return GetPositionAndSize(aX, aY, &dummyHolder, &dummyHolder);
+    return GetPositionAndSize(aX, aY, nullptr, nullptr);
 }
 
 NS_IMETHODIMP
@@ -5819,8 +5818,7 @@ nsDocShell::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
 NS_IMETHODIMP
 nsDocShell::GetSize(int32_t * aCX, int32_t * aCY)
 {
-    int32_t dummyHolder;
-    return GetPositionAndSize(&dummyHolder, &dummyHolder, aCX, aCY);
+    return GetPositionAndSize(nullptr, nullptr, aCX, aCY);
 }
 
 NS_IMETHODIMP
