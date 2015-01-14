@@ -666,6 +666,10 @@ class MochitestOptions(optparse.OptionParser):
         if mozinfo.isWin:
             options.ignoreMissingLeaks.append("tab")
 
+        # Bug 1121539 - OSX-only intermittent tab process leak in test_ipc.html
+        if mozinfo.isMac:
+            options.leakThresholds["tab"] = 50000
+
         return options
 
 
