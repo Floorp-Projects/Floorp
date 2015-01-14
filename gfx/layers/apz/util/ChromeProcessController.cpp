@@ -12,6 +12,11 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 
+ChromeProcessController::ChromeProcessController(nsIWidget* aWidget)
+  : mWidget(aWidget)
+{
+}
+
 void
 ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
