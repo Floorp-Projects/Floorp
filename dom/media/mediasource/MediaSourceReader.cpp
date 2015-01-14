@@ -519,6 +519,26 @@ MediaSourceReader::SwitchVideoReader(int64_t aTarget)
   return newReader ? READER_EXISTING : READER_ERROR;
 }
 
+bool
+MediaSourceReader::IsDormantNeeded()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mVideoReader) {
+    return mVideoReader->IsDormantNeeded();
+  }
+
+  return false;
+}
+
+void
+MediaSourceReader::ReleaseMediaResources()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mVideoReader) {
+    mVideoReader->ReleaseMediaResources();
+  }
+}
+
 MediaDecoderReader*
 CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 {
