@@ -55,16 +55,6 @@ inline bool ENCODING_FAILED(const ByteString& bs) { return bs.empty(); }
 // XXX: Evaluates its argument twice
 #define MOZILLA_PKIX_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
-class TestInput : public Input
-{
-public:
-  template <size_t N>
-  explicit TestInput(const char (&valueString)[N])
-    : Input(reinterpret_cast<const uint8_t(&)[N-1]>(valueString))
-  {
-  }
-};
-
 bool InputEqualsByteString(Input input, const ByteString& bs);
 ByteString InputToByteString(Input input);
 
@@ -314,7 +304,7 @@ ByteString CreateEncodedEKUExtension(Input eku, Critical critical);
 ///////////////////////////////////////////////////////////////////////////////
 // Encode OCSP responses
 
-class OCSPResponseExtension
+class OCSPResponseExtension final
 {
 public:
   ByteString id;
@@ -323,7 +313,7 @@ public:
   OCSPResponseExtension* next;
 };
 
-class OCSPResponseContext
+class OCSPResponseContext final
 {
 public:
   OCSPResponseContext(const CertID& certID, std::time_t time);
