@@ -466,7 +466,9 @@ private:
 private:
   nsPresContext* mPresContext; // weak, disconnected in Disconnect
 
-  bool mRebuildAllStyleData : 1;
+  // True if we need to reconstruct the rule tree the next time we
+  // process restyles.
+  bool mDoRebuildAllStyleData : 1;
   // True if we're already waiting for a refresh notification
   bool mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
