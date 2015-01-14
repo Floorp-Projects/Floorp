@@ -241,7 +241,7 @@ class CloseRunnable MOZ_FINAL : public nsICancelableRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CloseRunnable(BroadcastChannel* aBC)
+  explicit CloseRunnable(BroadcastChannel* aBC)
     : mBC(aBC)
   {
     MOZ_ASSERT(mBC);
@@ -272,7 +272,7 @@ class TeardownRunnable MOZ_FINAL : public nsICancelableRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  TeardownRunnable(BroadcastChannelChild* aActor)
+  explicit TeardownRunnable(BroadcastChannelChild* aActor)
     : mActor(aActor)
   {
     MOZ_ASSERT(mActor);
@@ -306,7 +306,7 @@ class BroadcastChannelFeature : public workers::WorkerFeature
   BroadcastChannel* mChannel;
 
 public:
-  BroadcastChannelFeature(BroadcastChannel* aChannel)
+  explicit BroadcastChannelFeature(BroadcastChannel* aChannel)
     : mChannel(aChannel)
   {
     MOZ_ASSERT(aChannel);
@@ -354,7 +354,7 @@ class CheckPermissionRunnable MOZ_FINAL
 public:
   bool mResult;
 
-  CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
+  explicit CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
     : workers::WorkerMainThreadRunnable(aWorkerPrivate)
     , mResult(false)
   {
