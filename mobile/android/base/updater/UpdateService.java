@@ -118,11 +118,6 @@ public class UpdateService extends IntentService {
         } else if (UpdateServiceHelper.ACTION_CANCEL_DOWNLOAD.equals(intent.getAction())) {
             mCancelDownload = true;
         } else {
-            if (!UpdateServiceHelper.ACTION_APPLY_UPDATE.equals(intent.getAction())) {
-                // Delete the update package used to install the current version.
-                deleteUpdatePackage(getLastFileName());
-            }
-
             super.onStartCommand(intent, flags, startId);
         }
 
@@ -463,6 +458,11 @@ public class UpdateService extends IntentService {
                 // Didn't match, so we're going to download a new one.
                 downloadFile.delete();
             }
+        }
+
+        if (!info.buildID.equals(getLastBuildID())) {
+            // Delete the previous package when a new version becomes available.
+            deleteUpdatePackage(getLastFileName());
         }
 
         Log.i(LOGTAG, "downloading update package");
