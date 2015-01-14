@@ -74,6 +74,12 @@ public:
               const MessageEventInit& aEventInit,
               ErrorResult& aRv);
 
+  static already_AddRefed<MessageEvent>
+  Constructor(EventTarget* aEventTarget,
+              const nsAString& aType,
+              const MessageEventInit& aEventInit,
+              ErrorResult& aRv);
+
 protected:
   ~MessageEvent();
 
