@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import urlparse
 
 from wptrunner.update.sync import LoadManifest
 from wptrunner.update.tree import get_unique_name
@@ -63,7 +64,9 @@ class SyncToUpstream(Step):
             self.logger.error("Cannot sync with upstream from a non-Git checkout.")
             return exit_clean
 
-        if github.requests is None:
+        try:
+            import requests
+        except ImportError:
             self.logger.error("Upstream sync requires the requests module to be installed")
             return exit_clean
 
@@ -211,7 +214,10 @@ class MergeUpstream(Step):
         if "merge_index" not in state:
             state.merge_index = 0
 
-        state.gh_repo = gh.repo("jgraham", "web-platform-tests")
+        org, name = urlparse.urlsplit(state.sync["remote_url"]).path[1:].split("/")
+        if name.endswith(".git"):
+            name = name[:-4]
+        state.gh_repo = gh.repo(org, name)
         for commit in state.rebased_commits[state.merge_index:]:
             with state.push(["gh_repo", "sync_tree"]):
                 state.commit = commit
