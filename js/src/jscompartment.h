@@ -220,13 +220,6 @@ struct JSCompartment
     inline void initGlobal(js::GlobalObject &global);
 
   public:
-    /*
-     * Moves all data from the allocator |workerAllocator|, which was
-     * in use by a parallel worker, into the compartment's main
-     * allocator.  This is used at the end of a parallel section.
-     */
-    void adoptWorkerAllocator(js::Allocator *workerAllocator);
-
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 

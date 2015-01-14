@@ -24,9 +24,8 @@ namespace jit {
 class JitZone;
 }
 
-// Encapsulates the data needed to perform allocation. Typically there is
-// precisely one of these per zone (|cx->zone().allocator|). However, in
-// parallel execution mode, there will be one per worker thread.
+// Encapsulates the data needed to perform allocation.  There is
+// precisely one of these per zone (|cx->zone().allocator|).
 class Allocator
 {
   public:
