@@ -9,6 +9,7 @@
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "gfx2DGlue.h"
+#include "nsAppRunner.h"
 
 namespace mozilla {
 namespace gfx {
@@ -28,7 +29,7 @@ Compositor::GetBackend()
 /* static */ void
 Compositor::SetBackend(LayersBackend backend)
 {
-  if (sBackend != LayersBackend::LAYERS_NONE && sBackend != backend) {
+  if (!gIsGtest && sBackend != LayersBackend::LAYERS_NONE && sBackend != backend) {
     // Assert this once we figure out bug 972891.
     //MOZ_CRASH("Trying to use more than one OMTC compositor.");
 
