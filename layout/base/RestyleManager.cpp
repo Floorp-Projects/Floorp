@@ -1565,9 +1565,6 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
   // Recalculate all of the style contexts for the document
   // Note that we can ignore the return value of ComputeStyleChangeFor
   // because we never need to reframe the root frame
-  // XXX This could be made faster by not rerunning rule matching
-  // (but note that nsPresShell::SetPreferenceStyleRules currently depends
-  // on us re-running rule matching here
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?  (We could do
   // roughly what we do for aRestyleHint above.)
