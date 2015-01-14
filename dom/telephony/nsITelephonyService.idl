@@ -174,7 +174,7 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(a91fa6be-0acc-4d36-99f1-3e3a88e83ae9)]
+[scriptable, uuid(2b7b3fe7-f1d9-48be-8fd6-aaf890fa73af)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -242,12 +242,16 @@ interface nsITelephonyService : nsISupports
                   in unsigned long callIndex,
                   in nsITelephonyCallback callback);
 
-  void conferenceCall(in unsigned long clientId);
-  void separateCall(in unsigned long clientId, in unsigned long callIndex);
+  void conferenceCall(in unsigned long clientId,
+                      in nsITelephonyCallback callback);
+  void separateCall(in unsigned long clientId, in unsigned long callIndex,
+                    in nsITelephonyCallback callback);
   void hangUpConference(in unsigned long clientId,
                         in nsITelephonyCallback callback);
-  void holdConference(in unsigned long clientId);
-  void resumeConference(in unsigned long clientId);
+  void holdConference(in unsigned long clientId,
+                      in nsITelephonyCallback callback);
+  void resumeConference(in unsigned long clientId,
+                        in nsITelephonyCallback callback);
 
   /**
    * Send an USSD on existing session. It results in error if the session is
