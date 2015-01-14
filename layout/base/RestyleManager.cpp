@@ -1533,6 +1533,12 @@ RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
   MOZ_ASSERT(mIsProcessingRestyles);
 
+  nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
+  if (!rootFrame) {
+    // No need to do anything.
+    return;
+  }
+
   mInRebuildAllStyleData = true;
 
   // Tell the style set to get the old rule tree out of the way
@@ -1580,7 +1586,7 @@ RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?  (We could do
   // roughly what we do for aRestyleHint above.)
-  ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
+  ComputeAndProcessStyleChange(rootFrame,
                                changeHint, aRestyleTracker, restyleHint);
 }
 
