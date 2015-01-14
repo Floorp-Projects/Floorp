@@ -738,12 +738,12 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
       mDecoder->SetMediaSeekable(seekable);
     }
   }
-  // Fires an initial progress event and sets up the stall counter so stall events
-  // fire if no download occurs within the required time frame.
-  mDecoder->Progress(false);
-
   MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+  // Fires an initial progress event and sets up the stall counter so stall events
+  // fire if no download occurs within the required time frame.
+  owner->DownloadProgressed();
+
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
