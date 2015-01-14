@@ -68,18 +68,6 @@
 
 using namespace mozilla;
 
-void*
-PL_DHashAllocTable(PLDHashTable* aTable, uint32_t aNBytes)
-{
-  return malloc(aNBytes);
-}
-
-void
-PL_DHashFreeTable(PLDHashTable* aTable, void* aPtr)
-{
-  free(aPtr);
-}
-
 PLDHashNumber
 PL_DHashStringKey(PLDHashTable* aTable, const void* aKey)
 {
@@ -158,8 +146,6 @@ PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 }
 
 static const PLDHashTableOps stub_ops = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   PL_DHashMatchEntryStub,
   PL_DHashMoveEntryStub,
@@ -185,13 +171,13 @@ PLDHashTable*
 PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
                  uint32_t aLength)
 {
-  PLDHashTable* table = (PLDHashTable*)aOps->allocTable(NULL, sizeof(*table));
+  PLDHashTable* table = (PLDHashTable*)malloc(sizeof(*table));
 
   if (!table) {
     return nullptr;
   }
   if (!PL_DHashTableInit(table, aOps, aEntrySize, fallible_t(), aLength)) {
-    aOps->freeTable(NULL, table);
+    free(table);
     return nullptr;
   }
   return table;
@@ -201,7 +187,7 @@ void
 PL_DHashTableDestroy(PLDHashTable* aTable)
 {
   PL_DHashTableFinish(aTable);
-  aTable->ops->freeTable(NULL, aTable);
+  free(aTable);
 }
 
 /*
@@ -263,7 +249,7 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
     return false;  // overflowed
   }
 
-  mEntryStore = (char*)aOps->allocTable(this, nbytes);
+  mEntryStore = (char*)malloc(nbytes);
   if (!mEntryStore) {
     return false;
   }
@@ -352,7 +338,7 @@ PLDHashTable::Finish()
   MOZ_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(this));
 
   /* Free entry storage last. */
-  ops->freeTable(this, mEntryStore);
+  free(mEntryStore);
 }
 
 void
@@ -495,7 +481,7 @@ PLDHashTable::ChangeTable(int aDeltaLog2)
     return false;   // overflowed
   }
 
-  char* newEntryStore = (char*)ops->allocTable(this, nbytes);
+  char* newEntryStore = (char*)malloc(nbytes);
   if (!newEntryStore) {
     return false;
   }
@@ -534,7 +520,7 @@ PLDHashTable::ChangeTable(int aDeltaLog2)
     oldEntryAddr += mEntrySize;
   }
 
-  ops->freeTable(this, oldEntryStore);
+  free(oldEntryStore);
   return true;
 }
 
