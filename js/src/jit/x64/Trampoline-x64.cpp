@@ -81,9 +81,6 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.vmovdqa(xmm15, Operand(rsp, 16 * 9));
 #endif
 
-    // Push the EnterJIT sps mark.
-    masm.spsMarkJit(&cx->runtime()->spsProfiler, rbp, rbx);
-
     // Save arguments passed in registers needed after function call.
     masm.push(result);
 
@@ -280,9 +277,6 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     *****************************************************************/
     masm.pop(r12); // vp
     masm.storeValue(JSReturnOperand, Operand(r12, 0));
-
-    // Unwind the sps mark.
-    masm.spsUnmarkJit(&cx->runtime()->spsProfiler, rbx);
 
     // Restore non-volatile registers.
 #if defined(_WIN64)
