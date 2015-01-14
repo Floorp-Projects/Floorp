@@ -10,6 +10,8 @@
 #define nsGridContainerFrame_h___
 
 #include "nsContainerFrame.h"
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
 
 /**
  * Factory function.
@@ -40,6 +42,21 @@ protected:
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  /**
+   * XXX temporary - move the ImplicitNamedAreas stuff to the style system.
+   * The implicit area names that come from x-start .. x-end lines in
+   * grid-template-columns / grid-template-rows are stored in this frame
+   * property when needed, as a ImplicitNamedAreas* value.
+   */
+  NS_DECLARE_FRAME_PROPERTY(ImplicitNamedAreasProperty, DestroyImplicitNamedAreas)
+  void InitImplicitNamedAreas(const nsStylePosition* aStyle);
+  void AddImplicitNamedAreas(const nsTArray<nsTArray<nsString>>& aLineNameLists);
+  typedef nsTHashtable<nsStringHashKey> ImplicitNamedAreas;
+  ImplicitNamedAreas* GetImplicitNamedAreas() const {
+    return static_cast<ImplicitNamedAreas*>(Properties().Get(ImplicitNamedAreasProperty()));
+  }
+  static void DestroyImplicitNamedAreas(void* aPropertyValue);
 
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
