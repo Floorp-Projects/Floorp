@@ -41,6 +41,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BroadcastChannel,
                                            DOMEventTargetHelper)
 
+  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
+
   virtual JSObject*
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
