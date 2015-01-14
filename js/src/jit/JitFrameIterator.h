@@ -273,7 +273,7 @@ class JitProfilingFrameIterator
   public:
     JitProfilingFrameIterator(JSRuntime *rt,
                               const JS::ProfilingFrameIterator::RegisterState &state);
-    JitProfilingFrameIterator(void *exitFrame);
+    explicit JitProfilingFrameIterator(void *exitFrame);
 
     void operator++();
     bool done() const { return fp_ == nullptr; }
