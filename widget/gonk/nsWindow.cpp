@@ -281,23 +281,6 @@ nsWindow::DispatchTouchInputViaAPZ(MultiTouchInput& aInput)
     // but if it doesn't we need to notify the APZ of various things. All of
     // that happens in DispatchEventForAPZ
     rv = DispatchEventForAPZ(&event, guid, inputBlockId);
-
-    // Finally, if the touch event had only one touch point, generate a mouse
-    // event for it and send it through the gecko root process.
-    // Technically we should not need to do this if the touch event was routed
-    // to the child process, but that seems to expose a bug in B2G where the
-    // keyboard doesn't go away in some cases.
-    // Also for now we're dispatching mouse events from all touch events because
-    // we need this for click events to work in the chrome process. Once we have
-    // APZ and ChromeProcessController::HandleSingleTap working for the chrome
-    // process we shouldn't need to do this at all.
-    if (event.touches.Length() == 1) {
-        WidgetMouseEvent mouseEvent = aInput.ToWidgetMouseEvent(this);
-        if (mouseEvent.message != NS_EVENT_NULL) {
-            mouseEvent.mFlags.mNoCrossProcessBoundaryForwarding = (rv == nsEventStatus_eConsumeNoDefault);
-            DispatchEvent(&mouseEvent, rv);
-        }
-    }
 }
 
 
