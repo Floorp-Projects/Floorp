@@ -929,6 +929,7 @@ RestyleManager::RestyleElement(Element*        aElement,
                                RestyleTracker& aRestyleTracker,
                                nsRestyleHint   aRestyleHint)
 {
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
   if (aPrimaryFrame && aPrimaryFrame->GetContent() != aElement) {
@@ -3914,10 +3915,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
                                              RestyleTracker&    aRestyleTracker,
                                              nsRestyleHint      aRestyleHint)
 {
-  // Create a ReframingStyleContexts struct on the stack and put it in
-  // our mReframingStyleContexts for the scope of this function.
-  ReframingStyleContexts reframingStyleContexts(this);
-
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   nsStyleChangeList changeList;
   ElementRestyler::ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
                                          aRestyleTracker, aRestyleHint);
@@ -3931,10 +3929,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*    aNewContext,
                                              RestyleTracker&    aRestyleTracker,
                                              nsRestyleHint      aRestyleHint)
 {
-  // Create a ReframingStyleContexts struct on the stack and put it in
-  // our mReframingStyleContexts for the scope of this function.
-  ReframingStyleContexts reframingStyleContexts(this);
-
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   MOZ_ASSERT(aNewContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS);
   nsIFrame* frame = GetNearestAncestorFrame(aElement);
   MOZ_ASSERT(frame, "display:contents node in map although it's a "
