@@ -219,6 +219,7 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
   , mChannel(aChannel)
   , mIsKeptAlive(false)
   , mInnerID(0)
+  , mState(StateActive)
 {
   // Window can be null in workers
 }
@@ -322,7 +323,18 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 }
 
 void
-BroadcastChannel::PostMessage(const nsAString& aMessage)
+BroadcastChannel::PostMessage(const nsAString& aMessage, ErrorResult& aRv)
+{
+  if (mState != StateActive) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  PostMessageInternal(aMessage);
+}
+
+void
+BroadcastChannel::PostMessageInternal(const nsAString& aMessage)
 {
   if (mActor) {
     nsRefPtr<PostMessageRunnable> runnable =
@@ -339,6 +351,21 @@ BroadcastChannel::PostMessage(const nsAString& aMessage)
 }
 
 void
+BroadcastChannel::Close()
+{
+  if (mState != StateActive) {
+    return;
+  }
+
+  if (mPendingMessages.IsEmpty()) {
+    Shutdown();
+  } else {
+    MOZ_ASSERT(!mActor);
+    mState = StateClosing;
+  }
+}
+
+void
 BroadcastChannel::ActorFailed()
 {
   MOZ_CRASH("Failed to create a PBackgroundChild actor!");
@@ -348,6 +375,10 @@ void
 BroadcastChannel::ActorCreated(ipc::PBackgroundChild* aActor)
 {
   MOZ_ASSERT(aActor);
+
+  if (mState == StateClosed) {
+    return;
+  }
 
   PBroadcastChannelChild* actor =
     aActor->SendPBroadcastChannelConstructor(mPrincipalInfo, mOrigin, mChannel);
@@ -359,15 +390,21 @@ BroadcastChannel::ActorCreated(ipc::PBackgroundChild* aActor)
 
   // Flush pending messages.
   for (uint32_t i = 0; i < mPendingMessages.Length(); ++i) {
-    PostMessage(mPendingMessages[i]);
+    PostMessageInternal(mPendingMessages[i]);
   }
 
   mPendingMessages.Clear();
+
+  if (mState == StateClosing) {
+    Shutdown();
+  }
 }
 
 void
 BroadcastChannel::Shutdown()
 {
+  mState = StateClosed;
+
   // If shutdown() is called we have to release the reference if we still keep
   // it.
   if (mIsKeptAlive) {
