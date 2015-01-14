@@ -58,20 +58,6 @@ protected:
   virtual bool
   DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
                                   MOZ_OVERRIDE;
-
-  virtual PBroadcastChannelParent*
-  AllocPBroadcastChannelParent(const PrincipalInfo& aPrincipalInfo,
-                               const nsString& aOrigin,
-                               const nsString& aChannel) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvPBroadcastChannelConstructor(PBroadcastChannelParent* actor,
-                                   const PrincipalInfo& aPrincipalInfo,
-                                   const nsString& origin,
-                                   const nsString& channel) MOZ_OVERRIDE;
-
-  virtual bool
-  DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) MOZ_OVERRIDE;
 };
 
 } // namespace ipc
