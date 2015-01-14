@@ -469,7 +469,6 @@ static const PLDHashTableOps gHostDB_ops =
     HostDB_MatchEntry,
     HostDB_MoveEntry,
     HostDB_ClearEntry,
-    PL_DHashFinalizeStub,
     HostDB_InitEntry,
 };
 
