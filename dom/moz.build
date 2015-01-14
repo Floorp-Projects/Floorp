@@ -93,6 +93,7 @@ DIRS += [
     'workers',
     'camera',
     'audiochannel',
+    'broadcastchannel',
     'promise',
     'smil',
     'telephony',
