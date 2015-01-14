@@ -103,6 +103,14 @@ var HelperApps =  {
   },
 
   getAppsForUri: function getAppsForUri(uri, flags = { }, callback) {
+    // Return early for well-known internal schemes
+    if (!uri || uri.schemeIs("about") || uri.schemeIs("chrome")) {
+      if (callback) {
+        callback([]);
+      }
+      return [];
+    }
+
     flags.filterBrowsers = "filterBrowsers" in flags ? flags.filterBrowsers : true;
     flags.filterHtml = "filterHtml" in flags ? flags.filterHtml : true;
 
