@@ -4,8 +4,15 @@
 
 include protocol PBackground;
 
+using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
+
+struct BroadcastChannelMessageData
+{
+  SerializedStructuredCloneBuffer data;
+};
 
 // This protocol is used for the BroadcastChannel API
 protocol PBroadcastChannel
@@ -13,11 +20,11 @@ protocol PBroadcastChannel
   manager PBackground;
 
 parent:
-  PostMessage(nsString message);
+  PostMessage(BroadcastChannelMessageData message);
   Close();
 
 child:
-  Notify(nsString message);
+  Notify(BroadcastChannelMessageData message);
   __delete__();
 };
 
