@@ -22,6 +22,8 @@ struct JSCompartment;
 
 namespace js {
 
+#if 0
+
 class ThreadPool;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -250,6 +252,8 @@ class ThreadPool : public Monitor
     // Abort the current job.
     void abortJob();
 };
+
+#endif
 
 } // namespace js
 

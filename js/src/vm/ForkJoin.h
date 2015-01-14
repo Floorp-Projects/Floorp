@@ -22,6 +22,8 @@
   #define FORKJOIN_SPEW
 #endif
 
+#if 0
+
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First
 //
@@ -589,5 +591,7 @@ InParallelSection()
 }
 
 } // namespace js
+
+#endif // 0
 
 #endif /* vm_ForkJoin_h */
