@@ -5684,8 +5684,21 @@ GCRuntime::resetIncrementalGC(const char *reason)
       }
 
 #ifdef JSGC_COMPACTING
-      case COMPACT:
+      case COMPACT: {
+        {
+            gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
+            rt->gc.waitBackgroundSweepOrAllocEnd();
+        }
+
+        JSGCInvocationKind oldInvocationKind = invocationKind;
+        invocationKind = GC_NORMAL;
+
+        SliceBudget budget;
+        incrementalCollectSlice(budget, JS::gcreason::RESET);
+
+        invocationKind = oldInvocationKind;
         break;
+      }
 #endif
 
       default:
