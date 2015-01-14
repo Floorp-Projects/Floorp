@@ -270,18 +270,8 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, InterpreterFrame *osrFra
         return Method_Compiled;
 
     // Check script warm-up counter.
-    //
-    // Also eagerly compile if we are in parallel warmup, the point of which
-    // is to gather type information so that the script may be compiled for
-    // parallel execution. We want to avoid the situation of OSRing during
-    // warm-up and only gathering type information for the loop, and not the
-    // rest of the function.
-    if (cx->runtime()->forkJoinWarmup > 0) {
-        if (osrFrame)
-            return Method_Skipped;
-    } else if (script->incWarmUpCounter() <= js_JitOptions.baselineWarmUpThreshold) {
+    if (script->incWarmUpCounter() <= js_JitOptions.baselineWarmUpThreshold)
         return Method_Skipped;
-    }
 
     if (script->isCallsiteClone()) {
         // Ensure the original function is compiled too, so that bailouts from

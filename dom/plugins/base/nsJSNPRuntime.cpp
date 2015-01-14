@@ -496,7 +496,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
 {
   switch (variant->type) {
   case NPVariantType_Void :
-    return JSVAL_VOID;
+    return JS::UndefinedValue();
   case NPVariantType_Null :
     return JSVAL_NULL;
   case NPVariantType_Bool :
@@ -546,7 +546,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
 
   NS_ERROR("Unable to convert NPVariant to jsval!");
 
-  return JSVAL_VOID;
+  return JS::UndefinedValue();
 }
 
 bool
@@ -555,7 +555,7 @@ JSValToNPVariant(NPP npp, JSContext *cx, JS::Value val, NPVariant *variant)
   NS_ASSERTION(npp, "Must have an NPP to wrap a jsval!");
 
   if (val.isPrimitive()) {
-    if (val == JSVAL_VOID) {
+    if (val.isUndefined()) {
       VOID_TO_NPVARIANT(*variant);
     } else if (val.isNull()) {
       NULL_TO_NPVARIANT(*variant);
@@ -1724,7 +1724,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   // called with no arguments.  We work around this problem by giving plugins a
   // [[DefaultValue]] which uses only toString and not valueOf.
 
-  JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
+  JS::Rooted<JS::Value> v(cx, JS::UndefinedValue());
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
   if (!v.isPrimitive() && JS::IsCallable(v.toObjectOrNull())) {

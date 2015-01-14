@@ -7877,7 +7877,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
             if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {
               return false;
             }
-            args.rval().set(JSVAL_VOID);
+            args.rval().setUndefined();
             #ifdef DEBUG
             AssertReturnTypeMatchesJitinfo(info, args.rval());
             #endif
