@@ -667,46 +667,69 @@ DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
                                          const NativeProperties* properties);
 
+#define HAS_MEMBER_TYPEDEFS                                               \
+private:                                                                  \
+  typedef char yes[1];                                                    \
+  typedef char no[2]
+
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
-  template<typename V> static yes& Check(char (*)[(&V::_name == 0) + 1])
+  template<typename V> static yes& Check##_name(char (*)[(&V::_name == 0) + 1])
 #else
 #define HAS_MEMBER_CHECK(_name)                                           \
-  template<typename V> static yes& Check(char (*)[sizeof(&V::_name) + 1])
+  template<typename V> static yes& Check##_name(char (*)[sizeof(&V::_name) + 1])
 #endif
 
-#define HAS_MEMBER(_name)                                                 \
-template<typename T>                                                      \
-class Has##_name##Member {                                                \
-  typedef char yes[1];                                                    \
-  typedef char no[2];                                                     \
-  HAS_MEMBER_CHECK(_name);                                                \
-  template<typename V> static no& Check(...);                             \
+#define HAS_MEMBER(_memberName, _valueName)                               \
+private:                                                                  \
+  HAS_MEMBER_CHECK(_memberName);                                          \
+  template<typename V> static no& Check##_memberName(...);                \
                                                                           \
 public:                                                                   \
-  static bool const Value = sizeof(Check<T>(nullptr)) == sizeof(yes);     \
+  static bool const _valueName =                                          \
+    sizeof(Check##_memberName<T>(nullptr)) == sizeof(yes)
+
+template<class T>
+struct NativeHasMember
+{
+  HAS_MEMBER_TYPEDEFS;
+
+  HAS_MEMBER(GetParentObject, GetParentObject);
+  HAS_MEMBER(JSBindingFinalized, JSBindingFinalized);
+  HAS_MEMBER(WrapObject, WrapObject);
 };
 
-HAS_MEMBER(WrapObject)
-
-// HasWrapObject<T>::Value will be true if T has a WrapObject member but it's
-// not nsWrapperCache::WrapObject.
-template<typename T>
-struct HasWrapObject
+template<class T>
+struct IsSmartPtr
 {
-private:
-  typedef char yes[1];
-  typedef char no[2];
-  typedef JSObject* (nsWrapperCache::*WrapObject)(JSContext*,
-                                                  JS::Handle<JSObject*>);
-  template<typename U, U> struct SFINAE;
-  template <typename V> static no& Check(SFINAE<WrapObject, &V::WrapObject>*);
-  template <typename V> static yes& Check(...);
+  HAS_MEMBER_TYPEDEFS;
+
+  HAS_MEMBER(get, value);
+};
+
+template<class T>
+struct IsRefcounted
+{
+  HAS_MEMBER_TYPEDEFS;
+
+  HAS_MEMBER(AddRef, HasAddref);
+  HAS_MEMBER(Release, HasRelease);
 
 public:
-  static bool const Value = HasWrapObjectMember<T>::Value &&
-                            sizeof(Check<T>(nullptr)) == sizeof(yes);
+  static bool const value = HasAddref && HasRelease;
+
+private:
+  // This struct only works if T is fully declared (not just forward declared).
+  // The IsBaseOf check will ensure that, we don't really need it for any other
+  // reason (the static assert will of course always be true).
+  static_assert(!IsBaseOf<nsISupports, T>::value || IsRefcounted::value,
+                "Classes derived from nsISupports are refcounted!");
+
 };
+
+#undef HAS_MEMBER
+#undef HAS_MEMBER_CHECK
+#undef HAS_MEMBER_TYPEDEFS
 
 #ifdef DEBUG
 template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
@@ -976,6 +999,7 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
                                      T* value,
                                      JS::MutableHandle<JS::Value> rval)
 {
+  static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
   MOZ_ASSERT(value);
   // We try to wrap in the compartment of the underlying object of "scope"
   JS::Rooted<JSObject*> obj(cx);
@@ -995,11 +1019,9 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
     }
 
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    obj = value->WrapObject(cx);
-  }
-
-  if (!obj) {
-    return false;
+    if (!value->WrapObject(cx, &obj)) {
+      return false;
+    }
   }
 
   // We can end up here in all sorts of compartments, per above.  Make
@@ -1014,11 +1036,12 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx,
 // is true if the JSObject took ownership
 template <class T>
 inline bool
-WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
-                                          JS::Handle<JSObject*> scopeArg,
-                                          nsAutoPtr<T>& value,
-                                          JS::MutableHandle<JS::Value> rval)
+WrapNewBindingNonWrapperCachedObject(JSContext* cx,
+                                     JS::Handle<JSObject*> scopeArg,
+                                     nsAutoPtr<T>& value,
+                                     JS::MutableHandle<JS::Value> rval)
 {
+  static_assert(!IsRefcounted<T>::value, "Only pass owned classes in here.");
   // We do a runtime check on value, because otherwise we might in
   // fact end up wrapping a null and invoking methods on it later.
   if (!value) {
@@ -1041,17 +1064,12 @@ WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
       ac.emplace(cx, scope);
     }
 
-    bool tookOwnership = false;
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
-    obj = value->WrapObject(cx, &tookOwnership);
-    MOZ_ASSERT_IF(obj, tookOwnership);
-    if (tookOwnership) {
-      value.forget();
+    if (!value->WrapObject(cx, &obj)) {
+      return false;
     }
-  }
 
-  if (!obj) {
-    return false;
+    value.forget();
   }
 
   // We can end up here in all sorts of compartments, per above.  Make
@@ -1060,8 +1078,9 @@ WrapNewBindingNonWrapperCachedOwnedObject(JSContext* cx,
   return JS_WrapValue(cx, rval);
 }
 
-// Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <typename> class SmartPtr, typename T>
+// Helper for smart pointers (nsRefPtr/nsCOMPtr).
+template <template <typename> class SmartPtr, typename T,
+          typename U=typename EnableIf<IsRefcounted<T>::value, T>::Type>
 inline bool
 WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                      const SmartPtr<T>& value,
@@ -1100,9 +1119,8 @@ HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
 
 // Helper for calling HandleNewBindingWrappingFailure with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-HAS_MEMBER(get)
 
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct HandleNewBindingWrappingFailureHelper
 {
   static inline bool Wrap(JSContext* cx, JS::Handle<JSObject*> scope,
@@ -1467,7 +1485,7 @@ struct WrapNativeParentFallback<T, true >
 
 // Wrapping of our native parent, for cases when it's a WebIDL object (though
 // possibly preffed off).
-template<typename T, bool hasWrapObject=HasWrapObject<T>::Value >
+template<typename T, bool hasWrapObject=NativeHasMember<T>::WrapObject>
 struct WrapNativeParentHelper
 {
   static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
@@ -1493,7 +1511,7 @@ struct WrapNativeParentHelper
 // Wrapping of our native parent, for cases when it's not a WebIDL object.  In
 // this case it must be nsISupports.
 template<typename T>
-struct WrapNativeParentHelper<T, false >
+struct WrapNativeParentHelper<T, false>
 {
   static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
   {
@@ -1551,9 +1569,7 @@ WrapNativeParent(JSContext* cx, const T& p)
   return WrapNativeParent(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
-HAS_MEMBER(GetParentObject)
-
-template<typename T, bool WrapperCached=HasGetParentObjectMember<T>::Value>
+template<typename T, bool WrapperCached=NativeHasMember<T>::GetParentObject>
 struct GetParentObject
 {
   static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj)
@@ -1632,7 +1648,7 @@ WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
 
 // Helper for calling GetOrCreateDOMReflector with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetOrCreateDOMReflectorHelper
 {
   static inline bool GetOrCreate(JSContext* cx, const T& value,
@@ -1648,6 +1664,7 @@ struct GetOrCreateDOMReflectorHelper<T, false>
   static inline bool GetOrCreate(JSContext* cx, T& value,
                                  JS::MutableHandle<JS::Value> rval)
   {
+    static_assert(IsRefcounted<T>::value, "Don't pass owned classes in here.");
     return GetOrCreateDOMReflector(cx, &value, rval);
   }
 };
@@ -1673,7 +1690,7 @@ GetOrCreateDOMReflector(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
 
 // Helper for calling GetOrCreateDOMReflectorNoWrap with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetOrCreateDOMReflectorNoWrapHelper
 {
   static inline bool GetOrCreate(JSContext* cx, const T& value,
@@ -1712,7 +1729,7 @@ GetCallbackFromCallbackObject(T* aObj)
 // Helper for getting the callback JSObject* of a smart ptr around a
 // CallbackObject or a reference to a CallbackObject or something like
 // that.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetCallbackFromCallbackObjectHelper
 {
   static inline JSObject* Get(const T& aObj)
@@ -2503,30 +2520,7 @@ HasConstructor(JSObject* obj)
 }
  #endif
  
-// Transfer reference in ptr to smartPtr.
-template<class T>
-inline void
-Take(nsRefPtr<T>& smartPtr, T* ptr)
-{
-  smartPtr = dont_AddRef(ptr);
-}
-
-// Transfer ownership of ptr to smartPtr.
-template<class T>
-inline void
-Take(nsAutoPtr<T>& smartPtr, T* ptr)
-{
-  smartPtr = ptr;
-}
-
-inline void
-MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
-{
-}
-
-HAS_MEMBER(JSBindingFinalized)
-
-template<class T, bool hasCallback=HasJSBindingFinalizedMember<T>::Value>
+template<class T, bool hasCallback=NativeHasMember<T>::JSBindingFinalized>
 struct JSBindingFinalized
 {
   static void Finalized(T* self)
@@ -2753,11 +2747,119 @@ ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache)
                                                                      aCache);
 }
 
-template<class T, template <typename> class SmartPtr,
+// The BindingJSObjectCreator class is supposed to be used by a caller that
+// wants to create and initialise a binding JSObject. After initialisation has
+// been successfully completed it should call ForgetObject().
+// The BindingJSObjectCreator object will root the JSObject until ForgetObject()
+// is called on it. If the native object for the binding is refcounted it will
+// also hold a strong reference to it, that reference is transferred to the
+// JSObject (which holds the native in a slot) when ForgetObject() is called. If
+// the BindingJSObjectCreator object is destroyed and ForgetObject() was never
+// called on it then the JSObject's slot holding the native will be set to
+// undefined, and for a refcounted native the strong reference will be released.
+template<class T>
+class MOZ_STACK_CLASS BindingJSObjectCreator
+{
+public:
+  explicit BindingJSObjectCreator(JSContext* aCx)
+    : mReflector(aCx)
+  {
+  }
+
+  ~BindingJSObjectCreator()
+  {
+    if (mReflector) {
+      js::SetReservedOrProxyPrivateSlot(mReflector, DOM_OBJECT_SLOT,
+                                        JS::UndefinedValue());
+    }
+  }
+
+  void
+  CreateProxyObject(JSContext* aCx, const js::Class* aClass,
+                    const DOMProxyHandler* aHandler,
+                    JS::Handle<JSObject*> aProto,
+                    JS::Handle<JSObject*> aParent, T* aNative,
+                    JS::MutableHandle<JSObject*> aReflector)
+  {
+    js::ProxyOptions options;
+    options.setClass(aClass);
+    JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aNative));
+    aReflector.set(js::NewProxyObject(aCx, aHandler, proxyPrivateVal, aProto,
+                                      aParent, options));
+    if (aReflector) {
+      mNative = aNative;
+      mReflector = aReflector;
+    }
+  }
+
+  void
+  CreateObject(JSContext* aCx, const JSClass* aClass,
+               JS::Handle<JSObject*> aProto, JS::Handle<JSObject*> aParent,
+               T* aNative, JS::MutableHandle<JSObject*> aReflector)
+  {
+    aReflector.set(JS_NewObject(aCx, aClass, aProto, aParent));
+    if (aReflector) {
+      js::SetReservedSlot(aReflector, DOM_OBJECT_SLOT, JS::PrivateValue(aNative));
+      mNative = aNative;
+      mReflector = aReflector;
+    }
+  }
+
+  void
+  InitializationSucceeded()
+  {
+    void* dummy;
+    mNative.forget(&dummy);
+    mReflector = nullptr;
+  }
+
+private:
+  struct OwnedNative
+  {
+    // Make sure the native objects inherit from NonRefcountedDOMObject so
+    // that we log their ctor and dtor.
+    static_assert(IsBaseOf<NonRefcountedDOMObject, T>::value,
+                  "Non-refcounted objects with DOM bindings should inherit "
+                  "from NonRefcountedDOMObject.");
+
+    OwnedNative&
+    operator=(T* aNative)
+    {
+      return *this;
+    }
+
+    // This signature sucks, but it's the only one that will make a nsRefPtr
+    // just forget about its pointer without warning.
+    void
+    forget(void**)
+    {
+    }
+  };
+
+  JS::Rooted<JSObject*> mReflector;
+  typename Conditional<IsRefcounted<T>::value, nsRefPtr<T>, OwnedNative>::Type mNative;
+};
+
+template<class T,
          bool isISupports=IsBaseOf<nsISupports, T>::value>
 class DeferredFinalizer
 {
-  typedef nsTArray<SmartPtr<T> > SmartPtrArray;
+  typedef typename Conditional<IsRefcounted<T>::value,
+                               nsRefPtr<T>, nsAutoPtr<T>>::Type SmartPtr;
+  typedef nsTArray<SmartPtr> SmartPtrArray;
+
+  template<class U>
+  static inline void
+  AppendAndTake(nsTArray<nsRefPtr<U>>& smartPtrArray, U* ptr)
+  {
+    smartPtrArray.AppendElement(dont_AddRef(ptr));
+  }
+  template<class U>
+  static inline void
+  AppendAndTake(nsTArray<nsAutoPtr<U>>& smartPtrArray, U* ptr)
+  {
+    smartPtrArray.AppendElement(ptr);
+  }
 
   static void*
   AppendDeferredFinalizePointer(void* aData, void* aObject)
@@ -2766,11 +2868,7 @@ class DeferredFinalizer
     if (!pointers) {
       pointers = new SmartPtrArray();
     }
-
-    T* self = static_cast<T*>(aObject);
-
-    SmartPtr<T>* defer = pointers->AppendElement();
-    Take(*defer, self);
+    AppendAndTake(*pointers, static_cast<T*>(aObject));
     return pointers;
   }
   static bool
@@ -2800,8 +2898,8 @@ public:
   }
 };
 
-template<class T, template <typename> class SmartPtr>
-class DeferredFinalizer<T, SmartPtr, true>
+template<class T>
+class DeferredFinalizer<T, true>
 {
 public:
   static void
@@ -2811,11 +2909,11 @@ public:
   }
 };
 
-template<class T, template <typename> class SmartPtr>
+template<class T>
 static void
 AddForDeferredFinalization(T* aObject)
 {
-  DeferredFinalizer<T, SmartPtr>::AddForDeferredFinalization(aObject);
+  DeferredFinalizer<T>::AddForDeferredFinalization(aObject);
 }
 
 // This returns T's CC participant if it participates in CC or null if it
@@ -3109,16 +3207,25 @@ StrongOrRawPtr(already_AddRefed<S>&& aPtr)
   return aPtr.template downcast<T>();
 }
 
-template<class T>
-inline T*
+template<class T,
+         class ReturnType=typename Conditional<IsRefcounted<T>::value, T*,
+                                               nsAutoPtr<T>>::Type>
+inline ReturnType
 StrongOrRawPtr(T* aPtr)
 {
-  return aPtr;
+  return ReturnType(aPtr);
 }
 
 template<class T, template<typename> class SmartPtr, class S>
 inline void
 StrongOrRawPtr(SmartPtr<S>&& aPtr) = delete;
+
+template<class T>
+struct StrongPtrForMember
+{
+  typedef typename Conditional<IsRefcounted<T>::value,
+                               nsRefPtr<T>, nsAutoPtr<T>>::Type Type;
+};
 
 inline
 JSObject*

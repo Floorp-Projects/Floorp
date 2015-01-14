@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIPresentationDeviceProvider;
+
+%{C++
+#define PRESENTATION_DEVICE_MANAGER_CONTRACTID "@mozilla.org/presentation-device/manager;1"
+#define PRESENTATION_DEVICE_CHANGE_TOPIC "presentation-device-change"
+%}
+
+/*
+ * Manager for the device availablility. User can observe "presentation-device-change"
+ * for any update of the available devices.
+ */
+[scriptable, uuid(beb61db5-3d5f-454f-a15a-dbfa0337c569)]
+interface nsIPresentationDeviceManager : nsISupports
+{
+  // true if there is any device available.
+  readonly attribute boolean deviceAvailable;
+
+  /*
+   * Register a device provider manually.
+   * @param provider The device provider to add.
+   */
+  void addDeviceProvider(in nsIPresentationDeviceProvider provider);
+
+  /*
+   * Unregister a device provider manually.
+   * @param provider The device provider to remove.
+   */
+  void removeDeviceProvider(in nsIPresentationDeviceProvider provider);
+
+  /*
+   * Force all registered device providers to update device information.
+   */
+  void forceDiscovery();
+
+  /*
+   * Retrieve all available devices, return a list of nsIPresentationDevice.
+   */
+  nsIArray getAvailableDevices();
+};
+

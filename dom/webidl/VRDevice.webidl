@@ -81,12 +81,15 @@ interface HMDVRDevice : VRDevice {
   DOMPoint getEyeTranslation(VREye whichEye);
 
   // the FOV that the HMD was configured with
+  [NewObject]
   VRFieldOfView getCurrentEyeFieldOfView(VREye whichEye);
 
   // the recommended FOV, per eye.
+  [NewObject]
   VRFieldOfView getRecommendedEyeFieldOfView(VREye whichEye);
 
   // the maximum FOV, per eye.  Above this, rendering will look broken.
+  [NewObject]
   VRFieldOfView getMaximumEyeFieldOfView(VREye whichEye);
 
   // Set a field of view.  If either of the fields of view is null,
@@ -119,6 +122,7 @@ interface PositionSensorVRDevice : VRDevice {
    * to check if the associated members are valid; if these are false, those members
    * will be null.
    */
+  [NewObject]
   VRPositionState getState(optional double timeOffset = 0.0);
 
   /* Zero this sensor, treating its current position and orientation

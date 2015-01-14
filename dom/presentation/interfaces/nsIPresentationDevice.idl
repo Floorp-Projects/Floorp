@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationControlChannel;
+interface nsIPresentationDevice;
+
+/*
+ * Event callbacks from remote presentation device.
+ */
+[scriptable, uuid(81984458-b9d1-4731-a26a-ba62ab339aac)]
+interface nsIPresentationDeviceEventListener : nsISupports
+{
+  /*
+   * Callback while the remote device is requesting to start a presentation session.
+   * @param url The URL requested to open by remote device.
+   * @param presentationId The Id for representing this session.
+   * @param controlChannel The control channel for this session.
+   */
+  void onSessionRequest(in nsIPresentationDevice device,
+                        in DOMString url,
+                        in DOMString presentationId,
+                        in nsIPresentationControlChannel controlChannel);
+};
+
+/*
+ * Remote device.
+ */
+[scriptable, uuid(7fac99d4-9b19-4b8d-b5cd-5da8adbe58f1)]
+interface nsIPresentationDevice : nsISupports
+{
+  // The unique Id for the device. UUID is recommanded.
+  readonly attribute AUTF8String id;
+
+  // The human-readable name of this device.
+  readonly attribute AUTF8String name;
+
+  //TODO expose more info in order to fulfill UX spec
+  // The category of this device, could be "wifi", "bluetooth", "hdmi", etc.
+  readonly attribute AUTF8String type;
+
+  // The listener for handling remote session request.
+  attribute nsIPresentationDeviceEventListener listener;
+
+  /*
+   * Establish a control channel to this device.
+   * @param url The URL requested to open by remote device.
+   * @param presentationId The Id for representing this session.
+   * @return The control channel for this session.
+   */
+  nsIPresentationControlChannel establishControlChannel(in DOMString url,
+                                                        in DOMString presentationId);
+};

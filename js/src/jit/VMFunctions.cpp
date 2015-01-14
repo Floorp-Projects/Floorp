@@ -928,7 +928,7 @@ GeneratorThrowOrClose(JSContext *cx, BaselineFrame *frame, Handle<GeneratorObjec
     frame->setOverridePc(script->offsetToPC(offset));
 
     MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
-    MOZ_ALWAYS_FALSE(js::GeneratorThrowOrClose(cx, genObj, arg, resumeKind));
+    MOZ_ALWAYS_FALSE(js::GeneratorThrowOrClose(cx, frame, genObj, arg, resumeKind));
     return false;
 }
 
