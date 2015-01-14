@@ -155,10 +155,12 @@ DocAccessibleParent::ShutdownAccessibles(ProxyEntry* entry, void*)
 }
 
 void
-DocAccessibleParent::ActorDestroy(ActorDestroyReason aWhy)
+DocAccessibleParent::Destroy()
 {
   MOZ_ASSERT(mChildDocs.IsEmpty(),
       "why wheren't the child docs destroyed already?");
+  MOZ_ASSERT(!mShutdown);
+  mShutdown = true;
 
   mAccessibles.EnumerateEntries(ShutdownAccessibles, nullptr);
   ProxyDestroyed(this);
