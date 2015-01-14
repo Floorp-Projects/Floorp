@@ -453,6 +453,7 @@ private:
                       RestyleTracker& aRestyleTracker,
                       nsRestyleHint   aRestyleHint);
 
+  void StartRebuildAllStyleData(RestyleTracker& aRestyleTracker);
   void FinishRebuildAllStyleData();
 
   void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
@@ -465,11 +466,17 @@ private:
   // be performed instead.
   bool RecomputePosition(nsIFrame* aFrame);
 
+  bool ShouldStartRebuildAllFor(RestyleTracker& aRestyleTracker) {
+    // When we process our primary restyle tracker and we have a pending
+    // rebuild-all, we need to process it.
+    return mDoRebuildAllStyleData &&
+           &aRestyleTracker == &mPendingRestyles;
+  }
+
   void ProcessRestyles(RestyleTracker& aRestyleTracker) {
     // Fast-path the common case (esp. for the animation restyle
     // tracker) of not having anything to do.
-    if (aRestyleTracker.Count() ||
-        mInRebuildAllStyleData) {
+    if (aRestyleTracker.Count() || ShouldStartRebuildAllFor(aRestyleTracker)) {
       aRestyleTracker.DoProcessRestyles();
     }
   }
