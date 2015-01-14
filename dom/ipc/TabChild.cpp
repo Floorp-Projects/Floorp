@@ -1429,53 +1429,93 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
     // isn't a request to open a modal-type window, we're going to create a new
     // <iframe mozbrowser/mozapp> and return its window here.
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
-    bool iframeMoz = (docshell && docshell->GetIsInBrowserOrApp() &&
-                      !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
-                                        nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                                        nsIWebBrowserChrome::CHROME_OPENAS_CHROME)));
+    if (docshell && docshell->GetIsInBrowserOrApp() &&
+        !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
+                          nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                          nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
 
-    if (!iframeMoz) {
-      int32_t openLocation =
-        nsWindowWatcher::GetWindowOpenLocation(aParent, aChromeFlags, aCalledFromJS,
-                                               aPositionSpecified, aSizeSpecified);
-
-      // If it turns out we're opening in the current browser, just hand over the
-      // current browser's docshell.
-      if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-        nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
-        *aWindowIsNew = false;
-        return browser->GetContentDOMWindow(aReturn);
-      }
+      // Note that BrowserFrameProvideWindow may return NS_ERROR_ABORT if the
+      // open window call was canceled.  It's important that we pass this error
+      // code back to our caller.
+      return BrowserFrameProvideWindow(aParent, aURI, aName, aFeatures,
+                                       aWindowIsNew, aReturn);
     }
 
-    // Note that ProvideWindowCommon may return NS_ERROR_ABORT if the
-    // open window call was canceled.  It's important that we pass this error
-    // code back to our caller.
-    return ProvideWindowCommon(aParent,
-                               iframeMoz,
-                               aChromeFlags,
-                               aCalledFromJS,
-                               aPositionSpecified,
-                               aSizeSpecified,
-                               aURI,
-                               aName,
-                               aFeatures,
-                               aWindowIsNew,
-                               aReturn);
+    int32_t openLocation =
+      nsWindowWatcher::GetWindowOpenLocation(aParent, aChromeFlags, aCalledFromJS,
+                                             aPositionSpecified, aSizeSpecified);
+
+    // If it turns out we're opening in the current browser, just hand over the
+    // current browser's docshell.
+    if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+      nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
+      *aWindowIsNew = false;
+      return browser->GetContentDOMWindow(aReturn);
+    }
+
+    // Otherwise, we're opening a new tab or a new window. We have to contact
+    // TabParent in order to do either.
+
+    PBrowserChild* newChild;
+
+    nsAutoCString uriString;
+    if (aURI) {
+      aURI->GetSpec(uriString);
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aParent->GetDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      NS_ERROR("Could retrieve document from nsIBaseWindow");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocument> doc;
+    doc = do_QueryInterface(domDoc);
+    if (!doc) {
+      NS_ERROR("Document from nsIBaseWindow didn't QI to nsIDocument");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+    if (!baseURI) {
+      NS_ERROR("nsIDocument didn't return a base URI");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoCString baseURIString;
+    baseURI->GetSpec(baseURIString);
+
+    nsAutoString nameString;
+    nameString.Assign(aName);
+    nsAutoCString features;
+
+    // We can assume that if content is requesting to open a window from a remote
+    // tab, then we want to enforce that the new window is also a remote tab.
+    features.Assign(aFeatures);
+    features.Append(",remote");
+
+    if (!CallCreateWindow(aChromeFlags, aCalledFromJS, aPositionSpecified,
+                          aSizeSpecified, NS_ConvertUTF8toUTF16(uriString),
+                          nameString, NS_ConvertUTF8toUTF16(features),
+                          NS_ConvertUTF8toUTF16(baseURIString),
+                          aWindowIsNew, &newChild)) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsIDOMWindow> win =
+        do_GetInterface(static_cast<TabChild*>(newChild)->WebNavigation());
+    win.forget(aReturn);
+    return NS_OK;
 }
 
 nsresult
-TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
-                              bool aIframeMoz,
-                              uint32_t aChromeFlags,
-                              bool aCalledFromJS,
-                              bool aPositionSpecified,
-                              bool aSizeSpecified,
-                              nsIURI* aURI,
-                              const nsAString& aName,
-                              const nsACString& aFeatures,
-                              bool* aWindowIsNew,
-                              nsIDOMWindow** aReturn)
+TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
+                                    nsIURI* aURI,
+                                    const nsAString& aName,
+                                    const nsACString& aFeatures,
+                                    bool* aWindowIsNew,
+                                    nsIDOMWindow** aReturn)
 {
   *aReturn = nullptr;
 
@@ -1499,7 +1539,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
                         &tabId);
 
   nsRefPtr<TabChild> newChild = new TabChild(ContentChild::GetSingleton(), tabId,
-                                             /* TabContext */ *this, aChromeFlags);
+                                             /* TabContext */ *this, /* chromeFlags */ 0);
   if (NS_FAILED(newChild->Init())) {
     return NS_ERROR_ABORT;
   }
@@ -1508,7 +1548,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   unused << Manager()->SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       nsRefPtr<TabChild>(newChild).forget().take(),
-      tabId, IPCTabContext(context, mScrolling), aChromeFlags,
+      tabId, IPCTabContext(context, mScrolling), /* chromeFlags */ 0,
       cc->GetID(), cc->IsForApp(), cc->IsForBrowser());
 
   nsAutoCString spec;
@@ -1518,51 +1558,9 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
 
   NS_ConvertUTF8toUTF16 url(spec);
   nsString name(aName);
-  nsAutoCString features(aFeatures);
-  nsTArray<FrameScriptInfo> frameScripts;
-
-  if (aIframeMoz) {
-    newChild->SendBrowserFrameOpenWindow(this, url, name,
-                                         NS_ConvertUTF8toUTF16(features),
-                                         aWindowIsNew);
-  } else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aOpener->GetDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      NS_ERROR("Could retrieve document from nsIBaseWindow");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDocument> doc;
-    doc = do_QueryInterface(domDoc);
-    if (!doc) {
-      NS_ERROR("Document from nsIBaseWindow didn't QI to nsIDocument");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
-    if (!baseURI) {
-      NS_ERROR("nsIDocument didn't return a base URI");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoCString baseURIString;
-    baseURI->GetSpec(baseURIString);
-
-    // We can assume that if content is requesting to open a window from a remote
-    // tab, then we want to enforce that the new window is also a remote tab.
-    features.AppendLiteral(",remote");
-
-    if (!SendCreateWindow(newChild,
-                          aChromeFlags, aCalledFromJS, aPositionSpecified,
-                          aSizeSpecified, url,
-                          name, NS_ConvertUTF8toUTF16(features),
-                          NS_ConvertUTF8toUTF16(baseURIString),
-                          aWindowIsNew,
-                          &frameScripts)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
+  NS_ConvertUTF8toUTF16 features(aFeatures);
+  newChild->SendBrowserFrameOpenWindow(this, url, name,
+                                       features, aWindowIsNew);
   if (!*aWindowIsNew) {
     PBrowserChild::Send__delete__(newChild);
     return NS_ERROR_ABORT;
@@ -1584,13 +1582,6 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   // Unfortunately we don't get a window unless we've shown the frame.  That's
   // pretty bogus; see bug 763602.
   newChild->DoFakeShow(scrolling, textureFactoryIdentifier, layersId, renderFrame);
-
-  for (size_t i = 0; i < frameScripts.Length(); i++) {
-    FrameScriptInfo& info = frameScripts[i];
-    if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
-      MOZ_CRASH();
-    }
-  }
 
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
   win.forget(aReturn);
@@ -1923,14 +1914,7 @@ TabChild::ApplyShowInfo(const ShowInfo& aInfo)
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   if (docShell) {
     nsCOMPtr<nsIDocShellTreeItem> item = do_GetInterface(docShell);
-    if (IsBrowserOrApp()) {
-      // B2G allows window.name to be set by changing the name attribute on the
-      // <iframe mozbrowser> element. window.open calls cause this attribute to
-      // be set to the correct value. A normal <xul:browser> element has no such
-      // attribute. The data we get here comes from reading the attribute, so we
-      // shouldn't trust it for <xul:browser> elements.
-      item->SetName(aInfo.name());
-    }
+    item->SetName(aInfo.name());
     docShell->SetFullscreenAllowed(aInfo.fullscreenAllowed());
     if (aInfo.isPrivate()) {
       bool nonBlank;

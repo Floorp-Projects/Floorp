@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 
 class nsBaseContentList;
@@ -179,6 +180,25 @@ private:
    * Cached style context for -moz-focus-outer CSS pseudo-element style.
    */
   nsRefPtr<nsStyleContext> mOuterFocusStyle;
+
+  class DummyTouchListener MOZ_FINAL : public nsIDOMEventListener
+  {
+  private:
+    ~DummyTouchListener() {}
+
+  public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
+    {
+      return NS_OK;
+    }
+  };
+
+  /**
+   * A no-op touch-listener used for APZ purposes (see nsRangeFrame::Init).
+   */
+  nsRefPtr<DummyTouchListener> mDummyTouchListener;
 };
 
 #endif

@@ -14,8 +14,6 @@ function testConferenceTwoCallsTwice() {
   let outInfo = gOutCallStrPool(outNumber);
   let inInfo = gInCallStrPool(inNumber);
 
-  let sendConferenceTwice = true;
-
   return Promise.resolve()
     .then(gCheckInitialState)
     .then(() => gDial(outNumber))
@@ -31,8 +29,12 @@ function testConferenceTwoCallsTwice() {
     .then(() => gCheckAll(inCall, [outCall, inCall], '', [],
                           [outInfo.held, inInfo.active]))
     .then(() => gAddCallsToConference([outCall, inCall], function() {
-      gCheckState(conference, [], 'connected', [outCall, inCall]);
-    }, sendConferenceTwice))
+                                      gCheckState(conference,
+                                                  [], 'connected',
+                                                  [outCall, inCall]); }))
+    .then(() => conference.add(outCall, inCall))
+    .then(() => ok(false, "The second |conference.add()| should be rejected"),
+          () => log("The second |conference.add()| is rejected as expected"))
     .then(() => gCheckAll(conference, [], 'connected', [outCall, inCall],
                           [outInfo.active, inInfo.active]))
     .then(() => gRemoteHangUpCalls([outCall, inCall]));

@@ -1802,8 +1802,8 @@ ContentChild::ProcessingError(Result what)
 {
     switch (what) {
     case MsgDropped:
-        QuickExit();
-
+        NS_WARNING("MsgDropped in ContentChild");
+        return;
     case MsgNotKnown:
         NS_RUNTIMEABORT("aborting because of MsgNotKnown");
     case MsgNotAllowed:

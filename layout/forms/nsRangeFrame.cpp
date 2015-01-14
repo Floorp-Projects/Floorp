@@ -35,6 +35,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+NS_IMPL_ISUPPORTS(nsRangeFrame::DummyTouchListener, nsIDOMEventListener)
+
 nsIFrame*
 NS_NewRangeFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -62,26 +64,17 @@ nsRangeFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
                    nsIFrame*         aPrevInFlow)
 {
-  // B2G's AsyncPanZoomController::ReceiveInputEvent handles touch events
-  // without checking whether the out-of-process document that it controls
-  // will handle them, unless it has been told that the document might do so.
-  // This is for perf reasons, otherwise it has to wait for the event to be
-  // round-tripped to the other process and back, delaying panning, etc.
-  // We must call SetHasTouchEventListeners() in order to get APZC to wait
-  // until the event has been round-tripped and check whether it has been
-  // handled, otherwise B2G will end up panning the document when the user
-  // tries to drag our thumb.
-  //
-  nsIPresShell* presShell = PresContext()->GetPresShell();
-  if (presShell) {
-    nsIDocument* document = presShell->GetDocument();
-    if (document) {
-      nsPIDOMWindow* innerWin = document->GetInnerWindow();
-      if (innerWin) {
-        innerWin->SetHasTouchEventListeners();
-      }
-    }
+  // With APZ enabled, touch events may be handled directly by the APZC code
+  // if the APZ knows that there is no content interested in the touch event.
+  // The range input element *is* interested in touch events, but doesn't use
+  // the usual mechanism (i.e. registering an event listener) to handle touch
+  // input. Instead, we do it here so that the APZ finds out about it, and
+  // makes sure to wait for content to run handlers before handling the touch
+  // input itself.
+  if (!mDummyTouchListener) {
+    mDummyTouchListener = new DummyTouchListener();
   }
+  aContent->AddEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
 
   nsStyleSet *styleSet = PresContext()->StyleSet();
 
@@ -99,6 +92,9 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
+
+  mContent->RemoveEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
+
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mTrackDiv);
   nsContentUtils::DestroyAnonymousContent(&mProgressDiv);

@@ -17,13 +17,6 @@ setup(function() {
     }
 });
 
-function Entry(name, startTime, initiatorType)
-{
-    this.name = name;
-    this.startTime = startTime;
-    this.initiatorType = initiatorType;
-};
-
 function resolve(path) {
     var a = document.createElement("a");
     a.href = path;
@@ -86,7 +79,10 @@ onload = function()
             break;
         }
 
-        expected_entry = new Entry(url, startTime, type);
+        expected_entry = {name:url,
+                          startTime: startTime,
+                          initiatorType: type};
+
         switch (type) {
         case "link":
             poll_for_stylesheet_load(expected_entry);
@@ -161,24 +157,25 @@ function resource_load(expected)
         assert_equals(actual.name, expected.name);
         assert_equals(actual.initiatorType, expected_type);
         assert_equals(actual.entryType, "resource");
-        assert_approx_equals(actual.startTime, expected.startTime, TEST_ALLOWED_TIMING_DELTA);
+        assert_greater_than_equal(actual.startTime, expected.startTime, "startTime is after the script to initiate the load ran");
         assert_equals(actual.duration, (actual.responseEnd - actual.startTime));
         this.done();
     });
 
     t["timing_attrs"].step(function test() {
         var actual = window.performance.getEntriesByName(expected.name)[0];
-        assert_equals(actual.redirectStart, 0);
-        assert_equals(actual.redirectEnd, 0);
+        assert_equals(actual.redirectStart, 0, "redirectStart time");
+        assert_equals(actual.redirectEnd, 0, "redirectEnd time");
         assert_true(actual.secureConnectionStart == undefined ||
-                    actual.secureConnectionStart == 0);
-        assert_greater_than_equal(actual.domainLookupStart, actual.fetchStart);
-        assert_greater_than_equal(actual.domainLookupEnd, actual.domainLookupStart);
-        assert_greater_than_equal(actual.connectStart, actual.domainLookupEnd);
-        assert_greater_than_equal(actual.connectEnd, actual.connectStart);
-        assert_greater_than_equal(actual.requestStart, actual.connectEnd);
-        assert_greater_than_equal(actual.responseStart, actual.requestStart);
-        assert_greater_than_equal(actual.responseEnd, actual.responseStart);
+                    actual.secureConnectionStart == 0, "secureConnectionStart time");
+        assert_equals(actual.fetchStart, actual.startTime, "fetchStart is equal to startTime");
+        assert_greater_than_equal(actual.domainLookupStart, actual.fetchStart, "domainLookupStart after fetchStart");
+        assert_greater_than_equal(actual.domainLookupEnd, actual.domainLookupStart, "domainLookupEnd after domainLookupStart");
+        assert_greater_than_equal(actual.connectStart, actual.domainLookupEnd, "connectStart after domainLookupEnd");
+        assert_greater_than_equal(actual.connectEnd, actual.connectStart, "connectEnd after connectStart");
+        assert_greater_than_equal(actual.requestStart, actual.connectEnd, "requestStart after connectEnd");
+        assert_greater_than_equal(actual.responseStart, actual.requestStart, "responseStart after requestStart");
+        assert_greater_than_equal(actual.responseEnd, actual.responseStart, "responseEnd after responseStart");
         this.done();
     });
 

@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Presentation Device Selection</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Test for Presentation Device Selection</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+var contentEventHandler = null;
+
+var gUrl = SimpleTest.getTestFileURL('presentation_prompt_handler_chrome.js');
+var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+function testSetup() {
+  info('setup for device selection');
+  return new Promise(function(resolve, reject) {
+    let device = {
+      id: 'test-id',
+      name: 'test-name',
+      type: 'test-type',
+    };
+    gScript.addMessageListener('setup-complete', function() {
+      resolve(device);
+    });
+    gScript.sendAsyncMessage('setup', device);
+  });
+}
+
+function testSelected(device) {
+  info('test device selected by user');
+  return new Promise(function(resolve, reject) {
+    let request = {
+      origin: 'test-origin',
+      requestURL: 'test-requestURL',
+    };
+
+    gScript.addMessageListener('presentation-select-device', function contentEventHandler(detail) {
+      gScript.removeMessageListener('presentation-select-device', contentEventHandler);
+      ok(true, 'receive user prompt for device selection');
+      is(detail.origin, request.origin, 'expected origin');
+      is(detail.requestURL, request.requestURL, 'expected requestURL');
+      let response = {
+        id: detail.id,
+        type: 'presentation-select-result',
+        deviceId: device.id,
+      };
+      gScript.sendAsyncMessage('presentation-select-response', response);
+
+      gScript.addMessageListener('presentation-select-result', function resultHandler(result) {
+        gScript.removeMessageListener('presentation-select-result', resultHandler);
+        is(result.type, 'select', 'expect device selected');
+        is(result.device.id, device.id, 'expected device id');
+        is(result.device.name, device.name, 'expected device name');
+        is(result.device.type, device.type, 'expected devcie type');
+        resolve();
+      });
+    });
+
+    gScript.sendAsyncMessage('trigger-device-prompt', request);
+  });
+}
+
+function testSelectedNotExisted() {
+  info('test selected device doesn\'t exist');
+  return new Promise(function(resolve, reject) {
+    gScript.addMessageListener('presentation-select-device', function contentEventHandler(detail) {
+      gScript.removeMessageListener('presentation-select-device', contentEventHandler);
+      ok(true, 'receive user prompt for device selection');
+      let response = {
+        id: detail.id,
+        type: 'presentation-select-deny',
+        deviceId: undefined, // simulate device Id that doesn't exist
+      };
+      gScript.sendAsyncMessage('presentation-select-response', response);
+
+      gScript.addMessageListener('presentation-select-result', function resultHandler(result) {
+        gScript.removeMessageListener('presentation-select-result', resultHandler);
+        is(result.type, 'cancel', 'expect user cancel');
+        resolve();
+      });
+    });
+
+    let request = {
+      origin: 'test-origin',
+      requestURL: 'test-requestURL',
+    };
+    gScript.sendAsyncMessage('trigger-device-prompt', request);
+  });
+}
+
+function testDenied() {
+  info('test denial of device selection');
+  return new Promise(function(resolve, reject) {
+    gScript.addMessageListener('presentation-select-device', function contentEventHandler(detail) {
+      gScript.removeMessageListener('presentation-select-device', contentEventHandler);
+      ok(true, 'receive user prompt for device selection');
+      let response = {
+        id: detail.id,
+        type: 'presentation-select-deny',
+      };
+      gScript.sendAsyncMessage('presentation-select-response', response);
+
+      gScript.addMessageListener('presentation-select-result', function resultHandler(result) {
+        gScript.removeMessageListener('presentation-select-result', resultHandler);
+        is(result.type, 'cancel', 'expect user cancel');
+        resolve();
+      });
+    });
+
+    let request = {
+      origin: 'test-origin',
+      requestURL: 'test-requestURL',
+    };
+    gScript.sendAsyncMessage('trigger-device-prompt', request);
+  });
+}
+
+function runTests() {
+  testSetup()
+  .then(testSelected)
+  .then(testSelectedNotExisted)
+  .then(testDenied)
+  .then(function() {
+    info('test finished, teardown');
+    gScript.sendAsyncMessage('teardown');
+    gScript.destroy();
+    SimpleTest.finish();
+  });
+}
+
+window.addEventListener('load', runTests);
+</script>
+</pre>
+</body>
+</html>
