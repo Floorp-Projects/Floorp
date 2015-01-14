@@ -34,6 +34,9 @@ class CompileRuntime
     // &mainThread.jitTop
     const void *addressOfJitTop();
 
+    // &mainThread.jitActivation
+    const void *addressOfJitActivation();
+
     // rt->mainThread.jitStackLimit;
     const void *addressOfJitStackLimit();
 
