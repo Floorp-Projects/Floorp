@@ -12,7 +12,9 @@
 #include "jsprf.h"
 #include "jsscript.h"
 
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitFrames.h"
 #include "vm/StringBuffer.h"
 
 using namespace js;
@@ -92,6 +94,14 @@ SPSProfiler::enable(bool enabled)
      * their profiler state toggled so they behave properly.
      */
     jit::ToggleBaselineSPS(rt, enabled);
+
+    /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
+     * stack.
+     */
+    if (rt->mainThread.jitActivation) {
+        void *lastProfilingFrame = GetTopProfilingJitFrame(rt->mainThread.jitTop);
+        rt->mainThread.jitActivation->setLastProfilingFrame(lastProfilingFrame);
+    }
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
@@ -401,4 +411,37 @@ AutoSuppressProfilerSampling::~AutoSuppressProfilerSampling()
 {
         if (previouslyEnabled_)
             rt_->enableProfilerSampling();
+}
+
+void *
+js::GetTopProfilingJitFrame(uint8_t *exitFramePtr)
+{
+    // For null exitFrame, there is no previous exit frame, just return.
+    if (!exitFramePtr)
+        return nullptr;
+
+    jit::ExitFrameLayout *exitFrame = (jit::ExitFrameLayout *) exitFramePtr;
+    size_t prevSize = exitFrame->prevFrameLocalSize();
+    jit::FrameType prevType = exitFrame->prevType();
+
+    uint8_t *prev = exitFramePtr + (jit::ExitFrameLayout::Size() + prevSize);
+
+    // previous frame type must be one of IonJS, BaselineJS, or BaselineStub,
+    // or unwound variants thereof.
+    switch (prevType) {
+      case jit::JitFrame_IonJS:
+      case jit::JitFrame_Unwound_IonJS:
+      case jit::JitFrame_BaselineJS:
+        return prev;
+
+      case jit::JitFrame_BaselineStub:
+      case jit::JitFrame_Unwound_BaselineStub: {
+        void *framePtr = ((jit::BaselineStubFrameLayout *) prev)->reverseSavedFramePtr();
+        return ((uint8_t *) framePtr) + jit::BaselineFrame::FramePointerOffset;
+      }
+
+      default:
+        MOZ_CRASH("unknown callee token type");
+        return nullptr;
+    }
 }

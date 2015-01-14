@@ -595,6 +595,9 @@ class PerThreadData : public PerThreadDataFriendFields
     js::Activation *profilingActivation() const {
         return profilingActivation_;
     }
+    void *addressOfProfilingActivation() {
+        return (void*) &profilingActivation_;
+    }
 
     js::AsmJSActivation *asmJSActivationStack() const {
         return asmJSActivationStack_;

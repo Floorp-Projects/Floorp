@@ -209,10 +209,13 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         Register numStackValues = regs.takeAny();
         masm.load32(slotNumStackValues, numStackValues);
 
-        // Push return address, previous frame pointer.
-        masm.subPtr(Imm32(2 * sizeof(uintptr_t)), StackPointer);
+        // Push return address.
+        masm.subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
         masm.ma_li(scratch, returnLabel.dest());
-        masm.storePtr(scratch, Address(StackPointer, sizeof(uintptr_t)));
+        masm.storePtr(scratch, Address(StackPointer, 0));
+
+        // Push previous frame pointer.
+        masm.subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
         masm.storePtr(BaselineFrameReg, Address(StackPointer, 0));
 
         // Reserve frame.
@@ -260,6 +263,19 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.freeStack(ExitFrameLayout::SizeWithFooter());
         masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
         masm.branchIfFalseBool(ReturnReg, &error);
+
+        // If OSR-ing, then emit instrumentation for setting lastProfilerFrame
+        // if profiler instrumentation is enabled.
+        {
+            Label skipProfilingInstrumentation;
+            Register realFramePtr = numStackValues;
+            AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+            masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
+                          &skipProfilingInstrumentation);
+            masm.ma_add(realFramePtr, StackPointer, Imm32(sizeof(void*)));
+            masm.profilerEnterFrame(realFramePtr, scratch);
+            masm.bind(&skipProfilingInstrumentation);
+        }
 
         masm.jump(jitcode);
 
@@ -952,6 +968,17 @@ JitRuntime::generateDebugTrapHandler(JSContext *cx)
                    JSReturnOperand);
     masm.movePtr(s5, StackPointer);
     masm.pop(s5);
+
+    // Before returning, if profiling is turned on, make sure that lastProfilingFrame
+    // is set to the correct caller frame.
+    {
+        Label skipProfilingInstrumentation;
+        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
+        masm.profilerExitFrame();
+        masm.bind(&skipProfilingInstrumentation);
+    }
+
     masm.ret();
 
     Linker linker(masm);

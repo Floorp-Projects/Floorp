@@ -83,14 +83,8 @@ class MIRGenerator
         return instrumentedProfiling_;
     }
 
-    bool isNativeToBytecodeMapEnabled() {
-        if (compilingAsmJS())
-            return false;
-#ifdef DEBUG
-        return true;
-#else
-        return instrumentedProfiling();
-#endif
+    bool isProfilerInstrumentationEnabled() {
+        return !compilingAsmJS() && instrumentedProfiling();
     }
 
     // Whether the main thread is trying to cancel this build.

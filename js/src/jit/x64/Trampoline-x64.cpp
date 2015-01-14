@@ -165,9 +165,11 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         Register numStackValues = regs.takeAny();
         masm.movq(numStackValuesAddr, numStackValues);
 
-        // Push return address, previous frame pointer.
+        // Push return address
         masm.mov(returnLabel.dest(), scratch);
         masm.push(scratch);
+
+        // Push previous frame pointer.
         masm.push(rbp);
 
         // Reserve frame.
@@ -230,6 +232,19 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.addPtr(Imm32(ExitFrameLayout::SizeWithFooter()), rsp);
         masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
         masm.branchIfFalseBool(ReturnReg, &error);
+
+        // If OSR-ing, then emit instrumentation for setting lastProfilerFrame
+        // if profiler instrumentation is enabled.
+        {
+            Label skipProfilingInstrumentation;
+            Register realFramePtr = numStackValues;
+            AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+            masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
+                          &skipProfilingInstrumentation);
+            masm.lea(Operand(framePtr, sizeof(void*)), realFramePtr);
+            masm.profilerEnterFrame(realFramePtr, scratch);
+            masm.bind(&skipProfilingInstrumentation);
+        }
 
         masm.jump(reg_code);
 
@@ -775,6 +790,17 @@ JitRuntime::generateDebugTrapHandler(JSContext *cx)
                    JSReturnOperand);
     masm.mov(rbp, rsp);
     masm.pop(rbp);
+
+    // Before returning, if profiling is turned on, make sure that lastProfilingFrame
+    // is set to the correct caller frame.
+    {
+        Label skipProfilingInstrumentation;
+        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
+        masm.profilerExitFrame();
+        masm.bind(&skipProfilingInstrumentation);
+    }
+
     masm.ret();
 
     Linker linker(masm);

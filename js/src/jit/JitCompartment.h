@@ -399,12 +399,8 @@ class JitRuntime
         return jitcodeGlobalTable_;
     }
 
-    bool isNativeToBytecodeMapEnabled(JSRuntime *rt) {
-#ifdef DEBUG
-        return true;
-#else // DEBUG
+    bool isProfilerInstrumentationEnabled(JSRuntime *rt) {
         return rt->spsProfiler.enabled();
-#endif // DEBUG
     }
 };
 
