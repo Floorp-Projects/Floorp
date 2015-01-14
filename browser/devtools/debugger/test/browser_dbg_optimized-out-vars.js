@@ -27,10 +27,10 @@ function test() {
     outerScope.expand();
 
     let upvarVar = outerScope.get("upvar");
-    ok(!upvarVar, "upvar was optimized out.");
-    if (upvarVar) {
-      ok(false, "upvar = " + upvarVar.target.querySelector(".value").getAttribute("value"));
-    }
+    ok(upvarVar, "The variable `upvar` is shown.");
+    is(upvarVar.target.querySelector(".value").getAttribute("value"),
+       gDebugger.L10N.getStr('variablesViewOptimizedOut'),
+       "Should show the optimized out message for upvar.");
 
     let argVar = outerScope.get("arg");
     is(argVar.target.querySelector(".name").getAttribute("value"), "arg",
