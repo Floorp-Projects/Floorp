@@ -31,7 +31,7 @@ class GeckoInstance(object):
                       "browser.tabs.remote.autostart.2": False}
 
     def __init__(self, host, port, bin, profile=None, app_args=None, symbols_path=None,
-                  gecko_log=None, prefs=None, ):
+                  gecko_log=None, prefs=None):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
@@ -42,6 +42,9 @@ class GeckoInstance(object):
         else:
             self.profile_path = profile
         self.prefs = prefs
+        self.required_prefs = deepcopy(GeckoInstance.required_prefs)
+        if prefs:
+            self.required_prefs.update(prefs)
         self.app_args = app_args or []
         self.runner = None
         self.symbols_path = symbols_path
