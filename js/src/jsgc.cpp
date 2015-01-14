@@ -1064,6 +1064,21 @@ GCRuntime::releaseArena(ArenaHeader *aheader, const AutoLockGC &lock)
     return aheader->chunk()->releaseArena(rt, aheader, lock);
 }
 
+void
+GCRuntime::decommitArena(ArenaHeader *aheader, AutoLockGC &lock)
+{
+    aheader->zone->usage.removeGCArena();
+    if (isBackgroundSweeping())
+        aheader->zone->threshold.updateForRemovedArena(tunables);
+
+    bool ok;
+    {
+        AutoUnlockGC unlock(lock);
+        ok = MarkPagesUnused(aheader, ArenaSize);
+    }
+    return aheader->chunk()->releaseArena(rt, aheader, lock, Chunk::ArenaDecommitState(ok));
+}
+
 GCRuntime::GCRuntime(JSRuntime *rt) :
     rt(rt),
     systemZone(nullptr),
@@ -2712,6 +2727,16 @@ ReleaseArenaList(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
     }
 }
 
+void
+DecommitArenaList(JSRuntime *rt, ArenaHeader *aheader, AutoLockGC &lock)
+{
+    ArenaHeader *next;
+    for (; aheader; aheader = next) {
+        next = aheader->next;
+        rt->gc.decommitArena(aheader, lock);
+    }
+}
+
 ArenaLists::~ArenaLists()
 {
     AutoLockGC lock(runtime_);
@@ -2756,7 +2781,7 @@ ArenaLists::forceFinalizeNow(FreeOp *fop, AllocKind thingKind, KeepArenasEnum ke
         return;
     arenaLists[thingKind].clear();
 
-    size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
+    const size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
@@ -2825,7 +2850,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, ArenaHeader *
     AllocKind thingKind = listHead->getAllocKind();
     Zone *zone = listHead->zone;
 
-    size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
+    const size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
@@ -3365,7 +3390,7 @@ GCRuntime::sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadT
     }
 
     AutoLockGC lock(rt);
-    ReleaseArenaList(rt, emptyArenas, lock);
+    DecommitArenaList(rt, emptyArenas, lock);
     while (!zones.isEmpty())
         zones.removeFront();
 }
