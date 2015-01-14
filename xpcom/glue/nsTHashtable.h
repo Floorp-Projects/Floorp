@@ -419,8 +419,6 @@ nsTHashtable<EntryType>::Init(uint32_t aInitLength)
 {
   static const PLDHashTableOps sOps =
   {
-    ::PL_DHashAllocTable,
-    ::PL_DHashFreeTable,
     s_HashKey,
     s_MatchEntry,
     EntryType::ALLOW_MEMMOVE ? ::PL_DHashMoveEntryStub : s_CopyEntry,
