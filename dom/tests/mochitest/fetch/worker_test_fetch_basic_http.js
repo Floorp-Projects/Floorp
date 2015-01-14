@@ -43,8 +43,9 @@ function testURLFail() {
   var promises = [];
   failFiles.forEach(function(entry) {
     var p = fetch(entry[0]).then(function(res) {
-      ok(res.type === "error", "Response should be an error for " + entry[0]);
-      is(res.status, 0, "Response status should be 0 for " + entry[0]);
+      ok(false, "Response should be an error for " + entry[0]);
+    }, function(e) {
+      ok(e instanceof TypeError, "Response should be an error for " + entry[0]);
     });
     promises.push(p);
   });

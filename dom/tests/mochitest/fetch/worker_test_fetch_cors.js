@@ -24,7 +24,9 @@ function testModeSameOrigin() {
   // Fetch spec Section 4, step 4, "request's mode is same-origin".
   var req = new Request("http://example.com", { mode: "same-origin" });
   return fetch(req).then(function(res) {
-    ok(isNetworkError(res), "Attempting to fetch a resource from a different origin with mode same-origin should fail.");
+    ok(false, "Attempting to fetch a resource from a different origin with mode same-origin should fail.");
+  }, function(e) {
+    ok(e instanceof TypeError, "Attempting to fetch a resource from a different origin with mode same-origin should fail.");
   });
 }
 
@@ -660,62 +662,43 @@ function testModeCors() {
                                          headers: req.headers, body: req.body });
     fetches.push((function(test, request) {
       return fetch(request).then(function(res) {
-      dump("Response for " + request.url + "\n");
-        if (test.pass) {
-          ok(!isNetworkError(res),
-            "shouldn't have failed in test for " + test.toSource());
-          if (test.status) {
-            is(res.status, test.status, "wrong status in test for " + test.toSource());
-            is(res.statusText, test.statusMessage, "wrong status text for " + test.toSource());
-          }
-          else {
-            is(res.status, 200, "wrong status in test for " + test.toSource());
-            is(res.statusText, "OK", "wrong status text for " + test.toSource());
-          }
-          if (test.responseHeaders) {
-            for (header in test.responseHeaders) {
-              if (test.expectedResponseHeaders.indexOf(header) == -1) {
-                is(res.headers.has(header), false,
-                   "|Headers.has()|wrong response header (" + header + ") in test for " +
-                   test.toSource());
-              }
-              else {
-                is(res.headers.get(header), test.responseHeaders[header],
-                   "|Headers.get()|wrong response header (" + header + ") in test for " +
-                   test.toSource());
-              }
-            }
-          }
-
-          return res.text().then(function(v) {
-            if (test.method !== "HEAD") {
-              is(v, "<res>hello pass</res>\n",
-                 "wrong responseText in test for " + test.toSource());
-            }
-            else {
-              is(v, "",
-                 "wrong responseText in HEAD test for " + test.toSource());
-            }
-          });
+        ok(test.pass, "Expected test to pass for " + test.toSource());
+        if (test.status) {
+          is(res.status, test.status, "wrong status in test for " + test.toSource());
+          is(res.statusText, test.statusMessage, "wrong status text for " + test.toSource());
         }
         else {
-          ok(isNetworkError(res),
-            "should have failed in test for " + test.toSource());
-          is(res.status, 0, "wrong status in test for " + test.toSource());
-          is(res.statusText, "", "wrong status text for " + test.toSource());
-          if (test.responseHeaders) {
-            for (header in test.responseHeaders) {
-              is(res.headers.get(header), null,
-                 "wrong response header (" + header + ") in test for " +
+          is(res.status, 200, "wrong status in test for " + test.toSource());
+          is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        }
+        if (test.responseHeaders) {
+          for (header in test.responseHeaders) {
+            if (test.expectedResponseHeaders.indexOf(header) == -1) {
+              is(res.headers.has(header), false,
+                 "|Headers.has()|wrong response header (" + header + ") in test for " +
+                 test.toSource());
+            }
+            else {
+              is(res.headers.get(header), test.responseHeaders[header],
+                 "|Headers.get()|wrong response header (" + header + ") in test for " +
                  test.toSource());
             }
           }
-
-          return res.text().then(function(v) {
-            is(v, "",
-               "wrong responseText in test for " + test.toSource());
-          });
         }
+
+        return res.text().then(function(v) {
+          if (test.method !== "HEAD") {
+            is(v, "<res>hello pass</res>\n",
+               "wrong responseText in test for " + test.toSource());
+          }
+          else {
+            is(v, "",
+               "wrong responseText in HEAD test for " + test.toSource());
+          }
+        });
+      }, function(e) {
+          ok(!test.pass, "Expected test failure for " + test.toSource());
+          ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
       });
     })(test, request));
   }
@@ -836,24 +819,13 @@ function testCredentials() {
   }
 
   function testResponse(res, test) {
-    if (test.pass) {
-      is(isNetworkError(res), false,
-        "shouldn't have failed in test for " + test.toSource());
-      is(res.status, 200, "wrong status in test for " + test.toSource());
-      is(res.statusText, "OK", "wrong status text for " + test.toSource());
-      return res.text().then(function(v) {
-        is(v, "<res>hello pass</res>\n",
-         "wrong text in test for " + test.toSource());
-      });
-    }
-    else {
-      is(isNetworkError(res), true,
-        "should have failed in test for " + test.toSource());
-      return res.text().then(function(v) {
-        is(v, "",
-         "wrong text in test for " + test.toSource());
-      });
-    }
+    ok(test.pass, "Expected test to pass for " + test.toSource());
+    is(res.status, 200, "wrong status in test for " + test.toSource());
+    is(res.statusText, "OK", "wrong status text for " + test.toSource());
+    return res.text().then(function(v) {
+      is(v, "<res>hello pass</res>\n",
+       "wrong text in test for " + test.toSource());
+    });
   }
 
   function runATest(i) {
@@ -866,7 +838,15 @@ function testCredentials() {
       } else {
         finalPromiseResolve();
       }
-    }, finalPromiseReject);
+    }, function(e) {
+      ok(!test.pass, "Expected test failure for " + test.toSource());
+      ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
+      if (i < tests.length-1) {
+        runATest(i+1);
+      } else {
+        finalPromiseResolve();
+      }
+    });
   }
 
   runATest(0);
@@ -1153,27 +1133,19 @@ function testRedirects() {
                                          body: req.body });
     fetches.push((function(request, test) {
       return fetch(request).then(function(res) {
-        if (test.pass) {
-          is(isNetworkError(res), false,
-            "shouldn't have failed in test for " + test.toSource());
-          is(res.status, 200, "wrong status in test for " + test.toSource());
-          is(res.statusText, "OK", "wrong status text for " + test.toSource());
-          is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
-          return res.text().then(function(v) {
-            is(v, "<res>hello pass</res>\n",
-               "wrong responseText in test for " + test.toSource());
-          });
-        }
-        else {
-          is(isNetworkError(res), true,
-            "should have failed in test for " + test.toSource());
-          is(res.status, 0, "wrong status in test for " + test.toSource());
-          is(res.statusText, "", "wrong status text for " + test.toSource());
-          return res.text().then(function(v) {
-            is(v, "",
-               "wrong responseText in test for " + test.toSource());
-          });
-        }
+        ok(test.pass, "Expected test to pass for " + test.toSource());
+        is(isNetworkError(res), false,
+          "shouldn't have failed in test for " + test.toSource());
+        is(res.status, 200, "wrong status in test for " + test.toSource());
+        is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
+        return res.text().then(function(v) {
+          is(v, "<res>hello pass</res>\n",
+             "wrong responseText in test for " + test.toSource());
+        });
+      }, function(e) {
+        ok(!test.pass, "Expected test failure for " + test.toSource());
+        ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
       });
     })(request, test));
   }

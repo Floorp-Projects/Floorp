@@ -266,9 +266,15 @@ MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
-  mResponse = new Response(go, aResponse);
-  mPromise->MaybeResolve(mResponse);
+  if (aResponse->Type() != ResponseType::Error) {
+    nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
+    mResponse = new Response(go, aResponse);
+    mPromise->MaybeResolve(mResponse);
+  } else {
+    ErrorResult result;
+    result.ThrowTypeError(MSG_FETCH_FAILED);
+    mPromise->MaybeReject(result);
+  }
 }
 
 MainThreadFetchResolver::~MainThreadFetchResolver()
@@ -296,11 +302,18 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
 
-    nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-    mResolver->mResponse = new Response(global, mInternalResponse);
-
     nsRefPtr<Promise> promise = mResolver->mFetchPromise.forget();
-    promise->MaybeResolve(mResolver->mResponse);
+
+    if (mInternalResponse->Type() != ResponseType::Error) {
+      nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
+      mResolver->mResponse = new Response(global, mInternalResponse);
+
+      promise->MaybeResolve(mResolver->mResponse);
+    } else {
+      ErrorResult result;
+      result.ThrowTypeError(MSG_FETCH_FAILED);
+      promise->MaybeReject(result);
+    }
 
     return true;
   }
@@ -322,7 +335,6 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
-    MOZ_ASSERT(mResolver->mResponse);
 
     mResolver->CleanUp(aCx);
     return true;
