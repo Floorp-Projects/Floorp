@@ -103,6 +103,14 @@ var HelperApps =  {
   },
 
   getAppsForUri: function getAppsForUri(uri, flags = { }, callback) {
+    // Return early for well-known internal schemes
+    if (!uri || uri.schemeIs("about") || uri.schemeIs("chrome")) {
+      if (callback) {
+        callback([]);
+      }
+      return [];
+    }
+
     flags.filterBrowsers = "filterBrowsers" in flags ? flags.filterBrowsers : true;
     flags.filterHtml = "filterHtml" in flags ? flags.filterHtml : true;
 
@@ -110,9 +118,9 @@ var HelperApps =  {
     let msg = this._getMessage("Intent:GetHandlers", uri, flags);
     let parseData = (d) => {
       let apps = []
-
-      if (!d)
+      if (!d) {
         return apps;
+      }
 
       apps = this._parseApps(d.apps);
 
@@ -140,8 +148,6 @@ var HelperApps =  {
 
     if (!callback) {
       let data = this._sendMessageSync(msg);
-      if (!data)
-        return [];
       return parseData(data);
     } else {
       Messaging.sendRequestForResult(msg).then(function(data) {
@@ -173,9 +179,10 @@ var HelperApps =  {
 
   _getMessage: function(type, uri, options = {}) {
     let mimeType = options.mimeType;
-    if (uri && mimeType == undefined)
+    if (uri && mimeType == undefined) {
       mimeType = ContentAreaUtils.getMIMETypeForURI(uri) || "";
-      
+    }
+
     return {
       type: type,
       mime: mimeType,
@@ -211,8 +218,9 @@ var HelperApps =  {
     });
 
     let thread = Services.tm.currentThread;
-    while (res == null)
+    while (res == null) {
       thread.processNextEvent(true);
+    }
 
     return res;
   },
