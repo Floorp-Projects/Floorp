@@ -519,9 +519,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     }
 
   private:
-    enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
-
-  private:
     /*
      * JS parsers, from lowest to highest precedence.
      *
@@ -539,7 +536,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
     Node functionStmt();
-    Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
+    Node functionExpr();
     Node statements();
 
     Node blockStatement();
@@ -561,20 +558,19 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node letStatement();
     Node importDeclaration();
     Node exportDeclaration();
-    Node expressionStatement(InvokedPrediction invoked = PredictUninvoked);
+    Node expressionStatement();
     Node variables(ParseNodeKind kind, bool *psimple = nullptr,
                    StaticBlockObject *blockObj = nullptr,
                    VarContext varContext = HoistVars);
-    Node expr(InvokedPrediction invoked = PredictUninvoked);
-    Node assignExpr(InvokedPrediction invoked = PredictUninvoked);
+    Node expr();
+    Node assignExpr();
     Node assignExprWithoutYield(unsigned err);
     Node yieldExpression();
-    Node condExpr1(InvokedPrediction invoked = PredictUninvoked);
-    Node orExpr1(InvokedPrediction invoked = PredictUninvoked);
-    Node unaryExpr(InvokedPrediction invoked = PredictUninvoked);
-    Node memberExpr(TokenKind tt, bool allowCallSyntax,
-                    InvokedPrediction invoked = PredictUninvoked);
-    Node primaryExpr(TokenKind tt, InvokedPrediction invoked = PredictUninvoked);
+    Node condExpr1();
+    Node orExpr1();
+    Node unaryExpr();
+    Node memberExpr(TokenKind tt, bool allowCallSyntax);
+    Node primaryExpr(TokenKind tt);
     Node parenExprOrGeneratorComprehension();
     Node exprInParens();
 
@@ -588,7 +584,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                            bool *hasRest);
 
     Node functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind,
-                     GeneratorKind generatorKind, InvokedPrediction invoked = PredictUninvoked);
+                     GeneratorKind generatorKind);
     bool functionArgsAndBody(Node pn, HandleFunction fun,
                              FunctionType type, FunctionSyntaxKind kind,
                              GeneratorKind generatorKind,
