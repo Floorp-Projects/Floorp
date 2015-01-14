@@ -1530,6 +1530,8 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 void
 RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
+  BeginProcessingRestyles();
+
   mInRebuildAllStyleData = true;
 
   // Tell the style set to get the old rule tree out of the way
@@ -1578,7 +1580,8 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
   // Note: The restyle tracker we pass in here doesn't matter.
   ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
                                changeHint, aRestyleTracker, restyleHint);
-  FlushOverflowChangedTracker();
+
+  EndProcessingRestyles();
 
   if (mInRebuildAllStyleData) {
     // Tell the style set it's safe to destroy the old rule tree.  We
