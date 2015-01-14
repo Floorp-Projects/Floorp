@@ -38,6 +38,8 @@ using namespace js::jit;
 
 using mozilla::ThreadLocal;
 
+#if 0
+
 ///////////////////////////////////////////////////////////////////////////
 // Degenerate configurations
 //
@@ -84,6 +86,8 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal, uint16_t *sliceStart,
     return true;
 }
 
+#endif // 0
+
 ThreadLocal<ForkJoinContext*> ForkJoinContext::tlsForkJoinContext;
 
 /* static */ bool
@@ -95,6 +99,8 @@ ForkJoinContext::initializeTls()
     }
     return true;
 }
+
+#if 0
 
 ///////////////////////////////////////////////////////////////////////////
 // Parallel configurations
@@ -2135,3 +2141,5 @@ intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *v
     //cx->allocator()->arenas.wipeDuringParallelExecution(cx->runtime());
     return true;
 }
+
+#endif // 0
