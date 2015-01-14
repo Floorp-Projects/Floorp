@@ -1530,7 +1530,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 void
 RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
-  BeginProcessingRestyles();
+  BeginProcessingRestyles(aRestyleTracker);
 
   mInRebuildAllStyleData = true;
 
@@ -1680,7 +1680,7 @@ RestyleManager::ProcessPendingRestyles()
 }
 
 void
-RestyleManager::BeginProcessingRestyles()
+RestyleManager::BeginProcessingRestyles(RestyleTracker& aRestyleTracker)
 {
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
