@@ -178,7 +178,6 @@
 @RESPATH@/components/dom_system_gonk.xpt
 #endif
 #ifdef MOZ_B2G_RIL
-@RESPATH@/components/dom_icc.xpt
 @RESPATH@/components/dom_wappush.xpt
 @RESPATH@/components/dom_mobileconnection.xpt
 #endif
@@ -218,6 +217,7 @@
 @RESPATH@/components/dom_permissionsettings.xpt
 @RESPATH@/components/dom_sidebar.xpt
 @RESPATH@/components/dom_cellbroadcast.xpt
+@RESPATH@/components/dom_icc.xpt
 @RESPATH@/components/dom_mobilemessage.xpt
 @RESPATH@/components/dom_storage.xpt
 @RESPATH@/components/dom_stylesheets.xpt
