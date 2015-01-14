@@ -4160,14 +4160,19 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
 
     DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
+    uint32_t frameNo = 0;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
         MOZ_ASSERT(i.stackAddress() != nullptr);
         MOZ_ASSERT(lastStackAddress <= i.stackAddress());
         lastStackAddress = i.stackAddress();
         JS::ProfilingFrameIterator::Frame frames[16];
         uint32_t nframes = i.extractStack(frames, 0, 16);
-        for (uint32_t i = 0; i < nframes; i++)
+        for (uint32_t i = 0; i < nframes; i++) {
+            if (frameNo > 0)
+                stack.append(",", 1);
             stack.append(frames[i].label, strlen(frames[i].label));
+            frameNo++;
+        }
     }
 
     // Only append the stack if it differs from the last stack.
