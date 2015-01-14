@@ -111,6 +111,30 @@ let AnimationPlayerActor = ActorClass({
   },
 
   /**
+   * Get the animation delay from this player, in milliseconds.
+   * Note that the Web Animations API doesn't yet offer a way to retrieve this
+   * directly from the AnimationPlayer object, so for now, a delay is only
+   * returned if found in the node's computed styles.
+   * @return {Number}
+   */
+  getDelay: function() {
+    let delayText;
+    if (this.styles.animationDelay !== "0s") {
+      delayText = this.styles.animationDelay;
+    } else if (this.styles.transitionDelay !== "0s") {
+      delayText = this.styles.transitionDelay;
+    } else {
+      return 0;
+    }
+
+    if (delayText.indexOf(",") !== -1) {
+      delayText = delayText.split(",")[this.playerIndex];
+    }
+
+    return parseFloat(delayText) * 1000;
+  },
+
+  /**
    * Get the animation iteration count for this player. That is, how many times
    * is the animation scheduled to run.
    * Note that the Web Animations API doesn't yet offer a way to retrieve this
@@ -145,6 +169,7 @@ let AnimationPlayerActor = ActorClass({
       playState: this.player.playState,
       name: this.player.source.effect.name,
       duration: this.getDuration(),
+      delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
       /**
        * Is the animation currently running on the compositor. This is important for
@@ -239,6 +264,7 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       playState: this._form.playState,
       name: this._form.name,
       duration: this._form.duration,
+      delay: this._form.delay,
       iterationCount: this._form.iterationCount,
       isRunningOnCompositor: this._form.isRunningOnCompositor
     }

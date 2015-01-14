@@ -554,7 +554,7 @@ const DownloadsPanel = {
       // still exist, and update the allowed items interactions accordingly.  We
       // do these checks on a background thread, and don't prevent the panel to
       // be displayed while these checks are being performed.
-      for each (let viewItem in DownloadsView._viewItems) {
+      for (let viewItem of DownloadsView._visibleViewItems.values()) {
         viewItem.verifyTargetExists();
       }
 
@@ -673,11 +673,11 @@ const DownloadsView = {
   _dataItems: [],
 
   /**
-   * Object containing the available DownloadsViewItem objects, indexed by their
-   * numeric download identifier.  There is a limited number of view items in
-   * the panel at any given time.
+   * Associates the visible DownloadsDataItem objects with their corresponding
+   * DownloadsViewItem object.  There is a limited number of view items in the
+   * panel at any given time.
    */
-  _viewItems: {},
+  _visibleViewItems: new Map(),
 
   /**
    * Called when the number of items in the list changes.
@@ -814,30 +814,31 @@ const DownloadsView = {
     this._itemCountChanged();
   },
 
-  /**
-   * Returns the view item associated with the provided data item for this view.
-   *
-   * @param aDataItem
-   *        DownloadsDataItem object for which the view item is requested.
-   *
-   * @return Object that can be used to notify item status events.
-   */
-  getViewItem(aDataItem) {
-    // If the item is visible, just return it, otherwise return a mock object
-    // that doesn't react to notifications.
-    if (aDataItem.downloadGuid in this._viewItems) {
-      return this._viewItems[aDataItem.downloadGuid];
+  // DownloadsView
+  onDataItemStateChanged(aDataItem, aOldState) {
+    let viewItem = this._visibleViewItems.get(aDataItem);
+    if (viewItem) {
+      viewItem.onStateChanged(aOldState);
     }
-    return this._invisibleViewItem;
+  },
+
+  // DownloadsView
+  onDataItemChanged(aDataItem) {
+    let viewItem = this._visibleViewItems.get(aDataItem);
+    if (viewItem) {
+      viewItem.onChanged();
+    }
   },
 
   /**
-   * Mock DownloadsDataItem object that doesn't react to notifications.
+   * Associates each richlistitem for a download with its corresponding
+   * DownloadsViewItemController object.
    */
-  _invisibleViewItem: Object.freeze({
-    onStateChange() {},
-    onProgressChange() {},
-  }),
+  _controllersForElements: new Map(),
+
+  controllerForElement(element) {
+    return this._controllersForElements.get(element);
+  },
 
   /**
    * Creates a new view item associated with the specified data item, and adds
@@ -850,7 +851,9 @@ const DownloadsView = {
 
     let element = document.createElement("richlistitem");
     let viewItem = new DownloadsViewItem(aDataItem, element);
-    this._viewItems[aDataItem.downloadGuid] = viewItem;
+    this._visibleViewItems.set(aDataItem, viewItem);
+    let viewItemController = new DownloadsViewItemController(aDataItem);
+    this._controllersForElements.set(element, viewItemController);
     if (aNewest) {
       this.richListBox.insertBefore(element, this.richListBox.firstChild);
     } else {
@@ -863,14 +866,15 @@ const DownloadsView = {
    */
   _removeViewItem(aDataItem) {
     DownloadsCommon.log("Removing a DownloadsViewItem from the downloads list.");
-    let element = this.getViewItem(aDataItem)._element;
+    let element = this._visibleViewItems.get(aDataItem)._element;
     let previousSelectedIndex = this.richListBox.selectedIndex;
     this.richListBox.removeChild(element);
     if (previousSelectedIndex != -1) {
       this.richListBox.selectedIndex = Math.min(previousSelectedIndex,
                                                 this.richListBox.itemCount - 1);
     }
-    delete this._viewItems[aDataItem.downloadGuid];
+    this._visibleViewItems.delete(aDataItem);
+    this._controllersForElements.delete(element);
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -891,7 +895,7 @@ const DownloadsView = {
     while (target.nodeName != "richlistitem") {
       target = target.parentNode;
     }
-    new DownloadsViewItemController(target).doCommand(aCommand);
+    DownloadsView.controllerForElement(target).doCommand(aCommand);
   },
 
   onDownloadClick(aEvent) {
@@ -965,8 +969,8 @@ const DownloadsView = {
       return;
     }
 
-    let controller = new DownloadsViewItemController(element);
-    let localFile = controller.dataItem.localFile;
+    let localFile = DownloadsView.controllerForElement(element)
+                                 .dataItem.localFile;
     if (!localFile.exists()) {
       return;
     }
@@ -1010,8 +1014,6 @@ function DownloadsViewItem(aDataItem, aElement) {
   let attributes = {
     "type": "download",
     "class": "download-state",
-    "id": "downloadsItem_" + this.dataItem.downloadGuid,
-    "downloadGuid": this.dataItem.downloadGuid,
     "state": this.dataItem.state,
     "progress": this.dataItem.inProgress ? this.dataItem.percentComplete : 100,
     "target": this.dataItem.target,
@@ -1052,7 +1054,7 @@ DownloadsViewItem.prototype = {
    * the download might be the same as before, if the data layer received
    * multiple events for the same download.
    */
-  onStateChange(aOldState) {
+  onStateChanged(aOldState) {
     // If a download just finished successfully, it means that the target file
     // now exists and we can extract its specific icon.  To ensure that the icon
     // is reloaded, we must change the URI used by the XUL image element, for
@@ -1072,14 +1074,12 @@ DownloadsViewItem.prototype = {
 
     // Update the user interface after switching states.
     this._element.setAttribute("state", this.dataItem.state);
-    this._updateProgress();
-    this._updateStatusLine();
   },
 
   /**
    * Called when the download progress has changed.
    */
-  onProgressChange() {
+  onChanged() {
     this._updateProgress();
     this._updateStatusLine();
   },
@@ -1283,8 +1283,8 @@ const DownloadsViewController = {
 
     // Other commands are selection-specific.
     let element = DownloadsView.richListBox.selectedItem;
-    return element &&
-           new DownloadsViewItemController(element).isCommandEnabled(aCommand);
+    return element && DownloadsView.controllerForElement(element)
+                                   .isCommandEnabled(aCommand);
   },
 
   doCommand(aCommand) {
@@ -1298,7 +1298,7 @@ const DownloadsViewController = {
     let element = DownloadsView.richListBox.selectedItem;
     if (element) {
       // The doCommand function also checks if the command is enabled.
-      new DownloadsViewItemController(element).doCommand(aCommand);
+      DownloadsView.controllerForElement(element).doCommand(aCommand);
     }
   },
 
@@ -1334,9 +1334,8 @@ const DownloadsViewController = {
  * Handles all the user interaction events, in particular the "commands",
  * related to a single item in the downloads list widgets.
  */
-function DownloadsViewItemController(aElement) {
-  let downloadGuid = aElement.getAttribute("downloadGuid");
-  this.dataItem = DownloadsCommon.getData(window).dataItems[downloadGuid];
+function DownloadsViewItemController(aDataItem) {
+  this.dataItem = aDataItem;
 }
 
 DownloadsViewItemController.prototype = {
