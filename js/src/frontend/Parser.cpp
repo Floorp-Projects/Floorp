@@ -1577,8 +1577,8 @@ Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler> *data,
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, Node funcpn,
-                                        bool *hasRest)
+Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType type, Node *listp,
+                                        Node funcpn, bool *hasRest)
 {
     FunctionBox *funbox = pc->sc->asFunctionBox();
 
@@ -1626,6 +1626,11 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
         bool hasDefaults = false;
         Node duplicatedArg = null();
         Node list = null();
+
+        if (type == Getter) {
+            report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
+            return false;
+        }
 
         while (true) {
             if (*hasRest) {
@@ -1702,6 +1707,11 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 
               case TOK_TRIPLEDOT:
               {
+                if (type == Setter) {
+                    report(ParseError, false, null(),
+                           JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
+                    return false;
+                }
                 *hasRest = true;
                 if (!tokenStream.getToken(&tt))
                     return false;
@@ -1762,7 +1772,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                 return false;
             }
 
-            if (parenFreeArrow)
+            if (parenFreeArrow || type == Setter)
                 break;
 
             bool matched;
@@ -1777,6 +1787,12 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
             if (!tokenStream.getToken(&tt))
                 return false;
             if (tt != TOK_RP) {
+                if (type == Setter) {
+                    report(ParseError, false, null(),
+                           JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
+                    return false;
+                }
+
                 report(ParseError, false, null(), JSMSG_PAREN_AFTER_FORMAL);
                 return false;
             }
@@ -1784,6 +1800,9 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 
         if (!hasDefaults)
             funbox->length = pc->numArgs() - *hasRest;
+    } else if (type == Setter) {
+        report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
+        return false;
     }
 
     return true;
@@ -2494,7 +2513,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
 
     Node prelude = null();
     bool hasRest;
-    if (!functionArguments(kind, &prelude, pn, &hasRest))
+    if (!functionArguments(kind, type, &prelude, pn, &hasRest))
         return false;
 
     FunctionBox *funbox = pc->sc->asFunctionBox();
@@ -2502,15 +2521,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     fun->setArgCount(pc->numArgs());
     if (hasRest)
         fun->setHasRest();
-
-    if (type == Getter && fun->nargs() > 0) {
-        report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
-        return false;
-    }
-    if (type == Setter && fun->nargs() != 1) {
-        report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
-        return false;
-    }
 
     if (kind == Arrow) {
         bool matched;

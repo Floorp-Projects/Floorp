@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 
@@ -199,4 +200,38 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
                                          180.0f,
                                          1.0f));
 }
+
+void
+MultiTouchInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  for (size_t i = 0; i < mTouches.Length(); i++) {
+    mTouches[i].mLocalScreenPoint = TransformTo<ParentLayerPixel>(aTransform, ScreenPoint(mTouches[i].mScreenPoint));
+  }
 }
+
+void
+PanGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  mLocalPanStartPoint = TransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
+  mLocalPanDisplacement = TransformVector<ParentLayerPixel>(aTransform, mPanDisplacement, mPanStartPoint);
+}
+
+void
+PinchGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  mLocalFocusPoint = TransformTo<ParentLayerPixel>(aTransform, mFocusPoint);
+}
+
+void
+TapGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  mLocalPoint = TransformTo<ParentLayerPixel>(aTransform, mPoint);
+}
+
+void
+ScrollWheelInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  mLocalOrigin = TransformTo<ParentLayerPixel>(aTransform, mOrigin);
+}
+
+} // namespace mozilla

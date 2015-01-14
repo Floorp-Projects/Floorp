@@ -515,14 +515,6 @@ private:
   int32_t mRetainedTouchIdentifier;
   /* The number of touch points we are tracking that are currently on the screen. */
   uint32_t mTouchCount;
-  /* The transform from root screen coordinates into mApzcForInputBlock's
-   * screen coordinates, as returned through the 'aTransformToApzcOut' parameter
-   * of GetInputTransform(), at the start of the input block. This is cached
-   * because this transform can change over the course of the input block,
-   * but for some operations we need to use the initial transform.
-   * Meaningless if mApzcForInputBlock is nullptr.
-   */
-  gfx::Matrix4x4 mCachedTransformToApzcForInputBlock;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
   gfx::TreeLog mApzcTreeLog;

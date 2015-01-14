@@ -253,9 +253,9 @@ public:
 
   /**
    * Handler for events which should not be intercepted by the touch listener.
-   * Does the work for ReceiveInputEvent().
    */
-  nsEventStatus HandleInputEvent(const InputData& aEvent);
+  nsEventStatus HandleInputEvent(const InputData& aEvent,
+                                 const Matrix4x4& aTransformToApzc);
 
   /**
    * Handler for gesture events.
@@ -327,6 +327,14 @@ public:
    * only one touch.
    */
   int32_t GetLastTouchIdentifier() const;
+
+  /**
+   * Returns the matrix that transforms points from global screen space into
+   * this APZC's ParentLayer space.
+   * To respect the lock ordering, mMonitor must NOT be held when calling
+   * this function (since this function acquires the tree lock).
+   */
+  Matrix4x4 GetTransformToThis() const;
 
   /**
    * Convert the vector |aVector|, rooted at the point |aAnchor|, from
