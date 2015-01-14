@@ -50,7 +50,7 @@ class Reader;
 //
 // Note that in the example, GoodExample has the same performance
 // characteristics as WorseExample, but with much better safety guarantees.
-class Input
+class Input final
 {
 public:
   typedef uint16_t size_type;
@@ -142,7 +142,7 @@ InputsAreEqual(const Input& a, const Input& b)
 //
 // In general, Reader allows for one byte of lookahead and no backtracking.
 // However, the Match* functions internally may have more lookahead.
-class Reader
+class Reader final
 {
 public:
   Reader()
@@ -284,7 +284,7 @@ public:
 
   bool AtEnd() const { return input == end; }
 
-  class Mark
+  class Mark final
   {
   private:
     friend class Reader;

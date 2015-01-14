@@ -39,7 +39,7 @@ namespace mozilla { namespace pkix {
 // OCSP. This type has second-level precision. The time zone is always UTC.
 //
 // Pass by value, not by reference.
-class Time
+class Time final
 {
 public:
   // Construct an uninitilized instance.
