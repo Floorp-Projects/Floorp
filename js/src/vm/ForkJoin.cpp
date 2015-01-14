@@ -2123,9 +2123,6 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinContext *cx, unsigned argc, Value *
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
-                           intrinsic_SetForkJoinTargetRegionPar);
-
 bool
 js::intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2138,6 +2135,3 @@ intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *v
     //cx->allocator()->arenas.wipeDuringParallelExecution(cx->runtime());
     return true;
 }
-
-JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_ClearThreadLocalArenasInfo,
-                           intrinsic_ClearThreadLocalArenasPar);
