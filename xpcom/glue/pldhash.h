@@ -184,8 +184,6 @@ struct PLDHashTable
    */
   const PLDHashTableOps* ops;
 
-  void*               data;           /* ops- and instance-specific data */
-
 private:
   int16_t             mHashShift;     /* multiplicative hash shift */
   /*
@@ -239,7 +237,7 @@ public:
   uint32_t EntryCount() const { return mEntryCount; }
   uint32_t Generation() const { return mGeneration; }
 
-  bool Init(const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
+  bool Init(const PLDHashTableOps* aOps, uint32_t aEntrySize,
             const mozilla::fallible_t&, uint32_t aLength);
 
   void Finish();
@@ -454,7 +452,7 @@ const PLDHashTableOps* PL_DHashGetStubOps(void);
  * the aOps->allocTable callback.
  */
 PLDHashTable* PL_NewDHashTable(
-  const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
+  const PLDHashTableOps* aOps, uint32_t aEntrySize,
   uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
@@ -464,16 +462,15 @@ PLDHashTable* PL_NewDHashTable(
 void PL_DHashTableDestroy(PLDHashTable* aTable);
 
 /*
- * Initialize aTable with aOps, aData, aEntrySize, and aCapacity. The table's
- * initial capacity will be chosen such that |aLength| elements can be inserted
- * without rehashing. If |aLength| is a power-of-two, this capacity will be
- * |2*length|.
+ * Initialize aTable with aOps, aEntrySize, and aCapacity. The table's initial
+ * capacity will be chosen such that |aLength| elements can be inserted without
+ * rehashing. If |aLength| is a power-of-two, this capacity will be |2*length|.
  *
  * This function will crash if it can't allocate enough memory, or if
  * |aEntrySize| and/or |aLength| are too large.
  */
 void PL_DHashTableInit(
-  PLDHashTable* aTable, const PLDHashTableOps* aOps, void* aData,
+  PLDHashTable* aTable, const PLDHashTableOps* aOps,
   uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
@@ -481,7 +478,7 @@ void PL_DHashTableInit(
  * returns a boolean indicating success, rather than crashing on failure.
  */
 MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
-  PLDHashTable* aTable, const PLDHashTableOps* aOps, void* aData,
+  PLDHashTable* aTable, const PLDHashTableOps* aOps,
   uint32_t aEntrySize, const mozilla::fallible_t&,
   uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
@@ -558,7 +555,7 @@ PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
  * Measure the size of the table's entry storage, and if
  * |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
  * pointed to by entries.  Doesn't measure |ops| because it's often shared
- * between tables, nor |data| because it's opaque.
+ * between tables.
  */
 size_t PL_DHashTableSizeOfExcludingThis(
   const PLDHashTable* aTable,

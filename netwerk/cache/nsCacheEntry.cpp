@@ -406,7 +406,7 @@ nsresult
 nsCacheEntryHashTable::Init()
 {
     nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nullptr,
+    initialized = PL_DHashTableInit(&table, &ops,
                                     sizeof(nsCacheEntryHashTableEntry),
                                     fallible_t(), 256);
 

@@ -331,13 +331,13 @@ nsScriptNameSpaceManager::Init()
   };
 
   mIsInitialized = PL_DHashTableInit(&mGlobalNames, &hash_table_ops,
-                                     nullptr, sizeof(GlobalNameMapEntry),
+                                     sizeof(GlobalNameMapEntry),
                                      fallible_t(),
                                      GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_OUT_OF_MEMORY);
 
   mIsInitialized = PL_DHashTableInit(&mNavigatorNames, &hash_table_ops,
-                                     nullptr, sizeof(GlobalNameMapEntry),
+                                     sizeof(GlobalNameMapEntry),
                                      fallible_t(),
                                      GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
   if (!mIsInitialized) {

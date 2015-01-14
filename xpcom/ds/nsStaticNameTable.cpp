@@ -143,7 +143,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
   }
 
   if (!PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
-                         nullptr, sizeof(NameTableEntry), fallible_t(),
+                         sizeof(NameTableEntry), fallible_t(),
                          aLength)) {
     mNameTable.ops = nullptr;
     return false;

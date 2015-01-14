@@ -633,7 +633,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
       PL_DHashTableInit(&mIdTable,
                         mQuirksMode ? &RuleHash_IdTable_CIOps.ops
                                     : &RuleHash_IdTable_CSOps.ops,
-                        nullptr, sizeof(RuleHashTableEntry));
+                        sizeof(RuleHashTableEntry));
     }
     AppendRuleToTable(&mIdTable, selector->mIDList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mIdSelectors);
@@ -643,7 +643,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
       PL_DHashTableInit(&mClassTable,
                         mQuirksMode ? &RuleHash_ClassTable_CIOps.ops
                                     : &RuleHash_ClassTable_CSOps.ops,
-                        nullptr, sizeof(RuleHashTableEntry));
+                        sizeof(RuleHashTableEntry));
     }
     AppendRuleToTable(&mClassTable, selector->mClassList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
@@ -651,7 +651,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
   else if (selector->mLowercaseTag) {
     RuleValue ruleValue(aRuleInfo, mRuleCount++, mQuirksMode);
     if (!mTagTable.ops) {
-      PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nullptr,
+      PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops,
                         sizeof(RuleHashTagTableEntry));
     }
     AppendRuleToTagTable(&mTagTable, selector->mLowercaseTag, ruleValue);
@@ -664,7 +664,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
   }
   else if (kNameSpaceID_Unknown != selector->mNameSpace) {
     if (!mNameSpaceTable.ops) {
-      PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops, nullptr,
+      PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops,
                         sizeof(RuleHashTableEntry));
     }
     AppendRuleToTable(&mNameSpaceTable,
@@ -933,21 +933,21 @@ struct RuleCascadeData {
   {
     // mAttributeSelectors is matching on the attribute _name_, not the value,
     // and we case-fold names at parse-time, so this is a case-sensitive match.
-    PL_DHashTableInit(&mAttributeSelectors, &AtomSelector_CSOps, nullptr,
+    PL_DHashTableInit(&mAttributeSelectors, &AtomSelector_CSOps,
                       sizeof(AtomSelectorEntry));
-    PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nullptr,
+    PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops,
                       sizeof(RuleHashTagTableEntry));
     PL_DHashTableInit(&mIdSelectors,
                       aQuirksMode ? &AtomSelector_CIOps.ops :
                                     &AtomSelector_CSOps,
-                      nullptr, sizeof(AtomSelectorEntry));
+                      sizeof(AtomSelectorEntry));
     PL_DHashTableInit(&mClassSelectors,
                       aQuirksMode ? &AtomSelector_CIOps.ops :
                                     &AtomSelector_CSOps,
-                      nullptr, sizeof(AtomSelectorEntry));
+                      sizeof(AtomSelectorEntry));
     memset(mPseudoElementRuleHashes, 0, sizeof(mPseudoElementRuleHashes));
 #ifdef MOZ_XUL
-    PL_DHashTableInit(&mXULTreeRules, &RuleHash_TagTable_Ops, nullptr,
+    PL_DHashTableInit(&mXULTreeRules, &RuleHash_TagTable_Ops,
                       sizeof(RuleHashTagTableEntry));
 #endif
   }
@@ -3373,7 +3373,7 @@ struct CascadeEnumData {
       mCacheKey(aKey),
       mSheetType(aSheetType)
   {
-    if (!PL_DHashTableInit(&mRulesByWeight, &gRulesByWeightOps, nullptr,
+    if (!PL_DHashTableInit(&mRulesByWeight, &gRulesByWeightOps,
                            sizeof(RuleByWeightEntry), fallible_t(), 32))
       mRulesByWeight.ops = nullptr;
 

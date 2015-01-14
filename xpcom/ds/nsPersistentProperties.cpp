@@ -465,7 +465,7 @@ nsPersistentProperties::nsPersistentProperties()
 {
   mSubclass = static_cast<nsIPersistentProperties*>(this);
 
-  PL_DHashTableInit(&mTable, &property_HashTableOps, nullptr,
+  PL_DHashTableInit(&mTable, &property_HashTableOps,
                     sizeof(PropertyTableEntry), 16);
 
   PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
