@@ -45,7 +45,7 @@ let PanelFrameInternal = {
    */
   _attachNotificatonPanel: function(aWindow, aParent, aButton, aType, aOrigin, aSrc, aSize) {
     aParent.hidden = false;
-    let notificationFrameId = aOrigin ? aType + "-status-" + aOrigin : aType;
+    let notificationFrameId = aOrigin ? aType + "-status-" + aOrigin : aType + "-panel-iframe";
     let doc = aWindow.document;
     let frame = doc.getElementById(notificationFrameId);
 
