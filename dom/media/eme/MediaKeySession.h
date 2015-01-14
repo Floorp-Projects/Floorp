@@ -18,6 +18,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeySessionBinding.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"
 
 struct JSContext;
 
@@ -79,8 +80,8 @@ public:
 
   already_AddRefed<Promise> GetUsableKeyIds(ErrorResult& aRv);
 
-  void DispatchKeyMessage(const nsTArray<uint8_t>& aMessage,
-                          const nsAString& aURL);
+  void DispatchKeyMessage(MediaKeyMessageType aMessageType,
+                          const nsTArray<uint8_t>& aMessage);
 
   void DispatchKeyError(uint32_t system_code);
 

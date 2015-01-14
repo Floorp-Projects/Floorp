@@ -6,6 +6,7 @@
 include protocol PGMP;
 include GMPTypes;
 
+using GMPSessionMessageType from  "gmp-decryption.h";
 using GMPSessionType from  "gmp-decryption.h";
 using GMPDOMException from "gmp-decryption.h";
 using GMPErr from "gmp-errors.h";
@@ -64,8 +65,8 @@ parent:
                 nsCString aMessage);
 
   SessionMessage(nsCString aSessionId,
-                 uint8_t[] aMessage,
-                 nsCString aDestinationURL);
+                 GMPSessionMessageType aMessageType,
+                 uint8_t[] aMessage);
 
   ExpirationChange(nsCString aSessionId, double aExpiryTime);
 
