@@ -207,10 +207,6 @@ public:
   // Called to indicate the download is progressing.
   virtual void DownloadProgressed() MOZ_FINAL MOZ_OVERRIDE;
 
-  // Called by the media decoder to indicate that the download has stalled
-  // (no data has arrived for a while).
-  virtual void DownloadStalled() MOZ_FINAL MOZ_OVERRIDE;
-
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aIsSuspended) MOZ_FINAL MOZ_OVERRIDE;
@@ -881,6 +877,23 @@ protected:
   void UpdatePreloadAction();
 
   /**
+   * Fire progress events if needed according to the time and byte constraints
+   * outlined in the specification. aHaveNewProgress is true if progress has
+   * just been detected.  Otherwise the method is called as a result of the
+   * progress timer.
+   */
+  void CheckProgress(bool aHaveNewProgress);
+  static void ProgressTimerCallback(nsITimer* aTimer, void* aClosure);
+  /**
+   * Start timer to update download progress.
+   */
+  nsresult StartProgress();
+  /**
+   * Stop progress information timer.
+   */
+  nsresult StopProgress();
+
+  /**
    * Dispatches an error event to a child source element.
    */
   void DispatchAsyncSourceError(nsIContent* aSourceElement);
@@ -1068,6 +1081,17 @@ protected:
   // main thread only.
   TimeStamp mTimeUpdateTime;
 
+  // Time that the last progress event was fired. Read/Write from the
+  // main thread only.
+  TimeStamp mProgressTime;
+
+  // Time that data was last read from the media resource. Used for
+  // computing if the download has stalled and to rate limit progress events
+  // when data is arriving slower than PROGRESS_MS. A value of null indicates
+  // that a stall event has already fired and not to fire another one until
+  // more data is received. Read/Write from the main thread only.
+  TimeStamp mDataTime;
+
   // Media 'currentTime' value when the last timeupdate event occurred.
   // Read/Write from the main thread only.
   double mLastCurrentTime;
@@ -1102,6 +1126,9 @@ protected:
 
   // Range of time played.
   nsRefPtr<TimeRanges> mPlayed;
+
+  // Timer used for updating progress events
+  nsCOMPtr<nsITimer> mProgressTimer;
 
 #ifdef MOZ_EME
   // Encrypted Media Extension media keys.
