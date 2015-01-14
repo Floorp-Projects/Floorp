@@ -198,10 +198,10 @@ class ExclusiveContext : public ContextFriendFields,
     }
 
   protected:
-    Allocator *allocator_;
+    js::gc::ArenaLists *arenas_;
 
   public:
-    inline Allocator *allocator() const { return allocator_; }
+    inline js::gc::ArenaLists *arenas() const { return arenas_; }
 
     template <typename T>
     bool isInsideCurrentZone(T thing) const {

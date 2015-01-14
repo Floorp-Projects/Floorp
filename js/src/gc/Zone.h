@@ -24,24 +24,6 @@ namespace jit {
 class JitZone;
 }
 
-// Encapsulates the data needed to perform allocation.  There is
-// precisely one of these per zone (|cx->zone().allocator|).
-class Allocator
-{
-  public:
-    explicit Allocator(JS::Zone *zone);
-
-    js::gc::ArenaLists arenas;
-
-  private:
-    // Since allocators can be accessed from worker threads, the parent zone_
-    // should not be accessed in general. GCRuntime is allowed to actually do
-    // the allocation, however.
-    friend class js::gc::GCRuntime;
-
-    JS::Zone *zone_;
-};
-
 namespace gc {
 
 // This class encapsulates the data that determines when we need to do a zone GC.
@@ -255,7 +237,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
   public:
-    js::Allocator allocator;
+    js::gc::ArenaLists arenas;
 
     js::types::TypeZone types;
 

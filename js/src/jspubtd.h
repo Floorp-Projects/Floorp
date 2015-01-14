@@ -290,8 +290,6 @@ enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_RETRY_AFTER_GC, TP_F
 
 class ExclusiveContext;
 
-class Allocator;
-
 enum ThingRootKind
 {
     THING_ROOT_OBJECT,

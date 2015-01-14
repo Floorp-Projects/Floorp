@@ -973,7 +973,7 @@ ExclusiveContext::ExclusiveContext(JSRuntime *rt, PerThreadData *pt, ContextKind
     helperThread_(nullptr),
     contextKind_(kind),
     perThreadData(pt),
-    allocator_(nullptr),
+    arenas_(nullptr),
     enterCompartmentDepth_(0)
 {
 }

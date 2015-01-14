@@ -439,7 +439,7 @@ js::ExclusiveContext::setCompartment(JSCompartment *comp)
 
     compartment_ = comp;
     zone_ = comp ? comp->zone() : nullptr;
-    allocator_ = zone_ ? &zone_->allocator : nullptr;
+    arenas_ = zone_ ? &zone_->arenas : nullptr;
 }
 
 inline JSScript *
