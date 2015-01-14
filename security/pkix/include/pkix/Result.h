@@ -38,7 +38,7 @@ static const unsigned int FATAL_ERROR_FLAG = 0x800;
 //         means that the end-entity certificate was actively distrusted.
 // Result::ERROR_UNTRUSTED_ISSUER
 //         means that path building failed because of active distrust.
-// Result::ERROR_INVALID_TIME
+// Result::ERROR_INVALID_DER_TIME
 //         means the DER-encoded time was unexpected, such as being before the
 //         UNIX epoch (allowed by X500, but not valid here).
 // Result::ERROR_EXPIRED_CERTIFICATE
@@ -109,7 +109,7 @@ static const unsigned int FATAL_ERROR_FLAG = 0x800;
                      SEC_ERROR_INADEQUATE_KEY_USAGE) \
     MOZILLA_PKIX_MAP(ERROR_INVALID_ALGORITHM, 12, \
                      SEC_ERROR_INVALID_ALGORITHM) \
-    MOZILLA_PKIX_MAP(ERROR_INVALID_TIME, 13, \
+    MOZILLA_PKIX_MAP(ERROR_INVALID_DER_TIME, 13, \
                      SEC_ERROR_INVALID_TIME) \
     MOZILLA_PKIX_MAP(ERROR_KEY_PINNING_FAILURE, 14, \
                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE) \
