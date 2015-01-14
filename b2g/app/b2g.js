@@ -1068,9 +1068,6 @@ pref("services.mobileid.server.uri", "https://msisdn.services.mozilla.com");
 pref("dom.mapped_arraybuffer.enabled", true);
 #endif
 
-// BroadcastChannel API
-pref("dom.broadcastChannel.enabled", true);
-
 // UDPSocket API
 pref("dom.udpsocket.enabled", true);
 
