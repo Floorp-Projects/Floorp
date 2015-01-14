@@ -856,7 +856,7 @@ const JSClass IDBObjectStore::sDummyPropJSClass = {
 IDBObjectStore::IDBObjectStore(IDBTransaction* aTransaction,
                                const ObjectStoreSpec* aSpec)
   : mTransaction(aTransaction)
-  , mCachedKeyPath(JSVAL_VOID)
+  , mCachedKeyPath(JS::UndefinedValue())
   , mSpec(aSpec)
   , mId(aSpec->metadata().id())
   , mRooted(false)
@@ -871,7 +871,7 @@ IDBObjectStore::~IDBObjectStore()
   AssertIsOnOwningThread();
 
   if (mRooted) {
-    mCachedKeyPath = JSVAL_VOID;
+    mCachedKeyPath.setUndefined();
     mozilla::DropJSObjects(this);
   }
 }
@@ -1487,7 +1487,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBObjectStore)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexes);
 
-  tmp->mCachedKeyPath = JSVAL_VOID;
+  tmp->mCachedKeyPath.setUndefined();
 
   if (tmp->mRooted) {
     mozilla::DropJSObjects(tmp);

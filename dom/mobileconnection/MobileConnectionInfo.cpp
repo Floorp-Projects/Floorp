@@ -119,7 +119,7 @@ MobileConnectionInfo::Update(nsIMobileConnectionInfo* aInfo)
 
   // Update mSignalStrength
   AutoJSContext cx;
-  JS::Rooted<JS::Value> signalStrength(cx, JSVAL_VOID);
+  JS::Rooted<JS::Value> signalStrength(cx, JS::UndefinedValue());
   aInfo->GetSignalStrength(&signalStrength);
   if (signalStrength.isNumber()) {
     mSignalStrength.SetValue(signalStrength.toNumber());
@@ -128,7 +128,7 @@ MobileConnectionInfo::Update(nsIMobileConnectionInfo* aInfo)
   }
 
   // Update mRelSignalStrength
-  JS::Rooted<JS::Value> relSignalStrength(cx, JSVAL_VOID);
+  JS::Rooted<JS::Value> relSignalStrength(cx, JS::UndefinedValue());
   aInfo->GetRelSignalStrength(&relSignalStrength);
   if (relSignalStrength.isNumber()) {
     mRelSignalStrength.SetValue(relSignalStrength.toNumber());

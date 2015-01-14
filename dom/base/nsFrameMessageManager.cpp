@@ -1075,7 +1075,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         thisValue.setObject(*object);
       }
 
-      JS::Rooted<JS::Value> rval(cx, JSVAL_VOID);
+      JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());
       JS::Rooted<JS::Value> argv(cx, JS::ObjectValue(*param));
 
       {
