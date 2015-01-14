@@ -85,7 +85,8 @@ public:
 
 enum class EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
 
-enum class KeyUsage : uint8_t {
+enum class KeyUsage : uint8_t
+{
   digitalSignature = 0,
   nonRepudiation   = 1,
   keyEncipherment  = 2,
@@ -98,7 +99,8 @@ enum class KeyUsage : uint8_t {
   noParticularKeyUsageRequired = 0xff,
 };
 
-enum class KeyPurposeId {
+enum class KeyPurposeId
+{
   anyExtendedKeyUsage = 0,
   id_kp_serverAuth = 1,           // id-kp-serverAuth
   id_kp_clientAuth = 2,           // id-kp-clientAuth
@@ -118,7 +120,8 @@ struct CertPolicyId final
   static const CertPolicyId anyPolicy;
 };
 
-enum class TrustLevel {
+enum class TrustLevel
+{
   TrustAnchor = 1,        // certificate is a trusted root CA certificate or
                           // equivalent *for the given policy*.
   ActivelyDistrusted = 2, // certificate is known to be bad
