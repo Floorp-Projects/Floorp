@@ -113,8 +113,13 @@ class CodeGeneratorShared : public LElementVisitor
     JSScript **nativeToBytecodeScriptList_;
     uint32_t nativeToBytecodeScriptListLength_;
 
-    bool isProfilerInstrumentationEnabled() {
-        return gen->isProfilerInstrumentationEnabled();
+    // When profiling is enabled, this is the instrumentation manager which
+    // maintains state of what script is currently being generated (for inline
+    // scripts) and when instrumentation needs to be emitted or skipped.
+    IonInstrumentation sps_;
+
+    bool isNativeToBytecodeMapEnabled() {
+        return gen->isNativeToBytecodeMapEnabled();
     }
 
   protected:

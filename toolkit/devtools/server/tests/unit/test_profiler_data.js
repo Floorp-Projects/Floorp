@@ -106,11 +106,12 @@ function test_data(client, actor, callback)
       // Now check the samples. At least one sample is expected to
       // have been in the busy wait above.
       let loc = stack.name + " (" + stack.filename + ":" + funcLine + ")";
+      let line = stack.lineNumber;
 
       do_check_true(response.profile.threads[0].samples.some(sample => {
         return typeof sample.frames == "object" &&
                sample.frames.length != 0 &&
-               sample.frames.some(f => (f.location == loc));
+               sample.frames.some(f => (f.line == line) && (f.location == loc));
       }));
 
       callback();
