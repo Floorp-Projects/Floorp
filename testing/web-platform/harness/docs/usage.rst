@@ -17,7 +17,7 @@ order to do this you must use use the extra requirements files in
 ``$VIRTUAL_ENV/requirements/requirements_browser.txt``. For example,
 in order to test against Firefox you would have to run::
 
-  pip install requirements/requirements_firefox.txt
+  pip install -r requirements/requirements_firefox.txt
 
 If you intend to work on the code, the ``-e`` option to pip should be
 used in combination with a source checkout i.e. inside a virtual

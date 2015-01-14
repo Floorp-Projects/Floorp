@@ -84,6 +84,7 @@ this.SystemMessagePermissionsTable = {
   "push-register": {
   	"push": []
   },
+  "request-sync": { },
   "sms-delivery-success": {
     "sms": []
   },

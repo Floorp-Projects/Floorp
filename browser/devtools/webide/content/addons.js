@@ -47,8 +47,7 @@ function BuildItem(addon, type) {
         status.textContent = Strings.GetStringFromName("addons_status_" + addon.status);
         break;
       case "failure":
-        console.error(arg);
-        window.alert(arg);
+        window.parent.UI.reportError("error_operationFail", arg);
         break;
       case "progress":
         if (arg == -1) {

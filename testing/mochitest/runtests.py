@@ -438,6 +438,7 @@ class MochitestUtilsMixin(object):
 
   # Path to the test script on the server
   TEST_PATH = "tests"
+  NESTED_OOP_TEST_PATH = "nested_oop"
   CHROME_PATH = "redirect.html"
   urlOpts = []
   log = None
@@ -669,6 +670,8 @@ class MochitestUtilsMixin(object):
       testURL = "/".join([testHost, self.CHROME_PATH])
     elif options.browserChrome or options.jetpackPackage or options.jetpackAddon:
       testURL = "about:blank"
+    if options.nested_oop:
+      testURL = "/".join([testHost, self.NESTED_OOP_TEST_PATH])
     return testURL
 
   def buildTestPath(self, options, testsToFilter=None, disabled=True):
@@ -1183,6 +1186,7 @@ class Mochitest(MochitestUtilsMixin):
     options.extraPrefs.append("browser.tabs.remote.autostart=%s" % ('true' if options.e10s else 'false'))
     if options.strictContentSandbox:
         options.extraPrefs.append("security.sandbox.windows.content.moreStrict=true")
+    options.extraPrefs.append("dom.ipc.tabs.nested.enabled=%s" % ('true' if options.nested_oop else 'false'))
 
     # get extensions to install
     extensions = self.getExtensionsToInstall(options)

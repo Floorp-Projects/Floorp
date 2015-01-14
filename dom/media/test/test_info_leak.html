@@ -86,7 +86,7 @@ function listener(evt) {
 }
 
 function createMedia(type, src, token) {
-  var tag = getMajorMimeType(test.type);
+  var tag = getMajorMimeType(type);
   var v = document.createElement(tag);
   for (var i=0; i<gEventTypes.length; i++) {
     v.addEventListener(gEventTypes[i], listener, false);

@@ -104,7 +104,7 @@ function serverOwnershipSubtree(walker, node) {
   }
 
   let children = [];
-  let docwalker = _documentWalker(node, window);
+  let docwalker = new _documentWalker(node, window);
   let child = docwalker.firstChild();
   while (child) {
     let item = serverOwnershipSubtree(walker, child);
