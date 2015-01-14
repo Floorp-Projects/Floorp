@@ -3666,7 +3666,7 @@ class LStart : public LInstructionHelper<0, 0, 0>
 
 // Passed the BaselineFrame address in the OsrFrameReg by SideCannon().
 // Forwards this object to the LOsrValues for Value materialization.
-class LOsrEntry : public LInstructionHelper<1, 0, 1>
+class LOsrEntry : public LInstructionHelper<1, 0, 0>
 {
   protected:
     Label label_;
@@ -3675,11 +3675,9 @@ class LOsrEntry : public LInstructionHelper<1, 0, 1>
   public:
     LIR_HEADER(OsrEntry)
 
-    LOsrEntry(const LDefinition &temp)
+    LOsrEntry()
       : frameDepth_(0)
-    {
-        setTemp(0, temp);
-    }
+    { }
 
     void setFrameDepth(uint32_t depth) {
         frameDepth_ = depth;
@@ -3690,9 +3688,7 @@ class LOsrEntry : public LInstructionHelper<1, 0, 1>
     Label *label() {
         return &label_;
     }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
+
 };
 
 // Materialize a Value stored in an interpreter frame for OSR.
@@ -6163,6 +6159,28 @@ class LCallInstanceOf : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
 
     static const size_t LHS = 0;
     static const size_t RHS = BOX_PIECES;
+};
+
+class LProfilerStackOp : public LInstructionHelper<0, 0, 1>
+{
+  public:
+    LIR_HEADER(ProfilerStackOp)
+
+    explicit LProfilerStackOp(const LDefinition &temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    JSScript *script() {
+        return mir_->toProfilerStackOp()->script();
+    }
+
+    MProfilerStackOp::Type type() {
+        return mir_->toProfilerStackOp()->type();
+    }
 };
 
 class LIsCallable : public LInstructionHelper<1, 1, 0>

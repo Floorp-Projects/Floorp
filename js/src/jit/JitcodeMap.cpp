@@ -7,15 +7,10 @@
 #include "jit/JitcodeMap.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/UniquePtr.h"
-#include "jsprf.h"
-
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
 
 #include "js/Vector.h"
-#include "vm/SPSProfiler.h"
-#include "jsscriptinlines.h"
 
 namespace js {
 namespace jit {
@@ -56,38 +51,6 @@ JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
     return true;
 }
 
-uint32_t
-JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
-                                              const char **results,
-                                              uint32_t maxResults) const
-{
-    MOZ_ASSERT(containsPointer(ptr));
-    MOZ_ASSERT(maxResults >= 1);
-    uint32_t ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
-                         reinterpret_cast<uint8_t *>(nativeStartAddr());
-
-    uint32_t regionIdx = regionTable()->findRegionEntry(ptrOffset);
-    MOZ_ASSERT(regionIdx < regionTable()->numRegions());
-
-    JitcodeRegionEntry region = regionTable()->regionEntry(regionIdx);
-
-    JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
-    MOZ_ASSERT(locationIter.hasMore());
-    uint32_t count = 0;
-    while (locationIter.hasMore()) {
-        uint32_t scriptIdx, pcOffset;
-
-        locationIter.readNext(&scriptIdx, &pcOffset);
-        MOZ_ASSERT(getStr(scriptIdx));
-
-        results[count++] = getStr(scriptIdx);
-        if (count >= maxResults)
-            break;
-    }
-
-    return count;
-}
-
 void
 JitcodeGlobalEntry::IonEntry::destroy()
 {
@@ -100,15 +63,11 @@ JitcodeGlobalEntry::IonEntry::destroy()
         js_free((void*) (regionTable_->payloadStart()));
     regionTable_ = nullptr;
 
-    // Free the scriptList strs.
-    for (uint32_t i = 0; i < scriptList_->size; i++)  {
-        js_free(scriptList_->pairs[i].str);
-        scriptList_->pairs[i].str = nullptr;
-    }
-
-    // Free the script list
-    js_free(scriptList_);
-    scriptList_ = nullptr;
+    // Single tag is just pointer-to-jsscript, no memory to free.
+    ScriptListTag tag = scriptListTag();
+    if (tag > Single)
+        js_free(scriptListPointer());
+    scriptList_ = 0;
 }
 
 bool
@@ -129,19 +88,6 @@ JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
     return true;
 }
 
-uint32_t
-JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
-                                                   const char **results,
-                                                   uint32_t maxResults) const
-{
-    MOZ_ASSERT(containsPointer(ptr));
-    MOZ_ASSERT(script_->hasBaselineScript());
-    MOZ_ASSERT(maxResults >= 1);
-
-    results[0] = str();
-    return 1;
-}
-
 bool
 JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                                    BytecodeLocationVector &results,
@@ -152,26 +98,10 @@ JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
     // There must exist an entry for the rejoin addr if this entry exists.
     JitRuntime *jitrt = rt->jitRuntime();
     JitcodeGlobalEntry entry;
-    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry, rt);
+    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry);
     MOZ_ASSERT(entry.isIon());
 
     return entry.callStackAtAddr(rt, rejoinAddr(), results, depth);
-}
-
-uint32_t
-JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
-                                                   const char **results,
-                                                   uint32_t maxResults) const
-{
-    MOZ_ASSERT(containsPointer(ptr));
-
-    // There must exist an entry for the rejoin addr if this entry exists.
-    JitRuntime *jitrt = rt->jitRuntime();
-    JitcodeGlobalEntry entry;
-    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry, rt);
-    MOZ_ASSERT(entry.isIon());
-
-    return entry.callStackAtAddr(rt, rejoinAddr(), results, maxResults);
 }
 
 
@@ -214,135 +144,34 @@ JitcodeGlobalEntry::compare(const JitcodeGlobalEntry &ent1, const JitcodeGlobalE
     return flip * -1;
 }
 
-/* static */ char *
-JitcodeGlobalEntry::createScriptString(JSContext *cx, JSScript *script, size_t *length)
-{
-    // If the script has a function, try calculating its name.
-    bool hasName = false;
-    size_t nameLength = 0;
-    mozilla::UniquePtr<char, JS::FreePolicy> nameStr = nullptr;
-    JSFunction *func = script->functionDelazifying();
-    if (func && func->displayAtom()) {
-        JSAtom *atom = func->displayAtom();
-
-        JS::AutoCheckCannotGC nogc;
-        nameStr = mozilla::UniquePtr<char, JS::FreePolicy>(
-            atom->hasLatin1Chars() ?
-                JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range(nogc)).c_str()
-              : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange(nogc)).c_str());
-        if (!nameStr)
-            return nullptr;
-
-        nameLength = strlen(nameStr.get());
-        hasName = true;
-    }
-
-    // Calculate filename length
-    const char *filenameStr = script->filename() ? script->filename() : "(null)";
-    size_t filenameLength = strlen(filenameStr);
-
-    // Calculate lineno length
-    bool hasLineno = false;
-    size_t linenoLength = 0;
-    char linenoStr[15];
-    if (hasName || (script->functionNonDelazifying() || script->isForEval())) {
-        linenoLength = JS_snprintf(linenoStr, 15, "%u", (unsigned) script->lineno());
-        hasLineno = true;
-    }
-
-    // Full profile string for scripts with functions is:
-    //      FuncName (FileName:Lineno)
-    // Full profile string for scripts without functions is:
-    //      FileName:Lineno
-    // Full profile string for scripts without functions and without linenos is:
-    //      FileName
-
-    // Calculate full string length.
-    size_t fullLength = 0;
-    if (hasName) {
-        MOZ_ASSERT(hasLineno);
-        fullLength = nameLength + 2 + filenameLength + 1 + linenoLength + 1;
-    } else if (hasLineno) {
-        fullLength = filenameLength + 1 + linenoLength;
-    } else {
-        fullLength = filenameLength;
-    }
-
-    // Allocate string.
-    char *str = cx->pod_malloc<char>(fullLength + 1);
-    if (!str)
-        return nullptr;
-
-    size_t cur = 0;
-
-    // Fill string with func name if needed.
-    if (hasName) {
-        memcpy(str + cur, nameStr.get(), nameLength);
-        cur += nameLength;
-        str[cur++] = ' ';
-        str[cur++] = '(';
-    }
-
-    // Fill string with filename chars.
-    memcpy(str + cur, filenameStr, filenameLength);
-    cur += filenameLength;
-
-    // Fill lineno chars.
-    if (hasLineno) {
-        str[cur++] = ':';
-        memcpy(str + cur, linenoStr, linenoLength);
-        cur += linenoLength;
-    }
-
-    // Terminal ')' if necessary.
-    if (hasName)
-        str[cur++] = ')';
-
-    MOZ_ASSERT(cur == fullLength);
-    str[cur] = 0;
-
-    if (length)
-        *length = fullLength;
-
-    return str;
-}
-
 bool
-JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
+JitcodeGlobalTable::lookup(void *ptr, JitcodeGlobalEntry *result)
 {
     MOZ_ASSERT(result);
 
     // Construct a JitcodeGlobalEntry::Query to do the lookup
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(ptr);
-
-    // Lookups on tree does mutation.  Suppress sampling when this is happening.
-    AutoSuppressProfilerSampling suppressSampling(rt);
     return tree_.contains(query, result);
 }
 
 void
-JitcodeGlobalTable::lookupInfallible(void *ptr, JitcodeGlobalEntry *result, JSRuntime *rt)
+JitcodeGlobalTable::lookupInfallible(void *ptr, JitcodeGlobalEntry *result)
 {
-    mozilla::DebugOnly<bool> success = lookup(ptr, result, rt);
+    mozilla::DebugOnly<bool> success = lookup(ptr, result);
     MOZ_ASSERT(success);
 }
 
 bool
-JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry, JSRuntime *rt)
+JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry)
 {
-    // Suppress profiler sampling while table is being mutated.
-    AutoSuppressProfilerSampling suppressSampling(rt);
-
-    MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache() || entry.isDummy());
+    // Should only add Main entries for now.
+    MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache());
     return tree_.insert(entry);
 }
 
 void
-JitcodeGlobalTable::removeEntry(void *startAddr, JSRuntime *rt)
+JitcodeGlobalTable::removeEntry(void *startAddr)
 {
-    // Suppress profiler sampling while table is being mutated.
-    AutoSuppressProfilerSampling suppressSampling(rt);
-
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
     JitcodeGlobalEntry result;
     mozilla::DebugOnly<bool> success = tree_.contains(query, &result);
@@ -727,26 +556,6 @@ JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOff
     return curPcOffset;
 }
 
-typedef js::Vector<char *, 32, SystemAllocPolicy> ProfilingStringVector;
-
-struct AutoFreeProfilingStrings {
-    ProfilingStringVector &profilingStrings_;
-    bool keep_;
-    explicit AutoFreeProfilingStrings(ProfilingStringVector &vec)
-        : profilingStrings_(vec),
-          keep_(false)
-    {}
-
-    void keepStrings() { keep_ = true; }
-
-    ~AutoFreeProfilingStrings() {
-        if (keep_)
-            return;
-        for (size_t i = 0; i < profilingStrings_.length(); i++)
-            js_free(profilingStrings_[i]);
-    }
-};
-
 bool
 JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
                               uint32_t numScripts, JSScript **scripts,
@@ -756,32 +565,25 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
 
     MOZ_ASSERT(numScripts > 0);
 
-    // Create profiling strings for script, within vector.
-    typedef js::Vector<char *, 32, SystemAllocPolicy> ProfilingStringVector;
+    if (numScripts == 1) {
+        out.init(code->raw(), code->rawEnd(), scripts[0], this);
+        return true;
+    }
 
-    ProfilingStringVector profilingStrings;
-    if (!profilingStrings.reserve(numScripts))
-        return false;
-
-    AutoFreeProfilingStrings autoFreeProfilingStrings(profilingStrings);
-    for (uint32_t i = 0; i < numScripts; i++) {
-        char *str = JitcodeGlobalEntry::createScriptString(cx, scripts[i]);
-        if (!str)
+    if (numScripts < uint32_t(JitcodeGlobalEntry::IonEntry::Multi)) {
+        JSScript **scriptsCopy = cx->pod_malloc<JSScript *>(numScripts);
+        if (!scriptsCopy)
             return false;
-        if (!profilingStrings.append(str))
-            return false;
+        memcpy(scriptsCopy, scripts, sizeof(JSScript *) * numScripts);
+        out.init(code->raw(), code->rawEnd(), numScripts, scriptsCopy, this);
+        return true;
     }
 
     // Create SizedScriptList
     void *mem = (void *)cx->pod_malloc<uint8_t>(SizedScriptList::AllocSizeFor(numScripts));
     if (!mem)
         return false;
-
-    // Keep allocated profiling strings on destruct.
-    autoFreeProfilingStrings.keepStrings();
-
-    SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts,
-                                                            &profilingStrings[0]);
+    SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts);
     out.init(code->raw(), code->rawEnd(), scriptList, this);
     return true;
 }

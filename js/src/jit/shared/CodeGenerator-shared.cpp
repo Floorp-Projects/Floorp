@@ -59,6 +59,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     nativeToBytecodeNumRegions_(0),
     nativeToBytecodeScriptList_(nullptr),
     nativeToBytecodeScriptListLength_(0),
+    sps_(&GetJitContext()->runtime->spsProfiler(), &lastNotInlinedPC_),
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -67,8 +68,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
     frameInitialAdjustment_(0)
 {
-    if (gen->isProfilerInstrumentationEnabled())
-        masm.enableProfilingInstrumentation();
+    if (!gen->compilingAsmJS())
+        masm.setInstrumentation(&sps_);
 
     if (gen->compilingAsmJS()) {
         // Since asm.js uses the system ABI which does not necessarily use a
@@ -106,6 +107,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
 bool
 CodeGeneratorShared::generateOutOfLineCode()
 {
+    JSScript *topScript = sps_.getPushed();
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
         // Add native => bytecode mapping entries for OOL sites.
         // Not enabled on asm.js yet since asm doesn't contain bytecode mappings.
@@ -121,11 +123,16 @@ CodeGeneratorShared::generateOutOfLineCode()
 
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
         lastPC_ = outOfLineCode_[i]->pc();
+        if (!sps_.prepareForOOL())
+            return false;
+        sps_.setPushed(outOfLineCode_[i]->script());
         outOfLineCode_[i]->bind(&masm);
 
         oolIns = outOfLineCode_[i];
         outOfLineCode_[i]->generate(this);
+        sps_.finishOOL();
     }
+    sps_.setPushed(topScript);
     oolIns = nullptr;
 
     return true;
@@ -151,7 +158,7 @@ bool
 CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite *site)
 {
     // Skip the table entirely if profiling is not enabled.
-    if (!isProfilerInstrumentationEnabled())
+    if (!isNativeToBytecodeMapEnabled())
         return true;
 
     MOZ_ASSERT(site);
