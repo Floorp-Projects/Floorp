@@ -23,7 +23,7 @@ let test = Task.async(function*() {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  yield PerformanceController.exportRecording("", file);
+  yield PerformanceController.exportRecording("", PerformanceController.getCurrentRecording(), file);
 
   yield exported;
   ok(true, "The recording data appears to have been successfully saved.");

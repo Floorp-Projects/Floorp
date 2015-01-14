@@ -755,7 +755,7 @@ var ProjectEditor = Class({
     if (this.hasUnsavedResources) {
       return confirm(
         getLocalizedString("projecteditor.confirmUnsavedTitle"),
-        getLocalizedString("projecteditor.confirmUnsavedLabel")
+        getLocalizedString("projecteditor.confirmUnsavedLabel2")
       );
     }
 

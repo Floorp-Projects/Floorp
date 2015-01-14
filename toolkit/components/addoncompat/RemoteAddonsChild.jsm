@@ -496,11 +496,21 @@ let RemoteAddonsChild = {
   _ready: false,
 
   makeReady: function() {
-    Prefetcher.init();
-    NotificationTracker.init();
-    ContentPolicyChild.init();
-    AboutProtocolChild.init();
-    ObserverChild.init();
+    let shims = [
+      Prefetcher,
+      NotificationTracker,
+      ContentPolicyChild,
+      AboutProtocolChild,
+      ObserverChild,
+    ];
+
+    for (let shim of shims) {
+      try {
+        shim.init();
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    }
   },
 
   init: function(global) {
@@ -520,7 +530,11 @@ let RemoteAddonsChild = {
 
   uninit: function(perTabShims) {
     for (let shim of perTabShims) {
-      shim.uninit();
+      try {
+        shim.uninit();
+      } catch(e) {
+        Cu.reportError(e);
+      }
     }
   },
 };

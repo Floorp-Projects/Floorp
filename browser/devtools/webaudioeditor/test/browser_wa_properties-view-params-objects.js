@@ -9,8 +9,8 @@
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(BUFFER_AND_ARRAY_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  let gVars = PropertiesView._propsView;
 
   let started = once(gFront, "start-context");
 
@@ -23,7 +23,7 @@ add_task(function*() {
   let nodeIds = actors.map(actor => actor.actorID);
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
     "curve": "Float32Array"
   }, "WaveShaper's `curve` is listed as an `Float32Array`.");
@@ -33,7 +33,7 @@ add_task(function*() {
   ok(state, "Float32Array property should not have a dropdown.");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
     "buffer": "AudioBuffer"
   }, "AudioBufferSourceNode's `buffer` is listed as an `AudioBuffer`.");

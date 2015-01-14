@@ -30,6 +30,7 @@ let OverviewView = {
   initialize: Task.async(function *() {
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
+    this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingTick = this._onRecordingTick.bind(this);
     this._onGraphMouseUp = this._onGraphMouseUp.bind(this);
     this._onGraphScroll = this._onGraphScroll.bind(this);
@@ -47,6 +48,7 @@ let OverviewView = {
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
   }),
 
   /**
@@ -63,6 +65,7 @@ let OverviewView = {
     clearNamedTimeout("graph-scroll");
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
   },
 
   /**
@@ -185,27 +188,42 @@ let OverviewView = {
   /**
    * Called when recording starts.
    */
-  _onRecordingStarted: function () {
+  _onRecordingStarted: function (_, recording) {
+    this._checkSelection(recording);
     this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
-
     this.framerateGraph.dropSelection();
-    this.framerateGraph.selectionEnabled = false;
-    this.markersOverview.selectionEnabled = false;
-    this.memoryOverview.selectionEnabled = false;
   },
 
   /**
    * Called when recording stops.
    */
-  _onRecordingStopped: function () {
+  _onRecordingStopped: function (_, recording) {
+    this._checkSelection(recording);
     clearTimeout(this._timeoutId);
     this._timeoutId = null;
 
     this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
+  },
 
-    this.framerateGraph.selectionEnabled = true;
-    this.markersOverview.selectionEnabled = true;
-    this.memoryOverview.selectionEnabled = true;
+  /**
+   * Called when a new recording is selected.
+   */
+  _onRecordingSelected: function (_, recording) {
+    this.framerateGraph.dropSelection();
+    this._checkSelection(recording);
+
+    // If timeout exists, we have something recording, so
+    // this will still tick away at rendering. Otherwise, force a render.
+    if (!this._timeoutId) {
+      this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
+    }
+  },
+
+  _checkSelection: function (recording) {
+    let selectionEnabled = !recording.isRecording();
+    this.framerateGraph.selectionEnabled = selectionEnabled;
+    this.markersOverview.selectionEnabled = selectionEnabled;
+    this.memoryOverview.selectionEnabled = selectionEnabled;
   }
 };
 
