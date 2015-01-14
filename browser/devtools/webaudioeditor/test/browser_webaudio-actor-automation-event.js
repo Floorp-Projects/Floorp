@@ -35,12 +35,13 @@ add_task(function*() {
     is(eventName, exp[0], "correct eventName in event");
     is(paramName, "frequency", "correct paramName in event");
     is(args.length, exp.length - 1, "correct length in args");
+
     args.forEach((a, i) => {
       // In the case of an array
       if (typeof a === "object") {
-        a.forEach((f, j) => is(f, exp[i + 1][j], "correct argument in args"));
+        a.forEach((f, j) => is(f, exp[i + 1][j], `correct argument in Float32Array: ${f}`));
       } else {
-        is(a, exp[i + 1], "correct argument in args");
+        is(a, exp[i + 1], `correct ${i+1}th argument in args: ${a}`);
       }
     });
     events.push([eventName].concat(args));

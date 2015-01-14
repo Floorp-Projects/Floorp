@@ -24,54 +24,55 @@ let TabMirror = function(deviceId, window) {
   this.RTCIceCandidate = window.mozRTCIceCandidate;
 
   Services.obs.addObserver((aSubject, aTopic, aData) => this._processMessage(aData), "MediaPlayer:Response", false);
-
+  this._sendMessage({ start: true });
+  this._window = window;
   this._pc = new window.mozRTCPeerConnection(CONFIG, {});
-
   if (!this._pc) {
     throw "Failure creating Webrtc object";
   }
 
-  this._pc.onicecandidate = this._onIceCandidate.bind(this);
-
-  let windowId = window.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-  let viewport = window.BrowserApp.selectedTab.getViewport();
-  let maxWidth =  Math.max(viewport.cssWidth, viewport.width);
-  let maxHeight = Math.max(viewport.cssHeight, viewport.height);
-  let minRatio = Math.sqrt((maxWidth * maxHeight) / (640 * 480));
-
-  let screenWidth = 640;
-  let screenHeight = 480;
-  let videoWidth = 0;
-  let videoHeight = 0;
-  if (screenWidth/screenHeight > maxWidth / maxHeight) {
-    videoWidth = screenWidth;
-    videoHeight = Math.ceil(videoWidth * maxHeight / maxWidth);
-  } else {
-    videoHeight = screenHeight;
-    videoWidth = Math.ceil(videoHeight * maxWidth / maxHeight);
-  }
-
-  let constraints = {
-    video: {
-      mediaSource: "browser",
-      browserWindow: windowId,
-      scrollWithPage: true,
-      advanced: [
-        { width: { min: videoWidth, max: videoWidth },
-          height: { min: videoHeight, max: videoHeight }
-        },
-        { aspectRatio: maxWidth / maxHeight }
-      ]
-    }
-  };
-
-  window.navigator.mozGetUserMedia(constraints, this._onGumSuccess.bind(this), this._onGumFailure.bind(this));
 };
 
 TabMirror.prototype = {
+  _window: null,
+  _screenSize: { width: 1280, height: 720 },
+  _pc: null,
+  _start: function() {
+    this._pc.onicecandidate = this._onIceCandidate.bind(this);
+
+    let windowId = this._window.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+    let viewport = this._window.BrowserApp.selectedTab.getViewport();
+    let maxWidth =  Math.max(viewport.cssWidth, viewport.width);
+    let maxHeight = Math.max(viewport.cssHeight, viewport.height);
+
+    let videoWidth = 0;
+    let videoHeight = 0;
+    if (this._screenSize.width/this._screenSize.height < maxWidth / maxHeight) {
+      videoWidth = this._screenSize.width;
+      videoHeight = Math.ceil(videoWidth * maxHeight / maxWidth);
+    } else {
+      videoHeight = this._screenSize.height;
+      videoWidth = Math.ceil(videoHeight * maxWidth / maxHeight);
+    }
+
+    let constraints = {
+      video: {
+        mediaSource: "browser",
+        browserWindow: windowId,
+        scrollWithPage: true,
+        advanced: [
+          { width: { min: videoWidth, max: videoWidth },
+            height: { min: videoHeight, max: videoHeight }
+          },
+          { aspectRatio: maxWidth / maxHeight }
+        ]
+      }
+    };
+
+    this._window.navigator.mozGetUserMedia(constraints, this._onGumSuccess.bind(this), this._onGumFailure.bind(this));
+  },
 
   _processMessage: function(data) {
-
     if (!data) {
       return;
     }
@@ -82,21 +83,27 @@ TabMirror.prototype = {
       return;
     }
 
-    if (msg.sdp) {
-      if (msg.type === "answer") {
-        this._processAnswer(msg);
-      } else {
-        log("Unandled sdp message type: " + msg.type);
+    if (msg.sdp && msg.type === "answer") {
+      this._processAnswer(msg);
+    } else if (msg.type == "size") {
+      if (msg.height) {
+        this._screenSize.height = msg.height;
       }
-    } else {
+      if (msg.width) {
+        this._screenSize.width = msg.width;
+      }
+      this._start();
+    } else if (msg.candidate) {
       this._processIceCandidate(msg);
+    } else {
+      log("dropping unrecognized message: " + JSON.stringify(msg));
     }
   },
 
   // Signaling methods
   _processAnswer: function(msg) {
     this._pc.setRemoteDescription(new this.RTCSessionDescription(msg),
-                                 this._setRemoteAnswerSuccess.bind(this), failure);
+                                  this._setRemoteAnswerSuccess.bind(this), failure);
   },
 
   _processIceCandidate: function(msg) {
