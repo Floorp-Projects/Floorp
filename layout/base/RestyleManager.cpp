@@ -941,7 +941,8 @@ RestyleManager::RestyleElement(Element*        aElement,
 
   // If we're restyling the root element and there are 'rem' units in
   // use, handle dynamic changes to the definition of a 'rem' here.
-  if (mPresContext->UsesRootEMUnits() && aPrimaryFrame) {
+  if (mPresContext->UsesRootEMUnits() && aPrimaryFrame &&
+      !mInRebuildAllStyleData) {
     nsStyleContext *oldContext = aPrimaryFrame->StyleContext();
     if (!oldContext->GetParent()) { // check that we're the root element
       nsRefPtr<nsStyleContext> newContext = mPresContext->StyleSet()->
@@ -949,10 +950,9 @@ RestyleManager::RestyleElement(Element*        aElement,
       if (oldContext->StyleFont()->mFont.size !=
           newContext->StyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
-        newContext = nullptr;
         mRebuildAllRestyleHint |= aRestyleHint;
         NS_UpdateHint(mRebuildAllExtraHint, aMinHint);
-        DoRebuildAllStyleData(aRestyleTracker);
+        StartRebuildAllStyleData(aRestyleTracker);
         return;
       }
     }
