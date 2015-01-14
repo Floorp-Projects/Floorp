@@ -195,7 +195,7 @@ RestyleTracker::DoProcessRestyles()
   PROFILER_LABEL("RestyleTracker", "ProcessRestyles",
     js::ProfileEntry::Category::CSS);
 
-  mRestyleManager->BeginProcessingRestyles();
+  mRestyleManager->BeginProcessingRestyles(*this);
 
   LOG_RESTYLE("Processing %d pending %srestyles with %d restyle roots for %s",
               mPendingRestyles.Count(),
