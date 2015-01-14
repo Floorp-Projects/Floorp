@@ -108,8 +108,7 @@ nsHttp::CreateAtomTable()
     // The initial length for this table is a value greater than the number of
     // known atoms (NUM_HTTP_ATOMS) because we expect to encounter a few random
     // headers right off the bat.
-    if (!PL_DHashTableInit(&sAtomTable, &ops, nullptr,
-                           sizeof(PLDHashEntryStub),
+    if (!PL_DHashTableInit(&sAtomTable, &ops, sizeof(PLDHashEntryStub),
                            fallible_t(), NUM_HTTP_ATOMS + 10)) {
         sAtomTable.ops = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;

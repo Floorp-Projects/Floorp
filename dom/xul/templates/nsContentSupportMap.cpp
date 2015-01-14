@@ -9,7 +9,7 @@
 void
 nsContentSupportMap::Init()
 {
-    PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), nullptr, sizeof(Entry));
+    PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), sizeof(Entry));
 }
 
 void

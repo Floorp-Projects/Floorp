@@ -429,7 +429,7 @@ nsTHashtable<EntryType>::Init(uint32_t aInitLength)
     s_InitEntry
   };
 
-  PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitLength);
+  PL_DHashTableInit(&mTable, &sOps, sizeof(EntryType), aInitLength);
 }
 
 // static
