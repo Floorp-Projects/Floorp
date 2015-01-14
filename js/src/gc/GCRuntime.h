@@ -530,6 +530,8 @@ class GCRuntime
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
 
+    void releaseHeldRelocatedArenas();
+
   private:
     void minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes);
 
@@ -791,7 +793,7 @@ class GCRuntime
      * frame, rather than at the beginning. In this case, the next slice will be
      * delayed so that we don't get back-to-back slices.
      */
-    volatile uintptr_t interFrameGC;
+    bool interFrameGC;
 
     /* Default budget for incremental GC slice. See SliceBudget in jsgc.h. */
     int64_t sliceBudget;
