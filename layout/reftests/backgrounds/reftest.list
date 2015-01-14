@@ -124,7 +124,7 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 random-if(B2G) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
-fails-if(Android&&(AndroidVersion==10||AndroidVersion==17)) HTTP != root-background-1.html about:blank
+HTTP != root-background-1.html about:blank
 
 random-if(B2G) == really-big-background.html really-big-background-ref.html
 == body-background.html body-background-ref.html
@@ -136,7 +136,7 @@ random-if(B2G) == really-big-background.html really-big-background-ref.html
 
 == multi-background-clip-content-border.html multi-background-clip-content-border-ref.html
 
-fails-if(Android&&(AndroidVersion==10||AndroidVersion==17)) HTTP == background-referrer.html background-referrer-ref.html
+HTTP == background-referrer.html background-referrer-ref.html
 
 == attachment-scroll-positioning-1.html attachment-scroll-positioning-1-ref.html
 == attachment-local-positioning-1.html attachment-local-positioning-1-ref.html
