@@ -153,7 +153,7 @@ class GeneratorObject : public NativeObject
     }
     void setYieldIndex(uint32_t yieldIndex) {
         MOZ_ASSERT_IF(yieldIndex == 0, getFixedSlot(YIELD_INDEX_SLOT).isUndefined());
-        MOZ_ASSERT_IF(yieldIndex != 0, isRunning());
+        MOZ_ASSERT_IF(yieldIndex != 0, isRunning() || isClosing());
         MOZ_ASSERT(yieldIndex < uint32_t(YIELD_INDEX_CLOSING));
         setFixedSlot(YIELD_INDEX_SLOT, Int32Value(yieldIndex));
         MOZ_ASSERT(isSuspended());
@@ -208,8 +208,9 @@ class StarGeneratorObject : public GeneratorObject
     static const Class class_;
 };
 
-bool GeneratorThrowOrClose(JSContext *cx, Handle<GeneratorObject*> obj, HandleValue val,
-                           uint32_t resumeKind);
+bool GeneratorThrowOrClose(JSContext *cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
+                           HandleValue val, uint32_t resumeKind);
+void SetReturnValueForClosingGenerator(JSContext *cx, AbstractFramePtr frame);
 
 } // namespace js
 

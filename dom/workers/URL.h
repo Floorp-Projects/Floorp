@@ -45,8 +45,8 @@ public:
     return nullptr;
   }
 
-  JSObject*
-  WrapObject(JSContext* aCx);
+  bool
+  WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
   // Methods for WebIDL
 

@@ -33,28 +33,28 @@ public:
   {
   }
 
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMPointReadOnly)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMPointReadOnly)
+
   double X() const { return mX; }
   double Y() const { return mY; }
   double Z() const { return mZ; }
   double W() const { return mW; }
 
 protected:
+  virtual ~DOMPointReadOnly() {}
+
   nsCOMPtr<nsISupports> mParent;
   double mX, mY, mZ, mW;
 };
 
 class DOMPoint MOZ_FINAL : public DOMPointReadOnly
 {
-  ~DOMPoint() {}
-
 public:
   explicit DOMPoint(nsISupports* aParent, double aX = 0.0, double aY = 0.0,
                     double aZ = 0.0, double aW = 1.0)
     : DOMPointReadOnly(aParent, aX, aY, aZ, aW)
   {}
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMPoint)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMPoint)
 
   static already_AddRefed<DOMPoint>
   Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,

@@ -555,10 +555,11 @@ class CallOnMessageAvailable MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnMessageAvailable(WebSocketChannel *aChannel,
-                         nsCString        &aData,
-                         int32_t           aLen)
+  CallOnMessageAvailable(WebSocketChannel* aChannel,
+                         nsACString& aData,
+                         int32_t aLen)
     : mChannel(aChannel),
+      mListenerMT(aChannel->mListenerMT),
       mData(aData),
       mLen(aLen) {}
 
@@ -566,19 +567,26 @@ public:
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
-    if (mLen < 0)
-      mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
-    else
-      mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext, mData);
+    if (mListenerMT) {
+      if (mLen < 0) {
+        mListenerMT->mListener->OnMessageAvailable(mListenerMT->mContext,
+                                                   mData);
+      } else {
+        mListenerMT->mListener->OnBinaryMessageAvailable(mListenerMT->mContext,
+                                                         mData);
+      }
+    }
+
     return NS_OK;
   }
 
 private:
   ~CallOnMessageAvailable() {}
 
-  nsRefPtr<WebSocketChannel>        mChannel;
-  nsCString                         mData;
-  int32_t                           mLen;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsCString mData;
+  int32_t mLen;
 };
 NS_IMPL_ISUPPORTS(CallOnMessageAvailable, nsIRunnable)
 
@@ -591,10 +599,12 @@ class CallOnStop MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnStop(WebSocketChannel *aChannel,
-             nsresult          aReason)
+  CallOnStop(WebSocketChannel* aChannel,
+             nsresult aReason)
     : mChannel(aChannel),
-      mReason(aReason) {}
+      mListenerMT(mChannel->mListenerMT),
+      mReason(aReason)
+  {}
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
@@ -602,19 +612,20 @@ public:
 
     nsWSAdmissionManager::OnStopSession(mChannel, mReason);
 
-    if (mChannel->mListener) {
-      mChannel->mListener->OnStop(mChannel->mContext, mReason);
-      mChannel->mListener = nullptr;
-      mChannel->mContext = nullptr;
+    if (mListenerMT) {
+      mListenerMT->mListener->OnStop(mListenerMT->mContext, mReason);
+      mChannel->mListenerMT = nullptr;
     }
+
     return NS_OK;
   }
 
 private:
   ~CallOnStop() {}
 
-  nsRefPtr<WebSocketChannel>        mChannel;
-  nsresult                          mReason;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsresult mReason;
 };
 NS_IMPL_ISUPPORTS(CallOnStop, nsIRunnable)
 
@@ -627,10 +638,11 @@ class CallOnServerClose MOZ_FINAL : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CallOnServerClose(WebSocketChannel *aChannel,
-                    uint16_t          aCode,
-                    nsCString        &aReason)
+  CallOnServerClose(WebSocketChannel* aChannel,
+                    uint16_t aCode,
+                    nsACString& aReason)
     : mChannel(aChannel),
+      mListenerMT(mChannel->mListenerMT),
       mCode(aCode),
       mReason(aReason) {}
 
@@ -638,16 +650,20 @@ public:
   {
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
-    mChannel->mListener->OnServerClose(mChannel->mContext, mCode, mReason);
+    if (mListenerMT) {
+      mListenerMT->mListener->OnServerClose(mListenerMT->mContext, mCode,
+                                            mReason);
+    }
     return NS_OK;
   }
 
 private:
   ~CallOnServerClose() {}
 
-  nsRefPtr<WebSocketChannel>        mChannel;
-  uint16_t                          mCode;
-  nsCString                         mReason;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  uint16_t mCode;
+  nsCString mReason;
 };
 NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 
@@ -658,9 +674,10 @@ NS_IMPL_ISUPPORTS(CallOnServerClose, nsIRunnable)
 class CallAcknowledge MOZ_FINAL : public nsCancelableRunnable
 {
 public:
-  CallAcknowledge(WebSocketChannel *aChannel,
-                  uint32_t          aSize)
+  CallAcknowledge(WebSocketChannel* aChannel,
+                  uint32_t aSize)
     : mChannel(aChannel),
+      mListenerMT(mChannel->mListenerMT),
       mSize(aSize) {}
 
   NS_IMETHOD Run()
@@ -668,15 +685,18 @@ public:
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     LOG(("WebSocketChannel::CallAcknowledge: Size %u\n", mSize));
-    mChannel->mListener->OnAcknowledge(mChannel->mContext, mSize);
+    if (mListenerMT) {
+      mListenerMT->mListener->OnAcknowledge(mListenerMT->mContext, mSize);
+    }
     return NS_OK;
   }
 
 private:
   ~CallAcknowledge() {}
 
-  nsRefPtr<WebSocketChannel>        mChannel;
-  uint32_t                          mSize;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  uint32_t mSize;
 };
 
 //-----------------------------------------------------------------------------
@@ -1174,17 +1194,7 @@ WebSocketChannel::~WebSocketChannel()
     NS_ProxyRelease(mainThread, forgettable, false);
   }
 
-  if (mListener) {
-    nsIWebSocketListener *forgettableListener;
-    mListener.forget(&forgettableListener);
-    NS_ProxyRelease(mainThread, forgettableListener, false);
-  }
-
-  if (mContext) {
-    nsISupports *forgettableContext;
-    mContext.forget(&forgettableContext);
-    NS_ProxyRelease(mainThread, forgettableContext, false);
-  }
+  mListenerMT = nullptr;
 
   if (mLoadGroup) {
     nsILoadGroup *forgettableGroup;
@@ -1586,7 +1596,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
       LOG(("WebSocketChannel:: %stext frame received\n",
            isDeflated ? "deflated " : ""));
 
-      if (mListener) {
+      if (mListenerMT) {
         nsCString utf8Data;
 
         if (isDeflated) {
@@ -1657,7 +1667,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
           mCloseTimer->Cancel();
           mCloseTimer = nullptr;
         }
-        if (mListener) {
+        if (mListenerMT) {
           mTargetThread->Dispatch(new CallOnServerClose(this, mServerCloseCode,
                                                         mServerCloseReason),
                                   NS_DISPATCH_NORMAL);
@@ -1696,7 +1706,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
       LOG(("WebSocketChannel:: %sbinary frame received\n",
            isDeflated ? "deflated " : ""));
 
-      if (mListener) {
+      if (mListenerMT) {
         nsCString binaryData;
 
         if (isDeflated) {
@@ -2265,8 +2275,11 @@ WebSocketChannel::StopSession(nsresult reason)
 
   if (!mCalledOnStop) {
     mCalledOnStop = 1;
-    mTargetThread->Dispatch(new CallOnStop(this, reason),
-                            NS_DISPATCH_NORMAL);
+
+    nsWSAdmissionManager::OnStopSession(this, reason);
+
+    nsRefPtr<CallOnStop> runnable = new CallOnStop(this, reason);
+    mTargetThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 }
 
@@ -2577,10 +2590,10 @@ WebSocketChannel::StartWebsocketData()
   nsWSAdmissionManager::OnConnected(this);
 
   LOG(("WebSocketChannel::StartWebsocketData Notifying Listener %p\n",
-       mListener.get()));
+       mListenerMT ? mListenerMT->mListener.get() : nullptr));
 
-  if (mListener) {
-    mListener->OnStart(mContext);
+  if (mListenerMT) {
+    mListenerMT->mListener->OnStart(mListenerMT->mContext);
   }
 
   // Start keepalive ping timer, if we're using keepalive.
@@ -2943,7 +2956,7 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mListener || mWasOpened)
+  if (mListenerMT || mWasOpened)
     return NS_ERROR_ALREADY_OPENED;
 
   nsresult rv;
@@ -3109,8 +3122,7 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   // Only set these if the open was successful:
   //
   mWasOpened = 1;
-  mListener = aListener;
-  mContext = aContext;
+  mListenerMT = new ListenerAndContextContainer(aListener, aContext);
   IncrementSessionCount();
 
   return rv;

@@ -362,8 +362,9 @@ DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPri
 {
 }
 
-JSObject*
-DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+bool
+DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                             JS::MutableHandle<JSObject*> aReflector)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mWorkerPrivate->IsSharedWorker());
@@ -374,7 +375,7 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
                                                          GetWorkerPrincipal(),
-                                                         true);
+                                                         true, aReflector);
 }
 
 void
@@ -393,8 +394,9 @@ SharedWorkerGlobalScope::SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
 {
 }
 
-JSObject*
-SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+bool
+SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                          JS::MutableHandle<JSObject*> aReflector)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mWorkerPrivate->IsSharedWorker());
@@ -404,7 +406,7 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
 
   return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                       GetWorkerPrincipal(),
-                                                      true);
+                                                      true, aReflector);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
@@ -426,8 +428,9 @@ ServiceWorkerGlobalScope::~ServiceWorkerGlobalScope()
 {
 }
 
-JSObject*
-ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+bool
+ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                           JS::MutableHandle<JSObject*> aReflector)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
@@ -437,7 +440,7 @@ ServiceWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
 
   return ServiceWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
                                                        GetWorkerPrincipal(),
-                                                       true);
+                                                       true, aReflector);
 }
 
 ServiceWorkerClients*

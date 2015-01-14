@@ -48,6 +48,28 @@ function StarGeneratorThrow(val) {
     }
 }
 
+function StarGeneratorReturn(val) {
+    if (!IsSuspendedStarGenerator(this)) {
+        if (!IsObject(this) || !IsStarGeneratorObject(this))
+            return callFunction(CallStarGeneratorMethodIfWrapped, this, val, "StarGeneratorReturn");
+
+        if (StarGeneratorObjectIsClosed(this))
+            return { value: val, done: true };
+
+        if (GeneratorIsRunning(this))
+            ThrowError(JSMSG_NESTING_GENERATOR);
+    }
+
+    try {
+        var rval = { value: val, done: true };
+        return resumeGenerator(this, rval, 'close');
+    } catch (e) {
+        if (!StarGeneratorObjectIsClosed(this))
+            GeneratorSetClosed(this);
+        throw e;
+    }
+}
+
 function LegacyGeneratorNext(val) {
     if (!IsObject(this) || !IsLegacyGeneratorObject(this))
         return callFunction(CallLegacyGeneratorMethodIfWrapped, this, val, "LegacyGeneratorNext");

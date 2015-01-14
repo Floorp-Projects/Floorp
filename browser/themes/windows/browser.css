@@ -887,7 +887,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: @tabToolbarNavbarOverlap@;
+  margin-bottom: var(--tab-toolbar-navbar-overlap);
 }
 
 #TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
@@ -1786,7 +1786,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 #TabsToolbar {
   min-height: 0;
   padding: 0;
-  margin-bottom: -@tabToolbarNavbarOverlap@; /* overlap the nav-bar's top border */
+  margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap)); /* overlap the nav-bar's top border */
 }
 
 %ifndef WINDOWS_AERO
@@ -1881,7 +1881,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-  margin: 0 0 @tabToolbarNavbarOverlap@;
+  margin: 0 0 var(--tab-toolbar-navbar-overlap);
 }
 
 #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,

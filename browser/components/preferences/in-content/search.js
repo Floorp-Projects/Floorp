@@ -24,6 +24,12 @@ var gSearchPane = {
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
 
+    window.addEventListener("click", this, false);
+    window.addEventListener("command", this, false);
+    window.addEventListener("dragstart", this, false);
+    window.addEventListener("keypress", this, false);
+    window.addEventListener("select", this, false);
+
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(this, "browser-search-engine-modified", false);
@@ -61,6 +67,49 @@ var gSearchPane = {
       if (e.name == currentEngine)
         list.selectedItem = item;
     });
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "click":
+        if (aEvent.target.id == "addEngines" && aEvent.button == 0) {
+          Services.wm.getMostRecentWindow('navigator:browser')
+                     .BrowserSearch.loadAddEngines();
+        }
+        break;
+      case "command":
+        switch (aEvent.target.id) {
+          case "":
+            if (aEvent.target.parentNode &&
+                aEvent.target.parentNode.parentNode &&
+                aEvent.target.parentNode.parentNode.id == "defaultEngine") {
+              gSearchPane.setDefaultEngine();
+            }
+            break;
+          case "restoreDefaultSearchEngines":
+            gSearchPane.onRestoreDefaults();
+            break;
+          case "removeEngineButton":
+            gSearchPane.remove();
+            break;
+        }
+        break;
+      case "dragstart":
+        if (aEvent.target.id == "engineChildren") {
+          onDragEngineStart(aEvent);
+        }
+        break;
+      case "keypress":
+        if (aEvent.target.id == "engineList") {
+          gSearchPane.onTreeKeyPress(aEvent);
+        }
+        break;
+      case "select":
+        if (aEvent.target.id == "engineList") {
+          gSearchPane.onTreeSelect();
+        }
+        break;
+    }
   },
 
   observe: function(aEngine, aTopic, aVerb) {

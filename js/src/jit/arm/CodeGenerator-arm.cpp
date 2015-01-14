@@ -50,6 +50,9 @@ CodeGeneratorARM::generatePrologue()
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
     masm.checkStackAlignment();
+
+    emitTracelogIonStart();
+
     return true;
 }
 
@@ -59,10 +62,7 @@ CodeGeneratorARM::generateEpilogue()
     MOZ_ASSERT(!gen->compilingAsmJS());
     masm.bind(&returnLabel_);
 
-#ifdef JS_TRACE_LOGGING
-    emitTracelogStopEvent(TraceLogger_IonMonkey);
-    emitTracelogScriptStop();
-#endif
+    emitTracelogIonStop();
 
     masm.freeStack(frameSize());
     MOZ_ASSERT(masm.framePushed() == 0);

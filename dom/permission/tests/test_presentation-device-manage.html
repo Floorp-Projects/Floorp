@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1080474
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for presentation-device-manage permission</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1080474">test presentation-device-manage</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript;version=1.8" src="file_framework.js"></script>
+<script type="application/javascript;version=1.8">
+function verifier(success, failure) {
+  if (window.navigator.mozPresentationDeviceInfo) {
+    success("Got mozPresentationDeviceInfo object!");
+  } else {
+    failure("Failed to get mozPresentationDeviceInfo object!");
+  }
+}
+var gData = [
+  {
+    perm: ["presentation-device-manage"],
+    settings: [["dom.presentation.enabled", true]],
+    obj: "mozPresentationDeviceInfo",
+    webidl: "PresentationDeviceInfoManager"
+  }
+]
+</script>
+</pre>
+</body>
+</html>
+

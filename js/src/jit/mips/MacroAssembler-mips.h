@@ -560,6 +560,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // unboxing code
     void unboxNonDouble(const ValueOperand &operand, Register dest);
     void unboxNonDouble(const Address &src, Register dest);
+    void unboxNonDouble(const BaseIndex &src, Register dest);
     void unboxInt32(const ValueOperand &operand, Register dest);
     void unboxInt32(const Address &src, Register dest);
     void unboxBoolean(const ValueOperand &operand, Register dest);
@@ -570,6 +571,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void unboxString(const Address &src, Register dest);
     void unboxObject(const ValueOperand &src, Register dest);
     void unboxObject(const Address &src, Register dest);
+    void unboxObject(const BaseIndex &src, Register dest) { unboxNonDouble(src, dest); }
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 

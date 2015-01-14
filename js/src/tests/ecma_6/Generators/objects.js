@@ -32,9 +32,14 @@ function TestGeneratorObjectMethods() {
   function* g() { yield 1; }
   var iter = g();
 
+  assertEq(iter.next.length, 1);
+  assertEq(iter.return.length, 1);
+  assertEq(iter.throw.length, 1);
+
   function TestNonGenerator(non_generator) {
     assertThrowsInstanceOf(function() { iter.next.call(non_generator); }, TypeError);
     assertThrowsInstanceOf(function() { iter.next.call(non_generator, 1); }, TypeError);
+    assertThrowsInstanceOf(function() { iter.return.call(non_generator, 1); }, TypeError);
     assertThrowsInstanceOf(function() { iter.throw.call(non_generator, 1); }, TypeError);
     assertThrowsInstanceOf(function() { iter.close.call(non_generator); }, TypeError);
   }

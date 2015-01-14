@@ -1004,18 +1004,6 @@
         "url": "/app-uri/resources/icons/w3c-48.png"
       },
       {
-        "url": "/app-uri/resources/idlharness.js"
-      },
-      {
-        "url": "/app-uri/resources/testharness.css"
-      },
-      {
-        "url": "/app-uri/resources/testharness.js"
-      },
-      {
-        "url": "/app-uri/resources/testharnessreport.js"
-      },
-      {
         "url": "/battery-status/battery-interface.js"
       },
       {
@@ -2780,24 +2768,6 @@
         "url": "/old-tests/submission/Infraware/Session_History/contents/Session_History/css/result.css"
       },
       {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/WebIDLParser.js"
-      },
-      {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/idlharness.js"
-      },
-      {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/readme.md"
-      },
-      {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/testharness.css"
-      },
-      {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/testharness.js"
-      },
-      {
-        "url": "/old-tests/submission/Infraware/Session_History/resources/testharnessreport.js"
-      },
-      {
         "url": "/old-tests/submission/Microsoft/dragdrop/dragdrop_support.js"
       },
       {
@@ -4287,6 +4257,9 @@
       },
       {
         "url": "/workers/semantics/encodings/003-1.py"
+      },
+      {
+        "url": "/workers/semantics/interface-objects/001.worker.js"
       },
       {
         "url": "/workers/semantics/multiple-workers/004-2.js"
@@ -17279,9 +17252,6 @@
         "url": "/workers/semantics/encodings/004.html"
       },
       {
-        "url": "/workers/semantics/interface-objects/001.html"
-      },
-      {
         "url": "/workers/semantics/interface-objects/002.html"
       },
       {
@@ -17928,6 +17898,6 @@
     "deleted": [],
     "items": {}
   },
-  "rev": "a84b794c43954b4465eb9b967cc934875952fc40",
+  "rev": "6e35a4cd58f8fa507fc90b9d7b7ff28153759cac",
   "url_base": "/"
 }

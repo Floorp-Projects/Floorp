@@ -49,9 +49,9 @@ public:
     MOZ_COUNT_DTOR(TextDecoder);
   }
 
-  JSObject* WrapObject(JSContext* aCx, bool* aTookOwnership)
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector)
   {
-    return TextDecoderBinding::Wrap(aCx, this, aTookOwnership);
+    return TextDecoderBinding::Wrap(aCx, this, aReflector);
   }
 
   /**

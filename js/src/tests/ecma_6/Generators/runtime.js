@@ -64,7 +64,7 @@ function TestGeneratorObjectPrototype() {
     assertEq(Object.getPrototypeOf((function*(){yield 1}).prototype),
                GeneratorObjectPrototype);
 
-    var expected_property_names = ["next", "throw", "constructor"];
+    var expected_property_names = ["next", "return", "throw", "constructor"];
     if (!JS_HAS_SYMBOLS)
         expected_property_names.push(std_iterator);
     var found_property_names =

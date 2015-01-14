@@ -355,6 +355,12 @@ describe("loop.store.ActiveRoomStore", function () {
       store.setStoreState({roomToken: "tokenFake"});
     });
 
+    it("should set the room state to JOINING", function() {
+      store.gotMediaPermission();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.JOINING);
+    });
+
     it("should call rooms.join on mozLoop", function() {
       store.gotMediaPermission();
 
@@ -676,6 +682,17 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledWithExactly(fakeMozLoop.rooms.leave,
         "fakeToken", "1627384950");
     });
+
+    it("should call mozLoop.rooms.leave if the room state is JOINING",
+      function() {
+        store.setStoreState({roomState: ROOM_STATES.JOINING});
+
+        store.windowUnload();
+
+        sinon.assert.calledOnce(fakeMozLoop.rooms.leave);
+        sinon.assert.calledWithExactly(fakeMozLoop.rooms.leave,
+          "fakeToken", "1627384950");
+      });
 
     it("should set the state to CLOSING", function() {
       store.windowUnload();
