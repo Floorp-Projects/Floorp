@@ -88,6 +88,21 @@ def skip_if_b2g(target):
 
     return wrapper
 
+def skip_if_e10s(target):
+    def wrapper(self, *args, **kwargs):
+        with self.marionette.using_context('chrome'):
+            multi_process_browser = self.marionette.execute_script("""
+            try {
+              return Services.appinfo.browserTabsRemoteAutostart;
+            } catch (e) {
+              return false;
+            }""")
+
+        if multi_process_browser:
+            raise SkipTest('skipping due to e10s')
+        return target(self, *args, **kwargs)
+    return wrapper
+
 def parameterized(func_suffix, *args, **kwargs):
     """
     A decorator that can generate methods given a base method and some data.

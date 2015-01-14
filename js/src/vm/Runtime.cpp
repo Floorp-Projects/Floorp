@@ -133,7 +133,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
   : mainThread(this),
     parentRuntime(parentRuntime),
     interrupt_(false),
-    interruptPar_(false),
     telemetryCallback(nullptr),
     handlingSignal(false),
     interruptCallback(nullptr),
@@ -216,10 +215,8 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     jitSupportsFloatingPoint(false),
     jitSupportsSimd(false),
     ionPcScriptCache(nullptr),
-    threadPool(this),
     defaultJSContextCallback(nullptr),
     ctypesActivityCallback(nullptr),
-    forkJoinWarmup(0),
     offthreadIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
 #ifdef DEBUG
@@ -276,9 +273,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 
     js::TlsPerThreadData.set(&mainThread);
-
-    if (!threadPool.init())
-        return false;
 
     if (CanUseExtraThreads())
         EnsureHelperThreadsInitialized();
@@ -623,7 +617,6 @@ void
 JSRuntime::requestInterrupt(InterruptMode mode)
 {
     interrupt_ = true;
-    interruptPar_ = true;
     mainThread.jitStackLimit_ = UINTPTR_MAX;
 
     if (mode == JSRuntime::RequestInterruptUrgent)
@@ -636,7 +629,6 @@ JSRuntime::handleInterrupt(JSContext *cx)
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     if (interrupt_ || mainThread.jitStackLimit_ == UINTPTR_MAX) {
         interrupt_ = false;
-        interruptPar_ = false;
         mainThread.resetJitStackLimit();
         return InvokeInterruptCallback(cx);
     }
@@ -815,7 +807,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {
-    return rt->ownerThread_ == PR_GetCurrentThread() && !InParallelSection();
+    return rt->ownerThread_ == PR_GetCurrentThread();
 }
 
 bool
@@ -823,11 +815,6 @@ js::CurrentThreadCanAccessZone(Zone *zone)
 {
     if (CurrentThreadCanAccessRuntime(zone->runtime_))
         return true;
-    if (InParallelSection()) {
-        DebugOnly<PerThreadData *> pt = js::TlsPerThreadData.get();
-        MOZ_ASSERT(pt && pt->associatedWith(zone->runtime_));
-        return true;
-    }
 
     // Only zones in use by an exclusive thread can be used off the main thread
     // or outside of PJS. We don't keep track of which thread owns such zones

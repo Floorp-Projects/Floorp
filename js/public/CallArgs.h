@@ -42,29 +42,6 @@
 typedef bool
 (* JSNative)(JSContext *cx, unsigned argc, JS::Value *vp);
 
-/* Typedef for native functions that may be called in parallel. */
-typedef bool
-(* JSParallelNative)(js::ForkJoinContext *cx, unsigned argc, JS::Value *vp);
-
-/*
- * Typedef for native functions that may be called either in parallel or
- * sequential execution.
- */
-typedef bool
-(* JSThreadSafeNative)(js::ThreadSafeContext *cx, unsigned argc, JS::Value *vp);
-
-/*
- * Convenience wrappers for passing in ThreadSafeNative to places that expect
- * a JSNative or a JSParallelNative.
- */
-template <JSThreadSafeNative threadSafeNative>
-inline bool
-JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp);
-
-template <JSThreadSafeNative threadSafeNative>
-inline bool
-JSParallelNativeThreadSafeWrapper(js::ForkJoinContext *cx, unsigned argc, JS::Value *vp);
-
 /*
  * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
  * replacing with the global object as necessary.

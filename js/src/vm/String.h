@@ -71,8 +71,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *    property via a flat string's "extensible" property.
  *
  *  - To avoid allocating small char arrays, short strings can be stored inline
- *    in the string header (JSInlineString). To increase the max size of such
- *    inline strings, larger string headers can be used (JSFatInlineString).
+ *    in the string header (JSInlineString). These come in two flavours:
+ *    JSThinInlineString, which is the same size as JSString; and
+ *    JSFatInlineString, which has a larger header and so can fit more chars.
  *
  *  - To avoid comparing O(n) string equality comparison, strings can be
  *    canonicalized to "atoms" (JSAtom) such that there is a single atom with a
@@ -109,9 +110,11 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  |  |
  *  |  +-- JSUndependedString   original dependent base / -
  *  |  |
- *  |  +-- JSInlineString       - / chars stored in header
- *  |         \
- *  |         JSFatInlineString - / header is fat
+ *  |  +-- JSInlineString (abstract)    - / chars stored in header
+ *  |      |
+ *  |      +-- JSThinInlineString       - / header is normal
+ *  |      |
+ *  |      +-- JSFatInlineString        - / header is fat
  *  |
  * JSAtom                       - / string equality === pointer equality
  *  |
@@ -126,8 +129,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * be combined with other string types to create additional most-derived types
  * that satisfy the invariants of more than one of the abovementioned
  * most-derived types:
- *  - InlineAtom    = JSInlineString    + JSAtom (atom with inline chars)
- *  - FatInlineAtom = JSFatInlineString + JSAtom (atom with (more) inline chars)
+ *  - InlineAtom     = JSInlineString     + JSAtom (atom with inline chars, abstract)
+ *  - ThinInlineAtom = JSThinInlineString + JSAtom (atom with inline chars)
+ *  - FatInlineAtom  = JSFatInlineString  + JSAtom (atom with (more) inline chars)
  *
  * Derived string types can be queried from ancestor types via isX() and
  * retrieved with asX() debug-only-checked casts.
@@ -139,7 +143,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 class JSString : public js::gc::TenuredCell
 {
   protected:
-    static const size_t NUM_INLINE_CHARS_LATIN1 = 2 * sizeof(void *) / sizeof(char);
+    static const size_t NUM_INLINE_CHARS_LATIN1   = 2 * sizeof(void *) / sizeof(JS::Latin1Char);
     static const size_t NUM_INLINE_CHARS_TWO_BYTE = 2 * sizeof(void *) / sizeof(char16_t);
 
     /* Fields only apply to string types commented on the right. */
@@ -234,29 +238,29 @@ class JSString : public js::gc::TenuredCell
      *
      */
 
-    static const uint32_t FLAT_BIT              = JS_BIT(0);
-    static const uint32_t HAS_BASE_BIT          = JS_BIT(1);
-    static const uint32_t INLINE_CHARS_BIT      = JS_BIT(2);
-    static const uint32_t ATOM_BIT              = JS_BIT(3);
+    static const uint32_t FLAT_BIT               = JS_BIT(0);
+    static const uint32_t HAS_BASE_BIT           = JS_BIT(1);
+    static const uint32_t INLINE_CHARS_BIT       = JS_BIT(2);
+    static const uint32_t ATOM_BIT               = JS_BIT(3);
 
-    static const uint32_t ROPE_FLAGS            = 0;
-    static const uint32_t DEPENDENT_FLAGS       = HAS_BASE_BIT;
-    static const uint32_t UNDEPENDED_FLAGS      = FLAT_BIT | HAS_BASE_BIT;
-    static const uint32_t EXTENSIBLE_FLAGS      = FLAT_BIT | JS_BIT(4);
-    static const uint32_t EXTERNAL_FLAGS        = FLAT_BIT | JS_BIT(5);
+    static const uint32_t ROPE_FLAGS             = 0;
+    static const uint32_t DEPENDENT_FLAGS        = HAS_BASE_BIT;
+    static const uint32_t UNDEPENDED_FLAGS       = FLAT_BIT | HAS_BASE_BIT;
+    static const uint32_t EXTENSIBLE_FLAGS       = FLAT_BIT | JS_BIT(4);
+    static const uint32_t EXTERNAL_FLAGS         = FLAT_BIT | JS_BIT(5);
 
-    static const uint32_t FAT_INLINE_MASK       = INLINE_CHARS_BIT | JS_BIT(4);
-    static const uint32_t PERMANENT_ATOM_MASK   = ATOM_BIT | JS_BIT(5);
+    static const uint32_t FAT_INLINE_MASK        = INLINE_CHARS_BIT | JS_BIT(4);
+    static const uint32_t PERMANENT_ATOM_MASK    = ATOM_BIT | JS_BIT(5);
 
-    /* Initial flags for inline and fat inline strings. */
-    static const uint32_t INIT_INLINE_FLAGS     = FLAT_BIT | INLINE_CHARS_BIT;
-    static const uint32_t INIT_FAT_INLINE_FLAGS = FLAT_BIT | FAT_INLINE_MASK;
+    /* Initial flags for thin inline and fat inline strings. */
+    static const uint32_t INIT_THIN_INLINE_FLAGS = FLAT_BIT | INLINE_CHARS_BIT;
+    static const uint32_t INIT_FAT_INLINE_FLAGS  = FLAT_BIT | FAT_INLINE_MASK;
 
-    static const uint32_t TYPE_FLAGS_MASK       = JS_BIT(6) - 1;
+    static const uint32_t TYPE_FLAGS_MASK        = JS_BIT(6) - 1;
 
-    static const uint32_t LATIN1_CHARS_BIT      = JS_BIT(6);
+    static const uint32_t LATIN1_CHARS_BIT       = JS_BIT(6);
 
-    static const uint32_t MAX_LENGTH            = js::MaxStringLength;
+    static const uint32_t MAX_LENGTH             = js::MaxStringLength;
 
     static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
 
@@ -770,28 +774,9 @@ class JSExtensibleString : public JSFlatString
 static_assert(sizeof(JSExtensibleString) == sizeof(JSString),
               "string subclasses must be binary-compatible with JSString");
 
-/*
- * On 32-bit platforms, JSInlineString can store 7 Latin1 characters or
- * 3 TwoByte characters (excluding null terminator) inline. On 64-bit
- * platforms, these numbers are 15 and 7, respectively.
- */
 class JSInlineString : public JSFlatString
 {
   public:
-    static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1 - 1;
-    static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE - 1;
-
-    template <js::AllowGC allowGC>
-    static inline JSInlineString *new_(js::ExclusiveContext *cx);
-
-    inline char16_t *initTwoByte(size_t length);
-    inline JS::Latin1Char *initLatin1(size_t length);
-
-    template <typename CharT>
-    inline CharT *init(size_t length);
-
-    inline void resetLength(size_t length);
-
     MOZ_ALWAYS_INLINE
     const JS::Latin1Char *latin1Chars(const JS::AutoCheckCannotGC &nogc) const {
         MOZ_ASSERT(JSString::isInline());
@@ -806,13 +791,6 @@ class JSInlineString : public JSFlatString
         return d.inlineStorageTwoByte;
     }
 
-    static bool latin1LengthFits(size_t length) {
-        return length <= MAX_LENGTH_LATIN1;
-    }
-    static bool twoByteLengthFits(size_t length) {
-        return length <= MAX_LENGTH_TWO_BYTE;
-    }
-
     template<typename CharT>
     static bool lengthFits(size_t length);
 
@@ -825,6 +803,30 @@ static_assert(sizeof(JSInlineString) == sizeof(JSString),
               "string subclasses must be binary-compatible with JSString");
 
 /*
+ * On 32-bit platforms, JSThinInlineString can store 7 Latin1 characters or 3
+ * TwoByte characters (excluding null terminator) inline. On 64-bit platforms,
+ * these numbers are 15 and 7, respectively.
+ */
+class JSThinInlineString : public JSInlineString
+{
+  public:
+    static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1 - 1;
+    static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE - 1;
+
+    template <js::AllowGC allowGC>
+    static inline JSThinInlineString *new_(js::ExclusiveContext *cx);
+
+    template <typename CharT>
+    inline CharT *init(size_t length);
+
+    template<typename CharT>
+    static bool lengthFits(size_t length);
+};
+
+static_assert(sizeof(JSThinInlineString) == sizeof(JSString),
+              "string subclasses must be binary-compatible with JSString");
+
+/*
  * On both 32-bit and 64-bit platforms, MAX_LENGTH_TWO_BYTE is 11 and
  * MAX_LENGTH_LATIN1 is 23 (excluding null terminator). This is deliberate,
  * in order to minimize potential performance differences between 32-bit and
@@ -832,9 +834,10 @@ static_assert(sizeof(JSInlineString) == sizeof(JSString),
  *
  * There are still some differences due to NUM_INLINE_CHARS_* being different.
  * E.g. TwoByte strings of length 4--7 will be JSFatInlineStrings on 32-bit
- * platforms and JSInlineStrings on 64-bit platforms. But the more significant
- * transition from inline strings to non-inline strings occurs at length 11 (for
- * TwoByte strings) and 23 (Latin1 strings) on both 32-bit and 64-bit platforms.
+ * platforms and JSThinInlineStrings on 64-bit platforms. But the more
+ * significant transition from inline strings to non-inline strings occurs at
+ * length 11 (for TwoByte strings) and 23 (Latin1 strings) on both 32-bit and
+ * 64-bit platforms.
  */
 class JSFatInlineString : public JSInlineString
 {
@@ -859,36 +862,8 @@ class JSFatInlineString : public JSInlineString
                                               INLINE_EXTENSION_CHARS_TWO_BYTE
                                               -1 /* null terminator */;
 
-    inline char16_t *initTwoByte(size_t length);
-    inline JS::Latin1Char *initLatin1(size_t length);
-
     template <typename CharT>
     inline CharT *init(size_t length);
-
-    static bool latin1LengthFits(size_t length) {
-        static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
-                      "fat inline strings' Latin1 characters don't exactly "
-                      "fill subsequent cells and thus are wasteful");
-        static_assert(MAX_LENGTH_LATIN1 + 1 ==
-                      (sizeof(JSFatInlineString) -
-                       offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char),
-                      "MAX_LENGTH_LATIN1 must be one less than inline Latin1 "
-                      "storage count");
-
-        return length <= MAX_LENGTH_LATIN1;
-    }
-    static bool twoByteLengthFits(size_t length) {
-        static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
-                      "fat inline strings' char16_t characters don't exactly "
-                      "fill subsequent cells and thus are wasteful");
-        static_assert(MAX_LENGTH_TWO_BYTE + 1 ==
-                      (sizeof(JSFatInlineString) -
-                       offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t),
-                      "MAX_LENGTH_TWO_BYTE must be one less than inline "
-                      "char16_t storage count");
-
-        return length <= MAX_LENGTH_TWO_BYTE;
-    }
 
     template<typename CharT>
     static bool lengthFits(size_t length);
@@ -1297,30 +1272,64 @@ JSRope::copyChars<char16_t>(js::ExclusiveContext *cx, js::ScopedJSFreePtr<char16
 
 template<>
 MOZ_ALWAYS_INLINE bool
-JSInlineString::lengthFits<JS::Latin1Char>(size_t length)
+JSThinInlineString::lengthFits<JS::Latin1Char>(size_t length)
 {
-    return latin1LengthFits(length);
+    return length <= MAX_LENGTH_LATIN1;
 }
 
 template<>
 MOZ_ALWAYS_INLINE bool
-JSInlineString::lengthFits<char16_t>(size_t length)
+JSThinInlineString::lengthFits<char16_t>(size_t length)
 {
-    return twoByteLengthFits(length);
+    return length <= MAX_LENGTH_TWO_BYTE;
 }
 
 template<>
 MOZ_ALWAYS_INLINE bool
 JSFatInlineString::lengthFits<JS::Latin1Char>(size_t length)
 {
-    return latin1LengthFits(length);
+    static_assert((INLINE_EXTENSION_CHARS_LATIN1 * sizeof(char)) % js::gc::CellSize == 0,
+                  "fat inline strings' Latin1 characters don't exactly "
+                  "fill subsequent cells and thus are wasteful");
+    static_assert(MAX_LENGTH_LATIN1 + 1 ==
+                  (sizeof(JSFatInlineString) -
+                   offsetof(JSFatInlineString, d.inlineStorageLatin1)) / sizeof(char),
+                  "MAX_LENGTH_LATIN1 must be one less than inline Latin1 "
+                  "storage count");
+
+    return length <= MAX_LENGTH_LATIN1;
 }
 
 template<>
 MOZ_ALWAYS_INLINE bool
 JSFatInlineString::lengthFits<char16_t>(size_t length)
 {
-    return twoByteLengthFits(length);
+    static_assert((INLINE_EXTENSION_CHARS_TWO_BYTE * sizeof(char16_t)) % js::gc::CellSize == 0,
+                  "fat inline strings' char16_t characters don't exactly "
+                  "fill subsequent cells and thus are wasteful");
+    static_assert(MAX_LENGTH_TWO_BYTE + 1 ==
+                  (sizeof(JSFatInlineString) -
+                   offsetof(JSFatInlineString, d.inlineStorageTwoByte)) / sizeof(char16_t),
+                  "MAX_LENGTH_TWO_BYTE must be one less than inline "
+                  "char16_t storage count");
+
+    return length <= MAX_LENGTH_TWO_BYTE;
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
+JSInlineString::lengthFits<JS::Latin1Char>(size_t length)
+{
+    // If it fits in a fat inline string, it fits in any inline string.
+    return JSFatInlineString::lengthFits<JS::Latin1Char>(length);
+}
+
+template<>
+MOZ_ALWAYS_INLINE bool
+JSInlineString::lengthFits<char16_t>(size_t length)
+{
+    // If it fits in a fat inline string, it fits in any inline string.
+    return JSFatInlineString::lengthFits<char16_t>(length);
 }
 
 template<>

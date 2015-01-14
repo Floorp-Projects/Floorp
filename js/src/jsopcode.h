@@ -32,69 +32,79 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 /*
  * JS bytecode formats.
  */
-#define JOF_BYTE          0       /* single bytecode, no immediates */
-#define JOF_JUMP          1       /* signed 16-bit jump offset immediate */
-#define JOF_ATOM          2       /* unsigned 16-bit constant index */
-#define JOF_UINT16        3       /* unsigned 16-bit immediate operand */
-#define JOF_TABLESWITCH   4       /* table switch */
-/* 5 is unused */
-#define JOF_QARG          6       /* quickened get/set function argument ops */
-#define JOF_LOCAL         7       /* var or block-local variable */
-#define JOF_DOUBLE        8       /* uint32_t index for double value */
-#define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
-#define JOF_UINT8         13      /* uint8_t immediate, e.g. top 8 bits of 24-bit
-                                     atom index */
-#define JOF_INT32         14      /* int32_t immediate operand */
-#define JOF_OBJECT        15      /* unsigned 16-bit object index */
-/* 16 is unused */
-#define JOF_REGEXP        17      /* unsigned 32-bit regexp index */
-#define JOF_INT8          18      /* int8_t immediate operand */
-#define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
-/* 20 is unused */
-#define JOF_SCOPECOORD    21      /* embedded ScopeCoordinate immediate */
-#define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
+enum {
+    JOF_BYTE            = 0,        /* single bytecode, no immediates */
+    JOF_JUMP            = 1,        /* signed 16-bit jump offset immediate */
+    JOF_ATOM            = 2,        /* unsigned 16-bit constant index */
+    JOF_UINT16          = 3,        /* unsigned 16-bit immediate operand */
+    JOF_TABLESWITCH     = 4,        /* table switch */
+    /* 5 is unused */
+    JOF_QARG            = 6,        /* quickened get/set function argument ops */
+    JOF_LOCAL           = 7,        /* var or block-local variable */
+    JOF_DOUBLE          = 8,        /* uint32_t index for double value */
+    JOF_UINT24          = 12,       /* extended unsigned 24-bit literal (index) */
+    JOF_UINT8           = 13,       /* uint8_t immediate, e.g. top 8 bits of 24-bit
+                                       atom index */
+    JOF_INT32           = 14,       /* int32_t immediate operand */
+    JOF_OBJECT          = 15,       /* unsigned 16-bit object index */
+    /* 16 is unused */
+    JOF_REGEXP          = 17,       /* unsigned 32-bit regexp index */
+    JOF_INT8            = 18,       /* int8_t immediate operand */
+    JOF_ATOMOBJECT      = 19,       /* uint16_t constant index + object index */
+    /* 20 is unused */
+    JOF_SCOPECOORD      = 21,       /* embedded ScopeCoordinate immediate */
+    JOF_TYPEMASK        = 0x001f,   /* mask for above immediate types */
 
-#define JOF_NAME          (1U<<5) /* name operation */
-#define JOF_PROP          (2U<<5) /* obj.prop operation */
-#define JOF_ELEM          (3U<<5) /* obj[index] operation */
-#define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
-#define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
-/* (1U<<9) is unused*/
-/* (1U<<10) is unused*/
-/* (1U<<11) is unused*/
-/* (1U<<12) is unused*/
-/* (1U<<13) is unused*/
-#define JOF_DETECTING    (1U<<14) /* object detection for warning-quelling */
-/* (1U<<15) is unused*/
-#define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
-/* (1U<<17) is unused */
-/* (1U<<18) is unused */
-#define JOF_CHECKSLOPPY  (1U<<19) /* Op can only be generated in sloppy mode */
-#define JOF_CHECKSTRICT  (1U<<20) /* Op can only be generated in strict mode */
-#define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
-                                     JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporary slot
-                                     to root intermediate objects besides
-                                     the slots opcode uses */
-#define JOF_TMPSLOT2     (2U<<22) /* interpreter uses extra 2 temporary slot
-                                     besides the slots opcode uses */
-#define JOF_TMPSLOT3     (3U<<22) /* interpreter uses extra 3 temporary slot
-                                     besides the slots opcode uses */
-#define JOF_TMPSLOT_SHIFT 22
-#define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
+    JOF_NAME            = 1 << 5,   /* name operation */
+    JOF_PROP            = 2 << 5,   /* obj.prop operation */
+    JOF_ELEM            = 3 << 5,   /* obj[index] operation */
+    JOF_MODEMASK        = 7 << 5,   /* mask for above addressing modes */
+    JOF_SET             = 1 << 8,   /* set (i.e., assignment) operation */
+    /* 1 << 9 is unused */
+    /* 1 << 10 is unused */
+    /* 1 << 11 is unused */
+    /* 1 << 12 is unused */
+    /* 1 << 13 is unused */
+    JOF_DETECTING       = 1 << 14,  /* object detection for warning-quelling */
+    /* 1 << 15 is unused */
+    JOF_LEFTASSOC       = 1 << 16,  /* left-associative operator */
+    /* 1 << 17 is unused */
+    /* 1 << 18 is unused */
+    JOF_CHECKSLOPPY     = 1 << 19,  /* Op can only be generated in sloppy mode */
+    JOF_CHECKSTRICT     = 1 << 20,  /* Op can only be generated in strict mode */
+    JOF_INVOKE          = 1 << 21,  /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
+                                       JSOP_NEW, JSOP_EVAL */
+    JOF_TMPSLOT         = 1 << 22,  /* interpreter uses extra temporary slot
+                                       to root intermediate objects besides
+                                       the slots opcode uses */
+    JOF_TMPSLOT2        = 2 << 22,  /* interpreter uses extra 2 temporary slot
+                                       besides the slots opcode uses */
+    JOF_TMPSLOT3        = 3 << 22,  /* interpreter uses extra 3 temporary slot
+                                       besides the slots opcode uses */
+    JOF_TMPSLOT_SHIFT   = 22,
+    JOF_TMPSLOT_MASK    = JS_BITMASK(2) << JOF_TMPSLOT_SHIFT,
 
-/* (1U<<24) is unused */
-#define JOF_GNAME        (1U<<25) /* predicted global name */
-#define JOF_TYPESET      (1U<<26) /* has an entry in a script's type sets */
-#define JOF_ARITH        (1U<<27) /* unary or binary arithmetic opcode */
+    /* 1 << 24 is unused */
+    JOF_GNAME           = 1 << 25,  /* predicted global name */
+    JOF_TYPESET         = 1 << 26,  /* has an entry in a script's type sets */
+    JOF_ARITH           = 1 << 27   /* unary or binary arithmetic opcode */
+};
 
-/* Shorthands for type from format and type from opcode. */
-#define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
-#define JOF_OPTYPE(op)  JOF_TYPE(js_CodeSpec[op].format)
+/* Shorthand for type from format. */
 
-/* Shorthands for mode from format and mode from opcode. */
-#define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
-#define JOF_OPMODE(op)  JOF_MODE(js_CodeSpec[op].format)
+static inline uint32_t
+JOF_TYPE(uint32_t fmt)
+{
+    return fmt & JOF_TYPEMASK;
+}
+
+/* Shorthand for mode from format. */
+
+static inline uint32_t
+JOF_MODE(uint32_t fmt)
+{
+    return fmt & JOF_MODEMASK;
+}
 
 /*
  * Immediate operand getters, setters, and bounds.
@@ -103,27 +113,49 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 static MOZ_ALWAYS_INLINE uint8_t
 GET_UINT8(jsbytecode *pc)
 {
-    return (uint8_t) pc[1];
+    return uint8_t(pc[1]);
 }
 
 static MOZ_ALWAYS_INLINE void
 SET_UINT8(jsbytecode *pc, uint8_t u)
 {
-    pc[1] = (jsbytecode) u;
+    pc[1] = jsbytecode(u);
 }
 
 /* Common uint16_t immediate format helpers. */
-#define UINT16_LEN              2
-#define UINT16_HI(i)            ((jsbytecode)((i) >> 8))
-#define UINT16_LO(i)            ((jsbytecode)(i))
-#define GET_UINT16(pc)          ((unsigned)(((pc)[1] << 8) | (pc)[2]))
-#define SET_UINT16(pc,i)        ((pc)[1] = UINT16_HI(i), (pc)[2] = UINT16_LO(i))
-#define UINT16_LIMIT            ((unsigned)1 << 16)
+
+static inline jsbytecode
+UINT16_HI(uint16_t i)
+{
+    return jsbytecode(i >> 8);
+}
+
+static inline jsbytecode
+UINT16_LO(uint16_t i)
+{
+    return jsbytecode(i);
+}
+
+static MOZ_ALWAYS_INLINE uint16_t
+GET_UINT16(const jsbytecode *pc)
+{
+    return uint16_t((pc[1] << 8) | pc[2]);
+}
+
+static MOZ_ALWAYS_INLINE void
+SET_UINT16(jsbytecode *pc, uint16_t i)
+{
+    pc[1] = UINT16_HI(i);
+    pc[2] = UINT16_LO(i);
+}
+
+static const unsigned UINT16_LEN        = 2;
+static const unsigned UINT16_LIMIT      = 1 << 16;
 
 /* Helpers for accessing the offsets of jump opcodes. */
-#define JUMP_OFFSET_LEN         4
-#define JUMP_OFFSET_MIN         INT32_MIN
-#define JUMP_OFFSET_MAX         INT32_MAX
+static const unsigned JUMP_OFFSET_LEN   = 4;
+static const int32_t JUMP_OFFSET_MIN    = INT32_MIN;
+static const int32_t JUMP_OFFSET_MAX    = INT32_MAX;
 
 static MOZ_ALWAYS_INLINE int32_t
 GET_JUMP_OFFSET(jsbytecode *pc)
@@ -134,13 +166,13 @@ GET_JUMP_OFFSET(jsbytecode *pc)
 static MOZ_ALWAYS_INLINE void
 SET_JUMP_OFFSET(jsbytecode *pc, int32_t off)
 {
-    pc[1] = (jsbytecode)(off >> 24);
-    pc[2] = (jsbytecode)(off >> 16);
-    pc[3] = (jsbytecode)(off >> 8);
-    pc[4] = (jsbytecode)off;
+    pc[1] = jsbytecode(off >> 24);
+    pc[2] = jsbytecode(off >> 16);
+    pc[3] = jsbytecode(off >> 8);
+    pc[4] = jsbytecode(off);
 }
 
-#define UINT32_INDEX_LEN        4
+static const unsigned UINT32_INDEX_LEN  = 4;
 
 static MOZ_ALWAYS_INLINE uint32_t
 GET_UINT32_INDEX(const jsbytecode *pc)
@@ -151,52 +183,123 @@ GET_UINT32_INDEX(const jsbytecode *pc)
 static MOZ_ALWAYS_INLINE void
 SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 {
-    pc[1] = (jsbytecode)(index >> 24);
-    pc[2] = (jsbytecode)(index >> 16);
-    pc[3] = (jsbytecode)(index >> 8);
-    pc[4] = (jsbytecode)index;
+    pc[1] = jsbytecode(index >> 24);
+    pc[2] = jsbytecode(index >> 16);
+    pc[3] = jsbytecode(index >> 8);
+    pc[4] = jsbytecode(index);
 }
 
-#define UINT24_HI(i)            ((jsbytecode)((i) >> 16))
-#define UINT24_MID(i)           ((jsbytecode)((i) >> 8))
-#define UINT24_LO(i)            ((jsbytecode)(i))
-#define GET_UINT24(pc)          ((unsigned)(((pc)[1] << 16) |                 \
-                                            ((pc)[2] << 8) |                  \
-                                            (pc)[3]))
-#define SET_UINT24(pc,i)        ((pc)[1] = UINT24_HI(i),                      \
-                                 (pc)[2] = UINT24_MID(i),                     \
-                                 (pc)[3] = UINT24_LO(i))
+static inline jsbytecode
+UINT24_HI(unsigned i)
+{
+    return jsbytecode(i >> 16);
+}
 
-#define GET_INT8(pc)            (int8_t((pc)[1]))
+static inline jsbytecode
+UINT24_MID(unsigned i)
+{
+    return jsbytecode(i >> 8);
+}
 
-#define GET_INT32(pc)           (((uint32_t((pc)[1]) << 24) |                 \
-                                  (uint32_t((pc)[2]) << 16) |                 \
-                                  (uint32_t((pc)[3]) << 8)  |                 \
-                                  uint32_t((pc)[4])))
-#define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)(uint32_t(i) >> 24),   \
-                                 (pc)[2] = (jsbytecode)(uint32_t(i) >> 16),   \
-                                 (pc)[3] = (jsbytecode)(uint32_t(i) >> 8),    \
-                                 (pc)[4] = (jsbytecode)uint32_t(i))
+static inline jsbytecode
+UINT24_LO(unsigned i)
+{
+    return jsbytecode(i);
+}
+
+static MOZ_ALWAYS_INLINE unsigned
+GET_UINT24(const jsbytecode *pc)
+{
+    return unsigned((pc[1] << 16) | (pc[2] << 8) | pc[3]);
+}
+
+static MOZ_ALWAYS_INLINE void
+SET_UINT24(jsbytecode *pc, unsigned i)
+{
+    MOZ_ASSERT(i < (1 << 24));
+    pc[1] = UINT24_HI(i);
+    pc[2] = UINT24_MID(i);
+    pc[3] = UINT24_LO(i);
+}
+
+static MOZ_ALWAYS_INLINE int8_t
+GET_INT8(const jsbytecode *pc)
+{
+    return int8_t(pc[1]);
+}
+
+static MOZ_ALWAYS_INLINE int32_t
+GET_INT32(const jsbytecode *pc)
+{
+    return  (uint32_t(pc[1]) << 24) |
+            (uint32_t(pc[2]) << 16) |
+            (uint32_t(pc[3]) << 8)  |
+            uint32_t(pc[4]);
+}
+
+static MOZ_ALWAYS_INLINE void
+SET_INT32(jsbytecode *pc, uint32_t i)
+{
+    pc[1] = jsbytecode(uint32_t(i) >> 24);
+    pc[2] = jsbytecode(uint32_t(i) >> 16);
+    pc[3] = jsbytecode(uint32_t(i) >> 8);
+    pc[4] = jsbytecode(uint32_t(i));
+}
 
 /* Index limit is determined by SN_4BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
-#define INDEX_LIMIT_LOG2        31
-#define INDEX_LIMIT             (uint32_t(1) << INDEX_LIMIT_LOG2)
+static const unsigned INDEX_LIMIT_LOG2  = 31;
+static const uint32_t INDEX_LIMIT       = uint32_t(1) << INDEX_LIMIT_LOG2;
 
-#define ARGC_HI(argc)           UINT16_HI(argc)
-#define ARGC_LO(argc)           UINT16_LO(argc)
-#define GET_ARGC(pc)            GET_UINT16(pc)
-#define ARGC_LIMIT              UINT16_LIMIT
+static inline jsbytecode
+ARGC_HI(uint16_t argc)
+{
+    return UINT16_HI(argc);
+}
 
-#define GET_ARGNO(pc)           GET_UINT16(pc)
-#define SET_ARGNO(pc,argno)     SET_UINT16(pc,argno)
-#define ARGNO_LEN               2
-#define ARGNO_LIMIT             UINT16_LIMIT
+static inline jsbytecode
+ARGC_LO(uint16_t argc)
+{
+    return UINT16_LO(argc);
+}
 
-#define GET_LOCALNO(pc)         GET_UINT24(pc)
-#define SET_LOCALNO(pc,varno)   SET_UINT24(pc,varno)
-#define LOCALNO_LEN             3
-#define LOCALNO_BITS            24
-#define LOCALNO_LIMIT           (1 << LOCALNO_BITS)
+static inline uint16_t
+GET_ARGC(const jsbytecode *pc)
+{
+    return GET_UINT16(pc);
+}
+
+static const unsigned ARGC_LIMIT        = UINT16_LIMIT;
+
+static inline uint16_t
+GET_ARGNO(const jsbytecode *pc)
+{
+    return GET_UINT16(pc);
+}
+
+static inline void
+SET_ARGNO(jsbytecode *pc, uint16_t argno)
+{
+    SET_UINT16(pc, argno);
+}
+
+static const unsigned ARGNO_LEN         = 2;
+static const unsigned ARGNO_LIMIT       = UINT16_LIMIT;
+
+static inline uint32_t
+GET_LOCALNO(const jsbytecode *pc)
+{
+    return GET_UINT24(pc);
+}
+
+static inline void
+SET_LOCALNO(jsbytecode *pc, uint32_t varno)
+{
+    SET_UINT24(pc, varno);
+}
+
+static const unsigned LOCALNO_LEN       = 3;
+static const unsigned LOCALNO_BITS      = 24;
+static const uint32_t LOCALNO_LIMIT     = 1 << LOCALNO_BITS;
 
 static inline unsigned
 LoopEntryDepthHint(jsbytecode *pc)
@@ -204,12 +307,14 @@ LoopEntryDepthHint(jsbytecode *pc)
     MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
     return GET_UINT8(pc) & 0x7f;
 }
+
 static inline bool
 LoopEntryCanIonOsr(jsbytecode *pc)
 {
     MOZ_ASSERT(*pc == JSOP_LOOPENTRY);
     return GET_UINT8(pc) & 0x80;
 }
+
 static inline uint8_t
 PackLoopEntryDepthHintAndFlags(unsigned loopDepth, bool canIonOsr)
 {
@@ -225,18 +330,39 @@ PackLoopEntryDepthHintAndFlags(unsigned loopDepth, bool canIonOsr)
  * many functions before hitting the C-stack recursion limit so this shouldn't
  * be a significant limitation in practice.
  */
-#define GET_SCOPECOORD_HOPS(pc) GET_UINT8(pc)
-#define SET_SCOPECOORD_HOPS(pc,hops) SET_UINT8(pc,hops)
-#define SCOPECOORD_HOPS_LEN     1
-#define SCOPECOORD_HOPS_BITS    8
-#define SCOPECOORD_HOPS_LIMIT   (1 << SCOPECOORD_HOPS_BITS)
+
+static inline uint8_t
+GET_SCOPECOORD_HOPS(jsbytecode *pc)
+{
+    return GET_UINT8(pc);
+}
+
+static inline void
+SET_SCOPECOORD_HOPS(jsbytecode *pc, uint8_t hops)
+{
+    SET_UINT8(pc, hops);
+}
+
+static const unsigned SCOPECOORD_HOPS_LEN   = 1;
+static const unsigned SCOPECOORD_HOPS_BITS  = 8;
+static const unsigned SCOPECOORD_HOPS_LIMIT = 1 << SCOPECOORD_HOPS_BITS;
 
 /* Describes the 'slot' component of a JOF_SCOPECOORD opcode. */
-#define GET_SCOPECOORD_SLOT(pc) GET_UINT24(pc)
-#define SET_SCOPECOORD_SLOT(pc,slot) SET_UINT24(pc,slot)
-#define SCOPECOORD_SLOT_LEN     3
-#define SCOPECOORD_SLOT_BITS    24
-#define SCOPECOORD_SLOT_LIMIT   (1 << SCOPECOORD_SLOT_BITS)
+static inline uint32_t
+GET_SCOPECOORD_SLOT(const jsbytecode *pc)
+{
+    return GET_UINT24(pc);
+}
+
+static inline void
+SET_SCOPECOORD_SLOT(jsbytecode *pc, uint32_t slot)
+{
+    SET_UINT24(pc, slot);
+}
+
+static const unsigned SCOPECOORD_SLOT_LEN   = 3;
+static const unsigned SCOPECOORD_SLOT_BITS  = 24;
+static const uint32_t SCOPECOORD_SLOT_LIMIT = 1 << SCOPECOORD_SLOT_BITS;
 
 struct JSCodeSpec {
     int8_t              length;         /* length including opcode byte */
@@ -251,6 +377,14 @@ extern const JSCodeSpec js_CodeSpec[];
 extern const unsigned   js_NumCodeSpecs;
 extern const char       * const js_CodeName[];
 extern const char       js_EscapeMap[];
+
+/* Shorthand for type from opcode. */
+
+static inline uint32_t
+JOF_OPTYPE(JSOp op)
+{
+    return JOF_TYPE(js_CodeSpec[op].format);
+}
 
 /* Silence unreferenced formal parameter warnings */
 #ifdef _MSC_VER

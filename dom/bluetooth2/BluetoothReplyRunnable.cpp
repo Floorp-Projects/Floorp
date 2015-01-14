@@ -99,7 +99,7 @@ BluetoothReplyRunnable::Run()
   MOZ_ASSERT(mReply);
 
   AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
+  JS::Rooted<JS::Value> v(cx, JS::UndefinedValue());
 
   nsresult rv;
   if (mReply->type() != BluetoothReply::TBluetoothReplySuccess) {

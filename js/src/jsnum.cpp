@@ -611,7 +611,7 @@ js::Int32ToString(ExclusiveContext *cx, int32_t si)
     Latin1Char *start = BackfillInt32InBuffer(si, buffer, ArrayLength(buffer), &length);
 
     mozilla::Range<const Latin1Char> chars(start, length);
-    JSInlineString *str = NewFatInlineString<allowGC>(cx, chars);
+    JSInlineString *str = NewInlineString<allowGC>(cx, chars);
     if (!str)
         return nullptr;
 
@@ -1382,7 +1382,7 @@ js::IndexToString(JSContext *cx, uint32_t index)
     RangedPtr<Latin1Char> start = BackfillIndexInCharBuffer(index, end);
 
     mozilla::Range<const Latin1Char> chars(start.get(), end - start);
-    JSInlineString *str = NewFatInlineString<CanGC>(cx, chars);
+    JSInlineString *str = NewInlineString<CanGC>(cx, chars);
     if (!str)
         return nullptr;
 
