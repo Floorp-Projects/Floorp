@@ -93,7 +93,7 @@ SPSProfiler::enable(bool enabled)
      * jitcode for scripts with active frames on the stack.  These scripts need to have
      * their profiler state toggled so they behave properly.
      */
-    jit::ToggleBaselineSPS(rt, enabled);
+    jit::ToggleBaselineProfiling(rt, enabled);
 
     /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
      * stack.
@@ -333,7 +333,6 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt,
     size_before = *profiler->size_;
     // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
     profiler->push("js::RunScript", this, nullptr, nullptr, /* copy = */ false);
-    // We also want to push a JS frame so the hang monitor can catch script hangs.
     profiler->push("js::RunScript", nullptr, script, script->code(), /* copy = */ false);
 }
 

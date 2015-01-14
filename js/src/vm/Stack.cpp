@@ -1370,7 +1370,8 @@ AbstractFramePtr::hasPushedSPSFrame() const
 {
     if (isInterpreterFrame())
         return asInterpreterFrame()->hasPushedSPSFrame();
-    return asBaselineFrame()->hasPushedSPSFrame();
+    MOZ_ASSERT(isBaselineFrame());
+    return false;
 }
 
 jit::JitActivation::JitActivation(JSContext *cx, bool active)
