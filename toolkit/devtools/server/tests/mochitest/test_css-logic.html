@@ -103,10 +103,10 @@ addTest(function getComputedStyle() {
   is (CssLogic.getComputedStyle(node).getPropertyValue("height"),
       "10px", "Computed style on a normal node works (height)");
 
-  let firstChild = _documentWalker(node, window).firstChild();
+  let firstChild = new _documentWalker(node, window).firstChild();
   is (CssLogic.getComputedStyle(firstChild).getPropertyValue("content"),
       "\"before\"", "Computed style on a ::before node works (content)");
-  let lastChild = _documentWalker(node, window).lastChild();
+  let lastChild = new _documentWalker(node, window).lastChild();
   is (CssLogic.getComputedStyle(lastChild).getPropertyValue("content"),
       "\"after\"", "Computed style on a ::after node works (content)");
 
@@ -121,13 +121,13 @@ addTest(function getBindingElementAndPseudo() {
       "Binding element is the node itself for a normal node");
   ok (!pseudo, "Pseudo is null for a normal node");
 
-  let firstChild = _documentWalker(node, window).firstChild();
+  let firstChild = new _documentWalker(node, window).firstChild();
   var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(firstChild);
   is (bindingElement, node,
       "Binding element is the parent for a pseudo node");
   is (pseudo, ":before", "Pseudo is correct for a ::before node");
 
-  let lastChild = _documentWalker(node, window).lastChild();
+  let lastChild = new _documentWalker(node, window).lastChild();
   var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(lastChild);
   is (bindingElement, node,
       "Binding element is the parent for a pseudo node");

@@ -75,7 +75,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
         audio_quality: l10n.get("feedback_category_audio_quality"),
         video_quality: l10n.get("feedback_category_video_quality"),
         disconnected : l10n.get("feedback_category_was_disconnected"),
-        confusing:     l10n.get("feedback_category_confusing"),
+        confusing:     l10n.get("feedback_category_confusing2"),
         other:         l10n.get("feedback_category_other2")
       };
     },
@@ -142,7 +142,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
 
     render: function() {
       return (
-        <FeedbackLayout title={l10n.get("feedback_what_makes_you_sad")}
+        <FeedbackLayout title={l10n.get("feedback_category_list_heading")}
                         reset={this.props.reset}>
           <form onSubmit={this.handleFormSubmit}>
             {this._getCategoryFields()}

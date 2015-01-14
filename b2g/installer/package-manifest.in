@@ -377,7 +377,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsTryToClose.manifest
 @BINPATH@/components/nsTryToClose.js
@@ -503,7 +502,6 @@
 @BINPATH@/components/UnifiedComplete.manifest
 @BINPATH@/components/UnifiedComplete.js
 @BINPATH@/components/nsPlacesExpiration.js
-@BINPATH@/components/PlacesProtocolHandler.js
 @BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js

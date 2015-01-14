@@ -2842,6 +2842,9 @@ WebConsoleFrame.prototype = {
    *        - linkOnly:
    *        An optional flag to copy only URL without timestamp and
    *        other meta-information. Default is false.
+   *        - contextmenu:
+   *        An optional flag to copy the last clicked item which brought
+   *        up the context menu if nothing is selected. Default is false.
    */
   copySelectedItems: function WCF_copySelectedItems(aOptions)
   {
@@ -2864,7 +2867,7 @@ WebConsoleFrame.prototype = {
           strings.push(item.url);
         }
         else {
-          strings.push("[" + timestampString + "] " + item.clipboardText);
+          strings.push(item.clipboardText);
         }
       }
     }
@@ -4783,6 +4786,14 @@ CommandController.prototype = {
     this.owner.copySelectedItems({ linkOnly: true, contextmenu: true });
   },
 
+  /**
+   * Copies the last clicked message.
+   */
+  copyLastClicked: function CommandController_copy()
+  {
+    this.owner.copySelectedItems({ linkOnly: false, contextmenu: true });
+  },
+
   supportsCommand: function CommandController_supportsCommand(aCommand)
   {
     if (!this.owner || !this.owner.output) {
@@ -4800,6 +4811,12 @@ CommandController.prototype = {
         let selectedItem = this.owner.output.getSelectedMessages(1)[0] ||
                            this.owner._contextMenuHandler.lastClickedMessage;
         return selectedItem && "url" in selectedItem;
+      }
+      case "cmd_copy": {
+        // Only copy if we right-clicked the console and there's no selected text.
+        // With text selected, we want to fall back onto the default copy behavior.
+        return this.owner._contextMenuHandler.lastClickedMessage &&
+              !this.owner.output.getSelectedMessages(1)[0];
       }
       case "consoleCmd_clearOutput":
       case "cmd_selectAll":
@@ -4825,6 +4842,9 @@ CommandController.prototype = {
         break;
       case "consoleCmd_clearOutput":
         this.owner.jsterm.clearOutput(true);
+        break;
+      case "cmd_copy":
+        this.copyLastClicked();
         break;
       case "cmd_find":
         this.owner.filterBox.focus();

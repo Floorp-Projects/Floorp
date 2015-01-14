@@ -2421,7 +2421,13 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
-  if (!mIsTopLevelContent && !OwnerIsBrowserOrAppFrame() && !mRemoteFrame) {
+  if (!mIsTopLevelContent &&
+      !OwnerIsBrowserOrAppFrame() &&
+      !mRemoteFrame &&
+      !(mOwnerContent->IsXUL() &&
+        mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                   nsGkAtoms::forcemessagemanager,
+                                   nsGkAtoms::_true, eCaseMatters))) {
     return NS_OK;
   }
 
