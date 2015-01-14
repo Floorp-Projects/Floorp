@@ -25,6 +25,8 @@
   <script type="application/javascript" src="webaudioeditor/views/utils.js"/>
   <script type="application/javascript" src="webaudioeditor/views/context.js"/>
   <script type="application/javascript" src="webaudioeditor/views/inspector.js"/>
+  <script type="application/javascript" src="webaudioeditor/views/properties.js"/>
+  <script type="application/javascript" src="webaudioeditor/views/automation.js"/>
 
   <vbox class="theme-body" flex="1">
     <hbox id="reload-notice"
@@ -75,7 +77,7 @@
             </vbox>
           </box>
         </hbox>
-        <splitter class="devtools-side-splitter"/>
+        <splitter id="inspector-splitter" class="devtools-side-splitter"/>
         <vbox id="web-audio-inspector" hidden="true">
           <hbox class="devtools-toolbar">
             <label id="web-audio-inspector-title" value="&webAudioEditorUI.inspectorTitle;"></label>
@@ -90,14 +92,37 @@
               <tabs>
                 <tab id="properties-tab"
                      label="&webAudioEditorUI.tab.properties;"/>
+                <tab id="automation-tab"
+                     label="&webAudioEditorUI.tab.automation;"/>
               </tabs>
               <tabpanels flex="1">
+                <!-- Properties Panel -->
                 <tabpanel id="properties-tabpanel"
                           class="tabpanel-content">
-                  <vbox id="properties-tabpanel-content" flex="1">
+                  <vbox id="properties-content" flex="1" hidden="true">
                   </vbox>
-                  <vbox id="properties-tabpanel-content-empty" flex="1" hidden="true">
+                  <vbox id="properties-empty" flex="1" hidden="true">
                     <label value="&webAudioEditorUI.propertiesEmpty;"></label>
+                  </vbox>
+                </tabpanel>
+
+                <!-- Automation Panel -->
+                <tabpanel id="automation-tabpanel"
+                          class="tabpanel-content">
+                  <vbox id="automation-content" flex="1" hidden="true">
+                    <toolbar id="automation-param-toolbar" class="devtools-toolbar">
+                      <hbox id="automation-param-toolbar-buttons" class="devtools-toolbarbutton-group">
+                      </hbox>
+                    </toolbar>
+                    <box id="automation-graph-container" flex="1">
+                      <canvas id="automation-graph"></canvas>
+                    </box>
+                    <vbox id="automation-no-events" flex="1" hidden="true">
+                      <label value="&webAudioEditorUI.automationNoEvents;"></label>
+                    </vbox>
+                  </vbox>
+                  <vbox id="automation-empty" flex="1" hidden="true">
+                    <label value="&webAudioEditorUI.automationEmpty;"></label>
                   </vbox>
                 </tabpanel>
               </tabpanels>

@@ -37,8 +37,8 @@ function waitForDeviceClosed() {
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(MEDIA_NODES_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  let gVars = PropertiesView._propsView;
 
   // Auto enable getUserMedia
   let mediaPermissionPref = Services.prefs.getBoolPref(MEDIA_PERMISSION);
@@ -59,7 +59,7 @@ add_task(function*() {
 
   for (let i = 0; i < types.length; i++) {
     click(panelWin, findGraphNode(panelWin, nodeIds[i]));
-    yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+    yield waitForInspectorRender(panelWin, EVENTS);
     checkVariableView(gVars, 0, NODE_DEFAULT_VALUES[types[i]], types[i]);
   }
 
