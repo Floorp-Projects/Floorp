@@ -70,14 +70,6 @@ protected:
 
   virtual bool
   DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor) MOZ_OVERRIDE;
-
-  virtual PBroadcastChannelChild*
-  AllocPBroadcastChannelChild(const PrincipalInfo& aPrincipalInfo,
-                              const nsString& aOrigin,
-                              const nsString& aChannel) MOZ_OVERRIDE;
-
-  virtual bool
-  DeallocPBroadcastChannelChild(PBroadcastChannelChild* aActor) MOZ_OVERRIDE;
 };
 
 class BackgroundChildImpl::ThreadLocal MOZ_FINAL
