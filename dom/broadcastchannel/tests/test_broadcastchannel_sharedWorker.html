@@ -5,10 +5,10 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Tests of DOM BroadcastChannel in workers
+Tests of DOM BroadcastChannel in SharedWorkers
 -->
 <head>
-  <title>Test for BroadcastChannel in workers</title>
+  <title>Test for BroadcastChannel in SharedWorkers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -20,17 +20,17 @@ Tests of DOM BroadcastChannel in workers
 <pre id="test">
 <script class="testbody" language="javascript">
 
-function testWorker(x) {
-  var worker = new Worker("broadcastchannel_worker.js");
+function runTests() {
+  var worker = new SharedWorker("broadcastchannel_sharedWorker.js");
 
   var bc = new BroadcastChannel('foobar');
 
-  worker.onmessage = function(event) {
+  worker.port.onmessage = function(event) {
     if (event.data == "READY") {
-      ok(true, "Worker is ready!");
+      ok(true, "SharedWorker is ready!");
       bc.postMessage('hello world from the window');
     } else if(event.data == "OK") {
-      ok(true, "Worker has received the message");
+      ok(true, "SharedWorker has received the message");
     } else {
       ok(false, "Something wrong happened");
     }
@@ -39,24 +39,15 @@ function testWorker(x) {
   bc.onmessage = function(event) {
     is("hello world from the worker", event.data, "The message matches!");
     bc.close();
-    runTests();
-  }
-
-  worker.postMessage(x);
-}
-
-var tests = [ 0, 3 ];
-function runTests() {
-  if (tests.length == 0) {
     SimpleTest.finish();
-    return;
   }
 
-  testWorker(tests.shift());
+  worker.port.postMessage('go');
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.broadcastChannel.enabled", true]]}, runTests);
+SpecialPowers.pushPrefEnv({"set": [["dom.broadcastChannel.enabled", true],
+                                   ["dom.workers.sharedWorkers.enabled", true]]}, runTests);
 
 </script>
 </pre>
