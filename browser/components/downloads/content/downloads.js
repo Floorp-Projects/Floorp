@@ -554,7 +554,7 @@ const DownloadsPanel = {
       // still exist, and update the allowed items interactions accordingly.  We
       // do these checks on a background thread, and don't prevent the panel to
       // be displayed while these checks are being performed.
-      for each (let viewItem in DownloadsView._viewItems) {
+      for (let viewItem of DownloadsView._visibleViewItems.values()) {
         viewItem.verifyTargetExists();
       }
 
@@ -673,11 +673,11 @@ const DownloadsView = {
   _dataItems: [],
 
   /**
-   * Object containing the available DownloadsViewItem objects, indexed by their
-   * numeric download identifier.  There is a limited number of view items in
-   * the panel at any given time.
+   * Associates the visible DownloadsDataItem objects with their corresponding
+   * DownloadsViewItem object.  There is a limited number of view items in the
+   * panel at any given time.
    */
-  _viewItems: {},
+  _visibleViewItems: new Map(),
 
   /**
    * Called when the number of items in the list changes.
@@ -814,30 +814,21 @@ const DownloadsView = {
     this._itemCountChanged();
   },
 
-  /**
-   * Returns the view item associated with the provided data item for this view.
-   *
-   * @param aDataItem
-   *        DownloadsDataItem object for which the view item is requested.
-   *
-   * @return Object that can be used to notify item status events.
-   */
-  getViewItem(aDataItem) {
-    // If the item is visible, just return it, otherwise return a mock object
-    // that doesn't react to notifications.
-    if (aDataItem.downloadGuid in this._viewItems) {
-      return this._viewItems[aDataItem.downloadGuid];
+  // DownloadsView
+  onDataItemStateChanged(aDataItem, aOldState) {
+    let viewItem = this._visibleViewItems.get(aDataItem);
+    if (viewItem) {
+      viewItem.onStateChanged(aOldState);
     }
-    return this._invisibleViewItem;
   },
 
-  /**
-   * Mock DownloadsDataItem object that doesn't react to notifications.
-   */
-  _invisibleViewItem: Object.freeze({
-    onStateChange() {},
-    onProgressChange() {},
-  }),
+  // DownloadsView
+  onDataItemChanged(aDataItem) {
+    let viewItem = this._visibleViewItems.get(aDataItem);
+    if (viewItem) {
+      viewItem.onChanged();
+    }
+  },
 
   /**
    * Creates a new view item associated with the specified data item, and adds
@@ -850,7 +841,7 @@ const DownloadsView = {
 
     let element = document.createElement("richlistitem");
     let viewItem = new DownloadsViewItem(aDataItem, element);
-    this._viewItems[aDataItem.downloadGuid] = viewItem;
+    this._visibleViewItems.set(aDataItem, viewItem);
     if (aNewest) {
       this.richListBox.insertBefore(element, this.richListBox.firstChild);
     } else {
@@ -863,14 +854,14 @@ const DownloadsView = {
    */
   _removeViewItem(aDataItem) {
     DownloadsCommon.log("Removing a DownloadsViewItem from the downloads list.");
-    let element = this.getViewItem(aDataItem)._element;
+    let element = this._visibleViewItems.get(aDataItem)._element;
     let previousSelectedIndex = this.richListBox.selectedIndex;
     this.richListBox.removeChild(element);
     if (previousSelectedIndex != -1) {
       this.richListBox.selectedIndex = Math.min(previousSelectedIndex,
                                                 this.richListBox.itemCount - 1);
     }
-    delete this._viewItems[aDataItem.downloadGuid];
+    this._visibleViewItems.delete(aDataItem);
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -1052,7 +1043,7 @@ DownloadsViewItem.prototype = {
    * the download might be the same as before, if the data layer received
    * multiple events for the same download.
    */
-  onStateChange(aOldState) {
+  onStateChanged(aOldState) {
     // If a download just finished successfully, it means that the target file
     // now exists and we can extract its specific icon.  To ensure that the icon
     // is reloaded, we must change the URI used by the XUL image element, for
@@ -1072,14 +1063,12 @@ DownloadsViewItem.prototype = {
 
     // Update the user interface after switching states.
     this._element.setAttribute("state", this.dataItem.state);
-    this._updateProgress();
-    this._updateStatusLine();
   },
 
   /**
    * Called when the download progress has changed.
    */
-  onProgressChange() {
+  onChanged() {
     this._updateProgress();
     this._updateStatusLine();
   },
