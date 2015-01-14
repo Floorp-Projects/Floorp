@@ -2699,6 +2699,19 @@ GCRuntime::releaseRelocatedArenasWithoutUnlocking(ArenaHeader *relocatedList, co
 #endif // JSGC_COMPACTING
 
 void
+GCRuntime::releaseHeldRelocatedArenas()
+{
+#if defined(JSGC_COMPACTING) && defined(DEBUG)
+    // In debug mode we don't release relocated arenas straight away.  Instead
+    // we protect them and hold onto them until the next GC sweep phase to catch
+    // any pointers to them that didn't get forwarded.
+    unprotectRelocatedArenas(relocatedArenasToRelease);
+    releaseRelocatedArenas(relocatedArenasToRelease);
+    relocatedArenasToRelease = nullptr;
+#endif
+}
+
+void
 ReleaseArenaList(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
 {
     ArenaHeader *next;
@@ -5119,11 +5132,7 @@ GCRuntime::beginSweepPhase(bool lastGC)
 
     MOZ_ASSERT(!abortSweepAfterCurrentGroup);
 
-#if defined(JSGC_COMPACTING) && defined(DEBUG)
-    unprotectRelocatedArenas(relocatedArenasToRelease);
-    releaseRelocatedArenas(relocatedArenasToRelease);
-    relocatedArenasToRelease = nullptr;
-#endif
+    releaseHeldRelocatedArenas();
 
     computeNonIncrementalMarkingForValidation();
 
@@ -6386,7 +6395,8 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
     // Throw away any excess chunks we have lying around.
     freeEmptyChunks(rt, lock);
 
-    // Release any relocated areans we may be holding on to.
+    // Release any relocated arenas we may be holding on to, without releasing
+    // the GC lock.
 #if defined(JSGC_COMPACTING) && defined(DEBUG)
     unprotectRelocatedArenas(relocatedArenasToRelease);
     releaseRelocatedArenasWithoutUnlocking(relocatedArenasToRelease, lock);
@@ -6548,6 +6558,10 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 
     source->clearTables();
     source->unsetIsDebuggee();
+
+    // Release any relocated arenas which we may be holding on to as they might
+    // be in the source zone
+    rt->gc.releaseHeldRelocatedArenas();
 
     // Fixup compartment pointers in source to refer to target, and make sure
     // type information generations are in sync.
