@@ -211,6 +211,8 @@ CoreLocationLocationProvider::Startup()
     mCLObjects = clObjs.forget();
   }
 
+  // Must be stopped before starting or response (success or failure) is not guaranteed
+  [mCLObjects->mLocationManager stopUpdatingLocation];
   [mCLObjects->mLocationManager startUpdatingLocation];
   return NS_OK;
 }
