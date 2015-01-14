@@ -11,6 +11,8 @@
 
 class nsIWidget;
 
+class MessageLoop;
+
 namespace mozilla {
 
 namespace layers {
@@ -46,6 +48,7 @@ public:
 
 private:
   nsCOMPtr<nsIWidget> mWidget;
+  MessageLoop* mUILoop;
 };
 
 } // namespace layers
