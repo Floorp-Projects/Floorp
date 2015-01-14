@@ -193,7 +193,7 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
   // Make sure mJSException is initialized _before_ we try to root it.  But
   // don't set it to exn yet, because we don't want to do that until after we
   // root.
-  mJSException = JS::UndefinedValue();
+  mJSException.setUndefined();
   if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
     // Don't use NS_ERROR_DOM_JS_EXCEPTION, because that indicates we have
     // in fact rooted mJSException.

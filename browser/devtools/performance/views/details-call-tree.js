@@ -13,10 +13,12 @@ let CallTreeView = {
   initialize: function () {
     this._callTree = $(".call-tree-cells-container");
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
+    this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRangeChange = this._onRangeChange.bind(this);
     this._onLink = this._onLink.bind(this);
 
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
   },
@@ -26,6 +28,7 @@ let CallTreeView = {
    */
   destroy: function () {
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
   },
@@ -49,6 +52,19 @@ let CallTreeView = {
   _onRecordingStopped: function () {
     let profilerData = PerformanceController.getProfilerData();
     this.render(profilerData);
+  },
+
+  /**
+   * Called when a recording has been selected.
+   */
+  _onRecordingSelected: function (_, recording) {
+    // If not recording, then this recording is done and we can render all of it
+    // Otherwise, TODO in bug 1120699 will hide the details view altogether if
+    // this is still recording.
+    if (!recording.isRecording()) {
+      let profilerData = recording.getProfilerData();
+      this.render(profilerData);
+    }
   },
 
   /**

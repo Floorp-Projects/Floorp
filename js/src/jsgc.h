@@ -767,11 +767,7 @@ class ArenaLists
     TenuredCell *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
 
     /*
-     * Moves all arenas from |fromArenaLists| into |this|.  In
-     * parallel blocks, we temporarily create one ArenaLists per
-     * parallel thread.  When the parallel block ends, we move
-     * whatever allocations may have been performed back into the
-     * compartment's main arena list using this function.
+     * Moves all arenas from |fromArenaLists| into |this|.
      */
     void adoptArenas(JSRuntime *runtime, ArenaLists *fromArenaLists);
 
@@ -801,8 +797,6 @@ class ArenaLists
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget,
                             SortedArenaList &sweepList);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, ArenaHeader **empty);
-
-    void wipeDuringParallelExecution(JSRuntime *rt);
 
     // When finalizing arenas, whether to keep empty arenas on the list or
     // release them immediately.

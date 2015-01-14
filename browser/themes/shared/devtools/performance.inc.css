@@ -362,3 +362,33 @@
 .marker-details-duration {
   font-weight: bold;
 }
+
+/* Recording items */
+
+.recording-item {
+  padding: 4px;
+}
+
+.recording-item-title {
+  font-size: 110%;
+}
+
+.recording-item-footer {
+  padding-top: 4px;
+  font-size: 90%;
+}
+
+.recording-item-save {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.recording-item-duration,
+.recording-item-save {
+  color: var(--theme-body-color-alt);
+}
+
+#recordings-list .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}

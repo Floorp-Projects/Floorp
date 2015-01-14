@@ -1042,6 +1042,19 @@ JS_GetEmptyStringValue(JSContext *cx);
 extern JS_PUBLIC_API(JSString *)
 JS_GetEmptyString(JSRuntime *rt);
 
+struct CompartmentTimeStats {
+    char compartmentName[1024];
+    JSAddonId *addonId;
+    JSCompartment *compartment;
+    uint64_t time;  // microseconds
+    uint64_t cpowTime; // microseconds
+};
+
+typedef js::Vector<CompartmentTimeStats, 0, js::SystemAllocPolicy> CompartmentStatsVector;
+
+extern JS_PUBLIC_API(bool)
+JS_GetCompartmentStats(JSRuntime *rt, CompartmentStatsVector &stats);
+
 /*
  * Format is a string of the following characters (spaces are insignificant),
  * specifying the tabulated type conversions:
