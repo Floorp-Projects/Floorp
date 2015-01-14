@@ -576,10 +576,10 @@ class ByObjectClass {
             // all "Object"), so let's make sure our hash table treats them all
             // as equivalent.
             bool has;
-            if (!JSObject::hasProperty(cx, obj, entryId, &has))
+            if (!HasOwnProperty(cx, obj, entryId, &has))
                 return false;
             if (has) {
-                fprintf(stderr, "already has %s\n", name);
+                fprintf(stderr, "already has own property '%s'\n", name);
                 MOZ_ASSERT(!has);
             }
 #endif

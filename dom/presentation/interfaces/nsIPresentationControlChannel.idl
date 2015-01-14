@@ -1,0 +1,91 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIInputStream;
+
+[scriptable, uuid(ae318e05-2a4e-4f85-95c0-e8b191ad812c)]
+interface nsIPresentationChannelDescription: nsISupports
+{
+  const unsigned short TYPE_TCP = 1;
+  const unsigned short TYPE_DATACHANNEL = 2;
+
+  // Type of transport channel.
+  readonly attribute uint8_t type;
+
+  // Addresses for TCP channel.
+  // Should only be used while type == TYPE_TCP.
+  readonly attribute nsIArray tcpAddress;
+
+  // Port number for TCP channel.
+  // Should only be used while type == TYPE_TCP.
+  readonly attribute uint16_t tcpPort;
+
+  // SDP for Data Channel.
+  // Should only be used while type == TYPE_DATACHANNEL.
+  readonly attribute DOMString dataChannelSDP;
+};
+
+/*
+ * The callbacks for events on control channel.
+ */
+[scriptable, uuid(d0cdc638-a9d5-4bcd-838c-3aed7c3f2a6b)]
+interface nsIPresentationControlChannelListener: nsISupports
+{
+  /*
+   * Callback for receiving offer from remote endpoint.
+   * @param offer The received offer.
+   */
+  void onOffer(in nsIPresentationChannelDescription offer);
+
+  /*
+   * Callback for receiving answer from remote endpoint.
+   * @param answer The received answer.
+   */
+  void onAnswer(in nsIPresentationChannelDescription answer);
+
+  /*
+   * The callback for notifying channel opened.
+   */
+  void notifyOpened();
+
+  /*
+   * The callback for notifying channel closed.
+   * @param reason The reason of channel close, NS_OK represents normal close.
+   */
+  void notifyClosed(in nsresult reason);
+};
+
+/*
+ * The control channel for establishing RTCPeerConnection for a presentation
+ * session. SDP Offer/Answer will be exchanged through this interface.
+ */
+[scriptable, uuid(6bff04b9-8e79-466f-9446-f969de646fd3)]
+interface nsIPresentationControlChannel: nsISupports
+{
+  // The listener for handling events of this control channel.
+  // All the events should be pending until listener is assigned.
+  attribute nsIPresentationControlChannelListener listener;
+
+  /*
+   * Send offer to remote endpiont. |onOffer| should be invoked
+   * on remote endpoint.
+   * @param offer The offer to send.
+   */
+  void sendOffer(in nsIPresentationChannelDescription offer);
+
+  /*
+   * Send answer to remote endpiont. |onAnswer| should
+   * be invoked on remote endpoint.
+   * @param answer The answer to send.
+   */
+  void sendAnswer(in nsIPresentationChannelDescription answer);
+
+  /*
+   * Close the transport channel.
+   */
+  void close();
+};

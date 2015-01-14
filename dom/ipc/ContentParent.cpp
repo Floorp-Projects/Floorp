@@ -994,11 +994,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         return nullptr;
     }
 
-    if (TabParent* parent = TabParent::GetNextTabParent()) {
-        parent->SetOwnerElement(aFrameElement);
-        return parent;
-    }
-
     ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
     bool isInContentProcess = (XRE_GetProcessType() != GeckoProcessType_Default);
     TabId tabId;

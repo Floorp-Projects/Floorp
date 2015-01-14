@@ -10,10 +10,11 @@
 
 namespace mozilla {
 
-JSObject*
-WebGLShaderPrecisionFormat::WrapObject(JSContext* cx)
+bool
+WebGLShaderPrecisionFormat::WrapObject(JSContext* aCx,
+                                       JS::MutableHandle<JSObject*> aReflector)
 {
-    return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, this);
+    return dom::WebGLShaderPrecisionFormatBinding::Wrap(aCx, this, aReflector);
 }
 
 } // namespace mozilla

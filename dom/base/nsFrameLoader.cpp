@@ -2305,7 +2305,7 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 bool
 nsFrameLoader::DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
 {
-  auto* tabParent = static_cast<TabParent*>(GetRemoteBrowser());
+  mozilla::dom::PBrowserParent* tabParent = GetRemoteBrowser();
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }
@@ -2421,7 +2421,13 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
-  if (!mIsTopLevelContent && !OwnerIsBrowserOrAppFrame() && !mRemoteFrame) {
+  if (!mIsTopLevelContent &&
+      !OwnerIsBrowserOrAppFrame() &&
+      !mRemoteFrame &&
+      !(mOwnerContent->IsXUL() &&
+        mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                   nsGkAtoms::forcemessagemanager,
+                                   nsGkAtoms::_true, eCaseMatters))) {
     return NS_OK;
   }
 

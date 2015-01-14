@@ -109,12 +109,12 @@ template <class T> class MediaQueue : private nsDeque {
   // Returns the approximate number of microseconds of items in the queue.
   int64_t Duration() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    if (GetSize() < 2) {
+    if (GetSize() == 0) {
       return 0;
     }
     T* last = Peek();
     T* first = PeekFront();
-    return last->mTime - first->mTime;
+    return last->GetEndTime() - first->mTime;
   }
 
   void LockedForEach(nsDequeFunctor& aFunctor) const {

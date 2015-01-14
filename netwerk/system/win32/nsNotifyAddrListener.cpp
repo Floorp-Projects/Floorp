@@ -34,6 +34,13 @@
 
 using namespace mozilla;
 
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gNotifyAddrLog = nullptr;
+#define LOG(args) PR_LOG(gNotifyAddrLog, PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
+
 static HMODULE sNetshell;
 static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 
@@ -212,6 +219,11 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 nsresult
 nsNotifyAddrListener::Init(void)
 {
+#if defined(PR_LOGGING)
+    if (!gNotifyAddrLog)
+        gNotifyAddrLog = PR_NewLogModule("nsNotifyAddr");
+#endif
+
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (!observerService)
@@ -268,6 +280,8 @@ nsNotifyAddrListener::SendEvent(const char *aEventID)
 {
     if (!aEventID)
         return NS_ERROR_NULL_POINTER;
+
+    LOG(("SendEvent: network is '%s'\n", aEventID));
 
     nsresult rv;
     nsCOMPtr<nsIRunnable> event = new ChangeEvent(this, aEventID);
@@ -477,6 +491,8 @@ nsNotifyAddrListener::CheckLinkStatus(void)
     const char *event;
     bool prevLinkUp = mLinkUp;
     ULONG prevCsum = mIPInterfaceChecksum;
+
+    LOG(("check status of all network adapters\n"));
 
     // The CheckAdaptersAddresses call is very expensive (~650 milliseconds),
     // so we don't want to call it synchronously. Instead, we just start up

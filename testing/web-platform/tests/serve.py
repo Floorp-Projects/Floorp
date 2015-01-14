@@ -24,6 +24,22 @@ from mod_pywebsocket import standalone as pywebsocket
 sys.path.insert(1, os.path.join(repo_root, "tools"))
 import sslutils
 
+
+@handlers.handler
+def workers_handler(request, response):
+    worker_path = request.url_parts.path.replace(".worker", ".worker.js")
+    return """
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+fetch_tests_from_worker(new Worker("%s"));
+</script>
+""" % (worker_path,)
+
+
 routes = [("GET", "/tools/runner/*", handlers.file_handler),
           ("POST", "/tools/runner/update_manifest.py", handlers.python_script_handler),
           (any_method, "/_certs/*", handlers.ErrorHandler(404)),
@@ -32,6 +48,7 @@ routes = [("GET", "/tools/runner/*", handlers.file_handler),
           (any_method, "/serve.py", handlers.ErrorHandler(404)),
           (any_method, "*.py", handlers.python_script_handler),
           ("GET", "*.asis", handlers.as_is_handler),
+          ("GET", "*.worker", workers_handler),
           ("GET", "*", handlers.file_handler),
           ]
 

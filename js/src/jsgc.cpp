@@ -6402,16 +6402,21 @@ ZonesSelected(JSRuntime *rt)
 }
 
 void
-GCRuntime::gcDebugSlice(SliceBudget &budget)
+GCRuntime::startDebugGC(JSGCInvocationKind gckind, SliceBudget &budget)
 {
-    if (!ZonesSelected(rt)) {
-        if (isIncrementalGCInProgress())
-            JS::PrepareForIncrementalGC(rt);
-        else
-            JS::PrepareForFullGC(rt);
-    }
-    if (!isIncrementalGCInProgress())
-        invocationKind = GC_NORMAL;
+    MOZ_ASSERT(!isIncrementalGCInProgress());
+    if (!ZonesSelected(rt))
+        JS::PrepareForFullGC(rt);
+    invocationKind = gckind;
+    collect(true, budget, JS::gcreason::DEBUG_GC);
+}
+
+void
+GCRuntime::debugGCSlice(SliceBudget &budget)
+{
+    MOZ_ASSERT(isIncrementalGCInProgress());
+    if (!ZonesSelected(rt))
+        JS::PrepareForIncrementalGC(rt);
     collect(true, budget, JS::gcreason::DEBUG_GC);
 }
 

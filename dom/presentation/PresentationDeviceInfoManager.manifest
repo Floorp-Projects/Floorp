@@ -1,0 +1,3 @@
+# PresentationDeviceInfoManager.js
+component {1bd66bef-f643-4be3-b690-0c656353eafd} PresentationDeviceInfoManager.js
+contract @mozilla.org/presentation-device/deviceInfo;1 {1bd66bef-f643-4be3-b690-0c656353eafd}

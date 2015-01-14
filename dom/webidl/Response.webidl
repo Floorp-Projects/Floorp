@@ -11,19 +11,18 @@
  Exposed=(Window,Worker),
  Func="mozilla::dom::Headers::PrefEnabled"]
 interface Response {
-  static Response error();
-  static Response redirect(USVString url, optional unsigned short status = 302);
+  [NewObject] static Response error();
+  [NewObject] static Response redirect(USVString url, optional unsigned short status = 302);
 
   readonly attribute ResponseType type;
 
   readonly attribute USVString url;
   readonly attribute unsigned short status;
   readonly attribute ByteString statusText;
-  readonly attribute Headers headers;
+  [SameObject] readonly attribute Headers headers;
 
-  Response clone();
+  [NewObject] Response clone();
 };
-
 Response implements Body;
 
 dictionary ResponseInit {
