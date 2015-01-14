@@ -466,7 +466,8 @@ private:
   void ProcessRestyles(RestyleTracker& aRestyleTracker) {
     // Fast-path the common case (esp. for the animation restyle
     // tracker) of not having anything to do.
-    if (aRestyleTracker.Count()) {
+    if (aRestyleTracker.Count() ||
+        mInRebuildAllStyleData) {
       aRestyleTracker.DoProcessRestyles();
     }
   }
