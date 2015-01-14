@@ -52,8 +52,6 @@ static PLDHashNumber
 
 
 static const PLDHashTableOps EntityToUnicodeOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
   PL_DHashStringKey,
   matchNodeString,
   PL_DHashMoveEntryStub,
@@ -62,8 +60,6 @@ static const PLDHashTableOps EntityToUnicodeOps = {
 }; 
 
 static const PLDHashTableOps UnicodeToEntityOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
   hashUnicodeValue,
   matchNodeUnicode,
   PL_DHashMoveEntryStub,

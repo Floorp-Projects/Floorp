@@ -50,8 +50,6 @@ ArenaStrdup(const nsAFlatCString& aString, PLArenaPool* aArena)
 }
 
 static const struct PLDHashTableOps property_HashTableOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
   PL_DHashStringKey,
   PL_DHashMatchStringKey,
   PL_DHashMoveEntryStub,

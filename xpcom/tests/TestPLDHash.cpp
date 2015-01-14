@@ -80,8 +80,6 @@ hash(PLDHashTable *table, const void *key)
 static bool test_pldhash_grow_to_max_capacity()
 {
   static const PLDHashTableOps ops = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
     hash,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
