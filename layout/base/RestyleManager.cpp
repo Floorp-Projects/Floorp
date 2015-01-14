@@ -1634,7 +1634,7 @@ RestyleManager::ProcessPendingRestyles()
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
 
-  mPendingRestyles.ProcessRestyles();
+  ProcessRestyles(mPendingRestyles);
 
   mPostAnimationRestyles = false;
   mSkipAnimationRules = false;
@@ -1653,7 +1653,7 @@ RestyleManager::ProcessPendingRestyles()
   // property, and then posts an immediate animation style change).
   MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = true;
-  mPendingAnimationRestyles.ProcessRestyles();
+  ProcessRestyles(mPendingAnimationRestyles);
   MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = false;
 
@@ -1723,7 +1723,7 @@ RestyleManager::UpdateOnlyAnimationStyles()
   transitionManager->AddStyleUpdatesTo(tracker);
   animationManager->AddStyleUpdatesTo(tracker);
 
-  tracker.ProcessRestyles();
+  ProcessRestyles(tracker);
 
   transitionManager->SetInAnimationOnlyStyleUpdate(false);
 }

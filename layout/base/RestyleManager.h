@@ -463,6 +463,14 @@ private:
   // be performed instead.
   bool RecomputePosition(nsIFrame* aFrame);
 
+  void ProcessRestyles(RestyleTracker& aRestyleTracker) {
+    // Fast-path the common case (esp. for the animation restyle
+    // tracker) of not having anything to do.
+    if (aRestyleTracker.Count()) {
+      aRestyleTracker.DoProcessRestyles();
+    }
+  }
+
 private:
   nsPresContext* mPresContext; // weak, disconnected in Disconnect
 
