@@ -233,12 +233,12 @@ public class ImmutableViewportMetrics {
     public ImmutableViewportMetrics offsetViewportByAndClamp(float dx, float dy) {
         if (isRTL) {
             return setViewportOrigin(
-                Math.min(pageRectRight - getWidth(), Math.max(viewportRectLeft + dx, pageRectLeft)),
-                Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeight())));
+                Math.min(pageRectRight - getWidthWithoutMargins(), Math.max(viewportRectLeft + dx, pageRectLeft)),
+                Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeightWithoutMargins())));
         }
         return setViewportOrigin(
-            Math.max(pageRectLeft, Math.min(viewportRectLeft + dx, pageRectRight - getWidth())),
-            Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeight())));
+            Math.max(pageRectLeft, Math.min(viewportRectLeft + dx, pageRectRight - getWidthWithoutMargins())),
+            Math.max(pageRectTop, Math.min(viewportRectTop + dy, pageRectBottom - getHeightWithoutMargins())));
     }
 
     public ImmutableViewportMetrics setPageRect(RectF pageRect, RectF cssPageRect) {
