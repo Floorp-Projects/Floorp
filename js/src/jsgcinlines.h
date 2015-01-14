@@ -11,7 +11,6 @@
 
 #include "gc/GCTrace.h"
 #include "gc/Zone.h"
-#include "vm/ForkJoin.h"
 
 namespace js {
 

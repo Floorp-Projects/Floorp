@@ -41,7 +41,6 @@
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
 #include "vm/Symbol.h"
-#include "vm/ThreadPool.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

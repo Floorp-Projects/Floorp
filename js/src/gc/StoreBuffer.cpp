@@ -10,7 +10,6 @@
 
 #include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/ForkJoin.h"
 
 #include "jsgcinlines.h"
 
