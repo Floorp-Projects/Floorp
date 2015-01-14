@@ -177,7 +177,14 @@ class TraceLoggerThread
   public:
     AutoTraceLog *top;
 
-    TraceLoggerThread();
+    TraceLoggerThread()
+      : enabled(0),
+        failed(false),
+        graph(),
+        iteration_(0),
+        top(nullptr)
+    { }
+
     bool init();
     ~TraceLoggerThread();
 
@@ -278,8 +285,10 @@ class TraceLoggerThreadState
                     SystemAllocPolicy> ThreadLoggerHashMap;
     typedef Vector<TraceLoggerThread *, 1, js::SystemAllocPolicy > MainThreadLoggers;
 
+#ifdef DEBUG
     bool initialized;
-    bool enabled;
+#endif
+
     bool enabledTextIds[TraceLogger_Last];
     bool mainThreadEnabled;
     bool offThreadEnabled;
@@ -291,7 +300,18 @@ class TraceLoggerThreadState
     uint64_t startupTime;
     PRLock *lock;
 
-    TraceLoggerThreadState();
+    TraceLoggerThreadState()
+      :
+#ifdef DEBUG
+        initialized(false),
+#endif
+        mainThreadEnabled(false),
+        offThreadEnabled(false),
+        graphSpewingEnabled(false),
+        lock(nullptr)
+    { }
+
+    bool init();
     ~TraceLoggerThreadState();
 
     TraceLoggerThread *forMainThread(JSRuntime *runtime);
@@ -309,11 +329,12 @@ class TraceLoggerThreadState
   private:
     TraceLoggerThread *forMainThread(PerThreadData *mainThread);
     TraceLoggerThread *create();
-    bool lazyInit();
 #endif
 };
 
 #ifdef JS_TRACE_LOGGING
+void DestroyTraceLoggerThreadState();
+
 TraceLoggerThread *TraceLoggerForMainThread(JSRuntime *runtime);
 TraceLoggerThread *TraceLoggerForMainThread(jit::CompileRuntime *runtime);
 TraceLoggerThread *TraceLoggerForCurrentThread();
