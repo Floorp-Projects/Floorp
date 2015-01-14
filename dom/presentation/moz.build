@@ -1,0 +1,34 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ['interfaces']
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+
+EXPORTS.mozilla.dom.presentation += [
+    'PresentationDeviceManager.h',
+]
+
+SOURCES += [
+    'PresentationDeviceManager.cpp',
+    'PresentationSessionRequest.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'PresentationDeviceInfoManager.js',
+    'PresentationDeviceInfoManager.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'PresentationDeviceInfoManager.jsm',
+]
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

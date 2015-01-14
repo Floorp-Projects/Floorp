@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationDevice;
+
+%{C++
+#define PRESENTATION_DEVICE_PROVIDER_CATEGORY "presentation-device-provider"
+%}
+
+/*
+ * The callbacks for any device updates.
+ */
+[scriptable, uuid(7f9f0514-d957-485a-90e8-57cc3acbf15b)]
+interface nsIPresentationDeviceListener: nsISupports
+{
+  void addDevice(in nsIPresentationDevice device);
+  void removeDevice(in nsIPresentationDevice device);
+  void updateDevice(in nsIPresentationDevice device);
+};
+
+/*
+ * Device provider for any device protocol, can be registered as default
+ * providers by adding its contractID to category "presentation-device-provider".
+ */
+[scriptable, uuid(3db2578a-0f50-44ad-b01b-28427b71b7bf)]
+interface nsIPresentationDeviceProvider: nsISupports
+{
+  // The listener for handling any device update.
+  attribute nsIPresentationDeviceListener listener;
+
+  /*
+   * Force to update device information.
+   */
+  void forceDiscovery();
+};

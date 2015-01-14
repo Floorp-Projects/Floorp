@@ -58,7 +58,7 @@ function test_getElementsByTagNameNS(context, element) {
     var t = element.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "abc"))
     this.add_cleanup(function() {element.removeChild(t)})
     assert_array_equals(context.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "abc"), [t]);
-   assert_array_equals(context.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "ABC"), []);
+    assert_array_equals(context.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "ABC"), []);
     assert_array_equals(context.getElementsByTagNameNS("test", "ABC"), []);
   }, "abc element in html namespace")
 

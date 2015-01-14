@@ -42,7 +42,7 @@ public:
     NS_DECL_NSIDOMXPATHEVALUATOR
 
     // WebIDL API
-    JSObject* WrapObject(JSContext* aCx);
+    bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
     nsIDocument* GetParentObject()
     {
         nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
