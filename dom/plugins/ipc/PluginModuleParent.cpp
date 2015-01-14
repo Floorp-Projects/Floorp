@@ -445,14 +445,14 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     if (mInitOnAsyncConnect) {
         mInitOnAsyncConnect = false;
 #if defined(XP_WIN)
-        mAsyncInitRv = NP_GetEntryPoints(mAsyncInitPluginFuncs,
+        mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
                                          &mAsyncInitError);
         if (NS_SUCCEEDED(mAsyncInitRv))
 #endif
         {
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
             mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         mAsyncInitPluginFuncs,
+                                         mNPPIface,
                                          &mAsyncInitError);
 #else
             mAsyncInitRv = NP_Initialize(mNPNIface,
@@ -462,7 +462,7 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 
 #if defined(XP_MACOSX)
         if (NS_SUCCEEDED(mAsyncInitRv)) {
-            mAsyncInitRv = NP_GetEntryPoints(mAsyncInitPluginFuncs,
+            mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
                                              &mAsyncInitError);
         }
 #endif
@@ -487,12 +487,12 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome)
     , mClearSiteDataSupported(false)
     , mGetSitesWithDataSupported(false)
     , mNPNIface(nullptr)
+    , mNPPIface(nullptr)
     , mPlugin(nullptr)
     , mTaskFactory(this)
     , mIsStartingAsync(false)
     , mNPInitialized(false)
     , mAsyncNewRv(NS_ERROR_NOT_INITIALIZED)
-    , mAsyncInitPluginFuncs(nullptr)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
     mIsStartingAsync = Preferences::GetBool(kAsyncInitPref, false);
@@ -1555,13 +1555,16 @@ PluginModuleParent::OnInitFailure()
     if (GetIPCChannel()->CanSend()) {
         Close();
     }
-    /* If we've failed then we need to enumerate any pending NPP_New calls
-       and clean them up. */
-    uint32_t len = mSurrogateInstances.Length();
-    for (uint32_t i = 0; i < len; ++i) {
-        mSurrogateInstances[i]->NotifyAsyncInitFailed();
+
+    if (mIsStartingAsync) {
+        /* If we've failed then we need to enumerate any pending NPP_New calls
+           and clean them up. */
+        uint32_t len = mSurrogateInstances.Length();
+        for (uint32_t i = 0; i < len; ++i) {
+            mSurrogateInstances[i]->NotifyAsyncInitFailed();
+        }
+        mSurrogateInstances.Clear();
     }
-    mSurrogateInstances.Clear();
 }
 
 class OfflineObserver MOZ_FINAL : public nsIObserver
@@ -1672,13 +1675,18 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
     PLUGIN_LOG_DEBUG_METHOD;
 
     mNPNIface = bFuncs;
+    mNPPIface = pFuncs;
 
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
         return NS_ERROR_FAILURE;
     }
 
-    SetPluginFuncs(pFuncs);
+    if (mIsStartingAsync) {
+        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
+    } else {
+        SetPluginFuncs(pFuncs);
+    }
 
     *error = NPERR_NO_ERROR;
     return NS_OK;
@@ -1689,28 +1697,28 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
 {
     PLUGIN_LOG_DEBUG_METHOD;
 
-    mNPNIface = bFuncs;
-
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
         return NS_ERROR_FAILURE;
     }
 
-    mAsyncInitPluginFuncs = pFuncs;
+    *error = NPERR_NO_ERROR;
+
+    mNPNIface = bFuncs;
+    mNPPIface = pFuncs;
+
+    // NB: This *MUST* be set prior to checking whether the subprocess has
+    // been connected!
+    if (mIsStartingAsync) {
+        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
+    }
 
     if (!mSubprocess->IsConnected()) {
         // The subprocess isn't connected yet. Defer NP_Initialize until
         // OnProcessLaunched is invoked.
         mInitOnAsyncConnect = true;
-        *error = NPERR_NO_ERROR;
         return NS_OK;
     }
-
-    if (mIsStartingAsync) {
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-    }
-
-    *error = NPERR_NO_ERROR;
 
     PluginSettings settings;
     GetSettings(&settings);
@@ -1719,11 +1727,12 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     // Asynchronous case
     if (mIsStartingAsync) {
         if (!SendAsyncNP_Initialize(settings)) {
+            Close();
             return NS_ERROR_FAILURE;
         }
         TimeStamp callNpInitEnd = TimeStamp::Now();
         mTimeBlocked += (callNpInitEnd - callNpInitStart);
-        return NS_PLUGIN_INIT_PENDING;
+        return NS_OK;
     }
 
     // Synchronous case
@@ -1733,10 +1742,11 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     }
     else if (*error != NPERR_NO_ERROR) {
         Close();
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     TimeStamp callNpInitEnd = TimeStamp::Now();
     mTimeBlocked += (callNpInitEnd - callNpInitStart);
+
     RecvNP_InitializeResult(*error);
 
     return NS_OK;
@@ -1750,8 +1760,10 @@ PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
         return true;
     }
 
-    SetPluginFuncs(mAsyncInitPluginFuncs);
-    InitAsyncSurrogates();
+    SetPluginFuncs(mNPPIface);
+    if (mIsStartingAsync) {
+        InitAsyncSurrogates();
+    }
 
     mNPInitialized = true;
     return true;
@@ -1765,14 +1777,16 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
     }
     bool initOk = aError == NPERR_NO_ERROR;
     if (initOk) {
-        SetPluginFuncs(mAsyncInitPluginFuncs);
-        if (SendAssociatePluginId()) {
-            PPluginModule::Bridge(mContentParent, this);
-            mNPInitialized = true;
-        } else {
-            initOk = false;
+        SetPluginFuncs(mNPPIface);
+        if (mIsStartingAsync) {
+            if (SendAssociatePluginId()) {
+                PPluginModule::Bridge(mContentParent, this);
+            } else {
+                initOk = false;
+            }
         }
     }
+    mNPInitialized = initOk;
     return mContentParent->SendLoadPluginResult(mPluginId, initOk);
 }
 
@@ -1826,7 +1840,7 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         }
         TimeStamp callNpInitEnd = TimeStamp::Now();
         mTimeBlocked += (callNpInitEnd - callNpInitStart);
-        return NS_PLUGIN_INIT_PENDING;
+        return NS_OK;
     }
 
     if (!CallNP_Initialize(settings, error)) {
@@ -1849,7 +1863,7 @@ PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
 
     if (mIsStartingAsync) {
 #if defined(XP_WIN)
-        SetPluginFuncs(mAsyncInitPluginFuncs);
+        SetPluginFuncs(mNPPIface);
 #endif
         InitAsyncSurrogates();
     }
@@ -1872,7 +1886,7 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
         // Initialization steps when e10s is disabled
 #if defined XP_WIN
         if (mIsStartingAsync) {
-            SetPluginFuncs(mAsyncInitPluginFuncs);
+            SetPluginFuncs(mNPPIface);
         }
 
         // Send the info needed to join the chrome process's audio session to the
@@ -1973,7 +1987,7 @@ PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
     *error = NPERR_NO_ERROR;
     if (mIsStartingAsync && !IsChrome()) {
         PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        mAsyncInitPluginFuncs = pFuncs;
+        mNPPIface = pFuncs;
     } else {
         SetPluginFuncs(pFuncs);
     }
@@ -1987,7 +2001,7 @@ PluginModuleChromeParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* erro
 #if defined(XP_MACOSX)
     if (mInitOnAsyncConnect) {
         PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        mAsyncInitPluginFuncs = pFuncs;
+        mNPPIface = pFuncs;
         *error = NPERR_NO_ERROR;
         return NS_OK;
     }
@@ -1996,7 +2010,7 @@ PluginModuleChromeParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* erro
         PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
     }
     if (!mSubprocess->IsConnected()) {
-        mAsyncInitPluginFuncs = pFuncs;
+        mNPPIface = pFuncs;
         mInitOnAsyncConnect = true;
         *error = NPERR_NO_ERROR;
         return NS_OK;

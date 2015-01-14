@@ -267,6 +267,7 @@ protected:
     bool mClearSiteDataSupported;
     bool mGetSitesWithDataSupported;
     NPNetscapeFuncs* mNPNIface;
+    NPPluginFuncs* mNPPIface;
     nsNPAPIPlugin* mPlugin;
     ScopedMethodFactory<PluginModuleParent> mTaskFactory;
     nsString mPluginDumpID;
@@ -293,7 +294,6 @@ protected:
     bool              mNPInitialized;
     nsTArray<nsRefPtr<PluginAsyncSurrogate>> mSurrogateInstances;
     nsresult          mAsyncNewRv;
-    NPPluginFuncs*    mAsyncInitPluginFuncs;
 };
 
 class PluginModuleContentParent : public PluginModuleParent
