@@ -951,11 +951,9 @@ RestyleManager::RestyleElement(Element*        aElement,
         // The basis for 'rem' units has changed.
         newContext = nullptr;
         mRebuildAllRestyleHint |= aRestyleHint;
+        NS_UpdateHint(mRebuildAllExtraHint, aMinHint);
         DoRebuildAllStyleData(aRestyleTracker);
-        if (aMinHint == 0) {
-          return;
-        }
-        aPrimaryFrame = aElement->GetPrimaryFrame();
+        return;
       }
     }
   }
