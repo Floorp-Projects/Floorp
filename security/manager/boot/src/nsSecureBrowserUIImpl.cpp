@@ -86,7 +86,6 @@ static const PLDHashTableOps gMapOps = {
   RequestMapMatchEntry,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   RequestMapInitEntry
 };
 

@@ -217,8 +217,7 @@ const struct PLDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -254,8 +253,7 @@ const struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -459,8 +457,7 @@ const struct PLDHashTableOps NativeSetMap::Entry::sOps =
     HashNativeKey,
     Match,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -526,8 +523,7 @@ const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
     HashIIDPtrKey,
     Match,
     PL_DHashMoveEntryStub,
-    Clear,
-    PL_DHashFinalizeStub
+    Clear
 };
 
 // static
@@ -605,8 +601,7 @@ const struct PLDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
     Hash,
     Match,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static

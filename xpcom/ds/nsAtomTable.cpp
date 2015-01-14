@@ -294,7 +294,6 @@ static const PLDHashTableOps AtomTableOps = {
   AtomTableMatchKey,
   PL_DHashMoveEntryStub,
   AtomTableClearEntry,
-  PL_DHashFinalizeStub,
   AtomTableInitEntry
 };
 

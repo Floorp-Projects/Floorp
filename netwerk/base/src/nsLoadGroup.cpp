@@ -1162,7 +1162,6 @@ nsresult nsLoadGroup::Init()
         RequestHashMatchEntry,
         PL_DHashMoveEntryStub,
         RequestHashClearEntry,
-        PL_DHashFinalizeStub,
         RequestHashInitEntry
     };
 

@@ -3978,7 +3978,6 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
         PL_DHashMatchEntryStub,
         PL_DHashMoveEntryStub,
         SubDocClearEntry,
-        PL_DHashFinalizeStub,
         SubDocInitEntry
       };
 

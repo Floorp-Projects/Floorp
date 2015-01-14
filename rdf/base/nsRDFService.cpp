@@ -146,7 +146,6 @@ static const PLDHashTableOps gResourceTableOps = {
     ResourceHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -184,7 +183,6 @@ static const PLDHashTableOps gLiteralTableOps = {
     LiteralHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -221,7 +219,6 @@ static const PLDHashTableOps gIntTableOps = {
     IntHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -262,7 +259,6 @@ static const PLDHashTableOps gDateTableOps = {
     DateHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -382,7 +378,6 @@ static const PLDHashTableOps gBlobTableOps = {
     BlobHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 

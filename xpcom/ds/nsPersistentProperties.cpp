@@ -56,7 +56,6 @@ static const struct PLDHashTableOps property_HashTableOps = {
   PL_DHashMatchStringKey,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   nullptr,
 };
 

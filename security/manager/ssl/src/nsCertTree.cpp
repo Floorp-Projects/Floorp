@@ -98,7 +98,6 @@ static const PLDHashTableOps gMapOps = {
   CompareCacheMatchEntry,
   PL_DHashMoveEntryStub,
   CompareCacheClearEntry,
-  PL_DHashFinalizeStub,
   CompareCacheInitEntry
 };
 

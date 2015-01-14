@@ -368,7 +368,6 @@ static const PLDHashTableOps RuleHash_TagTable_Ops = {
   RuleHash_TagTable_MatchEntry,
   RuleHash_TagTable_MoveEntry,
   RuleHash_TagTable_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_TagTable_InitEntry
 };
 
@@ -381,7 +380,6 @@ static const RuleHashTableOps RuleHash_ClassTable_CSOps = {
   RuleHash_CSMatchEntry,
   RuleHash_MoveEntry,
   RuleHash_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_InitEntry
   },
   RuleHash_ClassTable_GetKey
@@ -396,7 +394,6 @@ static const RuleHashTableOps RuleHash_ClassTable_CIOps = {
   RuleHash_CIMatchEntry,
   RuleHash_MoveEntry,
   RuleHash_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_InitEntry
   },
   RuleHash_ClassTable_GetKey
@@ -411,7 +408,6 @@ static const RuleHashTableOps RuleHash_IdTable_CSOps = {
   RuleHash_CSMatchEntry,
   RuleHash_MoveEntry,
   RuleHash_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_InitEntry
   },
   RuleHash_IdTable_GetKey
@@ -426,7 +422,6 @@ static const RuleHashTableOps RuleHash_IdTable_CIOps = {
   RuleHash_CIMatchEntry,
   RuleHash_MoveEntry,
   RuleHash_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_InitEntry
   },
   RuleHash_IdTable_GetKey
@@ -439,7 +434,6 @@ static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
   RuleHash_NameSpaceTable_MatchEntry,
   RuleHash_MoveEntry,
   RuleHash_ClearEntry,
-  PL_DHashFinalizeStub,
   RuleHash_InitEntry
 };
 
@@ -899,7 +893,6 @@ static const PLDHashTableOps AtomSelector_CSOps = {
   PL_DHashMatchEntryStub,
   AtomSelector_MoveEntry,
   AtomSelector_ClearEntry,
-  PL_DHashFinalizeStub,
   AtomSelector_InitEntry
 };
 
@@ -912,7 +905,6 @@ static const RuleHashTableOps AtomSelector_CIOps = {
   RuleHash_CIMatchEntry,
   AtomSelector_MoveEntry,
   AtomSelector_ClearEntry,
-  PL_DHashFinalizeStub,
   AtomSelector_InitEntry
   },
   AtomSelector_GetKey
@@ -3351,7 +3343,6 @@ static const PLDHashTableOps gRulesByWeightOps = {
     MatchWeightEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     InitWeightEntry
 };
 

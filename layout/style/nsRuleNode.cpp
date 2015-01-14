@@ -120,7 +120,6 @@ nsRuleNode::ChildrenHashOps = {
   ChildrenHashMatchEntry,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   nullptr
 };
 

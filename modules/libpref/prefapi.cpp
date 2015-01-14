@@ -83,7 +83,6 @@ static PLDHashTableOps     pref_HashTableOps = {
     matchPrefEntry,
     PL_DHashMoveEntryStub,
     clearPrefEntry,
-    PL_DHashFinalizeStub,
     nullptr,
 };
 

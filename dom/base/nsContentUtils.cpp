@@ -485,7 +485,6 @@ nsContentUtils::Init()
       PL_DHashMatchEntryStub,
       PL_DHashMoveEntryStub,
       EventListenerManagerHashClearEntry,
-      PL_DHashFinalizeStub,
       EventListenerManagerHashInitEntry
     };
 

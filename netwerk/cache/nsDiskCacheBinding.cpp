@@ -129,8 +129,7 @@ const PLDHashTableOps nsDiskCacheBindery::ops =
     HashKey,
     MatchEntry,
     MoveEntry,
-    ClearEntry,
-    PL_DHashFinalizeStub
+    ClearEntry
 };
 
 

@@ -766,7 +766,6 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
         PL_DHashMatchEntryStub,
         PL_DHashMoveEntryStub,
         ClearBroadcasterMapEntry,
-        PL_DHashFinalizeStub,
         nullptr
     };
 

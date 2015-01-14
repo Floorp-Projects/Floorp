@@ -120,7 +120,6 @@ nsDocLoader::nsDocLoader()
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
     RequestInfoHashClearEntry,
-    PL_DHashFinalizeStub,
     RequestInfoHashInitEntry
   };
 
