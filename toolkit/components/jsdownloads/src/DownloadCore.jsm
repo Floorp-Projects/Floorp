@@ -230,6 +230,11 @@ this.Download.prototype = {
    * transferred before the download finishes, that can be zero for empty files.
    *
    * When hasProgress is false, this property is always zero.
+   *
+   * @note This property may be different than the final file size on disk for
+   *       downloads that are encoded during the network transfer.  You can use
+   *       the "size" property of the DownloadTarget object to get the actual
+   *       size on disk once the download succeeds.
    */
   totalBytes: 0,
 
@@ -239,7 +244,8 @@ this.Download.prototype = {
    *
    * @note You shouldn't rely on this property being equal to totalBytes to
    *       determine whether the download is completed.  You should use the
-   *       individual state properties instead.
+   *       individual state properties instead.  This property may not be
+   *       updated during the last part of the download.
    */
   currentBytes: 0,
 
@@ -467,13 +473,23 @@ this.Download.prototype = {
         yield this.saver.execute(DS_setProgressBytes.bind(this),
                                  DS_setProperties.bind(this));
 
-        // Check for the last time if the download has been canceled.
+        // Now that the actual saving finished, read the actual file size on
+        // disk, that may be different from the amount of data transferred.
+        yield this.target.refresh();
+
+        // Check for the last time if the download has been canceled. This must
+        // be done right before setting the "stopped" property of the download,
+        // without any asynchronous operations in the middle, so that another
+        // cancellation request cannot start in the meantime and stay unhandled.
         if (this._promiseCanceled) {
           try {
             yield OS.File.remove(this.target.path);
           } catch (ex) {
             Cu.reportError(ex);
           }
+
+          this.target.exists = false;
+          this.target.size = 0;
 
           // Cancellation exceptions will be changed in the catch block below.
           throw new DownloadError();
@@ -610,6 +626,7 @@ this.Download.prototype = {
     this._promiseUnblock = Task.spawn(function* () {
       try {
         yield OS.File.move(this.target.partFilePath, this.target.path);
+        yield this.target.refresh();
       } catch (ex) {
         yield this.refresh();
         this._promiseUnblock = null;
@@ -893,6 +910,16 @@ this.Download.prototype = {
   {
     return Task.spawn(function () {
       if (!this.stopped || this._finalized) {
+        return;
+      }
+
+      if (this.succeeded) {
+        let oldExists = this.target.exists;
+        let oldSize = this.target.size;
+        yield this.target.refresh();
+        if (oldExists != this.target.exists || oldSize != this.target.size) {
+          this._notifyChange();
+        }
         return;
       }
 
@@ -1323,6 +1350,58 @@ this.DownloadTarget.prototype = {
    * partially downloaded data.
    */
   partFilePath: null,
+
+  /**
+   * Indicates whether the target file exists.
+   *
+   * This is a dynamic property updated when the download finishes or when the
+   * "refresh" method of the Download object is called. It can be used by the
+   * front-end to reduce I/O compared to checking the target file directly.
+   */
+  exists: false,
+
+  /**
+   * Size in bytes of the target file, or zero if the download has not finished.
+   *
+   * Even if the target file does not exist anymore, this property may still
+   * have a value taken from the download metadata. If the metadata has never
+   * been available in this session and the size cannot be obtained from the
+   * file because it has already been deleted, this property will be zero.
+   *
+   * For single-file downloads, this property will always match the actual file
+   * size on disk, while the totalBytes property of the Download object, when
+   * available, may represent the size of the encoded data instead.
+   *
+   * For downloads involving multiple files, like complete web pages saved to
+   * disk, the meaning of this value is undefined. It currently matches the size
+   * of the main file only rather than the sum of all the written data.
+   *
+   * This is a dynamic property updated when the download finishes or when the
+   * "refresh" method of the Download object is called. It can be used by the
+   * front-end to reduce I/O compared to checking the target file directly.
+   */
+  size: 0,
+
+  /**
+   * Sets the "exists" and "size" properties based on the actual file on disk.
+   *
+   * @return {Promise}
+   * @resolves When the operation has finished successfully.
+   * @rejects JavaScript exception.
+   */
+  refresh: Task.async(function* () {
+    try {
+      this.size = (yield OS.File.stat(this.path)).size;
+      this.exists = true;
+    } catch (ex) {
+      // Report any error not caused by the file not being there. In any case,
+      // the size of the download is not updated and the known value is kept.
+      if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+        Cu.reportError(ex);
+      }
+      this.exists = false;
+    }
+  }),
 
   /**
    * Returns a static representation of the current object state.

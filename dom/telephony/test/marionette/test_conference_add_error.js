@@ -17,9 +17,11 @@ function handleConferenceAddError(callToAdd) {
 
     deferred.resolve();
   };
-  conference.add(callToAdd);
 
-  return deferred.promise;
+  return conference.add(callToAdd)
+    .then(() => ok(false, "|conference.add| should be rejected"),
+          () => log("|conference.add| is rejected as expected"))
+    .then(() => deferred.promise);
 }
 
 function testConferenceAddError() {

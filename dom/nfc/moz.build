@@ -12,9 +12,11 @@ if CONFIG['MOZ_NFC']:
         'nsINfcContentHelper.idl',
     ]
     EXPORTS.mozilla.dom += [
+        'MozIsoDepTech.h',
         'MozNDEFRecord.h',
     ]
     UNIFIED_SOURCES += [
+        'MozIsoDepTech.cpp',
         'MozNDEFRecord.cpp',
     ]
     EXTRA_COMPONENTS += [

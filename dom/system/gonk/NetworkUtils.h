@@ -318,6 +318,7 @@ private:
   static void updateUpStreamSuccess(PARAMS);
   static void setDhcpServerSuccess(PARAMS);
   static void wifiOperationModeSuccess(PARAMS);
+  static void setDnsSuccess(PARAMS);
 #undef PARAMS
 
   /**

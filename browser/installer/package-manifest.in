@@ -378,7 +378,6 @@
 @RESPATH@/browser/components/nsSetDefaultBrowser.js
 @RESPATH@/browser/components/BrowserDownloads.manifest
 @RESPATH@/browser/components/DownloadsStartup.js
-@RESPATH@/browser/components/BrowserPlaces.manifest
 @RESPATH@/browser/components/devtools-clhandler.manifest
 @RESPATH@/browser/components/devtools-clhandler.js
 @RESPATH@/browser/components/webideCli.js
@@ -453,7 +452,6 @@
 @RESPATH@/components/UnifiedComplete.manifest
 @RESPATH@/components/UnifiedComplete.js
 @RESPATH@/components/nsPlacesExpiration.js
-@RESPATH@/browser/components/PlacesProtocolHandler.js
 @RESPATH@/components/PlacesCategoriesStarter.js
 @RESPATH@/components/ColorAnalyzer.js
 @RESPATH@/components/PageThumbsProtocol.js
