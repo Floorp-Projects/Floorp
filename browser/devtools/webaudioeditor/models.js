@@ -86,6 +86,17 @@ const AudioNodeModel = Class({
   },
 
   /**
+   * Returns a promise that resolves to an object containing an
+   * array of event information and an array of automation data.
+   *
+   * @param String paramName
+   * @return Promise->Array
+   */
+  getAutomationData: function (paramName) {
+    return this.actor.getAutomationData(paramName);
+  },
+
+  /**
    * Takes a `dagreD3.Digraph` object and adds this node to
    * the graph to be rendered.
    *
