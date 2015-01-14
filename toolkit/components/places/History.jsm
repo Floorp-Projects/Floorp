@@ -77,9 +77,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "gNotifier",
-                                   "@mozilla.org/browser/nav-history-service;1",
-                                   Ci.nsPIPlacesHistoryListenersNotifier);
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 Cu.importGlobalProperties(["URL"]);
@@ -529,15 +526,14 @@ let remove = Task.async(function*({guids, urls}, onResult = null) {
     }
 
     // 5. Notify observers.
+    let observers = PlacesUtils.history.getObservers();
+    let reason = Ci.nsINavHistoryObserver.REASON_DELETED;
     for (let {guid, uri, toRemove} of pages) {
-      gNotifier.notifyOnPageExpired(
-        uri, // uri
-        0, // visitTime - There are no more visits
-        toRemove, // wholeEntry
-        guid, // guid
-        Ci.nsINavHistoryObserver.REASON_DELETED, // reason
-        -1 // transition
-      );
+      if (toRemove) {
+        notify(observers, "onDeleteURI", [uri, guid, reason]);
+      } else {
+        notify(observers, "onDeleteVisits", [uri, 0, guid, reason, 0]);
+      }
     }
   });
 
