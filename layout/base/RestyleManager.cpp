@@ -1567,13 +1567,6 @@ RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 }
 
 void
-RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
-{
-  BeginProcessingRestyles(aRestyleTracker);
-  EndProcessingRestyles();
-}
-
-void
 RestyleManager::FinishRebuildAllStyleData()
 {
   MOZ_ASSERT(mInRebuildAllStyleData, "bad caller");
@@ -2623,7 +2616,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   nsRestyleHint hintToRestore = nsRestyleHint(0);
   if (mContent && mContent->IsElement() &&
       // If we're resolving from the root of the frame tree (which
-      // we do in DoRebuildAllStyleData), we need to avoid getting the
+      // we do when mDoRebuildAllStyleData), we need to avoid getting the
       // root's restyle data until we get to its primary frame, since
       // it's the primary frame that has the styles for the root element
       // (rather than the ancestors of the primary frame whose mContent
