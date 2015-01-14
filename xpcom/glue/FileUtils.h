@@ -161,6 +161,16 @@ void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                const size_t aCount = SIZE_MAX);
 
 
+#if defined(MOZ_WIDGET_GONK) || defined(XP_UNIX)
+#define MOZ_TEMP_FAILURE_RETRY(exp) (__extension__({ \
+  typeof (exp) _rc; \
+  do { \
+    _rc = (exp); \
+  } while (_rc == -1 && errno == EINTR); \
+  _rc; \
+}))
+#endif
+
 /* Define ReadSysFile() only on GONK to avoid unnecessary lubxul bloat.
 Also define it in debug builds, so that unit tests for it can be written
 and run in non-GONK builds. */
@@ -169,14 +179,6 @@ and run in non-GONK builds. */
 #ifndef ReadSysFile_PRESENT
 #define ReadSysFile_PRESENT
 #endif /* ReadSysFile_PRESENT */
-
-#define MOZ_TEMP_FAILURE_RETRY(exp) (__extension__({ \
-  typeof (exp) _rc; \
-  do { \
-    _rc = (exp); \
-  } while (_rc == -1 && errno == EINTR); \
-  _rc; \
-}))
 
 /**
  * Read the contents of a file.
