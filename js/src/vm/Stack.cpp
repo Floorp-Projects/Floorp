@@ -1378,15 +1378,20 @@ jit::JitActivation::JitActivation(JSContext *cx, bool active)
     active_(active),
     rematerializedFrames_(nullptr),
     ionRecovery_(cx),
-    bailoutData_(nullptr)
+    bailoutData_(nullptr),
+    lastProfilingFrame_(nullptr),
+    lastProfilingCallSite_(nullptr)
 {
     if (active) {
         prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
+        prevJitActivation_ = cx->mainThread().jitActivation;
         cx->mainThread().jitJSContext = cx;
+        cx->mainThread().jitActivation = this;
     } else {
         prevJitTop_ = nullptr;
         prevJitJSContext_ = nullptr;
+        prevJitActivation_ = nullptr;
     }
 }
 
@@ -1395,6 +1400,7 @@ jit::JitActivation::~JitActivation()
     if (active_) {
         cx_->perThreadData->jitTop = prevJitTop_;
         cx_->perThreadData->jitJSContext = prevJitJSContext_;
+        cx_->perThreadData->jitActivation = prevJitActivation_;
     }
 
     // All reocvered value are taken from activation during the bailout.
@@ -1437,10 +1443,13 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
     if (active) {
         prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
+        prevJitActivation_ = cx->mainThread().jitActivation;
         cx->mainThread().jitJSContext = cx;
+        cx->mainThread().jitActivation = this;
     } else {
         cx->mainThread().jitTop = prevJitTop_;
         cx->mainThread().jitJSContext = prevJitJSContext_;
+        cx->mainThread().jitActivation = prevJitActivation_;
     }
 }
 
