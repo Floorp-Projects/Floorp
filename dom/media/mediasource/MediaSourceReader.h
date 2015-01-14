@@ -53,6 +53,9 @@ public:
   virtual size_t SizeOfVideoQueueInFrames() MOZ_OVERRIDE;
   virtual size_t SizeOfAudioQueueInFrames() MOZ_OVERRIDE;
 
+  virtual bool IsDormantNeeded() MOZ_OVERRIDE;
+  virtual void ReleaseMediaResources() MOZ_OVERRIDE;
+
   void OnAudioDecoded(AudioData* aSample);
   void OnAudioNotDecoded(NotDecodedReason aReason);
   void OnVideoDecoded(VideoData* aSample);
