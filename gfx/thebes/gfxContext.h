@@ -430,12 +430,6 @@ public:
     void Clip();
 
     /**
-     * Undoes any clipping. Further drawings will only be restricted by the
-     * surface dimensions.
-     */
-    void ResetClip();
-
-    /**
      * Helper functions that will create a rect path and call Clip().
      * Any current path will be destroyed by these functions!
      */
@@ -444,12 +438,6 @@ public:
     void Clip(Path* aPath);
 
     void PopClip();
-
-    /**
-     * This will ensure that the surface actually has its clip set.
-     * Useful if you are doing native drawing.
-     */
-    void UpdateSurfaceClip();
 
     /**
      * This will return the current bounds of the clip region in user
