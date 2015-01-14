@@ -6,6 +6,8 @@
 #include "BroadcastChannelChild.h"
 #include "BroadcastChannel.h"
 #include "jsapi.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
@@ -37,7 +39,7 @@ BroadcastChannelChild::~BroadcastChannelChild()
 }
 
 bool
-BroadcastChannelChild::RecvNotify(const BroadcastChannelMessageData& aData)
+BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 {
   nsCOMPtr<DOMEventTargetHelper> helper = mBC;
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
@@ -75,6 +77,18 @@ BroadcastChannelChild::RecvNotify(const BroadcastChannelMessageData& aData)
   StructuredCloneData cloneData;
   cloneData.mData = buffer.data;
   cloneData.mDataLength = buffer.dataLength;
+
+  if (!aData.blobsChild().IsEmpty()) {
+    cloneData.mClosure.mBlobs.SetCapacity(aData.blobsChild().Length());
+
+    for (uint32_t i = 0, len = aData.blobsChild().Length(); i < len; ++i) {
+      nsRefPtr<FileImpl> impl =
+        static_cast<BlobChild*>(aData.blobsChild()[i])->GetBlobImpl();
+
+      nsRefPtr<File> blob = new File(mBC->GetOwner(), impl);
+      cloneData.mClosure.mBlobs.AppendElement(blob);
+    }
+  }
 
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
   if (cloneData.mDataLength && !ReadStructuredClone(cx, cloneData, &value)) {

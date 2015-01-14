@@ -5,6 +5,8 @@
 
 #include "BroadcastChannelParent.h"
 #include "BroadcastChannelService.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/unused.h"
 
@@ -31,8 +33,7 @@ BroadcastChannelParent::~BroadcastChannelParent()
 }
 
 bool
-BroadcastChannelParent::RecvPostMessage(
-                                       const BroadcastChannelMessageData& aData)
+BroadcastChannelParent::RecvPostMessage(const ClonedMessageData& aData)
 {
   AssertIsOnBackgroundThread();
 
@@ -74,15 +75,37 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
-BroadcastChannelParent::CheckAndDeliver(
-                                       const BroadcastChannelMessageData& aData,
-                                       const nsString& aOrigin,
-                                       const nsString& aChannel)
+BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
+                                        const nsString& aOrigin,
+                                        const nsString& aChannel)
 {
   AssertIsOnBackgroundThread();
 
   if (aOrigin == mOrigin && aChannel == mChannel) {
-    unused << SendNotify(aData);
+    // We need to duplicate data only if we have blobs.
+    if (aData.blobsParent().IsEmpty()) {
+      unused << SendNotify(aData);
+      return;
+    }
+
+    // Duplicate the data for this parent.
+    ClonedMessageData newData(aData);
+
+    // Ricreate the BlobParent for this new message.
+    for (uint32_t i = 0, len = newData.blobsParent().Length(); i < len; ++i) {
+      nsRefPtr<FileImpl> impl =
+        static_cast<BlobParent*>(newData.blobsParent()[i])->GetBlobImpl();
+
+      PBlobParent* blobParent =
+        BackgroundParent::GetOrCreateActorForBlobImpl(Manager(), impl);
+      if (!blobParent) {
+        return;
+      }
+
+      newData.blobsParent()[i] = blobParent;
+    }
+
+    unused << SendNotify(newData);
   }
 }
 

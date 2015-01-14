@@ -190,18 +190,28 @@ public:
       return NS_OK;
     }
 
-    BroadcastChannelMessageData message;
+    ClonedMessageData message;
 
     SerializedStructuredCloneBuffer& buffer = message.data();
     buffer.data = mData->mBuffer.data();
     buffer.dataLength = mData->mBuffer.nbytes();
 
-#ifdef DEBUG
-    {
-      const nsTArray<nsRefPtr<File>>& blobs = mData->mClosure.mBlobs;
-      MOZ_ASSERT(blobs.IsEmpty());
+    PBackgroundChild* backgroundManager = mActor->Manager();
+    MOZ_ASSERT(backgroundManager);
+
+    const nsTArray<nsRefPtr<File>>& blobs = mData->mClosure.mBlobs;
+
+    if (!blobs.IsEmpty()) {
+      message.blobsChild().SetCapacity(blobs.Length());
+
+      for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
+        PBlobChild* blobChild =
+          BackgroundChild::GetOrCreateActorForBlob(backgroundManager, blobs[i]);
+        MOZ_ASSERT(blobChild);
+
+        message.blobsChild().AppendElement(blobChild);
+      }
     }
-#endif
 
     mActor->SendPostMessage(message);
     return NS_OK;
@@ -270,9 +280,6 @@ public:
   virtual bool Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE
   {
     if (aStatus >= Canceling) {
-      WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-      MOZ_ASSERT(workerPrivate);
-
       mChannel->Shutdown();
     }
 
