@@ -1390,11 +1390,11 @@ void MediaDecoder::StartProgressUpdates()
   }
 }
 
-void MediaDecoder::MoveLoadsToBackground()
+void MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mResource) {
-    mResource->MoveLoadsToBackground();
+    mResource->SetLoadInBackground(aLoadInBackground);
   }
 }
 
