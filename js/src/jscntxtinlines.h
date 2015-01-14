@@ -485,24 +485,4 @@ JSContext::currentScript(jsbytecode **ppc,
     return script;
 }
 
-template <JSThreadSafeNative threadSafeNative>
-inline bool
-JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-    return threadSafeNative(cx, argc, vp);
-}
-
-template <JSThreadSafeNative threadSafeNative>
-inline bool
-JSParallelNativeThreadSafeWrapper(js::ForkJoinContext *cx, unsigned argc, JS::Value *vp)
-{
-    return threadSafeNative(cx, argc, vp);
-}
-
-/* static */ inline JSContext *
-js::ExecutionModeTraits<js::SequentialExecution>::toContextType(ExclusiveContext *cx)
-{
-    return cx->asJSContext();
-}
-
 #endif /* jscntxtinlines_h */

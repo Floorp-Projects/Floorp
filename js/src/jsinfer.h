@@ -181,27 +181,6 @@ ExecutionModeString(ExecutionMode mode)
  */
 static const unsigned NumExecutionModes = ParallelExecution + 1;
 
-template <ExecutionMode mode>
-struct ExecutionModeTraits
-{
-};
-
-template <> struct ExecutionModeTraits<SequentialExecution>
-{
-    typedef JSContext * ContextType;
-    typedef ExclusiveContext * ExclusiveContextType;
-
-    static inline JSContext *toContextType(ExclusiveContext *cx);
-};
-
-template <> struct ExecutionModeTraits<ParallelExecution>
-{
-    typedef ForkJoinContext * ContextType;
-    typedef ForkJoinContext * ExclusiveContextType;
-
-    static inline ForkJoinContext *toContextType(ForkJoinContext *cx) { return cx; }
-};
-
 namespace jit {
     struct IonScript;
     class JitAllocPolicy;
