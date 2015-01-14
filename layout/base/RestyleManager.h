@@ -224,6 +224,7 @@ public:
     }
   private:
     RestyleManager* mRestyleManager;
+    AutoRestore<ReframingStyleContexts*> mRestorePointer;
     ReframingStyleContextTable mElementContexts;
     ReframingStyleContextTable mBeforePseudoContexts;
     ReframingStyleContextTable mAfterPseudoContexts;
