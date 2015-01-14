@@ -7,6 +7,9 @@
 #define mozilla_layers_ChromeProcessController_h
 
 #include "mozilla/layers/GeckoContentController.h"
+#include "nsCOMPtr.h"
+
+class nsIWidget;
 
 namespace mozilla {
 
@@ -21,6 +24,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
+  explicit ChromeProcessController(nsIWidget* aWidget);
+
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
@@ -38,6 +43,9 @@ public:
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
                                        const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
 };
 
 } // namespace layers
