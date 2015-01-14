@@ -270,14 +270,6 @@ js::NativeObject::slotInRange(uint32_t slot, SentinelAllowed sentinel) const
 }
 #endif /* DEBUG */
 
-#if defined(_MSC_VER)
-/*
- * Work around a compiler bug in MSVC9 and above, where inlining this function
- * causes stack pointer offsets to go awry and spp to refer to something higher
- * up the stack.
- */
-MOZ_NEVER_INLINE
-#endif
 Shape *
 js::NativeObject::lookup(ExclusiveContext *cx, jsid id)
 {
