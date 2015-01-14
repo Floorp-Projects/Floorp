@@ -995,6 +995,16 @@ RestyleManager::ReframingStyleContexts::ReframingStyleContexts(
   mRestyleManager->mReframingStyleContexts = this;
 }
 
+RestyleManager::ReframingStyleContexts::~ReframingStyleContexts()
+{
+  // Before we go away, we need to flush out any frame construction that
+  // was enqueued, so that we start transitions.
+  // Note that this is a little bit evil in that we're calling into code
+  // that calls our member functions from our destructor, but it's at
+  // the beginning of our destructor, so it shouldn't be too bad.
+  mRestyleManager->mPresContext->FrameConstructor()->CreateNeededFrames();
+}
+
 static inline dom::Element*
 ElementForStyleContext(nsIContent* aParentContent,
                        nsIFrame* aFrame,
