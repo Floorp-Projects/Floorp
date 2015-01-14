@@ -64,7 +64,7 @@ FrameTagToString(const nsIFrame* aFrame)
 
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
-  , mRebuildAllStyleData(false)
+  , mDoRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
@@ -1478,7 +1478,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
 
-  mRebuildAllStyleData = false;
+  mDoRebuildAllStyleData = false;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
 
@@ -1592,7 +1592,7 @@ RestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
 
-  if (mRebuildAllStyleData) {
+  if (mDoRebuildAllStyleData) {
     RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
     MOZ_ASSERT(mPendingRestyles.Count() == 0);
     return;
@@ -1657,7 +1657,7 @@ RestyleManager::ProcessPendingRestyles()
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
 
-  if (mRebuildAllStyleData) {
+  if (mDoRebuildAllStyleData) {
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
     // This might add us as a refresh observer again; that's ok.
@@ -1770,7 +1770,7 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
 
-  mRebuildAllStyleData = true;
+  mDoRebuildAllStyleData = true;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
 
