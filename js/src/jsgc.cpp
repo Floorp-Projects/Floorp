@@ -3345,6 +3345,9 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
 void
 GCRuntime::sweepBackgroundThings(ZoneList &zones, ThreadType threadType)
 {
+    if (zones.isEmpty())
+        return;
+
     // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
     ArenaHeader *emptyArenas = nullptr;
     FreeOp fop(rt, threadType);
@@ -5096,12 +5099,13 @@ GCRuntime::endSweepingZoneGroup()
     }
 
     /* Start background thread to sweep zones if required. */
-    if (sweepOnBackgroundThread) {
-        ZoneList zones;
-        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
-            zones.append(zone);
+    ZoneList zones;
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+        zones.append(zone);
+    if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
-    }
+    else
+        sweepBackgroundThings(zones, MainThread);
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
     while (ArenaHeader *arena = arenasAllocatedDuringSweep) {
@@ -5405,12 +5409,6 @@ GCRuntime::endSweepPhase(bool lastGC)
     /* If not sweeping on background thread then we must do it here. */
     if (!sweepOnBackgroundThread) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_DESTROY);
-
-        ZoneList zones;
-        for (GCZonesIter zone(rt); !zone.done(); zone.next())
-            zones.append(zone);
-        if (!zones.isEmpty())
-            sweepBackgroundThings(zones, MainThread);
 
         /*
          * Destroy arenas after we finished the sweeping so finalizers can
