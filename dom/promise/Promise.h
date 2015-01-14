@@ -244,7 +244,7 @@ private:
   void MaybeReportRejectedOnce() {
     MaybeReportRejected();
     RemoveFeature();
-    mResult = JS::UndefinedValue();
+    mResult.setUndefined();
   }
 
   void MaybeResolveInternal(JSContext* aCx,

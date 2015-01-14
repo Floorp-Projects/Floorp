@@ -673,12 +673,10 @@ IonBuilder::build()
         JitSpew(JitSpew_IonScripts, "Analyzing script %s:%d (%p) %s",
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
-    } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        JitSpew(JitSpew_IonScripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
-                script()->filename(), script()->lineno(), (void *)script(),
-                (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        JitSpew(JitSpew_IonScripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+        MOZ_ASSERT(info().executionMode() == SequentialExecution);
+        JitSpew(JitSpew_IonScripts, "%sompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+                (script()->hasIonScript() ? "Rec" : "C"),
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     }
@@ -6694,10 +6692,6 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
 void
 IonBuilder::insertRecompileCheck()
 {
-    // PJS doesn't recompile and doesn't need recompile checks.
-    if (info().executionMode() != SequentialExecution)
-        return;
-
     // No need for recompile checks if this is the highest optimization level.
     OptimizationLevel curLevel = optimizationInfo().level();
     if (js_IonOptimizations.isLastLevel(curLevel))

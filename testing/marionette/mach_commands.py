@@ -132,6 +132,8 @@ class MachCommands(MachCommandBase):
         help='Path to gecko log file, or "-" for stdout.')
     @CommandArgument('--jsdebugger', action='store_true',
         help='Enable the jsdebugger for marionette javascript.')
+    @CommandArgument('--e10s', action='store_true',
+        help='Enable electrolysis for marionette tests (desktop only).')
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
     def run_marionette_test(self, tests, **kwargs):

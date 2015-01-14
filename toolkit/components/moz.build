@@ -10,6 +10,7 @@ if CONFIG['MOZ_ENABLE_XREMOTE']:
 
 DIRS += [
     'aboutcache',
+    'aboutcompartments',
     'aboutmemory',
     'addoncompat',
     'alerts',

@@ -231,8 +231,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool initEntrySlots(TempAllocator &alloc);
 
     // Replaces an edge for a given block with a new block. This is
-    // used for critical edge splitting and also for inserting
-    // bailouts during ParallelSafetyAnalysis.
+    // used for critical edge splitting.
     //
     // Note: If successorWithPhis is set, you must not be replacing it.
     void replacePredecessor(MBasicBlock *old, MBasicBlock *split);

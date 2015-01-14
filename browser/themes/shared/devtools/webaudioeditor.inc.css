@@ -145,6 +145,20 @@ text {
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
+/**
+ * Automation Styles
+ */
+
+#automation-param-toolbar .automation-param-button[selected] {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+#automation-graph {
+  overflow: hidden;
+  -moz-box-flex: 1;
+}
+
 @media (min-resolution: 2dppx) {
   #inspector-pane-toggle {
     list-style-image: url(debugger-collapse@2x.png);

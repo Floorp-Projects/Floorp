@@ -129,7 +129,7 @@ class ScopeCoordinate
     explicit inline ScopeCoordinate(jsbytecode *pc)
       : hops_(GET_SCOPECOORD_HOPS(pc)), slot_(GET_SCOPECOORD_SLOT(pc + SCOPECOORD_HOPS_LEN))
     {
-        MOZ_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
+        MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_SCOPECOORD);
     }
 
     inline ScopeCoordinate() {}

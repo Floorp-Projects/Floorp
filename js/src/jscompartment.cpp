@@ -832,9 +832,3 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
 }
-
-void
-JSCompartment::adoptWorkerAllocator(Allocator *workerAllocator)
-{
-    zone()->allocator.arenas.adoptArenas(runtimeFromMainThread(), &workerAllocator->arenas);
-}

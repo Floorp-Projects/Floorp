@@ -392,10 +392,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
     }
 
-    void loadSliceBounds(Register worker, Register dest) {
-        loadPtr(Address(worker, ThreadPoolWorker::offsetOfSliceBounds()), dest);
-    }
-
     void loadJSContext(Register dest) {
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
     }
@@ -858,12 +854,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         linkExitFrame();
         Push(ImmPtr(codeVal));
         Push(ImmPtr(nullptr));
-    }
-
-    void loadThreadPool(Register pool) {
-        // JitRuntimes are tied to JSRuntimes and there is one ThreadPool per
-        // JSRuntime, so we can hardcode the ThreadPool address here.
-        movePtr(ImmPtr(GetJitContext()->runtime->addressOfThreadPool()), pool);
     }
 
     void leaveExitFrame() {

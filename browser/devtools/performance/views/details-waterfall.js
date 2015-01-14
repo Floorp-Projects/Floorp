@@ -13,6 +13,7 @@ let WaterfallView = {
   initialize: Task.async(function *() {
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
+    this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
 
@@ -25,6 +26,7 @@ let WaterfallView = {
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     this.waterfall.recalculateBounds();
   }),
@@ -39,6 +41,7 @@ let WaterfallView = {
 
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
   },
 
   /**
@@ -65,6 +68,15 @@ let WaterfallView = {
    */
   _onRecordingStopped: function () {
     this.render();
+  },
+
+  /**
+   * Called when a recording is selected.
+   */
+  _onRecordingSelected: function (_, recording) {
+    if (!recording.isRecording()) {
+      this.render();
+    }
   },
 
   /**

@@ -3969,8 +3969,12 @@ OverflowableToolbar.prototype = {
   },
 
   onOverflow: function(aEvent) {
+    // The rangeParent check is here because of bug 1111986 and ensuring that
+    // overflow events from the bookmarks toolbar items or similar things that
+    // manage their own overflow don't trigger an overflow on the entire toolbar
     if (!this._enabled ||
-        (aEvent && aEvent.target != this._toolbar.customizationTarget))
+        (aEvent && aEvent.target != this._toolbar.customizationTarget) ||
+        (aEvent && aEvent.rangeParent))
       return;
 
     let child = this._target.lastChild;

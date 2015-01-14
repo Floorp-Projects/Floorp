@@ -120,25 +120,18 @@ class CallObject;
 /*
  * Execution Mode Overview
  *
- * JavaScript code can execute either sequentially or in parallel, such as in
- * PJS. Functions which behave identically in either execution mode can take a
- * ThreadSafeContext, and functions which have similar but not identical
- * behavior between execution modes can be templated on the mode. Such
- * functions use a context parameter type from ExecutionModeTraits below
- * indicating whether they are only permitted constrained operations (such as
- * thread safety, and side effects limited to being thread-local), or whether
- * they can have arbitrary side effects.
+ * JavaScript code executes sequentially.  Functions which have
+ * similar but not identical behavior between execution modes can be
+ * templated on the mode. Such functions use a context parameter type
+ * from ExecutionModeTraits below indicating whether they are only
+ * permitted constrained operations (such as thread safety, and side
+ * effects limited to being thread-local), or whether they can have
+ * arbitrary side effects.
  */
 
 enum ExecutionMode {
     /* Normal JavaScript execution. */
     SequentialExecution,
-
-    /*
-     * JavaScript code to be executed in parallel worker threads in PJS in a
-     * fork join fashion.
-     */
-    ParallelExecution,
 
     /*
      * Modes after this point are internal and are not counted in
@@ -164,8 +157,6 @@ ExecutionModeString(ExecutionMode mode)
     switch (mode) {
       case SequentialExecution:
         return "SequentialExecution";
-      case ParallelExecution:
-        return "ParallelExecution";
       case DefinitePropertiesAnalysis:
         return "DefinitePropertiesAnalysis";
       case ArgumentsUsageAnalysis:
@@ -179,28 +170,7 @@ ExecutionModeString(ExecutionMode mode)
  * Not as part of the enum so we don't get warnings about unhandled enum
  * values.
  */
-static const unsigned NumExecutionModes = ParallelExecution + 1;
-
-template <ExecutionMode mode>
-struct ExecutionModeTraits
-{
-};
-
-template <> struct ExecutionModeTraits<SequentialExecution>
-{
-    typedef JSContext * ContextType;
-    typedef ExclusiveContext * ExclusiveContextType;
-
-    static inline JSContext *toContextType(ExclusiveContext *cx);
-};
-
-template <> struct ExecutionModeTraits<ParallelExecution>
-{
-    typedef ForkJoinContext * ContextType;
-    typedef ForkJoinContext * ExclusiveContextType;
-
-    static inline ForkJoinContext *toContextType(ForkJoinContext *cx) { return cx; }
-};
+static const unsigned NumExecutionModes = SequentialExecution + 1;
 
 namespace jit {
     struct IonScript;

@@ -44,8 +44,8 @@ IDBKeyRange::IDBKeyRange(nsISupports* aGlobal,
                          bool aUpperOpen,
                          bool aIsOnly)
   : mGlobal(aGlobal)
-  , mCachedLowerVal(JSVAL_VOID)
-  , mCachedUpperVal(JSVAL_VOID)
+  , mCachedLowerVal(JS::UndefinedValue())
+  , mCachedUpperVal(JS::UndefinedValue())
   , mLowerOpen(aLowerOpen)
   , mUpperOpen(aUpperOpen)
   , mIsOnly(aIsOnly)

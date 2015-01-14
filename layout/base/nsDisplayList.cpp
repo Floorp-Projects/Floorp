@@ -3982,6 +3982,9 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (mFlags & HORIZONTAL_SCROLLBAR) {
     layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::HORIZONTAL);
   }
+  if (mFlags & SCROLLBAR_CONTAINER) {
+    layer->SetIsScrollbarContainer();
+  }
 
   if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
     mFrame->PresContext()->SetNotifySubDocInvalidationData(layer);

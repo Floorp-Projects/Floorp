@@ -164,7 +164,7 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // Analyze 1: reported.
   // Analyze 2: freed.
   char* e = (char*) malloc(4096);
-  e = (char*) realloc(e, 4097);
+  e = (char*) realloc(e, 7169);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.

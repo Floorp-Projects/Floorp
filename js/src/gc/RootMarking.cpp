@@ -123,7 +123,7 @@ static void
 MarkExactStackRoots(JSRuntime* rt, JSTracer *trc)
 {
     for (ContextIter cx(rt); !cx.done(); cx.next())
-        MarkExactStackRootsAcrossTypes<ThreadSafeContext*>(cx.get(), trc);
+        MarkExactStackRootsAcrossTypes<JSContext*>(cx.get(), trc);
     MarkExactStackRootsAcrossTypes<PerThreadData*>(&rt->mainThread, trc);
 }
 

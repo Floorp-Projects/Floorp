@@ -15,7 +15,9 @@ function startupWebAudioEditor() {
   return all([
     WebAudioEditorController.initialize(),
     ContextView.initialize(),
-    InspectorView.initialize()
+    InspectorView.initialize(),
+    PropertiesView.initialize(),
+    AutomationView.initialize()
   ]);
 }
 
@@ -27,6 +29,8 @@ function shutdownWebAudioEditor() {
     WebAudioEditorController.destroy(),
     ContextView.destroy(),
     InspectorView.destroy(),
+    PropertiesView.destroy(),
+    AutomationView.destroy()
   ]);
 }
 
@@ -83,6 +87,7 @@ let WebAudioEditorController = {
     $("#content").hidden = true;
     ContextView.resetUI();
     InspectorView.resetUI();
+    PropertiesView.resetUI();
   },
 
   // Since node create and connect are probably executed back to back,

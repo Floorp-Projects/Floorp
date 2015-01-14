@@ -80,7 +80,21 @@ void
 SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp)
 {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
-  Display::NotifyVsync(aVsyncTimestamp);
+
+  mozilla::TimeStamp displayVsyncTime = aVsyncTimestamp;
+  mozilla::TimeStamp now = mozilla::TimeStamp::Now();
+  // Posted tasks can only have integer millisecond delays
+  // whereas TimeDurations can have floating point delays.
+  // Thus the vsync timestamp can be in the future, which large parts
+  // of the system can't handle, including animations. Force the timestamp to be now.
+  if (aVsyncTimestamp > now) {
+    displayVsyncTime = now;
+  }
+
+  Display::NotifyVsync(displayVsyncTime);
+
+  // Prevent skew by still scheduling based on the original
+  // vsync timestamp
   ScheduleNextVsync(aVsyncTimestamp);
 }
 

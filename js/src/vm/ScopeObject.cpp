@@ -38,7 +38,7 @@ static JSObject *
 InnermostStaticScope(JSScript *script, jsbytecode *pc)
 {
     MOZ_ASSERT(script->containsPC(pc));
-    MOZ_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
+    MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_SCOPECOORD);
 
     NestedScopeObject *scope = script->getStaticScope(pc);
     if (scope)

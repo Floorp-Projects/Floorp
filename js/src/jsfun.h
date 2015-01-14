@@ -19,8 +19,6 @@ namespace js {
 class FunctionExtended;
 
 typedef JSNative           Native;
-typedef JSParallelNative   ParallelNative;
-typedef JSThreadSafeNative ThreadSafeNative;
 }
 
 struct JSAtomState;
@@ -156,9 +154,6 @@ class JSFunction : public js::NativeObject
     }
     bool isNamedLambda() const {
         return isLambda() && displayAtom() && !hasGuessedAtom();
-    }
-    bool hasParallelNative() const {
-        return isNative() && jitInfo() && jitInfo()->hasParallelNative();
     }
 
     bool isBuiltinFunctionConstructor();
@@ -400,15 +395,6 @@ class JSFunction : public js::NativeObject
 
     JSNative maybeNative() const {
         return isInterpreted() ? nullptr : native();
-    }
-
-    JSParallelNative parallelNative() const {
-        MOZ_ASSERT(hasParallelNative());
-        return jitInfo()->parallelNative;
-    }
-
-    JSParallelNative maybeParallelNative() const {
-        return hasParallelNative() ? parallelNative() : nullptr;
     }
 
     void initNative(js::Native native, const JSJitInfo *jitinfo) {

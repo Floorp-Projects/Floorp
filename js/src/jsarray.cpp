@@ -28,7 +28,6 @@
 #include "gc/Heap.h"
 #include "js/Conversions.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"

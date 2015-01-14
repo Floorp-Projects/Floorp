@@ -8,8 +8,8 @@
 add_task(function*() {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
-  let gVars = InspectorView._propsView;
+  let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
+  let gVars = PropertiesView._propsView;
 
   let started = once(gFront, "start-context");
 
@@ -23,19 +23,19 @@ add_task(function*() {
 
   // Gain node
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS);
 
-  ok(isVisible($("#properties-tabpanel-content")), "Parameters shown when they exist.");
-  ok(!isVisible($("#properties-tabpanel-content-empty")),
+  ok(isVisible($("#properties-content")), "Parameters shown when they exist.");
+  ok(!isVisible($("#properties-empty")),
     "Empty message hidden when AudioParams exist.");
 
   // Destination node
   click(panelWin, findGraphNode(panelWin, nodeIds[0]));
-  yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
+  yield waitForInspectorRender(panelWin, EVENTS);
 
-  ok(!isVisible($("#properties-tabpanel-content")),
+  ok(!isVisible($("#properties-content")),
     "Parameters hidden when they don't exist.");
-  ok(isVisible($("#properties-tabpanel-content-empty")),
+  ok(isVisible($("#properties-empty")),
     "Empty message shown when no AudioParams exist.");
 
   yield teardown(target);
