@@ -23,6 +23,11 @@ namespace dom {
 
 static const double radPerDegree = 2.0 * M_PI / 360.0;
 
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMMatrixReadOnly, mParent)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMatrixReadOnly, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMatrixReadOnly, Release)
+
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::Translate(double aTx,
                              double aTy,
@@ -302,11 +307,6 @@ DOMMatrixReadOnly::Stringify(nsAString& aResult)
 
   aResult = matrixStr;
 }
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMMatrix, mParent)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMatrix, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMatrix, Release)
 
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)

@@ -140,8 +140,8 @@ public:
   DropJSObjects();
 
   // WebIDL
-  JSObject*
-  WrapObject(JSContext* aCx);
+  bool
+  WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
   nsISupports*
   GetParentObject() const

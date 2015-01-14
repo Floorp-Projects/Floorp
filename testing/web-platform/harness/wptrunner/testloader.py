@@ -1,3 +1,4 @@
+import json
 import os
 import urlparse
 from abc import ABCMeta, abstractmethod
@@ -233,8 +234,26 @@ class ManifestLoader(object):
         return rv
 
     def create_manifest(self, manifest_path, tests_path, url_base="/"):
-        self.logger.info("Creating test manifest %s" % manifest_path)
-        manifest_file = manifest.Manifest(None, url_base)
+        self.update_manifest(manifest_path, tests_path, url_base, recreate=True)
+
+    def update_manifest(self, manifest_path, tests_path, url_base="/",
+                        recreate=False):
+        self.logger.info("Updating test manifest %s" % manifest_path)
+
+        json_data = None
+        if not recreate:
+            try:
+                with open(manifest_path) as f:
+                    json_data = json.load(f)
+            except IOError:
+                #If the existing file doesn't exist just create one from scratch
+                pass
+
+        if not json_data:
+            manifest_file = manifest.Manifest(None, url_base)
+        else:
+            manifest_file = manifest.Manifest.from_json(json_data)
+
         manifest.update(tests_path, url_base, manifest_file)
         manifest.write(manifest_file, manifest_path)
 
@@ -242,7 +261,7 @@ class ManifestLoader(object):
         manifest_path = os.path.join(metadata_path, "MANIFEST.json")
         if (not os.path.exists(manifest_path) or
             self.force_manifest_update):
-            self.create_manifest(manifest_path, tests_path, url_base)
+            self.update_manifest(manifest_path, tests_path, url_base)
         manifest_file = manifest.load(manifest_path)
         if manifest_file.url_base != url_base:
             self.logger.info("Updating url_base in manifest from %s to %s" % (manifest_file.url_base,
