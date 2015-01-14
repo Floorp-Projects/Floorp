@@ -20,6 +20,7 @@ else
   _google_oauth_api_keyfile=/e/builds/google-oauth-api.key
 fi
 ac_add_options --with-google-oauth-api-keyfile=${_google_oauth_api_keyfile}
+ac_add_options --with-mozilla-api-keyfile=/c/builds/mozilla-desktop-geoloc-api.key
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
