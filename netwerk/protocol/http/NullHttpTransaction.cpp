@@ -11,9 +11,81 @@
 #include "NullHttpTransaction.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
+#include "nsIHttpActivityObserver.h"
+#include "NullHttpChannel.h"
 
 namespace mozilla {
 namespace net {
+
+class CallObserveActivity MOZ_FINAL : public nsIRunnable
+{
+  ~CallObserveActivity()
+  {
+  }
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  CallObserveActivity(nsIHttpActivityObserver *aActivityDistributor,
+                      const nsCString &aHost,
+                      int32_t aPort,
+                      bool aEndToEndSSL,
+                      uint32_t aActivityType,
+                      uint32_t aActivitySubtype,
+                      PRTime aTimestamp,
+                      uint64_t aExtraSizeData,
+                      const nsACString &aExtraStringData)
+    : mActivityDistributor(aActivityDistributor)
+    , mHost(aHost)
+    , mPort(aPort)
+    , mEndToEndSSL(aEndToEndSSL)
+    , mActivityType(aActivityType)
+    , mActivitySubtype(aActivitySubtype)
+    , mTimestamp(aTimestamp)
+    , mExtraSizeData(aExtraSizeData)
+    , mExtraStringData(aExtraStringData)
+  {
+  }
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIURI> uri;
+    nsAutoCString port(NS_LITERAL_CSTRING(""));
+    if (mPort != -1 && ((mEndToEndSSL && mPort != 443) ||
+        (!mEndToEndSSL && mPort != 80))) {
+      port.AppendInt(mPort);
+    }
+
+    nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                            (mEndToEndSSL ? NS_LITERAL_CSTRING("https://")
+                            : NS_LITERAL_CSTRING("http://") ) + mHost + port);
+    if (NS_FAILED(rv)) {
+      return NS_OK;
+    }
+
+    nsRefPtr<NullHttpChannel> channel = new NullHttpChannel();
+    channel->Init(uri, 0, nullptr, 0, nullptr);
+    mActivityDistributor->ObserveActivity(
+      nsCOMPtr<nsISupports>(do_QueryObject(channel)),
+      mActivityType,
+      mActivitySubtype,
+      mTimestamp,
+      mExtraSizeData,
+      mExtraStringData);
+
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
+  nsCString mHost;
+  int32_t mPort;
+  bool mEndToEndSSL;
+  uint32_t mActivityType;
+  uint32_t mActivitySubtype;
+  PRTime mTimestamp;
+  uint64_t mExtraSizeData;
+  nsCString mExtraStringData;
+};
+
+NS_IMPL_ISUPPORTS(CallObserveActivity, nsIRunnable)
 
 NS_IMPL_ISUPPORTS(NullHttpTransaction, NullHttpTransaction, nsISupportsWeakReference)
 
@@ -28,6 +100,24 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
   , mCallbacks(callbacks)
   , mConnectionInfo(ci)
 {
+  nsresult rv;
+  mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID,
+                                       &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  bool activityDistributorActive;
+  rv = mActivityDistributor->GetIsActive(&activityDistributorActive);
+  if (NS_SUCCEEDED(rv) && activityDistributorActive) {
+    // There are some observers registered at activity distributor.
+    LOG(("NulHttpTransaction::NullHttpTransaction() "
+         "mActivityDistributor is active "
+         "[this=%p, %s]", this, ci->GetHost().get()));
+  } else {
+    // There is no observer, so don't use it.
+    mActivityDistributor = nullptr;
+  }
 }
 
 NullHttpTransaction::~NullHttpTransaction()
@@ -59,6 +149,17 @@ void
 NullHttpTransaction::OnTransportStatus(nsITransport* transport,
                                        nsresult status, uint64_t progress)
 {
+  if (mActivityDistributor) {
+    NS_DispatchToMainThread(new CallObserveActivity(mActivityDistributor,
+                                  mConnectionInfo->GetHost(),
+                                  mConnectionInfo->Port(),
+                                  mConnectionInfo->EndToEndSSL(),
+                                  NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT,
+                                  static_cast<uint32_t>(status),
+                                  PR_Now(),
+                                  progress,
+                                  EmptyCString()));
+  }
 }
 
 bool
@@ -129,8 +230,21 @@ NullHttpTransaction::RequestHead()
     nsresult rv = nsHttpHandler::GenerateHostPort(host,
                                                   mConnectionInfo->Port(),
                                                   hostHeader);
-    if (NS_SUCCEEDED(rv))
-       mRequestHead->SetHeader(nsHttp::Host, hostHeader);
+    if (NS_SUCCEEDED(rv)) {
+      mRequestHead->SetHeader(nsHttp::Host, hostHeader);
+      if (mActivityDistributor) {
+        // Report request headers.
+        nsCString reqHeaderBuf;
+        mRequestHead->Flatten(reqHeaderBuf, false);
+        NS_DispatchToMainThread(new CallObserveActivity(mActivityDistributor,
+                                  mConnectionInfo->GetHost(),
+                                  mConnectionInfo->Port(),
+                                  mConnectionInfo->EndToEndSSL(),
+                                  NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                                  NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER,
+                                  PR_Now(), 0, reqHeaderBuf));
+    }
+  }
 
     // CONNECT tunnels may also want Proxy-Authorization but that is a lot
     // harder to determine, so for now we will let those connections fail in
@@ -159,6 +273,16 @@ NullHttpTransaction::Close(nsresult reason)
   mStatus = reason;
   mConnection = nullptr;
   mIsDone = true;
+  if (mActivityDistributor) {
+    // Report that this transaction is closing.
+    NS_DispatchToMainThread(new CallObserveActivity(mActivityDistributor,
+                                  mConnectionInfo->GetHost(),
+                                  mConnectionInfo->Port(),
+                                  mConnectionInfo->EndToEndSSL(),
+                                  NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+                                  NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
+                                  PR_Now(), 0, EmptyCString()));
+  }
 }
 
 nsHttpConnectionInfo *
