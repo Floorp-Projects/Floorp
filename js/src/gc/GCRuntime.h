@@ -88,6 +88,23 @@ class BackgroundAllocTask : public GCParallelTask
     virtual void run() MOZ_OVERRIDE;
 };
 
+typedef mozilla::Vector<Chunk *> ChunkVector;
+
+// Search the provided Chunks for free arenas and decommit them.
+class BackgroundDecommitTask : public GCParallelTask
+{
+    // Guarded by the GC lock.
+    JSRuntime *runtime;
+    ChunkVector toDecommit_;
+
+  public:
+    BackgroundDecommitTask(JSRuntime *rt) : runtime(rt) {}
+    bool setChunksToScan(const ChunkVector &chunks);
+
+  protected:
+    virtual void run() MOZ_OVERRIDE;
+};
+
 /*
  * Encapsulates all of the GC tunables. These are effectively constant and
  * should only be modified by setParameter.
@@ -361,6 +378,7 @@ class GCRuntime
     void waitBackgroundSweepOrAllocEnd() {
         helperState.waitBackgroundSweepEnd();
         allocTask.cancel(GCParallelTask::CancelAndWait);
+        decommitTask.cancel(GCParallelTask::CancelAndWait);
     }
 
     void requestMinorGC(JS::gcreason::Reason reason);
@@ -585,7 +603,7 @@ class GCRuntime
     void endSweepPhase(bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
     void decommitAllWithoutUnlocking(const AutoLockGC &lock);
-    void decommitArenas(AutoLockGC &lock);
+    void startDecommit();
     void expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock);
     void queueZonesForBackgroundSweep(ZoneList &zones);
     void sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType);
@@ -913,6 +931,7 @@ class GCRuntime
     mozilla::DebugOnly<PRThread *> lockOwner;
 
     BackgroundAllocTask allocTask;
+    BackgroundDecommitTask decommitTask;
     GCHelperState helperState;
 
     /*
