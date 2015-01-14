@@ -315,10 +315,10 @@ public:
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) = 0;
   // Report the current offset in bytes from the start of the stream.
   virtual int64_t Tell() = 0;
-  // Moves any existing channel loads into the background, so that they don't
-  // block the load event. Any new loads initiated (for example to seek)
-  // will also be in the background.
-  virtual void MoveLoadsToBackground() {}
+  // Moves any existing channel loads into or out of background. Background
+  // loads don't block the load event. This also determines whether or not any
+  // new loads initiated (for example to seek) will be in the background.
+  virtual void SetLoadInBackground(bool aLoadInBackground) {}
   // Ensures that the value returned by IsSuspendedByCache below is up to date
   // (i.e. the cache has examined this stream at least once).
   virtual void EnsureCacheUpToDate() {}
@@ -431,7 +431,7 @@ private:
 class BaseMediaResource : public MediaResource {
 public:
   virtual nsIURI* URI() const MOZ_OVERRIDE { return mURI; }
-  virtual void MoveLoadsToBackground();
+  virtual void SetLoadInBackground(bool aLoadInBackground) MOZ_OVERRIDE;
 
   virtual size_t SizeOfExcludingThis(
                   MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
@@ -504,8 +504,10 @@ protected:
   // is safe.
   const nsAutoCString mContentType;
 
-  // True if MoveLoadsToBackground() has been called, i.e. the load event
-  // has been fired, and all channel loads will be in the background.
+  // True if SetLoadInBackground() has been called with
+  // aLoadInBackground = true, i.e. when the document load event is not
+  // blocked by this resource, and all channel loads will be in the
+  // background.
   bool mLoadInBackground;
 };
 
