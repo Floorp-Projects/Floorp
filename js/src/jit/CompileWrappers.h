@@ -90,7 +90,7 @@ class CompileZone
 
     const void *addressOfNeedsIncrementalBarrier();
 
-    // allocator.arenas.getFreeList(allocKind)
+    // arenas.getFreeList(allocKind)
     const void *addressOfFreeListFirst(gc::AllocKind allocKind);
     const void *addressOfFreeListLast(gc::AllocKind allocKind);
 };
