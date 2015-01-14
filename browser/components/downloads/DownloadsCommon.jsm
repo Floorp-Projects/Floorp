@@ -611,12 +611,8 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function () {
 function DownloadsDataCtor(aPrivate) {
   this._isPrivate = aPrivate;
 
-  // This Object contains all the available DownloadsDataItem objects, indexed by
-  // their globally unique identifier.  The identifiers of downloads that have
-  // been removed from the Download Manager data are still present, however the
-  // associated objects are replaced with the value "null".  This is required to
-  // prevent race conditions when populating the list asynchronously.
-  this.dataItems = {};
+  // Contains all the available DownloadsDataItem objects.
+  this.dataItems = new Set();
 
   // Array of view objects that should be notified when the available download
   // data changes.
@@ -644,8 +640,8 @@ DownloadsDataCtor.prototype = {
    * True if there are finished downloads that can be removed from the list.
    */
   get canRemoveFinished() {
-    for (let [, dataItem] of Iterator(this.dataItems)) {
-      if (dataItem && !dataItem.inProgress) {
+    for (let dataItem of this.dataItems) {
+      if (!dataItem.inProgress) {
         return true;
       }
     }
@@ -668,7 +664,7 @@ DownloadsDataCtor.prototype = {
   onDownloadAdded(aDownload) {
     let dataItem = new DownloadsDataItem(aDownload);
     this._downloadToDataItemMap.set(aDownload, dataItem);
-    this.dataItems[dataItem.downloadGuid] = dataItem;
+    this.dataItems.add(dataItem);
 
     for (let view of this._views) {
       view.onDataItemAdded(dataItem, true);
@@ -695,7 +691,7 @@ DownloadsDataCtor.prototype = {
     }
 
     this._downloadToDataItemMap.delete(aDownload);
-    this.dataItems[dataItem.downloadGuid] = null;
+    this.dataItems.delete(dataItem);
     for (let view of this._views) {
       view.onDataItemRemoved(dataItem);
     }
@@ -801,9 +797,7 @@ DownloadsDataCtor.prototype = {
 
     // Sort backwards by start time, ensuring that the most recent
     // downloads are added first regardless of their state.
-    let loadedItemsArray = [dataItem
-                            for each (dataItem in this.dataItems)
-                            if (dataItem)];
+    let loadedItemsArray = [...this.dataItems];
     loadedItemsArray.sort((a, b) => b.startTime - a.startTime);
     loadedItemsArray.forEach(dataItem => aView.onDataItemAdded(dataItem, false));
 
@@ -881,7 +875,6 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
 function DownloadsDataItem(aDownload) {
   this._download = aDownload;
 
-  this.downloadGuid = "id:" + this._autoIncrementId;
   this.file = aDownload.target.path;
   this.target = OS.Path.basename(aDownload.target.path);
   this.uri = aDownload.source.url;
@@ -891,13 +884,6 @@ function DownloadsDataItem(aDownload) {
 }
 
 DownloadsDataItem.prototype = {
-  /**
-   * The JavaScript API does not need identifiers for Download objects, so they
-   * are generated sequentially for the corresponding DownloadDataItem.
-   */
-  get _autoIncrementId() ++DownloadsDataItem.prototype.__lastId,
-  __lastId: 0,
-
   /**
    * Updates this object from the underlying Download object.
    */
@@ -1477,7 +1463,7 @@ DownloadsIndicatorDataCtor.prototype = {
   _activeDataItems() {
     let dataItems = this._isPrivate ? PrivateDownloadsData.dataItems
                                     : DownloadsData.dataItems;
-    for each (let dataItem in dataItems) {
+    for (let dataItem of dataItems) {
       if (dataItem && dataItem.inProgress) {
         yield dataItem;
       }
