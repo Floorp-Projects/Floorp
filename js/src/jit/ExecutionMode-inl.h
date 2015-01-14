@@ -19,7 +19,6 @@ HasIonScript(JSScript *script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->hasIonScript();
-      case ParallelExecution: return script->hasParallelIonScript();
       default:;
     }
     MOZ_CRASH("No such execution mode");
@@ -30,7 +29,6 @@ GetIonScript(JSScript *script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->maybeIonScript();
-      case ParallelExecution: return script->maybeParallelIonScript();
       default:;
     }
     MOZ_CRASH("No such execution mode");
@@ -41,7 +39,6 @@ SetIonScript(JSContext *cx, JSScript *script, ExecutionMode cmode, IonScript *io
 {
     switch (cmode) {
       case SequentialExecution: script->setIonScript(cx, ionScript); return;
-      case ParallelExecution: script->setParallelIonScript(ionScript); return;
       default:;
     }
     MOZ_CRASH("No such execution mode");
@@ -52,7 +49,6 @@ OffsetOfIonInJSScript(ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return JSScript::offsetOfIonScript();
-      case ParallelExecution: return JSScript::offsetOfParallelIonScript();
       default:;
     }
     MOZ_CRASH("No such execution mode");
@@ -63,7 +59,6 @@ CanIonCompile(JSScript *script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->canIonCompile();
-      case ParallelExecution: return script->canParallelIonCompile();
       case DefinitePropertiesAnalysis: return true;
       case ArgumentsUsageAnalysis: return true;
       default:;
@@ -76,7 +71,6 @@ CompilingOffThread(JSScript *script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->isIonCompilingOffThread();
-      case ParallelExecution: return script->isParallelIonCompilingOffThread();
       default:;
     }
     MOZ_CRASH("No such execution mode");
@@ -87,7 +81,6 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
 {
     switch (cmode) {
       case SequentialExecution: return script->isIonCompilingOffThread();
-      case ParallelExecution: return script->isParallelIonCompilingOffThread();
       default:;
     }
     MOZ_CRASH("No such execution mode");

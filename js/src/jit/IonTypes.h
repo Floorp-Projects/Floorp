@@ -101,12 +101,6 @@ enum BailoutKind
     Bailout_NonStringInput,
     Bailout_NonSymbolInput,
 
-    // PJS bailout when writing to a non-thread local object.
-    Bailout_GuardThreadExclusive,
-
-    // PJS bailout when encountering MIR unsafe for parallel execution.
-    Bailout_ParallelUnsafe,
-
     // For the initial snapshot when entering a function.
     Bailout_InitialState,
 
@@ -200,8 +194,6 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonStringInput";
       case Bailout_NonSymbolInput:
         return "Bailout_NonSymbolInput";
-      case Bailout_GuardThreadExclusive:
-        return "Bailout_GuardThreadExclusive";
       case Bailout_InitialState:
         return "Bailout_InitialState";
       case Bailout_Debugger:
