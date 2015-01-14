@@ -949,7 +949,8 @@ RestyleManager::RestyleElement(Element*        aElement,
           newContext->StyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
         newContext = nullptr;
-        DoRebuildAllStyleData(aRestyleTracker, nsChangeHint(0), aRestyleHint);
+        mRebuildAllRestyleHint |= aRestyleHint;
+        DoRebuildAllStyleData(aRestyleTracker);
         if (aMinHint == 0) {
           return;
         }
@@ -1478,10 +1479,8 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                "Use ReconstructDocElementHierarchy instead.");
 
   mRebuildAllStyleData = false;
-  NS_UpdateHint(aExtraHint, mRebuildAllExtraHint);
-  aRestyleHint |= mRebuildAllRestyleHint;
-  mRebuildAllExtraHint = nsChangeHint(0);
-  mRebuildAllRestyleHint = nsRestyleHint(0);
+  NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
+  mRebuildAllRestyleHint |= aRestyleHint;
 
   nsIPresShell* presShell = mPresContext->GetPresShell();
   if (!presShell || !presShell->GetRootFrame())
@@ -1512,7 +1511,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
 
-  DoRebuildAllStyleData(mPendingRestyles, aExtraHint, aRestyleHint);
+  DoRebuildAllStyleData(mPendingRestyles);
 
   mPostAnimationRestyles = false;
   mSkipAnimationRules = false;
@@ -1528,9 +1527,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 }
 
 void
-RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
-                                      nsChangeHint aExtraHint,
-                                      nsRestyleHint aRestyleHint)
+RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
@@ -1539,15 +1536,20 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
     return;
   }
 
+  nsRestyleHint restyleHint = mRebuildAllRestyleHint;
+  nsChangeHint changeHint = mRebuildAllExtraHint;
+  mRebuildAllExtraHint = nsChangeHint(0);
+  mRebuildAllRestyleHint = nsRestyleHint(0);
+
   // Until we get rid of these phases in bug 960465, we need to add
   // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
   // these booleans in all cases.
-  aRestyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
+  restyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
 
-  aRestyleHint = aRestyleHint | eRestyle_ForceDescendants;
+  restyleHint |= eRestyle_ForceDescendants;
 
-  if (!(aRestyleHint & eRestyle_Subtree) &&
-      (aRestyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants))) {
+  if (!(restyleHint & eRestyle_Subtree) &&
+      (restyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants))) {
     // We want this hint to apply to the root node's primary frame
     // rather than the root frame, since it's the primary frame that has
     // the styles for the root element (rather than the ancestors of the
@@ -1559,9 +1561,9 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
     if (root) {
       // If the root element is gone, dropping the hint on the floor
       // should be fine.
-      aRestyleTracker.AddPendingRestyle(root, aRestyleHint, nsChangeHint(0));
+      aRestyleTracker.AddPendingRestyle(root, restyleHint, nsChangeHint(0));
     }
-    aRestyleHint = nsRestyleHint(0);
+    restyleHint = nsRestyleHint(0);
   }
 
   // Recalculate all of the style contexts for the document
@@ -1572,7 +1574,7 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
   // roughly what we do for aRestyleHint above.)
   // Note: The restyle tracker we pass in here doesn't matter.
   ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
-                               aExtraHint, aRestyleTracker, aRestyleHint);
+                               changeHint, aRestyleTracker, restyleHint);
   FlushOverflowChangedTracker();
 
   // Tell the style set it's safe to destroy the old rule tree.  We
