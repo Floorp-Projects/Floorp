@@ -2330,7 +2330,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
         // parse to avoid the overhead of a lazy syntax-only parse. Although
         // the prediction may be incorrect, IIFEs are common enough that it
         // pays off for lots of code.
-        if (pn->isLikelyIIFE())
+        if (pn->isLikelyIIFE() && !funbox->isGenerator())
             break;
 
         Parser<SyntaxParseHandler> *parser = handler.syntaxParser;
