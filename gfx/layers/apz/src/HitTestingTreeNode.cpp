@@ -195,24 +195,24 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
   // If there's no APZC, then we do need to check against the mEventRegions
   // (which contains the layer's visible region) for obscuration purposes.
   if (!gfxPrefs::LayoutEventRegionsEnabled() && GetApzc()) {
-    return HitTestResult::HitLayer;
+    return HitTestResult::ApzcHitRegion;
   }
 
   // convert into Layer coordinate space
   Maybe<LayerPoint> pointInLayerPixels = Untransform(aPoint);
   if (!pointInLayerPixels) {
-    return HitTestResult::HitNothing;
+    return HitTestResult::NoApzcHit;
   }
   LayerIntPoint point = RoundedToInt(pointInLayerPixels.ref());
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {
-    return HitTestResult::HitNothing;
+    return HitTestResult::NoApzcHit;
   }
   if (mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y)) {
-    return HitTestResult::HitDispatchToContentRegion;
+    return HitTestResult::ApzcContentRegion;
   }
-  return HitTestResult::HitLayer;
+  return HitTestResult::ApzcHitRegion;
 }
 
 void
