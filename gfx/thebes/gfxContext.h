@@ -322,16 +322,6 @@ public:
     void Mask(mozilla::gfx::SourceSurface *surface, const mozilla::gfx::Point& offset = mozilla::gfx::Point());
 
     /**
-     ** Shortcuts
-     **/
-
-    /**
-     * Creates a new path with a rectangle from 0,0 to size.w,size.h
-     * and calls cairo_fill.
-     */
-    void DrawSurface(gfxASurface *surface, const gfxSize& size);
-
-    /**
      ** Line Properties
      **/
 
