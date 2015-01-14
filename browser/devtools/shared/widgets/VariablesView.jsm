@@ -2426,10 +2426,27 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       this._valueLabel.classList.remove(VariablesView.getClass(prevGrip));
     }
     this._valueGrip = aGrip;
-    this._valueString = VariablesView.getString(aGrip, {
-      concise: true,
-      noEllipsis: true,
-    });
+
+    if(aGrip && (aGrip.optimizedOut || aGrip.uninitialized || aGrip.missingArguments)) {
+      if(aGrip.optimizedOut) {
+        this._valueString = STR.GetStringFromName("variablesViewOptimizedOut")
+      }
+      else if(aGrip.uninitialized) {
+        this._valueString = STR.GetStringFromName("variablesViewUninitialized")
+      }
+      else if(aGrip.missingArguments) {
+        this._valueString = STR.GetStringFromName("variablesViewMissingArgs")
+      }
+      this.eval = null;
+    }
+    else {
+      this._valueString = VariablesView.getString(aGrip, {
+        concise: true,
+        noEllipsis: true,
+      });
+      this.eval = this.ownerView.eval;
+    }
+
     this._valueClassName = VariablesView.getClass(aGrip);
 
     this._valueLabel.classList.add(this._valueClassName);
