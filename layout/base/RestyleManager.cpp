@@ -984,6 +984,12 @@ RestyleManager::RestyleElement(Element*        aElement,
   }
 }
 
+RestyleManager::ReframingStyleContexts::ReframingStyleContexts(
+                                          RestyleManager* aRestyleManager)
+  : mRestyleManager(aRestyleManager)
+{
+}
+
 static inline dom::Element*
 ElementForStyleContext(nsIContent* aParentContent,
                        nsIFrame* aFrame,
@@ -3908,7 +3914,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
   // our mReframingStyleContexts for the scope of this function.
   MOZ_ASSERT(!mReframingStyleContexts, "shouldn't call recursively");
   AutoRestore<ReframingStyleContexts*> ar(mReframingStyleContexts);
-  ReframingStyleContexts reframingStyleContexts;
+  ReframingStyleContexts reframingStyleContexts(this);
   mReframingStyleContexts = &reframingStyleContexts;
 
   nsStyleChangeList changeList;
@@ -3928,7 +3934,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*    aNewContext,
   // our mReframingStyleContexts for the scope of this function.
   MOZ_ASSERT(!mReframingStyleContexts, "shouldn't call recursively");
   AutoRestore<ReframingStyleContexts*> ar(mReframingStyleContexts);
-  ReframingStyleContexts reframingStyleContexts;
+  ReframingStyleContexts reframingStyleContexts(this);
   mReframingStyleContexts = &reframingStyleContexts;
 
   MOZ_ASSERT(aNewContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS);
