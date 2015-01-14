@@ -2153,7 +2153,7 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::functionDef(HandlePropertyName funName,
                                   FunctionType type, FunctionSyntaxKind kind,
-                                  GeneratorKind generatorKind, InvokedPrediction invoked)
+                                  GeneratorKind generatorKind)
 {
     MOZ_ASSERT_IF(kind == Statement, funName);
 
@@ -2161,9 +2161,6 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName,
     Node pn = handler.newFunctionDefinition();
     if (!pn)
         return null();
-
-    if (invoked)
-        pn = handler.setLikelyIIFE(pn);
 
     bool bodyProcessed;
     if (!checkFunctionDefinition(funName, &pn, kind, &bodyProcessed))
@@ -2324,13 +2321,6 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
 
     // Try a syntax parse for this inner function.
     do {
-        // If we're assuming this function is an IIFE, always perform a full
-        // parse to avoid the overhead of a lazy syntax-only parse. Although
-        // the prediction may be incorrect, IIFEs are common enough that it
-        // pays off for lots of code.
-        if (pn->isLikelyIIFE())
-            break;
-
         Parser<SyntaxParseHandler> *parser = handler.syntaxParser;
         if (!parser)
             break;
@@ -2645,7 +2635,7 @@ Parser<ParseHandler>::functionStmt()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionExpr(InvokedPrediction invoked)
+Parser<ParseHandler>::functionExpr()
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
@@ -2671,7 +2661,7 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked)
         tokenStream.ungetToken();
     }
 
-    return functionDef(name, Normal, Expression, generatorKind, invoked);
+    return functionDef(name, Normal, Expression, generatorKind);
 }
 
 /*
@@ -4413,10 +4403,10 @@ Parser<SyntaxParseHandler>::exportDeclaration()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::expressionStatement(InvokedPrediction invoked)
+Parser<ParseHandler>::expressionStatement()
 {
     tokenStream.ungetToken();
-    Node pnexpr = expr(invoked);
+    Node pnexpr = expr();
     if (!pnexpr)
         return null();
     if (!MatchOrInsertSemicolon(tokenStream))
@@ -5894,9 +5884,6 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return expressionStatement();
       }
 
-      case TOK_NEW:
-        return expressionStatement(PredictInvoked);
-
       default:
         return expressionStatement();
     }
@@ -5904,9 +5891,9 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::expr(InvokedPrediction invoked)
+Parser<ParseHandler>::expr()
 {
-    Node pn = assignExpr(invoked);
+    Node pn = assignExpr();
     if (!pn)
         return null();
 
@@ -6028,7 +6015,7 @@ Precedence(ParseNodeKind pnk) {
 
 template <typename ParseHandler>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-Parser<ParseHandler>::orExpr1(InvokedPrediction invoked)
+Parser<ParseHandler>::orExpr1()
 {
     // Shift-reduce parser for the left-associative binary operator part of
     // the JS syntax.
@@ -6044,7 +6031,7 @@ Parser<ParseHandler>::orExpr1(InvokedPrediction invoked)
 
     Node pn;
     for (;;) {
-        pn = unaryExpr(invoked);
+        pn = unaryExpr();
         if (!pn)
             return pn;
 
@@ -6094,9 +6081,9 @@ Parser<ParseHandler>::orExpr1(InvokedPrediction invoked)
 
 template <typename ParseHandler>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-Parser<ParseHandler>::condExpr1(InvokedPrediction invoked)
+Parser<ParseHandler>::condExpr1()
 {
-    Node condition = orExpr1(invoked);
+    Node condition = orExpr1();
     if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
         return condition;
 
@@ -6195,7 +6182,7 @@ Parser<SyntaxParseHandler>::checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavo
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::assignExpr(InvokedPrediction invoked)
+Parser<ParseHandler>::assignExpr()
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -6247,7 +6234,7 @@ Parser<ParseHandler>::assignExpr(InvokedPrediction invoked)
     TokenStream::Position start(keepAtoms);
     tokenStream.tell(&start);
 
-    Node lhs = condExpr1(invoked);
+    Node lhs = condExpr1();
     if (!lhs)
         return null();
 
@@ -6353,7 +6340,7 @@ Parser<ParseHandler>::unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::unaryExpr(InvokedPrediction invoked)
+Parser<ParseHandler>::unaryExpr()
 {
     Node pn, pn2;
 
@@ -6411,7 +6398,7 @@ Parser<ParseHandler>::unaryExpr(InvokedPrediction invoked)
       }
 
       default:
-        pn = memberExpr(tt, /* allowCallSyntax = */ true, invoked);
+        pn = memberExpr(tt, true);
         if (!pn)
             return null();
 
@@ -7514,7 +7501,7 @@ Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPrediction invoked)
+Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
 
@@ -7530,7 +7517,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
 
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
-        Node ctorExpr = memberExpr(tt, false, PredictInvoked);
+        Node ctorExpr = memberExpr(tt, false);
         if (!ctorExpr)
             return null();
 
@@ -7547,7 +7534,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
                 handler.setOp(lhs, JSOP_SPREADNEW);
         }
     } else {
-        lhs = primaryExpr(tt, invoked);
+        lhs = primaryExpr(tt);
         if (!lhs)
             return null();
     }
@@ -8139,14 +8126,14 @@ Parser<ParseHandler>::methodDefinition(Node literal, Node propname, FunctionType
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::primaryExpr(TokenKind tt, InvokedPrediction invoked)
+Parser<ParseHandler>::primaryExpr(TokenKind tt)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
     JS_CHECK_RECURSION(context, return null());
 
     switch (tt) {
       case TOK_FUNCTION:
-        return functionExpr(invoked);
+        return functionExpr();
 
       case TOK_LB:
         return arrayInitializer();
@@ -8280,7 +8267,7 @@ Parser<ParseHandler>::parenExprOrGeneratorComprehension()
      */
     bool oldParsingForInit = pc->parsingForInit;
     pc->parsingForInit = false;
-    Node pn = expr(PredictInvoked);
+    Node pn = expr();
     pc->parsingForInit = oldParsingForInit;
 
     if (!pn)
@@ -8358,7 +8345,7 @@ Parser<ParseHandler>::exprInParens()
      */
     bool oldParsingForInit = pc->parsingForInit;
     pc->parsingForInit = false;
-    Node pn = expr(PredictInvoked);
+    Node pn = expr();
     pc->parsingForInit = oldParsingForInit;
 
     if (!pn)

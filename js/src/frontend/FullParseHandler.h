@@ -601,9 +601,6 @@ class FullParseHandler
         pn->setInParens(true);
         return pn;
     }
-    ParseNode *setLikelyIIFE(ParseNode *pn) {
-        return setInParens(pn);
-    }
     void setPrologue(ParseNode *pn) {
         pn->pn_prologue = true;
     }
