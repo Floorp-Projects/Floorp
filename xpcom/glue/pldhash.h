@@ -53,12 +53,10 @@
 #define PL_DHASH_BITS           32
 #define PL_DHASH_GOLDEN_RATIO   0x9E3779B9U
 
-/* Primitive and forward-struct typedefs. */
-typedef uint32_t                PLDHashNumber;
-typedef struct PLDHashEntryHdr  PLDHashEntryHdr;
-typedef struct PLDHashEntryStub PLDHashEntryStub;
-typedef struct PLDHashTable     PLDHashTable;
-typedef struct PLDHashTableOps  PLDHashTableOps;
+typedef uint32_t PLDHashNumber;
+
+class PLDHashTable;
+struct PLDHashTableOps;
 
 /*
  * Table entry header structure.
@@ -176,8 +174,9 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  * aTable->mGeneration before adding or removing, and compare the sample after,
  * dereferencing the entry pointer only if aTable->mGeneration has not changed.
  */
-struct PLDHashTable
+class PLDHashTable
 {
+public:
   /*
    * Virtual operations; see below. This field is public because it's commonly
    * zeroed to indicate that a table is no longer live.
