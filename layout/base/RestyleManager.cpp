@@ -1651,7 +1651,7 @@ RestyleManager::ProcessPendingRestyles()
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
     // This might add us as a refresh observer again; that's ok.
-    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
+    ProcessPendingRestyles();
   }
 }
 
