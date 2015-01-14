@@ -64,7 +64,8 @@ FrameTagToString(const nsIFrame* aFrame)
 
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
-  , mRebuildAllStyleData(false)
+  , mDoRebuildAllStyleData(false)
+  , mInRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
@@ -928,6 +929,7 @@ RestyleManager::RestyleElement(Element*        aElement,
                                RestyleTracker& aRestyleTracker,
                                nsRestyleHint   aRestyleHint)
 {
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
   if (aPrimaryFrame && aPrimaryFrame->GetContent() != aElement) {
@@ -940,7 +942,8 @@ RestyleManager::RestyleElement(Element*        aElement,
 
   // If we're restyling the root element and there are 'rem' units in
   // use, handle dynamic changes to the definition of a 'rem' here.
-  if (mPresContext->UsesRootEMUnits() && aPrimaryFrame) {
+  if (mPresContext->UsesRootEMUnits() && aPrimaryFrame &&
+      !mInRebuildAllStyleData) {
     nsStyleContext *oldContext = aPrimaryFrame->StyleContext();
     if (!oldContext->GetParent()) { // check that we're the root element
       nsRefPtr<nsStyleContext> newContext = mPresContext->StyleSet()->
@@ -948,12 +951,10 @@ RestyleManager::RestyleElement(Element*        aElement,
       if (oldContext->StyleFont()->mFont.size !=
           newContext->StyleFont()->mFont.size) {
         // The basis for 'rem' units has changed.
-        newContext = nullptr;
-        DoRebuildAllStyleData(aRestyleTracker, nsChangeHint(0), aRestyleHint);
-        if (aMinHint == 0) {
-          return;
-        }
-        aPrimaryFrame = aElement->GetPrimaryFrame();
+        mRebuildAllRestyleHint |= aRestyleHint;
+        NS_UpdateHint(mRebuildAllExtraHint, aMinHint);
+        StartRebuildAllStyleData(aRestyleTracker);
+        return;
       }
     }
   }
@@ -982,6 +983,26 @@ RestyleManager::RestyleElement(Element*        aElement,
                                    aRestyleTracker, aRestyleHint);
     }
   }
+}
+
+RestyleManager::ReframingStyleContexts::ReframingStyleContexts(
+                                          RestyleManager* aRestyleManager)
+  : mRestyleManager(aRestyleManager)
+  , mRestorePointer(mRestyleManager->mReframingStyleContexts)
+{
+  MOZ_ASSERT(!mRestyleManager->mReframingStyleContexts,
+             "shouldn't construct recursively");
+  mRestyleManager->mReframingStyleContexts = this;
+}
+
+RestyleManager::ReframingStyleContexts::~ReframingStyleContexts()
+{
+  // Before we go away, we need to flush out any frame construction that
+  // was enqueued, so that we start transitions.
+  // Note that this is a little bit evil in that we're calling into code
+  // that calls our member functions from our destructor, but it's at
+  // the beginning of our destructor, so it shouldn't be too bad.
+  mRestyleManager->mPresContext->FrameConstructor()->CreateNeededFrames();
 }
 
 static inline dom::Element*
@@ -1477,22 +1498,20 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
 
-  mRebuildAllStyleData = false;
-  NS_UpdateHint(aExtraHint, mRebuildAllExtraHint);
-  aRestyleHint |= mRebuildAllRestyleHint;
-  mRebuildAllExtraHint = nsChangeHint(0);
-  mRebuildAllRestyleHint = nsRestyleHint(0);
+  NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
+  mRebuildAllRestyleHint |= aRestyleHint;
 
-  nsIPresShell* presShell = mPresContext->GetPresShell();
-  if (!presShell || !presShell->GetRootFrame())
+  // Processing the style changes could cause a flush that propagates to
+  // the parent frame and thus destroys the pres shell, so we must hold
+  // a reference.
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  if (!presShell || !presShell->GetRootFrame()) {
+    mDoRebuildAllStyleData = false;
     return;
+  }
 
   // Make sure that the viewmanager will outlive the presshell
   nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
-
-  // Processing the style changes could cause a flush that propagates to
-  // the parent frame and thus destroys the pres shell.
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(presShell);
 
   // We may reconstruct frames below and hence process anything that is in the
   // tree. We don't want to get notified to process those items again after.
@@ -1500,52 +1519,45 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   nsAutoScriptBlocker scriptBlocker;
 
-  MOZ_ASSERT(!mIsProcessingRestyles, "Nesting calls to processing restyles");
-#ifdef DEBUG
-  mIsProcessingRestyles = true;
-#endif
+  mDoRebuildAllStyleData = true;
 
-  // Until we get rid of these phases in bug 960465, we need to skip
-  // animation restyles during the non-animation phase, and post
-  // animation restyles so that we restyle those elements again in the
-  // animation phase.  Furthermore, we need to add
-  // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
-  // these booleans in all cases.
-  mSkipAnimationRules = true;
-  mPostAnimationRestyles = true;
-  aRestyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
-
-  DoRebuildAllStyleData(mPendingRestyles, aExtraHint, aRestyleHint);
-
-  mPostAnimationRestyles = false;
-  mSkipAnimationRules = false;
-#ifdef DEBUG
-  mIsProcessingRestyles = false;
-#endif
-
-  // Make sure that we process any pending animation restyles from the
-  // above style change.  Note that we can *almost* implement the above
-  // by just posting a style change -- except we really need to restyle
-  // the root frame rather than the root element's primary frame.
   ProcessPendingRestyles();
 }
 
 void
-RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
-                                      nsChangeHint aExtraHint,
-                                      nsRestyleHint aRestyleHint)
+RestyleManager::StartRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
+  MOZ_ASSERT(mIsProcessingRestyles);
+
+  nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
+  if (!rootFrame) {
+    // No need to do anything.
+    return;
+  }
+
+  mInRebuildAllStyleData = true;
+
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
   nsresult rv = mPresContext->StyleSet()->BeginReconstruct();
   if (NS_FAILED(rv)) {
-    return;
+    MOZ_CRASH("unable to rebuild style data");
   }
 
-  aRestyleHint = aRestyleHint | eRestyle_ForceDescendants;
+  nsRestyleHint restyleHint = mRebuildAllRestyleHint;
+  nsChangeHint changeHint = mRebuildAllExtraHint;
+  mRebuildAllExtraHint = nsChangeHint(0);
+  mRebuildAllRestyleHint = nsRestyleHint(0);
 
-  if (!(aRestyleHint & eRestyle_Subtree) &&
-      (aRestyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants))) {
+  // Until we get rid of these phases in bug 960465, we need to add
+  // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
+  // these booleans in all cases.
+  restyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
+
+  restyleHint |= eRestyle_ForceDescendants;
+
+  if (!(restyleHint & eRestyle_Subtree) &&
+      (restyleHint & ~(eRestyle_Force | eRestyle_ForceDescendants))) {
     // We want this hint to apply to the root node's primary frame
     // rather than the root frame, since it's the primary frame that has
     // the styles for the root element (rather than the ancestors of the
@@ -1557,24 +1569,27 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
     if (root) {
       // If the root element is gone, dropping the hint on the floor
       // should be fine.
-      aRestyleTracker.AddPendingRestyle(root, aRestyleHint, nsChangeHint(0));
+      aRestyleTracker.AddPendingRestyle(root, restyleHint, nsChangeHint(0));
     }
-    aRestyleHint = nsRestyleHint(0);
+    restyleHint = nsRestyleHint(0);
   }
 
-  // Recalculate all of the style contexts for the document
+  // Recalculate all of the style contexts for the document, from the
+  // root frame.  We can't do this with a change hint, since we can't
+  // post a change hint for the root frame.
   // Note that we can ignore the return value of ComputeStyleChangeFor
-  // because we never need to reframe the root frame
-  // XXX This could be made faster by not rerunning rule matching
-  // (but note that nsPresShell::SetPreferenceStyleRules currently depends
-  // on us re-running rule matching here
+  // because we never need to reframe the root frame.
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?  (We could do
   // roughly what we do for aRestyleHint above.)
-  // Note: The restyle tracker we pass in here doesn't matter.
-  ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
-                               aExtraHint, aRestyleTracker, aRestyleHint);
-  FlushOverflowChangedTracker();
+  ComputeAndProcessStyleChange(rootFrame,
+                               changeHint, aRestyleTracker, restyleHint);
+}
+
+void
+RestyleManager::FinishRebuildAllStyleData()
+{
+  MOZ_ASSERT(mInRebuildAllStyleData, "bad caller");
 
   // Tell the style set it's safe to destroy the old rule tree.  We
   // must do this after the ProcessRestyledFrames call in case the
@@ -1582,6 +1597,8 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
   // reconstructed will still have their old style context pointers
   // until they are destroyed).
   mPresContext->StyleSet()->EndReconstruct();
+
+  mInRebuildAllStyleData = false;
 }
 
 void
@@ -1590,12 +1607,6 @@ RestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(mPresContext->Document(), "No document?  Pshaw!");
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
-
-  if (mRebuildAllStyleData) {
-    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
-    MOZ_ASSERT(mPendingRestyles.Count() == 0);
-    return;
-  }
 
   // First do any queued-up frame creation.  (We should really
   // merge this into the rest of the process, though; see bug 827239.)
@@ -1614,7 +1625,7 @@ RestyleManager::ProcessPendingRestyles()
   // if any style changes we cause trigger transitions, we have the
   // correct old style for starting the transition.
   if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
-      mPendingRestyles.Count() > 0) {
+      (mPendingRestyles.Count() > 0 || mDoRebuildAllStyleData)) {
     IncrementAnimationGeneration();
     UpdateOnlyAnimationStyles();
   }
@@ -1626,7 +1637,7 @@ RestyleManager::ProcessPendingRestyles()
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
 
-  mPendingRestyles.ProcessRestyles();
+  ProcessRestyles(mPendingRestyles);
 
   mPostAnimationRestyles = false;
   mSkipAnimationRules = false;
@@ -1645,7 +1656,7 @@ RestyleManager::ProcessPendingRestyles()
   // property, and then posts an immediate animation style change).
   MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = true;
-  mPendingAnimationRestyles.ProcessRestyles();
+  ProcessRestyles(mPendingAnimationRestyles);
   MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = false;
 
@@ -1656,22 +1667,33 @@ RestyleManager::ProcessPendingRestyles()
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
 
-  if (mRebuildAllStyleData) {
+  if (mDoRebuildAllStyleData) {
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
     // This might add us as a refresh observer again; that's ok.
-    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
+    ProcessPendingRestyles();
+
+    NS_ASSERTION(!mDoRebuildAllStyleData,
+                 "repeatedly setting mDoRebuildAllStyleData?");
   }
+
+  MOZ_ASSERT(!mInRebuildAllStyleData,
+             "should have called FinishRebuildAllStyleData");
 }
 
 void
-RestyleManager::BeginProcessingRestyles()
+RestyleManager::BeginProcessingRestyles(RestyleTracker& aRestyleTracker)
 {
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
   mPresContext->FrameConstructor()->BeginUpdate();
 
   mInStyleRefresh = true;
+
+  if (ShouldStartRebuildAllFor(aRestyleTracker)) {
+    mDoRebuildAllStyleData = false;
+    StartRebuildAllStyleData(aRestyleTracker);
+  }
 }
 
 void
@@ -1682,6 +1704,10 @@ RestyleManager::EndProcessingRestyles()
   // Set mInStyleRefresh to false now, since the EndUpdate call might
   // add more restyles.
   mInStyleRefresh = false;
+
+  if (mInRebuildAllStyleData) {
+    FinishRebuildAllStyleData();
+  }
 
   mPresContext->FrameConstructor()->EndUpdate();
 
@@ -1715,7 +1741,7 @@ RestyleManager::UpdateOnlyAnimationStyles()
   transitionManager->AddStyleUpdatesTo(tracker);
   animationManager->AddStyleUpdatesTo(tracker);
 
-  tracker.ProcessRestyles();
+  ProcessRestyles(tracker);
 
   transitionManager->SetInAnimationOnlyStyleUpdate(false);
 }
@@ -1769,7 +1795,7 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                "Should not reconstruct the root of the frame tree.  "
                "Use ReconstructDocElementHierarchy instead.");
 
-  mRebuildAllStyleData = true;
+  mDoRebuildAllStyleData = true;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   mRebuildAllRestyleHint |= aRestyleHint;
 
@@ -2616,7 +2642,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   nsRestyleHint hintToRestore = nsRestyleHint(0);
   if (mContent && mContent->IsElement() &&
       // If we're resolving from the root of the frame tree (which
-      // we do in DoRebuildAllStyleData), we need to avoid getting the
+      // we do when mDoRebuildAllStyleData), we need to avoid getting the
       // root's restyle data until we get to its primary frame, since
       // it's the primary frame that has the styles for the root element
       // (rather than the ancestors of the primary frame whose mContent
@@ -3899,13 +3925,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
                                              RestyleTracker&    aRestyleTracker,
                                              nsRestyleHint      aRestyleHint)
 {
-  // Create a ReframingStyleContexts struct on the stack and put it in
-  // our mReframingStyleContexts for the scope of this function.
-  MOZ_ASSERT(!mReframingStyleContexts, "shouldn't call recursively");
-  AutoRestore<ReframingStyleContexts*> ar(mReframingStyleContexts);
-  ReframingStyleContexts reframingStyleContexts;
-  mReframingStyleContexts = &reframingStyleContexts;
-
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   nsStyleChangeList changeList;
   ElementRestyler::ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
                                          aRestyleTracker, aRestyleHint);
@@ -3919,13 +3939,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*    aNewContext,
                                              RestyleTracker&    aRestyleTracker,
                                              nsRestyleHint      aRestyleHint)
 {
-  // Create a ReframingStyleContexts struct on the stack and put it in
-  // our mReframingStyleContexts for the scope of this function.
-  MOZ_ASSERT(!mReframingStyleContexts, "shouldn't call recursively");
-  AutoRestore<ReframingStyleContexts*> ar(mReframingStyleContexts);
-  ReframingStyleContexts reframingStyleContexts;
-  mReframingStyleContexts = &reframingStyleContexts;
-
+  MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   MOZ_ASSERT(aNewContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS);
   nsIFrame* frame = GetNearestAncestorFrame(aElement);
   MOZ_ASSERT(frame, "display:contents node in map although it's a "

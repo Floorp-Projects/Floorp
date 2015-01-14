@@ -4,6 +4,8 @@
 
 "use strict";
 
+let { Cu } = require("chrome");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let Services = require("Services");
 let promise = require("devtools/toolkit/deprecated-sync-thenables");
 let {Class} = require("sdk/core/heritage");
@@ -1148,7 +1150,7 @@ let Front = Class({
       this.actor().then(actorID => {
         packet.to = actorID;
         this.conn._transport.send(packet);
-      });
+      }).then(null, e => DevToolsUtils.reportException("Front.prototype.send", e));
     }
   },
 

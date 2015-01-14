@@ -193,16 +193,6 @@ struct IonScript
     // Number of times this script bailed out without invalidation.
     uint32_t numBailouts_;
 
-    // Flag set when it is likely that one of our (transitive) call
-    // targets is not compiled.  Used in ForkJoin.cpp to decide when
-    // we should add call targets to the worklist.
-    mozilla::Atomic<bool, mozilla::Relaxed> hasUncompiledCallTarget_;
-
-    // Flag set when this script is used as an entry script to parallel
-    // execution. If this is true, then the parent JSScript must be in its
-    // JitCompartment's parallel entry script set.
-    bool isParallelEntryScript_;
-
     // Flag set if IonScript was compiled with SPS profiling enabled.
     bool hasSPSInstrumentation_;
 
@@ -262,13 +252,6 @@ struct IonScript
 
     // Number of references from invalidation records.
     uint32_t invalidationCount_;
-
-    // If this is a parallel script, the number of major GC collections it has
-    // been idle, otherwise 0.
-    //
-    // JSScripts with parallel IonScripts are preserved across GC if the
-    // parallel age is < MAX_PARALLEL_AGE.
-    uint32_t parallelAge_;
 
     // Identifier of the compilation which produced this code.
     types::RecompileInfo recompileInfo_;
@@ -429,24 +412,6 @@ struct IonScript
     bool bailoutExpected() const {
         return numBailouts_ > 0;
     }
-    void setHasUncompiledCallTarget() {
-        hasUncompiledCallTarget_ = true;
-    }
-    void clearHasUncompiledCallTarget() {
-        hasUncompiledCallTarget_ = false;
-    }
-    bool hasUncompiledCallTarget() const {
-        return hasUncompiledCallTarget_;
-    }
-    void setIsParallelEntryScript() {
-        isParallelEntryScript_ = true;
-    }
-    void clearIsParallelEntryScript() {
-        isParallelEntryScript_ = false;
-    }
-    bool isParallelEntryScript() const {
-        return isParallelEntryScript_;
-    }
     void setHasSPSInstrumentation() {
         hasSPSInstrumentation_ = true;
     }
@@ -590,24 +555,10 @@ struct IonScript
         recompiling_ = false;
     }
 
-    static const uint32_t MAX_PARALLEL_AGE = 5;
-
     enum ShouldIncreaseAge {
         IncreaseAge = true,
         KeepAge = false
     };
-
-    void resetParallelAge() {
-        MOZ_ASSERT(isParallelEntryScript());
-        parallelAge_ = 0;
-    }
-    uint32_t parallelAge() const {
-        return parallelAge_;
-    }
-    uint32_t shouldPreserveParallelCode(ShouldIncreaseAge increaseAge = KeepAge) {
-        MOZ_ASSERT(isParallelEntryScript());
-        return (increaseAge ? ++parallelAge_ : parallelAge_) < MAX_PARALLEL_AGE;
-    }
 
     static void writeBarrierPre(Zone *zone, IonScript *ionScript);
 };

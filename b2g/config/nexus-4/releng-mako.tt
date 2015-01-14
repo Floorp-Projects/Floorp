@@ -16,6 +16,13 @@
 "digest": "27aced8feb0e757d61df37839e62410ff30a059cfa8f04897d29ab74b787c765313acf904b1f9cf311c3e682883514df7da54197665251ef9b8bdad6bd0f62c5",
 "algorithm": "sha512",
 "filename": "lge-mako-jwr66v-985845e4.tgz"
+},
+{
+"size": 80458572,
+"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": "True"
 }
 ]
 

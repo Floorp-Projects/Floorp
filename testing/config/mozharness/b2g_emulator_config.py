@@ -79,6 +79,28 @@ config = {
             "run_filename": "runtestsb2g.py",
             "testsdir": "mochitest"
         },
+        "mochitest-chrome": {
+            "options": [
+                "--adbpath=%(adbpath)s",
+                "--b2gpath=%(b2gpath)s",
+                "--console-level=INFO",
+                "--emulator=%(emulator)s",
+                "--logdir=%(logcat_dir)s",
+                "--remote-webserver=%(remote_webserver)s",
+                "--xre-path=%(xre_path)s",
+                "--symbols-path=%(symbols_path)s",
+                "--busybox=%(busybox)s",
+                "--total-chunks=%(total_chunks)s",
+                "--this-chunk=%(this_chunk)s",
+                "--quiet",
+                "--chrome",
+                "--log-raw=%(raw_log_file)s",
+                "--certificate-path=%(certificate_path)s",
+                "--test-path=%(test_path)s"
+            ],
+            "run_filename": "runtestsb2g.py",
+            "testsdir": "mochitest"
+        },
         "reftest": {
             "options": [
                 "--adbpath=%(adbpath)s",

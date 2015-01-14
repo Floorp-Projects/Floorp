@@ -50,6 +50,8 @@
 #include "nsThreadManager.h"
 #include "nsThreadPool.h"
 
+#include "nsCompartmentInfo.h"
+
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptiprivate.h"
@@ -233,6 +235,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMemoryReporterManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMemoryInfoDumper)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStatusReporterManager, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCompartmentInfo)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIOUtil)
 
