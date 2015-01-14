@@ -65,6 +65,7 @@ FrameTagToString(const nsIFrame* aFrame)
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
   , mDoRebuildAllStyleData(false)
+  , mInRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
@@ -1529,6 +1530,8 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 void
 RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
 {
+  mInRebuildAllStyleData = true;
+
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
   nsresult rv = mPresContext->StyleSet()->BeginReconstruct();
@@ -1577,12 +1580,16 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker)
                                changeHint, aRestyleTracker, restyleHint);
   FlushOverflowChangedTracker();
 
-  // Tell the style set it's safe to destroy the old rule tree.  We
-  // must do this after the ProcessRestyledFrames call in case the
-  // change list has frame reconstructs in it (since frames to be
-  // reconstructed will still have their old style context pointers
-  // until they are destroyed).
-  mPresContext->StyleSet()->EndReconstruct();
+  if (mInRebuildAllStyleData) {
+    // Tell the style set it's safe to destroy the old rule tree.  We
+    // must do this after the ProcessRestyledFrames call in case the
+    // change list has frame reconstructs in it (since frames to be
+    // reconstructed will still have their old style context pointers
+    // until they are destroyed).
+    mPresContext->StyleSet()->EndReconstruct();
+
+    mInRebuildAllStyleData = false;
+  }
 }
 
 void

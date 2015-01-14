@@ -469,6 +469,8 @@ private:
   // True if we need to reconstruct the rule tree the next time we
   // process restyles.
   bool mDoRebuildAllStyleData : 1;
+  // True if we're currently in the process of reconstructing the rule tree.
+  bool mInRebuildAllStyleData : 1;
   // True if we're already waiting for a refresh notification
   bool mObservingRefreshDriver : 1;
   // True if we're in the middle of a nsRefreshDriver refresh
