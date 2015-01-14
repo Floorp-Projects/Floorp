@@ -279,6 +279,32 @@ CallObject::createForStrictEval(JSContext *cx, AbstractFramePtr frame)
     return create(cx, script, scopeChain, callee);
 }
 
+CallObject *
+CallObject::createHollowForDebug(JSContext *cx, HandleFunction callee)
+{
+    MOZ_ASSERT(!callee->isHeavyweight());
+
+    // This scope's parent link is never used: the DebugScopeObject that
+    // refers to this scope carries its own parent link, which is what
+    // Debugger uses to construct the tree of Debugger.Environment objects. So
+    // just parent this scope directly to the global.
+    Rooted<GlobalObject *> global(cx, &callee->global());
+    Rooted<CallObject *> callobj(cx, createForFunction(cx, global, callee));
+    if (!callobj)
+        return nullptr;
+
+    RootedValue optimizedOut(cx, MagicValue(JS_OPTIMIZED_OUT));
+    RootedId id(cx);
+    RootedScript script(cx, callee->nonLazyScript());
+    for (BindingIter bi(script); !bi.done(); bi++) {
+        id = NameToId(bi->name());
+        if (!JSObject::setGeneric(cx, callobj, callobj, id, &optimizedOut, true))
+            return nullptr;
+    }
+
+    return callobj;
+}
+
 const Class CallObject::class_ = {
     "Call",
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS)
@@ -642,10 +668,9 @@ const Class StaticEvalObject::class_ = {
 
 /*****************************************************************************/
 
-ClonedBlockObject *
-ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, AbstractFramePtr frame)
+/* static */ ClonedBlockObject *
+ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, HandleObject enclosing)
 {
-    assertSameCompartment(cx, frame);
     MOZ_ASSERT(block->getClass() == &BlockObject::class_);
 
     RootedTypeObject type(cx, cx->getNewType(&BlockObject::class_, TaggedProto(block.get())));
@@ -660,9 +685,9 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
         return nullptr;
 
     /* Set the parent if necessary, as for call objects. */
-    if (&frame.scopeChain()->global() != obj->getParent()) {
+    if (&enclosing->global() != obj->getParent()) {
         MOZ_ASSERT(obj->getParent() == nullptr);
-        Rooted<GlobalObject*> global(cx, &frame.scopeChain()->global());
+        Rooted<GlobalObject*> global(cx, &enclosing->global());
         if (!JSObject::setParent(cx, obj, global))
             return nullptr;
     }
@@ -670,11 +695,39 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
     MOZ_ASSERT(!obj->inDictionaryMode());
     MOZ_ASSERT(obj->slotSpan() >= block->numVariables() + RESERVED_SLOTS);
 
-    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*frame.scopeChain()));
+    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*enclosing));
 
     MOZ_ASSERT(obj->isDelegate());
 
     return &obj->as<ClonedBlockObject>();
+}
+
+/* static */ ClonedBlockObject *
+ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, AbstractFramePtr frame)
+{
+    assertSameCompartment(cx, frame);
+    RootedObject enclosing(cx, frame.scopeChain());
+    return create(cx, block, enclosing);
+}
+
+/* static */ ClonedBlockObject *
+ClonedBlockObject::createHollowForDebug(JSContext *cx, Handle<StaticBlockObject *> block)
+{
+    MOZ_ASSERT(!block->needsClone());
+
+    // This scope's parent link is never used: the DebugScopeObject that
+    // refers to this scope carries its own parent link, which is what
+    // Debugger uses to construct the tree of Debugger.Environment objects. So
+    // just parent this scope directly to the global.
+    Rooted<GlobalObject *> global(cx, &block->global());
+    Rooted<ClonedBlockObject *> obj(cx, create(cx, block, global));
+    if (!obj)
+        return nullptr;
+
+    for (unsigned i = 0; i < block->numVariables(); i++)
+        obj->setVar(i, MagicValue(JS_OPTIMIZED_OUT), DONT_CHECK_ALIASING);
+
+    return obj;
 }
 
 void
@@ -1321,6 +1374,7 @@ class DebugScopeProxy : public BaseProxyHandler
                                MutableHandleValue vp, AccessResult *accessResult) const
     {
         MOZ_ASSERT(&debugScope->scope() == scope);
+        MOZ_ASSERT_IF(action == SET, !debugScope->isOptimizedOut());
         *accessResult = ACCESS_GENERIC;
         LiveScopeVal *maybeLiveScope = DebugScopes::hasLiveScope(*scope);
 
@@ -1684,6 +1738,9 @@ class DebugScopeProxy : public BaseProxyHandler
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());
         Rooted<ScopeObject*> scope(cx, &proxy->as<DebugScopeObject>().scope());
 
+        if (debugScope->isOptimizedOut())
+            return Throw(cx, id, JSMSG_DEBUG_CANT_SET_OPT_ENV);
+
         AccessResult access;
         if (!handleUnaliasedAccess(cx, debugScope, scope, id, SET, vp, &access))
             return false;
@@ -1862,6 +1919,26 @@ DebugScopeObject::getMaybeSentinelValue(JSContext *cx, HandleId id, MutableHandl
 {
     Rooted<DebugScopeObject *> self(cx, this);
     return DebugScopeProxy::singleton.getMaybeSentinelValue(cx, self, id, vp);
+}
+
+bool
+DebugScopeObject::isOptimizedOut() const
+{
+    ScopeObject &s = scope();
+
+    if (DebugScopes::hasLiveScope(s))
+        return false;
+
+    if (s.is<ClonedBlockObject>())
+        return !s.as<ClonedBlockObject>().staticBlock().needsClone();
+
+    if (s.is<CallObject>()) {
+        return !s.as<CallObject>().isForEval() &&
+               !s.as<CallObject>().callee().isHeavyweight() &&
+               !maybeSnapshot();
+    }
+
+    return false;
 }
 
 bool
@@ -2095,6 +2172,8 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
     MOZ_ASSERT(cx->compartment() == debugScope.compartment());
     MOZ_ASSERT_IF(si.withinInitialFrame() && si.initialFrame().isFunctionFrame(),
                   !si.initialFrame().callee()->isGenerator());
+    // Generators should always reify their scopes.
+    MOZ_ASSERT_IF(si.type() == ScopeIter::Call, !si.fun().isGenerator());
 
     if (!CanUseDebugScopeMaps(cx))
         return true;
@@ -2110,12 +2189,16 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         return false;
     }
 
-    MOZ_ASSERT(!scopes->liveScopes.has(&debugScope.scope()));
-    if (!scopes->liveScopes.put(&debugScope.scope(), LiveScopeVal(si))) {
-        js_ReportOutOfMemory(cx);
-        return false;
+    // Only add to liveScopes if we synthesized the debug scope on a live
+    // frame.
+    if (si.withinInitialFrame()) {
+        MOZ_ASSERT(!scopes->liveScopes.has(&debugScope.scope()));
+        if (!scopes->liveScopes.put(&debugScope.scope(), LiveScopeVal(si))) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
     }
-    liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
 
     return true;
 }
@@ -2423,10 +2506,6 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
 {
     MOZ_ASSERT(!si.hasScopeObject() && si.canHaveScopeObject());
 
-    // FIXMEshu completely optimized-out scopes
-    if (!si.withinInitialFrame())
-        MOZ_CRASH("NYI");
-
     if (DebugScopeObject *debugScope = DebugScopes::hasDebugScope(cx, si))
         return debugScope;
 
@@ -2449,9 +2528,15 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
     DebugScopeObject *debugScope = nullptr;
     switch (si.type()) {
       case ScopeIter::Call: {
+        RootedFunction callee(cx, &si.fun());
         // Generators should always reify their scopes.
-        MOZ_ASSERT(!si.initialFrame().callee()->isGenerator());
-        Rooted<CallObject*> callobj(cx, CallObject::createForFunction(cx, si.initialFrame()));
+        MOZ_ASSERT(!callee->isGenerator());
+
+        Rooted<CallObject*> callobj(cx);
+        if (si.withinInitialFrame())
+            callobj = CallObject::createForFunction(cx, si.initialFrame());
+        else
+            callobj = CallObject::createHollowForDebug(cx, callee);
         if (!callobj)
             return nullptr;
 
@@ -2468,10 +2553,15 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
       }
       case ScopeIter::Block: {
         // Generators should always reify their scopes.
-        MOZ_ASSERT_IF(si.initialFrame().isFunctionFrame(),
+        MOZ_ASSERT_IF(si.withinInitialFrame() && si.initialFrame().isFunctionFrame(),
                       !si.initialFrame().callee()->isGenerator());
+
         Rooted<StaticBlockObject *> staticBlock(cx, &si.staticBlock());
-        ClonedBlockObject *block = ClonedBlockObject::create(cx, staticBlock, si.initialFrame());
+        ClonedBlockObject *block;
+        if (si.withinInitialFrame())
+            block = ClonedBlockObject::create(cx, staticBlock, si.initialFrame());
+        else
+            block = ClonedBlockObject::createHollowForDebug(cx, staticBlock);
         if (!block)
             return nullptr;
 
