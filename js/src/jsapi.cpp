@@ -598,6 +598,11 @@ JS_ShutDown(void)
 
     DestroyHelperThreadsState();
 
+#ifdef JS_TRACE_LOGGING
+    DestroyTraceLoggerThreadState();
+    DestroyTraceLoggerGraphState();
+#endif
+
     PRMJ_NowShutdown();
 
 #if EXPOSE_INTL_API
