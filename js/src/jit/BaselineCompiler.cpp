@@ -261,23 +261,32 @@ BaselineCompiler::compile()
     if (compileDebugInstrumentation_)
         baselineScript->setHasDebugInstrumentation();
 
-    // If profiler instrumentation is enabled, register a native => bytecode mapping entry,
-    // and toggle profiling on
-    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
+    // If profiler instrumentation is enabled, toggle instrumentation on.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        baselineScript->toggleProfilerInstrumentation(true);
+
+    // Always register a native => bytecode mapping entry, since profiler can be
+    // turned on with baseline jitcode on stack, and baseline jitcode cannot be invalidated.
+    {
         JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%d (%p)",
                     script->filename(), script->lineno(), baselineScript.get());
+
+        // Generate profiling string.
+        char *str = JitcodeGlobalEntry::createScriptString(cx, script);
+        if (!str)
+            return Method_Error;
+
         JitcodeGlobalEntry::BaselineEntry entry;
-        entry.init(code->raw(), code->raw() + code->instructionsSize(), script);
+        entry.init(code->raw(), code->rawEnd(), script, str);
 
         JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-        if (!globalTable->addEntry(entry))
+        if (!globalTable->addEntry(entry, cx->runtime())) {
+            entry.destroy();
             return Method_Error;
+        }
 
         // Mark the jitcode as having a bytecode map.
         code->setHasBytecodeMap();
-
-        // Toggle profiler instrumentation on in the jitcode.
-        baselineScript->toggleProfilerInstrumentation(true);
     }
 
     script->setBaselineScript(cx, baselineScript.release());

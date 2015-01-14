@@ -8511,6 +8511,8 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         //   cx->mainThread().jitJSContext = cx;
         //   act.prevJitActivation_ = cx->mainThread().jitActivation;
         //   cx->mainThread().jitActivation = act;
+        //   act.prevProfilingActivation_ = cx->mainThread().profilingActivation;
+        //   cx->mainThread().profilingActivation_ = act;
         // On the ARM store8() uses the secondScratchReg (lr) as a temp.
         size_t offsetOfActivation = offsetof(JSRuntime, mainThread) +
                                     PerThreadData::offsetOfActivation();
@@ -8519,6 +8521,8 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
                                       offsetof(PerThreadData, jitJSContext);
         size_t offsetOfJitActivation = offsetof(JSRuntime, mainThread) +
                                        offsetof(PerThreadData, jitActivation);
+        size_t offsetOfProfilingActivation = offsetof(JSRuntime, mainThread) +
+                                             PerThreadData::offsetOfProfilingActivation();
         masm.loadAsmJSActivation(reg0);
         masm.loadPtr(Address(reg0, AsmJSActivation::offsetOfContext()), reg3);
         masm.loadPtr(Address(reg3, JSContext::offsetOfRuntime()), reg0);
@@ -8542,6 +8546,12 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitActivation()));
         //   cx->mainThread().jitActivation = act;
         masm.storePtr(reg1, Address(reg0, offsetOfJitActivation));
+
+        //   act.prevProfilingActivation_ = cx->mainThread().profilingActivation;
+        masm.loadPtr(Address(reg0, offsetOfProfilingActivation), reg2);
+        masm.storePtr(reg2, Address(reg1, Activation::offsetOfPrevProfiling()));
+        //   cx->mainThread().profilingActivation_ = act;
+        masm.storePtr(reg1, Address(reg0, offsetOfProfilingActivation));
     }
 
     // 2. Call
@@ -8561,6 +8571,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         Register reg2 = AsmJSIonExitRegD2;
 
         // The following is inlined:
+        //   rt->mainThread.profilingActivation = prevProfilingActivation_;
         //   rt->mainThread.activation()->active_ = false;
         //   rt->mainThread.jitTop = prevJitTop_;
         //   rt->mainThread.jitJSContext = prevJitJSContext_;
@@ -8573,16 +8584,22 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
                                       offsetof(PerThreadData, jitJSContext);
         size_t offsetOfJitActivation = offsetof(JSRuntime, mainThread) +
                                        offsetof(PerThreadData, jitActivation);
+        size_t offsetOfProfilingActivation = offsetof(JSRuntime, mainThread) +
+                                             PerThreadData::offsetOfProfilingActivation();
 
         masm.movePtr(AsmJSImmPtr(AsmJSImm_Runtime), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
 
-        //   rt->mainThread.activation()->active_ = false;
-        masm.store8(Imm32(0), Address(reg1, JitActivation::offsetOfActiveUint8()));
-
         //   rt->mainThread.jitTop = prevJitTop_;
         masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitTop()), reg2);
         masm.storePtr(reg2, Address(reg0, offsetOfJitTop));
+
+        //   rt->mainThread.profilingActivation = rt->mainThread.activation()->prevProfiling_;
+        masm.loadPtr(Address(reg1, Activation::offsetOfPrevProfiling()), reg2);
+        masm.storePtr(reg2, Address(reg0, offsetOfProfilingActivation));
+
+        //   rt->mainThread.activation()->active_ = false;
+        masm.store8(Imm32(0), Address(reg1, JitActivation::offsetOfActiveUint8()));
 
         //   rt->mainThread.jitJSContext = prevJitJSContext_;
         masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitJSContext()), reg2);
