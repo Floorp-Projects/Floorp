@@ -3735,15 +3735,14 @@ void HTMLMediaElement::ChangeDelayLoadStatus(bool aDelay)
 
   mDelayingLoadEvent = aDelay;
 
+  LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
+  if (mDecoder) {
+    mDecoder->SetLoadInBackground(!aDelay);
+  }
   if (aDelay) {
     mLoadBlockedDoc = OwnerDoc();
     mLoadBlockedDoc->BlockOnload();
-    LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
   } else {
-    if (mDecoder) {
-      mDecoder->MoveLoadsToBackground();
-    }
-    LOG(PR_LOG_DEBUG, ("%p ChangeDelayLoadStatus(%d) doc=0x%p", this, aDelay, mLoadBlockedDoc.get()));
     // mLoadBlockedDoc might be null due to GC unlinking
     if (mLoadBlockedDoc) {
       mLoadBlockedDoc->UnblockOnload(false);
