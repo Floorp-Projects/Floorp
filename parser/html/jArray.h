@@ -91,9 +91,8 @@ class autoJArray {
       arr = other.arr;
       length = other.length;
     }
-    void operator=(decltype(nullptr) n) {
+    void operator=(decltype(nullptr)) {
       // Make assigning null to an array in Java delete the buffer in C++
-      MOZ_ASSERT(n == nullptr);
       delete[] arr;
       arr = nullptr;
       length = 0;

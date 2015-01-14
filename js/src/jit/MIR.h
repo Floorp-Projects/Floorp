@@ -2494,7 +2494,7 @@ class MTest
     // background threads.  So make callers explicitly call it if they want us
     // to check whether the operand might do this.  If this method is never
     // called, we'll assume our operand can emulate undefined.
-    void cacheOperandMightEmulateUndefined();
+    void cacheOperandMightEmulateUndefined(types::CompilerConstraintList *constraints);
     MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
     void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
                                 bool *filtersNull);
@@ -3823,7 +3823,8 @@ class MCompare
     void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
                                 bool *filtersNull);
 
-    void infer(BaselineInspector *inspector, jsbytecode *pc);
+    void infer(types::CompilerConstraintList *constraints,
+               BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
         return compareType_;
     }
@@ -4856,7 +4857,7 @@ class MTypeOf
     }
 
     MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
-    void cacheInputMaybeCallableOrEmulatesUndefined();
+    void cacheInputMaybeCallableOrEmulatesUndefined(types::CompilerConstraintList *constraints);
 
     bool inputMaybeCallableOrEmulatesUndefined() const {
         return inputMaybeCallableOrEmulatesUndefined_;
@@ -7658,7 +7659,7 @@ class MNot
 
     INSTRUCTION_HEADER(Not)
 
-    void cacheOperandMightEmulateUndefined();
+    void cacheOperandMightEmulateUndefined(types::CompilerConstraintList *constraints);
     MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
 
     void markOperandCantEmulateUndefined() {
@@ -12545,8 +12546,10 @@ MControlInstruction *MDefinition::toControlInstruction() {
 
 // Helper functions used to decide how to build MIR.
 
-bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
-bool ElementAccessIsAnyTypedArray(MDefinition *obj, MDefinition *id,
+bool ElementAccessIsDenseNative(types::CompilerConstraintList *constraints,
+                                MDefinition *obj, MDefinition *id);
+bool ElementAccessIsAnyTypedArray(types::CompilerConstraintList *constraints,
+                                  MDefinition *obj, MDefinition *id,
                                   Scalar::Type *arrayType);
 bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj);
 bool ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints, MDefinition *obj);

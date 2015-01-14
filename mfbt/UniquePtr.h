@@ -13,7 +13,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Move.h"
-#include "mozilla/NullPtr.h"
 #include "mozilla/Pair.h"
 #include "mozilla/TypeTraits.h"
 
@@ -230,10 +229,9 @@ public:
     : mTuple(aOther.release(), Forward<DeleterType>(aOther.getDeleter()))
   {}
 
-  template<typename N>
-  UniquePtr(N,
-            typename EnableIf<IsNullPointer<N>::value, int>::Type aDummy = 0)
-    : mTuple(static_cast<Pointer>(nullptr), DeleterType())
+  MOZ_IMPLICIT
+  UniquePtr(decltype(nullptr))
+    : mTuple(nullptr, DeleterType())
   {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
     static_assert(!IsReference<D>::value, "must provide a deleter instance");
@@ -275,9 +273,8 @@ public:
     return *this;
   }
 
-  UniquePtr& operator=(NullptrT aNull)
+  UniquePtr& operator=(decltype(nullptr))
   {
-    MOZ_ASSERT(aNull == nullptr);
     reset(nullptr);
     return *this;
   }
@@ -413,10 +410,9 @@ public:
     : mTuple(aOther.release(), Forward<DeleterType>(aOther.getDeleter()))
   {}
 
-  template<typename N>
-  UniquePtr(N,
-            typename EnableIf<IsNullPointer<N>::value, int>::Type aDummy = 0)
-    : mTuple(static_cast<Pointer>(nullptr), DeleterType())
+  MOZ_IMPLICIT
+  UniquePtr(decltype(nullptr))
+    : mTuple(nullptr, DeleterType())
   {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
     static_assert(!IsReference<D>::value, "must provide a deleter instance");
@@ -431,7 +427,7 @@ public:
     return *this;
   }
 
-  UniquePtr& operator=(NullptrT)
+  UniquePtr& operator=(decltype(nullptr))
   {
     reset();
     return *this;
@@ -469,19 +465,18 @@ public:
     }
   }
 
+  void reset(decltype(nullptr))
+  {
+    Pointer old = mTuple.first();
+    mTuple.first() = nullptr;
+    if (old != nullptr) {
+      mTuple.second()(old);
+    }
+  }
+
 private:
-  // Kill off all remaining overloads that aren't true nullptr (the overload
-  // above should handle that) or emulated nullptr (which acts like int/long
-  // on gcc 4.4/4.5).
   template<typename U>
-  void reset(U,
-             typename EnableIf<!IsNullPointer<U>::value &&
-                               !IsSame<U,
-                                       Conditional<(sizeof(int) == sizeof(void*)),
-                                                   int,
-                                                   long>::Type>::value,
-                               int>::Type aDummy = 0)
-  = delete;
+  void reset(U) = delete;
 
 public:
   void swap(UniquePtr& aOther) { mTuple.swap(aOther.mTuple); }
@@ -552,33 +547,29 @@ operator!=(const UniquePtr<T, D>& aX, const UniquePtr<U, E>& aY)
 
 template<typename T, class D>
 bool
-operator==(const UniquePtr<T, D>& aX, NullptrT aNull)
+operator==(const UniquePtr<T, D>& aX, decltype(nullptr))
 {
-  MOZ_ASSERT(aNull == nullptr);
   return !aX;
 }
 
 template<typename T, class D>
 bool
-operator==(NullptrT aNull, const UniquePtr<T, D>& aX)
+operator==(decltype(nullptr), const UniquePtr<T, D>& aX)
 {
-  MOZ_ASSERT(aNull == nullptr);
   return !aX;
 }
 
 template<typename T, class D>
 bool
-operator!=(const UniquePtr<T, D>& aX, NullptrT aNull)
+operator!=(const UniquePtr<T, D>& aX, decltype(nullptr))
 {
-  MOZ_ASSERT(aNull == nullptr);
   return bool(aX);
 }
 
 template<typename T, class D>
 bool
-operator!=(NullptrT aNull, const UniquePtr<T, D>& aX)
+operator!=(decltype(nullptr), const UniquePtr<T, D>& aX)
 {
-  MOZ_ASSERT(aNull == nullptr);
   return bool(aX);
 }
 
@@ -622,8 +613,7 @@ struct UniqueSelector<T[N]>
  *   If Type is non-array T:
  *     The arguments passed to MakeUnique<T>(...) are forwarded into a
  *     |new T(...)| call, initializing the T as would happen if executing
- *     |T(...)|.  (Note: literal nullptr must not be provided as an argument to
- *     MakeUnique, because nullptr may be emulated.  See Move.h for details.)
+ *     |T(...)|.
  *
  * There are various benefits to using MakeUnique instead of |new| expressions.
  *
@@ -664,10 +654,6 @@ struct UniqueSelector<T[N]>
 // We don't have variadic template support everywhere, so just hard-code arities
 // 0-8 for now.  If you need more arguments, feel free to add the extra
 // overloads (and deletions for the T = E[N] case).
-//
-// Beware!  Due to lack of true nullptr support in gcc 4.4 and 4.5, passing
-// literal nullptr to MakeUnique will not work on some platforms.  See Move.h
-// for more details.
 
 template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject

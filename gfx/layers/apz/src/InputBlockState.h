@@ -7,9 +7,10 @@
 #ifndef mozilla_layers_InputBlockState_h
 #define mozilla_layers_InputBlockState_h
 
-#include "nsTArray.h"                       // for nsTArray
 #include "InputData.h"                      // for MultiTouchInput
-#include "nsAutoPtr.h"
+#include "mozilla/gfx/Matrix.h"             // for Matrix4x4
+#include "nsAutoPtr.h"                      // for nsRefPtr
+#include "nsTArray.h"                       // for nsTArray
 
 namespace mozilla {
 namespace layers {
@@ -23,6 +24,9 @@ class WheelBlockState;
 /**
  * A base class that stores state common to various input blocks.
  * Currently, it just stores the overscroll handoff chain.
+ * Note that the InputBlockState constructor acquires the tree lock, so callers
+ * from inside AsyncPanZoomController should ensure that the APZC lock is not
+ * held.
  */
 class InputBlockState
 {
@@ -46,6 +50,11 @@ private:
   nsRefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   bool mTargetConfirmed;
   const uint64_t mBlockId;
+protected:
+  // Used to transform events from global screen space to |mTargetApzc|'s
+  // screen space. It's cached at the beginning of the input block so that
+  // all events in the block are in the same coordinate space.
+  gfx::Matrix4x4 mTransformToApzc;
 };
 
 /**
@@ -93,6 +102,13 @@ public:
   bool IsDefaultPrevented() const;
 
   /**
+   * Process the given event using this input block's target apzc.
+   * This input block must not have pending events, and its apzc must not be
+   * nullptr.
+   */
+  void DispatchImmediate(const InputData& aEvent) const;
+
+  /**
    * @return true iff this block has received all the information needed
    *         to properly dispatch the events in the block.
    */
@@ -109,9 +125,10 @@ public:
   virtual void DropEvents() = 0;
 
   /**
-   * Process all events given an apzc, leaving ths block depleted.
+   * Process all events using this input block's target apzc, leaving this
+   * block depleted. This input block's apzc must not be nullptr.
    */
-  virtual void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) = 0;
+  virtual void HandleEvents() = 0;
 
   /**
    * Return true if this input block must stay active if it would otherwise
@@ -142,7 +159,7 @@ public:
   bool IsReadyForHandling() const MOZ_OVERRIDE;
   bool HasEvents() const MOZ_OVERRIDE;
   void DropEvents() MOZ_OVERRIDE;
-  void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) MOZ_OVERRIDE;
+  void HandleEvents() MOZ_OVERRIDE;
   bool MustStayActive() MOZ_OVERRIDE;
   const char* Type() MOZ_OVERRIDE;
 
@@ -197,10 +214,9 @@ public:
    */
   bool SetAllowedTouchBehaviors(const nsTArray<TouchBehaviorFlags>& aBehaviors);
   /**
-   * Copy the allowed touch behavior flags from another block.
-   * @return false if this block already has these flags set, true if not.
+   * Copy various properties from another block.
    */
-  bool CopyAllowedTouchBehaviorsFrom(const TouchBlockState& aOther);
+  void CopyPropertiesFrom(const TouchBlockState& aOther);
 
   /**
    * @return true iff this block has received all the information needed
@@ -255,16 +271,9 @@ public:
 
   bool HasEvents() const MOZ_OVERRIDE;
   void DropEvents() MOZ_OVERRIDE;
-  void HandleEvents(const nsRefPtr<AsyncPanZoomController>& aTarget) MOZ_OVERRIDE;
+  void HandleEvents() MOZ_OVERRIDE;
   bool MustStayActive() MOZ_OVERRIDE;
   const char* Type() MOZ_OVERRIDE;
-
-private:
-  /**
-   * @return the first event in the queue. The event is removed from the queue
-   *         before it is returned.
-   */
-  MultiTouchInput RemoveFirstEvent();
 
 private:
   nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;

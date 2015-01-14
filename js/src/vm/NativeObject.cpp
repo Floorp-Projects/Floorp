@@ -1413,7 +1413,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
         if (shape) {
             // Don't forget about arrays.
             if (IsImplicitDenseOrTypedArrayElement(shape)) {
-                if (obj->is<TypedArrayObject>()) {
+                if (IsAnyTypedArray(obj)) {
                     /*
                      * Silently ignore attempts to change individial index attributes.
                      * FIXME: Uses the same broken behavior as for accessors. This should

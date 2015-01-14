@@ -16,11 +16,11 @@ interface History {
   readonly attribute unsigned long length;
   [Throws]
   readonly attribute any state;
-  [Throws]
+  [Throws, UnsafeInPrerendering]
   void go(optional long delta = 0);
-  [Throws]
+  [Throws, UnsafeInPrerendering]
   void back();
-  [Throws]
+  [Throws, UnsafeInPrerendering]
   void forward();
   [Throws]
   void pushState(any data, DOMString title, optional DOMString? url = null);
