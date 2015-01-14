@@ -291,7 +291,7 @@ nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
     mTransfer(aTransfer),
     mNext(nullptr)
 {
-  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(), nullptr,
+  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(),
                     sizeof(PropertyListMapEntry));
 }
 

@@ -51,9 +51,8 @@ nsNSSShutDownList::nsNSSShutDownList()
   mActiveSSLSockets = 0;
   mPK11LogoutCancelObjects.ops = nullptr;
   mObjects.ops = nullptr;
-  PL_DHashTableInit(&mObjects, &gSetOps, nullptr,
-                    sizeof(ObjectHashEntry));
-  PL_DHashTableInit(&mPK11LogoutCancelObjects, &gSetOps, nullptr,
+  PL_DHashTableInit(&mObjects, &gSetOps, sizeof(ObjectHashEntry));
+  PL_DHashTableInit(&mPK11LogoutCancelObjects, &gSetOps,
                     sizeof(ObjectHashEntry));
 }
 

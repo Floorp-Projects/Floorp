@@ -40,7 +40,7 @@ nsCommandParams::~nsCommandParams()
 nsresult
 nsCommandParams::Init()
 {
-  PL_DHashTableInit(&mValuesHash, &sHashOps, nullptr, sizeof(HashEntry), 2);
+  PL_DHashTableInit(&mValuesHash, &sHashOps, sizeof(HashEntry), 2);
   return NS_OK;
 }
 

@@ -543,7 +543,7 @@ static inline void
 EnsureTableExists()
 {
   if (!gAtomTable.ops) {
-    PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
+    PL_DHashTableInit(&gAtomTable, &AtomTableOps,
                       sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_LENGTH);
   }
 }
