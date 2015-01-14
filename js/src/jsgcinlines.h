@@ -75,10 +75,10 @@ class ArenaIter
         init(zone, kind);
     }
 
-    void init(Allocator *allocator, AllocKind kind) {
-        aheader = allocator->arenas.getFirstArena(kind);
-        unsweptHeader = allocator->arenas.getFirstArenaToSweep(kind);
-        sweptHeader = allocator->arenas.getFirstSweptArena(kind);
+    void init(JS::Zone *zone, AllocKind kind) {
+        aheader = zone->arenas.getFirstArena(kind);
+        unsweptHeader = zone->arenas.getFirstArenaToSweep(kind);
+        sweptHeader = zone->arenas.getFirstSweptArena(kind);
         if (!unsweptHeader) {
             unsweptHeader = sweptHeader;
             sweptHeader = nullptr;
@@ -88,10 +88,6 @@ class ArenaIter
             unsweptHeader = sweptHeader;
             sweptHeader = nullptr;
         }
-    }
-
-    void init(JS::Zone *zone, AllocKind kind) {
-        init(&zone->allocator, kind);
     }
 
     bool done() const {
@@ -163,7 +159,7 @@ class ArenaCellIterImpl
     void init(ArenaHeader *aheader) {
 #ifdef DEBUG
         AllocKind kind = aheader->getAllocKind();
-        MOZ_ASSERT(aheader->zone->allocator.arenas.isSynchronizedFreeList(kind));
+        MOZ_ASSERT(aheader->zone->arenas.isSynchronizedFreeList(kind));
 #endif
         initUnsynchronized(aheader);
     }
@@ -231,7 +227,7 @@ class ZoneCellIterImpl
     ZoneCellIterImpl() {}
 
     void init(JS::Zone *zone, AllocKind kind) {
-        MOZ_ASSERT(zone->allocator.arenas.isSynchronizedFreeList(kind));
+        MOZ_ASSERT(zone->arenas.isSynchronizedFreeList(kind));
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
             cellIter.init(arenaIter.get());
@@ -282,7 +278,7 @@ class ZoneCellIter : public ZoneCellIterImpl
 
   public:
     ZoneCellIter(JS::Zone *zone, AllocKind kind)
-      : lists(&zone->allocator.arenas),
+      : lists(&zone->arenas),
         kind(kind)
     {
         JSRuntime *rt = zone->runtimeFromMainThread();
@@ -294,7 +290,7 @@ class ZoneCellIter : public ZoneCellIterImpl
          * currently active.
          */
         if (IsBackgroundFinalized(kind) &&
-            zone->allocator.arenas.needBackgroundFinalizeWait(kind))
+            zone->arenas.needBackgroundFinalizeWait(kind))
         {
             rt->gc.waitBackgroundSweepEnd();
         }
@@ -515,8 +511,7 @@ AllocateObject(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initi
         js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
     }
 
-    JSObject *obj = reinterpret_cast<JSObject *>(
-            cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
+    JSObject *obj = reinterpret_cast<JSObject *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
     if (!obj)
         obj = reinterpret_cast<JSObject *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
@@ -544,7 +539,7 @@ AllocateNonObject(ExclusiveContext *cx)
     if (!CheckAllocatorState<allowGC>(cx, kind))
         return nullptr;
 
-    T *t = static_cast<T *>(cx->allocator()->arenas.allocateFromFreeList(kind, thingSize));
+    T *t = static_cast<T *>(cx->arenas()->allocateFromFreeList(kind, thingSize));
     if (!t)
         t = static_cast<T *>(GCRuntime::refillFreeListFromAnyThread<allowGC>(cx, kind));
 
