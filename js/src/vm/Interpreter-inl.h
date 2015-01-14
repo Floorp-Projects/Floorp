@@ -16,7 +16,6 @@
 
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/ForkJoin.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
