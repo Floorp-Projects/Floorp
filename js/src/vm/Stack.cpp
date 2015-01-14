@@ -14,6 +14,7 @@
 #include "asmjs/AsmJSModule.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitCompartment.h"
 #include "js/GCAPI.h"
 #include "vm/Opcodes.h"
@@ -1389,6 +1390,8 @@ jit::JitActivation::JitActivation(JSContext *cx, bool active)
         prevJitActivation_ = cx->mainThread().jitActivation;
         cx->mainThread().jitJSContext = cx;
         cx->mainThread().jitActivation = this;
+
+        registerProfiling();
     } else {
         prevJitTop_ = nullptr;
         prevJitJSContext_ = nullptr;
@@ -1399,6 +1402,9 @@ jit::JitActivation::JitActivation(JSContext *cx, bool active)
 jit::JitActivation::~JitActivation()
 {
     if (active_) {
+        if (isProfiling())
+            unregisterProfiling();
+
         cx_->perThreadData->jitTop = prevJitTop_;
         cx_->perThreadData->jitJSContext = prevJitJSContext_;
         cx_->perThreadData->jitActivation = prevJitActivation_;
@@ -1413,6 +1419,13 @@ jit::JitActivation::~JitActivation()
 
     clearRematerializedFrames();
     js_delete(rematerializedFrames_);
+}
+
+bool
+jit::JitActivation::isProfiling() const
+{
+    // All JitActivations can be profiled.
+    return true;
 }
 
 void
@@ -1439,18 +1452,25 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
     // (Not tested and will probably fail in other situations.)
     MOZ_ASSERT(cx->mainThread().activation_ == this);
     MOZ_ASSERT(active != active_);
-    active_ = active;
 
     if (active) {
+        *((volatile bool *) active_) = true;
         prevJitTop_ = cx->mainThread().jitTop;
         prevJitJSContext_ = cx->mainThread().jitJSContext;
         prevJitActivation_ = cx->mainThread().jitActivation;
         cx->mainThread().jitJSContext = cx;
         cx->mainThread().jitActivation = this;
+
+        registerProfiling();
+
     } else {
+        unregisterProfiling();
+
         cx->mainThread().jitTop = prevJitTop_;
         cx->mainThread().jitJSContext = prevJitJSContext_;
         cx->mainThread().jitActivation = prevJitActivation_;
+
+        *((volatile bool *) active_) = false;
     }
 }
 
@@ -1597,10 +1617,8 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
 
     // NB: this is a hack and can be removed once Ion switches over to
     // JS::ProfilingFrameIterator.
-    if (cx->runtime()->spsProfiler.enabled()) {
+    if (cx->runtime()->spsProfiler.enabled())
         profiler_ = &cx->runtime()->spsProfiler;
-        profiler_->enterAsmJS("asm.js code :0", this);
-    }
 
     prevAsmJSForModule_ = module.activation();
     module.activation() = this;
@@ -1617,9 +1635,6 @@ AsmJSActivation::~AsmJSActivation()
 {
     // Hide this activation from the profiler before is is destroyed.
     unregisterProfiling();
-
-    if (profiler_)
-        profiler_->exitAsmJS();
 
     MOZ_ASSERT(fp_ == nullptr);
 
@@ -1660,7 +1675,13 @@ Activation::unregisterProfiling()
 {
     MOZ_ASSERT(isProfiling());
     MOZ_ASSERT(cx_->perThreadData->profilingActivation_ == this);
-    cx_->perThreadData->profilingActivation_ = prevProfiling_;
+
+    // There may be a non-active jit activation in the linked list.  Skip past it.
+    Activation *prevProfiling = prevProfiling_;
+    while (prevProfiling && prevProfiling->isJit() && !prevProfiling->asJit()->isActive())
+        prevProfiling = prevProfiling->prevProfiling_;
+
+    cx_->perThreadData->profilingActivation_ = prevProfiling;
 }
 
 ActivationIterator::ActivationIterator(JSRuntime *rt)
@@ -1698,14 +1719,24 @@ ActivationIterator::settle()
 }
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state)
-  : activation_(rt->mainThread.profilingActivation())
+  : rt_(rt),
+    activation_(rt->mainThread.profilingActivation()),
+    savedPrevJitTop_(nullptr)
 {
     if (!activation_)
         return;
 
+    // If profiler sampling is not enabled, skip.
+    if (!rt_->isProfilerSamplingEnabled()) {
+        activation_ = nullptr;
+        return;
+    }
+
     MOZ_ASSERT(activation_->isProfiling());
 
-    static_assert(sizeof(AsmJSProfilingFrameIterator) <= StorageSpace, "Need to increase storage");
+    static_assert(sizeof(AsmJSProfilingFrameIterator) <= StorageSpace &&
+                  sizeof(jit::JitProfilingFrameIterator) <= StorageSpace,
+                  "Need to increase storage");
 
     iteratorConstruct(state);
     settle();
@@ -1723,9 +1754,15 @@ void
 JS::ProfilingFrameIterator::operator++()
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    ++asmJSIter();
+    if (activation_->isAsmJS()) {
+        ++asmJSIter();
+        settle();
+        return;
+    }
+
+    ++jitIter();
     settle();
 }
 
@@ -1735,6 +1772,11 @@ JS::ProfilingFrameIterator::settle()
     while (iteratorDone()) {
         iteratorDestroy();
         activation_ = activation_->prevProfiling();
+
+        // Skip past any non-active jit activations in the list.
+        while (activation_ && activation_->isJit() && !activation_->asJit()->isActive())
+            activation_ = activation_->prevProfiling();
+
         if (!activation_)
             return;
         iteratorConstruct();
@@ -1745,52 +1787,134 @@ void
 JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState &state)
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS(), state);
+    if (activation_->isAsmJS()) {
+        new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS(), state);
+        // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
+        savedPrevJitTop_ = activation_->cx()->perThreadData->jitTop;
+        return;
+    }
+
+    MOZ_ASSERT(activation_->asJit()->isActive());
+    new (storage_.addr()) jit::JitProfilingFrameIterator(rt_, state);
 }
 
 void
 JS::ProfilingFrameIterator::iteratorConstruct()
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS());
+    if (activation_->isAsmJS()) {
+        new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS());
+        return;
+    }
+
+    MOZ_ASSERT(activation_->asJit()->isActive());
+    MOZ_ASSERT(savedPrevJitTop_ != nullptr);
+    new (storage_.addr()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
 }
 
 void
 JS::ProfilingFrameIterator::iteratorDestroy()
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    asmJSIter().~AsmJSProfilingFrameIterator();
+    if (activation_->isAsmJS()) {
+        asmJSIter().~AsmJSProfilingFrameIterator();
+        return;
+    }
+
+    // Save prevjitTop for later use
+    savedPrevJitTop_ = activation_->asJit()->prevJitTop();
+    jitIter().~JitProfilingFrameIterator();
 }
 
 bool
 JS::ProfilingFrameIterator::iteratorDone()
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    return asmJSIter().done();
+    if (activation_->isAsmJS())
+        return asmJSIter().done();
+
+    return jitIter().done();
 }
 
 void *
 JS::ProfilingFrameIterator::stackAddress() const
 {
     MOZ_ASSERT(!done());
+    MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    return asmJSIter().stackAddress();
+    if (activation_->isAsmJS())
+        return asmJSIter().stackAddress();
+
+    return jitIter().stackAddress();
 }
 
-const char *
-JS::ProfilingFrameIterator::label() const
+uint32_t
+JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_t end) const
+{
+    if (offset >= end)
+        return 0;
+
+    void *stackAddr = stackAddress();
+
+    if (isAsmJS()) {
+        frames[offset].kind = Frame_AsmJS;
+        frames[offset].stackAddress = stackAddr;
+        frames[offset].returnAddress = nullptr;
+        frames[offset].activation = activation_;
+        frames[offset].label = asmJSIter().label();
+        return 1;
+    }
+
+    MOZ_ASSERT(isJit());
+    void *returnAddr = jitIter().returnAddressToFp();
+
+    // Look up an entry for the return address.
+    jit::JitcodeGlobalTable *table = rt_->jitRuntime()->getJitcodeGlobalTable();
+    jit::JitcodeGlobalEntry entry;
+    mozilla::DebugOnly<bool> result = table->lookup(returnAddr, &entry, rt_);
+    MOZ_ASSERT(result);
+
+    MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline() || entry.isDummy());
+
+    // Dummy frames produce no stack frames.
+    if (entry.isDummy())
+        return 0;
+
+    FrameKind kind = entry.isBaseline() ? Frame_Baseline : Frame_Ion;
+
+    // Extract the stack for the entry.  Assume maximum inlining depth is <64
+    const char *labels[64];
+    uint32_t depth = entry.callStackAtAddr(rt_, returnAddr, labels, 64);
+    MOZ_ASSERT(depth < 64);
+    for (uint32_t i = 0; i < depth; i++) {
+        if (offset + i >= end)
+            return i;
+        frames[offset + i].kind = kind;
+        frames[offset + i].stackAddress = stackAddr;
+        frames[offset + i].returnAddress = returnAddr;
+        frames[offset + i].activation = activation_;
+        frames[offset + i].label = labels[i];
+    }
+    return depth;
+}
+
+bool
+JS::ProfilingFrameIterator::isAsmJS() const
 {
     MOZ_ASSERT(!done());
+    return activation_->isAsmJS();
+}
 
-    MOZ_ASSERT(activation_->isAsmJS());
-    return asmJSIter().label();
+bool
+JS::ProfilingFrameIterator::isJit() const
+{
+    return activation_->isJit();
 }
