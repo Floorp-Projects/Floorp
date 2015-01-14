@@ -594,27 +594,6 @@ gfxContext::Clip()
 }
 
 void
-gfxContext::ResetClip()
-{
-  for (int i = mStateStack.Length() - 1; i >= 0; i--) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      mDT->PopClip();
-    }
-
-    if (mStateStack[i].clipWasReset) {
-      break;
-    }
-  }
-  CurrentState().pushedClips.Clear();
-  CurrentState().clipWasReset = true;
-}
-
-void
-gfxContext::UpdateSurfaceClip()
-{
-}
-
-void
 gfxContext::PopClip()
 {
   MOZ_ASSERT(CurrentState().pushedClips.Length() > 0);
