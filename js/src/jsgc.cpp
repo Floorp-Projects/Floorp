@@ -3343,8 +3343,10 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
 }
 
 void
-GCRuntime::sweepBackgroundThings(ZoneList &zones, ThreadType threadType)
+GCRuntime::sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType)
 {
+    freeBlocks.freeAll();
+
     if (zones.isEmpty())
         return;
 
@@ -3597,10 +3599,9 @@ GCHelperState::doSweep(AutoLockGC &lock)
             zones.transferFrom(rt->gc.backgroundSweepZones);
             LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
             freeLifoAlloc.transferFrom(&rt->gc.freeLifoAlloc);
-            AutoUnlockGC unlock(lock);
 
-            rt->gc.sweepBackgroundThings(zones, BackgroundThread);
-            freeLifoAlloc.freeAll();
+            AutoUnlockGC unlock(lock);
+            rt->gc.sweepBackgroundThings(zones, freeLifoAlloc, BackgroundThread);
         }
 
         bool shrinking = shrinkFlag;
@@ -5105,7 +5106,7 @@ GCRuntime::endSweepingZoneGroup()
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
     else
-        sweepBackgroundThings(zones, MainThread);
+        sweepBackgroundThings(zones, freeLifoAlloc, MainThread);
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
     while (ArenaHeader *arena = arenasAllocatedDuringSweep) {
@@ -5410,6 +5411,8 @@ GCRuntime::endSweepPhase(bool lastGC)
     if (!sweepOnBackgroundThread) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_DESTROY);
 
+        assertBackgroundSweepingFinished();
+
         /*
          * Destroy arenas after we finished the sweeping so finalizers can
          * safely use IsAboutToBeFinalized(). This is done on the
@@ -5420,8 +5423,6 @@ GCRuntime::endSweepPhase(bool lastGC)
             AutoLockGC lock(rt);
             expireChunksAndArenas(invocationKind == GC_SHRINK, lock);
         }
-
-        freeLifoAlloc.freeAll();
 
         /* Ensure the compartments get swept if it's the last GC. */
         if (lastGC)

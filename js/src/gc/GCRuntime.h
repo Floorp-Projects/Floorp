@@ -587,7 +587,7 @@ class GCRuntime
     void decommitArenas(AutoLockGC &lock);
     void expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock);
     void queueZonesForBackgroundSweep(ZoneList &zones);
-    void sweepBackgroundThings(ZoneList &zones, ThreadType threadType);
+    void sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
     bool compactPhase(bool lastGC);
