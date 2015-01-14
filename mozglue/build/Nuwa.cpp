@@ -765,9 +765,6 @@ __wrap_pthread_key_create(pthread_key_t *key, void (*destructor)(void*)) {
 
 extern "C" MFBT_API int
 __wrap_pthread_key_delete(pthread_key_t key) {
-  if (!sIsNuwaProcess) {
-    return REAL(pthread_key_delete)(key);
-  }
   int rv = REAL(pthread_key_delete)(key);
   if (rv != 0) {
     return rv;
