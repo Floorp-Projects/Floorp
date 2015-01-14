@@ -14,6 +14,7 @@
 
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitFrameIterator.h"
 #include "jit/JitFrames.h"
 #include "vm/StringBuffer.h"
 
@@ -209,18 +210,18 @@ SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
 }
 
 void
-SPSProfiler::enterAsmJS(const char *string, void *sp)
+SPSProfiler::beginPseudoJS(const char *string, void *sp)
 {
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;
     volatile uint32_t *size = size_;
     uint32_t current = *size;
 
-    MOZ_ASSERT(enabled());
+    MOZ_ASSERT(installed());
     if (current < max_) {
         stack[current].setLabel(string);
         stack[current].setCppFrame(sp, 0);
-        stack[current].setFlag(ProfileEntry::ASMJS);
+        stack[current].setFlag(ProfileEntry::BEGIN_PSEUDO_JS);
     }
     *size = current + 1;
 }
@@ -332,17 +333,51 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt,
     }
     size_before = *profiler->size_;
     // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
-    profiler->push("js::RunScript", this, nullptr, nullptr, /* copy = */ false);
+    profiler->beginPseudoJS("js::RunScript", this);
     profiler->push("js::RunScript", nullptr, script, script->code(), /* copy = */ false);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
-    if (profiler != nullptr) {
-        profiler->pop();
-        profiler->pop();
-        MOZ_ASSERT(size_before == *profiler->size_);
+    if (profiler == nullptr)
+        return;
+
+    profiler->pop();
+    profiler->endPseudoJS();
+    MOZ_ASSERT(size_before == *profiler->size_);
+}
+
+SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime *rt, bool hasSPSFrame
+                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : profiler(&rt->spsProfiler)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (!hasSPSFrame || !profiler->enabled()) {
+        profiler = nullptr;
+        return;
     }
+
+    size_before = profiler->size();
+    if (profiler->size() == 0)
+        return;
+
+    ProfileEntry &entry = profiler->stack()[profiler->size() - 1];
+    MOZ_ASSERT(entry.isJs());
+    entry.setOSR();
+}
+
+SPSBaselineOSRMarker::~SPSBaselineOSRMarker()
+{
+    if (profiler == nullptr)
+        return;
+
+    MOZ_ASSERT(size_before == *profiler->size_);
+    if (profiler->size() == 0)
+        return;
+
+    ProfileEntry &entry = profiler->stack()[profiler->size() - 1];
+    MOZ_ASSERT(entry.isJs());
+    entry.unsetOSR();
 }
 
 JS_FRIEND_API(jsbytecode*)
@@ -384,8 +419,6 @@ js::ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
     return rt->spsProfiler.ipToPC(script, size_t(ip));
 }
 
-
-
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext *cx
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : rt_(cx->runtime()),
@@ -419,28 +452,7 @@ js::GetTopProfilingJitFrame(uint8_t *exitFramePtr)
     if (!exitFramePtr)
         return nullptr;
 
-    jit::ExitFrameLayout *exitFrame = (jit::ExitFrameLayout *) exitFramePtr;
-    size_t prevSize = exitFrame->prevFrameLocalSize();
-    jit::FrameType prevType = exitFrame->prevType();
-
-    uint8_t *prev = exitFramePtr + (jit::ExitFrameLayout::Size() + prevSize);
-
-    // previous frame type must be one of IonJS, BaselineJS, or BaselineStub,
-    // or unwound variants thereof.
-    switch (prevType) {
-      case jit::JitFrame_IonJS:
-      case jit::JitFrame_Unwound_IonJS:
-      case jit::JitFrame_BaselineJS:
-        return prev;
-
-      case jit::JitFrame_BaselineStub:
-      case jit::JitFrame_Unwound_BaselineStub: {
-        void *framePtr = ((jit::BaselineStubFrameLayout *) prev)->reverseSavedFramePtr();
-        return ((uint8_t *) framePtr) + jit::BaselineFrame::FramePointerOffset;
-      }
-
-      default:
-        MOZ_CRASH("unknown callee token type");
-        return nullptr;
-    }
+    jit::JitProfilingFrameIterator iter(exitFramePtr);
+    MOZ_ASSERT(!iter.done());
+    return iter.fp();
 }

@@ -598,6 +598,9 @@ class PerThreadData : public PerThreadDataFriendFields
     void *addressOfProfilingActivation() {
         return (void*) &profilingActivation_;
     }
+    static unsigned offsetOfProfilingActivation() {
+        return offsetof(PerThreadData, profilingActivation_);
+    }
 
     js::AsmJSActivation *asmJSActivationStack() const {
         return asmJSActivationStack_;
@@ -1030,7 +1033,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Whether sampling should be enabled or not. */
   private:
-    bool                suppressProfilerSampling;
+    mozilla::Atomic<bool, mozilla::SequentiallyConsistent> suppressProfilerSampling;
 
   public:
     bool isProfilerSamplingEnabled() const {
