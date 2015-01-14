@@ -519,3 +519,18 @@ MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               ScratchReg, Imm32(nursery.nurserySize()), label);
 }
+
+void
+MacroAssemblerX64::profilerEnterFrame(Register framePtr, Register scratch)
+{
+    AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
+    loadPtr(activation, scratch);
+    storePtr(framePtr, Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
+}
+
+void
+MacroAssemblerX64::profilerExitFrame()
+{
+    jmp(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+}

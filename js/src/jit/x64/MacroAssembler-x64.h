@@ -1445,6 +1445,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label *label);
+
+    // Instrumentation for entering and leaving the profiler.
+    void profilerEnterFrame(Register framePtr, Register scratch);
+    void profilerExitFrame();
 };
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;
