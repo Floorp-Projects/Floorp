@@ -1926,6 +1926,30 @@ MacroAssembler::finish()
 }
 
 void
+MacroAssembler::link(JitCode *code)
+{
+    MOZ_ASSERT(!oom());
+    // If this code can transition to C++ code and witness a GC, then we need to store
+    // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
+    // be unset if the code never needed to push its JitCode*.
+    if (hasEnteredExitFrame()) {
+        exitCodePatch_.fixup(this);
+        PatchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
+                                ImmPtr(code),
+                                ImmPtr((void*)-1));
+    }
+
+    // Fix up the code pointers to be written for locations where profilerCallSite
+    // emitted moves of RIP to a register.
+    for (size_t i = 0; i < profilerCallSites_.length(); i++) {
+        CodeOffsetLabel offset = profilerCallSites_[i];
+        offset.fixup(this);
+        CodeLocationLabel location(code, offset);
+        PatchDataWithValueCheck(location, ImmPtr(location.raw()), ImmPtr((void*)-1));
+    }
+}
+
+void
 MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch, Label *label)
 {
     // 16-bit loads are slow and unaligned 32-bit loads may be too so
@@ -2049,4 +2073,29 @@ MacroAssembler::spsUnmarkJit(SPSProfiler *p, Register temp)
     spsPopFrameSafe(p, temp);
 
     bind(&spsNotEnabled);
+}
+
+void
+MacroAssembler::profilerPreCallImpl()
+{
+    Register reg = CallTempReg0;
+    Register reg2 = CallTempReg1;
+    push(reg);
+    push(reg2);
+    profilerPreCallImpl(reg, reg2);
+    pop(reg2);
+    pop(reg);
+}
+
+void
+MacroAssembler::profilerPreCallImpl(Register reg, Register reg2)
+{
+    JitContext *icx = GetJitContext();
+    AbsoluteAddress profilingActivation(icx->runtime->addressOfProfilingActivation());
+
+    CodeOffsetLabel label = movWithPatch(ImmWord(uintptr_t(-1)), reg);
+    loadPtr(profilingActivation, reg2);
+    storePtr(reg, Address(reg2, JitActivation::offsetOfLastProfilingCallSite()));
+
+    appendProfilerCallSite(label);
 }
