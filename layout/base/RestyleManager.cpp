@@ -1605,7 +1605,7 @@ RestyleManager::ProcessPendingRestyles()
   // if any style changes we cause trigger transitions, we have the
   // correct old style for starting the transition.
   if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
-      mPendingRestyles.Count() > 0) {
+      (mPendingRestyles.Count() > 0 || mDoRebuildAllStyleData)) {
     IncrementAnimationGeneration();
     UpdateOnlyAnimationStyles();
   }
