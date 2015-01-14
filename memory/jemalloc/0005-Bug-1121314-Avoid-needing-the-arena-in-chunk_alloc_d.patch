@@ -1,0 +1,58 @@
+From 722400adde3b4cb307fdc310e6296e10e6ace7ae Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh+mozilla@glandium.org>
+Date: Wed, 14 Jan 2015 12:49:24 +0900
+Subject: [PATCH] Bug 1121314 - Avoid needing the arena in chunk_alloc_default
+ to avoid possible infinite loops involving a0malloc
+
+---
+ src/chunk.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/src/chunk.c b/src/chunk.c
+index 7926452..32e659c 100644
+--- a/src/chunk.c
++++ b/src/chunk.c
+@@ -247,27 +247,32 @@ chunk_alloc_arena(chunk_alloc_t *chunk_alloc, chunk_dalloc_t *chunk_dalloc,
+ 	return (ret);
+ }
+ 
+ /* Default arena chunk allocation routine in the absence of user override. */
+ void *
+ chunk_alloc_default(void *new_addr, size_t size, size_t alignment, bool *zero,
+     unsigned arena_ind)
+ {
+-	arena_t *arena;
++	dss_prec_t dss_prec = dss_prec_disabled;
+ 
+-	arena = arena_get(tsd_fetch(), arena_ind, false, true);
+-	/*
+-	 * The arena we're allocating on behalf of must have been initialized
+-	 * already.
+-	 */
+-	assert(arena != NULL);
++	if (have_dss) {
++		arena_t *arena;
++
++		arena = arena_get(tsd_fetch(), arena_ind, false, true);
++		/*
++		 * The arena we're allocating on behalf of must have been
++		 * initialized already.
++		 */
++		assert(arena != NULL);
++		dss_prec = arena->dss_prec;
++	}
+ 
+ 	return (chunk_alloc_core(new_addr, size, alignment, false, zero,
+-	    arena->dss_prec));
++	    dss_prec));
+ }
+ 
+ static void
+ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
+     size_t size)
+ {
+ 	bool unzeroed;
+ 	extent_node_t *xnode, *node, *prev, *xprev, key;
+-- 
+2.2.1.dirty
+
