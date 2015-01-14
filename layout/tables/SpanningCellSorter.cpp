@@ -33,8 +33,6 @@ SpanningCellSorter::~SpanningCellSorter()
 
 /* static */ const PLDHashTableOps
 SpanningCellSorter::HashTableOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
     HashTableHashKey,
     HashTableMatchEntry,
     PL_DHashMoveEntryStub,
