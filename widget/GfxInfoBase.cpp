@@ -28,6 +28,8 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -88,6 +90,7 @@ void InitGfxDriverInfoShutdownObserver()
 }
 
 using namespace mozilla::widget;
+using namespace mozilla::gfx;
 using namespace mozilla;
 
 #ifdef XP_MACOSX
@@ -550,8 +553,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 GfxInfoBase::GfxInfoBase()
-    : mFailureCount(0)
-    , mMutex("GfxInfoBase")
+    : mMutex("GfxInfoBase")
 {
 }
 
@@ -888,43 +890,73 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 NS_IMETHODIMP_(void)
 GfxInfoBase::LogFailure(const nsACString &failure)
 {
+  // gfxCriticalError has a mutex lock of its own, so we may not actually
+  // need this lock. ::GetFailures() accesses the data but the LogForwarder
+  // will not return the copy of the logs unless it can get the same lock
+  // that gfxCriticalError uses.  Still, that is so much of an implementation
+  // detail that it's nicer to just add an extra lock here and in ::GetFailures()
   MutexAutoLock lock(mMutex);
-  /* We only keep the first 9 failures */
-  if (mFailureCount < ArrayLength(mFailures)) {
-    mFailures[mFailureCount++] = failure;
 
-    /* record it in the crash notes too */
-    #if defined(MOZ_CRASHREPORTER)
-      CrashReporter::AppendAppNotesToCrashReport(failure);
-    #endif
-  }
-
+  // By default, gfxCriticalError asserts; make it not assert in this case.
+  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "(LF) " << failure.BeginReading();
 }
 
-/* void getFailures ([optional] out unsigned long failureCount, [array, size_is (failureCount), retval] out string failures); */
+/* void getFailures (out unsigned long failureCount, [optional, array, size_is (failureCount)] out long indices, [array, size_is (failureCount), retval] out string failures); */
 /* XPConnect method of returning arrays is very ugly. Would not recommend. Fallable nsMemory::Alloc makes things worse */
-NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t *failureCount, char ***failures)
+NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
+				       int32_t** indices,
+				       char ***failures)
 {
+  MutexAutoLock lock(mMutex);
 
   NS_ENSURE_ARG_POINTER(failureCount);
   NS_ENSURE_ARG_POINTER(failures);
 
   *failures = nullptr;
-  *failureCount = mFailureCount;
+  *failureCount = 0;
+
+  // indices is "allowed" to be null, the caller may not care about them,
+  // although calling from JS doesn't seem to get us there.
+  if (indices) *indices = nullptr;
+
+  LogForwarder* logForwarder = Factory::GetLogForwarder();
+  if (!logForwarder) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // There are two stirng copies in this method, starting with this one. We are
+  // assuming this is not a big deal, as the size of the array should be small
+  // and the strings in it should be small as well (the error messages in the
+  // code.)  The second copy happens with the Clone() calls.  Technically,
+  // we don't need the mutex lock after the StringVectorCopy() call.
+  std::vector<std::pair<int32_t,std::string> > loggedStrings = logForwarder->StringsVectorCopy();
+  *failureCount = loggedStrings.size();
 
   if (*failureCount != 0) {
     *failures = (char**)nsMemory::Alloc(*failureCount * sizeof(char*));
-    if (!failures)
+    if (!(*failures)) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (indices) {
+      *indices = (int32_t*)nsMemory::Alloc(*failureCount * sizeof(int32_t));
+      if (!(*indices)) {
+        nsMemory::Free(*failures);
+        *failures = nullptr;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
 
     /* copy over the failure messages into the array we just allocated */
-    for (uint32_t i = 0; i < *failureCount; i++) {
-      nsCString& flattenedFailureMessage(mFailures[i]);
-      (*failures)[i] = (char*)nsMemory::Clone(flattenedFailureMessage.get(), flattenedFailureMessage.Length() + 1);
+    std::vector<std::pair<int32_t, std::string> >::const_iterator it;
+    uint32_t i=0;
+    for(it = loggedStrings.begin() ; it != loggedStrings.end(); ++it, i++) {
+      (*failures)[i] = (char*)nsMemory::Clone((*it).second.c_str(), (*it).second.size() + 1);
+      if (indices) (*indices)[i] = (*it).first;
 
       if (!(*failures)[i]) {
         /* <sarcasm> I'm too afraid to use an inline function... </sarcasm> */
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, (*failures));
+	*failureCount = i;
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
