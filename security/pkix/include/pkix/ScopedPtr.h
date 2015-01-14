@@ -32,7 +32,7 @@ namespace mozilla { namespace pkix {
 // Similar to boost::scoped_ptr and std::unique_ptr. Does not support copying
 // or assignment.
 template <typename T, void (&Destroyer)(T*)>
-class ScopedPtr
+class ScopedPtr final
 {
 public:
   explicit ScopedPtr(T* value = nullptr) : mValue(value) { }
