@@ -53,12 +53,10 @@ const NOT_AVAILABLE = Number.MAX_VALUE;
  * The shell doesn't take care of inserting the item, or removing it when it's no longer
  * valid. That's the caller (a DownloadsPlacesView object) responsibility.
  *
- * The caller is also responsible for "passing over" notification from both the
- * download-view and the places-result-observer, in the following manner:
- *  - The DownloadsPlacesView object implements onDataItemStateChanged and
- *    onDataItemChanged of the DownloadsView pseudo interface.
- *  - The DownloadsPlacesView object adds itself as a places result observer and
- *    calls this object's placesNodeAnnotationChanged from its callbacks.
+ * The caller is also responsible for "passing over" notifications. The
+ * DownloadsPlacesView object implements onDataItemStateChanged and
+ * onDataItemChanged of the DownloadsView pseudo interface, and registers as a
+ * Places result observer.
  *
  * @param [optional] aDataItem
  *        The data item of a the session download. Required if aPlacesNode is not set
@@ -484,12 +482,6 @@ DownloadElementShell.prototype = {
     }
   },
 
-  _updateDisplayNameAndIcon() {
-    let metaData = this.getDownloadMetaData();
-    this._element.setAttribute("displayName", metaData.displayName);
-    this._element.setAttribute("image", this._getIcon());
-  },
-
   _updateUI() {
     if (!this.active) {
       throw new Error("Trying to _updateUI on an inactive download shell");
@@ -498,7 +490,9 @@ DownloadElementShell.prototype = {
     this._metaData = null;
     this._targetFileInfoFetched = false;
 
-    this._updateDisplayNameAndIcon();
+    let metaData = this.getDownloadMetaData();
+    this._element.setAttribute("displayName", metaData.displayName);
+    this._element.setAttribute("image", this._getIcon());
 
     // For history downloads done in past releases, the downloads/metaData
     // annotation is not set, and therefore we cannot tell the download
@@ -507,44 +501,6 @@ DownloadElementShell.prototype = {
       this._updateDownloadStatusUI();
     } else {
       this._fetchTargetFileInfo(true);
-    }
-  },
-
-  placesNodeAnnotationChanged(aAnnoName) {
-    this._annotations.delete(aAnnoName);
-    if (!this._dataItem && this.active) {
-      if (aAnnoName == DOWNLOAD_META_DATA_ANNO) {
-        let metaData = this.getDownloadMetaData();
-        let annotatedMetaData = this._getAnnotatedMetaData();
-        metaData.endTime = annotatedMetaData.endTime;
-        if ("fileSize" in annotatedMetaData) {
-          metaData.fileSize = annotatedMetaData.fileSize;
-        } else {
-          delete metaData.fileSize;
-        }
-
-        if (metaData.state != annotatedMetaData.state) {
-          metaData.state = annotatedMetaData.state;
-          if (this._element.selected) {
-            goUpdateDownloadCommands();
-          }
-        }
-
-        this._updateDownloadStatusUI();
-      } else if (aAnnoName == DESTINATION_FILE_URI_ANNO) {
-        let metaData = this.getDownloadMetaData();
-        let targetFileURI = this._getAnnotation(DESTINATION_FILE_URI_ANNO);
-        [metaData.filePath, metaData.fileName] =
-            this._extractFilePathAndNameFromFileURI(targetFileURI);
-        metaData.displayName = metaData.fileName;
-        this._updateDisplayNameAndIcon();
-
-        if (this._targetFileInfoFetched) {
-          // This will also update the download commands if necessary.
-          this._targetFileInfoFetched = false;
-          this._fetchTargetFileInfo();
-        }
-      }
     }
   },
 
@@ -814,15 +770,6 @@ DownloadsPlacesView.prototype = {
     if (this._active)
       this._ensureVisibleElementsAreActive();
     return this._active;
-  },
-
-  _forEachDownloadElementShellForURI(aURI, aCallback) {
-    if (this._downloadElementsShellsForURI.has(aURI)) {
-      let downloadElementShells = this._downloadElementsShellsForURI.get(aURI);
-      for (let des of downloadElementShells) {
-        aCallback(des);
-      }
-    }
   },
 
   _getAnnotationsFor(aURI) {
@@ -1256,11 +1203,7 @@ DownloadsPlacesView.prototype = {
     this._removeHistoryDownloadFromView(aPlacesNode);
   },
 
-  nodeAnnotationChanged(aNode, aAnnoName) {
-    this._forEachDownloadElementShellForURI(aNode.uri,
-                                            des => des.placesNodeAnnotationChanged(aAnnoName));
-  },
-
+  nodeAnnotationChanged() {},
   nodeIconChanged() {},
   nodeTitleChanged() {},
   nodeKeywordChanged() {},
