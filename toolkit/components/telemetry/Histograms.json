@@ -2228,13 +2228,13 @@
     "extended_statistics_ok": true,
     "description": "Number of times nsINetworkPredictor::Learn doesn't continue because the queue is full"
   },
-  "PREDICTOR_PREDICT_WAIT_TIME": {
+  "PREDICTOR_WAIT_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Amount of time a predict event waits in the queue (ms)"
+    "description": "Amount of time a predictor event waits in the queue (ms)"
   },
   "PREDICTOR_PREDICT_WORK_TIME": {
     "expires_in_version": "never",
@@ -2243,14 +2243,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Amount of time spent doing the work for predict (ms)"
-  },
-  "PREDICTOR_LEARN_WAIT_TIME": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Amount of time a learn event waits in the queue (ms)"
   },
   "PREDICTOR_LEARN_WORK_TIME": {
     "expires_in_version": "never",
