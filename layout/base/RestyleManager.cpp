@@ -1501,30 +1501,8 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   nsAutoScriptBlocker scriptBlocker;
 
-  MOZ_ASSERT(!mIsProcessingRestyles, "Nesting calls to processing restyles");
-#ifdef DEBUG
-  mIsProcessingRestyles = true;
-#endif
+  mDoRebuildAllStyleData = true;
 
-  // Until we get rid of these phases in bug 960465, we need to skip
-  // animation restyles during the non-animation phase, and post
-  // animation restyles so that we restyle those elements again in the
-  // animation phase.
-  mSkipAnimationRules = true;
-  mPostAnimationRestyles = true;
-
-  DoRebuildAllStyleData(mPendingRestyles);
-
-  mPostAnimationRestyles = false;
-  mSkipAnimationRules = false;
-#ifdef DEBUG
-  mIsProcessingRestyles = false;
-#endif
-
-  // Make sure that we process any pending animation restyles from the
-  // above style change.  Note that we can *almost* implement the above
-  // by just posting a style change -- except we really need to restyle
-  // the root frame rather than the root element's primary frame.
   ProcessPendingRestyles();
 }
 
@@ -1618,12 +1596,6 @@ RestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(mPresContext->Document(), "No document?  Pshaw!");
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
-
-  if (mDoRebuildAllStyleData) {
-    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
-    MOZ_ASSERT(mPendingRestyles.Count() == 0);
-    return;
-  }
 
   // First do any queued-up frame creation.  (We should really
   // merge this into the rest of the process, though; see bug 827239.)
