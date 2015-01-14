@@ -152,8 +152,8 @@ skip-if(B2G) HTTP(..) == missing-names.html missing-names-ref.html # bug 773482
 # Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
 # (using Chunkfive font data returned from a .sjs file)
 HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
-skip-if(B2G) fails-if(Android&&(AndroidVersion==10||AndroidVersion==17)) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # bug 773482
-fails-if(Android&&(AndroidVersion==10||AndroidVersion==17)) HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
+skip-if(B2G) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # bug 773482
+HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
 
 # Font load redirection
 HTTP(..) == font-redirect.html order-1-ref.html
