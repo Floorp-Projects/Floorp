@@ -181,7 +181,7 @@ public:
    */
   typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIContent>, nsStyleContext>
             ReframingStyleContextTable;
-  class MOZ_STACK_CLASS ReframingStyleContexts {
+  class MOZ_STACK_CLASS ReframingStyleContexts MOZ_FINAL {
   public:
     /**
      * Construct a ReframingStyleContexts object.  The caller must
@@ -190,6 +190,7 @@ public:
      * method of RestyleManager.)
      */
     explicit ReframingStyleContexts(RestyleManager* aRestyleManager);
+    ~ReframingStyleContexts();
 
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
       MOZ_ASSERT(aContent);
