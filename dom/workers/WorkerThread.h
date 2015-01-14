@@ -52,7 +52,7 @@ class WorkerThread MOZ_FINAL
   nsRefPtr<Observer> mObserver;
 
   // Protected by nsThread::mLock and waited on with mWorkerPrivateCondVar.
-  bool mOtherThreadDispatchingViaEventTarget;
+  uint32_t mOtherThreadsDispatchingViaEventTarget;
 
   // Protected by nsThread::mLock.
   DebugOnly<bool> mAcceptingNonWorkerRunnables;
