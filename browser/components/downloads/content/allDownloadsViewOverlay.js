@@ -53,14 +53,10 @@ const NOT_AVAILABLE = Number.MAX_VALUE;
  * The shell doesn't take care of inserting the item, or removing it when it's no longer
  * valid. That's the caller (a DownloadsPlacesView object) responsibility.
  *
- * The caller is also responsible for "passing over" notification from both the
- * download-view and the places-result-observer, in the following manner:
- *  - The DownloadsPlacesView object implements getViewItem of the download-view
- *    pseudo interface.  It returns this object (therefore we implement
- *    onStateChangea and onProgressChange here).
- *  - The DownloadsPlacesView object adds itself as a places result observer and
- *    calls this object's placesNodeIconChanged, placesNodeTitleChanged and
- *    placeNodeAnnotationChanged from its callbacks.
+ * The caller is also responsible for "passing over" notifications. The
+ * DownloadsPlacesView object implements onDataItemStateChanged and
+ * onDataItemChanged of the DownloadsView pseudo interface, and registers as a
+ * Places result observer.
  *
  * @param [optional] aDataItem
  *        The data item of a the session download. Required if aPlacesNode is not set
@@ -176,13 +172,10 @@ DownloadElementShell.prototype = {
     }
 
     if (this._placesNode) {
-      // Try to extract an extension from the uri.
-      let ext = this._downloadURIObj.QueryInterface(Ci.nsIURL).fileExtension;
-      if (ext) {
-        return "moz-icon://." + ext + "?size=32";
-      }
-      return this._placesNode.icon || "moz-icon://.unknown?size=32";
+      return "moz-icon://.unknown?size=32";
     }
+
+    // Assert unreachable.
     if (this._dataItem) {
       throw new Error("Session-download items should always have a target file uri");
     }
@@ -304,9 +297,9 @@ DownloadElementShell.prototype = {
    * - fileName: the downloaded file name on the file system. Set if filePath
    *   is set.
    * - displayName: the user-facing label for the download.  This is always
-   *   set.  If available, it's set to the downloaded file name.  If not,
-   *   the places title for the download uri is used it's set.  As a last
-   *   resort, we fallback to the download uri.
+   *   set.  If available, it's set to the downloaded file name.  If not, this
+   *   means the download does not have Places metadata because it is very old,
+   *   and in this rare case the download uri is used.
    * - fileSize (only set for downloads which completed successfully):
    *   the downloaded file size.  For downloads done after the landing of
    *   bug 826991, this value is "static" - that is, it does not necessarily
@@ -348,7 +341,7 @@ DownloadElementShell.prototype = {
             this._extractFilePathAndNameFromFileURI(targetFileURI);
           this._metaData.displayName = this._metaData.fileName;
         } catch (ex) {
-          this._metaData.displayName = this._placesNode.title || this.downloadURI;
+          this._metaData.displayName = this.downloadURI;
         }
       }
     }
@@ -489,12 +482,6 @@ DownloadElementShell.prototype = {
     }
   },
 
-  _updateDisplayNameAndIcon() {
-    let metaData = this.getDownloadMetaData();
-    this._element.setAttribute("displayName", metaData.displayName);
-    this._element.setAttribute("image", this._getIcon());
-  },
-
   _updateUI() {
     if (!this.active) {
       throw new Error("Trying to _updateUI on an inactive download shell");
@@ -503,7 +490,9 @@ DownloadElementShell.prototype = {
     this._metaData = null;
     this._targetFileInfoFetched = false;
 
-    this._updateDisplayNameAndIcon();
+    let metaData = this.getDownloadMetaData();
+    this._element.setAttribute("displayName", metaData.displayName);
+    this._element.setAttribute("image", this._getIcon());
 
     // For history downloads done in past releases, the downloads/metaData
     // annotation is not set, and therefore we cannot tell the download
@@ -515,61 +504,7 @@ DownloadElementShell.prototype = {
     }
   },
 
-  placesNodeIconChanged() {
-    if (!this._dataItem) {
-      this._element.setAttribute("image", this._getIcon());
-    }
-  },
-
-  placesNodeTitleChanged() {
-    // If there's a file path, we use the leaf name for the title.
-    if (!this._dataItem && this.active &&
-        !this.getDownloadMetaData().filePath) {
-      this._metaData = null;
-      this._updateDisplayNameAndIcon();
-    }
-  },
-
-  placesNodeAnnotationChanged(aAnnoName) {
-    this._annotations.delete(aAnnoName);
-    if (!this._dataItem && this.active) {
-      if (aAnnoName == DOWNLOAD_META_DATA_ANNO) {
-        let metaData = this.getDownloadMetaData();
-        let annotatedMetaData = this._getAnnotatedMetaData();
-        metaData.endTime = annotatedMetaData.endTime;
-        if ("fileSize" in annotatedMetaData) {
-          metaData.fileSize = annotatedMetaData.fileSize;
-        } else {
-          delete metaData.fileSize;
-        }
-
-        if (metaData.state != annotatedMetaData.state) {
-          metaData.state = annotatedMetaData.state;
-          if (this._element.selected) {
-            goUpdateDownloadCommands();
-          }
-        }
-
-        this._updateDownloadStatusUI();
-      } else if (aAnnoName == DESTINATION_FILE_URI_ANNO) {
-        let metaData = this.getDownloadMetaData();
-        let targetFileURI = this._getAnnotation(DESTINATION_FILE_URI_ANNO);
-        [metaData.filePath, metaData.fileName] =
-            this._extractFilePathAndNameFromFileURI(targetFileURI);
-        metaData.displayName = metaData.fileName;
-        this._updateDisplayNameAndIcon();
-
-        if (this._targetFileInfoFetched) {
-          // This will also update the download commands if necessary.
-          this._targetFileInfoFetched = false;
-          this._fetchTargetFileInfo();
-        }
-      }
-    }
-  },
-
-  /* DownloadView */
-  onStateChange(aOldState) {
+  onStateChanged(aOldState) {
     let metaData = this.getDownloadMetaData();
     metaData.state = this.dataItem.state;
     if (aOldState != nsIDM.DOWNLOAD_FINISHED && aOldState != metaData.state) {
@@ -583,6 +518,7 @@ DownloadElementShell.prototype = {
     }
 
     this._updateDownloadStatusUI();
+
     if (this._element.selected) {
       goUpdateDownloadCommands();
     } else {
@@ -590,8 +526,7 @@ DownloadElementShell.prototype = {
     }
   },
 
-  /* DownloadView */
-  onProgressChange() {
+  onChanged() {
     this._updateDownloadStatusUI();
   },
 
@@ -837,15 +772,6 @@ DownloadsPlacesView.prototype = {
     return this._active;
   },
 
-  _forEachDownloadElementShellForURI(aURI, aCallback) {
-    if (this._downloadElementsShellsForURI.has(aURI)) {
-      let downloadElementShells = this._downloadElementsShellsForURI.get(aURI);
-      for (let des of downloadElementShells) {
-        aCallback(des);
-      }
-    }
-  },
-
   _getAnnotationsFor(aURI) {
     if (!this._cachedAnnotations) {
       this._cachedAnnotations = new Map();
@@ -934,7 +860,7 @@ DownloadsPlacesView.prototype = {
     // data item. Thus, we also check that we make sure we don't have a view item
     // already.
     if (!shouldCreateShell &&
-        aDataItem && this.getViewItem(aDataItem) == null) {
+        aDataItem && !this._viewItemsForDataItems.has(aDataItem)) {
       // If there's a past-download-only shell for this download-uri with no
       // associated data item, use it for the new data item. Otherwise, go ahead
       // and create another shell.
@@ -1051,7 +977,7 @@ DownloadsPlacesView.prototype = {
       throw new Error("Should have had at leaat one shell for this uri");
     }
 
-    let shell = this.getViewItem(aDataItem);
+    let shell = this._viewItemsForDataItems.get(aDataItem);
     if (!shells.has(shell)) {
       throw new Error("Missing download element shell in shells list for url");
     }
@@ -1277,21 +1203,9 @@ DownloadsPlacesView.prototype = {
     this._removeHistoryDownloadFromView(aPlacesNode);
   },
 
-  nodeIconChanged(aNode) {
-    this._forEachDownloadElementShellForURI(aNode.uri,
-                                            des => des.placesNodeIconChanged());
-  },
-
-  nodeAnnotationChanged(aNode, aAnnoName) {
-    this._forEachDownloadElementShellForURI(aNode.uri,
-                                            des => des.placesNodeAnnotationChanged(aAnnoName));
-  },
-
-  nodeTitleChanged(aNode, aNewTitle) {
-    this._forEachDownloadElementShellForURI(aNode.uri,
-                                            des => des.placesNodeTitleChanged());
-  },
-
+  nodeAnnotationChanged() {},
+  nodeIconChanged() {},
+  nodeTitleChanged() {},
   nodeKeywordChanged() {},
   nodeDateAddedChanged() {},
   nodeLastModifiedChanged() {},
@@ -1362,8 +1276,14 @@ DownloadsPlacesView.prototype = {
     this._removeSessionDownloadFromView(aDataItem);
   },
 
-  getViewItem(aDataItem) {
-    return this._viewItemsForDataItems.get(aDataItem, null);
+  // DownloadsView
+  onDataItemStateChanged(aDataItem, aOldState) {
+    this._viewItemsForDataItems.get(aDataItem).onStateChanged(aOldState);
+  },
+
+  // DownloadsView
+  onDataItemChanged(aDataItem) {
+    this._viewItemsForDataItems.get(aDataItem).onChanged();
   },
 
   supportsCommand(aCommand) {

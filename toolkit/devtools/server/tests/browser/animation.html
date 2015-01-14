@@ -3,8 +3,8 @@
   .simple-animation {
     display: inline-block;
 
-    width: 150px;
-    height: 150px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: red;
 
@@ -14,8 +14,8 @@
   .multiple-animations {
     display: inline-block;
 
-    width: 150px;
-    height: 150px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: #eee;
 
@@ -25,8 +25,8 @@
   .transition {
     display: inline-block;
 
-    width: 150px;
-    height: 150px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: #f06;
 
@@ -39,12 +39,48 @@
   .short-animation {
     display: inline-block;
 
-    width: 150px;
-    height: 150px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: purple;
 
     animation: move 1s;
+  }
+
+  .delayed-animation {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rebeccapurple;
+
+    animation: move 2s 5s infinite;
+  }
+
+  .delayed-transition {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: black;
+
+    transition: width 5s 3s;
+  }
+  .delayed-transition.get-round {
+    width: 200px;
+  }
+
+  .delayed-multiple-animations {
+    display: inline-block;
+
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: green;
+
+    animation: move .5s 1s 10, glow 1s .75s 30;
   }
 
   @keyframes move {
@@ -64,10 +100,14 @@
 <div class="multiple-animations"></div>
 <div class="transition"></div>
 <div class="short-animation"></div>
+<div class="delayed-animation"></div>
+<div class="delayed-transition"></div>
+<div class="delayed-multiple-animations"></div>
 <script type="text/javascript">
-  // Get the transition started when the page loads
+  // Get the transitions started when the page loads
   var players;
   addEventListener("load", function() {
     document.querySelector(".transition").classList.add("get-round");
+    document.querySelector(".delayed-transition").classList.add("get-round");
   });
 </script>
