@@ -47,9 +47,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/MouseEvents.h"
-#include "mozilla/TouchEvents.h"
 #include "nsThreadUtils.h"
 #include "HwcComposer2D.h"
 
@@ -230,89 +227,33 @@ nsWindow::NotifyVsync(TimeStamp aVsyncTimestamp)
     }
 }
 
-/*static*/ nsEventStatus
-nsWindow::DispatchInputEvent(WidgetGUIEvent& aEvent)
+nsEventStatus
+nsWindow::DispatchInputEvent(WidgetGUIEvent& aEvent, bool* aWasCaptured)
 {
+    if (aWasCaptured) {
+        *aWasCaptured = false;
+    }
     if (!gFocusedWindow) {
         return nsEventStatus_eIgnore;
     }
 
     gFocusedWindow->UserActivity();
 
-    nsEventStatus status;
     aEvent.widget = gFocusedWindow;
+
+    if (TabParent* capturer = TabParent::GetEventCapturer()) {
+        bool captured = capturer->TryCapture(aEvent);
+        if (aWasCaptured) {
+            *aWasCaptured = captured;
+        }
+        if (captured) {
+            return nsEventStatus_eConsumeNoDefault;
+        }
+    }
+
+    nsEventStatus status;
     gFocusedWindow->DispatchEvent(&aEvent, status);
     return status;
-}
-
-/*static*/ void
-nsWindow::DispatchTouchInput(MultiTouchInput& aInput)
-{
-    if (!gFocusedWindow) {
-        return;
-    }
-
-    gFocusedWindow->UserActivity();
-    gFocusedWindow->DispatchTouchInputViaAPZ(aInput);
-}
-
-void
-nsWindow::DispatchTouchInputViaAPZ(MultiTouchInput& aInput)
-{
-    if (!mAPZC) {
-        // In general mAPZC should not be null, but during initial setup
-        // it might be, so we handle that case by ignoring touch input there.
-        return;
-    }
-
-    // First send it through the APZ code
-    mozilla::layers::ScrollableLayerGuid guid;
-    uint64_t inputBlockId;
-    nsEventStatus rv = mAPZC->ReceiveInputEvent(aInput, &guid, &inputBlockId);
-    // If the APZ says to drop it, then we drop it
-    if (rv == nsEventStatus_eConsumeNoDefault) {
-        return;
-    }
-
-    // Convert it to an event we can send to Gecko
-    WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
-
-    // If there is an event capturing child process, send it directly there.
-    // This happens if we already sent a touchstart event through the root
-    // process hit test and it ended up going to a child process. The event
-    // capturing process should get all subsequent touch events in the same
-    // event block. In this case the TryCapture call below will return true,
-    // and the child process will take care of responding to the event as needed
-    // so we don't need to do anything else here.
-    if (TabParent* capturer = TabParent::GetEventCapturer()) {
-        InputAPZContext context(guid, inputBlockId);
-        if (capturer->TryCapture(event)) {
-            return;
-        }
-    }
-
-    // If it didn't get captured, dispatch the event into the gecko root process
-    // for "normal" flow. The event might get sent to the child process still,
-    // but if it doesn't we need to notify the APZ of various things. All of
-    // that happens in DispatchEventForAPZ
-    rv = DispatchEventForAPZ(&event, guid, inputBlockId);
-
-    // Finally, if the touch event had only one touch point, generate a mouse
-    // event for it and send it through the gecko root process.
-    // Technically we should not need to do this if the touch event was routed
-    // to the child process, but that seems to expose a bug in B2G where the
-    // keyboard doesn't go away in some cases.
-    // Also for now we're dispatching mouse events from all touch events because
-    // we need this for click events to work in the chrome process. Once we have
-    // APZ and ChromeProcessController::HandleSingleTap working for the chrome
-    // process we shouldn't need to do this at all.
-    if (event.touches.Length() == 1) {
-        WidgetMouseEvent mouseEvent = aInput.ToWidgetMouseEvent(this);
-        if (mouseEvent.message != NS_EVENT_NULL) {
-            mouseEvent.mFlags.mNoCrossProcessBoundaryForwarding = (rv == nsEventStatus_eConsumeNoDefault);
-            DispatchEvent(&mouseEvent, rv);
-        }
-    }
 }
 
 NS_IMETHODIMP

@@ -27,7 +27,6 @@
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
 #include "js/Vector.h"
-#include "vm/ForkJoin.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
@@ -1230,7 +1229,6 @@ js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
 
     // If we were actually *in* a parallel section, then this function
     // would be inlined to TRUE in ion-generated code.
-    MOZ_ASSERT(!InParallelSection());
     args.rval().setBoolean(false);
     return true;
 }

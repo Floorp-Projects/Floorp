@@ -41,7 +41,6 @@
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
 #include "vm/Symbol.h"
-#include "vm/ThreadPool.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -703,7 +702,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
   private:
     mozilla::Atomic<uint32_t, mozilla::Relaxed> interrupt_;
-    mozilla::Atomic<uint32_t, mozilla::Relaxed> interruptPar_;
 
     /* Call this to accumulate telemetry data. */
     JSAccumulateTelemetryDataCallback telemetryCallback;
@@ -745,18 +743,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     MOZ_ALWAYS_INLINE bool hasPendingInterrupt() const {
         return interrupt_;
     }
-    MOZ_ALWAYS_INLINE bool hasPendingInterruptPar() const {
-        return interruptPar_;
-    }
 
     // For read-only JIT use:
     void *addressOfInterruptUint32() {
         static_assert(sizeof(interrupt_) == sizeof(uint32_t), "Assumed by JIT callers");
         return &interrupt_;
-    }
-    void *addressOfInterruptParUint32() {
-        static_assert(sizeof(interruptPar_) == sizeof(uint32_t), "Assumed by JIT callers");
-        return &interruptPar_;
     }
 
     /* Set when handling a signal for a thread associated with this runtime. */
@@ -1283,15 +1274,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     // Cache for jit::GetPcScript().
     js::jit::PcScriptCache *ionPcScriptCache;
 
-    js::ThreadPool threadPool;
-
     js::DefaultJSContextCallback defaultJSContextCallback;
 
     js::CTypesActivityCallback  ctypesActivityCallback;
-
-    // Non-zero if this is a ForkJoin warmup execution.  See
-    // js::ForkJoin() for more information.
-    uint32_t forkJoinWarmup;
 
   private:
     static mozilla::Atomic<size_t> liveRuntimesCount;

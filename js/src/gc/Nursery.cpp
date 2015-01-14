@@ -448,12 +448,11 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
 MOZ_ALWAYS_INLINE TenuredCell *
 js::Nursery::allocateFromTenured(Zone *zone, AllocKind thingKind)
 {
-    TenuredCell *t =
-        zone->allocator.arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
+    TenuredCell *t = zone->arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
     if (t)
         return t;
-    zone->allocator.arenas.checkEmptyFreeList(thingKind);
-    return zone->allocator.arenas.allocateFromArena(zone, thingKind);
+    zone->arenas.checkEmptyFreeList(thingKind);
+    return zone->arenas.allocateFromArena(zone, thingKind);
 }
 
 void
