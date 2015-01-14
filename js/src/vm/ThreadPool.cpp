@@ -17,6 +17,8 @@
 #include "vm/Monitor.h"
 #include "vm/Runtime.h"
 
+#if 0
+
 using namespace js;
 
 const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
@@ -469,3 +471,5 @@ ThreadPool::abortJob()
     // the thread pool having more work.
     while (hasWork());
 }
+
+#endif // 0

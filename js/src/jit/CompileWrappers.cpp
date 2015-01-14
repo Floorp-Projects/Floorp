@@ -78,18 +78,6 @@ CompileRuntime::addressOfInterruptUint32()
     return runtime()->addressOfInterruptUint32();
 }
 
-const void *
-CompileRuntime::addressOfInterruptParUint32()
-{
-    return runtime()->addressOfInterruptParUint32();
-}
-
-const void *
-CompileRuntime::addressOfThreadPool()
-{
-    return &runtime()->threadPool;
-}
-
 const JitRuntime *
 CompileRuntime::jitRuntime()
 {

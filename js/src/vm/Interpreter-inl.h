@@ -832,7 +832,6 @@ class FastInvokeGuard
       , script_(cx)
       , useIon_(jit::IsIonEnabled(cx))
     {
-        MOZ_ASSERT(!InParallelSection());
         initFunction(fval);
     }
 

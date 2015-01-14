@@ -288,8 +288,6 @@ namespace js {
  */
 enum ParallelResult { TP_SUCCESS, TP_RETRY_SEQUENTIALLY, TP_RETRY_AFTER_GC, TP_FATAL };
 
-struct ThreadSafeContext;
-class ForkJoinContext;
 class ExclusiveContext;
 
 class Allocator;
