@@ -520,10 +520,11 @@ HandleClosingGeneratorReturn(JSContext *cx, const JitFrameIterator &frame, jsbyt
 struct AutoDebuggerHandlingException
 {
     BaselineFrame *frame;
-    explicit AutoDebuggerHandlingException(BaselineFrame *frame)
+    AutoDebuggerHandlingException(BaselineFrame *frame, jsbytecode *pc)
       : frame(frame)
     {
         frame->setIsDebuggerHandlingException();
+        frame->setOverridePc(pc); // Will be cleared in HandleException.
     }
     ~AutoDebuggerHandlingException() {
         frame->unsetIsDebuggerHandlingException();
@@ -555,7 +556,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
     {
         // Set for debug mode OSR. See note concerning
         // 'isDebuggerHandlingException' in CollectJitStackScripts.
-        AutoDebuggerHandlingException debuggerHandling(frame.baselineFrame());
+        AutoDebuggerHandlingException debuggerHandling(frame.baselineFrame(), pc);
 
         switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
           case JSTRAP_ERROR:
