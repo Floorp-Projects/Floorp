@@ -1,30 +1,12 @@
 apply plugin: 'java'
 
-// sourceSets {
-//     main {
-//         java {
-//             // Remove the default directories entirely.
-//             srcDirs = []
-//             // Depend on everything in mobile/android that goes into
-//             // the omnijar.
-//             srcDir 'src/main/java/locales'
-//             srcDir 'src/main/java/chrome'
-//             srcDir 'src/main/java/components'
-//             srcDir 'src/main/java/modules'
-//             srcDir 'src/main/java/themes'
-//         }
-//     }
-// }
-
 /**
  * This task runs when any input file is newer than the omnijar.
  */
-task rebuildOmnijar(type:Exec) {
-    // Depend on all the inputs labeled as Java sources.
-    // project.sourceSets.main.java.srcDirs.each { srcDir ->
-    //     inputs.sourceDir srcDir
-    // }
+task buildOmnijar(type:Exec) {
+    dependsOn generateCodeAndResources
 
+    // Depend on all the Gecko resources.
     inputs.sourceDir 'src/main/java/locales'
     inputs.sourceDir 'src/main/java/chrome'
     inputs.sourceDir 'src/main/java/components'
@@ -42,9 +24,6 @@ task rebuildOmnijar(type:Exec) {
     args 'mobile/android/base'
     args 'gradle-omnijar'
 }
-
-// Rebuild the omnijar before the earliest Java task.
-tasks.compileJava.dependsOn rebuildOmnijar
 
 apply plugin: 'idea'
 
