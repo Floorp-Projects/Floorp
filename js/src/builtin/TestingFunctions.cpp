@@ -27,7 +27,6 @@
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
 #include "js/Vector.h"
-#include "vm/ForkJoin.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
