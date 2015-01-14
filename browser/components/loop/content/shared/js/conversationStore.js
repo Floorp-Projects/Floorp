@@ -374,8 +374,12 @@ loop.store = loop.store || {};
         function(err, result) {
           if (err) {
             console.error("Failed to get outgoing call data", err);
+            var failureReason = "setup";
+            if (err.errno == 122) {
+              failureReason = "user-unknown";
+            }
             this.dispatcher.dispatch(
-              new sharedActions.ConnectionFailure({reason: "setup"}));
+              new sharedActions.ConnectionFailure({reason: failureReason}));
             return;
           }
 
