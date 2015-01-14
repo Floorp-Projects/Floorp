@@ -26,6 +26,9 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 const WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 const l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
+const MAX_STRING_GRIP_LENGTH = 36;
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+
 // Constants for compatibility with the Web Console output implementation before
 // bug 778766.
 // TODO: remove these once bug 778766 is fixed.
@@ -1124,6 +1127,29 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
     }
 
     return result;
+  },
+
+  /**
+   * Shorten grips of the type string, leaves other grips unmodified.
+   *
+   * @param object grip
+   *        Value grip from the server.
+   * @return object
+   *        Possible values of object:
+   *        - A shortened string, if original grip was of string type.
+   *        - The unmodified input grip, if it wasn't of string type.
+   */
+  shortenValueGrip: function(grip)
+  {
+    let shortVal = grip;
+    if (typeof(grip)=="string") {
+      shortVal = grip.replace(/(\r\n|\n|\r)/gm," ");
+      if (shortVal.length > MAX_STRING_GRIP_LENGTH) {
+        shortVal = shortVal.substring(0,MAX_STRING_GRIP_LENGTH - 1) + ELLIPSIS;
+      }
+    }
+
+    return shortVal;
   },
 
   /**
@@ -2356,7 +2382,8 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     if (valueIsText) {
       this._text(value);
     } else {
-      let valueElem = this.message._renderValueGrip(value, { concise: true });
+      let shortVal = this.message.shortenValueGrip(value);
+      let valueElem = this.message._renderValueGrip(shortVal, { concise: true });
       container.appendChild(valueElem);
     }
   },
@@ -2676,7 +2703,9 @@ Widgets.ObjectRenderers.add({
           this._renderEmptySlots(emptySlots);
           emptySlots = 0;
         }
-        let elem = this.message._renderValueGrip(item, { concise: true });
+
+        let shortVal = this.message.shortenValueGrip(item);
+        let elem = this.message._renderValueGrip(shortVal, { concise: true });
         this.element.appendChild(elem);
       }
     }

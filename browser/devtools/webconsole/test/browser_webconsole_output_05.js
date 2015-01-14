@@ -6,6 +6,7 @@
 // Test the webconsole output for various types of objects.
 
 const TEST_URI = "data:text/html;charset=utf8,test for console output - 05";
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
 let dateNow = Date.now();
 
@@ -103,6 +104,14 @@ let inputTests = [
     printOutput: "[object Promise]",
     inspectable: true,
     variablesViewLabel: "Promise"
+  },
+
+  //11
+  {
+    input: "new Object({1: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery\\nlong\\nstring\\n,shown\\non\\na\\nsingle\\nline', 2: 'a shorter string', 3: 100})",
+    output: 'Object { 1: "this is supposed to be a very long ' + ELLIPSIS + '", 2: "a shorter string", 3: 100 }',
+    printOutput: "[object Object]",
+    inspectable: false,
   }
 ];
 
