@@ -264,7 +264,7 @@ IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
     if (thisTypes) {
         Scalar::Type type;
 
-        type = thisTypes->getTypedArrayType();
+        type = thisTypes->getTypedArrayType(constraints());
         if (type != Scalar::MaxTypedArrayViewType &&
             TypedArrayObject::isOriginalLengthGetter(native))
         {
@@ -273,7 +273,7 @@ IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
             return InliningStatus_Inlined;
         }
 
-        type = thisTypes->getSharedTypedArrayType();
+        type = thisTypes->getSharedTypedArrayType(constraints());
         if (type != Scalar::MaxTypedArrayViewType &&
             SharedTypedArrayObject::isOriginalLengthGetter(type, native))
         {
@@ -487,7 +487,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
 
     MDefinition *obj = callInfo.thisArg();
     types::TemporaryTypeSet *thisTypes = obj->resultTypeSet();
-    if (!thisTypes || thisTypes->getKnownClass() != &ArrayObject::class_)
+    if (!thisTypes || thisTypes->getKnownClass(constraints()) != &ArrayObject::class_)
         return InliningStatus_NotInlined;
     if (thisTypes->hasObjectFlags(constraints(), unhandledFlags))
         return InliningStatus_NotInlined;
@@ -602,7 +602,7 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    if (!thisTypes || thisTypes->getKnownClass() != &ArrayObject::class_)
+    if (!thisTypes || thisTypes->getKnownClass(constraints()) != &ArrayObject::class_)
         return InliningStatus_NotInlined;
     if (thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_SPARSE_INDEXES |
                                   types::OBJECT_FLAG_LENGTH_OVERFLOW))
@@ -663,7 +663,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     if (!thisTypes || !argTypes)
         return InliningStatus_NotInlined;
 
-    if (thisTypes->getKnownClass() != &ArrayObject::class_)
+    if (thisTypes->getKnownClass(constraints()) != &ArrayObject::class_)
         return InliningStatus_NotInlined;
     if (thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_SPARSE_INDEXES |
                                   types::OBJECT_FLAG_LENGTH_OVERFLOW))
@@ -671,7 +671,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     }
 
-    if (argTypes->getKnownClass() != &ArrayObject::class_)
+    if (argTypes->getKnownClass(constraints()) != &ArrayObject::class_)
         return InliningStatus_NotInlined;
     if (argTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_SPARSE_INDEXES |
                                  types::OBJECT_FLAG_LENGTH_OVERFLOW))
@@ -1468,7 +1468,7 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : nullptr;
+    const Class *clasp = thisTypes ? thisTypes->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
@@ -1507,7 +1507,7 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     if (callInfo.thisArg()->type() != MIRType_Object)
         return InliningStatus_NotInlined;
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : nullptr;
+    const Class *clasp = thisTypes ? thisTypes->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
@@ -1544,7 +1544,7 @@ IonBuilder::inlineStrReplace(CallInfo &callInfo)
 
     // Arg 0: RegExp.
     types::TemporaryTypeSet *arg0Type = callInfo.getArg(0)->resultTypeSet();
-    const Class *clasp = arg0Type ? arg0Type->getKnownClass() : nullptr;
+    const Class *clasp = arg0Type ? arg0Type->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_ && callInfo.getArg(0)->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
@@ -1625,7 +1625,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
         MDefinition *id = callInfo.getArg(idxi);
         MDefinition *elem = callInfo.getArg(elemi);
 
-        bool isDenseNative = ElementAccessIsDenseNative(obj, id);
+        bool isDenseNative = ElementAccessIsDenseNative(constraints(), obj, id);
 
         bool writeNeedsBarrier = false;
         if (isDenseNative) {
@@ -1638,7 +1638,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
         // barriers and on typed arrays and on typed object arrays.
         Scalar::Type arrayType;
         if ((!isDenseNative || writeNeedsBarrier) &&
-            !ElementAccessIsAnyTypedArray(obj, id, &arrayType) &&
+            !ElementAccessIsAnyTypedArray(constraints(), obj, id, &arrayType) &&
             !elementAccessIsTypedObjectArrayOfScalarType(obj, id, &arrayType))
         {
             return InliningStatus_NotInlined;
@@ -1660,14 +1660,14 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
         MDefinition *obj = callInfo.getArg(arri);
         MDefinition *id = callInfo.getArg(idxi);
 
-        if (ElementAccessIsDenseNative(obj, id)) {
+        if (ElementAccessIsDenseNative(constraints(), obj, id)) {
             if (!inlineUnsafeSetDenseArrayElement(callInfo, base))
                 return InliningStatus_Error;
             continue;
         }
 
         Scalar::Type arrayType;
-        if (ElementAccessIsAnyTypedArray(obj, id, &arrayType)) {
+        if (ElementAccessIsAnyTypedArray(constraints(), obj, id, &arrayType)) {
             if (!inlineUnsafeSetTypedArrayElement(callInfo, base, arrayType))
                 return InliningStatus_Error;
             continue;
@@ -1782,7 +1782,7 @@ IonBuilder::inlineHasClass(CallInfo &callInfo,
         return InliningStatus_NotInlined;
 
     types::TemporaryTypeSet *types = callInfo.getArg(0)->resultTypeSet();
-    const Class *knownClass = types ? types->getKnownClass() : nullptr;
+    const Class *knownClass = types ? types->getKnownClass(constraints()) : nullptr;
     if (knownClass) {
         pushConstant(BooleanValue(knownClass == clasp1 ||
                                   knownClass == clasp2 ||
@@ -1808,10 +1808,10 @@ IonBuilder::inlineHasClass(CallInfo &callInfo,
 
             // Convert to bool with the '!!' idiom
             MNot *resultInverted = MNot::New(alloc(), last);
-            resultInverted->cacheOperandMightEmulateUndefined();
+            resultInverted->cacheOperandMightEmulateUndefined(constraints());
             current->add(resultInverted);
             MNot *result = MNot::New(alloc(), resultInverted);
-            result->cacheOperandMightEmulateUndefined();
+            result->cacheOperandMightEmulateUndefined(constraints());
             current->add(result);
             current->push(result);
         }
@@ -1839,7 +1839,7 @@ IonBuilder::inlineIsTypedArray(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     bool result = false;
-    switch (types->forAllClasses(IsTypedArrayClass)) {
+    switch (types->forAllClasses(constraints(), IsTypedArrayClass)) {
       case types::TemporaryTypeSet::ForAllResult::ALL_FALSE:
       case types::TemporaryTypeSet::ForAllResult::EMPTY:
         result = false;
@@ -1897,7 +1897,7 @@ IonBuilder::inlineObjectIsTypeDescr(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     bool result = false;
-    switch (types->forAllClasses(IsTypeDescrClass)) {
+    switch (types->forAllClasses(constraints(), IsTypeDescrClass)) {
     case types::TemporaryTypeSet::ForAllResult::ALL_FALSE:
     case types::TemporaryTypeSet::ForAllResult::EMPTY:
         result = false;
@@ -1937,7 +1937,7 @@ IonBuilder::inlineSetTypedObjectOffset(CallInfo &callInfo)
     types::TemporaryTypeSet *types = typedObj->resultTypeSet();
     if (typedObj->type() != MIRType_Object || !types)
         return InliningStatus_NotInlined;
-    switch (types->forAllClasses(IsTypedObjectClass)) {
+    switch (types->forAllClasses(constraints(), IsTypedObjectClass)) {
       case types::TemporaryTypeSet::ForAllResult::ALL_FALSE:
       case types::TemporaryTypeSet::ForAllResult::EMPTY:
       case types::TemporaryTypeSet::ForAllResult::MIXED:
@@ -2047,7 +2047,7 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
         isCallableConstant = false;
     } else {
         types::TemporaryTypeSet *types = callInfo.getArg(0)->resultTypeSet();
-        const Class *clasp = types ? types->getKnownClass() : nullptr;
+        const Class *clasp = types ? types->getKnownClass(constraints()) : nullptr;
         if (clasp && !clasp->isProxy()) {
             isCallableKnown = true;
             isCallableConstant = clasp->nonProxyCallable();
@@ -2432,7 +2432,7 @@ IonBuilder::atomicsMeetsPreconditions(CallInfo &callInfo, Scalar::Type *arrayTyp
     if (!arg0Types)
         return false;
 
-    *arrayType = arg0Types->getSharedTypedArrayType();
+    *arrayType = arg0Types->getSharedTypedArrayType(constraints());
     switch (*arrayType) {
       case Scalar::Int8:
       case Scalar::Uint8:
