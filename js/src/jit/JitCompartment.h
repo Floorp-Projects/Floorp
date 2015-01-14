@@ -158,9 +158,6 @@ class JitRuntime
     // Shared post-bailout-handler tail.
     JitCode *bailoutTail_;
 
-    // Shared profiler exit frame tail.
-    JitCode *profilerExitFrameTail_;
-
     // Trampoline for entering JIT code. Contains OSR prologue.
     JitCode *enterJIT_;
 
@@ -237,7 +234,6 @@ class JitRuntime
 
   private:
     JitCode *generateLazyLinkStub(JSContext *cx);
-    JitCode *generateProfilerExitFrameTailStub(JSContext *cx);
     JitCode *generateExceptionTailStub(JSContext *cx, void *handler);
     JitCode *generateBailoutTailStub(JSContext *cx);
     JitCode *generateEnterJIT(JSContext *cx, EnterJitType type);
@@ -327,10 +323,6 @@ class JitRuntime
         return bailoutTail_;
     }
 
-    JitCode *getProfilerExitFrameTail() const {
-        return profilerExitFrameTail_;
-    }
-
     JitCode *getBailoutTable(const FrameSizeClass &frameClass) const;
 
     JitCode *getArgumentsRectifier() const {
@@ -399,8 +391,12 @@ class JitRuntime
         return jitcodeGlobalTable_;
     }
 
-    bool isProfilerInstrumentationEnabled(JSRuntime *rt) {
+    bool isNativeToBytecodeMapEnabled(JSRuntime *rt) {
+#ifdef DEBUG
+        return true;
+#else // DEBUG
         return rt->spsProfiler.enabled();
+#endif // DEBUG
     }
 };
 

@@ -1470,10 +1470,6 @@ public:
         MOZ_ASSERT(Imm16::IsInSignedRange(AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias));
         loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
     }
-
-    // Instrumentation for entering and leaving the profiler.
-    void profilerEnterFrame(Register framePtr, Register scratch);
-    void profilerExitFrame();
 };
 
 typedef MacroAssemblerMIPSCompat MacroAssemblerSpecific;

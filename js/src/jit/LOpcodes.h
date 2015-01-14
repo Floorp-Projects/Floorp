@@ -305,6 +305,7 @@
     _(InterruptCheck)               \
     _(AsmJSInterruptCheck)          \
     _(InterruptCheckImplicit)       \
+    _(ProfilerStackOp)              \
     _(GetDOMProperty)               \
     _(GetDOMMemberV)                \
     _(GetDOMMemberT)                \

@@ -708,6 +708,8 @@ IonBuilder::build()
 
     // Emit the start instruction, so we can begin real instructions.
     current->add(MStart::New(alloc(), MStart::StartType_Default));
+    if (instrumentedProfiling())
+        current->add(MProfilerStackOp::New(alloc(), script(), MProfilerStackOp::Enter));
 
     // Guard against over-recursion. Do this before we start unboxing, since
     // this will create an OSI point that will read the incoming argument
@@ -4073,6 +4075,9 @@ IonBuilder::processReturn(JSOp op)
         MOZ_CRASH("unknown return op");
     }
 
+    if (instrumentedProfiling() && inliningDepth_ == 0) {
+        current->add(MProfilerStackOp::New(alloc(), script(), MProfilerStackOp::Exit));
+    }
     MReturn *ret = MReturn::New(alloc(), def);
     current->end(ret);
 
