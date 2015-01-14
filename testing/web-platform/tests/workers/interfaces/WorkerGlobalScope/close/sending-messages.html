@@ -13,14 +13,10 @@ postMessage(2);
 async_test(function() {
   var worker = new Worker('#');
   var i = 0;
-  var timeout = setTimeout(this.step_func(function(e) {
-    assert_equals(i, 2);
-  }), 500);
   worker.onmessage = this.step_func(function(e) {
     i++;
     assert_equals(e.data, i);
     if (i == 2) {
-      clearTimeout(timeout);
       this.done();
     }
   });
