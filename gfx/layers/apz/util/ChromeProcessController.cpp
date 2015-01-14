@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/ChromeProcessController.h"
+#include "ChromeProcessController.h"
+
+#include "MainThreadUtils.h"    // for NS_IsMainThread()
+#include "base/message_loop.h"  // for MessageLoop
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "nsLayoutUtils.h"
@@ -14,7 +17,10 @@ using namespace mozilla::widget;
 
 ChromeProcessController::ChromeProcessController(nsIWidget* aWidget)
   : mWidget(aWidget)
+  , mUILoop(MessageLoop::current())
 {
+  // Otherwise we're initializing mUILoop incorrectly.
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
