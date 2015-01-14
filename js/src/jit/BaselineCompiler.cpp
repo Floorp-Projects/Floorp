@@ -175,7 +175,6 @@ BaselineCompiler::compile()
 
     prologueOffset_.fixup(&masm);
     epilogueOffset_.fixup(&masm);
-    spsPushToggleOffset_.fixup(&masm);
     profilerEnterFrameToggleOffset_.fixup(&masm);
     profilerExitFrameToggleOffset_.fixup(&masm);
 #ifdef JS_TRACE_LOGGING
@@ -190,7 +189,6 @@ BaselineCompiler::compile()
     mozilla::UniquePtr<BaselineScript, JS::DeletePolicy<BaselineScript> > baselineScript(
         BaselineScript::New(script, prologueOffset_.offset(),
                             epilogueOffset_.offset(),
-                            spsPushToggleOffset_.offset(),
                             profilerEnterFrameToggleOffset_.offset(),
                             profilerExitFrameToggleOffset_.offset(),
                             traceLoggerEnterToggleOffset_.offset(),
@@ -245,10 +243,6 @@ BaselineCompiler::compile()
     // All barriers are emitted off-by-default, toggle them on if needed.
     if (cx->zone()->needsIncrementalBarrier())
         baselineScript->toggleBarriers(true);
-
-    // All SPS instrumentation is emitted toggled off.  Toggle them on if needed.
-    if (cx->runtime()->spsProfiler.enabled())
-        baselineScript->toggleSPS(true);
 
 #ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
@@ -422,9 +416,6 @@ BaselineCompiler::emitPrologue()
     if (!emitArgumentTypeChecks())
         return false;
 
-    if (!emitSPSPush())
-        return false;
-
     return true;
 }
 
@@ -441,9 +432,6 @@ BaselineCompiler::emitEpilogue()
     if (!emitTraceLoggerExit())
         return false;
 #endif
-
-    // Pop SPS frame if necessary
-    emitSPSPop();
 
     masm.mov(BaselineFrameReg, BaselineStackReg);
     masm.pop(BaselineFrameReg);
@@ -838,35 +826,6 @@ BaselineCompiler::emitTraceLoggerExit()
     return true;
 }
 #endif
-
-bool
-BaselineCompiler::emitSPSPush()
-{
-    // Enter the IC, guarded by a toggled jump (initially disabled).
-    Label noPush;
-    CodeOffsetLabel toggleOffset = masm.toggledJump(&noPush);
-    MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
-    ICProfiler_Fallback::Compiler compiler(cx);
-    if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
-        return false;
-    masm.bind(&noPush);
-
-    // Store the start offset in the appropriate location.
-    MOZ_ASSERT(spsPushToggleOffset_.offset() == 0);
-    spsPushToggleOffset_ = toggleOffset;
-    return true;
-}
-
-void
-BaselineCompiler::emitSPSPop()
-{
-    // If profiler entry was pushed on this frame, pop it.
-    Label noPop;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_PUSHED_SPS_FRAME), &noPop);
-    masm.spsPopFrameSafe(&cx->runtime()->spsProfiler, R1.scratchReg());
-    masm.bind(&noPop);
-}
 
 void
 BaselineCompiler::emitProfilerEnterFrame()

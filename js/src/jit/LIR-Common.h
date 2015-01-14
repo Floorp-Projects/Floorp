@@ -6165,28 +6165,6 @@ class LCallInstanceOf : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
     static const size_t RHS = BOX_PIECES;
 };
 
-class LProfilerStackOp : public LInstructionHelper<0, 0, 1>
-{
-  public:
-    LIR_HEADER(ProfilerStackOp)
-
-    explicit LProfilerStackOp(const LDefinition &temp) {
-        setTemp(0, temp);
-    }
-
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
-
-    JSScript *script() {
-        return mir_->toProfilerStackOp()->script();
-    }
-
-    MProfilerStackOp::Type type() {
-        return mir_->toProfilerStackOp()->type();
-    }
-};
-
 class LIsCallable : public LInstructionHelper<1, 1, 0>
 {
   public:

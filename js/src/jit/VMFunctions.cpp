@@ -577,19 +577,6 @@ NewStringObject(JSContext *cx, HandleString str)
 }
 
 bool
-SPSEnter(JSContext *cx, HandleScript script)
-{
-    return cx->runtime()->spsProfiler.enter(script, script->functionNonDelazifying());
-}
-
-bool
-SPSExit(JSContext *cx, HandleScript script)
-{
-    cx->runtime()->spsProfiler.exit(script, script->functionNonDelazifying());
-    return true;
-}
-
-bool
 OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, bool *out)
 {
     RootedId id(cx);
@@ -801,15 +788,6 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     } else if (frame->isStrictEvalFrame()) {
         MOZ_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
         DebugScopes::onPopStrictEvalScope(frame);
-    }
-
-    // If the frame has a pushed SPS frame, make sure to pop it.
-    if (frame->hasPushedSPSFrame()) {
-        cx->runtime()->spsProfiler.exit(frame->script(), frame->maybeFun());
-        // Unset the pushedSPSFrame flag because DebugEpilogue may get called before
-        // probes::ExitScript in baseline during exception handling, and we don't
-        // want to double-pop SPS frames.
-        frame->unsetPushedSPSFrame();
     }
 
     if (!ok) {

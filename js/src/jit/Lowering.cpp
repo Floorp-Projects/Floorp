@@ -3493,18 +3493,6 @@ LIRGenerator::visitCallInstanceOf(MCallInstanceOf *ins)
 }
 
 void
-LIRGenerator::visitProfilerStackOp(MProfilerStackOp *ins)
-{
-    LProfilerStackOp *lir = new(alloc()) LProfilerStackOp(temp());
-    add(lir, ins);
-
-    // If slow assertions are enabled, then this node will result in a callVM
-    // out to a C++ function for the assertions, so we will need a safepoint.
-    if (gen->options.spsSlowAssertionsEnabled())
-        assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitIsCallable(MIsCallable *ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);

@@ -60,9 +60,6 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.push(esi);
     masm.push(edi);
 
-    // Push the EnterJIT sps mark.
-    masm.spsMarkJit(&cx->runtime()->spsProfiler, ebp, ebx);
-
     // Keep track of the stack which has to be unwound after returning from the
     // compiled function.
     masm.movl(esp, esi);
@@ -272,21 +269,18 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     // |ebp| could have been clobbered by the inner function.
     // Grab the address for the Value result from the argument stack.
-    //  +24 ... arguments ...
-    //  +20 <return>
-    //  +16 ebp <- original %ebp pointing here.
-    //  +12 ebx
-    //  +8  esi
-    //  +4  edi
-    //  +0  hasSPSFrame
-    masm.loadPtr(Address(esp, ARG_RESULT + 4 * sizeof(void *)), eax);
+    //  +20 ... arguments ...
+    //  +16 <return>
+    //  +12 ebp <- original %ebp pointing here.
+    //  +8  ebx
+    //  +4  esi
+    //  +0  edi
+    masm.loadPtr(Address(esp, ARG_RESULT + 3 * sizeof(void *)), eax);
     masm.storeValue(JSReturnOperand, Operand(eax, 0));
 
     /**************************************************************
         Return stack and registers to correct state
     **************************************************************/
-    // Unwind the sps mark.
-    masm.spsUnmarkJit(&cx->runtime()->spsProfiler, ebx);
 
     // Restore non-volatile registers
     masm.pop(edi);
