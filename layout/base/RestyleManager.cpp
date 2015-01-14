@@ -1651,7 +1651,13 @@ RestyleManager::ProcessPendingRestyles()
     // and it should be rarely used.
     // This might add us as a refresh observer again; that's ok.
     ProcessPendingRestyles();
+
+    NS_ASSERTION(!mDoRebuildAllStyleData,
+                 "repeatedly setting mDoRebuildAllStyleData?");
   }
+
+  MOZ_ASSERT(!mInRebuildAllStyleData,
+             "should have called FinishRebuildAllStyleData");
 }
 
 void
