@@ -79,6 +79,11 @@ public:
 
   void Shutdown();
 
+  bool IsClosed() const
+  {
+    return mState != StateActive;
+  }
+
 private:
   BroadcastChannel(nsPIDOMWindow* aWindow,
                    const PrincipalInfo& aPrincipalInfo,
