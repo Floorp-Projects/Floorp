@@ -7,6 +7,10 @@
 #include "BroadcastChannelParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 namespace mozilla {
 
 using namespace ipc;
