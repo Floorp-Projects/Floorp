@@ -9083,6 +9083,8 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   if test "$CROSS_COMPILE"; then
     ac_configure_args="$ac_configure_args je_cv_static_page_shift=12"
   fi
+  # Force disable DSS support in jemalloc.
+  ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 
   if ! test -e memory/jemalloc; then
     mkdir -p memory/jemalloc
