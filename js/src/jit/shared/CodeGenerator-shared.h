@@ -118,8 +118,8 @@ class CodeGeneratorShared : public LElementVisitor
     // scripts) and when instrumentation needs to be emitted or skipped.
     IonInstrumentation sps_;
 
-    bool isNativeToBytecodeMapEnabled() {
-        return gen->isNativeToBytecodeMapEnabled();
+    bool isProfilerInstrumentationEnabled() {
+        return gen->isProfilerInstrumentationEnabled();
     }
 
   protected:

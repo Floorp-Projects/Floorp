@@ -29,6 +29,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
+#include "vm/SPSProfiler.h"
 #include "vm/TraceLogging.h"
 
 #include "jsinferinlines.h"
@@ -682,11 +683,53 @@ struct AutoClearBaselineOverridePc
     ~AutoClearBaselineOverridePc() { frame->clearOverridePc(); }
 };
 
+struct AutoResetLastProfilerFrameOnReturnFromException
+{
+    JSContext *cx;
+    ResumeFromException *rfe;
+
+    AutoResetLastProfilerFrameOnReturnFromException(JSContext *cx, ResumeFromException *rfe)
+      : cx(cx), rfe(rfe) {}
+
+    ~AutoResetLastProfilerFrameOnReturnFromException() {
+        if (!cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+            return;
+
+        MOZ_ASSERT(cx->mainThread().jitActivation == cx->mainThread().profilingActivation());
+
+        void *lastProfilingFrame = getLastProfilingFrame();
+        cx->mainThread().jitActivation->setLastProfilingFrame(lastProfilingFrame);
+    }
+
+    void *getLastProfilingFrame() {
+        switch (rfe->kind) {
+          case ResumeFromException::RESUME_ENTRY_FRAME:
+            return nullptr;
+
+          // The following all return into baseline frames.
+          case ResumeFromException::RESUME_CATCH:
+          case ResumeFromException::RESUME_FINALLY:
+          case ResumeFromException::RESUME_FORCED_RETURN:
+            return rfe->framePointer + BaselineFrame::FramePointerOffset;
+
+          // When resuming into a bailed-out ion frame, use the bailout info to
+          // find the frame we are resuming into.
+          case ResumeFromException::RESUME_BAILOUT:
+            return rfe->bailoutInfo->incomingStack;
+        }
+
+        MOZ_CRASH("Invalid ResumeFromException type!");
+        return nullptr;
+    }
+};
+
 void
 HandleException(ResumeFromException *rfe)
 {
     JSContext *cx = GetJSContextFromJitCode();
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+
+    AutoResetLastProfilerFrameOnReturnFromException profFrameReset(cx, rfe);
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
