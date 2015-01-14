@@ -5,7 +5,7 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:id="@+id/restore_defaults"
-	      android:drawable="@drawable/menu"
+	      android:drawable="@drawable/new_tablet_menu"
 	      android:showAsAction="never"
 	      android:title="@string/pref_search_restore_defaults" />
 </menu>
