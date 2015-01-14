@@ -513,6 +513,10 @@ class SPSInstrumentation
     }
 };
 
+
+/* Get a pointer to the top-most profiling frame, given the exit frame pointer. */
+void *GetTopProfilingJitFrame(uint8_t *exitFramePtr);
+
 } /* namespace js */
 
 #endif /* vm_SPSProfiler_h */

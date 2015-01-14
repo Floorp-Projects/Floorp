@@ -1982,6 +1982,8 @@ CodeGenerator::visitReturn(LReturn *lir)
 void
 CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 {
+    Register temp = ToRegister(lir->temp());
+
     // Remember the OSR entry offset into the code buffer.
     masm.flushBuffer();
     setOsrEntryOffset(masm.size());
@@ -1990,6 +1992,10 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     emitTracelogStopEvent(TraceLogger_Baseline);
     emitTracelogStartEvent(TraceLogger_IonMonkey);
 #endif
+
+    // If profiling, save the current frame pointer to a per-thread global field.
+    if (isProfilerInstrumentationEnabled())
+        masm.profilerEnterFrame(StackPointer, temp);
 
     // Allocate the full frame for this function
     // Note we have a new entry here. So we reset MacroAssembler::framePushed()
@@ -7156,7 +7162,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         return false;
 
     // Encode native to bytecode map if profiling is enabled.
-    if (isNativeToBytecodeMapEnabled()) {
+    if (isProfilerInstrumentationEnabled()) {
         // Generate native-to-bytecode main table.
         if (!generateCompactNativeToBytecodeMap(cx, code))
             return false;
