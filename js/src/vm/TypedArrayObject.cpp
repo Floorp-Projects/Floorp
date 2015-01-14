@@ -833,7 +833,8 @@ TypedArrayObject::protoFunctions[] = {
 
 /* static */ const JSFunctionSpec
 TypedArrayObject::staticFunctions[] = {
-    // Coming soon...
+    JS_SELF_HOSTED_FN("from", "TypedArrayStaticFrom", 3, 0),
+    JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0),
     JS_FS_END
 };
 
