@@ -520,6 +520,7 @@ class GCRuntime
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
+    void decommitArena(ArenaHeader *aheader, AutoLockGC &lock);
 
     void releaseHeldRelocatedArenas();
 
