@@ -1413,9 +1413,9 @@ ForkJoinShared::execute()
 void
 ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 {
-    JSCompartment *comp = cx_->compartment();
-    for (unsigned i = 0; i < threadPool_->numWorkers(); i++)
-        comp->adoptWorkerAllocator(allocators_[i]);
+    //JSCompartment *comp = cx_->compartment();
+    //for (unsigned i = 0; i < threadPool_->numWorkers(); i++)
+    //    comp->adoptWorkerAllocator(allocators_[i]);
 
     if (gcRequested_) {
         Spew(SpewGC, "Triggering garbage collection in SpiderMonkey heap");
@@ -2135,7 +2135,7 @@ js::intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp)
 static bool
 intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *vp)
 {
-    cx->allocator()->arenas.wipeDuringParallelExecution(cx->runtime());
+    //cx->allocator()->arenas.wipeDuringParallelExecution(cx->runtime());
     return true;
 }
 

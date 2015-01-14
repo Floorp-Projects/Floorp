@@ -187,12 +187,6 @@ StoreBuffer::setAboutToOverflow()
     runtime_->gc.requestMinorGC(JS::gcreason::FULL_STORE_BUFFER);
 }
 
-bool
-StoreBuffer::inParallelSection() const
-{
-    return InParallelSection();
-}
-
 void
 StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes
 *sizes)

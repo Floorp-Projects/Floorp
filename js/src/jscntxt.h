@@ -233,7 +233,7 @@ struct ThreadSafeContext : ContextFriendFields,
   public:
     static size_t offsetOfAllocator() { return offsetof(ThreadSafeContext, allocator_); }
 
-    inline Allocator *allocator() const;
+    inline Allocator *allocator() const { return allocator_; }
 
     // Allocations can only trigger GC when running on the main thread.
     inline AllowGC allowGC() const { return isJSContext() ? CanGC : NoGC; }
@@ -249,7 +249,7 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 
     template <typename T>
-    inline bool isThreadLocal(T thing) const;
+    inline bool isThreadLocal(T thing) const { return true; }  // obsolete
 
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, maybeJSContext());
