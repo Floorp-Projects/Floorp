@@ -58,7 +58,6 @@ static const PLDHashTableOps EntityToUnicodeOps = {
   matchNodeString,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   nullptr,
 }; 
 
@@ -69,7 +68,6 @@ static const PLDHashTableOps UnicodeToEntityOps = {
   matchNodeUnicode,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   nullptr,
 };
 

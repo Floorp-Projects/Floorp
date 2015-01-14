@@ -175,7 +175,6 @@ static const PLDHashTableOps MappedAttrTable_Ops = {
   MappedAttrTable_MatchEntry,
   PL_DHashMoveEntryStub,
   MappedAttrTable_ClearEntry,
-  PL_DHashFinalizeStub,
   nullptr
 };
 
@@ -232,7 +231,6 @@ static const PLDHashTableOps LangRuleTable_Ops = {
   LangRuleTable_MatchEntry,
   PL_DHashMoveEntryStub,
   LangRuleTable_ClearEntry,
-  PL_DHashFinalizeStub,
   LangRuleTable_InitEntry
 };
 

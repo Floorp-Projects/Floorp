@@ -21,8 +21,7 @@ const PLDHashTableOps nsCommandParams::sHashOps =
   HashKey,
   HashMatchEntry,
   HashMoveEntry,
-  HashClearEntry,
-  PL_DHashFinalizeStub
+  HashClearEntry
 };
 
 NS_IMPL_ISUPPORTS(nsCommandParams, nsICommandParams)

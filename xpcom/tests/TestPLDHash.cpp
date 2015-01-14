@@ -86,7 +86,6 @@ static bool test_pldhash_grow_to_max_capacity()
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
   };
 

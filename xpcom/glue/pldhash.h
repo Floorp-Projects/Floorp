@@ -343,13 +343,6 @@ typedef void (*PLDHashClearEntry)(PLDHashTable* aTable,
                                   PLDHashEntryHdr* aEntry);
 
 /*
- * Called when a table (whether allocated dynamically by itself, or nested in
- * a larger structure, or allocated on the stack) is finished.  This callback
- * allows aTable->ops-specific code to finalize aTable->data.
- */
-typedef void (*PLDHashFinalize)(PLDHashTable* aTable);
-
-/*
  * Initialize a new entry, apart from keyHash.  This function is called when
  * PL_DHashTableOperate's PL_DHASH_ADD case finds no existing entry for the
  * given key, and must add a new one.  At that point, aEntry->keyHash is not
@@ -360,7 +353,7 @@ typedef bool (*PLDHashInitEntry)(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
                                  const void* aKey);
 
 /*
- * Finally, the "vtable" structure for PLDHashTable.  The first eight hooks
+ * Finally, the "vtable" structure for PLDHashTable.  The first six hooks
  * must be provided by implementations; they're called unconditionally by the
  * generic pldhash.c code.  Hooks after these may be null.
  *
@@ -372,8 +365,6 @@ typedef bool (*PLDHashInitEntry)(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
  *  moveEntry           Call placement new using copy ctor, run dtor on old
  *                      entry storage.
  *  clearEntry          Run dtor on entry.
- *  finalize            Stub unless aTable->data was initialized and needs to
- *                      be finalized.
  *
  * Note the reason why initEntry is optional: the default hooks (stubs) clear
  * entry storage:  On successful PL_DHashTableOperate(tbl, key, PL_DHASH_ADD),
@@ -395,7 +386,6 @@ struct PLDHashTableOps
   PLDHashMatchEntry   matchEntry;
   PLDHashMoveEntry    moveEntry;
   PLDHashClearEntry   clearEntry;
-  PLDHashFinalize     finalize;
 
   /* Optional hooks start here.  If null, these are not called. */
   PLDHashInitEntry    initEntry;
@@ -436,8 +426,6 @@ void PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
 void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-void PL_DHashFinalizeStub(PLDHashTable* aTable);
-
 /*
  * If you use PLDHashEntryStub or a subclass of it as your entry struct, and
  * if your entries move via memcpy and clear via memset(0), you can use these
@@ -456,8 +444,9 @@ PLDHashTable* PL_NewDHashTable(
   uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
- * Finalize aTable's data, free its entry storage (via aTable->ops->freeTable),
- * and return the memory starting at aTable to the malloc heap.
+ * Free |aTable|'s entry storage and |aTable| itself (both via
+ * aTable->ops->freeTable). Use this function to destroy a PLDHashTable that
+ * was allocated on the heap via PL_NewDHashTable().
  */
 void PL_DHashTableDestroy(PLDHashTable* aTable);
 
@@ -483,10 +472,9 @@ MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
   uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
- * Finalize aTable's data, free its entry storage using aTable->ops->freeTable,
- * and leave its members unchanged from their last live values (which leaves
- * pointers dangling).  If you want to burn cycles clearing aTable, it's up to
- * your code to call memset.
+ * Free |aTable|'s entry storage (via aTable->ops->freeTable). Use this function
+ * to destroy a PLDHashTable that is allocated on the stack or in static memory
+ * and was created via PL_DHashTableInit().
  */
 void PL_DHashTableFinish(PLDHashTable* aTable);
 
