@@ -37,7 +37,28 @@ struct CancelUSSDRequest
   uint32_t clientId;
 };
 
+struct ConferenceCallRequest
+{
+  uint32_t clientId;
+};
+
+struct SeparateCallRequest
+{
+  uint32_t clientId;
+  uint32_t callIndex;
+};
+
 struct HangUpConferenceRequest
+{
+  uint32_t clientId;
+};
+
+struct HoldConferenceRequest
+{
+  uint32_t clientId;
+};
+
+struct ResumeConferenceRequest
 {
   uint32_t clientId;
 };
@@ -86,7 +107,11 @@ union IPCTelephonyRequest
   DialRequest;
   SendUSSDRequest;
   CancelUSSDRequest;
+  ConferenceCallRequest;
+  SeparateCallRequest;
   HangUpConferenceRequest;
+  HoldConferenceRequest;
+  ResumeConferenceRequest;
   AnswerCallRequest;
   HangUpCallRequest;
   RejectCallRequest;
@@ -127,14 +152,6 @@ parent:
   RegisterListener();
 
   UnregisterListener();
-
-  ConferenceCall(uint32_t aClientId);
-
-  SeparateCall(uint32_t aClientId, uint32_t aCallIndex);
-
-  HoldConference(uint32_t aClientId);
-
-  ResumeConference(uint32_t aClientId);
 
   StartTone(uint32_t aClientId, nsString aTone);
 
