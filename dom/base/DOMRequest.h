@@ -58,7 +58,7 @@ public:
 
   void GetResult(JSContext*, JS::MutableHandle<JS::Value> aRetval) const
   {
-    NS_ASSERTION(mDone || mResult == JSVAL_VOID,
+    NS_ASSERTION(mDone || mResult.isUndefined(),
                  "Result should be undefined when pending");
     JS::ExposeValueToActiveJS(mResult);
     aRetval.set(mResult);
