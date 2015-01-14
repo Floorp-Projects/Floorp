@@ -26,14 +26,12 @@ namespace dom {
 
 class Element;
 
-class VRFieldOfViewReadOnly : public nsWrapperCache
+class VRFieldOfViewReadOnly : public NonRefcountedDOMObject
 {
 public:
-  VRFieldOfViewReadOnly(nsISupports* aParent,
-                        double aUpDegrees, double aRightDegrees,
+  VRFieldOfViewReadOnly(double aUpDegrees, double aRightDegrees,
                         double aDownDegrees, double aLeftDegrees)
-    : mParent(aParent)
-    , mUpDegrees(aUpDegrees)
+    : mUpDegrees(aUpDegrees)
     , mRightDegrees(aRightDegrees)
     , mDownDegrees(aDownDegrees)
     , mLeftDegrees(aLeftDegrees)
@@ -46,7 +44,6 @@ public:
   double LeftDegrees() const { return mLeftDegrees; }
 
 protected:
-  nsCOMPtr<nsISupports> mParent;
   double mUpDegrees;
   double mRightDegrees;
   double mDownDegrees;
@@ -55,29 +52,23 @@ protected:
 
 class VRFieldOfView MOZ_FINAL : public VRFieldOfViewReadOnly
 {
-  ~VRFieldOfView() {}
 public:
-  explicit VRFieldOfView(nsISupports* aParent,
-                         double aUpDegrees = 0.0, double aRightDegrees = 0.0,
+  explicit VRFieldOfView(double aUpDegrees = 0.0, double aRightDegrees = 0.0,
                          double aDownDegrees = 0.0, double aLeftDegrees = 0.0)
-    : VRFieldOfViewReadOnly(aParent, aUpDegrees, aRightDegrees, aDownDegrees, aLeftDegrees)
+    : VRFieldOfViewReadOnly(aUpDegrees, aRightDegrees, aDownDegrees, aLeftDegrees)
   {}
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VRFieldOfView)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(VRFieldOfView)
-
-  static already_AddRefed<VRFieldOfView>
+  static VRFieldOfView*
   Constructor(const GlobalObject& aGlobal, const VRFieldOfViewInit& aParams,
               ErrorResult& aRv);
 
-  static already_AddRefed<VRFieldOfView>
+  static VRFieldOfView*
   Constructor(const GlobalObject& aGlobal,
               double aUpDegrees, double aRightDegrees,
               double aDownDegrees, double aLeftDegrees,
               ErrorResult& aRv);
 
-  nsISupports* GetParentObject() const { return mParent; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
 
   void SetUpDegrees(double aVal) { mUpDegrees = aVal; }
   void SetRightDegrees(double aVal) { mRightDegrees = aVal; }
@@ -190,9 +181,9 @@ public:
   virtual void SetFieldOfView(const VRFieldOfViewInit& aLeftFOV,
                               const VRFieldOfViewInit& aRightFOV,
                               double zNear, double zFar) = 0;
-  virtual already_AddRefed<VRFieldOfView> GetCurrentEyeFieldOfView(VREye aEye) = 0;
-  virtual already_AddRefed<VRFieldOfView> GetRecommendedEyeFieldOfView(VREye aEye) = 0;
-  virtual already_AddRefed<VRFieldOfView> GetMaximumEyeFieldOfView(VREye aEye) = 0;
+  virtual VRFieldOfView* GetCurrentEyeFieldOfView(VREye aEye) = 0;
+  virtual VRFieldOfView* GetRecommendedEyeFieldOfView(VREye aEye) = 0;
+  virtual VRFieldOfView* GetMaximumEyeFieldOfView(VREye aEye) = 0;
   virtual already_AddRefed<DOMRect> GetRecommendedEyeRenderRect(VREye aEye) = 0;
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;

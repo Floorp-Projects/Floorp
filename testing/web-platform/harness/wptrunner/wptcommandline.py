@@ -192,6 +192,7 @@ def set_from_config(kwargs):
             kwargs["test_paths"]["/"] = {}
         kwargs["test_paths"]["/"]["metadata_path"] = kwargs["metadata_root"]
 
+
 def get_test_paths(config):
     # Set up test_paths
     test_paths = OrderedDict()
@@ -207,11 +208,11 @@ def get_test_paths(config):
     return test_paths
 
 
-
 def exe_path(name):
     path = find_executable(name)
     if os.access(path, os.X_OK):
         return path
+
 
 def check_args(kwargs):
     from mozrunner import debugger_arguments
@@ -301,6 +302,8 @@ def check_args(kwargs):
 
 
 def create_parser_update():
+    from mozlog.structured import commandline
+
     parser = argparse.ArgumentParser("web-platform-tests-update",
                                      description="Update script for web-platform-tests tests.")
     parser.add_argument("--config", action="store", type=abs_path, help="Path to config file")
@@ -318,16 +321,17 @@ def create_parser_update():
     parser.add_argument("--branch", action="store", type=abs_path,
                         help="Remote branch to sync against")
     parser.add_argument("--rev", action="store", help="Revision to sync to")
-    parser.add_argument("--no-check-clean", action="store_true", default=False,
-                        help="Don't check the working directory is clean before updating")
-    parser.add_argument("--patch", action="store_true",
-                        help="Create an mq patch or git commit containing the changes.")
+    parser.add_argument("--no-patch", action="store_true",
+                        help="Don't create an mq patch or git commit containing the changes.")
     parser.add_argument("--sync", dest="sync", action="store_true", default=False,
                         help="Sync the tests with the latest from upstream")
     parser.add_argument("--ignore-existing", action="store_true", help="When updating test results only consider results from the logfiles provided, not existing expectations.")
+    parser.add_argument("--continue", action="store_true", help="Continue a previously started run of the update script")
+    parser.add_argument("--abort", action="store_true", help="Clear state from a previous incomplete run of the update script")
     # Should make this required iff run=logfile
     parser.add_argument("run_log", nargs="*", type=abs_path,
                         help="Log file from run of tests")
+    commandline.add_logging_group(parser)
     return parser
 
 

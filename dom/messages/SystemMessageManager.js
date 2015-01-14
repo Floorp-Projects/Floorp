@@ -42,6 +42,10 @@ function SystemMessageManager() {
   // Flag to specify if this process has already registered the manifest URL.
   this._registerManifestURLReady = false;
 
+  // Used to know if the promise has to be accepted or not.
+  this._isHandling = false;
+  this._promise = null;
+
   // Flag to determine this process is a parent or child process.
   let appInfo = Cc["@mozilla.org/xre/app-info;1"];
   this._isParentProcess =
@@ -57,7 +61,7 @@ function SystemMessageManager() {
 SystemMessageManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  _dispatchMessage: function(aType, aDispatcher, aMessage) {
+  _dispatchMessage: function(aType, aDispatcher, aMessage, aMessageID) {
     if (aDispatcher.isHandling) {
       // Queue up the incomming message if we're currently dispatching a
       // message; we'll send the message once we finish with the current one.
@@ -66,11 +70,12 @@ SystemMessageManager.prototype = {
       // event loop from within a system message handler (e.g. via alert()),
       // and we can then try to send the page another message while it's
       // inside this nested event loop.
-      aDispatcher.messages.push(aMessage);
+      aDispatcher.messages.push({ message: aMessage, messageID: aMessageID });
       return;
     }
 
     aDispatcher.isHandling = true;
+    this._isHandling = true;
 
     // We get a json blob, but in some cases we want another kind of object
     // to be dispatched. To do so, we check if we have a valid contract ID of
@@ -90,22 +95,46 @@ SystemMessageManager.prototype = {
       }
     }
 
-    aDispatcher.handler
-      .handleMessage(wrapped ? aMessage
-                             : Cu.cloneInto(aMessage, this._window));
+    let message = wrapped ? aMessage : Cu.cloneInto(aMessage, this._window);
 
-    // We need to notify the parent one of the system messages has been handled,
-    // so the parent can release the CPU wake lock it took on our behalf.
-    cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
-                          { type: aType,
-                            manifestURL: this._manifestURL,
-                            pageURL: this._pageURL,
-                            handledCount: 1 });
+    let rejectPromise = false;
+    try {
+      aDispatcher.handler.handleMessage(message);
+    } catch(e) {
+      rejectPromise = true;
+    }
 
+    this._isHandling = false;
     aDispatcher.isHandling = false;
 
+    let self = this;
+    function sendResponse() {
+      // We need to notify the parent one of the system messages has been
+      // handled, so the parent can release the CPU wake lock it took on our
+      // behalf.
+      cpmm.sendAsyncMessage("SystemMessageManager:HandleMessageDone",
+                            { type: aType,
+                              manifestURL: self._manifestURL,
+                              pageURL: self._pageURL,
+                              msgID: aMessageID,
+                              rejected: rejectPromise });
+    }
+
+    if (!this._promise) {
+      debug("No promise set, sending the response immediately.");
+      sendResponse();
+    } else {
+      debug("Using the promise to postpone the response.");
+      this._promise.then(sendResponse, function() {
+        rejectPromise = true;
+        sendResponse();
+      });
+      this._promise = null;
+    }
+
     if (aDispatcher.messages.length > 0) {
-      this._dispatchMessage(aType, aDispatcher, aDispatcher.messages.shift());
+      let msg = aDispatcher.messages.shift();
+      this._dispatchMessage(aType, aDispatcher, msg.message, msg.messageID);
     } else {
       // No more messages that need to be handled, we can notify the
       // ContentChild to release the CPU wake lock grabbed by the ContentParent
@@ -170,9 +199,29 @@ SystemMessageManager.prototype = {
                                   manifestURL: this._manifestURL })[0];
   },
 
+  mozIsHandlingMessage: function() {
+    debug("is handling message: " + this._isHandling);
+    return this._isHandling;
+  },
+
+  mozSetMessageHandlerPromise: function(aPromise) {
+    debug("setting a promise");
+
+    if (!this._isHandling) {
+      throw "Not in a handleMessage method";
+    }
+
+    if (this._promise) {
+      throw "Promise already set";
+    }
+
+    this._promise = aPromise;
+  },
+
   uninit: function()  {
     this._dispatchers = null;
     this._pendings = null;
+    this._promise = null;
 
     if (this._isParentProcess) {
       Services.obs.removeObserver(this, kSystemMessageInternalReady);
@@ -236,8 +285,9 @@ SystemMessageManager.prototype = {
       }
 
       messages.forEach(function(aMsg) {
-        this._dispatchMessage(msg.type, dispatcher, aMsg);
+        this._dispatchMessage(msg.type, dispatcher, aMsg, msg.msgID);
       }, this);
+
     } else {
       // Since no handlers are registered, we need to notify the parent as if
       // all the queued system messages have been handled (notice |handledCount:

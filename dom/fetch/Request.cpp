@@ -58,12 +58,17 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (aInput.IsRequest()) {
     nsRefPtr<Request> inputReq = &aInput.GetAsRequest();
-    if (inputReq->BodyUsed()) {
-      aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
-      return nullptr;
+    nsCOMPtr<nsIInputStream> body;
+    inputReq->GetBody(getter_AddRefs(body));
+    if (body) {
+      if (inputReq->BodyUsed()) {
+        aRv.ThrowTypeError(MSG_REQUEST_BODY_CONSUMED_ERROR);
+        return nullptr;
+      } else {
+        inputReq->SetBodyUsed();
+      }
     }
 
-    inputReq->SetBodyUsed();
     request = inputReq->GetInternalRequest();
   } else {
     request = new InternalRequest();
@@ -123,6 +128,16 @@ Request::Constructor(const GlobalObject& aGlobal,
     fallbackCredentials = RequestCredentials::Omit;
   }
 
+  // CORS-with-forced-preflight is not publicly exposed and should not be
+  // considered a valid value.
+  if (aInit.mMode.WasPassed() &&
+      aInit.mMode.Value() == RequestMode::Cors_with_forced_preflight) {
+    NS_NAMED_LITERAL_STRING(sourceDescription, "'mode' member of RequestInit");
+    NS_NAMED_LITERAL_STRING(value, "cors-with-forced-preflight");
+    NS_NAMED_LITERAL_STRING(type, "RequestMode");
+    aRv.ThrowTypeError(MSG_INVALID_ENUM_VALUE, &sourceDescription, &value, &type);
+    return nullptr;
+  }
   RequestMode mode = aInit.mMode.WasPassed() ? aInit.mMode.Value() : fallbackMode;
   RequestCredentials credentials =
     aInit.mCredentials.WasPassed() ? aInit.mCredentials.Value()

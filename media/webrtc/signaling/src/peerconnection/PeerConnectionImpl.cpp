@@ -289,10 +289,11 @@ RTCStatsQuery::~RTCStatsQuery() {
 NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
 #ifdef MOZILLA_INTERNAL_API
-JSObject*
-PeerConnectionImpl::WrapObject(JSContext* aCx)
+bool
+PeerConnectionImpl::WrapObject(JSContext* aCx,
+                               JS::MutableHandle<JSObject*> aReflector)
 {
-  return PeerConnectionImplBinding::Wrap(aCx, this);
+  return PeerConnectionImplBinding::Wrap(aCx, this, aReflector);
 }
 #endif
 

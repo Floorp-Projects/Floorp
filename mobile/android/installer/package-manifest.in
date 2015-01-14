@@ -175,6 +175,7 @@
 #ifdef MOZ_GAMEPAD
 @BINPATH@/components/dom_gamepad.xpt
 #endif
+@BINPATH@/components/dom_presentation.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt
@@ -287,6 +288,9 @@
 @BINPATH@/components/zipwriter.xpt
 
 ; JavaScript components
+@BINPATH@/components/RequestSync.manifest
+@BINPATH@/components/RequestSyncManager.js
+@BINPATH@/components/RequestSyncScheduler.js
 @BINPATH@/components/ChromeNotifications.js
 @BINPATH@/components/ChromeNotifications.manifest
 @BINPATH@/components/ConsoleAPI.manifest
@@ -451,6 +455,9 @@
 
 @BINPATH@/components/Downloads.manifest
 @BINPATH@/components/DownloadLegacy.js
+
+@BINPATH@/components/PresentationDeviceInfoManager.manifest
+@BINPATH@/components/PresentationDeviceInfoManager.js
 
 ; Modules
 @BINPATH@/modules/*

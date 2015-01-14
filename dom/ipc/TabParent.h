@@ -134,17 +134,16 @@ public:
                                             const nsString& aName,
                                             const nsString& aFeatures,
                                             bool* aOutWindowOpened) MOZ_OVERRIDE;
-    virtual bool RecvCreateWindow(PBrowserParent* aOpener,
-                                  const uint32_t& aChromeFlags,
-                                  const bool& aCalledFromJS,
-                                  const bool& aPositionSpecified,
-                                  const bool& aSizeSpecified,
-                                  const nsString& aURI,
-                                  const nsString& aName,
-                                  const nsString& aFeatures,
-                                  const nsString& aBaseURI,
-                                  bool* aWindowIsNew,
-                                  InfallibleTArray<FrameScriptInfo>* aFrameScripts) MOZ_OVERRIDE;
+    virtual bool AnswerCreateWindow(const uint32_t& aChromeFlags,
+                                    const bool& aCalledFromJS,
+                                    const bool& aPositionSpecified,
+                                    const bool& aSizeSpecified,
+                                    const nsString& aURI,
+                                    const nsString& aName,
+                                    const nsString& aFeatures,
+                                    const nsString& aBaseURI,
+                                    bool* aWindowIsNew,
+                                    PBrowserParent** aRetVal) MOZ_OVERRIDE;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
@@ -353,11 +352,6 @@ public:
     void SetInitedByParent() { mInitedByParent = true; }
     bool IsInitedByParent() const { return mInitedByParent; }
 
-    static TabParent* GetNextTabParent();
-
-    bool SendLoadRemoteScript(const nsString& aURL,
-                              const bool& aRunInGlobalScope);
-
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
@@ -473,35 +467,6 @@ private:
     nsCOMPtr<nsILoadContext> mLoadContext;
 
     TabId mTabId;
-
-    // Helper class for RecvCreateWindow.
-    struct AutoUseNewTab;
-
-    // When loading a new tab or window via window.open, the child process sends
-    // a new PBrowser to use. We store that tab in sNextTabParent and then
-    // proceed through the browser's normal paths to create a new
-    // window/tab. When it comes time to create a new TabParent, we instead use
-    // sNextTabParent.
-    static TabParent* sNextTabParent;
-
-    // When loading a new tab or window via window.open, the child is
-    // responsible for loading the URL it wants into the new
-    // TabChild. Simultaneously, though, the parent sends a LoadURL message to
-    // every new PBrowser (usually for about:blank). This message usually
-    // arrives after the child has started to load the URL it wants, and
-    // overrides it. To prevent this, we set mSkipLoad to true when creating the
-    // new tab. This flag prevents the unwanted LoadURL message from being sent
-    // by the parent.
-    bool mSkipLoad;
-
-    // When loading a new tab or window via window.open, we want to ensure that
-    // frame scripts for that tab are loaded before any scripts start to run in
-    // the window. We can't load the frame scripts the normal way, using
-    // separate IPC messages, since they won't be processed by the child until
-    // returning to the event loop, which is too late. Instead, we queue up
-    // frame scripts that we intend to load and send them as part of the
-    // CreateWindow response. Then TabChild loads them immediately.
-    nsTArray<FrameScriptInfo> mDelayedFrameScripts;
 
 private:
     // This is used when APZ needs to find the TabParent associated with a layer

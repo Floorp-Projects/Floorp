@@ -91,7 +91,8 @@ BEGIN_TEST(testWeakMap_keyDelegates)
      */
     CHECK(newCCW(map, delegate));
     js::SliceBudget budget(js::WorkBudget(1000000));
-    rt->gc.gcDebugSlice(budget);
+    rt->gc.startDebugGC(GC_NORMAL, budget);
+    CHECK(!JS::IsIncrementalGCInProgress(rt));
 #ifdef DEBUG
     CHECK(map->zone()->lastZoneGroupIndex() < delegate->zone()->lastZoneGroupIndex());
 #endif
@@ -105,7 +106,8 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     key = nullptr;
     CHECK(newCCW(map, delegate));
     budget = js::SliceBudget(js::WorkBudget(100000));
-    rt->gc.gcDebugSlice(budget);
+    rt->gc.startDebugGC(GC_NORMAL, budget);
+    CHECK(!JS::IsIncrementalGCInProgress(rt));
     CHECK(checkSize(map, 1));
 
     /*

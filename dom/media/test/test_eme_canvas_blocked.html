@@ -38,8 +38,6 @@ function startTest(test, token)
     manager.finished(token);
   });
 
-  v.addEventListener("error", bail(token + " got error event"));
-
   LoadTest(test, v, token);
 }
 

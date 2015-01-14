@@ -110,6 +110,8 @@ public:
 
   virtual android::sp<android::MediaSource> GetAudioOffloadTrack();
 
+  virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
+
 protected:
   struct TrackInputCopier
   {
@@ -146,9 +148,8 @@ protected:
     // pipeline copier
     nsAutoPtr<TrackInputCopier> mInputCopier;
 
-    // media parameters
-    Mutex mDurationLock; // mDurationUs might be read or updated from multiple
-                         // threads.
+    // Protected by mTrackMonitor.
+    // mDurationUs might be read or updated from multiple threads.
     int64_t mDurationUs;
 
     // playback parameters
@@ -162,6 +163,7 @@ protected:
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
     bool mDiscontinuity;
     nsRefPtr<MediaTaskQueue> mTaskQueue;
+    Monitor mTrackMonitor;
 
   private:
     // Forbidden
@@ -240,6 +242,8 @@ private:
   struct AudioTrack : public Track
   {
     AudioTrack();
+    // Protected by mTrackMonitor.
+    MediaPromiseHolder<AudioDataPromise> mAudioPromise;
 
   private:
     // Forbidden
@@ -260,6 +264,8 @@ private:
     nsIntSize mFrameSize;
     nsIntRect mPictureRect;
     gfx::IntRect mRelativePictureRect;
+    // Protected by mTrackMonitor.
+    MediaPromiseHolder<VideoDataPromise> mVideoPromise;
 
   private:
     // Forbidden
@@ -370,10 +376,10 @@ private:
 
   bool CreateTaskQueues();
   void ShutdownTaskQueues();
-  bool DecodeVideoFrameTask(int64_t aTimeThreshold);
-  bool DecodeVideoFrameSync(int64_t aTimeThreshold);
-  bool DecodeAudioDataTask();
-  bool DecodeAudioDataSync();
+  void DecodeVideoFrameTask(int64_t aTimeThreshold);
+  void DecodeVideoFrameSync(int64_t aTimeThreshold);
+  void DecodeAudioDataTask();
+  void DecodeAudioDataSync();
   void DispatchVideoTask(int64_t aTimeThreshold);
   void DispatchAudioTask();
   inline bool CheckVideoResources() {
@@ -435,9 +441,6 @@ private:
   AudioTrack mAudioTrack;
   VideoTrack mVideoTrack;
   AudioTrack mAudioOffloadTrack; // only Track::mSource is valid
-
-  MediaPromiseHolder<AudioDataPromise> mAudioPromise;
-  MediaPromiseHolder<VideoDataPromise> mVideoPromise;
 
   // color converter
   android::I420ColorConverterHelper mColorConverter;

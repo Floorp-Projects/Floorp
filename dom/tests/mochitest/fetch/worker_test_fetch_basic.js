@@ -82,7 +82,6 @@ function runTest() {
     .then(testAboutURL)
     .then(testDataURL)
     .then(testSameOriginBlobURL)
-    //.then(testAboutURL)
     // Put more promise based tests here.
     .then(done)
     .catch(function(e) {

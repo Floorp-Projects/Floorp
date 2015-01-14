@@ -525,6 +525,18 @@ class CodeGeneratorShared : public LElementVisitor
         emitTracelogTree(/* isStart =*/ false, textId);
     }
 #endif
+    void emitTracelogIonStart() {
+#ifdef JS_TRACE_LOGGING
+        emitTracelogScriptStart();
+        emitTracelogStartEvent(TraceLogger_IonMonkey);
+#endif
+    }
+    void emitTracelogIonStop() {
+#ifdef JS_TRACE_LOGGING
+        emitTracelogStopEvent(TraceLogger_IonMonkey);
+        emitTracelogScriptStop();
+#endif
+    }
 };
 
 // An out-of-line path is generated at the end of the function.

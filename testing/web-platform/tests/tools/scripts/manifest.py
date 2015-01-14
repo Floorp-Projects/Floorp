@@ -304,7 +304,7 @@ class Manifest(object):
                remove_missing_local=False):
 
         if local_changes is None:
-            local_changes = []
+            local_changes = {}
 
         if committed_changes is not None:
             for rel_path, status in committed_changes:
@@ -531,6 +531,9 @@ def get_manifest_items(tests_root, rel_path, url_base, use_committed=False):
 
     if name.lower().endswith("-manual"):
         return [ManualTest(url)]
+
+    if filename.endswith(".worker.js"):
+        return [TestharnessTest(url[:-3])]
 
     ref_list = []
 

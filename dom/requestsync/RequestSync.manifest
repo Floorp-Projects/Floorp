@@ -1,0 +1,5 @@
+component {8ee5ab74-15c4-478f-9d32-67627b9f0f1a} RequestSyncScheduler.js
+contract @mozilla.org/dom/request-sync-scheduler;1 {8ee5ab74-15c4-478f-9d32-67627b9f0f1a}
+
+component {e6f55080-e549-4e30-9d00-15f240fb763c} RequestSyncManager.js
+contract @mozilla.org/dom/request-sync-manager;1 {e6f55080-e549-4e30-9d00-15f240fb763c}
