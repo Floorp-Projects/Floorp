@@ -149,12 +149,18 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   WritingMode frameWM = aReflowState.GetWritingMode();
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
-  nscoord startEdge = borderPadding.IStart(frameWM);
-  nscoord endEdge = aReflowState.AvailableISize() - borderPadding.IEnd(frameWM);
+  nscoord startEdge = 0;
+  const bool boxDecorationBreakClone =
+    StyleBorder()->mBoxDecorationBreak == NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+  if (boxDecorationBreakClone || !GetPrevContinuation()) {
+    startEdge = borderPadding.IStart(frameWM);
+  }
   NS_ASSERTION(aReflowState.AvailableISize() != NS_UNCONSTRAINEDSIZE,
                "should no longer use available widths");
+  nscoord availableISize = aReflowState.AvailableISize();
+  availableISize -= startEdge + borderPadding.IEnd(frameWM);
   aReflowState.mLineLayout->BeginSpan(this, &aReflowState,
-                                      startEdge, endEdge, &mBaseline);
+                                      startEdge, availableISize, &mBaseline);
 
   aStatus = NS_FRAME_COMPLETE;
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
@@ -180,6 +186,13 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(!NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus));
 
   aDesiredSize.ISize(lineWM) = aReflowState.mLineLayout->EndSpan(this);
+  if (boxDecorationBreakClone || !GetPrevContinuation()) {
+    aDesiredSize.ISize(lineWM) += borderPadding.IStart(frameWM);
+  }
+  if (boxDecorationBreakClone || NS_FRAME_IS_COMPLETE(aStatus)) {
+    aDesiredSize.ISize(lineWM) += borderPadding.IEnd(frameWM);
+  }
+
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize,
                                          borderPadding, lineWM, frameWM);
 }
