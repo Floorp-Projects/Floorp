@@ -159,9 +159,12 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(9f1d78e0-1314-11e4-9191-0800200c9a66)]
+[scriptable, uuid(f7e23599-176a-435b-9ecf-7e5274bdfa76)]
 interface nsINetworkService : nsISupports
 {
+  const long MODIFY_ROUTE_ADD    = 0;
+  const long MODIFY_ROUTE_REMOVE = 1;
+
   /**
    * Enable or disable Wifi Tethering
    *
@@ -314,36 +317,28 @@ interface nsINetworkService : nsISupports
   void removeDefaultRoute(in nsINetworkInterface networkInterface);
 
   /**
-   * Add host route.
+   * Modify route.
    *
+   * @param action
+   *        nsINetworkService.MODIFY_ROUTE_ADD to add route and
+   *        nsINetworkService.MODIFY_ROUTE_REMOVE to remove.
    * @param interfaceName
    *        Network interface name for the output of the host route.
-   * @param gateway
-   *        Gateway ip for the output of the host route.
-   * @param host
-   *        Host ip we want to add route for.
-   *
-   * @return A deferred promise that resolves on success or rejects with a
-   *         specified reason otherwise.
-   */
-  jsval addHostRoute(in DOMString interfaceName, in DOMString gateway,
-                     in DOMString host);
-
-  /**
-   * Remove host route.
-   *
-   * @param interfaceName
-   *        Network interface name for the output of the host route.
-   * @param gateway
-   *        Gateway ip for the output of the host route.
    * @param host
    *        Host ip we want to remove route for.
+   * @param prefixLength
+   *        The prefix length of the route we'd like to modify.
+   * @param [optional] gateway
+   *        Gateway ip for the output of the host route.
    *
    * @return A deferred promise that resolves on success or rejects with a
    *         specified reason otherwise.
    */
-  jsval removeHostRoute(in DOMString interfaceName, in DOMString gateway,
-                        in DOMString host);
+  jsval modifyRoute(in long      action,
+                    in DOMString interfaceName,
+                    in DOMString host,
+                    in long      prefixLength,
+                    [optional] in DOMString gateway);
 
   /**
    * Remove all host routes.
@@ -470,4 +465,28 @@ interface nsINetworkService : nsISupports
    */
   void resetConnections(in DOMString interfaceName,
                         in nsINativeCommandCallback callback);
+
+  /**
+   * Create network (required to call prior to any networking operation)
+   *
+   * @param networkInterface
+   *        The network interface name which we want to reset.
+   *
+   * @param callback
+   *        Callback to notify the result of resetting connections.
+   */
+  void createNetwork(in DOMString interfaceName,
+                     in nsINativeCommandCallback callback);
+
+  /**
+   * Destroy network (required to call prior to any networking operation)
+   *
+   * @param networkInterface
+   *        The network interface name which we want to reset.
+   *
+   * @param callback
+   *        Callback to notify the result of resetting connections.
+   */
+  void destroyNetwork(in DOMString interfaceName,
+                      in nsINativeCommandCallback callback);
 };
