@@ -78,6 +78,7 @@ SelectionCarets::SelectionCarets(nsIPresShell* aPresShell)
   , mCaretCenterToDownPointOffsetY(0)
   , mDragMode(NONE)
   , mAsyncPanZoomEnabled(false)
+  , mInAsyncPanZoomGesture(false)
   , mEndCaretVisible(false)
   , mStartCaretVisible(false)
   , mSelectionVisibleInScrollFrames(true)
@@ -1183,6 +1184,7 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
 void
 SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 {
+  mInAsyncPanZoomGesture = true;
   SetVisibility(false);
 
   SELECTIONCARETS_LOG("Dispatch scroll started with position x=%d, y=%d",
@@ -1193,6 +1195,7 @@ SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 {
+  mInAsyncPanZoomGesture = false;
   SELECTIONCARETS_LOG("Update selection carets after APZ is stopped!");
   UpdateSelectionCarets();
 
@@ -1209,12 +1212,20 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::ScrollPositionChanged()
 {
-  if (!mAsyncPanZoomEnabled && mVisible) {
-    SetVisibility(false);
-    //TODO: handling scrolling for selection bubble when APZ is off
+  if (mVisible) {
+    if (!mAsyncPanZoomEnabled) {
+      SetVisibility(false);
+      //TODO: handling scrolling for selection bubble when APZ is off
 
-    SELECTIONCARETS_LOG("Launch scroll end detector");
-    LaunchScrollEndDetector();
+      SELECTIONCARETS_LOG("Launch scroll end detector");
+      LaunchScrollEndDetector();
+    } else {
+      if (!mInAsyncPanZoomGesture) {
+        UpdateSelectionCarets();
+        DispatchSelectionStateChangedEvent(GetSelection(),
+                                           SelectionState::Updateposition);
+      }
+    }
   }
 }
 
