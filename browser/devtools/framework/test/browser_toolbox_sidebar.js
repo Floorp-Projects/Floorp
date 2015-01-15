@@ -111,7 +111,7 @@ function test() {
 
     is(label, 4, "Found the right amount of tabs.");
     is(panel.sidebar._tabbox.selectedPanel, panels[0], "First tab is selected");
-    ok(panel.sidebar.getCurrentTabID(), "tab1", "getCurrentTabID() is correct");
+    is(panel.sidebar.getCurrentTabID(), "tab1", "getCurrentTabID() is correct");
 
     panel.sidebar.once("tab1-unselected", function() {
       ok(true, "received 'unselected' event");
@@ -154,6 +154,7 @@ function test() {
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
       panel.sidebar.show();
       is(panel.panelDoc.getElementById("sidebar").width, 420, "Width restored")
+
       finishUp(panel);
     });
   }

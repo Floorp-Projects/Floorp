@@ -4,8 +4,7 @@
 "use strict";
 
 // Common code shared by browser_toolbox_options_disable_cache-*.js
-const TEST_URI = "http://mochi.test:8888/browser/browser/devtools/framework/" +
-                 "test/browser_toolbox_options_disable_cache.sjs";
+const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_cache.sjs";
 let tabs = [
 {
   title: "Tab 0",

@@ -11,7 +11,8 @@
 
 /* Toolbars */
 .devtools-toolbar,
-.devtools-sidebar-tabs > tabs {
+.devtools-sidebar-tabs tabs,
+.devtools-sidebar-alltabs {
   -moz-appearance: none;
   padding: 0;
   border-width: 0;
@@ -416,19 +417,30 @@
   color: var(--theme-body-color);
 }
 
-.devtools-sidebar-tabs > tabs {
+.devtools-sidebar-tabs tabs {
   position: static;
   font: inherit;
   margin-bottom: 0;
   overflow: hidden;
 }
 
-.devtools-sidebar-tabs > tabs > .tabs-right,
-.devtools-sidebar-tabs > tabs > .tabs-left {
+.devtools-sidebar-alltabs {
+  margin: 0;
+  border-width: 0 0 1px 0;
+  -moz-border-start-width: 1px;
+  border-style: solid;
+}
+
+.devtools-sidebar-alltabs dropmarker {
   display: none;
 }
 
-.devtools-sidebar-tabs > tabs > tab {
+.devtools-sidebar-tabs tabs > .tabs-right,
+.devtools-sidebar-tabs tabs > .tabs-left {
+  display: none;
+}
+
+.devtools-sidebar-tabs tabs > tab {
   -moz-appearance: none;
   /* We want to match the height of a toolbar with a toolbarbutton
    * First, we need to replicated the padding of toolbar (4px),
@@ -449,70 +461,70 @@
   text-shadow: none;
 }
 
-.devtools-sidebar-tabs > tabs > tab:first-child {
+.devtools-sidebar-tabs tabs > tab:first-child {
   -moz-border-start-width: 0;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab {
+.theme-dark .devtools-sidebar-tabs tabs > tab {
   border-image: @smallSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab:hover {
+.theme-dark .devtools-sidebar-tabs tabs > tab:hover {
   background: hsla(206,37%,4%,.2);
   border-image: @smallSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab:hover:active {
+.theme-dark .devtools-sidebar-tabs tabs > tab:hover:active {
   background: hsla(206,37%,4%,.4);
   border-image: @smallSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab {
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected] + tab {
   border-image: @solidSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected] + tab:hover {
   background: hsla(206,37%,4%,.2);
   border-image: @solidSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected] + tab:hover:active {
   background: hsla(206,37%,4%,.4);
   border-image: @solidSeparatorDark@ 1 1;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected],
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected],
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected]:hover:active {
   color: var(--theme-selection-color);
   background: #1d4f73;
   border-image: @solidSeparatorDark@ 1 1;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab {
+.theme-light .devtools-sidebar-tabs tabs > tab {
   border-image: @smallSeparatorLight@ 1 1;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab:hover {
+.theme-light .devtools-sidebar-tabs tabs > tab:hover {
   background: #ddd;
   border-image: @smallSeparatorLight@ 1 1;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab:hover:active {
+.theme-light .devtools-sidebar-tabs tabs > tab:hover:active {
   background: #ddd;
   border-image: @smallSeparatorLight@ 1 1;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab {
+.theme-light .devtools-sidebar-tabs tabs > tab[selected] + tab {
   border-image: @solidSeparatorLight@;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
+.theme-light .devtools-sidebar-tabs tabs > tab[selected] + tab:hover {
   background: #ddd;
   border-image: @solidSeparatorLight@;
 }
 
-.theme-light .devtools-sidebar-tabs > tabs > tab[selected],
-.theme-light .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
+.theme-light .devtools-sidebar-tabs tabs > tab[selected],
+.theme-light .devtools-sidebar-tabs tabs > tab[selected]:hover:active {
   color: var(--theme-selection-color);
   background: #4c9ed9;
   border-image: @solidSeparatorLight@;
