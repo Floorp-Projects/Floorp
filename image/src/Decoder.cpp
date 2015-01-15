@@ -7,10 +7,12 @@
 #include "Decoder.h"
 
 #include "mozilla/gfx/2D.h"
+#include "DecodePool.h"
+#include "GeckoProfiler.h"
 #include "imgIContainer.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "GeckoProfiler.h"
+#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 
@@ -29,8 +31,11 @@ Decoder::Decoder(RasterImage* aImage)
   , mDecodeFlags(0)
   , mBytesDecoded(0)
   , mSendPartialInvalidations(false)
+  , mDataDone(false)
   , mDecodeDone(false)
   , mDataError(false)
+  , mDecodeAborted(false)
+  , mImageIsTransient(false)
   , mFrameCount(0)
   , mFailCode(NS_OK)
   , mNeedsNewFrame(false)
@@ -73,7 +78,7 @@ void
 Decoder::Init()
 {
   // No re-initializing
-  NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
+  MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
 
   // Fire OnStartDecode at init time to support bug 512435.
   if (!IsSizeDecode()) {
@@ -111,6 +116,69 @@ Decoder::InitSharedDecoder(uint8_t* aImageData, uint32_t aImageDataLength,
   // Implementation-specific initialization
   InitInternal();
   mInitialized = true;
+}
+
+nsresult
+Decoder::Decode()
+{
+  MOZ_ASSERT(mInitialized, "Should be initialized here");
+  MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
+
+  // We keep decoding chunks until the decode completes or there are no more
+  // chunks available.
+  while (!GetDecodeDone() && !HasError()) {
+    auto newState = mIterator->AdvanceOrScheduleResume(this);
+
+    if (newState == SourceBufferIterator::WAITING) {
+      // We can't continue because the rest of the data hasn't arrived from the
+      // network yet. We don't have to do anything special; the
+      // SourceBufferIterator will ensure that Decode() gets called again on a
+      // DecodePool thread when more data is available.
+      return NS_OK;
+    }
+
+    if (newState == SourceBufferIterator::COMPLETE) {
+      mDataDone = true;
+
+      nsresult finalStatus = mIterator->CompletionStatus();
+      if (NS_FAILED(finalStatus)) {
+        PostDataError();
+      }
+
+      return finalStatus;
+    }
+
+    MOZ_ASSERT(newState == SourceBufferIterator::READY);
+
+    Write(mIterator->Data(), mIterator->Length());
+  }
+
+  return HasError() ? NS_ERROR_FAILURE : NS_OK;
+}
+
+void
+Decoder::Resume()
+{
+  DecodePool* decodePool = DecodePool::Singleton();
+  MOZ_ASSERT(decodePool);
+
+  nsCOMPtr<nsIEventTarget> target = decodePool->GetEventTarget();
+  if (MOZ_UNLIKELY(!target)) {
+    // We're shutting down and the DecodePool's thread pool has been destroyed.
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> worker = decodePool->CreateDecodeWorker(this);
+  target->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+bool
+Decoder::ShouldSyncDecode(size_t aByteLimit)
+{
+  MOZ_ASSERT(aByteLimit > 0);
+  MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
+
+  return mIterator->RemainingBytesIsNoMoreThan(aByteLimit);
 }
 
 void
@@ -172,7 +240,7 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
 }
 
 void
-Decoder::Finish(ShutdownReason aReason)
+Decoder::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -184,9 +252,10 @@ Decoder::Finish(ShutdownReason aReason)
   if (mInFrame && !HasError())
     PostFrameStop();
 
-  // If PostDecodeDone() has not been called, we need to sent teardown
-  // notifications.
-  if (!IsSizeDecode() && !mDecodeDone) {
+  // If PostDecodeDone() has not been called, and this decoder wasn't aborted
+  // early because of low-memory conditions or losing a race with another
+  // decoder, we need to send teardown notifications.
+  if (!IsSizeDecode() && !mDecodeDone && !WasAborted()) {
 
     // Log data errors to the error console
     nsCOMPtr<nsIConsoleService> consoleService =
@@ -208,22 +277,17 @@ Decoder::Finish(ShutdownReason aReason)
       }
     }
 
-    bool usable = !HasDecoderError();
-    if (aReason != ShutdownReason::NOT_NEEDED && !HasDecoderError()) {
-      // If we only have a data error, we're usable if we have at least one complete frame.
-      if (GetCompleteFrameCount() == 0) {
-        usable = false;
-      }
-    }
-
-    // If we're usable, do exactly what we should have when the decoder
-    // completed.
-    if (usable) {
+    // If we only have a data error, we're usable if we have at least one
+    // complete frame.
+    if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
+      // We're usable, so do exactly what we should have when the decoder
+      // completed.
       if (mInFrame) {
         PostFrameStop();
       }
       PostDecodeDone();
     } else {
+      // We're not usable. Record some final progress indicating the error.
       if (!IsSizeDecode()) {
         mProgress |= FLAG_DECODE_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
       }
@@ -235,9 +299,21 @@ Decoder::Finish(ShutdownReason aReason)
   // DecodingComplete calls Optimize().
   mImageMetadata.SetOnImage(mImage);
 
-  if (mDecodeDone) {
+  if (HasSize()) {
+    SetSizeOnImage();
+  }
+
+  if (mDecodeDone && !IsSizeDecode()) {
     MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
-    mImage->DecodingComplete(mCurrentFrame.get());
+
+    // If this image wasn't animated and isn't a transient image, mark its frame
+    // as optimizable. We don't support optimizing animated images and
+    // optimizing transient images isn't worth it.
+    if (!mIsAnimated && !mImageIsTransient && mCurrentFrame) {
+      mCurrentFrame->SetOptimizable();
+    }
+
+    mImage->OnDecodingComplete();
   }
 }
 
@@ -390,6 +466,12 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
                                           aFrameNum),
                          Lifetime::Persistent);
   if (outcome != InsertOutcome::SUCCESS) {
+    // We either hit InsertOutcome::FAILURE, which is a temporary failure due to
+    // low memory (we know it's not permanent because we checked CanHold()
+    // above), or InsertOutcome::FAILURE_ALREADY_PRESENT, which means that
+    // another decoder beat us to decoding this frame. Either way, we should
+    // abort this decoder rather than treat this as a real error.
+    mDecodeAborted = true;
     ref->Abort();
     return RawAccessFrameRef();
   }
@@ -431,9 +513,12 @@ Decoder::SetSizeOnImage()
   MOZ_ASSERT(mImageMetadata.HasSize(), "Should have size");
   MOZ_ASSERT(mImageMetadata.HasOrientation(), "Should have orientation");
 
-  mImage->SetSize(mImageMetadata.GetWidth(),
-                  mImageMetadata.GetHeight(),
-                  mImageMetadata.GetOrientation());
+  nsresult rv = mImage->SetSize(mImageMetadata.GetWidth(),
+                                mImageMetadata.GetHeight(),
+                                mImageMetadata.GetOrientation());
+  if (NS_FAILED(rv)) {
+    PostResizeError();
+  }
 }
 
 /*
