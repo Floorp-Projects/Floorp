@@ -10,7 +10,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f80ac10b-68dd-4482-a8c2-3cbe13fa89af)]
+[ptr] native JSContext(JSContext);
+
+[scriptable, uuid(4f2927e5-ae85-4c6b-93d2-2f639af6a236)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -30,6 +32,10 @@ interface nsIStackFrame : nsISupports
     readonly attribute AString                 formattedStack;
 
     AUTF8String toString();
+
+    // Return whether this stack frame can be accessed by the caller.  This is
+    // safe to call on non-main threads, but will always report "yes" there.
+    [noscript, notxpcom, nostdcall] boolean callerSubsumes(in JSContext aCx);
 };
 
 [scriptable, uuid(1caf1461-be1d-4b79-a552-5292b6bf3c35)]
