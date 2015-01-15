@@ -9184,7 +9184,9 @@ nsDocShell::CheckLoadingPermissions()
     // Note - The check for a current JSContext here isn't necessarily sensical.
     // It's just designed to preserve the old semantics during a mass-conversion
     // patch.
-    NS_ENSURE_TRUE(nsContentUtils::GetCurrentJSContext(), NS_OK);
+    if (!nsContentUtils::GetCurrentJSContext()) {
+      return NS_OK;
+    }
 
     // Check if the caller is from the same origin as this docshell,
     // or any of its ancestors.
