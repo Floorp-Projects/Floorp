@@ -45,6 +45,8 @@ public:
     return false;
   }
 
+  void ClearFailedRead() { mFailedRead.reset(); }
+
   void Pin()
   {
     mResource->Pin();
