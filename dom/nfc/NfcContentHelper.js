@@ -355,7 +355,7 @@ NfcContentHelper.prototype = {
     }
   },
 
-  handleGeneralResponse: function handleReadNDEFResponse(result) {
+  handleGeneralResponse: function handleGeneralResponse(result) {
     let requestId = result.requestId;
     let callback = this._requestMap[requestId];
     if (!callback) {
