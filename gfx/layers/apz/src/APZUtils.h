@@ -11,10 +11,10 @@ namespace mozilla {
 namespace layers {
 
 enum HitTestResult {
-  NoApzcHit,
-  ApzcHitRegion,
-  ApzcContentRegion,
-  OverscrolledApzc,
+  HitNothing,
+  HitLayer,
+  HitDispatchToContentRegion,
+  HitOverscrolledApzc,
 };
 
 }
