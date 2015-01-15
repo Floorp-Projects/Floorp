@@ -938,7 +938,7 @@ FunctionEnd
 !macroend
 !define MountRegistryIntoHKU "!insertmacro MountRegistryIntoHKU"
 !define un.MountRegistryIntoHKU "!insertmacro MountRegistryIntoHKU"
-;
+
 ; Unmounts all user ntuser.dat files into the registry as a subkey of HKU
 !macro UnmountRegistryIntoHKU
   ; $0 is used as an index for HKEY_USERS enumeration
@@ -1556,6 +1556,72 @@ FunctionEnd
 !macroend
 !define PushFilesToCheck "!insertmacro PushFilesToCheck"
 
+
+; Pushes the string "true" to the top of the stack if the Firewall service is
+; running and pushes the string "false" to the top of the stack if it isn't.
+!define SC_MANAGER_ALL_ACCESS 0x3F
+!define SERVICE_QUERY_CONFIG 0x0001
+!define SERVICE_QUERY_STATUS 0x0004
+!define SERVICE_RUNNING 0x4
+
+!macro IsFirewallSvcRunning
+  Push $R9
+  Push $R8
+  Push $R7
+  Push $R6
+  Push "false"
+
+  System::Call 'advapi32::OpenSCManagerW(n, n, i ${SC_MANAGER_ALL_ACCESS}) i.R6'
+  ${If} $R6 != 0
+    ; MpsSvc is the Firewall service on Windows Vista and above.
+    ; When opening the service with SERVICE_QUERY_CONFIG the return value will
+    ; be 0 if the service is not installed.
+    System::Call 'advapi32::OpenServiceW(i R6, t "MpsSvc", i ${SERVICE_QUERY_CONFIG}) i.R7'
+    ${If} $R7 != 0
+      System::Call 'advapi32::CloseServiceHandle(i R7) n'
+      ; Open the service with SERVICE_QUERY_CONFIG so its status can be queried.
+      System::Call 'advapi32::OpenServiceW(i R6, t "MpsSvc", i ${SERVICE_QUERY_STATUS}) i.R7'
+    ${Else}
+      ; SharedAccess is the Firewall service on Windows XP.
+      ; When opening the service with SERVICE_QUERY_CONFIG the return value will
+      ; be 0 if the service is not installed.
+      System::Call 'advapi32::OpenServiceW(i R6, t "SharedAccess", i ${SERVICE_QUERY_CONFIG}) i.R7'
+      ${If} $R7 != 0
+        System::Call 'advapi32::CloseServiceHandle(i R7) n'
+        ; Open the service with SERVICE_QUERY_CONFIG so its status can be
+        ; queried.
+        System::Call 'advapi32::OpenServiceW(i R6, t "SharedAccess", i ${SERVICE_QUERY_STATUS}) i.R7'
+      ${EndIf}
+    ${EndIf}
+    ; Did the calls to OpenServiceW succeed?
+    ${If} $R7 != 0
+      System::Call '*(i,i,i,i,i,i,i) i.R9'
+      ; Query the current status of the service.
+      System::Call 'advapi32::QueryServiceStatus(i R7, i $R9) i'
+      System::Call '*$R9(i, i.R8)'
+      System::Free $R9
+      System::Call 'advapi32::CloseServiceHandle(i R7) n'
+      IntFmt $R8 "0x%X" $R8
+      ${If} $R8 == ${SERVICE_RUNNING}
+        Pop $R9
+        Push "true"
+      ${EndIf}
+    ${EndIf}
+    System::Call 'advapi32::CloseServiceHandle(i R6) n'
+  ${EndIf}
+
+  Exch 1
+  Pop $R6
+  Exch 1
+  Pop $R7
+  Exch 1
+  Pop $R8
+  Exch 1
+  Pop $R9
+!macroend
+!define IsFirewallSvcRunning "!insertmacro IsFirewallSvcRunning"
+!define un.IsFirewallSvcRunning "!insertmacro IsFirewallSvcRunning"
+
 ; Sets this installation as the default browser by setting the registry keys
 ; under HKEY_CURRENT_USER via registry calls and using the AppAssocReg NSIS
 ; plugin for Vista and above. This is a function instead of a macro so it is
@@ -1619,8 +1685,13 @@ Function FixShortcutAppModelIDs
   ${EndIf}
 FunctionEnd
 
+; Helper for adding Firewall exceptions during install and after app update.
 Function AddFirewallEntries
-	liteFirewallW::AddRule "$INSTDIR\${FileMainEXE}" "${BrandShortName} ($INSTDIR)"
+  ${IsFirewallSvcRunning}
+  Pop $0
+  ${If} "$0" == "true"
+    liteFirewallW::AddRule "$INSTDIR\${FileMainEXE}" "${BrandShortName} ($INSTDIR)"
+  ${EndIf}
 FunctionEnd
 
 ; The !ifdef NO_LOG prevents warnings when compiling the installer.nsi due to
