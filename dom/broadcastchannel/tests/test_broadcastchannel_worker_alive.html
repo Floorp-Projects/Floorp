@@ -20,39 +20,30 @@ Tests of DOM BroadcastChannel in workers
 <pre id="test">
 <script class="testbody" language="javascript">
 
-function testWorker(x) {
-  var worker = new Worker("broadcastchannel_worker.js");
+function runTests() {
+  var id = 0;
+  (new BroadcastChannel('foobar')).onmessage = function(event) {
+    info("MSG: " + event.data);
 
-  var bc = new BroadcastChannel('foobar');
-
-  worker.onmessage = function(event) {
     if (event.data == "READY") {
       ok(true, "Worker is ready!");
-      bc.postMessage('hello world from the window');
-    } else if(event.data == "OK") {
-      ok(true, "Worker has received the message");
     } else {
-      ok(false, "Something wrong happened");
+      is(id, event.data, "The message is correct");
     }
+
+    for (var i = 0; i < 3; ++i) {
+      SpecialPowers.forceCC();
+      SpecialPowers.forceGC();
+    }
+
+    if (id == 5) {
+      SimpleTest.finish();
+    }
+
+    event.target.postMessage(++id);
   };
 
-  bc.onmessage = function(event) {
-    is("hello world from the worker", event.data, "The message matches!");
-    bc.close();
-    runTests();
-  }
-
-  worker.postMessage(x);
-}
-
-var tests = [ 0, 3 ];
-function runTests() {
-  if (tests.length == 0) {
-    SimpleTest.finish();
-    return;
-  }
-
-  testWorker(tests.shift());
+  new Worker("broadcastchannel_worker_alive.js");
 }
 
 SimpleTest.waitForExplicitFinish();
