@@ -924,6 +924,7 @@ class AssemblerShared
 
     ImmGCPtr noteMaybeNurseryPtr(ImmMaybeNurseryPtr ptr) {
         if (ptr.value && gc::IsInsideNursery(ptr.value)) {
+            // PJS FIXME bug 1121435
             // FIXME: Ideally we'd assert this in all cases, but PJS needs to
             //        compile IC's from off-main-thread; it will not touch
             //        nursery pointers, however.

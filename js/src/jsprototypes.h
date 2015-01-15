@@ -38,12 +38,6 @@
 #define ERROR_CLASP(type)           (&ErrorObject::classes[type])
 #define SHARED_TYPED_ARRAY_CLASP(type) (&SharedTypedArrayObject::classes[Scalar::type])
 
-#ifdef ENABLE_PARALLEL_JS
-#define IF_PJS(real,imaginary) real
-#else
-#define IF_PJS(real,imaginary) imaginary
-#endif
-
 #ifdef EXPOSE_INTL_API
 #define IF_INTL(real,imaginary) real
 #else
