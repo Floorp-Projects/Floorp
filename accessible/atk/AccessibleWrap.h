@@ -52,11 +52,11 @@ public:
   virtual ~AccessibleWrap();
   void ShutdownAtkObject();
 
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
 
   // return the atk object for this AccessibleWrap
   virtual void GetNativeInterface(void** aOutAccessible) MOZ_OVERRIDE;
-  virtual nsresult HandleAccEvent(AccEvent* aEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) MOZ_OVERRIDE;
 
   AtkObject * GetAtkObject(void);
   static AtkObject* GetAtkObject(Accessible* aAccessible);

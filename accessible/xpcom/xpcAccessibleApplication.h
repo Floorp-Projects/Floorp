@@ -27,10 +27,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleApplication
-  NS_IMETHOD GetAppName(nsAString& aName) MOZ_FINAL;
-  NS_IMETHOD GetAppVersion(nsAString& aVersion) MOZ_FINAL;
-  NS_IMETHOD GetPlatformName(nsAString& aName) MOZ_FINAL;
-  NS_IMETHOD GetPlatformVersion(nsAString& aVersion) MOZ_FINAL;
+  NS_IMETHOD GetAppName(nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
+  NS_IMETHOD GetAppVersion(nsAString& aVersion) MOZ_FINAL MOZ_OVERRIDE;
+  NS_IMETHOD GetPlatformName(nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
+  NS_IMETHOD GetPlatformVersion(nsAString& aVersion) MOZ_FINAL MOZ_OVERRIDE;
 
 protected:
   virtual ~xpcAccessibleApplication() {}
