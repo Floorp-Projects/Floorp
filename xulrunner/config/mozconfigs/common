@@ -5,5 +5,3 @@
 # This file is included at the top of all xulrunner mozconfigs
 
 . "$topsrcdir/build/mozconfig.common"
-
-ac_add_options --disable-unified-compilation

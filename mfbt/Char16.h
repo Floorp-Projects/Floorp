@@ -21,7 +21,7 @@
    /*
     * C++11 says char16_t is a distinct builtin type, but Windows's yvals.h
     * typedefs char16_t as an unsigned short prior to MSVC 2015, which
-    * implemented C++11's distinct char16_t type). We would like to alias
+    * implemented C++11's distinct char16_t type. We would like to alias
     * char16_t to Windows's 16-bit wchar_t so we can declare UTF-16 literals as
     * constant expressions (and pass char16_t pointers to Windows APIs). We
     * #define _CHAR16T here in order to prevent yvals.h from overriding our

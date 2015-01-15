@@ -116,8 +116,8 @@ FakeDecryptor::Message(const std::string& aMessage)
   MOZ_ASSERT(sInstance);
   const static std::string sid("fake-session-id");
   sInstance->mCallback->SessionMessage(sid.c_str(), sid.size(),
-                                       (const uint8_t*)aMessage.c_str(), aMessage.size(),
-                                       nullptr, 0);
+                                       kGMPLicenseRequest,
+                                       (const uint8_t*)aMessage.c_str(), aMessage.size());
 }
 
 std::vector<std::string>

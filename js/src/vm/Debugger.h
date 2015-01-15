@@ -912,8 +912,8 @@ Debugger::onLogAllocationSite(JSContext *cx, HandleSavedFrame frame, int64_t whe
 
 extern bool
 EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-              mozilla::Range<const char16_t> chars, const char *filename, unsigned lineno,
-              MutableHandleValue rval);
+              jsbytecode *pc, mozilla::Range<const char16_t> chars, const char *filename,
+              unsigned lineno, MutableHandleValue rval);
 
 bool ReportObjectRequired(JSContext *cx);
 

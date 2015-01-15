@@ -10,9 +10,35 @@
 
 #include "nsCSSAnonBoxes.h"
 #include "nsPresContext.h"
+#include "nsReadableUtils.h"
 #include "nsStyleContext.h"
 
 using namespace mozilla;
+
+// Return true if aString ends in aSuffix and has at least one character before
+// the suffix. Assign aIndex to where the suffix starts.
+static bool
+IsNameWithSuffix(const nsString& aString, const nsString& aSuffix,
+                 uint32_t* aIndex)
+{
+  if (StringEndsWith(aString, aSuffix)) {
+    *aIndex = aString.Length() - aSuffix.Length();
+    return *aIndex != 0;
+  }
+  return false;
+}
+
+static bool
+IsNameWithEndSuffix(const nsString& aString, uint32_t* aIndex)
+{
+  return IsNameWithSuffix(aString, NS_LITERAL_STRING("-end"), aIndex);
+}
+
+static bool
+IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
+{
+  return IsNameWithSuffix(aString, NS_LITERAL_STRING("-start"), aIndex);
+}
 
 //----------------------------------------------------------------------
 
@@ -37,6 +63,64 @@ NS_NewGridContainerFrame(nsIPresShell* aPresShell,
 
 // nsGridContainerFrame Method Implementations
 // ===========================================
+
+/* static */ void
+nsGridContainerFrame::DestroyImplicitNamedAreas(void* aPropertyValue)
+{
+  delete static_cast<ImplicitNamedAreas*>(aPropertyValue);
+}
+
+void
+nsGridContainerFrame::AddImplicitNamedAreas(
+  const nsTArray<nsTArray<nsString>>& aLineNameLists)
+{
+  // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
+  // XXX this just checks x-start .. x-end in one dimension and there's
+  // no other error checking.  A few wrong cases (maybe):
+  // (x-start x-end)
+  // (x-start) 0 (x-start) 0 (x-end)
+  // (x-end) 0 (x-start) 0 (x-end)
+  // (x-start) 0 (x-end) 0 (x-start) 0 (x-end)
+  const uint32_t len = aLineNameLists.Length();
+  nsTHashtable<nsStringHashKey> currentStarts;
+  ImplicitNamedAreas* areas = GetImplicitNamedAreas();
+  for (uint32_t i = 0; i < len; ++i) {
+    const nsTArray<nsString>& names(aLineNameLists[i]);
+    const uint32_t jLen = names.Length();
+    for (uint32_t j = 0; j < jLen; ++j) {
+      const nsString& name = names[j];
+      uint32_t index;
+      if (::IsNameWithStartSuffix(name, &index)) {
+        currentStarts.PutEntry(nsDependentSubstring(name, 0, index));
+      } else if (::IsNameWithEndSuffix(name, &index)) {
+        nsDependentSubstring area(name, 0, index);
+        if (currentStarts.Contains(area)) {
+          if (!areas) {
+            areas = new ImplicitNamedAreas;
+            Properties().Set(ImplicitNamedAreasProperty(), areas);
+          }
+          areas->PutEntry(area);
+        }
+      }
+    }
+  }
+}
+
+void
+nsGridContainerFrame::InitImplicitNamedAreas(const nsStylePosition* aStyle)
+{
+  ImplicitNamedAreas* areas = GetImplicitNamedAreas();
+  if (areas) {
+    // Clear it, but reuse the hashtable itself for now.  We'll remove it
+    // below if it isn't needed anymore.
+    areas->Clear();
+  }
+  AddImplicitNamedAreas(aStyle->mGridTemplateColumns.mLineNameLists);
+  AddImplicitNamedAreas(aStyle->mGridTemplateRows.mLineNameLists);
+  if (areas && areas->Count() == 0) {
+    Properties().Delete(ImplicitNamedAreasProperty());
+  }
+}
 
 void
 nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
@@ -67,6 +151,10 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                         contentBSize + bp.BStartEnd(wm));
   aDesiredSize.SetSize(wm, finalSize);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
+
+  const nsStylePosition* stylePos = aReflowState.mStylePosition;
+  InitImplicitNamedAreas(stylePos);
+
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
