@@ -29,7 +29,8 @@ public:
     mBC = aBC;
   }
 
-  virtual bool RecvNotify(const nsString& aMessage) MOZ_OVERRIDE;
+  virtual bool RecvNotify(const BroadcastChannelMessageData& aData)
+                                                                   MOZ_OVERRIDE;
 
   bool IsActorDestroyed() const
   {
@@ -41,8 +42,6 @@ private:
                         const nsAString& aChannel);
 
   ~BroadcastChannelChild();
-
-  void Notify(JSContext* aCx, const nsString& aMessage);
 
   void ActorDestroy(ActorDestroyReason aWhy);
 

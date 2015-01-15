@@ -13,6 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class BroadcastChannelParent;
+class BroadcastChannelMessageData;
 
 class BroadcastChannelService MOZ_FINAL
 {
@@ -25,7 +26,7 @@ public:
   void UnregisterActor(BroadcastChannelParent* aParent);
 
   void PostMessage(BroadcastChannelParent* aParent,
-                   const nsAString& aMessage,
+                   const BroadcastChannelMessageData& aData,
                    const nsAString& aOrigin,
                    const nsAString& aChannel);
 

@@ -22,7 +22,7 @@ class BroadcastChannelParent MOZ_FINAL : public PBroadcastChannelParent
   friend class mozilla::ipc::BackgroundParentImpl;
 
 public:
-  void CheckAndDeliver(const nsString& aMessage,
+  void CheckAndDeliver(const BroadcastChannelMessageData& aData,
                        const nsString& aOrigin,
                        const nsString& aChannel);
 
@@ -31,7 +31,8 @@ private:
                          const nsAString& aChannel);
   ~BroadcastChannelParent();
 
-  virtual bool RecvPostMessage(const nsString& aMessage) MOZ_OVERRIDE;
+  virtual bool
+  RecvPostMessage(const BroadcastChannelMessageData& aData) MOZ_OVERRIDE;
 
   virtual bool RecvClose() MOZ_OVERRIDE;
 

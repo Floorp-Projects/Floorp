@@ -28,7 +28,7 @@ function runTests() {
     if (event.data == "READY") {
       ok(true, "Worker is ready!");
     } else {
-      is(id, event.data, "The message is correct");
+      is(id, event.data, "The message is correct: " + id);
     }
 
     for (var i = 0; i < 3; ++i) {
@@ -38,6 +38,7 @@ function runTests() {
 
     if (id == 5) {
       SimpleTest.finish();
+      return;
     }
 
     event.target.postMessage(++id);
