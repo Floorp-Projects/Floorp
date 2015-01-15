@@ -9,7 +9,6 @@
 #include "mozilla/IMEStateManager.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -182,7 +181,6 @@ nsPresContext* IMEStateManager::sPresContext = nullptr;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsTestingIME = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
-bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
 
 // sActiveIMEContentObserver points to the currently active IMEContentObserver.
 // sActiveIMEContentObserver is null if there is no focused editor.
@@ -198,10 +196,6 @@ IMEStateManager::Init()
     sISMLog = PR_NewLogModule("IMEStateManager");
   }
 #endif
-  Preferences::AddBoolVarCache(
-    &sCheckForIMEUnawareWebApps,
-    "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",
-    false);
 }
 
 // static
@@ -753,25 +747,6 @@ private:
   uint32_t mState;
 };
 
-static bool
-MayBeIMEUnawareWebApp(nsINode* aNode)
-{
-  bool haveKeyEventsListener = false;
-
-  while (aNode) {
-    EventListenerManager* const mgr = aNode->GetExistingListenerManager();
-    if (mgr) {
-      if (mgr->MayHaveInputOrCompositionEventListener()) {
-        return false;
-      }
-      haveKeyEventsListener |= mgr->MayHaveKeyEventListener();
-    }
-    aNode = aNode->GetParentNode();
-  }
-
-  return haveKeyEventsListener;
-}
-
 // static
 void
 IMEStateManager::SetIMEState(const IMEState& aState,
@@ -793,9 +768,6 @@ IMEStateManager::SetIMEState(const IMEState& aState,
 
   InputContext context;
   context.mIMEState = aState;
-
-  context.mMayBeIMEUnaware = context.mIMEState.IsEditable() &&
-    sCheckForIMEUnawareWebApps && MayBeIMEUnawareWebApp(aContent);
 
   if (aContent && aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
       (aContent->Tag() == nsGkAtoms::input ||

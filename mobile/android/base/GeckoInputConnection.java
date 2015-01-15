@@ -590,6 +590,8 @@ class GeckoInputConnection
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
         else if (mIMETypeHint.equalsIgnoreCase("email"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+        else if (mIMETypeHint.equalsIgnoreCase("search"))
+            outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMETypeHint.equalsIgnoreCase("tel"))
             outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
         else if (mIMETypeHint.equalsIgnoreCase("number") ||
@@ -634,8 +636,7 @@ class GeckoInputConnection
             outAttrs.imeOptions = EditorInfo.IME_ACTION_DONE;
         else if (mIMEActionHint.equalsIgnoreCase("next"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_NEXT;
-        else if (mIMEActionHint.equalsIgnoreCase("search") ||
-                 mIMETypeHint.equalsIgnoreCase("search"))
+        else if (mIMEActionHint.equalsIgnoreCase("search"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEARCH;
         else if (mIMEActionHint.equalsIgnoreCase("send"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
@@ -815,14 +816,13 @@ class GeckoInputConnection
             !shouldProcessKey(keyCode, event)) {
             return false;
         }
-        final int action = down ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP;
         event = translateKey(keyCode, event);
         keyCode = event.getKeyCode();
 
         View view = getView();
         if (view == null) {
             InputThreadUtils.sInstance.sendEventFromUiThread(ThreadUtils.getUiHandler(),
-                mEditableClient, GeckoEvent.createKeyEvent(event, action, 0));
+                mEditableClient, GeckoEvent.createKeyEvent(event, 0));
             return true;
         }
 
@@ -840,7 +840,7 @@ class GeckoInputConnection
             (down && !keyListener.onKeyDown(view, uiEditable, keyCode, event)) ||
             (!down && !keyListener.onKeyUp(view, uiEditable, keyCode, event))) {
             InputThreadUtils.sInstance.sendEventFromUiThread(uiHandler, mEditableClient,
-                GeckoEvent.createKeyEvent(event, action, TextKeyListener.getMetaState(uiEditable)));
+                GeckoEvent.createKeyEvent(event, TextKeyListener.getMetaState(uiEditable)));
             if (skip && down) {
                 // Usually, the down key listener call above adjusts meta states for us.
                 // However, if we skip that call above, we have to manually adjust meta
@@ -864,43 +864,27 @@ class GeckoInputConnection
         return processKey(keyCode, event, false);
     }
 
-    /**
-     * Get a key that represents a given character.
-     */
-    private KeyEvent getCharKeyEvent(final char c) {
-        final long time = SystemClock.uptimeMillis();
-        return new KeyEvent(time, time, KeyEvent.ACTION_MULTIPLE,
-                            KeyEvent.KEYCODE_UNKNOWN, /* repeat */ 0) {
-            @Override
-            public int getUnicodeChar() {
-                return c;
-            }
-
-            @Override
-            public int getUnicodeChar(int metaState) {
-                return c;
-            }
-        };
-    }
-
     @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
-            final String str = event.getCharacters();
-            for (int i = 0; i < str.length(); i++) {
-                final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
-                if (!processKey(KeyEvent.KEYCODE_UNKNOWN, charEvent, /* down */ true) ||
-                    !processKey(KeyEvent.KEYCODE_UNKNOWN, charEvent, /* down */ false)) {
-                    return false;
-                }
+            View view = getView();
+            if (view != null) {
+                InputThreadUtils.sInstance.runOnIcThread(
+                    view.getRootView().getHandler(), mEditableClient,
+                    new Runnable() {
+                        @Override public void run() {
+                            // Don't call GeckoInputConnection.commitText because it can
+                            // post a key event back to onKeyMultiple, causing a loop
+                            GeckoInputConnection.super.commitText(event.getCharacters(), 1);
+                        }
+                    });
             }
             return true;
         }
-
         while ((repeatCount--) != 0) {
-            if (!processKey(keyCode, event, /* down */ true) ||
-                !processKey(keyCode, event, /* down */ false)) {
+            if (!processKey(keyCode, event, true) ||
+                !processKey(keyCode, event, false)) {
                 return false;
             }
         }
