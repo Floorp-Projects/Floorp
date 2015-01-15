@@ -6,9 +6,11 @@
 #include "BroadcastChannel.h"
 #include "BroadcastChannelChild.h"
 #include "mozilla/dom/BroadcastChannelBinding.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/Preferences.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
@@ -61,6 +63,23 @@ GetOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin, ErrorResult& aRv)
   appsService->GetManifestURLByLocalId(appId, aOrigin);
 }
 
+nsIPrincipal*
+GetPrincipalFromWorkerPrivate(WorkerPrivate* aWorkerPrivate)
+{
+  nsIPrincipal* principal = aWorkerPrivate->GetPrincipal();
+  if (principal) {
+    return principal;
+  }
+
+  // Walk up to our containing page
+  WorkerPrivate* wp = aWorkerPrivate;
+  while (wp->GetParent()) {
+    wp = wp->GetParent();
+  }
+
+  return wp->GetPrincipal();
+}
+
 class InitializeRunnable MOZ_FINAL : public WorkerMainThreadRunnable
 {
 public:
@@ -78,7 +97,12 @@ public:
   bool MainThreadRun() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
-    nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+
+    nsIPrincipal* principal = GetPrincipalFromWorkerPrivate(mWorkerPrivate);
+    if (!principal) {
+      mRv.Throw(NS_ERROR_FAILURE);
+      return true;
+    }
 
     bool isNullPrincipal;
     mRv = principal->GetIsNullPrincipal(&isNullPrincipal);
@@ -212,7 +236,97 @@ private:
   }
 };
 
+bool
+CheckPermission(nsIPrincipal* aPrincipal)
+{
+  // First of all, the general pref has to be turned on.
+  bool enabled = false;
+  Preferences::GetBool("dom.broadcastChannel.enabled", &enabled);
+  if (!enabled) {
+    return false;
+  }
+
+  if (!aPrincipal) {
+    return false;
+  }
+
+  uint16_t status;
+  if (NS_FAILED(aPrincipal->GetAppStatus(&status))) {
+    return false;
+  }
+
+  // Only support BroadcastChannel API for certified apps and desktop builds.
+  return status == nsIPrincipal::APP_STATUS_CERTIFIED ||
+         status == nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+}
+
+// A WorkerMainThreadRunnable to synchronously dispatch the call of
+// CheckPermission() from the worker thread to the main thread.
+class CheckPermissionRunnable MOZ_FINAL
+  : public workers::WorkerMainThreadRunnable
+{
+public:
+  bool mResult;
+
+  CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
+    : workers::WorkerMainThreadRunnable(aWorkerPrivate)
+    , mResult(false)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+protected:
+  virtual bool
+  MainThreadRun() MOZ_OVERRIDE
+  {
+    workers::AssertIsOnMainThread();
+
+    nsIPrincipal* principal = GetPrincipalFromWorkerPrivate(mWorkerPrivate);
+    if (!principal) {
+      return true;
+    }
+
+    mResult = CheckPermission(principal);
+    return true;
+  }
+};
+
 } // anonymous namespace
+
+/* static */ bool
+BroadcastChannel::IsEnabled(JSContext* aCx, JSObject* aGlobal)
+{
+  if (NS_IsMainThread()) {
+    JS::Rooted<JSObject*> global(aCx, aGlobal);
+
+    nsCOMPtr<nsPIDOMWindow> win = Navigator::GetWindowFromGlobal(global);
+    if (!win) {
+      return false;
+    }
+
+    nsIDocument* doc = win->GetExtantDoc();
+    if (!doc) {
+      return false;
+    }
+
+    return CheckPermission(doc->NodePrincipal());
+  }
+
+  workers::WorkerPrivate* workerPrivate =
+    workers::GetWorkerPrivateFromContext(aCx);
+  workerPrivate->AssertIsOnWorkerThread();
+
+  nsRefPtr<CheckPermissionRunnable> runnable =
+    new CheckPermissionRunnable(workerPrivate);
+
+  if (!runnable->Dispatch(aCx)) {
+    JS_ClearPendingException(aCx);
+    return false;
+  }
+
+  return runnable->mResult;
+}
 
 BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
                                    const PrincipalInfo& aPrincipalInfo,
