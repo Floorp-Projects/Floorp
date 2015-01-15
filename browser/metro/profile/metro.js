@@ -411,7 +411,7 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 // enable geo
 pref("geo.enabled", true);
-pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
+pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 
 // snapped view
 pref("browser.ui.snapped.maxWidth", 600);
