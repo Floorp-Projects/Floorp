@@ -1704,13 +1704,6 @@ pref("intl.locale.matchOS",                 false);
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
 
-// Android-specific pref to use key-events-only mode for IME-unaware webapps.
-#ifdef MOZ_WIDGET_ANDROID
-pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", true);
-#else
-pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", false);
-#endif
-
 // these locales have right-to-left UI
 pref("intl.uidirection.ar", "rtl");
 pref("intl.uidirection.he", "rtl");
