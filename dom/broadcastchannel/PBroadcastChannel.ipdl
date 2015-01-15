@@ -3,16 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include protocol PBlob;
+include DOMTypes;
 
 using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
-
-struct BroadcastChannelMessageData
-{
-  SerializedStructuredCloneBuffer data;
-};
 
 // This protocol is used for the BroadcastChannel API
 protocol PBroadcastChannel
@@ -20,11 +17,11 @@ protocol PBroadcastChannel
   manager PBackground;
 
 parent:
-  PostMessage(BroadcastChannelMessageData message);
+  PostMessage(ClonedMessageData message);
   Close();
 
 child:
-  Notify(BroadcastChannelMessageData message);
+  Notify(ClonedMessageData message);
   __delete__();
 };
 
