@@ -1430,6 +1430,7 @@ pref("devtools.timeline.hiddenMarkers", "[]");
 pref("devtools.performance.ui.show-timeline-memory", false);
 
 // The default Profiler UI settings
+pref("devtools.profiler.ui.flatten-tree-recursion", true);
 pref("devtools.profiler.ui.show-platform-data", false);
 
 // The default cache UI setting
