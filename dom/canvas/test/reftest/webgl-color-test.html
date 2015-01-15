@@ -1,76 +1,123 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<meta charset='UTF-8'>
+<!--
+Color Test
+
+Clear the four quadrants of the canvas as follows:
++------+------+
+| blue |black |
+|      |      |
++------+------+
+| red  |green |
+|      |      |
++------+------+
+
+Clear with a given alpha value. What effect this has depends on the
+context-creation args passed to this page.
+-->
+<html class='reftest-wait'>
+
 <head>
-<meta charset="UTF-8">
+  <script type='text/javascript' src='webgl-utils.js'></script>
+  <script type='text/javascript'>
+'use strict';
 
-<script type="text/javascript" src="webgl-utils.js"></script>
-<script type="text/javascript">
-/* Color Test
- *
- * Clear the four quadrants of the canvas as follows:
- * +------+------+
- * | red  |green |
- * |      |      |
- * +------+------+
- * | blue |white |
- * |      |      |
- * +------+------+
- *
- * This is for checking that we're getting the right colors when
- * we ask for them. This combined with the Orientation test assure
- * that we are getting the correct colors in the correct places.
- */
+var COLOR_VALUE = 127.0 / 255.0;
+var ALPHA_VALUE = 127.0 / 255.0;
 
-"use strict";
-
-function renderGL(gl) {
+function renderFrame(gl) {
   gl.enable(gl.SCISSOR_TEST);
 
-  gl.scissor(0, 128, 128, 128);
-  gl.clearColor(1.0, 0.0, 0.0, 1.0);
+  gl.scissor(0, 0, 100, 100);
+  gl.clearColor(COLOR_VALUE, 0.0, 0.0, ALPHA_VALUE);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.scissor(128, 128, 128, 128);
-  gl.clearColor(0.0, 1.0, 0.0, 1.0);
+  gl.scissor(100, 0, 100, 100);
+  gl.clearColor(0.0, COLOR_VALUE, 0.0, ALPHA_VALUE);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.scissor(0, 0, 128, 128);
-  gl.clearColor(0.0, 0.0, 1.0, 1.0);
+  gl.scissor(0, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, COLOR_VALUE, ALPHA_VALUE);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.scissor(128, 0, 128, 128);
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.scissor(100, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, 0.0, ALPHA_VALUE);
   gl.clear(gl.COLOR_BUFFER_BIT);
-
-  gl.finish();
 }
 
-function renderFailure(canvas) {
-  // This will also trigger RAF for us.
-  var context = canvas.getContext("2d");
-  context.fillText('WebGL failed.', 64, 64);
+////////////////////////////////////////////////////////////////////////////////
+// Boilerplate
+
+var TIMEOUT_MS = 10 * 1000;
+
+function setStatus(text) {
+  var elem = document.getElementById('status');
+  elem.innerHTML = text;
+}
+
+var gIsComplete = false;
+
+function markComplete(statusText) {
+  if (!statusText)
+    statusText = '';
+
+  if (gIsComplete)
+    return;
+  gIsComplete = true;
+
+  setStatus(statusText);
+  document.documentElement.removeAttribute('class');
+}
+
+function markError(text) {
+  markComplete('Error: ' + text);
+}
+
+function markTimedOut() {
+  markError('Timed out waiting on test completion.');
+}
+
+function runFrame(gl, frameCount, maxFrameCount) {
+  renderFrame(gl);
+  frameCount++;
+
+  if (frameCount >= maxFrameCount) {
+    console.log('Rendered ' + frameCount + ' frames.');
+    markComplete();
+    return;
+  }
+
+  requestAnimationFrame(function(){
+    runFrame(gl, frameCount, maxFrameCount);
+  });
 }
 
 function runTest() {
-  var canvas = document.getElementById("canvas");
+  var canvas = document.getElementById('canvas');
+
   var gl = initGL(canvas);
+  if (!gl) {
+    markError('WebGL context creation failed.');
+    return;
+  }
 
-  if (gl)
-    renderGL(gl);
-  else
-    renderFailure(canvas);
+  var maxFrameCount = arg('frame', 1);
+  if (maxFrameCount < 1) {
+    markError('Invalid `frame` arg: ' + maxFrameCount);
+    return;
+  }
 
-  waitForComposite(testComplete);
+  setStatus('Waiting...');
+
+  runFrame(gl, 0, maxFrameCount);
+  setTimeout(markTimedOut, TIMEOUT_MS);
 }
-
-function testComplete() {
-  document.documentElement.removeAttribute("class");
-}
-</script>
+  </script>
 </head>
 
-<body onload="rAF(runTest);">
-  <canvas id="canvas" width="256" height="256"></canvas>
+<body onload='runTest();'>
+  <canvas id='canvas' width='200' height='200'></canvas>
+  <div id='status'></div>
 </body>
 
 </html>

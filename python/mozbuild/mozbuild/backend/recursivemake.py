@@ -394,8 +394,7 @@ class RecursiveMakeBackend(CommonBackend):
             non_unified_var = var[len('UNIFIED_'):]
 
             files_per_unification = obj.files_per_unified_file
-            do_unify = not self.environment.substs.get(
-                'MOZ_DISABLE_UNIFIED_COMPILATION') and files_per_unification > 1
+            do_unify = files_per_unification > 1
             # Sorted so output is consistent and we don't bump mtimes.
             source_files = list(sorted(obj.files))
 

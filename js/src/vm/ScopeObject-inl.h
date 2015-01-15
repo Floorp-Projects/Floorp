@@ -86,7 +86,9 @@ StaticScopeIter<allowGC>::operator++(int)
     } else {
         onNamedLambda = true;
     }
-    MOZ_ASSERT_IF(obj, obj->template is<NestedScopeObject>() || obj->template is<JSFunction>());
+    MOZ_ASSERT_IF(obj, obj->template is<NestedScopeObject>() ||
+                       obj->template is<StaticEvalObject>() ||
+                       obj->template is<JSFunction>());
     MOZ_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
 }
 
@@ -96,8 +98,10 @@ StaticScopeIter<allowGC>::hasDynamicScopeObject() const
 {
     return obj->template is<StaticBlockObject>()
            ? obj->template as<StaticBlockObject>().needsClone()
-           : (obj->template is<StaticWithObject>() ||
-              obj->template as<JSFunction>().isHeavyweight());
+           : (obj->template is<StaticEvalObject>()
+              ? obj->template as<StaticEvalObject>().isStrict()
+              : (obj->template is<StaticWithObject>() ||
+                 obj->template as<JSFunction>().isHeavyweight()));
 }
 
 template <AllowGC allowGC>
@@ -105,8 +109,8 @@ inline Shape *
 StaticScopeIter<allowGC>::scopeShape() const
 {
     MOZ_ASSERT(hasDynamicScopeObject());
-    MOZ_ASSERT(type() != NAMED_LAMBDA);
-    if (type() == BLOCK)
+    MOZ_ASSERT(type() != NamedLambda && type() != Eval);
+    if (type() == Block)
         return block().lastProperty();
     return funScript()->callObjShape();
 }
@@ -116,17 +120,21 @@ inline typename StaticScopeIter<allowGC>::Type
 StaticScopeIter<allowGC>::type() const
 {
     if (onNamedLambda)
-        return NAMED_LAMBDA;
+        return NamedLambda;
     return obj->template is<StaticBlockObject>()
-           ? BLOCK
-           : (obj->template is<StaticWithObject>() ? WITH : FUNCTION);
+           ? Block
+           : (obj->template is<StaticWithObject>()
+              ? With
+              : (obj->template is<StaticEvalObject>()
+                 ? Eval
+                 : Function));
 }
 
 template <AllowGC allowGC>
 inline StaticBlockObject &
 StaticScopeIter<allowGC>::block() const
 {
-    MOZ_ASSERT(type() == BLOCK);
+    MOZ_ASSERT(type() == Block);
     return obj->template as<StaticBlockObject>();
 }
 
@@ -134,15 +142,23 @@ template <AllowGC allowGC>
 inline StaticWithObject &
 StaticScopeIter<allowGC>::staticWith() const
 {
-    MOZ_ASSERT(type() == WITH);
+    MOZ_ASSERT(type() == With);
     return obj->template as<StaticWithObject>();
+}
+
+template <AllowGC allowGC>
+inline StaticEvalObject &
+StaticScopeIter<allowGC>::eval() const
+{
+    MOZ_ASSERT(type() == Eval);
+    return obj->template as<StaticEvalObject>();
 }
 
 template <AllowGC allowGC>
 inline JSScript *
 StaticScopeIter<allowGC>::funScript() const
 {
-    MOZ_ASSERT(type() == FUNCTION);
+    MOZ_ASSERT(type() == Function);
     return obj->template as<JSFunction>().nonLazyScript();
 }
 
@@ -150,7 +166,7 @@ template <AllowGC allowGC>
 inline JSFunction &
 StaticScopeIter<allowGC>::fun() const
 {
-    MOZ_ASSERT(type() == FUNCTION);
+    MOZ_ASSERT(type() == Function);
     return obj->template as<JSFunction>();
 }
 

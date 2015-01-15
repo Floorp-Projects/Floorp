@@ -672,19 +672,16 @@ gfxPlatform::ShutdownLayersIPC()
     }
     sLayersIPCIsUp = false;
 
-    GeckoProcessType processType = XRE_GetProcessType();
-    if (processType == GeckoProcessType_Default) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+    {
         // This must happen after the shutdown of media and widgets, which
         // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
         layers::ImageBridgeChild::ShutDown();
-
 #ifdef MOZ_WIDGET_GONK
         layers::SharedBufferManagerChild::ShutDown();
 #endif
 
         layers::CompositorParent::ShutDown();
-    } else if (processType == GeckoProcessType_Content) {
-        layers::CompositorChild::ShutDown();
     }
 }
 

@@ -83,7 +83,7 @@ public:
   Error(const GlobalObject& aGlobal);
 
   static already_AddRefed<Response>
-  Redirect(const GlobalObject& aGlobal, const nsAString& aUrl, uint16_t aStatus);
+  Redirect(const GlobalObject& aGlobal, const nsAString& aUrl, uint16_t aStatus, ErrorResult& aRv);
 
   static already_AddRefed<Response>
   Constructor(const GlobalObject& aGlobal,

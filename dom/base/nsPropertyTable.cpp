@@ -280,7 +280,7 @@ nsPropertyTable::GetPropertyListFor(nsIAtom* aPropertyName) const
 }
 
 //----------------------------------------------------------------------
-    
+
 nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
                                             NSPropertyDtorFunc  aDtorFunc,
                                             void               *aDtorData,
@@ -291,7 +291,7 @@ nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
     mTransfer(aTransfer),
     mNext(nullptr)
 {
-  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(), this,
+  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(),
                     sizeof(PropertyListMapEntry));
 }
 
@@ -306,7 +306,7 @@ DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
                           uint32_t number, void *arg)
 {
   nsPropertyTable::PropertyList *propList =
-      static_cast<nsPropertyTable::PropertyList*>(table->data);
+      static_cast<nsPropertyTable::PropertyList*>(arg);
   PropertyListMapEntry* entry = static_cast<PropertyListMapEntry*>(hdr);
 
   propList->mDtorFunc(const_cast<void*>(entry->key), propList->mName,
@@ -319,8 +319,7 @@ nsPropertyTable::PropertyList::Destroy()
 {
   // Enumerate any remaining object/value pairs and destroy the value object
   if (mDtorFunc)
-    PL_DHashTableEnumerate(&mObjectValueMap, DestroyPropertyEnumerator,
-                           nullptr);
+    PL_DHashTableEnumerate(&mObjectValueMap, DestroyPropertyEnumerator, this);
 }
 
 bool

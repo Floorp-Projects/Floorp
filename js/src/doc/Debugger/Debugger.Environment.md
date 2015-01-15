@@ -94,6 +94,12 @@ properties from its prototype:
     [`Debugger.Object`][object] instance referring to <i>f</i>. Otherwise,
     this property's value is `null`.
 
+`optimizedOut`
+:   True if this environment is optimized out. False otherwise. For example,
+    functions whose locals are never aliased may present optimized-out
+    environments. When true, `getVariable` returns an ordinary JavaScript
+    object whose `optimizedOut` property is true on all bindings, and
+    `setVariable` throws a `ReferenceError`.
 
 
 ## Function Properties of the Debugger.Environment Prototype Object

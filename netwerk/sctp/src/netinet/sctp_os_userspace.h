@@ -219,7 +219,9 @@ typedef char* caddr_t;
 
 #define bzero(buf, len) memset(buf, 0, len)
 #define bcopy(srcKey, dstKey, len) memcpy(dstKey, srcKey, len)
+#if _MSC_VER < 1900
 #define snprintf(data, size, format, name) _snprintf_s(data, size, _TRUNCATE, format, name)
+#endif
 #define inline __inline
 #define __inline__ __inline
 #define random() rand()

@@ -389,10 +389,14 @@ size_t MacIOSurface::GetPlaneCount() {
 }
 
 /*static*/ size_t MacIOSurface::GetMaxWidth() {
+  if (!MacIOSurfaceLib::isInit())
+    return -1;
   return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(MacIOSurfaceLib::kPropWidth);
 }
 
 /*static*/ size_t MacIOSurface::GetMaxHeight() {
+  if (!MacIOSurfaceLib::isInit())
+    return -1;
   return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(MacIOSurfaceLib::kPropHeight);
 }
 

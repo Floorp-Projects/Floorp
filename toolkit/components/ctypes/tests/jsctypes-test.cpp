@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include "typedefs.h"
 
-#if defined(XP_WIN)
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
-#endif // defined(XP_WIN)
+#endif
 
 template <typename T> struct ValueTraits {
   static T literal() { return static_cast<T>(109.25); }

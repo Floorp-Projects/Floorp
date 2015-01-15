@@ -1,3 +1,0 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/android/nightly"
-
-ac_add_options --disable-unified-compilation

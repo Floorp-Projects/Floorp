@@ -6,6 +6,8 @@
 #include "nsUrlClassifierProxies.h"
 #include "nsUrlClassifierDBService.h"
 
+#include "mozilla/SyncRunnable.h"
+
 using namespace mozilla::safebrowsing;
 
 static nsresult
@@ -114,6 +116,31 @@ UrlClassifierDBServiceWorkerProxy::FinishStream()
     NS_NewRunnableMethod(mTarget,
                          &nsIUrlClassifierDBServiceWorker::FinishStream);
   return DispatchToWorkerThread(r);
+}
+
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable::Run()
+{
+  mTarget->DoLocalLookup(mSpec, mTables, mResults);
+  return NS_OK;
+}
+
+nsresult
+UrlClassifierDBServiceWorkerProxy::DoLocalLookup(const nsACString& spec,
+                                                 const nsACString& tables,
+                                                 LookupResultArray* results)
+
+{
+  // Run synchronously on background thread. NS_DISPATCH_SYNC does *not* do
+  // what we want -- it continues processing events on the main thread loop
+  // before the Dispatch returns.
+  nsCOMPtr<nsIRunnable> r = new DoLocalLookupRunnable(mTarget, spec, tables, results);
+  nsIThread* t = nsUrlClassifierDBService::BackgroundThread();
+  if (!t)
+    return NS_ERROR_FAILURE;
+
+  mozilla::SyncRunnable::DispatchToThread(t, r);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
