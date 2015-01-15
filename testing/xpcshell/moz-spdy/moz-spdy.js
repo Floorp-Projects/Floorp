@@ -188,8 +188,11 @@ var options = {
   windowSize: 16000000,
 };
 
-spdy.createServer(options, handleRequest).listen(4443);
-console.log('SPDY server listening on port 4443');
+function listenok() {
+  console.log('SPDY server listening on port ' + webServer.address().port);
+}
+
+var webServer = spdy.createServer(options, handleRequest).listen(-1, "0.0.0.0", 200, listenok);
 
 // Set up to exit when the user finishes our stdin
 process.stdin.resume();
