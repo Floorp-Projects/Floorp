@@ -3043,6 +3043,9 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
         'Stringifier'
     )
 
+    AffectsValues = ("Nothing", "Everything")
+    DependsOnValues = ("Nothing", "DOMState", "Everything")
+
     def __init__(self, location, identifier, tag):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
         self.tag = tag
@@ -3096,6 +3099,22 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
                               "that is not %s-only" %
                               self._scope.primaryGlobalName,
                               [self.location])
+
+    def _setDependsOn(self, dependsOn):
+        if self.dependsOn != "Everything":
+            raise WebIDLError("Trying to specify multiple different "
+                              "Pure, or Constant extended attributes for "
+                              "attribute", [self.location])
+        assert dependsOn in IDLInterfaceMember.DependsOnValues:
+        self.dependsOn = dependsOn
+
+    def _setAffects(self, affects):
+        if self.affects != "Everything":
+            raise WebIDLError("Trying to specify multiple different "
+                              "Pure, or Constant extended attributes for "
+                              "attribute", [self.location])
+        assert affects in IDLInterfaceMember.AffectsValues:
+        self.affects = affects
 
 class IDLConst(IDLInterfaceMember):
     def __init__(self, location, identifier, type, value):
@@ -3175,6 +3194,8 @@ class IDLAttribute(IDLInterfaceMember):
         self.enforceRange = False
         self.clamp = False
         self.slotIndex = None
+        self.dependsOn = "Everything"
+        self.affects = "Everything"
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
@@ -3243,10 +3264,9 @@ class IDLAttribute(IDLInterfaceMember):
 
         if ((self.getExtendedAttribute("Cached") or
              self.getExtendedAttribute("StoreInSlot")) and
-            not self.getExtendedAttribute("Constant") and
-            not self.getExtendedAttribute("Pure")):
+            not self.affects == "Nothing"):
             raise WebIDLError("Cached attributes and attributes stored in "
-                              "slots must be constant or pure, since the "
+                              "slots must be Constant or Pure, since the "
                               "getter won't always be called.",
                               [self.location])
         if self.getExtendedAttribute("Frozen"):
@@ -3372,14 +3392,23 @@ class IDLAttribute(IDLInterfaceMember):
                                   [attr.location, self.location])
         elif identifier == "Exposed":
             convertExposedAttrToGlobalNameSet(attr, self._exposureGlobalNames)
+        elif identifier == "Pure":
+            if not attr.noArguments():
+                raise WebIDLError("[Pure] must take no arguments",
+                                  [attr.location])
+            self._setDependsOn("DOMState")
+            self._setAffects("Nothing")
+        elif identifier == "Constant" or identifier == "SameObject":
+            if not attr.noArguments():
+                raise WebIDLError("[%s] must take no arguments" % identifier,
+                                  [attr.location])
+            self._setDependsOn("Nothing")
+            self._setAffects("Nothing")
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
-              identifier == "Pure" or
               identifier == "Throws" or
               identifier == "GetterThrows" or
               identifier == "ChromeOnly" or
-              identifier == "SameObject" or
-              identifier == "Constant" or
               identifier == "Func" or
               identifier == "Frozen" or
               identifier == "AvailableIn" or
@@ -3663,6 +3692,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         self._jsonifier = jsonifier
         self._specialType = specialType
         self._unforgeable = False
+        self.dependsOn = "Everything"
+        self.affects = "Everything"
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static operation must not be 'prototype'",
@@ -3974,13 +4005,18 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                                   [attr.location, self.location])
         elif identifier == "Exposed":
             convertExposedAttrToGlobalNameSet(attr, self._exposureGlobalNames)
-        elif (identifier == "Pure" or
-              identifier == "CrossOriginCallable" or
+        elif (identifier == "CrossOriginCallable" or
               identifier == "WebGLHandlesContextLoss"):
             # Known no-argument attributes.
             if not attr.noArguments():
                 raise WebIDLError("[%s] must take no arguments" % identifier,
                                   [attr.location])
+        elif identifier == "Pure":
+            if not attr.noArguments():
+                raise WebIDLError("[Pure] must take no arguments",
+                                  [attr.location])
+            self._setDependsOn("DOMState")
+            self._setAffects("Nothing")
         elif (identifier == "Throws" or
               identifier == "NewObject" or
               identifier == "ChromeOnly" or
