@@ -9,6 +9,7 @@ SharedLibrary('clearkey')
 FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
 UNIFIED_SOURCES += [
+    'AudioDecoder.cpp',
     'ClearKeyDecryptionManager.cpp',
     'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
@@ -17,6 +18,10 @@ UNIFIED_SOURCES += [
     'ClearKeyUtils.cpp',
     'gmp-clearkey.cpp',
     'openaes/oaes_lib.c',
+    'VideoDecoder.cpp',
+    'WMFAACDecoder.cpp',
+    'WMFH264Decoder.cpp',
+    'WMFUtils.cpp',
 ]
 
 LOCAL_INCLUDES += [
