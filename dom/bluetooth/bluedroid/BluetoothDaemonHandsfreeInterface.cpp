@@ -485,15 +485,28 @@ BluetoothDaemonHandsfreeModule::PhoneStateChangeCmd(
 
 nsresult
 BluetoothDaemonHandsfreeModule::ConfigureWbsCmd(
-  const nsAString& aBdAddr,
+  const nsAString& aRemoteAddr,
   BluetoothHandsfreeWbsConfig aConfig,
   BluetoothHandsfreeResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // TODO: to be implemented
+  nsAutoPtr<BluetoothDaemonPDU> pdu(
+    new BluetoothDaemonPDU(SERVICE_ID, OPCODE_CONFIGURE_WBS,
+                           6 + // Address
+                           1)); // Config
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = PackPDU(
+    PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), aConfig, *pdu);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = Send(pdu, aRes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  unused << pdu.forget();
+  return NS_OK;
 }
 
 // Responses
@@ -647,6 +660,16 @@ BluetoothDaemonHandsfreeModule::PhoneStateChangeRsp(
 }
 
 void
+BluetoothDaemonHandsfreeModule::ConfigureWbsRsp(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  ResultRunnable::Dispatch(
+    aRes, &BluetoothHandsfreeResultHandler::ConfigureWbs,
+    UnpackPDUInitOp(aPDU));
+}
+
+void
 BluetoothDaemonHandsfreeModule::HandleRsp(
   const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
   void* aUserData)
@@ -684,7 +707,9 @@ BluetoothDaemonHandsfreeModule::HandleRsp(
     INIT_ARRAY_AT(OPCODE_CLCC_RESPONSE,
       &BluetoothDaemonHandsfreeModule::ClccResponseRsp),
     INIT_ARRAY_AT(OPCODE_PHONE_STATE_CHANGE,
-      &BluetoothDaemonHandsfreeModule::PhoneStateChangeRsp)
+      &BluetoothDaemonHandsfreeModule::PhoneStateChangeRsp),
+    INIT_ARRAY_AT(OPCODE_CONFIGURE_WBS,
+      &BluetoothDaemonHandsfreeModule::ConfigureWbsRsp)
   };
 
   MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
