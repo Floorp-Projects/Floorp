@@ -3526,7 +3526,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   nsresult rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (csp) {
+  if (csp && aURI) {
     bool permitsBaseURI = false;
     rv = csp->PermitsBaseURI(aURI, &permitsBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
