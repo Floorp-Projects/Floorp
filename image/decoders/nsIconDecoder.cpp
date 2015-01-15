@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace image {
 
-nsIconDecoder::nsIconDecoder(RasterImage& aImage)
+nsIconDecoder::nsIconDecoder(RasterImage* aImage)
  : Decoder(aImage),
    mWidth(-1),
    mHeight(-1),
