@@ -526,3 +526,38 @@ function promiseNextTick() {
   executeSoon(deferred.resolve);
   return deferred.promise;
 }
+
+/**
+ * Collapses the current text selection in an input field and tabs to the next
+ * field.
+ */
+function collapseSelectionAndTab(inspector) {
+  EventUtils.sendKey("tab", inspector.panelWin); // collapse selection and move caret to end
+  EventUtils.sendKey("tab", inspector.panelWin); // next element
+}
+
+/**
+ * Collapses the current text selection in an input field and tabs to the
+ * previous field.
+ */
+function collapseSelectionAndShiftTab(inspector) {
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },
+    inspector.panelWin); // collapse selection and move caret to end
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },
+    inspector.panelWin); // previous element
+}
+
+/**
+ * Check that the current focused element is an attribute element in the markup
+ * view.
+ * @param {String} attrName The attribute name expected to be found
+ * @param {Boolean} editMode Whether or not the attribute should be in edit mode
+ */
+function checkFocusedAttribute(attrName, editMode) {
+  let focusedAttr = Services.focus.focusedElement;
+  is(focusedAttr ? focusedAttr.parentNode.dataset.attr : undefined,
+    attrName, attrName + " attribute editor is currently focused.");
+  is(focusedAttr ? focusedAttr.tagName : undefined,
+    editMode ? "input": "span",
+    editMode ? attrName + " is in edit mode" : attrName + " is not in edit mode");
+}
