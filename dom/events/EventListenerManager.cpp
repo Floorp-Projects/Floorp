@@ -101,8 +101,6 @@ EventListenerManager::EventListenerManager(EventTarget* aTarget)
   , mMayHaveScrollWheelEventListener(false)
   , mMayHaveMouseEnterLeaveEventListener(false)
   , mMayHavePointerEnterLeaveEventListener(false)
-  , mMayHaveKeyEventListener(false)
-  , mMayHaveInputOrCompositionEventListener(false)
   , mClearingListeners(false)
   , mIsMainThreadELM(NS_IsMainThread())
   , mNoListenerForEvent(0)
@@ -388,21 +386,7 @@ EventListenerManager::AddEventListenerInternal(
       window->SetHasGamepadEventListener();
     }
 #endif
-  } else if (aTypeAtom == nsGkAtoms::onkeydown ||
-             aTypeAtom == nsGkAtoms::onkeypress ||
-             aTypeAtom == nsGkAtoms::onkeyup) {
-    if (!aFlags.mInSystemGroup) {
-      mMayHaveKeyEventListener = true;
-    }
-  } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
-             aTypeAtom == nsGkAtoms::oncompositionstart ||
-             aTypeAtom == nsGkAtoms::oncompositionupdate ||
-             aTypeAtom == nsGkAtoms::oninput) {
-    if (!aFlags.mInSystemGroup) {
-      mMayHaveInputOrCompositionEventListener = true;
-    }
   }
-
   if (aTypeAtom && mTarget) {
     mTarget->EventListenerAdded(aTypeAtom);
   }
