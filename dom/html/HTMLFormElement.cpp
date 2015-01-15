@@ -20,7 +20,6 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIFormControlFrame.h"
-#include "nsISecureBrowserUI.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsInterfaceHashtable.h"
@@ -33,6 +32,7 @@
 #include "mozilla/BinarySearch.h"
 
 // form submission
+#include "mozilla/Telemetry.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
@@ -45,6 +45,9 @@
 #include "nsIDocShell.h"
 #include "nsFormData.h"
 #include "nsFormSubmissionConstants.h"
+#include "nsIPromptService.h"
+#include "nsISecurityUITelemetry.h"
+#include "nsIStringBundle.h"
 
 // radio buttons
 #include "mozilla/dom/HTMLInputElement.h"
@@ -859,6 +862,108 @@ HTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
 }
 
 nsresult
+HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
+                                               bool* aCancelSubmit)
+{
+  *aCancelSubmit = false;
+
+  // Only ask the user about posting from a secure URI to an insecure URI if
+  // this element is in the root document. When this is not the case, the mixed
+  // content blocker will take care of security for us.
+  nsIDocument* parent = OwnerDoc()->GetParentDocument();
+  bool isRootDocument = (!parent || nsContentUtils::IsChromeDoc(parent));
+  if (!isRootDocument) {
+    return NS_OK;
+  }
+
+  nsIPrincipal* principal = NodePrincipal();
+  if (!principal) {
+    *aCancelSubmit = true;
+    return NS_OK;
+  }
+  nsCOMPtr<nsIURI> principalURI;
+  nsresult rv = principal->GetURI(getter_AddRefs(principalURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!principalURI) {
+    principalURI = OwnerDoc()->GetDocumentURI();
+  }
+  bool formIsHTTPS;
+  rv = principalURI->SchemeIs("https", &formIsHTTPS);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool actionIsHTTPS;
+  rv = aActionURL->SchemeIs("https", &actionIsHTTPS);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool actionIsJS;
+  rv = aActionURL->SchemeIs("javascript", &actionIsJS);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!formIsHTTPS || actionIsHTTPS || actionIsJS) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPromptService> promptSvc =
+    do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+  if (!promptSvc) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    mozilla::services::GetStringBundleService();
+  if (!stringBundleService) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = stringBundleService->CreateBundle(
+    "chrome://global/locale/browser.properties",
+    getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsAutoString title;
+  nsAutoString message;
+  nsAutoString cont;
+  stringBundle->GetStringFromName(
+    MOZ_UTF16("formPostSecureToInsecureWarning.title"), getter_Copies(title));
+  stringBundle->GetStringFromName(
+    MOZ_UTF16("formPostSecureToInsecureWarning.message"),
+    getter_Copies(message));
+  stringBundle->GetStringFromName(
+    MOZ_UTF16("formPostSecureToInsecureWarning.continue"),
+    getter_Copies(cont));
+  int32_t buttonPressed;
+  bool checkState = false; // this is unused (ConfirmEx requires this parameter)
+  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
+  rv = promptSvc->ConfirmEx(window, title.get(), message.get(),
+                            (nsIPromptService::BUTTON_TITLE_IS_STRING *
+                             nsIPromptService::BUTTON_POS_0) +
+                            (nsIPromptService::BUTTON_TITLE_CANCEL *
+                             nsIPromptService::BUTTON_POS_1),
+                            cont.get(), nullptr, nullptr, nullptr,
+                            &checkState, &buttonPressed);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  *aCancelSubmit = (buttonPressed == 1);
+  uint32_t telemetryBucket =
+    nsISecurityUITelemetry::WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE;
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI,
+                                 telemetryBucket);
+  if (!*aCancelSubmit) {
+    // The user opted to continue, so note that in the next telemetry bucket.
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI,
+                                   telemetryBucket + 1);
+  }
+  return NS_OK;
+}
+
+nsresult
 HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
                                        bool* aCancelSubmit,
                                        bool    aEarlyNotify)
@@ -872,28 +977,13 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
                                   NS_FIRST_FORMSUBMIT_CATEGORY);
   }
 
-  // XXXbz what do the submit observers actually want?  The window
-  // of the document this is shown in?  Or something else?
-  // sXBL/XBL2 issue
-  nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
-
-  // Notify the secure browser UI, if any, that the form is being submitted.
-  nsCOMPtr<nsIDocShell> docshell = OwnerDoc()->GetDocShell();
-  if (docshell && !aEarlyNotify) {
-    nsCOMPtr<nsISecureBrowserUI> secureUI;
-    docshell->GetSecurityUI(getter_AddRefs(secureUI));
-    nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver =
-      do_QueryInterface(secureUI);
-    if (formSubmitObserver) {
-      nsresult rv = formSubmitObserver->Notify(this,
-                                               window,
-                                               aActionURL,
-                                               aCancelSubmit);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (*aCancelSubmit) {
-        return NS_OK;
-      }
+  if (!aEarlyNotify) {
+    nsresult rv = DoSecureToInsecureSubmitCheck(aActionURL, aCancelSubmit);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (*aCancelSubmit) {
+      return NS_OK;
     }
   }
 
@@ -913,6 +1003,11 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   if (theEnum) {
     nsCOMPtr<nsISupports> inst;
     *aCancelSubmit = false;
+
+    // XXXbz what do the submit observers actually want?  The window
+    // of the document this is shown in?  Or something else?
+    // sXBL/XBL2 issue
+    nsCOMPtr<nsPIDOMWindow> window = OwnerDoc()->GetWindow();
 
     bool loop = true;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
