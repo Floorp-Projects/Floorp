@@ -606,7 +606,7 @@ class NativeObject : public JSObject
         return lookup(cx, shape->propid()) == shape;
     }
 
-    /* Contextless; can be called from parallel code. */
+    /* Contextless; can be called from other pure code. */
     Shape *lookupPure(jsid id);
     Shape *lookupPure(PropertyName *name) {
         return lookupPure(NameToId(name));

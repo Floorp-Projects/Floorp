@@ -677,7 +677,6 @@ TraceLoggerThreadState::init()
         enabledTextIds[TraceLogger_DominatorTree] = true;
         enabledTextIds[TraceLogger_PhiAnalysis] = true;
         enabledTextIds[TraceLogger_ApplyTypes] = true;
-        enabledTextIds[TraceLogger_ParallelSafetyAnalysis] = true;
         enabledTextIds[TraceLogger_AliasAnalysis] = true;
         enabledTextIds[TraceLogger_GVN] = true;
         enabledTextIds[TraceLogger_LICM] = true;
