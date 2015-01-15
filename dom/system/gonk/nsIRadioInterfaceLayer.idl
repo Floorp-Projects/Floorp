@@ -25,7 +25,7 @@ interface nsIRilNetworkInterface : nsINetworkInterface
 interface nsIRilContext : nsISupports
 {
   /**
-   * One of the nsIIccProvider.CARD_STATE_* values.
+   * One of the nsIIcc.CARD_STATE_* values.
    */
   readonly attribute unsigned long cardState;
 
