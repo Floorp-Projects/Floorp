@@ -23,7 +23,7 @@ using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsRubyFrame)
   NS_QUERYFRAME_ENTRY(nsRubyFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsRubyFrameSuper)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyFrame)
 
@@ -48,8 +48,10 @@ nsRubyFrame::GetType() const
 /* virtual */ bool
 nsRubyFrame::IsFrameOfType(uint32_t aFlags) const
 {
-  return nsContainerFrame::IsFrameOfType(aFlags &
-    ~(nsIFrame::eLineParticipant));
+  if (aFlags & eBidiInlineContainer) {
+    return false;
+  }
+  return nsRubyFrameSuper::IsFrameOfType(aFlags);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -119,32 +121,6 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
     sum += e.GetBaseContainer()->GetPrefISize(aRenderingContext);
   }
   aData->currentLine += sum;
-}
-
-/* virtual */ LogicalSize
-nsRubyFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                           WritingMode aWM,
-                           const LogicalSize& aCBSize,
-                           nscoord aAvailableISize,
-                           const LogicalSize& aMargin,
-                           const LogicalSize& aBorder,
-                           const LogicalSize& aPadding,
-                           ComputeSizeFlags aFlags)
-{
-  // Ruby frame is inline, hence don't compute size before reflow.
-  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-}
-
-/* virtual */ nscoord
-nsRubyFrame::GetLogicalBaseline(WritingMode aWritingMode) const
-{
-  return mBaseline;
-}
-
-/* virtual */ bool
-nsRubyFrame::CanContinueTextRun() const
-{
-  return true;
 }
 
 /* virtual */ void
