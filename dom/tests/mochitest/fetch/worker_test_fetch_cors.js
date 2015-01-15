@@ -12,10 +12,6 @@ if (typeof is !== "function") {
 
 var path = "/tests/dom/base/test/";
 
-function isNetworkError(response) {
-  return response.type == "error" && response.status === 0 && response.statusText === "";
-}
-
 function isOpaqueResponse(response) {
   return response.type == "opaque" && response.status === 0 && response.statusText === "";
 }
@@ -66,6 +62,101 @@ function testModeNoCors() {
   return fetch(r).then(function(res) {
     ok(isOpaqueResponse(res), "no-cors Request fetch should result in opaque response");
   });
+}
+
+function testSameOriginCredentials() {
+  var cookieStr = "type=chocolatechip";
+  var tests = [
+              {
+                // Initialize by setting a cookie.
+                pass: 1,
+                setCookie: cookieStr,
+                withCred: "same-origin",
+              },
+              {
+                // Default mode is "omit".
+                pass: 1,
+                noCookie: 1,
+              },
+              {
+                pass: 1,
+                noCookie: 1,
+                withCred: "omit",
+              },
+              {
+                pass: 1,
+                cookie: cookieStr,
+                withCred: "same-origin",
+              },
+              {
+                pass: 1,
+                cookie: cookieStr,
+                withCred: "include",
+              },
+              ];
+
+  var finalPromiseResolve, finalPromiseReject;
+  var finalPromise = new Promise(function(res, rej) {
+    finalPromiseResolve = res;
+    finalPromiseReject = rej;
+  });
+
+  function makeRequest(test) {
+    req = {
+      // Add a default query param just to make formatting the actual params
+      // easier.
+      url: corsServerPath + "a=b",
+      method: test.method,
+      headers: test.headers,
+      withCred: test.withCred,
+    };
+
+    if (test.setCookie)
+      req.url += "&setCookie=" + escape(test.setCookie);
+    if (test.cookie)
+      req.url += "&cookie=" + escape(test.cookie);
+    if (test.noCookie)
+      req.url += "&noCookie";
+
+    return new Request(req.url, { method: req.method,
+                                  headers: req.headers,
+                                  credentials: req.withCred });
+  }
+
+  function testResponse(res, test) {
+    ok(test.pass, "Expected test to pass " + test.toSource());
+    is(res.status, 200, "wrong status in test for " + test.toSource());
+    is(res.statusText, "OK", "wrong status text for " + test.toSource());
+    return res.text().then(function(v) {
+      is(v, "<res>hello pass</res>\n",
+       "wrong text in test for " + test.toSource());
+    });
+  }
+
+  function runATest(tests, i) {
+    var test = tests[i];
+    var request = makeRequest(test);
+    console.log(request.url);
+    fetch(request).then(function(res) {
+      testResponse(res, test);
+      if (i < tests.length-1) {
+        runATest(tests, i+1);
+      } else {
+        finalPromiseResolve();
+      }
+    }, function(e) {
+      ok(!test.pass, "Expected test to fail " + test.toSource());
+      ok(e instanceof TypeError, "Test should fail " + test.toSource());
+      if (i < tests.length-1) {
+        runATest(tests, i+1);
+      } else {
+        finalPromiseResolve();
+      }
+    });
+  }
+
+  runATest(tests, 0);
+  return finalPromise;
 }
 
 function testModeCors() {
@@ -706,80 +797,98 @@ function testModeCors() {
   return Promise.all(fetches);
 }
 
-function testCredentials() {
+function testCrossOriginCredentials() {
   var tests = [
            { pass: 1,
              method: "GET",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 0,
              method: "GET",
-             withCred: 1,
+             withCred: "include",
              allowCred: 0,
            },
            { pass: 0,
              method: "GET",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
              origin: "*",
            },
            { pass: 1,
              method: "GET",
-             withCred: 0,
+             withCred: "omit",
              allowCred: 1,
              origin: "*",
            },
            { pass: 1,
              method: "GET",
              setCookie: "a=1",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              cookie: "a=1",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              noCookie: 1,
-             withCred: 0,
+             withCred: "omit",
              allowCred: 1,
            },
            { pass: 0,
              method: "GET",
              noCookie: 1,
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              setCookie: "a=2",
-             withCred: 0,
+             withCred: "omit",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              cookie: "a=1",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              setCookie: "a=2",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
            { pass: 1,
              method: "GET",
              cookie: "a=2",
-             withCred: 1,
+             withCred: "include",
              allowCred: 1,
            },
+           {
+             // When credentials mode is same-origin, but mode is cors, no
+             // cookie should be sent cross origin.
+             pass: 0,
+             method: "GET",
+             cookie: "a=2",
+             withCred: "same-origin",
+             allowCred: 1,
+           },
+           {
+             // When credentials mode is same-origin, but mode is cors, no
+             // cookie should be sent cross origin. This test checks the same
+             // thing as above, but uses the noCookie check on the server
+             // instead, and expects a valid response.
+             pass: 1,
+             method: "GET",
+             noCookie: 1,
+             withCred: "same-origin",
+           },
            ];
-           // FIXME(nsm): Add "same-origin" credentials test
 
   var baseURL = "http://example.org" + corsServerPath;
   var origin = "http://mochi.test:8888";
@@ -815,7 +924,7 @@ function testCredentials() {
 
     return new Request(req.url, { method: req.method,
                                   headers: req.headers,
-                                  credentials: req.withCred ? "include" : "omit" });
+                                  credentials: req.withCred });
   }
 
   function testResponse(res, test) {
@@ -828,13 +937,13 @@ function testCredentials() {
     });
   }
 
-  function runATest(i) {
+  function runATest(tests, i) {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(function(res) {
       testResponse(res, test);
       if (i < tests.length-1) {
-        runATest(i+1);
+        runATest(tests, i+1);
       } else {
         finalPromiseResolve();
       }
@@ -842,14 +951,14 @@ function testCredentials() {
       ok(!test.pass, "Expected test failure for " + test.toSource());
       ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
       if (i < tests.length-1) {
-        runATest(i+1);
+        runATest(tests, i+1);
       } else {
         finalPromiseResolve();
       }
     });
   }
 
-  runATest(0);
+  runATest(tests, 0);
   return finalPromise;
 }
 
@@ -1134,8 +1243,6 @@ function testRedirects() {
     fetches.push((function(request, test) {
       return fetch(request).then(function(res) {
         ok(test.pass, "Expected test to pass for " + test.toSource());
-        is(isNetworkError(res), false,
-          "shouldn't have failed in test for " + test.toSource());
         is(res.status, 200, "wrong status in test for " + test.toSource());
         is(res.statusText, "OK", "wrong status text for " + test.toSource());
         is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
@@ -1168,7 +1275,8 @@ function runTest() {
     .then(testModeSameOrigin)
     .then(testModeNoCors)
     .then(testModeCors)
-    .then(testCredentials)
+    .then(testSameOriginCredentials)
+    .then(testCrossOriginCredentials)
     .then(testRedirects)
     // Put more promise based tests here.
     .then(done)
