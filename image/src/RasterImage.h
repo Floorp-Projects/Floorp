@@ -376,11 +376,6 @@ private: // data
   // The number of frames this image has.
   uint32_t                   mFrameCount;
 
-  // Notification state. Used to avoid recursive notifications.
-  Progress                   mNotifyProgress;
-  nsIntRect                  mNotifyInvalidRect;
-  bool                       mNotifying:1;
-
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mDecodeOnDraw:1;  // Decoding on draw?
