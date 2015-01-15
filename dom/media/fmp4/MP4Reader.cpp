@@ -740,12 +740,16 @@ MP4Reader::ResetDecode()
   Flush(kVideo);
   {
     MonitorAutoLock mon(mDemuxerMonitor);
-    mDemuxer->SeekVideo(0);
+    if (mDemuxer) {
+      mDemuxer->SeekVideo(0);
+    }
   }
   Flush(kAudio);
   {
     MonitorAutoLock mon(mDemuxerMonitor);
-    mDemuxer->SeekAudio(0);
+    if (mDemuxer) {
+      mDemuxer->SeekAudio(0);
+    }
   }
   return MediaDecoderReader::ResetDecode();
 }
