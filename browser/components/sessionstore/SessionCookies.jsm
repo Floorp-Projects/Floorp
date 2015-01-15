@@ -261,6 +261,40 @@ let SessionCookiesInternal = {
 };
 
 /**
+ * Generates all possible subdomains for a given host and prepends a leading
+ * dot to all variants.
+ *
+ * See http://tools.ietf.org/html/rfc6265#section-5.1.3
+ *     http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
+ *
+ * All cookies belonging to a web page will be internally represented by a
+ * nsICookie object. nsICookie.host will be the request host if no domain
+ * parameter was given when setting the cookie. If a specific domain was given
+ * then nsICookie.host will contain that specific domain and prepend a leading
+ * dot to it.
+ *
+ * We thus generate all possible subdomains for a given domain and prepend a
+ * leading dot to them as that is the value that was used as the map key when
+ * the cookie was set.
+ */
+function* getPossibleSubdomainVariants(host) {
+  // Try given domain with a leading dot (.www.example.com).
+  yield "." + host;
+
+  // Stop if there are only two parts left (e.g. example.com was given).
+  let parts = host.split(".");
+  if (parts.length < 3) {
+    return;
+  }
+
+  // Remove the first subdomain (www.example.com -> example.com).
+  let rest = parts.slice(1).join(".");
+
+  // Try possible parent subdomains.
+  yield* getPossibleSubdomainVariants(rest);
+}
+
+/**
  * The internal cookie storage that keeps track of every active session cookie.
  * These are stored using maps per host, path, and cookie name.
  */
@@ -285,6 +319,11 @@ let CookieStore = {
    *     "/path": {
    *       "cookiename": {name: "cookiename", value: "value", etc...}
    *     }
+   *   },
+   *   ".example.com": {
+   *     "/path": {
+   *       "cookiename": {name: "cookiename", value: "value", etc...}
+   *     }
    *   }
    * };
    */
@@ -297,14 +336,27 @@ let CookieStore = {
    *        A string containing the host name we want to get cookies for.
    */
   getCookiesForHost: function (host) {
-    if (!this._hosts.has(host)) {
-      return [];
-    }
-
     let cookies = [];
 
-    for (let pathToNamesMap of this._hosts.get(host).values()) {
-      cookies.push(...pathToNamesMap.values());
+    let appendCookiesForHost = host => {
+      if (!this._hosts.has(host)) {
+        return;
+      }
+
+      for (let pathToNamesMap of this._hosts.get(host).values()) {
+        cookies.push(...pathToNamesMap.values());
+      }
+    }
+
+    // Try to find cookies for the given host, e.g. <www.example.com>.
+    // The full hostname will be in the map if the Set-Cookie header did not
+    // have a domain= attribute, i.e. the cookie will only be stored for the
+    // request domain. Also, try to find cookies for subdomains, e.g.
+    // <.example.com>. We will find those variants with a leading dot in the
+    // map if the Set-Cookie header had a domain= attribute, i.e. the cookie
+    // will be stored for a parent domain and we send it for any subdomain.
+    for (let variant of [host, ...getPossibleSubdomainVariants(host)]) {
+      appendCookiesForHost(variant);
     }
 
     return cookies;
