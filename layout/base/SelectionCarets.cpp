@@ -697,6 +697,7 @@ CompareRangeWithContentOffset(nsRange* aRange,
                          true,
                          true,  //limit on scrolled views
                          false,
+                         false,
                          false);
   nsresult rv = theFrame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {

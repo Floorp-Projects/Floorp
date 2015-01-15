@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <style>
+      span:before {
+        content: "IMAGE";
+      }
+    </style>
+  </head>
+  <body onload="start()">
+    <div onfocus="done()" contenteditable>foo<span></span>bar</div>
+    <script>
+      var div = document.querySelector("div");
+      function start() {
+        div.focus();
+      }
+      function done() {
+        var sel = getSelection();
+        // Set the caret right before "bar"
+        sel.collapse(div.lastChild, 0);
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>
