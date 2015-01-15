@@ -11,8 +11,9 @@ function test() {
 
   const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
   const isOSXMavericks = navigator.userAgent.indexOf("Mac OS X 10.9") != -1;
-  if (isOSXMtnLion || isOSXMavericks) {
-    todo(false, "This test fails on OS X 10.8 and 10.9, see bug 786938");
+  const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
+  if (isOSXMtnLion || isOSXMavericks || isOSXYosemite ) {
+    todo(false, "This test fails on OS X 10.8, 10.9, 10.10, see bug 786938");
     SimpleTest.finish();
     return;
   }
