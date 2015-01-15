@@ -212,6 +212,8 @@ Native2WrappedNativeMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr,
 
 const struct PLDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
 {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
@@ -246,6 +248,8 @@ IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 
 const struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
 {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
@@ -448,6 +452,8 @@ NativeSetMap::Entry::Match(PLDHashTable *table,
 
 const struct PLDHashTableOps NativeSetMap::Entry::sOps =
 {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     HashNativeKey,
     Match,
     PL_DHashMoveEntryStub,
@@ -512,6 +518,8 @@ IID2ThisTranslatorMap::Entry::Clear(PLDHashTable *table, PLDHashEntryHdr *entry)
 
 const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
 {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     HashIIDPtrKey,
     Match,
     PL_DHashMoveEntryStub,
@@ -588,6 +596,8 @@ XPCNativeScriptableSharedMap::Entry::Match(PLDHashTable *table,
 
 const struct PLDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
 {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     Hash,
     Match,
     PL_DHashMoveEntryStub,

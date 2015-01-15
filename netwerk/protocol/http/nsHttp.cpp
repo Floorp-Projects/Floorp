@@ -42,7 +42,7 @@ struct HttpHeapAtom {
     char                 value[1];
 };
 
-static PLDHashTable         sAtomTable;
+static struct PLDHashTable  sAtomTable;
 static struct HttpHeapAtom *sHeapAtoms = nullptr;
 static Mutex               *sLock = nullptr;
 
@@ -85,6 +85,8 @@ StringCompare(PLDHashTable *table, const PLDHashEntryHdr *entry,
 }
 
 static const PLDHashTableOps ops = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     StringHash,
     StringCompare,
     PL_DHashMoveEntryStub,
