@@ -191,7 +191,7 @@
 
 <!ENTITY fxaccount_finish_migrating_header 'Sign in to finish upgrading'>
 <!ENTITY fxaccount_finish_migrating_button_label 'Finish upgrading'>
-<!ENTITY fxaccount_finish_migrating_description 'Upgrading can transfer a lot of data. It\&apos;s best to be on a WiFi network.'>
+<!ENTITY fxaccount_finish_migrating_description 'Upgrading can transfer a lot of data. It\&apos;s best to be on a Wi-Fi network.'>
 
 <!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
