@@ -66,6 +66,31 @@ def prefcnt(debugger, command, result, dict):
     else:
         print "unknown mRefCnt type " + refcnt_type
 
+# Used to work around http://llvm.org/bugs/show_bug.cgi?id=22211
+def callfunc(debugger, command, result, dict):
+    """Calls a function for which debugger information is unavailable by getting its address from the symbol table.
+       The function is assumed to return void."""
+
+    if '(' not in command:
+        print 'Usage: callfunc your_function(args)'
+        return
+
+    command_parts = command.split('(')
+    funcname = command_parts[0].strip()
+    args = command_parts[1]
+
+    target = debugger.GetSelectedTarget()
+    symbols = target.FindFunctions(funcname).symbols
+    if not symbols:
+        print 'Could not find a function symbol for a function called "%s"' % funcname
+        return
+
+    sym = symbols[0]
+    arg_types = '()'
+    if sym.name and sym.name.startswith(funcname + '('):
+        arg_types = sym.name[len(funcname):]
+    debugger.HandleCommand('print ((void(*)%s)0x%0x)(%s' % (arg_types, sym.addr.GetLoadAddress(target), args))
+
 def init(debugger):
     debugger.HandleCommand("type summary add nsAString_internal -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsACString_internal -F lldbutils.general.summarize_string")
@@ -78,3 +103,4 @@ def init(debugger):
     debugger.HandleCommand("type synthetic add -x \"FallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"AutoFallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("command script add -f lldbutils.general.prefcnt -f lldbutils.general.prefcnt prefcnt")
+    debugger.HandleCommand("command script add -f lldbutils.general.callfunc -f lldbutils.general.callfunc callfunc")

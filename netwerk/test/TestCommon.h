@@ -22,7 +22,7 @@ class nsQuitPumpingEvent MOZ_FINAL : public nsIRunnable {
   ~nsQuitPumpingEvent() {}
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() MOZ_OVERRIDE {
     gKeepPumpingEvents = false;
     return NS_OK;
   }

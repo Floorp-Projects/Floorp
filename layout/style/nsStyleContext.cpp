@@ -399,6 +399,8 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 
   UNIQUE_CASE(Display)
   UNIQUE_CASE(Background)
+  UNIQUE_CASE(Border)
+  UNIQUE_CASE(Padding)
   UNIQUE_CASE(Text)
   UNIQUE_CASE(TextReset)
 
@@ -573,6 +575,30 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
           static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
         mutable_display->mDisplay = displayVal;
       }
+    }
+  }
+
+  // Suppress border/padding of ruby level containers
+  if (disp->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER ||
+      disp->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+    if (StyleBorder()->GetComputedBorder() != nsMargin(0, 0, 0, 0)) {
+      nsStyleBorder* border =
+        static_cast<nsStyleBorder*>(GetUniqueStyleData(eStyleStruct_Border));
+      NS_FOR_CSS_SIDES(side) {
+        border->SetBorderWidth(side, 0);
+      }
+    }
+
+    nsMargin computedPadding;
+    if (!StylePadding()->GetPadding(computedPadding) ||
+        computedPadding != nsMargin(0, 0, 0, 0)) {
+      const nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
+      nsStylePadding* padding =
+        static_cast<nsStylePadding*>(GetUniqueStyleData(eStyleStruct_Padding));
+      NS_FOR_CSS_SIDES(side) {
+        padding->mPadding.Set(side, zero);
+      }
+      padding->RecalcData();
     }
   }
 

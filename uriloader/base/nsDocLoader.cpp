@@ -120,12 +120,10 @@ nsDocLoader::nsDocLoader()
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
     RequestInfoHashClearEntry,
-    PL_DHashFinalizeStub,
     RequestInfoHashInitEntry
   };
 
-  PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, nullptr,
-                    sizeof(nsRequestInfo));
+  PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, sizeof(nsRequestInfo));
 
   ClearInternalProgress();
 

@@ -7,6 +7,7 @@
 #include "DocAccessibleChild.h"
 
 #include "Accessible-inl.h"
+#include "ProxyAccessible.h"
 
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
@@ -14,12 +15,23 @@
 namespace mozilla {
 namespace a11y {
 
-void
+static uint32_t
+InterfacesFor(Accessible* aAcc)
+{
+  uint32_t interfaces = 0;
+  if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole())
+    interfaces |= Interfaces::HYPERTEXT;
+
+  return interfaces;
+}
+
+static void
 SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
 {
   uint64_t id = reinterpret_cast<uint64_t>(aRoot->UniqueID());
   uint32_t role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
+  uint32_t interfaces = InterfacesFor(aRoot);
 
   // OuterDocAccessibles are special because we don't want to serialize the
   // child doc here, we'll call PDocAccessibleConstructor in
@@ -27,7 +39,7 @@ SerializeTree(Accessible* aRoot, nsTArray<AccessibleData>& aTree)
   if (childCount == 1 && aRoot->GetChildAt(0)->IsDoc())
     childCount = 0;
 
-  aTree.AppendElement(AccessibleData(id, role, childCount));
+  aTree.AppendElement(AccessibleData(id, role, childCount, interfaces));
   for (uint32_t i = 0; i < childCount; i++)
     SerializeTree(aRoot->GetChildAt(i), aTree);
 }
@@ -115,6 +127,20 @@ DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAt
     aAttributes->AppendElement(Attribute(name, value));
     }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTextSubstring(const uint64_t& aID,
+                                      const int32_t& aStartOffset,
+                                      const int32_t& aEndOffset,
+                                      nsString* aText)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!acc || !acc->IsHyperText())
+    return false;
+
+  acc->AsHyperText()->TextSubstring(aStartOffset, aEndOffset, *aText);
   return true;
 }
 }
