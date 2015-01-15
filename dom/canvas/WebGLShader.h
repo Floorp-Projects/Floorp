@@ -6,25 +6,17 @@
 #ifndef WEBGL_SHADER_H_
 #define WEBGL_SHADER_H_
 
+#include "GLDefs.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
-#include "WebGLUniformInfo.h"
 
 namespace mozilla {
 
-struct WebGLMappedIdentifier
-{
-    // ASCII strings
-    nsCString original;
-    nsCString mapped;
-
-    WebGLMappedIdentifier(const nsACString& o, const nsACString& m)
-        : original(o)
-        , mapped(m)
-    {}
-};
+namespace webgl {
+class ShaderValidator;
+} // namespace webgl
 
 class WebGLShader MOZ_FINAL
     : public nsWrapperCache
@@ -38,67 +30,57 @@ class WebGLShader MOZ_FINAL
 public:
     WebGLShader(WebGLContext* webgl, GLenum type);
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+protected:
+    ~WebGLShader();
 
-    GLuint GLName() { return mGLName; }
-    sh::GLenum ShaderType() { return mType; }
+public:
+    // GL funcs
+    void CompileShader();
+    JS::Value GetShaderParameter(GLenum pname) const;
+    void GetShaderInfoLog(nsAString* out) const;
+    void GetShaderSource(nsAString* out) const;
+    void GetShaderTranslatedSource(nsAString* out) const;
+    void ShaderSource(const nsAString& source);
 
-    void SetSource(const nsAString& src) {
-        // TODO: Do some quick gzip here maybe? Getting this will be very rare,
-        // and we have to keep it forever.
-        mSource.Assign(src);
+    // Util funcs
+    bool CanLinkTo(const WebGLShader* prev, nsCString* const out_log) const;
+    size_t CalcNumSamplerUniforms() const;
+    void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
+    bool FindAttribUserNameByMappedName(const nsACString& mappedName,
+                                        nsDependentCString* const out_userName) const;
+    bool FindUniformByMappedName(const nsACString& mappedName,
+                                 nsCString* const out_userName,
+                                 bool* const out_isArray) const;
+
+    bool IsCompiled() const {
+        return mTranslationSuccessful && mCompilationSuccessful;
     }
 
-    const nsString& Source() const { return mSource; }
-
-    void SetNeedsTranslation() { mNeedsTranslation = true; }
-    bool NeedsTranslation() const { return mNeedsTranslation; }
-
-    void SetCompileStatus (bool status) {
-        mCompileStatus = status;
-    }
-
+    // Other funcs
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
     void Delete();
 
-    bool CompileStatus() const {
-        return mCompileStatus;
-    }
+    WebGLContext* GetParentObject() const { return Context(); }
 
-    void SetTranslationSuccess();
-
-    void SetTranslationFailure(const nsCString& msg) {
-        mTranslationLog.Assign(msg);
-    }
-
-    const nsCString& TranslationLog() const { return mTranslationLog; }
-
-    const nsString& TranslatedSource() const { return mTranslatedSource; }
-
-    WebGLContext* GetParentObject() const {
-        return Context();
-    }
-
-    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* js) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShader)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)
 
+public:
+    const GLuint mGLName;
+    const GLenum mType;
 protected:
-    ~WebGLShader() {
-        DeleteOnce();
-    }
-
-    GLuint mGLName;
-    GLenum mType;
     nsString mSource;
-    nsString mTranslatedSource;
-    nsCString mTranslationLog; // The translation log should contain only ASCII characters
-    bool mNeedsTranslation;
-    nsTArray<WebGLMappedIdentifier> mAttributes;
-    nsTArray<WebGLMappedIdentifier> mUniforms;
-    nsTArray<WebGLUniformInfo> mUniformInfos;
-    int mAttribMaxNameLength;
-    bool mCompileStatus;
+    nsCString mCleanSource;
+
+    UniquePtr<webgl::ShaderValidator> mValidator;
+    nsCString mValidationLog;
+    bool mTranslationSuccessful;
+    nsCString mTranslatedSource;
+
+    bool mCompilationSuccessful;
+    nsCString mCompilationLog;
 };
 
 } // namespace mozilla

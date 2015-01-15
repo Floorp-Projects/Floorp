@@ -48,7 +48,7 @@ public:
 
     WebGLContext* GetParentObject() const {
         return Context();
-    };
+    }
 
     virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
