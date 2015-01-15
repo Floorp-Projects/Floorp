@@ -120,7 +120,7 @@ struct VMFunction
     // The root type of the out param if outParam == Type_Handle.
     RootType outParamRootType;
 
-    // PJS FIXME: get rid of executionMode
+    // PJS FIXME bug 1121434: get rid of executionMode
     ExecutionMode executionMode;
 
     // Number of Values the VM wrapper should pop from the stack when it returns.
@@ -484,7 +484,7 @@ template <> struct OutParamToRootType<MutableHandleString> {
 #define SEP_OR(_) |
 #define NOTHING(_)
 
-// PJS FIXME: get rid of executionMode()
+// PJS FIXME bug 1121434: get rid of executionMode()
 #define FUNCTION_INFO_STRUCT_BODY(ForEachNb)                                            \
     static inline ExecutionMode executionMode() {                                       \
         return SequentialExecution;                                                     \
@@ -538,7 +538,7 @@ template <class R, class Context>
 struct FunctionInfo<R (*)(Context)> : public VMFunction {
     typedef R (*pf)(Context);
 
-    // PJS FIXME: get rid of executionMode()
+    // PJS FIXME bug 1121434: get rid of executionMode()
     static inline ExecutionMode executionMode() {
         return SequentialExecution;
     }

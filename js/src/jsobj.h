@@ -1102,15 +1102,6 @@ LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **
                    Shape **propp);
 
 bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
-
-inline bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, PropertyName *name, Value *vp)
-{
-    return GetPropertyPure(cx, obj, NameToId(name), vp);
-}
-
-bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
@@ -1127,9 +1118,6 @@ IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
 // that way because we need a Rooted temporary in this method anyway.
 extern bool
 IsDelegateOfObject(JSContext *cx, HandleObject protoObj, JSObject* obj, bool *result);
-
-bool
-GetObjectElementOperationPure(ExclusiveContext *cx, JSObject *obj, const Value &prop, Value *vp);
 
 /* Wrap boolean, number or string as Boolean, Number or String object. */
 extern JSObject *

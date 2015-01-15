@@ -608,12 +608,6 @@ PerThreadData::initJitStackLimit()
 }
 
 void
-PerThreadData::initJitStackLimitPar(uintptr_t limit)
-{
-    jitStackLimit_ = limit;
-}
-
-void
 JSRuntime::requestInterrupt(InterruptMode mode)
 {
     interrupt_ = true;
@@ -816,9 +810,9 @@ js::CurrentThreadCanAccessZone(Zone *zone)
     if (CurrentThreadCanAccessRuntime(zone->runtime_))
         return true;
 
-    // Only zones in use by an exclusive thread can be used off the main thread
-    // or outside of PJS. We don't keep track of which thread owns such zones
-    // though, so this check is imperfect.
+    // Only zones in use by an exclusive thread can be used off the main thread.
+    // We don't keep track of which thread owns such zones though, so this check
+    // is imperfect.
     return zone->usedByExclusiveThread;
 }
 

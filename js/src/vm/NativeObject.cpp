@@ -2118,8 +2118,6 @@ baseops::SetPropertyHelper(JSContext *cx, HandleNativeObject obj, HandleObject r
         //   doesn't have that many elements.
         // - We're being called from a resolve hook to assign to the property
         //   being resolved.
-        // - We're running in parallel mode so we've already done the whole
-        //   lookup (in LookupPropertyPure above).
         // What they all have in common is we do not want to keep walking
         // the prototype chain.
         RootedObject proto(cx, done ? nullptr : pobj->getProto());
