@@ -19,9 +19,6 @@
 #include "frontend/SourceNotes.h"
 
 namespace js {
-
-class StaticEvalObject;
-
 namespace frontend {
 
 class FullParseHandler;
@@ -119,8 +116,6 @@ struct BytecodeEmitter
     Parser<FullParseHandler> *const parser;
 
     HandleScript    evalCaller;     /* scripted caller info for eval and dbgapi */
-    Handle<StaticEvalObject *> evalStaticScope;
-                                   /* compile time scope for eval; does not imply stmt stack */
 
     StmtInfoBCE     *topStmt;       /* top of statement info stack */
     StmtInfoBCE     *topScopeStmt;  /* top lexical scope statement */
@@ -202,8 +197,7 @@ struct BytecodeEmitter
      */
     BytecodeEmitter(BytecodeEmitter *parent, Parser<FullParseHandler> *parser, SharedContext *sc,
                     HandleScript script, Handle<LazyScript *> lazyScript,
-                    bool insideEval, HandleScript evalCaller,
-                    Handle<StaticEvalObject *> evalStaticScope, bool hasGlobalScope,
+                    bool insideEval, HandleScript evalCaller, bool hasGlobalScope,
                     uint32_t lineNum, EmitterMode emitterMode = Normal);
     bool init();
     bool updateLocalsToFrameSlots();

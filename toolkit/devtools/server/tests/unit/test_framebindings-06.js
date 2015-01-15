@@ -39,6 +39,9 @@ function test_banana_environment()
       equal(parent.type, "block");
       ok("banana2" in parent.bindings.variables);
       parent = parent.parent;
+      equal(parent.type, "block");
+      ok("banana2" in parent.bindings.variables);
+      parent = parent.parent;
       equal(parent.type, "function");
       equal(parent.function.name, "banana");
 
