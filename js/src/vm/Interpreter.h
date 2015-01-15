@@ -246,7 +246,7 @@ UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc);
 
 // Unwind all scopes.
 extern void
-UnwindAllScopesInFrame(JSContext *cx, ScopeIter &si);
+UnwindAllScopes(JSContext *cx, ScopeIter &si);
 
 // Compute the pc needed to unwind the scope to the beginning of the block
 // pointed to by the try note.

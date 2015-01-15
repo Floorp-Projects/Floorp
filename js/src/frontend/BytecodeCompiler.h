@@ -17,7 +17,6 @@ class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
 class ScriptSourceObject;
-class StaticEvalObject;
 struct SourceCompressionTask;
 
 namespace frontend {
@@ -25,7 +24,6 @@ namespace frontend {
 JSScript *
 CompileScript(ExclusiveContext *cx, LifoAlloc *alloc,
               HandleObject scopeChain, HandleScript evalCaller,
-              Handle<StaticEvalObject *> evalStaticScope,
               const ReadOnlyCompileOptions &options, SourceBufferHolder &srcBuf,
               JSString *source_ = nullptr, unsigned staticLevel = 0,
               SourceCompressionTask *extraSct = nullptr);

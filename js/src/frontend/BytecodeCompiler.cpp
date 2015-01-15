@@ -210,7 +210,6 @@ frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOp
 JSScript *
 frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject scopeChain,
                         HandleScript evalCaller,
-                        Handle<StaticEvalObject *> evalStaticScope,
                         const ReadOnlyCompileOptions &options,
                         SourceBufferHolder &srcBuf,
                         JSString *source_ /* = nullptr */,
@@ -285,7 +284,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     GlobalSharedContext globalsc(cx, scopeChain, directives, options.extraWarningsOption);
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, evalStaticScope, savedCallerFun,
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), savedCallerFun,
                                                   options, staticLevel, sourceObject, 0,
                                                   srcBuf.length()));
     if (!script)
@@ -301,7 +300,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         options.selfHostingMode ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc, script,
                         /* lazyScript = */ js::NullPtr(), options.forEval,
-                        evalCaller, evalStaticScope, !!globalScope, options.lineno, emitterMode);
+                        evalCaller, !!globalScope, options.lineno, emitterMode);
     if (!bce.init())
         return nullptr;
 
@@ -517,7 +516,6 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
                         options.forEval, /* evalCaller = */ js::NullPtr(),
-                        /* evalStaticScope = */ js::NullPtr(),
                         /* hasGlobalScope = */ true, options.lineno,
                         BytecodeEmitter::LazyFunction);
     if (!bce.init())
@@ -650,7 +648,6 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
                                /* lazyScript = */ js::NullPtr(), /* insideEval = */ false,
                                /* evalCaller = */ js::NullPtr(),
-                               /* evalStaticScope = */ js::NullPtr(),
                                fun->environment() && fun->environment()->is<GlobalObject>(),
                                options.lineno);
         if (!funbce.init())
