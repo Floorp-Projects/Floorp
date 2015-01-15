@@ -33,6 +33,8 @@ ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 }
 
 static const PLDHashTableOps gSetOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   ObjectSetMatchEntry,
   PL_DHashMoveEntryStub,
