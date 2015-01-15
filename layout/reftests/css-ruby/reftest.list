@@ -8,6 +8,10 @@ fails == autohiding-3.html autohiding-3-ref.html # bug 1107701
 == box-generation-3.html box-generation-3-ref.html
 == box-generation-4.html box-generation-4-ref.html
 == box-generation-5.html box-generation-5-ref.html
+== box-properties-1.html box-properties-1-ref.html
+== box-properties-2.html box-properties-2-ref.html
+== box-properties-3.html box-properties-3-ref.html
+== box-properties-4.html box-properties-4-ref.html
 == dynamic-insertion-1.html dynamic-insertion-1-ref.html
 == dynamic-insertion-2.html dynamic-insertion-2-ref.html
 == dynamic-insertion-3.html dynamic-insertion-3-ref.html
