@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1055667 - Box properties on ruby boxes</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .inside {
+      display: inline-block;
+      width: 50px; height: 10px;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+  <div style="width: 80px">
+    <span style="background: silver; padding: 0 20px; border: 10px solid gray; border-width: 0 10px;"
+      ><div class="inside"></div
+      ><div class="inside" style="padding: 0 15px;"></div
+      ><div class="inside"></div
+    ></span>
+  </div>
+</body>
+</html>
