@@ -75,11 +75,11 @@ namespace {
 struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
 {
   PostMessageData(BroadcastChannelParent* aParent,
-                  const nsAString& aMessage,
+                  const BroadcastChannelMessageData& aData,
                   const nsAString& aOrigin,
                   const nsAString& aChannel)
     : mParent(aParent)
-    , mMessage(aMessage)
+    , mData(aData)
     , mOrigin(aOrigin)
     , mChannel(aChannel)
   {
@@ -93,7 +93,7 @@ struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
   }
 
   BroadcastChannelParent* mParent;
-  const nsString mMessage;
+  const BroadcastChannelMessageData& mData;
   const nsString mOrigin;
   const nsString mChannel;
 };
@@ -108,7 +108,7 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
   MOZ_ASSERT(parent);
 
   if (parent != data->mParent) {
-    parent->CheckAndDeliver(data->mMessage, data->mOrigin, data->mChannel);
+    parent->CheckAndDeliver(data->mData, data->mOrigin, data->mChannel);
   }
 
   return PL_DHASH_NEXT;
@@ -118,7 +118,7 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
 
 void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
-                                     const nsAString& aMessage,
+                                     const BroadcastChannelMessageData& aData,
                                      const nsAString& aOrigin,
                                      const nsAString& aChannel)
 {
@@ -126,7 +126,7 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mAgents.Contains(aParent));
 
-  PostMessageData data(aParent, aMessage, aOrigin, aChannel);
+  PostMessageData data(aParent, aData, aOrigin, aChannel);
   mAgents.EnumerateEntries(PostMessageEnumerator, &data);
 }
 

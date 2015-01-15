@@ -24,6 +24,7 @@ class WorkerFeature;
 }
 
 class BroadcastChannelChild;
+struct BroadcastChannelMessage;
 
 class BroadcastChannel MOZ_FINAL
   : public DOMEventTargetHelper
@@ -55,7 +56,8 @@ public:
     aName = mChannel;
   }
 
-  void PostMessage(const nsAString& aMessage, ErrorResult& aRv);
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   ErrorResult& aRv);
 
   void Close();
 
@@ -85,12 +87,15 @@ private:
 
   ~BroadcastChannel();
 
-  void PostMessageInternal(const nsAString& aMessage);
+  void PostMessageData(BroadcastChannelMessage* aData);
+
+  void PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                           ErrorResult& aRv);
 
   void UpdateMustKeepAlive();
 
   nsRefPtr<BroadcastChannelChild> mActor;
-  nsTArray<nsString> mPendingMessages;
+  nsTArray<nsRefPtr<BroadcastChannelMessage>> mPendingMessages;
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 

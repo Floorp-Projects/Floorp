@@ -8,6 +8,9 @@
 #include "jsapi.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/StructuredCloneUtils.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "WorkerPrivate.h"
@@ -34,7 +37,7 @@ BroadcastChannelChild::~BroadcastChannelChild()
 }
 
 bool
-BroadcastChannelChild::RecvNotify(const nsString& aMessage)
+BroadcastChannelChild::RecvNotify(const BroadcastChannelMessageData& aData)
 {
   nsCOMPtr<DOMEventTargetHelper> helper = mBC;
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
@@ -50,39 +53,36 @@ BroadcastChannelChild::RecvNotify(const nsString& aMessage)
     return true;
   }
 
-  if (NS_IsMainThread()) {
-    AutoJSAPI autoJS;
-    if (!autoJS.Init(mBC->GetParentObject())) {
-      NS_WARNING("Dropping message");
-      return true;
-    }
+  AutoJSAPI jsapi;
+  nsCOMPtr<nsIGlobalObject> globalObject;
 
-    Notify(autoJS.cx(), aMessage);
+  if (NS_IsMainThread()) {
+    globalObject = do_QueryInterface(mBC->GetParentObject());
+  } else {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    globalObject = workerPrivate->GlobalScope();
+  }
+
+  if (!globalObject || !jsapi.Init(globalObject)) {
+    NS_WARNING("Failed to initialize AutoJSAPI object.");
     return true;
   }
 
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
+  JSContext* cx = jsapi.cx();
 
-  Notify(workerPrivate->GetJSContext(), aMessage);
-  return true;
-}
+  const SerializedStructuredCloneBuffer& buffer = aData.data();
+  StructuredCloneData cloneData;
+  cloneData.mData = buffer.data;
+  cloneData.mDataLength = buffer.dataLength;
 
-void
-BroadcastChannelChild::Notify(JSContext* aCx, const nsString& aMessage)
-{
-  JS::Rooted<JSString*> str(aCx,
-                            JS_NewUCStringCopyN(aCx, aMessage.get(),
-                                                aMessage.Length()));
-  if (!str) {
-    // OOM, no exception needed.
-    NS_WARNING("Failed allocating a JS string. Probably OOM.");
-    return;
+  JS::Rooted<JS::Value> value(cx, JS::NullValue());
+  if (cloneData.mDataLength && !ReadStructuredClone(cx, cloneData, &value)) {
+    JS_ClearPendingException(cx);
+    return false;
   }
 
-  JS::Rooted<JS::Value> value(aCx, JS::StringValue(str));
-
-  RootedDictionary<MessageEventInit> init(aCx);
+  RootedDictionary<MessageEventInit> init(cx);
   init.mBubbles = false;
   init.mCancelable = false;
   init.mOrigin.Construct(mOrigin);
@@ -93,13 +93,15 @@ BroadcastChannelChild::Notify(JSContext* aCx, const nsString& aMessage)
     MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to create a MessageEvent object.");
-    return;
+    return true;
   }
 
   event->SetTrusted(true);
 
   bool status;
   mBC->DispatchEvent(static_cast<Event*>(event.get()), &status);
+
+  return true;
 }
 
 void
