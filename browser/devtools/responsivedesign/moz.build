@@ -4,8 +4,7 @@
 
 EXTRA_JS_MODULES.devtools += [
     'resize-commands.js',
-    'responsivedesign-child.js',
-    'responsivedesign.jsm'
+    'responsivedesign.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
