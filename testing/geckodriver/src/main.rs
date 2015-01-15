@@ -2,20 +2,24 @@
 #![allow(unstable)]
 #![allow(non_snake_case)]
 
-
 #[macro_use] extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate core;
 extern crate getopts;
 extern crate hyper;
 extern crate regex;
+#[macro_use] extern crate webdriver;
 
 use getopts::{usage,optflag, getopts, OptGroup};
-use httpserver::start;
 use std::io::net::ip::SocketAddr;
 use std::str::FromStr;
 use std::io;
 use std::os;
+
+use webdriver::common::WebDriverError;
+use webdriver::httpserver::start;
+
+use marionette::MarionetteHandler;
 
 macro_rules! try_opt {
     ($expr:expr, $err_type:expr, $err_msg:expr) => ({
@@ -26,12 +30,7 @@ macro_rules! try_opt {
     })
 }
 
-mod command;
-mod common;
-mod httpserver;
 mod marionette;
-mod messagebuilder;
-mod response;
 
 static DEFAULT_ADDR: &'static str = "127.0.0.1:4444";
 static VERSION: &'static str = include_str!("../.version");
@@ -99,7 +98,7 @@ fn run(args: Vec<String>) -> Result<(), isize> {
         }
     };
 
-    start(addr.ip, addr.port);
+    start(addr.ip, addr.port, MarionetteHandler::new());
     return Ok(());
 }
 
