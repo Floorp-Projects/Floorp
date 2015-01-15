@@ -44,8 +44,9 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   nsCOMPtr<DOMEventTargetHelper> helper = mBC;
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
 
-  // This object is going to be deleted soon. No notify is required.
-  if (!eventTarget) {
+  // This object has been already closed by content or is going to be deleted
+  // soon. No notify is required.
+  if (!eventTarget || mBC->IsClosed()) {
     return true;
   }
 

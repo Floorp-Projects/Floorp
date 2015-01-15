@@ -232,6 +232,37 @@ private:
 
 NS_IMPL_ISUPPORTS(PostMessageRunnable, nsICancelableRunnable, nsIRunnable)
 
+class CloseRunnable MOZ_FINAL : public nsICancelableRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  CloseRunnable(BroadcastChannel* aBC)
+    : mBC(aBC)
+  {
+    MOZ_ASSERT(mBC);
+  }
+
+  NS_IMETHODIMP Run()
+  {
+    mBC->Shutdown();
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP Cancel()
+  {
+    mBC = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~CloseRunnable() {}
+
+  nsRefPtr<BroadcastChannel> mBC;
+};
+
+NS_IMPL_ISUPPORTS(CloseRunnable, nsICancelableRunnable, nsIRunnable)
+
 class TeardownRunnable MOZ_FINAL : public nsICancelableRunnable
 {
 public:
@@ -480,7 +511,12 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     new BroadcastChannel(window, principalInfo, origin, aChannel);
 
   // Register this component to PBackground.
-  ipc::BackgroundChild::GetOrCreateForCurrentThread(bc);
+  PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
+  if (actor) {
+    bc->ActorCreated(actor);
+  } else {
+    BackgroundChild::GetOrCreateForCurrentThread(bc);
+  }
 
   if (!workerPrivate) {
     MOZ_ASSERT(window);
@@ -556,7 +592,16 @@ BroadcastChannel::Close()
   }
 
   if (mPendingMessages.IsEmpty()) {
-    Shutdown();
+    // We cannot call Shutdown() immediatelly because we could have some
+    // postMessage runnable already dispatched. Instead, we change the state to
+    // StateClosed and we shutdown the actor asynchrounsly.
+
+    mState = StateClosed;
+    nsRefPtr<CloseRunnable> runnable = new CloseRunnable(this);
+
+    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
+      NS_WARNING("Failed to dispatch to the current thread!");
+    }
   } else {
     MOZ_ASSERT(!mActor);
     mState = StateClosing;
@@ -570,7 +615,7 @@ BroadcastChannel::ActorFailed()
 }
 
 void
-BroadcastChannel::ActorCreated(ipc::PBackgroundChild* aActor)
+BroadcastChannel::ActorCreated(PBackgroundChild* aActor)
 {
   MOZ_ASSERT(aActor);
 
