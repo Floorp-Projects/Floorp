@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1107592</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1107592 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function checkExn(lineNumber, message, filename, testNumber, exn) {
+    ise(exn.lineNumber, lineNumber,
+        "Should have the right line number in test " + testNumber);
+    ise("filename" in exn ? exn.filename : exn.fileName, filename,
+        "Should have the right file name in test " + testNumber);
+    ise(exn.message, message,
+        "Should have the right message in test " + testNumber);
+    if (message === "") {
+      ise(exn.name, "NS_ERROR_UNEXPECTED",
+          "Should have one of our synthetic exceptions in test " + testNumber);
+    }
+  }
+
+  function ensurePromiseFail(testNumber, value) {
+    ok(false, "Test " + testNumber + " should not have a fulfilled promise");
+  }
+
+  function doTest() {
+    var t = new TestInterfaceJS();
+
+    var ourFile = "http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html";
+
+    Promise.all([
+      t.testPromiseWithThrowingChromePromiseInit().then(
+          ensurePromiseFail.bind(null, 1),
+          checkExn.bind(null, 40, "", ourFile, 1)),
+      t.testPromiseWithThrowingContentPromiseInit(function() {
+          thereIsNoSuchContentFunction1();
+        }).then(
+          ensurePromiseFail.bind(null, 2),
+          checkExn.bind(null, 44,
+                        "thereIsNoSuchContentFunction1 is not defined",
+                        ourFile, 2)),
+      t.testPromiseWithThrowingChromeThenFunction().then(
+          ensurePromiseFail.bind(null, 3),
+          checkExn.bind(null, 0, "", "", 3)),
+      t.testPromiseWithThrowingContentThenFunction(function() {
+          thereIsNoSuchContentFunction2();
+        }).then(
+          ensurePromiseFail.bind(null, 4),
+          checkExn.bind(null, 54,
+                        "thereIsNoSuchContentFunction2 is not defined",
+                        ourFile, 4)),
+      t.testPromiseWithThrowingChromeThenable().then(
+          ensurePromiseFail.bind(null, 5),
+          checkExn.bind(null, 0, "", "", 5)),
+      t.testPromiseWithThrowingContentThenable({
+            then: function() { thereIsNoSuchContentFunction3(); }
+        }).then(
+          ensurePromiseFail.bind(null, 6),
+          checkExn.bind(null, 64,
+                        "thereIsNoSuchContentFunction3 is not defined",
+                        ourFile, 6)),
+    ]).then(SimpleTest.finish,
+            function() {
+              ok(false, "One of our catch statements totally failed");
+              SimpleTest.finish();
+            });
+  }
+
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                            doTest);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107592">Mozilla Bug 1107592</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
