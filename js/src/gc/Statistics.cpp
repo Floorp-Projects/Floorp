@@ -882,8 +882,8 @@ Statistics::beginPhase(Phase phase)
     //
     // Reuse this mechanism for managing PHASE_MUTATOR.
     if (parent == PHASE_GC_BEGIN || parent == PHASE_GC_END || parent == PHASE_MUTATOR) {
-        MOZ_ASSERT(suspendedPhaseNestingDepth < mozilla::ArrayLength(suspendedPhases));
         suspendedPhases[suspendedPhaseNestingDepth++] = parent;
+        MOZ_ASSERT(suspendedPhaseNestingDepth <= mozilla::ArrayLength(suspendedPhases));
         recordPhaseEnd(parent);
         parent = phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : PHASE_NO_PARENT;
     }
