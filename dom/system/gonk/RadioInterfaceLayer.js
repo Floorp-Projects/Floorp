@@ -1666,7 +1666,7 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   aWorkerMessenger.registerClient(aClientId, this);
 
   this.rilContext = {
-    cardState:      Ci.nsIIccProvider.CARD_STATE_UNKNOWN,
+    cardState:      Ci.nsIIcc.CARD_STATE_UNKNOWN,
     iccInfo:        null,
     imsi:           null
   };
@@ -1764,8 +1764,8 @@ RadioInterface.prototype = {
 
   isCardPresent: function() {
     let cardState = this.rilContext.cardState;
-    return cardState !== Ci.nsIIccProvider.CARD_STATE_UNDETECTED &&
-      cardState !== Ci.nsIIccProvider.CARD_STATE_UNKNOWN;
+    return cardState !== Ci.nsIIcc.CARD_STATE_UNDETECTED &&
+      cardState !== Ci.nsIIcc.CARD_STATE_UNKNOWN;
   },
 
   /**
