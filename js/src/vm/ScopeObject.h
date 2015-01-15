@@ -281,6 +281,7 @@ class CallObject : public ScopeObject
 
     static CallObject *createForFunction(JSContext *cx, AbstractFramePtr frame);
     static CallObject *createForStrictEval(JSContext *cx, AbstractFramePtr frame);
+    static CallObject *createHollowForDebug(JSContext *cx, HandleFunction callee);
 
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
@@ -633,9 +634,15 @@ class StaticBlockObject : public BlockObject
 
 class ClonedBlockObject : public BlockObject
 {
+    static ClonedBlockObject *create(JSContext *cx, Handle<StaticBlockObject *> block,
+                                     HandleObject enclosing);
+
   public:
     static ClonedBlockObject *create(JSContext *cx, Handle<StaticBlockObject *> block,
                                      AbstractFramePtr frame);
+
+    static ClonedBlockObject *createHollowForDebug(JSContext *cx,
+                                                   Handle<StaticBlockObject *> block);
 
     /* The static block from which this block was cloned. */
     StaticBlockObject &staticBlock() const {
@@ -758,8 +765,18 @@ class ScopeIter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-// The key in MissingScopeMap, used to map live frames to their synthesized
-// scopes.
+// The key in MissingScopeMap. For live frames, maps live frames to their
+// synthesized scopes. For completely optimized-out scopes, maps the static
+// scope objects to their synthesized scopes. The scopes we synthesize for
+// static scope objects are read-only, and we never use their parent links, so
+// they don't need to be distinct.
+//
+// That is, completely optimized out scopes have can't be distinguished by
+// frame. Note that even if the frame corresponding to the static scope is
+// live on the stack, it is unsound to synthesize a scope from that live
+// frame. In other words, the provenance of the scope chain is from allocated
+// closures (i.e., allocation sites) and is irrecoverable from simple stack
+// inspection (i.e., call sites).
 class MissingScopeKey
 {
     friend class LiveScopeVal;
@@ -786,7 +803,7 @@ class MissingScopeKey
     bool operator!=(const MissingScopeKey &other) const {
         return frame_ != other.frame_ || staticScope_ != other.staticScope_;
     }
-    static void rekey(MissingScopeKey &k, const MissingScopeKey& newKey) {
+    static void rekey(MissingScopeKey &k, const MissingScopeKey &newKey) {
         k = newKey;
     }
 };
@@ -879,6 +896,10 @@ class DebugScopeObject : public ProxyObject
     // Get a property by 'id', but returns sentinel values instead of throwing
     // on exceptional cases.
     bool getMaybeSentinelValue(JSContext *cx, HandleId id, MutableHandleValue vp);
+
+    // Does this debug scope not have a dynamic counterpart or was never live
+    // (and thus does not have a synthesized ScopeObject or a snapshot)?
+    bool isOptimizedOut() const;
 };
 
 /* Maintains per-compartment debug scope bookkeeping information. */
