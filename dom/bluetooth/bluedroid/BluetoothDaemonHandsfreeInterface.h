@@ -37,7 +37,8 @@ public:
     OPCODE_FORMATTED_AT_RESPONSE = 0x0b,
     OPCODE_AT_RESPONSE = 0x0c,
     OPCODE_CLCC_RESPONSE = 0x0d,
-    OPCODE_PHONE_STATE_CHANGE = 0x0e
+    OPCODE_PHONE_STATE_CHANGE = 0x0e,
+    OPCODE_CONFIGURE_WBS = 0x0f
   };
 
   virtual nsresult Send(BluetoothDaemonPDU* aPDU, void* aUserData) = 0;
@@ -200,6 +201,10 @@ protected:
   void PhoneStateChangeRsp(const BluetoothDaemonPDUHeader& aHeader,
                            BluetoothDaemonPDU& aPDU,
                            BluetoothHandsfreeResultHandler* aRes);
+
+  void ConfigureWbsRsp(const BluetoothDaemonPDUHeader& aHeader,
+                       BluetoothDaemonPDU& aPDU,
+                       BluetoothHandsfreeResultHandler* aRes);
 
   void HandleRsp(const BluetoothDaemonPDUHeader& aHeader,
                  BluetoothDaemonPDU& aPDU,
