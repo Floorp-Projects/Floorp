@@ -22,8 +22,7 @@ protected:
     void
     Init()
     {
-        PL_DHashTableInit(&mTable, PL_DHashGetStubOps(), nullptr,
-                          sizeof(Entry));
+        PL_DHashTableInit(&mTable, PL_DHashGetStubOps(), sizeof(Entry));
     }
 
     void

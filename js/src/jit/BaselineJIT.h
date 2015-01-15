@@ -371,20 +371,15 @@ struct BaselineScript
     uint8_t *nativeCodeForPC(JSScript *script, jsbytecode *pc,
                              PCMappingSlotInfo *slotInfo = nullptr);
 
-    jsbytecode *pcForReturnOffset(JSScript *script, uint32_t nativeOffset);
-    jsbytecode *pcForReturnAddress(JSScript *script, uint8_t *nativeAddress);
-
-    jsbytecode *pcForNativeAddress(JSScript *script, uint8_t *nativeAddress);
-    jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset);
+    // Return the bytecode offset for a given native code address. Be careful
+    // when using this method: we don't emit code for some bytecode ops, so
+    // the result may not be accurate.
+    jsbytecode *approximatePcForNativeAddress(JSScript *script, uint8_t *nativeAddress);
 
     bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
     void unlinkDependentAsmJSModules(FreeOp *fop);
     void removeDependentAsmJSModule(DependentAsmJSModuleExit exit);
 
-  private:
-    jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset, bool isReturn);
-
-  public:
     // Toggle debug traps (used for breakpoints and step mode) in the script.
     // If |pc| is nullptr, toggle traps for all ops in the script. Else, only
     // toggle traps at |pc|.

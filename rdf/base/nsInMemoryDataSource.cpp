@@ -164,7 +164,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash =
-        PL_NewDHashTable(PL_DHashGetStubOps(), nullptr, sizeof(Entry));
+        PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -790,15 +790,8 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 nsresult
 InMemoryDataSource::Init()
 {
-    PL_DHashTableInit(&mForwardArcs,
-                      PL_DHashGetStubOps(),
-                      nullptr,
-                      sizeof(Entry));
-
-    PL_DHashTableInit(&mReverseArcs,
-                      PL_DHashGetStubOps(),
-                      nullptr,
-                      sizeof(Entry));
+    PL_DHashTableInit(&mForwardArcs, PL_DHashGetStubOps(), sizeof(Entry));
+    PL_DHashTableInit(&mReverseArcs, PL_DHashGetStubOps(), sizeof(Entry));
 
 #ifdef PR_LOGGING
     if (! gLog)

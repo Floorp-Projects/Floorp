@@ -24,7 +24,11 @@ function testURL() {
       ok(res.type !== "error", "Response should not be an error for " + entry[0]);
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(res.statusText, entry[3], "Status text should match expected for " + entry[0]);
-      ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
+      // This file redirects to pass2
+      if (entry[0] != "file_XHR_pass3.txt")
+        ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
+      else
+        ok(res.url.endsWith(path + "file_XHR_pass2.txt"), "Response url should match request for simple fetch for " + entry[0]);
       is(res.headers.get('content-type'), entry[4], "Response should have content-type for " + entry[0]);
     });
     promises.push(p);
@@ -56,7 +60,10 @@ function testRequestGET() {
       ok(res.type !== "error", "Response should not be an error for " + entry[0]);
       is(res.status, entry[2], "Status should match expected for " + entry[0]);
       is(res.statusText, entry[3], "Status text should match expected for " + entry[0]);
-      ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
+      if (entry[0] != "file_XHR_pass3.txt")
+        ok(res.url.endsWith(path + entry[0]), "Response url should match request for simple fetch for " + entry[0]);
+      else
+        ok(res.url.endsWith(path + "file_XHR_pass2.txt"), "Response url should match request for simple fetch for " + entry[0]);
       is(res.headers.get('content-type'), entry[4], "Response should have content-type for " + entry[0]);
     });
     promises.push(p);

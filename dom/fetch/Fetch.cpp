@@ -971,8 +971,10 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
   nsCOMPtr<nsIInputStream> stream;
   DerivedClass()->GetBody(getter_AddRefs(stream));
   if (!stream) {
-    NS_WARNING("Could not get stream");
-    return;
+    rv = NS_NewCStringInputStream(getter_AddRefs(stream), EmptyCString());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   nsCOMPtr<nsIInputStreamPump> pump;

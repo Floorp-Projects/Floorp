@@ -303,7 +303,9 @@ HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
   // nsTextControlFrame::UpdateValueDisplay retrieves the correct value
   // if needed.
   SetValueChanged(true);
-  mState.SetValue(aValue, aUserInput, true);
+  if (!mState.SetValue(aValue, aUserInput, true)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
@@ -321,7 +323,8 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue)
   nsAutoString currentValue;
   GetValueInternal(currentValue, true);
 
-  SetValueInternal(aValue, false);
+  nsresult rv = SetValueInternal(aValue, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFocusedValue.Equals(currentValue)) {
     GetValueInternal(mFocusedValue, true);
@@ -336,8 +339,7 @@ HTMLTextAreaElement::SetUserInput(const nsAString& aValue)
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-  SetValueInternal(aValue, true);
-  return NS_OK;
+  return SetValueInternal(aValue, true);
 }
 
 NS_IMETHODIMP
@@ -966,7 +968,11 @@ HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
 
   if (aStart <= aEnd) {
     value.Replace(aStart, aEnd - aStart, aReplacement);
-    SetValueInternal(value, false);
+    nsresult rv = SetValueInternal(value, false);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
   }
 
   uint32_t newEnd = aStart + aReplacement.Length();
@@ -1019,7 +1025,8 @@ HTMLTextAreaElement::Reset()
 
   // To get the initial spellchecking, reset value to
   // empty string before setting the default value.
-  SetValue(EmptyString());
+  rv = SetValue(EmptyString());
+  NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString resetVal;
   GetDefaultValue(resetVal);
   rv = SetValue(resetVal);
@@ -1110,7 +1117,8 @@ HTMLTextAreaElement::RestoreState(nsPresState* aState)
   if (state) {
     nsAutoString data;
     state->GetData(data);
-    SetValue(data);
+    nsresult rv = SetValue(data);
+    NS_ENSURE_SUCCESS(rv, false);
   }
 
   if (aState->IsDisabledSet()) {
@@ -1294,7 +1302,7 @@ HTMLTextAreaElement::CopyInnerTo(Element* aDest)
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsAutoString value;
     GetValueInternal(value, true);
-    static_cast<HTMLTextAreaElement*>(aDest)->SetValue(value);
+    return static_cast<HTMLTextAreaElement*>(aDest)->SetValue(value);
   }
   return NS_OK;
 }

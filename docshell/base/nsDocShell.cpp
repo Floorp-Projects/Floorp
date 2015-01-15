@@ -5804,8 +5804,7 @@ nsDocShell::SetPosition(int32_t x, int32_t y)
 NS_IMETHODIMP
 nsDocShell::GetPosition(int32_t * aX, int32_t * aY)
 {
-    int32_t dummyHolder;
-    return GetPositionAndSize(aX, aY, &dummyHolder, &dummyHolder);
+    return GetPositionAndSize(aX, aY, nullptr, nullptr);
 }
 
 NS_IMETHODIMP
@@ -5819,8 +5818,7 @@ nsDocShell::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
 NS_IMETHODIMP
 nsDocShell::GetSize(int32_t * aCX, int32_t * aCY)
 {
-    int32_t dummyHolder;
-    return GetPositionAndSize(&dummyHolder, &dummyHolder, aCX, aCY);
+    return GetPositionAndSize(nullptr, nullptr, aCX, aCY);
 }
 
 NS_IMETHODIMP
@@ -9186,7 +9184,9 @@ nsDocShell::CheckLoadingPermissions()
     // Note - The check for a current JSContext here isn't necessarily sensical.
     // It's just designed to preserve the old semantics during a mass-conversion
     // patch.
-    NS_ENSURE_TRUE(nsContentUtils::GetCurrentJSContext(), NS_OK);
+    if (!nsContentUtils::GetCurrentJSContext()) {
+      return NS_OK;
+    }
 
     // Check if the caller is from the same origin as this docshell,
     // or any of its ancestors.
