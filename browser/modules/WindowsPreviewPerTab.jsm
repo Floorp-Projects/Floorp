@@ -142,6 +142,7 @@ function PreviewController(win, tab) {
   this.preview = this.win.createTabPreview(this);
 
   this.linkedBrowser.addEventListener("MozAfterPaint", this, false);
+  this.linkedBrowser.addEventListener("resize", this, false);
   this.tab.addEventListener("TabAttrModified", this, false);
 
   XPCOMUtils.defineLazyGetter(this, "canvasPreview", function () {
@@ -171,6 +172,7 @@ PreviewController.prototype = {
                                          Ci.nsIDOMEventListener]),
   destroy: function () {
     this.tab.removeEventListener("TabAttrModified", this, false);
+    this.linkedBrowser.removeEventListener("resize", this, false);
     this.linkedBrowser.removeEventListener("MozAfterPaint", this, false);
 
     // Break cycles, otherwise we end up leaking the window with everything
@@ -201,9 +203,17 @@ PreviewController.prototype = {
   // Resizes the canvasPreview to 0x0, essentially freeing its memory.
   // updateCanvasPreview() will detect the size mismatch as a resize event
   // the next time it is called.
-  resetCanvasPreview: function () {
-    this.canvasPreview.width = 0;
-    this.canvasPreview.height = 0;
+  resetCanvasPreview: function () this.resizeCanvasPreview(0, 0),
+
+  resizeCanvasPreview: function (width, height) {
+    this.canvasPreview.width = width;
+    this.canvasPreview.height = height;
+  },
+
+  get wasResizedSinceLastPreview () {
+    let bx = this.linkedBrowser.boxObject;
+    return bx.width != this.canvasPreview.width ||
+           bx.height != this.canvasPreview.height;
   },
 
   get zoom() {
@@ -219,13 +229,15 @@ PreviewController.prototype = {
   updateCanvasPreview: function () {
     let win = this.linkedBrowser.contentWindow;
     let bx = this.linkedBrowser.boxObject;
+    // If we resized then we need to flush layout so that the previews are up
+    // to date. Layout flushing for resizes is deferred for background tabs so
+    // we may need to force it. (bug 526620)
+    let flushLayout = this.wasResizedSinceLastPreview;
     // Check for resize
-    if (bx.width != this.canvasPreview.width ||
-        bx.height != this.canvasPreview.height) {
+    if (flushLayout) {
       // Invalidate the entire area and repaint
       this.onTabPaint({left:0, top:0, right:win.innerWidth, bottom:win.innerHeight});
-      this.canvasPreview.width = bx.width;
-      this.canvasPreview.height = bx.height;
+      this.resizeCanvasPreview(bx.width, bx.height);
     }
 
     // Draw dirty regions
@@ -233,6 +245,9 @@ PreviewController.prototype = {
     let scale = this.zoom;
 
     let flags = this.canvasPreviewFlags;
+    if (flushLayout)
+      flags &= ~Ci.nsIDOMCanvasRenderingContext2D.DRAWWINDOW_DO_NOT_FLUSH;
+
     // The dirty region may include parts that are offscreen so we clip to the
     // canvas area.
     this.dirtyRegion.intersectRect(0, 0, win.innerWidth, win.innerHeight);
@@ -371,6 +386,19 @@ PreviewController.prototype = {
         break;
       case "TabAttrModified":
         this.updateTitleAndTooltip();
+        break;
+      case "resize":
+        // We need to invalidate our window's other tabs' previews since layout
+        // due to resizing is delayed for background tabs. Note that this
+        // resize may not be the first after the main window has been resized -
+        // the user may be switching to our tab which forces the resize.
+        this.win.previews.forEach(function (p) {
+          let controller = p.controller.wrappedJSObject;
+          if (controller.wasResizedSinceLastPreview) {
+            controller.resetCanvasPreview();
+            p.invalidate();
+          }
+        });
         break;
     }
   }
