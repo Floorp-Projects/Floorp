@@ -31,7 +31,8 @@ class FetchDriverObserver
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchDriverObserver);
   virtual void OnResponseAvailable(InternalResponse* aResponse) = 0;
-  virtual void OnResponseEnd() = 0;
+  virtual void OnResponseEnd()
+  { };
 
 protected:
   virtual ~FetchDriverObserver()
