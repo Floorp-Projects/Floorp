@@ -269,8 +269,6 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
 #endif
   mSourceBuffer(new SourceBuffer()),
   mFrameCount(0),
-  mNotifyProgress(NoProgress),
-  mNotifying(false),
   mHasSize(false),
   mDecodeOnDraw(false),
   mTransient(false),
@@ -1857,43 +1855,14 @@ RasterImage::NotifyProgress(Progress aProgress,
   nsRefPtr<RasterImage> image(this);
 
   bool wasDefaultFlags = aFlags == DECODE_FLAGS_DEFAULT;
-  Progress progress = aProgress;
-  nsIntRect invalidRect = aInvalidRect;
 
-  if (!invalidRect.IsEmpty() && wasDefaultFlags) {
+  if (!aInvalidRect.IsEmpty() && wasDefaultFlags) {
     // Update our image container since we're invalidating.
     UpdateImageContainer();
   }
 
-  if (mNotifying) {
-    // Accumulate the progress changes. We don't permit recursive notifications
-    // because they cause subtle concurrency bugs, so we'll delay sending out
-    // the notifications until we pop back to the lowest invocation of
-    // NotifyProgress on the stack.
-    mNotifyProgress |= progress;
-    mNotifyInvalidRect.Union(invalidRect);
-  } else {
-    MOZ_ASSERT(mNotifyProgress == NoProgress && mNotifyInvalidRect.IsEmpty(),
-               "Shouldn't have an accumulated change at this point");
-
-    progress = image->mProgressTracker->Difference(progress);
-
-    while (progress != NoProgress || !invalidRect.IsEmpty()) {
-      // Tell the observers what happened.
-      mNotifying = true;
-      image->mProgressTracker->SyncNotifyProgress(progress, invalidRect);
-      mNotifying = false;
-
-      // Gather any progress changes that may have occurred as a result of sending
-      // out the previous notifications. If there were any, we'll send out
-      // notifications for them next.
-      progress = image->mProgressTracker->Difference(mNotifyProgress);
-      mNotifyProgress = NoProgress;
-
-      invalidRect = mNotifyInvalidRect;
-      mNotifyInvalidRect = nsIntRect();
-    }
-  }
+  // Tell the observers what happened.
+  image->mProgressTracker->SyncNotifyProgress(aProgress, aInvalidRect);
 }
 
 void
