@@ -532,6 +532,8 @@ def apply_patches():
     os.system("patch -p0 < stdint.patch")
     # Patch to allow older versions of Apple's clang to build libvpx.
     os.system("patch -p3 < apple-clang.patch")
+    # Patch to allow MSVC 2015 to compile libvpx
+    os.system("patch -p3 < msvc2015.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

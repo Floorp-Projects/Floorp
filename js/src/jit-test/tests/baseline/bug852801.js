@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| allow-oom; allow-unhandlable-oom
 var STATUS = "STATUS: ";
 var callStack = new Array();
 function startTest() { }

@@ -277,11 +277,11 @@ MediaKeySession::GetUsableKeyIds(ErrorResult& aRv)
 }
 
 void
-MediaKeySession::DispatchKeyMessage(const nsTArray<uint8_t>& aMessage,
-                                    const nsAString& aURL)
+MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
+                                    const nsTArray<uint8_t>& aMessage)
 {
   nsRefPtr<MediaKeyMessageEvent> event(
-    MediaKeyMessageEvent::Constructor(this, aURL, aMessage));
+    MediaKeyMessageEvent::Constructor(this, aMessageType, aMessage));
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();

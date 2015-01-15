@@ -34,7 +34,7 @@ PlatformShutdown()
 }
 
 void
-ProxyCreated(ProxyAccessible*)
+ProxyCreated(ProxyAccessible*, uint32_t)
 {
 }
 

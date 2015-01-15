@@ -116,6 +116,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
                                  Parser<FullParseHandler> *parser, SharedContext *sc,
                                  HandleScript script, Handle<LazyScript *> lazyScript,
                                  bool insideEval, HandleScript evalCaller,
+                                 Handle<StaticEvalObject *> staticEvalScope,
                                  bool hasGlobalScope, uint32_t lineNum, EmitterMode emitterMode)
   : sc(sc),
     parent(parent),
@@ -126,6 +127,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     current(&main),
     parser(parser),
     evalCaller(evalCaller),
+    evalStaticScope(staticEvalScope),
     topStmt(nullptr),
     topScopeStmt(nullptr),
     staticScope(sc->context),
@@ -802,7 +804,10 @@ EnclosingStaticScope(BytecodeEmitter *bce)
 
     if (!bce->sc->isFunctionBox()) {
         MOZ_ASSERT(!bce->parent);
-        return nullptr;
+
+        // Top-level eval scripts have a placeholder static scope so that
+        // StaticScopeIter may iterate through evals.
+        return bce->evalStaticScope;
     }
 
     return bce->sc->asFunctionBox()->function();
@@ -1591,8 +1596,8 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
             return false;
         RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
         for (StaticScopeIter<CanGC> ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
-            if (ssi.type() != StaticScopeIter<CanGC>::FUNCTION) {
-                if (ssi.type() == StaticScopeIter<CanGC>::BLOCK) {
+            if (ssi.type() != StaticScopeIter<CanGC>::Function) {
+                if (ssi.type() == StaticScopeIter<CanGC>::Block) {
                     // Use generic ops if a catch block is encountered.
                     return false;
                 }
@@ -5339,9 +5344,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         if (fun->isInterpretedLazy()) {
             if (!fun->lazyScript()->sourceObject()) {
-                JSObject *scope = bce->staticScope;
-                if (!scope && bce->sc->isFunctionBox())
-                    scope = bce->sc->asFunctionBox()->function();
+                JSObject *scope = EnclosingStaticScope(bce);
                 JSObject *source = bce->script->sourceObject();
                 fun->lazyScript()->setParent(scope, &source->as<ScriptSourceObject>());
             }
@@ -5377,8 +5380,8 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
             BytecodeEmitter bce2(bce, bce->parser, funbox, script, /* lazyScript = */ js::NullPtr(),
-                                 bce->insideEval, bce->evalCaller, bce->hasGlobalScope, lineNum,
-                                 bce->emitterMode);
+                                 bce->insideEval, bce->evalCaller, bce->evalStaticScope,
+                                 bce->hasGlobalScope, lineNum, bce->emitterMode);
             if (!bce2.init())
                 return false;
 

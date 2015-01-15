@@ -221,7 +221,7 @@ RegisterErrorTable()
 {
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.
-  static const struct PRErrorMessage ErrorTableText[] = {
+  static const PRErrorMessage ErrorTableText[] = {
     { "MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE",
       "The server uses key pinning (HPKP) but no trusted certificate chain "
       "could be constructed that matches the pinset. Key pinning violations "
@@ -243,7 +243,7 @@ RegisterErrorTable()
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.
 
-  static const struct PRErrorTable ErrorTable = {
+  static const PRErrorTable ErrorTable = {
     ErrorTableText,
     "pkixerrors",
     ERROR_BASE,

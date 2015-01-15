@@ -29,6 +29,29 @@ function testClone() {
   is(res.headers.get('content-length'), "5", "Response content-length should be 5.");
 }
 
+function testRedirect() {
+  var res = Response.redirect("./redirect.response");
+  is(res.status, 302, "Default redirect has status code 302");
+  var h = res.headers.get("location");
+  ok(h === (new URL("./redirect.response", self.location.href)).href, "Location header should be correct absolute URL");
+
+  var successStatus = [301, 302, 303, 307, 308];
+  for (var i = 0; i < successStatus.length; ++i) {
+    var res = Response.redirect("./redirect.response", successStatus[i]);
+    is(res.status, successStatus[i], "Status code should match");
+  }
+
+  var failStatus = [300, 0, 304, 305, 306, 309, 500];
+  for (var i = 0; i < failStatus.length; ++i) {
+    try {
+      var res = Response.redirect(".", failStatus[i]);
+      ok(false, "Invalid status code should fail " + failStatus[i]);
+    } catch(e) {
+      is(e.name, "RangeError", "Invalid status code should fail " + failStatus[i]);
+    }
+  }
+}
+
 function testBodyUsed() {
   var res = new Response("Sample body");
   ok(!res.bodyUsed, "bodyUsed is initially false.");
@@ -115,6 +138,7 @@ onmessage = function() {
 
   testDefaultCtor();
   testClone();
+  testRedirect();
 
   Promise.resolve()
     .then(testBodyCreation)
