@@ -10,11 +10,10 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("destroy");
 
 function test() {
   function isOpen() {
-    return gBrowser.getBrowserContainer(gBrowser.selectedTab.linkedBrowser)
-                   .hasAttribute("responsivemode");
+    return !!gBrowser.selectedTab.__responsiveUI;
   }
 
-  helpers.addTabWithToolbar("data:text/html;charset=utf-8,hi", function(options) {
+  helpers.addTabWithToolbar("about:blank", function(options) {
     return helpers.audit(options, [
       {
         setup: "resize toggle",
