@@ -52,9 +52,6 @@ default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
 == object-fit-scale-down-png-002p.html object-fit-scale-down-png-002-ref.html
 
 # Tests for 'object-fit' / 'object-position' with an SVG image
-# XXXdholbert Some tests below that use SVG in <embed> or <object> occasionally
-# fail on B2G. I suspect these failures are versions of bug 1110950, so I'm
-# temporarily annotating the tests as random-if(B2G) until that bug is fixed.
 == object-fit-fill-svg-001e.html object-fit-fill-svg-001-ref.html
 == object-fit-fill-svg-001i.html object-fit-fill-svg-001-ref.html
 == object-fit-fill-svg-001o.html object-fit-fill-svg-001-ref.html
@@ -83,9 +80,9 @@ fails == object-fit-fill-svg-006p.html object-fit-fill-svg-006-ref.html # bug 10
 == object-fit-contain-svg-001i.html object-fit-contain-svg-001-ref.html
 == object-fit-contain-svg-001o.html object-fit-contain-svg-001-ref.html
 == object-fit-contain-svg-001p.html object-fit-contain-svg-001-ref.html
-random-if(B2G) == object-fit-contain-svg-002e.html object-fit-contain-svg-002-ref.html # bug 1110950
+== object-fit-contain-svg-002e.html object-fit-contain-svg-002-ref.html
 == object-fit-contain-svg-002i.html object-fit-contain-svg-002-ref.html
-random-if(B2G) == object-fit-contain-svg-002o.html object-fit-contain-svg-002-ref.html # bug 1110950
+== object-fit-contain-svg-002o.html object-fit-contain-svg-002-ref.html
 == object-fit-contain-svg-002p.html object-fit-contain-svg-002-ref.html
 == object-fit-contain-svg-003e.html object-fit-contain-svg-003-ref.html
 == object-fit-contain-svg-003i.html object-fit-contain-svg-003-ref.html
@@ -111,17 +108,17 @@ random-if(B2G) == object-fit-contain-svg-002o.html object-fit-contain-svg-002-re
 == object-fit-cover-svg-002i.html object-fit-cover-svg-002-ref.html
 == object-fit-cover-svg-002o.html object-fit-cover-svg-002-ref.html
 == object-fit-cover-svg-002p.html object-fit-cover-svg-002-ref.html
-random-if(B2G) == object-fit-cover-svg-003e.html object-fit-cover-svg-003-ref.html # bug 1110950
+== object-fit-cover-svg-003e.html object-fit-cover-svg-003-ref.html
 == object-fit-cover-svg-003i.html object-fit-cover-svg-003-ref.html
-random-if(B2G) == object-fit-cover-svg-003o.html object-fit-cover-svg-003-ref.html # bug 1110950
+== object-fit-cover-svg-003o.html object-fit-cover-svg-003-ref.html
 == object-fit-cover-svg-003p.html object-fit-cover-svg-003-ref.html
-random-if(B2G) == object-fit-cover-svg-004e.html object-fit-cover-svg-004-ref.html # bug 1110950
+== object-fit-cover-svg-004e.html object-fit-cover-svg-004-ref.html
 == object-fit-cover-svg-004i.html object-fit-cover-svg-004-ref.html
-random-if(B2G) == object-fit-cover-svg-004o.html object-fit-cover-svg-004-ref.html # bug 1110950
+== object-fit-cover-svg-004o.html object-fit-cover-svg-004-ref.html
 == object-fit-cover-svg-004p.html object-fit-cover-svg-004-ref.html
-random-if(B2G) == object-fit-cover-svg-005e.html object-fit-cover-svg-005-ref.html # bug 1110950
+== object-fit-cover-svg-005e.html object-fit-cover-svg-005-ref.html
 == object-fit-cover-svg-005i.html object-fit-cover-svg-005-ref.html
-random-if(B2G) == object-fit-cover-svg-005o.html object-fit-cover-svg-005-ref.html # bug 1110950
+== object-fit-cover-svg-005o.html object-fit-cover-svg-005-ref.html
 == object-fit-cover-svg-005p.html object-fit-cover-svg-005-ref.html
 == object-fit-cover-svg-006e.html object-fit-cover-svg-006-ref.html
 == object-fit-cover-svg-006i.html object-fit-cover-svg-006-ref.html
@@ -143,9 +140,9 @@ random-if(B2G) == object-fit-cover-svg-005o.html object-fit-cover-svg-005-ref.ht
 == object-fit-none-svg-004i.html object-fit-none-svg-004-ref.html
 == object-fit-none-svg-004o.html object-fit-none-svg-004-ref.html
 == object-fit-none-svg-004p.html object-fit-none-svg-004-ref.html
-random-if(B2G) == object-fit-none-svg-005e.html object-fit-none-svg-005-ref.html # bug 1110950
+== object-fit-none-svg-005e.html object-fit-none-svg-005-ref.html
 == object-fit-none-svg-005i.html object-fit-none-svg-005-ref.html
-random-if(B2G) == object-fit-none-svg-005o.html object-fit-none-svg-005-ref.html # bug 1110950
+== object-fit-none-svg-005o.html object-fit-none-svg-005-ref.html
 == object-fit-none-svg-005p.html object-fit-none-svg-005-ref.html
 == object-fit-none-svg-006e.html object-fit-none-svg-006-ref.html
 == object-fit-none-svg-006i.html object-fit-none-svg-006-ref.html
@@ -155,9 +152,9 @@ random-if(B2G) == object-fit-none-svg-005o.html object-fit-none-svg-005-ref.html
 == object-fit-scale-down-svg-001i.html object-fit-scale-down-svg-001-ref.html
 == object-fit-scale-down-svg-001o.html object-fit-scale-down-svg-001-ref.html
 == object-fit-scale-down-svg-001p.html object-fit-scale-down-svg-001-ref.html
-random-if(B2G) == object-fit-scale-down-svg-002e.html object-fit-scale-down-svg-002-ref.html # bug 1110950
+== object-fit-scale-down-svg-002e.html object-fit-scale-down-svg-002-ref.html
 == object-fit-scale-down-svg-002i.html object-fit-scale-down-svg-002-ref.html
-random-if(B2G) == object-fit-scale-down-svg-002o.html object-fit-scale-down-svg-002-ref.html # bug 1110950
+== object-fit-scale-down-svg-002o.html object-fit-scale-down-svg-002-ref.html
 == object-fit-scale-down-svg-002p.html object-fit-scale-down-svg-002-ref.html
 == object-fit-scale-down-svg-003e.html object-fit-scale-down-svg-003-ref.html
 == object-fit-scale-down-svg-003i.html object-fit-scale-down-svg-003-ref.html
