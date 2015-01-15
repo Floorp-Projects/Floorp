@@ -15,8 +15,10 @@ buildscript {
     }
 
     dependencies {
-        // IntelliJ 14.0.2 wants 0.14.4; Android Studio wants 1.0.0.
-        classpath 'com.android.tools.build:gradle:[0.14.4,1.0.0]'
+        // IntelliJ 14.0.2 wants 0.14.4; IntelliJ 14.0.3 and Android Studio want
+        // 1.0.0.  There are major issues with the combination of 0.14.4, Gradle
+        // 2.2.1, and IntelliJ 14.0.2: see Bug 1120032.
+        classpath 'com.android.tools.build:gradle:1.0.0'
     }
 }
 
