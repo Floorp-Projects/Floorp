@@ -13,7 +13,6 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLShader.h"
 #include "WebGLTexture.h"
-#include "WebGLUniformInfo.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
