@@ -385,7 +385,7 @@ NfcContentHelper.prototype = {
       return;
     }
 
-    let ndefMsg = [];
+    let ndefMsg = new this._window.Array();
     let records = result.records;
     for (let i = 0; i < records.length; i++) {
       let record = records[i];

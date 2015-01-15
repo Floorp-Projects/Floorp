@@ -40,7 +40,6 @@ dependencies {
     }
 
     compile project(':branding')
-    compile project(':omnijar')
     compile project(':preprocessed_code')
     compile project(':preprocessed_resources')
     compile project(':thirdparty')
