@@ -8,6 +8,9 @@ const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {})
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
+const URL_ROOT = "http://example.com/browser/browser/devtools/framework/test/";
+const CHROME_URL_ROOT = "chrome://mochitests/content/browser/browser/devtools/framework/test/";
+
 let TargetFactory = devtools.TargetFactory;
 
 // All test are asynchronous
