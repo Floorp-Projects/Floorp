@@ -29,8 +29,7 @@ public:
     mBC = aBC;
   }
 
-  virtual bool RecvNotify(const BroadcastChannelMessageData& aData)
-                                                                   MOZ_OVERRIDE;
+  virtual bool RecvNotify(const ClonedMessageData& aData) MOZ_OVERRIDE;
 
   bool IsActorDestroyed() const
   {
