@@ -116,6 +116,9 @@ HwcComposer2D::HwcComposer2D()
     , mHasHWVsync(false)
     , mLock("mozilla.HwcComposer2D.mLock")
 {
+#if ANDROID_VERSION >= 17
+    RegisterHwcEventCallback();
+#endif
 }
 
 HwcComposer2D::~HwcComposer2D() {
@@ -154,8 +157,6 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur, gl::GLContext* aGLCont
         mColorFill = false;
         mRBSwapSupport = false;
     }
-
-    RegisterHwcEventCallback();
 #else
     char propValue[PROPERTY_VALUE_MAX];
     property_get("ro.display.colorfill", propValue, "0");
@@ -196,6 +197,8 @@ HwcComposer2D::EnableVsync(bool aEnable)
 
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, aEnable);
     return aEnable;
+#else
+    return false;
 #endif
 }
 
