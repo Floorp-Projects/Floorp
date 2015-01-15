@@ -8177,7 +8177,12 @@ class CGMemberJITInfo(CGThing):
         dependsOn = self.member.dependsOn
         assert affects in IDLInterfaceMember.AffectsValues
         assert dependsOn in IDLInterfaceMember.DependsOnValues
-        return affects == "Nothing" and dependsOn != "Everything"
+        # Things that are DependsOn=DeviceState are not movable, because we
+        # don't want them coalesced with each other or loop-hoisted, since
+        # their return value can change even if nothing is going on from our
+        # point of view.
+        return (affects == "Nothing" and
+                (dependsOn != "Everything" and dependsOn != "DeviceState"))
 
     def aliasSet(self):
         """Returns the alias set to store in the jitinfo.  This may not be the
@@ -8189,7 +8194,7 @@ class CGMemberJITInfo(CGThing):
         dependsOn = self.member.dependsOn
         assert dependsOn in IDLInterfaceMember.DependsOnValues
 
-        if dependsOn == "Nothing":
+        if dependsOn == "Nothing" or dependsOn == "DeviceState":
             assert self.member.affects == "Nothing"
             return "AliasNone"
 

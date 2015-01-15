@@ -3044,7 +3044,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
     )
 
     AffectsValues = ("Nothing", "Everything")
-    DependsOnValues = ("Nothing", "DOMState", "Everything")
+    DependsOnValues = ("Nothing", "DOMState", "DeviceState", "Everything")
 
     def __init__(self, location, identifier, tag):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
@@ -3425,9 +3425,10 @@ class IDLAttribute(IDLInterfaceMember):
             if not attr.hasValue():
                 raise WebIDLError("[DependsOn] takes an identifier",
                                   [attr.location])
-            if attr.value() == "Nothing" and not self.readonly:
-                raise WebIDLError("[DependsOn=Nothing] only allowed on "
-                                  "readonly attributes",
+            if (attr.value() != "Everything" and attr.value() != "DOMState" and
+                not self.readonly):
+                raise WebIDLError("[DependsOn=%s] only allowed on "
+                                  "readonly attributes" % attr.value(),
                                   [attr.location, self.location])
             self._setDependsOn(attr.value())
         elif (identifier == "Pref" or
