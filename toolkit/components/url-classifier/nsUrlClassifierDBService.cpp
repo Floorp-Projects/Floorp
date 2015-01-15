@@ -41,6 +41,9 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "Entries.h"
+#include "HashStore.h"
+#include "Classifier.h"
+#include "ProtocolParser.h"
 #include "mozilla/Attributes.h"
 #include "nsIPrincipal.h"
 #include "Classifier.h"
@@ -97,108 +100,6 @@ static bool gShuttingDownThread = false;
 
 static mozilla::Atomic<int32_t> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
 
-// -------------------------------------------------------------------------
-// Actual worker implementation
-class nsUrlClassifierDBServiceWorker MOZ_FINAL :
-  public nsIUrlClassifierDBServiceWorker
-{
-public:
-  nsUrlClassifierDBServiceWorker();
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIURLCLASSIFIERDBSERVICE
-  NS_DECL_NSIURLCLASSIFIERDBSERVICEWORKER
-
-  nsresult Init(uint32_t aGethashNoise, nsCOMPtr<nsIFile> aCacheDir);
-
-  // Queue a lookup for the worker to perform, called in the main thread.
-  // tables is a comma-separated list of tables to query
-  nsresult QueueLookup(const nsACString& lookupKey,
-                       const nsACString& tables,
-                       nsIUrlClassifierLookupCallback* callback);
-
-  // Handle any queued-up lookups.  We call this function during long-running
-  // update operations to prevent lookups from blocking for too long.
-  nsresult HandlePendingLookups();
-
-  // Perform a blocking classifier lookup for a given url. Can be called on
-  // either the main thread or the worker thread.
-  nsresult DoLocalLookup(const nsACString& spec,
-                         const nsACString& tables,
-                         nsICryptoHash* cryptoHash,
-                         LookupResultArray* results);
-
-private:
-  // No subclassing
-  ~nsUrlClassifierDBServiceWorker();
-
-  // Disallow copy constructor
-  nsUrlClassifierDBServiceWorker(nsUrlClassifierDBServiceWorker&);
-
-  // Applies the current transaction and resets the update/working times.
-  nsresult ApplyUpdate();
-
-  // Reset the in-progress update stream
-  void ResetStream();
-
-  // Reset the in-progress update
-  void ResetUpdate();
-
-  // Perform a classifier lookup for a given url.
-  nsresult DoLookup(const nsACString& spec,
-                    const nsACString& tables,
-                    nsIUrlClassifierLookupCallback* c);
-
-  nsresult AddNoise(const Prefix aPrefix,
-                    const nsCString tableName,
-                    uint32_t aCount,
-                    LookupResultArray& results);
-
-  // Can only be used on the background thread
-  nsCOMPtr<nsICryptoHash> mCryptoHash;
-
-  nsAutoPtr<Classifier> mClassifier;
-  // The class that actually parses the update chunks.
-  nsAutoPtr<ProtocolParser> mProtocolParser;
-
-  // Directory where to store the SB databases.
-  nsCOMPtr<nsIFile> mCacheDir;
-
-  // XXX: maybe an array of autoptrs.  Or maybe a class specifically
-  // storing a series of updates.
-  nsTArray<TableUpdate*> mTableUpdates;
-
-  int32_t mUpdateWait;
-
-  // Entries that cannot be completed. We expect them to die at
-  // the next update
-  PrefixArray mMissCache;
-
-  nsresult mUpdateStatus;
-  nsTArray<nsCString> mUpdateTables;
-
-  nsCOMPtr<nsIUrlClassifierUpdateObserver> mUpdateObserver;
-  bool mInStream;
-
-  // The number of noise entries to add to the set of lookup results.
-  uint32_t mGethashNoise;
-
-  // Pending lookups are stored in a queue for processing.  The queue
-  // is protected by mPendingLookupLock.
-  Mutex mPendingLookupLock;
-
-  class PendingLookup {
-  public:
-    TimeStamp mStartTime;
-    nsCString mKey;
-    nsCString mTables;
-    nsCOMPtr<nsIUrlClassifierLookupCallback> mCallback;
-  };
-
-  // list of pending lookups
-  nsTArray<PendingLookup> mPendingLookups;
-};
-
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
                   nsIUrlClassifierDBServiceWorker,
                   nsIUrlClassifierDBService)
@@ -250,11 +151,9 @@ nsUrlClassifierDBServiceWorker::QueueLookup(const nsACString& spec,
 nsresult
 nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
                                               const nsACString& tables,
-                                              nsICryptoHash* cryptoHash,
                                               LookupResultArray* results)
 {
-  LOG(("nsUrlClassifierDBServiceWorker::DoLocalLookup %s (main=%s) %p",
-       spec.Data(), NS_IsMainThread() ? "true" : "false", this));
+  MOZ_ASSERT(!NS_IsMainThread(), "DoLocalLookup must be on background thread");
   if (!results) {
     return NS_ERROR_FAILURE;
   }
@@ -265,7 +164,7 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
 
   // We ignore failures from Check because we'd rather return the
   // results that were found than fail.
-  mClassifier->Check(spec, tables, gFreshnessGuarantee, cryptoHash, *results);
+  mClassifier->Check(spec, tables, gFreshnessGuarantee, *results);
 
   LOG(("Found %d results.", results->Length()));
   return NS_OK;
@@ -351,7 +250,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = DoLocalLookup(spec, tables, nullptr, results);
+  nsresult rv = DoLocalLookup(spec, tables, results);
   if (NS_FAILED(rv)) {
     c->LookupComplete(nullptr);
     return rv;
@@ -1223,7 +1122,7 @@ nsUrlClassifierDBService::Init()
 
   // Force PSM loading on main thread
   nsresult rv;
-  mCryptoHashMain = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  nsCOMPtr<nsICryptoHash> dummy = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Directory providers must also be accessed on the main thread.
@@ -1357,9 +1256,8 @@ nsUrlClassifierDBService::ClassifyLocal(nsIPrincipal* aPrincipal,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // We don't use the proxy, since this is a blocking lookup. In unittests, we
-  // may not have been initalized, so don't crash.
-  rv = mWorker->DoLocalLookup(key, tables, mCryptoHashMain, results);
+  // In unittests, we may not have been initalized, so don't crash.
+  rv = mWorkerProxy->DoLocalLookup(key, tables, results);
   if (NS_SUCCEEDED(rv)) {
     rv = ProcessLookupResults(results, mCheckMalware, mCheckPhishing,
                               mCheckTracking);

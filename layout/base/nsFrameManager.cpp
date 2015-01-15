@@ -75,7 +75,6 @@ static const PLDHashTableOps PlaceholderMapOps = {
   PlaceholderMapMatchEntry,
   PL_DHashMoveEntryStub,
   PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
   nullptr
 };
 
@@ -175,7 +174,7 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
   if (!mPlaceholderMap.ops) {
-    PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nullptr,
+    PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps,
                       sizeof(PlaceholderMapEntry));
   }
   PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>(PL_DHashTableAdd(&mPlaceholderMap,

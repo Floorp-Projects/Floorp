@@ -182,8 +182,7 @@ Native2WrappedNativeMap::newMap(int length)
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), nullptr,
-                              sizeof(Entry), length);
+    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 Native2WrappedNativeMap::~Native2WrappedNativeMap()
@@ -218,8 +217,7 @@ const struct PLDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -235,7 +233,7 @@ IID2WrappedJSClassMap::newMap(int length)
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), length);
+    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
 }
 
 IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
@@ -255,8 +253,7 @@ const struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
     HashIIDPtrKey,
     MatchIIDPtrKey,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -272,7 +269,7 @@ IID2NativeInterfaceMap::newMap(int length)
 
 IID2NativeInterfaceMap::IID2NativeInterfaceMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), length);
+    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
 }
 
 IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
@@ -314,8 +311,7 @@ ClassInfo2NativeSetMap::newMap(int length)
 
 ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), nullptr,
-                              sizeof(Entry), length);
+    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
@@ -354,8 +350,7 @@ ClassInfo2WrappedNativeProtoMap::newMap(int length)
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), nullptr,
-                              sizeof(Entry), length);
+    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry), length);
 }
 
 ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
@@ -462,8 +457,7 @@ const struct PLDHashTableOps NativeSetMap::Entry::sOps =
     HashNativeKey,
     Match,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -479,7 +473,7 @@ NativeSetMap::newMap(int length)
 
 NativeSetMap::NativeSetMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), length);
+    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
 }
 
 NativeSetMap::~NativeSetMap()
@@ -529,8 +523,7 @@ const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
     HashIIDPtrKey,
     Match,
     PL_DHashMoveEntryStub,
-    Clear,
-    PL_DHashFinalizeStub
+    Clear
 };
 
 // static
@@ -546,7 +539,7 @@ IID2ThisTranslatorMap::newMap(int length)
 
 IID2ThisTranslatorMap::IID2ThisTranslatorMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), length);
+    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
 }
 
 IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
@@ -608,8 +601,7 @@ const struct PLDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
     Hash,
     Match,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
+    PL_DHashClearEntryStub
 };
 
 // static
@@ -626,7 +618,7 @@ XPCNativeScriptableSharedMap::newMap(int length)
 
 XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int length)
 {
-    mTable = PL_NewDHashTable(&Entry::sOps, nullptr, sizeof(Entry), length);
+    mTable = PL_NewDHashTable(&Entry::sOps, sizeof(Entry), length);
 }
 
 XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
@@ -677,7 +669,7 @@ XPCWrappedNativeProtoMap::newMap(int length)
 
 XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int length)
 {
-    mTable = PL_NewDHashTable(PL_DHashGetStubOps(), nullptr,
+    mTable = PL_NewDHashTable(PL_DHashGetStubOps(),
                               sizeof(PLDHashEntryStub), length);
 }
 

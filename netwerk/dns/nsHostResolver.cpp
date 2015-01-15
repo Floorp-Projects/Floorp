@@ -469,7 +469,6 @@ static const PLDHashTableOps gHostDB_ops =
     HostDB_MatchEntry,
     HostDB_MoveEntry,
     HostDB_ClearEntry,
-    PL_DHashFinalizeStub,
     HostDB_InitEntry,
 };
 
@@ -557,7 +556,7 @@ nsHostResolver::Init()
         return NS_ERROR_FAILURE;
     }
 
-    PL_DHashTableInit(&mDB, &gHostDB_ops, nullptr, sizeof(nsHostDBEnt), 0);
+    PL_DHashTableInit(&mDB, &gHostDB_ops, sizeof(nsHostDBEnt), 0);
 
     mShutdown = false;
 

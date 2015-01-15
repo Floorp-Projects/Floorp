@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(f7f3709c-04a9-45c6-8e34-40f762654a78)]
+[scriptable, uuid(42d1e0e3-303a-424f-89ea-4f15c699d767)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -42,6 +42,11 @@ interface nsIProfiler : nsISupports
    * shared library versions for stack symbolication.
    */
   AString getSharedLibraryInformation();
+
+  /**
+   * Dump the collected profile to a file.
+   */
+  void dumpProfileToFile(in string aFilename);
 };
 
 /**

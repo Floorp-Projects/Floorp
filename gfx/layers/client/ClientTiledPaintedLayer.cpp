@@ -70,10 +70,21 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
        ancestorParent ? iter != ancestorParent : iter.IsValid();
        iter = iter.GetParent()) {
     transform = transform * iter.GetTransform();
-    // If the layer has a pres shell resolution, the compositor will apply
-    // a scale to scale to this transform. Apply it here too.
-    const FrameMetrics& metrics = iter.Metrics();
-    transform.PostScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1.f);
+
+    if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+      // When scrolling containers, layout adds a post-scale into the transform
+      // of the displayport-ancestor (which we pick up in GetTransform() above)
+      // to cancel out the pres shell resolution (for historical reasons). The
+      // compositor in turn cancels out this post-scale (i.e., scales by the
+      // pres shell resolution), and to get correct calculations, we need to do
+      // so here, too.
+      //
+      // With containerless scrolling, the offending post-scale is on the
+      // parent layer of the displayport-ancestor, which we don't reach in this
+      // loop, so we don't need to worry about it.
+      const FrameMetrics& metrics = iter.Metrics();
+      transform.PostScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1.f);
+    }
   }
   return transform;
 }

@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include "pkix/Result.h"
+#include "pkix/stdkeywords.h"
 
 namespace mozilla { namespace pkix {
 
@@ -38,7 +39,7 @@ namespace mozilla { namespace pkix {
 // OCSP. This type has second-level precision. The time zone is always UTC.
 //
 // Pass by value, not by reference.
-class Time
+class Time final
 {
 public:
   // Construct an uninitilized instance.
