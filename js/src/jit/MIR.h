@@ -2963,6 +2963,17 @@ class MSimdBox
         return initialHeap_;
     }
 
+    bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
+        if (congruentIfOperandsEqual(ins)) {
+            MOZ_ASSERT(ins->toSimdBox()->initialHeap() == initialHeap());
+            // The template object is likely to be different, but represents the
+            // same kind of objects as the MIRTypes are identical.
+            return true;
+        }
+
+        return false;
+    }
+
     AliasSet getAliasSet() const MOZ_OVERRIDE {
         return AliasSet::None();
     }
