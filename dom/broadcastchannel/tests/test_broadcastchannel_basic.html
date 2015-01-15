@@ -36,7 +36,7 @@ function runTest() {
     is(evt.target, bc, "MessageEvent.target is bc");
     is(evt.target.name, 'foobar', "MessageEvent.target.name is foobar");
     is(evt.target.name, bc.name, "MessageEvent.target.name == bc.name");
-    is(evt.origin, 'http://mochi.test:8888', "MessageEvent.origin is correct");
+    ok(evt.origin.indexOf('http://mochi.test:8888') == 0, "MessageEvent.origin is correct");
     is(evt.data, "Hello world from the iframe!", "The message from the iframe has been received!");
     SimpleTest.finish();
   }

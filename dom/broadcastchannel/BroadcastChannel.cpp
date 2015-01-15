@@ -328,60 +328,28 @@ private:
   }
 };
 
-bool
-CheckPermission(nsIPrincipal* aPrincipal)
-{
-  // First of all, the general pref has to be turned on.
-  bool enabled = false;
-  Preferences::GetBool("dom.broadcastChannel.enabled", &enabled);
-  if (!enabled) {
-    return false;
-  }
-
-  if (!aPrincipal) {
-    return false;
-  }
-
-  uint16_t status;
-  if (NS_FAILED(aPrincipal->GetAppStatus(&status))) {
-    return false;
-  }
-
-  // Only support BroadcastChannel API for certified apps and desktop builds.
-  return status == nsIPrincipal::APP_STATUS_CERTIFIED ||
-         status == nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-}
-
-// A WorkerMainThreadRunnable to synchronously dispatch the call of
-// CheckPermission() from the worker thread to the main thread.
-class CheckPermissionRunnable MOZ_FINAL
-  : public workers::WorkerMainThreadRunnable
+class PrefEnabledRunnable MOZ_FINAL : public WorkerMainThreadRunnable
 {
 public:
-  bool mResult;
+  explicit PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerMainThreadRunnable(aWorkerPrivate)
+    , mEnabled(false)
+  { }
 
-  explicit CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
-    : workers::WorkerMainThreadRunnable(aWorkerPrivate)
-    , mResult(false)
+  bool MainThreadRun() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-  }
-
-protected:
-  virtual bool
-  MainThreadRun() MOZ_OVERRIDE
-  {
-    workers::AssertIsOnMainThread();
-
-    nsIPrincipal* principal = GetPrincipalFromWorkerPrivate(mWorkerPrivate);
-    if (!principal) {
-      return true;
-    }
-
-    mResult = CheckPermission(principal);
+    AssertIsOnMainThread();
+    mEnabled = Preferences::GetBool("dom.broadcastChannel.enabled", false);
     return true;
   }
+
+  bool IsEnabled() const
+  {
+    return mEnabled;
+  }
+
+private:
+  bool mEnabled;
 };
 
 } // anonymous namespace
@@ -390,34 +358,18 @@ protected:
 BroadcastChannel::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   if (NS_IsMainThread()) {
-    JS::Rooted<JSObject*> global(aCx, aGlobal);
-
-    nsCOMPtr<nsPIDOMWindow> win = Navigator::GetWindowFromGlobal(global);
-    if (!win) {
-      return false;
-    }
-
-    nsIDocument* doc = win->GetExtantDoc();
-    if (!doc) {
-      return false;
-    }
-
-    return CheckPermission(doc->NodePrincipal());
+    return Preferences::GetBool("dom.broadcastChannel.enabled", false);
   }
 
-  workers::WorkerPrivate* workerPrivate =
-    workers::GetWorkerPrivateFromContext(aCx);
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<CheckPermissionRunnable> runnable =
-    new CheckPermissionRunnable(workerPrivate);
+  nsRefPtr<PrefEnabledRunnable> runnable =
+    new PrefEnabledRunnable(workerPrivate);
+  runnable->Dispatch(workerPrivate->GetJSContext());
 
-  if (!runnable->Dispatch(aCx)) {
-    JS_ClearPendingException(aCx);
-    return false;
-  }
-
-  return runnable->mResult;
+  return runnable->IsEnabled();
 }
 
 BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
