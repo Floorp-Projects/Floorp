@@ -15,16 +15,13 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIDOMDOMRequest.h"
+#include "nsIIccInfo.h"
 #include "nsIPermissionManager.h"
 #include "nsIVariant.h"
 #include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
-
-#ifdef MOZ_B2G_RIL
-#include "nsIIccInfo.h"
-#endif // MOZ_B2G_RIL
 
 #define MOBILECONN_ERROR_INVALID_PARAMETER NS_LITERAL_STRING("InvalidParameter")
 #define MOBILECONN_ERROR_INVALID_PASSWORD  NS_LITERAL_STRING("InvalidPassword")
@@ -49,18 +46,14 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::mobileconnection;
 
 class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
-#ifdef MOZ_B2G_RIL
                                            , public nsIIccListener
-#endif // MOZ_B2G_RIL
 {
   MobileConnection* mMobileConnection;
 
 public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSIMOBILECONNECTIONLISTENER(mMobileConnection)
-#ifdef MOZ_B2G_RIL
   NS_FORWARD_SAFE_NSIICCLISTENER(mMobileConnection)
-#endif // MOZ_B2G_RIL
 
   explicit Listener(MobileConnection* aMobileConnection)
     : mMobileConnection(aMobileConnection)
@@ -81,12 +74,8 @@ private:
   }
 };
 
-#ifdef MOZ_B2G_RIL
 NS_IMPL_ISUPPORTS(MobileConnection::Listener, nsIMobileConnectionListener,
                   nsIIccListener)
-#else
-NS_IMPL_ISUPPORTS(MobileConnection::Listener, nsIMobileConnectionListener)
-#endif // MOZ_B2G_RIL
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
@@ -98,6 +87,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
   // down.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoice)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mData)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
@@ -105,6 +95,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
   tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVoice)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mData)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIccHandler)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
@@ -136,15 +127,15 @@ MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
 
   nsresult rv = service->GetItemByServiceId(mClientId,
                                             getter_AddRefs(mMobileConnection));
-#ifdef MOZ_B2G_RIL
-  mIcc = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
 
-  if (NS_FAILED(rv) || !mMobileConnection || !mIcc) {
-    NS_WARNING("Could not acquire nsIMobileConnection or nsIIccProvider!");
-#else
-  if (NS_FAILED(rv) || !mMobileConnection) {
-    NS_WARNING("Could not acquire nsIMobileConnection!");
-#endif // MOZ_B2G_RIL
+  nsCOMPtr<nsIIccService> iccService = do_GetService(ICC_SERVICE_CONTRACTID);
+
+  if (iccService) {
+    iccService->GetIccByServiceId(mClientId, getter_AddRefs(mIccHandler));
+  }
+
+  if (NS_FAILED(rv) || !mMobileConnection || !mIccHandler) {
+    NS_WARNING("Could not acquire nsIMobileConnection or nsIIcc!");
     return;
   }
 
@@ -159,12 +150,10 @@ MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
     UpdateVoice();
     UpdateData();
 
-#ifdef MOZ_B2G_RIL
-    rv = mIcc->RegisterIccMsg(mClientId, mListener);
+    rv = mIccHandler->RegisterListener(mListener);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Failed registering icc messages with service");
     UpdateIccId();
-#endif // MOZ_B2G_RIL
   }
 }
 
@@ -176,11 +165,9 @@ MobileConnection::Shutdown()
       mMobileConnection->UnregisterListener(mListener);
     }
 
-#ifdef MOZ_B2G_RIL
-    if (mIcc) {
-      mIcc->UnregisterIccMsg(mClientId, mListener);
+    if (mIccHandler) {
+      mIccHandler->UnregisterListener(mListener);
     }
-#endif // MOZ_B2G_RIL
 
     mListener->Disconnect();
     mListener = nullptr;
@@ -246,11 +233,10 @@ MobileConnection::UpdateData()
 bool
 MobileConnection::UpdateIccId()
 {
-#ifdef MOZ_B2G_RIL
   nsAutoString iccId;
   nsCOMPtr<nsIIccInfo> iccInfo;
-  if (mIcc &&
-      NS_SUCCEEDED(mIcc->GetIccInfo(mClientId, getter_AddRefs(iccInfo))) &&
+  if (mIccHandler &&
+      NS_SUCCEEDED(mIccHandler->GetIccInfo(getter_AddRefs(iccInfo))) &&
       iccInfo) {
     iccInfo->GetIccid(iccId);
   } else {
@@ -261,7 +247,6 @@ MobileConnection::UpdateIccId()
     mIccId = iccId;
     return true;
   }
-#endif // MOZ_B2G_RIL
 
   return false;
 }
@@ -1134,7 +1119,6 @@ MobileConnection::NotifyNetworkSelectionModeChanged()
   return NS_OK;
 }
 
-#ifdef MOZ_B2G_RIL
 // nsIIccListener
 
 NS_IMETHODIMP
@@ -1171,4 +1155,3 @@ MobileConnection::NotifyIccInfoChanged()
 
   return asyncDispatcher->PostDOMEvent();
 }
-#endif // MOZ_B2G_RIL
