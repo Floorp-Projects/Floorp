@@ -4336,11 +4336,7 @@ pref("dom.voicemail.enabled", false);
 pref("dom.voicemail.defaultServiceId", 0);
 
 // DOM BroadcastChannel API.
-#ifdef RELEASE_BUILD
-pref("dom.broadcastChannel.enabled", false);
-#else
 pref("dom.broadcastChannel.enabled", true);
-#endif
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);
