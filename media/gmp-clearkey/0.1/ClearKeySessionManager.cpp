@@ -35,13 +35,24 @@ ClearKeySessionManager::~ClearKeySessionManager()
    MOZ_ASSERT(!mRefCount);
 }
 
+static bool
+CanDecode()
+{
+  return
+#if defined(ENABLE_WMF)
+    wmf::EnsureLibs() ||
+#endif
+    false;
+}
+
 void
 ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback)
 {
   CK_LOGD("ClearKeySessionManager::Init");
   mCallback = aCallback;
-  mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AUDIO |
-                             GMP_EME_CAP_DECRYPT_VIDEO);
+  mCallback->SetCapabilities(CanDecode() ?
+                             GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO | GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO :
+                             GMP_EME_CAP_DECRYPT_AUDIO | GMP_EME_CAP_DECRYPT_VIDEO);
   ClearKeyPersistence::EnsureInitialized();
 }
 
@@ -273,19 +284,6 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
 void
 ClearKeySessionManager::ClearInMemorySessionData(ClearKeySession* aSession)
 {
-  MOZ_ASSERT(aSession);
-
-  const vector<KeyId>& keyIds = aSession->GetKeyIds();
-  for (auto it = keyIds.begin(); it != keyIds.end(); it++) {
-    MOZ_ASSERT(mDecryptionManager->HasKeyForKeyId(*it));
-    mDecryptionManager->ReleaseKeyId(*it);
-
-    const string& sessionId = aSession->Id();
-    mCallback->KeyStatusChanged(&sessionId[0], sessionId.size(),
-                                &(*it)[0], it->size(),
-                                kGMPUnknown);
-  }
-
   mSessions.erase(aSession->Id());
   delete aSession;
 }

@@ -9,7 +9,6 @@ SharedLibrary('clearkey')
 FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
 UNIFIED_SOURCES += [
-    'AudioDecoder.cpp',
     'ClearKeyDecryptionManager.cpp',
     'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
@@ -17,12 +16,27 @@ UNIFIED_SOURCES += [
     'ClearKeyStorage.cpp',
     'ClearKeyUtils.cpp',
     'gmp-clearkey.cpp',
-    'openaes/oaes_lib.c',
-    'VideoDecoder.cpp',
-    'WMFAACDecoder.cpp',
-    'WMFH264Decoder.cpp',
-    'WMFUtils.cpp',
 ]
+
+SOURCES += [
+    'openaes/oaes_lib.c',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'AnnexB.cpp',
+        'AudioDecoder.cpp',
+        'VideoDecoder.cpp',
+        'WMFAACDecoder.cpp',
+        'WMFH264Decoder.cpp',
+    ]
+
+    SOURCES += [
+        'WMFUtils.cpp',
+    ]
+
+    DEFINES['ENABLE_WMF'] = True
+
 
 LOCAL_INCLUDES += [
     '/dom/media/gmp',

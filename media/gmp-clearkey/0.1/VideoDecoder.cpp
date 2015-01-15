@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
+#include <cstdint>
+#include <limits>
 
-#ifdef TEST_DECODING
+#include "AnnexB.h"
+#include "ClearKeyDecryptionManager.h"
+#include "ClearKeyUtils.h"
+#include "gmp-task-utils.h"
+#include "mozilla/Endian.h"
+#include "VideoDecoder.h"
+
+using namespace wmf;
 
 VideoDecoder::VideoDecoder(GMPVideoHost *aHostAPI)
   : mHostAPI(aHostAPI)
@@ -49,7 +57,7 @@ VideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
     return;
   }
 
-  auto err = GMPCreateMutex(&mMutex);
+  auto err = GetPlatform()->createmutex(&mMutex);
   if (GMP_FAILED(err)) {
     mCallback->Error(GMPGenericErr);
     return;
@@ -61,10 +69,18 @@ VideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
   const uint8_t* avccEnd = aCodecSpecific + aCodecSpecificLength;
   mExtraData.insert(mExtraData.end(), avcc, avccEnd);
 
-  if (!mAVCC.Parse(mExtraData) ||
-      !AVC::ConvertConfigToAnnexB(mAVCC, &mAnnexB)) {
-    mCallback->Error(GMPGenericErr);
-    return;
+  AnnexB::ConvertConfig(mExtraData, mAnnexB);
+}
+
+void
+VideoDecoder::EnsureWorker()
+{
+  if (!mWorkerThread) {
+    GetPlatform()->createthread(&mWorkerThread);
+    if (!mWorkerThread) {
+      mCallback->Error(GMPAllocErr);
+      return;
+    }
   }
 }
 
@@ -81,13 +97,8 @@ VideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
     return;
   }
 
-  if (!mWorkerThread) {
-    GMPCreateThread(&mWorkerThread);
-    if (!mWorkerThread) {
-      mCallback->Error(GMPAllocErr);
-      return;
-    }
-  }
+  EnsureWorker();
+
   {
     AutoLock lock(mMutex);
     mNumInputTasks++;
@@ -101,11 +112,10 @@ VideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
                                aInputFrame));
 }
 
-static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
-
 void
 VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
 {
+  CK_LOGD("VideoDecoder::DecodeTask");
   HRESULT hr;
 
   {
@@ -115,34 +125,32 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
   }
 
   if (!aInput || !mHostAPI || !mDecoder) {
-    LOG(L"Decode job not set up correctly!");
+    CK_LOGE("Decode job not set up correctly!");
     return;
   }
 
   const uint8_t* inBuffer = aInput->Buffer();
   if (!inBuffer) {
-    LOG(L"No buffer for encoded frame!\n");
+    CK_LOGE("No buffer for encoded frame!\n");
     return;
   }
 
   const GMPEncryptedBufferMetadata* crypto = aInput->GetDecryptionData();
-  std::vector<uint8_t> buffer;
+  std::vector<uint8_t> buffer(inBuffer, inBuffer + aInput->Size());
   if (crypto) {
     // Plugin host should have set up its decryptor/key sessions
     // before trying to decode!
-    auto decryptor = Decryptor::Get(crypto);
-    if (!decryptor ||
-        !decryptor->Decrypt(inBuffer, aInput->Size(), crypto, buffer)) {
-      LOG(L"Video decryption error!");
-      mCallback->Error(GMPNoKeyErr);
+    GMPErr rv =
+      ClearKeyDecryptionManager::Get()->Decrypt(&buffer[0], buffer.size(), crypto);
+
+    if (GMP_FAILED(rv)) {
+      GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPVideoDecoderCallback::Error, rv));
       return;
     }
-    buffer.data();
-  } else {
-    buffer.insert(buffer.end(), inBuffer, inBuffer+aInput->Size());
   }
 
-  AVC::ConvertFrameToAnnexB(4, &buffer);
+  AnnexB::ConvertFrameInPlace(buffer);
+
   if (aInput->FrameType() == kGMPKeyFrame) {
     // We must send the SPS and PPS to Windows Media Foundation's decoder.
     // Note: We do this *after* decryption, otherwise the subsample info
@@ -156,11 +164,11 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
                        aInput->Duration());
 
   // We must delete the input sample!
-  GMPRunOnMainThread(WrapTask(aInput, &GMPVideoEncodedFrame::Destroy));
+  GetPlatform()->runonmainthread(WrapTask(aInput, &GMPVideoEncodedFrame::Destroy));
 
-  SAMPLE_LOG(L"VideoDecoder::DecodeTask() Input ret hr=0x%x\n", hr);
+  CK_LOGD("VideoDecoder::DecodeTask() Input ret hr=0x%x\n", hr);
   if (FAILED(hr)) {
-    LOG(L"VideoDecoder::DecodeTask() decode failed ret=0x%x%s\n",
+    CK_LOGE("VideoDecoder::DecodeTask() decode failed ret=0x%x%s\n",
         hr,
         ((hr == MF_E_NOTACCEPTING) ? " (MF_E_NOTACCEPTING)" : ""));
     return;
@@ -169,7 +177,7 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
   while (hr == S_OK) {
     CComPtr<IMFSample> output;
     hr = mDecoder->Output(&output);
-    SAMPLE_LOG(L"VideoDecoder::DecodeTask() output ret=0x%x\n", hr);
+    CK_LOGD("VideoDecoder::DecodeTask() output ret=0x%x\n", hr);
     if (hr == S_OK) {
       ReturnOutput(output);
     }
@@ -178,11 +186,11 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
       if (mNumInputTasks == 0) {
         // We have run all input tasks. We *must* notify Gecko so that it will
         // send us more data.
-        GMPRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::InputDataExhausted));
+        GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPVideoDecoderCallback::InputDataExhausted));
       }
     }
     if (FAILED(hr)) {
-      LOG(L"VideoDecoder::DecodeTask() output failed hr=0x%x\n", hr);
+      CK_LOGE("VideoDecoder::DecodeTask() output failed hr=0x%x\n", hr);
     }
   }
 }
@@ -190,7 +198,7 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
 void
 VideoDecoder::ReturnOutput(IMFSample* aSample)
 {
-  SAMPLE_LOG(L"[%p] WMFDecodingModule::OutputVideoFrame()\n", this);
+  CK_LOGD("[%p] VideoDecoder::ReturnOutput()\n", this);
   assert(aSample);
 
   HRESULT hr;
@@ -198,7 +206,7 @@ VideoDecoder::ReturnOutput(IMFSample* aSample)
   GMPVideoFrame* f = nullptr;
   mHostAPI->CreateFrame(kGMPI420VideoFrame, &f);
   if (!f) {
-    LOG(L"Failed to create i420 frame!\n");
+    CK_LOGE("Failed to create i420 frame!\n");
     return;
   }
   auto vf = static_cast<GMPVideoi420Frame*>(f);
@@ -206,7 +214,7 @@ VideoDecoder::ReturnOutput(IMFSample* aSample)
   hr = SampleToVideoFrame(aSample, vf);
   ENSURE(SUCCEEDED(hr), /*void*/);
 
-  GMPRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::Decoded, vf));
+  GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPVideoDecoderCallback::Decoded, vf));
 
 }
 
@@ -257,7 +265,7 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
   int32_t halfWidth = (width + 1) / 2;
   int32_t totalSize = y_size + 2 * v_size;
 
-  GMPSyncRunOnMainThread(WrapTask(aVideoFrame,
+  GetPlatform()->syncrunonmainthread(WrapTask(aVideoFrame,
                                   &GMPVideoi420Frame::CreateEmptyFrame,
                                   stride, height, stride, halfStride, halfStride));
 
@@ -310,7 +318,7 @@ void
 VideoDecoder::DrainTask()
 {
   if (FAILED(mDecoder->Drain())) {
-    GMPSyncRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::DrainComplete));
+    GetPlatform()->syncrunonmainthread(WrapTask(mCallback, &GMPVideoDecoderCallback::DrainComplete));
   }
 
   // Return any pending output.
@@ -318,17 +326,18 @@ VideoDecoder::DrainTask()
   while (hr == S_OK) {
     CComPtr<IMFSample> output;
     hr = mDecoder->Output(&output);
-    SAMPLE_LOG(L"VideoDecoder::DrainTask() output ret=0x%x\n", hr);
+    CK_LOGD("VideoDecoder::DrainTask() output ret=0x%x\n", hr);
     if (hr == S_OK) {
       ReturnOutput(output);
     }
   }
-  GMPSyncRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::DrainComplete));
+  GetPlatform()->syncrunonmainthread(WrapTask(mCallback, &GMPVideoDecoderCallback::DrainComplete));
 }
 
 void
 VideoDecoder::Drain()
 {
+  EnsureWorker();
   mWorkerThread->Post(WrapTask(this,
                                &VideoDecoder::DrainTask));
 }
@@ -341,5 +350,3 @@ VideoDecoder::DecodingComplete()
   }
   delete this;
 }
-
-#endif

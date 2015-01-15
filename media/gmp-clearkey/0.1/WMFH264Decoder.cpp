@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
+#include "WMFH264Decoder.h"
 
-#ifdef TEST_DECODING
+namespace wmf {
 
 WMFH264Decoder::WMFH264Decoder()
   : mDecoder(nullptr)
@@ -35,7 +35,7 @@ WMFH264Decoder::Init()
   HRESULT hr;
 
   hr = CreateMFT(__uuidof(CMSH264DecoderMFT),
-                 L"msmpeg2vdec.dll",
+                 "msmpeg2vdec.dll",
                  mDecoder);
   ENSURE(SUCCEEDED(hr), hr);
 
@@ -67,7 +67,7 @@ WMFH264Decoder::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   HRESULT hr;
 
   IntRect pictureRegion;
-  hr = ::GetPictureRegion(aMediaType, pictureRegion);
+  hr = wmf::GetPictureRegion(aMediaType, pictureRegion);
   ENSURE(SUCCEEDED(hr), hr);
 
   UINT32 width = 0, height = 0;
@@ -80,7 +80,7 @@ WMFH264Decoder::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   mVideoHeight = height;
   mPictureRegion = pictureRegion;
 
-  LOG(L"WMFH264Decoder frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d)\n",
+  LOG("WMFH264Decoder frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d)\n",
       width, height,
       mStride,
       mPictureRegion.x, mPictureRegion.y, mPictureRegion.width, mPictureRegion.height);
@@ -118,7 +118,7 @@ WMFH264Decoder::SetDecoderInputType()
   HRESULT hr;
 
   CComPtr<IMFMediaType> type;
-  hr = ::MFCreateMediaType(&type);
+  hr = MFCreateMediaType(&type);
   ENSURE(SUCCEEDED(hr), hr);
 
   hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
@@ -297,7 +297,7 @@ WMFH264Decoder::Input(const uint8_t* aData,
   hr = mDecoder->ProcessInput(0, input, 0);
   if (hr == MF_E_NOTACCEPTING) {
     // MFT *already* has enough data to produce a sample. Retrieve it.
-    LOG(L"ProcessInput returned MF_E_NOTACCEPTING\n");
+    LOG("ProcessInput returned MF_E_NOTACCEPTING\n");
     return MF_E_NOTACCEPTING;
   }
   ENSURE(SUCCEEDED(hr), hr);
@@ -340,4 +340,4 @@ WMFH264Decoder::Drain()
   return S_OK;
 }
 
-#endif
+} // namespace wmf

@@ -14,13 +14,66 @@
  * limitations under the License.
  */
 
-void LOG(wchar_t* format, ...);
+#ifndef __WMFUtils_h__
+#define __WMFUtils_h__
+
+#include <cstdint>
+#include <string>
+
+#include <assert.h>
+#include <mfapi.h>
+#include <mferror.h>
+#include <mfobjects.h>
+#include <mftransform.h>
+#include <wmcodecdsp.h>
+
+#include "gmp-platform.h"
+
+void LOG(const char* format, ...);
 
 #ifdef LOG_SAMPLE_DECODE
 #define SAMPLE_LOG LOG
 #else
 #define SAMPLE_LOG(...)
 #endif
+
+#ifndef CLSID_CMSAACDecMFT
+#define WMF_MUST_DEFINE_AAC_MFT_CLSID
+extern "C" const CLSID CLSID_CMSAACDecMFT;
+#endif
+
+namespace wmf {
+
+// Reimplementation of CComPtr to reduce dependence on system
+// shared libraries.
+template<class T>
+class CComPtr {
+public:
+  CComPtr() : mPtr(nullptr) { }
+  CComPtr(T* const & aPtr) : mPtr(aPtr) { }
+  CComPtr(const nullptr_t& aNullPtr) : mPtr(aNullPtr) { }
+  T** operator&() { return &mPtr; }
+  T* operator->(){ return mPtr; }
+  operator T*() { return mPtr; }
+  T* operator=(T* const & aPtr) { return mPtr = aPtr; }
+  T* operator=(const nullptr_t& aPtr) { return mPtr = aPtr; }
+
+  T* Detach() {
+    T* tmp = mPtr;
+    mPtr = nullptr;
+    return tmp;
+  }
+
+  ~CComPtr() {
+    if (mPtr) {
+      mPtr->Release();
+    }
+    mPtr = nullptr;
+  }
+
+private:
+  T* mPtr;
+};
 
 class IntRect {
 public:
@@ -36,11 +89,23 @@ public:
 
 typedef int64_t Microseconds;
 
+#ifdef ENSURE
+#undef ENSURE
+#endif
+
 #define ENSURE(condition, ret) \
-{ if (!(condition)) { LOG(L"##condition## FAILED %S:%d\n", __FILE__, __LINE__); return ret; } }
+{ if (!(condition)) { LOG("##condition## FAILED %S:%d\n", __FILE__, __LINE__); return ret; } }
 
 #define GMP_SUCCEEDED(x) ((x) == GMPNoErr)
 #define GMP_FAILED(x) ((x) != GMPNoErr)
+
+#define MFPLAT_FUNC(_func) \
+  extern decltype(::_func)* _func;
+#include "WMFSymbols.h"
+#undef MFPLAT_FUNC
+
+bool
+EnsureLibs();
 
 HRESULT
 GetPictureRegion(IMFMediaType* aMediaType, IntRect& aOutPictureRegion);
@@ -174,5 +239,9 @@ void dump(const uint8_t* data, uint32_t len, const char* filename);
 
 HRESULT
 CreateMFT(const CLSID& clsid,
-          const wchar_t* aDllName,
+          const char* aDllName,
           CComPtr<IMFTransform>& aOutMFT);
+
+} // namespace wmf
+
+#endif // __WMFUtils_h__

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ClearKeyDecryptionManager.h"
 #include "ClearKeySession.h"
 #include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
@@ -26,6 +27,16 @@ ClearKeySession::ClearKeySession(const std::string& aSessionId,
 ClearKeySession::~ClearKeySession()
 {
   CK_LOGD("ClearKeySession dtor %p", this);
+
+  auto& keyIds = GetKeyIds();
+  for (auto it = keyIds.begin(); it != keyIds.end(); it++) {
+    MOZ_ASSERT(ClearKeyDecryptionManager::Get()->HasKeyForKeyId(*it));
+
+    ClearKeyDecryptionManager::Get()->ReleaseKeyId(*it);
+    mCallback->KeyStatusChanged(&mSessionId[0], mSessionId.size(),
+                                &(*it)[0], it->size(),
+                                kGMPUnknown);
+  }
 }
 
 void

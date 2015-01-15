@@ -14,8 +14,8 @@
 #include "ClearKeySession.h"
 #include "ClearKeyUtils.h"
 #include "gmp-api/gmp-decryption.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
-#include "ScopedNSSTypes.h"
 #include "RefCounted.h"
 
 class ClearKeySessionManager MOZ_FINAL : public GMPDecryptor

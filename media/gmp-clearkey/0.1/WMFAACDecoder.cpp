@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
-
-#ifdef TEST_DECODING
+#include "WMFAACDecoder.h"
 
 using std::vector;
-using std::unique_ptr;
+
+namespace wmf {
 
 WMFAACDecoder::WMFAACDecoder()
   : mDecoder(nullptr)
@@ -90,14 +89,14 @@ WMFAACDecoder::Init(int32_t aChannelCount,
 
   // AAC decoder is in msauddecmft on Win8, and msmpeg2adec in earlier versions.
   hr = CreateMFT(CLSID_CMSAACDecMFT,
-                 L"msauddecmft.dll",
+                 "msauddecmft.dll",
                  mDecoder);
   if (FAILED(hr)) {
     hr = CreateMFT(CLSID_CMSAACDecMFT,
-                   L"msmpeg2adec.dll",
+                   "msmpeg2adec.dll",
                    mDecoder);
     if (FAILED(hr)) {
-      LOG(L"Failed to create AAC decoder\n");
+      LOG("Failed to create AAC decoder\n");
       return E_FAIL;
     }
   }
@@ -155,9 +154,6 @@ WMFAACDecoder::SetDecoderInputType(int32_t aChannelCount,
 
   mChannels = aChannelCount;
   hr = type->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mChannels);
-  ENSURE(SUCCEEDED(hr), hr);
-
-  hr = type->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0); // Raw AAC
   ENSURE(SUCCEEDED(hr), hr);
 
   hr = type->SetBlob(MF_MT_USER_DATA, aUserData, aUserDataLength);
@@ -326,7 +322,7 @@ WMFAACDecoder::Input(const uint8_t* aData,
   hr = mDecoder->ProcessInput(0, input, 0);
   if (hr == MF_E_NOTACCEPTING) {
     // MFT *already* has enough data to produce a sample. Retrieve it.
-    LOG(L"ProcessInput returned MF_E_NOTACCEPTING\n");
+    LOG("ProcessInput returned MF_E_NOTACCEPTING\n");
     return MF_E_NOTACCEPTING;
   }
   ENSURE(SUCCEEDED(hr), hr);
@@ -368,4 +364,4 @@ WMFAACDecoder::Drain()
   return S_OK;
 }
 
-#endif
+}
