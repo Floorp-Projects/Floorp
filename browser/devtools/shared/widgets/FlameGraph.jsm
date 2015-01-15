@@ -829,7 +829,10 @@ let FlameGraphUtils = {
    *        A list of { time, frames: [{ location }] } objects.
    * @param object options [optional]
    *        Additional options supported by this operation:
-   *          - flattenRecursion: specifies if consecutive frames are omitted
+   *          - flattenRecursion: specifies if identical consecutive frames
+   *                              should be omitted from the output
+   *          - filterFrames: predicate used for filtering all frames, passing
+   *                          in each frame, its index and the sample array
    * @param array out [optional]
    *        An output storage to reuse for storing the flame graph data.
    * @return array
@@ -857,6 +860,13 @@ let FlameGraphUtils = {
       // sharing the same location.
       if (options.flattenRecursion) {
         frames = frames.filter(this._isConsecutiveDuplicate);
+      }
+
+      // Apply a provided filter function. This can be used, for example, to
+      // filter out platform frames if only content-related function calls
+      // should be taken into consideration.
+      if (options.filterFrames) {
+        frames = frames.filter(options.filterFrames);
       }
 
       for (let { location } of frames) {
