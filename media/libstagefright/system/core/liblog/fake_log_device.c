@@ -34,8 +34,10 @@
 #ifdef _MSC_VER
 #include <io.h>
 #include <process.h>
+#if _MSC_VER < 1900
 #include <nspr/prprf.h>
 #define snprintf PR_snprintf
+#endif
 
 /* We don't want to indent large blocks because it causes unnecessary merge
  * conflicts */

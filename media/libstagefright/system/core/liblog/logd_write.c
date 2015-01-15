@@ -34,8 +34,10 @@
 #define LOG_BUF_SIZE	1024
 
 #ifdef _MSC_VER
+#if _MSC_VER < 1900
 #include <nspr/prprf.h>
 #define snprintf PR_snprintf
+#endif
 #define __builtin_trap abort
 static int W_OK = 0;
 static int access(char* c, int i) { return -1; }
