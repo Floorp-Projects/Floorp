@@ -136,9 +136,6 @@ public:
   void
   OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE;
 
-  void
-  OnResponseEnd() MOZ_OVERRIDE;
-
 private:
   ~MainThreadFetchResolver();
 };
@@ -263,14 +260,6 @@ MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
   nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
   mResponse = new Response(go, aResponse);
   mPromise->MaybeResolve(mResponse);
-}
-
-void
-MainThreadFetchResolver::OnResponseEnd()
-{
-  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mResponse);
 }
 
 MainThreadFetchResolver::~MainThreadFetchResolver()
