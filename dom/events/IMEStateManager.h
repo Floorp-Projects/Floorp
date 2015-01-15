@@ -164,7 +164,6 @@ protected:
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsTestingIME;
   static bool           sIsGettingNewIMEState;
-  static bool           sCheckForIMEUnawareWebApps;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker MOZ_FINAL
   {
