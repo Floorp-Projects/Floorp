@@ -7046,10 +7046,12 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
 
     traversedFrame = frameTraversal->CurrentItem();
 
-    // Skip anonymous elements
+    // Skip anonymous elements, but watch out for generated content
     if (!traversedFrame ||
-        traversedFrame->GetContent()->IsRootOfNativeAnonymousSubtree())
+        (!traversedFrame->IsGeneratedContentFrame() &&
+         traversedFrame->GetContent()->IsRootOfNativeAnonymousSubtree())) {
       return NS_ERROR_FAILURE;
+    }
 
     traversedFrame->IsSelectable(&selectable, nullptr);
     if (!selectable) {
