@@ -229,7 +229,7 @@ public:
     }
 
     virtual ~gfxUnknownSurface() { }
-    virtual const nsIntSize GetSize() const { return mSize; }
+    virtual const nsIntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
 private:
     nsIntSize mSize;

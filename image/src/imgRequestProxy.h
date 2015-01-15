@@ -145,7 +145,7 @@ protected:
         : mOwner(owner), mStatus(status)
       {}
 
-      NS_IMETHOD Run() {
+      NS_IMETHOD Run() MOZ_OVERRIDE {
         mOwner->DoCancel(mStatus);
         return NS_OK;
       }
