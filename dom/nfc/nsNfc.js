@@ -90,7 +90,7 @@ NfcCallback.prototype = {
            ", errormsg: " + aErrorMsg);
       return;
     }
-    resolver.reject(aErrorMsg);
+    resolver.reject(new this._window.Error(aErrorMsg));
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
