@@ -183,7 +183,7 @@ class CPUInfo
 #endif
     static void SetSSE3Disabled() { maxEnabledSSEVersion = SSE2; avxEnabled = false; }
     static void SetSSE4Disabled() { maxEnabledSSEVersion = SSSE3; avxEnabled = false; }
-    static void SetAVXDisabled() { avxEnabled = false; }
+    static void SetAVXEnabled() { avxEnabled = true; }
 };
 
 class AssemblerX86Shared : public AssemblerShared
