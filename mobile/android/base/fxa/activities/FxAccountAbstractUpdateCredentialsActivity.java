@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
@@ -22,6 +23,7 @@ import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.tasks.FxAccountSignInTask;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
+import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -150,6 +152,8 @@ public abstract class FxAccountAbstractUpdateCredentialsActivity extends FxAccou
         startActivity(successIntent);
       }
       finish();
+
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATIONS_COMPLETED, 1);
     }
   }
 
