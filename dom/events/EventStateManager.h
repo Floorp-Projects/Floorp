@@ -815,6 +815,9 @@ private:
   static PLDHashOperator ResetLastOverForContent(const uint32_t& aIdx,
                                                  nsRefPtr<OverOutElementsWrapper>& aChunk,
                                                  void* aClosure);
+  void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
+                               nsEventStatus& aStatus,
+                               bool dispatchedToContentProcess);
 
   int32_t     mLockCursor;
 
