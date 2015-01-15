@@ -27,6 +27,8 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Environment;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.support.v4.app.NotificationCompat;
@@ -77,6 +79,8 @@ public class UpdateService extends IntentService {
     private ConnectivityManager mConnectivityManager;
     private Builder mBuilder;
 
+    private volatile WifiLock mWifiLock;
+
     private boolean mDownloading;
     private boolean mCancelDownload;
     private boolean mApplyImmediately;
@@ -96,6 +100,8 @@ public class UpdateService extends IntentService {
         mPrefs = getSharedPreferences(PREFS_NAME, 0);
         mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        mWifiLock = ((WifiManager)getSystemService(Context.WIFI_SERVICE))
+                    .createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, PREFS_NAME);
         mCancelDownload = false;
     }
 
@@ -103,6 +109,10 @@ public class UpdateService extends IntentService {
     public void onDestroy() {
         mCrashHandler.unregister();
         mCrashHandler = null;
+
+        if (mWifiLock.isHeld()) {
+            mWifiLock.release();
+        }
     }
 
     @Override
@@ -476,6 +486,12 @@ public class UpdateService extends IntentService {
         showDownloadNotification(downloadFile);
 
         try {
+            NetworkInfo netInfo = mConnectivityManager.getActiveNetworkInfo();
+            if (netInfo != null && netInfo.isConnected() &&
+                netInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                mWifiLock.acquire();
+            }
+
             URLConnection conn = openConnectionWithProxy(info.url);
             int length = conn.getContentLength();
 
@@ -530,6 +546,10 @@ public class UpdateService extends IntentService {
             } catch (java.io.IOException e) {}
 
             mDownloading = false;
+
+            if (mWifiLock.isHeld()) {
+                mWifiLock.release();
+            }
         }
     }
 

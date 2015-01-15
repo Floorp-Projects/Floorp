@@ -102,6 +102,10 @@ let mockPushHandler = {
     registerCallback(this.registrationResult, this.registrationPushURL, channelId);
   },
 
+  unregister: function(channelID) {
+    return;
+  },
+
   /**
    * Test-only API to simplify notifying a push notification result.
    */
@@ -115,12 +119,19 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-let MockWebSocketChannel = function(options = {}) {
-  this.defaultMsgHandler = options.defaultMsgHandler;
-};
+function MockWebSocketChannel() {};
 
 MockWebSocketChannel.prototype = {
   QueryInterface: XPCOMUtils.generateQI(Ci.nsIWebSocketChannel),
+
+  initRegStatus: 0,
+
+  defaultMsgHandler: function(msg) {
+    // Treat as a ping
+    this.listener.onMessageAvailable(this.context,
+                                     JSON.stringify({}));
+    return;
+  },
 
   /**
    * nsIWebSocketChannel implementations.
@@ -160,6 +171,10 @@ MockWebSocketChannel.prototype = {
       default:
         this.defaultMsgHandler && this.defaultMsgHandler(message);
     }
+  },
+
+  close: function(aCode, aReason) {
+    this.stop(aCode);
   },
 
   notify: function(version) {
