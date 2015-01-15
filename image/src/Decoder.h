@@ -22,7 +22,7 @@ class Decoder
 {
 public:
 
-  explicit Decoder(RasterImage& aImage);
+  explicit Decoder(RasterImage* aImage);
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
@@ -187,6 +187,11 @@ public:
 
   ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
+  /**
+   * Returns a weak pointer to the image associated with this decoder.
+   */
+  RasterImage* GetImage() const { MOZ_ASSERT(mImage); return mImage.get(); }
+
   // Tell the decoder infrastructure to allocate a frame. By default, frame 0
   // is created as an ARGB frame with no offset and with size width * height.
   // If decoders need something different, they must ask for it.
@@ -312,7 +317,7 @@ protected:
    * Member variables.
    *
    */
-  RasterImage &mImage;
+  nsRefPtr<RasterImage> mImage;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
