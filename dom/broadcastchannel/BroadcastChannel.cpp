@@ -21,6 +21,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsISupportsPrimitives.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 namespace mozilla {
 
 using namespace ipc;
@@ -237,7 +241,7 @@ class CloseRunnable MOZ_FINAL : public nsICancelableRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  CloseRunnable(BroadcastChannel* aBC)
+  explicit CloseRunnable(BroadcastChannel* aBC)
     : mBC(aBC)
   {
     MOZ_ASSERT(mBC);
@@ -268,7 +272,7 @@ class TeardownRunnable MOZ_FINAL : public nsICancelableRunnable
 public:
   NS_DECL_ISUPPORTS
 
-  TeardownRunnable(BroadcastChannelChild* aActor)
+  explicit TeardownRunnable(BroadcastChannelChild* aActor)
     : mActor(aActor)
   {
     MOZ_ASSERT(mActor);
@@ -356,7 +360,7 @@ class CheckPermissionRunnable MOZ_FINAL
 public:
   bool mResult;
 
-  CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
+  explicit CheckPermissionRunnable(workers::WorkerPrivate* aWorkerPrivate)
     : workers::WorkerMainThreadRunnable(aWorkerPrivate)
     , mResult(false)
   {
@@ -422,7 +426,7 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
                                    const nsAString& aChannel)
   : DOMEventTargetHelper(aWindow)
   , mWorkerFeature(nullptr)
-  , mPrincipalInfo(aPrincipalInfo)
+  , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
   , mOrigin(aOrigin)
   , mChannel(aChannel)
   , mIsKeptAlive(false)
@@ -564,6 +568,14 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
     return;
   }
 
+  const nsTArray<nsRefPtr<File>>& blobs = data->mClosure.mBlobs;
+  for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
+    if (!blobs[i]->Impl()->MayBeClonedToOtherThreads()) {
+      aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+      return;
+    }
+  }
+
   PostMessageData(data);
 }
 
@@ -624,7 +636,7 @@ BroadcastChannel::ActorCreated(PBackgroundChild* aActor)
   }
 
   PBroadcastChannelChild* actor =
-    aActor->SendPBroadcastChannelConstructor(mPrincipalInfo, mOrigin, mChannel);
+    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel);
 
   mActor = static_cast<BroadcastChannelChild*>(actor);
   MOZ_ASSERT(mActor);

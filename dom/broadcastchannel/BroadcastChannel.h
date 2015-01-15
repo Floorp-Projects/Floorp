@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -17,6 +16,11 @@
 class nsPIDOMWindow;
 
 namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace dom {
 
 namespace workers {
@@ -104,7 +108,8 @@ private:
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
-  PrincipalInfo mPrincipalInfo;
+  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
+
   nsString mOrigin;
   nsString mChannel;
 
