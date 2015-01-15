@@ -125,6 +125,24 @@ public:
       return true;
     }
 
+    // Walk up to our containing page
+    WorkerPrivate* wp = mWorkerPrivate;
+    while (wp->GetParent()) {
+      wp = wp->GetParent();
+    }
+
+    // Window doesn't exist for some kind of workers (eg: SharedWorkers)
+    nsPIDOMWindow* window = wp->GetWindow();
+    if (!window) {
+      return true;
+    }
+
+    nsIDocument* doc = window->GetExtantDoc();
+    // No bfcache when BroadcastChannel is used.
+    if (doc) {
+      doc->DisallowBFCaching();
+    }
+
     return true;
   }
 
@@ -400,6 +418,11 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
+    nsIDocument* doc = window->GetExtantDoc();
+    // No bfcache when BroadcastChannel is used.
+    if (doc) {
+      doc->DisallowBFCaching();
+    }
   } else {
     JSContext* cx = aGlobal.Context();
     workerPrivate = GetWorkerPrivateFromContext(cx);
@@ -506,7 +529,7 @@ BroadcastChannel::ActorCreated(ipc::PBackgroundChild* aActor)
   mActor = static_cast<BroadcastChannelChild*>(actor);
   MOZ_ASSERT(mActor);
 
-  mActor->SetEventTarget(this);
+  mActor->SetParent(this);
 
   // Flush pending messages.
   for (uint32_t i = 0; i < mPendingMessages.Length(); ++i) {
@@ -539,7 +562,7 @@ BroadcastChannel::Shutdown()
   }
 
   if (mActor) {
-    mActor->SetEventTarget(nullptr);
+    mActor->SetParent(nullptr);
 
     nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
     NS_DispatchToCurrentThread(runnable);
