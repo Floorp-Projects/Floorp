@@ -379,7 +379,8 @@ EventEmitter.decorate(PerformanceController);
  * Shortcuts for accessing various profiler preferences.
  */
 const Prefs = new ViewHelpers.Prefs("devtools.profiler", {
-  showPlatformData: ["Bool", "ui.show-platform-data"]
+  flattenTreeRecursion: ["Bool", "ui.flatten-tree-recursion"],
+  showPlatformData: ["Bool", "ui.show-platform-data"],
 });
 
 /**

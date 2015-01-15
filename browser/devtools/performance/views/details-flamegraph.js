@@ -42,7 +42,9 @@ let FlameGraphView = {
       return;
     }
     let samples = profilerData.profile.threads[0].samples;
-    let dataSrc = FlameGraphUtils.createFlameGraphDataFromSamples(samples);
+    let dataSrc = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+      flattenRecursion: Prefs.flattenTreeRecursion
+    });
     this.graph.setData(dataSrc);
     this.emit(EVENTS.FLAMEGRAPH_RENDERED);
   },
