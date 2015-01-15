@@ -5,7 +5,6 @@
 #ifndef mozilla_dom_BroadcastChannelChild_h
 #define mozilla_dom_BroadcastChannelChild_h
 
-#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/PBroadcastChannelChild.h"
 
 namespace mozilla {
@@ -16,7 +15,7 @@ class BackgroundChildImpl;
 
 namespace dom {
 
-class EventTarget;
+class BroadcastChannel;
 
 class BroadcastChannelChild MOZ_FINAL : public PBroadcastChannelChild
 {
@@ -25,9 +24,9 @@ class BroadcastChannelChild MOZ_FINAL : public PBroadcastChannelChild
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelChild)
 
-  void SetEventTarget(EventTarget* aEventTarget)
+  void SetParent(BroadcastChannel* aBC)
   {
-    mEventTarget = aEventTarget;
+    mBC = aBC;
   }
 
   virtual bool RecvNotify(const nsString& aMessage) MOZ_OVERRIDE;
@@ -49,7 +48,7 @@ private:
 
   // This raw pointer is actually the parent object.
   // It's set to null when the parent object is deleted.
-  EventTarget* mEventTarget;
+  BroadcastChannel* mBC;
 
   nsString mOrigin;
   nsString mChannel;

@@ -30,24 +30,29 @@ BroadcastChannelChild::BroadcastChannelChild(const nsAString& aOrigin,
 
 BroadcastChannelChild::~BroadcastChannelChild()
 {
-  MOZ_ASSERT(!mEventTarget);
+  MOZ_ASSERT(!mBC);
 }
 
 bool
 BroadcastChannelChild::RecvNotify(const nsString& aMessage)
 {
+  nsCOMPtr<DOMEventTargetHelper> helper = mBC;
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
+
   // This object is going to be deleted soon. No notify is required.
-  if (!mEventTarget) {
+  if (!eventTarget) {
+    return true;
+  }
+
+  // CheckInnerWindowCorrectness can be used also without a window when
+  // BroadcastChannel is running in a worker. In this case, it's a NOP.
+  if (NS_FAILED(mBC->CheckInnerWindowCorrectness())) {
     return true;
   }
 
   if (NS_IsMainThread()) {
-    DOMEventTargetHelper* deth =
-      DOMEventTargetHelper::FromSupports(mEventTarget);
-    MOZ_ASSERT(deth);
-
     AutoJSAPI autoJS;
-    if (!autoJS.Init(deth->GetParentObject())) {
+    if (!autoJS.Init(mBC->GetParentObject())) {
       NS_WARNING("Dropping message");
       return true;
     }
@@ -85,8 +90,7 @@ BroadcastChannelChild::Notify(JSContext* aCx, const nsString& aMessage)
 
   ErrorResult rv;
   nsRefPtr<MessageEvent> event =
-    MessageEvent::Constructor(mEventTarget, NS_LITERAL_STRING("message"),
-                              init, rv);
+    MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to create a MessageEvent object.");
     return;
@@ -95,7 +99,7 @@ BroadcastChannelChild::Notify(JSContext* aCx, const nsString& aMessage)
   event->SetTrusted(true);
 
   bool status;
-  mEventTarget->DispatchEvent(static_cast<Event*>(event.get()), &status);
+  mBC->DispatchEvent(static_cast<Event*>(event.get()), &status);
 }
 
 void
