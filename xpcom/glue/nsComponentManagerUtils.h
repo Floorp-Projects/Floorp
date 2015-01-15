@@ -37,7 +37,8 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const
+    MOZ_OVERRIDE;
 
 private:
   const nsCID&    mCID;
@@ -56,7 +57,7 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const MOZ_OVERRIDE;
 
 private:
   const char*   mContractID;
@@ -75,7 +76,7 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const MOZ_OVERRIDE;
 
 private:
   nsIFactory* MOZ_NON_OWNING_REF mFactory;
@@ -132,7 +133,7 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const MOZ_OVERRIDE;
 
 private:
   const nsCID&    mCID;
@@ -148,7 +149,7 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const MOZ_OVERRIDE;
 
 private:
   const char*   mContractID;
