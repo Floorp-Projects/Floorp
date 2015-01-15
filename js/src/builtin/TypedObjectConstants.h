@@ -32,9 +32,8 @@
 #define JS_DESCR_SLOT_ARRAYPROTO         6  // Lazily created prototype for arrays
 #define JS_DESCR_SLOT_TRACE_LIST         7  // List of references for use in tracing
 
-// Slots on scalars, references, and SIMD objects
+// Slots on scalars, references, and x4s
 #define JS_DESCR_SLOT_TYPE               8  // Type code
-#define JS_DESCR_SLOT_LANES              9
 
 // Slots on array descriptors
 #define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    8
@@ -86,6 +85,5 @@
 // case.
 #define JS_SIMDTYPEREPR_INT32         0
 #define JS_SIMDTYPEREPR_FLOAT32       1
-#define JS_SIMDTYPEREPR_FLOAT64       2
 
 #endif
