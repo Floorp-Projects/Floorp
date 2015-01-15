@@ -833,6 +833,8 @@ let FlameGraphUtils = {
    *                              should be omitted from the output
    *          - filterFrames: predicate used for filtering all frames, passing
    *                          in each frame, its index and the sample array
+   *          - showIdleBlocks: adds "idle" blocks when no frames are available
+   *                            using the provided localized text
    * @param array out [optional]
    *        An output storage to reuse for storing the flame graph data.
    * @return array
@@ -867,6 +869,11 @@ let FlameGraphUtils = {
       // should be taken into consideration.
       if (options.filterFrames) {
         frames = frames.filter(options.filterFrames);
+      }
+
+      // If no frames are available, add a pseudo "idle" block in between.
+      if (options.showIdleBlocks && frames.length == 0) {
+        frames = [{ location: options.showIdleBlocks || "" }];
       }
 
       for (let { location } of frames) {
