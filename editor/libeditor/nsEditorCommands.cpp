@@ -590,7 +590,7 @@ nsDeleteCommand::IsCommandEnabled(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!nsCRT::strcmp("cmd_delete", aCommandName) && *outCmdEnabled) {
-    rv = editor->CanCut(outCmdEnabled);
+    rv = editor->CanDelete(outCmdEnabled);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -1153,14 +1153,15 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 }
 
 bool
-nsPlaintextEditor::CanCutOrCopy()
+nsPlaintextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
 {
   nsRefPtr<Selection> selection = GetSelection();
   if (!selection) {
     return false;
   }
 
-  if (IsPasswordEditor())
+  if (aPasswordFieldAllowed == ePasswordFieldNotAllowed &&
+      IsPasswordEditor())
     return false;
 
   return !selection->Collapsed();
@@ -1198,7 +1199,7 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
 NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 {
   NS_ENSURE_ARG_POINTER(aCanCut);
-  *aCanCut = IsModifiable() && CanCutOrCopy();
+  *aCanCut = IsModifiable() && CanCutOrCopy(ePasswordFieldNotAllowed);
   return NS_OK;
 }
 
@@ -1211,7 +1212,14 @@ NS_IMETHODIMP nsPlaintextEditor::Copy()
 NS_IMETHODIMP nsPlaintextEditor::CanCopy(bool *aCanCopy)
 {
   NS_ENSURE_ARG_POINTER(aCanCopy);
-  *aCanCopy = CanCutOrCopy();
+  *aCanCopy = CanCutOrCopy(ePasswordFieldNotAllowed);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaintextEditor::CanDelete(bool *aCanDelete)
+{
+  NS_ENSURE_ARG_POINTER(aCanDelete);
+  *aCanDelete = IsModifiable() && CanCutOrCopy(ePasswordFieldAllowed);
   return NS_OK;
 }
 
