@@ -460,11 +460,7 @@ protected:
       return mJustificationInfo.mIsEndJustifiable;
     }
 
-    bool ParticipatesInJustification() const
-    {
-      // Skip bullets and empty frames
-      return !GetFlag(PFD_ISBULLET) && !GetFlag(PFD_ISEMPTY);
-    }
+    bool ParticipatesInJustification() const;
   };
   PerFrameData* mFrameFreeList;
 
