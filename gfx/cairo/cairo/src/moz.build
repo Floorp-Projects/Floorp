@@ -199,6 +199,9 @@ for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
     if CONFIG[var]:
         DEFINES[var] = True
 
+# Normally determined by cairo's configure script.
+DEFINES['HAVE_UINT64_T'] = True
+
 if CONFIG['GNU_CC']:
     DEFINES['HAVE_INTEL_ATOMIC_PRIMITIVES'] = True
     # We would normally use autoconf to set these up, using AC_CHECK_SIZEOF.
