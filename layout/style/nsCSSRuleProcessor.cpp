@@ -362,6 +362,8 @@ RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
 }
 
 static const PLDHashTableOps RuleHash_TagTable_Ops = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_TagTable_MatchEntry,
   RuleHash_TagTable_MoveEntry,
@@ -372,6 +374,8 @@ static const PLDHashTableOps RuleHash_TagTable_Ops = {
 // Case-sensitive ops.
 static const RuleHashTableOps RuleHash_ClassTable_CSOps = {
   {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_CSMatchEntry,
   RuleHash_MoveEntry,
@@ -384,6 +388,8 @@ static const RuleHashTableOps RuleHash_ClassTable_CSOps = {
 // Case-insensitive ops.
 static const RuleHashTableOps RuleHash_ClassTable_CIOps = {
   {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
   RuleHash_MoveEntry,
@@ -396,6 +402,8 @@ static const RuleHashTableOps RuleHash_ClassTable_CIOps = {
 // Case-sensitive ops.
 static const RuleHashTableOps RuleHash_IdTable_CSOps = {
   {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_CSMatchEntry,
   RuleHash_MoveEntry,
@@ -408,6 +416,8 @@ static const RuleHashTableOps RuleHash_IdTable_CSOps = {
 // Case-insensitive ops.
 static const RuleHashTableOps RuleHash_IdTable_CIOps = {
   {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
   RuleHash_MoveEntry,
@@ -418,6 +428,8 @@ static const RuleHashTableOps RuleHash_IdTable_CIOps = {
 };
 
 static const PLDHashTableOps RuleHash_NameSpaceTable_Ops = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   RuleHash_NameSpaceTable_HashKey,
   RuleHash_NameSpaceTable_MatchEntry,
   RuleHash_MoveEntry,
@@ -875,6 +887,8 @@ AtomSelector_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 
 // Case-sensitive ops.
 static const PLDHashTableOps AtomSelector_CSOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   PL_DHashMatchEntryStub,
   AtomSelector_MoveEntry,
@@ -885,6 +899,8 @@ static const PLDHashTableOps AtomSelector_CSOps = {
 // Case-insensitive ops.
 static const RuleHashTableOps AtomSelector_CIOps = {
   {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
   AtomSelector_MoveEntry,
@@ -3321,6 +3337,8 @@ InitWeightEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 }
 
 static const PLDHashTableOps gRulesByWeightOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
     HashIntKey,
     MatchWeightEntry,
     PL_DHashMoveEntryStub,

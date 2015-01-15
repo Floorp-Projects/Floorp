@@ -114,6 +114,8 @@ nsRuleNode::ChildrenHashOps = {
   // free rather than the pres shell's arena because the table doesn't
   // grow very often and the pres shell's arena doesn't recycle very
   // large size allocations.
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   ChildrenHashHashKey,
   ChildrenHashMatchEntry,
   PL_DHashMoveEntryStub,

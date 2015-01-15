@@ -94,6 +94,8 @@ caseInsensitiveStringHashKey(PLDHashTable* aTable, const void* aKey)
 }
 
 static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
   caseInsensitiveStringHashKey,
   matchNameKeysCaseInsensitive,
   PL_DHashMoveEntryStub,
