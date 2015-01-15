@@ -30,8 +30,10 @@
 #include <log/logprint.h>
 
 #ifdef _MSC_VER
+#if _MSC_VER < 1900
 #include <nspr/prprf.h>
 #define snprintf PR_snprintf
+#endif
 #define inline
 /* We don't want to indent large blocks because it causes unnecessary merge
  * conflicts */
