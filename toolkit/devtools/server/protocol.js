@@ -7,7 +7,7 @@
 let { Cu } = require("chrome");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let Services = require("Services");
-let promise = require("devtools/toolkit/deprecated-sync-thenables");
+let promise = require("promise");
 let {Class} = require("sdk/core/heritage");
 let {EventTarget} = require("sdk/event/target");
 let events = require("sdk/event/core");
