@@ -187,9 +187,11 @@ public:
   int8_t DomDependentByte();
   int8_t SetDomDependentByte(int8_t);
   int8_t ConstantByte();
+  int8_t DeviceStateDependentByte();
   int8_t ReturnByteSideEffectFree();
   int8_t ReturnDOMDependentByte();
   int8_t ReturnConstantByte();
+  int8_t ReturnDeviceStateDependentByte();
 
   void UnsafePrerenderMethod();
   int32_t UnsafePrerenderWritable();

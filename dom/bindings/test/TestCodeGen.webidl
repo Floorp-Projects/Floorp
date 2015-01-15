@@ -163,12 +163,16 @@ interface TestInterface {
   attribute byte domDependentByte;
   [Affects=Nothing, DependsOn=Nothing]
   readonly attribute byte constantByte;
+  [DependsOn=DeviceState, Affects=Nothing]
+  readonly attribute byte deviceStateDependentByte;
   [Affects=Nothing]
   byte returnByteSideEffectFree();
   [Affects=Nothing, DependsOn=DOMState]
   byte returnDOMDependentByte();
   [Affects=Nothing, DependsOn=Nothing]
   byte returnConstantByte();
+  [DependsOn=DeviceState, Affects=Nothing]
+  byte returnDeviceStateDependentByte();
 
   [UnsafeInPrerendering]
   void unsafePrerenderMethod();
