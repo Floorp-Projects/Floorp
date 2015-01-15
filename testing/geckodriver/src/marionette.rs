@@ -2,26 +2,109 @@ use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::io::{IoResult, TcpStream, IoError};
+use std::sync::Mutex;
 
-use command::{WebDriverMessage};
-use command::WebDriverCommand::{NewSession, DeleteSession, Get, GetCurrentUrl,
-                                GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
-                                GetWindowHandles, Close, SetWindowSize,
-                                GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
-                                SwitchToParentFrame, FindElement, FindElements, IsDisplayed,
-                                IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
-                                GetElementTagName, GetElementRect, IsEnabled, ElementClick,
-                                ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
-                                ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
-                                DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
-                                TakeScreenshot};
-use command::{GetParameters, WindowSizeParameters, SwitchToWindowParameters,
-              SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
-              GetCookieParameters, AddCookieParameters, TimeoutsParameters,
-              TakeScreenshotParameters};
-use response::{WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
-               ElementRectResponse, CookieResponse, Date, Cookie};
-use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId};
+use webdriver::command::{WebDriverMessage};
+use webdriver::command::WebDriverCommand::{
+    NewSession, DeleteSession, Get, GetCurrentUrl,
+    GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
+    GetWindowHandles, Close, SetWindowSize,
+    GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
+    SwitchToParentFrame, FindElement, FindElements, IsDisplayed,
+    IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
+    GetElementTagName, GetElementRect, IsEnabled, ElementClick,
+    ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
+    ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
+    DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
+    TakeScreenshot};
+use webdriver::command::{
+    GetParameters, WindowSizeParameters, SwitchToWindowParameters,
+    SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
+    GetCookieParameters, AddCookieParameters, TimeoutsParameters,
+    TakeScreenshotParameters};
+use webdriver::response::{
+    WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
+    ElementRectResponse, CookieResponse, Date, Cookie};
+use webdriver::common::{
+    WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId};
+use webdriver::httpserver::{WebDriverHandler, Session};
+
+
+pub struct MarionetteHandler {
+    connection: Mutex<Option<MarionetteConnection>>
+}
+
+impl MarionetteHandler {
+    pub fn new() -> MarionetteHandler {
+        MarionetteHandler {
+            connection: Mutex::new(None)
+        }
+    }
+
+    fn create_connection(&mut self, session_id: &Option<String>) -> WebDriverResult<()> {
+        let mut connection = MarionetteConnection::new(session_id.clone());
+        if connection.connect().is_err() {
+            return Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                "Failed to start marionette connection"));
+        }
+        self.connection = Mutex::new(Some(connection));
+        Ok(())
+    }
+}
+
+impl WebDriverHandler for MarionetteHandler {
+    fn handle_command(&mut self, session: &Option<Session>, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse> {
+        let mut create_connection = false;
+        match self.connection.lock() {
+            Ok(ref mut connection) => {
+                if connection.is_none() {
+                    match msg.command {
+                        NewSession => {
+                            create_connection = true;
+                        },
+                        _ => {
+                            return Err(WebDriverError::new(
+                                ErrorStatus::UnknownError,
+                                "Tried to run command without establishing a connection"));
+                        }
+                    }
+                }
+            },
+            Err(_) => {
+                return Err(WebDriverError::new(
+                    ErrorStatus::UnknownError,
+                    "Failed to aquire marionette connection"))
+            }
+        }
+        if create_connection {
+            try!(self.create_connection(&msg.session_id));
+        }
+        match self.connection.lock() {
+            Ok(ref mut connection) => {
+                match connection.as_mut() {
+                    Some(conn) => conn.send_message(msg),
+                    None => panic!()
+                }
+            },
+            Err(_) => {
+                Err(WebDriverError::new(
+                    ErrorStatus::UnknownError,
+                    "Failed to aquire marionette connection"))
+            }
+        }
+    }
+
+    fn delete_session(&mut self, session: &Option<Session>) {
+        if let Ok(connection) = self.connection.lock() {
+            if let Some(ref conn) = *connection {
+                conn.close();
+            }
+        }
+        self.connection = Mutex::new(None);
+    }
+}
+
 
 pub struct MarionetteSession {
     pub session_id: String,
@@ -332,6 +415,9 @@ impl MarionetteConnection {
             }
             Err(_) => panic!("Failed to connect to marionette")
         }
+    }
+
+    pub fn close(&self) {
     }
 
     fn encode_msg(&self, msg:&Json) -> String {
