@@ -96,6 +96,7 @@ public:
   NS_IMETHOD CanCut(bool *aCanCut) MOZ_OVERRIDE;
   NS_IMETHOD Copy() MOZ_OVERRIDE;
   NS_IMETHOD CanCopy(bool *aCanCopy) MOZ_OVERRIDE;
+  NS_IMETHOD CanDelete(bool *aCanDelete) MOZ_OVERRIDE;
   NS_IMETHOD Paste(int32_t aSelectionType) MOZ_OVERRIDE;
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste) MOZ_OVERRIDE;
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable) MOZ_OVERRIDE;
@@ -203,7 +204,11 @@ protected:
   /* small utility routine to test the eEditorReadonly bit */
   bool IsModifiable();
 
-  bool CanCutOrCopy();
+  enum PasswordFieldAllowed {
+    ePasswordFieldAllowed,
+    ePasswordFieldNotAllowed
+  };
+  bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
   bool FireClipboardEvent(int32_t aType, int32_t aSelectionType);
 
   bool UpdateMetaCharset(nsIDOMDocument* aDocument,
