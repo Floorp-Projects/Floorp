@@ -21,8 +21,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(a1ddae68-35d0-11e4-9329-cb55463f21c9)]
-
+[scriptable, uuid(094be624-f0bf-400f-89e2-6a84baab9474)]
 interface nsIEditor  : nsISupports
 {
 %{C++
@@ -305,18 +304,22 @@ interface nsIEditor  : nsISupports
     * collapsed selection.
     */
   boolean canCut();
-  
+
   /** copy the currently selected text, putting it into the OS clipboard
     * What if no text is selected?
     * What about mixed selections?
     * What are the clipboard formats?
     */
   void copy();
-  
+
   /** Can we copy? True if we have a non-collapsed selection.
     */
   boolean canCopy();
-  
+
+  /** Can we delete? True if we have a non-collapsed selection.
+    */
+  boolean canDelete();
+
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
     */
