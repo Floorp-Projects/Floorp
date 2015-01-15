@@ -273,6 +273,18 @@ public:
                          : RawAccessFrameRef();
   }
 
+  /**
+   * Writes data to the decoder. Only public for the benefit of nsICODecoder;
+   * other callers should use Decode().
+   *
+   * @param aBuffer buffer containing the data to be written
+   * @param aCount the number of bytes to write
+   *
+   * Any errors are reported by setting the appropriate state on the decoder.
+   */
+  void Write(const char* aBuffer, uint32_t aCount);
+
+
 protected:
   virtual ~Decoder();
 
@@ -364,15 +376,6 @@ protected:
                                      gfx::SurfaceFormat aFormat,
                                      uint8_t aPaletteDepth,
                                      imgFrame* aPreviousFrame);
-  /**
-   * Writes data to the decoder.
-   *
-   * @param aBuffer buffer containing the data to be written
-   * @param aCount the number of bytes to write
-   *
-   * Any errors are reported by setting the appropriate state on the decoder.
-   */
-  void Write(const char* aBuffer, uint32_t aCount);
 
   /*
    * Member variables.

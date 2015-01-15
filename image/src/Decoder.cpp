@@ -404,18 +404,25 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
              aPreviousFrame->GetPaletteDepth() != aPaletteDepth,
              "Replacing first frame with the same kind of frame?");
 
-  // Remove the old frame from the SurfaceCache and release our reference to it.
-  IntSize prevFrameSize = aPreviousFrame->GetImageSize();
-  SurfaceCache::RemoveSurface(ImageKey(&mImage),
-                              RasterSurfaceKey(prevFrameSize, aDecodeFlags, 0));
-  mFrameCount = 0;
+  // Reset our state.
   mInFrame = false;
-  mCurrentFrame->Abort();
-  mCurrentFrame = RawAccessFrameRef();
+  RawAccessFrameRef ref = Move(mCurrentFrame);
 
-  // Add the new frame as usual.
-  return InternalAddFrame(aFrameNum, aFrameRect, aDecodeFlags, aFormat,
-                          aPaletteDepth, nullptr);
+  MOZ_ASSERT(ref, "No ref to current frame?");
+
+  // Reinitialize the old frame.
+  nsIntSize oldSize = ThebesIntSize(aPreviousFrame->GetImageSize());
+  bool nonPremult =
+    aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+  if (NS_FAILED(aPreviousFrame->ReinitForDecoder(oldSize, aFrameRect, aFormat,
+                                               aPaletteDepth, nonPremult))) {
+    NS_WARNING("imgFrame::ReinitForDecoder should succeed");
+    mFrameCount = 0;
+    aPreviousFrame->Abort();
+    return RawAccessFrameRef();
+  }
+
+  return ref;
 }
 
 RawAccessFrameRef
