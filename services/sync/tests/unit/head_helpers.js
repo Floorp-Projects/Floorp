@@ -3,6 +3,7 @@
 
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://testing-common/services/common/utils.js");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
 let provider = {
   getFile: function(prop, persistent) {
