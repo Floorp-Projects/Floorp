@@ -589,9 +589,6 @@ Section "-Application" APP_IDX
     ${EndUnless}
   ${EndIf}
 
-  ; Add the Firewall entries during install
-  Call AddFirewallEntries
-
 !ifdef MOZ_MAINTENANCE_SERVICE
   ${If} $TmpVal == "HKLM"
     ; Add the registry keys for allowed certificates.
@@ -626,6 +623,9 @@ Section "-InstallEndCleanup"
 
   ${GetShortcutsLogPath} $0
   WriteIniStr "$0" "TASKBAR" "Migrated" "true"
+
+  ; Add the Firewall entries during install
+  Call AddFirewallEntries
 
   ; Refresh desktop icons
   System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i ${SHCNF_DWORDFLUSH}, i 0, i 0)"
