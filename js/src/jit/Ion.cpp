@@ -2508,10 +2508,16 @@ jit::StopAllOffThreadCompilations(JSCompartment *comp)
 }
 
 void
-jit::InvalidateAll(FreeOp *fop, Zone *zone)
+jit::StopAllOffThreadCompilations(Zone *zone)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         StopAllOffThreadCompilations(comp);
+}
+
+void
+jit::InvalidateAll(FreeOp *fop, Zone *zone)
+{
+    StopAllOffThreadCompilations(zone);
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter->compartment()->zone() == zone) {
