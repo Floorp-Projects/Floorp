@@ -24,7 +24,7 @@ class WorkerFeature;
 }
 
 class BroadcastChannelChild;
-struct BroadcastChannelMessage;
+class BroadcastChannelMessage;
 
 class BroadcastChannel MOZ_FINAL
   : public DOMEventTargetHelper

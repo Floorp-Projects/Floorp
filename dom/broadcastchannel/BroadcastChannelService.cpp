@@ -75,7 +75,7 @@ namespace {
 struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
 {
   PostMessageData(BroadcastChannelParent* aParent,
-                  const BroadcastChannelMessageData& aData,
+                  const ClonedMessageData& aData,
                   const nsAString& aOrigin,
                   const nsAString& aChannel)
     : mParent(aParent)
@@ -93,7 +93,7 @@ struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
   }
 
   BroadcastChannelParent* mParent;
-  const BroadcastChannelMessageData& mData;
+  const ClonedMessageData& mData;
   const nsString mOrigin;
   const nsString mChannel;
 };
@@ -118,7 +118,7 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
 
 void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
-                                     const BroadcastChannelMessageData& aData,
+                                     const ClonedMessageData& aData,
                                      const nsAString& aOrigin,
                                      const nsAString& aChannel)
 {
