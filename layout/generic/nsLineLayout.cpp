@@ -2445,6 +2445,22 @@ nsLineLayout::TrimTrailingWhiteSpace()
   return 0 != deltaISize;
 }
 
+bool
+nsLineLayout::PerFrameData::ParticipatesInJustification() const
+{
+  if (GetFlag(PFD_ISBULLET) || GetFlag(PFD_ISEMPTY) ||
+      GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
+    // Skip bullets, empty frames, and placeholders
+    return false;
+  }
+  if (GetFlag(PFD_ISTEXTFRAME) && !GetFlag(PFD_ISNONWHITESPACETEXTFRAME) &&
+      static_cast<nsTextFrame*>(mFrame)->IsAtEndOfLine()) {
+    // Skip trimmed whitespaces
+    return false;
+  }
+  return true;
+}
+
 struct nsLineLayout::JustificationComputationState
 {
   PerFrameData* mLastParticipant;
