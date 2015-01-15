@@ -7,6 +7,7 @@
 #include "BroadcastChannelChild.h"
 #include "mozilla/dom/BroadcastChannelBinding.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -27,6 +28,22 @@ using namespace ipc;
 namespace dom {
 
 using namespace workers;
+
+class BroadcastChannelMessage MOZ_FINAL
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(BroadcastChannelMessage)
+
+  JSAutoStructuredCloneBuffer mBuffer;
+  StructuredCloneClosure mClosure;
+
+  BroadcastChannelMessage()
+  { }
+
+private:
+  ~BroadcastChannelMessage()
+  { }
+};
 
 namespace {
 
@@ -159,9 +176,9 @@ public:
   NS_DECL_ISUPPORTS
 
   PostMessageRunnable(BroadcastChannelChild* aActor,
-                      const nsAString& aMessage)
+                      BroadcastChannelMessage* aData)
     : mActor(aActor)
-    , mMessage(aMessage)
+    , mData(aData)
   {
     MOZ_ASSERT(mActor);
   }
@@ -169,9 +186,24 @@ public:
   NS_IMETHODIMP Run()
   {
     MOZ_ASSERT(mActor);
-    if (!mActor->IsActorDestroyed()) {
-      mActor->SendPostMessage(mMessage);
+    if (mActor->IsActorDestroyed()) {
+      return NS_OK;
     }
+
+    BroadcastChannelMessageData message;
+
+    SerializedStructuredCloneBuffer& buffer = message.data();
+    buffer.data = mData->mBuffer.data();
+    buffer.dataLength = mData->mBuffer.nbytes();
+
+#ifdef DEBUG
+    {
+      const nsTArray<nsRefPtr<File>>& blobs = mData->mClosure.mBlobs;
+      MOZ_ASSERT(blobs.IsEmpty());
+    }
+#endif
+
+    mActor->SendPostMessage(message);
     return NS_OK;
   }
 
@@ -185,7 +217,7 @@ private:
   ~PostMessageRunnable() {}
 
   nsRefPtr<BroadcastChannelChild> mActor;
-  nsString mMessage;
+  nsRefPtr<BroadcastChannelMessage> mData;
 };
 
 NS_IMPL_ISUPPORTS(PostMessageRunnable, nsICancelableRunnable, nsIRunnable)
@@ -466,22 +498,38 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 }
 
 void
-BroadcastChannel::PostMessage(const nsAString& aMessage, ErrorResult& aRv)
+BroadcastChannel::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                              ErrorResult& aRv)
 {
   if (mState != StateActive) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  PostMessageInternal(aMessage);
+  PostMessageInternal(aCx, aMessage, aRv);
 }
 
 void
-BroadcastChannel::PostMessageInternal(const nsAString& aMessage)
+BroadcastChannel::PostMessageInternal(JSContext* aCx,
+                                      JS::Handle<JS::Value> aMessage,
+                                      ErrorResult& aRv)
+{
+  nsRefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
+
+  if (!WriteStructuredClone(aCx, aMessage, data->mBuffer, data->mClosure)) {
+    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    return;
+  }
+
+  PostMessageData(data);
+}
+
+void
+BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
 {
   if (mActor) {
     nsRefPtr<PostMessageRunnable> runnable =
-      new PostMessageRunnable(mActor, aMessage);
+      new PostMessageRunnable(mActor, aData);
 
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch to the current thread!");
@@ -490,7 +538,7 @@ BroadcastChannel::PostMessageInternal(const nsAString& aMessage)
     return;
   }
 
-  mPendingMessages.AppendElement(aMessage);
+  mPendingMessages.AppendElement(aData);
 }
 
 void
@@ -533,7 +581,7 @@ BroadcastChannel::ActorCreated(ipc::PBackgroundChild* aActor)
 
   // Flush pending messages.
   for (uint32_t i = 0; i < mPendingMessages.Length(); ++i) {
-    PostMessageInternal(mPendingMessages[i]);
+    PostMessageData(mPendingMessages[i]);
   }
 
   mPendingMessages.Clear();

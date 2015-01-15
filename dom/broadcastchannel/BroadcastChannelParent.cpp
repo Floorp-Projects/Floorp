@@ -31,7 +31,8 @@ BroadcastChannelParent::~BroadcastChannelParent()
 }
 
 bool
-BroadcastChannelParent::RecvPostMessage(const nsString& aMessage)
+BroadcastChannelParent::RecvPostMessage(
+                                       const BroadcastChannelMessageData& aData)
 {
   AssertIsOnBackgroundThread();
 
@@ -39,7 +40,7 @@ BroadcastChannelParent::RecvPostMessage(const nsString& aMessage)
     return false;
   }
 
-  mService->PostMessage(this, aMessage, mOrigin, mChannel);
+  mService->PostMessage(this, aData, mOrigin, mChannel);
   return true;
 }
 
@@ -73,14 +74,15 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
-BroadcastChannelParent::CheckAndDeliver(const nsString& aMessage,
-                                        const nsString& aOrigin,
-                                        const nsString& aChannel)
+BroadcastChannelParent::CheckAndDeliver(
+                                       const BroadcastChannelMessageData& aData,
+                                       const nsString& aOrigin,
+                                       const nsString& aChannel)
 {
   AssertIsOnBackgroundThread();
 
   if (aOrigin == mOrigin && aChannel == mChannel) {
-    unused << SendNotify(aMessage);
+    unused << SendNotify(aData);
   }
 }
 
