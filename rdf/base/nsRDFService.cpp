@@ -146,7 +146,6 @@ static const PLDHashTableOps gResourceTableOps = {
     ResourceHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -184,7 +183,6 @@ static const PLDHashTableOps gLiteralTableOps = {
     LiteralHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -221,7 +219,6 @@ static const PLDHashTableOps gIntTableOps = {
     IntHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -262,7 +259,6 @@ static const PLDHashTableOps gDateTableOps = {
     DateHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -382,7 +378,6 @@ static const PLDHashTableOps gBlobTableOps = {
     BlobHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
 };
 
@@ -760,20 +755,16 @@ RDFServiceImpl::Init()
     if (! mNamedDataSources)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_DHashTableInit(&mResources, &gResourceTableOps, nullptr,
+    PL_DHashTableInit(&mResources, &gResourceTableOps,
                       sizeof(ResourceHashEntry));
 
-    PL_DHashTableInit(&mLiterals, &gLiteralTableOps, nullptr,
-                      sizeof(LiteralHashEntry));
+    PL_DHashTableInit(&mLiterals, &gLiteralTableOps, sizeof(LiteralHashEntry));
 
-    PL_DHashTableInit(&mInts, &gIntTableOps, nullptr,
-                      sizeof(IntHashEntry));
+    PL_DHashTableInit(&mInts, &gIntTableOps, sizeof(IntHashEntry));
 
-    PL_DHashTableInit(&mDates, &gDateTableOps, nullptr,
-                      sizeof(DateHashEntry));
+    PL_DHashTableInit(&mDates, &gDateTableOps, sizeof(DateHashEntry));
 
-    PL_DHashTableInit(&mBlobs, &gBlobTableOps, nullptr,
-                      sizeof(BlobHashEntry));
+    PL_DHashTableInit(&mBlobs, &gBlobTableOps, sizeof(BlobHashEntry));
 
     mDefaultResourceFactory = do_GetClassObject(kRDFDefaultResourceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");

@@ -129,8 +129,7 @@ const PLDHashTableOps nsDiskCacheBindery::ops =
     HashKey,
     MatchEntry,
     MoveEntry,
-    ClearEntry,
-    PL_DHashFinalizeStub
+    ClearEntry
 };
 
 
@@ -150,7 +149,7 @@ nsresult
 nsDiskCacheBindery::Init()
 {
     nsresult rv = NS_OK;
-    PL_DHashTableInit(&table, &ops, nullptr, sizeof(HashTableEntry), 0);
+    PL_DHashTableInit(&table, &ops, sizeof(HashTableEntry), 0);
     initialized = true;
 
     return rv;

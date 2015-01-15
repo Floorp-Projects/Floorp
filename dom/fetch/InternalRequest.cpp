@@ -25,9 +25,16 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->mURL.Assign(mURL);
   copy->SetMethod(mMethod);
   copy->mHeaders = new InternalHeaders(*mHeaders);
+  copy->SetUnsafeRequest();
 
   copy->mBodyStream = mBodyStream;
+  copy->mForceOriginHeader = true;
+  // The "client" is not stored in our implementation. Fetch API users should
+  // use the appropriate window/document/principal and other Gecko security
+  // mechanisms as appropriate.
+  copy->mSameOriginDataURL = true;
   copy->mPreserveContentCodings = true;
+  // The default referrer is already about:client.
 
   copy->mContext = nsIContentPolicy::TYPE_FETCH;
   copy->mMode = mMode;

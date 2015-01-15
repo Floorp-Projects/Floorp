@@ -48,7 +48,6 @@ public:
   nsresult Check(const nsACString& aSpec,
                  const nsACString& tables,
                  uint32_t aFreshnessGuarantee,
-                 nsICryptoHash* aCryptoHash,
                  LookupResultArray& aResults);
 
   /**

@@ -40,6 +40,7 @@ public:
 
   Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
                       Input, /*out*/ TrustLevel& trustLevel)
+                      /*non-final*/ override
   {
     EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
     trustLevel = TrustLevel::InheritsTrust;
@@ -52,9 +53,9 @@ public:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA, const CertID&,
-                                 Time time, /*optional*/ const Input*,
-                                 /*optional*/ const Input*)
+  Result CheckRevocation(EndEntityOrCA endEntityOrCA, const CertID&, Time time,
+                         /*optional*/ const Input*, /*optional*/ const Input*)
+                         final override
   {
     // TODO: I guess mozilla::pkix should support revocation of designated
     // OCSP responder eventually, but we don't now, so this function should
@@ -63,25 +64,25 @@ public:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result IsChainValid(const DERArray&, Time)
+  Result IsChainValid(const DERArray&, Time) final override
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  Input subjectPublicKeyInfo)
+  Result VerifySignedData(const SignedDataWithSignature& signedData,
+                          Input subjectPublicKeyInfo) final override
   {
     return TestVerifySignedData(signedData, subjectPublicKeyInfo);
   }
 
-  virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
-                           size_t digestBufLen)
+  Result DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+                   final override
   {
     return TestDigestBuf(item, digestBuf, digestBufLen);
   }
 
-  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
+  Result CheckPublicKey(Input subjectPublicKeyInfo) final override
   {
     return TestCheckPublicKey(subjectPublicKeyInfo);
   }
@@ -950,7 +951,7 @@ public:
     }
   }
 
-  class TrustDomain : public OCSPTestTrustDomain
+  class TrustDomain final : public OCSPTestTrustDomain
   {
   public:
     TrustDomain()
@@ -965,10 +966,9 @@ public:
       return true;
     }
   private:
-    virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                const CertPolicyId&,
-                                Input candidateCert,
-                                /*out*/ TrustLevel& trustLevel)
+    Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
+                        Input candidateCert, /*out*/ TrustLevel& trustLevel)
+                        override
     {
       EXPECT_EQ(endEntityOrCA, EndEntityOrCA::MustBeEndEntity);
       EXPECT_FALSE(certDER.empty());

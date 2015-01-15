@@ -7,33 +7,11 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
+#include "mozilla/layers/CompositorParent.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
-
-class TestLayerManager: public LayerManager {
-public:
-  TestLayerManager()
-    : LayerManager()
-  {}
-
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) { return false; }
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() { return nullptr; }
-  virtual void GetBackendName(nsAString& aName) {}
-  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
-  virtual void BeginTransaction() {}
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() { return nullptr; }
-  virtual void SetRoot(Layer* aLayer) {}
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() { return nullptr; }
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) {}
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() { return nullptr; }
-  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) {}
-  virtual int32_t GetMaxTextureSize() const { return 0; }
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() { return nullptr; }
-};
 
 class TestContainerLayer: public ContainerLayer {
 public:
@@ -71,6 +49,44 @@ public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     MOZ_CRASH();
   }
+};
+
+class TestLayerManager: public LayerManager {
+public:
+  TestLayerManager()
+    : LayerManager()
+  {}
+
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) { return false; }
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() {
+    nsRefPtr<ContainerLayer> layer = new TestContainerLayer(this);
+    return layer.forget();
+  }
+  virtual void GetBackendName(nsAString& aName) {}
+  virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
+  virtual void BeginTransaction() {}
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() {
+    NS_RUNTIMEABORT("Not implemented.");
+    return nullptr;
+  }
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() {
+    nsRefPtr<PaintedLayer> layer = new TestPaintedLayer(this);
+    return layer.forget();
+  }
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() {
+    NS_RUNTIMEABORT("Not implemented.");
+    return nullptr;
+  }
+  virtual void SetRoot(Layer* aLayer) {}
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) {}
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
+    NS_RUNTIMEABORT("Not implemented.");
+    return nullptr;
+  }
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
+                              void* aCallbackData,
+                              EndTransactionFlags aFlags = END_DEFAULT) {}
+  virtual int32_t GetMaxTextureSize() const { return 0; }
 };
 
 class TestUserData: public LayerUserData {
@@ -153,9 +169,11 @@ static
 already_AddRefed<Layer> CreateLayer(char aLayerType, LayerManager* aManager) {
   nsRefPtr<Layer> layer = nullptr;
   if (aLayerType == 'c') {
-    layer = new TestContainerLayer(aManager);
+    layer = aManager->CreateContainerLayer();
   } else if (aLayerType == 't') {
-    layer = new TestPaintedLayer(aManager);
+    layer = aManager->CreatePaintedLayer();
+  } else if (aLayerType == 'o') {
+    layer = aManager->CreateColorLayer();
   }
   return layer.forget();
 }
@@ -169,7 +187,9 @@ already_AddRefed<Layer> CreateLayerTree(
 
   aLayersOut.Clear();
 
-  manager = new TestLayerManager();
+  if (!manager) {
+    manager = new TestLayerManager();
+  }
 
   nsRefPtr<Layer> rootLayer = nullptr;
   nsRefPtr<ContainerLayer> parentContainerLayer = nullptr;
@@ -215,6 +235,11 @@ already_AddRefed<Layer> CreateLayerTree(
   }
   if (rootLayer) {
     rootLayer->ComputeEffectiveTransforms(Matrix4x4());
+    manager->SetRoot(rootLayer);
+    if (rootLayer->AsLayerComposite()) {
+      // Only perform this for LayerManagerComposite
+      CompositorParent::SetShadowProperties(rootLayer);
+    }
   }
   return rootLayer.forget();
 }

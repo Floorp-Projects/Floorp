@@ -5,8 +5,8 @@ apply from: rootProject.file("${topsrcdir}/mobile/android/gradle/android.gradle"
 android {
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFile getDefaultProguardFile('proguard-android.txt')
+            minifyEnabled true
+            proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
         }
     }
 
@@ -24,5 +24,31 @@ android {
 
 dependencies {
     compile project(':base')
+    compile project(':omnijar')
     androidTestCompile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+/**
+ * We want to expose the JSM files and chrome content to IDEs; the omnijar
+ * project does this.  In addition, the :omnijar:buildOmnijar task builds a new
+ * omni.ja (directly into the object directory).
+ *
+ * The task dependency is: :generateDebugAssets -> :omnijar:buildOmnijar.
+ *
+ * One might expect that we could do this all in the omnijar project, but there
+ * appears to be a bug (which I have not fully isolated) where-by debug-only
+ * assets in a library (.aar file) are ignored in favor of release assets.  This
+ * means we would have to insert the omni.ja into the omnijar project's release
+ * assets, which is altogether confusing.
+ */
+android.applicationVariants.all { variant ->
+    // We only insert omni.ja and the .so libraries into debug builds.
+    def name = variant.buildType.name
+    if (!name.contains(com.android.builder.core.BuilderConstants.DEBUG)) {
+        return
+    }
+
+    def buildOmnijarTask = project(':omnijar').tasks.getByName('buildOmnijar')
+    def generateAssetsTask = tasks.findByName("generate${name.capitalize()}Assets")
+    generateAssetsTask.dependsOn buildOmnijarTask
 }

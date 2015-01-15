@@ -205,13 +205,9 @@ CollectJitStackScripts(JSContext *cx, const Debugger::ExecutionObservableSet &ob
                 // See cases F and G in PatchBaselineFramesForDebugMode.
                 if (!entries.append(DebugModeOSREntry(script, info)))
                     return false;
-            } else if (frame->isDebuggerHandlingException() && frame->maybeOverridePc()) {
+            } else if (frame->isDebuggerHandlingException()) {
                 // We are in the middle of handling an exception and the frame
-                // has an override pc. This happens since we could have bailed
-                // out in place from Ion after a throw, settling on the pc which
-                // may have no ICEntry (e.g., Ion is free to insert resume
-                // points after non-effectful ops for better register
-                // allocation).
+                // must have an override pc.
                 uint32_t offset = script->pcToOffset(frame->overridePc());
                 if (!entries.append(DebugModeOSREntry(script, offset)))
                     return false;

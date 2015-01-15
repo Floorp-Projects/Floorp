@@ -14,7 +14,6 @@ var FindHelper = {
     switch(aTopic) {
       case "FindInPage:Opened": {
         this._findOpened();
-        this._init();
         break;
       }
 
@@ -115,7 +114,9 @@ var FindHelper = {
   },
 
   findAgain: function(searchString, findBackwards, matchCase) {
-    // This can happen if the user taps next/previous after re-opening the search bar
+    // This always happens if the user taps next/previous after re-opening the
+    // search bar, and not only forces _init() but also an initial fastFind(STRING)
+    // before any findAgain(DIRECTION).
     if (!this._finder) {
       this.doFind(searchString, matchCase);
       return;

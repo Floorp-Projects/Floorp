@@ -123,7 +123,7 @@ this.UITour = {
     ["loop-newRoom", {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
-        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
         if (!loopBrowser) {
           return null;
         }
@@ -135,7 +135,7 @@ this.UITour = {
     ["loop-roomList", {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
-        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
         if (!loopBrowser) {
           return null;
         }
@@ -162,7 +162,7 @@ this.UITour = {
     }],
     ["loop-signInUpLink", {
       query: (aDocument) => {
-        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop");
+        let loopBrowser = aDocument.querySelector("#loop-notification-panel > #loop-panel-iframe");
         if (!loopBrowser) {
           return null;
         }
