@@ -464,8 +464,6 @@ Section "Uninstall"
     ${EndIf}
   ${EndIf}
 
-	liteFirewallW::RemoveRule "$INSTDIR\${FileMainEXE}" "${BrandShortName} ($INSTDIR)"
-
   ; Refresh desktop icons otherwise the start menu internet item won't be
   ; removed and other ugly things will happen like recreation of the app's
   ; clients registry key by the OS under some conditions.
@@ -489,6 +487,11 @@ Section "Uninstall"
   Call un.UninstallServiceIfNotUsed
 !endif
 
+  ${un.IsFirewallSvcRunning}
+  Pop $0
+  ${If} "$0" == "true"
+    liteFirewallW::RemoveRule "$INSTDIR\${FileMainEXE}" "${BrandShortName} ($INSTDIR)"
+  ${EndIf}
 SectionEnd
 
 ################################################################################
