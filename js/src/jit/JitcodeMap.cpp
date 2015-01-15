@@ -78,7 +78,8 @@ JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
     MOZ_ASSERT(containsPointer(ptr));
     MOZ_ASSERT(script_->hasBaselineScript());
 
-    jsbytecode *pc = script_->baselineScript()->pcForNativeAddress(script_, (uint8_t*) ptr);
+    uint8_t *addr = reinterpret_cast<uint8_t*>(ptr);
+    jsbytecode *pc = script_->baselineScript()->approximatePcForNativeAddress(script_, addr);
     if (!results.append(BytecodeLocation(script_, pc)))
         return false;
 

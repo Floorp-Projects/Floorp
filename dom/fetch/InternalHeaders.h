@@ -89,11 +89,12 @@ public:
 
   void
   GetEntries(nsTArray<InternalHeaders::Entry>& aEntries) const;
+
+  void
+  GetUnsafeHeaders(nsTArray<nsCString>& aNames) const;
 private:
   virtual ~InternalHeaders();
 
-  static bool IsSimpleHeader(const nsACString& aName,
-                             const nsACString& aValue);
   static bool IsInvalidName(const nsACString& aName, ErrorResult& aRv);
   static bool IsInvalidValue(const nsACString& aValue, ErrorResult& aRv);
   bool IsImmutable(ErrorResult& aRv) const;
@@ -120,6 +121,9 @@ private:
            IsForbiddenRequestNoCorsHeader(aName, aValue) ||
            IsForbiddenResponseHeader(aName);
   }
+
+  static bool IsSimpleHeader(const nsACString& aName,
+                             const nsACString& aValue);
 };
 
 } // namespace dom

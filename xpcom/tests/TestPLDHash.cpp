@@ -20,7 +20,7 @@ static bool test_pldhash_Init_capacity_ok()
   // will allocate 0.5GB of entry store on 32-bit platforms and 1GB on 64-bit
   // platforms.
   PLDHashTable t;
-  bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(), nullptr,
+  bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(),
                               sizeof(PLDHashEntryStub),
                               mozilla::fallible_t(),
                               PL_DHASH_MAX_INITIAL_LENGTH);
@@ -34,7 +34,7 @@ static bool test_pldhash_Init_capacity_too_large()
 {
   // Try the smallest too-large capacity.
   PLDHashTable t;
-  bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(), nullptr,
+  bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(),
                               sizeof(PLDHashEntryStub),
                               mozilla::fallible_t(),
                               PL_DHASH_MAX_INITIAL_LENGTH + 1);
@@ -59,7 +59,7 @@ static bool test_pldhash_Init_overflow()
 
   // |nullptr| for |ops| is ok because it's unused due to the failure.
   PLDHashTable t;
-  bool ok = PL_DHashTableInit(&t, /* ops = */nullptr, nullptr,
+  bool ok = PL_DHashTableInit(&t, /* ops = */nullptr,
                               sizeof(OneKBEntry), mozilla::fallible_t(),
                               PL_DHASH_MAX_INITIAL_LENGTH);
 
@@ -86,12 +86,11 @@ static bool test_pldhash_grow_to_max_capacity()
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
     nullptr
   };
 
   PLDHashTable t;
-  bool ok = PL_DHashTableInit(&t, &ops, nullptr, sizeof(PLDHashEntryStub),
+  bool ok = PL_DHashTableInit(&t, &ops, sizeof(PLDHashEntryStub),
                               mozilla::fallible_t(), 128);
   if (!ok)
     return false;

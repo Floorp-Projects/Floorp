@@ -23,7 +23,7 @@ using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsRubyFrame)
   NS_QUERYFRAME_ENTRY(nsRubyFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsRubyFrameSuper)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyFrame)
 
@@ -48,8 +48,10 @@ nsRubyFrame::GetType() const
 /* virtual */ bool
 nsRubyFrame::IsFrameOfType(uint32_t aFlags) const
 {
-  return nsContainerFrame::IsFrameOfType(aFlags &
-    ~(nsIFrame::eLineParticipant));
+  if (aFlags & eBidiInlineContainer) {
+    return false;
+  }
+  return nsRubyFrameSuper::IsFrameOfType(aFlags);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -121,32 +123,6 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
   aData->currentLine += sum;
 }
 
-/* virtual */ LogicalSize
-nsRubyFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                           WritingMode aWM,
-                           const LogicalSize& aCBSize,
-                           nscoord aAvailableISize,
-                           const LogicalSize& aMargin,
-                           const LogicalSize& aBorder,
-                           const LogicalSize& aPadding,
-                           ComputeSizeFlags aFlags)
-{
-  // Ruby frame is inline, hence don't compute size before reflow.
-  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-}
-
-/* virtual */ nscoord
-nsRubyFrame::GetLogicalBaseline(WritingMode aWritingMode) const
-{
-  return mBaseline;
-}
-
-/* virtual */ bool
-nsRubyFrame::CanContinueTextRun() const
-{
-  return true;
-}
-
 /* virtual */ void
 nsRubyFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -173,12 +149,18 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   WritingMode frameWM = aReflowState.GetWritingMode();
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
-  nscoord startEdge = borderPadding.IStart(frameWM);
-  nscoord endEdge = aReflowState.AvailableISize() - borderPadding.IEnd(frameWM);
+  nscoord startEdge = 0;
+  const bool boxDecorationBreakClone =
+    StyleBorder()->mBoxDecorationBreak == NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+  if (boxDecorationBreakClone || !GetPrevContinuation()) {
+    startEdge = borderPadding.IStart(frameWM);
+  }
   NS_ASSERTION(aReflowState.AvailableISize() != NS_UNCONSTRAINEDSIZE,
                "should no longer use available widths");
+  nscoord availableISize = aReflowState.AvailableISize();
+  availableISize -= startEdge + borderPadding.IEnd(frameWM);
   aReflowState.mLineLayout->BeginSpan(this, &aReflowState,
-                                      startEdge, endEdge, &mBaseline);
+                                      startEdge, availableISize, &mBaseline);
 
   aStatus = NS_FRAME_COMPLETE;
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
@@ -204,7 +186,14 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(!NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus));
 
   aDesiredSize.ISize(lineWM) = aReflowState.mLineLayout->EndSpan(this);
-  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
+  if (boxDecorationBreakClone || !GetPrevContinuation()) {
+    aDesiredSize.ISize(lineWM) += borderPadding.IStart(frameWM);
+  }
+  if (boxDecorationBreakClone || NS_FRAME_IS_COMPLETE(aStatus)) {
+    aDesiredSize.ISize(lineWM) += borderPadding.IEnd(frameWM);
+  }
+
+  nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize,
                                          borderPadding, lineWM, frameWM);
 }
 

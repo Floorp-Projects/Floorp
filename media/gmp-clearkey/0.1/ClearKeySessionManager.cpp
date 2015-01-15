@@ -99,8 +99,8 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
   string request;
   ClearKeyUtils::MakeKeyRequest(neededKeys, request, aSessionType);
   mCallback->SessionMessage(&sessionId[0], sessionId.length(),
-                            (uint8_t*)&request[0], request.length(),
-                            "" /* destination url */, 0);
+                            kGMPLicenseRequest,
+                            (uint8_t*)&request[0], request.length());
 }
 
 void

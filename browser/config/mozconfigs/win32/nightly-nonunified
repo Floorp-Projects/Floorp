@@ -1,6 +1,0 @@
-. "$topsrcdir/build/mozconfig.win-common"
-MOZ_AUTOMATION_PRETTY=1
-MOZ_AUTOMATION_UPLOAD=0
-. "$topsrcdir/browser/config/mozconfigs/win32/nightly"
-
-ac_add_options --disable-unified-compilation

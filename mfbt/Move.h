@@ -145,24 +145,23 @@ namespace mozilla {
  *   reference to a template argument (like 'XArg&& x' and 'YArg&& y' above),
  *   then when the argument is applied to an lvalue, the template argument
  *   resolves to 'T&'; and when it is applied to an rvalue, the template
- *   argument resolves to 'T&&'. Thus, in a call to C::C like:
+ *   argument resolves to 'T'. Thus, in a call to C::C like:
  *
  *      X foo(int);
  *      Y yy;
  *
  *      C(foo(5), yy)
  *
- *   XArg would resolve to 'X&&', and YArg would resolve to 'Y&'.
+ *   XArg would resolve to 'X', and YArg would resolve to 'Y&'.
  *
  * - Second, Whereas C++ used to forbid references to references, C++11 defines
  *   'collapsing rules': 'T& &', 'T&& &', and 'T& &&' (that is, any combination
  *   involving an lvalue reference) now collapse to simply 'T&'; and 'T&& &&'
  *   collapses to 'T&&'.
  *
- *   Thus, in the call above, 'XArg&&' is 'X&& &&', collapsing to 'X&&'; and
- *   'YArg&&' is 'Y& &&', which collapses to 'Y &'. Because the arguments are
- *   declared as rvalue references to template arguments, the rvalue-ness
- *   "shines through" where present.
+ *   Thus, in the call above, 'XArg&&' is 'X&&'; and 'YArg&&' is 'Y& &&', which
+ *   collapses to 'Y&'. Because the arguments are declared as rvalue references
+ *   to template arguments, the lvalue-ness "shines through" where present.
  *
  * Then, the 'Forward<T>' function --- you must invoke 'Forward' with its type
  * argument --- returns an lvalue reference or an rvalue reference to its

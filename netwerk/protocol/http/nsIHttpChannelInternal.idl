@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(bbf9d5bb-8daf-4909-88bc-f3b2f6a886d0)]
+[scriptable, uuid(a3cd6509-da6a-4cd4-8f97-2645396909da)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -224,4 +224,10 @@ interface nsIHttpChannelInternal : nsISupports
      * The URI of the top-level window that's associated with this channel.
      */
     readonly attribute nsIURI topWindowURI;
+
+    /**
+     * Used only by nsChannelClassifier to resume connecting or abort the
+     * channel after a remote classification verdict.
+     */
+    void continueBeginConnect();
 };

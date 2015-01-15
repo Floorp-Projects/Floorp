@@ -30,7 +30,7 @@ public:
 
     NS_IMETHOD OnLookupComplete(nsICancelable *request,
                                 nsIDNSRecord  *rec,
-                                nsresult       status)
+                                nsresult       status) MOZ_OVERRIDE
     {
         printf("%d: OnLookupComplete called [host=%s status=%x rec=%p]\n",
             mIndex, mHost.get(), static_cast<uint32_t>(status), (void*)rec);

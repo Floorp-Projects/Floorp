@@ -55,7 +55,7 @@ void PlatformShutdown();
  * called when a new ProxyAccessible is created, so the platform may setup a
  * wrapper for it, or take other action.
  */
-void ProxyCreated(ProxyAccessible*);
+void ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces);
 
 /**
  * Called just before a ProxyAccessible is destroyed so its wrapper can be

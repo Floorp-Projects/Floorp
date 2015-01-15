@@ -58,6 +58,8 @@ extern int    gRestartArgc;
 extern char **gRestartArgv;
 extern bool gLogConsoleErrors;
 
+extern bool gIsGtest;
+
 /**
  * Create the nativeappsupport implementation.
  *

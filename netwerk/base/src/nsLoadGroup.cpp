@@ -1162,11 +1162,10 @@ nsresult nsLoadGroup::Init()
         RequestHashMatchEntry,
         PL_DHashMoveEntryStub,
         RequestHashClearEntry,
-        PL_DHashFinalizeStub,
         RequestHashInitEntry
     };
 
-    PL_DHashTableInit(&mRequests, &hash_table_ops, nullptr,
+    PL_DHashTableInit(&mRequests, &hash_table_ops,
                       sizeof(RequestMapEntry));
 
     mConnectionInfo = new nsLoadGroupConnectionInfo();

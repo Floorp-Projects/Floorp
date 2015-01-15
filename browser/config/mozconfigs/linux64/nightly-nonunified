@@ -1,6 +1,0 @@
-MOZ_AUTOMATION_UPLOAD=0
-MOZ_AUTOMATION_PRETTY=1
-
-. "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
-
-ac_add_options --disable-unified-compilation

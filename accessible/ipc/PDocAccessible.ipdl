@@ -14,6 +14,7 @@ struct AccessibleData
   uint64_t ID;
   uint32_t Role;
   uint32_t ChildrenCount;
+  uint32_t Interfaces;
 };
 
 struct ShowEventData
@@ -49,6 +50,8 @@ child:
   prio(high) sync Name(uint64_t aID) returns(nsString name);
   prio(high) sync Description(uint64_t aID) returns(nsString desc);
   prio(high) sync Attributes(uint64_t aID) returns(Attribute[] attributes);
+prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
+                              aEndOffset) returns(nsString aText);
 };
 
 }

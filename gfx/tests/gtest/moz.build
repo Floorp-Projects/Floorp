@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestAsyncPanZoomController.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
+    'TestCompositor.cpp',
     'TestGfxPrefs.cpp',
     'TestLayers.cpp',
     'TestRegion.cpp',

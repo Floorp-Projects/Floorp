@@ -22,16 +22,15 @@ function parseArgs() {
 }
 
 var gArgs = null;
-function arg(key) {
+function arg(key, defaultVal) {
   if (gArgs === null) {
     gArgs = parseArgs();
   }
 
-  var ret = gArgs[key];
-  if (ret === undefined)
-    ret = false;
+  if (!(key in gArgs))
+    return defaultVal;
 
-  return ret;
+  return gArgs[key];
 }
 
 function initGL(canvas) {
@@ -40,12 +39,12 @@ function initGL(canvas) {
 
   var gl = null;
 
-  var withAA = arg("aa");
-  var withAlpha = arg("alpha");
-  var withDepth = arg("depth");
-  var withPremult = arg("premult");
-  var withPreserve = arg("preserve");
-  var withStencil = arg("stencil");
+  var withAA = arg("aa", false);
+  var withAlpha = arg("alpha", false);
+  var withDepth = arg("depth", false);
+  var withPremult = arg("premult", false);
+  var withPreserve = arg("preserve", false);
+  var withStencil = arg("stencil", false);
 
   try {
     var argDict = {

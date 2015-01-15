@@ -1065,23 +1065,6 @@ gfxWindowsPlatform::DidRenderingDeviceReset()
   return false;
 }
 
-gfxFontFamily *
-gfxWindowsPlatform::FindFontFamily(const nsAString& aName)
-{
-    return gfxPlatformFontList::PlatformFontList()->FindFamily(aName);
-}
-
-gfxFontEntry *
-gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle)
-{
-    nsRefPtr<gfxFontFamily> ff = FindFontFamily(aName);
-    if (!ff)
-        return nullptr;
-
-    bool aNeedsBold;
-    return ff->FindFontForStyle(aFontStyle, aNeedsBold);
-}
-
 void
 gfxWindowsPlatform::GetPlatformCMSOutputProfile(void* &mem, size_t &mem_size)
 {

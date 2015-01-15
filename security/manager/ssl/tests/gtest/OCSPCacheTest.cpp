@@ -18,6 +18,13 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 using namespace mozilla::psm;
 
+template <size_t N>
+inline Input
+LiteralInput(const char(&valueString)[N])
+{
+  return Input(reinterpret_cast<const uint8_t(&)[N - 1]>(valueString));
+}
+
 const int MaxCacheEntries = 1024;
 
 class OCSPCacheTest : public ::testing::Test
@@ -54,15 +61,15 @@ PutAndGet(OCSPCache& cache, const CertID& certID, Result result,
   ASSERT_EQ(time, timeOut);
 }
 
-TestInput fakeIssuer1("CN=issuer1");
-TestInput fakeKey000("key000");
-TestInput fakeKey001("key001");
-TestInput fakeSerial0000("0000");
+Input fakeIssuer1(LiteralInput("CN=issuer1"));
+Input fakeKey000(LiteralInput("key000"));
+Input fakeKey001(LiteralInput("key001"));
+Input fakeSerial0000(LiteralInput("0000"));
 
 TEST_F(OCSPCacheTest, TestPutAndGet)
 {
-  TestInput fakeSerial000("000");
-  TestInput fakeSerial001("001");
+  Input fakeSerial000(LiteralInput("000"));
+  Input fakeSerial001(LiteralInput("001"));
 
   SCOPED_TRACE("");
   PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial001),
@@ -105,7 +112,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   Time timeInPlus512(now);
   ASSERT_EQ(Success, timeInPlus512.AddSeconds(512));
 
-  static const TestInput fakeSerial0512("0512");
+  static const Input fakeSerial0512(LiteralInput("0512"));
   CertID cert0512(fakeIssuer1, fakeKey000, fakeSerial0512);
   ASSERT_TRUE(cache.Get(cert0512, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
@@ -115,7 +122,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   ASSERT_EQ(timeInPlus512, timeOut);
 
   // We've never seen this certificate
-  static const TestInput fakeSerial1111("1111");
+  static const Input fakeSerial1111(LiteralInput("1111"));
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey000, fakeSerial1111),
                          resultOut, timeOut));
 }
@@ -166,7 +173,7 @@ TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
-  TestInput fakeSerial0001("0001");
+  Input fakeSerial0001(LiteralInput("0001"));
   CertID evicted(fakeIssuer1, fakeKey000, fakeSerial0001);
   ASSERT_FALSE(cache.Get(evicted, resultOut, timeOut));
 }
@@ -186,7 +193,7 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
     PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
               Result::ERROR_REVOKED_CERTIFICATE, timeIn);
   }
-  static const TestInput fakeSerial1025("1025");
+  static const Input fakeSerial1025(LiteralInput("1025"));
   CertID good(fakeIssuer1, fakeKey000, fakeSerial1025);
   // This will "succeed", allowing verification to continue. However,
   // nothing was actually put in the cache.
@@ -201,7 +208,7 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
   Time timeOut(Time::uninitialized);
   ASSERT_FALSE(cache.Get(good, resultOut, timeOut));
 
-  static const TestInput fakeSerial1026("1026");
+  static const Input fakeSerial1026(LiteralInput("1026"));
   CertID revoked(fakeIssuer1, fakeKey000, fakeSerial1026);
   // This will fail, causing verification to fail.
   Time timeInPlus1026(timeIn);
@@ -217,8 +224,8 @@ TEST_F(OCSPCacheTest, VariousIssuers)
 {
   SCOPED_TRACE("");
   Time timeIn(now);
-  static const TestInput fakeIssuer2("CN=issuer2");
-  static const TestInput fakeSerial001("001");
+  static const Input fakeIssuer2(LiteralInput("CN=issuer2"));
+  static const Input fakeSerial001(LiteralInput("001"));
   CertID subject(fakeIssuer1, fakeKey000, fakeSerial001);
   PutAndGet(cache, subject, Success, now);
   Result resultOut;
