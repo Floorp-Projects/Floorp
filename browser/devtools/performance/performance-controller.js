@@ -347,7 +347,6 @@ let PerformanceController = {
   },
 
   /**
-  /**
    * Get most recently added profile that was triggered manually (via UI)
    */
   _getLatest: function () {
@@ -385,6 +384,7 @@ EventEmitter.decorate(PerformanceController);
 const Prefs = new ViewHelpers.Prefs("devtools.profiler", {
   flattenTreeRecursion: ["Bool", "ui.flatten-tree-recursion"],
   showPlatformData: ["Bool", "ui.show-platform-data"],
+  showIdleBlocks: ["Bool", "ui.show-idle-blocks"],
 });
 
 /**

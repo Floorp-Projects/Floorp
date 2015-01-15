@@ -45,6 +45,7 @@ let FlameGraphView = {
     let dataSrc = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
       flattenRecursion: Prefs.flattenTreeRecursion,
       filterFrames: !Prefs.showPlatformData && FrameNode.isContent,
+      showIdleBlocks: Prefs.showIdleBlocks && L10N.getStr("table.idle")
     });
     this.graph.setData(dataSrc);
     this.emit(EVENTS.FLAMEGRAPH_RENDERED);
