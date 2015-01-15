@@ -134,7 +134,7 @@ function RILContentHelper() {
   this.rilContexts = [];
   for (let clientId = 0; clientId < this.numClients; clientId++) {
     this.rilContexts[clientId] = {
-      cardState: Ci.nsIIccProvider.CARD_STATE_UNKNOWN,
+      cardState: Ci.nsIIcc.CARD_STATE_UNKNOWN,
       iccInfo: null
     };
   }
