@@ -23,6 +23,13 @@ devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
 devtools.lazyRequireGetter(this, "PerformanceIO",
   "devtools/performance/io", true);
+devtools.lazyRequireGetter(this, "RecordingModel",
+  "devtools/performance/recording-model", true);
+devtools.lazyRequireGetter(this, "RECORDING_IN_PROGRESS",
+  "devtools/performance/recording-model", true);
+devtools.lazyRequireGetter(this, "RECORDING_UNAVAILABLE",
+  "devtools/performance/recording-model", true);
+
 devtools.lazyRequireGetter(this, "MarkersOverview",
   "devtools/timeline/markers-overview", true);
 devtools.lazyRequireGetter(this, "MemoryOverview",
@@ -35,22 +42,19 @@ devtools.lazyRequireGetter(this, "CallView",
   "devtools/profiler/tree-view", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
-
+devtools.lazyRequireGetter(this, "FrameNode",
+  "devtools/profiler/tree-model", true);
 
 devtools.lazyImporter(this, "CanvasGraphUtils",
   "resource:///modules/devtools/Graphs.jsm");
 devtools.lazyImporter(this, "LineGraphWidget",
   "resource:///modules/devtools/Graphs.jsm");
-devtools.lazyImporter(this, "SideMenuWidget",
-  "resource:///modules/devtools/SideMenuWidget.jsm");
-
-const { RecordingModel, RECORDING_IN_PROGRESS, RECORDING_UNAVAILABLE } =
-  devtools.require("devtools/performance/recording-model");
-
 devtools.lazyImporter(this, "FlameGraphUtils",
   "resource:///modules/devtools/FlameGraph.jsm");
 devtools.lazyImporter(this, "FlameGraph",
   "resource:///modules/devtools/FlameGraph.jsm");
+devtools.lazyImporter(this, "SideMenuWidget",
+  "resource:///modules/devtools/SideMenuWidget.jsm");
 
 // Events emitted by various objects in the panel.
 const EVENTS = {
