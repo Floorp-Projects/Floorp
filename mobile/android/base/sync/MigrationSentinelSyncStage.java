@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -18,6 +19,7 @@ import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.stage.AbstractNonRepositorySyncStage;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
+import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 
 /**
  * The purpose of this class is to talk to a Sync 1.1 server and check
@@ -152,6 +154,7 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
 
     private void onMigrated() {
       Logger.info(LOG_TAG, "Account migrated!");
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATIONS_SUCCEEDED, 1);
       session.config.persistLastMigrationSentinelCheckTimestamp(fetchTimestamp);
       session.abort(null, "Account migrated.");
     }
@@ -163,6 +166,7 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
 
     private void onError(Exception ex, String reason) {
       Logger.info(LOG_TAG, "Could not migrate: " + reason, ex);
+      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATIONS_FAILED, 1);
       session.abort(ex, reason);
     }
 
@@ -181,6 +185,9 @@ public class MigrationSentinelSyncStage extends AbstractNonRepositorySyncStage {
           public void handleRequestSuccess(SyncStorageResponse response) {
             Logger.info(LOG_TAG, "Found " + META_FXA_CREDENTIALS + " record; attempting migration.");
             setTimestamp(response.normalizedWeaveTimestamp());
+
+            TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATION_SENTINELS_SEEN, 1);
+
             try {
               final ExtendedJSONObject body = response.jsonObjectBody();
               final CryptoRecord cryptoRecord = CryptoRecord.fromJSONRecord(body);
