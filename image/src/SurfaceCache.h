@@ -236,6 +236,7 @@ struct SurfaceCache
    * @return false if the surface cache can't hold a surface of that size.
    */
   static bool CanHold(const IntSize& aSize);
+  static bool CanHold(size_t aSize);
 
   /**
    * Locks an image, preventing any of that image's surfaces from expiring

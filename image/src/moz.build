@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'OrientedImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'ShutdownTracker.cpp',
+    'SourceBuffer.cpp',
     'SurfaceCache.cpp',
     'SVGDocumentWrapper.cpp',
     'VectorImage.cpp',
