@@ -496,6 +496,16 @@ protected:
                                  bool aEarlyNotify);
 
   /**
+   * If this form submission is secure -> insecure, ask the user if they want
+   * to continue.
+   *
+   * @param aActionURL the URL being submitted to
+   * @param aCancelSubmit out param: will be true if the user wants to cancel
+   */
+  nsresult DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
+                                         bool* aCancelSubmit);
+
+  /**
    * Find form controls in this form with the correct value in the name
    * attribute.
    */
