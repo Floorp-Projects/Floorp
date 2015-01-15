@@ -1620,15 +1620,7 @@ class JSScript : public js::gc::TenuredCell
         return arr->vector[index];
     }
 
-    js::NestedScopeObject *getStaticBlockScope(jsbytecode *pc);
-
-    // Returns the innermost static scope at pc if it falls within the extent
-    // of the script. Returns nullptr otherwise.
-    JSObject *innermostStaticScopeInScript(jsbytecode *pc);
-
-    // As innermostStaticScopeInScript, but returns the enclosing static scope
-    // if the innermost static scope falls without the extent of the script.
-    JSObject *innermostStaticScope(jsbytecode *pc);
+    js::NestedScopeObject *getStaticScope(jsbytecode *pc);
 
     /*
      * The isEmpty method tells whether this script has code that computes any

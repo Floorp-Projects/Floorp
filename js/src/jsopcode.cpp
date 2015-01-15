@@ -1692,7 +1692,7 @@ ExpressionDecompiler::getLocal(uint32_t local, jsbytecode *pc)
 
         MOZ_CRASH("No binding");
     }
-    for (NestedScopeObject *chain = script->getStaticBlockScope(pc);
+    for (NestedScopeObject *chain = script->getStaticScope(pc);
          chain;
          chain = chain->enclosingNestedScope())
     {
