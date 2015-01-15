@@ -376,6 +376,21 @@ Convert(uint8_t aIn, BluetoothHandsfreeVolumeType& aOut)
 }
 
 nsresult
+Convert(uint8_t aIn, BluetoothHandsfreeWbsConfig& aOut)
+{
+  static const BluetoothHandsfreeWbsConfig sWbsConfig[] = {
+    CONVERT(0x00, HFP_WBS_NONE),
+    CONVERT(0x01, HFP_WBS_NO),
+    CONVERT(0x02, HFP_WBS_YES)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sWbsConfig[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(uint8_t aIn, BluetoothPropertyType& aOut)
 {
   static const BluetoothPropertyType sPropertyType[] = {
@@ -809,6 +824,22 @@ Convert(BluetoothHandsfreeVolumeType aIn, uint8_t& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sVolumeType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothHandsfreeWbsConfig aIn, uint8_t& aOut)
+{
+  static const uint8_t sWbsConfig[] = {
+    CONVERT(HFP_WBS_NONE, 0x00),
+    CONVERT(HFP_WBS_NO, 0x01),
+    CONVERT(HFP_WBS_YES, 0x02)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sWbsConfig))) {
+    aOut = 0x00; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sWbsConfig[aIn];
   return NS_OK;
 }
 
