@@ -1489,11 +1489,18 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  // Changes to "z-index", "object-fit", & "object-position" require a repaint.
-  if (mZIndex != aOther.mZIndex ||
-      mObjectFit != aOther.mObjectFit ||
-      mObjectPosition != aOther.mObjectPosition) {
+  // Changes to "z-index" require a repaint.
+  if (mZIndex != aOther.mZIndex) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
+  // Changes to "object-fit" & "object-position" require a repaint.  They
+  // may also require a reflow, if we have a nsSubDocumentFrame, so that we
+  // can adjust the size & position of the subdocument.
+  if (mObjectFit != aOther.mObjectFit ||
+      mObjectPosition != aOther.mObjectPosition) {
+    NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_RepaintFrame,
+                                       nsChangeHint_NeedReflow));
   }
 
   if (mOrder != aOther.mOrder) {
