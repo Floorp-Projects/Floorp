@@ -130,6 +130,10 @@ protected:
     // For vertical fonts, cached vmtx and VORG table, if present.
     mutable hb_blob_t *mVmtxTable;
     mutable hb_blob_t *mVORGTable;
+    // And for vertical TrueType (not CFF) fonts that have vmtx,
+    // we also use loca and glyf to get glyph bounding boxes.
+    mutable hb_blob_t *mLocaTable;
+    mutable hb_blob_t *mGlyfTable;
 
     // Cached pointer to cmap subtable to be used for char-to-glyph mapping.
     // This comes from GetFontTablePtr; if it is non-null, our destructor
@@ -157,6 +161,7 @@ protected:
 
     bool mInitialized;
     bool mVerticalInitialized;
+    bool mLocaLongOffsets;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */
