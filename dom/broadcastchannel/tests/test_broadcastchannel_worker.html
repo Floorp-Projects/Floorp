@@ -1,0 +1,49 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM BroadcastChannel in workers
+-->
+<head>
+  <title>Test for BroadcastChannel in workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+var worker = new Worker("broadcastchannel_worker.js");
+
+var bc = new BroadcastChannel('foobar');
+
+worker.onmessage = function(event) {
+  if (event.data == "READY") {
+    ok(true, "Worker is ready!");
+    bc.postMessage('hello world from the window');
+  } else if(event.data == "OK") {
+    ok(true, "Worker has received the message");
+  } else {
+    ok(false, "Something wrong happened");
+  }
+};
+
+bc.onmessage = function(event) {
+  is("hello world from the worker", event.data, "The message matches!");
+  SimpleTest.finish();
+}
+
+worker.postMessage('go');
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
