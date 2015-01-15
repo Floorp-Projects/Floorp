@@ -2427,7 +2427,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([getc_unlocked _getc_nolock localtime_r])
+AC_CHECK_FUNCS([getc_unlocked _getc_nolock gmtime_r localtime_r])
 
 
 dnl Checks for math functions.
