@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e0c735ec89df011ea7dd435087a9045ecff9ff9e">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="ebc90190771a945d405f5d36efd813db6f77f965"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="401e981f51cf047292d101c785be8ec48bf75e8c"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="049c281ad212bf528b2af8fc246b0dd0c9f97415"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="3f4cd30032f7d9002421bdb78860c28c78760888"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0024095d96fdccc076e511cfa7a4287cb1e0fd83"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -129,7 +129,7 @@
   <!-- Stock Android things -->
   <project name="platform/external/icu4c" path="external/icu4c" revision="2bb01561780583cc37bc667f0ea79f48a122d8a2"/>
   <!-- dolphin specific things -->
-  <project name="device/sprd" path="device/sprd" revision="b94ac10f073ed2503505e59f5097d4e286423037"/>
+  <project name="device/sprd" path="device/sprd" revision="56f0085d1105fd6519d5d3773f91d48b2ad66d5c"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="4e58336019b5cbcfd134caf55b142236cf986618"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="4387fe988e5a1001f29ce05fcfda03ed2d32137b"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
