@@ -83,6 +83,13 @@ TestInterfaceJS.prototype = {
       return new this._win.Promise(func);
   },
 
+  testPromiseWithDOMExceptionThrowingPromiseInit: function() {
+    return new this._win.Promise(() => {
+      throw new this._win.DOMException("We are a second DOMException",
+                                       "NotFoundError");
+    })
+  },
+
   testPromiseWithThrowingChromeThenFunction: function() {
     return this._win.Promise.resolve(5).then(function() {
       noSuchMethodExistsYo2();
@@ -91,6 +98,13 @@ TestInterfaceJS.prototype = {
 
   testPromiseWithThrowingContentThenFunction: function(func) {
     return this._win.Promise.resolve(10).then(func);
+  },
+
+  testPromiseWithDOMExceptionThrowingThenFunction: function() {
+    return this._win.Promise.resolve(5).then(() => {
+      throw new this._win.DOMException("We are a third DOMException",
+                                       "NetworkError");
+    });
   },
 
   testPromiseWithThrowingChromeThenable: function() {
@@ -112,6 +126,20 @@ TestInterfaceJS.prototype = {
     // property won't return the function.
     return this._win.Promise.resolve(Cu.waiveXrays(thenable));
   },
+
+  testPromiseWithDOMExceptionThrowingThenable: function() {
+    // We need to produce a thing that has a "then" property in the page
+    // compartment, since we plan to call the page-provided resolve function.
+    var thenable = new this._win.Object();
+    Cu.waiveXrays(thenable).then = () => {
+      throw new this._win.DOMException("We are a fourth DOMException",
+                                       "TypeMismatchError");
+    }
+    return new this._win.Promise(function(resolve) {
+      resolve(thenable)
+    });
+  },
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])

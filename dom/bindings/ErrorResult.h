@@ -97,7 +97,8 @@ public:
 
   // StealJSException steals the JS Exception from the object. This method must
   // be called only if IsJSException() returns true. This method also resets the
-  // ErrorCode() to NS_OK.
+  // ErrorCode() to NS_OK.  The value will be ensured to be sanitized wrt to the
+  // current compartment of cx if it happens to be a DOMException.
   void StealJSException(JSContext* cx, JS::MutableHandle<JS::Value> value);
 
   void MOZ_ALWAYS_INLINE MightThrowJSException()

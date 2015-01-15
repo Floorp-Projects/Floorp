@@ -234,20 +234,11 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
   nsresult rv =
     UNWRAP_OBJECT(DOMException, &mJSException.toObject(), domException);
   if (NS_SUCCEEDED(rv)) {
-    // We actually have to create a new DOMException object, because the one we
+    // We may have to create a new DOMException object, because the one we
     // have has a stack that includes the chrome code that threw it, and in
     // particular has the wrong file/line/column information.
-    nsString message;
-    domException->GetMessageMoz(message);
-    nsString name;
-    domException->GetName(name);
-    nsRefPtr<dom::DOMException> newException =
-      new dom::DOMException(nsresult(domException->Result()),
-                            NS_ConvertUTF16toUTF8(message),
-                            NS_ConvertUTF16toUTF8(name),
-                            domException->Code());
     JS::Rooted<JS::Value> reflector(aCx);
-    if (!GetOrCreateDOMReflector(aCx, newException, &reflector)) {
+    if (!domException->Sanitize(aCx, &reflector)) {
       // Well, that threw _an_ exception.  Let's forget ours.  We can just
       // unroot and not change the value, since mJSException is completely
       // ignored if mResult is not NS_ERROR_DOM_JS_EXCEPTION and we plan to
@@ -301,6 +292,17 @@ ErrorResult::StealJSException(JSContext* cx,
   value.set(mJSException);
   js::RemoveRawValueRoot(cx, &mJSException);
   mResult = NS_OK;
+
+  if (value.isObject()) {
+    // If it's a DOMException we may need to sanitize it.
+    dom::DOMException* domException;
+    nsresult rv =
+      UNWRAP_OBJECT(DOMException, &value.toObject(), domException);
+    if (NS_SUCCEEDED(rv) && !domException->Sanitize(cx, value)) {
+      JS_GetPendingException(cx, value);
+      JS_ClearPendingException(cx);
+    }
+  }
 }
 
 void
