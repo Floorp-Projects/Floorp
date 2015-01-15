@@ -96,6 +96,7 @@ public:
   NS_IMETHOD CanCut(bool *aCanCut);
   NS_IMETHOD Copy();
   NS_IMETHOD CanCopy(bool *aCanCopy);
+  NS_IMETHOD CanDelete(bool *aCanDelete);
   NS_IMETHOD Paste(int32_t aSelectionType);
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste);
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
@@ -203,7 +204,11 @@ protected:
   /* small utility routine to test the eEditorReadonly bit */
   bool IsModifiable();
 
-  bool CanCutOrCopy();
+  enum PasswordFieldAllowed {
+    ePasswordFieldAllowed,
+    ePasswordFieldNotAllowed
+  };
+  bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
   bool FireClipboardEvent(int32_t aType, int32_t aSelectionType);
 
   bool UpdateMetaCharset(nsIDOMDocument* aDocument,
