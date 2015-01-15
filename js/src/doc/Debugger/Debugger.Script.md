@@ -203,6 +203,39 @@ methods of other kinds of objects.
 
     * and the fourth line begins at offset 10.
 
+`getAllColumnOffsets()`:
+:   Return an array describing the relationship between bytecode instruction
+    offsets and source code positions in this script. Unlike getAllOffsets(),
+    which returns all offsets that are entry points for each line,
+    getAllColumnOffsets() returns all offsets that are entry points for each
+    (line, column) pair.
+
+    The elements of the array are objects, each of which describes a single
+    entry point, and contains the following properties:
+
+    * lineNumber: the line number for which offset is an entry point
+
+    * columnNumber: the column number for which offset is an entry point
+
+    * offset: the bytecode instruction offset of the entry point
+
+    For example, suppose we have a script for the following source code:
+
+    ```language-js
+    a=[]
+    for (i=1; i < 10; i++)
+        // It's hip to be square.
+        a[i] = i*i;
+    ```
+
+    Calling `getAllColumnOffsets()` on that code might yield an array like this:
+
+    ```language-js
+    [{ lineNumber: 0, columnNumber: 0, offset: 0 },
+     { lineNumber: 1, columnNumber: 5, offset: 5 },
+     { lineNumber: 1, columnNumber: 10, offset: 20 },
+     { lineNumber: 3, columnNumber: 4, offset: 10 }]
+
 <code>getLineOffsets(<i>line</i>)</code>
 :   Return an array of bytecode instruction offsets representing the entry
     points to source line <i>line</i>. If the script contains no executable
@@ -269,4 +302,6 @@ methods of other kinds of objects.
     <i>offset</i> is not a valid bytecode offset in this script, throw an
     error.
 
-
+<code>isInCatchScope([<i>offset</i>])</code>
+:   This is `true` if this offset falls within the scope of a try block, and
+    `false` otherwise.
