@@ -1,4 +1,5 @@
 Name: clearkey
 Description: ClearKey decrypt-only GMP plugin
 Version: 0.1
-APIs: eme-decrypt-v6[org.w3.clearkey]
+APIs: eme-decrypt-v6[org.w3.clearkey], decode-audio[aac:org.w3.clearkey], decode-video[h264:org.w3.clearkey]
+Libraries: dxva2.dll, d3d9.dll, msmpeg2vdec.dll, msmpeg2adec.dll, MSAudDecMFT.dll
