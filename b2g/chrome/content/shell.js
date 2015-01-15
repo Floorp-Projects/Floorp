@@ -368,36 +368,12 @@ var shell = {
     IndexedDBPromptHelper.uninit();
   },
 
-  // If this key event actually represents a hardware button, send a
-  // mozChromeEvent with detail.type set to 'xxx-button-press' or
-  // 'xxx-button-release' instead. Note that no more mozChromeEvent for hardware
-  // buttons needed after Bug 1014418 is landed.
-  filterHardwareKeys: function shell_filterHardwareKeys(evt) {
-    var type;
-    switch (evt.keyCode) {
-      case evt.DOM_VK_HOME:         // Home button
-        type = 'home-button';
-        break;
-      case evt.DOM_VK_SLEEP:        // Sleep button
-      case evt.DOM_VK_END:          // On desktop we don't have a sleep button
-        type = 'sleep-button';
-        break;
-      case evt.DOM_VK_VOLUME_UP:      // Volume up button
-        type = 'volume-up-button';
-        break;
-      case evt.DOM_VK_VOLUME_DOWN:    // Volume down button
-        type = 'volume-down-button';
-        break;
-      case evt.DOM_VK_ESCAPE:       // Back button (should be disabled)
-        type = 'back-button';
-        break;
-      case evt.DOM_VK_CONTEXT_MENU: // Menu button
-        type = 'menu-button';
-        break;
-      case evt.DOM_VK_F1: // headset button
-        type = 'headset-button';
-        break;
-    }
+  // If this key event represents a hardware button which needs to be send as
+  // a message, broadcasts it with the message set to 'xxx-button-press' or
+  // 'xxx-button-release'.
+  broadcastHardwareKeys: function shell_broadcastHardwareKeys(evt) {
+    let type;
+    let message;
 
     let mediaKeys = {
       'MediaTrackNext': 'media-next-track-button',
@@ -410,53 +386,33 @@ var shell = {
       'MediaFastForward': 'media-fast-forward-button'
     };
 
-    let isMediaKey = false;
-    if (mediaKeys[evt.key]) {
-      isMediaKey = true;
-      type = mediaKeys[evt.key];
-    }
-
-    // The key doesn't represent a hardware button, so no mozChromeEvent.
-    if (!type) {
+    if (evt.keyCode == evt.DOM_VK_F1) {
+      type = 'headset-button';
+      message = 'headset-button';
+    } else if (mediaKeys[evt.key]) {
+      type = 'media-button';
+      message = mediaKeys[evt.key];
+    } else {
       return;
     }
 
     switch (evt.type) {
       case 'keydown':
-        type = type + '-press';
+        message = message + '-press';
         break;
       case 'keyup':
-        type = type + '-release';
+        message = message + '-release';
         break;
     }
 
-    // Let applications receive the headset button key press/release event.
-    if (evt.keyCode == evt.DOM_VK_F1 && type !== this.lastHardwareButtonEventType) {
-      this.lastHardwareButtonEventType = type;
-      gSystemMessenger.broadcastMessage('headset-button', type);
-      return;
-    }
-
-    if (isMediaKey) {
-      this.lastHardwareButtonEventType = type;
-      gSystemMessenger.broadcastMessage('media-button', type);
-      return;
-    }
-
-    // On my device, the physical hardware buttons (sleep and volume)
-    // send multiple events (press press release release), but the
-    // soft home button just sends one.  This hack is to manually
-    // "debounce" the keys. If the type of this event is the same as
-    // the type of the last one, then don't send it.  We'll never send
-    // two presses or two releases in a row.
-    // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=761067
-    if (type !== this.lastHardwareButtonEventType) {
-      this.lastHardwareButtonEventType = type;
-      this.sendChromeEvent({type: type});
+    // Let applications receive the headset button and media key press/release message.
+    if (message !== this.lastHardwareButtonMessage) {
+      this.lastHardwareButtonMessage = message;
+      gSystemMessenger.broadcastMessage(type, message);
     }
   },
 
-  lastHardwareButtonEventType: null, // property for the hack above
+  lastHardwareButtonMessage: null, // property for the hack above
   visibleNormalAudioActive: false,
 
   handleEvent: function shell_handleEvent(evt) {
@@ -464,7 +420,7 @@ var shell = {
     switch (evt.type) {
       case 'keydown':
       case 'keyup':
-        this.filterHardwareKeys(evt);
+        this.broadcastHardwareKeys(evt);
         break;
       case 'mozfullscreenchange':
         // When the screen goes fullscreen make sure to set the focus to the

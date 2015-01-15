@@ -34,7 +34,7 @@ add_test(function test_registration_invalid_token() {
   MozLoopService.promiseRegisteredWithServers().then(() => {
     // Due to the way the time stamp checking code works in hawkclient, we expect a couple
     // of authorization requests before we reset the token.
-    Assert.equal(authorizationAttempts, 2);
+    Assert.equal(authorizationAttempts, 4); //hawk will repeat each registration attemtp twice: calls and rooms.
     Assert.equal(Services.prefs.getCharPref(LOOP_HAWK_PREF), fakeSessionToken2);
     run_next_test();
   }, err => {
