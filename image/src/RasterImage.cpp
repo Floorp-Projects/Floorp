@@ -1448,12 +1448,16 @@ RasterImage::Decode(DecodeStrategy aStrategy,
     return NS_ERROR_FAILURE;
   }
 
-  // Send out early notifications right away. (Unless this is a size decode,
-  // which doesn't send out any notifications until the end.)
   if (!aDoSizeDecode) {
+    // Send out early notifications right away.
     NotifyProgress(decoder->TakeProgress(),
                    decoder->TakeInvalidRect(),
                    decoder->GetDecodeFlags());
+
+    // Lock the image while we're decoding, so that it doesn't get evicted from
+    // the SurfaceCache before we have a chance to realize that it's animated.
+    // The corresponding unlock happens in FinalizeDecoder.
+    LockImage();
   }
 
   if (mHasSourceData) {
@@ -1908,6 +1912,11 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     } else if (wasSize && !mHasSize) {
       DoError();
     }
+  }
+
+  if (!wasSize) {
+    // Unlock the image, balancing the LockImage call we made in Decode().
+    UnlockImage();
   }
 
   // If we were a size decode and a full decode was requested, now's the time.
