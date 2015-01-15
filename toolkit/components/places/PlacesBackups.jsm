@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "localFileCtor",
                                "nsILocalFile", "initWithPath"));
 
 XPCOMUtils.defineLazyGetter(this, "filenamesRegex",
-  () => new RegExp("^bookmarks-([0-9\-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=\+\-]{24})){0,1}\.(json(lz4)?)$", "i")
+  () => /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
 );
 
 /**
@@ -265,7 +265,7 @@ this.PlacesBackups = {
       "https://bugzilla.mozilla.org/show_bug.cgi?id=859695");
 
     for (let i = 0; i < this._entries.length; i++) {
-      let rx = new RegExp("\.json(lz4)?$");
+      let rx = /\.json(lz4)?$/;
       if (this._entries[i].leafName.match(rx))
         return this._entries[i];
     }
@@ -282,7 +282,7 @@ this.PlacesBackups = {
      return Task.spawn(function* () {
        let entries = yield this.getBackupFiles();
        for (let entry of entries) {
-         let rx = new RegExp("\.json(lz4)?$");
+         let rx = /\.json(lz4)?$/;
          if (OS.Path.basename(entry).match(rx)) {
            return entry;
          }
