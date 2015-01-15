@@ -3097,7 +3097,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
             bool needsBold;
             gfxFontEntry *fe = family->FindFontForStyle(mStyle, needsBold);
             // if ch in cmap, create and return a gfxFont
-            if (fe && fe->TestCharacterMap(aCh)) {
+            if (fe && fe->HasCharacter(aCh)) {
                 nsRefPtr<gfxFont> prefFont = fe->FindOrMakeFont(&mStyle, needsBold);
                 if (!prefFont) continue;
                 mLastPrefFamily = family;

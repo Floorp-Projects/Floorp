@@ -1541,7 +1541,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
         gfxFontEntry *fontEntry;
         bool needsBold;  // ignored in the system fallback case
         fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
-        if (fontEntry && fontEntry->TestCharacterMap(aCh)) {
+        if (fontEntry && fontEntry->HasCharacter(aCh)) {
             *aMatchedFamily = family;
             return fontEntry;
         }
