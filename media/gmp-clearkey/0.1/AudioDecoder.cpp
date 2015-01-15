@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
+#include <cstdint>
+#include <limits>
 
-#ifdef TEST_DECODING
+#include "AudioDecoder.h"
+#include "ClearKeyDecryptionManager.h"
+#include "ClearKeyUtils.h"
+#include "gmp-task-utils.h"
+
+using namespace wmf;
 
 AudioDecoder::AudioDecoder(GMPAudioHost *aHostAPI)
   : mHostAPI(aHostAPI)
@@ -43,12 +49,12 @@ AudioDecoder::InitDecode(const GMPAudioCodec& aConfig,
                               aConfig.mSamplesPerSecond,
                               (BYTE*)aConfig.mExtraData,
                               aConfig.mExtraDataLen);
-  LOG(L"[%p] WMFDecodingModule::InitializeAudioDecoder() hr=0x%x\n", this, hr);
+  LOG("[%p] AudioDecoder::InitializeAudioDecoder() hr=0x%x\n", this, hr);
   if (FAILED(hr)) {
     mCallback->Error(GMPGenericErr);
     return;
   }
-  auto err = GMPCreateMutex(&mMutex);
+  auto err = GetPlatform()->createmutex(&mMutex);
   if (GMP_FAILED(err)) {
     mCallback->Error(GMPGenericErr);
     return;
@@ -56,15 +62,21 @@ AudioDecoder::InitDecode(const GMPAudioCodec& aConfig,
 }
 
 void
-AudioDecoder::Decode(GMPAudioSamples* aInput)
+AudioDecoder::EnsureWorker()
 {
   if (!mWorkerThread) {
-    GMPCreateThread(&mWorkerThread);
+    GetPlatform()->createthread(&mWorkerThread);
     if (!mWorkerThread) {
       mCallback->Error(GMPAllocErr);
       return;
     }
   }
+}
+
+void
+AudioDecoder::Decode(GMPAudioSamples* aInput)
+{
+  EnsureWorker();
   {
     AutoLock lock(mMutex);
     mNumInputTasks++;
@@ -86,44 +98,40 @@ AudioDecoder::DecodeTask(GMPAudioSamples* aInput)
   }
 
   if (!aInput || !mHostAPI || !mDecoder) {
-    LOG(L"Decode job not set up correctly!");
+    LOG("Decode job not set up correctly!");
     return;
   }
 
   const uint8_t* inBuffer = aInput->Buffer();
   if (!inBuffer) {
-    LOG(L"No buffer for encoded samples!\n");
+    LOG("No buffer for encoded samples!\n");
     return;
   }
 
   const GMPEncryptedBufferMetadata* crypto = aInput->GetDecryptionData();
-  std::vector<uint8_t> buffer;
+  std::vector<uint8_t> buffer(inBuffer, inBuffer + aInput->Size());
   if (crypto) {
-    const uint8_t* iv = crypto->IV();
-    uint32_t sz = crypto->IVSize();
     // Plugin host should have set up its decryptor/key sessions
     // before trying to decode!
-    auto decryptor = Decryptor::Get(crypto);
-    if (!decryptor ||
-        !decryptor->Decrypt(inBuffer, aInput->Size(), crypto, buffer)) {
-      LOG(L"Audio decryption error!");
-      mCallback->Error(GMPNoKeyErr);
+    GMPErr rv =
+      ClearKeyDecryptionManager::Get()->Decrypt(&buffer[0], buffer.size(), crypto);
+
+    if (GMP_FAILED(rv)) {
+      GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPAudioDecoderCallback::Error, rv));
       return;
     }
-    inBuffer = buffer.data();
-    assert(buffer.size() == aInput->Size());
   }
 
-  hr = mDecoder->Input(inBuffer,
-                       aInput->Size(),
+  hr = mDecoder->Input(&buffer[0],
+                       buffer.size(),
                        aInput->TimeStamp());
 
   // We must delete the input sample!
-  GMPRunOnMainThread(WrapTask(aInput, &GMPAudioSamples::Destroy));
+  GetPlatform()->runonmainthread(WrapTask(aInput, &GMPAudioSamples::Destroy));
 
-  SAMPLE_LOG(L"AudioDecoder::DecodeTask() Input ret hr=0x%x\n", hr);
+  SAMPLE_LOG("AudioDecoder::DecodeTask() Input ret hr=0x%x\n", hr);
   if (FAILED(hr)) {
-    LOG(L"AudioDecoder::DecodeTask() decode failed ret=0x%x%s\n",
+    LOG("AudioDecoder::DecodeTask() decode failed ret=0x%x%s\n",
         hr,
         ((hr == MF_E_NOTACCEPTING) ? " (MF_E_NOTACCEPTING)" : ""));
     return;
@@ -132,7 +140,7 @@ AudioDecoder::DecodeTask(GMPAudioSamples* aInput)
   while (hr == S_OK) {
     CComPtr<IMFSample> output;
     hr = mDecoder->Output(&output);
-    SAMPLE_LOG(L"AudioDecoder::DecodeTask() output ret=0x%x\n", hr);
+    SAMPLE_LOG("AudioDecoder::DecodeTask() output ret=0x%x\n", hr);
     if (hr == S_OK) {
       ReturnOutput(output);
     }
@@ -141,10 +149,10 @@ AudioDecoder::DecodeTask(GMPAudioSamples* aInput)
       if (mNumInputTasks == 0) {
         // We have run all input tasks. We *must* notify Gecko so that it will
         // send us more data.
-        GMPRunOnMainThread(WrapTask(mCallback, &GMPAudioDecoderCallback::InputDataExhausted));
+        GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPAudioDecoderCallback::InputDataExhausted));
       }
     } else if (FAILED(hr)) {
-      LOG(L"AudioDecoder::DecodeTask() output failed hr=0x%x\n", hr);
+      LOG("AudioDecoder::DecodeTask() output failed hr=0x%x\n", hr);
     }
   }
 }
@@ -152,7 +160,7 @@ AudioDecoder::DecodeTask(GMPAudioSamples* aInput)
 void
 AudioDecoder::ReturnOutput(IMFSample* aSample)
 {
-  SAMPLE_LOG(L"[%p] WMFDecodingModule::OutputVideoFrame()\n", this);
+  SAMPLE_LOG("[%p] AudioDecoder::ReturnOutput()\n", this);
   assert(aSample);
 
   HRESULT hr;
@@ -160,19 +168,19 @@ AudioDecoder::ReturnOutput(IMFSample* aSample)
   GMPAudioSamples* samples = nullptr;
   mHostAPI->CreateSamples(kGMPAudioIS16Samples, &samples);
   if (!samples) {
-    LOG(L"Failed to create i420 frame!\n");
+    LOG("Failed to create i420 frame!\n");
     return;
   }
 
   hr = MFToGMPSample(aSample, samples);
   if (FAILED(hr)) {
     samples->Destroy();
-    LOG(L"Failed to prepare output sample!");
+    LOG("Failed to prepare output sample!");
     return;
   }
   ENSURE(SUCCEEDED(hr), /*void*/);
 
-  GMPRunOnMainThread(WrapTask(mCallback, &GMPAudioDecoderCallback::Decoded, samples));
+  GetPlatform()->runonmainthread(WrapTask(mCallback, &GMPAudioDecoderCallback::Decoded, samples));
 }
 
 HRESULT
@@ -221,7 +229,7 @@ void
 AudioDecoder::DrainTask()
 {
   if (FAILED(mDecoder->Drain())) {
-    GMPSyncRunOnMainThread(WrapTask(mCallback, &GMPAudioDecoderCallback::DrainComplete));
+    GetPlatform()->syncrunonmainthread(WrapTask(mCallback, &GMPAudioDecoderCallback::DrainComplete));
   }
 
   // Return any pending output.
@@ -229,17 +237,18 @@ AudioDecoder::DrainTask()
   while (hr == S_OK) {
     CComPtr<IMFSample> output;
     hr = mDecoder->Output(&output);
-    SAMPLE_LOG(L"AudioDecoder::DrainTask() output ret=0x%x\n", hr);
+    SAMPLE_LOG("AudioDecoder::DrainTask() output ret=0x%x\n", hr);
     if (hr == S_OK) {
       ReturnOutput(output);
     }
   }
-  GMPSyncRunOnMainThread(WrapTask(mCallback, &GMPAudioDecoderCallback::DrainComplete));
+  GetPlatform()->syncrunonmainthread(WrapTask(mCallback, &GMPAudioDecoderCallback::DrainComplete));
 }
 
 void
 AudioDecoder::Drain()
 {
+  EnsureWorker();
   mWorkerThread->Post(WrapTask(this,
                                &AudioDecoder::DrainTask));
 }
@@ -252,5 +261,3 @@ AudioDecoder::DecodingComplete()
   }
   delete this;
 }
-
-#endif

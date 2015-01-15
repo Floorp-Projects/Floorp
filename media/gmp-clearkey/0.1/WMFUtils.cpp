@@ -14,23 +14,73 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
+#include "WMFUtils.h"
 
-void LOG(wchar_t* format, ...)
+#include <stdio.h>
+
+#define INITGUID
+#include <guiddef.h>
+
+#pragma comment(lib, "mfuuid.lib")
+#pragma comment(lib, "wmcodecdspuuid")
+#pragma comment(lib, "mfplat.lib")
+
+void LOG(const char* format, ...)
 {
+#ifdef WMF_DECODER_LOG
   va_list args;
   va_start(args, format);
-
-  WCHAR msg[MAX_PATH];
-  if (FAILED(StringCbVPrintf(msg, sizeof(msg), format, args))) {
-    return;
-  }
-
-  OutputDebugString(msg);
+  vprintf(format, args);
+#endif
 }
 
+#ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
+// Some SDK versions don't define the AAC decoder CLSID.
+// {32D186A7-218F-4C75-8876-DD77273A8999}
+DEFINE_GUID(CLSID_CMSAACDecMFT, 0x32D186A7, 0x218F, 0x4C75, 0x88, 0x76, 0xDD, 0x77, 0x27, 0x3A, 0x89, 0x99);
+#endif
 
-#ifdef TEST_DECODING
+namespace wmf {
+
+
+#define MFPLAT_FUNC(_func) \
+  decltype(::_func)* _func;
+#include "WMFSymbols.h"
+#undef MFPLAT_FUNC
+
+static bool
+LinkMfplat()
+{
+  static bool sInitDone = false;
+  static bool sInitOk = false;
+  if (!sInitDone) {
+    sInitDone = true;
+    auto handle = GetModuleHandle("mfplat.dll");
+#define MFPLAT_FUNC(_func) \
+    if (!(_func = (decltype(_func))(GetProcAddress(handle, #_func)))) { \
+      return false; \
+    }
+#include "WMFSymbols.h"
+#undef MFPLAT_FUNC
+    sInitOk = true;
+  }
+  return sInitOk;
+}
+
+bool
+EnsureLibs()
+{
+  static bool sInitDone = false;
+  static bool sInitOk = false;
+  if (!sInitDone) {
+    sInitOk = LinkMfplat() &&
+      !!GetModuleHandle("msauddecmft.dll") &&
+      !!GetModuleHandle("msmpeg2adec.dll") &&
+      !!GetModuleHandle("msmpeg2vdec.dll");
+    sInitDone = true;
+  }
+  return sInitOk;
+}
 
 int32_t
 MFOffsetToInt32(const MFOffset& aOffset)
@@ -120,8 +170,6 @@ GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
   return hr;
 }
 
-#endif
-
 void dump(const uint8_t* data, uint32_t len, const char* filename)
 {
   FILE* f = 0;
@@ -132,12 +180,12 @@ void dump(const uint8_t* data, uint32_t len, const char* filename)
 
 HRESULT
 CreateMFT(const CLSID& clsid,
-          const wchar_t* aDllName,
+          const char* aDllName,
           CComPtr<IMFTransform>& aOutMFT)
 {
   HMODULE module = ::GetModuleHandle(aDllName);
   if (!module) {
-    LOG(L"Failed to get %S\n", aDllName);
+    LOG("Failed to get %S\n", aDllName);
     return E_FAIL;
   }
 
@@ -148,7 +196,7 @@ CreateMFT(const CLSID& clsid,
   DllGetClassObjectFnPtr GetClassObjPtr =
     reinterpret_cast<DllGetClassObjectFnPtr>(GetProcAddress(module, "DllGetClassObject"));
   if (!GetClassObjPtr) {
-    LOG(L"Failed to get DllGetClassObject\n");
+    LOG("Failed to get DllGetClassObject\n");
     return E_FAIL;
   }
 
@@ -157,7 +205,7 @@ CreateMFT(const CLSID& clsid,
                               __uuidof(IClassFactory),
                               reinterpret_cast<void**>(static_cast<IClassFactory**>(&classFactory)));
   if (FAILED(hr)) {
-    LOG(L"Failed to get H264 IClassFactory\n");
+    LOG("Failed to get H264 IClassFactory\n");
     return E_FAIL;
   }
 
@@ -165,9 +213,11 @@ CreateMFT(const CLSID& clsid,
                                     __uuidof(IMFTransform),
                                     reinterpret_cast<void**>(static_cast<IMFTransform**>(&aOutMFT)));
   if (FAILED(hr)) {
-    LOG(L"Failed to get create MFT\n");
+    LOG("Failed to get create MFT\n");
     return E_FAIL;
   }
 
   return S_OK;
 }
+
+} // namespace
