@@ -178,7 +178,7 @@
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
 .browserContainer > findbar,
 #browser-bottombox {
-  background: var(--chrome-secondary-background-color) !important;
+  background-color: var(--chrome-secondary-background-color) !important;
   color: var(--chrome-color);
 }
 
@@ -228,7 +228,8 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 /* Nav bar specific stuff */
 #nav-bar {
   margin-top: 0 !important;
-  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
   border-radius: 0 !important;
   box-shadow: 0 -1px var(--chrome-nav-bar-separator-color) !important;
   background-image: none !important;
