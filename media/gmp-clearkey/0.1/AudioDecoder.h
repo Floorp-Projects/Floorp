@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-#include "stdafx.h"
+#ifndef __AudioDecoder_h__
+#define __AudioDecoder_h__
 
-#ifdef TEST_DECODING
+#include "gmp-audio-decode.h"
+#include "gmp-audio-host.h"
+#include "WMFAACDecoder.h"
+
+#include "mfobjects.h"
 
 class AudioDecoder : public GMPAudioDecoder
 {
@@ -38,6 +43,8 @@ public:
 
 private:
 
+  void EnsureWorker();
+
   void DecodeTask(GMPAudioSamples* aEncodedSamples);
   void DrainTask();
 
@@ -50,9 +57,9 @@ private:
   GMPAudioDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete
   GMPThread* mWorkerThread;
   GMPMutex* mMutex;
-  AutoPtr<WMFAACDecoder> mDecoder;
+  wmf::AutoPtr<wmf::WMFAACDecoder> mDecoder;
 
   int32_t mNumInputTasks;
 };
 
-#endif // TEST_DECODING
+#endif // __AudioDecoder_h__

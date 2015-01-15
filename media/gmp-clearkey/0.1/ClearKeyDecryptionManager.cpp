@@ -19,7 +19,7 @@ public:
   bool HasKey() const { return !!mKey.size(); }
 
   GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 GMPEncryptedBufferMetadata* aMetadata);
+                 const GMPEncryptedBufferMetadata* aMetadata);
 
   const Key& DecryptionKey() const { return mKey; }
 
@@ -119,7 +119,7 @@ ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 
 GMPErr
 ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                                   GMPEncryptedBufferMetadata* aMetadata)
+                                   const GMPEncryptedBufferMetadata* aMetadata)
 {
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
   KeyId keyId(aMetadata->KeyId(), aMetadata->KeyId() + aMetadata->KeyIdSize());
@@ -149,7 +149,7 @@ ClearKeyDecryptor::InitKey(const Key& aKey)
 
 GMPErr
 ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                           GMPEncryptedBufferMetadata* aMetadata)
+                           const GMPEncryptedBufferMetadata* aMetadata)
 {
   CK_LOGD("ClearKeyDecryptor::Decrypt");
   // If the sample is split up into multiple encrypted subsamples, we need to

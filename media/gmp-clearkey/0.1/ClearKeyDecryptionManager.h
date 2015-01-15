@@ -34,7 +34,7 @@ public:
   void ReleaseKeyId(KeyId aKeyId);
 
   GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 GMPEncryptedBufferMetadata* aMetadata);
+                 const GMPEncryptedBufferMetadata* aMetadata);
 
   void Shutdown();
 
