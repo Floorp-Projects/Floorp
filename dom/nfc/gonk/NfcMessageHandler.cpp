@@ -23,8 +23,6 @@ static const char* kWriteNDEFRequest = "writeNDEF";
 static const char* kMakeReadOnlyRequest = "makeReadOnly";
 static const char* kFormatRequest = "format";
 static const char* kTransceiveRequest = "transceive";
-static const char* kConnectRequest = "connect";
-static const char* kCloseRequest = "close";
 
 static const char* kChangeRFStateResponse = "ChangeRFStateResponse";
 static const char* kReadNDEFResponse = "ReadNDEFResponse";
@@ -32,8 +30,6 @@ static const char* kWriteNDEFResponse = "WriteNDEFResponse";
 static const char* kMakeReadOnlyResponse = "MakeReadOnlyResponse";
 static const char* kFormatResponse = "FormatResponse";
 static const char* kTransceiveResponse = "TransceiveResponse";
-static const char* kConnectResponse = "ConnectResponse";
-static const char* kCloseResponse = "CloseResponse";
 
 static const char* kInitializedNotification = "InitializedNotification";
 static const char* kTechDiscoveredNotification = "TechDiscoveredNotification";
@@ -63,12 +59,6 @@ NfcMessageHandler::Marshall(Parcel& aParcel, const CommandOptions& aOptions)
   } else if (!strcmp(type, kTransceiveRequest)) {
     result = TransceiveRequest(aParcel, aOptions);
     mPendingReqQueue.AppendElement(NfcRequest::TransceiveReq);
-  } else if (!strcmp(type, kConnectRequest)) {
-    result = ConnectRequest(aParcel, aOptions);
-    mPendingReqQueue.AppendElement(NfcRequest::ConnectReq);
-  } else if (!strcmp(type, kCloseRequest)) {
-    result = CloseRequest(aParcel, aOptions);
-    mPendingReqQueue.AppendElement(NfcRequest::CloseReq);
   } else {
     result = false;
   }
@@ -133,12 +123,6 @@ NfcMessageHandler::GeneralResponse(const Parcel& aParcel, EventOptions& aOptions
       break;
     case NfcRequest::FormatReq:
       type = kFormatResponse;
-      break;
-    case NfcRequest::ConnectReq:
-      type = kConnectResponse;
-      break;
-    case NfcRequest::CloseReq:
-      type = kCloseResponse;
       break;
     default:
       NMH_LOG("Nfcd, unknown general response %d", pendingReq);
@@ -264,25 +248,6 @@ NfcMessageHandler::TransceiveRequest(Parcel& aParcel, const CommandOptions& aOpt
   void* data = aParcel.writeInplace(length);
   memcpy(data, aOptions.mCommand.Elements(), length);
 
-  mRequestIdQueue.AppendElement(aOptions.mRequestId);
-  return true;
-}
-
-bool
-NfcMessageHandler::ConnectRequest(Parcel& aParcel, const CommandOptions& aOptions)
-{
-  aParcel.writeInt32(NfcRequest::ConnectReq);
-  aParcel.writeInt32(aOptions.mSessionId);
-  aParcel.writeInt32(aOptions.mTechType);
-  mRequestIdQueue.AppendElement(aOptions.mRequestId);
-  return true;
-}
-
-bool
-NfcMessageHandler::CloseRequest(Parcel& aParcel, const CommandOptions& aOptions)
-{
-  aParcel.writeInt32(NfcRequest::CloseReq);
-  aParcel.writeInt32(aOptions.mSessionId);
   mRequestIdQueue.AppendElement(aOptions.mRequestId);
   return true;
 }
