@@ -3476,6 +3476,25 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
     return true;
 }
 
+static bool
+IsFunctionCloneable(HandleFunction fun, HandleObject dynamicScope)
+{
+    if (!fun->isInterpreted())
+        return true;
+
+    // If a function was compiled to be lexically nested inside some other
+    // script, we cannot clone it without breaking the compiler's assumptions.
+    JSObject *scope = fun->nonLazyScript()->enclosingStaticScope();
+    if (scope && (!scope->is<StaticEvalObject>() ||
+                  scope->as<StaticEvalObject>().isDirect() ||
+                  scope->as<StaticEvalObject>().isStrict()))
+    {
+        return false;
+    }
+
+    return !fun->nonLazyScript()->compileAndGo() || dynamicScope->is<GlobalObject>();
+}
+
 static JSObject *
 CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject dynamicScope)
 {
@@ -3498,13 +3517,8 @@ CloneFunctionObject(JSContext *cx, HandleObject funobj, HandleObject dynamicScop
         if (!fun->getOrCreateScript(cx))
             return nullptr;
     }
-    /*
-     * If a function was compiled to be lexically nested inside some other
-     * script, we cannot clone it without breaking the compiler's assumptions.
-     */
-    if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo() && !dynamicScope->is<GlobalObject>())))
-    {
+
+    if (!IsFunctionCloneable(fun, dynamicScope)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return nullptr;
     }
@@ -4019,7 +4033,8 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf));
+    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), NullPtr(),
+                                       options, srcBuf));
     return !!script;
 }
 
@@ -4419,7 +4434,7 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     options.setCompileAndGo(obj->is<GlobalObject>());
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                    obj, NullPtr(), options,
+                                                    obj, NullPtr(), NullPtr(), options,
                                                     srcBuf, nullptr, 0, &sct));
     if (!script)
         return false;

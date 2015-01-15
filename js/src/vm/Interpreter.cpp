@@ -886,13 +886,13 @@ PopScope(JSContext *cx, ScopeIter &si)
         if (cx->compartment()->isDebuggee())
             DebugScopes::onPopBlock(cx, si);
         if (si.staticBlock().needsClone())
-            si.frame().popBlock(cx);
+            si.initialFrame().popBlock(cx);
         break;
       case ScopeIter::With:
-        si.frame().popWith(cx);
+        si.initialFrame().popWith(cx);
         break;
       case ScopeIter::Call:
-      case ScopeIter::StrictEvalScope:
+      case ScopeIter::Eval:
         break;
     }
 }
@@ -902,12 +902,11 @@ PopScope(JSContext *cx, ScopeIter &si)
 void
 js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 {
-    if (si.done())
+    if (!si.withinInitialFrame())
         return;
 
-    Rooted<NestedScopeObject *> staticScope(cx, si.frame().script()->getStaticScope(pc));
-
-    for (; si.staticScope() != staticScope; ++si)
+    RootedObject staticScope(cx, si.initialFrame().script()->innermostStaticScope(pc));
+    for (; si.maybeStaticScope() != staticScope; ++si)
         PopScope(cx, si);
 }
 
@@ -919,9 +918,9 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 // will have no pc location distinguishing the first block scope from the
 // outermost function scope.
 void
-js::UnwindAllScopes(JSContext *cx, ScopeIter &si)
+js::UnwindAllScopesInFrame(JSContext *cx, ScopeIter &si)
 {
-    for (; !si.done(); ++si)
+    for (; si.withinInitialFrame(); ++si)
         PopScope(cx, si);
 }
 
@@ -942,14 +941,14 @@ js::UnwindScopeToTryPc(JSScript *script, JSTryNote *tn)
 static void
 ForcedReturn(JSContext *cx, ScopeIter &si, InterpreterRegs &regs)
 {
-    UnwindAllScopes(cx, si);
+    UnwindAllScopesInFrame(cx, si);
     regs.setToEndOfScript();
 }
 
 static void
 ForcedReturn(JSContext *cx, InterpreterRegs &regs)
 {
-    ScopeIter si(regs.fp(), regs.pc, cx);
+    ScopeIter si(cx, regs.fp(), regs.pc);
     ForcedReturn(cx, si, regs);
 }
 
@@ -1038,7 +1037,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
 {
     MOZ_ASSERT(regs.fp()->script()->containsPC(regs.pc));
 
-    ScopeIter si(regs.fp(), regs.pc, cx);
+    ScopeIter si(cx, regs.fp(), regs.pc);
     bool ok = false;
 
   again:
@@ -3357,7 +3356,7 @@ CASE(JSOP_POPBLOCKSCOPE)
 #ifdef DEBUG
     // Pop block from scope chain.
     MOZ_ASSERT(*(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH) == JSOP_DEBUGLEAVEBLOCK);
-    NestedScopeObject *scope = script->getStaticScope(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH);
+    NestedScopeObject *scope = script->getStaticBlockScope(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH);
     MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
     StaticBlockObject &blockObj = scope->as<StaticBlockObject>();
     MOZ_ASSERT(blockObj.needsClone());
@@ -3370,8 +3369,8 @@ END_CASE(JSOP_POPBLOCKSCOPE)
 
 CASE(JSOP_DEBUGLEAVEBLOCK)
 {
-    MOZ_ASSERT(script->getStaticScope(REGS.pc));
-    MOZ_ASSERT(script->getStaticScope(REGS.pc)->is<StaticBlockObject>());
+    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc));
+    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc)->is<StaticBlockObject>());
 
     // FIXME: This opcode should not be necessary.  The debugger shouldn't need
     // help from bytecode to do its job.  See bug 927782.
@@ -4097,7 +4096,7 @@ js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *p
         // Failing that, it must be a block-local let.
         if (!name) {
             // Skip to the right scope.
-            Rooted<NestedScopeObject *> scope(cx, script->getStaticScope(pc));
+            Rooted<NestedScopeObject *> scope(cx, script->getStaticBlockScope(pc));
             MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
             Rooted<StaticBlockObject *> block(cx, &scope->as<StaticBlockObject>());
             while (slot < block->localOffset())

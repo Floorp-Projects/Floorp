@@ -415,10 +415,6 @@ BaselineCompiler::emitPrologue()
     if (!emitSPSPush())
         return false;
 
-    // Pad a nop so that the last non-op ICEntry we pushed does not get
-    // confused with the start address of the first op for PC mapping.
-    masm.nop();
-
     return true;
 }
 
@@ -3003,17 +2999,6 @@ static const VMFunction PopBlockScopeInfo = FunctionInfo<PopBlockScopeFn>(jit::P
 bool
 BaselineCompiler::emit_JSOP_POPBLOCKSCOPE()
 {
-#ifdef DEBUG
-    // The static block scope ends right before this op. Assert we generated
-    // JIT code for the previous op, so that pcForNativeOffset does not
-    // incorrectly return this pc instead of the previous one and confuse
-    // ScopeIter::settle. TODO: remove this when bug 1118826 lands.
-    PCMappingEntry &prevEntry = pcMappingEntries_[pcMappingEntries_.length() - 2];
-    PCMappingEntry &curEntry = pcMappingEntries_[pcMappingEntries_.length() - 1];
-    MOZ_ASSERT(curEntry.pcOffset == script->pcToOffset(pc));
-    MOZ_ASSERT(curEntry.nativeOffset > prevEntry.nativeOffset);
-#endif
-
     // Call a stub to pop the block from the block chain.
     prepareVMCall();
 
@@ -3029,12 +3014,8 @@ static const VMFunction DebugLeaveBlockInfo = FunctionInfo<DebugLeaveBlockFn>(ji
 bool
 BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
 {
-    if (!compileDebugInstrumentation_) {
-        // See the comment in emit_JSOP_POPBLOCKSCOPE.
-        if (*GetNextPc(pc) == JSOP_POPBLOCKSCOPE)
-            masm.nop();
+    if (!compileDebugInstrumentation_)
         return true;
-    }
 
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());

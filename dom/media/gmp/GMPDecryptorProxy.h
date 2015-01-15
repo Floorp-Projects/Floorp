@@ -31,8 +31,8 @@ public:
                              const nsCString& aSessionId) = 0;
 
   virtual void SessionMessage(const nsCString& aSessionId,
-                              const nsTArray<uint8_t>& aMessage,
-                              const nsCString& aDestinationURL) = 0;
+                              GMPSessionMessageType aMessageType,
+                              const nsTArray<uint8_t>& aMessage) = 0;
 
   virtual void ExpirationChange(const nsCString& aSessionId,
                                 GMPTimestamp aExpiryTime) = 0;

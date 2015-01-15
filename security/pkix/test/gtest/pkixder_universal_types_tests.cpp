@@ -353,7 +353,7 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
     Input input(generalizedTimeDER);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, GeneralizedTime(reader, value));
   }
 
   // TimeChoice: GeneralizedTime
@@ -361,13 +361,13 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
     Input input(generalizedTimeDER);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, TimeChoice(reader, value));
   }
 
   // TimeChoice: UTCTime
   {
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME,
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME,
               TimeChoiceForEquivalentUTCTime(generalizedTimeDER, value));
   }
 }
@@ -406,12 +406,12 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
   // GeneralizedTime
   Input gtBuf(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH);
   Reader gt(gtBuf);
-  ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(gt, value));
+  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, GeneralizedTime(gt, value));
 
   // TimeChoice: GeneralizedTime
   Input tc_gt_buf(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH);
   Reader tc_gt(tc_gt_buf);
-  ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(tc_gt, value));
+  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, TimeChoice(tc_gt, value));
 
   // TimeChoice: UTCTime
   const uint8_t DER_UTCTIME_INVALID_ZERO_LENGTH[] = {
@@ -420,7 +420,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
   };
   Input tc_utc_buf(DER_UTCTIME_INVALID_ZERO_LENGTH);
   Reader tc_utc(tc_utc_buf);
-  ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(tc_utc, value));
+  ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, TimeChoice(tc_utc, value));
 }
 
 // A non zulu time should fail
@@ -699,7 +699,7 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
     Input input(DER);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, GeneralizedTime(reader, value));
   }
 
   // TimeChoice: GeneralizedTime
@@ -707,7 +707,7 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
     Input input(DER);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, TimeChoice(reader, value));
   }
 }
 
@@ -837,7 +837,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
     Input input(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, GeneralizedTime(reader, value));
   }
 
   // TimeChoice: GeneralizedTime
@@ -845,7 +845,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
     Input input(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
     Reader reader(input);
     Time value(Time::uninitialized);
-    ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
+    ASSERT_EQ(Result::ERROR_INVALID_DER_TIME, TimeChoice(reader, value));
   }
 
   // This test is not applicable to TimeChoice: UTCTime

@@ -289,6 +289,7 @@ public:
 };
 
 bool ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst);
+uint32_t ReadPixel(SharedSurface* src);
 
 } // namespace gl
 } // namespace mozilla

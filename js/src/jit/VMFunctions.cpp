@@ -785,8 +785,8 @@ bool
 DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
 {
     // Unwind scope chain to stack depth 0.
-    ScopeIter si(frame, pc, cx);
-    UnwindAllScopes(cx, si);
+    ScopeIter si(cx, frame, pc);
+    UnwindAllScopesInFrame(cx, si);
     jsbytecode *unwindPc = frame->script()->main();
     frame->setOverridePc(unwindPc);
 

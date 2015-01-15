@@ -120,8 +120,8 @@ public:
 
   // Main thread only.
   void OnSessionMessage(const nsAString& aSessionId,
-                        nsTArray<uint8_t>& aMessage,
-                        const nsAString& aDestinationURL);
+                        GMPSessionMessageType aMessageType,
+                        nsTArray<uint8_t>& aMessage);
 
   // Main thread only.
   void OnExpirationChange(const nsAString& aSessionId,

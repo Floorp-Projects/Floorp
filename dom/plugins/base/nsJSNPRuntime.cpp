@@ -408,7 +408,7 @@ CreateNPObjWrapperTable()
     return false;
   }
 
-  PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nullptr,
+  PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(),
                     sizeof(NPObjWrapperHashEntry));
   return true;
 }

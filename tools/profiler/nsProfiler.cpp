@@ -194,6 +194,13 @@ nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProfiler::DumpProfileToFile(const char* aFilename)
+{
+  profiler_save_profile_to_file(aFilename);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx,
                                          JS::MutableHandle<JS::Value> aResult)
 {

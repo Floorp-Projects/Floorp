@@ -7,6 +7,7 @@
 #include "DocAccessibleParent.h"
 #include "nsAutoPtr.h"
 #include "mozilla/a11y/Platform.h"
+#include "ProxyAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -74,7 +75,7 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
     new ProxyAccessible(newChild.ID(), aParent, this, role);
   aParent->AddChildAt(aIdxInParent, newProxy);
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
-  ProxyCreated(newProxy);
+  ProxyCreated(newProxy, newChild.Interfaces());
 
   uint32_t accessibles = 1;
   uint32_t kids = newChild.ChildrenCount();
@@ -142,7 +143,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   outerDoc->SetChildDoc(aChildDoc);
   mChildDocs.AppendElement(aChildDoc);
   aChildDoc->mParentDoc = this;
-  ProxyCreated(aChildDoc);
+  ProxyCreated(aChildDoc, 0);
   return true;
 }
 
@@ -154,10 +155,12 @@ DocAccessibleParent::ShutdownAccessibles(ProxyEntry* entry, void*)
 }
 
 void
-DocAccessibleParent::ActorDestroy(ActorDestroyReason aWhy)
+DocAccessibleParent::Destroy()
 {
   MOZ_ASSERT(mChildDocs.IsEmpty(),
       "why wheren't the child docs destroyed already?");
+  MOZ_ASSERT(!mShutdown);
+  mShutdown = true;
 
   mAccessibles.EnumerateEntries(ShutdownAccessibles, nullptr);
   ProxyDestroyed(this);

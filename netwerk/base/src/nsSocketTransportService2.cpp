@@ -867,7 +867,8 @@ nsSocketTransportService::DoPollIteration(bool wait)
 
     int32_t n = Poll(wait, &pollInterval);
     if (n < 0) {
-        SOCKET_LOG(("  PR_Poll error [%d]\n", PR_GetError()));
+        SOCKET_LOG(("  PR_Poll error [%d] os error [%d]\n", PR_GetError(),
+                    PR_GetOSError()));
     }
     else {
         //

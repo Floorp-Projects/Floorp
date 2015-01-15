@@ -13,10 +13,13 @@
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/URL.h"
+#include "mozilla/dom/workers/bindings/URL.h"
 
 #include "nsDOMString.h"
 
 #include "InternalResponse.h"
+#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -52,12 +55,64 @@ Response::Error(const GlobalObject& aGlobal)
 
 /* static */ already_AddRefed<Response>
 Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
-                   uint16_t aStatus)
+                   uint16_t aStatus, ErrorResult& aRv)
 {
-  ErrorResult result;
-  ResponseInit init;
+  nsAutoString parsedURL;
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+    nsCOMPtr<nsIURI> docURI = window->GetDocumentURI();
+    nsAutoCString spec;
+    aRv = docURI->GetSpec(spec);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    nsRefPtr<mozilla::dom::URL> url =
+      dom::URL::Constructor(aGlobal, aUrl, NS_ConvertUTF8toUTF16(spec), aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    url->Stringify(parsedURL, aRv);
+  } else {
+    workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    worker->AssertIsOnWorkerThread();
+
+    NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
+    nsRefPtr<workers::URL> url =
+      workers::URL::Constructor(aGlobal, aUrl, baseURL, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+
+    url->Stringify(parsedURL, aRv);
+  }
+
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (aStatus != 301 && aStatus != 302 && aStatus != 303 && aStatus != 307 && aStatus != 308) {
+    aRv.Throw(NS_ERROR_RANGE_ERR);
+    return nullptr;
+  }
+
   Optional<ArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams> body;
-  nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, result);
+  ResponseInit init;
+  init.mStatus = aStatus;
+  nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  r->GetInternalHeaders()->Set(NS_LITERAL_CSTRING("Location"),
+                               NS_ConvertUTF16toUTF8(parsedURL), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   return r.forget();
 }
 
