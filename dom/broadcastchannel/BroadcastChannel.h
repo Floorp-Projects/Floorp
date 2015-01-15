@@ -53,7 +53,9 @@ public:
     aName = mChannel;
   }
 
-  void PostMessage(const nsAString& aMessage);
+  void PostMessage(const nsAString& aMessage, ErrorResult& aRv);
+
+  void Close();
 
   EventHandlerNonNull* GetOnmessage();
   void SetOnmessage(EventHandlerNonNull* aCallback);
@@ -81,6 +83,8 @@ private:
 
   ~BroadcastChannel();
 
+  void PostMessageInternal(const nsAString& aMessage);
+
   void UpdateMustKeepAlive();
 
   nsRefPtr<BroadcastChannelChild> mActor;
@@ -95,6 +99,12 @@ private:
   bool mIsKeptAlive;
 
   uint64_t mInnerID;
+
+  enum {
+    StateActive,
+    StateClosing,
+    StateClosed
+  } mState;
 };
 
 } // namespace dom
