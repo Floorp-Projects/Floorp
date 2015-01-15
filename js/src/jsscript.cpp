@@ -981,10 +981,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 }
 
                 StaticScopeIter<NoGC> ssi(funEnclosingScope);
-                if (ssi.done() || ssi.type() == StaticScopeIter<NoGC>::FUNCTION) {
+
+                if (ssi.done() || ssi.type() == StaticScopeIter<NoGC>::Function) {
                     MOZ_ASSERT(ssi.done() == !fun);
                     funEnclosingScopeIndex = UINT32_MAX;
-                } else if (ssi.type() == StaticScopeIter<NoGC>::BLOCK) {
+                } else if (ssi.type() == StaticScopeIter<NoGC>::Block) {
                     funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.block());
                     MOZ_ASSERT(funEnclosingScopeIndex < i);
                 } else {
@@ -3017,9 +3018,9 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     RootedObject staticScope(cx, innerFun->nonLazyScript()->enclosingStaticScope());
                     StaticScopeIter<CanGC> ssi(cx, staticScope);
                     RootedObject enclosingScope(cx);
-                    if (ssi.done() || ssi.type() == StaticScopeIter<CanGC>::FUNCTION)
+                    if (ssi.done() || ssi.type() == StaticScopeIter<CanGC>::Function)
                         enclosingScope = fun;
-                    else if (ssi.type() == StaticScopeIter<CanGC>::BLOCK)
+                    else if (ssi.type() == StaticScopeIter<CanGC>::Block)
                         enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
                     else
                         enclosingScope = objects[FindScopeObjectIndex(src, ssi.staticWith())];
@@ -3167,10 +3168,18 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     RootedScript script(cx, clone->nonLazyScript());
     MOZ_ASSERT(script);
     MOZ_ASSERT(script->compartment() == original->compartment());
-    MOZ_ASSERT_IF(script->compartment() != cx->compartment(),
-                  !script->enclosingStaticScope());
 
+    // The only scripts with enclosing static scopes that may be cloned across
+    // compartments are non-strict, indirect eval scripts, as their dynamic
+    // scope chains terminate in the global scope immediately.
     RootedObject scope(cx, script->enclosingStaticScope());
+    if (script->compartment() != cx->compartment() && scope) {
+        MOZ_ASSERT(!scope->as<StaticEvalObject>().isDirect() &&
+                   !scope->as<StaticEvalObject>().isStrict());
+        scope = StaticEvalObject::create(cx, NullPtr());
+        if (!scope)
+            return false;
+    }
 
     clone->mutableScript().init(nullptr);
 
@@ -3469,7 +3478,7 @@ LazyScript::finalize(FreeOp *fop)
 }
 
 NestedScopeObject *
-JSScript::getStaticScope(jsbytecode *pc)
+JSScript::getStaticBlockScope(jsbytecode *pc)
 {
     MOZ_ASSERT(containsPC(pc));
 
@@ -3521,6 +3530,22 @@ JSScript::getStaticScope(jsbytecode *pc)
     }
 
     return blockChain;
+}
+
+JSObject *
+JSScript::innermostStaticScopeInScript(jsbytecode *pc)
+{
+    if (JSObject *scope = getStaticBlockScope(pc))
+        return scope;
+    return functionNonDelazifying();
+}
+
+JSObject *
+JSScript::innermostStaticScope(jsbytecode *pc)
+{
+    if (JSObject *scope = innermostStaticScopeInScript(pc))
+        return scope;
+    return enclosingStaticScope();
 }
 
 void
@@ -3837,7 +3862,7 @@ uint32_t
 LazyScript::staticLevel(JSContext *cx) const
 {
     for (StaticScopeIter<NoGC> ssi(enclosingScope()); !ssi.done(); ssi++) {
-        if (ssi.type() == StaticScopeIter<NoGC>::FUNCTION)
+        if (ssi.type() == StaticScopeIter<NoGC>::Function)
             return ssi.funScript()->staticLevel() + 1;
     }
     return 1;

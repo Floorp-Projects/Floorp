@@ -586,7 +586,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
     uint32_t pcOffset = uint32_t(pc - script->main());
-    ScopeIter si(frame.baselineFrame(), pc, cx);
+    ScopeIter si(cx, frame.baselineFrame(), pc);
     for (; tn != tnEnd; ++tn) {
         if (pcOffset < tn->start)
             continue;
