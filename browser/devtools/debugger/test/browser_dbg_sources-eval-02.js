@@ -32,7 +32,8 @@ function test() {
 
       let item = gSources.getItemForAttachment(e => e.label == "bar.js");
       ok(item, "Source label is incorrect.");
-      ok(item.attachment.group === 'http://example.com', 'Source group is incorrect');
+      is(item.attachment.group, 'http://example.com',
+         'Source group is incorrect');
 
       let shown = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
       gSources.selectedItem = item;
