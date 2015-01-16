@@ -89,16 +89,21 @@ public:
     /* Apply an "input transform" to the given |aInput| and return the transformed value.
        The input transform applied is the one for the content element corresponding to
        |aGuid|; this is populated in a previous call to UpdateCallbackTransform. See that
-       method's documentations for details. */
+       method's documentations for details.
+       This method additionally adjusts |aInput| by inversely scaling by the provided
+       pres shell resolution, to cancel out a compositor-side transform (added in
+       bug 1076241) that APZ doesn't unapply. */
     static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
-                                           const ScrollableLayerGuid& aGuid);
+                                           const ScrollableLayerGuid& aGuid,
+                                           float aPresShellResolution);
 
     /* Same as above, but operates on nsIntPoint that are assumed to be in LayoutDevice
        pixel space. Requires an additonal |aScale| parameter to convert between CSS and
        LayoutDevice space. */
     static nsIntPoint ApplyCallbackTransform(const nsIntPoint& aPoint,
                                              const ScrollableLayerGuid& aGuid,
-                                             const CSSToLayoutDeviceScale& aScale);
+                                             const CSSToLayoutDeviceScale& aScale,
+                                             float aPresShellResolution);
 };
 
 }
