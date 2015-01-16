@@ -135,6 +135,39 @@ this.ManifestProcessor.prototype.process = function({
     return (displayModes.has(value)) ? value : defaultDisplayMode;
   }
 
+  function processScopeMember(manifest, manifestURL, docURL, startURL) {
+    const spec = {
+        objectName: 'manifest',
+        object: manifest,
+        property: 'scope',
+        expectedType: 'string',
+        dontTrim: true
+      },
+      value = extractValue(spec);
+    let scopeURL;
+    try {
+      scopeURL = new URL(value, manifestURL);
+    } catch (e) {
+      let msg = 'The URL of scope is invalid.';
+      issueDeveloperWarning(msg);
+      return undefined;
+    }
+
+    if (scopeURL.origin !== docURL.origin) {
+      let msg = 'Scope needs to be same-origin as Document.';
+      issueDeveloperWarning(msg);
+      return undefined;
+    }
+
+    //If start URL is not within scope of scope URL:
+    if (startURL && startURL.origin !== scopeURL.origin || !startURL.pathname.startsWith(scopeURL.pathname)) {
+      let msg = 'The start URL is outside the scope, so scope is invalid.';
+      issueDeveloperWarning(msg);
+      return undefined;
+    }
+    return scopeURL;
+  }
+
   function processStartURLMember(manifest, manifestURL, docURL) {
     const obj = {
       objectName: 'manifest',
@@ -319,5 +352,6 @@ this.ManifestProcessor.prototype.process = function({
     icons: processIconsMember(manifest, manifestURL),
     short_name: processShortNameMember(manifest)
   };
+  processedManifest.scope = processScopeMember(manifest, manifestURL, docURL, processedManifest.start_url);
   return processedManifest;
 };
