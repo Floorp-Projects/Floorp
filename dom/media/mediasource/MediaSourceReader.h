@@ -99,6 +99,8 @@ public:
   nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
 
+  void CancelSeek() MOZ_OVERRIDE;
+
   // Acquires the decoder monitor, and is thus callable on any thread.
   nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
 
