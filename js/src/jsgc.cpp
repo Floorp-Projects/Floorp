@@ -1129,7 +1129,9 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     sliceBudget(SliceBudget::Unlimited),
     incrementalAllowed(true),
     generationalDisabled(0),
+#ifdef JSGC_COMPACTING
     compactingDisabled(0),
+#endif
     manipulatingDeadZones(false),
     objectsMarkedInDeadZones(0),
     poked(false),
@@ -1149,7 +1151,9 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #ifdef DEBUG
     inUnsafeRegion(0),
     noGCOrAllocationCheck(0),
+#ifdef JSGC_COMPACTING
     relocatedArenasToRelease(nullptr),
+#endif
 #endif
     lock(nullptr),
     lockOwner(nullptr),
@@ -1943,8 +1947,14 @@ ArenaLists::allocateFromArenaInner(JS::Zone *zone, ArenaHeader *aheader, AllocKi
 bool
 GCRuntime::shouldCompact()
 {
+#ifdef JSGC_COMPACTING
     return invocationKind == GC_SHRINK && isCompactingGCEnabled();
+#else
+    return false;
+#endif
 }
+
+#ifdef JSGC_COMPACTING
 
 void
 GCRuntime::disableCompactingGC()
@@ -2704,10 +2714,12 @@ GCRuntime::releaseRelocatedArenasWithoutUnlocking(ArenaHeader *relocatedList, co
     }
 }
 
+#endif // JSGC_COMPACTING
+
 void
 GCRuntime::releaseHeldRelocatedArenas()
 {
-#ifdef DEBUG
+#if defined(JSGC_COMPACTING) && defined(DEBUG)
     // In debug mode we don't release relocated arenas straight away.  Instead
     // we protect them and hold onto them until the next GC sweep phase to catch
     // any pointers to them that didn't get forwarded.
@@ -5479,6 +5491,9 @@ GCRuntime::endSweepPhase(bool lastGC)
 bool
 GCRuntime::compactPhase(bool lastGC)
 {
+#ifndef JSGC_COMPACTING
+    MOZ_CRASH();
+#else
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
     if (isIncremental) {
@@ -5543,6 +5558,8 @@ GCRuntime::compactPhase(bool lastGC)
         }
     }
 #endif
+
+#endif // JSGC_COMPACTING
     return true;
 }
 
@@ -5702,6 +5719,7 @@ GCRuntime::resetIncrementalGC(const char *reason)
         break;
       }
 
+#ifdef JSGC_COMPACTING
       case COMPACT: {
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -5717,6 +5735,7 @@ GCRuntime::resetIncrementalGC(const char *reason)
         invocationKind = oldInvocationKind;
         break;
       }
+#endif
 
       default:
         MOZ_CRASH("Invalid incremental GC state");
@@ -6404,7 +6423,7 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 {
     // Release any relocated arenas we may be holding on to, without releasing
     // the GC lock.
-#ifdef DEBUG
+#if defined(JSGC_COMPACTING) && defined(DEBUG)
     unprotectRelocatedArenas(relocatedArenasToRelease);
     releaseRelocatedArenasWithoutUnlocking(relocatedArenasToRelease, lock);
     relocatedArenasToRelease = nullptr;
@@ -7125,13 +7144,19 @@ JS::IsIncrementalGCEnabled(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS::DisableCompactingGC(JSRuntime *rt)
 {
+#ifdef JSGC_COMPACTING
     rt->gc.disableCompactingGC();
+#endif
 }
 
 JS_PUBLIC_API(bool)
 JS::IsCompactingGCEnabled(JSRuntime *rt)
 {
+#ifdef JSGC_COMPACTING
     return rt->gc.isCompactingGCEnabled();
+#else
+    return false;
+#endif
 }
 
 JS_PUBLIC_API(bool)
