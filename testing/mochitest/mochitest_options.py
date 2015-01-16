@@ -668,7 +668,7 @@ class MochitestOptions(optparse.OptionParser):
 
         # Bug 1121539 - OSX-only intermittent tab process leak in test_ipc.html
         if mozinfo.isMac:
-            options.leakThresholds["tab"] = 50000
+            options.leakThresholds["tab"] = 100000
 
         return options
 
