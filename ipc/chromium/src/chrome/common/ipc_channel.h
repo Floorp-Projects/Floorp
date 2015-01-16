@@ -98,7 +98,7 @@ class Channel : public Message::Sender {
   //
   // If you Send() a message on a Close()'d channel, we delete the message
   // immediately.
-  virtual bool Send(Message* message);
+  virtual bool Send(Message* message) MOZ_OVERRIDE;
 
   // Unsound_IsClosed() and Unsound_NumQueuedMessages() are safe to call from
   // any thread, but the value returned may be out of date, because we don't

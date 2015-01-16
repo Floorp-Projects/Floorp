@@ -133,10 +133,10 @@ class MessagePumpLibevent : public MessagePump {
 
 
   // MessagePump methods:
-  virtual void Run(Delegate* delegate);
-  virtual void Quit();
-  virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
+  virtual void Run(Delegate* delegate) MOZ_OVERRIDE;
+  virtual void Quit() MOZ_OVERRIDE;
+  virtual void ScheduleWork() MOZ_OVERRIDE;
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) MOZ_OVERRIDE;
 
  protected:
 
@@ -204,9 +204,9 @@ protected:
    */
   virtual void OnError() {}
   virtual void OnLineRead(int aFd, nsDependentCSubstring& aMessage) = 0;
-  virtual void OnFileCanWriteWithoutBlocking(int /* aFd */) {}
+  virtual void OnFileCanWriteWithoutBlocking(int /* aFd */) MOZ_OVERRIDE {}
 private:
-  virtual void OnFileCanReadWithoutBlocking(int aFd) MOZ_FINAL;
+  virtual void OnFileCanReadWithoutBlocking(int aFd) MOZ_FINAL MOZ_OVERRIDE;
 
   nsAutoPtr<char> mReceiveBuffer;
   int mReceivedIndex;
