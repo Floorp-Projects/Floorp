@@ -458,17 +458,6 @@ class CodeGeneratorShared : public LElementVisitor
     inline OutOfLineCode *oolCallVM(const VMFunction &fun, LInstruction *ins, const ArgSeq &args,
                                     const StoreOutputTo &out);
 
-    void callVM(const VMFunctionsModal &f, LInstruction *ins, const Register *dynStack = nullptr) {
-        callVM(f[gen->info().executionMode()], ins, dynStack);
-    }
-
-    template <class ArgSeq, class StoreOutputTo>
-    inline OutOfLineCode *oolCallVM(const VMFunctionsModal &f, LInstruction *ins,
-                                    const ArgSeq &args, const StoreOutputTo &out)
-    {
-        return oolCallVM(f[gen->info().executionMode()], ins, args, out);
-    }
-
     void addCache(LInstruction *lir, size_t cacheIndex);
     size_t addCacheLocations(const CacheLocationList &locs, size_t *numLocs);
     ReciprocalMulConstants computeDivisionConstants(int d);

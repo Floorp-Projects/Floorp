@@ -24,7 +24,6 @@
 #include "gfxPrefs.h"
 #include "libui/Input.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
@@ -333,21 +332,6 @@ GeckoTouchDispatcher::ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp a
   aOutTouch.mTimeStamp = sampleTime;
 }
 
-// Some touch events get sent as mouse events. If APZ doesn't capture the event
-// and if a touch only has 1 touch input, we can send a mouse event.
-void
-GeckoTouchDispatcher::DispatchMouseEvent(MultiTouchInput& aMultiTouch,
-                                         bool aForwardToChildren)
-{
-  WidgetMouseEvent mouseEvent = aMultiTouch.ToWidgetMouseEvent(nullptr);
-  if (mouseEvent.message == NS_EVENT_NULL) {
-    return;
-  }
-
-  mouseEvent.mFlags.mNoCrossProcessBoundaryForwarding = !aForwardToChildren;
-  nsWindow::DispatchInputEvent(mouseEvent);
-}
-
 static bool
 IsExpired(const MultiTouchInput& aTouch)
 {
@@ -372,9 +356,7 @@ GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
     return;
   }
 
-  bool captured = false;
-  WidgetTouchEvent event = aMultiTouch.ToWidgetTouchEvent(nullptr);
-  nsEventStatus status = nsWindow::DispatchInputEvent(event, &captured);
+  nsWindow::DispatchTouchInput(aMultiTouch);
 
   if (mEnabledUniformityInfo && profiler_is_active()) {
     const char* touchAction = "Invalid";
@@ -394,11 +376,6 @@ GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
     const ScreenIntPoint& touchPoint = aMultiTouch.mTouches[0].mScreenPoint;
     TouchDataPayload* payload = new TouchDataPayload(touchPoint);
     PROFILER_MARKER_PAYLOAD(touchAction, payload);
-  }
-
-  if (!captured && (aMultiTouch.mTouches.Length() == 1)) {
-    bool forwardToChildren = status != nsEventStatus_eConsumeNoDefault;
-    DispatchMouseEvent(aMultiTouch, forwardToChildren);
   }
 }
 

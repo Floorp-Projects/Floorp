@@ -70,13 +70,13 @@ class JS_FRIEND_API(Wrapper);
  * With regard to the implementation of these internal methods, there are three
  * very different kinds of object in SpiderMonkey.
  *
- * 1.  Native objects' internal methods are implemented in js::baseops in
- *     vm/NativeObject.cpp, with duplicate (but functionally identical)
- *     implementations scattered through the ICs and JITs.
+ * 1.  Native objects' internal methods are implemented in vm/NativeObject.cpp,
+ *     with duplicate (but functionally identical) implementations scattered
+ *     through the ICs and JITs.
  *
  * 2.  Certain non-native objects have internal methods that are implemented as
  *     magical js::ObjectOps hooks. We're trying to get rid of these.
- * 
+ *
  * 3.  All other objects are proxies. A proxy's internal methods are
  *     implemented in C++, as the virtual methods of a C++ object stored on the
  *     proxy, known as its handler.

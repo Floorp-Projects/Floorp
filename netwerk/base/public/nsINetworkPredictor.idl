@@ -18,7 +18,7 @@ typedef unsigned long PredictorLearnReason;
  *                       NOTE: nsINetworkPredictor should only
  *                       be used on the main thread.
  */
-[scriptable, uuid(980f70bc-0487-4b22-a4c1-bf1185c8ae1f)]
+[scriptable, uuid(acc88e7c-3f39-42c7-ac31-6377c2c3d73e)]
 interface nsINetworkPredictor : nsISupports
 {
   /**
@@ -122,12 +122,6 @@ interface nsINetworkPredictor : nsISupports
    * after this completes will start from a blank slate.
    */
   void reset();
-
-  /**
-   * @deprecated THIS API IS FOR TESTING ONLY. IF YOU DON'T KNOW WHAT IT DOES,
-   * DON'T USE IT
-   */
-  void prepareForDnsTest(in long long timestamp, in string uri);
 };
 
 %{C++

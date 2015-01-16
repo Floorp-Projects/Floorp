@@ -350,7 +350,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
     if (!getter)
         return nullptr;
 
-    if (!DefineNativeProperty(cx, proto, byteLengthId, UndefinedHandleValue,
+    if (!NativeDefineProperty(cx, proto, byteLengthId, UndefinedHandleValue,
                               JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, attrs))
         return nullptr;
 

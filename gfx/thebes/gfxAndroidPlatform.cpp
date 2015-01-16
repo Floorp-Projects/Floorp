@@ -437,7 +437,6 @@ public:
     return mGlobalDisplay;
   }
 
-protected:
   class GonkDisplay MOZ_FINAL : public VsyncSource::Display
   {
   public:
@@ -486,6 +485,10 @@ gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<VsyncSource> vsyncSource = new GonkVsyncSource();
+    if (!vsyncSource->GetGlobalDisplay().IsVsyncEnabled()) {
+        NS_WARNING("Error enabling gonk vsync. Falling back to software vsync\n");
+        return gfxPlatform::CreateHardwareVsyncSource();
+    }
     return vsyncSource.forget();
 #else
     NS_WARNING("Hardware vsync not supported on android yet");

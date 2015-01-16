@@ -636,6 +636,7 @@ BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
     case NS_STYLE_LIST_STYLE_SQUARE:
     case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
     case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
       aResult = ' ';
       break;
 
