@@ -241,7 +241,9 @@ public:
 
   void Finish();
 
-  PLDHashEntryHdr* Operate(const void* aKey, PLDHashOperator aOp);
+  PLDHashEntryHdr* Lookup(const void* aKey);
+  PLDHashEntryHdr* Add(const void* aKey);
+  void Remove(const void* aKey);
 
   void RawRemove(PLDHashEntryHdr* aEntry);
 
@@ -295,6 +297,8 @@ private:
     SearchTable(const void* aKey, PLDHashNumber aKeyHash, PLDHashOperator aOp);
 
   PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
+
+  PLDHashEntryHdr* Operate(const void* aKey, PLDHashOperator aOp);
 
   bool ChangeTable(int aDeltaLog2);
 };
