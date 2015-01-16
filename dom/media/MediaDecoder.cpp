@@ -131,7 +131,6 @@ void MediaDecoder::SetDormantIfNecessary(bool aDormant)
 
   if(aDormant) {
     // enter dormant state
-    DestroyDecodedStream();
     mDecoderStateMachine->SetDormant(true);
 
     int64_t timeUsecs = 0;
