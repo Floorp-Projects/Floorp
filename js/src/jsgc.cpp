@@ -2098,6 +2098,8 @@ PtrIsInRange(const void *ptr, const void *start, size_t length)
 static bool
 RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize)
 {
+    JS::AutoSuppressGCAnalysis nogc(zone->runtimeFromMainThread());
+
     // Allocate a new cell.
     MOZ_ASSERT(zone == src->zone());
     void *dstAlloc = zone->arenas.allocateFromFreeList(thingKind, thingSize);
@@ -2373,7 +2375,7 @@ namespace gc {
 
 struct ArenasToUpdate
 {
-    ArenasToUpdate(JSRuntime *rt);
+    explicit ArenasToUpdate(JSRuntime *rt);
     bool done() { return initialized && arena == nullptr; }
     ArenaHeader* next();
     ArenaHeader *getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
@@ -2389,7 +2391,7 @@ struct ArenasToUpdate
 
 bool ArenasToUpdate::shouldProcessKind(unsigned kind)
 {
-    MOZ_ASSERT(kind >= 0 && kind < FINALIZE_LIMIT);
+    MOZ_ASSERT(kind < FINALIZE_LIMIT);
     return
         kind != FINALIZE_FAT_INLINE_STRING &&
         kind != FINALIZE_STRING &&
