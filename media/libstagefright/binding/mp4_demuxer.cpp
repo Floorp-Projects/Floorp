@@ -144,6 +144,13 @@ MP4Demuxer::Init()
   sp<MetaData> metaData = e->getMetaData();
   mCrypto.Update(metaData);
 
+  int64_t movieDuration;
+  if (!mVideoConfig.duration && !mAudioConfig.duration &&
+      metaData->findInt64(kKeyMovieDuration, &movieDuration)) {
+    // No duration were found in either tracks, use movie extend header box one.
+    mVideoConfig.duration = mAudioConfig.duration = movieDuration;
+  }
+
   return mPrivate->mAudio.get() || mPrivate->mVideo.get();
 }
 
