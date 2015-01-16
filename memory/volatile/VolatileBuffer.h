@@ -6,6 +6,7 @@
 #define mozalloc_VolatileBuffer_h
 
 #include "mozilla/mozalloc.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -36,19 +37,19 @@
  * When a buffer is purged, some or all of the buffer is zeroed out. This
  * API cannot tell which parts of the buffer were lost.
  *
- * VolatileBuffer is not thread safe. Do not use VolatileBufferPtrs on
- * different threads.
+ * VolatileBuffer and VolatileBufferPtr are threadsafe.
  */
 
 namespace mozilla {
 
-class VolatileBuffer : public RefCounted<VolatileBuffer>
+class VolatileBuffer
 {
   friend class VolatileBufferPtr_base;
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(VolatileBuffer)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VolatileBuffer)
+
   VolatileBuffer();
-  ~VolatileBuffer();
 
   /* aAlignment must be a multiple of the pointer size */
   bool Init(size_t aSize, size_t aAlignment = sizeof(void*));
@@ -62,6 +63,15 @@ protected:
   void Unlock();
 
 private:
+  ~VolatileBuffer();
+
+  /**
+   * Protects mLockCount, mFirstLock, and changes to the volatility of our
+   * buffer.  Other member variables are read-only except in Init() and the
+   * destructor.
+   */
+  Mutex mMutex;
+
   void* mBuf;
   size_t mSize;
   int mLockCount;
