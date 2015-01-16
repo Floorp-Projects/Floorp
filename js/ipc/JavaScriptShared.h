@@ -110,6 +110,9 @@ class IdToObjectMap
     JSObject *find(ObjectId id);
     void remove(ObjectId id);
 
+    void clear();
+    bool empty() const;
+
   private:
     Table table_;
 };
@@ -131,6 +134,7 @@ class ObjectToIdMap
     bool add(JSContext *cx, JSObject *obj, ObjectId id);
     ObjectId find(JSObject *obj);
     void remove(JSObject *obj);
+    void clear();
 
   private:
     static void keyMarkCallback(JSTracer *trc, JSObject *key, void *data);
@@ -144,7 +148,7 @@ class JavaScriptShared
 {
   public:
     explicit JavaScriptShared(JSRuntime *rt);
-    virtual ~JavaScriptShared() {}
+    virtual ~JavaScriptShared();
 
     bool init();
 
