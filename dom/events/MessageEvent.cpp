@@ -119,14 +119,23 @@ MessageEvent::Constructor(const GlobalObject& aGlobal,
                           ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<MessageEvent> event = new MessageEvent(t, nullptr, nullptr);
+  return Constructor(t, aType, aParam, aRv);
+}
+
+/* static */ already_AddRefed<MessageEvent>
+MessageEvent::Constructor(EventTarget* aEventTarget,
+                          const nsAString& aType,
+                          const MessageEventInit& aParam,
+                          ErrorResult& aRv)
+{
+  nsRefPtr<MessageEvent> event = new MessageEvent(aEventTarget, nullptr, nullptr);
 
   aRv = event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  bool trusted = event->Init(t);
+  bool trusted = event->Init(aEventTarget);
   event->SetTrusted(trusted);
 
   event->mData = aParam.mData;

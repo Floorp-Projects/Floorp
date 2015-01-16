@@ -2118,6 +2118,8 @@ nsCocoaWindow::NotifyIME(const IMENotification& aIMENotification)
     case NOTIFY_IME_OF_FOCUS:
       if (mInputContext.IsPasswordEditor()) {
         TextInputHandler::EnableSecureEventInput();
+      } else {
+        TextInputHandler::EnsureSecureEventInputDisabled();
       }
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:

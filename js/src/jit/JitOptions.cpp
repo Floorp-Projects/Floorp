@@ -135,9 +135,6 @@ JitOptions::JitOptions()
     // We may want to tune it further after other optimizations have gone
     // in.
     SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
-
-    // How many uses of a parallel kernel before we attempt compilation.
-    SET_DEFAULT(compilerWarmUpThresholdPar, 1);
 }
 
 bool

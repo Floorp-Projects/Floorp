@@ -493,7 +493,13 @@ struct Class
     ClassExtension      ext;
     ObjectOps           ops;
 
-    /* Class is not native and its map is not a scope. */
+    /*
+     * Objects of this class aren't native objects. They don't have Shapes that
+     * describe their properties and layout. Classes using this flag must
+     * provide their own property behavior, either by being proxy classes (do
+     * this) or by overriding all the ObjectOps except getElements, watch,
+     * unwatch, and thisObject (don't do this).
+     */
     static const uint32_t NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
 
     bool isNative() const {

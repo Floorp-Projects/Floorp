@@ -1275,9 +1275,9 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     JSAtom *undefinedAtom = cx->names().undefined;
     if (idstr == undefinedAtom) {
         *resolved = true;
-        return JSObject::defineProperty(cx, obj, undefinedAtom->asPropertyName(),
-                                        UndefinedHandleValue, nullptr, nullptr,
-                                        JSPROP_PERMANENT | JSPROP_READONLY);
+        return DefineProperty(cx, obj, undefinedAtom->asPropertyName(),
+                              UndefinedHandleValue, nullptr, nullptr,
+                              JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -1916,7 +1916,7 @@ JS_DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue
     CHECK_REQUEST(cx);
     MOZ_ASSERT(obj != nullptr);
     MOZ_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
-    return JSObject::defaultValue(cx, obj, hint, vp);
+    return ToPrimitive(cx, obj, hint, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -1940,14 +1940,6 @@ JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
     return true;
 }
 #endif  /* GCC 4.4 */
-
-JS_PUBLIC_API(bool)
-JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
-{
-    MOZ_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
-    MOZ_ASSERT(obj);
-    return DefaultValue(cx, obj, type, vp);
-}
 
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, HandleObject obj, HandleObject parent_proto,
@@ -2026,7 +2018,7 @@ JS_GetInstancePrivate(JSContext *cx, HandleObject obj, const JSClass *clasp, Cal
 JS_PUBLIC_API(bool)
 JS_GetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop)
 {
-    return JSObject::getProto(cx, obj, protop);
+    return GetPrototype(cx, obj, protop);
 }
 
 JS_PUBLIC_API(bool)
@@ -2037,7 +2029,7 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     assertSameCompartment(cx, obj, proto);
 
     bool succeeded;
-    if (!JSObject::setProto(cx, obj, proto, &succeeded))
+    if (!SetPrototype(cx, obj, proto, &succeeded))
         return false;
 
     if (!succeeded) {
@@ -2047,6 +2039,18 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     }
 
     return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_IsExtensible(JSContext *cx, HandleObject obj, bool *extensible)
+{
+    return IsExtensible(cx, obj, extensible);
+}
+
+JS_PUBLIC_API(bool)
+JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
+{
+    return PreventExtensions(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2076,7 +2080,7 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
     assertSameCompartment(cx, proto);
 
     RootedValue cval(cx);
-    if (!JSObject::getProperty(cx, proto, proto, cx->names().constructor, &cval))
+    if (!GetProperty(cx, proto, proto, cx->names().constructor, &cval))
         return nullptr;
     if (!IsFunctionObject(cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
@@ -2227,12 +2231,6 @@ JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const CallArgs& 
 }
 
 JS_PUBLIC_API(bool)
-JS_IsExtensible(JSContext *cx, HandleObject obj, bool *extensible)
-{
-    return JSObject::isExtensible(cx, obj, extensible);
-}
-
-JS_PUBLIC_API(bool)
 JS_IsNative(JSObject *obj)
 {
     return obj->isNative();
@@ -2250,7 +2248,7 @@ JS_FreezeObject(JSContext *cx, HandleObject obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return JSObject::freeze(cx, obj);
+    return FreezeObject(cx, obj);
 }
 
 JS_PUBLIC_API(bool)
@@ -2262,12 +2260,12 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
 
     /* Assume that non-extensible objects are already deep-frozen, to avoid divergence. */
     bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
+    if (!IsExtensible(cx, obj, &extensible))
         return false;
     if (!extensible)
         return true;
 
-    if (!JSObject::freeze(cx, obj))
+    if (!FreezeObject(cx, obj))
         return false;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
@@ -2291,7 +2289,7 @@ JS_HasPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool *foundp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return JSObject::hasProperty(cx, obj, id, foundp);
+    return HasProperty(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(bool)
@@ -2483,7 +2481,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
         getter = nullptr;
     if (setter == JS_StrictPropertyStub)
         setter = nullptr;
-    return JSObject::defineGeneric(cx, obj, id, value, getter, setter, attrs);
+    return DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2945,7 +2943,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     RootedObject obj2(cx);
     RootedShape shape(cx);
 
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
+    if (!LookupProperty(cx, obj, id, &obj2, &shape))
         return false;
 
     desc.clear();
@@ -2968,7 +2966,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     } else {
         if (obj2->is<ProxyObject>())
             return Proxy::getPropertyDescriptor(cx, obj2, id, desc);
-        if (!JSObject::getGenericAttributes(cx, obj2, id, &desc.attributesRef()))
+        if (!GetPropertyAttributes(cx, obj2, id, &desc.attributesRef()))
             return false;
         MOZ_ASSERT(desc.getter() == nullptr);
         MOZ_ASSERT(desc.setter() == nullptr);
@@ -3028,10 +3026,9 @@ JS_ForwardGetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-    assertSameCompartment(cx, onBehalfOf);
+    assertSameCompartment(cx, obj, id, onBehalfOf);
 
-    return JSObject::getGeneric(cx, obj, onBehalfOf, id, vp);
+    return GetProperty(cx, obj, onBehalfOf, id, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3048,7 +3045,7 @@ JS_ForwardGetElementTo(JSContext *cx, HandleObject obj, uint32_t index, HandleOb
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return JSObject::getElement(cx, obj, onBehalfOf, index, vp);
+    return GetElement(cx, obj, onBehalfOf, index, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3080,7 +3077,7 @@ JS_SetPropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue v)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    return JSObject::setGeneric(cx, obj, obj, id, &value, false);
+    return SetProperty(cx, obj, obj, id, &value, false);
 }
 
 JS_PUBLIC_API(bool)
@@ -3098,7 +3095,7 @@ JS_ForwardSetPropertyTo(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS
         return false;
 
     RootedValue value(cx, v);
-    return JSObject::setGeneric(cx, obj, receiver, id, &value, strict);
+    return SetProperty(cx, obj, receiver, id, &value, strict);
 }
 
 static bool
@@ -3108,7 +3105,7 @@ SetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, vp);
 
-    return JSObject::setElement(cx, obj, obj, index, vp, false);
+    return SetElement(cx, obj, obj, index, vp, false);
 }
 
 JS_PUBLIC_API(bool)
@@ -3181,7 +3178,7 @@ JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *resul
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    return JSObject::deleteGeneric(cx, obj, id, result);
+    return DeleteProperty(cx, obj, id, result);
 }
 
 JS_PUBLIC_API(bool)
@@ -3191,7 +3188,7 @@ JS_DeleteElement2(JSContext *cx, HandleObject obj, uint32_t index, bool *result)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return JSObject::deleteElement(cx, obj, index, result);
+    return DeleteElement(cx, obj, index, result);
 }
 
 JS_PUBLIC_API(bool)
@@ -3204,7 +3201,7 @@ JS_DeleteProperty2(JSContext *cx, HandleObject obj, const char *name, bool *resu
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return JSObject::deleteGeneric(cx, obj, id, result);
+    return DeleteProperty(cx, obj, id, result);
 }
 
 JS_PUBLIC_API(bool)
@@ -3218,7 +3215,7 @@ JS_DeleteUCProperty2(JSContext *cx, HandleObject obj, const char16_t *name, size
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return JSObject::deleteGeneric(cx, obj, id, result);
+    return DeleteProperty(cx, obj, id, result);
 }
 
 JS_PUBLIC_API(bool)
@@ -3727,7 +3724,7 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs,
             RootedValue funVal(cx);
             if (!cx->global()->getSelfHostedFunction(cx, shName, name, fs->nargs, &funVal))
                 return false;
-            if (!JSObject::defineGeneric(cx, obj, id, funVal, nullptr, nullptr, flags))
+            if (!DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags))
                 return false;
         } else {
             JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
@@ -4569,7 +4566,7 @@ JS_CallFunctionName(JSContext *cx, HandleObject obj, const char *name, const Han
 
     RootedValue v(cx);
     RootedId id(cx, AtomToId(atom));
-    if (!JSObject::getGeneric(cx, obj, obj, id, &v))
+    if (!GetProperty(cx, obj, obj, id, &v))
         return false;
 
     return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
@@ -6125,12 +6122,6 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
     if (!decoder.codeFunction(&funobj))
         return nullptr;
     return funobj;
-}
-
-JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded)
-{
-    return JSObject::preventExtensions(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(void)

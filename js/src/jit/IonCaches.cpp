@@ -1759,7 +1759,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     }
 
     RootedId id(cx, NameToId(name));
-    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+    if (!GetProperty(cx, obj, obj, id, vp))
         return false;
 
     if (!cache.idempotent()) {
@@ -2273,7 +2273,7 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext *cx, HandleObject obj, HandleP
     if (!checkObj)
         return true;
 
-    if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
+    if (!LookupProperty(cx, obj, name, holder, shape))
         return false;
 
     if (!holder)

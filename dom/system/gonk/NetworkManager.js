@@ -308,6 +308,17 @@ NetworkManager.prototype = {
     debug("Network '" + networkId + "' registered.");
   },
 
+  _addSubnetRoutes: function(network) {
+    let ips = {};
+    let prefixLengths = {};
+    let length = network.getAddresses(ips, prefixLengths);
+    for (let i = 0; i < length; i++) {
+      debug('Adding subnet routes: ' + ips.value[i] + '/' + prefixLengths.value[i]);
+      gNetworkService.modifyRoute(Ci.nsINetworkService.MODIFY_ROUTE_ADD,
+                                  network.name, ips.value[i], prefixLengths.value[i]);
+    }
+  },
+
   updateNetworkInterface: function(network) {
     if (!(network instanceof Ci.nsINetworkInterface)) {
       throw Components.Exception("Argument must be nsINetworkInterface.",
@@ -320,35 +331,50 @@ NetworkManager.prototype = {
     }
     debug("Network " + network.type + "/" + network.name +
           " changed state to " + network.state);
+
+    // Note that since Lollipop we need to allocate and initialize
+    // something through netd, so we add createNetwork/destroyNetwork
+    // to deal with that explicitly.
+
     switch (network.state) {
       case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
-        // Add host route for data calls
-        if (this.isNetworkTypeMobile(network.type)) {
-          gNetworkService.removeHostRoutes(network.name);
-          this.setHostRoutes(network);
-        }
-        // Dun type is a special case where we add the default route to a
-        // secondary table.
-        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-          this.setSecondaryDefaultRoute(network);
-        }
-        // Remove pre-created default route and let setAndConfigureActive()
-        // to set default route only on preferred network
-        gNetworkService.removeDefaultRoute(network);
-        this.setAndConfigureActive();
-
-        // Update data connection when Wifi connected/disconnected
-        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI && this.mRil) {
-          for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
-            this.mRil.getRadioInterface(i).updateRILNetworkInterface();
+        gNetworkService.createNetwork(network.name, () => {
+          // Add host route for data calls
+          if (this.isNetworkTypeMobile(network.type)) {
+            gNetworkService.removeHostRoutes(network.name);
+            this.setHostRoutes(network);
           }
-        }
+          // Dun type is a special case where we add the default route to a
+          // secondary table.
+          if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+            this.setSecondaryDefaultRoute(network);
+          }
+          // Remove pre-created default route and let setAndConfigureActive()
+          // to set default route only on preferred network
+          gNetworkService.removeDefaultRoute(network);
 
-        this.onConnectionChanged(network);
+          this._addSubnetRoutes(network);
+          this.setAndConfigureActive();
 
-        // Probing the public network accessibility after routing table is ready
-        CaptivePortalDetectionHelper
-          .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
+          // Update data connection when Wifi connected/disconnected
+          if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI && this.mRil) {
+            for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
+              this.mRil.getRadioInterface(i).updateRILNetworkInterface();
+            }
+          }
+
+          this.onConnectionChanged(network);
+
+          // Probing the public network accessibility after routing table is ready
+          CaptivePortalDetectionHelper
+            .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
+
+          // Notify outer modules like MmsService to start the transaction after
+          // the configuration of the network interface is done.
+          Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
+                                       this.convertConnectionType(network));
+        });
+
         break;
       case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
         // Remove host route for data calls
@@ -378,13 +404,14 @@ NetworkManager.prototype = {
           }
         }
 
+        gNetworkService.destroyNetwork(network.name, () => {
+          // Notify outer modules like MmsService to start the transaction after
+          // the configuration of the network interface is done.
+          Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
+                                       this.convertConnectionType(network));
+        });
         break;
     }
-
-    // Notify outer modules like MmsService to start the transaction after
-    // the configuration of the network interface is done.
-    Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
-                                 this.convertConnectionType(network));
   },
 
   unregisterNetworkInterface: function(network) {
@@ -435,14 +462,22 @@ NetworkManager.prototype = {
   },
 
   _updateRoutes: function(doAdd, ipAddresses, networkName, gateways) {
+    let getMaxPrefixLength = (aIp) => {
+      return aIp.match(this.REGEXP_IPV4) ? IPV4_MAX_PREFIX_LENGTH : IPV6_MAX_PREFIX_LENGTH;
+    }
+
     let promises = [];
 
     ipAddresses.forEach((aIpAddress) => {
       let gateway = this.selectGateway(gateways, aIpAddress);
       if (gateway) {
         promises.push((doAdd)
-          ? gNetworkService.addHostRoute(networkName, gateway, aIpAddress)
-          : gNetworkService.removeHostRoute(networkName, gateway, aIpAddress));
+          ? gNetworkService.modifyRoute(Ci.nsINetworkService.MODIFY_ROUTE_ADD,
+                                        networkName, aIpAddress,
+                                        getMaxPrefixLength(aIpAddress), gateway)
+          : gNetworkService.modifyRoute(Ci.nsINetworkService.MODIFY_ROUTE_REMOVE,
+                                        networkName, aIpAddress,
+                                        getMaxPrefixLength(aIpAddress), gateway));
       }
     });
 
@@ -1271,6 +1306,10 @@ NetworkManager.prototype = {
 
   _setDefaultRouteAndDNS: function(network, oldInterface) {
     gNetworkService.setDefaultRoute(network, oldInterface, function(success) {
+      if (!success) {
+        gNetworkService.destroyNetwork(network, function() {});
+        return;
+      }
       gNetworkService.setDNS(network, function(result) {
         gNetworkService.setNetworkProxy(network);
       });
