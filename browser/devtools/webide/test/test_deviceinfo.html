@@ -49,7 +49,7 @@
           win.Cmds.showRuntimeDetails();
           is(deck.selectedPanel, infoIframe, "info iframe selected");
 
-          yield infoIframe.contentWindow.getRawPermissionsTablePromise;
+          yield infoIframe.contentWindow.getDescriptionPromise;
 
           yield nextTick();
 
@@ -72,7 +72,7 @@
           win.Cmds.showPermissionsTable();
           is(deck.selectedPanel, permIframe, "permission iframe selected");
 
-          yield infoIframe.contentWindow.getDescriptionPromise;
+          yield permIframe.contentWindow.getRawPermissionsTablePromise;
 
           yield nextTick();
 
