@@ -925,7 +925,10 @@ class TypeNewScript
 
     void trace(JSTracer *trc);
     void sweep();
+
+#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
+#endif
 
     void registerNewObject(PlainObject *res);
     void unregisterNewObject(PlainObject *res);
@@ -1238,7 +1241,9 @@ struct TypeObject : public gc::TenuredCell
         flags_ |= generation << OBJECT_FLAG_GENERATION_SHIFT;
     }
 
+#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
+#endif
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
