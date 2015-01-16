@@ -9,13 +9,13 @@ extern crate hyper;
 extern crate regex;
 
 
-#[macro_use]
-pub mod macros;
+#[macro_use] pub mod macros;
+mod messagebuilder;
 pub mod command;
 pub mod common;
+pub mod error;
 pub mod httpserver;
 pub mod response;
-mod messagebuilder;
 
 
 #[test]

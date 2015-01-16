@@ -4,7 +4,7 @@ use hyper::method::Method;
 use hyper::method::Method::{Get, Post, Delete};
 
 use command::{WebDriverMessage};
-use common::{WebDriverResult, WebDriverError, ErrorStatus};
+use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 #[derive(Clone, Copy)]
 pub enum MatchType {
