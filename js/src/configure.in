@@ -3055,18 +3055,6 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
     WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
 
 dnl ========================================================
-dnl = Use compacting GC
-dnl ========================================================
-dnl Compact the heap by moving GC things when doing a shrinking colletion.
-MOZ_ARG_ENABLE_BOOL(gccompacting,
-[  --enable-gccompacting   Compact the heap by moving GC things],
-    JSGC_COMPACTING=1,
-    JSGC_COMPACTING= )
-if test -n "$JSGC_COMPACTING"; then
-    AC_DEFINE(JSGC_COMPACTING)
-fi
-
-dnl ========================================================
 dnl = Use a smaller chunk size for GC chunks
 dnl ========================================================
 dnl Use large (1MB) chunks by default.  For B2G this option is used to give
