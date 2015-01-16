@@ -28,13 +28,28 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
 
   ConvertSampleTo4BytesAVCC(aSample);
 
-  uint8_t* d = aSample->data;
-  while (d + 4 < aSample->data + aSample->size) {
-    uint32_t nalLen = mozilla::BigEndian::readUint32(d);
-    // Overwrite the NAL length with the Annex B separator.
-    memcpy(d, kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
-    d += 4 + nalLen;
+  if (aSample->size < 4) {
+    // Nothing to do, it's corrupted anyway.
+    return;
   }
+
+  ByteReader reader(aSample->data, aSample->size);
+
+  mozilla::Vector<uint8_t> tmp;
+  ByteWriter writer(tmp);
+
+  while (reader.Remaining() >= 4) {
+    uint32_t nalLen = reader.ReadU32();
+    const uint8_t* p = reader.Read(nalLen);
+
+    writer.Write(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
+    if (!p) {
+      break;
+    }
+    writer.Write(p, nalLen);
+  }
+
+  aSample->Replace(tmp.begin(), tmp.length());
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aSample->is_sync_point) {
