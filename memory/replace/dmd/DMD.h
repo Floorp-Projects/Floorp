@@ -29,7 +29,7 @@ struct Sizes
   size_t mStackTracesUnused;
   size_t mStackTraceTable;
   size_t mLiveBlockTable;
-  size_t mDeadBlockList;
+  size_t mDeadBlockTable;
 
   Sizes() { Clear(); }
   void Clear() { memset(this, 0, sizeof(Sizes)); }
@@ -147,11 +147,13 @@ ClearReports()
 //   // backwards-incompatible changes are made. A mandatory integer.
 //   //
 //   // Version history:
-//   // - 1: The original format. Implemented in bug 1044709.
-//   // - 2: Added the "mode" property under "invocation". Added in bug 1094552.
-//   // - 3: The "dmdEnvVar" property under "invocation" can now be |null| if
-//   //      the |DMD| environment variable is not defined. Done in bug 1100851.
-//   "version": 3,
+//   // - 1: Bug 1044709. The original format.
+//   // - 2: Bug 1094552. Added the "mode" property under "invocation".
+//   // - 3: Bug 1100851. The "dmdEnvVar" property under "invocation" can now
+//   //      be |null| if the |DMD| environment variable is not defined.
+//   // - 4: Bug 1121830. Added the "num" property in "blockList" object.
+//   //
+//   "version": 4,
 //
 //   // Information about how DMD was invoked. A mandatory object.
 //   "invocation": {
@@ -184,7 +186,13 @@ ClearReports()
 //
 //       // The stack trace at which the block was allocated. A mandatory
 //       // string which indexes into the "traceTable" object.
-//       "alloc": "A"
+//       "alloc": "A",
+//
+//       // The number of heap blocks with exactly the above properties. This
+//       // is mandatory if it is greater than one, but omitted otherwise.
+//       // (Blocks with identical properties don't have to be aggregated via
+//       // this property, but it can greatly reduce output file size.)
+//       "num": 5
 //     },
 //
 //     // An example of a sampled heap block.
@@ -233,11 +241,12 @@ ClearReports()
 //   }
 // }
 //
-// Implementation note: normally, this wouldn't be templated, but in that case,
-// the function is compiled, which makes the destructor for the UniquePtr fire
-// up, and that needs JSONWriteFunc to be fully defined. That, in turn,
-// requires to include JSONWriter.h, which includes double-conversion.h, which
-// ends up breaking various things built with -Werror for various reasons.
+// Implementation note: normally, this function wouldn't be templated, but in
+// that case, the function is compiled, which makes the destructor for the
+// UniquePtr fire up, and that needs JSONWriteFunc to be fully defined. That,
+// in turn, requires to include JSONWriter.h, which includes
+// double-conversion.h, which ends up breaking various things built with
+// -Werror for various reasons.
 //
 template <typename JSONWriteFunc>
 inline void
