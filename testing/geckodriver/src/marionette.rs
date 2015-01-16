@@ -24,10 +24,12 @@ use webdriver::command::{
     TakeScreenshotParameters};
 use webdriver::response::{
     WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
-    ElementRectResponse, CookieResponse, Date, Cookie};
+    ElementRectResponse, CookieResponse, Cookie};
 use webdriver::common::{
-    WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId};
-use webdriver::httpserver::{WebDriverHandler, Session};
+    Date, Nullable, WebElement, FrameId};
+use webdriver::error::{
+    WebDriverResult, WebDriverError, ErrorStatus};
+use webdriver::server::{WebDriverHandler, Session};
 
 
 pub struct MarionetteHandler {
