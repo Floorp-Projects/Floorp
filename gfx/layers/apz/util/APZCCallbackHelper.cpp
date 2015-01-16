@@ -143,7 +143,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
 
     // The pres shell resolution is updated by the the async zoom since the
     // last paint.
-    float presShellResolution = aMetrics.mPresShellResolution
+    float presShellResolution = aMetrics.GetPresShellResolution()
                               * aMetrics.GetAsyncZoom().scale;
     aUtils->SetResolutionAndScaleTo(presShellResolution, presShellResolution);
 
