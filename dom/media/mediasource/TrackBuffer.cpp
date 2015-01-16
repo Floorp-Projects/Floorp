@@ -549,6 +549,15 @@ TrackBuffer::DiscardDecoder()
 }
 
 void
+TrackBuffer::EndCurrentDecoder()
+{
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+  if (mCurrentDecoder) {
+    mCurrentDecoder->GetResource()->Ended();
+  }
+}
+
+void
 TrackBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
