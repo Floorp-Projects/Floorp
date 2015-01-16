@@ -1042,7 +1042,6 @@ class GCParallelTask
     }
 
     // Check if a task is actively running.
-    bool isRunningOutsideLock() const;
     bool isRunning() const;
 
     // This should be friended to HelperThread, but cannot be because it

@@ -1154,7 +1154,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     lock(nullptr),
     lockOwner(nullptr),
     allocTask(rt, emptyChunks_),
-    decommitTask(rt),
     helperState(rt)
 {
     setGCMode(JSGC_MODE_GLOBAL);
@@ -3310,75 +3309,49 @@ GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC &lock)
 }
 
 void
-GCRuntime::startDecommit()
+GCRuntime::decommitArenas(AutoLockGC &lock)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    MOZ_ASSERT(!decommitTask.isRunningOutsideLock());
+    // Verify that all entries in the empty chunks pool are decommitted.
+    for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next())
+        MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
 
-    {
-        AutoLockGC lock(rt);
-
-        // Verify that all entries in the empty chunks pool are already decommitted.
-        for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next())
-            MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
-
-        // Build a Vector of all available Chunks to pass to the background.
-        MOZ_ASSERT(availableChunks(lock).verify());
-        ChunkVector toDecommit;
-        for (ChunkPool::Iter iter(availableChunks(lock)); !iter.done(); iter.next()) {
-            if (!toDecommit.append(iter.get())) {
-                // The OOM handler does a full, immediate decommit, so there is
-                // nothing more to do here in any case.
-                return onOutOfMallocMemory(lock);
-            }
-        }
-        if (!decommitTask.setChunksToScan(toDecommit))
+    // Build a Vector of all current available Chunks. Since we release the
+    // gc lock while doing the decommit syscall, it is dangerous to iterate
+    // the available list directly, as concurrent operations can modify it.
+    mozilla::Vector<Chunk *> toDecommit;
+    MOZ_ASSERT(availableChunks(lock).verify());
+    for (ChunkPool::Iter iter(availableChunks(lock)); !iter.done(); iter.next()) {
+        if (!toDecommit.append(iter.get())) {
+            // The OOM handler does a full, immediate decommit, so there is
+            // nothing more to do here in any case.
             return onOutOfMallocMemory(lock);
+        }
     }
-
-    if (sweepOnBackgroundThread)
-        decommitTask.start();
-    else
-        decommitTask.runFromMainThread(rt);
-}
-
-bool
-BackgroundDecommitTask::setChunksToScan(const ChunkVector &chunks)
-{
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-    MOZ_ASSERT(toDecommit_.empty());
-    return toDecommit_.appendAll(chunks);
-}
-
-/* virtual */ void
-BackgroundDecommitTask::run()
-{
-    AutoLockGC lock(runtime);
 
     // Start at the tail and stop before the first chunk: we allocate from the
     // head and don't want to thrash with the mutator.
-    for (size_t i = toDecommit_.length(); i > 1; --i) {
-        Chunk *chunk = toDecommit_[i - 1];
+    for (size_t i = toDecommit.length(); i > 1; --i) {
+        Chunk *chunk = toDecommit[i - 1];
         MOZ_ASSERT(chunk);
 
         // The arena list is not doubly-linked, so we have to work in the free
         // list order and not in the natural order.
         while (chunk->info.numArenasFreeCommitted) {
-            ArenaHeader *aheader = chunk->allocateArena(runtime, nullptr, FINALIZE_OBJECT0, lock);
+            ArenaHeader *aheader = chunk->allocateArena(rt, nullptr, FINALIZE_OBJECT0, lock);
             bool ok;
             {
                 AutoUnlockGC unlock(lock);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
-            chunk->releaseArena(runtime, aheader, lock, Chunk::ArenaDecommitState(ok));
+            chunk->releaseArena(rt, aheader, lock, Chunk::ArenaDecommitState(ok));
 
-            // If we are low enough on memory that we can't update the page tables,
-            // or if we need to return for any other reason, break out of the loop.
-            if (cancel_ || !ok)
-                break;
+            // FIXME Bug 1095620: add cancellation support when this becomes
+            // a ParallelTask.
+            if (/* cancel_ || */ !ok)
+                return;
         }
     }
-    toDecommit_.clearAndFree();
+    MOZ_ASSERT(availableChunks(lock).verify());
 }
 
 void
@@ -3389,6 +3362,9 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
         AutoUnlockGC unlock(lock);
         FreeChunkPool(rt, toFree);
     }
+
+    if (shouldShrink)
+        decommitArenas(lock);
 }
 
 void
@@ -5456,13 +5432,6 @@ GCRuntime::endSweepPhase(bool lastGC)
             grayBitsValid = true;
     }
 
-    /*
-     * Decommit foreground-finalized arenas in parallel to background sweeping.
-     * Arenas that become empty during background sweeping will be decommitted
-     * on the background sweeping thread.
-     */
-    startDecommit();
-
     /* If not sweeping on background thread then we must do it here. */
     if (!sweepOnBackgroundThread) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_DESTROY);
@@ -6088,13 +6057,10 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JS::gcreason::Reason r
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
 
-        // As we are about to clear the mark bits and mess with the chunks
-        // without the lock, so wait for background finalization to finish. We
-        // only need to wait on the first slice.
-        if (!isIncrementalGCInProgress()) {
+        // As we are about to clear the mark bits, wait for background
+        // finalization to finish. We only need to wait on the first slice.
+        if (!isIncrementalGCInProgress())
             waitBackgroundSweepEnd();
-            decommitTask.cancel(GCParallelTask::CancelAndWait);
-        }
 
         // We must also wait for background allocation to finish so we can
         // avoid taking the GC lock when manipulating the chunks during the GC.
