@@ -34,8 +34,6 @@ private:
   bool FormatRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool TransceiveRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool TransceiveResponse(const android::Parcel& aParcel, EventOptions& aOptions);
-  bool ConnectRequest(android::Parcel& aParcel, const CommandOptions& options);
-  bool CloseRequest(android::Parcel& aParcel, const CommandOptions& options);
 
   bool InitializeNotification(const android::Parcel& aParcel, EventOptions& aOptions);
   bool TechDiscoveredNotification(const android::Parcel& aParcel, EventOptions& aOptions);
