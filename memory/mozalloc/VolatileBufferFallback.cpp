@@ -13,8 +13,7 @@ int posix_memalign(void** memptr, size_t alignment, size_t size);
 namespace mozilla {
 
 VolatileBuffer::VolatileBuffer()
-  : mMutex("VolatileBuffer")
-  , mBuf(nullptr)
+  : mBuf(nullptr)
   , mSize(0)
   , mLockCount(0)
 {
@@ -28,13 +27,9 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
 
   mSize = aSize;
 #if defined(MOZ_MEMORY)
-  if (posix_memalign(&mBuf, aAlignment, aSize) != 0) {
-    return false;
-  }
+  posix_memalign(&mBuf, aAlignment, aSize);
 #elif defined(HAVE_POSIX_MEMALIGN)
-  if (moz_posix_memalign(&mBuf, aAlignment, aSize) != 0) {
-    return false;
-  }
+  (void)moz_posix_memalign(&mBuf, aAlignment, aSize);
 #else
 #error "No memalign implementation found"
 #endif
@@ -43,16 +38,12 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
 
 VolatileBuffer::~VolatileBuffer()
 {
-  MOZ_ASSERT(mLockCount == 0, "Being destroyed with non-zero lock count?");
-
   free(mBuf);
 }
 
 bool
 VolatileBuffer::Lock(void** aBuf)
 {
-  MutexAutoLock lock(mMutex);
-
   MOZ_ASSERT(mBuf, "Attempting to lock an uninitialized VolatileBuffer");
 
   *aBuf = mBuf;
@@ -64,8 +55,6 @@ VolatileBuffer::Lock(void** aBuf)
 void
 VolatileBuffer::Unlock()
 {
-  MutexAutoLock lock(mMutex);
-
   mLockCount--;
   MOZ_ASSERT(mLockCount >= 0, "VolatileBuffer unlocked too many times!");
 }
