@@ -642,10 +642,8 @@ struct ArenaHeader
 
     void unmarkAll();
 
-#ifdef JSGC_COMPACTING
     size_t countUsedCells();
     size_t countFreeCells();
-#endif
 };
 static_assert(ArenaZoneOffset == offsetof(ArenaHeader, zone),
               "The hardcoded API zone offset must match the actual offset.");
