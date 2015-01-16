@@ -16,8 +16,8 @@ use std::str::FromStr;
 use std::io;
 use std::os;
 
-use webdriver::common::WebDriverError;
-use webdriver::httpserver::start;
+use webdriver::error::WebDriverError;
+use webdriver::server::start;
 
 use marionette::MarionetteHandler;
 
