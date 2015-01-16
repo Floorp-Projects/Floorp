@@ -147,7 +147,7 @@ JitcodeGlobalEntry::BaselineEntry::destroy()
 {
     if (!str_)
         return;
-    js_free(str_);
+    js_free((void*) str_);
     str_ = nullptr;
 }
 
