@@ -150,12 +150,11 @@ public:
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
   virtual void ReadUpdatedMetadata(MediaInfo* aInfo) { };
 
-  // Moves the decode head to aTime microseconds. aStartTime and aEndTime
-  // denote the start and end times of the media in usecs, and aCurrentTime
-  // is the current playback position in microseconds.
+  // Moves the decode head to aTime microseconds. aEndTime denotes the end
+  // time of the media in usecs. This is only needed for OggReader, and should
+  // probably be removed somehow.
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aStartTime,
-       int64_t aEndTime, int64_t aCurrentTime) = 0;
+  Seek(int64_t aTime, int64_t aEndTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media
