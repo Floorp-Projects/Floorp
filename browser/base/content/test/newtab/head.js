@@ -684,3 +684,34 @@ function whenSearchInitDone() {
   });
   return deferred.promise;
 }
+
+/**
+ * Changes the newtab customization option and waits for the panel to open and close
+ *
+ * @param {string} aTheme
+ *        Can be any of("blank"|"classic"|"enhanced")
+ */
+function customizeNewTabPage(aTheme) {
+  let document = getContentDocument();
+  let panel = document.getElementById("newtab-customize-panel");
+  let customizeButton = document.getElementById("newtab-customize-button");
+
+  // Attache onShown the listener on panel
+  panel.addEventListener("popupshown", function onShown() {
+    panel.removeEventListener("popupshown", onShown);
+
+    // Get the element for the specific option and click on it,
+    // then trigger an escape to close the panel
+    document.getElementById("newtab-customize-" + aTheme).click();
+    executeSoon(() => { panel.hidePopup(); });
+  });
+
+  // Attache the listener for panel closing, this will resolve the promise
+  panel.addEventListener("popuphidden", function onHidden() {
+    panel.removeEventListener("popuphidden", onHidden);
+    executeSoon(TestRunner.next);
+  });
+
+  // Click on the customize button to display the panel
+  customizeButton.click();
+}
