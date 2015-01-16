@@ -135,6 +135,9 @@ public:
            (!mVideoReader || mVideoReader->IsAsync());
   }
 
+  // Returns true if aReader is a currently active audio or video
+  bool IsActiveReader(MediaDecoderReader* aReader);
+
 private:
   // Switch the current audio/video reader to the reader that
   // contains aTarget (or up to aError after target). Both
