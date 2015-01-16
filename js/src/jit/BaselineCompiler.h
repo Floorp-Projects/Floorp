@@ -259,6 +259,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitSPSPush();
     void emitSPSPop();
 
+    void emitProfilerEnterFrame();
+    void emitProfilerExitFrame();
+
     bool initScopeChain();
 
     void storeValue(const StackValue *source, const Address &dest,
