@@ -2,7 +2,8 @@ use std::collections::BTreeMap;
 use rustc_serialize::json::{ToJson, Json};
 use regex::Captures;
 
-use common::{WebDriverResult, WebDriverError, ErrorStatus, Nullable, WebElement, FrameId, LocatorStrategy};
+use common::{Nullable, WebElement, FrameId, LocatorStrategy};
+use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use response::Date; //TODO: Put all these types in a specific file
 use messagebuilder::MatchType;
 
