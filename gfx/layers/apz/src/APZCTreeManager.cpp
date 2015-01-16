@@ -1168,11 +1168,10 @@ APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid,
-                               GuidComparator aComparator)
+APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, aComparator);
+  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
   nsRefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
   return apzc.forget();
@@ -1263,8 +1262,9 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
     }
     if (!scrollParent) {
       ScrollableLayerGuid guid(parent->GetGuid().mLayersId, 0, apzc->GetScrollHandoffParentId());
-      nsRefPtr<AsyncPanZoomController> scrollParentPtr = GetTargetAPZC(guid, &GuidComparatorIgnoringPresShell);
-      scrollParent = scrollParentPtr.get();
+      nsRefPtr<HitTestingTreeNode> node = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+      MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+      scrollParent = node ? node->GetApzc() : nullptr;
     }
     apzc = scrollParent;
   }
