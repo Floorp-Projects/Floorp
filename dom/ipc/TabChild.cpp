@@ -1437,8 +1437,16 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
       // Note that BrowserFrameProvideWindow may return NS_ERROR_ABORT if the
       // open window call was canceled.  It's important that we pass this error
       // code back to our caller.
-      return BrowserFrameProvideWindow(aParent, aURI, aName, aFeatures,
-                                       aWindowIsNew, aReturn);
+      return ProvideWindowCommon(aParent,
+                                 aChromeFlags,
+                                 aCalledFromJS,
+                                 aPositionSpecified,
+                                 aSizeSpecified,
+                                 aURI,
+                                 aName,
+                                 aFeatures,
+                                 aWindowIsNew,
+                                 aReturn);
     }
 
     int32_t openLocation =
@@ -1510,12 +1518,16 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
 }
 
 nsresult
-TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
-                                    nsIURI* aURI,
-                                    const nsAString& aName,
-                                    const nsACString& aFeatures,
-                                    bool* aWindowIsNew,
-                                    nsIDOMWindow** aReturn)
+TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
+                              uint32_t aChromeFlags,
+                              bool aCalledFromJS,
+                              bool aPositionSpecified,
+                              bool aSizeSpecified,
+                              nsIURI* aURI,
+                              const nsAString& aName,
+                              const nsACString& aFeatures,
+                              bool* aWindowIsNew,
+                              nsIDOMWindow** aReturn)
 {
   *aReturn = nullptr;
 
@@ -1539,7 +1551,7 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
                         &tabId);
 
   nsRefPtr<TabChild> newChild = new TabChild(ContentChild::GetSingleton(), tabId,
-                                             /* TabContext */ *this, /* chromeFlags */ 0);
+                                             /* TabContext */ *this, aChromeFlags);
   if (NS_FAILED(newChild->Init())) {
     return NS_ERROR_ABORT;
   }
@@ -1548,7 +1560,7 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
   unused << Manager()->SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       nsRefPtr<TabChild>(newChild).forget().take(),
-      tabId, IPCTabContext(context, mScrolling), /* chromeFlags */ 0,
+      tabId, IPCTabContext(context, mScrolling), aChromeFlags,
       cc->GetID(), cc->IsForApp(), cc->IsForBrowser());
 
   nsAutoCString spec;
