@@ -10,11 +10,11 @@ extern crate regex;
 
 
 #[macro_use] pub mod macros;
-mod messagebuilder;
+mod common;
+mod httpapi;
 pub mod command;
-pub mod common;
 pub mod error;
-pub mod httpserver;
+pub mod server;
 pub mod response;
 
 

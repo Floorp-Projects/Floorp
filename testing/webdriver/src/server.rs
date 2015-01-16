@@ -11,7 +11,7 @@ use hyper::uri::RequestUri::AbsolutePath;
 
 use command::{WebDriverMessage, WebDriverCommand};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use messagebuilder::{get_builder, MessageBuilder};
+use httpapi::WebDriverHttpApi;
 use response::WebDriverResponse;
 
 enum DispatchMessage {
@@ -136,14 +136,14 @@ impl<T: WebDriverHandler> Dispatcher<T> {
 
 struct HttpHandler {
     chan: Mutex<Sender<DispatchMessage>>,
-    builder: Mutex<MessageBuilder>
+    api: Mutex<WebDriverHttpApi>
 }
 
 impl HttpHandler {
-    fn new(builder: MessageBuilder, chan: Sender<DispatchMessage>) -> HttpHandler {
+    fn new(api: WebDriverHttpApi, chan: Sender<DispatchMessage>) -> HttpHandler {
         HttpHandler {
             chan: Mutex::new(chan),
-            builder: Mutex::new(builder)
+            api: Mutex::new(api)
         }
     }
 }
@@ -163,9 +163,9 @@ impl Handler for HttpHandler {
                 let msg_result = {
                     // The fact that this locks for basically the whole request doesn't
                     // matter as long as we are only handling one request at a time.
-                    match self.builder.lock() {
-                        Ok(ref builder) => {
-                            builder.from_http(req.method, path.as_slice(), body.as_slice())
+                    match self.api.lock() {
+                        Ok(ref api) => {
+                            api.decode_request(req.method, path.as_slice(), body.as_slice())
                         },
                         Err(_) => return
                     }
@@ -232,7 +232,7 @@ pub fn start<T: WebDriverHandler>(ip_address: IpAddr, port: u16, handler: T) {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     });
-    let builder = get_builder();
-    let http_handler = HttpHandler::new(builder, msg_send.clone());
+    let api = WebDriverHttpApi::new();
+    let http_handler = HttpHandler::new(api, msg_send.clone());
     server.listen(http_handler).unwrap();
 }
