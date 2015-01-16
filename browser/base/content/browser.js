@@ -149,9 +149,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Social",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ProcessHangMonitor",
-  "resource:///modules/ProcessHangMonitor.jsm");
-
 #ifdef MOZ_SAFE_BROWSING
 XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
   "resource://gre/modules/SafeBrowsing.jsm");
