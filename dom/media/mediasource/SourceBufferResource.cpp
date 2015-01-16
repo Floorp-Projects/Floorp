@@ -196,6 +196,7 @@ SourceBufferResource::AppendData(const uint8_t* aData, uint32_t aLength)
   SBR_DEBUG("SourceBufferResource(%p)::AppendData(aData=%p, aLength=%u)", this, aData, aLength);
   ReentrantMonitorAutoEnter mon(mMonitor);
   mInputBuffer.AppendItem(aData, aLength);
+  mEnded = false;
   mon.NotifyAll();
 }
 
