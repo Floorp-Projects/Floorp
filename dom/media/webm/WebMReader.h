@@ -156,7 +156,7 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) MOZ_OVERRIDE;
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
 
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
@@ -210,7 +210,7 @@ protected:
   // reading metadata or destruction of the reader itself.
   void Cleanup();
 
-  virtual nsresult SeekInternal(int64_t aTime, int64_t aStartTime);
+  virtual nsresult SeekInternal(int64_t aTime);
 
   // Initializes mLayersBackendType if possible.
   void InitLayersBackendType();

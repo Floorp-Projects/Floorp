@@ -44,10 +44,7 @@ public:
                         MetadataTags** aTags) MOZ_OVERRIDE;
 
   nsRefPtr<SeekPromise>
-  Seek(int64_t aTime,
-       int64_t aStartTime,
-       int64_t aEndTime,
-       int64_t aCurrentTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
 
   bool IsMediaSeekable() MOZ_OVERRIDE;
   
