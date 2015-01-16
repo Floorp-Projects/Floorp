@@ -119,7 +119,6 @@ function isValidSerializerVersion (version) {
   ].indexOf(version);
 }
 
-
 /**
  * Takes recording data (with version `1`, from the original profiler tool), and
  * massages the data to be line with the current performance tool's property names

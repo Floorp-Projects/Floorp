@@ -151,12 +151,10 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
   /**
    * Signals that a recording has been imported.
    *
-   * @param object recordingData
-   *        The profiler and refresh driver ticks data received from the front.
    * @param RecordingModel model
    *        The recording model containing data on the recording session.
    */
-  _onRecordingImported: function (_, recordingData, model) {
+  _onRecordingImported: function (_, model) {
     let recordingItem = this.addEmptyRecording(model);
     recordingItem.isRecording = false;
 
