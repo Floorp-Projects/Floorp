@@ -20,7 +20,7 @@ GetFundamentalTrap(JSContext *cx, HandleObject handler, HandlePropertyName name,
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    return JSObject::getProperty(cx, handler, handler, name, fvalp);
+    return GetProperty(cx, handler, handler, name, fvalp);
 }
 
 static bool
@@ -34,7 +34,7 @@ GetDerivedTrap(JSContext *cx, HandleObject handler, HandlePropertyName name,
                name == cx->names().keys ||
                name == cx->names().iterate);
 
-    return JSObject::getProperty(cx, handler, handler, name, fvalp);
+    return GetProperty(cx, handler, handler, name, fvalp);
 }
 
 static bool
@@ -96,7 +96,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     for (uint32_t n = 0; n < length; ++n) {
         if (!CheckForInterrupt(cx))
             return false;
-        if (!JSObject::getElement(cx, obj, obj, n, &v))
+        if (!GetElement(cx, obj, obj, n, &v))
             return false;
         RootedId id(cx);
         if (!ValueToId<CanGC>(cx, v, &id))

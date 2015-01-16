@@ -131,13 +131,13 @@ GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def
                    MutableHandleValue result)
 {
     bool found;
-    if (!JSObject::hasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, id, &found))
         return false;
     if (!found) {
         result.set(defaultValue);
         return true;
     }
-    return JSObject::getGeneric(cx, obj, obj, id, result);
+    return GetProperty(cx, obj, obj, id, result);
 }
 
 /*
@@ -505,7 +505,7 @@ class NodeBuilder
 
         /* Represent "no node" as null and ensure users are not exposed to magic values. */
         RootedValue optVal(cx, val.isMagic(JS_SERIALIZE_NO_NODE) ? NullValue() : val);
-        return JSObject::defineProperty(cx, obj, atom->asPropertyName(), optVal);
+        return DefineProperty(cx, obj, atom->asPropertyName(), optVal);
     }
 
     bool newNodeLoc(TokenPos *pos, MutableHandleValue dst);
@@ -737,7 +737,7 @@ NodeBuilder::newArray(NodeVector &elts, MutableHandleValue dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!JSObject::setElement(cx, array, array, i, &val, false))
+        if (!SetElement(cx, array, array, i, &val, false))
             return false;
     }
 
