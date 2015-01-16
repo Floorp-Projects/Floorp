@@ -4690,6 +4690,11 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
     }
 
     if (aState == NS_EVENT_STATE_ACTIVE) {
+      // Editable content can never become active since their default actions
+      // are disabled.
+      if (aContent && aContent->IsEditable()) {
+        aContent = nullptr;
+      }
       if (aContent != mActiveContent) {
         notifyContent1 = aContent;
         notifyContent2 = mActiveContent;
