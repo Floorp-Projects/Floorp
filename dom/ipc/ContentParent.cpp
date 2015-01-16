@@ -982,6 +982,12 @@ ContentParent::RecvLoadPlugin(const uint32_t& aPluginId)
 }
 
 bool
+ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId)
+{
+    return mozilla::plugins::SetupBridge(aPluginId, this, true);
+}
+
+bool
 ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
                                nsTArray<PluginTag>* aPlugins,
                                uint32_t* aNewPluginEpoch)
