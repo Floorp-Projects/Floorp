@@ -1914,24 +1914,14 @@ MediaDecoderStateMachine::EnqueueDecodeSeekTask()
                "Should be on state machine or decode thread.");
   AssertCurrentThreadInMonitor();
 
-  if (mState != DECODER_STATE_SEEKING ||
-      !mSeekTarget.IsValid() ||
-      mCurrentSeekTarget.IsValid()) {
-    return NS_OK;
-  }
-  mCurrentSeekTarget = mSeekTarget;
-  mSeekTarget.Reset();
-  mDropAudioUntilNextDiscontinuity = HasAudio();
-  mDropVideoUntilNextDiscontinuity = HasVideo();
-
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DecodeSeek));
   nsresult rv = DecodeTaskQueue()->Dispatch(task);
   if (NS_FAILED(rv)) {
     DECODER_WARN("Dispatch DecodeSeek task failed.");
-    mCurrentSeekTarget.Reset();
     DecodeError();
   }
+
   return rv;
 }
 
@@ -2388,9 +2378,18 @@ void MediaDecoderStateMachine::DecodeSeek()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  if (mState != DECODER_STATE_SEEKING) {
+
+  if (mState != DECODER_STATE_SEEKING ||
+      !mSeekTarget.IsValid() ||
+      mCurrentSeekTarget.IsValid()) {
+    DECODER_LOG("Early returning from DecodeSeek");
     return;
   }
+
+  mCurrentSeekTarget = mSeekTarget;
+  mSeekTarget.Reset();
+  mDropAudioUntilNextDiscontinuity = HasAudio();
+  mDropVideoUntilNextDiscontinuity = HasVideo();
 
   // During the seek, don't have a lock on the decoder state,
   // otherwise long seek operations can block the main thread.
