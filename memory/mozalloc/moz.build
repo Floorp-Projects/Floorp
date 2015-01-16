@@ -10,7 +10,6 @@ EXPORTS.mozilla += [
     'mozalloc.h',
     'mozalloc_abort.h',
     'mozalloc_oom.h',
-    'VolatileBuffer.h',
 ]
 
 if CONFIG['MOZ_MSVC_STL_WRAP__RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP__Throw']:
@@ -40,23 +39,6 @@ UNIFIED_SOURCES += [
     'mozalloc_oom.cpp',
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    UNIFIED_SOURCES += [
-        'VolatileBufferAshmem.cpp',
-    ]
-elif CONFIG['OS_TARGET'] == 'Darwin':
-    UNIFIED_SOURCES += [
-        'VolatileBufferOSX.cpp',
-    ]
-elif CONFIG['OS_TARGET'] == 'WINNT':
-    UNIFIED_SOURCES += [
-        'VolatileBufferWindows.cpp',
-    ]
-else:
-    UNIFIED_SOURCES += [
-        'VolatileBufferFallback.cpp',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     Library('mozalloc')
 else:
@@ -65,8 +47,6 @@ else:
 
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES['_GNU_SOURCE'] = True
-
-TEST_DIRS += ['tests']
 
 GENERATED_INCLUDES += ['/xpcom']
 
