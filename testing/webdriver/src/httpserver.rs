@@ -10,7 +10,7 @@ use hyper::server::{Server, Handler, Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
 
 use command::{WebDriverMessage, WebDriverCommand};
-use common::{WebDriverResult, ErrorStatus, WebDriverError};
+use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use messagebuilder::{get_builder, MessageBuilder};
 use response::WebDriverResponse;
 
