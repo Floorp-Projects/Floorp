@@ -133,7 +133,7 @@ public:
   MediaByteRange(int64_t aStart, int64_t aEnd)
     : mStart(aStart), mEnd(aEnd)
   {
-    NS_ASSERTION(mStart < mEnd, "Range should end after start!");
+    NS_ASSERTION(mStart <= mEnd, "Range should end after start!");
   }
 
   explicit MediaByteRange(TimestampedMediaByteRange& aByteRange);
