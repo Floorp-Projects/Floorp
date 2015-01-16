@@ -80,16 +80,18 @@ protected:
 
   // mMonitor protects mImage access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack() and
-  // image changes).  Note that mSources is not accessed from other threads
-  // for video and is not protected.
+  // image changes).
+  // mMonitor also protects mSources[] access/changes.
+  // mSources[] is accessed from webrtc threads.
+
   // All the mMonitor accesses are from the child classes.
   Monitor mMonitor; // Monitor for processing Camera frames.
+  nsTArray<SourceMediaStream*> mSources; // When this goes empty, we shut down HW
   nsRefPtr<layers::Image> mImage;
   nsRefPtr<layers::ImageContainer> mImageContainer;
   int mWidth, mHeight; // protected with mMonitor on Gonk due to different threading
   // end of data protected by mMonitor
 
-  nsTArray<SourceMediaStream*> mSources; // When this goes empty, we shut down HW
 
   bool mInitDone;
   bool mHasDirectListeners;
