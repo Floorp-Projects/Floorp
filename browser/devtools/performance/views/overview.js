@@ -112,10 +112,11 @@ let OverviewView = {
    *        The fps graph resolution. @see Graphs.jsm
    */
   render: Task.async(function *(resolution) {
-    let interval = PerformanceController.getInterval();
-    let markers = PerformanceController.getMarkers();
-    let memory = PerformanceController.getMemory();
-    let timestamps = PerformanceController.getTicks();
+    let recording = PerformanceController.getCurrentRecording();
+    let interval = recording.getInterval();
+    let markers = recording.getMarkers();
+    let memory = recording.getMemory();
+    let timestamps = recording.getTicks();
 
     this.markersOverview.setData({ interval, markers });
     this.emit(EVENTS.MARKERS_GRAPH_RENDERED);

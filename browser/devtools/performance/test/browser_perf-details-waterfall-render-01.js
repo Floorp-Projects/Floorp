@@ -9,7 +9,7 @@ function spawnTest () {
   let { EVENTS, PerformanceController, WaterfallView } = panel.panelWin;
 
   yield startRecording(panel);
-  yield waitUntil(() => PerformanceController.getMarkers().length);
+  yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);
 
   let rendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   yield stopRecording(panel);
