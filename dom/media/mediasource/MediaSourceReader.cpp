@@ -49,7 +49,6 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mLastAudioTime(0)
   , mLastVideoTime(0)
   , mPendingSeekTime(-1)
-  , mPendingEndTime(-1)
   , mWaitingForSeekData(false)
   , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
@@ -603,10 +602,10 @@ MediaSourceReader::NotifyTimeRangesChanged()
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-MediaSourceReader::Seek(int64_t aTime, int64_t aEndTime)
+MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg which is non-MSE */)
 {
-  MSE_DEBUG("MediaSourceReader(%p)::Seek(aTime=%lld, aStart=%lld, aEnd=%lld, aCurrent=%lld)",
-            this, aTime, aEndTime);
+  MSE_DEBUG("MediaSourceReader(%p)::Seek(aTime=%lld, aEnd=%lld, aCurrent=%lld)",
+            this, aTime);
 
   mSeekPromise.RejectIfExists(NS_OK, __func__);
   nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
@@ -619,7 +618,6 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aEndTime)
   // Store pending seek target in case the track buffers don't contain
   // the desired time and we delay doing the seek.
   mPendingSeekTime = aTime;
-  mPendingEndTime = aEndTime;
 
   // Only increment the number of expected OnSeekCompleted
   // notifications if we weren't already waiting for AttemptSeek
@@ -640,7 +638,7 @@ MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
   if (mAudioTrack) {
     mAudioIsSeeking = true;
     SwitchAudioReader(mPendingSeekTime);
-    mAudioReader->Seek(mPendingSeekTime, mPendingEndTime)
+    mAudioReader->Seek(mPendingSeekTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
                        &MediaSourceReader::OnAudioSeekCompleted,
                        &MediaSourceReader::OnSeekFailed);
@@ -691,7 +689,7 @@ MediaSourceReader::AttemptSeek()
   if (mVideoTrack) {
     mVideoIsSeeking = true;
     SwitchVideoReader(mPendingSeekTime);
-    mVideoReader->Seek(mPendingSeekTime, mPendingEndTime)
+    mVideoReader->Seek(mPendingSeekTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
                        &MediaSourceReader::OnVideoSeekCompleted,
                        &MediaSourceReader::OnSeekFailed);
