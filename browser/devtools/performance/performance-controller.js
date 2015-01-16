@@ -250,7 +250,7 @@ let PerformanceController = {
     let recording = this.createNewRecording();
     yield recording.importRecording(file);
 
-    this.emit(EVENTS.RECORDING_IMPORTED, recording.getAllData(), recording);
+    this.emit(EVENTS.RECORDING_IMPORTED, recording);
   }),
 
   /**
