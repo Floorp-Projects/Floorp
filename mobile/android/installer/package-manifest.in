@@ -124,6 +124,7 @@
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
 @BINPATH@/components/commandlines.xpt
+@BINPATH@/components/compartments.xpt
 @BINPATH@/components/composer.xpt
 @BINPATH@/components/content_events.xpt
 @BINPATH@/components/content_geckomediaplugins.xpt
