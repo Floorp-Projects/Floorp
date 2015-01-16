@@ -4164,8 +4164,10 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
         MOZ_ASSERT(i.stackAddress() != nullptr);
         MOZ_ASSERT(lastStackAddress <= i.stackAddress());
         lastStackAddress = i.stackAddress();
-        const char *label = i.label();
-        stack.append(label, strlen(label));
+        JS::ProfilingFrameIterator::Frame frames[16];
+        uint32_t nframes = i.extractStack(frames, 0, 16);
+        for (uint32_t i = 0; i < nframes; i++)
+            stack.append(frames[i].label, strlen(frames[i].label));
     }
 
     // Only append the stack if it differs from the last stack.
