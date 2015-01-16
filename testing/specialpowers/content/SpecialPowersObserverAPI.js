@@ -367,6 +367,13 @@ SpecialPowersObserverAPI.prototype = {
               utils.AppsUtils.allowUnsignedAddons = true;
               return;
             }
+          case "debug-customizations":
+            {
+              let scope = {};
+              Components.utils.import("resource://gre/modules/UserCustomizations.jsm", scope);
+              scope.UserCustomizations._debug = aMessage.json.value;
+              return;
+            }
           default:
             throw new SpecialPowersException("Invalid operation for SPWebAppsService");
         }
