@@ -20,7 +20,9 @@ describe("loop.roomViews", function () {
         mozLoop: {
           getAudioBlob: sinon.stub()
         }
-      }
+      },
+      addEventListener: function() {},
+      removeEventListener: function() {}
     };
     loop.shared.mixins.setRootObject(fakeWindow);
 
