@@ -25,6 +25,7 @@ void protobuf_ShutdownFile_LayerScopePacket_2eproto() {
   delete LayersPacket_Layer_Region::default_instance_;
   delete LayersPacket_Layer_Matrix::default_instance_;
   delete LayersPacket_Layer_Shadow::default_instance_;
+  delete MetaPacket::default_instance_;
   delete Packet::default_instance_;
 }
 
@@ -44,6 +45,7 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Region::default_instance_ = new LayersPacket_Layer_Region();
   LayersPacket_Layer_Matrix::default_instance_ = new LayersPacket_Layer_Matrix();
   LayersPacket_Layer_Shadow::default_instance_ = new LayersPacket_Layer_Shadow();
+  MetaPacket::default_instance_ = new MetaPacket();
   Packet::default_instance_ = new Packet();
   FramePacket::default_instance_->InitAsDefaultInstance();
   ColorPacket::default_instance_->InitAsDefaultInstance();
@@ -55,6 +57,7 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Region::default_instance_->InitAsDefaultInstance();
   LayersPacket_Layer_Matrix::default_instance_->InitAsDefaultInstance();
   LayersPacket_Layer_Shadow::default_instance_->InitAsDefaultInstance();
+  MetaPacket::default_instance_->InitAsDefaultInstance();
   Packet::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_LayerScopePacket_2eproto);
 }
@@ -3030,6 +3033,162 @@ void LayersPacket::Swap(LayersPacket* other) {
 
 // ===================================================================
 
+#ifndef _MSC_VER
+const int MetaPacket::kComposedByHwcFieldNumber;
+#endif  // !_MSC_VER
+
+MetaPacket::MetaPacket()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void MetaPacket::InitAsDefaultInstance() {
+}
+
+MetaPacket::MetaPacket(const MetaPacket& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void MetaPacket::SharedCtor() {
+  _cached_size_ = 0;
+  composedbyhwc_ = false;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+MetaPacket::~MetaPacket() {
+  SharedDtor();
+}
+
+void MetaPacket::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void MetaPacket::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const MetaPacket& MetaPacket::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_LayerScopePacket_2eproto();  return *default_instance_;
+}
+
+MetaPacket* MetaPacket::default_instance_ = NULL;
+
+MetaPacket* MetaPacket::New() const {
+  return new MetaPacket;
+}
+
+void MetaPacket::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    composedbyhwc_ = false;
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool MetaPacket::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional bool composedByHwc = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &composedbyhwc_)));
+          set_has_composedbyhwc();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void MetaPacket::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional bool composedByHwc = 1;
+  if (has_composedbyhwc()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->composedbyhwc(), output);
+  }
+  
+}
+
+int MetaPacket::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional bool composedByHwc = 1;
+    if (has_composedbyhwc()) {
+      total_size += 1 + 1;
+    }
+    
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void MetaPacket::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const MetaPacket*>(&from));
+}
+
+void MetaPacket::MergeFrom(const MetaPacket& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_composedbyhwc()) {
+      set_composedbyhwc(from.composedbyhwc());
+    }
+  }
+}
+
+void MetaPacket::CopyFrom(const MetaPacket& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool MetaPacket::IsInitialized() const {
+  
+  return true;
+}
+
+void MetaPacket::Swap(MetaPacket* other) {
+  if (other != this) {
+    std::swap(composedbyhwc_, other->composedbyhwc_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string MetaPacket::GetTypeName() const {
+  return "mozilla.layers.layerscope.MetaPacket";
+}
+
+
+// ===================================================================
+
 bool Packet_DataType_IsValid(int value) {
   switch(value) {
     case 1:
@@ -3037,6 +3196,7 @@ bool Packet_DataType_IsValid(int value) {
     case 3:
     case 4:
     case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -3049,6 +3209,7 @@ const Packet_DataType Packet::FRAMEEND;
 const Packet_DataType Packet::COLOR;
 const Packet_DataType Packet::TEXTURE;
 const Packet_DataType Packet::LAYERS;
+const Packet_DataType Packet::META;
 const Packet_DataType Packet::DataType_MIN;
 const Packet_DataType Packet::DataType_MAX;
 const int Packet::DataType_ARRAYSIZE;
@@ -3059,6 +3220,7 @@ const int Packet::kFrameFieldNumber;
 const int Packet::kColorFieldNumber;
 const int Packet::kTextureFieldNumber;
 const int Packet::kLayersFieldNumber;
+const int Packet::kMetaFieldNumber;
 #endif  // !_MSC_VER
 
 Packet::Packet()
@@ -3071,6 +3233,7 @@ void Packet::InitAsDefaultInstance() {
   color_ = const_cast< ::mozilla::layers::layerscope::ColorPacket*>(&::mozilla::layers::layerscope::ColorPacket::default_instance());
   texture_ = const_cast< ::mozilla::layers::layerscope::TexturePacket*>(&::mozilla::layers::layerscope::TexturePacket::default_instance());
   layers_ = const_cast< ::mozilla::layers::layerscope::LayersPacket*>(&::mozilla::layers::layerscope::LayersPacket::default_instance());
+  meta_ = const_cast< ::mozilla::layers::layerscope::MetaPacket*>(&::mozilla::layers::layerscope::MetaPacket::default_instance());
 }
 
 Packet::Packet(const Packet& from)
@@ -3086,6 +3249,7 @@ void Packet::SharedCtor() {
   color_ = NULL;
   texture_ = NULL;
   layers_ = NULL;
+  meta_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -3099,6 +3263,7 @@ void Packet::SharedDtor() {
     delete color_;
     delete texture_;
     delete layers_;
+    delete meta_;
   }
 }
 
@@ -3131,6 +3296,9 @@ void Packet::Clear() {
     }
     if (has_layers()) {
       if (layers_ != NULL) layers_->::mozilla::layers::layerscope::LayersPacket::Clear();
+    }
+    if (has_meta()) {
+      if (meta_ != NULL) meta_->::mozilla::layers::layerscope::MetaPacket::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -3212,6 +3380,20 @@ bool Packet::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(50)) goto parse_meta;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.MetaPacket meta = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_meta:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_meta()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -3263,6 +3445,12 @@ void Packet::SerializeWithCachedSizes(
       5, this->layers(), output);
   }
   
+  // optional .mozilla.layers.layerscope.MetaPacket meta = 6;
+  if (has_meta()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, this->meta(), output);
+  }
+  
 }
 
 int Packet::ByteSize() const {
@@ -3303,6 +3491,13 @@ int Packet::ByteSize() const {
           this->layers());
     }
     
+    // optional .mozilla.layers.layerscope.MetaPacket meta = 6;
+    if (has_meta()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->meta());
+    }
+    
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -3332,6 +3527,9 @@ void Packet::MergeFrom(const Packet& from) {
     }
     if (from.has_layers()) {
       mutable_layers()->::mozilla::layers::layerscope::LayersPacket::MergeFrom(from.layers());
+    }
+    if (from.has_meta()) {
+      mutable_meta()->::mozilla::layers::layerscope::MetaPacket::MergeFrom(from.meta());
     }
   }
 }
@@ -3364,6 +3562,7 @@ void Packet::Swap(Packet* other) {
     std::swap(color_, other->color_);
     std::swap(texture_, other->texture_);
     std::swap(layers_, other->layers_);
+    std::swap(meta_, other->meta_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     std::swap(_cached_size_, other->_cached_size_);
   }
