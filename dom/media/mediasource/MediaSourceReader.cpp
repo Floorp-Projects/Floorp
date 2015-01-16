@@ -118,7 +118,11 @@ MediaSourceReader::RequestAudioData()
     mAudioPromise.Reject(DECODE_ERROR, __func__);
     return p;
   }
-  MOZ_ASSERT(!mAudioIsSeeking);
+  if (mAudioIsSeeking) {
+    MSE_DEBUG("MediaSourceReader(%p)::RequestAudioData called mid-seek. Rejecting.", this);
+    mAudioPromise.Reject(CANCELED, __func__);
+    return p;
+  }
   if (SwitchAudioReader(mLastAudioTime)) {
     mAudioReader->Seek(mLastAudioTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
@@ -252,7 +256,11 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropAudioBeforeThreshold = true;
     mDropVideoBeforeThreshold = true;
   }
-  MOZ_ASSERT(!mVideoIsSeeking);
+  if (mVideoIsSeeking) {
+    MSE_DEBUG("MediaSourceReader(%p)::RequestVideoData called mid-seek. Rejecting.", this);
+    mVideoPromise.Reject(CANCELED, __func__);
+    return p;
+  }
   if (SwitchVideoReader(mLastVideoTime)) {
     mVideoReader->Seek(mLastVideoTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
