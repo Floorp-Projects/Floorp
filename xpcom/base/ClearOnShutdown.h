@@ -56,7 +56,7 @@ public:
   {
   }
 
-  virtual void Shutdown()
+  virtual void Shutdown() MOZ_OVERRIDE
   {
     if (mPtr) {
       *mPtr = nullptr;
