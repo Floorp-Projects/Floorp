@@ -189,20 +189,14 @@ private:
   MediaPromiseHolder<SeekPromise> mSeekPromise;
   int64_t mPendingSeekTime;
   bool mWaitingForSeekData;
+  bool mAudioIsSeeking;
+  bool mVideoIsSeeking;
 
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
   bool mDropVideoBeforeThreshold;
 
   bool mEnded;
-
-  // For a seek to complete we need to send a sample with
-  // the mDiscontinuity field set to true once we have the
-  // first decoded sample. These flags are set during seeking
-  // so we can detect when we have the first decoded sample
-  // after a seek.
-  bool mAudioIsSeeking;
-  bool mVideoIsSeeking;
 
   bool mHasEssentialTrackBuffers;
 
