@@ -73,8 +73,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ProcessHangMonitor.h"
-#include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -1804,11 +1802,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     // finish waiting in the xpcom-shutdown/profile-before-change observer.
     mIPCOpen = false;
 
-    if (mHangMonitorActor) {
-        ProcessHangMonitor::RemoveProcess(mHangMonitorActor);
-        mHangMonitorActor = nullptr;
-    }
-
     if (why == NormalShutdown && !mCalledClose) {
         // If we shut down normally but haven't called Close, assume somebody
         // else called Close on us. In that case, we still need to call
@@ -2041,7 +2034,6 @@ ContentParent::InitializeMembers()
     mCreatedPairedMinidumps = false;
     mShutdownPending = false;
     mIPCOpen = true;
-    mHangMonitorActor = nullptr;
 }
 
 ContentParent::ContentParent(mozIApplication* aApp,
@@ -2120,8 +2112,6 @@ ContentParent::ContentParent(mozIApplication* aApp,
                  true  /* Send registered chrome */);
 
     ContentProcessManager::GetSingleton()->AddContentProcess(this);
-
-    ProcessHangMonitor::AddProcess(this);
 
     // Set a reply timeout for CPOWs.
     SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 0));
@@ -3058,14 +3048,6 @@ ContentParent::AllocPBackgroundParent(Transport* aTransport,
                                       ProcessId aOtherProcess)
 {
     return BackgroundParent::Alloc(this, aTransport, aOtherProcess);
-}
-
-PProcessHangMonitorParent*
-ContentParent::AllocPProcessHangMonitorParent(Transport* aTransport,
-                                              ProcessId aOtherProcess)
-{
-    mHangMonitorActor = CreateHangMonitorParent(this, aTransport, aOtherProcess);
-    return mHangMonitorActor;
 }
 
 PSharedBufferManagerParent*
@@ -4317,8 +4299,7 @@ ContentParent::RecvNotifyKeywordSearchLoading(const nsString &aProvider,
 bool
 ContentParent::ShouldContinueFromReplyTimeout()
 {
-    nsRefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
-    return !monitor || !monitor->ShouldTimeOutCPOWs();
+    return false;
 }
 
 bool
