@@ -1697,6 +1697,46 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             break;
         }
 
+        case FOURCC('m', 'e', 'h', 'd'):
+        {
+            if (chunk_data_size < 8) {
+                return ERROR_MALFORMED;
+            }
+
+            uint8_t version;
+            if (mDataSource->readAt(
+                        data_offset, &version, sizeof(version))
+                    < (ssize_t)sizeof(version)) {
+                return ERROR_IO;
+            }
+            if (version > 1) {
+                break;
+            }
+            int64_t duration = 0;
+            if (version == 1) {
+                if (mDataSource->readAt(
+                            data_offset + 4, &duration, sizeof(duration))
+                        < (ssize_t)sizeof(duration)) {
+                    return ERROR_IO;
+                }
+                duration = ntoh64(duration);
+            } else {
+                uint32_t duration32;
+                if (mDataSource->readAt(
+                            data_offset + 4, &duration32, sizeof(duration32))
+                        < (ssize_t)sizeof(duration32)) {
+                    return ERROR_IO;
+                }
+                duration = ntohl(duration32);
+            }
+            if (duration) {
+              mFileMetaData->setInt64(kKeyMovieDuration, duration * 1000LL);
+            }
+
+            *offset += chunk_size;
+            break;
+        }
+
         case FOURCC('m', 'd', 'a', 't'):
         {
             ALOGV("mdat chunk, drm: %d", mIsDrm);
