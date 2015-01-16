@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <style>
     .ball {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: #f06;
 
@@ -13,23 +13,31 @@
     }
 
     .still {
-      top: 50px;
-      left: 50px;
+      top: 0;
+      left: 10px;
     }
 
     .animated {
-      top: 200px;
-      left: 200px;
+      top: 100px;
+      left: 10px;
 
       animation: simple-animation 2s infinite alternate;
     }
 
     .multi {
-      top: 100px;
-      left: 400px;
+      top: 200px;
+      left: 10px;
 
       animation: simple-animation 2s infinite alternate,
                  other-animation 5s infinite alternate;
+    }
+
+    .delayed {
+      top: 300px;
+      left: 10px;
+      background: rebeccapurple;
+
+      animation: simple-animation 3s 60s 10;
     }
 
     @keyframes simple-animation {
@@ -50,5 +58,6 @@
   <div class="ball still"></div>
   <div class="ball animated"></div>
   <div class="ball multi"></div>
+  <div class="ball delayed"></div>
 </body>
 </html>

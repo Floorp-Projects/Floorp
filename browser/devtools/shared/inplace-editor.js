@@ -11,7 +11,7 @@
  *
  * editableField({
  *   element: spanToEdit,
- *   done: function(value, commit) {
+ *   done: function(value, commit, direction) {
  *     if (commit) {
  *       spanToEdit.textContent = value;
  *     }
@@ -62,9 +62,11 @@ Cu.import("resource://gre/modules/devtools/event-emitter.js");
  *       with the current value of the text input.
  *    {function} done:
  *       Called when input is committed or blurred.  Called with
- *       current value and a boolean telling the caller whether to
- *       commit the change.  This function is called before the editor
- *       has been torn down.
+ *       current value, a boolean telling the caller whether to
+ *       commit the change, and the direction of the next element to be
+ *       selected. Direction may be one of nsIFocusManager.MOVEFOCUS_FORWARD,
+ *       nsIFocusManager.MOVEFOCUS_BACKWARD, or null (no movement).
+ *       This function is called before the editor has been torn down.
  *    {function} destroy:
  *       Called when the editor is destroyed and has been torn down.
  *    {string} advanceChars:
@@ -103,6 +105,7 @@ exports.editableField = editableField;
  *      defaults to "click"
  * @param {function} aCallback
  *        Called when the editor is activated.
+ * @return {function} function which calls aCallback
  */
 function editableItem(aOptions, aCallback)
 {
@@ -148,6 +151,13 @@ function editableItem(aOptions, aCallback)
   // Mark the element editable field for tab
   // navigation while editing.
   element._editable = true;
+
+  // Save the trigger type so we can dispatch this later
+  element._trigger = trigger;
+
+  return function turnOnEditMode() {
+    aCallback(element);
+  }
 }
 
 exports.editableItem = this.editableItem;
@@ -769,7 +779,7 @@ InplaceEditor.prototype = {
   /**
    * Call the client's done handler and clear out.
    */
-  _apply: function InplaceEditor_apply(aEvent)
+  _apply: function InplaceEditor_apply(aEvent, direction)
   {
     if (this._applied) {
       return;
@@ -779,7 +789,7 @@ InplaceEditor.prototype = {
 
     if (this.done) {
       let val = this.input.value.trim();
-      return this.done(this.cancelled ? this.initial : val, !this.cancelled);
+      return this.done(this.cancelled ? this.initial : val, !this.cancelled, direction);
     }
 
     return null;
@@ -945,7 +955,7 @@ InplaceEditor.prototype = {
         }
       }
 
-      this._apply();
+      this._apply(aEvent, direction);
 
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
@@ -958,9 +968,11 @@ InplaceEditor.prototype = {
         let next = moveFocus(this.doc.defaultView, direction);
 
         // If the next node to be focused has been tagged as an editable
-        // node, send it a click event to trigger
+        // node, trigger editing using the configured event
         if (next && next.ownerDocument === this.doc && next._editable) {
-          next.click();
+          let e = this.doc.createEvent('Event');
+          e.initEvent(next._trigger, true, true);
+          next.dispatchEvent(e);
         }
       }
 

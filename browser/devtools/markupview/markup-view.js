@@ -2129,7 +2129,7 @@ function ElementEditor(aContainer, aNode) {
   }
 
   // Make the new attribute space editable.
-  editableField({
+  this.newAttr.editMode = editableField({
     element: this.newAttr,
     trigger: "dblclick",
     stopOnReturn: true,
@@ -2235,7 +2235,7 @@ ElementEditor.prototype = {
     }
 
     // Make the attribute editable.
-    editableField({
+    attr.editMode = editableField({
       element: inner,
       trigger: "dblclick",
       stopOnReturn: true,
@@ -2257,7 +2257,7 @@ ElementEditor.prototype = {
           aEditor.input.select();
         }
       },
-      done: (aVal, aCommit) => {
+      done: (aVal, aCommit, direction) => {
         if (!aCommit || aVal === initial) {
           return;
         }
@@ -2269,6 +2269,7 @@ ElementEditor.prototype = {
         // parsed out of the input element. Restore original attribute if
         // parsing fails.
         try {
+          this.refocusOnEdit(aAttr.name, attr, direction);
           this._saveAttribute(aAttr.name, undoMods);
           doMods.removeAttribute(aAttr.name);
           this._applyAttributes(aVal, attr, doMods, undoMods);
@@ -2345,6 +2346,97 @@ ElementEditor.prototype = {
     } else {
       aUndoMods.removeAttribute(aName);
     }
+  },
+
+  /**
+   * Listen to mutations, and when the attribute list is regenerated
+   * try to focus on the attribute after the one that's being edited now.
+   * If the attribute order changes, go to the beginning of the attribute list.
+   */
+  refocusOnEdit: function(attrName, attrNode, direction) {
+    // Only allow one refocus on attribute change at a time, so when there's
+    // more than 1 request in parallel, the last one wins.
+    if (this._editedAttributeObserver) {
+      this.markup._inspector.off("markupmutation", this._editedAttributeObserver);
+      this._editedAttributeObserver = null;
+    }
+
+    let container = this.markup.getContainer(this.node);
+
+    let activeAttrs = [...this.attrList.childNodes].filter(el => el.style.display != "none");
+    let attributeIndex = activeAttrs.indexOf(attrNode);
+
+    let onMutations = this._editedAttributeObserver = (e, mutations) => {
+      let isDeletedAttribute = false;
+      let isNewAttribute = false;
+      for (let mutation of mutations) {
+        let inContainer = this.markup.getContainer(mutation.target) === container;
+        if (!inContainer) {
+          continue;
+        }
+
+        let isOriginalAttribute = mutation.attributeName === attrName;
+
+        isDeletedAttribute = isDeletedAttribute || isOriginalAttribute && mutation.newValue === null;
+        isNewAttribute = isNewAttribute || mutation.attributeName !== attrName;
+      }
+      let isModifiedOrder = isDeletedAttribute && isNewAttribute;
+      this._editedAttributeObserver = null;
+
+      // "Deleted" attributes are merely hidden, so filter them out.
+      let visibleAttrs = [...this.attrList.childNodes].filter(el => el.style.display != "none");
+      let activeEditor;
+      if (visibleAttrs.length > 0) {
+        if (!direction) {
+          // No direction was given; stay on current attribute.
+          activeEditor = visibleAttrs[attributeIndex];
+        } else if (isModifiedOrder) {
+          // The attribute was renamed, reordering the existing attributes.
+          // So let's go to the beginning of the attribute list for consistency.
+          activeEditor = visibleAttrs[0];
+        } else {
+          let newAttributeIndex;
+          if (isDeletedAttribute) {
+            newAttributeIndex = attributeIndex;
+          } else {
+            if (direction == Ci.nsIFocusManager.MOVEFOCUS_FORWARD) {
+              newAttributeIndex = attributeIndex + 1;
+            } else if (direction == Ci.nsIFocusManager.MOVEFOCUS_BACKWARD) {
+              newAttributeIndex = attributeIndex - 1;
+            }
+          }
+
+          // The number of attributes changed (deleted), or we moved through the array
+          // so check we're still within bounds.
+          if (newAttributeIndex >= 0 && newAttributeIndex <= visibleAttrs.length - 1) {
+            activeEditor = visibleAttrs[newAttributeIndex];
+          }
+        }
+      }
+
+      // Either we have no attributes left,
+      // or we just edited the last attribute and want to move on.
+      if (!activeEditor) {
+        activeEditor = this.newAttr;
+      }
+
+      // Refocus was triggered by tab or shift-tab.
+      // Continue in edit mode.
+      if (direction) {
+        activeEditor.editMode();
+      } else {
+        // Refocus was triggered by enter.
+        // Exit edit mode (but restore focus).
+        let editable = activeEditor === this.newAttr ? activeEditor : activeEditor.querySelector(".editable");
+        editable.focus();
+      }
+
+      this.markup.emit("refocusedonedit");
+    };
+
+    // Start listening for mutations until we find an attributes change
+    // that modifies this attribute.
+    this.markup._inspector.once("markupmutation", onMutations);
   },
 
   /**

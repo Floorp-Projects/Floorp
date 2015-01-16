@@ -7,7 +7,8 @@
    there are overrides for each platform in their devedition.css files. */
 
 :root {
-  --space-above-tabbar: 1px;
+  --tab-toolbar-navbar-overlap: 0px;
+  --space-above-tabbar: 0px;
   --toolbarbutton-text-shadow: none;
   --panel-ui-button-background-size: 1px calc(100% - 1px);
   --panel-ui-button-background-position: 1px 0px;
@@ -32,9 +33,9 @@
   --tab-separator-color: #474C50;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #1a4666;
-  --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
-                                     0 8px 3px -5px #2b82bf inset,
-                                     0 -1px 0 rgba(0,0,0,.2) inset;
+  --tab-selection-box-shadow: 0 2px 0 #D7F1FF inset,
+                              0 -2px 0 rgba(0,0,0,.05) inset,
+                              0 -1px 0 rgba(0,0,0,.3) inset;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
 
   /* Toolbar buttons */
@@ -92,9 +93,9 @@
   --tab-separator-color: #C6C6C7;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
-  --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
-                              0 8px 3px -5px #319BDB inset,
-                              0 -1px 0 #2A7CB1 inset;
+  --tab-selection-box-shadow: 0 2px 0 #9FDFFF inset,
+                              0 -2px 0 rgba(0,0,0,.05) inset,
+                              0 -1px 0 rgba(0,0,0,.2) inset;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
 
 
@@ -177,7 +178,7 @@
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
 .browserContainer > findbar,
 #browser-bottombox {
-  background: var(--chrome-secondary-background-color) !important;
+  background-color: var(--chrome-secondary-background-color) !important;
   color: var(--chrome-color);
 }
 
@@ -227,9 +228,10 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 /* Nav bar specific stuff */
 #nav-bar {
   margin-top: 0 !important;
-  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
   border-radius: 0 !important;
-  box-shadow: 0 1px var(--chrome-nav-bar-separator-color) inset !important;
+  box-shadow: 0 -1px var(--chrome-nav-bar-separator-color) !important;
   background-image: none !important;
 }
 
@@ -288,7 +290,6 @@ searchbar:not([oneoffui]) .search-go-button {
 }
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
-  /* The -2px in `calc` is the height of `tabToolbarNavbarOverlap` plus a 1px offset from the center */
   background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
@@ -309,13 +310,6 @@ searchbar:not([oneoffui]) .search-go-button {
 /* Don't need space for the tab curves (66px - 30px) */
 .tabs-newtab-button {
   width: 36px;
-}
-
-/* Override @tabToolbarNavbarOverlap@ */
-#TabsToolbar .toolbarbutton-1,
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  margin-bottom: 0;
 }
 
 #TabsToolbar > #new-tab-button:hover,
