@@ -94,8 +94,7 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
   nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-       int64_t aCurrentTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
 
   // Acquires the decoder monitor, and is thus callable on any thread.
   nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
@@ -189,9 +188,7 @@ private:
   // to be added to the track buffer.
   MediaPromiseHolder<SeekPromise> mSeekPromise;
   int64_t mPendingSeekTime;
-  int64_t mPendingStartTime;
   int64_t mPendingEndTime;
-  int64_t mPendingCurrentTime;
   bool mWaitingForSeekData;
 
   int64_t mTimeThreshold;
