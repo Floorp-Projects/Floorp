@@ -21,6 +21,7 @@ class MediaResource;
 class MediaDecoderStateMachine;
 class SourceBufferDecoder;
 class TrackBuffer;
+enum MSRangeRemovalAction : uint8_t;
 
 namespace dom {
 
@@ -56,7 +57,7 @@ public:
   bool IsExpectingMoreData() MOZ_OVERRIDE;
 
   void SetDecodedDuration(int64_t aDuration);
-  void SetMediaSourceDuration(double aDuration);
+  void SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction);
   double GetMediaSourceDuration();
   void DurationChanged(double aOldDuration, double aNewDuration);
 
