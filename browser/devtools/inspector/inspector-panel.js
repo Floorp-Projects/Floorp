@@ -313,7 +313,9 @@ InspectorPanel.prototype = {
    */
   setupSidebar: function InspectorPanel_setupSidebar() {
     let tabbox = this.panelDoc.querySelector("#inspector-sidebar");
-    this.sidebar = new ToolSidebar(tabbox, this, "inspector");
+    this.sidebar = new ToolSidebar(tabbox, this, "inspector", {
+      showAllTabsMenu: true
+    });
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
