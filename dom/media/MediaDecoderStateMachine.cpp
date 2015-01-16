@@ -220,6 +220,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDropVideoUntilNextDiscontinuity(false),
   mDecodeToSeekTarget(false),
   mWaitingForDecoderSeek(false),
+  mCancelingSeek(false),
   mCurrentTimeBeforeSeek(0),
   mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
   mDecodingFrozenAtStateDecoding(false),
@@ -1702,10 +1703,6 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
     return;
   }
 
-  // MediaDecoder::mPlayState should be SEEKING while we seek, and
-  // in that case MediaDecoder shouldn't be calling us.
-  NS_ASSERTION(mState != DECODER_STATE_SEEKING,
-               "We shouldn't already be seeking");
   NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
                "We should have got duration already");
 
@@ -2380,9 +2377,25 @@ void MediaDecoderStateMachine::DecodeSeek()
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
 
   if (mState != DECODER_STATE_SEEKING ||
-      !mSeekTarget.IsValid() ||
-      mCurrentSeekTarget.IsValid()) {
+      !mSeekTarget.IsValid()) {
     DECODER_LOG("Early returning from DecodeSeek");
+    return;
+  }
+
+  // If there's already an existing seek in progress, we need to handle that.
+  if (mCurrentSeekTarget.IsValid()) {
+    // There are 3 states we might be in, listed in the order that they occur:
+    //   (1) Waiting for the seek to be resolved.
+    //   (2) Waiting for the seek to be resolved, having already issued a cancel.
+    //   (3) After seek resolution, waiting for SeekComplete to run.
+    //
+    // If we're in the first state, we move to the second. Otherwise, we just wait
+    // for things to sort themselves out.
+    if (mWaitingForDecoderSeek && !mCancelingSeek) {
+      mReader->CancelSeek();
+      mCancelingSeek = true;
+    }
+
     return;
   }
 
@@ -2469,6 +2482,7 @@ MediaDecoderStateMachine::OnSeekCompleted(int64_t aTime)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mWaitingForDecoderSeek = false;
+  mCancelingSeek = false;
 
   // We must decode the first samples of active streams, so we can determine
   // the new stream time. So dispatch tasks to do that.
@@ -2480,12 +2494,21 @@ void
 MediaDecoderStateMachine::OnSeekFailed(nsresult aResult)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  bool wasCanceled = mCancelingSeek;
   mWaitingForDecoderSeek = false;
-  // Sometimes we reject the promise for non-failure reasons, like
-  // when we request a second seek before the previous one has
-  // completed.
+  mCancelingSeek = false;
+
   if (NS_FAILED(aResult)) {
     DecodeError();
+  } else if (wasCanceled && mSeekTarget.IsValid() && mState == DECODER_STATE_SEEKING) {
+    // Try again.
+    mCurrentSeekTarget = mSeekTarget;
+    mSeekTarget.Reset();
+    mReader->Seek(mCurrentSeekTarget.mTime, mEndTime)
+           ->Then(DecodeTaskQueue(), __func__, this,
+                  &MediaDecoderStateMachine::OnSeekCompleted,
+                  &MediaDecoderStateMachine::OnSeekFailed);
+    mWaitingForDecoderSeek = true;
   }
 }
 
@@ -2548,7 +2571,12 @@ MediaDecoderStateMachine::SeekCompleted()
 
   nsCOMPtr<nsIRunnable> stopEvent;
   bool isLiveStream = mDecoder->GetResource()->GetLength() == -1;
-  if (GetMediaTime() == mEndTime && !isLiveStream) {
+  if (mSeekTarget.IsValid()) {
+    // A new seek target came in while we were processing the old one. No rest
+    // for the seeking.
+    DECODER_LOG("A new seek came along while we were finishing the old one - staying in SEEKING");
+    SetState(DECODER_STATE_SEEKING);
+  } else if (GetMediaTime() == mEndTime && !isLiveStream) {
     // Seeked to end of media, move to COMPLETED state. Note we don't do
     // this if we're playing a live stream, since the end of media will advance
     // once we download more data!
