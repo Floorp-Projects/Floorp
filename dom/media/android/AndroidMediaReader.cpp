@@ -320,7 +320,7 @@ bool AndroidMediaReader::DecodeAudioData()
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-AndroidMediaReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
+AndroidMediaReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
