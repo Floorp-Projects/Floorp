@@ -223,6 +223,8 @@ int main(int argc, _CONST char* argv[])
 #elif defined(XP_WIN)
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
+#else
+  #error "Unknown platform"  // having this here keeps cppcheck happy
 #endif
 
 #ifdef HAS_DLL_BLOCKLIST
@@ -271,6 +273,8 @@ int main(int argc, _CONST char* argv[])
       XRE_TelemetryAccumulate(mozilla::Telemetry::GLUESTARTUP_HARD_FAULTS,
                               int(newRUsage.ru_majflt - initialRUsage.ru_majflt));
     }
+#else
+  #error "Unknown platform"  // having this here keeps cppcheck happy
 #endif
   }
 
