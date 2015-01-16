@@ -275,13 +275,13 @@ parent:
                                                  int32_t IMEOpen,
                                                  intptr_t NativeIMEContext);
 
-    prio(urgent) async SetInputContext(int32_t IMEEnabled,
-                                       int32_t IMEOpen,
-                                       nsString type,
-                                       nsString inputmode,
-                                       nsString actionHint,
-                                       int32_t cause,
-                                       int32_t focusChange);
+    prio(urgent) sync SetInputContext(int32_t IMEEnabled,
+                                      int32_t IMEOpen,
+                                      nsString type,
+                                      nsString inputmode,
+                                      nsString actionHint,
+                                      int32_t cause,
+                                      int32_t focusChange);
 
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 

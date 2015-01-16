@@ -1925,14 +1925,25 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
                                const int32_t& aCause,
                                const int32_t& aFocusChange)
 {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget || !AllowContentIME()) {
+    return true;
+  }
+
+  InputContext oldContext = widget->GetInputContext();
+
+  // Ignore if current widget IME setting is not DISABLED and didn't come
+  // from remote content.  Chrome content may have taken over.
+  if (oldContext.mIMEState.mEnabled != IMEState::DISABLED &&
+      oldContext.IsOriginMainProcess()) {
+    return true;
+  }
+
   // mIMETabParent (which is actually static) tracks which if any TabParent has IMEFocus
   // When the input mode is set to anything but IMEState::DISABLED,
   // mIMETabParent should be set to this
   mIMETabParent =
     aIMEEnabled != static_cast<int32_t>(IMEState::DISABLED) ? this : nullptr;
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget || !AllowContentIME())
-    return true;
 
   InputContext context;
   context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(aIMEEnabled);
@@ -1940,6 +1951,8 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
   context.mHTMLInputType.Assign(aType);
   context.mHTMLInputInputmode.Assign(aInputmode);
   context.mActionHint.Assign(aActionHint);
+  context.mOrigin = InputContext::ORIGIN_CONTENT;
+
   InputContextAction action(
     static_cast<InputContextAction::Cause>(aCause),
     static_cast<InputContextAction::FocusChange>(aFocusChange));
@@ -2195,7 +2208,11 @@ TabParent::MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
                                           ScrollableLayerGuid* aOutTargetGuid,
                                           uint64_t* aOutInputBlockId)
 {
-  if (aEvent.mClass == eWheelEventClass) {
+  if (aEvent.mClass == eWheelEventClass
+#ifdef MOZ_WIDGET_GONK
+      || aEvent.mClass == eTouchEventClass
+#endif
+     ) {
     // Wheel events must be sent to APZ directly from the widget. New APZ-
     // aware events should follow suit and move there as well. However, we
     // do need to inform the child process of the correct target and block

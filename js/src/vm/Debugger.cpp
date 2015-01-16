@@ -873,7 +873,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
         }
 
         RootedValue trueVal(cx, BooleanValue(true));
-        if (!JSObject::defineProperty(cx, optObj, name, trueVal))
+        if (!DefineProperty(cx, optObj, name, trueVal))
             return false;
 
         vp.setObject(*optObj);
@@ -1061,7 +1061,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
-        !DefineNativeProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
+        !NativeDefineProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
     {
         return false;
     }
@@ -1126,7 +1126,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     HandleNativeObject nobj = obj.as<NativeObject>();
 
     RootedValue v(cx, vp.get());
-    if (!NativeGet(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
+    if (!NativeGetExistingProperty(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
         return handleUncaughtException(ac, &v, callHook);
 
     ac.reset();
@@ -1150,7 +1150,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
 
     RootedId id(cx, AtomToId(atom));
     RootedValue fval(cx);
-    return JSObject::getGeneric(cx, obj, obj, id, &fval) &&
+    return GetProperty(cx, obj, obj, id, &fval) &&
            (!IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
@@ -2879,7 +2879,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     /* Get Debugger.prototype. */
     RootedValue v(cx);
     RootedObject callee(cx, &args.callee());
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &v))
+    if (!GetProperty(cx, callee, callee, cx->names().prototype, &v))
         return false;
     RootedNativeObject proto(cx, &v.toObject().as<NativeObject>());
     MOZ_ASSERT(proto->getClass() == &Debugger::jsclass);
@@ -3130,7 +3130,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
          * scripts scoped to a particular global object.
          */
         RootedValue global(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().global, &global))
+        if (!GetProperty(cx, query, query, cx->names().global, &global))
             return false;
         if (global.isUndefined()) {
             matchAllDebuggeeGlobals();
@@ -3150,7 +3150,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         }
 
         /* Check for a 'url' property. */
-        if (!JSObject::getProperty(cx, query, query, cx->names().url, &url))
+        if (!GetProperty(cx, query, query, cx->names().url, &url))
             return false;
         if (!url.isUndefined() && !url.isString()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
@@ -3160,7 +3160,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
         /* Check for a 'source' property */
         RootedValue debuggerSource(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().source, &debuggerSource))
+        if (!GetProperty(cx, query, query, cx->names().source, &debuggerSource))
             return false;
         if (!debuggerSource.isUndefined()) {
             if (!debuggerSource.isObject() ||
@@ -3176,7 +3176,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
         /* Check for a 'displayURL' property. */
         RootedValue displayURL(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().displayURL, &displayURL))
+        if (!GetProperty(cx, query, query, cx->names().displayURL, &displayURL))
             return false;
         if (!displayURL.isUndefined() && !displayURL.isString()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
@@ -3193,7 +3193,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
         /* Check for a 'line' property. */
         RootedValue lineProperty(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().line, &lineProperty))
+        if (!GetProperty(cx, query, query, cx->names().line, &lineProperty))
             return false;
         if (lineProperty.isUndefined()) {
             hasLine = false;
@@ -3220,7 +3220,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         /* Check for an 'innermost' property. */
         PropertyName *innermostName = cx->names().innermost;
         RootedValue innermostProperty(cx);
-        if (!JSObject::getProperty(cx, query, query, innermostName, &innermostProperty))
+        if (!GetProperty(cx, query, query, innermostName, &innermostProperty))
             return false;
         innermost = ToBoolean(innermostProperty);
         if (innermost) {
@@ -3553,7 +3553,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     bool parseQuery(HandleObject query) {
         /* Check for the 'class' property */
         RootedValue cls(cx);
-        if (!JSObject::getProperty(cx, query, query, cx->names().class_, &cls))
+        if (!GetProperty(cx, query, query, cx->names().class_, &cls))
             return false;
         if (!cls.isUndefined()) {
             if (!cls.isString()) {
@@ -3845,7 +3845,7 @@ Debugger::setupTraceLogger(JSContext *cx, unsigned argc, Value *vp)
         }
 
         RootedValue v(cx);
-        if (!JSObject::getGeneric(cx, obj, obj, ids[i], &v))
+        if (!GetProperty(cx, obj, obj, ids[i], &v))
             return false;
 
         textIds.append(textId);
@@ -4636,7 +4636,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
             bool found;
             if (!HasOwnProperty(cx, result, id, &found))
                 return false;
-            if (found && !JSObject::getGeneric(cx, result, result, id, &offsetsv))
+            if (found && !GetProperty(cx, result, result, id, &offsetsv))
                 return false;
 
             if (offsetsv.isObject()) {
@@ -4658,7 +4658,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
                 }
 
                 RootedValue value(cx, ObjectValue(*offsets));
-                if (!JSObject::defineGeneric(cx, result, id, value))
+                if (!DefineProperty(cx, result, id, value))
                     return false;
             }
 
@@ -4704,16 +4704,16 @@ DebuggerScript_getAllColumnOffsets(JSContext *cx, unsigned argc, Value *vp)
 
             RootedId id(cx, NameToId(cx->names().lineNumber));
             RootedValue value(cx, NumberValue(lineno));
-            if (!JSObject::defineGeneric(cx, entry, id, value))
+            if (!DefineProperty(cx, entry, id, value))
                 return false;
 
             value = NumberValue(column);
-            if (!JSObject::defineProperty(cx, entry, cx->names().columnNumber, value))
+            if (!DefineProperty(cx, entry, cx->names().columnNumber, value))
                 return false;
 
             id = NameToId(cx->names().offset);
             value = NumberValue(offset);
-            if (!JSObject::defineGeneric(cx, entry, id, value))
+            if (!DefineProperty(cx, entry, id, value))
                 return false;
 
             if (!NewbornArrayPush(cx, result, ObjectValue(*entry)))
@@ -5739,7 +5739,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         MOZ_ASSERT(frame.numActualArgs() <= 0x7fffffff);
         unsigned fargc = frame.numActualArgs();
         RootedValue fargcVal(cx, Int32Value(fargc));
-        if (!DefineNativeProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
+        if (!NativeDefineProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
                                   JSPROP_PERMANENT | JSPROP_READONLY))
         {
             return false;
@@ -5755,7 +5755,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             id = INT_TO_JSID(i);
             if (!getobj ||
-                !DefineNativeProperty(cx, argsobj, id, UndefinedHandleValue,
+                !NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue,
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.get()), nullptr,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
             {
@@ -5988,7 +5988,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         }
         for (size_t i = 0; i < keys.length(); i++) {
             MutableHandleValue valp = values[i];
-            if (!JSObject::getGeneric(cx, bindingsobj, bindingsobj, keys[i], valp) ||
+            if (!GetProperty(cx, bindingsobj, bindingsobj, keys[i], valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -6048,7 +6048,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
          * should have a thisObject hook that returns the appropriate outer
          * object.
          */
-        JSObject *thisObj = JSObject::thisObject(cx, scope);
+        JSObject *thisObj = GetThisObject(cx, scope);
         if (!thisObj)
             return false;
         thisv = ObjectValue(*thisObj);
@@ -6066,7 +6066,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             id = keys[i];
             MutableHandleValue val = values[i];
             if (!cx->compartment()->wrap(cx, val) ||
-                !DefineNativeProperty(cx, nenv, id, val, nullptr, nullptr, 0))
+                !NativeDefineProperty(cx, nenv, id, val, nullptr, nullptr, 0))
             {
                 return false;
             }
@@ -6234,7 +6234,7 @@ DebuggerObject_getProto(JSContext *cx, unsigned argc, Value *vp)
     RootedObject proto(cx);
     {
         AutoCompartment ac(cx, refobj);
-        if (!JSObject::getProto(cx, refobj, &proto))
+        if (!GetPrototype(cx, refobj, &proto))
             return false;
     }
     RootedValue protov(cx, ObjectOrNullValue(proto));
@@ -6251,7 +6251,7 @@ DebuggerObject_getClass(JSContext *cx, unsigned argc, Value *vp)
     const char *className;
     {
         AutoCompartment ac(cx, refobj);
-        className = JSObject::className(cx, refobj);
+        className = GetObjectClassName(cx, refobj);
     }
     JSAtom *str = Atomize(cx, className, strlen(className));
     if (!str)
@@ -6632,7 +6632,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
 
         ErrorCopier ec(ac);
         bool dummy;
-        if (!DefineProperty(cx, obj, id, desc, true, &dummy))
+        if (!StandardDefineProperty(cx, obj, id, desc, true, &dummy))
             return false;
     }
 
@@ -6676,7 +6676,7 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         ErrorCopier ec(ac);
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
+            if (!StandardDefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
                 return false;
         }
     }
@@ -6702,13 +6702,13 @@ DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
     ErrorCopier ec(ac);
 
     bool succeeded;
-    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+    if (!DeleteProperty(cx, obj, id, &succeeded))
         return false;
     args.rval().setBoolean(succeeded);
     return true;
 }
 
-enum SealHelperOp { Seal, Freeze, PreventExtensions };
+enum SealHelperOp { OpSeal, OpFreeze, OpPreventExtensions };
 
 static bool
 DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp op, const char *name)
@@ -6719,14 +6719,14 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
     ac.emplace(cx, obj);
     ErrorCopier ec(ac);
     bool ok;
-    if (op == Seal) {
-        ok = JSObject::seal(cx, obj);
-    } else if (op == Freeze) {
-        ok = JSObject::freeze(cx, obj);
+    if (op == OpSeal) {
+        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Sealed);
+    } else if (op == OpFreeze) {
+        ok = SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
     } else {
-        MOZ_ASSERT(op == PreventExtensions);
+        MOZ_ASSERT(op == OpPreventExtensions);
         bool succeeded;
-        ok = JSObject::preventExtensions(cx, obj, &succeeded);
+        ok = PreventExtensions(cx, obj, &succeeded);
         if (!ok)
             return false;
         if (!succeeded) {
@@ -6743,19 +6743,19 @@ DebuggerObject_sealHelper(JSContext *cx, unsigned argc, Value *vp, SealHelperOp 
 static bool
 DebuggerObject_seal(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_sealHelper(cx, argc, vp, Seal, "seal");
+    return DebuggerObject_sealHelper(cx, argc, vp, OpSeal, "seal");
 }
 
 static bool
 DebuggerObject_freeze(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_sealHelper(cx, argc, vp, Freeze, "freeze");
+    return DebuggerObject_sealHelper(cx, argc, vp, OpFreeze, "freeze");
 }
 
 static bool
 DebuggerObject_preventExtensions(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_sealHelper(cx, argc, vp, PreventExtensions, "preventExtensions");
+    return DebuggerObject_sealHelper(cx, argc, vp, OpPreventExtensions, "preventExtensions");
 }
 
 static bool
@@ -6768,14 +6768,14 @@ DebuggerObject_isSealedHelper(JSContext *cx, unsigned argc, Value *vp, SealHelpe
     ac.emplace(cx, obj);
     ErrorCopier ec(ac);
     bool r;
-    if (op == Seal) {
-        if (!JSObject::isSealed(cx, obj, &r))
+    if (op == OpSeal) {
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, &r))
             return false;
-    } else if (op == Freeze) {
-        if (!JSObject::isFrozen(cx, obj, &r))
+    } else if (op == OpFreeze) {
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &r))
             return false;
     } else {
-        if (!JSObject::isExtensible(cx, obj, &r))
+        if (!IsExtensible(cx, obj, &r))
             return false;
     }
     args.rval().setBoolean(r);
@@ -6785,19 +6785,19 @@ DebuggerObject_isSealedHelper(JSContext *cx, unsigned argc, Value *vp, SealHelpe
 static bool
 DebuggerObject_isSealed(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_isSealedHelper(cx, argc, vp, Seal, "isSealed");
+    return DebuggerObject_isSealedHelper(cx, argc, vp, OpSeal, "isSealed");
 }
 
 static bool
 DebuggerObject_isFrozen(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_isSealedHelper(cx, argc, vp, Freeze, "isFrozen");
+    return DebuggerObject_isSealedHelper(cx, argc, vp, OpFreeze, "isFrozen");
 }
 
 static bool
 DebuggerObject_isExtensible(JSContext *cx, unsigned argc, Value *vp)
 {
-    return DebuggerObject_isSealedHelper(cx, argc, vp, PreventExtensions, "isExtensible");
+    return DebuggerObject_isSealedHelper(cx, argc, vp, OpPreventExtensions, "isExtensible");
 }
 
 enum ApplyOrCallMode { ApplyMode, CallMode };
@@ -7324,7 +7324,7 @@ DebuggerEnv_find(JSContext *cx, unsigned argc, Value *vp)
         RootedShape prop(cx);
         RootedObject pobj(cx);
         for (; env && !prop; env = env->enclosingScope()) {
-            if (!JSObject::lookupGeneric(cx, env, id, &pobj, &prop))
+            if (!LookupProperty(cx, env, id, &pobj, &prop))
                 return false;
             if (prop)
                 break;
@@ -7361,7 +7361,7 @@ DebuggerEnv_getVariable(JSContext *cx, unsigned argc, Value *vp)
             if (!env->as<DebugScopeObject>().getMaybeSentinelValue(cx, id, &v))
                 return false;
         } else {
-            if (!JSObject::getGeneric(cx, env, env, id, &v))
+            if (!GetProperty(cx, env, env, id, &v))
                 return false;
         }
     }
@@ -7398,7 +7398,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
 
         /* Make sure the environment actually has the specified binding. */
         bool has;
-        if (!JSObject::hasProperty(cx, env, id, &has))
+        if (!HasProperty(cx, env, id, &has))
             return false;
         if (!has) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_VARIABLE_NOT_FOUND);
@@ -7406,7 +7406,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* Just set the property. */
-        if (!JSObject::setGeneric(cx, env, env, id, &v, true))
+        if (!SetProperty(cx, env, env, id, &v, true))
             return false;
     }
 
@@ -7466,7 +7466,7 @@ Builder::Object::definePropertyToTrusted(JSContext *cx, const char *name,
         return false;
     RootedId id(cx, AtomToId(atom));
 
-    return JSObject::defineGeneric(cx, value, id, trusted);
+    return DefineProperty(cx, value, id, trusted);
 }
 
 bool

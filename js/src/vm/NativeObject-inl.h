@@ -601,11 +601,11 @@ LookupPropertyInline(ExclusiveContext *cx,
         if (!proto->isNative()) {
             if (!cx->shouldBeJSContext() || !allowGC)
                 return false;
-            return JSObject::lookupGeneric(cx->asJSContext(),
-                                           MaybeRooted<JSObject*, allowGC>::toHandle(proto),
-                                           MaybeRooted<jsid, allowGC>::toHandle(id),
-                                           MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-                                           MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
+            return LookupProperty(cx->asJSContext(),
+                                  MaybeRooted<JSObject*, allowGC>::toHandle(proto),
+                                  MaybeRooted<jsid, allowGC>::toHandle(id),
+                                  MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                                  MaybeRooted<Shape*, allowGC>::toMutableHandle(propp));
         }
 
         current = &proto->template as<NativeObject>();
@@ -617,15 +617,23 @@ LookupPropertyInline(ExclusiveContext *cx,
 }
 
 inline bool
-DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj,
-                     PropertyName *name, HandleValue value,
-                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+NativeLookupProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
+                     MutableHandleObject objp, MutableHandleShape propp)
+{
+    RootedId id(cx, NameToId(name));
+    return NativeLookupProperty<CanGC>(cx, obj, id, objp, propp);
+}
+
+inline bool
+NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
+                     HandleValue value, PropertyOp getter, StrictPropertyOp setter,
+                     unsigned attrs)
 {
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     RootedId id(cx, NameToId(name));
-    return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs);
+    return NativeDefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 inline bool

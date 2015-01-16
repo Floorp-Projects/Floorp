@@ -268,7 +268,7 @@ js_ObjectClassIs(JSContext *cx, HandleObject obj, ESClassValue classValue)
 JS_FRIEND_API(const char *)
 js_ObjectClassName(JSContext *cx, HandleObject obj)
 {
-    return JSObject::className(cx, obj);
+    return GetObjectClassName(cx, obj);
 }
 
 JS_FRIEND_API(JS::Zone *)
@@ -507,7 +507,7 @@ js::GetGeneric(JSContext *cx, JSObject *objArg, JSObject *receiverArg, jsid idAr
     RootedObject obj(cx, objArg), receiver(cx, receiverArg);
     RootedId id(cx, idArg);
     RootedValue value(cx);
-    if (!JSObject::getGeneric(cx, obj, receiver, id, &value))
+    if (!GetProperty(cx, obj, receiver, id, &value))
         return false;
     *vp = value;
     return true;
@@ -829,7 +829,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             RootedValue key(cx, IdToValue(id));
             RootedValue v(cx);
 
-            if (!JSObject::getGeneric(cx, obj, obj, id, &v)) {
+            if (!GetProperty(cx, obj, obj, id, &v)) {
                 buf = JS_sprintf_append(buf, "    <Failed to fetch property while inspecting stack frame>\n");
                 cx->clearPendingException();
                 continue;
@@ -1195,7 +1195,7 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
     if (descriptor.hasSetterObject())
         assertSameCompartment(cx, descriptor.setterObject());
 
-    return DefineOwnProperty(cx, HandleObject(obj), id, descriptor, bp);
+    return StandardDefineProperty(cx, obj, id, descriptor, bp);
 }
 
 JS_FRIEND_API(bool)

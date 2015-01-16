@@ -8,6 +8,8 @@ EXPORTS.mozilla.layout += [
     'RenderFrameChild.h',
     'RenderFrameParent.h',
     'RenderFrameUtils.h',
+    'VsyncChild.h',
+    'VsyncParent.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -15,8 +17,14 @@ UNIFIED_SOURCES += [
     'RenderFrameParent.cpp',
 ]
 
+SOURCES += [
+    'VsyncChild.cpp',
+    'VsyncParent.cpp',
+]
+
 IPDL_SOURCES = [
     'PRenderFrame.ipdl',
+    'PVsync.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -179,7 +179,7 @@ static JSObject *
 GetPrototype(JSContext *cx, HandleObject obj)
 {
     RootedValue prototypeVal(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().prototype,
+    if (!GetProperty(cx, obj, obj, cx->names().prototype,
                                &prototypeVal))
     {
         return nullptr;
@@ -529,30 +529,30 @@ js::CreateUserSizeAndAlignmentProperties(JSContext *cx, HandleTypeDescr descr)
     if (descr->transparent()) {
         // byteLength
         RootedValue typeByteLength(cx, Int32Value(descr->size()));
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength, typeByteLength,
-                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, descr, cx->names().byteLength, typeByteLength,
+                            nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
 
         // byteAlignment
         RootedValue typeByteAlignment(cx, Int32Value(descr->alignment()));
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment, typeByteAlignment,
-                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, descr, cx->names().byteAlignment, typeByteAlignment,
+                            nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
     } else {
         // byteLength
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength, UndefinedHandleValue,
-                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, descr, cx->names().byteLength, UndefinedHandleValue,
+                            nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
 
         // byteAlignment
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment, UndefinedHandleValue,
-                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, descr, cx->names().byteAlignment, UndefinedHandleValue,
+                            nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
@@ -586,15 +586,15 @@ ArrayMetaTypeDescr::create(JSContext *cx,
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH, Int32Value(length));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
-    if (!JSObject::defineProperty(cx, obj, cx->names().elementType, elementTypeVal,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, obj, cx->names().elementType, elementTypeVal,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
 
     RootedValue lengthValue(cx, NumberValue(length));
-    if (!JSObject::defineProperty(cx, obj, cx->names().length, lengthValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, obj, cx->names().length, lengthValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -794,7 +794,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 
         // Load the value for the current field from the `fields` object.
         // The value should be a type descriptor.
-        if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
+        if (!GetProperty(cx, fields, fields, id, &fieldTypeVal))
             return nullptr;
         fieldType = ToObjectIf<TypeDescr>(fieldTypeVal);
         if (!fieldType) {
@@ -814,10 +814,11 @@ StructMetaTypeDescr::create(JSContext *cx,
         }
 
         // userFieldTypes[id] = typeObj
-        if (!JSObject::defineGeneric(cx, userFieldTypes, id,
-                                     fieldTypeObjs[i], nullptr, nullptr,
-                                     JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, userFieldTypes, id, fieldTypeObjs[i], nullptr, nullptr,
+                            JSPROP_READONLY | JSPROP_PERMANENT))
+        {
             return nullptr;
+        }
 
         // Append "f:Type" to the string repr
         if (i > 0 && !stringBuffer.append(", ")) {
@@ -853,10 +854,11 @@ StructMetaTypeDescr::create(JSContext *cx,
 
         // userFieldOffsets[id] = offset
         RootedValue offsetValue(cx, Int32Value(offset.value()));
-        if (!JSObject::defineGeneric(cx, userFieldOffsets, id,
-                                     offsetValue, nullptr, nullptr,
-                                     JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!DefineProperty(cx, userFieldOffsets, id, offsetValue, nullptr, nullptr,
+                            JSPROP_READONLY | JSPROP_PERMANENT))
+        {
             return nullptr;
+        }
 
         // Add space for this field to the total struct size.
         sizeSoFar = offset + fieldType->size();
@@ -945,19 +947,19 @@ StructMetaTypeDescr::create(JSContext *cx,
     }
 
     // Create data properties fieldOffsets and fieldTypes
-    if (!JSObject::freeze(cx, userFieldOffsets))
+    if (!FreezeObject(cx, userFieldOffsets))
         return nullptr;
-    if (!JSObject::freeze(cx, userFieldTypes))
+    if (!FreezeObject(cx, userFieldTypes))
         return nullptr;
     RootedValue userFieldOffsetsValue(cx, ObjectValue(*userFieldOffsets));
-    if (!JSObject::defineProperty(cx, descr, cx->names().fieldOffsets, userFieldOffsetsValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, descr, cx->names().fieldOffsets, userFieldOffsetsValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
     RootedValue userFieldTypesValue(cx, ObjectValue(*userFieldTypes));
-    if (!JSObject::defineProperty(cx, descr, cx->names().fieldTypes, userFieldTypesValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, descr, cx->names().fieldTypes, userFieldTypesValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -1165,11 +1167,8 @@ DefineSimpleTypeDescr(JSContext *cx,
     descr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
     RootedValue descrValue(cx, ObjectValue(*descr));
-    if (!JSObject::defineProperty(cx, module, className,
-                                  descrValue, nullptr, nullptr, 0))
-    {
+    if (!DefineProperty(cx, module, className, descrValue, nullptr, nullptr, 0))
         return false;
-    }
 
     if (!CreateTraceList(cx, descr))
         return false;
@@ -1214,8 +1213,8 @@ DefineMetaTypeDescr(JSContext *cx,
         return nullptr;
 
     RootedValue protoProtoValue(cx, ObjectValue(*protoProto));
-    if (!JSObject::defineProperty(cx, proto, cx->names().prototype, protoProtoValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, proto, cx->names().prototype, protoProtoValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -1288,8 +1287,8 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
         return false;
 
     RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
-    if (!JSObject::defineProperty(cx, module, cx->names().ArrayType, arrayTypeValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, module, cx->names().ArrayType, arrayTypeValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return false;
     }
@@ -1303,8 +1302,8 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
         return false;
 
     RootedValue structTypeValue(cx, ObjectValue(*structType));
-    if (!JSObject::defineProperty(cx, module, cx->names().StructType, structTypeValue,
-                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!DefineProperty(cx, module, cx->names().StructType, structTypeValue,
+                        nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return false;
     }
@@ -1312,11 +1311,8 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
     // Everything is setup, install module on the global object:
     RootedValue moduleValue(cx, ObjectValue(*module));
     global->setConstructor(JSProto_TypedObject, moduleValue);
-    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject, moduleValue,
-                                  nullptr, nullptr, 0))
-    {
+    if (!DefineProperty(cx, global, cx->names().TypedObject, moduleValue, nullptr, nullptr, 0))
         return false;
-    }
 
     return module;
 }
@@ -1718,7 +1714,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    return JSObject::lookupGeneric(cx, proto, id, objp, propp);
+    return LookupProperty(cx, proto, id, objp, propp);
 }
 
 bool
@@ -1844,7 +1840,7 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
         return true;
     }
 
-    return JSObject::getGeneric(cx, proto, receiver, id, vp);
+    return GetProperty(cx, proto, receiver, id, vp);
 }
 
 bool
@@ -1880,7 +1876,7 @@ TypedObject::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
         return true;
     }
 
-    return JSObject::getElement(cx, proto, receiver, index, vp);
+    return GetElement(cx, proto, receiver, index, vp);
 }
 
 /*static*/ bool
@@ -2034,7 +2030,7 @@ TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    return JSObject::getGenericAttributes(cx, proto, id, attrsp);
+    return GetPropertyAttributes(cx, proto, id, attrsp);
 }
 
 static bool
@@ -2073,7 +2069,7 @@ TypedObject::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    return JSObject::setGenericAttributes(cx, proto, id, attrsp);
+    return SetPropertyAttributes(cx, proto, id, attrsp);
 }
 
 bool
@@ -2088,7 +2084,7 @@ TypedObject::obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, boo
         return true;
     }
 
-    return JSObject::deleteGeneric(cx, proto, id, succeeded);
+    return DeleteProperty(cx, proto, id, succeeded);
 }
 
 bool

@@ -88,6 +88,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "BroadcastChannel", pref: "dom.broadcastChannel.enabled" },
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "DedicatedWorkerGlobalScope",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DataStore", b2g: true },

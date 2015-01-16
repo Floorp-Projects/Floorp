@@ -65,20 +65,26 @@ o<a href=# id=a_ancestor class=x><table id=table class=x><tbody id=tbody class=x
       // id selector
       {input:'#a:active, #b:active, #map1:active, #c:active, #img1:active, #map2:active, #d:active, #img2:active, #e:active, #f:active, #g:active, #h:active, #i:active, #j:active, #k:active, #l:active, #m:active, #n:active, #o:active, #a_ancestor:active, #table:active, #tbody:active, #tr:active, #td:active, #body:active, #html:active', prop:'caption-side', value:'bottom'},
       {input:'#a:hover, #b:hover, #map1:hover, #c:hover, #img1:hover, #map2:hover, #d:hover, #img2:hover, #e:hover, #f:hover, #g:hover, #h:hover, #i:hover, #j:hover, #k:hover, #l:hover, #m:hover, #n:hover, #o:hover, #a_ancestor:hover, #table:hover, #tbody:hover, #tr:hover, #td:hover, #body:hover, #html:hover', prop:'clear', value:'left'},
+      {input:':active#a, :active#b, :active#map1, :active#c, :active#img1, :active#map2, :active#d, :active#img2, :active#e, :active#f, :active#g, :active#h, :active#i, :active#j, :active#k, :active#l, :active#m, :active#n, :active#o, :active#a_ancestor, :active#table, :active#tbody, :active#tr, :active#td, :active#body, :active#html', prop:'list-style-type', value:'circle'},
+      {input:':hover#a, :hover#b, :hover#map1, :hover#c, :hover#img1, :hover#map2, :hover#d, :hover#img2, :hover#e, :hover#f, :hover#g, :hover#h, :hover#i, :hover#j, :hover#k, :hover#l, :hover#m, :hover#n, :hover#o, :hover#a_ancestor, :hover#table, :hover#tbody, :hover#tr, :hover#td, :hover#body, :hover#html', prop:'max-height', value:'10000px'},
       // class selector
       {input:'.t:active, .x:active', prop:'cursor', value:'move'},
       {input:'.t:hover, .x:hover', prop:'empty-cells', value:'hide'},
+      {input:':active.t, :active.x', prop:'max-width', value:'10000px'},
+      {input:':hover.t, :hover.x', prop:'min-height', value:'1px'},
       // pseudo-class selector
       {input:':lang(en):active', prop:'font-style', value:'italic'},
       {input:':lang(en):hover', prop:'font-variant', value:'small-caps'},
+      {input:':active:lang(en)', prop:'min-width', value:'1px'},
+      {input:':hover:lang(en)', prop:'overflow', value:'hidden'},
       // pseudo-element selector
       {input:':active::before', prop:'top', value:'1px', pseudoElt:'::before'},
       {input:':hover::before', prop:'right', value:'1px', pseudoElt:'::before'},
       {input:':active::after', prop:'bottom', value:'1px', pseudoElt:'::after'},
       {input:':hover::after', prop:'left', value:'1px', pseudoElt:'::after'},
       // as argument
-      {input:':matches(:active)', prop:'font-weight', value:'bold'},
-      {input:':matches(:hover)', prop:'list-style-position', value:'inside'},
+      //{input:':matches(:active)', prop:'font-weight', value:'bold'},
+      //{input:':matches(:hover)', prop:'list-style-position', value:'inside'},
       ];
 
       var stylesheet = '';

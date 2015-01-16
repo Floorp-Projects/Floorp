@@ -2530,10 +2530,6 @@ GetElementsWithAdder(JSContext *cx, JS::HandleObject obj, JS::HandleObject recei
 JS_FRIEND_API(bool)
 ForwardToNative(JSContext *cx, JSNative native, const JS::CallArgs &args);
 
-/* ES5 8.12.8. */
-extern JS_FRIEND_API(bool)
-DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
-
 /*
  * Helper function. To approximate a call to the [[DefineOwnProperty]] internal
  * method described in ES5, first call this, then call JS_DefinePropertyById.

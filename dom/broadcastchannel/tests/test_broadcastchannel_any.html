@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+var tests = [
+ 'hello world',
+ 123,
+ null,
+ true,
+ new Date(),
+ [ 1, 'test', true, new Date() ],
+ { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
+ new Blob([123], { type: 'plain/text' })
+];
+
+var currentTest = null;
+
+function getType(a) {
+  if (a === null || a === undefined)
+    return 'null';
+
+  if (Array.isArray(a))
+    return 'array';
+
+  if (typeof a == 'object')
+    return 'object';
+
+  return 'primitive';
+}
+
+function compare(a, b) {
+  is (getType(a), getType(b), 'Type matches');
+
+  var type = getType(a);
+  if (type == 'array') {
+    is (a.length, b.length, 'Array.length matches');
+    for (var i = 0; i < a.length; ++i) {
+      compare(a[i], b[i]);
+    }
+
+    return;
+  }
+
+  if (type == 'object') {
+    ok (a !== b, 'They should not match');
+
+    var aProps = [];
+    for (var p in a) aProps.push(p);
+
+    var bProps = [];
+    for (var p in b) bProps.push(p);
+
+    is (aProps.length, bProps.length, 'Props match');
+    is (aProps.sort().toSource(), bProps.sort().toSource(), 'Props match - using toSource()');
+
+    for (var p in a) {
+      compare(a[p], b[p]);
+    }
+
+    return;
+  }
+
+  if (type != 'null') {
+    is (a.toSource(), b.toSource(), 'Matching using toSource()');
+  }
+}
+
+function runTest() {
+  var bc = new BroadcastChannel("foobar");
+  ok(bc, "BroadcastChannel can be created");
+
+  bc.onmessage = function(event) {
+    compare(event.data, currentTest);
+    next();
+  }
+
+  function next() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    currentTest = tests.shift();
+    bc.postMessage(currentTest);
+  }
+
+  var worker = new Worker("broadcastchannel_worker_any.js");
+  worker.onmessage = function(event) {
+    if (event.data == "READY") {
+      next();
+    }
+  };
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.broadcastChannel.enabled", true]]}, runTest);
+
+</script>
+</body>
+</html>
+
