@@ -298,6 +298,7 @@ KEY_MAP_QT      (Clear, Qt::Key_Clear)
 KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
 
 // Copy
+KEY_MAP_WIN_CMD (Copy, APPCOMMAND_COPY)
 KEY_MAP_GTK     (Copy, GDK_Copy)
 KEY_MAP_QT      (Copy, Qt::Key_Copy)
 
@@ -306,6 +307,7 @@ KEY_MAP_WIN     (CrSel, VK_CRSEL)
 KEY_MAP_GTK     (CrSel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
 
 // Cut
+KEY_MAP_WIN_CMD (Cut, APPCOMMAND_CUT)
 KEY_MAP_GTK     (Cut, GDK_Cut)
 KEY_MAP_QT      (Cut, Qt::Key_Cut)
 
@@ -1185,9 +1187,11 @@ KEY_MAP_ANDROID (AVRInput, AKEYCODE_AVR_INPUT)
 KEY_MAP_ANDROID (AVRPower, AKEYCODE_AVR_POWER)
 
 // ChannelDown
+KEY_MAP_WIN_CMD (ChannelDown, APPCOMMAND_MEDIA_CHANNEL_DOWN)
 KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
 
 // ChannelUp
+KEY_MAP_WIN_CMD (ChannelUp, APPCOMMAND_MEDIA_CHANNEL_UP)
 KEY_MAP_ANDROID (ChannelUp, AKEYCODE_CHANNEL_UP)
 
 // ColorF0Red
@@ -1221,6 +1225,7 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
 // MediaFastForward
+KEY_MAP_WIN_CMD (MediaFastForward, APPCOMMAND_MEDIA_FAST_FORWARD)
 KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
 KEY_MAP_QT      (MediaFastForward, Qt::Key_AudioForward)
 KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
