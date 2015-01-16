@@ -527,14 +527,14 @@ HTMLMediaElement::GetMozSrcObject() const
 void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream& aValue)
 {
-  mSrcAttrStream = &aValue;
-  Load();
+  SetMozSrcObject(&aValue);
 }
 
 void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream* aValue)
 {
-  SetMozSrcObject(*aValue);
+  mSrcAttrStream = aValue;
+  Load();
 }
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
