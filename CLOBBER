@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1061240 - Lots of file renames in the libjpeg-turbo update and zero faith
+Bug 1100184 - Lots of file moves from the /netwerk flattening and zero faith
 in the build system to properly handle them.
