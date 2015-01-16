@@ -280,10 +280,15 @@ MediaEngineWebRTCAudioSource::Allocate(const AudioTrackConstraintsN &aConstraint
       LOG(("Audio device is not initalized"));
       return NS_ERROR_FAILURE;
     }
-  } else if (mSources.IsEmpty()) {
-    LOG(("Audio device %d reallocated", mCapIndex));
   } else {
-    LOG(("Audio device %d allocated shared", mCapIndex));
+#ifdef PR_LOGGING
+    MonitorAutoLock lock(mMonitor);
+    if (mSources.IsEmpty()) {
+      LOG(("Audio device %d reallocated", mCapIndex));
+    } else {
+      LOG(("Audio device %d allocated shared", mCapIndex));
+    }
+#endif
   }
   return NS_OK;
 }
@@ -291,7 +296,13 @@ MediaEngineWebRTCAudioSource::Allocate(const AudioTrackConstraintsN &aConstraint
 nsresult
 MediaEngineWebRTCAudioSource::Deallocate()
 {
-  if (mSources.IsEmpty()) {
+  bool empty;
+  {
+    MonitorAutoLock lock(mMonitor);
+    empty = mSources.IsEmpty();
+  }
+  if (empty) {
+    // If empty, no callbacks to deliver data should be occuring
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
@@ -488,8 +499,19 @@ MediaEngineWebRTCAudioSource::Shutdown()
   }
 
   if (mState == kStarted) {
-    while (!mSources.IsEmpty()) {
-      Stop(mSources[0], kAudioTrack); // XXX change to support multiple tracks
+    SourceMediaStream *source;
+    bool empty;
+
+    while (1) {
+      {
+        MonitorAutoLock lock(mMonitor);
+        empty = mSources.IsEmpty();
+        if (empty) {
+          break;
+        }
+        source = mSources[0];
+      }
+      Stop(source, kAudioTrack); // XXX change to support multiple tracks
     }
     MOZ_ASSERT(mState == kStopped);
   }
