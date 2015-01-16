@@ -235,8 +235,6 @@ Shape::finalize(FreeOp *fop)
         fop->delete_(kids.toHash());
 }
 
-#ifdef JSGC_COMPACTING
-
 void
 Shape::fixupDictionaryShapeAfterMovingGC()
 {
@@ -321,8 +319,6 @@ Shape::fixupAfterMovingGC()
     else
         fixupShapeTreeAfterMovingGC();
 }
-
-#endif // JSGC_COMPACTING
 
 void
 ShapeGetterSetterRef::mark(JSTracer *trc)
