@@ -845,9 +845,11 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
               this, mVideoReader.get(), maxDuration);
   }
 
-  if (maxDuration != -1) {
-    static_cast<MediaSourceDecoder*>(mDecoder)->SetDecodedDuration(maxDuration);
+  if (!maxDuration) {
+    // Treat a duration of 0 as infinity
+    maxDuration = -1;
   }
+  static_cast<MediaSourceDecoder*>(mDecoder)->SetDecodedDuration(maxDuration);
 
   *aInfo = mInfo;
   *aTags = nullptr; // TODO: Handle metadata.
