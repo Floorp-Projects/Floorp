@@ -268,4 +268,10 @@ MediaSourceDecoder::SetCDMProxy(CDMProxy* aProxy)
 }
 #endif
 
+bool
+MediaSourceDecoder::IsActiveReader(MediaDecoderReader* aReader)
+{
+  return mReader->IsActiveReader(aReader);
+}
+
 } // namespace mozilla
