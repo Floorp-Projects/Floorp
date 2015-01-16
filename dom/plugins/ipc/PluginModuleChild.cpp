@@ -2118,6 +2118,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
     if (FindInReadable(flash, aMimeType)) {
       mQuirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
+      mQuirks |= QUIRK_FLASH_HIDE_HIDPI_SUPPORT;
     }
     if (FindInReadable(flash, aMimeType) ||
         FindInReadable(quicktime, mPluginFilename)) {
