@@ -636,12 +636,6 @@ PLDHashTable::Operate(const void* aKey, PLDHashOperator aOp)
 }
 
 PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableOperate(PLDHashTable* aTable, const void* aKey, PLDHashOperator aOp)
-{
-  return aTable->Operate(aKey, aOp);
-}
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey)
 {
   return aTable->Operate(aKey, PL_DHASH_LOOKUP);
