@@ -265,18 +265,6 @@ describe("loop.shared.views", function() {
 
         sinon.assert.notCalled(model.startSession);
       });
-
-      it("should set the correct stream publish options", function() {
-
-        var component = mountTestComponent({
-          sdk: fakeSDK,
-          model: model,
-          video: {enabled: false}
-        });
-
-        expect(component.publisherConfig.publishVideo).to.eql(false);
-
-      });
     });
 
     describe("constructed", function() {
