@@ -1,8 +1,9 @@
+// vim: set ts=2 sw=2 sts=2 tw=80:
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-this.EXPORTED_SYMBOLS = ["Finder"];
+this.EXPORTED_SYMBOLS = ["Finder","GetClipboardSearchString"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -24,6 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
                                          "nsIClipboardHelper");
 
 const kHighlightIterationSizeMax = 100;
+const kSelectionMaxLen = 150;
 
 function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
@@ -90,31 +92,10 @@ Finder.prototype = {
   },
 
   get clipboardSearchString() {
-    let searchString = "";
-    if (!Clipboard.supportsFindClipboard())
-      return searchString;
-
-    try {
-      let trans = Cc["@mozilla.org/widget/transferable;1"]
-                    .createInstance(Ci.nsITransferable);
-      trans.init(this._getWindow()
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebNavigation)
-                     .QueryInterface(Ci.nsILoadContext));
-      trans.addDataFlavor("text/unicode");
-
-      Clipboard.getData(trans, Ci.nsIClipboard.kFindClipboard);
-
-      let data = {};
-      let dataLen = {};
-      trans.getTransferData("text/unicode", data, dataLen);
-      if (data.value) {
-        data = data.value.QueryInterface(Ci.nsISupportsString);
-        searchString = data.toString();
-      }
-    } catch (ex) {}
-
-    return searchString;
+    return GetClipboardSearchString(this._getWindow()
+                                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIWebNavigation)
+                                        .QueryInterface(Ci.nsILoadContext));
   },
 
   set clipboardSearchString(aSearchString) {
@@ -165,12 +146,8 @@ Finder.prototype = {
    * selected text in the window, on supported platforms (i.e. OSX).
    */
   setSearchStringToSelection: function() {
-    // Find the selected text.
-    let selection = this._getWindow().getSelection();
-    // Don't go for empty selections.
-    if (!selection.rangeCount)
-      return null;
-    let searchString = (selection.toString() || "").trim();
+    let searchString = this.getActiveSelectionText();
+
     // Empty strings are rather useless to search for.
     if (!searchString.length)
       return null;
@@ -200,6 +177,44 @@ Finder.prototype = {
       this._notify(aWord, result, false, false, false);
     }
   }),
+
+  getInitialSelection: function() {
+    this._getWindow().setTimeout(() => {
+      let initialSelection = this.getActiveSelectionText();
+      for (let l of this._listeners) {
+        try {
+          l.onCurrentSelection(initialSelection, true);
+        } catch (ex) {}
+      }
+    }, 0);
+  },
+
+  getActiveSelectionText: function() {
+    let focusedWindow = {};
+    let focusedElement =
+      Services.focus.getFocusedElementForWindow(this._getWindow(), true,
+                                                focusedWindow);
+    focusedWindow = focusedWindow.value;
+
+    let selText;
+
+    if (focusedElement instanceof Ci.nsIDOMNSEditableElement &&
+        focusedElement.editor) {
+      // The user may have a selection in an input or textarea.
+      selText = focusedElement.editor.selectionController
+        .getSelection(Ci.nsISelectionController.SELECTION_NORMAL)
+        .toString();
+    } else {
+      // Look for any selected text on the actual page.
+      selText = focusedWindow.getSelection().toString();
+    }
+
+    if (!selText)
+      return "";
+
+    // Process our text to get rid of unwanted characters.
+    return selText.trim().replace(/\s+/g, " ").substr(0, kSelectionMaxLen);
+  },
 
   enableSelection: function() {
     this._fastFind.setSelectionModeAndRepaint(Ci.nsISelectionController.SELECTION_ON);
@@ -647,8 +662,14 @@ Finder.prototype = {
 
   _getSelectionController: function(aWindow) {
     // display: none iframes don't have a selection controller, see bug 493658
-    if (!aWindow.innerWidth || !aWindow.innerHeight)
+    try {
+      if (!aWindow.innerWidth || !aWindow.innerHeight)
+        return null;
+    } catch (e) {
+      // If getting innerWidth or innerHeight throws, we can't get a selection
+      // controller.
       return null;
+    }
 
     // Yuck. See bug 138068.
     let docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1002,3 +1023,28 @@ Finder.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference])
 };
+
+function GetClipboardSearchString(aLoadContext) {
+  let searchString = "";
+  if (!Clipboard.supportsFindClipboard())
+    return searchString;
+
+  try {
+    let trans = Cc["@mozilla.org/widget/transferable;1"]
+                  .createInstance(Ci.nsITransferable);
+    trans.init(aLoadContext);
+    trans.addDataFlavor("text/unicode");
+
+    Clipboard.getData(trans, Ci.nsIClipboard.kFindClipboard);
+
+    let data = {};
+    let dataLen = {};
+    trans.getTransferData("text/unicode", data, dataLen);
+    if (data.value) {
+      data = data.value.QueryInterface(Ci.nsISupportsString);
+      searchString = data.toString();
+    }
+  } catch (ex) {}
+
+  return searchString;
+}
