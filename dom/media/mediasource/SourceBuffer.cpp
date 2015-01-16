@@ -349,10 +349,8 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
              "We don't handle timestampOffset for sequence mode yet");
   if (aLength) {
     if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
-      Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
-      ErrorResult dummy;
-      mMediaSource->EndOfStream(decodeError, dummy);
-      aRv.Throw(NS_ERROR_FAILURE);
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<bool>(this, &SourceBuffer::AppendError, true);
+      NS_DispatchToMainThread(event);
       return;
     }
 
@@ -368,6 +366,29 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // by the spec.
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
   NS_DispatchToMainThread(event);
+}
+
+void
+SourceBuffer::AppendError(bool aDecoderError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    return;
+  }
+  mTrackBuffer->ResetParserState();
+
+  mUpdating = false;
+
+  QueueAsyncSimpleEvent("error");
+  QueueAsyncSimpleEvent("updateend");
+
+  if (aDecoderError) {
+    Optional<MediaSourceEndOfStreamError> decodeError(
+      MediaSourceEndOfStreamError::Decode);
+    ErrorResult dummy;
+    mMediaSource->EndOfStream(decodeError, dummy);
+  }
 }
 
 bool
