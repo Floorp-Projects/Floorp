@@ -50,12 +50,12 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mLastVideoTime(0)
   , mPendingSeekTime(-1)
   , mWaitingForSeekData(false)
+  , mAudioIsSeeking(false)
+  , mVideoIsSeeking(false)
   , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
-  , mAudioIsSeeking(false)
-  , mVideoIsSeeking(false)
   , mHasEssentialTrackBuffers(false)
 #ifdef MOZ_FMP4
   , mSharedDecoderManager(new SharedDecoderManager())
@@ -118,7 +118,7 @@ MediaSourceReader::RequestAudioData()
     mAudioPromise.Reject(DECODE_ERROR, __func__);
     return p;
   }
-  mAudioIsSeeking = false;
+  MOZ_ASSERT(!mAudioIsSeeking);
   if (SwitchAudioReader(mLastAudioTime)) {
     mAudioReader->Seek(mLastAudioTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
@@ -252,7 +252,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropAudioBeforeThreshold = true;
     mDropVideoBeforeThreshold = true;
   }
-  mVideoIsSeeking = false;
+  MOZ_ASSERT(!mVideoIsSeeking);
   if (SwitchVideoReader(mLastVideoTime)) {
     mVideoReader->Seek(mLastVideoTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
@@ -635,6 +635,10 @@ void
 MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 {
   mPendingSeekTime = aTime;
+  MOZ_ASSERT(mVideoIsSeeking);
+  MOZ_ASSERT(!mAudioIsSeeking);
+  mVideoIsSeeking = false;
+
   if (mAudioTrack) {
     mAudioIsSeeking = true;
     SwitchAudioReader(mPendingSeekTime);
@@ -651,18 +655,32 @@ MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 void
 MediaSourceReader::OnAudioSeekCompleted(int64_t aTime)
 {
+  mPendingSeekTime = aTime;
+  MOZ_ASSERT(mAudioIsSeeking);
+  MOZ_ASSERT(!mVideoIsSeeking);
+  mAudioIsSeeking = false;
+
   mSeekPromise.Resolve(mPendingSeekTime, __func__);
+  mPendingSeekTime = -1;
 }
 
 void
 MediaSourceReader::OnSeekFailed(nsresult aResult)
 {
-  // Keep the most recent failed result (if any)
-  if (NS_FAILED(aResult)) {
-    mSeekPromise.Reject(aResult, __func__);
-    return;
+  MOZ_ASSERT(mVideoIsSeeking || mAudioIsSeeking);
+
+  if (mVideoIsSeeking) {
+    MOZ_ASSERT(!mAudioIsSeeking);
+    mVideoIsSeeking = false;
   }
-  mSeekPromise.Resolve(mPendingSeekTime, __func__);
+
+  if (mAudioIsSeeking) {
+    MOZ_ASSERT(!mVideoIsSeeking);
+    mAudioIsSeeking = false;
+  }
+
+  mPendingSeekTime = -1;
+  mSeekPromise.Reject(aResult, __func__);
 }
 
 void
