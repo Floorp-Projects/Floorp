@@ -20,20 +20,6 @@ runWithMSE(function(ms, v) {
     var sb = ms.addSourceBuffer("video/webm");
     ok(sb, "Create a SourceBuffer");
 
-    function once(target, name, cb) {
-      target.addEventListener(name, function() {
-        target.removeEventListener(name, cb);
-        cb();
-      });
-    }
-    function loadSegment(typedArray) {
-      info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
-      return new Promise(function(resolve, reject) {
-        once(sb, 'update', resolve);
-        sb.appendBuffer(typedArray);
-      });
-    }
-
     function waitUntilTime(targetTime) {
       return new Promise(function(resolve, reject) {
         v.addEventListener("waiting", function onwaiting() {
@@ -49,19 +35,19 @@ runWithMSE(function(ms, v) {
 
     fetchWithXHR("seek.webm", function(arrayBuffer) {
       sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 0, 318))().then(
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 318, 25223-318))).then(
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 25223, 46712-25223))).then(
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))().then(
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25223-318))).then(
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25223, 46712-25223))).then(
       /* Note - Missing |46712, 67833 - 46712| segment here corresponding to (0.8, 1.2] */
       /* Note - Missing |67833, 88966 - 67833| segment here corresponding to (1.2, 1.6]  */
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 88966))).then(function() {
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966))).then(function() {
         var promise = waitUntilTime(0.7);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
       }).then(function() {
         window.firstStop = Date.now();
-        loadSegment(new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
+        loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
         return waitUntilTime(1.0);
       }).then(function() {
         var waitDuration = (Date.now() - window.firstStop) / 1000;
@@ -70,7 +56,7 @@ runWithMSE(function(ms, v) {
         /* If we allow the rest of the stream to be played, we get stuck at
            around 2s. See bug 1093133.
         once(v, 'ended', SimpleTest.finish.bind(SimpleTest));
-        return loadSegment(new Uint8Array(arrayBuffer, 67833, 88966 - 67833));
+        return loadSegment(sb, new Uint8Array(arrayBuffer, 67833, 88966 - 67833));
         */
       });
     });
