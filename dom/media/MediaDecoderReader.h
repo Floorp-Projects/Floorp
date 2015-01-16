@@ -156,6 +156,15 @@ public:
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) = 0;
 
+  // Cancels an ongoing seek, if any. Any previously-requested seek is
+  // guaranteeed to be resolved or rejected in finite time, though no
+  // guarantees are made about precise nature of the resolve/reject, since the
+  // promise might have already dispatched a resolution or an error code before
+  // the cancel arrived.
+  //
+  // Must be called on the decode task queue.
+  virtual void CancelSeek() { };
+
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media
   // element is paused and we don't need to decode any more data, the state

@@ -1112,6 +1112,10 @@ protected:
   // until this completes.
   bool mWaitingForDecoderSeek;
 
+  // True if we're in the process of canceling a seek. This allows us to avoid
+  // invoking CancelSeek() multiple times.
+  bool mCancelingSeek;
+
   // We record the playback position before we seek in order to
   // determine where the seek terminated relative to the playback position
   // we were at before the seek.

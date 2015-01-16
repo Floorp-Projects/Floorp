@@ -633,10 +633,8 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   mRequestedSeekTarget = SeekTarget(timeUsecs, aSeekType);
   mCurrentTime = aTime;
 
-  // If we are already in the seeking state, then setting mRequestedSeekTarget
-  // above will result in the new seek occurring when the current seek
-  // completes.
-  if (mPlayState != PLAY_STATE_LOADING && mPlayState != PLAY_STATE_SEEKING) {
+  // If we are already in the seeking state, the new seek overrides the old one.
+  if (mPlayState != PLAY_STATE_LOADING) {
     bool paused = false;
     if (mOwner) {
       paused = mOwner->GetPaused();
