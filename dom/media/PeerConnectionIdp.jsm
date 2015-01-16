@@ -95,9 +95,12 @@ PeerConnectionIdp.prototype = {
 
   _getIdentityFromSdp: function(sdp) {
     // a=identity is session level
+    let idMatch;
     let mLineMatch = sdp.match(PeerConnectionIdp._mLinePattern);
-    let sessionLevel = sdp.substring(0, mLineMatch.index);
-    let idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
+    if (mLineMatch) {
+      let sessionLevel = sdp.substring(0, mLineMatch.index);
+      idMatch = sessionLevel.match(PeerConnectionIdp._identityPattern);
+    }
     if (idMatch) {
       let assertion = {};
       try {
