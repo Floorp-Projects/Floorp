@@ -80,6 +80,11 @@ public:
   // Call ResetDecode() on each decoder in mDecoders.
   void ResetDecode();
 
+  // Run MSE Reset Parser State Algorithm.
+  // 3.5.2 Reset Parser State
+  // http://w3c.github.io/media-source/#sourcebuffer-reset-parser-state
+  void ResetParserState();
+
   // Returns a reference to mInitializedDecoders, used by MediaSourceReader
   // to select decoders.
   // TODO: Refactor to a cleaner interface between TrackBuffer and MediaSourceReader.
