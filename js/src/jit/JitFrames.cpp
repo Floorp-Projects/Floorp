@@ -2671,7 +2671,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 
     // Look up and print bytecode info for the native address.
     JitcodeGlobalEntry entry;
-    if (!jitrt->getJitcodeGlobalTable()->lookup(returnAddressToFp_, &entry))
+    if (!jitrt->getJitcodeGlobalTable()->lookup(returnAddressToFp_, &entry, rt))
         return true;
 
     JitSpew(JitSpew_Profiling, "Found nativeToBytecode entry for %p: %p - %p",
@@ -2717,6 +2717,278 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     return true;
 }
 #endif // DEBUG
+
+JitProfilingFrameIterator::JitProfilingFrameIterator(
+        JSRuntime *rt, const JS::ProfilingFrameIterator::RegisterState &state)
+{
+    // If no profilingActivation is live, initialize directly to
+    // end-of-iteration state.
+    if (!rt->mainThread.profilingActivation()) {
+        type_ = JitFrame_Entry;
+        fp_ = nullptr;
+        returnAddressToFp_ = nullptr;
+        return;
+    }
+
+    MOZ_ASSERT(rt->mainThread.profilingActivation()->isJit());
+
+    JitActivation *act = rt->mainThread.profilingActivation()->asJit();
+
+    // If the top JitActivation has a null lastProfilingFrame, assume that
+    // it's a trivially empty activation, and initialize directly
+    // to end-of-iteration state.
+    if (!act->lastProfilingFrame()) {
+        type_ = JitFrame_Entry;
+        fp_ = nullptr;
+        returnAddressToFp_ = nullptr;
+        return;
+    }
+
+    // Get the fp from the current profilingActivation
+    fp_ = (uint8_t *) act->lastProfilingFrame();
+    void *lastCallSite = act->lastProfilingCallSite();
+
+    JitcodeGlobalTable *table = rt->jitRuntime()->getJitcodeGlobalTable();
+
+    // Profiler sampling must NOT be suppressed if we are here.
+    MOZ_ASSERT(rt->isProfilerSamplingEnabled());
+
+    // Since the frame is on stack, and is a jit frame, it MUST have Baseline jitcode.
+    MOZ_ASSERT(frameScript()->hasBaselineScript());
+
+    // Try initializing with sampler pc
+    if (tryInitWithPC(state.pc))
+        return;
+
+    // Try initializing with sampler pc using native=>bytecode table.
+    if (tryInitWithTable(table, state.pc, rt))
+        return;
+
+    // Try initializing with lastProfilingCallSite pc
+    if (lastCallSite) {
+        if (tryInitWithPC(lastCallSite))
+            return;
+
+        // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
+        if (tryInitWithTable(table, lastCallSite, rt))
+            return;
+    }
+
+    // If nothing matches, for now just assume we are at the start of the last frame's
+    // baseline jit code.
+    type_ = JitFrame_BaselineJS;
+    returnAddressToFp_ = frameScript()->baselineScript()->method()->raw();
+    //++(*this);
+}
+
+template <typename FrameType, typename ReturnType=CommonFrameLayout*>
+inline ReturnType
+GetPreviousRawFrame(FrameType *frame)
+{
+    size_t prevSize = frame->prevFrameLocalSize() + FrameType::Size();
+    return (ReturnType) (((uint8_t *) frame) + prevSize);
+}
+
+JitProfilingFrameIterator::JitProfilingFrameIterator(void *exitFrame)
+{
+    // Exit frame was en
+    ExitFrameLayout *frame = (ExitFrameLayout *) exitFrame;
+    FrameType prevType = frame->prevType();
+
+    if (prevType == JitFrame_IonJS || prevType == JitFrame_BaselineJS ||
+        prevType == JitFrame_Unwound_IonJS)
+    {
+        returnAddressToFp_ = frame->returnAddress();
+        fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t *>(frame);
+        type_ = JitFrame_IonJS;
+        return;
+    }
+
+    if (prevType == JitFrame_BaselineStub || prevType == JitFrame_Unwound_BaselineStub) {
+        BaselineStubFrameLayout *stubFrame =
+            GetPreviousRawFrame<ExitFrameLayout, BaselineStubFrameLayout *>(frame);
+        MOZ_ASSERT_IF(prevType == JitFrame_BaselineStub,
+                      stubFrame->prevType() == JitFrame_BaselineJS);
+        MOZ_ASSERT_IF(prevType == JitFrame_Unwound_BaselineStub,
+                      stubFrame->prevType() == JitFrame_BaselineJS ||
+                      stubFrame->prevType() == JitFrame_IonJS);
+        returnAddressToFp_ = stubFrame->returnAddress();
+        fp_ = ((uint8_t *) stubFrame->reverseSavedFramePtr())
+                + jit::BaselineFrame::FramePointerOffset;
+        type_ = JitFrame_BaselineJS;
+        return;
+    }
+
+    MOZ_CRASH("Invalid frame type prior to exit frame.");
+}
+
+bool
+JitProfilingFrameIterator::tryInitWithPC(void *pc)
+{
+    JSScript *callee = frameScript();
+
+    // Check for Ion first, since it's more likely for hot code.
+    if (callee->hasIonScript() && callee->ionScript()->method()->containsNativePC(pc)) {
+        type_ = JitFrame_IonJS;
+        returnAddressToFp_ = pc;
+        return true;
+    }
+
+    // Check for containment in Baseline jitcode second.
+    if (callee->baselineScript()->method()->containsNativePC(pc)) {
+        type_ = JitFrame_BaselineJS;
+        returnAddressToFp_ = pc;
+        return true;
+    }
+
+    return false;
+}
+
+bool
+JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt)
+{
+    if (!pc)
+        return false;
+
+    JitcodeGlobalEntry entry;
+    if (!table->lookup(pc, &entry, rt))
+        return false;
+
+    JSScript *callee = frameScript();
+
+    MOZ_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache());
+    if (entry.isIon()) {
+        // If looked-up callee doesn't match frame callee, don't accept lastProfilingCallSite
+        if (entry.ionEntry().getScript(0) != callee)
+            return false;
+
+        type_ = JitFrame_IonJS;
+        returnAddressToFp_ = pc;
+        return true;
+    }
+
+    if (entry.isBaseline()) {
+        // If looked-up callee doesn't match frame callee, don't accept lastProfilingCallSite
+        if (entry.baselineEntry().script() != callee)
+            return false;
+
+        type_ = JitFrame_BaselineJS;
+        returnAddressToFp_ = pc;
+        return true;
+    }
+
+    if (entry.isIonCache()) {
+        JitcodeGlobalEntry ionEntry;
+        table->lookupInfallible(entry.ionCacheEntry().rejoinAddr(), &ionEntry, rt);
+        MOZ_ASSERT(ionEntry.isIon());
+
+        if (ionEntry.ionEntry().getScript(0) != callee)
+            return false;
+
+        type_ = JitFrame_IonJS;
+        returnAddressToFp_ = entry.ionCacheEntry().rejoinAddr();
+        return true;
+    }
+
+    return false;
+}
+
+void
+JitProfilingFrameIterator::operator++()
+{
+    /*
+     * fp_ points to a Baseline or Ion frame.  The possible call-stacks
+     * patterns occurring between this frame and a previous Ion or Baseline
+     * frame are as follows:
+     *
+     * <Baseline-Or-Ion>
+     * ^
+     * |
+     * ^--- Ion
+     * |
+     * ^--- Baseline Stub <---- Baseline
+     * |
+     * ^--- Argument Rectifier
+     * |    ^
+     * |    |
+     * |    ^--- Ion
+     * |    |
+     * |    ^--- Baseline Stub <---- Baseline
+     * |
+     * ^--- Entry Frame (From C++)
+     *      Exit Frame (From previous JitActivation)
+     *      ^
+     *      |
+     *      ^--- Ion
+     *      |
+     *      ^--- Baseline
+     *      |
+     *      ^--- Baseline Stub <---- Baseline
+     */
+    JitFrameLayout *frame = framePtr();
+    FrameType prevType = frame->prevType();
+
+    if (prevType == JitFrame_IonJS) {
+        returnAddressToFp_ = frame->returnAddress();
+        fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(frame);
+        type_ = JitFrame_IonJS;
+        return;
+    }
+
+    if (prevType == JitFrame_BaselineJS) {
+        returnAddressToFp_ = frame->returnAddress();
+        fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(frame);
+        type_ = JitFrame_BaselineJS;
+        return;
+    }
+
+    if (prevType == JitFrame_BaselineStub) {
+        BaselineStubFrameLayout *stubFrame =
+            GetPreviousRawFrame<JitFrameLayout, BaselineStubFrameLayout *>(frame);
+        MOZ_ASSERT(stubFrame->prevType() == JitFrame_BaselineJS);
+
+        returnAddressToFp_ = stubFrame->returnAddress();
+        fp_ = ((uint8_t *) stubFrame->reverseSavedFramePtr())
+                + jit::BaselineFrame::FramePointerOffset;
+        type_ = JitFrame_BaselineJS;
+        return;
+    }
+
+    if (prevType == JitFrame_Rectifier) {
+        RectifierFrameLayout *rectFrame =
+            GetPreviousRawFrame<JitFrameLayout, RectifierFrameLayout *>(frame);
+        FrameType rectPrevType = rectFrame->prevType();
+
+        if (rectPrevType == JitFrame_IonJS) {
+            returnAddressToFp_ = rectFrame->returnAddress();
+            fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(rectFrame);
+            type_ = JitFrame_IonJS;
+            return;
+        }
+
+        if (rectPrevType == JitFrame_BaselineStub) {
+            BaselineStubFrameLayout *stubFrame =
+                GetPreviousRawFrame<JitFrameLayout, BaselineStubFrameLayout *>(rectFrame);
+            returnAddressToFp_ = stubFrame->returnAddress();
+            fp_ = ((uint8_t *) stubFrame->reverseSavedFramePtr())
+                    + jit::BaselineFrame::FramePointerOffset;
+            type_ = JitFrame_BaselineJS;
+            return;
+        }
+
+        MOZ_CRASH("Bad frame type prior to rectifier frame.");
+    }
+
+    if (prevType == JitFrame_Entry) {
+        // No previous frame, set to null to indicate that JitFrameIterator is done()
+        returnAddressToFp_ = nullptr;
+        fp_ = nullptr;
+        type_ = JitFrame_Entry;
+        return;
+    }
+
+    MOZ_CRASH("Bad frame type.");
+}
 
 JitFrameLayout *
 InvalidationBailoutStack::fp() const

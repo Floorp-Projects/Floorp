@@ -112,10 +112,12 @@ typedef HashMap<JSScript*, const char*, DefaultHasher<JSScript*>, SystemAllocPol
         ProfileStringMap;
 
 class SPSEntryMarker;
+class SPSBaselineOSRMarker;
 
 class SPSProfiler
 {
     friend class SPSEntryMarker;
+    friend class SPSBaselineOSRMarker;
 
     JSRuntime            *rt;
     ProfileStringMap     strings;
@@ -151,6 +153,7 @@ class SPSProfiler
 
     uint32_t *sizePointer() { return size_; }
     uint32_t maxSize() { return max_; }
+    uint32_t size() { MOZ_ASSERT(installed()); return *size_; }
     ProfileEntry *stack() { return stack_; }
 
     /* management of whether instrumentation is on or off */
@@ -180,8 +183,8 @@ class SPSProfiler
     }
 
     /* Enter asm.js code */
-    void enterAsmJS(const char *string, void *sp);
-    void exitAsmJS() { pop(); }
+    void beginPseudoJS(const char *string, void *sp);
+    void endPseudoJS() { pop(); }
 
     jsbytecode *ipToPC(JSScript *script, size_t ip) { return nullptr; }
 
@@ -264,6 +267,24 @@ class SPSEntryMarker
                             JSScript *script
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~SPSEntryMarker();
+
+  private:
+    SPSProfiler *profiler;
+    mozilla::DebugOnly<uint32_t> size_before;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * This class is used in the interpreter to bound regions where the baseline JIT
+ * being entered via OSR.  It marks the current top pseudostack entry as
+ * OSR-ed
+ */
+class SPSBaselineOSRMarker
+{
+  public:
+    explicit SPSBaselineOSRMarker(JSRuntime *rt, bool hasSPSFrame
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~SPSBaselineOSRMarker();
 
   private:
     SPSProfiler *profiler;
