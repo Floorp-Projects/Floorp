@@ -171,7 +171,9 @@ function getHost(uri, href) {
       host = uri.specIgnoringRef;
     } else {
       // This is unfortunate, but we should display *something*...
-      host = bundle.getString("getUserMedia.sharingMenuUnknownHost");
+      const kBundleURI = "chrome://browser/locale/browser.properties";
+      let bundle = Services.strings.createBundle(kBundleURI);
+      host = bundle.GetStringFromName("getUserMedia.sharingMenuUnknownHost");
     }
   }
   return host;
