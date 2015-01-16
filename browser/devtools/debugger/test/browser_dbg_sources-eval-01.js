@@ -28,6 +28,11 @@ function test() {
 
       is(gSources.values.length, 2, "Should have 2 sources");
 
+      let item = gSources.getItemForAttachment(e => e.label.indexOf("> eval") !== -1);
+      ok(item, "Source label is incorrect.");
+      is(item.attachment.group, 'evals',
+         'Source group is incorrect');
+
       yield closeDebuggerAndFinish(gPanel);
     });
   });

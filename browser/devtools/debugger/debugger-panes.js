@@ -10,10 +10,13 @@ const SAMPLE_SIZE = 50; // no of lines
 const INDENT_COUNT_THRESHOLD = 5; // percentage
 const CHARACTER_LIMIT = 250; // line character limit
 
-// Maps known URLs to friendly source group names
+// Maps known URLs to friendly source group names and put them at the
+// bottom of source list.
 const KNOWN_SOURCE_GROUPS = {
   "Add-on SDK": "resource://gre/modules/commonjs/",
 };
+
+KNOWN_SOURCE_GROUPS['evals'] = "eval";
 
 /**
  * Functions handling the sources UI.
@@ -170,14 +173,22 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let fullUrl = aSource.url || aSource.introductionUrl;
     let url = fullUrl.split(" -> ").pop();
     let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
+    let group;
 
     if (!aSource.url && aSource.introductionUrl) {
-      label += ' > eval';
+      label += ' > ' + aSource.introductionType;
+      group = 'evals';
+    }
+    else if(aSource.addonID) {
+      group = aSource.addonID;
+    }
+    else {
+      group = SourceUtils.getSourceGroup(url);
     }
 
     return {
       label: label,
-      group: aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url),
+      group: group,
       unicodeUrl: NetworkHelper.convertToUnicode(unescape(fullUrl))
     };
   },
