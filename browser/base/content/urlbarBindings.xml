@@ -1149,7 +1149,8 @@
 
         let header = document.getAnonymousElementByAttribute(this, "anonid",
                                                              "search-panel-one-offs-header")
-        header.collapsed = list.collapsed = !engines.length;
+        // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
+        header.hidden = list.collapsed = !engines.length;
 
         // 49px is the min-width of each search engine button,
         // adapt this const when changing the css.
