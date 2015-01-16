@@ -60,8 +60,8 @@ DEFINES['IMPL_NS_NET'] = True
 DEFINES['FORCE_PR_LOG'] = True
 
 LOCAL_INCLUDES += [
-    '../../base',
     '/dom/base',
+    '/netwerk/base',
     'controller',
     'rtsp',
 ]
