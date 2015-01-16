@@ -3,6 +3,8 @@ const EXPECTED_CHAIN = [
   "MIIC2jCCAcKgAwIBAgIBATANBgkqhkiG9w0BAQsFADAmMSQwIgYDVQQDExtBbHRlcm5hdGUgVHJ1c3RlZCBBdXRob3JpdHkwHhcNMTQwOTI1MjEyMTU0WhcNMjQwOTI1MjEyMTU0WjAmMSQwIgYDVQQDExtBbHRlcm5hdGUgVHJ1c3RlZCBBdXRob3JpdHkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBT+BwAhO52IWgSIdZZifU9LHOs3IR/+8DCC0WP5d/OuyKlZ6Rqd0tsd3i7durhQyjHSbLf2lJStcnFjcVEbEnNI76RuvlN8xLLn5eV+2Ayr4cZYKztudwRmw+DV/iYAiMSy0hs7m3ssfX7qpoi1aNRjUanwU0VTCPQhF1bEKAC2du+C5Z8e92zN5t87w7bYr7lt+m8197XliXEu+0s9RgnGwGaZ296BIRz6NOoJYTa43n06LU1I1+Z4d6lPdzUFrSR0GBaMhUSurUBtOin3yWiMhg1VHX/KwqGc4als5GyCVXy8HGrA/0zQPOhetxrlhEVAdK/xBt7CZvByj1Rcc7AgMBAAGjEzARMA8GA1UdEwQIMAYBAf8CAQAwDQYJKoZIhvcNAQELBQADggEBAJq/hogSRqzPWTwX4wTn/DVSNdWwFLv53qep9YrSMJ8ZsfbfK9Es4VP4dBLRQAVMJ0Z5mW1I6d/n0KayTanuUBvemYdxPi/qQNSs8UJcllqdhqWzmzAg6a0LxrMnEeKzPBPD6q8PwQ7tYP+B4sBN9tnnsnyPgti9ZiNZn5FwXZliHXseQ7FE9/SqHlLw5LXW3YtKjuti6RmuV6fq3j+D4oeC5vb1mKgIyoTqGN6ze57v8RHi+pQ8Q+kmoUn/L3Z2YmFe4SKN/4WoyXr8TdejpThGOCGCAd3565s5gOx5QfSQX11P8NZKO8hcN0tme3VzmGpHK0Z/6MTmdpNaTwQ6odk="
   ];
 
+const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE = -16384;
+
 function parseReport(request) {
   // read the report from the request
   let inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
@@ -36,6 +38,12 @@ function handleRequest(request, response) {
           response.write("<html>The report contained an unexpected chain</html>");
           return;
         }
+      }
+
+      if (report.errorCode !== MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE) {
+        response.setStatusLine("1.1", 500, "Server error");
+        response.write("<html>The report contained an unexpected error code</html>");
+        return;
       }
 
       // if all is as expected, send the 201 the client expects
