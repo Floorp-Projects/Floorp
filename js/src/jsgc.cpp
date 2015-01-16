@@ -3190,7 +3190,7 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
         // The threshold has been surpassed, immediately trigger a GC,
         // which will be done non-incrementally.
         triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
-    } else if (usedBytes >= igcThresholdBytes) {
+    } else if (usedBytes >= igcThresholdBytes && interFrameGC) {
         // Reduce the delay to the start of the next incremental slice.
         if (zone->gcDelayBytes < ArenaSize)
             zone->gcDelayBytes = 0;
