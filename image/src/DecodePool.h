@@ -25,39 +25,15 @@ namespace image {
 class Decoder;
 class RasterImage;
 
-MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
-  INACTIVE,
-  PENDING,
-  ACTIVE,
-  WORK_DONE,
-  STOPPED
-MOZ_END_ENUM_CLASS(DecodeStatus)
-
-MOZ_BEGIN_ENUM_CLASS(DecodeUntil, uint8_t)
-  TIME,
-  SIZE,
-  DONE_BYTES
-MOZ_END_ENUM_CLASS(DecodeUntil)
-
-MOZ_BEGIN_ENUM_CLASS(ShutdownReason, uint8_t)
-  DONE,
-  NOT_NEEDED,
-  FATAL_ERROR
-MOZ_END_ENUM_CLASS(ShutdownReason)
-
-
 /**
- * DecodePool is a singleton class we use when decoding large images.
+ * DecodePool is a singleton class that manages decoding of raster images. It
+ * owns a pool of image decoding threads that are used for asynchronous
+ * decoding.
  *
- * When we wish to decode an image larger than
- * image.mem.max_bytes_for_sync_decode, we call DecodePool::RequestDecode()
- * for the image.  This adds the image to a queue of pending requests and posts
- * the DecodePool singleton to the event queue, if it's not already pending
- * there.
- *
- * When the DecodePool is run from the event queue, it decodes the image (and
- * all others it's managing) in chunks, periodically yielding control back to
- * the event loop.
+ * DecodePool allows callers to run a decoder, handling management of the
+ * decoder's lifecycle and whether it executes on the main thread,
+ * off-main-thread in the image decoding thread pool, or on some combination of
+ * the two.
  */
 class DecodePool : public nsIObserver
 {
@@ -67,57 +43,51 @@ public:
 
   static DecodePool* Singleton();
 
-  /**
-   * Ask the DecodePool to asynchronously decode this image.
-   */
-  void RequestDecode(RasterImage* aImage);
+  /// Ask the DecodePool to run @aDecoder asynchronously and return immediately.
+  void AsyncDecode(Decoder* aDecoder);
 
   /**
-   * Decode aImage for a short amount of time, and post the remainder to the
-   * queue.
+   * Run @aDecoder synchronously if the image it's decoding is small. If the
+   * image is too large, or if the source data isn't complete yet, run @aDecoder
+   * asynchronously instead.
    */
-  void DecodeABitOf(RasterImage* aImage);
+  void SyncDecodeIfSmall(Decoder* aDecoder);
 
   /**
-   * Ask the DecodePool to stop decoding this image.  Internally, we also
-   * call this function when we finish decoding an image.
+   * Run aDecoder synchronously if at all possible. If it can't complete
+   * synchronously because the source data isn't complete, asynchronously decode
+   * the rest.
+   */
+  void SyncDecodeIfPossible(Decoder* aDecoder);
+
+  /**
+   * Returns an event target interface to the DecodePool's underlying thread
+   * pool. Callers can use this event target to submit work to the image
+   * decoding thread pool.
    *
-   * Since the DecodePool keeps raw pointers to RasterImages, make sure you
-   * call this before a RasterImage is destroyed!
-   */
-  static void StopDecoding(RasterImage* aImage);
-
-  /**
-   * Synchronously decode the beginning of the image until we run out of
-   * bytes or we get the image's size.  Note that this done on a best-effort
-   * basis; if the size is burried too deep in the image, we'll give up.
-   *
-   * @return NS_ERROR if an error is encountered, and NS_OK otherwise.  (Note
-   *         that we return NS_OK even when the size was not found.)
-   */
-  nsresult DecodeUntilSizeAvailable(RasterImage* aImage);
-
-  /**
-   * Returns an event target interface to the thread pool; primarily for
-   * OnDataAvailable delivery off main thread.
-   *
-   * @return An nsIEventTarget interface to mThreadPool.
+   * @return An nsIEventTarget interface to the thread pool.
    */
   already_AddRefed<nsIEventTarget> GetEventTarget();
 
   /**
-   * Decode some chunks of the given image.  If aDecodeUntil is SIZE,
-   * decode until we have the image's size, then stop. If bytesToDecode is
-   * non-0, at most bytesToDecode bytes will be decoded. if aDecodeUntil is
-   * DONE_BYTES, decode until all bytesToDecode bytes are decoded.
+   * Creates a worker which can be used to attempt further decoding using the
+   * provided decoder.
+   *
+   * @return The new worker, which should be posted to the event target returned
+   *         by GetEventTarget.
    */
-  nsresult DecodeSomeOfImage(RasterImage* aImage,
-                             DecodeUntil aDecodeUntil = DecodeUntil::TIME,
-                             uint32_t bytesToDecode = 0);
+  already_AddRefed<nsIRunnable> CreateDecodeWorker(Decoder* aDecoder);
 
 private:
+  friend class DecodeWorker;
+  friend class NotifyDecodeCompleteWorker;
+
   DecodePool();
   virtual ~DecodePool();
+
+  void Decode(Decoder* aDecoder);
+  void NotifyDecodeComplete(Decoder* aDecoder);
+  void NotifyProgress(Decoder* aDecoder);
 
   static StaticRefPtr<DecodePool> sSingleton;
 

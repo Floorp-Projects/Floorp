@@ -54,7 +54,6 @@ EXPORTS += [
     'nsInterfaceRequestorAgg.h',
     'nsISizeOf.h',
     'nsISupportsBase.h',
-    'nsISupportsObsolete.h',
     'nsObjCExceptions.h',
     'nsRefPtr.h',
     'nsStackWalk.h',

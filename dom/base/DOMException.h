@@ -156,6 +156,15 @@ public:
   static already_AddRefed<DOMException>
   Create(nsresult aRv);
 
+  // Sanitize() is a workaround for the fact that DOMExceptions can leak stack
+  // information for the first stackframe to callers that should not have access
+  // to it.  To prevent this, we check whether aCx subsumes our first stackframe
+  // and if not hand out a JS::Value for a clone of ourselves.  Otherwise we
+  // hand out a JS::Value for ourselves.
+  //
+  // If the return value is false, an exception was thrown on aCx.
+  bool Sanitize(JSContext* aCx, JS::MutableHandle<JS::Value> aSanitizedValue);
+
 protected:
 
   virtual ~DOMException() {}

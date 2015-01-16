@@ -53,12 +53,10 @@
 #define PL_DHASH_BITS           32
 #define PL_DHASH_GOLDEN_RATIO   0x9E3779B9U
 
-/* Primitive and forward-struct typedefs. */
-typedef uint32_t                PLDHashNumber;
-typedef struct PLDHashEntryHdr  PLDHashEntryHdr;
-typedef struct PLDHashEntryStub PLDHashEntryStub;
-typedef struct PLDHashTable     PLDHashTable;
-typedef struct PLDHashTableOps  PLDHashTableOps;
+typedef uint32_t PLDHashNumber;
+
+class PLDHashTable;
+struct PLDHashTableOps;
 
 /*
  * Table entry header structure.
@@ -176,8 +174,9 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  * aTable->mGeneration before adding or removing, and compare the sample after,
  * dereferencing the entry pointer only if aTable->mGeneration has not changed.
  */
-struct PLDHashTable
+class PLDHashTable
 {
+public:
   /*
    * Virtual operations; see below. This field is public because it's commonly
    * zeroed to indicate that a table is no longer live.
@@ -301,15 +300,6 @@ private:
 };
 
 /*
- * Table space at mEntryStore is allocated and freed using these callbacks.
- * The allocator should return null on error only (not if called with aNBytes
- * equal to 0; but note that pldhash.c code will never call with 0 aNBytes).
- */
-typedef void* (*PLDHashAllocTable)(PLDHashTable* aTable, uint32_t aNBytes);
-
-typedef void (*PLDHashFreeTable)(PLDHashTable* aTable, void* aPtr);
-
-/*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from aTable.  A hash code may have any PLDHashNumber value.
  */
@@ -353,13 +343,11 @@ typedef bool (*PLDHashInitEntry)(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
                                  const void* aKey);
 
 /*
- * Finally, the "vtable" structure for PLDHashTable.  The first six hooks
+ * Finally, the "vtable" structure for PLDHashTable.  The first four hooks
  * must be provided by implementations; they're called unconditionally by the
  * generic pldhash.c code.  Hooks after these may be null.
  *
  * Summary of allocation-related hook usage with C++ placement new emphasis:
- *  allocTable          Allocate raw bytes with malloc, no ctors run.
- *  freeTable           Free raw bytes with free, no dtors run.
  *  initEntry           Call placement new using default key-based ctor.
  *                      Return true on success, false on error.
  *  moveEntry           Call placement new using copy ctor, run dtor on old
@@ -380,8 +368,6 @@ typedef bool (*PLDHashInitEntry)(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
 struct PLDHashTableOps
 {
   /* Mandatory hooks.  All implementations must provide these. */
-  PLDHashAllocTable   allocTable;
-  PLDHashFreeTable    freeTable;
   PLDHashHashKey      hashKey;
   PLDHashMatchEntry   matchEntry;
   PLDHashMoveEntry    moveEntry;
@@ -394,9 +380,6 @@ struct PLDHashTableOps
 /*
  * Default implementations for the above ops.
  */
-void* PL_DHashAllocTable(PLDHashTable* aTable, uint32_t aNBytes);
-
-void PL_DHashFreeTable(PLDHashTable* aTable, void* aPtr);
 
 PLDHashNumber PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
 
@@ -434,10 +417,8 @@ void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps* PL_DHashGetStubOps(void);
 
 /*
- * Dynamically allocate a new PLDHashTable using malloc, initialize it using
- * PL_DHashTableInit, and return its address.  Return null on malloc failure.
- * Note that the entry storage at aTable->mEntryStore will be allocated using
- * the aOps->allocTable callback.
+ * Dynamically allocate a new PLDHashTable, initialize it using
+ * PL_DHashTableInit, and return its address. Return null on allocation failure.
  */
 PLDHashTable* PL_NewDHashTable(
   const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -491,9 +472,9 @@ void PL_DHashTableFinish(PLDHashTable* aTable);
  *  entry = PL_DHashTableOperate(table, key, PL_DHASH_ADD);
  *
  * If entry is null upon return, then either the table is severely overloaded,
- * and memory can't be allocated for entry storage via aTable->ops->allocTable;
- * Or if aTable->ops->initEntry is non-null, the aTable->ops->initEntry op may
- * have returned false.
+ * and memory can't be allocated for entry storage. Or if
+ * aTable->ops->initEntry is non-null, the aTable->ops->initEntry op may have
+ * returned false.
  *
  * Otherwise, aEntry->keyHash has been set so that PL_DHASH_ENTRY_IS_BUSY(entry)
  * is true, and it is up to the caller to initialize the key and value parts

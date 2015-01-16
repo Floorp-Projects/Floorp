@@ -16,8 +16,6 @@ using namespace mozilla;
 
 const PLDHashTableOps nsCommandParams::sHashOps =
 {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
   HashKey,
   HashMatchEntry,
   HashMoveEntry,

@@ -105,19 +105,36 @@ public:
   // Tries to evict at least aSizeToEvict from the queue up until
   // aOffset. Returns amount evicted.
   uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict) {
+    SBR_DEBUG("ResourceQueue(%p)::Evict(aOffset=%llu, aSizeToEvict=%u)",
+              this, aOffset, aSizeToEvict);
+    return EvictBefore(std::min(aOffset, (uint64_t)aSizeToEvict));
+  }
+
+  uint32_t EvictBefore(uint64_t aOffset) {
+    SBR_DEBUG("ResourceQueue(%p)::EvictBefore(%llu)", this, aOffset);
     uint32_t evicted = 0;
     while (ResourceItem* item = ResourceAt(0)) {
-      if (item->mData.Length() + mOffset > aOffset) {
+      SBR_DEBUG("ResourceQueue(%p)::EvictBefore item=%p length=%d offset=%llu",
+                this, item, item->mData.Length(), mOffset);
+      if (item->mData.Length() + mOffset >= aOffset) {
         break;
       }
       mOffset += item->mData.Length();
       evicted += item->mData.Length();
-      SBR_DEBUGV("ResourceQueue(%p)::Evict(%llu, %u) removed chunk length=%u",
-                 this, aOffset, aSizeToEvict, item->mData.Length());
       delete PopFront();
-      if (aSizeToEvict && evicted >= aSizeToEvict) {
-        break;
-      }
+    }
+    return evicted;
+  }
+
+  uint32_t EvictAll() {
+    SBR_DEBUG("ResourceQueue(%p)::EvictAll()", this);
+    uint32_t evicted = 0;
+    while (ResourceItem* item = ResourceAt(0)) {
+      SBR_DEBUG("ResourceQueue(%p)::EvictAll item=%p length=%d offset=%llu",
+                this, item, item->mData.Length(), mOffset);
+      mOffset += item->mData.Length();
+      evicted += item->mData.Length();
+      delete PopFront();
     }
     return evicted;
   }

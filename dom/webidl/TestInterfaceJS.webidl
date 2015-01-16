@@ -55,4 +55,15 @@ interface TestInterfaceJS {
 
   [Throws]
   void testThrowDOMException();
+
+  // Tests for promise-rejection behavior
+  Promise<void> testPromiseWithThrowingChromePromiseInit();
+  Promise<void> testPromiseWithThrowingContentPromiseInit(PromiseInit func);
+  Promise<void> testPromiseWithDOMExceptionThrowingPromiseInit();
+  Promise<void> testPromiseWithThrowingChromeThenFunction();
+  Promise<void> testPromiseWithThrowingContentThenFunction(AnyCallback func);
+  Promise<void> testPromiseWithDOMExceptionThrowingThenFunction();
+  Promise<void> testPromiseWithThrowingChromeThenable();
+  Promise<void> testPromiseWithThrowingContentThenable(object thenable);
+  Promise<void> testPromiseWithDOMExceptionThrowingThenable();
 };
