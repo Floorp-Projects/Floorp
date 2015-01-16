@@ -627,7 +627,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
   MSE_DEBUG("MediaSourceReader(%p)::Seek(aTime=%lld, aEnd=%lld, aCurrent=%lld)",
             this, aTime);
 
-  mSeekPromise.RejectIfExists(NS_OK, __func__);
+  MOZ_ASSERT(mSeekPromise.IsEmpty());
   nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
   if (IsShutdown()) {
@@ -639,9 +639,6 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
   // the desired time and we delay doing the seek.
   mPendingSeekTime = aTime;
 
-  // Only increment the number of expected OnSeekCompleted
-  // notifications if we weren't already waiting for AttemptSeek
-  // to complete (and they would have been accounted for already).
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mWaitingForSeekData = true;
@@ -649,6 +646,26 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
 
   AttemptSeek();
   return p;
+}
+
+void
+MediaSourceReader::CancelSeek()
+{
+  MOZ_ASSERT(OnDecodeThread());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mWaitingForSeekData) {
+    mSeekPromise.Reject(NS_OK, __func__);
+    mWaitingForSeekData = false;
+    mPendingSeekTime = -1;
+  } else if (mVideoIsSeeking) {
+    // NB: Currently all readers have sync Seeks(), so this is a no-op.
+    mVideoReader->CancelSeek();
+  } else if (mAudioIsSeeking) {
+    // NB: Currently all readers have sync Seeks(), so this is a no-op.
+    mAudioReader->CancelSeek();
+  } else {
+    MOZ_ASSERT(mSeekPromise.IsEmpty());
+  }
 }
 
 void
