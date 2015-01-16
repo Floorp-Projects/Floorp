@@ -251,20 +251,17 @@ public:
   // layout/paint time.
   ParentLayerRect mCompositionBounds;
 
-  // ---------------------------------------------------------------------------
-  // The following metrics are dimensionless.
-  //
-
-  // The pres-shell resolution that has been induced on the document containing
-  // this scroll frame as a result of zooming this scroll frame (whether via
-  // user action, or choosing an initial zoom level on page load). This can
-  // only be different from 1.0 for frames that are zoomable, which currently
-  // is just the root content document's root scroll frame (mIsRoot = true).
-  // This is a plain float rather than a ScaleFactor because in and of itself
-  // it does not convert between any coordinate spaces for which we have names.
-  float mPresShellResolution;
-
 public:
+  void SetPresShellResolution(const float aPresShellResolution)
+  {
+    mPresShellResolution = aPresShellResolution;
+  }
+
+  float GetPresShellResolution() const
+  {
+    return mPresShellResolution;
+  }
+
   void SetDisplayPort(const CSSRect& aDisplayPort)
   {
     mDisplayPort = aDisplayPort;
@@ -523,6 +520,16 @@ public:
   }
 
 private:
+
+  // The pres-shell resolution that has been induced on the document containing
+  // this scroll frame as a result of zooming this scroll frame (whether via
+  // user action, or choosing an initial zoom level on page load). This can
+  // only be different from 1.0 for frames that are zoomable, which currently
+  // is just the root content document's root scroll frame (mIsRoot = true).
+  // This is a plain float rather than a ScaleFactor because in and of itself
+  // it does not convert between any coordinate spaces for which we have names.
+  float mPresShellResolution;
+
   // The area of a frame's contents that has been painted, relative to
   // mCompositionBounds.
   //
