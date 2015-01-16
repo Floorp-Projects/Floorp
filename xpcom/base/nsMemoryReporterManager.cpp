@@ -957,7 +957,7 @@ public:
            "Memory used by DMD's live block table.");
 
     REPORT("explicit/dmd/dead-block-list",
-           sizes.mDeadBlockList,
+           sizes.mDeadBlockTable,
            "Memory used by DMD's dead block list.");
 
 #undef REPORT
