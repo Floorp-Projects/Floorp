@@ -22,6 +22,13 @@ namespace image {
 // SourceBufferIterator implementation.
 //////////////////////////////////////////////////////////////////////////////
 
+SourceBufferIterator::~SourceBufferIterator()
+{
+  if (mOwner) {
+    mOwner->OnIteratorRelease();
+  }
+}
+
 SourceBufferIterator::State
 SourceBufferIterator::AdvanceOrScheduleResume(IResumable* aConsumer)
 {
@@ -43,7 +50,14 @@ SourceBufferIterator::RemainingBytesIsNoMoreThan(size_t aBytes) const
 
 SourceBuffer::SourceBuffer()
   : mMutex("image::SourceBuffer")
+  , mConsumerCount(0)
 { }
+
+SourceBuffer::~SourceBuffer()
+{
+  MOZ_ASSERT(mConsumerCount == 0,
+             "SourceBuffer destroyed with active consumers");
+}
 
 nsresult
 SourceBuffer::AppendChunk(Maybe<Chunk>&& aChunk)
@@ -72,16 +86,87 @@ SourceBuffer::AppendChunk(Maybe<Chunk>&& aChunk)
 }
 
 Maybe<SourceBuffer::Chunk>
-SourceBuffer::CreateChunk(size_t aCapacity)
+SourceBuffer::CreateChunk(size_t aCapacity, bool aRoundUp /* = true */)
 {
   if (MOZ_UNLIKELY(aCapacity == 0)) {
     MOZ_ASSERT_UNREACHABLE("Appending a chunk of zero size?");
     return Nothing();
   }
 
+  // Round up if requested.
+  size_t finalCapacity = aRoundUp ? RoundedUpCapacity(aCapacity)
+                                  : aCapacity;
+
+  // Use the size of the SurfaceCache as an additional heuristic to avoid
+  // allocating huge buffers. Generally images do not get smaller when decoded,
+  // so if we could store the source data in the SurfaceCache, we assume that
+  // there's no way we'll be able to store the decoded version.
+  if (MOZ_UNLIKELY(!SurfaceCache::CanHold(finalCapacity))) {
+    return Nothing();
+  }
+
+  return Some(Chunk(finalCapacity));
+}
+
+nsresult
+SourceBuffer::Compact()
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  MOZ_ASSERT(mConsumerCount == 0, "Should have no consumers here");
+  MOZ_ASSERT(mWaitingConsumers.Length() == 0, "Shouldn't have waiters");
+  MOZ_ASSERT(mStatus, "Should be complete here");
+
+  // Compact our waiting consumers list, since we're complete and no future
+  // consumer will ever have to wait.
+  mWaitingConsumers.Compact();
+
+  // If we have no more than one chunk, then we can't compact further.
+  if (mChunks.Length() < 2) {
+    return NS_OK;
+  }
+
+  // We can compact our buffer. Determine the total length.
+  size_t length = 0;
+  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
+    length += mChunks[i].Length();
+  }
+
+  Maybe<Chunk> newChunk = CreateChunk(length, /* aRoundUp = */ false);
+  if (MOZ_UNLIKELY(!newChunk || newChunk->AllocationFailed())) {
+    NS_WARNING("Failed to allocate chunk for SourceBuffer compacting - OOM?");
+    return NS_OK;
+  }
+
+  // Copy our old chunks into the new chunk.
+  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
+    size_t offset = newChunk->Length();
+    MOZ_ASSERT(offset < newChunk->Capacity());
+    MOZ_ASSERT(offset + mChunks[i].Length() <= newChunk->Capacity());
+
+    memcpy(newChunk->Data() + offset, mChunks[i].Data(), mChunks[i].Length());
+    newChunk->AddLength(mChunks[i].Length());
+  }
+
+  MOZ_ASSERT(newChunk->Length() == newChunk->Capacity(),
+             "Compacted chunk has slack space");
+
+  // Replace the old chunks with the new, compact chunk.
+  mChunks.Clear();
+  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(Move(newChunk))))) {
+    return HandleError(NS_ERROR_OUT_OF_MEMORY);
+  }
+  mChunks.Compact();
+
+  return NS_OK;
+}
+
+/* static */ size_t
+SourceBuffer::RoundedUpCapacity(size_t aCapacity)
+{
   // Protect against overflow.
   if (MOZ_UNLIKELY(SIZE_MAX - aCapacity < MIN_CHUNK_CAPACITY)) {
-    return Nothing();
+    return aCapacity;
   }
 
   // Round up to the next multiple of MIN_CHUNK_CAPACITY (which should be the
@@ -91,15 +176,7 @@ SourceBuffer::CreateChunk(size_t aCapacity)
   MOZ_ASSERT(roundedCapacity >= aCapacity, "Bad math?");
   MOZ_ASSERT(roundedCapacity - aCapacity < MIN_CHUNK_CAPACITY, "Bad math?");
 
-  // Use the size of the SurfaceCache as an additional heuristic to avoid
-  // allocating huge buffers. Generally images do not get smaller when decoded,
-  // so if we could store the source data in the SurfaceCache, we assume that
-  // there's no way we'll be able to store the decoded version.
-  if (MOZ_UNLIKELY(!SurfaceCache::CanHold(roundedCapacity))) {
-    return Nothing();
-  }
-
-  return Some(Chunk(roundedCapacity));
+  return roundedCapacity;
 }
 
 size_t
@@ -291,6 +368,14 @@ SourceBuffer::Complete(nsresult aStatus)
 
   // Resume any waiting consumers now that we're complete.
   ResumeWaitingConsumers();
+
+  // If we still have active consumers, just return.
+  if (mConsumerCount > 0) {
+    return;
+  }
+
+  // Attempt to compact our buffer down to a single chunk.
+  Compact();
 }
 
 bool
@@ -321,6 +406,34 @@ SourceBuffer::SizeOfIncludingThisWithComputedFallback(MallocSizeOf
   }
 
   return n;
+}
+
+SourceBufferIterator
+SourceBuffer::Iterator()
+{
+  {
+    MutexAutoLock lock(mMutex);
+    mConsumerCount++;
+  }
+
+  return SourceBufferIterator(this);
+}
+
+void
+SourceBuffer::OnIteratorRelease()
+{
+  MutexAutoLock lock(mMutex);
+
+  MOZ_ASSERT(mConsumerCount > 0, "Consumer count doesn't add up");
+  mConsumerCount--;
+
+  // If we still have active consumers, or we're not complete yet, then return.
+  if (mConsumerCount > 0 || !mStatus) {
+    return;
+  }
+
+  // Attempt to compact our buffer down to a single chunk.
+  Compact();
 }
 
 bool
