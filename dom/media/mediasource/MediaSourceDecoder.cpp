@@ -173,9 +173,9 @@ MediaSourceDecoder::IsExpectingMoreData()
 
 class DurationChangedRunnable : public nsRunnable {
 public:
-  explicit DurationChangedRunnable(MediaSourceDecoder* aDecoder,
-                                   double aOldDuration,
-                                   double aNewDuration)
+  DurationChangedRunnable(MediaSourceDecoder* aDecoder,
+                          double aOldDuration,
+                          double aNewDuration)
     : mDecoder(aDecoder)
     , mOldDuration(aOldDuration)
     , mNewDuration(aNewDuration)
@@ -218,11 +218,13 @@ MediaSourceDecoder::SetDecodedDuration(int64_t aDuration)
   if (aDuration >= 0) {
     duration /= USECS_PER_S;
   }
-  SetMediaSourceDuration(duration);
+  // No need to call Range Removal algorithm as this is called following
+  // ReadMetadata and nothing has been added to the source buffers yet.
+  SetMediaSourceDuration(duration, MSRangeRemovalAction::SKIP);
 }
 
 void
-MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
+MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
@@ -233,12 +235,21 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
     mDecoderStateMachine->SetDuration(INT64_MAX);
     mMediaSourceDuration = PositiveInfinity<double>();
   }
-  if (NS_IsMainThread()) {
-    DurationChanged(oldDuration, mMediaSourceDuration);
+  if (aAction == MSRangeRemovalAction::SKIP) {
+    if (NS_IsMainThread()) {
+      MediaDecoder::DurationChanged();
+    } else {
+      nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(this, &MediaDecoder::DurationChanged);
+      NS_DispatchToMainThread(task);
+    }
   } else {
-    nsRefPtr<nsIRunnable> task =
-      new DurationChangedRunnable(this, oldDuration, mMediaSourceDuration);
-    NS_DispatchToMainThread(task);
+    if (NS_IsMainThread()) {
+      DurationChanged(oldDuration, mMediaSourceDuration);
+    } else {
+      nsRefPtr<nsIRunnable> task =
+        new DurationChangedRunnable(this, oldDuration, mMediaSourceDuration);
+      NS_DispatchToMainThread(task);
+    }
   }
 }
 
