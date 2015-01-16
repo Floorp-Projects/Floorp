@@ -751,7 +751,7 @@
     </style>
 
     <style name="GeckoActionBar">
-        <item name="android:background">@drawable/ab_stacked_transparent_light_holo</item>
+        <item name="android:background">@drawable/ab_background</item>
     </style>
 
     <style name="GeckoActionBar.Title">
