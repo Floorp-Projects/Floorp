@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" minBufferTime="PT1.500000S" type="static" mediaPresentationDuration="PT0H0M9.98S" profiles="urn:mpeg:dash:profile:full:2011">
+ <ProgramInformation moreInformationURL="http://gpac.sourceforge.net">
+  <Title>bipbop_dash.mpd handcrafted by JYA</Title>
+ </ProgramInformation>
+
+ <Period duration="PT0H0M9.98S">
+  <AdaptationSet segmentAlignment="true" maxWidth="400" maxHeight="300" maxFrameRate="90000" par="4:3" lang="und">
+   <Representation id="1" mimeType="video/mp4" codecs="avc1.4d4015" width="400" height="300" frameRate="90000" sar="1:1" startWithSAP="1" bandwidth="226425">
+    <SegmentList timescale="90000" duration="69043">
+     <Initialization sourceURL="bipbop_videoinit.mp4"/>
+     <SegmentURL media="bipbop_video1.m4s"/>
+     <SegmentURL media="bipbop_video2.m4s"/>
+     <SegmentURL media="bipbop_video3.m4s"/>
+     <SegmentURL media="bipbop_video4.m4s"/>
+     <SegmentURL media="bipbop_video5.m4s"/>
+     <SegmentURL media="bipbop_video6.m4s"/>
+     <SegmentURL media="bipbop_video7.m4s"/>
+     <SegmentURL media="bipbop_video8.m4s"/>
+     <SegmentURL media="bipbop_video9.m4s"/>
+     <SegmentURL media="bipbop_video10.m4s"/>
+     <SegmentURL media="bipbop_video11.m4s"/>
+     <SegmentURL media="bipbop_video12.m4s"/>
+     <SegmentURL media="bipbop_video13.m4s"/>
+    </SegmentList>
+   </Representation>
+  </AdaptationSet>
+  <AdaptationSet segmentAlignment="true" lang="und">
+   <Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="22050" startWithSAP="1" bandwidth="7206">
+    <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+    <SegmentList timescale="22050" duration="20101">
+     <Initialization sourceURL="bipbop_audioinit.mp4"/>
+     <SegmentURL media="bipbop_audio1.m4s"/>
+     <SegmentURL media="bipbop_audio2.m4s"/>
+     <SegmentURL media="bipbop_audio3.m4s"/>
+     <SegmentURL media="bipbop_audio4.m4s"/>
+     <SegmentURL media="bipbop_audio5.m4s"/>
+     <SegmentURL media="bipbop_audio6.m4s"/>
+     <SegmentURL media="bipbop_audio7.m4s"/>
+     <SegmentURL media="bipbop_audio8.m4s"/>
+     <SegmentURL media="bipbop_audio9.m4s"/>
+     <SegmentURL media="bipbop_audio10.m4s"/>
+     <SegmentURL media="bipbop_audio11.m4s"/>
+    </SegmentList>
+   </Representation>
+  </AdaptationSet>
+ </Period>
+</MPD>
