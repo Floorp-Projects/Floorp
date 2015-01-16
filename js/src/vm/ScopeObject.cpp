@@ -655,8 +655,8 @@ StaticEvalObject::create(JSContext *cx, HandleObject enclosing)
     if (!obj)
         return nullptr;
 
-    obj->as<StaticEvalObject>().initEnclosingNestedScope(enclosing);
-    obj->setFixedSlot(STRICT_SLOT, BooleanValue(false));
+    obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectOrNullValue(enclosing));
+    obj->setReservedSlot(STRICT_SLOT, BooleanValue(false));
     return &obj->as<StaticEvalObject>();
 }
 
@@ -1300,9 +1300,9 @@ LiveScopeVal::sweep()
 }
 
 // Live ScopeIter values may be added to DebugScopes::liveScopes, as
-// ScopeIterVal instances.  They need to have write barriers when they are added
+// LiveScopeVal instances.  They need to have write barriers when they are added
 // to the hash table, but no barriers when rehashing inside GC.  It's a nasty
-// hack, but the important thing is that ScopeIterKey and ScopeIterVal need to
+// hack, but the important thing is that LiveScopeVal and MissingScopeKey need to
 // alias each other.
 void
 LiveScopeVal::staticAsserts()
