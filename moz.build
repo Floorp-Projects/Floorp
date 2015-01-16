@@ -44,7 +44,6 @@ if not CONFIG['LIBXUL_SDK']:
         DIRS += [
             'mozglue',
             'memory/mozalloc',
-            'memory/volatile',
         ]
 
 if not CONFIG['JS_STANDALONE']:
