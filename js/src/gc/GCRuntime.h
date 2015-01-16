@@ -32,8 +32,11 @@ struct FinalizePhase;
 class MarkingValidator;
 struct AutoPrepareForTracing;
 class AutoTraceSession;
+
+#ifdef JSGC_COMPACTING
 struct ArenasToUpdate;
 struct MovingTracer;
+#endif
 
 class ChunkPool
 {
@@ -292,7 +295,11 @@ class GCRuntime
     bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
     bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
     bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
+#ifdef JSGC_COMPACTING
     bool isHeapCompacting() { return isHeapMajorCollecting() && state() == COMPACT; }
+#else
+    bool isHeapCompacting() { return false; }
+#endif
 
     bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock);
@@ -428,9 +435,11 @@ class GCRuntime
     void disableGenerationalGC();
     void enableGenerationalGC();
 
+#ifdef JSGC_COMPACTING
     void disableCompactingGC();
     void enableCompactingGC();
     bool isCompactingGCEnabled();
+#endif
 
     void setGrayRootsTracer(JSTraceDataOp traceOp, void *data);
     bool addBlackRootsTracer(JSTraceDataOp traceOp, void *data);
@@ -592,6 +601,7 @@ class GCRuntime
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
     bool compactPhase(bool lastGC);
+#ifdef JSGC_COMPACTING
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
     ArenaHeader *relocateArenas();
@@ -603,6 +613,7 @@ class GCRuntime
 #ifdef DEBUG
     void protectRelocatedArenas(ArenaHeader *relocatedList);
     void unprotectRelocatedArenas(ArenaHeader *relocatedList);
+#endif
 #endif
     void finishCollection();
 
@@ -799,11 +810,13 @@ class GCRuntime
      */
     unsigned generationalDisabled;
 
+#ifdef JSGC_COMPACTING
     /*
      * Some code cannot tolerate compacting GC so it can be disabled with this
      * counter.
      */
     unsigned compactingDisabled;
+#endif
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
@@ -904,7 +917,9 @@ class GCRuntime
 
     size_t noGCOrAllocationCheck;
 
+#ifdef JSGC_COMPACTING
     ArenaHeader* relocatedArenasToRelease;
+#endif
 
 #endif
 
