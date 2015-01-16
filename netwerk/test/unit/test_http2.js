@@ -533,6 +533,23 @@ function test_http2_pushapi_1() {
   chan.asyncOpen(listener, chan);
 }
 
+var WrongSuiteListener = function() {};
+WrongSuiteListener.prototype = new Http2CheckListener();
+WrongSuiteListener.prototype.shouldBeHttp2 = false;
+WrongSuiteListener.prototype.onStopRequest = function(request, ctx, status) {
+  prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
+  Http2CheckListener.prototype.onStopRequest.call(this);
+};
+
+// test that we use h1 without the mandatory cipher suite available
+function test_http2_wrongsuite() {
+  prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", false);
+  var chan = makeChan("https://localhost:6944/wrongsuite");
+  chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION | Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  var listener = new WrongSuiteListener();
+  chan.asyncOpen(listener, null);
+}
+
 function test_http2_h11required_stream() {
   var chan = makeChan("https://localhost:6944/h11required_stream");
   var listener = new Http2CheckListener();
@@ -601,6 +618,7 @@ var tests = [ test_http2_post_big
             , test_http2_h11required_stream
             , test_http2_h11required_session
             , test_http2_retry_rst
+            , test_http2_wrongsuite
 
             // cleanup
             , test_complete
