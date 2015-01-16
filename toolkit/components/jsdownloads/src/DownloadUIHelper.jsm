@@ -40,7 +40,7 @@ const kStringsRequiringFormatting = {
   quitCancelDownloadsAlertMsgMultiple: true,
   quitCancelDownloadsAlertMsgMacMultiple: true,
   offlineCancelDownloadsAlertMsgMultiple: true,
-  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple: true
+  leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2: true
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,9 +232,9 @@ this.DownloadPrompter.prototype = {
       case this.ON_LEAVE_PRIVATE_BROWSING:
         title = s.leavePrivateBrowsingCancelDownloadsAlertTitle;
         message = aDownloadsCount > 1
-                  ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple(aDownloadsCount)
-                  : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg;
-        cancelButton = s.dontLeavePrivateBrowsingButton;
+                  ? s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2(aDownloadsCount)
+                  : s.leavePrivateBrowsingWindowsCancelDownloadsAlertMsg2;
+        cancelButton = s.dontLeavePrivateBrowsingButton2;
         break;
     }
 
