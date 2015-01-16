@@ -347,19 +347,21 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
-  if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
-    Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
-    ErrorResult dummy;
-    mMediaSource->EndOfStream(decodeError, dummy);
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+  if (aLength) {
+    if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
+      Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
+      ErrorResult dummy;
+      mMediaSource->EndOfStream(decodeError, dummy);
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
-  if (mTrackBuffer->HasInitSegment()) {
-    mMediaSource->QueueInitializationEvent();
-  }
+    if (mTrackBuffer->HasInitSegment()) {
+      mMediaSource->QueueInitializationEvent();
+    }
 
-  CheckEndTime();
+    CheckEndTime();
+  }
 
   // Run the final step of the buffer append algorithm asynchronously to
   // ensure the SourceBuffer's updating flag transition behaves as required
