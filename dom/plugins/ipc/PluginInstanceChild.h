@@ -89,7 +89,7 @@ protected:
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) MOZ_OVERRIDE;
     virtual bool
     AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
-                                Shmem& mem,
+                                Shmem&& mem,
                                 int16_t* handled,
                                 Shmem* rtnmem) MOZ_OVERRIDE;
     virtual bool

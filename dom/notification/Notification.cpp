@@ -332,9 +332,9 @@ NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
   return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
-                                                         NS_LITERAL_CSTRING("unused"),
-                                                         emptyOptions,
-                                                         aTypes);
+							 NS_LITERAL_CSTRING("unused"),
+							 emptyOptions,
+							 aTypes);
 }
 
 NS_IMPL_ISUPPORTS(NotificationTask, nsIRunnable)

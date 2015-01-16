@@ -147,17 +147,17 @@ public:
                                   InfallibleTArray<FrameScriptInfo>* aFrameScripts) MOZ_OVERRIDE;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
-                                 const InfallibleTArray<CpowEntry>& aCpows,
+                                 InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
                                  InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
     virtual bool RecvRpcMessage(const nsString& aMessage,
                                 const ClonedMessageData& aData,
-                                const InfallibleTArray<CpowEntry>& aCpows,
+                                InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
                                 InfallibleTArray<nsString>* aJSONRetVal) MOZ_OVERRIDE;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
                                     nsIMEUpdatePreference* aPreference,
@@ -168,7 +168,7 @@ public:
                                          const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelectedCompositionRect(
                    const uint32_t& aOffset,
-                   const InfallibleTArray<nsIntRect>& aRects,
+                   InfallibleTArray<nsIntRect>&& aRects,
                    const uint32_t& aCaretOffset,
                    const nsIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
@@ -182,7 +182,7 @@ public:
     virtual bool RecvNotifyIMEEditorRect(const nsIntRect& aRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMEPositionChange(
                    const nsIntRect& aEditoRect,
-                   const InfallibleTArray<nsIntRect>& aCompositionRects,
+                   InfallibleTArray<nsIntRect>&& aCompositionRects,
                    const nsIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition) MOZ_OVERRIDE;
@@ -198,8 +198,8 @@ public:
                                      const int32_t& aFocusChange) MOZ_OVERRIDE;
     virtual bool RecvRequestFocus(const bool& aCanRaise) MOZ_OVERRIDE;
     virtual bool RecvEnableDisableCommands(const nsString& aAction,
-                                           const nsTArray<nsCString>& aEnabledCommands,
-                                           const nsTArray<nsCString>& aDisabledCommands) MOZ_OVERRIDE;
+                                           nsTArray<nsCString>&& aEnabledCommands,
+                                           nsTArray<nsCString>&& aDisabledCommands) MOZ_OVERRIDE;
     virtual bool RecvSetCursor(const uint32_t& aValue, const bool& aForce) MOZ_OVERRIDE;
     virtual bool RecvSetBackgroundColor(const nscolor& aValue) MOZ_OVERRIDE;
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) MOZ_OVERRIDE;
@@ -220,7 +220,7 @@ public:
                                                const uint64_t& aInputBlockId,
                                                const bool& aPreventDefault) MOZ_OVERRIDE;
     virtual bool RecvSetTargetAPZC(const uint64_t& aInputBlockId,
-                                   const nsTArray<ScrollableLayerGuid>& aTargets) MOZ_OVERRIDE;
+                                   nsTArray<ScrollableLayerGuid>&& aTargets) MOZ_OVERRIDE;
 
     virtual PColorPickerParent*
     AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) MOZ_OVERRIDE;

@@ -59,13 +59,13 @@ public:
 private:
   // PGMPVideoEncoderChild
   virtual bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
-                              const nsTArray<uint8_t>& aCodecSpecific,
+                              InfallibleTArray<uint8_t>&& aCodecSpecific,
                               const int32_t& aNumberOfCores,
                               const uint32_t& aMaxPayloadSize) MOZ_OVERRIDE;
   virtual bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                          const nsTArray<uint8_t>& aCodecSpecificInfo,
-                          const nsTArray<GMPVideoFrameType>& aFrameTypes) MOZ_OVERRIDE;
-  virtual bool RecvChildShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
+                          InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
+                          InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) MOZ_OVERRIDE;
+  virtual bool RecvChildShmemForPool(Shmem&& aEncodedBuffer) MOZ_OVERRIDE;
   virtual bool RecvSetChannelParameters(const uint32_t& aPacketLoss,
                                         const uint32_t& aRTT) MOZ_OVERRIDE;
   virtual bool RecvSetRates(const uint32_t& aNewBitRate,

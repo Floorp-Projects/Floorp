@@ -107,7 +107,7 @@ GMPVideoDecoderChild::Error(GMPErr aError)
 
 bool
 GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
-                                     const nsTArray<uint8_t>& aCodecSpecific,
+                                     InfallibleTArray<uint8_t>&& aCodecSpecific,
                                      const int32_t& aCoreCount)
 {
   if (!mVideoDecoder) {
@@ -126,7 +126,7 @@ GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
 bool
 GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                                  const bool& aMissingFrames,
-                                 const nsTArray<uint8_t>& aCodecSpecificInfo,
+                                 InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
                                  const int64_t& aRenderTimeMs)
 {
   if (!mVideoDecoder) {
@@ -146,7 +146,7 @@ GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
 }
 
 bool
-GMPVideoDecoderChild::RecvChildShmemForPool(Shmem& aFrameBuffer)
+GMPVideoDecoderChild::RecvChildShmemForPool(Shmem&& aFrameBuffer)
 {
   if (aFrameBuffer.IsWritable()) {
     mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
