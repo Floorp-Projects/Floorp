@@ -52,7 +52,7 @@ public:
   void operator--(int) { value--; }
 
   // Do not define operator+=() or operator-=() here.  These will coerce via
-  // the implicit cast and built-in ooperators.  Defining explicit methods here
+  // the implicit cast and built-in operators.  Defining explicit methods here
   // will create ambiguity the compiler can't deal with.
 
   T* operator&() { return &value; }
