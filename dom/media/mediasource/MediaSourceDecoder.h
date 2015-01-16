@@ -80,6 +80,11 @@ public:
   bool IsActiveReader(MediaDecoderReader* aReader);
 
 private:
+  void DoSetMediaSourceDuration(double aDuration);
+  void ScheduleDurationChange(double aOldDuration,
+                              double aNewDuration,
+                              MSRangeRemovalAction aAction);
+
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear
   // mMediaSource.
