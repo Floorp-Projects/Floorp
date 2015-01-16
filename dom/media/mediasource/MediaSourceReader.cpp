@@ -695,6 +695,7 @@ MediaSourceReader::AttemptSeek()
     if (!mWaitingForSeekData || !TrackBuffersContainTime(mPendingSeekTime)) {
       return;
     }
+    mWaitingForSeekData = false;
   }
 
   ResetDecode();
@@ -716,11 +717,6 @@ MediaSourceReader::AttemptSeek()
     MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
   } else {
     OnVideoSeekCompleted(mPendingSeekTime);
-  }
-
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mWaitingForSeekData = false;
   }
 }
 
