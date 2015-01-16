@@ -333,8 +333,9 @@ RTCPeerConnection.prototype = {
     this._mustValidateRTCConfiguration(rtcConfig,
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     if (_globalPCList._networkdown || !this._win.navigator.onLine) {
-      throw new this._win.DOMError("InvalidStateError",
-          "Can't create RTCPeerConnections when the network is down");
+      throw new this._win.DOMException(
+          "Can't create RTCPeerConnections when the network is down",
+          "InvalidStateError");
     }
 
     this.makeGetterSetterEH("onaddstream");
@@ -367,8 +368,9 @@ RTCPeerConnection.prototype = {
 
   get _impl() {
     if (!this._pc) {
-      throw new this._win.DOMError("InvalidStateError",
-          "RTCPeerConnection is gone (did you enter Offline mode?)");
+      throw new this._win.DOMException(
+          "RTCPeerConnection is gone (did you enter Offline mode?)",
+          "InvalidStateError");
     }
     return this._pc;
   },
@@ -389,9 +391,16 @@ RTCPeerConnection.prototype = {
    *   onError   - legacy callback (optional)
    */
   _queue: function(func, onSuccess, onError) {
+    this._checkClosed(); // out here DOMException line-numbers work.
     let p = this._taskChain.then(() => {
-      this._checkClosed(); // TODO: Move outside promise once Bug 1107592 is fixed.
-      return func();
+      // Don't _checkClosed() inside the chain, because it throws, and spec
+      // behavior as of this writing is to NOT reject outstanding promises on
+      // close. This is what happens most of the time anyways, as the c++ code
+      // stops calling us once closed, hanging the chain. However, c++ may
+      // already have queued tasks on us, so if we're one of those then sit back.
+      if (!this._closed) {
+        return func();
+      }
     });
     this._taskChain = p.catch(() => {}); // don't propagate errors in taskChain!
     return onSuccess? p.then(this._wrapLegacyCallback(onSuccess),
@@ -417,46 +426,44 @@ RTCPeerConnection.prototype = {
    *
    * WebIDL normalizes structure for us, so we test well-formed stun/turn urls,
    * but not validity of servers themselves, before passing along to C++.
-   * ErrorMsg is passed in to detail which array-entry failed, if any.
+   *
+   *   msg - Error message to detail which array-entry failed, if any.
    */
-  _mustValidateRTCConfiguration: function(rtcConfig, errorMsg) {
-    var errorCtor = this._win.DOMError;
-    var warningFunc = this.logWarning.bind(this);
-    function nicerNewURI(uriStr, errorMsg) {
-      let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+  _mustValidateRTCConfiguration: function(rtcConfig, msg) {
+    let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+
+    let nicerNewURI = uriStr => {
       try {
         return ios.newURI(uriStr, null, null);
       } catch (e if (e.result == Cr.NS_ERROR_MALFORMED_URI)) {
-        throw new errorCtor("", errorMsg + " - malformed URI: " + uriStr);
+        throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
+                                         "SyntaxError");
       }
-    }
-    function mustValidateServer(server) {
+    };
+
+    rtcConfig.iceServers.forEach(server => {
       if (!server.url) {
-        throw new errorCtor("", errorMsg + " - missing url");
+        throw new this._win.DOMException(msg + " - missing url", "InvalidAccessError");
       }
-      let url = nicerNewURI(server.url, errorMsg);
+      let url = nicerNewURI(server.url);
       if (url.scheme in { turn:1, turns:1 }) {
         if (!server.username) {
-          throw new errorCtor("", errorMsg + " - missing username: " + server.url);
+          throw new this._win.DOMException(msg + " - missing username: " + server.url,
+                                           "InvalidAccessError");
         }
         if (!server.credential) {
-          throw new errorCtor("", errorMsg + " - missing credential: " +
-                              server.url);
+          throw new this._win.DOMException(msg + " - missing credential: " + server.url,
+                                           "InvalidAccessError");
         }
       }
       else if (!(url.scheme in { stun:1, stuns:1 })) {
-        throw new errorCtor("", errorMsg + " - improper scheme: " + url.scheme);
+        throw new this._win.DOMException(msg + " - improper scheme: " + url.scheme,
+                                         "SyntaxError");
       }
       if (url.scheme in { stuns:1, turns:1 }) {
-        warningFunc(url.scheme.toUpperCase() + " is not yet supported.", null, 0);
+        this.logWarning(url.scheme.toUpperCase() + " is not yet supported.", null, 0);
       }
-    }
-    if (rtcConfig.iceServers) {
-      let len = rtcConfig.iceServers.length;
-      for (let i=0; i < len; i++) {
-        mustValidateServer (rtcConfig.iceServers[i], errorMsg);
-      }
-    }
+    });
   },
 
   // Ideally, this should be of the form _checkState(state),
@@ -465,7 +472,8 @@ RTCPeerConnection.prototype = {
   // spec. See Bug 831756.
   _checkClosed: function() {
     if (this._closed) {
-      throw new this._win.DOMError("InvalidStateError", "Peer connection is closed");
+      throw new this._win.DOMException("Peer connection is closed",
+                                       "InvalidStateError");
     }
   },
 
@@ -593,12 +601,12 @@ RTCPeerConnection.prototype = {
   _createAnswer: function() {
     return new this._win.Promise((resolve, reject) => {
       if (!this.remoteDescription) {
-        throw new this._win.DOMError("InvalidStateError",
-                                     "setRemoteDescription not called");
+        throw new this._win.DOMException("setRemoteDescription not called",
+                                         "InvalidStateError");
       }
       if (this.remoteDescription.type != "offer") {
-        throw new this._win.DOMError("InvalidStateError",
-                                     "No outstanding offer");
+        throw new this._win.DOMException("No outstanding offer",
+                                         "InvalidStateError");
       }
       this._onCreateAnswerSuccess = resolve;
       this._onCreateAnswerFailure = reject;
@@ -622,10 +630,12 @@ RTCPeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       case "pranswer":
-        throw new this._win.DOMError("NotSupportedError", "pranswer not yet implemented");
+        throw new this._win.DOMException("pranswer not yet implemented",
+                                         "NotSupportedError");
       default:
-        throw new this._win.DOMError("InvalidParameterError",
-            "Invalid type " + desc.type + " provided to setLocalDescription");
+        throw new this._win.DOMException(
+            "Invalid type " + desc.type + " provided to setLocalDescription",
+            "InvalidParameterError");
     }
 
     return this._queue(() => this._setLocalDescription(type, desc.sdp),
@@ -652,10 +662,12 @@ RTCPeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       case "pranswer":
-        throw new this._win.DOMError("NotSupportedError", "pranswer not yet implemented");
+        throw new this._win.DOMException("pranswer not yet implemented",
+                                         "NotSupportedError");
       default:
-        throw new this._win.DOMError("InvalidParameterError",
-            "Invalid type " + desc.type + " provided to setRemoteDescription");
+        throw new this._win.DOMException(
+            "Invalid type " + desc.type + " provided to setRemoteDescription",
+            "InvalidParameterError");
     }
 
     // Have to get caller's origin outside of Promise constructor and pass it in
@@ -777,13 +789,14 @@ RTCPeerConnection.prototype = {
   },
 
   updateIce: function(config) {
-    throw new this._win.DOMError("NotSupportedError", "updateIce not yet implemented");
+    throw new this._win.DOMException("updateIce not yet implemented",
+                                     "NotSupportedError");
   },
 
   addIceCandidate: function(cand, onSuccess, onError) {
     if (!cand.candidate && !cand.sdpMLineIndex) {
-      throw new this._win.DOMError("InvalidParameterError",
-          "Invalid candidate passed to addIceCandidate!");
+      throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
+                                       "InvalidParameterError");
     }
     return this._queue(() => this._addIceCandidate(cand), onSuccess, onError);
   },
@@ -804,19 +817,22 @@ RTCPeerConnection.prototype = {
 
   removeStream: function(stream) {
      // Bug 844295: Not implementing this functionality.
-     throw new this._win.DOMError("NotSupportedError", "removeStream not yet implemented");
+     throw new this._win.DOMException("removeStream not yet implemented",
+                                      "NotSupportedError");
   },
 
   getStreamById: function(id) {
-    throw new this._win.DOMError("NotSupportedError", "getStreamById not yet implemented");
+    throw new this._win.DOMException("getStreamById not yet implemented",
+                                     "NotSupportedError");
   },
 
   addTrack: function(track, stream) {
     if (stream.currentTime === undefined) {
-      throw new this._win.DOMError("InvalidParameterError", "invalid stream.");
+      throw new this._win.DOMException("invalid stream.", "InvalidParameterError");
     }
-    if (stream.getTracks().indexOf(track) == -1) {
-      throw new this._win.DOMError("InvalidParameterError", "track is not in stream.");
+    if (stream.getTracks().indexOf(track) < 0) {
+      throw new this._win.DOMException("track is not in stream.",
+                                       "InvalidParameterError");
     }
     this._checkClosed();
     this._impl.addTrack(track, stream);
@@ -829,11 +845,12 @@ RTCPeerConnection.prototype = {
 
   removeTrack: function(sender) {
      // Bug 844295: Not implementing this functionality.
-     throw new this._win.DOMError("NotSupportedError", "removeTrack not yet implemented");
+     throw new this._win.DOMException("removeTrack not yet implemented",
+                                      "NotSupportedError");
   },
 
   _replaceTrack: function(sender, withTrack) {
-    // TODO: Do a (sender._stream.getTracks().indexOf(track) == -1) check
+    // TODO: Do a (sender._stream.getTracks().indexOf(track) < 0) check
     //       on both track args someday.
     //
     // The proposed API will be that both tracks must already be in the same
@@ -995,10 +1012,10 @@ RTCPeerConnection.prototype = {
       this.logWarning("Deprecated RTCDataChannelInit dictionary entry stream used!", null, 0);
     }
 
-    if (dict.maxRetransmitTime != undefined &&
-        dict.maxRetransmits != undefined) {
-      throw new this._win.DOMError("InvalidParameterError",
-          "Both maxRetransmitTime and maxRetransmits cannot be provided");
+    if (dict.maxRetransmitTime !== null && dict.maxRetransmits !== null) {
+      throw new this._win.DOMException(
+          "Both maxRetransmitTime and maxRetransmits cannot be provided",
+          "InvalidParameterError");
     }
     let protocol;
     if (dict.protocol == undefined) {
@@ -1043,7 +1060,7 @@ PeerConnectionObserver.prototype = {
     this._dompc = dompc._innerObject;
   },
 
-  newError: function(code, message) {
+  newError: function(message, code) {
     // These strings must match those defined in the WebRTC spec.
     const reasonName = [
       "",
@@ -1058,7 +1075,7 @@ PeerConnectionObserver.prototype = {
       "InternalError"
     ];
     let name = reasonName[Math.min(code, reasonName.length - 1)];
-    return new this._dompc._win.DOMError(name, message);
+    return new this._dompc._win.DOMException(message, name);
   },
 
   dispatchEvent: function(event) {
@@ -1079,7 +1096,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateOfferError: function(code, message) {
-    this._dompc._onCreateOfferFailure(this.newError(code, message));
+    this._dompc._onCreateOfferFailure(this.newError(message, code));
   },
 
   onCreateAnswerSuccess: function(sdp) {
@@ -1096,7 +1113,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onCreateAnswerError: function(code, message) {
-    this._dompc._onCreateAnswerFailure(this.newError(code, message));
+    this._dompc._onCreateAnswerFailure(this.newError(message, code));
   },
 
   onSetLocalDescriptionSuccess: function() {
@@ -1109,12 +1126,12 @@ PeerConnectionObserver.prototype = {
 
   onSetLocalDescriptionError: function(code, message) {
     this._localType = null;
-    this._dompc._onSetLocalDescriptionFailure(this.newError(code, message));
+    this._dompc._onSetLocalDescriptionFailure(this.newError(message, code));
   },
 
   onSetRemoteDescriptionError: function(code, message) {
     this._remoteType = null;
-    this._dompc._onSetRemoteDescriptionFailure(this.newError(code, message));
+    this._dompc._onSetRemoteDescriptionFailure(this.newError(message, code));
   },
 
   onAddIceCandidateSuccess: function() {
@@ -1122,7 +1139,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onAddIceCandidateError: function(code, message) {
-    this._dompc._onAddIceCandidateError(this.newError(code, message));
+    this._dompc._onAddIceCandidateError(this.newError(message, code));
   },
 
   onIceCandidate: function(level, mid, candidate) {
@@ -1250,7 +1267,7 @@ PeerConnectionObserver.prototype = {
   },
 
   onGetStatsError: function(code, message) {
-    this._dompc._onGetStatsFailure(this.newError(code, message));
+    this._dompc._onGetStatsFailure(this.newError(message, code));
   },
 
   onAddStream: function(stream) {
@@ -1287,7 +1304,7 @@ PeerConnectionObserver.prototype = {
     var pc = this._dompc;
     pc._onReplaceTrackWithTrack = null;
     pc._onReplaceTrackSender = null;
-    pc._onReplaceTrackError(this.newError(code, message));
+    pc._onReplaceTrackError(this.newError(message, code));
   },
 
   foundIceCandidate: function(cand) {
