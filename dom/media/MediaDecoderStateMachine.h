@@ -628,6 +628,8 @@ protected:
   // The decoder monitor must be held.
   void EnqueueLoadedMetadataEvent();
 
+  void EnqueueFirstFrameLoadedEvent();
+
   // Dispatches a task to the decode task queue to begin decoding content.
   // This is threadsafe and can be called on any thread.
   // The decoder monitor must be held.
@@ -1123,16 +1125,19 @@ protected:
 
   MediaDecoderOwner::NextFrameStatus mLastFrameStatus;
 
-  // True if we are back from DECODER_STATE_DORMANT state, and we can skip
+  // mDecodingFrozenAtStateDecoding: turn on/off at
+  //                                 SetDormant/Seek,Play.
+  bool mDecodingFrozenAtStateDecoding;
+
+  // True if we are back from DECODER_STATE_DORMANT state and
+  // LoadedMetadataEvent was already sent.
+  bool mSentLoadedMetadataEvent;
+  // True if we are back from DECODER_STATE_DORMANT state and
+  // FirstFrameLoadedEvent was already sent, then we can skip
   // SetStartTime because the mStartTime already set before. Also we don't need
   // to decode any audio/video since the MediaDecoder will trigger a seek
   // operation soon.
-  // mDecodingFrozenAtStateMetadata: turn on/off at
-  //                                 SetDormant/FinishDecodeMetadata.
-  // mDecodingFrozenAtStateDecoding: turn on/off at
-  //                                 SetDormant/Seek,Play.
-  bool mDecodingFrozenAtStateMetadata;
-  bool mDecodingFrozenAtStateDecoding;
+  bool mSentFirstFrameLoadedEvent;
 };
 
 } // namespace mozilla;

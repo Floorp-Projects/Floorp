@@ -775,11 +775,13 @@ public:
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                              nsAutoPtr<MetadataTags> aTags) MOZ_OVERRIDE;
+                              nsAutoPtr<MetadataTags> aTags,
+                              bool aRestoredFromDromant) MOZ_OVERRIDE;
 
   // Called when the first audio and/or video from the media file has been loaded
   // by the state machine. Call on the main thread only.
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo) MOZ_OVERRIDE;
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
+                                bool aRestoredFromDromant) MOZ_OVERRIDE;
 
   // Called from MetadataLoaded(). Creates audio tracks and adds them to its
   // owner's audio track list, and implies to video tracks respectively.
