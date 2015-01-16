@@ -2,10 +2,9 @@ use std::collections::BTreeMap;
 use rustc_serialize::json::{ToJson, Json};
 use regex::Captures;
 
-use common::{Nullable, WebElement, FrameId, LocatorStrategy};
+use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use response::Date; //TODO: Put all these types in a specific file
-use messagebuilder::MatchType;
+use httpapi::Route;
 
 
 #[derive(PartialEq)]
@@ -69,7 +68,7 @@ impl WebDriverMessage {
         }
     }
 
-    pub fn from_http(match_type: MatchType, params: &Captures, body: &str) -> WebDriverResult<WebDriverMessage> {
+    pub fn from_http(match_type: Route, params: &Captures, body: &str) -> WebDriverResult<WebDriverMessage> {
         let session_id = WebDriverMessage::get_session_id(params);
         let body_data = if body != "" {
             debug!("Got request body {}", body);
@@ -82,62 +81,62 @@ impl WebDriverMessage {
             Json::Null
         };
         let command = match match_type {
-            MatchType::NewSession => WebDriverCommand::NewSession,
-            MatchType::DeleteSession => WebDriverCommand::DeleteSession,
-            MatchType::Get => {
+            Route::NewSession => WebDriverCommand::NewSession,
+            Route::DeleteSession => WebDriverCommand::DeleteSession,
+            Route::Get => {
                 let parameters: GetParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::Get(parameters)
             },
-            MatchType::GetCurrentUrl => WebDriverCommand::GetCurrentUrl,
-            MatchType::GoBack => WebDriverCommand::GoBack,
-            MatchType::GoForward => WebDriverCommand::GoForward,
-            MatchType::Refresh => WebDriverCommand::Refresh,
-            MatchType::GetTitle => WebDriverCommand::GetTitle,
-            MatchType::GetWindowHandle => WebDriverCommand::GetWindowHandle,
-            MatchType::GetWindowHandles => WebDriverCommand::GetWindowHandles,
-            MatchType::Close => WebDriverCommand::Close,
-            MatchType::SetTimeouts => {
+            Route::GetCurrentUrl => WebDriverCommand::GetCurrentUrl,
+            Route::GoBack => WebDriverCommand::GoBack,
+            Route::GoForward => WebDriverCommand::GoForward,
+            Route::Refresh => WebDriverCommand::Refresh,
+            Route::GetTitle => WebDriverCommand::GetTitle,
+            Route::GetWindowHandle => WebDriverCommand::GetWindowHandle,
+            Route::GetWindowHandles => WebDriverCommand::GetWindowHandles,
+            Route::Close => WebDriverCommand::Close,
+            Route::SetTimeouts => {
                 let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SetTimeouts(parameters)
             },
-            MatchType::SetWindowSize => {
+            Route::SetWindowSize => {
                 let parameters: WindowSizeParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SetWindowSize(parameters)
             },
-            MatchType::GetWindowSize => WebDriverCommand::GetWindowSize,
-            MatchType::MaximizeWindow => WebDriverCommand::MaximizeWindow,
-            MatchType::SwitchToWindow => {
+            Route::GetWindowSize => WebDriverCommand::GetWindowSize,
+            Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
+            Route::SwitchToWindow => {
                 let parameters: SwitchToWindowParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SwitchToWindow(parameters)
             }
-            MatchType::SwitchToFrame => {
+            Route::SwitchToFrame => {
                 let parameters: SwitchToFrameParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SwitchToFrame(parameters)
             },
-            MatchType::SwitchToParentFrame => WebDriverCommand::SwitchToParentFrame,
-            MatchType::FindElement => {
+            Route::SwitchToParentFrame => WebDriverCommand::SwitchToParentFrame,
+            Route::FindElement => {
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElement(parameters)
             },
-            MatchType::FindElements => {
+            Route::FindElements => {
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElements(parameters)
             },
-            MatchType::IsDisplayed => {
+            Route::IsDisplayed => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsDisplayed(element)
             },
-            MatchType::IsSelected => {
+            Route::IsSelected => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsSelected(element)
             },
-            MatchType::GetElementAttribute => {
+            Route::GetElementAttribute => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
@@ -147,7 +146,7 @@ impl WebDriverMessage {
                                     "Missing name parameter").to_string();
                 WebDriverCommand::GetElementAttribute(element, attr)
             },
-            MatchType::GetCSSValue => {
+            Route::GetCSSValue => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
@@ -157,56 +156,56 @@ impl WebDriverMessage {
                                         "Missing propertyName parameter").to_string();
                 WebDriverCommand::GetCSSValue(element, property)
             },
-            MatchType::GetElementText => {
+            Route::GetElementText => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementText(element)
             },
-            MatchType::GetElementTagName => {
+            Route::GetElementTagName => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementTagName(element)
             },
-            MatchType::GetElementRect => {
+            Route::GetElementRect => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::GetElementRect(element)
             },
-            MatchType::IsEnabled => {
+            Route::IsEnabled => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::IsEnabled(element)
             },
-            MatchType::ElementClick => {
+            Route::ElementClick => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementClick(element)
             },
-            MatchType::ElementTap => {
+            Route::ElementTap => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementTap(element)
             },
-            MatchType::ElementClear => {
+            Route::ElementClear => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
                 let element = WebElement::new(element_id.to_string());
                 WebDriverCommand::ElementClear(element)
             },
-            MatchType::ElementSendKeys => {
+            Route::ElementSendKeys => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
@@ -214,36 +213,36 @@ impl WebDriverMessage {
                 let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ElementSendKeys(element, parameters)
             },
-            MatchType::ExecuteScript => {
+            Route::ExecuteScript => {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteScript(parameters)
             },
-            MatchType::ExecuteAsyncScript => {
+            Route::ExecuteAsyncScript => {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteAsyncScript(parameters)
             },
-            MatchType::GetCookie => {
+            Route::GetCookie => {
                 let parameters: GetCookieParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::GetCookie(parameters)
             },
-            MatchType::AddCookie => {
+            Route::AddCookie => {
                 let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::AddCookie(parameters)
             },
-            MatchType::DismissAlert => {
+            Route::DismissAlert => {
                 WebDriverCommand::DismissAlert
             },
-            MatchType::AcceptAlert => {
+            Route::AcceptAlert => {
                 WebDriverCommand::AcceptAlert
             },
-            MatchType::GetAlertText => {
+            Route::GetAlertText => {
                 WebDriverCommand::GetAlertText
             },
-            MatchType::SendAlertText => {
+            Route::SendAlertText => {
                 let parameters: SendAlertTextParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SendAlertText(parameters)
             }
-            MatchType::TakeScreenshot => {
+            Route::TakeScreenshot => {
                 let parameters: TakeScreenshotParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::TakeScreenshot(parameters)
             }
