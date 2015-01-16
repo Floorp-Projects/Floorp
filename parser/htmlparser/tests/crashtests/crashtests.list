@@ -30,7 +30,7 @@ load 269095-1.html
 load 286733-1.html
 load 286733-2.html
 load 299036-1.html
-skip-if((OSX==10.7||OSX==10.8)&&browserIsRemote) load 328751-1.html # Bug 849747
+skip-if((OSX==1007||OSX==1008)&&browserIsRemote) load 328751-1.html # Bug 849747
 load 408939-1.html
 load 423373-1.html
 load 445171-1.html

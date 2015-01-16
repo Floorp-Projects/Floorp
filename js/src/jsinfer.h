@@ -117,61 +117,6 @@ class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>
 
 class CallObject;
 
-/*
- * Execution Mode Overview
- *
- * JavaScript code executes sequentially.  Functions which have
- * similar but not identical behavior between execution modes can be
- * templated on the mode. Such functions use a context parameter type
- * from ExecutionModeTraits below indicating whether they are only
- * permitted constrained operations (such as thread safety, and side
- * effects limited to being thread-local), or whether they can have
- * arbitrary side effects.
- */
-
-enum ExecutionMode {
-    /* Normal JavaScript execution. */
-    SequentialExecution,
-
-    /*
-     * Modes after this point are internal and are not counted in
-     * NumExecutionModes below.
-     */
-
-    /*
-     * MIR analysis performed when invoking 'new' on a script, to determine
-     * definite properties. Used by the optimizing JIT.
-     */
-    DefinitePropertiesAnalysis,
-
-    /*
-     * MIR analysis performed when executing a script which uses its arguments,
-     * when it is not known whether a lazy arguments value can be used.
-     */
-    ArgumentsUsageAnalysis
-};
-
-inline const char *
-ExecutionModeString(ExecutionMode mode)
-{
-    switch (mode) {
-      case SequentialExecution:
-        return "SequentialExecution";
-      case DefinitePropertiesAnalysis:
-        return "DefinitePropertiesAnalysis";
-      case ArgumentsUsageAnalysis:
-        return "ArgumentsUsageAnalysis";
-      default:
-        MOZ_CRASH("Invalid ExecutionMode");
-    }
-}
-
-/*
- * Not as part of the enum so we don't get warnings about unhandled enum
- * values.
- */
-static const unsigned NumExecutionModes = SequentialExecution + 1;
-
 namespace jit {
     struct IonScript;
     class JitAllocPolicy;
@@ -1494,8 +1439,8 @@ class RecompileInfo;
 // constraints for the compilation. Returns whether the type constraints
 // still hold.
 bool
-FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode executionMode,
-                  CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
+FinishCompilation(JSContext *cx, HandleScript script, CompilerConstraintList *constraints,
+                  RecompileInfo *precompileInfo);
 
 // Update the actual types in any scripts queried by constraints with any
 // speculative types added during the definite properties analysis.
@@ -1618,30 +1563,28 @@ class CompilerOutput
     // If this compilation has not been invalidated, the associated script and
     // kind of compilation being performed.
     JSScript *script_;
-    ExecutionMode mode_ : 2;
 
     // Whether this compilation is about to be invalidated.
     bool pendingInvalidation_ : 1;
 
     // During sweeping, the list of compiler outputs is compacted and invalidated
     // outputs are removed. This gives the new index for a valid compiler output.
-    uint32_t sweepIndex_ : 29;
+    uint32_t sweepIndex_ : 31;
 
   public:
-    static const uint32_t INVALID_SWEEP_INDEX = (1 << 29) - 1;
+    static const uint32_t INVALID_SWEEP_INDEX = static_cast<uint32_t>(1 << 31) - 1;
 
     CompilerOutput()
-      : script_(nullptr), mode_(SequentialExecution),
+      : script_(nullptr),
         pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
     {}
 
-    CompilerOutput(JSScript *script, ExecutionMode mode)
-      : script_(script), mode_(mode),
+    explicit CompilerOutput(JSScript *script)
+      : script_(script),
         pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
     {}
 
     JSScript *script() const { return script_; }
-    inline ExecutionMode mode() const { return mode_; }
 
     inline jit::IonScript *ion() const;
 

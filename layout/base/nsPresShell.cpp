@@ -8800,17 +8800,21 @@ PresShell::ShouldIgnoreInvalidation()
 void
 PresShell::WillPaint()
 {
+  // Check the simplest things first.  In particular, it's important to
+  // check mIsActive before making any of the more expensive calls such
+  // as GetRootPresContext, for the case of a browser with a large
+  // number of tabs.
+  // Don't bother doing anything if some viewmanager in our tree is painting
+  // while we still have painting suppressed or we are not active.
+  if (!mIsActive || mPaintingSuppressed || !IsVisible()) {
+    return;
+  }
+
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (!rootPresContext) {
     // In some edge cases, such as when we don't have a root frame yet,
     // we can't find the root prescontext. There's nothing to do in that
     // case.
-    return;
-  }
-
-  // Don't bother doing anything if some viewmanager in our tree is painting
-  // while we still have painting suppressed or we are not active.
-  if (mPaintingSuppressed || !mIsActive || !IsVisible()) {
     return;
   }
 

@@ -59,8 +59,8 @@ random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
 ## Currently fails most places due to partial backout of bug 808288, see bug 837461.
 ## (Marking "random" rather than "fails" because it would pass for people
 ## if they have an Emoji font installed when running the tests.)
-## WAS: random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
-random-if(!cocoaWidget||OSX==10.6||OSX==10.7) != text-emoji.html text-emoji-notref.html
+## WAS: random-if(OSX==1007) != text-emoji.html text-emoji-notref.html
+random-if(!cocoaWidget||OSX==1006||OSX==1007) != text-emoji.html text-emoji-notref.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
@@ -68,7 +68,7 @@ random-if(!cocoaWidget||OSX==10.6||OSX==10.7) != text-emoji.html text-emoji-notr
 fails-if(azureSkia||azureSkiaGL||azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if(!(Android&&AndroidVersion>=15)&&(OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8)))||azureSkiaGL||azureSkia) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if(!(Android&&AndroidVersion>=15)&&(OSX==1006||(azureQuartz&&OSX>=1007))||azureSkiaGL||azureSkia) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
@@ -85,7 +85,7 @@ fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bu
 == ctm-singular-sanity.html data:text/html,<body>Pass
 == ctm-1.html ctm-1-ref.html
 
-fails-if(OSX==10.6) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
+fails-if(OSX==1006) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted

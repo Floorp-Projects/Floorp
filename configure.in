@@ -2111,13 +2111,8 @@ ia64*-hpux*)
         # while; Intel recommends against using it.
         MOZ_OPTIMIZE_FLAGS="-O2"
     elif test "$GNU_CC" -o "$GNU_CXX"; then
-        case $GCC_VERSION in
-        4.5.*)
-            # -Os is broken on gcc 4.5.x we need to tweak it to get good results.
-            MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
-        esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-Os $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os"
         if test -z "$CLANG_CC"; then
            MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
         fi
@@ -2366,6 +2361,9 @@ ia64*-hpux*)
         AC_DEFINE(_X86_)
         ;;
     x86_64-*)
+        if test -z "$HAVE_64BIT_BUILD"; then
+            AC_MSG_ERROR([You are targeting 64-bit but using the 32-bit compiler.])
+        fi
         if test -n "$_WIN32_MSVC"; then
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X64"
         fi
@@ -2627,7 +2625,7 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
     ;;
   *)
     case $GCC_VERSION in
-    4.4*|4.6*)
+    4.6*)
       VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(MOZILLA_DIR)/config/gcc_hidden_dso_handle.h'
       ;;
     *)
@@ -6926,7 +6924,6 @@ AC_SUBST(MOZ_FRAMEPTR_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
-AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 

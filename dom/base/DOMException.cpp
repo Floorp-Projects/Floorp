@@ -722,5 +722,32 @@ DOMException::Create(nsresult aRv)
   return inst.forget();
 }
 
+bool
+DOMException::Sanitize(JSContext* aCx,
+                       JS::MutableHandle<JS::Value> aSanitizedValue)
+{
+  nsRefPtr<DOMException> retval = this;
+  if (mLocation && !mLocation->CallerSubsumes(aCx)) {
+    nsString message;
+    GetMessageMoz(message);
+    nsString name;
+    GetName(name);
+    retval = new dom::DOMException(nsresult(Result()),
+                                   NS_ConvertUTF16toUTF8(message),
+                                   NS_ConvertUTF16toUTF8(name),
+                                   Code());
+    // Now it's possible that the stack on retval still starts with
+    // stuff aCx is not supposed to touch; it depends on what's on the
+    // stack right this second.  Walk past all of that.
+    while (retval->mLocation && !retval->mLocation->CallerSubsumes(aCx)) {
+      nsCOMPtr<nsIStackFrame> caller;
+      retval->mLocation->GetCaller(getter_AddRefs(caller));
+      retval->mLocation.swap(caller);
+    }
+  }
+
+  return ToJSValue(aCx, retval, aSanitizedValue);
+}
+
 } // namespace dom
 } // namespace mozilla

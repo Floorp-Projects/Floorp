@@ -12,22 +12,21 @@
 #include "DecodePool.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
+#include "SourceBuffer.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
 
 namespace image {
 
-class Decoder
+class Decoder : public IResumable
 {
 public:
 
-  explicit Decoder(RasterImage& aImage);
+  explicit Decoder(RasterImage* aImage);
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
-   *
-   * Notifications Sent: TODO
    */
   void Init();
 
@@ -42,28 +41,30 @@ public:
                          RawAccessFrameRef&& aFrameRef);
 
   /**
-   * Writes data to the decoder.
-   *
+   * Decodes, reading all data currently available in the SourceBuffer. If more
    * If aBuffer is null and aCount is 0, Write() flushes any buffered data to
    * the decoder. Data is buffered if the decoder wasn't able to completely
    * decode it because it needed a new frame.  If it's necessary to flush data,
    * NeedsToFlushData() will return true.
    *
-   * @param aBuffer buffer containing the data to be written
-   * @param aCount the number of bytes to write
+   * data is needed, Decode() automatically ensures that it will be called again
+   * on a DecodePool thread when the data becomes available.
    *
    * Any errors are reported by setting the appropriate state on the decoder.
-   *
-   * Notifications Sent: TODO
    */
-  void Write(const char* aBuffer, uint32_t aCount);
+  nsresult Decode();
 
   /**
-   * Informs the decoder that all the data has been written.
-   *
-   * Notifications Sent: TODO
+   * Cleans up the decoder's state and notifies our image about success or
+   * failure. May only be called on the main thread.
    */
-  void Finish(ShutdownReason aReason);
+  void Finish();
+
+  /**
+   * Given a maximum number of bytes we're willing to decode, @aByteLimit,
+   * returns true if we should attempt to run this decoder synchronously.
+   */
+  bool ShouldSyncDecode(size_t aByteLimit);
 
   /**
    * Informs the shared decoder that all the data has been written.
@@ -98,8 +99,19 @@ public:
     return progress;
   }
 
+  /**
+   * Returns true if there's any progress to report.
+   */
+  bool HasProgress() const
+  {
+    return mProgress != NoProgress || !mInvalidRect.IsEmpty();
+  }
+
   // We're not COM-y, so we don't get refcounts by default
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Decoder)
+
+  // Implement IResumable.
+  virtual void Resume() MOZ_OVERRIDE;
 
   /*
    * State.
@@ -111,7 +123,7 @@ public:
   bool IsSizeDecode() { return mSizeDecode; }
   void SetSizeDecode(bool aSizeDecode)
   {
-    NS_ABORT_IF_FALSE(!mInitialized, "Can't set size decode after Init()!");
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
     mSizeDecode = aSizeDecode;
   }
 
@@ -133,6 +145,32 @@ public:
     mSendPartialInvalidations = aSend;
   }
 
+  /**
+   * Set an iterator to the SourceBuffer which will feed data to this decoder.
+   *
+   * This should be called for almost all decoders; the exceptions are the
+   * contained decoders of an nsICODecoder, which will be fed manually via Write
+   * instead.
+   *
+   * This must be called before Init() is called.
+   */
+  void SetIterator(SourceBufferIterator&& aIterator)
+  {
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
+    mIterator.emplace(Move(aIterator));
+  }
+
+  /**
+   * Set whether this decoder is associated with a transient image. The decoder
+   * may choose to avoid certain optimizations that don't pay off for
+   * short-lived images in this case.
+   */
+  void SetImageIsTransient(bool aIsTransient)
+  {
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
+    mImageIsTransient = aIsTransient;
+  }
+
   size_t BytesDecoded() const { return mBytesDecoded; }
 
   // The amount of time we've spent inside Write() so far for this decoder.
@@ -149,14 +187,27 @@ public:
   uint32_t GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
 
   // Error tracking
-  bool HasError() { return HasDataError() || HasDecoderError(); }
-  bool HasDataError() { return mDataError; }
-  bool HasDecoderError() { return NS_FAILED(mFailCode); }
-  nsresult GetDecoderError() { return mFailCode; }
+  bool HasError() const { return HasDataError() || HasDecoderError(); }
+  bool HasDataError() const { return mDataError; }
+  bool HasDecoderError() const { return NS_FAILED(mFailCode); }
+  nsresult GetDecoderError() const { return mFailCode; }
   void PostResizeError() { PostDataError(); }
-  bool GetDecodeDone() const {
-    return mDecodeDone;
+
+  bool GetDecodeDone() const
+  {
+    return mDecodeDone || (mSizeDecode && HasSize()) || HasError() || mDataDone;
   }
+
+  /**
+   * Returns true if this decoder was aborted.
+   *
+   * This may happen due to a low-memory condition, or because another decoder
+   * was racing with this one to decode the same frames with the same flags and
+   * this decoder lost the race. Either way, this is not a permanent situation
+   * and does not constitute an error, so we don't report any errors when this
+   * happens.
+   */
+  bool WasAborted() const { return mDecodeAborted; }
 
   // flags.  Keep these in sync with imgIContainer.idl.
   // SetDecodeFlags must be called before Init(), otherwise
@@ -187,6 +238,11 @@ public:
 
   ImageMetadata& GetImageMetadata() { return mImageMetadata; }
 
+  /**
+   * Returns a weak pointer to the image associated with this decoder.
+   */
+  RasterImage* GetImage() const { MOZ_ASSERT(mImage); return mImage.get(); }
+
   // Tell the decoder infrastructure to allocate a frame. By default, frame 0
   // is created as an ARGB frame with no offset and with size width * height.
   // If decoders need something different, they must ask for it.
@@ -216,6 +272,18 @@ public:
     return mCurrentFrame ? mCurrentFrame->RawAccessRef()
                          : RawAccessFrameRef();
   }
+
+  /**
+   * Writes data to the decoder. Only public for the benefit of nsICODecoder;
+   * other callers should use Decode().
+   *
+   * @param aBuffer buffer containing the data to be written
+   * @param aCount the number of bytes to write
+   *
+   * Any errors are reported by setting the appropriate state on the decoder.
+   */
+  void Write(const char* aBuffer, uint32_t aCount);
+
 
 protected:
   virtual ~Decoder();
@@ -308,11 +376,13 @@ protected:
                                      gfx::SurfaceFormat aFormat,
                                      uint8_t aPaletteDepth,
                                      imgFrame* aPreviousFrame);
+
   /*
    * Member variables.
    *
    */
-  RasterImage &mImage;
+  nsRefPtr<RasterImage> mImage;
+  Maybe<SourceBufferIterator> mIterator;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
@@ -330,8 +400,11 @@ protected:
   uint32_t mDecodeFlags;
   size_t mBytesDecoded;
   bool mSendPartialInvalidations;
+  bool mDataDone;
   bool mDecodeDone;
   bool mDataError;
+  bool mDecodeAborted;
+  bool mImageIsTransient;
 
 private:
   uint32_t mFrameCount; // Number of frames, including anything in-progress

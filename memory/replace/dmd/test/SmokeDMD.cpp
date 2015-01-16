@@ -260,6 +260,11 @@ TestUnsampled(const char* aTestName, int aNum, const char* aMode, int aSeven)
 //free(y);
 //free(z);
 
+  // Do some allocations that will only show up in cumulative mode.
+  for (int i = 0; i < 100; i++) {
+    free(malloc(128));
+  }
+
   if (aNum == 2) {
     // Analyze 2.
     Analyze(Move(f));

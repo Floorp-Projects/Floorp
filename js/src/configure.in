@@ -1657,13 +1657,8 @@ ia64*-hpux*)
         # while; Intel recommends against using it.
         MOZ_OPTIMIZE_FLAGS="-O2"
     elif test "$GNU_CC" -o "$GNU_CXX"; then
-        case $GCC_VERSION in
-        4.5.*)
-            # -Os is broken on gcc 4.5.x we need to tweak it to get good results.
-            MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
-        esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-O3 $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-O3"
         if test -z "$CLANG_CC"; then
            MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
         fi
@@ -2189,7 +2184,7 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
     ;;
   *)
     case $GCC_VERSION in
-    4.4*|4.6*)
+    4.6*)
       VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden_dso_handle.h'
       ;;
     *)
@@ -2922,7 +2917,6 @@ AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_FRAMEPTR_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
-AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
