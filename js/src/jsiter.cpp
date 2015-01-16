@@ -352,7 +352,7 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
         if (flags & JSITER_OWNONLY)
             break;
 
-        if (!JSObject::getProto(cx, pobj, &pobj))
+        if (!GetPrototype(cx, pobj, &pobj))
             return false;
 
     } while (pobj != nullptr);
@@ -427,7 +427,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
     RootedValue rval(cx);
     /* Check whether we have a valid __iterator__ method. */
     HandlePropertyName name = cx->names().iteratorIntrinsic;
-    if (!JSObject::getProperty(cx, obj, obj, name, &rval))
+    if (!GetProperty(cx, obj, obj, name, &rval))
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
@@ -829,11 +829,11 @@ js::CreateItrResultObject(JSContext *cx, HandleValue value, bool done)
     if (!obj)
         return nullptr;
 
-    if (!JSObject::defineProperty(cx, obj, cx->names().value, value))
+    if (!DefineProperty(cx, obj, cx->names().value, value))
         return nullptr;
 
     RootedValue doneBool(cx, BooleanValue(done));
-    if (!JSObject::defineProperty(cx, obj, cx->names().done, doneBool))
+    if (!DefineProperty(cx, obj, cx->names().done, doneBool))
         return nullptr;
 
     return obj;
@@ -897,7 +897,7 @@ NativeIteratorNext(JSContext *cx, NativeIterator *ni, MutableHandleValue rval, b
         return false;
     ni->incCursor();
     RootedObject obj(cx, ni->obj);
-    if (!JSObject::getGeneric(cx, obj, obj, id, rval))
+    if (!GetProperty(cx, obj, obj, id, rval))
         return false;
 
     // JS 1.7 only: for each (let [k, v] in obj)
@@ -1163,7 +1163,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                      * became visible as a result of this deletion.
                      */
                     RootedObject proto(cx);
-                    if (!JSObject::getProto(cx, obj, &proto))
+                    if (!GetPrototype(cx, obj, &proto))
                         return false;
                     if (proto) {
                         RootedObject obj2(cx);
@@ -1172,13 +1172,13 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         RootedValue idv(cx, StringValue(*idp));
                         if (!ValueToId<CanGC>(cx, idv, &id))
                             return false;
-                        if (!JSObject::lookupGeneric(cx, proto, id, &obj2, &prop))
+                        if (!LookupProperty(cx, proto, id, &obj2, &prop))
                             return false;
                         if (prop) {
                             unsigned attrs;
                             if (obj2->isNative())
                                 attrs = GetShapeAttributes(obj2, prop);
-                            else if (!JSObject::getGenericAttributes(cx, obj2, id, &attrs))
+                            else if (!GetPropertyAttributes(cx, obj2, id, &attrs))
                                 return false;
 
                             if (attrs & JSPROP_ENUMERATE)
@@ -1303,7 +1303,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     JS_CHECK_RECURSION(cx, return false);
 
     // Call the iterator object's .next method.
-    if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
+    if (!GetProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
     // We try to support the old and new iterator protocol at the same time!
     if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
@@ -1330,11 +1330,11 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     // it's using the new style protocol. Otherwise just return the object.
     RootedObject result(cx, &rval.toObject());
     bool found = false;
-    if (!JSObject::hasProperty(cx, result, cx->names().done, &found))
+    if (!HasProperty(cx, result, cx->names().done, &found))
         return false;
     if (!found)
         return true;
-    if (!JSObject::hasProperty(cx, result, cx->names().value, &found))
+    if (!HasProperty(cx, result, cx->names().value, &found))
         return false;
     if (!found)
         return true;
@@ -1343,7 +1343,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 
     // 7.4.4 IteratorComplete
     // Get iterResult.done
-    if (!JSObject::getProperty(cx, result, result, cx->names().done, rval))
+    if (!GetProperty(cx, result, result, cx->names().done, rval))
         return false;
 
     bool done = ToBoolean(rval);
@@ -1353,7 +1353,7 @@ js::IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
      }
 
     // 7.4.5 IteratorValue
-    return JSObject::getProperty(cx, result, result, cx->names().value, rval);
+    return GetProperty(cx, result, result, cx->names().value, rval);
 }
 
 static bool
@@ -1440,7 +1440,7 @@ GlobalObject::initStopIterationClass(JSContext *cx, Handle<GlobalObject *> globa
         return true;
 
     RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationObject::class_));
-    if (!proto || !JSObject::freeze(cx, proto))
+    if (!proto || !FreezeObject(cx, proto))
         return false;
 
     // This should use a non-JSProtoKey'd slot, but this is easier for now.

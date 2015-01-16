@@ -32,6 +32,9 @@ class nsIRunnable;
 
 namespace mozilla {
 class RefreshDriverTimer;
+namespace layout {
+class VsyncChild;
+}
 }
 
 /**
@@ -256,6 +259,14 @@ public:
    */
   nsPresContext* PresContext() const { return mPresContext; }
 
+  /**
+   * PBackgroundChild actor is created asynchronously in content process.
+   * We can't create vsync-based timers during PBackground startup. This
+   * function will be called when PBackgroundChild actor is created. Then we can
+   * do the pending vsync-based timer creation.
+   */
+  static void PVsyncActorCreated(mozilla::layout::VsyncChild* aVsyncChild);
+
 #ifdef DEBUG
   /**
    * Check whether the given observer is an observer for the given flush type
@@ -333,7 +344,7 @@ private:
   void FinishedWaitingForTransaction();
 
   mozilla::RefreshDriverTimer* ChooseTimer() const;
-  mozilla::RefreshDriverTimer *mActiveTimer;
+  mozilla::RefreshDriverTimer* mActiveTimer;
 
   ProfilerBacktrace* mReflowCause;
   ProfilerBacktrace* mStyleCause;

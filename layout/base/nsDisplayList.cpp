@@ -3056,7 +3056,18 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 {
   NS_ASSERTION(aBuilder->FindReferenceFrameFor(aFrame) == aBuilder->FindReferenceFrameFor(mFrame),
                "Reference frame mismatch");
-  uint8_t pointerEvents = aFrame->StyleVisibility()->mPointerEvents;
+  if (!aFrame->GetParent()) {
+    MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::viewportFrame);
+    nsSubDocumentFrame* subdoc = static_cast<nsSubDocumentFrame*>(
+        nsLayoutUtils::GetCrossDocParentFrame(aFrame));
+    if (subdoc && subdoc->PassPointerEventsToChildren()) {
+      // If this viewport frame is for a subdocument with
+      // mozpasspointerevents, then we don't want to add the viewport itself
+      // to the event regions. Instead we want to add only subframes.
+      return;
+    }
+  }
+  uint8_t pointerEvents = aFrame->StyleVisibility()->GetEffectivePointerEvents(aFrame);
   if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
     return;
   }

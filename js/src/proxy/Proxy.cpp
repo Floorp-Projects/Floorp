@@ -87,7 +87,7 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id,
 #define INVOKE_ON_PROTOTYPE(cx, handler, proxy, protoCall)                   \
     JS_BEGIN_MACRO                                                           \
         RootedObject proto(cx);                                              \
-        if (!JSObject::getProto(cx, proxy, &proto))                          \
+        if (!GetPrototype(cx, proxy, &proto))                                \
             return false;                                                    \
         if (!proto)                                                          \
             return true;                                                     \
@@ -297,7 +297,7 @@ Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     }
     if (own)
         return handler->get(cx, proxy, receiver, id, vp);
-    INVOKE_ON_PROTOTYPE(cx, handler, proxy, JSObject::getGeneric(cx, proto, receiver, id, vp));
+    INVOKE_ON_PROTOTYPE(cx, handler, proxy, GetProperty(cx, proto, receiver, id, vp));
 }
 
 bool
@@ -370,7 +370,7 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp)
         return false;
 
     RootedObject proto(cx);
-    if (!JSObject::getProto(cx, proxy, &proto))
+    if (!GetPrototype(cx, proxy, &proto))
         return false;
     if (!proto)
         return EnumeratedIdVectorToIterator(cx, proxy, 0, props, objp);

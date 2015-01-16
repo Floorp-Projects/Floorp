@@ -78,11 +78,11 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
 #ifdef DEBUG
     RootedValue test(cx);
     RootedId id(cx, NameToId(cx->names().index));
-    if (!baseops::GetProperty(cx, arr, id, &test))
+    if (!NativeGetProperty(cx, arr, id, &test))
         return false;
     MOZ_ASSERT(test == arr->getSlot(0));
     id = NameToId(cx->names().input);
-    if (!baseops::GetProperty(cx, arr, id, &test))
+    if (!NativeGetProperty(cx, arr, id, &test))
         return false;
     MOZ_ASSERT(test == arr->getSlot(1));
 #endif
@@ -251,7 +251,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          * to executing RegExpObject::getSource on the unwrapped object.
          */
         RootedValue v(cx);
-        if (!JSObject::getProperty(cx, sourceObj, sourceObj, cx->names().source, &v))
+        if (!GetProperty(cx, sourceObj, sourceObj, cx->names().source, &v))
             return false;
 
         // For proxies like CPOWs, we can't assume the result of a property get
@@ -394,35 +394,35 @@ regexp_flags(JSContext *cx, unsigned argc, JS::Value *vp)
 
     /* Steps 4-6. */
     RootedValue global(cx);
-    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().global, &global))
+    if (!GetProperty(cx, thisObj, thisObj, cx->names().global, &global))
         return false;
     if (ToBoolean(global) && !sb.append('g'))
         return false;
 
     /* Steps 7-9. */
     RootedValue ignoreCase(cx);
-    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().ignoreCase, &ignoreCase))
+    if (!GetProperty(cx, thisObj, thisObj, cx->names().ignoreCase, &ignoreCase))
         return false;
     if (ToBoolean(ignoreCase) && !sb.append('i'))
         return false;
 
     /* Steps 10-12. */
     RootedValue multiline(cx);
-    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().multiline, &multiline))
+    if (!GetProperty(cx, thisObj, thisObj, cx->names().multiline, &multiline))
         return false;
     if (ToBoolean(multiline) && !sb.append('m'))
         return false;
 
     /* Steps 13-15. */
     RootedValue unicode(cx);
-    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().unicode, &unicode))
+    if (!GetProperty(cx, thisObj, thisObj, cx->names().unicode, &unicode))
         return false;
     if (ToBoolean(unicode) && !sb.append('u'))
         return false;
 
     /* Steps 16-18. */
     RootedValue sticky(cx);
-    if (!JSObject::getProperty(cx, thisObj, thisObj, cx->names().sticky, &sticky))
+    if (!GetProperty(cx, thisObj, thisObj, cx->names().sticky, &sticky))
         return false;
     if (ToBoolean(sticky) && !sb.append('y'))
         return false;

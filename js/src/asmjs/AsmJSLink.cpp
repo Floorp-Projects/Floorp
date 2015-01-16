@@ -1011,7 +1011,7 @@ CreateExportObject(JSContext *cx, Handle<AsmJSModuleObject*> moduleObj)
         MOZ_ASSERT(func.maybeFieldName() != nullptr);
         RootedId id(cx, NameToId(func.maybeFieldName()));
         RootedValue val(cx, ObjectValue(*fun));
-        if (!DefineNativeProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!NativeDefineProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE))
             return nullptr;
     }
 
