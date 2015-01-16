@@ -976,40 +976,32 @@ function formNameExists(name)
  * Removes all history visits, downloads, and form entries.
  */
 function blankSlate() {
-  PlacesUtils.bhistory.removeAllPages();
-
-  // The promise is resolved only when removing both downloads and form history are done.
-  let deferred = Promise.defer();
-  let formHistoryDone = false, downloadsDone = false;
-
-  Task.spawn(function deleteAllDownloads() {
+  let deleteDownloads = Task.spawn(function* deleteAllDownloads() {
     let publicList = yield Downloads.getList(Downloads.PUBLIC);
     let downloads = yield publicList.getAll();
     for (let download of downloads) {
       yield publicList.remove(download);
       yield download.finalize(true);
     }
-    downloadsDone = true;
-    if (formHistoryDone) {
-      deferred.resolve();
-    }
   }).then(null, Components.utils.reportError);
 
-  FormHistory.update({ op: "remove" },
-                     { handleError: function (error) {
-                         do_throw("Error occurred updating form history: " + error);
-                         deferred.reject(error);
-                       },
-                       handleCompletion: function (reason) {
-                         if (!reason) {
-                           formHistoryDone = true;
-                           if (downloadsDone) {
-                             deferred.resolve();
-                           }
-                         }
-                       }
-                     });
-  return deferred.promise;
+  let updateFormHistory = new Promise((resolve, reject) => {
+    FormHistory.update({op: "remove"}, {
+      handleCompletion(reason) {
+        if (!reason) {
+          resolve();
+        }
+      },
+
+      handleError(error) {
+        do_throw("Error occurred updating form history: " + error);
+        reject(error);
+      }
+    });
+  });
+
+  return Promise.all([
+    PlacesTestUtils.clearHistory(), deleteDownloads, updateFormHistory]);
 }
 
 /**
