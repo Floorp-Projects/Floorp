@@ -497,13 +497,6 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Previously used to initialize the reference count, but no longer needed.
- *
- * DEPRECATED.
- */
-#define NS_INIT_ISUPPORTS() ((void)0)
-
-/**
  * Use this macro to declare and implement the AddRef & Release methods for a
  * given non-XPCOM <i>_class</i>.
  *
