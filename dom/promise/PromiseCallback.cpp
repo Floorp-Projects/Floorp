@@ -205,18 +205,37 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   // PromiseReactionTask step 6
   JS::Rooted<JS::Value> retValue(aCx);
-  mCallback->Call(value, &retValue, rv, CallbackObject::eRethrowExceptions);
+  mCallback->Call(value, &retValue, rv, CallbackObject::eRethrowExceptions,
+                  mNextPromise->Compartment());
 
   rv.WouldReportJSException();
 
   // PromiseReactionTask step 7
-  if (rv.Failed() && rv.IsJSException()) {
+  if (rv.Failed()) {
     JS::Rooted<JS::Value> value(aCx);
-    rv.StealJSException(aCx, &value);
+    if (rv.IsJSException()) {
+      { // scope for ac
+        // Enter the compartment of mNextPromise before stealing the JS
+        // exception, since the StealJSException call will use the current
+        // compartment for a security check that determines how much of the
+        // stack we're allowed to see and we'll be exposing that stack to
+        // consumers of mPromise.
+        JSAutoCompartment ac(aCx, mNextPromise->GlobalJSObject());
+        rv.StealJSException(aCx, &value);
+      }
 
-    if (!JS_WrapValue(aCx, &value)) {
-      NS_WARNING("Failed to wrap value into the right compartment.");
-      return;
+      if (!JS_WrapValue(aCx, &value)) {
+        NS_WARNING("Failed to wrap value into the right compartment.");
+        return;
+      }
+    } else {
+      // Convert the ErrorResult to a JS exception object that we can reject
+      // ourselves with.  This will be exactly the exception that would get
+      // thrown from a binding method whose ErrorResult ended up with whatever
+      // is on "rv" right now.
+      JSAutoCompartment ac(aCx, mNextPromise->GlobalJSObject());
+      DebugOnly<bool> conversionResult = ToJSValue(aCx, rv, &value);
+      MOZ_ASSERT(conversionResult);
     }
 
     mNextPromise->RejectInternal(aCx, value);

@@ -46,6 +46,7 @@
           win.Cmds.showDevicePrefs();
           is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
 
+          yield prefIframe.contentWindow.getAllPrefs;
           yield nextTick();
 
           let doc = prefIframe.contentWindow.document;

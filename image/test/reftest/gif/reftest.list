@@ -47,4 +47,4 @@ skip-if(B2G) random-if(Android) == test_bug641198.html animation2a-finalframe.gi
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-skip-if(B2G) HTTP == webcam.html blue.gif # bug 773482
+skip-if(B2G||browserIsRemote) HTTP == webcam.html blue.gif # bug 773482

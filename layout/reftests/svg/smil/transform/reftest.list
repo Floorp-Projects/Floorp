@@ -13,6 +13,6 @@ fuzzy(12,27) == scale-1.svg scale-1-ref.svg  # bug 981004
 == set-transform-1.svg lime.svg
 fuzzy-if(winWidget,1,3) == skew-1.svg skew-1-ref.svg # bug 983671
 == translate-clipPath-1.svg lime.svg
-fails-if(OSX==10.6) == translate-gradient-1.svg lime.svg
+fails-if(OSX==1006) == translate-gradient-1.svg lime.svg
 == translate-pattern-1.svg lime.svg
 == use-1.svg lime.svg

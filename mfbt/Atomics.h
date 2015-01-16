@@ -284,8 +284,7 @@ private:
   {
 #if defined(__clang__) || defined(_MSC_VER)
     return aVal;
-#elif defined(__GNUC__) && MOZ_GCC_VERSION_AT_LEAST(4, 6, 0) && \
-    !MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+#elif defined(__GNUC__) && !MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
     return aVal * sizeof(T);
 #else
     return aVal;

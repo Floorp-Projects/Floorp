@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1107592</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1107592 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function checkExn(lineNumber, name, message, code, filename, testNumber, stack, exn) {
+    ise(exn.lineNumber, lineNumber,
+        "Should have the right line number in test " + testNumber);
+    ise(exn.name, name,
+        "Should have the right exception name in test " + testNumber);
+    ise("filename" in exn ? exn.filename : exn.fileName, filename,
+        "Should have the right file name in test " + testNumber);
+    ise(exn.message, message,
+        "Should have the right message in test " + testNumber);
+    ise(exn.code, code, "Should have the right .code in test " + testNumber);
+    if (message === "") {
+      ise(exn.name, "NS_ERROR_UNEXPECTED",
+          "Should have one of our synthetic exceptions in test " + testNumber);
+    }
+    ise(exn.stack, stack, "Should have the right stack in test " + testNumber);
+  }
+
+  function ensurePromiseFail(testNumber, value) {
+    ok(false, "Test " + testNumber + " should not have a fulfilled promise");
+  }
+
+  function doTest() {
+    var t = new TestInterfaceJS();
+
+    var ourFile = "http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html";
+
+    Promise.all([
+      t.testPromiseWithThrowingChromePromiseInit().then(
+          ensurePromiseFail.bind(null, 1),
+          checkExn.bind(null, 44, "NS_ERROR_UNEXPECTED", "", undefined,
+                        ourFile, 1,
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:44:6\n")),
+      t.testPromiseWithThrowingContentPromiseInit(function() {
+          thereIsNoSuchContentFunction1();
+        }).then(
+          ensurePromiseFail.bind(null, 2),
+          checkExn.bind(null, 50, "ReferenceError",
+                        "thereIsNoSuchContentFunction1 is not defined",
+                        undefined, ourFile, 2,
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:50:11\ndoTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:49:7\n")),
+      t.testPromiseWithThrowingChromeThenFunction().then(
+          ensurePromiseFail.bind(null, 3),
+          checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 3, "")),
+      t.testPromiseWithThrowingContentThenFunction(function() {
+          thereIsNoSuchContentFunction2();
+        }).then(
+          ensurePromiseFail.bind(null, 4),
+          checkExn.bind(null, 61, "ReferenceError",
+                        "thereIsNoSuchContentFunction2 is not defined",
+                        undefined, ourFile, 4,
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\n")),
+      t.testPromiseWithThrowingChromeThenable().then(
+          ensurePromiseFail.bind(null, 5),
+          checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 5, "")),
+      t.testPromiseWithThrowingContentThenable({
+            then: function() { thereIsNoSuchContentFunction3(); }
+        }).then(
+          ensurePromiseFail.bind(null, 6),
+          checkExn.bind(null, 72, "ReferenceError",
+                        "thereIsNoSuchContentFunction3 is not defined",
+                        undefined, ourFile, 6,
+                        "doTest/<.then@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:72:32\n")),
+      t.testPromiseWithDOMExceptionThrowingPromiseInit().then(
+          ensurePromiseFail.bind(null, 7),
+          checkExn.bind(null, 79, "NotFoundError",
+                        "We are a second DOMException",
+                        DOMException.NOT_FOUND_ERR, ourFile, 7,
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:79:6\n")),
+      t.testPromiseWithDOMExceptionThrowingThenFunction().then(
+          ensurePromiseFail.bind(null, 8),
+          checkExn.bind(null, 0, "NetworkError",
+                        "We are a third DOMException",
+                        DOMException.NETWORK_ERR, "", 8, "")),
+      t.testPromiseWithDOMExceptionThrowingThenable().then(
+          ensurePromiseFail.bind(null, 9),
+          checkExn.bind(null, 0, "TypeMismatchError",
+                        "We are a fourth DOMException",
+                         DOMException.TYPE_MISMATCH_ERR, "", 9, "")),
+    ]).then(SimpleTest.finish,
+            function() {
+              ok(false, "One of our catch statements totally failed");
+              SimpleTest.finish();
+            });
+  }
+
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                            doTest);
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107592">Mozilla Bug 1107592</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

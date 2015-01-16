@@ -94,12 +94,8 @@
 #      define MOZ_HAVE_CXX11_OVERRIDE
 #      define MOZ_HAVE_CXX11_FINAL       final
 #    endif
-#    if MOZ_GCC_VERSION_AT_LEAST(4, 6, 0)
 #      define MOZ_HAVE_CXX11_CONSTEXPR
-#    endif
-#    if MOZ_GCC_VERSION_AT_LEAST(4, 5, 0)
 #      define MOZ_HAVE_EXPLICIT_CONVERSION
-#    endif
 #  else
      /* __final is a non-C++11 GCC synonym for 'final', per GCC r176655. */
 #    if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)

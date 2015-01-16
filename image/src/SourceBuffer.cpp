@@ -1,0 +1,573 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "SourceBuffer.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include "mozilla/Likely.h"
+#include "MainThreadUtils.h"
+#include "SurfaceCache.h"
+
+using std::max;
+using std::min;
+
+namespace mozilla {
+namespace image {
+
+//////////////////////////////////////////////////////////////////////////////
+// SourceBufferIterator implementation.
+//////////////////////////////////////////////////////////////////////////////
+
+SourceBufferIterator::~SourceBufferIterator()
+{
+  if (mOwner) {
+    mOwner->OnIteratorRelease();
+  }
+}
+
+SourceBufferIterator::State
+SourceBufferIterator::AdvanceOrScheduleResume(IResumable* aConsumer)
+{
+  MOZ_ASSERT(mOwner);
+  return mOwner->AdvanceIteratorOrScheduleResume(*this, aConsumer);
+}
+
+bool
+SourceBufferIterator::RemainingBytesIsNoMoreThan(size_t aBytes) const
+{
+  MOZ_ASSERT(mOwner);
+  return mOwner->RemainingBytesIsNoMoreThan(*this, aBytes);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// SourceBuffer implementation.
+//////////////////////////////////////////////////////////////////////////////
+
+SourceBuffer::SourceBuffer()
+  : mMutex("image::SourceBuffer")
+  , mConsumerCount(0)
+{ }
+
+SourceBuffer::~SourceBuffer()
+{
+  MOZ_ASSERT(mConsumerCount == 0,
+             "SourceBuffer destroyed with active consumers");
+}
+
+nsresult
+SourceBuffer::AppendChunk(Maybe<Chunk>&& aChunk)
+{
+  mMutex.AssertCurrentThreadOwns();
+
+#ifdef DEBUG
+  if (mChunks.Length() > 0) {
+    NS_WARNING("Appending an extra chunk for SourceBuffer");
+  }
+#endif
+
+  if (MOZ_UNLIKELY(!aChunk)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (MOZ_UNLIKELY(aChunk->AllocationFailed())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (MOZ_UNLIKELY(!mChunks.AppendElement(Move(*aChunk)))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+Maybe<SourceBuffer::Chunk>
+SourceBuffer::CreateChunk(size_t aCapacity, bool aRoundUp /* = true */)
+{
+  if (MOZ_UNLIKELY(aCapacity == 0)) {
+    MOZ_ASSERT_UNREACHABLE("Appending a chunk of zero size?");
+    return Nothing();
+  }
+
+  // Round up if requested.
+  size_t finalCapacity = aRoundUp ? RoundedUpCapacity(aCapacity)
+                                  : aCapacity;
+
+  // Use the size of the SurfaceCache as an additional heuristic to avoid
+  // allocating huge buffers. Generally images do not get smaller when decoded,
+  // so if we could store the source data in the SurfaceCache, we assume that
+  // there's no way we'll be able to store the decoded version.
+  if (MOZ_UNLIKELY(!SurfaceCache::CanHold(finalCapacity))) {
+    return Nothing();
+  }
+
+  return Some(Chunk(finalCapacity));
+}
+
+nsresult
+SourceBuffer::Compact()
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  MOZ_ASSERT(mConsumerCount == 0, "Should have no consumers here");
+  MOZ_ASSERT(mWaitingConsumers.Length() == 0, "Shouldn't have waiters");
+  MOZ_ASSERT(mStatus, "Should be complete here");
+
+  // Compact our waiting consumers list, since we're complete and no future
+  // consumer will ever have to wait.
+  mWaitingConsumers.Compact();
+
+  // If we have no more than one chunk, then we can't compact further.
+  if (mChunks.Length() < 2) {
+    return NS_OK;
+  }
+
+  // We can compact our buffer. Determine the total length.
+  size_t length = 0;
+  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
+    length += mChunks[i].Length();
+  }
+
+  Maybe<Chunk> newChunk = CreateChunk(length, /* aRoundUp = */ false);
+  if (MOZ_UNLIKELY(!newChunk || newChunk->AllocationFailed())) {
+    NS_WARNING("Failed to allocate chunk for SourceBuffer compacting - OOM?");
+    return NS_OK;
+  }
+
+  // Copy our old chunks into the new chunk.
+  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
+    size_t offset = newChunk->Length();
+    MOZ_ASSERT(offset < newChunk->Capacity());
+    MOZ_ASSERT(offset + mChunks[i].Length() <= newChunk->Capacity());
+
+    memcpy(newChunk->Data() + offset, mChunks[i].Data(), mChunks[i].Length());
+    newChunk->AddLength(mChunks[i].Length());
+  }
+
+  MOZ_ASSERT(newChunk->Length() == newChunk->Capacity(),
+             "Compacted chunk has slack space");
+
+  // Replace the old chunks with the new, compact chunk.
+  mChunks.Clear();
+  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(Move(newChunk))))) {
+    return HandleError(NS_ERROR_OUT_OF_MEMORY);
+  }
+  mChunks.Compact();
+
+  return NS_OK;
+}
+
+/* static */ size_t
+SourceBuffer::RoundedUpCapacity(size_t aCapacity)
+{
+  // Protect against overflow.
+  if (MOZ_UNLIKELY(SIZE_MAX - aCapacity < MIN_CHUNK_CAPACITY)) {
+    return aCapacity;
+  }
+
+  // Round up to the next multiple of MIN_CHUNK_CAPACITY (which should be the
+  // size of a page).
+  size_t roundedCapacity =
+    (aCapacity + MIN_CHUNK_CAPACITY - 1) & ~(MIN_CHUNK_CAPACITY - 1);
+  MOZ_ASSERT(roundedCapacity >= aCapacity, "Bad math?");
+  MOZ_ASSERT(roundedCapacity - aCapacity < MIN_CHUNK_CAPACITY, "Bad math?");
+
+  return roundedCapacity;
+}
+
+size_t
+SourceBuffer::FibonacciCapacityWithMinimum(size_t aMinCapacity)
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  // We grow the source buffer using a Fibonacci growth rate.
+
+  size_t length = mChunks.Length();
+
+  if (length == 0) {
+    return aMinCapacity;
+  }
+
+  if (length == 1) {
+    return max(2 * mChunks[0].Capacity(), aMinCapacity);
+  }
+
+  return max(mChunks[length - 1].Capacity() + mChunks[length - 2].Capacity(),
+             aMinCapacity);
+}
+
+void
+SourceBuffer::AddWaitingConsumer(IResumable* aConsumer)
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  MOZ_ASSERT(!mStatus, "Waiting when we're complete?");
+
+  if (MOZ_UNLIKELY(NS_IsMainThread())) {
+    NS_WARNING("SourceBuffer consumer on the main thread needed to wait");
+  }
+
+  mWaitingConsumers.AppendElement(aConsumer);
+}
+
+void
+SourceBuffer::ResumeWaitingConsumers()
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  if (mWaitingConsumers.Length() == 0) {
+    return;
+  }
+
+  for (uint32_t i = 0 ; i < mWaitingConsumers.Length() ; ++i) {
+    mWaitingConsumers[i]->Resume();
+  }
+
+  mWaitingConsumers.Clear();
+}
+
+nsresult
+SourceBuffer::ExpectLength(size_t aExpectedLength)
+{
+  MOZ_ASSERT(aExpectedLength > 0, "Zero expected size?");
+
+  MutexAutoLock lock(mMutex);
+
+  if (MOZ_UNLIKELY(mStatus)) {
+    MOZ_ASSERT_UNREACHABLE("ExpectLength after SourceBuffer is complete");
+    return NS_OK;
+  }
+
+  if (MOZ_UNLIKELY(mChunks.Length() > 0)) {
+    MOZ_ASSERT_UNREACHABLE("Duplicate or post-Append call to ExpectLength");
+    return NS_OK;
+  }
+
+  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aExpectedLength))))) {
+    return HandleError(NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+SourceBuffer::Append(const char* aData, size_t aLength)
+{
+  MOZ_ASSERT(aData, "Should have a buffer");
+  MOZ_ASSERT(aLength > 0, "Writing a zero-sized chunk");
+
+  size_t currentChunkCapacity = 0;
+  size_t currentChunkLength = 0;
+  char* currentChunkData = nullptr;
+  size_t currentChunkRemaining = 0;
+  size_t forCurrentChunk = 0;
+  size_t forNextChunk = 0;
+  size_t nextChunkCapacity = 0;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (MOZ_UNLIKELY(mStatus)) {
+      // This SourceBuffer is already complete; ignore further data.
+      return NS_ERROR_FAILURE;
+    }
+
+    if (MOZ_UNLIKELY(mChunks.Length() == 0)) {
+      if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aLength))))) {
+        return HandleError(NS_ERROR_OUT_OF_MEMORY);
+      }
+    }
+
+    // Copy out the current chunk's information so we can release the lock.
+    // Note that this wouldn't be safe if multiple producers were allowed!
+    Chunk& currentChunk = mChunks.LastElement();
+    currentChunkCapacity = currentChunk.Capacity();
+    currentChunkLength = currentChunk.Length();
+    currentChunkData = currentChunk.Data();
+
+    // Partition this data between the current chunk and the next chunk.
+    // (Because we always allocate a chunk big enough to fit everything passed
+    // to Append, we'll never need more than those two chunks to store
+    // everything.)
+    currentChunkRemaining = currentChunkCapacity - currentChunkLength;
+    forCurrentChunk = min(aLength, currentChunkRemaining);
+    forNextChunk = aLength - forCurrentChunk;
+
+    // If we'll need another chunk, determine what its capacity should be while
+    // we still hold the lock.
+    nextChunkCapacity = forNextChunk > 0
+                      ? FibonacciCapacityWithMinimum(forNextChunk)
+                      : 0;
+  }
+
+  // Write everything we can fit into the current chunk.
+  MOZ_ASSERT(currentChunkLength + forCurrentChunk <= currentChunkCapacity);
+  memcpy(currentChunkData + currentChunkLength, aData, forCurrentChunk);
+
+  // If there's something left, create a new chunk and write it there.
+  Maybe<Chunk> nextChunk;
+  if (forNextChunk > 0) {
+    MOZ_ASSERT(nextChunkCapacity >= forNextChunk, "Next chunk too small?");
+    nextChunk = CreateChunk(nextChunkCapacity);
+    if (MOZ_LIKELY(nextChunk && !nextChunk->AllocationFailed())) {
+      memcpy(nextChunk->Data(), aData + forCurrentChunk, forNextChunk);
+      nextChunk->AddLength(forNextChunk);
+    }
+  }
+
+  // Update shared data structures.
+  {
+    MutexAutoLock lock(mMutex);
+
+    // Update the length of the current chunk.
+    Chunk& currentChunk = mChunks.LastElement();
+    MOZ_ASSERT(currentChunk.Data() == currentChunkData, "Multiple producers?");
+    MOZ_ASSERT(currentChunk.Length() == currentChunkLength,
+               "Multiple producers?");
+
+    currentChunk.AddLength(forCurrentChunk);
+
+    // If we created a new chunk, add it to the series.
+    if (forNextChunk > 0) {
+      if (MOZ_UNLIKELY(!nextChunk)) {
+        return HandleError(NS_ERROR_OUT_OF_MEMORY);
+      }
+
+      if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(Move(nextChunk))))) {
+        return HandleError(NS_ERROR_OUT_OF_MEMORY);
+      }
+    }
+
+    // Resume any waiting readers now that there's new data.
+    ResumeWaitingConsumers();
+  }
+
+  return NS_OK;
+}
+
+void
+SourceBuffer::Complete(nsresult aStatus)
+{
+  MutexAutoLock lock(mMutex);
+
+  if (MOZ_UNLIKELY(mStatus)) {
+    MOZ_ASSERT_UNREACHABLE("Called Complete more than once");
+    return;
+  }
+
+  if (MOZ_UNLIKELY(NS_SUCCEEDED(aStatus) && IsEmpty())) {
+    // It's illegal to succeed without writing anything.
+    aStatus = NS_ERROR_FAILURE;
+  }
+
+  mStatus = Some(aStatus);
+
+  // Resume any waiting consumers now that we're complete.
+  ResumeWaitingConsumers();
+
+  // If we still have active consumers, just return.
+  if (mConsumerCount > 0) {
+    return;
+  }
+
+  // Attempt to compact our buffer down to a single chunk.
+  Compact();
+}
+
+bool
+SourceBuffer::IsComplete()
+{
+  MutexAutoLock lock(mMutex);
+  return bool(mStatus);
+}
+
+size_t
+SourceBuffer::SizeOfIncludingThisWithComputedFallback(MallocSizeOf
+                                                        aMallocSizeOf) const
+{
+  MutexAutoLock lock(mMutex);
+
+  size_t n = aMallocSizeOf(this);
+  n += mChunks.SizeOfExcludingThis(aMallocSizeOf);
+
+  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
+    size_t chunkSize = aMallocSizeOf(mChunks[i].Data());
+
+    if (chunkSize == 0) {
+      // We're on a platform where moz_malloc_size_of always returns 0.
+      chunkSize = mChunks[i].Capacity();
+    }
+
+    n += chunkSize;
+  }
+
+  return n;
+}
+
+SourceBufferIterator
+SourceBuffer::Iterator()
+{
+  {
+    MutexAutoLock lock(mMutex);
+    mConsumerCount++;
+  }
+
+  return SourceBufferIterator(this);
+}
+
+void
+SourceBuffer::OnIteratorRelease()
+{
+  MutexAutoLock lock(mMutex);
+
+  MOZ_ASSERT(mConsumerCount > 0, "Consumer count doesn't add up");
+  mConsumerCount--;
+
+  // If we still have active consumers, or we're not complete yet, then return.
+  if (mConsumerCount > 0 || !mStatus) {
+    return;
+  }
+
+  // Attempt to compact our buffer down to a single chunk.
+  Compact();
+}
+
+bool
+SourceBuffer::RemainingBytesIsNoMoreThan(const SourceBufferIterator& aIterator,
+                                         size_t aBytes) const
+{
+  MutexAutoLock lock(mMutex);
+
+  // If we're not complete, we always say no.
+  if (!mStatus) {
+    return false;
+  }
+
+  // If the iterator's at the end, the answer is trivial.
+  if (!aIterator.HasMore()) {
+    return true;
+  }
+
+  uint32_t iteratorChunk = aIterator.mData.mIterating.mChunk;
+  size_t iteratorOffset = aIterator.mData.mIterating.mOffset;
+  size_t iteratorLength = aIterator.mData.mIterating.mLength;
+
+  // Include the bytes the iterator is currently pointing to in the limit, so
+  // that the current chunk doesn't have to be a special case.
+  size_t bytes = aBytes + iteratorOffset + iteratorLength;
+
+  // Count the length over all of our chunks, starting with the one that the
+  // iterator is currently pointing to. (This is O(N), but N is expected to be
+  // ~1, so it doesn't seem worth caching the length separately.)
+  size_t lengthSoFar = 0;
+  for (uint32_t i = iteratorChunk ; i < mChunks.Length() ; ++i) {
+    lengthSoFar += mChunks[i].Length();
+    if (lengthSoFar > bytes) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+SourceBufferIterator::State
+SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
+                                              IResumable* aConsumer)
+{
+  MutexAutoLock lock(mMutex);
+
+  if (MOZ_UNLIKELY(!aIterator.HasMore())) {
+    MOZ_ASSERT_UNREACHABLE("Should not advance a completed iterator");
+    return SourceBufferIterator::COMPLETE;
+  }
+
+  if (MOZ_UNLIKELY(mStatus && NS_FAILED(*mStatus))) {
+    // This SourceBuffer is complete due to an error; all reads fail.
+    return aIterator.SetComplete(*mStatus);
+  }
+
+  if (MOZ_UNLIKELY(mChunks.Length() == 0)) {
+    // We haven't gotten an initial chunk yet.
+    AddWaitingConsumer(aConsumer);
+    return aIterator.SetWaiting();
+  }
+
+  uint32_t iteratorChunkIdx = aIterator.mData.mIterating.mChunk;
+  MOZ_ASSERT(iteratorChunkIdx < mChunks.Length());
+
+  const Chunk& currentChunk = mChunks[iteratorChunkIdx];
+  size_t iteratorEnd = aIterator.mData.mIterating.mOffset +
+                       aIterator.mData.mIterating.mLength;
+  MOZ_ASSERT(iteratorEnd <= currentChunk.Length());
+  MOZ_ASSERT(iteratorEnd <= currentChunk.Capacity());
+
+  if (iteratorEnd < currentChunk.Length()) {
+    // There's more data in the current chunk.
+    return aIterator.SetReady(iteratorChunkIdx, currentChunk.Data(),
+                              iteratorEnd, currentChunk.Length() - iteratorEnd);
+  }
+
+  if (iteratorEnd == currentChunk.Capacity() &&
+      !IsLastChunk(iteratorChunkIdx)) {
+    // Advance to the next chunk.
+    const Chunk& nextChunk = mChunks[iteratorChunkIdx + 1];
+    return aIterator.SetReady(iteratorChunkIdx + 1, nextChunk.Data(), 0,
+                              nextChunk.Length());
+  }
+
+  MOZ_ASSERT(IsLastChunk(iteratorChunkIdx), "Should've advanced");
+
+  if (mStatus) {
+    // There's no more data and this SourceBuffer completed successfully.
+    MOZ_ASSERT(NS_SUCCEEDED(*mStatus), "Handled failures earlier");
+    return aIterator.SetComplete(*mStatus);
+  }
+
+  // We're not complete, but there's no more data right now. Arrange to wake up
+  // the consumer when we get more data.
+  AddWaitingConsumer(aConsumer);
+  return aIterator.SetWaiting();
+}
+
+nsresult
+SourceBuffer::HandleError(nsresult aError)
+{
+  MOZ_ASSERT(NS_FAILED(aError), "Should have an error here");
+  MOZ_ASSERT(aError == NS_ERROR_OUT_OF_MEMORY,
+             "Unexpected error; may want to notify waiting readers, which "
+             "HandleError currently doesn't do");
+
+  mMutex.AssertCurrentThreadOwns();
+
+  NS_WARNING("SourceBuffer encountered an unrecoverable error");
+
+  // Record the error.
+  mStatus = Some(aError);
+
+  // Drop our references to waiting readers.
+  mWaitingConsumers.Clear();
+
+  return *mStatus;
+}
+
+bool
+SourceBuffer::IsEmpty()
+{
+  mMutex.AssertCurrentThreadOwns();
+  return mChunks.Length() == 0 ||
+         mChunks[0].Length() == 0;
+}
+
+bool
+SourceBuffer::IsLastChunk(uint32_t aChunk)
+{
+  mMutex.AssertCurrentThreadOwns();
+  return aChunk + 1 == mChunks.Length();
+}
+
+} // namespace image
+} // namespace mozilla
