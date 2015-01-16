@@ -42,7 +42,7 @@
 
 namespace mozilla {
 
-class MOZALLOC_EXPORT VolatileBuffer : public RefCounted<VolatileBuffer>
+class VolatileBuffer : public RefCounted<VolatileBuffer>
 {
   friend class VolatileBufferPtr_base;
 public:
