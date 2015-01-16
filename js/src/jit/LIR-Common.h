@@ -3675,7 +3675,7 @@ class LOsrEntry : public LInstructionHelper<1, 0, 1>
   public:
     LIR_HEADER(OsrEntry)
 
-    LOsrEntry(const LDefinition &temp)
+    explicit LOsrEntry(const LDefinition &temp)
       : frameDepth_(0)
     {
         setTemp(0, temp);
