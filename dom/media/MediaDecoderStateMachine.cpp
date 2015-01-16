@@ -2451,7 +2451,7 @@ void MediaDecoderStateMachine::DecodeSeek()
       // the reader, since it could do I/O or deadlock some other way.
       res = mReader->ResetDecode();
       if (NS_SUCCEEDED(res)) {
-        mReader->Seek(seekTime, mStartTime, GetEndTime(), mCurrentTimeBeforeSeek)
+        mReader->Seek(seekTime, GetEndTime())
                ->Then(DecodeTaskQueue(), __func__, this,
                       &MediaDecoderStateMachine::OnSeekCompleted,
                       &MediaDecoderStateMachine::OnSeekFailed);
