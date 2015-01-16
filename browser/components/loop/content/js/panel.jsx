@@ -989,7 +989,8 @@ loop.panel = (function(_, mozL10n) {
             {this._renderRoomsOrCallTab()}
             <Tab name="contacts">
               <ContactsList selectTab={this.selectTab}
-                            startForm={this.startForm} />
+                            startForm={this.startForm}
+                            notifications={this.props.notifications} />
             </Tab>
             <Tab name="contacts_add" hidden={true}>
               <ContactDetailsForm ref="contacts_add" mode="add"
