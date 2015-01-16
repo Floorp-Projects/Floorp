@@ -908,4 +908,11 @@ MediaSourceReader::SetCDMProxy(CDMProxy* aProxy)
 }
 #endif
 
+bool
+MediaSourceReader::IsActiveReader(MediaDecoderReader* aReader)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  return aReader == mVideoReader.get() || aReader == mAudioReader.get();
+}
+
 } // namespace mozilla

@@ -74,6 +74,10 @@ public:
 
   MediaSourceReader* GetReader() { return mReader; }
 
+  // Returns true if aReader is a currently active audio or video
+  // reader in this decoders MediaSourceReader.
+  bool IsActiveReader(MediaDecoderReader* aReader);
+
 private:
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear

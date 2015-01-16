@@ -622,8 +622,6 @@ public:
         : mWriteNeeded(false)
     {
         mOps = (PLDHashTableOps) {
-            PL_DHashAllocTable,
-            PL_DHashFreeTable,
             StringHash,
             HashMatchEntry,
             MoveEntry,

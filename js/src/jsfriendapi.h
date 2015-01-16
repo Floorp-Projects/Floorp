@@ -2620,6 +2620,14 @@ SetJitExceptionHandler(JitExceptionHandler handler);
 extern JS_FRIEND_API(JSObject *)
 GetObjectEnvironmentObjectForFunction(JSFunction *fun);
 
+/*
+ * Get the stored principal of the stack frame this SavedFrame object
+ * represents.  note that this is not the same thing as the object principal of
+ * the object itself.  Do NOT pass a non-SavedFrame object here.
+ */
+extern JS_FRIEND_API(JSPrincipals *)
+GetSavedFramePrincipals(JS::HandleObject savedFrame);
+
 } /* namespace js */
 
 extern JS_FRIEND_API(bool)

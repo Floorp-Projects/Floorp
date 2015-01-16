@@ -557,9 +557,9 @@ skip-if(B2G) == 363858-1.html 363858-1-ref.html
 skip-if(B2G) == 363858-2.html 363858-2-ref.html
 skip-if(B2G) == 363858-3.html 363858-3-ref.html
 skip-if(B2G) == 363858-4.html 363858-4-ref.html
-fuzzy-if(OSX==10.8,45,2) == 363858-5a.html 363858-5-ref.html
+fuzzy-if(OSX>=1008,45,2) == 363858-5a.html 363858-5-ref.html
 == 363858-5b.html 363858-5-ref.html
-fuzzy-if(OSX==10.8,45,2) == 363858-6a.html 363858-6-ref.html
+fuzzy-if(OSX>=1008,45,2) == 363858-6a.html 363858-6-ref.html
 == 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
@@ -1460,7 +1460,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 534804-1.html 534804-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
-fails-if(OSX==10.7) == 534919-1.html 534919-1-ref.html # Bug 705044
+fails-if(OSX==1007) == 534919-1.html 534919-1-ref.html # Bug 705044
 random == 536061.html 536061-ref.html # fixedpoint division in blur code makes this fail
 == 537471-1.html 537471-1-ref.html
 skip-if(B2G&&browserIsRemote) == 537507-1.xul 537507-1-ref.xul # bug 974780
@@ -1587,7 +1587,7 @@ skip-if(B2G) == 582476-1.svg 582476-1-ref.svg
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-skip-if(B2G) fuzzy-if(d2d,52,1051) fuzzy-if(OSX==10.8,129,1068) == 586683-1.html 586683-1-ref.html
+skip-if(B2G) fuzzy-if(d2d,52,1051) fuzzy-if(OSX==1008,129,1068) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1644,7 +1644,7 @@ skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
 skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
-skip-if(B2G) random-if(winWidget) fuzzy-if(OSX==10.8,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
+skip-if(B2G) random-if(winWidget) fuzzy-if(OSX==1008,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
 fuzzy-if(d2d,5,1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
@@ -1791,7 +1791,7 @@ fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
 == 931464-1.html 931464-1-ref.html
 == 931853.html 931853-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
-fuzzy-if(OSX==10.6,2,30) skip-if(B2G&&browserIsRemote) == 933264-1.html 933264-1-ref.html
+fuzzy-if(OSX==1006,2,30) skip-if(B2G&&browserIsRemote) == 933264-1.html 933264-1-ref.html
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017

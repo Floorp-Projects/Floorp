@@ -3785,9 +3785,6 @@ pref("image.mem.allow_locking_in_content_processes", true);
 // Chunk size for calls to the image decoders
 pref("image.mem.decode_bytes_at_a_time", 16384);
 
-// The longest time we can spend in an iteration of an async decode
-pref("image.mem.max_ms_before_yield", 5);
-
 // Minimum timeout for expiring unused images from the surface cache, in
 // milliseconds. This controls how long we store cached temporary surfaces.
 pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60ms
@@ -3829,7 +3826,6 @@ pref("gl.msaa-level", 2);
 #endif
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
-pref("webgl.shader_validator", true);
 pref("webgl.disable-angle", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
@@ -3843,6 +3839,7 @@ pref("webgl.restore-context-when-visible", true);
 pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);
+pref("webgl.bypass-shader-validation", false);
 #ifdef XP_WIN
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);

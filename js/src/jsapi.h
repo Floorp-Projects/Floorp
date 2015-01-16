@@ -2401,17 +2401,6 @@ extern JS_PUBLIC_API(bool)
 JS_StrictPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool strict,
                       JS::MutableHandleValue vp);
 
-#if defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 4
-/*
- * This is here because GCC 4.4 for Android ICS can't compile the JS engine
- * without it. The function is unused, but if you delete it, we'll trigger a
- * compiler bug. When we no longer support ICS, this can be deleted.
- * See bug 1103152.
- */
-extern JS_PUBLIC_API(bool)
-JS_ResolveStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp);
-#endif  /* GCC 4.4 */
-
 template<typename T>
 struct JSConstScalarSpec {
     const char *name;

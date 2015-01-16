@@ -13618,6 +13618,12 @@ class CGCallback(CGClass):
         # CallSetup should re-throw exceptions on aRv.
         args.append(Argument("ExceptionHandling", "aExceptionHandling",
                              "eReportExceptions"))
+        # And the argument for communicating when exceptions should really be
+        # rethrown.  In particular, even when aExceptionHandling is
+        # eRethrowExceptions they won't get rethrown if aCompartment is provided
+        # and its principal doesn't subsume either the callback or the
+        # exception.
+        args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
         args.insert(0, Argument("const T&",  "thisObjPtr"))
@@ -13625,7 +13631,7 @@ class CGCallback(CGClass):
 
         setupCall = fill(
             """
-            CallSetup s(this, aRv, aExceptionHandling);
+            CallSetup s(this, aRv, aExceptionHandling, aCompartment);
             if (!s.GetContext()) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
@@ -13937,11 +13943,10 @@ class CallbackMember(CGNativeMember):
         if not self.needThisHandling:
             # Since we don't need this handling, we're the actual method that
             # will be called, so we need an aRethrowExceptions argument.
-            if self.rethrowContentException:
-                args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
-            else:
+            if not self.rethrowContentException:
                 args.append(Argument("ExceptionHandling", "aExceptionHandling",
                                      "eReportExceptions"))
+            args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
             return args
         # We want to allow the caller to pass in a "this" value, as
         # well as a JSContext.
@@ -13959,7 +13964,7 @@ class CallbackMember(CGNativeMember):
             callSetup += ", eRethrowContentExceptions, aCompartment, /* aIsJSImplementedWebIDL = */ "
             callSetup += toStringBool(isJSImplementedDescriptor(self.descriptorProvider))
         else:
-            callSetup += ", aExceptionHandling"
+            callSetup += ", aExceptionHandling, aCompartment"
         callSetup += ");\n"
         return fill(
             """

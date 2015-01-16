@@ -93,12 +93,13 @@ let AppManager = exports.AppManager = {
   },
 
   onConnectionChanged: function() {
+    console.log("Connection status changed: " + this.connection.status);
+
     if (this.connection.status == Connection.Status.DISCONNECTED) {
       this.selectedRuntime = null;
     }
 
     if (this.connection.status != Connection.Status.CONNECTED) {
-      console.log("Connection status changed: " + this.connection.status);
       if (this._appsFront) {
         this._appsFront.off("install-progress", this.onInstallProgress);
         this._appsFront.unwatchApps();
@@ -354,18 +355,15 @@ let AppManager = exports.AppManager = {
         } else {
           deferred.reject();
         }
-      }
+      };
       this.connection.on(Connection.Events.CONNECTED, onConnectedOrDisconnected);
       this.connection.on(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
       try {
         // Reset the connection's state to defaults
         this.connection.resetOptions();
-        this.selectedRuntime.connect(this.connection).then(
-          () => {},
-          deferred.reject.bind(deferred));
+        deferred.resolve(this.selectedRuntime.connect(this.connection));
       } catch(e) {
-        console.error(e);
-        deferred.reject();
+        deferred.reject(e);
       }
     }, deferred.reject);
 
@@ -386,6 +384,10 @@ let AppManager = exports.AppManager = {
       this.connection.once(Connection.Events.STATUS_CHANGED, () => {
         this._telemetry.stopTimer(timerId);
       });
+    }).catch(() => {
+      // Empty rejection handler to silence uncaught rejection warnings
+      // |connectToRuntime| caller should listen for rejections.
+      // Bug 1121100 may find a better way to silence these.
     });
 
     return deferred.promise;
