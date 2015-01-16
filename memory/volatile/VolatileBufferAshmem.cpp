@@ -22,7 +22,8 @@ extern "C" int posix_memalign(void** memptr, size_t alignment, size_t size);
 namespace mozilla {
 
 VolatileBuffer::VolatileBuffer()
-  : mBuf(nullptr)
+  : mMutex("VolatileBuffer")
+  , mBuf(nullptr)
   , mSize(0)
   , mLockCount(0)
   , mFd(-1)
@@ -72,6 +73,8 @@ heap_alloc:
 
 VolatileBuffer::~VolatileBuffer()
 {
+  MOZ_ASSERT(mLockCount == 0, "Being destroyed with non-zero lock count?");
+
   if (OnHeap()) {
     free(mBuf);
   } else {
@@ -83,6 +86,8 @@ VolatileBuffer::~VolatileBuffer()
 bool
 VolatileBuffer::Lock(void** aBuf)
 {
+  MutexAutoLock lock(mMutex);
+
   MOZ_ASSERT(mBuf, "Attempting to lock an uninitialized VolatileBuffer");
 
   *aBuf = mBuf;
@@ -98,6 +103,8 @@ VolatileBuffer::Lock(void** aBuf)
 void
 VolatileBuffer::Unlock()
 {
+  MutexAutoLock lock(mMutex);
+
   MOZ_ASSERT(mLockCount > 0, "VolatileBuffer unlocked too many times!");
   if (--mLockCount || OnHeap()) {
     return;
