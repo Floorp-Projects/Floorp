@@ -218,9 +218,7 @@ MediaSourceDecoder::SetDecodedDuration(int64_t aDuration)
   if (aDuration >= 0) {
     duration /= USECS_PER_S;
   }
-  // No need to call Range Removal algorithm as this is called following
-  // ReadMetadata and nothing has been added to the source buffers yet.
-  SetMediaSourceDuration(duration, MSRangeRemovalAction::SKIP);
+  DoSetMediaSourceDuration(duration);
 }
 
 void
@@ -228,6 +226,13 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
+  DoSetMediaSourceDuration(aDuration);
+  ScheduleDurationChange(oldDuration, aDuration, aAction);
+}
+
+void
+MediaSourceDecoder::DoSetMediaSourceDuration(double aDuration)
+{
   if (aDuration >= 0) {
     mDecoderStateMachine->SetDuration(aDuration * USECS_PER_S);
     mMediaSourceDuration = aDuration;
@@ -235,19 +240,27 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
     mDecoderStateMachine->SetDuration(INT64_MAX);
     mMediaSourceDuration = PositiveInfinity<double>();
   }
+}
+
+void
+MediaSourceDecoder::ScheduleDurationChange(double aOldDuration,
+                                           double aNewDuration,
+                                           MSRangeRemovalAction aAction)
+{
   if (aAction == MSRangeRemovalAction::SKIP) {
     if (NS_IsMainThread()) {
       MediaDecoder::DurationChanged();
     } else {
-      nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(this, &MediaDecoder::DurationChanged);
+      nsCOMPtr<nsIRunnable> task =
+        NS_NewRunnableMethod(this, &MediaDecoder::DurationChanged);
       NS_DispatchToMainThread(task);
     }
   } else {
     if (NS_IsMainThread()) {
-      DurationChanged(oldDuration, mMediaSourceDuration);
+      DurationChanged(aOldDuration, aNewDuration);
     } else {
       nsRefPtr<nsIRunnable> task =
-        new DurationChangedRunnable(this, oldDuration, mMediaSourceDuration);
+        new DurationChangedRunnable(this, aOldDuration, aNewDuration);
       NS_DispatchToMainThread(task);
     }
   }
