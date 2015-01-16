@@ -1142,6 +1142,18 @@ MStringLength::foldsTo(TempAllocator &alloc)
     return this;
 }
 
+MDefinition *
+MConcat::foldsTo(TempAllocator &alloc)
+{
+    if (lhs()->isConstantValue() && lhs()->constantValue().toString()->empty())
+        return rhs();
+
+    if (rhs()->isConstantValue() && rhs()->constantValue().toString()->empty())
+        return lhs();
+
+    return this;
+}
+
 static bool
 EnsureFloatInputOrConvert(MUnaryInstruction *owner, TempAllocator &alloc)
 {

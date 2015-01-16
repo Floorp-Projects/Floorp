@@ -6123,6 +6123,7 @@ class MConcat
         return new(alloc) MConcat(left, right);
     }
 
+    MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
     bool congruentTo(const MDefinition *ins) const MOZ_OVERRIDE {
         return congruentIfOperandsEqual(ins);
     }
