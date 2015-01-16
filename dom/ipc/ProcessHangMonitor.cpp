@@ -61,7 +61,7 @@ class HangMonitorChild
   : public PProcessHangMonitorChild
 {
  public:
-  HangMonitorChild(ProcessHangMonitor* aMonitor);
+  explicit HangMonitorChild(ProcessHangMonitor* aMonitor);
   virtual ~HangMonitorChild();
 
   void Open(Transport* aTransport, ProcessHandle aHandle,
@@ -163,7 +163,7 @@ class HangMonitorParent
   : public PProcessHangMonitorParent
 {
 public:
-  HangMonitorParent(ProcessHangMonitor* aMonitor);
+  explicit HangMonitorParent(ProcessHangMonitor* aMonitor);
   virtual ~HangMonitorParent();
 
   void Open(Transport* aTransport, ProcessHandle aHandle,
