@@ -48,8 +48,9 @@ pkix_ExternalRevocationCheckFn(PKIX_PL_Cert *cert, PKIX_PL_Cert *issuer,
                                void **pNBIOContext, void *plContext);
 
 /* Revocation method structure assosiates revocation types with
- * a set of flags on the method, a priority of the method, and
- * method local/external checker functions. */
+ * a set of flags on the method, a priority of the method (0
+ * corresponds to the highest priority), and method local/external
+ * checker functions. */
 struct pkix_RevocationMethodStruct {
     PKIX_RevocationMethodType methodType;
     PKIX_UInt32 flags;
