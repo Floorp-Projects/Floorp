@@ -188,6 +188,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),
+  mDurationSet(false),
   mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentFrameTime(0),
@@ -1408,6 +1409,14 @@ int64_t MediaDecoderStateMachine::GetDuration()
   return mEndTime - mStartTime;
 }
 
+int64_t MediaDecoderStateMachine::GetEndTime()
+{
+  if (mEndTime == -1 && mDurationSet) {
+    return INT64_MAX;
+  }
+  return mEndTime;
+}
+
 void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
 {
   NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
@@ -1415,11 +1424,19 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
   AssertCurrentThreadInMonitor();
 
   if (aDuration == -1) {
+    mDurationSet = false;
     return;
   }
 
+  mDurationSet = true;
+
   if (mStartTime == -1) {
     SetStartTime(0);
+  }
+
+  if (aDuration == INT64_MAX) {
+    mEndTime = -1;
+    return;
   }
 
   mEndTime = mStartTime + aDuration;
@@ -1735,12 +1752,13 @@ MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
   }
 
   // Bound the seek time to be inside the media range.
+  int64_t end = GetEndTime();
   NS_ASSERTION(mStartTime != -1, "Should know start time by now");
-  NS_ASSERTION(mEndTime != -1, "Should know end time by now");
+  NS_ASSERTION(end != -1, "Should know end time by now");
   int64_t seekTime = aTarget.mTime + mStartTime;
-  seekTime = std::min(seekTime, mEndTime);
+  seekTime = std::min(seekTime, end);
   seekTime = std::max(mStartTime, seekTime);
-  NS_ASSERTION(seekTime >= mStartTime && seekTime <= mEndTime,
+  NS_ASSERTION(seekTime >= mStartTime && seekTime <= end,
                "Can only seek in range [0,duration]");
   mSeekTarget = SeekTarget(seekTime, aTarget.mType);
 
@@ -2188,7 +2206,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     return NS_ERROR_FAILURE;
   }
   mDecoder->StartProgressUpdates();
-  mGotDurationFromMetaData = (GetDuration() != -1);
+  mGotDurationFromMetaData = (GetDuration() != -1) || mDurationSet;
 
   if (mGotDurationFromMetaData) {
     // We have all the information required: duration and size
@@ -2300,12 +2318,8 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   }
 
   NS_ASSERTION(mStartTime != -1, "Must have start time");
-  MOZ_ASSERT((!HasVideo() && !HasAudio()) ||
-               !(mDecoder->IsMediaSeekable() && mDecoder->IsTransportSeekable()) ||
-               mEndTime != -1,
-             "Active seekable media should have end time");
   MOZ_ASSERT(!(mDecoder->IsMediaSeekable() && mDecoder->IsTransportSeekable()) ||
-               GetDuration() != -1,
+               (GetDuration() != -1) || mDurationSet,
              "Seekable media should have duration");
   DECODER_LOG("Media goes from %lld to %lld (duration %lld) "
               "transportSeekable=%d, mediaSeekable=%d",
@@ -2429,7 +2443,7 @@ void MediaDecoderStateMachine::DecodeSeek()
       // the reader, since it could do I/O or deadlock some other way.
       res = mReader->ResetDecode();
       if (NS_SUCCEEDED(res)) {
-        mReader->Seek(seekTime, mStartTime, mEndTime, mCurrentTimeBeforeSeek)
+        mReader->Seek(seekTime, mStartTime, GetEndTime(), mCurrentTimeBeforeSeek)
                ->Then(DecodeTaskQueue(), __func__, this,
                       &MediaDecoderStateMachine::OnSeekCompleted,
                       &MediaDecoderStateMachine::OnSeekFailed);
@@ -3244,7 +3258,7 @@ void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
   mStartTime = 0;
   if (aStartTimeUsecs != 0) {
     mStartTime = aStartTimeUsecs;
-    if (mGotDurationFromMetaData) {
+    if (mGotDurationFromMetaData && GetEndTime() != INT64_MAX) {
       NS_ASSERTION(mEndTime != -1,
                    "We should have mEndTime as supplied duration here");
       // We were specified a duration from a Content-Duration HTTP header.

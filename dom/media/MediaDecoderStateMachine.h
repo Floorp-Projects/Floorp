@@ -171,11 +171,18 @@ public:
   // must be obtained before calling this. It is in units of microseconds.
   int64_t GetDuration();
 
+  // Time of the last frame in the media, in microseconds or INT64_MAX if
+  // media has an infinite duration.
+  // Accessed on state machine, decode, and main threads.
+  // Access controlled by decoder monitor.
+  int64_t GetEndTime();
+
   // Called from the main thread to set the duration of the media resource
   // if it is able to be obtained via HTTP headers. Called from the
   // state machine thread to set the duration if it is obtained from the
   // media metadata. The decoder monitor must be obtained before calling this.
   // aDuration is in microseconds.
+  // A value of INT64_MAX will be treated as infinity.
   void SetDuration(int64_t aDuration);
 
   // Called while decoding metadata to set the end time of the media
@@ -832,7 +839,13 @@ protected:
   // Time of the last frame in the media, in microseconds. This is the
   // end time of the last frame in the media. Accessed on state
   // machine, decode, and main threads. Access controlled by decoder monitor.
+  // It will be set to -1 if the duration is infinite
   int64_t mEndTime;
+
+  // Will be set when SetDuration has been called with a value != -1
+  // mDurationSet false doesn't indicate that we do not have a valid duration
+  // as mStartTime and mEndTime could have been set separately.
+  bool mDurationSet;
 
   // Position to seek to in microseconds when the seek state transition occurs.
   // The decoder monitor lock must be obtained before reading or writing
