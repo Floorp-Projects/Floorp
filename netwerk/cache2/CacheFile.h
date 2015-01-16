@@ -121,7 +121,7 @@ private:
   void     Lock();
   void     Unlock();
   void     AssertOwnsLock() const;
-  void     ReleaseOutsideLock(nsRefPtr<nsISupports> aObject);
+  void     ReleaseOutsideLock(nsISupports *aObject);
 
   enum ECallerType {
     READER    = 0,
@@ -216,7 +216,7 @@ private:
   nsTArray<CacheFileInputStream*> mInputs;
   CacheFileOutputStream          *mOutput;
 
-  nsTArray<nsRefPtr<nsISupports>> mObjsToRelease;
+  nsTArray<nsISupports*>          mObjsToRelease;
 };
 
 class CacheFileAutoLock {
