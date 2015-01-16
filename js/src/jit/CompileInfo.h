@@ -206,7 +206,7 @@ class CompileInfo
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
 
-    CompileInfo(unsigned nlocals)
+    explicit CompileInfo(unsigned nlocals)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr), osrStaticScope_(nullptr),
         constructing_(false), analysisMode_(Analysis_None), scriptNeedsArgsObj_(false),
         inlineScriptTree_(nullptr)
