@@ -707,78 +707,87 @@ function ArrayKeys() {
     return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
-/* ES6 rev 25 (2014 May 22) 22.1.2.1 */
-function ArrayFrom(arrayLike, mapfn=undefined, thisArg=undefined) {
+// ES6 draft rev31 (2015/01/15) 22.1.2.1 Array.from(source[, mapfn[, thisArg]]).
+function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
     // Step 1.
     var C = this;
 
     // Steps 2-3.
-    var items = ToObject(arrayLike);
-
-    // Steps 4-5.
-    var mapping = (mapfn !== undefined);
+    var mapping = mapfn !== undefined;
     if (mapping && !IsCallable(mapfn))
         ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
+    var T = thisArg;
 
     // All elements defined by this algorithm have the same attrs:
     var attrs = ATTR_CONFIGURABLE | ATTR_ENUMERABLE | ATTR_WRITABLE;
 
-    // Steps 6-8.
-    var usingIterator = items[std_iterator];
+    // Steps 4-5.
+    var usingIterator = GetMethod(items, std_iterator);
+
+    // Step 6.
     if (usingIterator !== undefined) {
-        // Steps 8.a-c.
+        // Steps 6.a-c.
         var A = IsConstructor(C) ? new C() : [];
 
-        // Steps 8.d-e.
-        var iterator = callFunction(usingIterator, items);
+        // Steps 6.d-e.
+        var iterator = GetIterator(items, usingIterator);
 
-        // Step 8.f.
+        // Step 6.f.
         var k = 0;
 
-        // Steps 8.g.i-vi.
+        // Step 6.g.
         // These steps cannot be implemented using a for-of loop.
         // See <https://bugs.ecmascript.org/show_bug.cgi?id=2883>.
-        var next;
         while (true) {
-            // Steps 8.g.ii-vi.
-            next = iterator.next();
+            // Steps 6.g.i-iii.
+            var next = iterator.next();
             if (!IsObject(next))
                 ThrowError(JSMSG_NEXT_RETURNED_PRIMITIVE);
-            if (next.done)
-                break;  // Substeps of 8.g.iv are implemented below.
+
+            // Step 6.g.iv.
+            if (next.done) {
+                A.length = k;
+                return A;
+            }
+
+            // Steps 6.g.v-vi.
             var nextValue = next.value;
 
-            // Steps 8.g.vii-viii.
+            // Steps 6.g.vii-viii.
             var mappedValue = mapping ? callFunction(mapfn, thisArg, nextValue, k) : nextValue;
 
-            // Steps 8.g.ix-xi.
+            // Steps 6.g.ix-xi.
             _DefineDataProperty(A, k++, mappedValue, attrs);
-        }
-    } else {
-        // Step 9 is an assertion: items is not an Iterator. Testing this is
-        // literally the very last thing we did, so we don't assert here.
-
-        // Steps 10-12.
-        // FIXME: Array operations should use ToLength (bug 924058).
-        var len = ToInteger(items.length);
-
-        // Steps 13-15.
-        var A = IsConstructor(C) ? new C(len) : NewDenseArray(len);
-
-        // Steps 16-17.
-        for (var k = 0; k < len; k++) {
-            // Steps 17.a-c.
-            var kValue = items[k];
-
-            // Steps 17.d-e.
-            var mappedValue = mapping ? callFunction(mapfn, thisArg, kValue, k) : kValue;
-
-            // Steps 17.f-g.
-            _DefineDataProperty(A, k, mappedValue, attrs);
         }
     }
 
-    // Steps 8.g.iv.1-3 and 18-20 are the same.
-    A.length = k;
+    // Step 7.
+    assert(usingIterator === undefined, "`items` can't be an Iterable after step 6.g.iv");
+
+    // Steps 8-9.
+    var arrayLike = ToObject(items);
+
+    // Steps 10-11.
+    var len = ToLength(arrayLike.length);
+
+    // Steps 12-14.
+    var A = IsConstructor(C) ? new C(len) : NewDenseArray(len);
+
+    // Steps 15-16.
+    for (var k = 0; k < len; k++) {
+        // Steps 16.a-c.
+        var kValue = items[k];
+
+        // Steps 16.d-e.
+        var mappedValue = mapping ? callFunction(mapfn, thisArg, kValue, k) : kValue;
+
+        // Steps 16.f-g.
+        _DefineDataProperty(A, k, mappedValue, attrs);
+    }
+
+    // Steps 17-18.
+    A.length = len;
+
+    // Step 19.
     return A;
 }
