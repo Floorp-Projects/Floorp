@@ -1314,16 +1314,8 @@ MacroAssembler::handleFailure()
 {
     // Re-entry code is irrelevant because the exception will leave the
     // running function and never come back
-    if (sps_)
-        sps_->skipNextReenter();
-    leaveSPSFrame();
-
     JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     jump(excTail);
-
-    // Doesn't actually emit code, but balances the leave()
-    if (sps_)
-        sps_->reenter(*this, InvalidReg);
 }
 
 #ifdef DEBUG
@@ -1345,7 +1337,7 @@ MacroAssembler::assumeUnreachable(const char *output)
         setupUnalignedABICall(1, temp);
         movePtr(ImmPtr(output), temp);
         passABIArg(temp);
-        callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, AssumeUnreachable_));
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, AssumeUnreachable_));
 
         PopRegsInMask(RegisterSet::Volatile());
     }
@@ -1373,7 +1365,7 @@ MacroAssembler::printf(const char *output)
     setupUnalignedABICall(1, temp);
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, Printf0_));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf0_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1399,7 +1391,7 @@ MacroAssembler::printf(const char *output, Register value)
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     passABIArg(value);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, Printf1_));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf1_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1422,7 +1414,7 @@ MacroAssembler::tracelogStartId(Register logger, uint32_t textId, bool force)
     passABIArg(logger);
     move32(Imm32(textId), temp);
     passABIArg(temp);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStartEventPrivate));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStartEventPrivate));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1441,7 +1433,7 @@ MacroAssembler::tracelogStartId(Register logger, Register textId)
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(textId);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStartEventPrivate));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStartEventPrivate));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1462,7 +1454,7 @@ MacroAssembler::tracelogStartEvent(Register logger, Register event)
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(event);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogFunc));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogFunc));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1485,7 +1477,7 @@ MacroAssembler::tracelogStopId(Register logger, uint32_t textId, bool force)
     move32(Imm32(textId), temp);
     passABIArg(temp);
 
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStopEventPrivate));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStopEventPrivate));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1504,7 +1496,7 @@ MacroAssembler::tracelogStopId(Register logger, Register textId)
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(textId);
-    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStopEventPrivate));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStopEventPrivate));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -2021,58 +2013,6 @@ MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition *maybeDef, Reg
             MOZ_CRASH("Unsupported type");
         }
     }
-}
-
-
-// If a pseudostack frame has this as its label, its stack pointer
-// field points to the registers saved on entry to JIT code.  A native
-// stack unwinder could use that information to continue unwinding
-// past that point.
-const char MacroAssembler::enterJitLabel[] = "EnterJIT";
-
-// Creates an enterJIT pseudostack frame, as described above.  Pushes
-// a word to the stack to indicate whether this was done.  |framePtr| is
-// the pointer to the machine-dependent saved state.
-void
-MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
-{
-    Label spsNotEnabled;
-    uint32_t *enabledAddr = p->addressOfEnabled();
-    load32(AbsoluteAddress(enabledAddr), temp);
-    push(temp); // +4: Did we push an sps frame.
-    branchTest32(Assembler::Equal, temp, temp, &spsNotEnabled);
-
-    Label stackFull;
-    // We always need the "safe" versions, because these are used in trampolines
-    // and won't be regenerated when SPS state changes.
-    spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
-
-    // Push a C++ frame with non-copy label
-    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfLabel()));
-    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfSpOrScript()));
-    store32(Imm32(0),               Address(temp, ProfileEntry::offsetOfLineOrPc()));
-    store32(Imm32(ProfileEntry::IS_CPP_ENTRY), Address(temp, ProfileEntry::offsetOfFlags()));
-
-    /* Always increment the stack size, whether or not we actually pushed. */
-    bind(&stackFull);
-    loadPtr(AbsoluteAddress(p->addressOfSizePointer()), temp);
-    add32(Imm32(1), Address(temp, 0));
-
-    bind(&spsNotEnabled);
-}
-
-// Pops the word pushed by spsMarkJit and, if spsMarkJit pushed an SPS
-// frame, pops it.
-void
-MacroAssembler::spsUnmarkJit(SPSProfiler *p, Register temp)
-{
-    Label spsNotEnabled;
-    pop(temp); // -4: Was the profiler enabled.
-    branchTest32(Assembler::Equal, temp, temp, &spsNotEnabled);
-
-    spsPopFrameSafe(p, temp);
-
-    bind(&spsNotEnabled);
 }
 
 void
