@@ -1078,6 +1078,21 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // the stack.
     masm.pop(scratchReg);
 
+#ifdef DEBUG
+    // If profiler instrumentation is on, ensure that lastProfilingFrame is
+    // the frame currently being OSR-ed
+    {
+        Label checkOk;
+        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &checkOk);
+        masm.loadPtr(AbsoluteAddress((void*)&cx->mainThread().jitActivation), scratchReg);
+        masm.loadPtr(Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()), scratchReg);
+        masm.branchPtr(Assembler::Equal, scratchReg, BaselineStackReg, &checkOk);
+        masm.assumeUnreachable("Baseline OSR lastProfilingFrame mismatch.");
+        masm.bind(&checkOk);
+    }
+#endif
+
     // Jump into Ion.
     masm.loadPtr(Address(osrDataReg, offsetof(IonOsrTempData, jitcode)), scratchReg);
     masm.loadPtr(Address(osrDataReg, offsetof(IonOsrTempData, baselineFrame)), OsrFrameReg);

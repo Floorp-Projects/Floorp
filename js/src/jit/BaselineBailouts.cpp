@@ -1721,6 +1721,12 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     JitFrameIterator iter(cx);
     uint8_t *outerFp = nullptr;
 
+    // Iter currently points at the exit frame.  Get the previous frame
+    // (which must be a baseline frame), and set it as the last profiling
+    // frame.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        cx->mainThread().jitActivation->setLastProfilingFrame(iter.prevFp());
+
     uint32_t frameno = 0;
     while (frameno < numFrames) {
         MOZ_ASSERT(!iter.isIonJS());

@@ -1633,7 +1633,7 @@ LIRGenerator::visitLimitedTruncate(MLimitedTruncate *nop)
 void
 LIRGenerator::visitOsrEntry(MOsrEntry *entry)
 {
-    LOsrEntry *lir = new(alloc()) LOsrEntry;
+    LOsrEntry *lir = new(alloc()) LOsrEntry(temp());
     defineFixed(lir, entry, LAllocation(AnyRegister(OsrFrameReg)));
 }
 
