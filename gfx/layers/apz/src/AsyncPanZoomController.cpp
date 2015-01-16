@@ -1146,6 +1146,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case FLING:
     case ANIMATING_ZOOM:
     case SMOOTH_SCROLL:
+    case OVERSCROLL_ANIMATION:
       CurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations();
       // Fall through.
     case NOTHING: {
@@ -1226,8 +1227,8 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 
     case OVERSCROLL_ANIMATION:
       // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
-      // as touch blocks that begin in an overscrolled state
-      // are ignored.
+      // as touch blocks that begin in an overscrolled state cancel the
+      // animation.
       NS_WARNING("Received impossible touch in OnTouchMove");
       break;
   }
@@ -1310,9 +1311,9 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     return nsEventStatus_eIgnore;
 
   case OVERSCROLL_ANIMATION:
-    // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
-    // as touch blocks that begin in an overscrolled state
-    // are ignored.
+    // Should not receive a touch-end in the OVERSCROLL_ANIMATION state
+    // as touch blocks that begin in an overscrolled state cancel the
+    // animation.
     NS_WARNING("Received impossible touch in OnTouchEnd");
     break;
   }
