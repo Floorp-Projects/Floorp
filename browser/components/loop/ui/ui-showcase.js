@@ -83,7 +83,6 @@
   // Local mocks
 
   var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
-  mockMozLoopRooms.roomsEnabled = true;
 
   var mockContact = {
     name: ["Mr Smith"],
@@ -93,7 +92,6 @@
   };
 
   var mockClient = {
-    requestCallUrl: noop,
     requestCallUrlInfo: noop
   };
 
@@ -220,33 +218,21 @@
             React.createElement("p", {className: "note"}, 
               React.createElement("strong", null, "Note:"), " 332px wide."
             ), 
-            React.createElement(Example, {summary: "Call URL retrieved", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         callUrl: "http://invalid.example.url/", 
-                         mozLoop: navigator.mozLoop, 
-                         dispatcher: dispatcher, 
-                         roomStore: roomStore})
-            ), 
-            React.createElement(Example, {summary: "Call URL retrieved - authenticated", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         callUrl: "http://invalid.example.url/", 
-                         userProfile: {email: "test@example.com"}, 
-                         mozLoop: navigator.mozLoop, 
-                         dispatcher: dispatcher, 
-                         roomStore: roomStore})
-            ), 
-            React.createElement(Example, {summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         mozLoop: navigator.mozLoop, 
-                         dispatcher: dispatcher, 
-                         roomStore: roomStore})
-            ), 
-            React.createElement(Example, {summary: "Pending call url retrieval - authenticated", dashed: "true", style: {width: "332px"}}, 
+            React.createElement(Example, {summary: "Room list tab", dashed: "true", style: {width: "332px"}}, 
               React.createElement(PanelView, {client: mockClient, notifications: notifications, 
                          userProfile: {email: "test@example.com"}, 
-                         mozLoop: navigator.mozLoop, 
+                         mozLoop: mockMozLoopRooms, 
                          dispatcher: dispatcher, 
-                         roomStore: roomStore})
+                         roomStore: roomStore, 
+                         selectedTab: "rooms"})
+            ), 
+            React.createElement(Example, {summary: "Contact list tab", dashed: "true", style: {width: "332px"}}, 
+              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
+                         userProfile: {email: "test@example.com"}, 
+                         mozLoop: mockMozLoopRooms, 
+                         dispatcher: dispatcher, 
+                         roomStore: roomStore, 
+                         selectedTab: "contacts"})
             ), 
             React.createElement(Example, {summary: "Error Notification", dashed: "true", style: {width: "332px"}}, 
               React.createElement(PanelView, {client: mockClient, notifications: errNotifications, 
@@ -260,14 +246,6 @@
                          mozLoop: navigator.mozLoop, 
                          dispatcher: dispatcher, 
                          roomStore: roomStore})
-            ), 
-            React.createElement(Example, {summary: "Room list tab", dashed: "true", style: {width: "332px"}}, 
-              React.createElement(PanelView, {client: mockClient, notifications: notifications, 
-                         userProfile: {email: "test@example.com"}, 
-                         mozLoop: mockMozLoopRooms, 
-                         dispatcher: dispatcher, 
-                         roomStore: roomStore, 
-                         selectedTab: "rooms"})
             ), 
             React.createElement(Example, {summary: "Contact import success", dashed: "true", style: {width: "332px"}}, 
               React.createElement(PanelView, {notifications: new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}]), 
