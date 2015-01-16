@@ -158,7 +158,7 @@ bool
 CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite *site)
 {
     // Skip the table entirely if profiling is not enabled.
-    if (!isNativeToBytecodeMapEnabled())
+    if (!isProfilerInstrumentationEnabled())
         return true;
 
     MOZ_ASSERT(site);

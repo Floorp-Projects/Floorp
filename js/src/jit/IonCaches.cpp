@@ -429,7 +429,7 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
     attachStub(masm, attacher, code);
 
     // Add entry to native => bytecode mapping for this stub if needed.
-    if (cx->runtime()->jitRuntime()->isNativeToBytecodeMapEnabled(cx->runtime())) {
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
         JitcodeGlobalEntry::IonCacheEntry entry;
         entry.init(code->raw(), code->raw() + code->instructionsSize(), rejoinAddress());
 
