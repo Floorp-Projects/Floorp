@@ -1713,8 +1713,8 @@ SetGCCallback(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    RootedObject opts(cx);
-    if (!JS_ValueToObject(cx, args[0], &opts))
+    RootedObject opts(cx, ToObject(cx, args[0]));
+    if (!opts)
         return false;
 
     RootedValue v(cx);
