@@ -203,7 +203,7 @@ class ArgumentsObject : public NativeObject
     /*
      * An ArgumentsObject serves two roles:
      *  - a real object, accessed through regular object operations, e.g..,
-     *    JSObject::getElement corresponding to 'arguments[i]';
+     *    GetElement corresponding to 'arguments[i]';
      *  - a VM-internal data structure, storing the value of arguments (formal
      *    and actual) that are accessed directly by the VM when a reading the
      *    value of a formal parameter.

@@ -63,6 +63,7 @@ public:
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
   virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
   virtual uint32_t GetAppId() MOZ_OVERRIDE;
+  bool GetInBrowser();
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;

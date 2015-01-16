@@ -2729,10 +2729,10 @@ CloneForDeadBranches(TempAllocator &alloc, MInstruction *candidate)
 
     MDefinitionVector operands(alloc);
     size_t end = candidate->numOperands();
-    for (size_t i = 0; i < end; i++) {
-        if (!operands.append(candidate->getOperand(i)))
-            return false;
-    }
+    if (!operands.reserve(end))
+        return false;
+    for (size_t i = 0; i < end; ++i)
+        operands.infallibleAppend(candidate->getOperand(i));
 
     MInstruction *clone = candidate->clone(alloc, operands);
     clone->setRange(nullptr);

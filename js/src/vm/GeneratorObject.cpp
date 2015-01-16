@@ -28,7 +28,7 @@ GeneratorObject::create(JSContext *cx, AbstractFramePtr frame)
         RootedObject fun(cx, frame.fun());
         // FIXME: This would be faster if we could avoid doing a lookup to get
         // the prototype for the instance.  Bug 906600.
-        if (!JSObject::getProperty(cx, fun, fun, cx->names().prototype, &pval))
+        if (!GetProperty(cx, fun, fun, cx->names().prototype, &pval))
             return nullptr;
         JSObject *proto = pval.isObject() ? &pval.toObject() : nullptr;
         if (!proto) {

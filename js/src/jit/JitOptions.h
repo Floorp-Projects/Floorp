@@ -54,7 +54,6 @@ struct JitOptions
     uint32_t maxStackArgs;
     uint32_t osrPcMismatchesBeforeRecompile;
     uint32_t smallFunctionMaxBytecodeLength_;
-    uint32_t compilerWarmUpThresholdPar;
 
     JitOptions();
     bool isSmallFunction(JSScript *script) const;

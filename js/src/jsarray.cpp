@@ -71,7 +71,7 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
     }
 
     RootedValue value(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().length, &value))
+    if (!GetProperty(cx, obj, obj, cx->names().length, &value))
         return false;
 
     if (value.isInt32()) {
@@ -179,14 +179,14 @@ DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
 
     RootedObject obj2(cx);
     RootedShape prop(cx);
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
+    if (!LookupProperty(cx, obj, id, &obj2, &prop))
         return false;
 
     if (!prop) {
         vp.setUndefined();
         *hole = true;
     } else {
-        if (!JSObject::getGeneric(cx, obj, receiver, id, vp))
+        if (!GetProperty(cx, obj, receiver, id, vp))
             return false;
         *hole = false;
     }
@@ -278,7 +278,7 @@ js::GetElementsWithAdder(JSContext *cx, HandleObject obj, HandleObject receiver,
             }
         } else {
             MOZ_ASSERT(adder->getBehavior() == ElementAdder::GetElement);
-            if (!JSObject::getElement(cx, obj, receiver, i, &val))
+            if (!GetElement(cx, obj, receiver, i, &val))
                 return false;
         }
         adder->append(cx, val);
@@ -317,7 +317,7 @@ js::GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
     }
 
     for (uint32_t i = 0; i < length; i++) {
-        if (!JSObject::getElement(cx, aobj, aobj, i, MutableHandleValue::fromMarkedLocation(&vp[i])))
+        if (!GetElement(cx, aobj, aobj, i, MutableHandleValue::fromMarkedLocation(&vp[i])))
             return false;
     }
 
@@ -364,7 +364,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
         return false;
 
     RootedValue tmp(cx, v);
-    return JSObject::setGeneric(cx, obj, obj, id, &tmp, true);
+    return SetProperty(cx, obj, obj, id, &tmp, true);
 }
 
 /*
@@ -410,7 +410,7 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
     RootedId id(cx);
     if (!ToId(cx, index, &id))
         return false;
-    return JSObject::deleteGeneric(cx, obj, id, succeeded);
+    return DeleteProperty(cx, obj, id, succeeded);
 }
 
 /* ES6 20130308 draft 9.3.5 */
@@ -434,7 +434,7 @@ bool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
-    return JSObject::setProperty(cx, obj, obj, cx->names().length, &v, true);
+    return SetProperty(cx, obj, obj, cx->names().length, &v, true);
 }
 
 /*
@@ -453,7 +453,7 @@ array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandle
             vp.setNumber(obj->as<ArrayObject>().length());
             return true;
         }
-        if (!JSObject::getProto(cx, obj, &obj))
+        if (!GetPrototype(cx, obj, &obj))
             return false;
     } while (obj);
     return true;
@@ -467,8 +467,8 @@ array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, M
         // chain. Ideally the setter should not have been called, but since
         // we're here, do an impression of SetPropertyByDefining.
         const Class *clasp = obj->getClass();
-        return JSObject::defineProperty(cx, obj, cx->names().length, vp,
-                                        clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+        return DefineProperty(cx, obj, cx->names().length, vp,
+                              clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
@@ -628,7 +628,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
 
                 /* Steps 15b-d. */
                 bool deleteSucceeded;
-                if (!JSObject::deleteElement(cx, arr, oldLen, &deleteSucceeded))
+                if (!DeleteElement(cx, arr, oldLen, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = oldLen + 1;
@@ -688,7 +688,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
 
                 /* Steps 15b-d. */
                 bool deleteSucceeded;
-                if (!JSObject::deleteElement(cx, arr, index, &deleteSucceeded))
+                if (!DeleteElement(cx, arr, index, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
                     newLen = index + 1;
@@ -1161,7 +1161,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedValue join(cx, args.calleev());
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().join, &join))
+    if (!GetProperty(cx, obj, obj, cx->names().join, &join))
         return false;
 
     if (!IsCallable(join)) {
@@ -1304,7 +1304,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
         value = *vector++;
         indexv = DoubleValue(index);
         if (!ValueToId<CanGC>(cx, indexv, &id) ||
-            !JSObject::setGeneric(cx, obj, obj, id, &value, true))
+            !SetProperty(cx, obj, obj, id, &value, true))
         {
             return false;
         }
@@ -2442,7 +2442,7 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
             bool hole;
             if (!CheckForInterrupt(cx) ||
                 !GetElement(cx, obj, actualStart + k, &hole, &fromValue) ||
-                (!hole && !JSObject::defineElement(cx, arr, k, fromValue)))
+                (!hole && !DefineElement(cx, arr, k, fromValue)))
             {
                 return false;
             }
@@ -2807,7 +2807,7 @@ SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
         {
             return false;
         }
-        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
+        if (!hole && !DefineElement(cx, result, slot - begin, value))
             return false;
     }
     return true;
@@ -2835,7 +2835,7 @@ SliceSparse(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
         if (!GetElement(cx, obj, obj, index, &hole, &value))
             return false;
 
-        if (!hole && !JSObject::defineElement(cx, result, index - begin, value))
+        if (!hole && !DefineElement(cx, result, index - begin, value))
             return false;
     }
 
@@ -3091,13 +3091,13 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 8.
     for (unsigned k = 0; k < args.length(); k++) {
-        if (!JSObject::defineElement(cx, obj, k, args[k]))
+        if (!DefineElement(cx, obj, k, args[k]))
             return false;
     }
 
     // Steps 9-10.
     RootedValue v(cx, NumberValue(args.length()));
-    if (!JSObject::setProperty(cx, obj, obj, cx->names().length, &v, true))
+    if (!SetProperty(cx, obj, obj, cx->names().length, &v, true))
         return false;
 
     // Step 11.

@@ -579,7 +579,7 @@ class GlobalObject : public NativeObject
 #endif
         RootedObject holder(cx, intrinsicsHolder());
         RootedValue valCopy(cx, value);
-        return JSObject::setProperty(cx, holder, holder, name, &valCopy, false);
+        return SetProperty(cx, holder, holder, name, &valCopy, false);
     }
 
     bool getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, HandleAtom name,

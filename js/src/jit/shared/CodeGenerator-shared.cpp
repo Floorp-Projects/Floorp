@@ -996,9 +996,6 @@ CodeGeneratorShared::resetOsiPointRegs(LSafepoint *safepoint)
 void
 CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Register *dynStack)
 {
-    // Different execution modes have different sets of VM functions.
-    MOZ_ASSERT(fun.executionMode == gen->info().executionMode());
-
     // If we're calling a function with an out parameter type of double, make
     // sure we have an FPU.
     MOZ_ASSERT_IF(fun.outParam == Type_Double, GetJitContext()->runtime->jitSupportsFloatingPoint());

@@ -2278,12 +2278,12 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 
     Rooted<jsid> value_id(cx, AtomToId(cx->names().value));
     Rooted<jsid> done_id(cx, AtomToId(cx->names().done));
-    if (!DefineNativeProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
+    if (!NativeDefineProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
     {
         return false;
     }
-    if (!DefineNativeProperty(cx, obj, done_id, UndefinedHandleValue, nullptr, nullptr,
+    if (!NativeDefineProperty(cx, obj, done_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
     {
         return false;
@@ -4241,7 +4241,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
                 return true;
             }
             id = INT_TO_JSID(idx);
-            if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
+            if (!DefineProperty(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
                 return false;
         }
         MOZ_ASSERT(idx == count);
@@ -4287,11 +4287,8 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
 
             uint32_t index;
             if (IsDefinitelyIndex(idvalue, &index)) {
-                if (!JSObject::defineElement(cx, obj, index, value, nullptr, nullptr,
-                                             JSPROP_ENUMERATE))
-                {
+                if (!DefineElement(cx, obj, index, value, nullptr, nullptr, JSPROP_ENUMERATE))
                     return false;
-                }
 
                 continue;
             }
@@ -4301,12 +4298,11 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
                 return false;
 
             if (name->isIndex(&index)) {
-                if (!JSObject::defineElement(cx, obj, index, value,
-                                             nullptr, nullptr, JSPROP_ENUMERATE))
+                if (!DefineElement(cx, obj, index, value, nullptr, nullptr, JSPROP_ENUMERATE))
                     return false;
             } else {
-                if (!JSObject::defineProperty(cx, obj, name->asPropertyName(), value,
-                                              nullptr, nullptr, JSPROP_ENUMERATE))
+                if (!DefineProperty(cx, obj, name->asPropertyName(), value,
+                                    nullptr, nullptr, JSPROP_ENUMERATE))
                 {
                     return false;
                 }
@@ -6626,7 +6622,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 MOZ_ASSERT(!obj->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());
-                if (!DefineNativeProperty(cx, obj, id, undefinedValue, nullptr, nullptr,
+                if (!NativeDefineProperty(cx, obj, id, undefinedValue, nullptr, nullptr,
                                           JSPROP_ENUMERATE))
                 {
                     return false;

@@ -148,7 +148,7 @@ function ensureModuleIsOpen() {
  * @param args
  *        array of arguments to pass to the notification.
  */
-function notify(observers, notification, args) {
+function notify(observers, notification, args = []) {
   for (let observer of observers) {
     try {
       observer[notification](...args);
@@ -253,7 +253,7 @@ this.History = Object.freeze({
    *      A callback invoked for each page found.
    *
    * @return (Promise)
-   *      A promise resoled once the operation is complete.
+   *      A promise resolved once the operation is complete.
    * @resolve (bool)
    *      `true` if at least one page was removed, `false` otherwise.
    * @throws (TypeError)
@@ -328,7 +328,7 @@ this.History = Object.freeze({
    *      The full URI of the page or the GUID of the page.
    *
    * @return (Promise)
-   *      A promise resoled once the operation is complete.
+   *      A promise resolved once the operation is complete.
    * @resolve (bool)
    *      `true` if the page has been visited, `false` otherwise.
    * @throws (Error)
@@ -337,6 +337,28 @@ this.History = Object.freeze({
    */
   hasVisits: function(page, onResult) {
     throw new Error("Method not implemented");
+  },
+
+  /**
+   * Clear all history.
+   *
+   * @return (Promise)
+   *      A promise resolved once the operation is complete.
+   */
+  clear() {
+    ensureModuleIsOpen();
+
+    return Task.spawn(function* () {
+      let promise = clear();
+      operationsBarrier.client.addBlocker("History.clear", promise);
+
+      try {
+        return (yield promise);
+      } finally {
+        // Cleanup the barrier.
+        operationsBarrier.client.removeBlocker(promise);
+      }
+    });
   },
 
   /**
@@ -453,6 +475,34 @@ let invalidateFrecencies = Task.async(function*(db, idList) {
   );
 });
 
+// Inner implementation of History.clear().
+let clear = Task.async(function* () {
+  let db = yield DBConnPromised;
+
+  // Remove all history.
+  yield db.execute("DELETE FROM moz_historyvisits");
+
+  // Clear the registered embed visits.
+  PlacesUtils.history.clearEmbedVisits();
+
+  // Expiration will take care of orphans.
+  let observers = PlacesUtils.history.getObservers();
+  notify(observers, "onClearHistory");
+
+  // Invalidate frecencies for the remaining places. This must happen
+  // after the notification to ensure it runs enqueued to expiration.
+  yield db.execute(
+    `UPDATE moz_places SET frecency =
+     (CASE
+      WHEN url BETWEEN 'place:' AND 'place;'
+      THEN 0
+      ELSE -1
+      END)
+     WHERE frecency > 0`);
+
+  // Notify frecency change observers.
+  notify(observers, "onManyFrecenciesChanged");
+});
 
 // Inner implementation of History.remove.
 let remove = Task.async(function*({guids, urls}, onResult = null) {

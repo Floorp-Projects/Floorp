@@ -2235,6 +2235,7 @@ GCRuntime::relocateArenas()
 
         if (CanRelocateZone(rt, zone)) {
             zone->setGCState(Zone::Compact);
+            StopAllOffThreadCompilations(zone);
             relocatedList = zone->arenas.relocateArenas(relocatedList);
         }
     }
@@ -6394,9 +6395,6 @@ GCRuntime::onOutOfMallocMemory()
 void
 GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 {
-    // Throw away any excess chunks we have lying around.
-    freeEmptyChunks(rt, lock);
-
     // Release any relocated arenas we may be holding on to, without releasing
     // the GC lock.
 #if defined(JSGC_COMPACTING) && defined(DEBUG)
@@ -6404,6 +6402,9 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
     releaseRelocatedArenasWithoutUnlocking(relocatedArenasToRelease, lock);
     relocatedArenasToRelease = nullptr;
 #endif
+
+    // Throw away any excess chunks we have lying around.
+    freeEmptyChunks(rt, lock);
 
     // Immediately decommit as many arenas as possible in the hopes that this
     // might let the OS scrape together enough pages to satisfy the failing
