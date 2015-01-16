@@ -3283,6 +3283,11 @@ Http2Session::BufferOutput(const char *buf,
 bool // static
 Http2Session::ALPNCallback(nsISupports *securityInfo)
 {
+  if (!gHttpHandler->IsH2MandatorySuiteEnabled()) {
+    LOG3(("Http2Session::ALPNCallback Mandatory Cipher Suite Unavailable\n"));
+    return false;
+  }
+
   nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
   LOG3(("Http2Session::ALPNCallback sslsocketcontrol=%p\n", ssl.get()));
   if (ssl) {
