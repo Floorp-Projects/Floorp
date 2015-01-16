@@ -120,9 +120,6 @@ struct VMFunction
     // The root type of the out param if outParam == Type_Handle.
     RootType outParamRootType;
 
-    // PJS FIXME: get rid of executionMode
-    ExecutionMode executionMode;
-
     // Number of Values the VM wrapper should pop from the stack when it returns.
     // Used by baseline IC stubs so that they can use tail calls to call the VM
     // wrapper.
@@ -228,7 +225,6 @@ struct VMFunction
         outParam(Type_Void),
         returnType(Type_Void),
         outParamRootType(RootNone),
-        executionMode(SequentialExecution),
         extraValuesToPop(0)
     {
     }
@@ -237,8 +233,7 @@ struct VMFunction
     VMFunction(void *wrapped, uint32_t explicitArgs, uint32_t argumentProperties,
                uint32_t argumentPassedInFloatRegs, uint64_t argRootTypes,
                DataType outParam, RootType outParamRootType, DataType returnType,
-               ExecutionMode executionMode, uint32_t extraValuesToPop = 0,
-               MaybeTailCall expectTailCall = NonTailCall)
+               uint32_t extraValuesToPop = 0, MaybeTailCall expectTailCall = NonTailCall)
       : wrapped(wrapped),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
@@ -247,13 +242,11 @@ struct VMFunction
         returnType(returnType),
         argumentRootTypes(argRootTypes),
         outParamRootType(outParamRootType),
-        executionMode(executionMode),
         extraValuesToPop(extraValuesToPop),
         expectTailCall(expectTailCall)
     {
         // Check for valid failure/return type.
-        MOZ_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
-                      returnType == Type_Bool);
+        MOZ_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
         MOZ_ASSERT(returnType == Type_Bool ||
                    returnType == Type_Object);
     }
@@ -271,31 +264,6 @@ struct VMFunction
   private:
     // Add this to the global list of VMFunctions.
     void addToFunctions();
-};
-
-// A collection of VM functions for each execution mode.
-struct VMFunctionsModal
-{
-    explicit VMFunctionsModal(const VMFunction &info) {
-        add(info);
-    }
-    VMFunctionsModal(const VMFunction &info1, const VMFunction &info2) {
-        add(info1);
-        add(info2);
-    }
-
-    inline const VMFunction &operator[](ExecutionMode mode) const {
-        MOZ_ASSERT((unsigned)mode < NumExecutionModes);
-        return funs_[mode];
-    }
-
-  private:
-    void add(const VMFunction &info) {
-        MOZ_ASSERT((unsigned)info.executionMode < NumExecutionModes);
-        funs_[info.executionMode].init(info);
-    }
-
-    mozilla::Array<VMFunction, NumExecutionModes> funs_;
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
@@ -468,6 +436,14 @@ template <> struct OutParamToRootType<MutableHandleString> {
     static const VMFunction::RootType result = VMFunction::RootString;
 };
 
+template <class> struct MatchContext { };
+template <> struct MatchContext<JSContext *> {
+    static const bool valid = true;
+};
+template <> struct MatchContext<ExclusiveContext *> {
+    static const bool valid = true;
+};
+
 #define FOR_EACH_ARGS_1(Macro, Sep, Last) Macro(1) Last(1)
 #define FOR_EACH_ARGS_2(Macro, Sep, Last) FOR_EACH_ARGS_1(Macro, Sep, Sep) Macro(2) Last(2)
 #define FOR_EACH_ARGS_3(Macro, Sep, Last) FOR_EACH_ARGS_2(Macro, Sep, Sep) Macro(3) Last(3)
@@ -484,11 +460,7 @@ template <> struct OutParamToRootType<MutableHandleString> {
 #define SEP_OR(_) |
 #define NOTHING(_)
 
-// PJS FIXME: get rid of executionMode()
 #define FUNCTION_INFO_STRUCT_BODY(ForEachNb)                                            \
-    static inline ExecutionMode executionMode() {                                       \
-        return SequentialExecution;                                                     \
-    }                                                                                   \
     static inline DataType returnType() {                                               \
         return TypeToDataType<R>::result;                                               \
     }                                                                                   \
@@ -518,16 +490,18 @@ template <> struct OutParamToRootType<MutableHandleString> {
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
                      argumentProperties(), argumentPassedInFloatRegs(),                 \
                      argumentRootTypes(), outParam(), outParamRootType(),               \
-                     returnType(), executionMode(),                                     \
-                     extraValuesToPop.numValues, expectTailCall)                        \
-    { }                                                                                 \
+                     returnType(), extraValuesToPop.numValues, expectTailCall)          \
+    {                                                                                   \
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");   \
+    }                                                                                   \
     explicit FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))            \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
                      argumentProperties(), argumentPassedInFloatRegs(),                 \
                      argumentRootTypes(), outParam(), outParamRootType(),               \
-                     returnType(), executionMode(),                                     \
-                     extraValuesToPop.numValues, NonTailCall)                           \
-    { }
+                     returnType(), extraValuesToPop.numValues, NonTailCall)             \
+    {                                                                                   \
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");   \
+    }
 
 template <typename Fun>
 struct FunctionInfo {
@@ -538,10 +512,6 @@ template <class R, class Context>
 struct FunctionInfo<R (*)(Context)> : public VMFunction {
     typedef R (*pf)(Context);
 
-    // PJS FIXME: get rid of executionMode()
-    static inline ExecutionMode executionMode() {
-        return SequentialExecution;
-    }
     static inline DataType returnType() {
         return TypeToDataType<R>::result;
     }
@@ -567,14 +537,18 @@ struct FunctionInfo<R (*)(Context)> : public VMFunction {
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),
-                   returnType(), executionMode(), 0, NonTailCall)
-    { }
+                   returnType(), 0, NonTailCall)
+    {
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");
+    }
     explicit FunctionInfo(pf fun, MaybeTailCall expectTailCall)
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),
-                   returnType(), executionMode(), 0, expectTailCall)
-    { }
+                   returnType(), expectTailCall)
+    {
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");
+    }
 };
 
 // Specialize the class for each number of argument used by VMFunction.

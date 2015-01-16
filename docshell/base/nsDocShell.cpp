@@ -10174,6 +10174,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     else
       srcdoc = NullString();
 
+    mozilla::net::PredictorLearn(aURI, nullptr,
+                                 nsINetworkPredictor::LEARN_LOAD_TOPLEVEL,
+                                 this);
     mozilla::net::PredictorPredict(aURI, nullptr,
                                    nsINetworkPredictor::PREDICT_LOAD,
                                    this, nullptr);

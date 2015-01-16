@@ -1245,7 +1245,7 @@ JSStructuredCloneWriter::write(HandleValue v)
                 if (found) {
                     RootedValue val(context());
                     if (!startWrite(key) ||
-                        !JSObject::getGeneric(context(), obj, obj, id, &val) ||
+                        !GetProperty(context(), obj, obj, id, &val) ||
                         !startWrite(val))
                     {
                         return false;
@@ -1863,7 +1863,7 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
             if (!ValueToId<CanGC>(context(), key, &id))
                 return false;
 
-            if (!JSObject::defineGeneric(context(), obj, id, val))
+            if (!DefineProperty(context(), obj, id, val))
                 return false;
          }
     }

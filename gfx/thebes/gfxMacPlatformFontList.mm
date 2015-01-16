@@ -862,7 +862,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
             if (family) {
                 fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
                 if (fontEntry) {
-                    if (fontEntry->TestCharacterMap(aCh)) {
+                    if (fontEntry->HasCharacter(aCh)) {
                         *aMatchedFamily = family;
                     } else {
                         fontEntry = nullptr;

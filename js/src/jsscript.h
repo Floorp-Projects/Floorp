@@ -969,7 +969,7 @@ class JSScript : public js::gc::TenuredCell
     // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
     bool usesArgumentsApplyAndThis_:1;
 
-    // PJS FIXME
+    // PJS FIXME bug 1121433 - clone at call site may be obsolete
     /* script is attempted to be cloned anew at each callsite. This is
        temporarily needed for ParallelArray selfhosted code until type
        information can be made context sensitive. See discussion in
