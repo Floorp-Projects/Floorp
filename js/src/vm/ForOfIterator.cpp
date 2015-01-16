@@ -56,10 +56,10 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     RootedValue callee(cx);
 #ifdef JS_HAS_SYMBOLS
     RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-    if (!JSObject::getGeneric(cx, iterableObj, iterableObj, iteratorId, &callee))
+    if (!GetProperty(cx, iterableObj, iterableObj, iteratorId, &callee))
         return false;
 #else
-    if (!JSObject::getProperty(cx, iterableObj, iterableObj, cx->names().std_iterator, &callee))
+    if (!GetProperty(cx, iterableObj, iterableObj, cx->names().std_iterator, &callee))
         return false;
 #endif
 
@@ -127,7 +127,7 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
         }
     }
 
-    return JSObject::getElement(cx_, iterator, iterator, index++, vp);
+    return GetElement(cx_, iterator, iterator, index++, vp);
 }
 
 bool
@@ -150,7 +150,7 @@ ForOfIterator::next(MutableHandleValue vp, bool *done)
     }
 
     RootedValue method(cx_);
-    if (!JSObject::getProperty(cx_, iterator, iterator, cx_->names().next, &method))
+    if (!GetProperty(cx_, iterator, iterator, cx_->names().next, &method))
         return false;
 
     InvokeArgs args(cx_);
@@ -166,14 +166,14 @@ ForOfIterator::next(MutableHandleValue vp, bool *done)
     if (!resultObj)
         return false;
     RootedValue doneVal(cx_);
-    if (!JSObject::getProperty(cx_, resultObj, resultObj, cx_->names().done, &doneVal))
+    if (!GetProperty(cx_, resultObj, resultObj, cx_->names().done, &doneVal))
         return false;
     *done = ToBoolean(doneVal);
     if (*done) {
         vp.setUndefined();
         return true;
     }
-    return JSObject::getProperty(cx_, resultObj, resultObj, cx_->names().value, vp);
+    return GetProperty(cx_, resultObj, resultObj, cx_->names().value, vp);
 }
 
 bool

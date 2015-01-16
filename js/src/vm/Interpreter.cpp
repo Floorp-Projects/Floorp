@@ -88,7 +88,7 @@ js::BoxNonStrictThis(JSContext *cx, HandleValue thisv)
 
     if (thisv.isNullOrUndefined()) {
         Rooted<GlobalObject*> global(cx, cx->global());
-        return JSObject::thisObject(cx, global);
+        return GetThisObject(cx, global);
     }
 
     if (thisv.isObject())
@@ -164,7 +164,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     RootedValue idval(cx, idval_);
 
     RootedValue value(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
+    if (!GetProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
         return false;
 
     if (value.isObject()) {
@@ -248,7 +248,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 
     bool wasObject = lval.isObject();
 
-    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+    if (!GetProperty(cx, obj, obj, id, vp))
         return false;
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -312,13 +312,13 @@ SetObjectProperty(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Mutable
 
     bool strict = op == JSOP_STRICTSETPROP;
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper(cx, obj.as<NativeObject>(), obj.as<NativeObject>(),
-                                        id, baseops::Qualified, rref, strict))
+        if (!NativeSetProperty(cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
+                               Qualified, rref, strict))
         {
             return false;
         }
     } else {
-        if (!JSObject::setGeneric(cx, obj, obj, id, rref, strict))
+        if (!SetProperty(cx, obj, obj, id, rref, strict))
             return false;
     }
 
@@ -544,7 +544,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             RootedObject thisObj(cx, &args.thisv().toObject());
-            JSObject *thisp = JSObject::thisObject(cx, thisObj);
+            JSObject *thisp = GetThisObject(cx, thisObj);
             if (!thisp)
                 return false;
             args.setThis(ObjectValue(*thisp));
@@ -685,7 +685,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     }
 
     /* Use the scope chain as 'this', modulo outerization. */
-    JSObject *thisObj = JSObject::thisObject(cx, scopeChain);
+    JSObject *thisObj = GetThisObject(cx, scopeChain);
     if (!thisObj)
         return false;
     Value thisv = ObjectValue(*thisObj);
@@ -1180,7 +1180,7 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  * (an object on the scope chain).
  *
  * We can avoid computing |this| eagerly and push the implicit callee-coerced
- * |this| value, undefined, if any of these conditions hold:
+ * |this| value, undefined, if either of these conditions hold:
  *
  * 1. The nominal |this|, obj, is a global object.
  *
@@ -1188,8 +1188,9 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
  *    censored with undefined.
  *
- * Otherwise, we bind |this| to obj->thisObject(). Only names inside |with|
- * statements and embedding-specific scope objects fall into this category.
+ * Otherwise, we bind |this| to GetThisObject(cx, obj). Only names inside
+ * |with| statements and embedding-specific scope objects fall into this
+ * category.
  *
  * If the callee is a strict mode function, then code implementing JSOP_THIS
  * in the interpreter and JITs will leave undefined as |this|. If funval is a
@@ -1210,7 +1211,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    JSObject *nobj = JSObject::thisObject(cx, obj);
+    JSObject *nobj = GetThisObject(cx, obj);
     if (!nobj)
         return false;
 
@@ -1342,7 +1343,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         return false;
 
     RootedValue tmp(cx, value);
-    return JSObject::setGeneric(cx, obj, obj, id, &tmp, strict);
+    return SetProperty(cx, obj, obj, id, &tmp, strict);
 }
 
 static MOZ_NEVER_INLINE bool
@@ -1877,7 +1878,7 @@ CASE(JSOP_IN)
     FETCH_ELEMENT_ID(-2, id);
     RootedObject &obj2 = rootObject1;
     RootedShape &prop = rootShape0;
-    if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
+    if (!LookupProperty(cx, obj, id, &obj2, &prop))
         goto error;
     bool cond = prop != nullptr;
     prop = nullptr;
@@ -2287,7 +2288,7 @@ CASE(JSOP_STRICTDELPROP)
     FETCH_OBJECT(cx, -1, obj);
 
     bool succeeded;
-    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+    if (!DeleteProperty(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELPROP) {
         obj->reportNotConfigurable(cx, id);
@@ -2314,7 +2315,7 @@ CASE(JSOP_STRICTDELELEM)
     RootedId &id = rootId0;
     if (!ValueToId<CanGC>(cx, propval, &id))
         goto error;
-    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
+    if (!DeleteProperty(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELELEM) {
         obj->reportNotConfigurable(cx, id);
@@ -3157,7 +3158,7 @@ CASE(JSOP_MUTATEPROTO)
         MOZ_ASSERT(obj->is<PlainObject>());
 
         bool succeeded;
-        if (!JSObject::setProto(cx, obj, newProto, &succeeded))
+        if (!SetPrototype(cx, obj, newProto, &succeeded))
             goto error;
         MOZ_ASSERT(succeeded);
     }
@@ -3182,7 +3183,7 @@ CASE(JSOP_INITPROP)
     RootedId &id = rootId0;
     id = NameToId(name);
 
-    if (!DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
+    if (!NativeDefineProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE))
         goto error;
 
     REGS.sp--;
@@ -3568,7 +3569,7 @@ js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHa
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
-    return JSObject::getProperty(cx, obj, obj, name, vp);
+    return GetProperty(cx, obj, obj, name, vp);
 }
 
 bool
@@ -3604,7 +3605,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
         return false;
     }
 
-    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+    if (!GetProperty(cx, obj, obj, name, vp))
         return false;
 
     // See note in FetchName.
@@ -3629,7 +3630,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
         return true;
     }
 
-    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+    if (!GetProperty(cx, obj, obj, name, vp))
         return false;
 
     // See note in FetchName.
@@ -3702,7 +3703,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     RootedShape shape(cx);
     RootedObject pobj(cx);
-    if (!JSObject::lookupProperty(cx, parent, name, &pobj, &shape))
+    if (!LookupProperty(cx, parent, name, &pobj, &shape))
         return false;
 
     RootedValue rval(cx, ObjectValue(*fun));
@@ -3717,13 +3718,13 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 
     /* Steps 5d, 5f. */
     if (!shape || pobj != parent)
-        return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+        return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
     /* Step 5e. */
     MOZ_ASSERT(parent->isNative());
     if (parent->is<GlobalObject>()) {
         if (shape->configurable())
-            return JSObject::defineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+            return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
@@ -3744,7 +3745,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict());
+    return SetProperty(cx, parent, parent, name, &rval, script->strict());
 }
 
 bool
@@ -3771,7 +3772,7 @@ bool
 js::SetProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &value)
 {
     RootedValue v(cx, value);
-    return JSObject::setGeneric(cx, obj, obj, id, &v, strict);
+    return SetProperty(cx, obj, obj, id, &v, strict);
 }
 
 template bool js::SetProperty<true> (JSContext *cx, HandleObject obj, HandleId id, const Value &value);
@@ -3786,7 +3787,7 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *
         return false;
 
     RootedId id(cx, NameToId(name));
-    if (!JSObject::deleteGeneric(cx, obj, id, bp))
+    if (!DeleteProperty(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
@@ -3810,7 +3811,7 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, index, &id))
         return false;
-    if (!JSObject::deleteGeneric(cx, obj, id, bp))
+    if (!DeleteProperty(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
@@ -3922,7 +3923,7 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
 
     bool succeeded;
     RootedId id(cx, NameToId(name));
-    if (!JSObject::deleteGeneric(cx, scope, id, &succeeded))
+    if (!DeleteProperty(cx, scope, id, &succeeded))
         return false;
     res.setBoolean(succeeded);
     return true;
@@ -3982,7 +3983,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
     }
 
     RootedValue scratch(cx);
-    return JSObject::defineGeneric(cx, obj, id, scratch, getter, setter, attrs);
+    return DefineProperty(cx, obj, id, scratch, getter, setter, attrs);
 }
 
 bool

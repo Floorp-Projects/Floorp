@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
         <field name="field"><![CDATA[
           (function () {
              try {
-               let (x=1) (x);
+               eval("let x = 1;");
                var success = true;
              }
              catch (e) { success = false; }
@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
         <property name="property">
           <getter><![CDATA[
              try {
-               let (x=1) (x);
+               eval("let x = 1;");
                var success = true;
              }
              catch (e) { success = false; }
@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
            ]]></getter>
           <setter><![CDATA[
             try {
-              let (x=1) (x);
+              eval("let x = 1;");
               var success = true
             }
             catch (e) { success = false }
@@ -44,8 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
         <method name="method">
           <body><![CDATA[
             try {
-              let (x=1) (x);
+              eval("let x = 1;");
               var success = true;
+
             }
             catch (e) { success = false; }
             XPCNativeWrapper.unwrap(window).report("XBL methods", success)
@@ -56,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
           var x = this.field;
           this.method()
           try {
-            let (x=1) (x);
+            eval("let x = 1;");
             var success = true
           }
           catch (e) { success = false }
@@ -72,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
       <handlers>
         <handler action='
           try {
-            let (x=1) (x);
+            eval("let x = 1;");
             var success = true
           }
           catch (e) { success = false }
@@ -106,7 +107,7 @@ function report(testName, success) {
 </script>
 <script type="text/javascript; version=1.7"><![CDATA[
   try {
-    let (x=1) (x);
+    eval("let x = 1;");
     var success = true;
   }
   catch (e) { success = false; }
@@ -114,7 +115,7 @@ function report(testName, success) {
 ]]></script>
 <script type="text/javascript"><![CDATA[
   try {
-    let (x=1) (x);
+    eval("let x = 1;");
     var success = false;
   }
   catch (e) { success = true; }
@@ -123,4 +124,3 @@ function report(testName, success) {
 </pre>
 </body>
 </html>
-

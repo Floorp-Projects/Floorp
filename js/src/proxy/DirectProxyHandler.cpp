@@ -41,8 +41,8 @@ DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId i
     RootedValue v(cx, desc.value());
     return CheckDefineProperty(cx, target, id, v, desc.attributes(),
                                desc.getter(), desc.setter()) &&
-           JSObject::defineGeneric(cx, target, id, v, desc.getter(), desc.setter(),
-                                   desc.attributes());
+           DefineProperty(cx, target, id, v, desc.getter(), desc.setter(),
+                          desc.attributes());
 }
 
 bool
@@ -59,7 +59,7 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::deleteGeneric(cx, target, id, bp);
+    return DeleteProperty(cx, target, id, bp);
 }
 
 bool
@@ -117,35 +117,35 @@ bool
 DirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::getProto(cx, target, protop);
+    return GetPrototype(cx, target, protop);
 }
 
 bool
 DirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setProto(cx, target, proto, bp);
+    return SetPrototype(cx, target, proto, bp);
 }
 
 bool
 DirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setImmutablePrototype(cx, target, succeeded);
+    return SetImmutablePrototype(cx, target, succeeded);
 }
 
 bool
 DirectProxyHandler::preventExtensions(JSContext *cx, HandleObject proxy, bool *succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::preventExtensions(cx, target, succeeded);
+    return PreventExtensions(cx, target, succeeded);
 }
 
 bool
 DirectProxyHandler::isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::isExtensible(cx, target, extensible);
+    return IsExtensible(cx, target, extensible);
 }
 
 bool
@@ -161,7 +161,7 @@ DirectProxyHandler::className(JSContext *cx, HandleObject proxy) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::className(cx, target);
+    return GetObjectClassName(cx, target);
 }
 
 JSString *
@@ -221,7 +221,7 @@ DirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::getGeneric(cx, target, receiver, id, vp);
+    return GetProperty(cx, target, receiver, id, vp);
 }
 
 bool
@@ -230,7 +230,7 @@ DirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JSObject::setGeneric(cx, target, receiver, id, vp, strict);
+    return SetProperty(cx, target, receiver, id, vp, strict);
 }
 
 bool

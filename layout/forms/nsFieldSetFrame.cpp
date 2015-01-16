@@ -355,9 +355,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  NS_PRECONDITION(aReflowState.ComputedWidth() != NS_INTRINSICSIZE,
-                  "Should have a precomputed width!");      
-  
+  NS_PRECONDITION(aReflowState.ComputedISize() != NS_INTRINSICSIZE,
+                  "Should have a precomputed inline-size!");
+
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
 
