@@ -87,6 +87,7 @@ struct PcScriptCache;
 class Simulator;
 class SimulatorRuntime;
 struct AutoFlushICache;
+class CompileRuntime;
 }
 
 /*
@@ -551,6 +552,7 @@ class PerThreadData : public PerThreadDataFriendFields
     friend class js::ActivationIterator;
     friend class js::jit::JitActivation;
     friend class js::AsmJSActivation;
+    friend class js::jit::CompileRuntime;
 #ifdef DEBUG
     friend void js::AssertCurrentThreadCanLock(RuntimeLock which);
 #endif

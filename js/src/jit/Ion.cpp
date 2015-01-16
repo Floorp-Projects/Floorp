@@ -151,6 +151,7 @@ JitRuntime::JitRuntime()
     ionAlloc_(nullptr),
     exceptionTail_(nullptr),
     bailoutTail_(nullptr),
+    profilerExitFrameTail_(nullptr),
     enterJIT_(nullptr),
     bailoutHandler_(nullptr),
     argumentsRectifier_(nullptr),
@@ -198,6 +199,11 @@ JitRuntime::initialize(JSContext *cx)
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
     if (!functionWrappers_ || !functionWrappers_->init())
+        return false;
+
+    JitSpew(JitSpew_Codegen, "# Emitting profiler exit frame tail stub");
+    profilerExitFrameTail_ = generateProfilerExitFrameTailStub(cx);
+    if (!profilerExitFrameTail_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting exception tail stub");
