@@ -854,9 +854,17 @@ let gDevToolsBrowser = {
                          .getService(Ci.nsISlowScriptDebug);
     let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
 
-    function slowScriptDebugHandler(aTab, aCallback) {
-      let target = devtools.TargetFactory.forTab(aTab);
+    debugService.activationHandler = function(aWindow) {
+      let chromeWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIDocShellTreeItem)
+                                .rootTreeItem
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow)
+                                .QueryInterface(Ci.nsIDOMChromeWindow);
+      let target = devtools.TargetFactory.forTab(chromeWindow.gBrowser.selectedTab);
 
+      let setupFinished = false;
       gDevTools.showToolbox(target, "jsdebugger").then(toolbox => {
         let threadClient = toolbox.getCurrentPanel().panelWin.gThreadClient;
 
@@ -866,13 +874,13 @@ let gDevToolsBrowser = {
           case "paused":
             // When the debugger is already paused.
             threadClient.breakOnNext();
-            aCallback();
+            setupFinished = true;
             break;
           case "attached":
             // When the debugger is already open.
             threadClient.interrupt(() => {
               threadClient.breakOnNext();
-              aCallback();
+              setupFinished = true;
             });
             break;
           case "resuming":
@@ -880,7 +888,7 @@ let gDevToolsBrowser = {
             threadClient.addOneTimeListener("resumed", () => {
               threadClient.interrupt(() => {
                 threadClient.breakOnNext();
-                aCallback();
+                setupFinished = true;
               });
             });
             break;
@@ -889,20 +897,6 @@ let gDevToolsBrowser = {
                         threadClient.state);
           }
       });
-    }
-
-    debugService.activationHandler = function(aWindow) {
-      let chromeWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocShellTreeItem)
-                                .rootTreeItem
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindow)
-                                .QueryInterface(Ci.nsIDOMChromeWindow);
-
-      let setupFinished = false;
-      slowScriptDebugHandler(chromeWindow.gBrowser.selectedTab,
-                             () => { setupFinished = true; });
 
       // Don't return from the interrupt handler until the debugger is brought
       // up; no reason to continue executing the slow script.
@@ -913,18 +907,6 @@ let gDevToolsBrowser = {
         tm.currentThread.processNextEvent(true);
       }
       utils.leaveModalState();
-    };
-
-    debugService.remoteActivationHandler = function(aBrowser, aCallback) {
-      let chromeWindow = aBrowser.ownerDocument.defaultView;
-      let tab = chromeWindow.gBrowser.getTabForBrowser(aBrowser);
-      chromeWindow.gBrowser.selected = tab;
-
-      function callback() {
-        aCallback.finishDebuggerStartup();
-      }
-
-      slowScriptDebugHandler(tab, callback);
     };
   },
 
