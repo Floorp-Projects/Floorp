@@ -214,7 +214,10 @@ MediaSourceDecoder::SetDecodedDuration(int64_t aDuration)
     return;
   }
   double duration = aDuration;
-  duration /= USECS_PER_S;
+  // A duration of -1 is +Infinity.
+  if (aDuration >= 0) {
+    duration /= USECS_PER_S;
+  }
   SetMediaSourceDuration(duration);
 }
 
@@ -223,13 +226,18 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
-  mMediaSourceDuration = aDuration;
-  mDecoderStateMachine->SetDuration(aDuration * USECS_PER_S);
+  if (aDuration >= 0) {
+    mDecoderStateMachine->SetDuration(aDuration * USECS_PER_S);
+    mMediaSourceDuration = aDuration;
+  } else {
+    mDecoderStateMachine->SetDuration(INT64_MAX);
+    mMediaSourceDuration = PositiveInfinity<double>();
+  }
   if (NS_IsMainThread()) {
-    DurationChanged(oldDuration, aDuration);
+    DurationChanged(oldDuration, mMediaSourceDuration);
   } else {
     nsRefPtr<nsIRunnable> task =
-      new DurationChangedRunnable(this, oldDuration, aDuration);
+      new DurationChangedRunnable(this, oldDuration, mMediaSourceDuration);
     NS_DispatchToMainThread(task);
   }
 }
