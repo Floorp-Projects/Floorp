@@ -268,6 +268,22 @@
                          dispatcher: dispatcher, 
                          roomStore: roomStore, 
                          selectedTab: "rooms"})
+            ), 
+            React.createElement(Example, {summary: "Contact import success", dashed: "true", style: {width: "332px"}}, 
+              React.createElement(PanelView, {notifications: new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}]), 
+                         userProfile: {email: "test@example.com"}, 
+                         mozLoop: mockMozLoopRooms, 
+                         dispatcher: dispatcher, 
+                         roomStore: roomStore, 
+                         selectedTab: "contacts"})
+            ), 
+            React.createElement(Example, {summary: "Contact import error", dashed: "true", style: {width: "332px"}}, 
+              React.createElement(PanelView, {notifications: new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}]), 
+                         userProfile: {email: "test@example.com"}, 
+                         mozLoop: mockMozLoopRooms, 
+                         dispatcher: dispatcher, 
+                         roomStore: roomStore, 
+                         selectedTab: "contacts"})
             )
           ), 
 

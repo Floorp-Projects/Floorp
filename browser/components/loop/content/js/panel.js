@@ -989,7 +989,8 @@ loop.panel = (function(_, mozL10n) {
             this._renderRoomsOrCallTab(), 
             React.createElement(Tab, {name: "contacts"}, 
               React.createElement(ContactsList, {selectTab: this.selectTab, 
-                            startForm: this.startForm})
+                            startForm: this.startForm, 
+                            notifications: this.props.notifications})
             ), 
             React.createElement(Tab, {name: "contacts_add", hidden: true}, 
               React.createElement(ContactDetailsForm, {ref: "contacts_add", mode: "add", 
