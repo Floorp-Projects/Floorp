@@ -697,7 +697,8 @@ MediaDecoder::IsExpectingMoreData()
 }
 
 void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                  nsAutoPtr<MetadataTags> aTags)
+                                  nsAutoPtr<MetadataTags> aTags,
+                                  bool aRestoredFromDromant)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -727,11 +728,14 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
+    if (!aRestoredFromDromant) {
+      mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
+    }
   }
 }
 
-void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
+void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
+                                    bool aRestoredFromDromant)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -747,7 +751,9 @@ void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
 
   if (mOwner) {
     Invalidate();
-    mOwner->FirstFrameLoaded();
+    if (!aRestoredFromDromant) {
+      mOwner->FirstFrameLoaded();
+    }
   }
 
   // This can run cache callbacks.
