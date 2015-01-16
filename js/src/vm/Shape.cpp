@@ -256,7 +256,6 @@ ShapeTable::search(jsid id, bool adding)
     MOZ_CRASH("Shape::search failed to find an expected entry.");
 }
 
-#ifdef JSGC_COMPACTING
 void
 ShapeTable::fixupAfterMovingGC()
 {
@@ -268,7 +267,6 @@ ShapeTable::fixupAfterMovingGC()
             entry.setPreservingCollision(Forwarded(shape));
     }
 }
-#endif
 
 bool
 ShapeTable::change(int log2Delta, ExclusiveContext *cx)
@@ -1693,7 +1691,6 @@ JSCompartment::sweepInitialShapeTable()
     }
 }
 
-#ifdef JSGC_COMPACTING
 void
 JSCompartment::fixupInitialShapeTable()
 {
@@ -1732,7 +1729,6 @@ JSCompartment::fixupInitialShapeTable()
         }
     }
 }
-#endif // JSGC_COMPACTING
 
 void
 AutoRooterGetterSetter::Inner::trace(JSTracer *trc)

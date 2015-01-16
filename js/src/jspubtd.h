@@ -20,8 +20,7 @@
 
 #include "js/TypeDecls.h"
 
-#if (defined(JS_GC_ZEAL)) || \
-    (defined(JSGC_COMPACTING) && defined(DEBUG))
+#if (defined(JS_GC_ZEAL)) || defined(DEBUG)
 # define JSGC_HASH_TABLE_CHECKS
 #endif
 

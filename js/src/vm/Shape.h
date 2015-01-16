@@ -227,10 +227,8 @@ class ShapeTable {
     bool change(int log2Delta, ExclusiveContext *cx);
     Entry &search(jsid id, bool adding);
 
-#ifdef JSGC_COMPACTING
     /* Update entries whose shapes have been moved */
     void fixupAfterMovingGC();
-#endif
 
   private:
     Entry &getEntry(uint32_t i) const {
@@ -530,9 +528,7 @@ class BaseShape : public gc::TenuredCell
             gc::MarkObject(trc, &metadata, "metadata");
     }
 
-#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
-#endif
 
   private:
     static void staticAsserts() {
@@ -1061,9 +1057,7 @@ class Shape : public gc::TenuredCell
     inline Shape *search(ExclusiveContext *cx, jsid id);
     inline Shape *searchLinear(jsid id);
 
-#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
-#endif
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
@@ -1071,10 +1065,8 @@ class Shape : public gc::TenuredCell
     static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
 
   private:
-#ifdef JSGC_COMPACTING
     void fixupDictionaryShapeAfterMovingGC();
     void fixupShapeTreeAfterMovingGC();
-#endif
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
