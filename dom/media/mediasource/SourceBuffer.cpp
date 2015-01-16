@@ -233,7 +233,7 @@ SourceBuffer::Ended()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsAttached());
   MSE_DEBUG("SourceBuffer(%p)::Ended", this);
-  mTrackBuffer->DiscardDecoder();
+  mTrackBuffer->EndCurrentDecoder();
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
