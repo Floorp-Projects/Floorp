@@ -26,14 +26,7 @@ loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 loader.loadSubScript("chrome://marionette/content/marionette-sendkeys.js", utils);
 
-// SpecialPowers requires insecure automation-only features that we put behind a pref.
-Services.prefs.setBoolPref('security.turn_off_all_security_so_that_viruses_can_take_over_this_computer',
-                           true);
 let specialpowers = {};
-loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
-                     specialpowers);
-specialpowers.specialPowersObserver = new specialpowers.SpecialPowersObserver();
-specialpowers.specialPowersObserver.init();
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -57,6 +50,7 @@ loader.loadSubScript("resource://gre/modules/devtools/transport/transport.js");
 let bypassOffline = false;
 let qemu = "0";
 let device = null;
+const SECURITY_PREF = 'security.turn_off_all_security_so_that_viruses_can_take_over_this_computer';
 
 XPCOMUtils.defineLazyServiceGetter(this, "cookieManager",
                                    "@mozilla.org/cookiemanager;1",
@@ -164,6 +158,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
+  this.enabled_security_pref = false;
   this.sandbox = null;
   this.oopFrameId = null; // frame ID of current remote frame, used for mozbrowserclose events
   this.sessionCapabilities = {
@@ -586,6 +581,24 @@ MarionetteServerConnection.prototype = {
     logger.info("The newSession request is " + JSON.stringify(aRequest))
     this.command_id = this.getCommandId();
     this.newSessionCommandId = this.command_id;
+
+    // SpecialPowers requires insecure automation-only features that we put behind a pref
+    let security_pref_value = false;
+    try {
+      security_pref_value = Services.prefs.getBoolPref(SECURITY_PREF);
+    } catch(e) {}
+    if (!security_pref_value) {
+      this.enabled_security_pref = true;
+      Services.prefs.setBoolPref(SECURITY_PREF, true);
+    }
+
+    if (!specialpowers.hasOwnProperty('specialPowersObserver')) {
+      loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                           specialpowers);
+      specialpowers.specialPowersObserver = new specialpowers.SpecialPowersObserver();
+      specialpowers.specialPowersObserver.init();
+      specialpowers.specialPowersObserver._loadFrameScript();
+    }
 
     this.scriptTimeout = 10000;
     if (aRequest && aRequest.parameters) {
