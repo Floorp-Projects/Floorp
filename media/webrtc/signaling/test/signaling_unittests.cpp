@@ -1327,14 +1327,8 @@ class SignalingAgent {
     }
   }
 
-  // Right now we have no convenient way for this unit-test to learn the track
-  // ids of the tracks, so they can be queried later. We could either expose
-  // the JsepSessionImpl in some way, or we could parse the identifiers out of
-  // the SDP. For now, we just specify audio/video, since a given DOMMediaStream
-  // can have only one of each anyway. Once this is fixed, we will need to
-  // pass a real track id if we want to test that case.
   mozilla::RefPtr<mozilla::MediaPipeline> GetMediaPipeline(
-    bool local, size_t stream, bool video) {
+    bool local, size_t stream, int track) {
     SourceStreamInfo* streamInfo;
     if (local) {
       mozilla::SyncRunnable::DispatchToThread(
@@ -1354,16 +1348,11 @@ class SignalingAgent {
 
     const auto &pipelines = streamInfo->GetPipelines();
 
-    for (auto i = pipelines.begin(); i != pipelines.end(); ++i) {
-      if (i->second->IsVideo() == video) {
-        std::cout << "Got MediaPipeline " << i->second->trackid();
-        return i->second;
-      }
-    }
-    return nullptr;
+    auto it = pipelines.find(track);
+    return (it == pipelines.end())? nullptr : it->second;
   }
 
-  void CheckMediaPipeline(int stream, bool video, uint32_t flags,
+  void CheckMediaPipeline(int stream, int track, uint32_t flags,
     VideoSessionConduit::FrameRequestType frameRequestMethod =
       VideoSessionConduit::FrameRequestNone) {
 
@@ -1372,13 +1361,13 @@ class SignalingAgent {
               << ((flags & PIPELINE_SEND) ? "sending " : "receiving ")
               << ((flags & PIPELINE_VIDEO) ? "video" : "audio")
               << " pipeline (stream " << stream
-              << ", track " << video << "); expect "
+              << ", track " << track << "); expect "
               << ((flags & PIPELINE_RTCP_MUX) ? "MUX, " : "no MUX, ")
               << ((flags & PIPELINE_RTCP_NACK) ? "NACK." : "no NACK.")
               << std::endl;
 
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
-      GetMediaPipeline((flags & PIPELINE_LOCAL), stream, video);
+      GetMediaPipeline((flags & PIPELINE_LOCAL), stream, track);
     ASSERT_TRUE(pipeline);
     ASSERT_EQ(pipeline->IsDoingRtcpMux(), !!(flags & PIPELINE_RTCP_MUX));
     // We cannot yet test send/recv with video.
@@ -1949,12 +1938,12 @@ public:
     a2_->CloseReceiveStreams();
 
     // Check caller video settings for remote pipeline
-    a1_->CheckMediaPipeline(0, true, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
+    a1_->CheckMediaPipeline(0, 1, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
       PIPELINE_VIDEO | rtcpFbFlags, frameRequestMethod);
 
     // Check caller video settings for remote pipeline
     // (Should use pli and nack, regardless of what was in the offer)
-    a2_->CheckMediaPipeline(0, true,
+    a2_->CheckMediaPipeline(0, 1,
                             (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
                             PIPELINE_VIDEO |
                             PIPELINE_SEND |
@@ -1989,12 +1978,12 @@ public:
     a2_->CloseReceiveStreams();
 
     // Check callee video settings for remote pipeline
-    a2_->CheckMediaPipeline(0, true, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
+    a2_->CheckMediaPipeline(0, 1, (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
       PIPELINE_VIDEO | rtcpFbFlags, frameRequestMethod);
 
     // Check caller video settings for remote pipeline
     // (Should use pli and nack, regardless of what was in the offer)
-    a1_->CheckMediaPipeline(0, true,
+    a1_->CheckMediaPipeline(0, 1,
                             (fRtcpMux ? PIPELINE_RTCP_MUX : 0) |
                             PIPELINE_VIDEO |
                             PIPELINE_SEND |
@@ -2570,12 +2559,12 @@ TEST_P(SignalingTest, FullCall)
   // Check the low-level media pipeline
   // for RTP and RTCP flows
   // The first Local pipeline gets stored at 0
-  a1_->CheckMediaPipeline(0, false, fRtcpMux ?
+  a1_->CheckMediaPipeline(0, 0, fRtcpMux ?
     PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND :
     PIPELINE_LOCAL | PIPELINE_SEND);
 
   // The first Remote pipeline gets stored at 0
-  a2_->CheckMediaPipeline(0, false, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0));
+  a2_->CheckMediaPipeline(0, 0, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0));
 }
 
 TEST_P(SignalingTest, FullCallAudioOnly)
@@ -3408,8 +3397,10 @@ TEST_P(SignalingTest, AudioOnlyCalleeNoRtcpMux)
   // Check the low-level media pipeline
   // for RTP and RTCP flows
   // The first Local pipeline gets stored at 0
-  a1_->CheckMediaPipeline(0, false, PIPELINE_LOCAL | PIPELINE_SEND);
-  a2_->CheckMediaPipeline(0, false, 0);
+  a1_->CheckMediaPipeline(0, 0, PIPELINE_LOCAL | PIPELINE_SEND);
+
+  // The first Remote pipeline gets stored at 1
+  a2_->CheckMediaPipeline(0, 0, 0);
 }
 
 
@@ -3546,18 +3537,18 @@ TEST_P(SignalingTest, FullCallAudioNoMuxVideoMux)
   // Check the low-level media pipeline
   // for RTP and RTCP flows
   // The first Local pipeline gets stored at 0
-  a1_->CheckMediaPipeline(0, false, PIPELINE_LOCAL | PIPELINE_SEND);
+  a1_->CheckMediaPipeline(0, 0, PIPELINE_LOCAL | PIPELINE_SEND);
 
   // Now check video mux.
-  a1_->CheckMediaPipeline(0, true,
+  a1_->CheckMediaPipeline(0, 1,
     PIPELINE_LOCAL | (fRtcpMux ? PIPELINE_RTCP_MUX : 0) | PIPELINE_SEND |
     PIPELINE_VIDEO);
 
   // The first Remote pipeline gets stored at 0
-  a2_->CheckMediaPipeline(0, false, 0);
+  a2_->CheckMediaPipeline(0, 0, 0);
 
   // Now check video mux.
-  a2_->CheckMediaPipeline(0, true, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0) |
+  a2_->CheckMediaPipeline(0, 1, (fRtcpMux ?  PIPELINE_RTCP_MUX : 0) |
     PIPELINE_VIDEO | PIPELINE_RTCP_NACK, VideoSessionConduit::FrameRequestPli);
 }
 
