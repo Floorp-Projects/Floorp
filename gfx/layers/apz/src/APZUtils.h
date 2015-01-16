@@ -14,7 +14,6 @@ enum HitTestResult {
   HitNothing,
   HitLayer,
   HitDispatchToContentRegion,
-  HitOverscrolledApzc,
 };
 
 }
