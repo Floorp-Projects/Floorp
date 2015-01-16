@@ -108,6 +108,8 @@ SipccSdpAttributeList::LoadSimpleStrings(sdp_t* sdp, uint16_t level,
                    errorHolder);
   LoadSimpleString(sdp, level, SDP_ATTR_IDENTITY,
                    SdpAttribute::kIdentityAttribute, errorHolder);
+  LoadSimpleString(sdp, level, SDP_ATTR_MSID_SEMANTIC,
+                   SdpAttribute::kMsidSemanticAttribute, errorHolder);
 }
 
 void
@@ -545,38 +547,6 @@ SipccSdpAttributeList::LoadGroups(sdp_t* sdp, uint16_t level,
   return true;
 }
 
-bool
-SipccSdpAttributeList::LoadMsidSemantics(sdp_t* sdp, uint16_t level,
-                                         SdpErrorHolder& errorHolder)
-{
-  auto msidSemantics = MakeUnique<SdpMsidSemanticAttributeList>();
-
-  for (uint16_t i = 1; i < UINT16_MAX; ++i) {
-    sdp_attr_t* attr = sdp_find_attr(sdp, level, 0, SDP_ATTR_MSID_SEMANTIC, i);
-
-    if (!attr) {
-      break;
-    }
-
-    sdp_msid_semantic_t* msid_semantic = &(attr->attr.msid_semantic);
-    std::vector<std::string> msids;
-    for (size_t i = 0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
-      if (!msid_semantic->msids[i]) {
-        break;
-      }
-
-      msids.push_back(msid_semantic->msids[i]);
-    }
-
-    msidSemantics->PushEntry(msid_semantic->semantic, msids);
-  }
-
-  if (!msidSemantics->mMsidSemantics.empty()) {
-    SetAttribute(msidSemantics.release());
-  }
-  return true;
-}
-
 void
 SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
 {
@@ -859,10 +829,6 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     if (!LoadGroups(sdp, level, errorHolder)) {
       return false;
     }
-
-    if (!LoadMsidSemantics(sdp, level, errorHolder)) {
-      return false;
-    }
   } else {
     sdp_media_e mtype = sdp_get_media_type(sdp, level);
     if (mtype == SDP_MEDIA_APPLICATION) {
@@ -1079,14 +1045,14 @@ SipccSdpAttributeList::GetMsid() const
   return *static_cast<const SdpMsidAttributeList*>(attr);
 }
 
-const SdpMsidSemanticAttributeList&
+const std::string&
 SipccSdpAttributeList::GetMsidSemantic() const
 {
   if (!HasAttribute(SdpAttribute::kMsidSemanticAttribute)) {
-    MOZ_CRASH();
+    return kEmptyString;
   }
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kMsidSemanticAttribute);
-  return *static_cast<const SdpMsidSemanticAttributeList*>(attr);
+  return static_cast<const SdpStringAttribute*>(attr)->mValue;
 }
 
 uint32_t
