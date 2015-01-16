@@ -47,7 +47,7 @@ interface MozNFCTag {
   /**
    * The identifier of this tag.
    */
-  [Pure, Constant] readonly attribute Uint8Array? id;
+  [Constant] readonly attribute Uint8Array? id;
 
   /**
    * The type of this tag, null if unknown.
