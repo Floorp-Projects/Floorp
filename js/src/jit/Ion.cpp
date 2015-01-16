@@ -47,8 +47,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-#include "jit/ExecutionMode-inl.h"
-
 using namespace js;
 using namespace js::jit;
 
@@ -408,8 +406,6 @@ JitCompartment::ensureIonStubsExist(JSContext *cx)
 void
 jit::FinishOffThreadBuilder(JSContext *cx, IonBuilder *builder)
 {
-    ExecutionMode executionMode = builder->info().executionMode();
-
     // Clean the references to the pending IonBuilder, if we just finished it.
     if (builder->script()->hasIonScript() && builder->script()->pendingIonBuilder() == builder)
         builder->script()->setPendingIonBuilder(cx, nullptr);
@@ -422,11 +418,10 @@ jit::FinishOffThreadBuilder(JSContext *cx, IonBuilder *builder)
         builder->script()->ionScript()->clearRecompiling();
 
     // Clean up if compilation did not succeed.
-    if (CompilingOffThread(builder->script(), executionMode)) {
-        SetIonScript(cx, builder->script(), executionMode,
-                     builder->abortReason() == AbortReason_Disable
-                     ? ION_DISABLED_SCRIPT
-                     : nullptr);
+    if (builder->script()->isIonCompilingOffThread()) {
+        builder->script()->setIonScript(cx, builder->abortReason() == AbortReason_Disable
+                                            ? ION_DISABLED_SCRIPT
+                                            : nullptr);
     }
 
     // The builder is allocated into its LifoAlloc, so destroying that will
@@ -1760,7 +1755,7 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_Alloc;
 
     CompileInfo *info = alloc->new_<CompileInfo>(script, script->functionNonDelazifying(), osrPc,
-                                                 constructing, SequentialExecution,
+                                                 constructing, Analysis_None,
                                                  script->needsArgsObj(), inlineScriptTree);
     if (!info)
         return AbortReason_Alloc;
@@ -1792,7 +1787,7 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_Alloc;
 
     MOZ_ASSERT(recompile == builder->script()->hasIonScript());
-    MOZ_ASSERT(CanIonCompile(builder->script(), SequentialExecution));
+    MOZ_ASSERT(builder->script()->canIonCompile());
 
     RootedScript builderScript(cx, builder->script());
 
@@ -2578,13 +2573,12 @@ jit::Invalidate(types::TypeZone &types, FreeOp *fop,
             continue;
         MOZ_ASSERT(co->isValid());
 
-        ExecutionMode executionMode = co->mode();
         JSScript *script = co->script();
         IonScript *ionScript = co->ion();
         if (!ionScript)
             continue;
 
-        SetIonScript(nullptr, script, executionMode, nullptr);
+        script->setIonScript(nullptr, nullptr);
         ionScript->decrementInvalidationCount(fop);
         co->invalidate();
         numInvalidations--;
