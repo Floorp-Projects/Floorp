@@ -1265,7 +1265,7 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
   argReason.mLearn = reason;
 
   // We always open the full uri (general cache) entry first, so we don't gum up
-  // the works waiting on predictor-only entires to open
+  // the works waiting on predictor-only entries to open
   nsRefPtr<Predictor::Action> uriAction =
     new Predictor::Action(Predictor::Action::IS_FULL_URI,
                           Predictor::Action::DO_LEARN, argReason, targetURI,
