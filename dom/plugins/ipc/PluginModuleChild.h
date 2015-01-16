@@ -101,8 +101,8 @@ protected:
     RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                    const nsCString& aMimeType,
                                    const uint16_t& aMode,
-                                   const InfallibleTArray<nsCString>& aNames,
-                                   const InfallibleTArray<nsCString>& aValues)
+                                   InfallibleTArray<nsCString>&& aNames,
+                                   InfallibleTArray<nsCString>&& aValues)
                                    MOZ_OVERRIDE;
     virtual bool
     AnswerNP_Shutdown(NPError *rv) MOZ_OVERRIDE;
@@ -149,8 +149,8 @@ protected:
 
     virtual bool RecvStartProfiler(const uint32_t& aEntries,
                                    const double& aInterval,
-                                   const nsTArray<nsCString>& aFeatures,
-                                   const nsTArray<nsCString>& aThreadNameFilters) MOZ_OVERRIDE;
+                                   nsTArray<nsCString>&& aFeatures,
+                                   nsTArray<nsCString>&& aThreadNameFilters) MOZ_OVERRIDE;
     virtual bool RecvStopProfiler() MOZ_OVERRIDE;
     virtual bool AnswerGetProfile(nsCString* aProfile) MOZ_OVERRIDE;
 

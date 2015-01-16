@@ -47,7 +47,7 @@ class CxxCodeGen(CodePrinter, Visitor):
         elif t.ptrptr:       ts += '**'
         elif t.ptrconstptr:  ts += '* const*'
 
-        if t.ref:  ts += '&'
+        ts += '&' * t.ref
 
         self.write(ts)
 
@@ -356,6 +356,9 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.write('(')
         self.writeExprList(ec.args)
         self.write(')')
+
+    def visitExprMove(self, em):
+        self.visitExprCall(em)
 
     def visitExprNew(self, en):
         self.write('new ')

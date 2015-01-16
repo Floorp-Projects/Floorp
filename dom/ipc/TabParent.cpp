@@ -1287,7 +1287,7 @@ TabParent::TryCapture(const WidgetGUIEvent& aEvent)
 bool
 TabParent::RecvSyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData,
-                           const InfallibleTArray<CpowEntry>& aCpows,
+                           InfallibleTArray<CpowEntry>&& aCpows,
                            const IPC::Principal& aPrincipal,
                            InfallibleTArray<nsString>* aJSONRetVal)
 {
@@ -1309,7 +1309,7 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
 bool
 TabParent::RecvRpcMessage(const nsString& aMessage,
                           const ClonedMessageData& aData,
-                          const InfallibleTArray<CpowEntry>& aCpows,
+                          InfallibleTArray<CpowEntry>&& aCpows,
                           const IPC::Principal& aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal)
 {
@@ -1331,7 +1331,7 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
 bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const ClonedMessageData& aData,
-                            const InfallibleTArray<CpowEntry>& aCpows,
+                            InfallibleTArray<CpowEntry>&& aCpows,
                             const IPC::Principal& aPrincipal)
 {
   // FIXME Permission check for TabParent in Content process
@@ -1500,7 +1500,7 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
 bool
 TabParent::RecvNotifyIMESelectedCompositionRect(
   const uint32_t& aOffset,
-  const InfallibleTArray<nsIntRect>& aRects,
+  InfallibleTArray<nsIntRect>&& aRects,
   const uint32_t& aCaretOffset,
   const nsIntRect& aCaretRect)
 {
@@ -1581,7 +1581,7 @@ TabParent::RecvNotifyIMEEditorRect(const nsIntRect& aRect)
 bool
 TabParent::RecvNotifyIMEPositionChange(
              const nsIntRect& aEditorRect,
-             const InfallibleTArray<nsIntRect>& aCompositionRects,
+             InfallibleTArray<nsIntRect>&& aCompositionRects,
              const nsIntRect& aCaretRect)
 {
   mIMEEditorRect = aEditorRect;
@@ -1625,8 +1625,8 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
 
 bool
 TabParent::RecvEnableDisableCommands(const nsString& aAction,
-                                     const nsTArray<nsCString>& aEnabledCommands,
-                                     const nsTArray<nsCString>& aDisabledCommands)
+                                     nsTArray<nsCString>&& aEnabledCommands,
+                                     nsTArray<nsCString>&& aDisabledCommands)
 {
   nsCOMPtr<nsIRemoteBrowser> remoteBrowser = do_QueryInterface(mFrameElement);
   if (remoteBrowser) {
@@ -2352,7 +2352,7 @@ TabParent::RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
 
 bool
 TabParent::RecvSetTargetAPZC(const uint64_t& aInputBlockId,
-                             const nsTArray<ScrollableLayerGuid>& aTargets)
+                             nsTArray<ScrollableLayerGuid>&& aTargets)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->SetTargetAPZC(aInputBlockId, aTargets);

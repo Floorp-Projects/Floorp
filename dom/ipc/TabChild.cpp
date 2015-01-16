@@ -2978,7 +2978,7 @@ TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalSco
 bool
 TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const ClonedMessageData& aData,
-                           const InfallibleTArray<CpowEntry>& aCpows,
+                           InfallibleTArray<CpowEntry>&& aCpows,
                            const IPC::Principal& aPrincipal)
 {
   if (mTabChildGlobal) {

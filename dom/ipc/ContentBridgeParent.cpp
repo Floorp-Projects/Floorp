@@ -62,20 +62,22 @@ ContentBridgeParent::DeferredDestroy()
 bool
 ContentBridgeParent::RecvSyncMessage(const nsString& aMsg,
                                      const ClonedMessageData& aData,
-                                     const InfallibleTArray<jsipc::CpowEntry>& aCpows,
+                                     InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                      const IPC::Principal& aPrincipal,
                                      InfallibleTArray<nsString>* aRetvals)
 {
-  return nsIContentParent::RecvSyncMessage(aMsg, aData, aCpows, aPrincipal, aRetvals);
+  return nsIContentParent::RecvSyncMessage(aMsg, aData, Move(aCpows),
+                                           aPrincipal, aRetvals);
 }
 
 bool
 ContentBridgeParent::RecvAsyncMessage(const nsString& aMsg,
                                       const ClonedMessageData& aData,
-                                      const InfallibleTArray<jsipc::CpowEntry>& aCpows,
+                                      InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                       const IPC::Principal& aPrincipal)
 {
-  return nsIContentParent::RecvAsyncMessage(aMsg, aData, aCpows, aPrincipal);
+  return nsIContentParent::RecvAsyncMessage(aMsg, aData, Move(aCpows),
+                                            aPrincipal);
 }
 
 PBlobParent*

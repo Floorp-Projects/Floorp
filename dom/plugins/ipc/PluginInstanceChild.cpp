@@ -855,7 +855,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 
 bool
 PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
-                                                 Shmem& mem,
+                                                 Shmem&& mem,
                                                  int16_t* handled,
                                                  Shmem* rtnmem)
 {
@@ -919,7 +919,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
 #else
 bool
 PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
-                                                 Shmem& mem,
+                                                 Shmem&& mem,
                                                  int16_t* handled,
                                                  Shmem* rtnmem)
 {
