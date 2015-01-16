@@ -296,6 +296,7 @@ function SearchPref(event) {
   }
 }
 
+let getAllPrefs; // Used by tests
 function BuildUI() {
   table = document.querySelector("table");
   let trs = table.querySelectorAll("tr:not(#add-custom-preference)");
@@ -307,7 +308,8 @@ function BuildUI() {
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
       AppManager.preferenceFront) {
-    AppManager.preferenceFront.getAllPrefs().then(json => {
+    getAllPrefs = AppManager.preferenceFront.getAllPrefs();
+    getAllPrefs.then(json => {
       let devicePrefs = Object.keys(json);
       devicePrefs.sort();
       for (let i = 0; i < devicePrefs.length; i++) {
