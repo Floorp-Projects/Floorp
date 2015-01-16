@@ -236,7 +236,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-RawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
+RawReader::Seek(int64_t aTime, int64_t aEndTime)
 {
   nsresult res = SeekInternal(aTime);
   if (NS_FAILED(res)) {

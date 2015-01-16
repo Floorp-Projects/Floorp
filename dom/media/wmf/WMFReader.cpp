@@ -889,10 +889,7 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-WMFReader::Seek(int64_t aTargetUs,
-                int64_t aStartTime,
-                int64_t aEndTime,
-                int64_t aCurrentTime)
+WMFReader::Seek(int64_t aTargetUs, int64_t aEndTime)
 {
   nsresult res = SeekInternal(aTargetUs);
   if (NS_FAILED(res)) {
