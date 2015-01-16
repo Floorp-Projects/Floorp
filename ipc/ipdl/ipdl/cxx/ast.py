@@ -663,6 +663,10 @@ class ExprCall(Node):
         self.func = func
         self.args = args
 
+class ExprMove(ExprCall):
+    def __init__(self, arg):
+        ExprCall.__init__(self, ExprVar("mozilla::Move"), args=[arg])
+
 class ExprNew(Node):
     # XXX taking some poetic license ...
     def __init__(self, ctype, args=[ ], newargs=None):

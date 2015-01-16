@@ -70,7 +70,7 @@ protected:
   virtual bool DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
 
   virtual bool
-  RecvParentAsyncMessages(const InfallibleTArray<AsyncParentMessageData>& aMessages) MOZ_OVERRIDE;
+  RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

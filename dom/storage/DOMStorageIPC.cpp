@@ -214,7 +214,7 @@ DOMStorageDBChild::RecvObserve(const nsCString& aTopic,
 }
 
 bool
-DOMStorageDBChild::RecvScopesHavingData(const InfallibleTArray<nsCString>& aScopes)
+DOMStorageDBChild::RecvScopesHavingData(nsTArray<nsCString>&& aScopes)
 {
   for (uint32_t i = 0; i < aScopes.Length(); ++i) {
     ScopesHavingData().PutEntry(aScopes[i]);

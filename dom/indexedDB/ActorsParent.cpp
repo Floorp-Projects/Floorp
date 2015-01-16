@@ -3036,7 +3036,7 @@ private:
   virtual bool
   RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
-                                    const nsTArray<nsString>& aObjectStoreNames,
+                                    InfallibleTArray<nsString>&& aObjectStoreNames,
                                     const Mode& aMode)
                                     MOZ_OVERRIDE;
 
@@ -6526,7 +6526,7 @@ Database::AllocPBackgroundIDBTransactionParent(
 bool
 Database::RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
-                                    const nsTArray<nsString>& aObjectStoreNames,
+                                    InfallibleTArray<nsString>&& aObjectStoreNames,
                                     const Mode& aMode)
 {
   AssertIsOnBackgroundThread();
