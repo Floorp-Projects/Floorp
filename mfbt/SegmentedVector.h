@@ -85,12 +85,7 @@ class SegmentedVector : private AllocPolicy
     template<typename U>
     void Append(U&& aU)
     {
-      // GCC 4.4 gives a bogus "invalid use of member" error for this
-      // assertion, so skip it in that case. Once bug 1056337 lands and GCC 4.4
-      // is no longer used we should be able to remove this condition.
-#if !(defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
       MOZ_ASSERT(mLength < SegmentCapacity);
-#endif
       // Pre-increment mLength so that the bounds-check in operator[] passes.
       mLength++;
       T* elem = &(*this)[mLength - 1];

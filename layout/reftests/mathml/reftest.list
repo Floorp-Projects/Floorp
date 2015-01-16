@@ -233,7 +233,7 @@ fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
-fails-if(B2G||Android||OSX==10.6) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
+fails-if(B2G||Android||OSX==1006) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
 == menclose-3-default.html menclose-3-default-ref.html
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
@@ -275,9 +275,9 @@ fuzzy-if(d2d,7,1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == subscript-italic-correction.html subscript-italic-correction-ref.html # Windows versions with Cambria Math, bug 961482
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==10.6) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==10.6) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
-fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==10.6) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
+fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679
+fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
+fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX==1006) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
 == mathvariant-1d.html mathvariant-1d-ref.html
 fails-if(B2G||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 == mathvariant-3.html mathvariant-3-ref.html

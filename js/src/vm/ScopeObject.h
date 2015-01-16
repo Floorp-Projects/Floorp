@@ -173,25 +173,27 @@ ScopeCoordinateFunctionScript(JSScript *script, jsbytecode *pc);
  * chain (that is, fp->scopeChain() or fun->environment()). The hierarchy of
  * scope objects is:
  *
- *   JSObject                   Generic object
+ *   JSObject                      Generic object
  *     \
- *   ScopeObject                Engine-internal scope
+ *   ScopeObject                   Engine-internal scope
+ *   \   \   \   \
+ *    \   \   \  StaticEvalObject  Placeholder so eval scopes may be iterated through
  *     \   \   \
- *      \   \  DeclEnvObject    Holds name of recursive/heavyweight named lambda
+ *      \   \  DeclEnvObject       Holds name of recursive/heavyweight named lambda
  *       \   \
- *        \  CallObject         Scope of entire function or strict eval
+ *        \  CallObject            Scope of entire function or strict eval
  *         \
- *   NestedScopeObject          Scope created for a statement
+ *   NestedScopeObject             Scope created for a statement
  *     \   \  \
- *      \   \ StaticWithObject  Template for "with" object in static scope chain
+ *      \   \ StaticWithObject     Template for "with" object in static scope chain
  *       \   \
- *        \  DynamicWithObject  Run-time "with" object on scope chain
+ *        \  DynamicWithObject     Run-time "with" object on scope chain
  *         \
- *   BlockObject                Shared interface of cloned/static block objects
+ *   BlockObject                   Shared interface of cloned/static block objects
  *     \   \
- *      \  ClonedBlockObject    let, switch, catch, for
+ *      \  ClonedBlockObject       let, switch, catch, for
  *       \
- *       StaticBlockObject      See NB
+ *       StaticBlockObject         See NB
  *
  * This hierarchy represents more than just the interface hierarchy: reserved
  * slots in base classes are fixed for all derived classes. Thus, for example,
@@ -351,6 +353,39 @@ class DeclEnvObject : public ScopeObject
     }
 };
 
+// Static eval scope template objects on the static scope. Created at the
+// time of compiling the eval script, and set as its static enclosing scope.
+class StaticEvalObject : public ScopeObject
+{
+    static const uint32_t STRICT_SLOT = 1;
+
+  public:
+    static const unsigned RESERVED_SLOTS = 2;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+
+    static const Class class_;
+
+    static StaticEvalObject *create(JSContext *cx, HandleObject enclosing);
+
+    JSObject *enclosingScopeForStaticScopeIter() {
+        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
+    }
+
+    void setStrict() {
+        setReservedSlot(STRICT_SLOT, BooleanValue(true));
+    }
+
+    bool isStrict() const {
+        return getReservedSlot(STRICT_SLOT).isTrue();
+    }
+
+    // Indirect evals terminate in the global at run time, and has no static
+    // enclosing scope.
+    bool isDirect() const {
+        return getReservedSlot(SCOPE_CHAIN_SLOT).isObject();
+    }
+};
+
 class NestedScopeObject : public ScopeObject
 {
   public:
@@ -459,35 +494,6 @@ class DynamicWithObject : public NestedScopeObject
 
     static inline size_t thisSlot() {
         return THIS_SLOT;
-    }
-};
-
-// Static eval scope template objects on the static scope. Created at the
-// time of compiling the eval script, and set as its static enclosing scope.
-class StaticEvalObject : public NestedScopeObject
-{
-    static const uint32_t STRICT_SLOT = 1;
-
-  public:
-    static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
-
-    static const Class class_;
-
-    static StaticEvalObject *create(JSContext *cx, HandleObject enclosing);
-
-    void setStrict() {
-        setReservedSlot(STRICT_SLOT, BooleanValue(true));
-    }
-
-    bool isStrict() const {
-        return getReservedSlot(STRICT_SLOT).isTrue();
-    }
-
-    // Indirect evals terminate in the global at run time, and has no static
-    // enclosing scope.
-    bool isDirect() const {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).isObject();
     }
 };
 
@@ -985,8 +991,7 @@ JSObject::is<js::NestedScopeObject>() const
 {
     return is<js::BlockObject>() ||
            is<js::StaticWithObject>() ||
-           is<js::DynamicWithObject>() ||
-           is<js::StaticEvalObject>();
+           is<js::DynamicWithObject>();
 }
 
 template<>

@@ -6,48 +6,87 @@
 #ifndef WEBGL_ACTIVE_INFO_H_
 #define WEBGL_ACTIVE_INFO_H_
 
+#include "GLDefs.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
+#include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS
+#include "nsISupportsImpl.h" // NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING
 #include "nsString.h"
-#include "WebGLObjectModel.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 
+class WebGLContext;
+
 class WebGLActiveInfo MOZ_FINAL
+    : public nsWrapperCache
 {
 public:
-    WebGLActiveInfo(GLint size, GLenum type, const nsACString& name)
-        : mSize(size)
-        , mType(type)
-        , mName(NS_ConvertASCIItoUTF16(name))
-    {}
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLActiveInfo)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLActiveInfo)
+
+    virtual JSObject* WrapObject(JSContext* js) MOZ_OVERRIDE;
+
+    WebGLContext* GetParentObject() const {
+        return mWebGL;
+    }
+
+
+    WebGLContext* const mWebGL;
+
+    // ActiveInfo state:
+    const GLint mElemCount; // `size`
+    const GLenum mElemType; // `type`
+    const nsCString mBaseUserName; // `name`, but ASCII, and without any final "[0]".
+
+    // Not actually part of ActiveInfo:
+    const bool mIsArray;
+    const uint8_t mElemSize;
+    const nsCString mBaseMappedName; // Without any final "[0]".
+
+    WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
+                    const nsACString& baseUserName, const nsACString& baseMappedName);
+
+    /* GLES 2.0.25, p33:
+     *   This command will return as much information about active
+     *   attributes as possible. If no information is available, length will
+     *   be set to zero and name will be an empty string. This situation
+     *   could arise if GetActiveAttrib is issued after a failed link.
+     *
+     * It's the same for GetActiveUniform.
+     */
+    static WebGLActiveInfo* CreateInvalid(WebGLContext* webgl) {
+        return new WebGLActiveInfo(webgl);
+    }
 
     // WebIDL attributes
-
     GLint Size() const {
-        return mSize;
+        return mElemCount;
     }
 
     GLenum Type() const {
-        return mType;
+        return mElemType;
     }
 
     void GetName(nsString& retval) const {
-        retval = mName;
+        CopyASCIItoUTF16(mBaseUserName, retval);
+        if (mIsArray)
+            retval.AppendLiteral("[0]");
     }
-
-    bool WrapObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector);
-
-   NS_INLINE_DECL_REFCOUNTING(WebGLActiveInfo)
 
 private:
-    // Private destructor, to discourage deletion outside of Release():
-    ~WebGLActiveInfo()
-    {
-    }
+    explicit WebGLActiveInfo(WebGLContext* webgl)
+        : mWebGL(webgl)
+        , mElemCount(0)
+        , mElemType(0)
+        , mBaseUserName("")
+        , mIsArray(false)
+        , mElemSize(0)
+        , mBaseMappedName("")
+    { }
 
-    GLint mSize;
-    GLenum mType;
-    nsString mName;
+    // Private destructor, to discourage deletion outside of Release():
+    ~WebGLActiveInfo() { }
 };
 
 } // namespace mozilla

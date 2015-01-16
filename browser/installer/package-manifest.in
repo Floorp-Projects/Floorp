@@ -175,6 +175,7 @@
 @RESPATH@/components/chrome.xpt
 @RESPATH@/components/commandhandler.xpt
 @RESPATH@/components/commandlines.xpt
+@RESPATH@/components/compartments.xpt
 @RESPATH@/components/composer.xpt
 @RESPATH@/components/content_events.xpt
 @RESPATH@/components/content_html.xpt

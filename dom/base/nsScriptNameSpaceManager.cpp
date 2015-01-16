@@ -320,8 +320,6 @@ nsScriptNameSpaceManager::Init()
 {
   static const PLDHashTableOps hash_table_ops =
   {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
     GlobalNameHashHashKey,
     GlobalNameHashMatchEntry,
     PL_DHashMoveEntryStub,

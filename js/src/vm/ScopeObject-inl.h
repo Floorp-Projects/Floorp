@@ -80,6 +80,8 @@ StaticScopeIter<allowGC>::operator++(int)
 {
     if (obj->template is<NestedScopeObject>()) {
         obj = obj->template as<NestedScopeObject>().enclosingScopeForStaticScopeIter();
+    } else if (obj->template is<StaticEvalObject>()) {
+        obj = obj->template as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {
         onNamedLambda = false;
         obj = obj->template as<JSFunction>().nonLazyScript()->enclosingStaticScope();

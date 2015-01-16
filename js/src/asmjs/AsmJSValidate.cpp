@@ -2404,7 +2404,7 @@ class FunctionCompiler
         jitContext_.emplace(m_.cx(), alloc_);
 
         graph_  = lifo_.new_<MIRGraph>(alloc_);
-        info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
+        info_   = lifo_.new_<CompileInfo>(locals_.count());
         const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_AsmJS);
         const JitCompileOptions options;
         mirGen_ = lifo_.new_<MIRGenerator>(CompileCompartment::get(cx()->compartment()),
