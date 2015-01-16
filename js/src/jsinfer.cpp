@@ -22,6 +22,7 @@
 
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
+#include "jit/CompileInfo.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitCompartment.h"
@@ -35,7 +36,6 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/CompileInfo.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
