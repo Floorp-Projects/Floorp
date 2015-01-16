@@ -50,31 +50,17 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
-    bool poppedLastSPSFrame = false;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, false, bailoutInfo,
-                                           /* excInfo = */ nullptr, &poppedLastSPSFrame);
+                                           /* excInfo = */ nullptr);
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
     MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
-        // If the bailout failed, then bailout trampoline will pop the
-        // current frame and jump straight to exception handling code when
-        // this function returns.  Any SPS entry pushed for this frame will
-        // be silently forgotten.
-        //
-        // We call ExitScript here to ensure that if the ionScript had SPS
-        // instrumentation, then the SPS entry for it is popped.
-        //
-        // However, if the bailout was during argument check, then a
-        // pseudostack frame would not have been pushed in the first
-        // place, so don't pop anything in that case.
-        bool popSPSFrame = iter.ionScript()->hasSPSInstrumentation() &&
-                           (SnapshotIterator(iter).bailoutKind() != Bailout_ArgumentCheck) &&
-                           !poppedLastSPSFrame;
         JSScript *script = iter.script();
-        probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           /* popSPSFrame = */ false);
 
         EnsureExitFrame(iter.jsFrame());
     }
@@ -140,9 +126,8 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
-    bool poppedLastSPSFrame = false;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true, bailoutInfo,
-                                           /* excInfo = */ nullptr, &poppedLastSPSFrame);
+                                           /* excInfo = */ nullptr);
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
@@ -160,11 +145,9 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         // However, if the bailout was during argument check, then a
         // pseudostack frame would not have been pushed in the first
         // place, so don't pop anything in that case.
-        bool popSPSFrame = iter.ionScript()->hasSPSInstrumentation() &&
-                           (SnapshotIterator(iter).bailoutKind() != Bailout_ArgumentCheck) &&
-                           !poppedLastSPSFrame;
         JSScript *script = iter.script();
-        probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           /* popSPSFrame = */ false);
 
         JitFrameLayout *frame = iter.jsFrame();
         JitSpew(JitSpew_IonInvalidate, "Bailout failed (%s): converting to exit frame",
@@ -207,7 +190,7 @@ uint32_t
 jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
                              ResumeFromException *rfe,
                              const ExceptionBailoutInfo &excInfo,
-                             bool *overrecursed, bool *poppedLastSPSFrameOut)
+                             bool *overrecursed)
 {
     // We can be propagating debug mode exceptions without there being an
     // actual exception pending. For instance, when we return false from an
@@ -224,7 +207,7 @@ jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
 
     BaselineBailoutInfo *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true,
-                                           &bailoutInfo, &excInfo, poppedLastSPSFrameOut);
+                                           &bailoutInfo, &excInfo);
 
     if (retval == BAILOUT_RETURN_OK) {
         MOZ_ASSERT(bailoutInfo);

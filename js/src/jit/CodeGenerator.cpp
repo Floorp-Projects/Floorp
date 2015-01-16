@@ -3653,7 +3653,7 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
         MOZ_CRASH();
     }
 
-    masm.callWithABINoProfiling(callee);
+    masm.callWithABI(callee);
     restoreVolatile();
 
     masm.bind(&done);
@@ -3719,7 +3719,7 @@ CodeGenerator::emitValueResultChecks(LInstruction *lir, MDefinition *mir)
     masm.loadJSContext(temp2);
     masm.passABIArg(temp2);
     masm.passABIArg(temp1);
-    masm.callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, AssertValidValue));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, AssertValidValue));
     masm.popValue(output);
     restoreVolatile();
 
@@ -6932,9 +6932,6 @@ CodeGenerator::generateAsmJS(AsmJSFunctionLabels *labels)
 {
     JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
-    // AsmJS doesn't do SPS instrumentation.
-    sps_.disable();
-
     if (!omitOverRecursedCheck())
         labels->overflowThunk.emplace();
 
@@ -7210,8 +7207,8 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
 
     // If SPS is enabled, mark IonScript as having been instrumented with SPS
-    if (sps_.enabled())
-        ionScript->setHasSPSInstrumentation();
+    if (isProfilerInstrumentationEnabled())
+        ionScript->setHasProfilingInstrumentation();
 
     script->setIonScript(cx, ionScript);
 
@@ -8895,49 +8892,6 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
     MOZ_ASSERT(masm.framePushed() == initialStack);
-}
-
-typedef bool(*SPSFn)(JSContext *, HandleScript);
-static const VMFunction SPSEnterInfo = FunctionInfo<SPSFn>(SPSEnter);
-static const VMFunction SPSExitInfo = FunctionInfo<SPSFn>(SPSExit);
-
-void
-CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
-{
-    Register temp = ToRegister(lir->temp()->output());
-
-    switch (lir->type()) {
-        case MProfilerStackOp::Enter:
-            if (gen->options.spsSlowAssertionsEnabled()) {
-                saveLive(lir);
-                pushArg(ImmGCPtr(lir->script()));
-                callVM(SPSEnterInfo, lir);
-                restoreLive(lir);
-                sps_.pushManual(lir->script(), masm, temp, /* inlinedFunction = */ false);
-            } else {
-                masm.propagateOOM(sps_.push(lir->script(), masm, temp,
-                                            /* inlinedFunction = */ false));
-            }
-            return;
-
-        case MProfilerStackOp::Exit:
-            if (gen->options.spsSlowAssertionsEnabled()) {
-                saveLive(lir);
-                pushArg(ImmGCPtr(lir->script()));
-                // Once we've exited, then we shouldn't emit instrumentation for
-                // the corresponding reenter() because we no longer have a
-                // frame.
-                sps_.skipNextReenter();
-                callVM(SPSExitInfo, lir);
-                restoreLive(lir);
-            } else {
-                sps_.pop(masm, temp, /* inlinedFunction = */ false);
-            }
-            return;
-
-        default:
-            MOZ_CRASH("invalid LProfilerStackOp type");
-    }
 }
 
 class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator>

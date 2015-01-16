@@ -209,7 +209,7 @@ class ExceptionBailoutInfo
 uint32_t ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
                                  ResumeFromException *rfe,
                                  const ExceptionBailoutInfo &excInfo,
-                                 bool *overrecursed, bool *poppedLastSPSFrameOut);
+                                 bool *overrecursed);
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
 

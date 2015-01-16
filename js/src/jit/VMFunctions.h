@@ -679,9 +679,6 @@ JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type,
 JSObject *NewSingletonCallObject(JSContext *cx, HandleShape shape, uint32_t lexicalBegin);
 JSObject *NewStringObject(JSContext *cx, HandleString str);
 
-bool SPSEnter(JSContext *cx, HandleScript script);
-bool SPSExit(JSContext *cx, HandleScript script);
-
 bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, bool *out);
 bool OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, bool *out);
 

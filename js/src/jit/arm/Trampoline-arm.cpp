@@ -36,8 +36,8 @@ GenerateReturn(MacroAssembler &masm, int returnCode, SPSProfiler *prof)
     // Restore non-volatile floating point registers.
     masm.transferMultipleByRuns(NonVolatileFloatRegs, IsLoad, StackPointer, IA);
 
-    // Unwind the sps mark.
-    masm.spsUnmarkJit(prof, r8);
+    // Get rid of padding word.
+    masm.addPtr(Imm32(sizeof(void*)), sp);
 
     // Set up return value
     masm.ma_mov(Imm32(returnCode), r0);
@@ -69,7 +69,8 @@ struct EnterJITStack
     double d14;
     double d15;
 
-    size_t hasSPSMark;
+    // Padding.
+    void *padding;
 
     // Non-volatile registers.
     void *r4;
@@ -129,9 +130,8 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     // The 5th argument is located at [sp, 36]
     masm.finishDataTransfer();
 
-    // Push the EnterJIT sps mark. "Frame pointer" = start of saved core regs.
-    masm.movePtr(sp, r8);
-    masm.spsMarkJit(&cx->runtime()->spsProfiler, r8, r9);
+    // Add padding word.
+    masm.subPtr(Imm32(sizeof(void*)), sp);
 
     // Push the float registers.
     masm.transferMultipleByRuns(NonVolatileFloatRegs, IsStore, sp, DB);
