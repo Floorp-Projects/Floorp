@@ -379,7 +379,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
 
 static void
 HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromException *rfe,
-                   bool *overrecursed, bool *poppedLastSPSFrameOut)
+                   bool *overrecursed)
 {
     RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
@@ -411,8 +411,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             // to the stack depth at the snapshot, as we could've thrown in the
             // middle of a call.
             ExceptionBailoutInfo propagateInfo;
-            uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed,
-                                                      poppedLastSPSFrameOut);
+            uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed);
             if (retval == BAILOUT_RETURN_OK)
                 return;
         }
@@ -454,8 +453,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
                 // Bailout at the start of the catch block.
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
                 ExceptionBailoutInfo excInfo(frame.frameNo(), catchPC, tn->stackDepth);
-                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed,
-                                                          poppedLastSPSFrameOut);
+                uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, excInfo, overrecursed);
                 if (retval == BAILOUT_RETURN_OK)
                     return;
 
@@ -763,8 +761,7 @@ HandleException(ResumeFromException *rfe)
             bool invalidated = iter.checkInvalidation(&ionScript);
 
             for (;;) {
-                bool poppedLastSPSFrame = false;
-                HandleExceptionIon(cx, frames, rfe, &overrecursed, &poppedLastSPSFrame);
+                HandleExceptionIon(cx, frames, rfe, &overrecursed);
 
                 if (rfe->kind == ResumeFromException::RESUME_BAILOUT) {
                     if (invalidated)
@@ -774,29 +771,13 @@ HandleException(ResumeFromException *rfe)
 
                 MOZ_ASSERT(rfe->kind == ResumeFromException::RESUME_ENTRY_FRAME);
 
-                // Figure out whether SPS frame was pushed for this frame or not.
-                // Even if profiler is enabled, the frame being popped might have
-                // been entered prior to SPS being enabled, and thus not have
-                // a pushed SPS frame.
-                bool popSPSFrame = cx->runtime()->spsProfiler.enabled();
-                if (invalidated)
-                    popSPSFrame = ionScript->hasSPSInstrumentation();
-
-                // Don't pop an SPS frame for inlined frames, since they are not instrumented.
-                if (frames.more())
-                    popSPSFrame = false;
-
-                // Don't pop the last SPS frame if it's already been popped by
-                // bailing out.
-                if (poppedLastSPSFrame)
-                    popSPSFrame = false;
-
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
 
                 JSScript *script = frames.script();
-                probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
+                probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                                   /* popSPSFrame = */ false);
                 if (!frames.more()) {
                     TraceLogStopEvent(logger, TraceLogger_IonMonkey);
                     TraceLogStopEvent(logger, TraceLogger_Scripts);
@@ -847,11 +828,7 @@ HandleException(ResumeFromException *rfe)
             // Unwind profiler pseudo-stack
             JSScript *script = iter.script();
             probes::ExitScript(cx, script, script->functionNonDelazifying(),
-                               iter.baselineFrame()->hasPushedSPSFrame());
-            // After this point, any pushed SPS frame would have been popped if it needed
-            // to be.  Unset the flag here so that if we call DebugEpilogue below,
-            // it doesn't try to pop the SPS frame again.
-            iter.baselineFrame()->unsetPushedSPSFrame();
+                               /* popSPSFrame = */ false);
 
             if (iter.baselineFrame()->isDebuggee() && !calledDebugEpilogue) {
                 // If we still need to call the DebugEpilogue, we must
