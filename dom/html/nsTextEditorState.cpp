@@ -979,7 +979,6 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
   : mTextCtrlElement(aOwningElement),
     mRestoringSelection(nullptr),
     mBoundFrame(nullptr),
-    mTextListener(nullptr),
     mEverInited(false),
     mEditorInitialized(false),
     mInitializing(false),
@@ -1012,7 +1011,7 @@ nsTextEditorState::Clear()
     // for us.
     DestroyEditor();
   }
-  NS_IF_RELEASE(mTextListener);
+  mTextListener = nullptr;
 }
 
 void nsTextEditorState::Unlink()
@@ -1125,8 +1124,8 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   // Create a SelectionController
   mSelCon = new nsTextInputSelectionImpl(frameSel, shell, rootNode);
+  MOZ_ASSERT(!mTextListener, "Should not overwrite the object");
   mTextListener = new nsTextInputListener(mTextCtrlElement);
-  NS_ADDREF(mTextListener);
 
   mTextListener->SetFrame(mBoundFrame);
   mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
@@ -1647,7 +1646,6 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
         TrustedEventsAtSystemGroupBubble());
     }
 
-    NS_RELEASE(mTextListener);
     mTextListener = nullptr;
   }
 
