@@ -36,6 +36,9 @@ public class testCheck extends PixelTest {
 
         mDriver.startCheckerboardRecording();
 
+        // Tell Gecko to ignore any longpress events triggered by MEH.
+        meh.disableGeckoLongpress();
+
         // Scroll repeatedly downwards, then upwards. On each iteration of i,
         // increase the scroll distance to test different scroll amounts.
         for (int i = 2; i < 7; i++) {

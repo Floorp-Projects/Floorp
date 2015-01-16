@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<window title="Mozilla Bug 1114520"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript;version=1.7">
+  <![CDATA[
+  "use strict";
+
+  const { 'utils': Cu } = Components;
+  Cu.import("resource://gre/modules/ContactDB.jsm", window);
+  Cu.importGlobalProperties(["indexedDB"]);
+
+  let contactsDB = new ContactDB();
+  contactsDB.init();
+
+  function makeFailure(reason, skipDelete) {
+    return function() {
+      ok(false, reason);
+      if (skipDelete) {
+        SimpleTest.finish();
+        return;
+      }
+      deleteDatabase(SimpleTest.finish);
+    };
+  };
+
+  function deleteDatabase(then) {
+    contactsDB.close();
+    let req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = then;
+    req.onblocked = makeFailure("blocked", true);
+    req.onupgradeneeded = makeFailure("onupgradeneeded", true);
+    req.onerror = makeFailure("onerror", true);
+  };
+
+  let CONTACT_PROPS = {
+    id: "ab74671e36be41b680f8f030e7e24ea2",
+    properties: {
+      name: ["Magnificentest foo bar the third"],
+      givenName: ["foo"],
+      familyName: ["bar"]
+    }
+  };
+
+  let ANOTHER_CONTACT_PROPS = {
+    id: "b461d53d548b4e8aaa8256911a415f79",
+    properties: {
+      name: ["Magnificentest foo bar the fourth"],
+      givenName: ["foo"],
+      familyName: ["bar"]
+    }
+  };
+
+  let Tests = [function() {
+    info("Save contact");
+    contactsDB.saveContact(CONTACT_PROPS, function() {
+      ok(true, "Saved contact successfully");
+      next();
+    });
+  }, function() {
+    info("Save another contact");
+    contactsDB.saveContact(ANOTHER_CONTACT_PROPS, function() {
+      ok(true, "Saved contact successfully");
+      next();
+    });
+  }, function() {
+    info("Get all contacts so cache is built");
+    contactsDB.getAll(function(contacts) {
+      ok(true, "Got all contacts " + contacts.length);
+      next();
+    }, function(e) {
+      makeFailure("Unexpected error getting contacts " + e);
+    }, {"sortBy":"givenName","sortOrder":"ascending"});
+  }, function() {
+    info("Contacts cache should have both ids");
+    let contactsCount = 0;
+    contactsDB.newTxn("readonly", SAVED_GETALL_STORE_NAME, function(txn, store) {
+      store.openCursor().onsuccess = function(e) {
+        let cursor = e.target.result;
+        if (!cursor) {
+          makeFailure("Wrong cache");
+          return;
+        }
+        ok(cursor.value.length == 2, "Both contacts ids are in the cache");
+        next();
+      };
+    }, null, makeFailure);
+  }, function() {
+    info("Remove contact " + CONTACT_PROPS.id);
+    contactsDB.removeContact(CONTACT_PROPS.id, function() {
+      ok(true, "Removed contact");
+      next();
+    }, function() {
+      makeFailure("Unexpected error removing contact " + e);
+    });
+  }, function() {
+    info("Contacts cache should have only one id");
+    contactsDB.newTxn("readonly", SAVED_GETALL_STORE_NAME, function(txn, store) {
+      store.openCursor().onsuccess = function(e) {
+        let cursor = e.target.result;
+        if (!cursor) {
+          makeFailure;
+          return;
+        }
+        ok(cursor.value.length == 1, "Only one contacts id is in the cache");
+        ok(cursor.value[0] == ANOTHER_CONTACT_PROPS.id, "And it is the right id");
+        next();
+      };
+    }, null, makeFailure);
+  }, function() {
+    deleteDatabase(next);
+  }];
+
+  function next() {
+    let step = Tests.shift();
+    if (step) {
+      step();
+    } else {
+      info("All done");
+      SimpleTest.finish();
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  next();
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1114520"
+     target="_blank">Mozilla Bug 1114520</a>
+  </body>
+</window>
