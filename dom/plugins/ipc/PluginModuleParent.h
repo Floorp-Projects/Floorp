@@ -176,6 +176,9 @@ protected:
                                            PluginAsyncSurrogate** aSurrogate = nullptr);
 
 protected:
+    void SetChildTimeout(const int32_t aChildTimeout);
+    static void TimeoutChanged(const char* aPref, void* aModule);
+
     virtual void UpdatePluginTimeout() {}
 
     virtual bool RecvNotifyContentModuleDestroyed() MOZ_OVERRIDE { return true; }
@@ -309,13 +312,19 @@ class PluginModuleContentParent : public PluginModuleParent
     static void OnLoadPluginResult(const uint32_t& aPluginId, const bool& aResult);
     static void AssociatePluginId(uint32_t aPluginId, base::ProcessId aProcessId);
 
+    virtual ~PluginModuleContentParent();
+
   private:
+    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+    virtual void OnExitedSyncSend() MOZ_OVERRIDE;
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     void OnCrash(DWORD processID) MOZ_OVERRIDE {}
 #endif
 
     static PluginModuleContentParent* sSavedModuleParent;
+
+    uint32_t mPluginId;
 };
 
 class PluginModuleChromeParent
@@ -343,6 +352,9 @@ class PluginModuleChromeParent
      */
     void
     OnHangUIContinue();
+
+    void
+    EvaluateHangUIState(const bool aReset);
 #endif // XP_WIN
 
     virtual bool WaitForIPCConnection() MOZ_OVERRIDE;
@@ -402,8 +414,6 @@ private:
     CrashReporterParent* CrashReporter();
 
     void CleanupFromTimeout(const bool aByHangUI);
-    void SetChildTimeout(const int32_t aChildTimeout);
-    static void TimeoutChanged(const char* aPref, void* aModule);
 
     virtual void UpdatePluginTimeout() MOZ_OVERRIDE;
 
@@ -448,9 +458,6 @@ private:
     CrashReporterParent* mCrashReporter;
 #endif // MOZ_CRASHREPORTER
 
-
-    void
-    EvaluateHangUIState(const bool aReset);
 
     /**
      * Launches the Plugin Hang UI.
