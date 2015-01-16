@@ -1,33 +1,24 @@
 {
- "version": 3,
+ "version": 4,
  "invocation": {
   "dmdEnvVar": "--mode=dark-matter --sample-below=127",
   "mode": "dark-matter",
   "sampleBelowSize": 127
  },
  "blockList": [
-  {"req": 4096, "alloc": "A"},
-  {"req": 4096, "alloc": "A"},
-  {"req": 4096, "alloc": "A"},
-  {"req": 4096, "alloc": "A"},
+  {"req": 4096, "alloc": "A", "num": 4},
 
-  {"req": 4096, "alloc": "B"},
-  {"req": 4096, "alloc": "B"},
-  {"req": 4096, "alloc": "B"},
+  {"req": 4096, "alloc": "B", "num": 3},
   {"req": 4096, "alloc": "B"},
 
-  {"req": 4096, "alloc": "C"},
-  {"req": 4096, "alloc": "C"},
-  {"req": 4096, "alloc": "C"},
-  {"req": 4096, "alloc": "C"},
+  {"req": 4096, "alloc": "C", "num": 2},
+  {"req": 4096, "alloc": "C", "num": 2},
 
-  {"req": 4096,             "alloc": "D", "reps": ["R1"]},
-  {"req": 4096,             "alloc": "D", "reps": ["R1"]},
+  {"req": 4096,             "alloc": "D", "reps": ["R1"], "num": 2},
   {"req": 2000, "slop": 48, "alloc": "D", "reps": ["R1"]},
 
   {"req": 15360,            "alloc": "F"},
-  {"req": 512,              "alloc": "F"},
-  {"req": 512,              "alloc": "F"},
+  {"req": 512,              "alloc": "F", "num": 2},
   {                         "alloc": "F"},
   {"req": 1024,             "alloc": "F", "reps": ["R1"]},
   {                         "alloc": "F", "reps": ["R1"]},

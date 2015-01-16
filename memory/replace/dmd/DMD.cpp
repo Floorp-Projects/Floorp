@@ -38,7 +38,6 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/SegmentedVector.h"
 
 // CodeAddressService is defined entirely in the header, so this does not make
 // DMD depend on XPCOM's object file.
@@ -445,7 +444,7 @@ public:
 };
 
 // This lock must be held while manipulating global state such as
-// gStackTraceTable, gLiveBlockTable, gDeadBlockList. Note that gOptions is
+// gStackTraceTable, gLiveBlockTable, gDeadBlockTable. Note that gOptions is
 // *not* protected by this lock because it is only written to by Options(),
 // which is only invoked at start-up and in ResetEverything(), which is only
 // used by SmokeDMD.cpp.
@@ -1036,12 +1035,46 @@ public:
   {
     aStackTraces.put(AllocStackTrace());  // never null
   }
+
+  // Hash policy.
+
+  typedef DeadBlock Lookup;
+
+  static uint32_t hash(const DeadBlock& aB)
+  {
+    return mozilla::HashGeneric(aB.ReqSize(),
+                                aB.SlopSize(),
+                                aB.IsSampled(),
+                                aB.AllocStackTrace());
+  }
+
+  static bool match(const DeadBlock& aA, const DeadBlock& aB)
+  {
+    return aA.ReqSize() == aB.ReqSize() &&
+           aA.SlopSize() == aB.SlopSize() &&
+           aA.IsSampled() == aB.IsSampled() &&
+           aA.AllocStackTrace() == aB.AllocStackTrace();
+  }
 };
 
-static const size_t kDeadBlockListSegmentSize = 16384;
-typedef SegmentedVector<DeadBlock, kDeadBlockListSegmentSize,
-                        InfallibleAllocPolicy> DeadBlockList;
-static DeadBlockList* gDeadBlockList = nullptr;
+// For each unique DeadBlock value we store a count of how many actual dead
+// blocks have that value.
+typedef js::HashMap<DeadBlock, size_t, DeadBlock, InfallibleAllocPolicy>
+  DeadBlockTable;
+static DeadBlockTable* gDeadBlockTable = nullptr;
+
+// Add the dead block to the dead block table, if that's appropriate.
+void MaybeAddToDeadBlockTable(const DeadBlock& aDb)
+{
+  if (gOptions->IsCumulativeMode() && aDb.AllocStackTrace()) {
+    AutoLockState lock;
+    if (DeadBlockTable::AddPtr p = gDeadBlockTable->lookupForAdd(aDb)) {
+      p->value() += 1;
+    } else {
+      gDeadBlockTable->add(p, aDb, 1);
+    }
+  }
+}
 
 // Add a pointer to each live stack trace into the given StackTraceSet.  (A
 // stack trace is live if it's used by one of the live blocks.)
@@ -1058,8 +1091,8 @@ GatherUsedStackTraces(StackTraceSet& aStackTraces)
     r.front().AddStackTracesToTable(aStackTraces);
   }
 
-  for (auto iter = gDeadBlockList->Iter(); !iter.Done(); iter.Next()) {
-    iter.Get().AddStackTracesToTable(aStackTraces);
+  for (auto r = gDeadBlockTable->all(); !r.empty(); r.popFront()) {
+    r.front().key().AddStackTracesToTable(aStackTraces);
   }
 }
 
@@ -1248,10 +1281,7 @@ replace_realloc(void* aOldPtr, size_t aSize)
   void* ptr = gMallocTable->realloc(aOldPtr, aSize);
   if (ptr) {
     AllocCallback(ptr, aSize, t);
-    if (gOptions->IsCumulativeMode() && db.AllocStackTrace()) {
-      AutoLockState lock;
-      gDeadBlockList->InfallibleAppend(db);
-    }
+    MaybeAddToDeadBlockTable(db);
   } else {
     // If realloc fails, we undo the prior operations by re-inserting the old
     // pointer into the live block table. We don't have to do anything with the
@@ -1303,10 +1333,7 @@ replace_free(void* aPtr)
   // our update here would remove the newly-malloc'd block.
   DeadBlock db;
   FreeCallback(aPtr, t, &db);
-  if (gOptions->IsCumulativeMode() && db.AllocStackTrace()) {
-    AutoLockState lock;
-    gDeadBlockList->InfallibleAppend(db);
-  }
+  MaybeAddToDeadBlockTable(db);
   gMallocTable->free(aPtr);
 }
 
@@ -1524,11 +1551,11 @@ Init(const malloc_table_t* aMallocTable)
     gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>();
     gLiveBlockTable->init(8192);
 
-    // Create this even if the mode isn't Cumulative, in case the mode is
-    // changed later on (as is done by SmokeDMD.cpp, for example). It's tiny
-    // when empty, so space isn't a concern.
-    gDeadBlockList =
-      InfallibleAllocPolicy::new_<DeadBlockList>(kDeadBlockListSegmentSize);
+    // Create this even if the mode isn't Cumulative (albeit with a small
+    // size), in case the mode is changed later on (as is done by SmokeDMD.cpp,
+    // for example).
+    gDeadBlockTable = InfallibleAllocPolicy::new_<DeadBlockTable>();
+    gDeadBlockTable->init(gOptions->IsCumulativeMode() ? 8192 : 4);
   }
 
   gIsDMDInitialized = true;
@@ -1579,7 +1606,7 @@ DMDFuncs::ReportOnAlloc(const void* aPtr)
 // The version number of the output format. Increment this if you make
 // backwards-incompatible changes to the format. See DMD.h for the version
 // history.
-static const int kOutputVersionNumber = 3;
+static const int kOutputVersionNumber = 4;
 
 // Note that, unlike most SizeOf* functions, this function does not take a
 // |mozilla::MallocSizeOf| argument.  That's because those arguments are
@@ -1616,7 +1643,7 @@ SizeOfInternal(Sizes* aSizes)
 
   aSizes->mLiveBlockTable = gLiveBlockTable->sizeOfIncludingThis(MallocSizeOf);
 
-  aSizes->mDeadBlockList = gDeadBlockList->SizeOfIncludingThis(MallocSizeOf);
+  aSizes->mDeadBlockTable = gDeadBlockTable->sizeOfIncludingThis(MallocSizeOf);
 }
 
 void
@@ -1801,9 +1828,12 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
       }
 
       // Dead blocks.
-      for (auto iter = gDeadBlockList->Iter(); !iter.Done(); iter.Next()) {
-        const DeadBlock& b = iter.Get();
+      for (auto r = gDeadBlockTable->all(); !r.empty(); r.popFront()) {
+        const DeadBlock& b = r.front().key();
         b.AddStackTracesToTable(usedStackTraces);
+
+        size_t num = r.front().value();
+        MOZ_ASSERT(num > 0);
 
         writer.StartObjectElement(writer.SingleLineStyle);
         {
@@ -1814,6 +1844,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
             }
           }
           writer.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
+
+          if (num > 1) {
+            writer.IntProperty("num", num);
+          }
         }
         writer.EndObject();
       }
@@ -1890,9 +1924,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
       Show(gLiveBlockTable->capacity(), buf2, kBufLen),
       Show(gLiveBlockTable->count(),    buf3, kBufLen));
 
-    StatusMsg("      Dead block list:      %10s bytes (%s entries)\n",
-      Show(sizes.mDeadBlockList,     buf1, kBufLen),
-      Show(gDeadBlockList->Length(), buf2, kBufLen));
+    StatusMsg("      Dead block table:     %10s bytes (%s entries, %s used)\n",
+      Show(sizes.mDeadBlockTable,       buf1, kBufLen),
+      Show(gDeadBlockTable->capacity(), buf2, kBufLen),
+      Show(gDeadBlockTable->count(),    buf3, kBufLen));
 
     StatusMsg("    }\n");
     StatusMsg("    Data structures that are destroyed after Dump() ends {\n");
@@ -1952,7 +1987,7 @@ DMDFuncs::ResetEverything(const char* aOptions)
 
   // Clear all existing blocks.
   gLiveBlockTable->clear();
-  gDeadBlockList->Clear();
+  gDeadBlockTable->clear();
   gSmallBlockActualSizeCounter = 0;
 }
 
