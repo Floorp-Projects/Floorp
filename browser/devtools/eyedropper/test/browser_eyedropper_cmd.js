@@ -31,9 +31,10 @@ function spawnTest() {
 }
 
 function inspectAndWaitForCopy() {
-  return waitForClipboard(() => {
-    inspectPage(); // setup: inspect the page
-  }, DIV_COLOR);
+  let copied = waitForClipboard(() => {}, DIV_COLOR);
+  let ready = inspectPage(); // resolves once eyedropper is destroyed
+  
+  return Promise.all([copied, ready]);
 }
 
 function inspectPage() {
@@ -54,6 +55,7 @@ function inspectPage() {
       EventUtils.synthesizeMouse(target, x + 10, y + 10, { type: "mousemove" }, win);
 
       EventUtils.synthesizeMouse(target, x + 10, y + 10, {}, win);
+      return dropper.once("destroy");
     });
   })
 }
