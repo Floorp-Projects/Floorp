@@ -88,7 +88,10 @@ public:
     // binding object for a DOMError or DOMException from the caller's scope,
     // otherwise report it.
     eRethrowContentExceptions,
-    // Throw any exception to the caller code.
+    // Throw exceptions to the caller code, unless the caller compartment is
+    // provided, the exception is not a DOMError or DOMException from the
+    // caller compartment, and the caller compartment does not subsume our
+    // unwrapped callback.
     eRethrowExceptions
   };
 
@@ -168,6 +171,11 @@ protected:
   public:
     // If aExceptionHandling == eRethrowContentExceptions then aCompartment
     // needs to be set to the compartment in which exceptions will be rethrown.
+    //
+    // If aExceptionHandling == eRethrowExceptions then aCompartment may be set
+    // to the compartment in which exceptions will be rethrown.  In that case
+    // they will only be rethrown if that compartment's principal subsumes the
+    // principal of our (unwrapped) callback.
     CallSetup(CallbackObject* aCallback, ErrorResult& aRv,
               ExceptionHandling aExceptionHandling,
               JSCompartment* aCompartment = nullptr,
@@ -189,7 +197,7 @@ protected:
     JSContext* mCx;
 
     // Caller's compartment. This will only have a sensible value if
-    // mExceptionHandling == eRethrowContentExceptions.
+    // mExceptionHandling == eRethrowContentExceptions or eRethrowExceptions.
     JSCompartment* mCompartment;
 
     // And now members whose construction/destruction order we need to control.

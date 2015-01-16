@@ -405,9 +405,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         mHaveProfile = false;
 
         // XXX shutdown devices
-        nsCacheService::OnProfileShutdown(!strcmp("shutdown-cleanse",
-                                                  data.get()));
-        
+        nsCacheService::OnProfileShutdown();
     } else if (!strcmp("suspend_process_notification", topic)) {
         // A suspended process may never return, so shutdown the cache to reduce
         // cache corruption.
@@ -2395,7 +2393,7 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry,
 
 
 void
-nsCacheService::OnProfileShutdown(bool cleanse)
+nsCacheService::OnProfileShutdown()
 {
     if (!gService)  return;
     if (!gService->mInitialized) {
@@ -2419,17 +2417,11 @@ nsCacheService::OnProfileShutdown(bool cleanse)
     (void) SyncWithCacheIOThread();
 
     if (gService->mDiskDevice && gService->mEnableDiskDevice) {
-        if (cleanse)
-            gService->mDiskDevice->EvictEntries(nullptr);
-
         gService->mDiskDevice->Shutdown();
     }
     gService->mEnableDiskDevice = false;
 
     if (gService->mOfflineDevice && gService->mEnableOfflineDevice) {
-        if (cleanse)
-            gService->mOfflineDevice->EvictEntries(nullptr);
-
         gService->mOfflineDevice->Shutdown();
     }
     gService->mCustomOfflineDevices.Enumerate(

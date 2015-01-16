@@ -182,7 +182,7 @@ public:
     /**
      * Methods called by nsCacheProfilePrefObserver
      */
-    static void      OnProfileShutdown(bool cleanse);
+    static void      OnProfileShutdown();
     static void      OnProfileChanged();
 
     static void      SetDiskCacheEnabled(bool    enabled);

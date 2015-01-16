@@ -398,32 +398,12 @@ public:
 #elif defined(JS_CODEGEN_MIPS)
     static void cacheFlush(void* code, size_t size)
     {
-#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-
-#if defined(__GNUC__) && (GCC_VERSION >= 40300)
-#if (__mips_isa_rev == 2) && (GCC_VERSION < 40403)
-        int lineSize;
-        asm("rdhwr %0, $1" : "=r" (lineSize));
-        //
-        // Modify "start" and "end" to avoid GCC 4.3.0-4.4.2 bug in
-        // mips_expand_synci_loop that may execute synci one more time.
-        // "start" points to the first byte of the cache line.
-        // "end" points to the last byte of the line before the last cache line.
-        // Because size is always a multiple of 4, this is safe to set
-        // "end" to the last byte.
-        //
-        intptr_t start = reinterpret_cast<intptr_t>(code) & (-lineSize);
-        intptr_t end = ((reinterpret_cast<intptr_t>(code) + size - 1) & (-lineSize)) - 1;
-        __builtin___clear_cache(reinterpret_cast<char*>(start), reinterpret_cast<char*>(end));
-#else
+#if defined(__GNUC__)
         intptr_t end = reinterpret_cast<intptr_t>(code) + size;
         __builtin___clear_cache(reinterpret_cast<char*>(code), reinterpret_cast<char*>(end));
-#endif
 #else
         _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
 #endif
-
-#undef GCC_VERSION
     }
 #elif defined(JS_CODEGEN_ARM) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
     static void cacheFlush(void* code, size_t size)

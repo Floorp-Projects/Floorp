@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e0c735ec89df011ea7dd435087a9045ecff9ff9e">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="401e981f51cf047292d101c785be8ec48bf75e8c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5ae81fcc0d8568a50d0bf8491004bc9485b3a9ae"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="049c281ad212bf528b2af8fc246b0dd0c9f97415"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -158,7 +158,7 @@
   <project name="platform/hardware/ril" path="hardware/ril" revision="12b1977cc704b35f2e9db2bb423fa405348bc2f3"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="985bf15264d865fe7b9c5b45f61c451cbaafa43d"/>
   <project name="platform/system/core" path="system/core" revision="350eac5403124dacb2a5fd9e28ac290a59fc3b8e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="f9c93ff3550ce324056d7c062e88fe45ca7dfd43"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="0c557e136bb615923aad0f5c69da4e869523efc5"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="d8952a42771045fca73ec600e2b42a4c7129d723"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="018b44e52b2bac5d3631d559550e88a4b68c6e67"/>

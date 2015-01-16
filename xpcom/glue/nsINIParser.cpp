@@ -143,9 +143,9 @@ nsINIParser::InitFromFILE(FILE* aFd)
   char* buffer = &mFileContents[0];
 
   if (flen >= 3 &&
-      mFileContents[0] == static_cast<char>(0xEF) &&
-      mFileContents[1] == static_cast<char>(0xBB) &&
-      mFileContents[2] == static_cast<char>(0xBF)) {
+      mFileContents[0] == '\xEF' &&
+      mFileContents[1] == '\xBB' &&
+      mFileContents[2] == '\xBF') {
     // Someone set us up the Utf-8 BOM
     // This case is easy, since we assume that BOM-less
     // files are Utf-8 anyway.  Just skip the BOM and process as usual.
@@ -154,8 +154,8 @@ nsINIParser::InitFromFILE(FILE* aFd)
 
 #ifdef XP_WIN
   if (flen >= 2 &&
-      mFileContents[0] == static_cast<char>(0xFF) &&
-      mFileContents[1] == static_cast<char>(0xFE)) {
+      mFileContents[0] == '\xFF' &&
+      mFileContents[1] == '\xFE') {
     // Someone set us up the Utf-16LE BOM
     buffer = &mFileContents[2];
     // Get the size required for our Utf8 buffer

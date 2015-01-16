@@ -14,6 +14,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "builtin/SymbolObject.h"
+#include "jit/BaselineJIT.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
 #include "vm/NumberObject.h"
@@ -23,8 +24,6 @@
 #include "vm/TypedArrayObject.h"
 
 #include "jscntxtinlines.h"
-
-#include "jit/ExecutionMode-inl.h"
 
 namespace js {
 namespace types {
@@ -40,7 +39,7 @@ CompilerOutput::ion() const
     // (i.e. after IonBuilder but before CodeGenerator::link) then a valid
     // CompilerOutput may not yet have an associated IonScript.
     MOZ_ASSERT(isValid());
-    jit::IonScript *ion = jit::GetIonScript(script(), mode());
+    jit::IonScript *ion = script()->maybeIonScript();
     MOZ_ASSERT(ion != ION_COMPILING_SCRIPT);
     return ion;
 }

@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FAIL_ON_WARNINGS = True
+
 EXPORTS += [
     'DMD.h',
 ]
@@ -22,6 +24,8 @@ SOURCES += [
 SharedLibrary('dmd')
 
 DEFINES['MOZ_NO_MOZALLOC'] = True
+DEFINES['IMPL_MFBT'] = True
+DEFINES['XPCOM_GLUE'] = True
 
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True

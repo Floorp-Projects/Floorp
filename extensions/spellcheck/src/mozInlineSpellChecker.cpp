@@ -902,7 +902,11 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
 nsresult
 mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
 {
-  NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);
+  if (!mSpellCheck) {
+    NS_WARN_IF_FALSE(mPendingSpellCheck,
+                     "Trying to spellcheck, but checking seems to be disabled");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   mozInlineSpellStatus status(this);
   nsRange* range = static_cast<nsRange*>(aRange);

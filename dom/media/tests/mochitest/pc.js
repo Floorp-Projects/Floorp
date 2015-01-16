@@ -1488,7 +1488,8 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.dataChannels = [ ];
 
-  this.onAddStreamFired = false;
+  this.onAddStreamAudioCounter = 0;
+  this.onAddStreamVideoCounter = 0;
   this.addStreamCallbacks = {};
 
   this._local_ice_candidates = [];
@@ -1534,15 +1535,15 @@ function PeerConnectionWrapper(label, configuration, h264) {
    */
   this._pc.onaddstream = function (event) {
     info(self + ": 'onaddstream' event fired for " + JSON.stringify(event.stream));
-    // TODO: remove this once Bugs 998552 and 998546 are closed
-    self.onAddStreamFired = true;
 
     var type = '';
     if (event.stream.getAudioTracks().length > 0) {
       type = 'audio';
+      self.onAddStreamAudioCounter += event.stream.getAudioTracks().length;
     }
     if (event.stream.getVideoTracks().length > 0) {
       type += 'video';
+      self.onAddStreamVideoCounter += event.stream.getVideoTracks().length;
     }
     self.attachMedia(event.stream, type, 'remote');
 
@@ -2251,12 +2252,8 @@ PeerConnectionWrapper.prototype = {
    */
   checkMediaTracks : function PCW_checkMediaTracks(constraintsRemote, onSuccess) {
     var self = this;
-    var addStreamTimeout = null;
 
     function _checkMediaTracks(constraintsRemote, onSuccess) {
-      if (addStreamTimeout !== null) {
-        clearTimeout(addStreamTimeout);
-      }
 
       var localConstraintAudioTracks =
         self.countAudioTracksInMediaConstraint(self.constraints);
@@ -2293,23 +2290,35 @@ PeerConnectionWrapper.prototype = {
       self.countAudioTracksInMediaConstraint(constraintsRemote) +
       self.countVideoTracksInMediaConstraint(constraintsRemote);
 
-    // TODO: remove this once Bugs 998552 and 998546 are closed
-    if ((self.onAddStreamFired) || (expectedRemoteTracks == 0)) {
-      _checkMediaTracks(constraintsRemote, onSuccess);
-    } else {
-      info(self + " checkMediaTracks() got called before onAddStream fired");
-      // we rely on the outer mochitest timeout to catch the case where
+    // TODO: this whole counting of streams should be replaced with comparing
+    //       media stream objects IDs and what we got in the SDP (bug 1089798)
+    function _compareReceivedAndExpectedTracks(constraintsRemote, onSuccess) {
+      var receivedRemoteTracks =
+        self.onAddStreamAudioCounter + self.onAddStreamVideoCounter;
+
+      if (receivedRemoteTracks === expectedRemoteTracks) {
+        _checkMediaTracks(constraintsRemote, onSuccess);
+      } else if (receivedRemoteTracks > expectedRemoteTracks) {
+        ok(false, "Received more streams " + receivedRemoteTracks +
+            " then expected " + expectedRemoteTracks);
+        _checkMediaTracks(constraintsRemote, onSuccess);
+      } else {
+        info("Still waiting for more remote streams to arrive (" +
+            receivedRemoteTracks + " vs " + expectedRemoteTracks + ")");
+      }
+    }
+
+    if (expectedRemoteTracks > (self.onAddStreamAudioCounter +
+        self.onAddStreamVideoCounter)) {
+      // This installs a callback handler for every time onaddstrem fires.
+      // We rely on the outer mochitest timeout to catch the case where
       // onaddstream never fires
       self.addStreamCallbacks.checkMediaTracks = function() {
-        _checkMediaTracks(constraintsRemote, onSuccess);
+        _compareReceivedAndExpectedTracks(constraintsRemote, onSuccess);
       };
-      addStreamTimeout = setTimeout(function () {
-        ok(self.onAddStreamFired, self + " checkMediaTracks() timed out waiting for onaddstream event to fire");
-        if (!self.onAddStreamFired) {
-          onSuccess();
-        }
-      }, 60000);
     }
+    _compareReceivedAndExpectedTracks(constraintsRemote, onSuccess);
+
   },
 
   verifySdp : function PCW_verifySdp(desc, expectedType, offerConstraintsList,

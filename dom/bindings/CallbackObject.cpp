@@ -21,6 +21,8 @@
 #include "WorkerPrivate.h"
 #include "nsGlobalWindow.h"
 #include "WorkerScope.h"
+#include "jsapi.h"
+#include "nsJSPrincipals.h"
 
 namespace mozilla {
 namespace dom {
@@ -186,14 +188,36 @@ bool
 CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aException)
 {
   if (mExceptionHandling == eRethrowExceptions) {
-    return true;
+    if (!mCompartment) {
+      // Caller didn't ask us to filter for only exceptions we subsume.
+      return true;
+    }
+
+    // On workers, we don't have nsIPrincipals to work with.  But we also only
+    // have one compartment, so check whether mCompartment is the same as the
+    // current compartment of mCx.
+    if (mCompartment == js::GetContextCompartment(mCx)) {
+      return true;
+    }
+
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // At this point mCx is in the compartment of our unwrapped callback, so
+    // just check whether the principal of mCompartment subsumes that of the
+    // current compartment/global of mCx.
+    nsIPrincipal* callerPrincipal =
+      nsJSPrincipals::get(JS_GetCompartmentPrincipals(mCompartment));
+    nsIPrincipal* calleePrincipal = nsContentUtils::SubjectPrincipal();
+    if (callerPrincipal->SubsumesConsideringDomain(calleePrincipal)) {
+      return true;
+    }
   }
 
-  MOZ_ASSERT(mExceptionHandling == eRethrowContentExceptions);
+  MOZ_ASSERT(mCompartment);
 
-  // For eRethrowContentExceptions we only want to throw an exception if the
-  // object that was thrown is a DOMError or DOMException object in the caller
-  // compartment (which we stored in mCompartment).
+  // Now we only want to throw an exception to the caller if the object that was
+  // thrown is a DOMError or DOMException object in the caller compartment
+  // (which we stored in mCompartment).
 
   if (!aException.isObject()) {
     return false;

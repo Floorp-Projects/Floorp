@@ -52,11 +52,8 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::gl;
 using namespace mozilla::gfx;
-
-static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum* baseType,
-                                           GLint* unitSize);
+using namespace mozilla::gl;
 
 static const WebGLRectangleObject*
 CurValidFBRectObject(const WebGLContext* webgl,
@@ -122,16 +119,11 @@ WebGLContext::AttachShader(WebGLProgram* program, WebGLShader* shader)
 
     if (!ValidateObject("attachShader: program", program) ||
         !ValidateObject("attachShader: shader", shader))
+    {
         return;
+    }
 
-    // Per GLSL ES 2.0, we can only have one of each type of shader
-    // attached.  This renders the next test somewhat moot, but we'll
-    // leave it for when we support more than one shader of each type.
-    if (program->HasAttachedShaderOfType(shader->ShaderType()))
-        return ErrorInvalidOperation("attachShader: only one of each type of shader may be attached to a program");
-
-    if (!program->AttachShader(shader))
-        return ErrorInvalidOperation("attachShader: shader is already attached");
+    program->AttachShader(shader);
 }
 
 void
@@ -144,31 +136,7 @@ WebGLContext::BindAttribLocation(WebGLProgram* prog, GLuint location,
     if (!ValidateObject("bindAttribLocation: program", prog))
         return;
 
-    GLuint progname = prog->GLName();
-
-    if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
-        return;
-
-    if (location >= MaxVertexAttribs()) {
-        return ErrorInvalidValue("bindAttribLocation: `location` must be less"
-                                 " than MAX_VERTEX_ATTRIBS.");
-    }
-
-    if (StringBeginsWith(name, NS_LITERAL_STRING("gl_")))
-        return ErrorInvalidOperation("bindAttribLocation: can't set the"
-                                     " location of a name that starts with"
-                                     " 'gl_'.");
-
-    NS_LossyConvertUTF16toASCII cname(name);
-    nsCString mappedName;
-    if (mShaderValidation) {
-        WebGLProgram::HashMapIdentifier(cname, &mappedName);
-    } else {
-        mappedName.Assign(cname);
-    }
-
-    MakeContextCurrent();
-    gl->fBindAttribLocation(progname, location, mappedName.get());
+    prog->BindAttribLocation(location, name);
 }
 
 void
@@ -829,14 +797,15 @@ WebGLContext::DetachShader(WebGLProgram* program, WebGLShader* shader)
     if (IsContextLost())
         return;
 
+    // It's valid to attempt to detach a deleted shader, since it's still a
+    // shader.
     if (!ValidateObject("detachShader: program", program) ||
-        // it's valid to attempt to detach a deleted shader, since it's
-        // still a shader
         !ValidateObjectAllowDeleted("detashShader: shader", shader))
+    {
         return;
+    }
 
-    if (!program->DetachShader(shader))
-        return ErrorInvalidOperation("detachShader: shader is not attached");
+    program->DetachShader(shader);
 }
 
 void
@@ -974,50 +943,6 @@ WebGLContext::FrontFace(GLenum mode)
     gl->fFrontFace(mode);
 }
 
-already_AddRefed<WebGLActiveInfo>
-WebGLContext::GetActiveAttrib(WebGLProgram* prog, uint32_t index)
-{
-    if (IsContextLost())
-        return nullptr;
-
-    if (!ValidateObject("getActiveAttrib: program", prog))
-        return nullptr;
-
-    MakeContextCurrent();
-    GLuint progname = prog->GLName();
-
-    GLuint activeAttribs = 0;
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTES,
-                      (GLint*)&activeAttribs);
-    if (index >= activeAttribs) {
-        ErrorInvalidValue("`index` (%i) must be less than ACTIVE_ATTRIBUTES"
-                          " (%i).",
-                          index, activeAttribs);
-        return nullptr;
-    }
-
-    GLint len = 0;
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
-    if (len == 0)
-        return nullptr;
-
-    nsAutoArrayPtr<char> name(new char[len]);
-    GLint attrsize = 0;
-    GLuint attrtype = 0;
-
-    gl->fGetActiveAttrib(progname, index, len, &len, &attrsize, &attrtype, name);
-    if (attrsize == 0 || attrtype == 0) {
-        return nullptr;
-    }
-
-    nsCString reverseMappedName;
-    prog->ReverseMapIdentifier(nsDependentCString(name), &reverseMappedName);
-
-    nsRefPtr<WebGLActiveInfo> retActiveInfo =
-        new WebGLActiveInfo(attrsize, attrtype, reverseMappedName);
-    return retActiveInfo.forget();
-}
-
 void
 WebGLContext::GenerateMipmap(GLenum rawTarget)
 {
@@ -1083,7 +1008,19 @@ WebGLContext::GenerateMipmap(GLenum rawTarget)
 }
 
 already_AddRefed<WebGLActiveInfo>
-WebGLContext::GetActiveUniform(WebGLProgram* prog, uint32_t index)
+WebGLContext::GetActiveAttrib(WebGLProgram* prog, GLuint index)
+{
+    if (IsContextLost())
+        return nullptr;
+
+    if (!ValidateObject("getActiveAttrib: program", prog))
+        return nullptr;
+
+    return prog->GetActiveAttrib(index);
+}
+
+already_AddRefed<WebGLActiveInfo>
+WebGLContext::GetActiveUniform(WebGLProgram* prog, GLuint index)
 {
     if (IsContextLost())
         return nullptr;
@@ -1091,56 +1028,7 @@ WebGLContext::GetActiveUniform(WebGLProgram* prog, uint32_t index)
     if (!ValidateObject("getActiveUniform: program", prog))
         return nullptr;
 
-    MakeContextCurrent();
-    GLuint progname = prog->GLName();
-
-    GLuint activeUniforms = 0;
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORMS,
-                      (GLint*)&activeUniforms);
-    if (index >= activeUniforms) {
-        ErrorInvalidValue("`index` (%i) must be less than ACTIVE_UNIFORMS"
-                          " (%i).",
-                          index, activeUniforms);
-        return nullptr;
-    }
-
-    GLint len = 0;
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &len);
-    if (len == 0)
-        return nullptr;
-
-    nsAutoArrayPtr<char> name(new char[len]);
-
-    GLint usize = 0;
-    GLuint utype = 0;
-
-    gl->fGetActiveUniform(progname, index, len, &len, &usize, &utype, name);
-    if (len == 0 || usize == 0 || utype == 0) {
-        return nullptr;
-    }
-
-    nsCString reverseMappedName;
-    prog->ReverseMapIdentifier(nsDependentCString(name), &reverseMappedName);
-
-    // OpenGL ES 2.0 specifies that if foo is a uniform array, GetActiveUniform returns its name as "foo[0]".
-    // See section 2.10 page 35 in the OpenGL ES 2.0.24 specification:
-    //
-    // > If the active uniform is an array, the uniform name returned in name will always
-    // > be the name of the uniform array appended with "[0]".
-    //
-    // There is no such requirement in the OpenGL (non-ES) spec and indeed we have OpenGL implementations returning
-    // "foo" instead of "foo[0]". So, when implementing WebGL on top of desktop OpenGL, we must check if the
-    // returned name ends in [0], and if it doesn't, append that.
-    //
-    // In principle we don't need to do that on OpenGL ES, but this is such a tricky difference between the ES and non-ES
-    // specs that it seems probable that some ES implementers will overlook it. Since the work-around is quite cheap,
-    // we do it unconditionally.
-    if (usize > 1 && reverseMappedName.CharAt(reverseMappedName.Length()-1) != ']')
-        reverseMappedName.AppendLiteral("[0]");
-
-    nsRefPtr<WebGLActiveInfo> retActiveInfo =
-        new WebGLActiveInfo(usize, utype, reverseMappedName);
-    return retActiveInfo.forget();
+    return prog->GetActiveUniform(index);
 }
 
 void
@@ -1151,19 +1039,15 @@ WebGLContext::GetAttachedShaders(WebGLProgram* prog,
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowNull("getAttachedShaders", prog))
+    if (!prog) {
+        ErrorInvalidValue("getAttachedShaders: Invalid program.");
+        return;
+    }
+
+    if (!ValidateObject("getAttachedShaders", prog))
         return;
 
-    MakeContextCurrent();
-
-    if (!prog) {
-        retval.SetNull();
-        ErrorInvalidValue("getAttachedShaders: invalid program");
-    } else if (prog->AttachedShaders().Length() == 0) {
-        retval.SetValue().TruncateLength(0);
-    } else {
-        retval.SetValue().AppendElements(prog->AttachedShaders());
-    }
+    prog->GetAttachedShaders(&retval.SetValue());
 }
 
 GLint
@@ -1175,17 +1059,7 @@ WebGLContext::GetAttribLocation(WebGLProgram* prog, const nsAString& name)
     if (!ValidateObject("getAttribLocation: program", prog))
         return -1;
 
-    if (!ValidateGLSLVariableName(name, "getAttribLocation"))
-        return -1;
-
-    NS_LossyConvertUTF16toASCII cname(name);
-    nsCString mappedName;
-    prog->MapIdentifier(cname, &mappedName);
-
-    GLuint progname = prog->GLName();
-
-    MakeContextCurrent();
-    return gl->fGetAttribLocation(progname, mappedName.get());
+    return prog->GetAttribLocation(name);
 }
 
 JS::Value
@@ -1546,100 +1420,23 @@ WebGLContext::GetProgramParameter(WebGLProgram* prog, GLenum pname)
     if (!ValidateObjectAllowDeleted("getProgramParameter: program", prog))
         return JS::NullValue();
 
-    GLuint progname = prog->GLName();
-
-    MakeContextCurrent();
-
-    GLint i = 0;
-
-    if (IsWebGL2()) {
-        switch (pname) {
-        case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
-        case LOCAL_GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH:
-            gl->fGetProgramiv(progname, pname, &i);
-            return JS::Int32Value(i);
-        }
-    }
-
-    switch (pname) {
-        case LOCAL_GL_ATTACHED_SHADERS:
-        case LOCAL_GL_ACTIVE_UNIFORMS:
-        case LOCAL_GL_ACTIVE_ATTRIBUTES:
-            gl->fGetProgramiv(progname, pname, &i);
-            return JS::Int32Value(i);
-
-        case LOCAL_GL_DELETE_STATUS:
-            return JS::BooleanValue(prog->IsDeleteRequested());
-
-        case LOCAL_GL_LINK_STATUS:
-            return JS::BooleanValue(prog->LinkStatus());
-
-        case LOCAL_GL_VALIDATE_STATUS:
-#ifdef XP_MACOSX
-            // See comment in ValidateProgram below.
-            if (gl->WorkAroundDriverBugs())
-                i = 1;
-            else
-                gl->fGetProgramiv(progname, pname, &i);
-#else
-            gl->fGetProgramiv(progname, pname, &i);
-#endif
-            return JS::BooleanValue(bool(i));
-
-        default:
-            ErrorInvalidEnumInfo("getProgramParameter: parameter", pname);
-    }
-
-    return JS::NullValue();
+    return prog->GetProgramParameter(pname);
 }
 
 void
 WebGLContext::GetProgramInfoLog(WebGLProgram* prog, nsAString& retval)
 {
-    nsAutoCString s;
-    GetProgramInfoLog(prog, s);
-    if (s.IsVoid())
-        retval.SetIsVoid(true);
-    else
-        CopyASCIItoUTF16(s, retval);
-}
+    retval.SetIsVoid(true);
 
-void
-WebGLContext::GetProgramInfoLog(WebGLProgram* prog, nsACString& retval)
-{
     if (IsContextLost())
-    {
-        retval.SetIsVoid(true);
         return;
-    }
 
-    if (!ValidateObject("getProgramInfoLog: program", prog)) {
-        retval.Truncate();
+    if (!ValidateObject("getProgramInfoLog: program", prog))
         return;
-    }
 
-    GLuint progname = prog->GLName();
+    prog->GetProgramInfoLog(&retval);
 
-    MakeContextCurrent();
-
-    GLint k = -1;
-    gl->fGetProgramiv(progname, LOCAL_GL_INFO_LOG_LENGTH, &k);
-    if (k == -1) {
-        // If GetProgramiv doesn't modify |k|,
-        // it's because there was a GL error.
-        // GetProgramInfoLog should return null on error. (Bug 746740)
-        retval.SetIsVoid(true);
-        return;
-    }
-
-    if (k == 0) {
-        retval.Truncate();
-        return;
-    }
-
-    retval.SetCapacity(k);
-    gl->fGetProgramInfoLog(progname, k, &k, (char*) retval.BeginWriting());
-    retval.SetLength(k);
+    retval.SetIsVoid(false);
 }
 
 // here we have to support all pnames with both int and float params.
@@ -1847,140 +1644,22 @@ WebGLContext::GetTexParameterInternal(const TexTarget& target, GLenum pname)
 }
 
 JS::Value
-WebGLContext::GetUniform(JSContext* cx, WebGLProgram* prog,
-                         WebGLUniformLocation* location)
+WebGLContext::GetUniform(JSContext* js, WebGLProgram* prog,
+                         WebGLUniformLocation* loc)
 {
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateObject("getUniform: program", prog))
+    if (!ValidateObject("getUniform: `program`", prog))
         return JS::NullValue();
 
-    if (!ValidateObject("getUniform: location", location))
+    if (!ValidateObject("getUniform: `location`", loc))
         return JS::NullValue();
 
-    if (location->Program() != prog) {
-        ErrorInvalidValue("getUniform: this uniform location corresponds to another program");
+    if (!loc->ValidateForProgram(prog, this, "getUniform"))
         return JS::NullValue();
-    }
 
-    if (location->ProgramGeneration() != prog->Generation()) {
-        ErrorInvalidOperation("getUniform: this uniform location is obsolete since the program has been relinked");
-        return JS::NullValue();
-    }
-
-    GLuint progname = prog->GLName();
-
-    MakeContextCurrent();
-
-    GLint uniforms = 0;
-    GLint uniformNameMaxLength = 0;
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORMS, &uniforms);
-    gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniformNameMaxLength);
-
-    // we now need the type info to switch between fGetUniformfv and fGetUniformiv
-    // the only way to get that is to iterate through all active uniforms by index until
-    // one matches the given uniform location.
-    GLenum uniformType = 0;
-    nsAutoArrayPtr<GLchar> uniformName(new GLchar[uniformNameMaxLength]);
-    // this buffer has 16 more bytes to be able to store [index] at the end.
-    nsAutoArrayPtr<GLchar> uniformNameBracketIndex(new GLchar[uniformNameMaxLength + 16]);
-
-    GLint index;
-    for (index = 0; index < uniforms; ++index) {
-        GLsizei length;
-        GLint size;
-        gl->fGetActiveUniform(progname, index, uniformNameMaxLength, &length,
-                              &size, &uniformType, uniformName);
-        if (gl->fGetUniformLocation(progname, uniformName) == location->Location())
-            break;
-
-        // now we handle the case of array uniforms. In that case, fGetActiveUniform returned as 'size'
-        // the biggest index used plus one, so we need to loop over that. The 0 index has already been handled above,
-        // so we can start at one. For each index, we construct the string uniformName + "[" + index + "]".
-        if (size > 1) {
-            bool found_it = false;
-            if (uniformName[length - 1] == ']') { // if uniformName ends in [0]
-                // remove the [0] at the end
-                length -= 3;
-                uniformName[length] = 0;
-            }
-            for (GLint arrayIndex = 1; arrayIndex < size; arrayIndex++) {
-                sprintf(uniformNameBracketIndex.get(), "%s[%d]", uniformName.get(), arrayIndex);
-                if (gl->fGetUniformLocation(progname, uniformNameBracketIndex) == location->Location()) {
-                    found_it = true;
-                    break;
-                }
-            }
-            if (found_it) break;
-        }
-    }
-
-    if (index == uniforms) {
-        GenerateWarning("getUniform: internal error: hit an OpenGL driver bug");
-        return JS::NullValue();
-    }
-
-    GLenum baseType;
-    GLint unitSize;
-    if (!BaseTypeAndSizeFromUniformType(uniformType, &baseType, &unitSize)) {
-        GenerateWarning("getUniform: internal error: unknown uniform type 0x%x", uniformType);
-        return JS::NullValue();
-    }
-
-    // this should never happen
-    if (unitSize > 16) {
-        GenerateWarning("getUniform: internal error: unexpected uniform unit size %d", unitSize);
-        return JS::NullValue();
-    }
-
-    if (baseType == LOCAL_GL_FLOAT) {
-        GLfloat fv[16] = { GLfloat(0) };
-        gl->fGetUniformfv(progname, location->Location(), fv);
-        if (unitSize == 1) {
-            return JS::DoubleValue(fv[0]);
-        } else {
-            JSObject* obj = Float32Array::Create(cx, this, unitSize, fv);
-            if (!obj) {
-                ErrorOutOfMemory("getUniform: out of memory");
-                return JS::NullValue();
-            }
-            return JS::ObjectOrNullValue(obj);
-        }
-    } else if (baseType == LOCAL_GL_INT) {
-        GLint iv[16] = { 0 };
-        gl->fGetUniformiv(progname, location->Location(), iv);
-        if (unitSize == 1) {
-            return JS::Int32Value(iv[0]);
-        } else {
-            JSObject* obj = Int32Array::Create(cx, this, unitSize, iv);
-            if (!obj) {
-                ErrorOutOfMemory("getUniform: out of memory");
-                return JS::NullValue();
-            }
-            return JS::ObjectOrNullValue(obj);
-        }
-    } else if (baseType == LOCAL_GL_BOOL) {
-        GLint iv[16] = { 0 };
-        gl->fGetUniformiv(progname, location->Location(), iv);
-        if (unitSize == 1) {
-            return JS::BooleanValue(iv[0] ? true : false);
-        } else {
-            bool uv[16];
-            for (int k = 0; k < unitSize; k++)
-                uv[k] = iv[k];
-            JS::Rooted<JS::Value> val(cx);
-            // Be careful: we don't want to convert all of |uv|!
-            if (!ToJSValue(cx, uv, unitSize, &val)) {
-                ErrorOutOfMemory("getUniform: out of memory");
-                return JS::NullValue();
-            }
-            return val;
-        }
-    }
-
-    // Else preserving behavior, but I'm not sure this is correct per spec
-    return JS::UndefinedValue();
+    return loc->GetUniform(js, this);
 }
 
 already_AddRefed<WebGLUniformLocation>
@@ -1992,26 +1671,7 @@ WebGLContext::GetUniformLocation(WebGLProgram* prog, const nsAString& name)
     if (!ValidateObject("getUniformLocation: program", prog))
         return nullptr;
 
-    if (!ValidateGLSLVariableName(name, "getUniformLocation"))
-        return nullptr;
-
-    NS_LossyConvertUTF16toASCII cname(name);
-    nsCString mappedName;
-    prog->MapIdentifier(cname, &mappedName);
-
-    GLuint progname = prog->GLName();
-    MakeContextCurrent();
-    GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
-
-    nsRefPtr<WebGLUniformLocation> loc;
-    if (intlocation >= 0) {
-        WebGLUniformInfo info = prog->GetUniformInfoForMappedIdentifier(mappedName);
-        loc = new WebGLUniformLocation(this,
-                                       prog,
-                                       intlocation,
-                                       info);
-    }
-    return loc.forget();
+    return prog->GetUniformLocation(name);
 }
 
 void
@@ -2091,164 +1751,26 @@ WebGLContext::IsTexture(WebGLTexture* tex)
         tex->HasEverBeenBound();
 }
 
-// Try to bind an attribute that is an array to location 0:
-bool
-WebGLContext::BindArrayAttribToLocation0(WebGLProgram* program)
-{
-    if (mBoundVertexArray->IsAttribArrayEnabled(0)) {
-        return false;
-    }
-
-    GLint leastArrayLocation = -1;
-
-    std::map<GLint, nsCString>::iterator itr;
-    for (itr = program->mActiveAttribMap.begin();
-         itr != program->mActiveAttribMap.end();
-         itr++) {
-        int32_t index = itr->first;
-        if (mBoundVertexArray->IsAttribArrayEnabled(index) &&
-            index < leastArrayLocation)
-        {
-            leastArrayLocation = index;
-        }
-    }
-
-    if (leastArrayLocation > 0) {
-        nsCString& attrName = program->mActiveAttribMap.find(leastArrayLocation)->second;
-        const char* attrNameCStr = attrName.get();
-        gl->fBindAttribLocation(program->GLName(), 0, attrNameCStr);
-        return true;
-    }
-    return false;
-}
-
-static void
-LinkAndUpdateProgram(GLContext* gl, WebGLProgram* prog)
-{
-    GLuint name = prog->GLName();
-    gl->fLinkProgram(name);
-
-    prog->SetLinkStatus(false);
-
-    GLint ok = 0;
-    gl->fGetProgramiv(name, LOCAL_GL_LINK_STATUS, &ok);
-    if (!ok)
-        return;
-
-    if (!prog->UpdateInfo())
-        return;
-
-    prog->SetLinkStatus(true);
-}
-
 void
-WebGLContext::LinkProgram(WebGLProgram* program)
+WebGLContext::LinkProgram(WebGLProgram* prog)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("linkProgram", program))
+    if (!ValidateObject("linkProgram", prog))
         return;
 
-    InvalidateBufferFetching(); // we do it early in this function
-    // as some of the validation below changes program state
+    prog->LinkProgram();
 
-    if (!program->NextGeneration()) {
-        // XXX throw?
-        return;
-    }
+    if (prog->IsLinked()) {
+        mActiveProgramLinkInfo = prog->LinkInfo();
 
-    if (!program->HasBothShaderTypesAttached()) {
-        GenerateWarning("linkProgram: this program doesn't have both a vertex"
-                        " shader and a fragment shader");
-        program->SetLinkStatus(false);
-        return;
-    }
-
-    if (program->HasBadShaderAttached()) {
-        GenerateWarning("linkProgram: The program has bad shaders attached.");
-        program->SetLinkStatus(false);
-        return;
-    }
-
-    // bug 777028
-    // Mesa can't handle more than 16 samplers per program, counting each array entry.
-    if (gl->WorkAroundDriverBugs() &&
-        mIsMesa &&
-        program->UpperBoundNumSamplerUniforms() > 16)
-    {
-        GenerateWarning("Programs with more than 16 samplers are disallowed on"
-                        " Mesa drivers to avoid a Mesa crasher.");
-        program->SetLinkStatus(false);
-        return;
-    }
-
-    MakeContextCurrent();
-    LinkAndUpdateProgram(gl, program);
-
-    if (program->LinkStatus()) {
-        if (BindArrayAttribToLocation0(program)) {
-            GenerateWarning("linkProgram: Relinking program to make attrib0 an"
-                            " array.");
-            LinkAndUpdateProgram(gl, program);
+        if (gl->WorkAroundDriverBugs() &&
+            gl->Vendor() == gl::GLVendor::NVIDIA)
+        {
+            if (mCurrentProgram == prog)
+                gl->fUseProgram(prog->mGLName);
         }
-    }
-
-    if (!program->LinkStatus()) {
-        if (ShouldGenerateWarnings()) {
-            // report shader/program infoLogs as warnings.
-            // note that shader compilation errors can be deferred to linkProgram,
-            // which is why we can't do anything in compileShader. In practice we could
-            // report in compileShader the translation errors generated by ANGLE,
-            // but it seems saner to keep a single way of obtaining shader infologs.
-
-            nsAutoCString log;
-
-            bool alreadyReportedShaderInfoLog = false;
-
-            for (size_t i = 0; i < program->AttachedShaders().Length(); i++) {
-
-                WebGLShader* shader = program->AttachedShaders()[i];
-
-                if (shader->CompileStatus())
-                    continue;
-
-                const char* shaderTypeName = nullptr;
-                if (shader->ShaderType() == LOCAL_GL_VERTEX_SHADER) {
-                    shaderTypeName = "vertex";
-                } else if (shader->ShaderType() == LOCAL_GL_FRAGMENT_SHADER) {
-                    shaderTypeName = "fragment";
-                } else {
-                    // should have been validated earlier
-                    MOZ_ASSERT(false);
-                    shaderTypeName = "<unknown>";
-                }
-
-                GetShaderInfoLog(shader, log);
-
-                GenerateWarning("linkProgram: a %s shader used in this program failed to "
-                                "compile, with this log:\n%s\n",
-                                shaderTypeName,
-                                log.get());
-                alreadyReportedShaderInfoLog = true;
-            }
-
-            if (!alreadyReportedShaderInfoLog) {
-                GetProgramInfoLog(program, log);
-                if (!log.IsEmpty()) {
-                    GenerateWarning("linkProgram failed, with this log:\n%s\n",
-                                    log.get());
-                }
-            }
-        }
-        return;
-    }
-
-    if (gl->WorkAroundDriverBugs() &&
-        gl->Vendor() == gl::GLVendor::NVIDIA)
-    {
-        if (program == mCurrentProgram)
-            gl->fUseProgram(program->GLName());
     }
 }
 
@@ -2888,7 +2410,7 @@ WebGLContext::Uniform1i(WebGLUniformLocation* loc, GLint a1)
         return;
 
     // Only uniform1i can take sampler settings.
-    if (!ValidateSamplerUniformSetter("Uniform1i", loc, a1))
+    if (!loc->ValidateSamplerSetter(a1, this, "uniform1i"))
         return;
 
     MakeContextCurrent();
@@ -2991,7 +2513,7 @@ WebGLContext::Uniform1iv_base(WebGLUniformLocation* loc, size_t arrayLength,
         return;
     }
 
-    if (!ValidateSamplerUniformSetter("uniform1iv", loc, data[0]))
+    if (!loc->ValidateSamplerSetter(data[0], this, "uniform1iv"))
         return;
 
     MakeContextCurrent();
@@ -3011,8 +2533,8 @@ WebGLContext::Uniform2iv_base(WebGLUniformLocation* loc, size_t arrayLength,
         return;
     }
 
-    if (!ValidateSamplerUniformSetter("uniform2iv", loc, data[0]) ||
-        !ValidateSamplerUniformSetter("uniform2iv", loc, data[1]))
+    if (!loc->ValidateSamplerSetter(data[0], this, "uniform2iv") ||
+        !loc->ValidateSamplerSetter(data[1], this, "uniform2iv"))
     {
         return;
     }
@@ -3034,9 +2556,9 @@ WebGLContext::Uniform3iv_base(WebGLUniformLocation* loc, size_t arrayLength,
         return;
     }
 
-    if (!ValidateSamplerUniformSetter("uniform3iv", loc, data[0]) ||
-        !ValidateSamplerUniformSetter("uniform3iv", loc, data[1]) ||
-        !ValidateSamplerUniformSetter("uniform3iv", loc, data[2]))
+    if (!loc->ValidateSamplerSetter(data[0], this, "uniform3iv") ||
+        !loc->ValidateSamplerSetter(data[1], this, "uniform3iv") ||
+        !loc->ValidateSamplerSetter(data[2], this, "uniform3iv"))
     {
         return;
     }
@@ -3058,10 +2580,10 @@ WebGLContext::Uniform4iv_base(WebGLUniformLocation* loc, size_t arrayLength,
         return;
     }
 
-    if (!ValidateSamplerUniformSetter("uniform4iv", loc, data[0]) ||
-        !ValidateSamplerUniformSetter("uniform4iv", loc, data[1]) ||
-        !ValidateSamplerUniformSetter("uniform4iv", loc, data[2]) ||
-        !ValidateSamplerUniformSetter("uniform4iv", loc, data[3]))
+    if (!loc->ValidateSamplerSetter(data[0], this, "uniform4iv") ||
+        !loc->ValidateSamplerSetter(data[1], this, "uniform4iv") ||
+        !loc->ValidateSamplerSetter(data[2], this, "uniform4iv") ||
+        !loc->ValidateSamplerSetter(data[3], this, "uniform4iv"))
     {
         return;
     }
@@ -3200,21 +2722,19 @@ WebGLContext::UseProgram(WebGLProgram* prog)
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowNull("useProgram", prog))
+    if (!prog) {
+        mCurrentProgram = nullptr;
+        mActiveProgramLinkInfo = nullptr;
+        return;
+    }
+
+    if (!ValidateObject("useProgram", prog))
         return;
 
-    MakeContextCurrent();
-
-    InvalidateBufferFetching();
-
-    GLuint progname = prog ? prog->GLName() : 0;
-
-    if (prog && !prog->LinkStatus())
-        return ErrorInvalidOperation("useProgram: program was not linked successfully");
-
-    gl->fUseProgram(progname);
-
-    mCurrentProgram = prog;
+    if (prog->UseProgram()) {
+        mCurrentProgram = prog;
+        mActiveProgramLinkInfo = mCurrentProgram->LinkInfo();
+    }
 }
 
 void
@@ -3226,18 +2746,7 @@ WebGLContext::ValidateProgram(WebGLProgram* prog)
     if (!ValidateObject("validateProgram", prog))
         return;
 
-    MakeContextCurrent();
-
-#ifdef XP_MACOSX
-    // see bug 593867 for NVIDIA and bug 657201 for ATI. The latter is confirmed with Mac OS 10.6.7
-    if (gl->WorkAroundDriverBugs()) {
-        GenerateWarning("validateProgram: implemented as a no-operation on Mac to work around crashes");
-        return;
-    }
-#endif
-
-    GLuint progname = prog->GLName();
-    gl->fValidateProgram(progname);
+    prog->ValidateProgram();
 }
 
 already_AddRefed<WebGLFramebuffer>
@@ -3290,305 +2799,7 @@ WebGLContext::CompileShader(WebGLShader* shader)
     if (!ValidateObject("compileShader", shader))
         return;
 
-    GLuint shadername = shader->GLName();
-
-    shader->SetCompileStatus(false);
-
-    // nothing to do if the validator is disabled
-    if (!mShaderValidation)
-        return;
-
-    // nothing to do if translation was already done
-    if (!shader->NeedsTranslation())
-        return;
-
-    MakeContextCurrent();
-
-    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
-
-    ShHandle compiler = 0;
-    ShBuiltInResources resources;
-
-    memset(&resources, 0, sizeof(ShBuiltInResources));
-
-    ShInitBuiltInResources(&resources);
-
-    resources.MaxVertexAttribs = mGLMaxVertexAttribs;
-    resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
-    resources.MaxVaryingVectors = mGLMaxVaryingVectors;
-    resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
-    resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
-    resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
-    resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
-    resources.MaxDrawBuffers = mGLMaxDrawBuffers;
-
-    if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
-        resources.EXT_frag_depth = 1;
-
-    if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
-        resources.OES_standard_derivatives = 1;
-
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-        resources.EXT_draw_buffers = 1;
-
-    if (IsExtensionEnabled(WebGLExtensionID::EXT_shader_texture_lod))
-        resources.EXT_shader_texture_lod = 1;
-
-    // Tell ANGLE to allow highp in frag shaders. (unless disabled)
-    // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
-    resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;
-
-    resources.HashFunction = WebGLProgram::IdentifierHashFunction;
-
-    if (gl->WorkAroundDriverBugs()) {
-#ifdef XP_MACOSX
-        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
-            // Work around bug 890432
-            resources.MaxExpressionComplexity = 1000;
-        }
-#endif
-    }
-
-    // We're storing an actual instance of StripComments because, if we don't, the
-    // cleanSource nsAString instance will be destroyed before the reference is
-    // actually used.
-    StripComments stripComments(shader->Source());
-    const nsAString& cleanSource = Substring(stripComments.result().Elements(), stripComments.length());
-    if (!ValidateGLSLString(cleanSource, "compileShader"))
-        return;
-
-    // shaderSource() already checks that the source stripped of comments is in the
-    // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
-    NS_LossyConvertUTF16toASCII sourceCString(cleanSource);
-
-    if (gl->WorkAroundDriverBugs()) {
-        const uint32_t maxSourceLength = 0x3ffff;
-        if (sourceCString.Length() > maxSourceLength)
-            return ErrorInvalidValue("compileShader: source has more than %d characters",
-                                     maxSourceLength);
-    }
-
-    const char* s = sourceCString.get();
-
-#define WEBGL2_BYPASS_ANGLE
-#ifdef WEBGL2_BYPASS_ANGLE
-    /*
-     * The bypass don't bring a full support for GLSL ES 3.0, but the main purpose
-     * is to natively bring gl_InstanceID (to do instanced rendering) and gl_FragData
-     *
-     * To remove the bypass code, just comment #define WEBGL2_BYPASS_ANGLE above
-     *
-     * To bypass angle, the context must be a WebGL 2 and the shader must have the
-     * following line at the very top :
-     *      #version proto-200
-     *
-     * In this case, byPassANGLE == true and here is what we do :
-     *  We create two shader source code:
-     *    - one for the driver, that enable GL_EXT_gpu_shader4
-     *    - one for the angle compilor, to get informations about vertex attributes
-     *      and uniforms
-     */
-    static const char* bypassPrefixSearch = "#version proto-200";
-    static const char* bypassANGLEPrefix[2] = {"precision mediump float;\n"
-                                               "#define gl_VertexID 0\n"
-                                               "#define gl_InstanceID 0\n",
-
-                                               "precision mediump float;\n"
-                                               "#extension GL_EXT_draw_buffers : enable\n"
-                                               "#define gl_PrimitiveID 0\n"};
-
-    const bool bypassANGLE = IsWebGL2() && (strstr(s, bypassPrefixSearch) != 0);
-
-    const char* angleShaderCode = s;
-    nsTArray<char> bypassANGLEShaderCode;
-    nsTArray<char> bypassDriverShaderCode;
-
-    if (bypassANGLE) {
-        const int bypassStage = (shader->ShaderType() == LOCAL_GL_FRAGMENT_SHADER) ? 1 : 0;
-        const char* originalShader = strstr(s, bypassPrefixSearch) + strlen(bypassPrefixSearch);
-        int originalShaderSize = strlen(s) - (originalShader - s);
-        int bypassShaderCodeSize = originalShaderSize + 4096 + 1;
-
-        bypassANGLEShaderCode.SetLength(bypassShaderCodeSize);
-        strcpy(bypassANGLEShaderCode.Elements(), bypassANGLEPrefix[bypassStage]);
-        strcat(bypassANGLEShaderCode.Elements(), originalShader);
-
-        bypassDriverShaderCode.SetLength(bypassShaderCodeSize);
-        strcpy(bypassDriverShaderCode.Elements(), "#extension GL_EXT_gpu_shader4 : enable\n");
-        strcat(bypassDriverShaderCode.Elements(), originalShader);
-
-        angleShaderCode = bypassANGLEShaderCode.Elements();
-    }
-#endif
-
-    compiler = ShConstructCompiler(shader->ShaderType(),
-                                   SH_WEBGL_SPEC,
-                                   targetShaderSourceLanguage,
-                                   &resources);
-
-    int compileOptions = SH_VARIABLES |
-                         SH_ENFORCE_PACKING_RESTRICTIONS |
-                         SH_INIT_VARYINGS_WITHOUT_STATIC_USE |
-                         SH_OBJECT_CODE |
-                         SH_LIMIT_CALL_STACK_DEPTH;
-
-    if (resources.MaxExpressionComplexity > 0) {
-        compileOptions |= SH_LIMIT_EXPRESSION_COMPLEXITY;
-    }
-
-#ifndef XP_MACOSX
-    // We want to do this everywhere, but to do this on Mac, we need
-    // to do it only on Mac OSX > 10.6 as this causes the shader
-    // compiler in 10.6 to crash
-    compileOptions |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
-#endif
-
-#ifdef XP_MACOSX
-    if (gl->WorkAroundDriverBugs()) {
-        // Work around bug 665578 and bug 769810
-        if (gl->Vendor() == gl::GLVendor::ATI) {
-            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
-        // Work around bug 735560
-        if (gl->Vendor() == gl::GLVendor::Intel) {
-            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
-        }
-
-        // Work around bug 636926
-        if (gl->Vendor() == gl::GLVendor::NVIDIA) {
-            compileOptions |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
-        }
-
-        // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
-        // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
-        compileOptions |= SH_UNFOLD_SHORT_CIRCUIT;
-    }
-#endif
-
-#ifdef WEBGL2_BYPASS_ANGLE
-    if (!ShCompile(compiler, &angleShaderCode, 1, compileOptions)) {
-#else
-    if (!ShCompile(compiler, &s, 1, compileOptions)) {
-#endif
-        size_t lenWithNull = 0;
-        ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &lenWithNull);
-
-        if (!lenWithNull) {
-            // Error in ShGetInfo.
-            shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
-        } else {
-            size_t len = lenWithNull - 1;
-
-            nsAutoCString info;
-            if (len) {
-                // Don't allocate or try to write to zero length string
-                info.SetLength(len); // Allocates len+1, for the null-term.
-                ShGetInfoLog(compiler, info.BeginWriting());
-            }
-            shader->SetTranslationFailure(info);
-        }
-        ShDestruct(compiler);
-        shader->SetCompileStatus(false);
-        return;
-    }
-
-    size_t num_attributes = 0;
-    ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTES, &num_attributes);
-    size_t num_uniforms = 0;
-    ShGetInfo(compiler, SH_ACTIVE_UNIFORMS, &num_uniforms);
-    size_t attrib_max_length = 0;
-    ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max_length);
-    size_t uniform_max_length = 0;
-    ShGetInfo(compiler, SH_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_length);
-    size_t mapped_max_length = 0;
-    ShGetInfo(compiler, SH_MAPPED_NAME_MAX_LENGTH, &mapped_max_length);
-
-    shader->mAttribMaxNameLength = attrib_max_length;
-
-    shader->mAttributes.Clear();
-    shader->mUniforms.Clear();
-    shader->mUniformInfos.Clear();
-
-    nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
-    nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
-    nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
-
-    for (size_t i = 0; i < num_uniforms; i++) {
-        size_t length;
-        int size;
-        sh::GLenum type;
-        ShPrecisionType precision;
-        int staticUse;
-        ShGetVariableInfo(compiler, SH_ACTIVE_UNIFORMS, (int)i,
-                          &length, &size, &type,
-                          &precision, &staticUse,
-                          uniform_name,
-                          mapped_name);
-
-        shader->mUniforms.AppendElement(WebGLMappedIdentifier(
-                                            nsDependentCString(uniform_name),
-                                            nsDependentCString(mapped_name)));
-
-        // we need uniform info to validate uniform setter calls
-        char mappedNameLength = strlen(mapped_name);
-        char mappedNameLastChar = mappedNameLength > 1
-                                  ? mapped_name[mappedNameLength - 1]
-                                  : 0;
-        shader->mUniformInfos.AppendElement(WebGLUniformInfo(
-                                                size,
-                                                mappedNameLastChar == ']',
-                                                type));
-    }
-
-    for (size_t i = 0; i < num_attributes; i++) {
-        size_t length;
-        int size;
-        sh::GLenum type;
-        ShPrecisionType precision;
-        int staticUse;
-        ShGetVariableInfo(compiler, SH_ACTIVE_ATTRIBUTES, (int)i,
-                          &length, &size, &type,
-                          &precision, &staticUse,
-                          attribute_name,
-                          mapped_name);
-        shader->mAttributes.AppendElement(WebGLMappedIdentifier(
-                                              nsDependentCString(attribute_name),
-                                              nsDependentCString(mapped_name)));
-    }
-
-    size_t lenWithNull = 0;
-    ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &lenWithNull);
-    MOZ_ASSERT(lenWithNull >= 1);
-    size_t len = lenWithNull - 1;
-
-    nsAutoCString translatedSrc;
-    translatedSrc.SetLength(len); // Allocates len+1, for the null-term.
-    ShGetObjectCode(compiler, translatedSrc.BeginWriting());
-
-    CopyASCIItoUTF16(translatedSrc, shader->mTranslatedSource);
-
-    const char* ts = translatedSrc.get();
-
-#ifdef WEBGL2_BYPASS_ANGLE
-    if (bypassANGLE) {
-        const char* driverShaderCode = bypassDriverShaderCode.Elements();
-        gl->fShaderSource(shadername, 1, (const GLchar**) &driverShaderCode, nullptr);
-    } else {
-        gl->fShaderSource(shadername, 1, &ts, nullptr);
-    }
-#else
-    gl->fShaderSource(shadername, 1, &ts, nullptr);
-#endif
-
-    shader->SetTranslationSuccess();
-
-    ShDestruct(compiler);
-
-    gl->fCompileShader(shadername);
-    GLint ok;
-    gl->fGetShaderiv(shadername, LOCAL_GL_COMPILE_STATUS, &ok);
-    shader->SetCompileStatus(ok);
+    shader->CompileShader();
 }
 
 void
@@ -3720,81 +2931,23 @@ WebGLContext::GetShaderParameter(WebGLShader* shader, GLenum pname)
     if (!ValidateObject("getShaderParameter: shader", shader))
         return JS::NullValue();
 
-    GLuint shadername = shader->GLName();
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_SHADER_TYPE:
-        {
-            GLint i = 0;
-            gl->fGetShaderiv(shadername, pname, &i);
-            return JS::NumberValue(uint32_t(i));
-        }
-            break;
-        case LOCAL_GL_DELETE_STATUS:
-            return JS::BooleanValue(shader->IsDeleteRequested());
-            break;
-        case LOCAL_GL_COMPILE_STATUS:
-        {
-            GLint i = 0;
-            gl->fGetShaderiv(shadername, pname, &i);
-            return JS::BooleanValue(bool(i));
-        }
-            break;
-        default:
-            ErrorInvalidEnumInfo("getShaderParameter: parameter", pname);
-    }
-
-    return JS::NullValue();
+    return shader->GetShaderParameter(pname);
 }
 
 void
 WebGLContext::GetShaderInfoLog(WebGLShader* shader, nsAString& retval)
 {
-    nsAutoCString s;
-    GetShaderInfoLog(shader, s);
-    if (s.IsVoid())
-        retval.SetIsVoid(true);
-    else
-        CopyASCIItoUTF16(s, retval);
-}
+    retval.SetIsVoid(true);
 
-void
-WebGLContext::GetShaderInfoLog(WebGLShader* shader, nsACString& retval)
-{
     if (IsContextLost())
-    {
-        retval.SetIsVoid(true);
         return;
-    }
 
     if (!ValidateObject("getShaderInfoLog: shader", shader))
         return;
 
-    retval = shader->TranslationLog();
-    if (!retval.IsVoid()) {
-        return;
-    }
+    shader->GetShaderInfoLog(&retval);
 
-    MakeContextCurrent();
-
-    GLuint shadername = shader->GLName();
-    GLint k = -1;
-    gl->fGetShaderiv(shadername, LOCAL_GL_INFO_LOG_LENGTH, &k);
-    if (k == -1) {
-        // XXX GL Error? should never happen.
-        return;
-    }
-
-    if (k == 0) {
-        retval.Truncate();
-        return;
-    }
-
-    retval.SetCapacity(k);
-    gl->fGetShaderInfoLog(shadername, k, &k, (char*) retval.BeginWriting());
-    retval.SetLength(k);
+    retval.SetIsVoid(false);
 }
 
 already_AddRefed<WebGLShaderPrecisionFormat>
@@ -3848,15 +3001,15 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
 void
 WebGLContext::GetShaderSource(WebGLShader* shader, nsAString& retval)
 {
-    if (IsContextLost()) {
-        retval.SetIsVoid(true);
+    retval.SetIsVoid(true);
+
+    if (IsContextLost())
         return;
-    }
 
     if (!ValidateObject("getShaderSource: shader", shader))
         return;
 
-    retval.Assign(shader->Source());
+    shader->GetShaderSource(&retval);
 }
 
 void
@@ -3868,31 +3021,21 @@ WebGLContext::ShaderSource(WebGLShader* shader, const nsAString& source)
     if (!ValidateObject("shaderSource: shader", shader))
         return;
 
-    // We're storing an actual instance of StripComments because, if we don't, the
-    // cleanSource nsAString instance will be destroyed before the reference is
-    // actually used.
-    StripComments stripComments(source);
-    const nsAString& cleanSource = Substring(stripComments.result().Elements(), stripComments.length());
-    if (!ValidateGLSLString(cleanSource, "compileShader"))
-        return;
-
-    shader->SetSource(source);
-
-    shader->SetNeedsTranslation();
+    shader->ShaderSource(source);
 }
 
 void
 WebGLContext::GetShaderTranslatedSource(WebGLShader* shader, nsAString& retval)
 {
-    if (IsContextLost()) {
-        retval.SetIsVoid(true);
+    retval.SetIsVoid(true);
+
+    if (IsContextLost())
         return;
-    }
 
     if (!ValidateObject("getShaderTranslatedSource: shader", shader))
         return;
 
-    retval.Assign(shader->TranslatedSource());
+    shader->GetShaderTranslatedSource(&retval);
 }
 
 GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
@@ -4369,77 +3512,6 @@ WebGLContext::RestoreContext()
 
     ForceRestoreContext();
 }
-
-bool
-BaseTypeAndSizeFromUniformType(GLenum uType, GLenum* baseType, GLint* unitSize)
-{
-    switch (uType) {
-        case LOCAL_GL_INT:
-        case LOCAL_GL_INT_VEC2:
-        case LOCAL_GL_INT_VEC3:
-        case LOCAL_GL_INT_VEC4:
-        case LOCAL_GL_SAMPLER_2D:
-        case LOCAL_GL_SAMPLER_CUBE:
-            *baseType = LOCAL_GL_INT;
-            break;
-        case LOCAL_GL_FLOAT:
-        case LOCAL_GL_FLOAT_VEC2:
-        case LOCAL_GL_FLOAT_VEC3:
-        case LOCAL_GL_FLOAT_VEC4:
-        case LOCAL_GL_FLOAT_MAT2:
-        case LOCAL_GL_FLOAT_MAT3:
-        case LOCAL_GL_FLOAT_MAT4:
-            *baseType = LOCAL_GL_FLOAT;
-            break;
-        case LOCAL_GL_BOOL:
-        case LOCAL_GL_BOOL_VEC2:
-        case LOCAL_GL_BOOL_VEC3:
-        case LOCAL_GL_BOOL_VEC4:
-            *baseType = LOCAL_GL_BOOL; // pretend these are int
-            break;
-        default:
-            return false;
-    }
-
-    switch (uType) {
-        case LOCAL_GL_INT:
-        case LOCAL_GL_FLOAT:
-        case LOCAL_GL_BOOL:
-        case LOCAL_GL_SAMPLER_2D:
-        case LOCAL_GL_SAMPLER_CUBE:
-            *unitSize = 1;
-            break;
-        case LOCAL_GL_INT_VEC2:
-        case LOCAL_GL_FLOAT_VEC2:
-        case LOCAL_GL_BOOL_VEC2:
-            *unitSize = 2;
-            break;
-        case LOCAL_GL_INT_VEC3:
-        case LOCAL_GL_FLOAT_VEC3:
-        case LOCAL_GL_BOOL_VEC3:
-            *unitSize = 3;
-            break;
-        case LOCAL_GL_INT_VEC4:
-        case LOCAL_GL_FLOAT_VEC4:
-        case LOCAL_GL_BOOL_VEC4:
-            *unitSize = 4;
-            break;
-        case LOCAL_GL_FLOAT_MAT2:
-            *unitSize = 4;
-            break;
-        case LOCAL_GL_FLOAT_MAT3:
-            *unitSize = 9;
-            break;
-        case LOCAL_GL_FLOAT_MAT4:
-            *unitSize = 16;
-            break;
-        default:
-            return false;
-    }
-
-    return true;
-}
-
 
 WebGLTexelFormat
 mozilla::GetWebGLTexelFormat(TexInternalFormat effectiveInternalFormat)
