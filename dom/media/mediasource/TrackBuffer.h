@@ -61,6 +61,8 @@ public:
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
   // reset mLast{Start,End}Timestamp.
   void DiscardDecoder();
+  // Mark the current decoder's resource as ended.
+  void EndCurrentDecoder();
 
   void Detach();
 
