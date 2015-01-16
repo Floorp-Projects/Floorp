@@ -22,6 +22,7 @@ BEGIN_TEST(testGCOutOfMemory)
 
     JS::RootedValue root(cx);
 
+    // Count the number of allocations until we hit OOM, and store it in 'max'.
     static const char source[] =
         "var max = 0; (function() {"
         "    var array = [];"
@@ -38,9 +39,8 @@ BEGIN_TEST(testGCOutOfMemory)
     CHECK_EQUAL(errorCount, 1u);
     JS_GC(rt);
 
-    // Temporarily disabled to reopen the tree. Bug 847579.
-    return true;
-
+    // The above GC should have discarded everything. Verify that we can now
+    // allocate half as many objects without OOMing.
     EVAL("(function() {"
          "    var array = [];"
          "    for (var i = max >> 2; i != 0;) {"
@@ -53,7 +53,14 @@ BEGIN_TEST(testGCOutOfMemory)
 }
 
 virtual JSRuntime * createRuntime() MOZ_OVERRIDE {
-    JSRuntime *rt = JS_NewRuntime(768 * 1024);
+    // Note that the max nursery size must be less than the whole heap size, or
+    // the test will fail because 'max' (the number of allocations required for
+    // OOM) will be based on the nursery size, and that will overflow the
+    // tenured heap, which will cause the second pass with max/4 allocations to
+    // OOM. (Actually, this only happens with nursery zeal, because normally
+    // the nursery will start out with only a single chunk before triggering a
+    // major GC.)
+    JSRuntime *rt = JS_NewRuntime(768 * 1024, 128 * 1024);
     if (!rt)
         return nullptr;
     setNativeStackQuota(rt);
