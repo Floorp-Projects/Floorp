@@ -3,8 +3,8 @@
 <head>
   <title>getUserMedia() triggers error callback when auth is denied</title>
 <link rel="author" title="Dominique Hazael-Massieux" href="mailto:dom@w3.org"/>
-<link rel="help" href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#widl-NavigatorUserMedia-getUserMedia-void-MediaStreamConstraints-constraints-NavigatorUserMediaSuccessCallback-successCallback-NavigatorUserMediaErrorCallback-errorCallback">
-<link rel="help" href="http://dev.w3.org/2011/webrtc/editor/getusermedia.html#idl-def-NavigatorUserMediaError">
+<link rel="help" href="http://w3c.github.io/mediacapture-main/getusermedia.html#error-names">
+<link rel="help" href="http://w3c.github.io/mediacapture-main/getusermedia.html#idl-def-MediaStreamError">
 <link rel='stylesheet' href='/resources/testharness.css' media='all'/>
 </head>
 <body>
@@ -26,7 +26,7 @@ t.step(function() {
     t.done();
   }),
   t.step_func(function (error) {
-    assert_equals(error.name, "PermissionDenied", "Permission denied error returned"); // see https://www.w3.org/Bugs/Public/show_bug.cgi?id=22216
+    assert_equals(error.name, "PermissionDeniedError", "Permission denied error returned");
     assert_equals(error.constraintName, null, "constraintName attribute not set for permission denied");
     t.done();
   }));

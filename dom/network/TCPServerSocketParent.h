@@ -32,6 +32,7 @@ public:
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
 
   uint32_t GetAppId();
+  bool GetInBrowser();
 
   void AddIPDLReference();
   void ReleaseIPDLReference();

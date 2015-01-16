@@ -66,16 +66,16 @@ fun_enumerate(JSContext *cx, HandleObject obj)
 
     if (!obj->isBoundFunction() && !obj->as<JSFunction>().isArrow()) {
         id = NameToId(cx->names().prototype);
-        if (!JSObject::hasProperty(cx, obj, id, &found))
+        if (!HasProperty(cx, obj, id, &found))
             return false;
     }
 
     id = NameToId(cx->names().length);
-    if (!JSObject::hasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, id, &found))
         return false;
 
     id = NameToId(cx->names().name);
-    if (!JSObject::hasProperty(cx, obj, id, &found))
+    if (!HasProperty(cx, obj, id, &found))
         return false;
 
     return true;
@@ -419,8 +419,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // Per ES5 15.3.5.2 a user-defined function's .prototype property is
     // initially non-configurable, non-enumerable, and writable.
     RootedValue protoVal(cx, ObjectValue(*proto));
-    if (!JSObject::defineProperty(cx, obj, cx->names().prototype, protoVal, nullptr, nullptr,
-                                  JSPROP_PERMANENT))
+    if (!DefineProperty(cx, obj, cx->names().prototype, protoVal, nullptr, nullptr,
+                        JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -431,11 +431,8 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // back with a .constructor.
     if (!isStarGenerator) {
         RootedValue objVal(cx, ObjectValue(*obj));
-        if (!JSObject::defineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr,
-                                      0))
-        {
+        if (!DefineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr, 0))
             return nullptr;
-        }
     }
 
     return proto;
@@ -514,7 +511,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         }
 
-        if (!DefineNativeProperty(cx, fun, id, v, nullptr, nullptr, attrs))
+        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, attrs))
             return false;
 
         if (isLength)
@@ -709,7 +706,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, bool *
         obj = obj->as<JSFunction>().getBoundFunctionTarget();
 
     RootedValue pval(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().prototype, &pval))
+    if (!GetProperty(cx, obj, obj, cx->names().prototype, &pval))
         return false;
 
     if (pval.isPrimitive()) {
@@ -894,7 +891,7 @@ CreateFunctionPrototype(JSContext *cx, JSProtoKey key)
     bool succeeded;
     RootedFunction throwTypeError(cx, NewFunction(cx, tte, ThrowTypeError, 0,
                                                   JSFunction::NATIVE_FUN, self, js::NullPtr()));
-    if (!throwTypeError || !JSObject::preventExtensions(cx, throwTypeError, &succeeded))
+    if (!throwTypeError || !PreventExtensions(cx, throwTypeError, &succeeded))
         return nullptr;
     if (!succeeded) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
@@ -2167,7 +2164,7 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         return nullptr;
 
     RootedValue funVal(cx, ObjectValue(*fun));
-    if (!JSObject::defineGeneric(cx, obj, id, funVal, gop, sop, flags & ~JSFUN_FLAGS_MASK))
+    if (!DefineProperty(cx, obj, id, funVal, gop, sop, flags & ~JSFUN_FLAGS_MASK))
         return nullptr;
 
     return fun;

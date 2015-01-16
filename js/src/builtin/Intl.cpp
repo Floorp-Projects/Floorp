@@ -457,8 +457,8 @@ intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
         RootedAtom a(cx, Atomize(cx, lang, strlen(lang)));
         if (!a)
             return false;
-        if (!JSObject::defineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
-                                      JSPROP_ENUMERATE))
+        if (!DefineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
+                            JSPROP_ENUMERATE))
         {
             return false;
         }
@@ -615,7 +615,7 @@ Collator(JSContext *cx, CallArgs args, bool construct)
 
             // 10.1.2.1 step 5
             bool extensible;
-            if (!JSObject::isExtensible(cx, obj, &extensible))
+            if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
@@ -703,9 +703,9 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -720,7 +720,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
         return nullptr;
 
     return ctor;
@@ -808,7 +808,7 @@ js::intl_availableCollations(JSContext *cx, unsigned argc, Value *vp)
         if (!jscollation)
             return false;
         RootedValue element(cx, StringValue(jscollation));
-        if (!JSObject::defineElement(cx, collations, index++, element))
+        if (!DefineElement(cx, collations, index++, element))
             return false;
     }
 
@@ -829,7 +829,7 @@ NewUCollator(JSContext *cx, HandleObject collator)
     if (!GetInternals(cx, collator, &internals))
         return nullptr;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().locale, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
     JSAutoByteString locale(cx, value.toString());
     if (!locale)
@@ -844,7 +844,7 @@ NewUCollator(JSContext *cx, HandleObject collator)
     UColAttributeValue uNormalization = UCOL_ON;
     UColAttributeValue uCaseFirst = UCOL_DEFAULT;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().usage, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().usage, &value))
         return nullptr;
     JSAutoByteString usage(cx, value.toString());
     if (!usage)
@@ -883,7 +883,7 @@ NewUCollator(JSContext *cx, HandleObject collator)
     // via the Unicode locale extension and is therefore already set on
     // locale.
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().sensitivity, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().sensitivity, &value))
         return nullptr;
     JSAutoByteString sensitivity(cx, value.toString());
     if (!sensitivity)
@@ -900,7 +900,7 @@ NewUCollator(JSContext *cx, HandleObject collator)
         uStrength = UCOL_TERTIARY;
     }
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().ignorePunctuation, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().ignorePunctuation, &value))
         return nullptr;
     // According to the ICU team, UCOL_SHIFTED causes punctuation to be
     // ignored. Looking at Unicode Technical Report 35, Unicode Locale Data
@@ -910,12 +910,12 @@ NewUCollator(JSContext *cx, HandleObject collator)
     if (value.toBoolean())
         uAlternate = UCOL_SHIFTED;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().numeric, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().numeric, &value))
         return nullptr;
     if (!value.isUndefined() && value.toBoolean())
         uNumeric = UCOL_ON;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().caseFirst, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().caseFirst, &value))
         return nullptr;
     if (!value.isUndefined()) {
         JSAutoByteString caseFirst(cx, value.toString());
@@ -1101,7 +1101,7 @@ NumberFormat(JSContext *cx, CallArgs args, bool construct)
 
             // 11.1.2.1 step 5
             bool extensible;
-            if (!JSObject::isExtensible(cx, obj, &extensible))
+            if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
@@ -1191,9 +1191,9 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -1208,11 +1208,8 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr,
-                                  0))
-    {
+    if (!DefineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return ctor;
 }
@@ -1283,7 +1280,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
     if (!GetInternals(cx, numberFormat, &internals))
        return nullptr;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().locale, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
     JSAutoByteString locale(cx, value.toString());
     if (!locale)
@@ -1306,14 +1303,14 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
     // We don't need to look at numberingSystem - it can only be set via
     // the Unicode locale extension and is therefore already set on locale.
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().style, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().style, &value))
         return nullptr;
     JSAutoByteString style(cx, value.toString());
     if (!style)
         return nullptr;
 
     if (equal(style, "currency")) {
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().currency, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().currency, &value))
             return nullptr;
         currency = value.toString();
         MOZ_ASSERT(currency->length() == 3, "IsWellFormedCurrencyCode permits only length-3 strings");
@@ -1324,7 +1321,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
         if (!uCurrency)
             return nullptr;
 
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
             return nullptr;
         JSAutoByteString currencyDisplay(cx, value.toString());
         if (!currencyDisplay)
@@ -1346,43 +1343,43 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
 
     RootedId id(cx, NameToId(cx->names().minimumSignificantDigits));
     bool hasP;
-    if (!JSObject::hasProperty(cx, internals, id, &hasP))
+    if (!HasProperty(cx, internals, id, &hasP))
         return nullptr;
     if (hasP) {
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().minimumSignificantDigits,
-                                   &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits,
+                         &value))
         {
             return nullptr;
         }
         uMinimumSignificantDigits = int32_t(value.toNumber());
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().maximumSignificantDigits,
-                                   &value))
+        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits,
+                         &value))
         {
             return nullptr;
         }
         uMaximumSignificantDigits = int32_t(value.toNumber());
     } else {
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
-                                   &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
+                         &value))
         {
             return nullptr;
         }
         uMinimumIntegerDigits = int32_t(value.toNumber());
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().minimumFractionDigits,
-                                   &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits,
+                         &value))
         {
             return nullptr;
         }
         uMinimumFractionDigits = int32_t(value.toNumber());
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().maximumFractionDigits,
-                                   &value))
+        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits,
+                         &value))
         {
             return nullptr;
         }
         uMaximumFractionDigits = int32_t(value.toNumber());
     }
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().useGrouping, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value))
         return nullptr;
     uUseGrouping = value.toBoolean();
 
@@ -1558,7 +1555,7 @@ DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
 
             // 12.1.2.1 step 5
             bool extensible;
-            if (!JSObject::isExtensible(cx, obj, &extensible))
+            if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
@@ -1647,9 +1644,9 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet, &getter))
         return nullptr;
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                                  JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  nullptr, JSPROP_GETTER | JSPROP_SHARED))
+    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
+                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
     }
@@ -1664,11 +1661,8 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!JSObject::defineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue,
-                                  nullptr, nullptr, 0))
-    {
+    if (!DefineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return ctor;
 }
@@ -1740,7 +1734,7 @@ js::intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp)
     if (!jscalendar)
         return false;
     RootedValue element(cx, StringValue(jscalendar));
-    if (!JSObject::defineElement(cx, calendars, index++, element))
+    if (!DefineElement(cx, calendars, index++, element))
         return false;
 
     // Now get the calendars that "would make a difference", i.e., not the default.
@@ -1768,7 +1762,7 @@ js::intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp)
         if (!jscalendar)
             return false;
         element = StringValue(jscalendar);
-        if (!JSObject::defineElement(cx, calendars, index++, element))
+        if (!DefineElement(cx, calendars, index++, element))
             return false;
     }
 
@@ -1845,9 +1839,8 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
     if (!GetInternals(cx, dateTimeFormat, &internals))
        return nullptr;
 
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().locale, &value)) {
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    }
     JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
@@ -1864,12 +1857,12 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
 
     RootedId id(cx, NameToId(cx->names().timeZone));
     bool hasP;
-    if (!JSObject::hasProperty(cx, internals, id, &hasP))
+    if (!HasProperty(cx, internals, id, &hasP))
         return nullptr;
 
     AutoStableStringChars timeZoneChars(cx);
     if (hasP) {
-        if (!JSObject::getProperty(cx, internals, internals, cx->names().timeZone, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().timeZone, &value))
             return nullptr;
         if (!value.isUndefined()) {
             JSFlatString *flat = value.toString()->ensureFlat(cx);
@@ -1881,7 +1874,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
             uTimeZoneLength = u_strlen(uTimeZone);
         }
     }
-    if (!JSObject::getProperty(cx, internals, internals, cx->names().pattern, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().pattern, &value))
         return nullptr;
 
     AutoStableStringChars patternChars(cx);
@@ -2036,7 +2029,7 @@ js_InitIntlClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedValue IntlValue(cx, ObjectValue(*Intl));
-    if (!JSObject::defineProperty(cx, global, cx->names().Intl, IntlValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, global, cx->names().Intl, IntlValue, nullptr, nullptr, 0))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, Intl, intl_static_methods))

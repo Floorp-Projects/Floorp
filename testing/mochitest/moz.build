@@ -33,7 +33,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     '/build/pgo/server-locations.txt',
     '/build/sanitizers/lsan_suppressions.txt',
     '/netwerk/test/httpserver/httpd.js',
-    '/testing/mozbase/manifestparser/manifestparser/manifestparser.py',
     '/testing/mozbase/mozdevice/mozdevice/devicemanager.py',
     '/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py',
     '/testing/mozbase/mozdevice/mozdevice/devicemanagerSUT.py',

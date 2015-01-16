@@ -15,9 +15,6 @@ bool
 DefineTestingFunctions(JSContext *cx, HandleObject obj, bool fuzzingSafe);
 
 bool
-testingFunc_inParallelSection(JSContext *cx, unsigned argc, Value *vp);
-
-bool
 testingFunc_bailout(JSContext *cx, unsigned argc, Value *vp);
 
 bool

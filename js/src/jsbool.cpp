@@ -156,7 +156,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedValue value(cx, ObjectValue(*valueOf));
-    if (!JSObject::defineProperty(cx, booleanProto, valueOfName, value, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, booleanProto, valueOfName, value, nullptr, nullptr, 0))
         return nullptr;
 
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Boolean, ctor, booleanProto))

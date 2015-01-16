@@ -65,19 +65,21 @@ interface nsITCPSocketParent : nsISupports
 // This interface is the bridge of TCPSocketParent, which is written in C++,
 // and TCPSocket, which is written in Javascript. TCPSocketParentIntermediary
 // implements nsITCPSocketIntermediary in Javascript.
-[scriptable, uuid(0bc14635-c586-4046-b82f-27ff45e6c39c)]
+[scriptable, uuid(aa9bd46d-26bf-4ba8-9c18-ba02482c02f0)]
 interface nsITCPSocketIntermediary : nsISupports {
   // Open the connection to the server with the given parameters
   nsIDOMTCPSocket open(in nsITCPSocketParent parent,
                        in DOMString host, in unsigned short port,
                        in boolean useSSL, in DOMString binaryType,
-                       in unsigned long appId);
+                       in unsigned long appId,
+                       in boolean inBrowser);
 
   // Listen on a port
   nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,
                                in unsigned short port, in unsigned short backlog,
                                in DOMString binaryType,
-                               in unsigned long appId);
+                               in unsigned long appId,
+                               in boolean inBrowser);
 
   // Called when received a child request to send a string.
   void onRecvSendString(in DOMString data, in uint32_t trackingNumber);

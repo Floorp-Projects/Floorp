@@ -144,6 +144,7 @@ CodeGenerator *CompileBackEnd(MIRGenerator *mir);
 
 void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(JSContext *cx, IonBuilder *builder);
+void StopAllOffThreadCompilations(Zone *zone);
 void StopAllOffThreadCompilations(JSCompartment *comp);
 
 uint8_t *LazyLinkTopActivation(JSContext *cx);

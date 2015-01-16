@@ -1,0 +1,130 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_BroadcastChannel_h
+#define mozilla_dom_BroadcastChannel_h
+
+#include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
+#include "nsIObserver.h"
+#include "nsTArray.h"
+#include "nsRefPtr.h"
+
+class nsPIDOMWindow;
+
+namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}
+
+namespace dom {
+
+namespace workers {
+class WorkerFeature;
+}
+
+class BroadcastChannelChild;
+class BroadcastChannelMessage;
+
+class BroadcastChannel MOZ_FINAL
+  : public DOMEventTargetHelper
+  , public nsIIPCBackgroundChildCreateCallback
+  , public nsIObserver
+{
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+  NS_DECL_NSIOBSERVER
+
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BroadcastChannel,
+                                           DOMEventTargetHelper)
+
+  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  static already_AddRefed<BroadcastChannel>
+  Constructor(const GlobalObject& aGlobal, const nsAString& aChannel,
+              ErrorResult& aRv);
+
+  void GetName(nsAString& aName) const
+  {
+    aName = mChannel;
+  }
+
+  void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                   ErrorResult& aRv);
+
+  void Close();
+
+  EventHandlerNonNull* GetOnmessage();
+  void SetOnmessage(EventHandlerNonNull* aCallback);
+
+  using nsIDOMEventTarget::AddEventListener;
+  using nsIDOMEventTarget::RemoveEventListener;
+
+  virtual void AddEventListener(const nsAString& aType,
+                                EventListener* aCallback,
+                                bool aCapture,
+                                const Nullable<bool>& aWantsUntrusted,
+                                ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void RemoveEventListener(const nsAString& aType,
+                                   EventListener* aCallback,
+                                   bool aCapture,
+                                   ErrorResult& aRv) MOZ_OVERRIDE;
+
+  void Shutdown();
+
+  bool IsClosed() const
+  {
+    return mState != StateActive;
+  }
+
+private:
+  BroadcastChannel(nsPIDOMWindow* aWindow,
+                   const PrincipalInfo& aPrincipalInfo,
+                   const nsAString& aOrigin,
+                   const nsAString& aChannel);
+
+  ~BroadcastChannel();
+
+  void PostMessageData(BroadcastChannelMessage* aData);
+
+  void PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                           ErrorResult& aRv);
+
+  void UpdateMustKeepAlive();
+
+  nsRefPtr<BroadcastChannelChild> mActor;
+  nsTArray<nsRefPtr<BroadcastChannelMessage>> mPendingMessages;
+
+  nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
+
+  nsAutoPtr<PrincipalInfo> mPrincipalInfo;
+
+  nsString mOrigin;
+  nsString mChannel;
+
+  bool mIsKeptAlive;
+
+  uint64_t mInnerID;
+
+  enum {
+    StateActive,
+    StateClosing,
+    StateClosed
+  } mState;
+};
+
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_BroadcastChannel_h

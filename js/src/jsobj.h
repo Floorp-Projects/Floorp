@@ -78,6 +78,10 @@ class NormalArgumentsObject;
 class SetObject;
 class StrictArgumentsObject;
 
+// Forward declarations, required for later friend declarations.
+bool PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+bool SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
+
 }  /* namespace js */
 
 /*
@@ -113,6 +117,9 @@ class JSObject : public js::gc::Cell
     friend class js::GCMarker;
     friend class js::NewObjectCache;
     friend class js::Nursery;
+    friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
+    friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
+                                          bool *succeeded);
 
     /* Make the type object to use for LAZY_TYPE objects. */
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
@@ -337,7 +344,7 @@ class JSObject : public js::gc::Cell
      * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy.
      * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
      *    check if the proto is an object, nullptr, or lazily computed.
-     * 3. JSObject::getProto(cx, obj, &proto) computes the proto of an object.
+     * 3. js::GetPrototype(cx, obj, &proto) computes the proto of an object.
      *    If obj is a proxy and the proto is lazy, this code may allocate or
      *    GC in order to compute the proto. Currently, it will not run JS code.
      */
@@ -384,19 +391,6 @@ class JSObject : public js::gc::Cell
         MOZ_ASSERT(!hasLazyPrototype());
         return lastProperty()->hasObjectFlag(js::BaseShape::IMMUTABLE_PROTOTYPE);
     }
-
-    // Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
-    // trying to change it will not work.  If an internal error occurred,
-    // returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
-    // [[Prototype]] is now immutable.
-    static bool
-    setImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
-
-    static inline bool getProto(JSContext *cx, js::HandleObject obj,
-                                js::MutableHandleObject protop);
-    // Returns false on error, success of operation in outparam.
-    static inline bool setProto(JSContext *cx, JS::HandleObject obj,
-                                JS::HandleObject proto, bool *succeeded);
 
     // uninlinedSetType() is the same as setType(), but not inlined.
     inline void setType(js::types::TypeObject *newType);
@@ -493,9 +487,6 @@ class JSObject : public js::gc::Cell
      */
 
   public:
-    static inline bool
-    isExtensible(js::ExclusiveContext *cx, js::HandleObject obj, bool *extensible);
-
     // Indicates whether a non-proxy is extensible.  Don't call on proxies!
     // This method really shouldn't exist -- but there are a few internal
     // places that want it (JITs and the like), and it'd be a pain to mark them
@@ -506,43 +497,6 @@ class JSObject : public js::gc::Cell
         // [[Extensible]] for ordinary non-proxy objects is an object flag.
         return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
     }
-
-    // Attempt to change the [[Extensible]] bit on |obj| to false.  Indicate
-    // success or failure through the |*succeeded| outparam, or actual error
-    // through the return value.
-    static bool
-    preventExtensions(JSContext *cx, js::HandleObject obj, bool *succeeded);
-
-  private:
-    enum ImmutabilityType { SEAL, FREEZE };
-
-    /*
-     * The guts of Object.seal (ES5 15.2.3.8) and Object.freeze (ES5 15.2.3.9): mark the
-     * object as non-extensible, and adjust each property's attributes appropriately: each
-     * property becomes non-configurable, and if |freeze|, data properties become
-     * read-only as well.
-     */
-    static bool sealOrFreeze(JSContext *cx, js::HandleObject obj, ImmutabilityType it);
-
-    static bool isSealedOrFrozen(JSContext *cx, js::HandleObject obj, ImmutabilityType it, bool *resultp);
-
-    static inline unsigned getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it);
-
-  public:
-    /* ES5 15.2.3.8: non-extensible, all props non-configurable */
-    static inline bool seal(JSContext *cx, js::HandleObject obj) { return sealOrFreeze(cx, obj, SEAL); }
-    /* ES5 15.2.3.9: non-extensible, all properties non-configurable, all data props read-only */
-    static inline bool freeze(JSContext *cx, js::HandleObject obj) { return sealOrFreeze(cx, obj, FREEZE); }
-
-    static inline bool isSealed(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, SEAL, resultp);
-    }
-    static inline bool isFrozen(JSContext *cx, js::HandleObject obj, bool *resultp) {
-        return isSealedOrFrozen(cx, obj, FREEZE, resultp);
-    }
-
-    /* toString support. */
-    static const char *className(JSContext *cx, js::HandleObject obj);
 
   public:
     /*
@@ -561,12 +515,6 @@ class JSObject : public js::gc::Cell
 
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
-    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                                   bool *foundp);
-
-    static inline bool hasProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
-                                   bool *foundp);
-
   public:
     static bool reportReadOnly(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext *cx, jsid id, unsigned report = JSREPORT_ERROR);
@@ -581,118 +529,12 @@ class JSObject : public js::gc::Cell
     bool callMethod(JSContext *cx, js::HandleId id, unsigned argc, js::Value *argv,
                     js::MutableHandleValue vp);
 
-    static bool lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                              js::MutableHandleObject objp, js::MutableHandleShape propp);
-
-    static bool lookupProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
-                               js::MutableHandleObject objp, js::MutableHandleShape propp)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return lookupGeneric(cx, obj, id, objp, propp);
-    }
-
-    static inline bool lookupElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                                     js::MutableHandleObject objp, js::MutableHandleShape propp);
-
-    static bool defineGeneric(js::ExclusiveContext *cx, js::HandleObject obj,
-                              js::HandleId id, js::HandleValue value,
-                              JSPropertyOp getter = nullptr,
-                              JSStrictPropertyOp setter = nullptr,
-                              unsigned attrs = JSPROP_ENUMERATE);
-
-    static bool defineProperty(js::ExclusiveContext *cx, js::HandleObject obj,
-                               js::PropertyName *name, js::HandleValue value,
-                               JSPropertyOp getter = nullptr,
-                               JSStrictPropertyOp setter = nullptr,
-                               unsigned attrs = JSPROP_ENUMERATE);
-
-    static bool defineElement(js::ExclusiveContext *cx, js::HandleObject obj,
-                              uint32_t index, js::HandleValue value,
-                              JSPropertyOp getter = nullptr,
-                              JSStrictPropertyOp setter = nullptr,
-                              unsigned attrs = JSPROP_ENUMERATE);
-
-    static inline bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  js::HandleId id, js::MutableHandleValue vp);
-
-    static inline bool getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                      jsid id, js::Value *vp);
-
-    static bool getProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                            js::PropertyName *name, js::MutableHandleValue vp)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return getGeneric(cx, obj, receiver, id, vp);
-    }
-
-    static bool getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                js::PropertyName *name, js::Value *vp)
-    {
-        return getGenericNoGC(cx, obj, receiver, js::NameToId(name), vp);
-    }
-
-    static inline bool getElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  uint32_t index, js::MutableHandleValue vp);
-    static inline bool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                      uint32_t index, js::Value *vp);
-
-    static inline bool setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  js::HandleId id, js::MutableHandleValue vp, bool strict);
-
-    static bool setProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                            js::PropertyName *name,
-                            js::MutableHandleValue vp, bool strict)
-    {
-        JS::RootedId id(cx, js::NameToId(name));
-        return setGeneric(cx, obj, receiver, id, vp, strict);
-    }
-
-    static inline bool setElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                                  uint32_t index, js::MutableHandleValue vp, bool strict);
-
     static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
                                      js::HandleObject receiver, js::HandleId id,
                                      js::MutableHandleValue vp, bool strict);
     static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj,
                                     js::HandleObject receiver, uint32_t index,
                                     js::MutableHandleValue vp, bool strict);
-
-    static inline bool getGenericAttributes(JSContext *cx, js::HandleObject obj,
-                                            js::HandleId id, unsigned *attrsp);
-
-    static inline bool setGenericAttributes(JSContext *cx, js::HandleObject obj,
-                                            js::HandleId id, unsigned *attrsp);
-
-    static inline bool deleteGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
-                                     bool *succeeded);
-    static inline bool deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index,
-                                     bool *succeeded);
-
-    static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                             JS::HandleObject callable);
-    static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-    static bool defaultValue(JSContext *cx, js::HandleObject obj, JSType hint,
-                             js::MutableHandleValue vp)
-    {
-        JSConvertOp op = obj->getClass()->convert;
-        bool ok;
-        if (!op)
-            ok = js::DefaultValue(cx, obj, hint, vp);
-        else
-            ok = op(cx, obj, hint, vp);
-        MOZ_ASSERT_IF(ok, vp.isPrimitive());
-        return ok;
-    }
-
-    static JSObject *thisObject(JSContext *cx, js::HandleObject obj)
-    {
-        if (js::ObjectOp op = obj->getOps()->thisObject)
-            return op(cx, obj);
-        return obj;
-    }
-
-    static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
     static bool swap(JSContext *cx, JS::HandleObject a, JS::HandleObject b);
 
@@ -863,24 +705,6 @@ IsConstructor(const Value &v)
     return v.isObject() && v.toObject().isConstructor();
 }
 
-inline JSObject *
-GetInnerObject(JSObject *obj)
-{
-    if (js::InnerObjectOp op = obj->getClass()->ext.innerObject) {
-        JS::AutoSuppressGCAnalysis nogc;
-        return op(obj);
-    }
-    return obj;
-}
-
-inline JSObject *
-GetOuterObject(JSContext *cx, js::HandleObject obj)
-{
-    if (js::ObjectOp op = obj->getClass()->ext.outerObject)
-        return op(cx, obj);
-    return obj;
-}
-
 } /* namespace js */
 
 class JSValueArray {
@@ -901,9 +725,224 @@ class ValueArray {
 
 namespace js {
 
-/* Set *resultp to tell whether obj has an own property with the given id. */
-bool
-HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp);
+/*** Standard internal methods ********************************************************************
+ *
+ * The functions below are the fundamental operations on objects.
+ *
+ * ES6 specifies 14 internal methods that define how objects behave.  The spec
+ * is actually quite good on this topic, though you may have to read it a few
+ * times. See ES6 draft rev 29 (6 Dec 2014) 6.1.7.2 and 6.1.7.3.
+ *
+ * When 'obj' is an ordinary object, these functions have boring standard
+ * behavior as specified by ES6 draft rev 29 section 9.1; see the section about
+ * internal methods in vm/NativeObject.h.
+ *
+ * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
+ * any one of the functions below could do just about anything. See jsproxy.h.
+ */
+
+/*
+ * ES6 [[GetPrototypeOf]]. Get obj's prototype, storing it in protop.
+ *
+ * If obj is definitely not a proxy, the infallible obj->getProto() can be used
+ * instead. See the comment on JSObject::getTaggedProto().
+ */
+inline bool
+GetPrototype(JSContext *cx, HandleObject obj, MutableHandleObject protop);
+
+/*
+ * ES6 [[SetPrototypeOf]]. Change obj's prototype to proto.
+ *
+ * Returns false on error, success of operation in outparam. For example, if
+ * obj is not extensible, its prototype is fixed. js::SetPrototype will return
+ * true, because no exception is thrown for this; but *succeeded will be false.
+ */
+extern bool
+SetPrototype(JSContext *cx, HandleObject obj, HandleObject proto, bool *succeeded);
+
+/*
+ * ES6 [[IsExtensible]]. Extensible objects can have new properties defined on
+ * them. Inextensible objects can't, and their [[Prototype]] slot is fixed as
+ * well.
+ */
+inline bool
+IsExtensible(ExclusiveContext *cx, HandleObject obj, bool *extensible);
+
+/*
+ * ES6 [[PreventExtensions]]. Attempt to change the [[Extensible]] bit on |obj|
+ * to false.  Indicate success or failure through the |*succeeded| outparam, or
+ * actual error through the return value.
+ */
+extern bool
+PreventExtensions(JSContext *cx, HandleObject obj, bool *succeeded);
+
+/*
+ * ES6 [[GetOwnPropertyDescriptor]]. Get a description of one of obj's own
+ * properties.
+ *
+ * If no such property exists on obj, return true with desc.object() set to
+ * null.
+ */
+extern bool
+GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                         MutableHandle<PropertyDescriptor> desc);
+
+/*
+ * ES6 [[DefineOwnProperty]]. Define a property on obj.
+ *
+ * If obj is an array, this follows ES5 15.4.5.1.
+ * If obj is any other native object, this follows ES5 8.12.9.
+ * If obj is a proxy, this calls the proxy handler's defineProperty method.
+ * Otherwise, this reports an error and returns false.
+ *
+ * Both StandardDefineProperty functions hew close to the ES5 spec. Note that
+ * the DefineProperty functions do not enforce some invariants mandated by ES6.
+ */
+extern bool
+StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                       const PropDesc &desc, bool throwError, bool *rval);
+
+extern bool
+StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                       Handle<PropertyDescriptor> descriptor, bool *bp);
+
+extern bool
+DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
+               JSPropertyOp getter = nullptr,
+               JSStrictPropertyOp setter = nullptr,
+               unsigned attrs = JSPROP_ENUMERATE);
+
+extern bool
+DefineProperty(ExclusiveContext *cx, HandleObject obj, PropertyName *name, HandleValue value,
+               JSPropertyOp getter = nullptr,
+               JSStrictPropertyOp setter = nullptr,
+               unsigned attrs = JSPROP_ENUMERATE);
+
+extern bool
+DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, HandleValue value,
+              JSPropertyOp getter = nullptr,
+              JSStrictPropertyOp setter = nullptr,
+              unsigned attrs = JSPROP_ENUMERATE);
+
+/*
+ * ES6 [[HasProperty]]. Set *foundp to true if `id in obj` (that is, if obj has
+ * an own or inherited property obj[id]), false otherwise.
+ */
+inline bool
+HasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
+
+inline bool
+HasProperty(JSContext *cx, HandleObject obj, PropertyName *name, bool *foundp);
+
+/*
+ * ES6 [[Get]]. Get the value of the property `obj[id]`, or undefined if no
+ * such property exists.
+ *
+ * Typically obj == receiver; if obj != receiver then the caller is most likely
+ * a proxy using GetProperty to finish a property get that started out as
+ * `receiver[id]`, and we've already searched the prototype chain up to `obj`.
+ */
+inline bool
+GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp);
+
+inline bool
+GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+            MutableHandleValue vp)
+{
+    RootedId id(cx, NameToId(name));
+    return GetProperty(cx, obj, receiver, id, vp);
+}
+
+inline bool
+GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+           MutableHandleValue vp);
+
+inline bool
+GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+
+inline bool
+GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name, Value *vp)
+{
+    return GetPropertyNoGC(cx, obj, receiver, NameToId(name), vp);
+}
+
+inline bool
+GetElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp);
+
+/*
+ * ES6 [[Set]]. Carry out the assignment `obj[id] = vp`.
+ *
+ * The `receiver` argument has to do with how [[Set]] interacts with the
+ * prototype chain and proxies. It's hard to explain and ES6 doesn't really
+ * try. Long story short, if you just want bog-standard assignment, pass the
+ * same object as both obj and receiver.
+ *
+ * When obj != receiver, it's a reasonable guess that a proxy is involved, obj
+ * is the proxy's target, and the proxy is using SetProperty to finish an
+ * assignment that started out as `receiver[id] = vp`, by delegating it to obj.
+ *
+ * Strict errors: ES6 specifies that this method returns a boolean value
+ * indicating whether assignment "succeeded". We currently take a `strict`
+ * argument instead, but this has to change. See bug 1113369.
+ */
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp, bool strict);
+
+inline bool
+SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+            MutableHandleValue vp, bool strict)
+{
+    RootedId id(cx, NameToId(name));
+    return SetProperty(cx, obj, receiver, id, vp, strict);
+}
+
+inline bool
+SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+           MutableHandleValue vp, bool strict);
+
+/*
+ * ES6 [[Delete]]. Equivalent to the JS code `delete obj[id]`.
+ */
+inline bool
+DeleteProperty(JSContext *cx, js::HandleObject obj, js::HandleId id, bool *succeeded);
+
+inline bool
+DeleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, bool *succeeded);
+
+
+/*** SpiderMonkey nonstandard internal methods ***************************************************/
+
+/*
+ * Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
+ * trying to change it will not work.  If an internal error occurred,
+ * returns false.  Otherwise, |*succeeded| is set to true iff |obj|'s
+ * [[Prototype]] is now immutable.
+ */
+extern bool
+SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj, bool *succeeded);
+
+/*
+ * Deprecated. A version of HasProperty that also returns the object on which
+ * the property was found (but that information is unreliable for proxies), and
+ * the Shape of the property, if native.
+ */
+extern bool
+LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
+               MutableHandleObject objp, MutableHandleShape propp);
+
+inline bool
+LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
+               MutableHandleObject objp, MutableHandleShape propp)
+{
+    RootedId id(cx, NameToId(name));
+    return LookupProperty(cx, obj, id, objp, propp);
+}
+
+/* Set *result to tell whether obj has an own property with the given id. */
+extern bool
+HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
 
 template <AllowGC allowGC>
 extern bool
@@ -912,6 +951,128 @@ NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
                           typename MaybeRooted<jsid, allowGC>::HandleType id,
                           typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                           typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
+
+/*
+ * Deprecated. An easier-to-use version of LookupProperty that returns only the
+ * property attributes.
+ */
+inline bool
+GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+
+/*
+ * Deprecated. Search the prototype chain for `obj[id]` and redefine it to have
+ * the given property attributes.
+ */
+inline bool
+SetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
+
+/*
+ * Set a watchpoint: a synchronous callback when the given property of the
+ * given object is set.
+ *
+ * Watchpoints are nonstandard and do not fit in well with the way ES6
+ * specifies [[Set]]. They are also insufficient for implementing
+ * Object.observe.
+ */
+extern bool
+WatchProperty(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable);
+
+/* Clear a watchpoint. */
+extern bool
+UnwatchProperty(JSContext *cx, HandleObject obj, HandleId id);
+
+/*
+ * ToPrimitive support, currently implemented like an internal method (JSClass::convert).
+ * In ES6 this is just a method, @@toPrimitive. See bug 1054756.
+ */
+extern bool
+ToPrimitive(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+
+MOZ_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, MutableHandleValue vp);
+
+MOZ_ALWAYS_INLINE bool
+ToPrimitive(JSContext *cx, JSType preferredType, MutableHandleValue vp);
+
+/*
+ * toString support. (This isn't called GetClassName because there's a macro in
+ * <windows.h> with that name.)
+ */
+extern const char *
+GetObjectClassName(JSContext *cx, HandleObject obj);
+
+/*
+ * Inner and outer objects
+ *
+ * GetInnerObject and GetOuterObject (and also GetThisObject, somewhat) have to
+ * do with Windows and WindowProxies. There's a screwy invariant that actual
+ * Window objects (the global objects of web pages) are never directly exposed
+ * to script. Instead we often substitute a WindowProxy.
+ *
+ * As a result, we have calls to these three "substitute-this-object-for-that-
+ * object" functions sprinkled at apparently arbitrary (but actually *very*
+ * carefully and nervously selected) places throughout the engine and indeed
+ * the universe.
+ */
+
+/*
+ * If obj a WindowProxy, return its current inner Window. Otherwise return obj.
+ *
+ * GetInnerObject is called when we need a scope chain; you never want a
+ * WindowProxy on a scope chain.
+ *
+ * It's also called in a few places where an object comes in from script, and
+ * the user probably intends to operate on the Window, not the
+ * WindowProxy. Object.prototype.watch and various Debugger features do
+ * this. (Users can't simply pass the Window, because the Window isn't exposed
+ * to scripts.)
+ */
+inline JSObject *
+GetInnerObject(JSObject *obj)
+{
+    if (InnerObjectOp op = obj->getClass()->ext.innerObject) {
+        JS::AutoSuppressGCAnalysis nogc;
+        return op(obj);
+    }
+    return obj;
+}
+
+/*
+ * If obj is a Window object, return the WindowProxy. Otherwise return obj.
+ *
+ * This must be called before passing an object to script, if the object might
+ * be a Window. (But usually those cases involve scope objects, and for those,
+ * it is better to call GetThisObject instead.)
+ */
+inline JSObject *
+GetOuterObject(JSContext *cx, HandleObject obj)
+{
+    if (ObjectOp op = obj->getClass()->ext.outerObject)
+        return op(cx, obj);
+    return obj;
+}
+
+/*
+ * Return an object that may be used as `this` in place of obj. For most
+ * objects this just returns obj.
+ *
+ * Some JSObjects shouldn't be exposed directly to script. This includes (at
+ * least) DynamicWithObjects and Window objects. However, since both of those
+ * can be on scope chains, we sometimes would expose those as `this` if we
+ * were not so vigilant about calling GetThisObject where appropriate.
+ *
+ * See comments at ComputeImplicitThis.
+ */
+inline JSObject *
+GetThisObject(JSContext *cx, HandleObject obj)
+{
+    if (ObjectOp op = obj->getOps()->thisObject)
+        return op(cx, obj);
+    return obj;
+}
+
+
+/* * */
 
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
@@ -959,19 +1120,7 @@ extern const char js_lookupGetter_str[];
 extern const char js_lookupSetter_str[];
 #endif
 
-extern bool
-js_PopulateObject(JSContext *cx, js::HandleObject newborn, js::HandleObject props);
-
-
 namespace js {
-
-extern bool
-DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                  JS::HandleValue descriptor, bool *bp);
-
-extern bool
-DefineOwnProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                  JS::Handle<js::PropertyDescriptor> descriptor, bool *bp);
 
 /*
  * The NewObjectKind allows an allocation site to specify the type properties
@@ -1033,20 +1182,7 @@ CloneObject(JSContext *cx, HandleObject obj, Handle<js::TaggedProto> proto, Hand
 extern NativeObject *
 DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind newKind = GenericObject);
 
-/*
- * Call the [[DefineOwnProperty]] internal method of obj.
- *
- * If obj is an array, this follows ES5 15.4.5.1.
- * If obj is any other native object, this follows ES5 8.12.9.
- * If obj is a proxy, this calls the proxy handler's defineProperty method.
- * Otherwise, this reports an error and returns false.
- */
 extern bool
-DefineProperty(JSContext *cx, js::HandleObject obj,
-               js::HandleId id, const PropDesc &desc, bool throwError,
-               bool *rval);
-
-bool
 DefineProperties(JSContext *cx, HandleObject obj, HandleObject props);
 
 /*
@@ -1102,15 +1238,6 @@ LookupPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, NativeObject **
                    Shape **propp);
 
 bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, jsid id, Value *vp);
-
-inline bool
-GetPropertyPure(ExclusiveContext *cx, JSObject *obj, PropertyName *name, Value *vp)
-{
-    return GetPropertyPure(cx, obj, NameToId(name), vp);
-}
-
-bool
 GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
@@ -1127,9 +1254,6 @@ IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
 // that way because we need a Rooted temporary in this method anyway.
 extern bool
 IsDelegateOfObject(JSContext *cx, HandleObject protoObj, JSObject* obj, bool *result);
-
-bool
-GetObjectElementOperationPure(ExclusiveContext *cx, JSObject *obj, const Value &prop, Value *vp);
 
 /* Wrap boolean, number or string as Boolean, Number or String object. */
 extern JSObject *
@@ -1183,15 +1307,32 @@ Throw(JSContext *cx, jsid id, unsigned errorNumber);
 extern bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
 
-namespace baseops {
+enum class IntegrityLevel {
+    Sealed,
+    Frozen
+};
 
+/*
+ * ES6 rev 29 (6 Dec 2014) 7.3.13. Mark obj as non-extensible, and adjust each
+ * of obj's own properties' attributes appropriately: each property becomes
+ * non-configurable, and if level == Frozen, data properties become
+ * non-writable as well.
+ */
 extern bool
-Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
+SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level);
 
+inline bool
+FreezeObject(JSContext *cx, HandleObject obj)
+{
+    return SetIntegrityLevel(cx, obj, IntegrityLevel::Frozen);
+}
+
+/*
+ * ES6 rev 29 (6 Dec 2014) 7.3.14. Code shared by Object.isSealed and
+ * Object.isFrozen.
+ */
 extern bool
-Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-} /* namespace baseops */
+TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bool *resultp);
 
 }  /* namespace js */
 

@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'MozMtpDatabase.cpp',
     'MozMtpServer.cpp',
     'MozMtpStorage.cpp',
+    'NetIdManager.cpp',
     'NetworkUtils.cpp',
     'NetworkWorker.cpp',
     'nsVolume.cpp',

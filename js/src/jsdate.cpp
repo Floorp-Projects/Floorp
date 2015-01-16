@@ -522,7 +522,7 @@ date_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp
     MOZ_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
     MOZ_ASSERT(obj->is<DateObject>());
 
-    return DefaultValue(cx, obj, (hint == JSTYPE_VOID) ? JSTYPE_STRING : hint, vp);
+    return JS::OrdinaryToPrimitive(cx, obj, hint == JSTYPE_VOID ? JSTYPE_STRING : hint, vp);
 }
 
 /* for use by date_parse */
@@ -2462,7 +2462,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 4. */
     RootedValue toISO(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().toISOString, &toISO))
+    if (!GetProperty(cx, obj, obj, cx->names().toISOString, &toISO))
         return false;
 
     /* Step 5. */
@@ -3012,9 +3012,9 @@ FinishDateClassInit(JSContext *cx, HandleObject ctor, HandleObject proto)
     RootedValue toUTCStringFun(cx);
     RootedId toUTCStringId(cx, NameToId(cx->names().toUTCString));
     RootedId toGMTStringId(cx, NameToId(cx->names().toGMTString));
-    return baseops::GetProperty(cx, proto.as<DateObject>(), toUTCStringId, &toUTCStringFun) &&
-           baseops::DefineGeneric(cx, proto.as<DateObject>(), toGMTStringId, toUTCStringFun,
-                                  nullptr, nullptr, 0);
+    return NativeGetProperty(cx, proto.as<DateObject>(), toUTCStringId, &toUTCStringFun) &&
+           NativeDefineProperty(cx, proto.as<DateObject>(), toGMTStringId, toUTCStringFun,
+                                nullptr, nullptr, 0);
 }
 
 const Class DateObject::class_ = {

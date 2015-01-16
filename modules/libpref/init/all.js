@@ -1584,7 +1584,7 @@ pref("network.dir.format", 2);
 pref("network.prefetch-next", true);
 
 // enables the predictive service
-pref("network.predictor.enabled", false);
+pref("network.predictor.enabled", true);
 pref("network.predictor.enable-hover-on-ssl", false);
 pref("network.predictor.page-degradation.day", 0);
 pref("network.predictor.page-degradation.week", 5);
@@ -1599,9 +1599,8 @@ pref("network.predictor.subresource-degradation.max", 100);
 pref("network.predictor.preconnect-min-confidence", 90);
 pref("network.predictor.preresolve-min-confidence", 60);
 pref("network.predictor.redirect-likely-confidence", 75);
-pref("network.predictor.max-queue-size", 50);
-pref("network.predictor.max-db-size", 157286400); // bytes
-pref("network.predictor.preserve", 80); // percentage of predictor data to keep when cleaning up
+pref("network.predictor.max-resources-per-entry", 100);
+pref("network.predictor.cleaned-up", false);
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
 // which provides transparent Kerberos or NTLM authentication using the SPNEGO
@@ -1709,13 +1708,6 @@ pref("intl.locale.matchOS",                 false);
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
-
-// Android-specific pref to use key-events-only mode for IME-unaware webapps.
-#ifdef MOZ_WIDGET_ANDROID
-pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", true);
-#else
-pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", false);
-#endif
 
 // these locales have right-to-left UI
 pref("intl.uidirection.ar", "rtl");
@@ -4341,6 +4333,9 @@ pref("dom.voicemail.enabled", false);
 // Numeric default service id for Voice Mail API calls with |serviceId|
 // parameter omitted.
 pref("dom.voicemail.defaultServiceId", 0);
+
+// DOM BroadcastChannel API.
+pref("dom.broadcastChannel.enabled", true);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);

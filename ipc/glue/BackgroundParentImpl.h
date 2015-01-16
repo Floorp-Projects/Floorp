@@ -9,6 +9,11 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 
 namespace mozilla {
+
+namespace layout {
+class VsyncParent;
+}
+
 namespace ipc {
 
 // Instances of this class should never be created directly. This class is meant
@@ -58,6 +63,26 @@ protected:
   virtual bool
   DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
                                   MOZ_OVERRIDE;
+
+  virtual PVsyncParent*
+  AllocPVsyncParent() MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPVsyncParent(PVsyncParent* aActor) MOZ_OVERRIDE;
+
+  virtual PBroadcastChannelParent*
+  AllocPBroadcastChannelParent(const PrincipalInfo& aPrincipalInfo,
+                               const nsString& aOrigin,
+                               const nsString& aChannel) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvPBroadcastChannelConstructor(PBroadcastChannelParent* actor,
+                                   const PrincipalInfo& aPrincipalInfo,
+                                   const nsString& origin,
+                                   const nsString& channel) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) MOZ_OVERRIDE;
 };
 
 } // namespace ipc

@@ -92,6 +92,7 @@ InvokeAndRetry(ThisType* aThisVal, ReturnType(ThisType::*aMethod)(), MP4Stream* 
     if (NS_WARN_IF(!stream->LastReadFailed(&failure))) {
       return result;
     }
+    stream->ClearFailedRead();
 
     if (NS_WARN_IF(failure == prevFailure)) {
       NS_WARNING(nsPrintfCString("Failed reading the same block twice: offset=%lld, count=%lu",
