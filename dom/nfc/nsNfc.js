@@ -25,12 +25,14 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "nsIAppsService");
 
 function NfcCallback(aWindow) {
+  this._window = aWindow;
   this.initDOMRequestHelper(aWindow, null);
   this._createPromise();
 }
 NfcCallback.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
+  _window: null,
   promise: null,
   _requestId: null,
 
@@ -80,7 +82,7 @@ NfcCallback.prototype = {
       debug("can not find promise resolver for id: " + this._requestId);
       return;
     }
-    resolver.resolve(aArray);
+    resolver.resolve(Cu.cloneInto(aArray, this._window));
   },
 
   notifyError: function notifyError(aErrorMsg) {
@@ -90,7 +92,7 @@ NfcCallback.prototype = {
            ", errormsg: " + aErrorMsg);
       return;
     }
-    resolver.reject(aErrorMsg);
+    resolver.reject(new this._window.Error(aErrorMsg));
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,

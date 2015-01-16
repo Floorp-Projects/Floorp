@@ -102,7 +102,7 @@ interface nsINfcRequestCallback : nsISupports
   void notifyError(in DOMString errorMsg);
 };
 
-[scriptable, uuid(0f8aae32-9920-491e-a197-8995941d54df)]
+[scriptable, uuid(b5194ae8-d5d5-482f-a73f-dd0d755a1972)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -179,34 +179,6 @@ interface nsINfcContentHelper : nsISupports
                   in DOMString technology,
                   in nsIVariant command,
                   in nsINfcRequestCallback callback);
-
-  /**
-   * Enable I/O operations to the tag
-   *
-   * @param techType
-   *        Interface to a technology in a Tag
-   *
-   * @param sessionToken
-   *        Current token
-   *
-   * @param callback
-   *        Called when request is finished
-   */
-  void connect(in unsigned long techType,
-               in DOMString sessionToken,
-               in nsINfcRequestCallback callback);
-
-  /**
-   * Disable I/O operations to the tag
-   *
-   * @param sessionToken
-   *        Current token
-   *
-   * @param callback
-   *        Called when request is finished
-   */
-  void close(in DOMString sessionToken,
-             in nsINfcRequestCallback callback);
 
   /**
    * Get current RF state.
