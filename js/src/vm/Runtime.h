@@ -519,6 +519,12 @@ class PerThreadData : public PerThreadDataFriendFields
      */
     JSContext           *jitJSContext;
 
+     /*
+     * Points to the most recent JitActivation pushed on the thread.
+     * See JitActivation constructor in vm/Stack.cpp
+     */
+    js::jit::JitActivation *jitActivation;
+
     /* See comment for JSRuntime::interrupt_. */
   private:
     mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit_;
