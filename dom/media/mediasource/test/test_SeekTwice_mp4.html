@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Avoid making trouble for people who fix rounding bugs.
+function fuzzyEquals(a, b) {
+  return Math.abs(a - b) < 0.01;
+}
+
+function range(start, end) {
+  var rv = [];
+  for (var i = start; i < end; ++i) {
+    rv.push(i);
+  }
+  return rv;
+}
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var audiosb = ms.addSourceBuffer("audio/mp4");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
+    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(1, 5), '.m4s'))
+    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(6, 12), '.m4s'))
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 6), '.m4s'))
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(7, 14), '.m4s'))
+    .then(function() {
+      var p = once(el, 'seeking');
+      el.play();
+      el.currentTime = 4.5; // Seek to a gap in the video
+      return p;
+    }).then(function() {
+      ok(true, "Got seeking event");
+      var p = once(el, 'seeked');
+      el.currentTime = 6; // Seek past the gap.
+      return p;
+    }).then(function() {
+      ok(true, "Got seeked event");
+      ok(el.currentTime >= 6, "Time >= 6");
+      once(el, 'ended').then(SimpleTest.finish.bind(SimpleTest));
+      ms.endOfStream();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
