@@ -1572,7 +1572,7 @@ class CompilerOutput
     uint32_t sweepIndex_ : 31;
 
   public:
-    static const uint32_t INVALID_SWEEP_INDEX = (1 << 31) - 1u;
+    static const uint32_t INVALID_SWEEP_INDEX = static_cast<uint32_t>(1 << 31) - 1;
 
     CompilerOutput()
       : script_(nullptr),
