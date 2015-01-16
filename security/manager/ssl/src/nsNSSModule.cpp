@@ -93,8 +93,14 @@ _InstanceClassChrome##Constructor(nsISupports *aOuter, REFNSIID aIID,         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    if (!EnsureNSSInitialized(ensureOperator))                                \
+    if (!NS_IS_PROCESS_DEFAULT &&                                             \
+        ensureOperator == nssEnsureChromeOrContent) {                         \
+        if (!EnsureNSSInitializedChromeOrContent()) {                         \
+            return NS_ERROR_FAILURE;                                          \
+        }                                                                     \
+    } else if (!EnsureNSSInitialized(ensureOperator)) {                       \
         return NS_ERROR_FAILURE;                                              \
+    }                                                                         \
                                                                               \
     if (NS_IS_PROCESS_DEFAULT)                                                \
         NS_NSS_INSTANTIATE(ensureOperator, _InstanceClassChrome);             \
@@ -193,7 +199,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertTree)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPkcs11)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsNTLMAuthModule, InitTest)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHash)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureChromeOrContent, nsCryptoHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHMAC)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsStreamCipher)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsKeyObject)

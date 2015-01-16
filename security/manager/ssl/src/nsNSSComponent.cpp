@@ -157,6 +157,7 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
     // call do_GetService for nss component to ensure it.
   case nssEnsure:
   case nssEnsureOnChromeOnly:
+  case nssEnsureChromeOrContent:
     // We are reentered during nss component creation or nss component is already up
     if (PR_AtomicAdd(&haveLoaded, 0) || loading)
       return true;
