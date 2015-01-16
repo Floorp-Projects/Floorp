@@ -8,6 +8,21 @@ use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
+#[derive(RustcEncodable, PartialEq, Show)]
+pub struct Date(u64);
+
+impl Date {
+    pub fn new(timestamp: u64) -> Date {
+        Date(timestamp)
+    }
+}
+
+impl ToJson for Date {
+    fn to_json(&self) -> Json {
+        let &Date(x) = self;
+        x.to_json()
+    }
+}
 
 #[derive(PartialEq, Clone, Show)]
 pub enum Nullable<T: ToJson> {

@@ -1,7 +1,7 @@
 use rustc_serialize::json;
 use rustc_serialize::json::ToJson;
 
-use common::Nullable;
+use common::{Nullable, Date};
 
 #[derive(Show)]
 pub enum WebDriverResponse {
@@ -87,22 +87,6 @@ impl ElementRectResponse {
             width: width,
             height: height
         }
-    }
-}
-
-#[derive(RustcEncodable, PartialEq, Show)]
-pub struct Date(u64);
-
-impl Date {
-    pub fn new(timestamp: u64) -> Date {
-        Date(timestamp)
-    }
-}
-
-impl ToJson for Date {
-    fn to_json(&self) -> json::Json {
-        let &Date(x) = self;
-        x.to_json()
     }
 }
 
