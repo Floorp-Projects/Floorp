@@ -1131,6 +1131,10 @@ class Activation
         return hideScriptedCallerCount_ > 0;
     }
 
+    static size_t offsetOfPrevProfiling() {
+        return offsetof(Activation, prevProfiling_);
+    }
+
   private:
     Activation(const Activation &other) = delete;
     void operator=(const Activation &other) = delete;
@@ -1300,9 +1304,7 @@ class JitActivation : public Activation
     }
     void setActive(JSContext *cx, bool active = true);
 
-    bool isProfiling() const {
-        return false;
-    }
+    bool isProfiling() const;
 
     uint8_t *prevJitTop() const {
         return prevJitTop_;
