@@ -10,7 +10,6 @@
 #include "CacheFileOutputStream.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
 #include <algorithm>
 #include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
@@ -1000,13 +999,13 @@ CacheFile::Lock()
 void
 CacheFile::Unlock()
 {
-  // move the elements out of mObjsToRelease
-  // so that they can be released after we unlock
-  nsTArray<nsRefPtr<nsISupports>> objs;
+  nsTArray<nsISupports*> objs;
   objs.SwapElements(mObjsToRelease);
 
   mLock.Unlock();
 
+  for (uint32_t i = 0; i < objs.Length(); i++)
+    objs[i]->Release();
 }
 
 void
@@ -1016,11 +1015,11 @@ CacheFile::AssertOwnsLock() const
 }
 
 void
-CacheFile::ReleaseOutsideLock(nsRefPtr<nsISupports> aObject)
+CacheFile::ReleaseOutsideLock(nsISupports *aObject)
 {
   AssertOwnsLock();
 
-  mObjsToRelease.AppendElement(Move(aObject));
+  mObjsToRelease.AppendElement(aObject);
 }
 
 nsresult
@@ -1439,7 +1438,8 @@ CacheFile::RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk)
   AssertOwnsLock();
 
   aChunk->mActiveChunk = false;
-  ReleaseOutsideLock(nsRefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
+  ReleaseOutsideLock(static_cast<CacheFileChunkListener *>(
+                       aChunk->mFile.forget().take()));
 
   if (aCacheChunk) {
     mCachedChunks.Put(aChunk->Index(), aChunk);
@@ -1542,7 +1542,7 @@ CacheFile::RemoveInput(CacheFileInputStream *aInput, nsresult aStatus)
   found = mInputs.RemoveElement(aInput);
   MOZ_ASSERT(found);
 
-  ReleaseOutsideLock(already_AddRefed<nsIInputStream>(static_cast<nsIInputStream*>(aInput)));
+  ReleaseOutsideLock(static_cast<nsIInputStream*>(aInput));
 
   if (!mMemoryOnly)
     WriteMetadataIfNeededLocked();
@@ -1835,9 +1835,8 @@ CacheFile::WriteAllCachedChunks(const uint32_t& aIdx,
 
   MOZ_ASSERT(aChunk->IsReady());
 
-  // this would be cleaner if we had an nsRefPtr constructor
-  // that took a nsRefPtr<Derived>
-  file->ReleaseOutsideLock(nsRefPtr<nsISupports>(aChunk));
+  NS_ADDREF(aChunk);
+  file->ReleaseOutsideLock(aChunk);
 
   return PL_DHASH_REMOVE;
 }
@@ -1937,7 +1936,7 @@ CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx)
   chunk->UpdateDataSize(chunk->DataSize(), kChunkSize - chunk->DataSize(),
                         false);
 
-  ReleaseOutsideLock(chunk.forget());
+  ReleaseOutsideLock(chunk.forget().take());
 
   return NS_OK;
 }
