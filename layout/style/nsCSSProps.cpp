@@ -3037,7 +3037,10 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
                          animtype_)                                         \
   static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
                 "properties defined with CSS_PROP_LOGICAL must also use "   \
-                "the CSS_PROPERTY_LOGICAL flag");
+                "the CSS_PROPERTY_LOGICAL flag");                           \
+  static_assert(!((flags_) & CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED),    \
+                "CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED has no effect "  \
+                "on logical properties");
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LOGICAL
 #undef CSS_PROP
