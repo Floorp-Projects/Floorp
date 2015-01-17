@@ -705,10 +705,10 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eEnum) {
       if (value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_CENTER ||
           value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
         if (marginLeft->GetUnit() == eCSSUnit_Null)
           marginLeft->SetAutoValue();
-        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+        nsCSSValue* marginRight = aData->ValueForMarginRight();
         if (marginRight->GetUnit() == eCSSUnit_Null)
           marginRight->SetAutoValue();
       }
@@ -721,10 +721,10 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       value = aAttributes->GetAttr(nsGkAtoms::hspace);
 
       if (value && value->Type() == nsAttrValue::eInteger) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
         if (marginLeft->GetUnit() == eCSSUnit_Null)
           marginLeft->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
-        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+        nsCSSValue* marginRight = aData->ValueForMarginRight();
         if (marginRight->GetUnit() == eCSSUnit_Null)
           marginRight->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       }

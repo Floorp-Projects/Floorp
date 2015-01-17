@@ -147,3 +147,11 @@ CSS_PROP_ALIAS(padding-inline-start,
                padding_start,
                PaddingInlineStart,
                "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(margin-inline-end,
+               margin_end,
+               MarginInlineEnd,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(margin-inline-start,
+               margin_start,
+               MarginInlineStart,
+               "layout.css.vertical-text.enabled")

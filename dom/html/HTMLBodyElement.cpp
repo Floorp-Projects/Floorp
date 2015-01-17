@@ -62,10 +62,10 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyMarginWidth = value->GetIntegerValue();
       if (bodyMarginWidth < 0) bodyMarginWidth = 0;
-      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
       if (marginLeft->GetUnit() == eCSSUnit_Null)
         marginLeft->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
-      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+      nsCSSValue* marginRight = aData->ValueForMarginRight();
       if (marginRight->GetUnit() == eCSSUnit_Null)
         marginRight->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
     }
@@ -107,7 +107,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyLeftMargin = value->GetIntegerValue();
       if (bodyLeftMargin < 0) bodyLeftMargin = 0;
-      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+      nsCSSValue* marginLeft = aData->ValueForMarginLeft();
       if (marginLeft->GetUnit() == eCSSUnit_Null)
         marginLeft->SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
     }
@@ -117,7 +117,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyRightMargin = value->GetIntegerValue();
       if (bodyRightMargin < 0) bodyRightMargin = 0;
-      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+      nsCSSValue* marginRight = aData->ValueForMarginRight();
       if (marginRight->GetUnit() == eCSSUnit_Null)
         marginRight->SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
     }
@@ -147,10 +147,10 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
         if (marginLeft->GetUnit() == eCSSUnit_Null)
           marginLeft->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+        nsCSSValue* marginRight = aData->ValueForMarginRight();
         if (marginRight->GetUnit() == eCSSUnit_Null)
           marginRight->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
       }

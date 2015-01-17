@@ -174,17 +174,11 @@ LayoutView.prototype = {
       marginBottom: {selector: ".margin.bottom > span",
                   property: "margin-bottom",
                   value: undefined},
-      // margin-left is a shorthand for some internal properties,
-      // margin-left-ltr-source and margin-left-rtl-source for example. The
-      // real margin value we want is in margin-left-value
       marginLeft: {selector: ".margin.left > span",
                   property: "margin-left",
-                  realProperty: "margin-left-value",
                   value: undefined},
-      // margin-right behaves the same as margin-left
       marginRight: {selector: ".margin.right > span",
                   property: "margin-right",
-                  realProperty: "margin-right-value",
                   value: undefined},
       paddingTop: {selector: ".padding.top > span",
                   property: "padding-top",
@@ -261,11 +255,9 @@ LayoutView.prototype = {
    * Called when the user clicks on one of the editable values in the layoutview
    */
   initEditor: function(element, event, dimension) {
-    let { property, realProperty } = dimension;
-    if (!realProperty)
-      realProperty = property;
+    let { property } = dimension;
     let session = new EditingSession(document, this.elementRules);
-    let initialValue = session.getProperty(realProperty);
+    let initialValue = session.getProperty(property);
 
     let editor = new InplaceEditor({
       element: element,
