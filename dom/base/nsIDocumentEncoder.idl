@@ -228,6 +228,13 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputDontRemoveLineEndingSpaces = (1 << 24);
 
   /**
+   * Serialize in a way that is suitable for copying a plaintext version of the
+   * document to the clipboard.  This can for example cause line endings to be
+   * injected at preformatted block element boundaries.
+   */
+  const unsigned long OutputForPlainTextClipboardCopy = (1 << 25);
+
+  /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.
    * @param aMimeType MimeType to use. May also be set by SetMimeType.
