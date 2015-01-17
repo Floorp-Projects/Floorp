@@ -17,6 +17,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.widget.Toast;
 
 /**
@@ -32,7 +33,7 @@ public class FxAccountCodeResender {
     protected final byte[] sessionToken;
 
     public FxAccountResendCodeTask(Context context, byte[] sessionToken, FxAccountClient client, RequestDelegate<Void> delegate) {
-      super(context, null, client, delegate);
+      super(context, null, client, null, delegate);
       this.sessionToken = sessionToken;
     }
 
