@@ -13,7 +13,12 @@
   </style>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript">
-  SimpleTest.expectAssertions(9);
+  var numAssertions = 9;
+  if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
+    // these are from the additional margin-inline-{start,end} tests
+    numAssertions += 2;
+  }
+  SimpleTest.expectAssertions(numAssertions);
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(2);
 
@@ -57,8 +62,8 @@ var gBadComputedNoFrame = {
   "border-bottom-right-radius": [ "0%", "calc(-1%)" ],
   "border-top-left-radius": [ "0%", "calc(-1%)" ],
   "border-top-right-radius": [ "0%", "calc(-1%)" ],
-  "-moz-margin-end": [ "0%", "calc(0% + 0px)", "calc(-1%)" ],
-  "-moz-margin-start": [ "0%", "calc(0% + 0px)", "calc(-1%)" ],
+  "-moz-margin-end": [ "0%", "calc(0% + 0px)" ],
+  "-moz-margin-start": [ "0%", "calc(0% + 0px)" ],
   "-moz-outline-radius": [ "0%", "calc(-1%)", "calc(0px) calc(0pt) calc(0%) calc(0em)" ],
   "-moz-outline-radius-bottomleft": [ "0%", "calc(-1%)" ],
   "-moz-outline-radius-bottomright": [ "0%", "calc(-1%)" ],
@@ -68,6 +73,8 @@ var gBadComputedNoFrame = {
   "-moz-padding-start": [ "0%", "calc(0% + 0px)", "calc(-1%)" ],
   "margin": [ "0% 0px 0em 0pt" ],
   "margin-bottom": [ "0%", "calc(0% + 0px)" ],
+  "margin-inline-end": [ "0%", "calc(0% + 0px)" ],
+  "margin-inline-start": [ "0%", "calc(0% + 0px)" ],
   "margin-left": [ "0%", "calc(0% + 0px)" ],
   "margin-right": [ "0%", "calc(0% + 0px)" ],
   "margin-top": [ "0%", "calc(0% + 0px)" ],

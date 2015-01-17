@@ -175,6 +175,12 @@ EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
   bool ltr = direction == NS_STYLE_DIRECTION_LTR;
 
   switch (aProperty) {
+    case eCSSProperty_margin_end:
+      aProperty = ltr ? eCSSProperty_margin_right : eCSSProperty_margin_left;
+      break;
+    case eCSSProperty_margin_start:
+      aProperty = ltr ? eCSSProperty_margin_left : eCSSProperty_margin_right;
+      break;
     case eCSSProperty_padding_end:
       aProperty = ltr ? eCSSProperty_padding_right : eCSSProperty_padding_left;
       break;

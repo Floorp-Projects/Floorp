@@ -9879,18 +9879,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseListStyle();
   case eCSSProperty_margin:
     return ParseMargin();
-  case eCSSProperty_margin_end:
-    return ParseDirectionalBoxProperty(eCSSProperty_margin_end,
-                                       NS_BOXPROP_SOURCE_LOGICAL);
-  case eCSSProperty_margin_left:
-    return ParseDirectionalBoxProperty(eCSSProperty_margin_left,
-                                       NS_BOXPROP_SOURCE_PHYSICAL);
-  case eCSSProperty_margin_right:
-    return ParseDirectionalBoxProperty(eCSSProperty_margin_right,
-                                       NS_BOXPROP_SOURCE_PHYSICAL);
-  case eCSSProperty_margin_start:
-    return ParseDirectionalBoxProperty(eCSSProperty_margin_start,
-                                       NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_object_position:
     return ParseObjectPosition();
   case eCSSProperty_outline:
@@ -12947,20 +12935,11 @@ CSSParserImpl::ParseMargin()
 {
   static const nsCSSProperty kMarginSideIDs[] = {
     eCSSProperty_margin_top,
-    eCSSProperty_margin_right_value,
+    eCSSProperty_margin_right,
     eCSSProperty_margin_bottom,
-    eCSSProperty_margin_left_value
-  };
-  static const nsCSSProperty kMarginSources[] = {
-    eCSSProperty_margin_left_ltr_source,
-    eCSSProperty_margin_left_rtl_source,
-    eCSSProperty_margin_right_ltr_source,
-    eCSSProperty_margin_right_rtl_source,
-    eCSSProperty_UNKNOWN
+    eCSSProperty_margin_left
   };
 
-  // do this now, in case 4 values weren't specified
-  InitBoxPropsAsPhysical(kMarginSources);
   return ParseBoxProperties(kMarginSideIDs);
 }
 

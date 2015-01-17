@@ -6499,28 +6499,13 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Margin, (), margin, parentMargin)
 
-  // margin: length, percent, auto, inherit
-  nsStyleCoord  coord;
-  nsCSSRect ourMargin;
-  ourMargin.mTop = *aRuleData->ValueForMarginTop();
-  ourMargin.mRight = *aRuleData->ValueForMarginRightValue();
-  ourMargin.mBottom = *aRuleData->ValueForMarginBottom();
-  ourMargin.mLeft = *aRuleData->ValueForMarginLeftValue();
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForMarginLeftLTRSource(),
-                       *aRuleData->ValueForMarginLeftRTLSource(),
-                       *aRuleData->ValueForMarginStartValue(),
-                       *aRuleData->ValueForMarginEndValue(),
-                       NS_SIDE_LEFT, ourMargin, canStoreInRuleTree);
-  AdjustLogicalBoxProp(aContext,
-                       *aRuleData->ValueForMarginRightLTRSource(),
-                       *aRuleData->ValueForMarginRightRTLSource(),
-                       *aRuleData->ValueForMarginEndValue(),
-                       *aRuleData->ValueForMarginStartValue(),
-                       NS_SIDE_RIGHT, ourMargin, canStoreInRuleTree);
+  // margin: length, percent, calc, inherit
+  const nsCSSProperty* subprops =
+    nsCSSProps::SubpropertyEntryFor(eCSSProperty_margin);
+  nsStyleCoord coord;
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord parentCoord = parentMargin->mMargin.Get(side);
-    if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
+    if (SetCoord(*aRuleData->ValueFor(subprops[side]),
                  coord, parentCoord,
                  SETCOORD_LPAH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
                    SETCOORD_UNSET_INITIAL,
