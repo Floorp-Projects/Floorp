@@ -71,6 +71,8 @@
 #include "mozilla/dom/MediaSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaSourceDecoder.h"
+#include "AudioStreamTrack.h"
+#include "VideoStreamTrack.h"
 
 #include "AudioChannelService.h"
 
@@ -671,7 +673,10 @@ void HTMLMediaElement::AbortExistingLoads()
   mHaveQueuedSelectResource = false;
   mSuspendedForPreloadNone = false;
   mDownloadSuspendedByCache = false;
+  mHasAudio = false;
+  mHasVideo = false;
   mSourcePointer = nullptr;
+  mLastNextFrameStatus = NEXT_FRAME_UNINITIALIZED;
 
   mTags = nullptr;
 
@@ -900,6 +905,30 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
   } else if (VideoTrack* track = aTrack->AsVideoTrack()) {
     mDisableVideo = !track->Selected();
   }
+}
+
+void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
+{
+  if (!mSrcStream || mSrcStream != aStream) {
+    return;
+  }
+
+  bool oldHasVideo = mHasVideo;
+
+  nsAutoTArray<nsRefPtr<AudioStreamTrack>,1> audioTracks;
+  mSrcStream->GetAudioTracks(audioTracks);
+  nsAutoTArray<nsRefPtr<VideoStreamTrack>,1> videoTracks;
+  mSrcStream->GetVideoTracks(videoTracks);
+
+  mHasAudio = !audioTracks.IsEmpty();
+  mHasVideo = !videoTracks.IsEmpty();
+
+  if (IsVideo() && oldHasVideo != mHasVideo) {
+    // We are a video element and mHasVideo changed so update the screen wakelock
+    NotifyOwnerDocumentActivityChanged();
+  }
+
+  UpdateReadyStateForData(mLastNextFrameStatus);
 }
 
 void HTMLMediaElement::LoadFromSourceChildren()
@@ -1987,6 +2016,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
+    mLastNextFrameStatus(NEXT_FRAME_UNINITIALIZED),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
     mPreloadAction(PRELOAD_UNDEFINED),
@@ -2823,6 +2853,25 @@ private:
   bool mPendingNotifyOutput;
 };
 
+class HTMLMediaElement::MediaStreamTracksAvailableCallback:
+    public DOMMediaStream::OnTracksAvailableCallback
+{
+public:
+  explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement,
+                                              DOMMediaStream::TrackTypeHints aExpectedTracks = 0):
+      DOMMediaStream::OnTracksAvailableCallback(aExpectedTracks),
+      mElement(aElement)
+    {}
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+
+    mElement->NotifyMediaStreamTracksAvailable(aStream);
+  }
+private:
+  HTMLMediaElement* mElement;
+};
+
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 {
   NS_ASSERTION(!mSrcStream && !mSrcStreamListener, "Should have been ended already");
@@ -2844,22 +2893,26 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   if (mPausedForInactiveDocumentOrChannel) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
+
+  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this, DOMMediaStream::HINT_CONTENTS_AUDIO));
+  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this, DOMMediaStream::HINT_CONTENTS_VIDEO));
+
+  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+
   ChangeDelayLoadStatus(false);
   GetSrcMediaStream()->AddAudioOutput(this);
-  GetSrcMediaStream()->SetAudioOutputVolume(this, float(mMuted ? 0.0 : mVolume));
+  SetVolumeInternal();
   VideoFrameContainer* container = GetVideoFrameContainer();
   if (container) {
     GetSrcMediaStream()->AddVideoOutput(container);
   }
 
+  CheckAutoplayDataReady();
+
   // Note: we must call DisconnectTrackListListeners(...)  before dropping
   // mSrcStream
   mSrcStream->ConstructMediaTracks(AudioTracks(), VideoTracks());
 
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
-  DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
-  DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
   // FirstFrameLoaded() will be called when the stream has current data.
 }
 
@@ -2938,6 +2991,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     ResetState();
   } else {
     UpdateMediaSize(aInfo->mVideo.mDisplay);
+  }
+
+  if (IsVideo() && aInfo->HasVideo()) {
+    // We are a video element playing video so update the screen wakelock
+    NotifyOwnerDocumentActivityChanged();
   }
 }
 
@@ -3203,14 +3261,43 @@ bool HTMLMediaElement::ShouldCheckAllowOrigin()
 
 void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame)
 {
-  if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+  mLastNextFrameStatus = aNextFrame;
+
+  if (mDecoder && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
     // on its own thread before MetadataLoaded gets a chance to run.
     // The arrival of more data can't change us out of this readyState.
     return;
   }
 
+  if (mSrcStream && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+    if ((!mHasAudio && !mHasVideo) ||
+        (IsVideo() && mHasVideo && mMediaSize == nsIntSize(-1, -1))) {
+      return;
+    }
+
+    // We are playing a stream that has video and a video frame is now set.
+    // This means we have all metadata needed to change ready state.
+    MediaInfo mediaInfo;
+    mediaInfo.mAudio.mHasAudio = mHasAudio;
+    mediaInfo.mVideo.mHasVideo = mHasVideo;
+    if (mHasVideo) {
+      mediaInfo.mVideo.mDisplay = mMediaSize;
+    }
+    MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
+  }
+
   if (aNextFrame == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING) {
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
+    return;
+  }
+
+  if (IsVideo() && mHasVideo && !IsPlaybackEnded() &&
+        GetImageContainer() && !GetImageContainer()->HasCurrentImage()) {
+    // Don't advance if we are playing video, but don't have a video frame.
+    // Also, if video became available after advancing to HAVE_CURRENT_DATA
+    // while we are still playing, we need to revert to HAVE_METADATA until
+    // a video frame is available.
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
     return;
   }
@@ -3365,14 +3452,14 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
 
 bool HTMLMediaElement::CanActivateAutoplay()
 {
-  // For stream inputs, we activate autoplay on HAVE_CURRENT_DATA because
+  // For stream inputs, we activate autoplay on HAVE_NOTHING because
   // this element itself might be blocking the stream from making progress by
   // being paused.
   return !mPausedForInactiveDocumentOrChannel &&
          mAutoplaying &&
          mPaused &&
          ((mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
-          (mSrcStream && mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA)) &&
+          mSrcStream) &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
          mAutoplayEnabled &&
          !IsEditable();
@@ -3401,23 +3488,13 @@ void HTMLMediaElement::CheckAutoplayDataReady()
 
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
 {
-  // If we have loaded the metadata, and the size of the video is still
-  // (-1, -1), the media has no video. Don't go a create a video frame
-  // container.
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA &&
-      mMediaSize == nsIntSize(-1, -1)) {
-    return nullptr;
-  }
+  if (mVideoFrameContainer)
+    return mVideoFrameContainer;
 
   // Only video frames need an image container.
   if (!IsVideo()) {
     return nullptr;
   }
-
-  mHasVideo = true;
-
-  if (mVideoFrameContainer)
-    return mVideoFrameContainer;
 
   mVideoFrameContainer =
     new VideoFrameContainer(this, LayerManager::CreateAsynchronousImageContainer());
@@ -3533,6 +3610,7 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
 void HTMLMediaElement::UpdateMediaSize(nsIntSize size)
 {
   mMediaSize = size;
+  UpdateReadyStateForData(mLastNextFrameStatus);
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents)

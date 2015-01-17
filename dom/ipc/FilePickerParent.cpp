@@ -201,8 +201,8 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
                            const bool& aAddToRecentDocs,
                            const nsString& aDefaultFile,
                            const nsString& aDefaultExtension,
-                           const InfallibleTArray<nsString>& aFilters,
-                           const InfallibleTArray<nsString>& aFilterNames,
+                           InfallibleTArray<nsString>&& aFilters,
+                           InfallibleTArray<nsString>&& aFilterNames,
                            const nsString& aDisplayDirectory)
 {
   if (!CreateFilePicker()) {

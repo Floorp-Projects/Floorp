@@ -60,24 +60,29 @@ class ProfileEntry
         // sample of the pseudostack.
         FRAME_LABEL_COPY = 0x02,
 
-        // This ProfileEntry was pushed immediately before calling into asm.js.
-        ASMJS = 0x04,
+        // This ProfileEntry is a dummy entry indicating the start of a run
+        // of JS pseudostack entries.
+        BEGIN_PSEUDO_JS = 0x04,
+
+        // This flag is used to indicate that an interpreter JS entry has OSR-ed
+        // into baseline.
+        OSR = 0x08,
 
         // Mask for removing all flags except the category information.
-        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY & ~ASMJS
+        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY & ~BEGIN_PSEUDO_JS & ~OSR
     };
 
     // Keep these in sync with browser/devtools/profiler/utils/global.js
     MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
-        OTHER    = 0x08,
-        CSS      = 0x10,
-        JS       = 0x20,
-        GC       = 0x40,
-        CC       = 0x80,
-        NETWORK  = 0x100,
-        GRAPHICS = 0x200,
-        STORAGE  = 0x400,
-        EVENTS   = 0x800,
+        OTHER    = 0x10,
+        CSS      = 0x20,
+        JS       = 0x40,
+        GC       = 0x80,
+        CC       = 0x100,
+        NETWORK  = 0x200,
+        GRAPHICS = 0x400,
+        STORAGE  = 0x800,
+        EVENTS   = 0x1000,
 
         FIRST    = OTHER,
         LAST     = EVENTS
@@ -124,6 +129,18 @@ class ProfileEntry
     }
     uint32_t category() const volatile {
         return flags_ & CATEGORY_MASK;
+    }
+
+    void setOSR() volatile {
+        MOZ_ASSERT(isJs());
+        setFlag(OSR);
+    }
+    void unsetOSR() volatile {
+        MOZ_ASSERT(isJs());
+        unsetFlag(OSR);
+    }
+    bool isOSR() const volatile {
+        return hasFlag(OSR);
     }
 
     void *stackAddress() const volatile {

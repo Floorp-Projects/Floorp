@@ -63,13 +63,13 @@ public:
 private:
   // PGMPVideoDecoderChild
   virtual bool RecvInitDecode(const GMPVideoCodec& aCodecSettings,
-                              const nsTArray<uint8_t>& aCodecSpecific,
+                              InfallibleTArray<uint8_t>&& aCodecSpecific,
                               const int32_t& aCoreCount) MOZ_OVERRIDE;
   virtual bool RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                           const bool& aMissingFrames,
-                          const nsTArray<uint8_t>& aCodecSpecificInfo,
+                          InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
                           const int64_t& aRenderTimeMs) MOZ_OVERRIDE;
-  virtual bool RecvChildShmemForPool(Shmem& aFrameBuffer) MOZ_OVERRIDE;
+  virtual bool RecvChildShmemForPool(Shmem&& aFrameBuffer) MOZ_OVERRIDE;
   virtual bool RecvReset() MOZ_OVERRIDE;
   virtual bool RecvDrain() MOZ_OVERRIDE;
   virtual bool RecvDecodingComplete() MOZ_OVERRIDE;

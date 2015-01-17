@@ -125,6 +125,7 @@ interface CanvasRenderingContext2D {
   // hit regions
   [Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options);
   [Pref="canvas.hitregions.enabled"] void removeHitRegion(DOMString id);
+  [Pref="canvas.hitregions.enabled"] void clearHitRegions();
 
   // pixel manipulation
   [NewObject, Throws]

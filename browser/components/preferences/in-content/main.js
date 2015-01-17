@@ -178,7 +178,10 @@ var gMainPane = {
         for (let prefToChange of prefsToChange) {
           prefToChange.value = e10sCheckbox.checked;
         }
-        if (!e10sCheckbox.checked) {
+
+        let tmp = {};
+        Components.utils.import("resource://gre/modules/UpdateChannel.jsm", tmp);
+        if (!e10sCheckbox.checked && tmp.UpdateChannel.get() == "nightly") {
           Services.prefs.setBoolPref("browser.requestE10sFeedback", true);
           Services.prompt.alert(window, brandName, "After restart, a tab will open to input.mozilla.org where you can provide us feedback about your e10s experience.");
         }

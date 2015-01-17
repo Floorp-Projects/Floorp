@@ -2118,6 +2118,7 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
     if (FindInReadable(flash, aMimeType)) {
       mQuirks |= QUIRK_FLASH_AVOID_CGMODE_CRASHES;
+      mQuirks |= QUIRK_FLASH_HIDE_HIDPI_SUPPORT;
     }
     if (FindInReadable(flash, aMimeType) ||
         FindInReadable(quicktime, mPluginFilename)) {
@@ -2130,8 +2131,8 @@ bool
 PluginModuleChild::RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                                   const nsCString& aMimeType,
                                                   const uint16_t& aMode,
-                                                  const InfallibleTArray<nsCString>& aNames,
-                                                  const InfallibleTArray<nsCString>& aValues)
+                                                  InfallibleTArray<nsCString>&& aNames,
+                                                  InfallibleTArray<nsCString>&& aValues)
 {
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
@@ -2477,8 +2478,8 @@ PluginModuleChild::ProcessNativeEvents() {
 bool
 PluginModuleChild::RecvStartProfiler(const uint32_t& aEntries,
                                      const double& aInterval,
-                                     const nsTArray<nsCString>& aFeatures,
-                                     const nsTArray<nsCString>& aThreadNameFilters)
+                                     nsTArray<nsCString>&& aFeatures,
+                                     nsTArray<nsCString>&& aThreadNameFilters)
 {
     nsTArray<const char*> featureArray;
     for (size_t i = 0; i < aFeatures.Length(); ++i) {

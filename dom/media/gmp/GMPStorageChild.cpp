@@ -242,7 +242,7 @@ GMPStorageChild::RecvOpenComplete(const nsCString& aRecordName,
 bool
 GMPStorageChild::RecvReadComplete(const nsCString& aRecordName,
                                   const GMPErr& aStatus,
-                                  const InfallibleTArray<uint8_t>& aBytes)
+                                  InfallibleTArray<uint8_t>&& aBytes)
 {
   if (mShutdown) {
     return true;
@@ -330,7 +330,7 @@ private:
 };
 
 bool
-GMPStorageChild::RecvRecordNames(const InfallibleTArray<nsCString>& aRecordNames,
+GMPStorageChild::RecvRecordNames(InfallibleTArray<nsCString>&& aRecordNames,
                                  const GMPErr& aStatus)
 {
   RecordIteratorContext ctx;

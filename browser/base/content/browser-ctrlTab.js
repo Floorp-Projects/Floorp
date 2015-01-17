@@ -399,9 +399,9 @@ var ctrlTab = {
   suspendGUI: function ctrlTab_suspendGUI() {
     document.removeEventListener("keyup", this, true);
 
-    Array.forEach(this.previews, function (preview) {
+    for (let preview of this.previews) {
       this.updatePreview(preview, null);
-    }, this);
+    }
   },
 
   onKeyPress: function ctrlTab_onKeyPress(event) {

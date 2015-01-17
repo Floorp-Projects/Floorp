@@ -414,6 +414,16 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
     exitReason_(AsmJSExit::None),
     codeRange_(nullptr)
 {
+    // If profiling hasn't been enabled for this module, then CallerFPFromFP
+    // will be trash, so ignore the entire activation. In practice, this only
+    // happens if profiling is enabled while module->active() (in this case,
+    // profiling will be enabled when the module becomes inactive and gets
+    // called again).
+    if (!module_->profilingEnabled()) {
+        MOZ_ASSERT(done());
+        return;
+    }
+
     initFromFP(activation);
 }
 

@@ -20,6 +20,7 @@ describe("loop.shared.mixins", function() {
 
   afterEach(function() {
     sandbox.restore();
+    sharedMixins.setRootObject(window);
   });
 
   describe("loop.shared.mixins.UrlHashChangeMixin", function() {
@@ -162,10 +163,6 @@ describe("loop.shared.mixins", function() {
       });
     });
 
-    afterEach(function() {
-      loop.shared.mixins.setRootObject(window);
-    });
-
     function setupFakeVisibilityEventDispatcher(event) {
       loop.shared.mixins.setRootObject({
         document: {
@@ -194,6 +191,100 @@ describe("loop.shared.mixins", function() {
 
         sinon.assert.calledOnce(onDocumentHiddenStub);
       });
+  });
+
+  describe("loop.shared.mixins.MediaSetupMixin", function() {
+    var view, TestComp, rootObject;
+
+    beforeEach(function() {
+      TestComp = React.createClass({
+        mixins: [loop.shared.mixins.MediaSetupMixin],
+        render: function() {
+          return React.DOM.div();
+        }
+      });
+
+      rootObject = {
+        events: {},
+        addEventListener: function(eventName, listener) {
+          this.events[eventName] = listener;
+        },
+        removeEventListener: function(eventName) {
+          delete this.events[eventName];
+        }
+      };
+
+      sharedMixins.setRootObject(rootObject);
+
+      view = TestUtils.renderIntoDocument(React.createElement(TestComp));
+    });
+
+    describe("#getDefaultPublisherConfig", function() {
+      it("should provide a default publisher configuration", function() {
+        var defaultConfig = view.getDefaultPublisherConfig({publishVideo: true});
+
+        expect(defaultConfig.publishVideo).eql(true);
+      });
+    });
+
+    describe("Events", function() {
+      var localElement, remoteElement;
+
+      beforeEach(function() {
+        sandbox.stub(view, "getDOMNode").returns({
+          querySelector: function(classSelector) {
+            if (classSelector.contains("local")) {
+              return localElement;
+            }
+            return remoteElement;
+          }
+        });
+      });
+
+      describe("resize", function() {
+        it("should update the width on the local stream element", function() {
+          localElement = {
+            style: { width: "0%" }
+          };
+
+          rootObject.events.resize();
+
+          expect(localElement.style.width).eql("100%");
+        });
+
+        it("should update the height on the remote stream element", function() {
+          remoteElement = {
+            style: { height: "0%" }
+          };
+
+          rootObject.events.resize();
+
+          expect(remoteElement.style.height).eql("100%");
+        });
+      });
+
+      describe("orientationchange", function() {
+        it("should update the width on the local stream element", function() {
+          localElement = {
+            style: { width: "0%" }
+          };
+
+          rootObject.events.orientationchange();
+
+          expect(localElement.style.width).eql("100%");
+        });
+
+        it("should update the height on the remote stream element", function() {
+          remoteElement = {
+            style: { height: "0%" }
+          };
+
+          rootObject.events.orientationchange();
+
+          expect(remoteElement.style.height).eql("100%");
+        });
+      });
+    });
   });
 
   describe("loop.shared.mixins.AudioMixin", function() {

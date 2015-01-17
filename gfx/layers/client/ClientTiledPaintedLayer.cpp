@@ -83,7 +83,7 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
       // parent layer of the displayport-ancestor, which we don't reach in this
       // loop, so we don't need to worry about it.
       const FrameMetrics& metrics = iter.Metrics();
-      transform.PostScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1.f);
+      transform.PostScale(metrics.GetPresShellResolution(), metrics.GetPresShellResolution(), 1.f);
     }
   }
   return transform;

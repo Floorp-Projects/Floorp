@@ -185,27 +185,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<JitContext> jitContext_;
     mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
-    // SPS instrumentation, only used for Ion caches.
-    mozilla::Maybe<IonInstrumentation> spsInstrumentation_;
-    jsbytecode *spsPc_;
-
   private:
     // This field is used to manage profiling instrumentation output. If
     // provided and enabled, then instrumentation will be emitted around call
-    // sites. The IonInstrumentation instance is hosted inside of
-    // CodeGeneratorShared and is the manager of when instrumentation is
-    // actually emitted or not. If nullptr, then no instrumentation is emitted.
-    IonInstrumentation *sps_;
+    // sites.
+    bool emitProfilingInstrumentation_;
 
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
   public:
-    // If instrumentation should be emitted, then the sps parameter should be
-    // provided, but otherwise it can be safely omitted to prevent all
-    // instrumentation from being emitted.
     MacroAssembler()
-      : sps_(nullptr)
+      : emitProfilingInstrumentation_(false)
     {
         JitContext *jcx = GetJitContext();
         JSContext *cx = jcx->cx;
@@ -228,7 +219,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     explicit MacroAssembler(JSContext *cx, IonScript *ion = nullptr,
                             JSScript *script = nullptr, jsbytecode *pc = nullptr)
-      : sps_(nullptr)
+      : emitProfilingInstrumentation_(false)
     {
         constructRoot(cx);
         jitContext_.emplace(cx, (js::jit::TempAllocator *)nullptr);
@@ -240,21 +231,15 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
         if (ion) {
             setFramePushed(ion->frameSize());
-            if (pc && cx->runtime()->spsProfiler.enabled()) {
-                // We have to update the SPS pc when this IC stub calls into
-                // the VM.
-                spsPc_ = pc;
-                spsInstrumentation_.emplace(&cx->runtime()->spsProfiler, &spsPc_);
-                sps_ = spsInstrumentation_.ptr();
-                sps_->setPushed(script);
-            }
+            if (pc && cx->runtime()->spsProfiler.enabled())
+                emitProfilingInstrumentation_ = true;
         }
     }
 
     // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : sps_(nullptr)
+      : emitProfilingInstrumentation_(false)
     {
 #ifdef JS_CODEGEN_ARM
         initWithAllocator();
@@ -262,8 +247,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void setInstrumentation(IonInstrumentation *sps) {
-        sps_ = sps;
+    void enableProfilingInstrumentation() {
+        emitProfilingInstrumentation_ = true;
     }
 
     void resetForNewCodeGenerator(TempAllocator &alloc) {
@@ -864,20 +849,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         return exitCodePatch_.offset() != 0;
     }
 
-    void link(JitCode *code) {
-        MOZ_ASSERT(!oom());
-        // If this code can transition to C++ code and witness a GC, then we need to store
-        // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
-        // be unset if the code never needed to push its JitCode*.
-        if (hasEnteredExitFrame()) {
-            exitCodePatch_.fixup(this);
-            PatchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
-                                    ImmPtr(code),
-                                    ImmPtr((void*)-1));
-        }
-
-    }
-
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
 
@@ -889,50 +860,45 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
-    void callWithABINoProfiling(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
-        MacroAssemblerSpecific::callWithABI(fun, result);
-    }
-
-    template <typename T>
     void callWithABI(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
-        leaveSPSFrame();
-        callWithABINoProfiling(fun, result);
-        reenterSPSFrame();
+        profilerPreCall();
+        MacroAssemblerSpecific::callWithABI(fun, result);
+        profilerPostReturn();
     }
 
     // see above comment for what is returned
     uint32_t callJit(Register callee) {
-        leaveSPSFrame();
+        profilerPreCall();
         MacroAssemblerSpecific::callJit(callee);
         uint32_t ret = currentOffset();
-        reenterSPSFrame();
+        profilerPostReturn();
         return ret;
     }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(Label *target) {
-        leaveSPSFrame();
+        profilerPreCall();
         MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
-        reenterSPSFrame();
+        profilerPostReturn();
         return ret;
     }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(JitCode *target) {
-        leaveSPSFrame();
+        profilerPreCall();
         MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
-        reenterSPSFrame();
+        profilerPostReturn();
         return ret;
     }
 
     // see above comment for what is returned
     uint32_t callWithExitFrame(JitCode *target, Register dynStack) {
-        leaveSPSFrame();
+        profilerPreCall();
         MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
         uint32_t ret = currentOffset();
-        reenterSPSFrame();
+        profilerPostReturn();
         return ret;
     }
 
@@ -968,165 +934,19 @@ class MacroAssembler : public MacroAssemblerSpecific
     // These two functions are helpers used around call sites throughout the
     // assembler. They are called from the above call wrappers to emit the
     // necessary instrumentation.
-    void leaveSPSFrame() {
-        if (!sps_ || !sps_->enabled())
+    void profilerPreCall() {
+        if (!emitProfilingInstrumentation_)
             return;
-        // No registers are guaranteed to be available, so push/pop a register
-        // so we can use one
-        push(CallTempReg0);
-        sps_->leave(*this, CallTempReg0);
-        pop(CallTempReg0);
+        profilerPreCallImpl();
     }
 
-    void reenterSPSFrame() {
-        if (!sps_ || !sps_->enabled())
+    void profilerPostReturn() {
+        if (!emitProfilingInstrumentation_)
             return;
-        // Attempt to use a now-free register within a given set, but if the
-        // architecture being built doesn't have an available register, resort
-        // to push/pop
-        GeneralRegisterSet regs(Registers::TempMask & ~Registers::JSCallMask &
-                                                      ~Registers::CallMask);
-        if (regs.empty()) {
-            push(CallTempReg0);
-            sps_->reenter(*this, CallTempReg0);
-            pop(CallTempReg0);
-        } else {
-            sps_->reenter(*this, regs.getAny());
-        }
-    }
-
-    void spsProfileEntryAddress(SPSProfiler *p, int offset, Register temp,
-                                Label *full)
-    {
-        movePtr(ImmPtr(p->sizePointer()), temp);
-        load32(Address(temp, 0), temp);
-        if (offset != 0)
-            add32(Imm32(offset), temp);
-        branch32(Assembler::GreaterThanOrEqual, temp, Imm32(p->maxSize()), full);
-
-        JS_STATIC_ASSERT(sizeof(ProfileEntry) == (2 * sizeof(void *)) + 8);
-        if (sizeof(void *) == 4) {
-            lshiftPtr(Imm32(4), temp);
-        } else {
-            lshiftPtr(Imm32(3), temp);
-            mulBy3(temp, temp);
-        }
-
-        addPtr(ImmPtr(p->stack()), temp);
-    }
-
-    // The safe version of the above method refrains from assuming that the fields
-    // of the SPSProfiler class are going to stay the same across different runs of
-    // the jitcode.  Ion can use the more efficient unsafe version because ion jitcode
-    // will not survive changes to to the profiler settings.  Baseline jitcode, however,
-    // can span these changes, so any hardcoded field values will be incorrect afterwards.
-    // All the sps-related methods used by baseline call |spsProfileEntryAddressSafe|.
-    void spsProfileEntryAddressSafe(SPSProfiler *p, int offset, Register temp,
-                                    Label *full)
-    {
-        // Load size pointer
-        loadPtr(AbsoluteAddress(p->addressOfSizePointer()), temp);
-
-        // Load size
-        load32(Address(temp, 0), temp);
-        if (offset != 0)
-            add32(Imm32(offset), temp);
-
-        // Test against max size.
-        branch32(Assembler::LessThanOrEqual, AbsoluteAddress(p->addressOfMaxSize()), temp, full);
-
-        JS_STATIC_ASSERT(sizeof(ProfileEntry) == (2 * sizeof(void *)) + 8);
-        if (sizeof(void *) == 4) {
-            lshiftPtr(Imm32(4), temp);
-        } else {
-            lshiftPtr(Imm32(3), temp);
-            mulBy3(temp, temp);
-        }
-
-        push(temp);
-        loadPtr(AbsoluteAddress(p->addressOfStack()), temp);
-        addPtr(Address(StackPointer, 0), temp);
-        addPtr(Imm32(sizeof(size_t)), StackPointer);
+        profilerPostReturnImpl();
     }
 
   public:
-    // These functions are needed by the IonInstrumentation interface defined in
-    // vm/SPSProfiler.h.  They will modify the pseudostack provided to SPS to
-    // perform the actual instrumentation.
-
-    void spsUpdatePCIdx(SPSProfiler *p, int32_t idx, Register temp) {
-        Label stackFull;
-        spsProfileEntryAddress(p, -1, temp, &stackFull);
-        store32(Imm32(idx), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        bind(&stackFull);
-    }
-
-    void spsUpdatePCIdx(SPSProfiler *p, Register idx, Register temp) {
-        Label stackFull;
-        spsProfileEntryAddressSafe(p, -1, temp, &stackFull);
-        store32(idx, Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        bind(&stackFull);
-    }
-
-    // spsPushFrame variant for Ion-optimized scripts.
-    void spsPushFrame(SPSProfiler *p, const char *str, JSScript *s, Register temp) {
-        Label stackFull;
-        spsProfileEntryAddress(p, 0, temp, &stackFull);
-
-        // Push a JS frame with a copy label
-        storePtr(ImmPtr(str), Address(temp, ProfileEntry::offsetOfLabel()));
-        storePtr(ImmGCPtr(s), Address(temp, ProfileEntry::offsetOfSpOrScript()));
-        store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        store32(Imm32(ProfileEntry::FRAME_LABEL_COPY), Address(temp, ProfileEntry::offsetOfFlags()));
-
-        /* Always increment the stack size, whether or not we actually pushed. */
-        bind(&stackFull);
-        movePtr(ImmPtr(p->sizePointer()), temp);
-        add32(Imm32(1), Address(temp, 0));
-    }
-
-    // spsPushFrame variant for Baseline-optimized scripts.
-    void spsPushFrame(SPSProfiler *p, const Address &str, const Address &script,
-                      Register temp, Register temp2)
-    {
-        Label stackFull;
-        spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
-
-        // Push a JS frame with a copy label
-        loadPtr(str, temp2);
-        storePtr(temp2, Address(temp, ProfileEntry::offsetOfLabel()));
-
-        loadPtr(script, temp2);
-        storePtr(temp2, Address(temp, ProfileEntry::offsetOfSpOrScript()));
-
-        // Store 0 for PCIdx because that's what interpreter does.
-        // (See probes::EnterScript, which calls spsProfiler.enter, which pushes an entry
-        //  with 0 pcIdx).
-        store32(Imm32(0), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        store32(Imm32(ProfileEntry::FRAME_LABEL_COPY), Address(temp, ProfileEntry::offsetOfFlags()));
-
-        /* Always increment the stack size, whether or not we actually pushed. */
-        bind(&stackFull);
-        movePtr(ImmPtr(p->addressOfSizePointer()), temp);
-        loadPtr(Address(temp, 0), temp);
-        add32(Imm32(1), Address(temp, 0));
-    }
-
-    void spsPopFrame(SPSProfiler *p, Register temp) {
-        movePtr(ImmPtr(p->sizePointer()), temp);
-        add32(Imm32(-1), Address(temp, 0));
-    }
-
-    // spsPropFrameSafe does not assume |profiler->sizePointer()| will stay constant.
-    void spsPopFrameSafe(SPSProfiler *p, Register temp) {
-        loadPtr(AbsoluteAddress(p->addressOfSizePointer()), temp);
-        add32(Imm32(-1), Address(temp, 0));
-    }
-
-    static const char enterJitLabel[];
-    void spsMarkJit(SPSProfiler *p, Register framePtr, Register temp);
-    void spsUnmarkJit(SPSProfiler *p, Register temp);
-
     void loadBaselineOrIonRaw(Register script, Register dest, Label *failure);
     void loadBaselineOrIonNoArgCheck(Register callee, Register dest, Label *failure);
 
@@ -1151,6 +971,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void finish();
+    void link(JitCode *code);
 
     void assumeUnreachable(const char *output);
     void printf(const char *output);
@@ -1422,6 +1243,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&ok);
 #endif
     }
+
+    void profilerPreCallImpl();
+    void profilerPreCallImpl(Register reg, Register reg2);
+    void profilerPostReturnImpl() {}
 };
 
 static inline Assembler::DoubleCondition

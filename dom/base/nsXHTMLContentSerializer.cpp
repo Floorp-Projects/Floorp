@@ -33,6 +33,8 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsParserConstants.h"
+#include "nsComputedDOMStyle.h"
+#include "mozilla/dom/Element.h"
 
 static const int32_t kLongLineLen = 128;
 
@@ -131,7 +133,7 @@ nsXHTMLContentSerializer::AppendText(nsIContent* aText,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  if (mPreLevel > 0 || mDoRaw) {
+  if (mDoRaw || PreLevel() > 0) {
     AppendToStringConvertLF(data, aStr);
   }
   else if (mDoFormat) {
@@ -535,8 +537,9 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
   int32_t namespaceID = aContent->GetNameSpaceID();
 
   if (namespaceID == kNameSpaceID_XHTML) {
-    if (name == nsGkAtoms::br && mPreLevel > 0 && 
-        (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
+    if (name == nsGkAtoms::br &&
+        (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
+        PreLevel() > 0) {
       AppendNewLineToString(aStr);
       return false;
     }
@@ -843,39 +846,58 @@ nsXHTMLContentSerializer::LineBreakAfterClose(int32_t aNamespaceID, nsIAtom* aNa
 void
 nsXHTMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
-
-  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+  if (!ShouldMaintainPreLevel() ||
+      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 
   nsIAtom *name = aNode->Tag();
 
-  if (name == nsGkAtoms::pre ||
+  if (IsElementPreformatted(aNode) ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
       name == nsGkAtoms::noframes
       ) {
-    mPreLevel++;
+    PreLevel()++;
   }
 }
 
 void
 nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
-  if (aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
+  if (!ShouldMaintainPreLevel() ||
+      aNode->GetNameSpaceID() != kNameSpaceID_XHTML) {
     return;
   }
 
   nsIAtom *name = aNode->Tag();
-  if (name == nsGkAtoms::pre ||
+  if (IsElementPreformatted(aNode) ||
       name == nsGkAtoms::script ||
       name == nsGkAtoms::style ||
       name == nsGkAtoms::noscript ||
       name == nsGkAtoms::noframes
     ) {
-    --mPreLevel;
+    --PreLevel();
   }
+}
+
+bool
+nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
+{
+  MOZ_ASSERT(ShouldMaintainPreLevel(), "We should not be calling this needlessly");
+
+  if (!aNode->IsElement()) {
+    return false;
+  }
+  nsRefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aNode->AsElement(),
+                                                         nullptr, nullptr);
+  if (styleContext) {
+    const nsStyleText* textStyle = styleContext->StyleText();
+    return textStyle->WhiteSpaceOrNewlineIsSignificant();
+  }
+  return false;
 }
 
 void 

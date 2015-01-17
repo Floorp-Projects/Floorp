@@ -68,6 +68,8 @@ class BaselineCompilerShared
     mozilla::DebugOnly<bool> inCall_;
 
     CodeOffsetLabel spsPushToggleOffset_;
+    CodeOffsetLabel profilerEnterFrameToggleOffset_;
+    CodeOffsetLabel profilerExitFrameToggleOffset_;
     CodeOffsetLabel traceLoggerEnterToggleOffset_;
     CodeOffsetLabel traceLoggerExitToggleOffset_;
     CodeOffsetLabel traceLoggerScriptTextIdOffset_;
