@@ -9651,7 +9651,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
           // If this is a shorthand property, we store the token stream on each
           // of its corresponding longhand properties.
           CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
-                                               nsCSSProps::eEnabledForAllContent) {
+                                               PropertyEnabledState()) {
             nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
             tokenStream->mPropertyID = *p;
             tokenStream->mShorthandPropertyID = aPropID;
