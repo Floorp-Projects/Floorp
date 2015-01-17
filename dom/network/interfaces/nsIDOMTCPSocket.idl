@@ -12,7 +12,6 @@
 #include "domstubs.idl"
 #include "nsIDOMEvent.idl"
 #include "nsITCPSocketChild.idl"
-#include "nsIDOMTCPServerSocket.idl"
 
 interface nsISocketTransport;
 
@@ -32,7 +31,7 @@ interface nsISocketTransport;
 // Bug 797561 - Expose a server tcp socket API to web applications
 
 
-[scriptable, uuid(65f6d2c8-4be6-4695-958d-0735e8935289)]
+[scriptable, uuid(8D7BF931-CBBF-4D7C-98F6-9B1F1359E659)]
 interface nsIDOMTCPSocket : nsISupports
 {
   /**
@@ -53,26 +52,6 @@ interface nsIDOMTCPSocket : nsISupports
    * @return The new TCPSocket instance.
    */
   nsIDOMTCPSocket open(in DOMString host, in unsigned short port, [optional] in jsval options);
-
-  /**
-   * Listen on a port
-   *
-   * @param localPort The port of the server socket. Pass -1 to indicate no preference,
-   *                  and a port will be selected automatically.
-   * @param options An object specifying one or more parameters which
-   *                determine the details of the socket.
-   *
-   *        binaryType: "arraybuffer" to use ArrayBuffer
-   *          instances in the ondata callback and as the argument
-   *          to send. Defaults to "string", to use JavaScript strings.
-   * @param backlog The maximum length the queue of pending connections may grow to.
-   *                This parameter may be silently limited by the operating system.
-   *                Pass -1 to use the default value.
-   *
-   * @return The new TCPServerSocket instance.
-   */
-  nsIDOMTCPServerSocket listen(in unsigned short localPort, [optional] in jsval options,
-                               [optional] in unsigned short backlog);
 
   /**
    * Enable secure on channel.
@@ -247,17 +226,17 @@ interface nsITCPSocketInternal : nsISupports {
 
   // Create a socket object on the parent side.
   // This is called in accepting any open request on the parent side.
-  // 
+  //
   // @param transport
   //        The accepted socket transport.
   // @param binaryType
-  //        "arraybuffer" to use ArrayBuffer instances 
+  //        "arraybuffer" to use ArrayBuffer instances
   //        in the ondata callback and as the argument to send.
-  // @param window
-  //        An object to create ArrayBuffer for this window. See Bug 831107.
+  // @param global
+  //        An object to create ArrayBuffer for this global. See Bug 831107.
   nsIDOMTCPSocket createAcceptedParent(in nsISocketTransport transport,
                                        in DOMString binaryType,
-                                       in nsIDOMWindow window);
+                                       in nsISupports global);
 
   // Create a DOM socket on the child side
   // This is called when the socket is accepted on the parent side.

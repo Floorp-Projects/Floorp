@@ -5,14 +5,14 @@
 #include "domstubs.idl"
 
 interface nsIDOMTCPSocket;
-interface nsIDOMTCPServerSocket;
+interface nsITCPServerSocketInternal;
 interface nsITCPServerSocketParent;
 interface nsITCPSocketIntermediary;
 
 // Interface required to allow the TCP socket object (TCPSocket.js) in the
 // parent process to talk to the parent IPC actor, TCPSocketParent, which
 // is written in C++.
-[scriptable, uuid(6f040bf0-6852-11e3-949a-0800200c9a66)]
+[scriptable, uuid(03B864C8-AAA9-4062-943E-AE6397070E0D)]
 interface nsITCPSocketParent : nsISupports
 {
   [implicit_jscontext] void initJS(in jsval intermediary);
@@ -75,11 +75,11 @@ interface nsITCPSocketIntermediary : nsISupports {
                        in boolean inBrowser);
 
   // Listen on a port
-  nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,
-                               in unsigned short port, in unsigned short backlog,
-                               in DOMString binaryType,
-                               in unsigned long appId,
-                               in boolean inBrowser);
+  nsITCPServerSocketInternal listen(in nsITCPServerSocketParent parent,
+                                    in unsigned short port, in unsigned short backlog,
+                                    in DOMString binaryType,
+                                    in unsigned long appId,
+                                    in boolean inBrowser);
 
   // Called when received a child request to send a string.
   void onRecvSendString(in DOMString data, in uint32_t trackingNumber);
