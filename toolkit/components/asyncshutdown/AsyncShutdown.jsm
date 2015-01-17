@@ -46,6 +46,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gDebug",
@@ -80,6 +82,102 @@ try {
 Services.prefs.addObserver(PREF_DELAY_CRASH_MS, function() {
   DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
 }, false);
+
+/**
+ * A set of Promise that supports waiting.
+ *
+ * Promise items may be added or removed during the wait. The wait will
+ * resolve once all Promise items have been resolved or removed.
+ */
+function PromiseSet() {
+  /**
+   * key: the Promise passed pass the client of the `PromiseSet`.
+   * value: an indirection on top of `key`, as an object with
+   *   the following fields:
+   *   - indirection: a Promise resolved if `key` is resolved or
+   *     if `resolve` is called
+   *   - resolve: a function used to resolve the indirection.
+   */
+  this._indirections = new Map();
+}
+PromiseSet.prototype = {
+  /**
+   * Wait until all Promise have been resolved or removed.
+   *
+   * Note that calling `wait()` causes Promise to be removed from the
+   * Set once they are resolved.
+   *
+   * @return {Promise} Resolved once all Promise have been resolved or removed,
+   * or rejected after at least one Promise has rejected.
+   */
+  wait: function() {
+    // Pick an arbitrary element in the map, if any exists.
+    let entry = this._indirections.entries().next();
+    if (entry.done) {
+      // No indirections left, we are done.
+      return Promise.resolve();
+    }
+
+    let [, indirection] = entry.value;
+    let promise = indirection.promise;
+    promise = promise.then(() =>
+      // At this stage, the entry has been cleaned up.
+      this.wait()
+    );
+    return promise;
+  },
+
+  /**
+   * Add a new Promise to the set.
+   *
+   * Calls to wait (including ongoing calls) will only return once
+   * `key` has either resolved or been removed.
+   */
+  add: function(key) {
+    this._ensurePromise(key);
+    let indirection = PromiseUtils.defer();
+    key.then(
+      x => {
+        // Clean up immediately.
+        // This needs to be done before the call to `resolve`, otherwise
+        // `wait()` may loop forever.
+        this._indirections.delete(key);
+        indirection.resolve(x);
+      },
+      err => {
+        this._indirections.delete(key);
+        indirection.reject(err);
+      });
+    this._indirections.set(key, indirection);
+  },
+
+  /**
+   * Remove a Promise from the set.
+   *
+   * Calls to wait (including ongoing calls) will ignore this promise,
+   * unless it is added again.
+   */
+  delete: function(key) {
+    this._ensurePromise(key);
+    let value = this._indirections.get(key);
+    if (!value) {
+      return false;
+    }
+    this._indirections.delete(key);
+    value.resolve();
+    return true;
+  },
+
+  _ensurePromise: function(key) {
+    if (!key || typeof key != "object") {
+      throw new Error("Expected an object");
+    }
+    if ((!"then" in key) || typeof key.then != "function") {
+      throw new Error("Expected a Promise");
+    }
+  },
+
+};
 
 
 /**
@@ -391,23 +489,44 @@ function Barrier(name) {
     throw new TypeError("Instances of Barrier need a (non-empty) name");
   }
 
-  /**
-   * The set of conditions registered by clients, as a map.
-   *
-   * Key: condition (function)
-   * Value: Array of {name: string, fetchState: function, filename: string,
-   *   lineNumber: number, stack: string}
-   */
-  this._conditions = new Map();
 
   /**
-   * Indirections, used to let clients cancel a blocker when they
-   * call removeBlocker().
+   * The set of all Promise for which we need to wait before the barrier
+   * is lifted. Note that this set may be changed while we are waiting.
    *
-   * Key: condition (function)
-   * Value: Deferred.
+   * Set to `null` once the wait is complete.
    */
-  this._indirections = null;
+  this._waitForMe = new PromiseSet();
+
+  /**
+   * A map from conditions, as passed by users during the call to `addBlocker`,
+   * to `promise`, as present in `this._waitForMe`.
+   *
+   * Used to let users perform cleanup through `removeBlocker`.
+   * Set to `null` once the wait is complete.
+   *
+   * Key: condition (any, as passed by user)
+   * Value: promise used as a key in `this._waitForMe`. Note that there is
+   * no guarantee that the key is still present in `this._waitForMe`.
+   */
+  this._conditionToPromise = new Map();
+
+  /**
+   * A map from Promise, as present in `this._waitForMe` or
+   * `this._conditionToPromise`, to information on blockers.
+   *
+   * Key: Promise (as present in this._waitForMe or this._conditionToPromise).
+   * Value:  {
+   *  trigger: function,
+   *  promise,
+   *  name,
+   *  fetchState: function,
+   *  stack,
+   *  filename,
+   *  lineNumber
+   * };
+   */
+  this._promiseToBlocker = new Map();
 
   /**
    * The name of the barrier.
@@ -420,9 +539,9 @@ function Barrier(name) {
   this._promise = null;
 
   /**
-   * An array of objects used to monitor the state of each blocker.
+   * `true` once we have started waiting.
    */
-  this._monitors = null;
+  this._isStarted = false;
 
   /**
    * The capability of adding blockers. This object may safely be returned
@@ -465,7 +584,7 @@ function Barrier(name) {
      * - filename A string containing the filename for the caller. This
      *    module can generally infer  the information if it is not provided.
      */
-    addBlocker: function(name, condition, details) {
+    addBlocker: (name, condition, details) => {
       if (typeof name != "string") {
         throw new TypeError("Expected a human-readable name as first argument");
       }
@@ -479,11 +598,11 @@ function Barrier(name) {
       if (typeof details != "object") {
         throw new TypeError("Expected an object as third argument to `addBlocker`, got " + details);
       }
-      if (!this._conditions) {
-	throw new Error("Phase " + this._name +
-			" has already begun, it is too late to register" +
-			" completion condition '" + name + "'.");
+      if (!this._waitForMe) {
+        throw new Error(`Phase "${ this._name } is finished, it is too late to register completion condition "${ name }"`);
       }
+
+      // Normalize the details
 
       let fetchState = details.fetchState || null;
       let filename = details.filename || "?";
@@ -517,17 +636,73 @@ function Barrier(name) {
         }
       }
 
-      let set = this._conditions.get(condition);
-      if (!set) {
-        set = [];
-        this._conditions.set(condition, set);
+      // Split the condition between a trigger function and a promise.
+
+      // The function to call to notify the blocker that we have started waiting.
+      // This function returns a promise resolved/rejected once the
+      // condition is complete, and never throws.
+      let trigger;
+
+      // A promise resolved once the condition is complete.
+      let promise;
+      if (typeof condition == "function") {
+        promise = new Promise((resolve, reject) => {
+          trigger = () => {
+            try {
+              resolve(condition());
+            } catch (ex) {
+              reject(ex);
+            }
+          }
+        });
+      } else {
+        // If `condition` is not a function, `trigger` is not particularly
+        // interesting, and `condition` needs to be normalized to a promise.
+        trigger = () => {};
+        promise = Promise.resolve(condition);
       }
-      set.push({name: name,
-                fetchState: fetchState,
-                filename: filename,
-                lineNumber: lineNumber,
-                stack: stack});
-    }.bind(this),
+
+      // Make sure that `promise` never rejects.
+      promise = promise.then(null, error => {
+        let msg = `A blocker encountered an error while we were waiting.
+          Blocker:  ${ name }
+          Phase: ${ this._name }
+          State: ${ safeGetState(fetchState) }`;
+        warn(msg, error);
+
+        // The error should remain uncaught, to ensure that it
+        // still causes tests to fail.
+        Promise.reject(error);
+      });
+
+      let blocker = {
+        trigger: trigger,
+        promise: promise,
+        name: name,
+        fetchState: fetchState,
+        stack: stack,
+        filename: filename,
+        lineNumber: lineNumber
+      };
+
+      this._waitForMe.add(promise);
+      this._promiseToBlocker.set(promise, blocker);
+      this._conditionToPromise.set(condition, promise);
+
+      // As conditions may hold lots of memory, we attempt to cleanup
+      // as soon as we are done (which might be in the next tick, if
+      // we have been passed a resolved promise).
+      promise = promise.then(() =>
+        this._removeBlocker(condition)
+      );
+
+      if (this._isStarted) {
+        // The wait has already started. The blocker should be
+        // notified asap. We do it out of band as clients probably
+        // expect `addBlocker` to return immediately.
+        Promise.resolve().then(trigger);
+      }
+    },
 
     /**
      * Remove the blocker for a condition.
@@ -539,24 +714,9 @@ function Barrier(name) {
      * @return {boolean} true if at least one blocker has been
      * removed, false otherwise.
      */
-    removeBlocker: function(condition) {
-      if (this._conditions) {
-        // wait() hasn't been called yet.
-        return this._conditions.delete(condition);
-      }
-
-      if (this._indirections) {
-        // wait() is in progress
-        let deferred = this._indirections.get(condition);
-        if (deferred) {
-          // Unlock the blocker
-          deferred.resolve();
-        }
-        return this._indirections.delete(condition);
-      }
-      // wait() is complete.
-      return false;
-    }.bind(this),
+    removeBlocker: (condition) => {
+      return this._removeBlocker(condition);
+    }
   };
 }
 Barrier.prototype = Object.freeze({
@@ -565,21 +725,21 @@ Barrier.prototype = Object.freeze({
    * designed for error-reporting.
    */
   get state() {
-    if (this._conditions) {
+    if (!this._isStarted) {
       return "Not started";
     }
-    if (!this._monitors) {
+    if (!this._waitForMe) {
       return "Complete";
     }
     let frozen = [];
-    for (let {name, isComplete, fetchState, stack, filename, lineNumber} of this._monitors) {
-      if (!isComplete) {
-        frozen.push({name: name,
-                     state: safeGetState(fetchState),
-                     filename: filename,
-                     lineNumber: lineNumber,
-                     stack: stack});
-      }
+    for (let {name, fetchState, stack, filename, lineNumber} of this._promiseToBlocker.values()) {
+      frozen.push({
+        name: name,
+        state: safeGetState(fetchState),
+        filename: filename,
+        lineNumber: lineNumber,
+        stack: stack
+      });
     }
     return frozen;
   },
@@ -614,109 +774,43 @@ Barrier.prototype = Object.freeze({
     return this._promise = this._wait(options);
   },
   _wait: function(options) {
+
+    // Sanity checks
+    if (this._isStarted) {
+      throw new TypeError("Internal error: already started " + this._name);
+    }
+    if (!this._waitForMe || !this._conditionToPromise || !this._promiseToBlocker) {
+      throw new TypeError("Internal error: already finished " + this._name);
+    }
+
     let topic = this._name;
-    let conditions = this._conditions;
-    this._conditions = null; // Too late to register
-    if (conditions.size == 0) {
-      return Promise.resolve();
+
+    // Notify blockers
+    for (let blocker of this._promiseToBlocker.values()) {
+      blocker.trigger(); // We have guarantees that this method will never throw
     }
 
-    this._indirections = new Map();
-    // The promises for which we are waiting.
-    let allPromises = [];
+    this._isStarted = true;
 
-    // Information to determine and report to the user which conditions
-    // are not satisfied yet.
-    this._monitors = [];
-
-    for (let _condition of conditions.keys()) {
-      for (let current of conditions.get(_condition)) {
-        let condition = _condition; // Avoid capturing the wrong variable
-        let {name, fetchState, stack, filename, lineNumber} = current;
-
-        // An indirection on top of condition, used to let clients
-        // cancel a blocker through removeBlocker.
-        let indirection = Promise.defer();
-        this._indirections.set(condition, indirection);
-
-        // Gather all completion conditions
-
-        try {
-          if (typeof condition == "function") {
-            // Normalize |condition| to the result of the function.
-            try {
-              condition = condition(topic);
-            } catch (ex) {
-              condition = Promise.reject(ex);
-            }
-          }
-
-          // Normalize to a promise. Of course, if |condition| was not a
-          // promise in the first place (in particular if the above
-          // function returned |undefined| or failed), that new promise
-          // isn't going to be terribly interesting, but it will behave
-          // as a promise.
-          condition = Promise.resolve(condition);
-
-          let monitor = {
-            isComplete: false,
-            name: name,
-            fetchState: fetchState,
-            stack: stack,
-            filename: filename,
-            lineNumber: lineNumber
-          };
-
-	  condition = condition.then(null, function onError(error) {
-            let msg = "A completion condition encountered an error" +
-              " while we were spinning the event loop." +
-	      " Condition: " + name +
-              " Phase: " + topic +
-              " State: " + safeGetState(fetchState);
-	    warn(msg, error);
-
-            // The error should remain uncaught, to ensure that it
-            // still causes tests to fail.
-            Promise.reject(error);
-	  });
-          condition.then(() => indirection.resolve());
-
-          indirection.promise.then(() => monitor.isComplete = true);
-          this._monitors.push(monitor);
-          allPromises.push(indirection.promise);
-
-        } catch (error) {
-            let msg = "A completion condition encountered an error" +
-                  " while we were initializing the phase." +
-                  " Condition: " + name +
-                  " Phase: " + topic +
-                  " State: " + safeGetState(fetchState);
-            warn(msg, error);
-        }
-
-      }
-    }
-    conditions = null;
-
-    let promise = Promise.all(allPromises);
-    allPromises = null;
+    // Now, wait
+    let promise = this._waitForMe.wait();
 
     promise = promise.then(null, function onError(error) {
       // I don't think that this can happen.
       // However, let's be overcautious with async/shutdown error reporting.
       let msg = "An uncaught error appeared while completing the phase." +
-            " Phase: " + topic;
+        " Phase: " + topic;
       warn(msg, error);
     });
 
     promise = promise.then(() => {
-      this._monitors = null;
-      this._indirections = null;
-    }); // Memory cleanup
-
+      // Cleanup memory
+      this._waitForMe = null;
+      this._promiseToBlocker = null;
+      this._conditionToPromise = null;
+    });
 
     // Now handle warnings and crashes
-
     let warnAfterMS = DELAY_WARNING_MS;
     if (options && "warnAfterMS" in options) {
       if (typeof options.warnAfterMS == "number"
@@ -732,12 +826,12 @@ Barrier.prototype = Object.freeze({
       // If the promise takes too long to be resolved/rejected,
       // we need to notify the user.
       let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(function() {
+      timer.initWithCallback(() => {
         let msg = "At least one completion condition is taking too long to complete." +
-	  " Conditions: " + JSON.stringify(this.state) +
-	  " Barrier: " + topic;
+        " Conditions: " + JSON.stringify(this.state) +
+        " Barrier: " + topic;
         warn(msg);
-      }.bind(this), warnAfterMS, Ci.nsITimer.TYPE_ONE_SHOT);
+      }, warnAfterMS, Ci.nsITimer.TYPE_ONE_SHOT);
 
       promise = promise.then(function onSuccess() {
         timer.cancel();
@@ -769,8 +863,8 @@ Barrier.prototype = Object.freeze({
       timeToCrash = looseTimer(crashAfterMS);
       timeToCrash.promise.then(
         function onTimeout() {
-	  // Report the problem as best as we can, then crash.
-	  let state = this.state;
+          // Report the problem as best as we can, then crash.
+          let state = this.state;
 
           // If you change the following message, please make sure
           // that any information on the topic and state appears
@@ -779,42 +873,39 @@ Barrier.prototype = Object.freeze({
           let msg = "AsyncShutdown timeout in " + topic +
             " Conditions: " + JSON.stringify(state) +
             " At least one completion condition failed to complete" +
-	    " within a reasonable amount of time. Causing a crash to" +
-	    " ensure that we do not leave the user with an unresponsive" +
-	    " process draining resources.";
-	  fatalerr(msg);
-	  if (gCrashReporter && gCrashReporter.enabled) {
+            " within a reasonable amount of time. Causing a crash to" +
+            " ensure that we do not leave the user with an unresponsive" +
+            " process draining resources.";
+          fatalerr(msg);
+          if (gCrashReporter && gCrashReporter.enabled) {
             let data = {
               phase: topic,
               conditions: state
-	    };
+            };
             gCrashReporter.annotateCrashReport("AsyncShutdownTimeout",
               JSON.stringify(data));
-	  } else {
+          } else {
             warn("No crash reporter available");
-	  }
+          }
 
           // To help sorting out bugs, we want to make sure that the
           // call to nsIDebug.abort points to a guilty client, rather
-          // than to AsyncShutdown itself. We search through all the
-          // clients until we find one that is guilty and use its
-          // filename/lineNumber, which have been determined during
-          // the call to `addBlocker`.
+          // than to AsyncShutdown itself. We pick a client that is
+          // still blocking and use its filename/lineNumber,
+          // which have been determined during the call to `addBlocker`.
           let filename = "?";
           let lineNumber = -1;
-          for (let monitor of this._monitors) {
-            if (monitor.isComplete) {
-              continue;
-            }
-            filename = monitor.filename;
-            lineNumber = monitor.lineNumber;
+          for (let blocker of this._promiseToBlocker) {
+            filename = blocker.filename;
+            lineNumber = blocker.lineNumber;
+            break;
           }
-	  gDebug.abort(filename, lineNumber);
+          gDebug.abort(filename, lineNumber);
         }.bind(this),
-	  function onSatisfied() {
-            // The promise has been rejected, which means that we have satisfied
-            // all completion conditions.
-          });
+        function onSatisfied() {
+          // The promise has been rejected, which means that we have satisfied
+          // all completion conditions.
+        });
 
       promise = promise.then(function() {
         timeToCrash.reject();
@@ -823,6 +914,23 @@ Barrier.prototype = Object.freeze({
 
     return promise;
   },
+
+  _removeBlocker: function(condition) {
+    if (!this._waitForMe || !this._promiseToBlocker || !this._conditionToPromise) {
+      // We have already cleaned up everything.
+      return false;
+    }
+
+    let promise = this._conditionToPromise.get(condition);
+    if (!promise) {
+      // The blocker has already been removed
+      return false;
+    }
+    this._conditionToPromise.delete(condition);
+    this._promiseToBlocker.delete(promise);
+    return this._waitForMe.delete(promise);
+  },
+
 });
 
 

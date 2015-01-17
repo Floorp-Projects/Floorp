@@ -263,6 +263,12 @@ p {
   border: 1px solid #fbeed5;
 }
 
+.alert-success {
+  background: #5BC0A4;
+  border: 1px solid #5BC0A4;
+  color: #fff;
+}
+
 .notificationContainer > .details-error {
   background: #fbebeb;
   color: #d74345

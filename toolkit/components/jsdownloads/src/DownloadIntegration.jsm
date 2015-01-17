@@ -662,7 +662,12 @@ this.DownloadIntegration = {
         // We should report errors with making the permissions less restrictive
         // or marking the file as read-only on Unix and Mac, but this should not
         // prevent the download from completing.
-        Cu.reportError(ex);
+        // The setPermissions API error EPERM is expected to occur when working
+        // on a file system that does not support file permissions, like FAT32,
+        // thus we don't report this error.
+        if (!(ex instanceof OS.File.Error) || ex.unixErrno != OS.Constants.libc.EPERM) {
+          Cu.reportError(ex);
+        }
       }
 
       gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),

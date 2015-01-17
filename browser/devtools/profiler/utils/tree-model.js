@@ -18,7 +18,7 @@ const CONTENT_SCHEMES = ["http://", "https://", "file://"];
 
 exports.ThreadNode = ThreadNode;
 exports.FrameNode = FrameNode;
-exports._isContent = isContent; // used in tests
+exports.FrameNode.isContent = isContent;
 
 /**
  * A call tree for a thread. This is essentially a linkage between all frames

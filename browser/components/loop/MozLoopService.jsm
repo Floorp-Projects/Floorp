@@ -1244,22 +1244,6 @@ this.MozLoopService = {
   },
 
   /**
-   * Used to note a call url expiry time. If the time is later than the current
-   * latest expiry time, then the stored expiry time is increased. For times
-   * sooner, this function is a no-op; this ensures we always have the latest
-   * expiry time for a url.
-   *
-   * This is used to determine whether or not we should be registering with the
-   * push server on start.
-   *
-   * @param {Integer} expiryTimeSeconds The seconds since epoch of the expiry time
-   *                                    of the url.
-   */
-  noteCallUrlExpiry: function(expiryTimeSeconds) {
-    MozLoopServiceInternal.expiryTimeSeconds = expiryTimeSeconds;
-  },
-
-  /**
    * Returns the strings for the specified element. Designed for use with l10n.js.
    *
    * @param {key} The element id to get strings for.
