@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 1122366 - margin collapsing</title>
+  <style type="text/css">
+  div {
+    font: 40px/1em serif;
+    height: 4em;
+  }
+  div.wrapper {
+    margin: 10px;
+    background: blue;
+    border-left: green solid .5em;
+    border-right: green solid 1.5em;
+    width: 2em;
+  }
+  </style>
+ </head>
+ <body>
+  <div class="wrapper">
+  </div>
+  <div class="wrapper">
+  </div>
+ </body>
+</html>

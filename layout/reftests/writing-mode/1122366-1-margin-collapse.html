@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 1122366 - margin collapsing</title>
+  <style type="text/css">
+  div {
+    font: 40px/1em serif;
+    height: 4em;
+  }
+  div.wrapper {
+    margin: 10px;
+    background: blue;
+    border-left: green solid .5em;
+    border-right: green solid 1.5em;
+  }
+  div.lr {
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: tb-lr; /* IE11 */
+    writing-mode: vertical-lr;
+  }
+  div.rl {
+    -webkit-writing-mode: vertical-rl;
+    writing-mode: tb-rl; /* IE11 */
+    writing-mode: vertical-rl;
+  }
+  div.widthless
+  {
+    margin-right: 2em;
+    width: 0;
+  }
+  </style>
+ </head>
+ <body>
+  <div class="wrapper lr">
+    <div class="widthless"></div>
+    <div class="widthless"></div>
+  </div>
+  <div class="wrapper rl">
+    <div class="widthless"></div>
+    <div class="widthless"></div>
+  </div>
+ </body>
+</html>
