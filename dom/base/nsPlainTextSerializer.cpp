@@ -670,7 +670,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
 
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
-  else if (nsContentUtils::IsHTMLBlock(aTag)) {
+  else if (IsElementBlock(mElement)) {
     EnsureVerticalSpace(0);
   }
 
@@ -887,8 +887,7 @@ nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
   else if (aTag == nsGkAtoms::q) {
     Write(NS_LITERAL_STRING("\""));
   }
-  else if (nsContentUtils::IsHTMLBlock(aTag)
-           && aTag != nsGkAtoms::script) {
+  else if (IsElementBlock(mElement) && aTag != nsGkAtoms::script) {
     // All other blocks get 1 vertical space after them
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
@@ -1776,6 +1775,20 @@ nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
   }
   // Fall back to looking at the tag, in case there is no style information.
   return GetIdForContent(aElement) == nsGkAtoms::pre;
+}
+
+bool
+nsPlainTextSerializer::IsElementBlock(Element* aElement)
+{
+  nsRefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
+                                                         nullptr);
+  if (styleContext) {
+    const nsStyleDisplay* displayStyle = styleContext->StyleDisplay();
+    return displayStyle->IsBlockOutsideStyle();
+  }
+  // Fall back to looking at the tag, in case there is no style information.
+  return nsContentUtils::IsHTMLBlock(GetIdForContent(aElement));
 }
 
 /**
