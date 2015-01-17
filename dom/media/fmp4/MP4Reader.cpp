@@ -898,10 +898,7 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-MP4Reader::Seek(int64_t aTime,
-                int64_t aStartTime,
-                int64_t aEndTime,
-                int64_t aCurrentTime)
+MP4Reader::Seek(int64_t aTime, int64_t aEndTime)
 {
   LOG("MP4Reader::Seek(%lld)", aTime);
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());

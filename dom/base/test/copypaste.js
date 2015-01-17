@@ -160,8 +160,8 @@ function testCopyPaste (isXHTML) {
   testPasteText(" Tt t t ");
 
   copyChildrenToClipboard("div5");
-  testSelectionToString(" T ");
-  testClipboardValue("text/unicode", " T ");
+  testSelectionToString(" T     ");
+  testClipboardValue("text/unicode", " T     ");
   if (isXHTML) {
     testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">     </textarea>\n</div>");
     testInnerHTML("div5", "\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">     </textarea>\n");
@@ -170,7 +170,7 @@ function testCopyPaste (isXHTML) {
     testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea>     </textarea>\n</div>");
     testInnerHTML("div5", "\n  T<textarea>     </textarea>\n");
   }
-  testPasteText(" T ");
+  testPasteText(" T     ");
 
   copyRangeToClipboard($("div6").childNodes[0],0, $("div6").childNodes[1],1,suppressUnicodeCheckIfHidden);
   testSelectionToString("");

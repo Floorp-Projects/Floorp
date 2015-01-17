@@ -16,6 +16,8 @@
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
+extern std::string g_working_dir_path;
+
 namespace nss_test {
 
 #define LOG(a) std::cerr << name_ << ": " << a << std::endl;
@@ -211,7 +213,10 @@ class TlsAgent : public PollTarget {
         adapter_(nullptr),
         ssl_fd_(nullptr),
         role_(role),
-        state_(INIT) {}
+        state_(INIT) {
+      memset(&info_, 0, sizeof(info_));
+      memset(&csinfo_, 0, sizeof(csinfo_));
+  }
 
   ~TlsAgent() {
     if (pr_fd_) {
@@ -287,6 +292,10 @@ class TlsAgent : public PollTarget {
 
       SECKEY_DestroyPrivateKey(priv);
       CERT_DestroyCertificate(cert);
+    } else {
+      SECStatus rv = SSL_SetURL(ssl_fd_, "server");
+      EXPECT_EQ(SECSuccess, rv);
+      if (rv != SECSuccess) return false;
     }
 
     SECStatus rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook,
@@ -295,6 +304,22 @@ class TlsAgent : public PollTarget {
     if (rv != SECSuccess) return false;
 
     return true;
+  }
+
+  void SetSessionTicketsEnabled(bool en) {
+    ASSERT_TRUE(EnsureTlsSetup());
+
+    SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_SESSION_TICKETS,
+                                  en ? PR_TRUE : PR_FALSE);
+    ASSERT_EQ(SECSuccess, rv);
+  }
+
+  void SetSessionCacheEnabled(bool en) {
+    ASSERT_TRUE(EnsureTlsSetup());
+
+    SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_NO_CACHE,
+                                  en ? PR_FALSE : PR_TRUE);
+    ASSERT_EQ(SECSuccess, rv);
   }
 
   void SetVersionRange(uint16_t minver, uint16_t maxver) {
@@ -374,6 +399,11 @@ class TlsAgent : public PollTarget {
     }
   }
 
+  std::vector<uint8_t> GetSessionId() {
+    return std::vector<uint8_t>(info_.sessionID,
+                                info_.sessionID + info_.sessionIDLength);
+  }
+
  private:
   const static char* states[];
 
@@ -426,7 +456,19 @@ class TlsConnectTestBase : public ::testing::Test {
     delete server_;
   }
 
-  void SetUp() { Init(); }
+  void SetUp() {
+    // Configure a fresh session cache.
+    SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
+
+    Init();
+  }
+
+  void TearDown() {
+    client_ = nullptr;
+    server_ = nullptr;
+
+    SSL_ShutdownServerSessionIDCache();
+  }
 
   void Init() {
     ASSERT_TRUE(client_->Init());
@@ -471,6 +513,14 @@ class TlsConnectTestBase : public ::testing::Test {
 
     std::cerr << "Connected with cipher suite " << client_->cipher_suite_name()
               << std::endl;
+
+    // Check and store session ids.
+    std::vector<uint8_t> sid_c1 = client_->GetSessionId();
+    ASSERT_EQ(32, sid_c1.size());
+    std::vector<uint8_t> sid_s1 = server_->GetSessionId();
+    ASSERT_EQ(32, sid_s1.size());
+    ASSERT_EQ(sid_c1, sid_s1);
+    session_id_ = sid_c1;
   }
 
   void EnableSomeECDHECiphers() {
@@ -482,6 +532,7 @@ class TlsConnectTestBase : public ::testing::Test {
   Mode mode_;
   TlsAgent* client_;
   TlsAgent* server_;
+  std::vector<uint8_t> session_id_;
 };
 
 class TlsConnectTest : public TlsConnectTestBase {
@@ -514,6 +565,26 @@ TEST_P(TlsConnectGeneric, Connect) {
   } else {
     client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_1);
   }
+}
+
+TEST_P(TlsConnectGeneric, ConnectResumed) {
+  Connect();
+  std::vector<uint8_t> old_sid = session_id_;
+
+  Reset();
+  Connect();
+  ASSERT_EQ(old_sid, session_id_) << "Session was not resumed when it should have been";
+}
+
+TEST_P(TlsConnectGeneric, ConnectNotResumed) {
+  Connect();
+  std::vector<uint8_t> old_sid = session_id_;
+
+  Reset();
+  client_->SetSessionCacheEnabled(false);
+  Connect();
+
+  ASSERT_NE(old_sid, session_id_) << "Session was resumed when it should not have been";
 }
 
 TEST_P(TlsConnectGeneric, ConnectTLS_1_1_Only) {
@@ -561,6 +632,7 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceReuseKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetInspector(i2);
   EnableSomeECDHECiphers();
+  client_->SetSessionCacheEnabled(false);
   Connect();
   client_->CheckKEAType(ssl_kea_ecdh);
 
@@ -594,6 +666,7 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceNewKey) {
   TlsInspectorRecordHandshakeMessage* i2 =
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetInspector(i2);
+  client_->SetSessionCacheEnabled(false);
   Connect();
   client_->CheckKEAType(ssl_kea_ecdh);
 

@@ -75,12 +75,12 @@ protected:
 protected:
   virtual bool RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
-                               const InfallibleTArray<jsipc::CpowEntry>& aCpows,
+                               InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal,
                                InfallibleTArray<nsString>* aRetvals) MOZ_OVERRIDE;
   virtual bool RecvAsyncMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
-                                const InfallibleTArray<jsipc::CpowEntry>& aCpows,
+                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
   virtual jsipc::PJavaScriptParent* AllocPJavaScriptParent() MOZ_OVERRIDE;

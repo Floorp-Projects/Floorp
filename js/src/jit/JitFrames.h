@@ -331,6 +331,9 @@ class CommonFrameLayout
     static size_t offsetOfDescriptor() {
         return offsetof(CommonFrameLayout, descriptor_);
     }
+    uintptr_t descriptor() const {
+        return descriptor_;
+    }
     static size_t offsetOfReturnAddress() {
         return offsetof(CommonFrameLayout, returnAddress_);
     }
@@ -821,6 +824,11 @@ class BaselineStubFrameLayout : public CommonFrameLayout
     }
     static inline int reverseOffsetOfSavedFramePtr() {
         return -int(2 * sizeof(void *));
+    }
+
+    void *reverseSavedFramePtr() {
+        uint8_t *addr = ((uint8_t *) this) + reverseOffsetOfSavedFramePtr();
+        return *(void **)addr;
     }
 
     inline ICStub *maybeStubPtr() {

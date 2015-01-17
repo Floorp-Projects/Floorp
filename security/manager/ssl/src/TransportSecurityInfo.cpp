@@ -22,6 +22,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsXULAppAPI.h"
 #include "PSMRunnable.h"
 
 #include "secerr.h"
@@ -234,9 +235,13 @@ TransportSecurityInfo::formatErrorMessage(MutexAutoLock const & proofOfLock,
                                           bool wantsHtml, bool suppressPort443, 
                                           nsString &result)
 {
+  result.Truncate();
   if (errorCode == 0) {
-    result.Truncate();
     return NS_OK;
+  }
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   nsresult rv;
@@ -296,8 +301,8 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 // of the previous value. This is so when older versions attempt to
 // read a newer serialized TransportSecurityInfo, they will actually
 // fail and return NS_ERROR_FAILURE instead of silently failing.
-#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0x328f, 0x45ab, \
-  { 0xa8, 0xa4, 0x35, 0x18, 0x80, 0x04, 0x77, 0x8d } }
+#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0x1faa, 0x4169, \
+  { 0xb0, 0xd2, 0x81, 0x29, 0xec, 0x7c, 0xb1, 0xde } }
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
 NS_IMETHODIMP
@@ -322,11 +327,17 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  // XXX: uses nsNSSComponent string bundles off the main thread
-  rv = formatErrorMessage(lock, mErrorCode, mErrorMessageType, true, true,
-                          mErrorMessageCached);
+  rv = stream->Write32(static_cast<uint32_t>(mErrorCode));
   if (NS_FAILED(rv)) {
     return rv;
+  }
+  if (mErrorMessageCached.IsEmpty()) {
+    // XXX: uses nsNSSComponent string bundles off the main thread
+    rv = formatErrorMessage(lock, mErrorCode, mErrorMessageType,
+                            true, true, mErrorMessageCached);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   rv = stream->WriteWStringZ(mErrorMessageCached.get());
   if (NS_FAILED(rv)) {
@@ -394,12 +405,18 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
     return NS_ERROR_UNEXPECTED;
   }
   mSubRequestsNoSecurity = subRequestsNoSecurity;
+  uint32_t errorCode;
+  rv = stream->Read32(&errorCode);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // PRErrorCode will be a negative value
+  mErrorCode = static_cast<PRErrorCode>(errorCode);
+
   rv = stream->ReadString(mErrorMessageCached);
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  mErrorCode = 0;
 
   // For successful connections and for connections with overridable errors,
   // mSSLStatus will be non-null. For connections with non-overridable errors,

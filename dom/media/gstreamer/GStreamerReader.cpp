@@ -789,10 +789,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
 }
 
 nsRefPtr<MediaDecoderReader::SeekPromise>
-GStreamerReader::Seek(int64_t aTarget,
-                      int64_t aStartTime,
-                      int64_t aEndTime,
-                      int64_t aCurrentTime)
+GStreamerReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
