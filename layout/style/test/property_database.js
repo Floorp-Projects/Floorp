@@ -4551,8 +4551,10 @@ function logical_axis_prop_get_computed(cs, property)
   var orientation = writingMode.substring(0, writingMode.indexOf("-"));
 
   var mappings = {
-    "block-size":  { horizontal: "height", vertical: "width"  },
-    "inline-size": { horizontal: "width",  vertical: "height" },
+    "block-size":      { horizontal: "height",     vertical: "width"      },
+    "inline-size":     { horizontal: "width",      vertical: "height"     },
+    "max-block-size":  { horizontal: "max-height", vertical: "max-width"  },
+    "max-inline-size": { horizontal: "max-width",  vertical: "max-height" },
   };
 
   if (!mappings[property]) {
@@ -5026,6 +5028,42 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(3*25px + 50%)",
       ],
       invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ],
+    },
+    "max-block-size": {
+      domProp: "maxBlockSize",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      axis: true,
+      get_computed: logical_axis_prop_get_computed,
+      prerequisites: { "display": "block" },
+      initial_values: [ "none" ],
+      other_values: [ "30px", "50%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: ["none", "5" ]
+    },
+    "max-inline-size": {
+      domProp: "maxInlineSize",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      axis: true,
+      get_computed: logical_axis_prop_get_computed,
+      prerequisites: { "display": "block" },
+      initial_values: [ "none" ],
+      other_values: [ "30px", "50%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: ["none", "5" ]
     },
     "padding-block-end": {
       domProp: "paddingBlockEnd",
