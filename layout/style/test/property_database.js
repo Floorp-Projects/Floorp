@@ -24,6 +24,9 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //     must not be CSS_TYPE_LONGHAND.)
 //   logical: optional, indicates that the property is a logical directional
 //     property.  (Type must be CSS_TYPE_LONGHAND.)
+//   axis: optional, indicates that the property is an axis-related logical
+//     directional property.  (Type must be CSS_TYPE_LONGHAND and 'logical'
+//     must be true.)
 //   get_computed: if present, the property's computed value shows up on
 //     another property, and this is a function used to get it
 //   initial_values: Values whose computed value should be the same as the
@@ -4540,6 +4543,30 @@ var gCSSProperties = {
   }
 }
 
+function logical_axis_prop_get_computed(cs, property)
+{
+  // Use defaults for these two properties in case the vertical text
+  // pref (which they live behind) is turned off.
+  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
+  var orientation = writingMode.substring(0, writingMode.indexOf("-"));
+
+  var mappings = {
+    "block-size":  { horizontal: "height", vertical: "width"  },
+    "inline-size": { horizontal: "width",  vertical: "height" },
+  };
+
+  if (!mappings[property]) {
+    throw "unexpected property " + property;
+  }
+
+  var prop = mappings[property][orientation];
+  if (!prop) {
+    throw "unexpected writing mode " + writingMode;
+  }
+
+  return prop;
+}
+
 function logical_box_prop_get_computed(cs, property)
 {
   // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
@@ -4696,6 +4723,25 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
       other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
       invalid_values: [ "5%", "5", "5 solid green" ]
+    },
+    "block-size": {
+      domProp: "blockSize",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      axis: true,
+      get_computed: logical_axis_prop_get_computed,
+      /* XXX testing auto has prerequisites */
+      initial_values: [ "auto" ],
+      prerequisites: { "display": "block" },
+      other_values: [ "15px", "3em", "15%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ "none" ],
     },
     "border-block-end-color": {
       domProp: "borderBlockEndColor",
@@ -4889,6 +4935,25 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(3*25px + 5em)",
       ],
       invalid_values: [ "5%", "5" ]
+    },
+    "inline-size": {
+      domProp: "inlineSize",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      axis: true,
+      get_computed: logical_axis_prop_get_computed,
+      /* XXX testing auto has prerequisites */
+      initial_values: [ "auto" ],
+      prerequisites: { "display": "block" },
+      other_values: [ "15px", "3em", "15%",
+        "calc(2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: [ "none" ],
     },
     "margin-block-end": {
       domProp: "marginBlockEnd",
