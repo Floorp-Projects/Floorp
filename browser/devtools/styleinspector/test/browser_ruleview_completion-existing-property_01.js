@@ -17,17 +17,15 @@ const MAX_ENTRIES = 10;
 //    total items in the popup
 //  ]
 let testData = [
-  ["VK_RIGHT", "border", -1, 0],
-  ["-","border-bottom", 0, 10],
-  ["b","border-bottom", 0, 6],
-  ["VK_BACK_SPACE", "border-b", -1, 0],
-  ["VK_BACK_SPACE", "border-", -1, 0],
-  ["VK_BACK_SPACE", "border", -1, 0],
-  ["VK_BACK_SPACE", "borde", -1, 0],
-  ["VK_BACK_SPACE", "bord", -1, 0],
-  ["VK_BACK_SPACE", "bor", -1, 0],
-  ["VK_BACK_SPACE", "bo", -1, 0],
-  ["VK_BACK_SPACE", "b", -1, 0],
+  ["VK_RIGHT", "font", -1, 0],
+  ["-","font-family", 0, MAX_ENTRIES],
+  ["f","font-family", 0, 2],
+  ["VK_BACK_SPACE", "font-f", -1, 0],
+  ["VK_BACK_SPACE", "font-", -1, 0],
+  ["VK_BACK_SPACE", "font", -1, 0],
+  ["VK_BACK_SPACE", "fon", -1, 0],
+  ["VK_BACK_SPACE", "fo", -1, 0],
+  ["VK_BACK_SPACE", "f", -1, 0],
   ["VK_BACK_SPACE", "", -1, 0],
   ["d", "direction", 0, 3],
   ["VK_DOWN", "display", 1, 3],
@@ -52,7 +50,7 @@ let testData = [
   ["VK_ESCAPE", null, -1, 0],
 ];
 
-let TEST_URL = "data:text/html;charset=utf-8,<h1 style='border: 1px solid red'>Filename" +
+let TEST_URL = "data:text/html;charset=utf-8,<h1 style='font: 24px serif'>Filename" +
                ": browser_bug893965_css_property_completion_existing_property.js</h1>";
 
 add_task(function*() {
