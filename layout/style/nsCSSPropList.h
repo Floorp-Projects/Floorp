@@ -676,6 +676,18 @@ CSS_PROP_SHORTHAND(
     Border,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
+CSS_PROP_SHORTHAND(
+    border-block-end,
+    border_block_end,
+    BorderBlockEnd,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.vertical-text.enabled")
+CSS_PROP_SHORTHAND(
+    border-block-start,
+    border_block_start,
+    BorderBlockStart,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.vertical-text.enabled")
 CSS_PROP_LOGICAL(
     border-block-end-color,
     border_block_end_color,

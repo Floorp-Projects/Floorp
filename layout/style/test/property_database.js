@@ -4688,6 +4688,15 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
                         "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                         "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
     },
+    "border-block-end": {
+      domProp: "borderBlockEnd",
+      inherited: false,
+      type: CSS_TYPE_TRUE_SHORTHAND,
+      subproperties: [ "border-block-end-color", "border-block-end-style", "border-block-end-width" ],
+      initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+      other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+      invalid_values: [ "5%", "5", "5 solid green" ]
+    },
     "border-block-end-color": {
       domProp: "borderBlockEndColor",
       inherited: false,
@@ -4728,6 +4737,15 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(3*25px + 5em)",
       ],
       invalid_values: [ "5%", "5" ]
+    },
+    "border-block-start": {
+      domProp: "borderBlockStart",
+      inherited: false,
+      type: CSS_TYPE_TRUE_SHORTHAND,
+      subproperties: [ "border-block-start-color", "border-block-start-style", "border-block-start-width" ],
+      initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+      other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+      invalid_values: [ "5%", "5", "5 solid green" ]
     },
     "border-block-start-color": {
       domProp: "borderBlockStartColor",
