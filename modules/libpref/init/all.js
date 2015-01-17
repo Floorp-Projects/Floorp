@@ -2278,6 +2278,7 @@ pref("editor.positioning.offset",            0);
 
 pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
+pref("dom.max_child_script_run_time", 2);
 pref("dom.max_script_run_time", 10);
 
 // If true, ArchiveReader will be enabled
@@ -2324,6 +2325,9 @@ pref("dom.ipc.plugins.timeoutSecs", 45);
 // to a synchronous request before terminating itself. After this
 // point the child assumes the parent is hung. Currently disabled.
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
+// How long a plugin in e10s is allowed to process a synchronous IPC
+// message before we notify the chrome process of a hang.
+pref("dom.ipc.plugins.contentTimeoutSecs", 2);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
@@ -2341,6 +2345,7 @@ pref("dom.ipc.tabs.shutdownTimeoutSecs", 5);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
+pref("dom.ipc.plugins.contentTimeoutSecs", 0);
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 0);
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 #ifdef XP_WIN

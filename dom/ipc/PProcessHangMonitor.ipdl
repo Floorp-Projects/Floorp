@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+
+namespace mozilla {
+
+struct SlowScriptData
+{
+  TabId tabId;
+  nsCString filename;
+  uint32_t lineno;
+};
+
+struct PluginHangData
+{
+  uint32_t pluginId;
+};
+
+union HangData
+{
+  SlowScriptData;
+  PluginHangData;
+};
+
+protocol PProcessHangMonitor
+{
+parent:
+  async HangEvidence(HangData data);
+
+child:
+  async TerminateScript();
+
+  async BeginStartingDebugger();
+  async EndStartingDebugger();
+};
+
+} // namespace mozilla

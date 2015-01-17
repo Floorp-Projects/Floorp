@@ -177,6 +177,11 @@ public:
         return INTR_SEMS == mMesageSemantics && OUT_MESSAGE == mDirection;
     }
 
+    bool IsOutgoingSync() const {
+        return (mMesageSemantics == INTR_SEMS || mMesageSemantics == SYNC_SEMS) &&
+               mDirection == OUT_MESSAGE;
+    }
+
     void Describe(int32_t* id, const char** dir, const char** sems,
                   const char** name) const
     {
@@ -218,6 +223,9 @@ public:
         if (frame.IsInterruptIncall())
             mThat.EnteredCall();
 
+        if (frame.IsOutgoingSync())
+            mThat.EnteredSyncSend();
+
         mThat.mSawInterruptOutMsg |= frame.IsInterruptOutcall();
     }
 
@@ -226,7 +234,9 @@ public:
 
         MOZ_ASSERT(!mThat.mCxxStackFrames.empty());
 
-        bool exitingCall = mThat.mCxxStackFrames.back().IsInterruptIncall();
+        const InterruptFrame& frame = mThat.mCxxStackFrames.back();
+        bool exitingSync = frame.IsOutgoingSync();
+        bool exitingCall = frame.IsInterruptIncall();
         mThat.mCxxStackFrames.shrinkBy(1);
 
         bool exitingStack = mThat.mCxxStackFrames.empty();
@@ -238,6 +248,9 @@ public:
 
         if (exitingCall)
             mThat.ExitedCall();
+
+        if (exitingSync)
+            mThat.ExitedSyncSend();
 
         if (exitingStack)
             mThat.ExitedCxxStack();
