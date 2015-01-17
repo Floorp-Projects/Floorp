@@ -30,6 +30,7 @@ const nsIFile = Components.interfaces.nsIFile;
 
 this.EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -88,12 +89,21 @@ function isContentPrefEnabled() {
 let gDownloadLastDirFile = readLastDirPref();
 
 this.DownloadLastDir = function DownloadLastDir(aWindow) {
-  this.window = aWindow;
+  let loadContext = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIWebNavigation)
+                           .QueryInterface(Components.interfaces.nsILoadContext);
+  // Need this in case the real thing has gone away by the time we need it.
+  // We only care about the private browsing state. All the rest of the
+  // load context isn't of interest to the content pref service.
+  this.fakeContext = {
+    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsILoadContext]),
+    usePrivateBrowsing: loadContext.usePrivateBrowsing
+  };
 }
 
 DownloadLastDir.prototype = {
   isPrivate: function DownloadLastDir_isPrivate() {
-    return PrivateBrowsingUtils.isWindowPrivate(this.window);
+    return this.fakeContext.usePrivateBrowsing;
   },
   // compat shims
   get file() this._getLastFile(),
@@ -110,11 +120,7 @@ DownloadLastDir.prototype = {
                        Components.stack.caller);
 
     if (aURI && isContentPrefEnabled()) {
-      let loadContext = this.window
-                            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                            .getInterface(Components.interfaces.nsIWebNavigation)
-                            .QueryInterface(Components.interfaces.nsILoadContext);
-      let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF, loadContext);
+      let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF, this.fakeContext);
       if (lastDir) {
         var lastDirFile = Components.classes["@mozilla.org/file/local;1"]
                                     .createInstance(Components.interfaces.nsIFile);
@@ -148,12 +154,8 @@ DownloadLastDir.prototype = {
     let uri = aURI instanceof Components.interfaces.nsIURI ? aURI.spec : aURI;
     let cps2 = Components.classes["@mozilla.org/content-pref/service;1"]
                          .getService(Components.interfaces.nsIContentPrefService2);
-    let loadContext = this.window
-                          .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIWebNavigation)
-                          .QueryInterface(Components.interfaces.nsILoadContext);
     let result = null;
-    cps2.getByDomainAndName(uri, LAST_DIR_PREF, loadContext, {
+    cps2.getByDomainAndName(uri, LAST_DIR_PREF, this.fakeContext, {
       handleResult: function(aResult) result = aResult,
       handleCompletion: function(aReason) {
         let file = plainPrefFile;
@@ -173,14 +175,10 @@ DownloadLastDir.prototype = {
       let uri = aURI instanceof Components.interfaces.nsIURI ? aURI.spec : aURI;
       let cps2 = Components.classes["@mozilla.org/content-pref/service;1"]
                            .getService(Components.interfaces.nsIContentPrefService2);
-      let loadContext = this.window
-                            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                            .getInterface(Components.interfaces.nsIWebNavigation)
-                            .QueryInterface(Components.interfaces.nsILoadContext);
       if (aFile instanceof Components.interfaces.nsIFile)
-        cps2.set(uri, LAST_DIR_PREF, aFile.path, loadContext);
+        cps2.set(uri, LAST_DIR_PREF, aFile.path, this.fakeContext);
       else
-        cps2.removeByDomainAndName(uri, LAST_DIR_PREF, loadContext);
+        cps2.removeByDomainAndName(uri, LAST_DIR_PREF, this.fakeContext);
     }
     if (this.isPrivate()) {
       if (aFile instanceof Components.interfaces.nsIFile)

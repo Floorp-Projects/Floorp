@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+
 function run_test() {
   run_next_test();
 }
@@ -15,30 +17,71 @@ add_task(function* test_no_condition() {
   }
 });
 
-
 add_task(function* test_phase_various_failures() {
-  do_print("Ensure that we cannot add a condition for a phase once notification has been received");
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+    do_print("Kind: " + kind);
+    // Testing with wrong arguments
     let lock = makeLock(kind);
-    lock.wait(); // Don't actually wait for the promise to be resolved
-    let exn = get_exn(() => lock.addBlocker("Test", true));
-    do_check_true(!!exn);
 
-    if (kind == "xpcom-barrier") {
-      do_print("Skipping this part of the test that is caught differently by XPConnect");
-      continue;
+    Assert.throws(() => lock.addBlocker(), /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/);
+    Assert.throws(() => lock.addBlocker(null, true), /TypeError|NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS/);
+
+    if (kind != "xpcom-barrier") {
+      // xpcom-barrier actually expects a string in that position
+      Assert.throws(() => lock.addBlocker("Test 2", () => true, "not a function"), /TypeError/);
     }
-    do_print("Ensure that an incomplete blocker causes a TypeError");
 
-    lock = makeLock(kind);
-    exn = get_exn(() => lock.addBlocker());
-    do_check_exn(exn, "TypeError");
+    // Attempting to add a blocker after we are done waiting
+    yield lock.wait();
+    Assert.throws(() => lock.addBlocker("Test 3", () => true), /is finished/);
+  }
+});
 
-    exn = get_exn(() => lock.addBlocker(null, true));
-    do_check_exn(exn, "TypeError");
+add_task(function* test_reentrant() {
+  do_print("Ensure that we can call addBlocker from within a blocker");
 
-    exn = get_exn(() => lock.addBlocker("Test 2", () => true, "not a function"));
-    do_check_exn(exn, "TypeError");
+  for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
+    do_print("Kind: " + kind);
+    let lock = makeLock(kind);
+
+    let deferredOuter = PromiseUtils.defer();
+    let deferredInner = PromiseUtils.defer();
+    let deferredBlockInner = PromiseUtils.defer();
+
+    lock.addBlocker("Outer blocker", () => {
+      do_print("Entering outer blocker");
+      deferredOuter.resolve();
+      lock.addBlocker("Inner blocker", () => {
+        do_print("Entering inner blocker");
+        deferredInner.resolve();
+        return deferredBlockInner.promise;
+      });
+    });
+
+    // Note that phase-style locks spin the event loop and do not return from
+    // `lock.wait()` until after all blockers have been resolved. Therefore,
+    // to be able to test them, we need to dispatch the following steps to the
+    // event loop before calling `lock.wait()`, which we do by forcing
+    // a Promise.resolve().
+    //
+    let promiseSteps = Task.spawn(function* () {
+      yield Promise.resolve();
+
+      do_print("Waiting until we have entered the outer blocker");
+      yield deferredOuter.promise;
+
+      do_print("Waiting until we have entered the inner blocker");
+      yield deferredInner.promise;
+
+      do_print("Allowing the lock to resolve")
+      deferredBlockInner.resolve();
+    });
+
+    do_print("Starting wait");
+    yield lock.wait();
+
+    do_print("Waiting until all steps have been walked");
+    yield promiseSteps;
   }
 });
 
@@ -149,4 +192,3 @@ add_task(function* test_state() {
 add_task(function*() {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });
-

@@ -48,10 +48,6 @@ describe("loop.panel", function() {
       getPluralForm: function() {
         return "fakeText";
       },
-      copyString: sandbox.stub(),
-      noteCallUrlExpiry: sinon.spy(),
-      composeEmail: sinon.spy(),
-      telemetryAdd: sinon.spy(),
       contacts: {
         getAll: function(callback) {
           callback(null, []);
@@ -186,69 +182,33 @@ describe("loop.panel", function() {
     describe('TabView', function() {
       var view, callTab, roomsTab, contactsTab;
 
-      describe("loop.rooms.enabled on", function() {
-        beforeEach(function() {
-          navigator.mozLoop.getLoopPref = function(pref) {
-            if (pref === "rooms.enabled" ||
-                pref === "gettingStarted.seen") {
-              return true;
-            }
-          };
+      beforeEach(function() {
+        navigator.mozLoop.getLoopPref = function(pref) {
+          if (pref === "gettingStarted.seen") {
+            return true;
+          }
+        };
 
-          view = createTestPanelView();
+        view = createTestPanelView();
 
-          [roomsTab, contactsTab] =
-            TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
-        });
-
-        it("should select contacts tab when clicking tab button", function() {
-          TestUtils.Simulate.click(
-            view.getDOMNode().querySelector("li[data-tab-name=\"contacts\"]"));
-
-          expect(contactsTab.getDOMNode().classList.contains("selected"))
-            .to.be.true;
-        });
-
-        it("should select rooms tab when clicking tab button", function() {
-          TestUtils.Simulate.click(
-            view.getDOMNode().querySelector("li[data-tab-name=\"rooms\"]"));
-
-          expect(roomsTab.getDOMNode().classList.contains("selected"))
-            .to.be.true;
-        });
+        [roomsTab, contactsTab] =
+          TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
       });
 
-      describe("loop.rooms.enabled off", function() {
-        beforeEach(function() {
-          navigator.mozLoop.getLoopPref = function(pref) {
-            if (pref === "rooms.enabled") {
-              return false;
-            } else if (pref === "gettingStarted.seen") {
-              return true;
-            }
-          };
+      it("should select contacts tab when clicking tab button", function() {
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector("li[data-tab-name=\"contacts\"]"));
 
-          view = createTestPanelView();
+        expect(contactsTab.getDOMNode().classList.contains("selected"))
+          .to.be.true;
+      });
 
-          [callTab, contactsTab] =
-            TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
-        });
+      it("should select rooms tab when clicking tab button", function() {
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector("li[data-tab-name=\"rooms\"]"));
 
-        it("should select contacts tab when clicking tab button", function() {
-          TestUtils.Simulate.click(
-            view.getDOMNode().querySelector("li[data-tab-name=\"contacts\"]"));
-
-          expect(contactsTab.getDOMNode().classList.contains("selected"))
-            .to.be.true;
-        });
-
-        it("should select call tab when clicking tab button", function() {
-          TestUtils.Simulate.click(
-            view.getDOMNode().querySelector("li[data-tab-name=\"call\"]"));
-
-          expect(callTab.getDOMNode().classList.contains("selected"))
-            .to.be.true;
-        });
+        expect(roomsTab.getDOMNode().classList.contains("selected"))
+          .to.be.true;
       });
     });
 
@@ -465,284 +425,6 @@ describe("loop.panel", function() {
         } catch (ex) {}
       });
 
-    });
-  });
-
-  describe("loop.panel.CallUrlResult", function() {
-    var fakeClient, callUrlData, view;
-
-    beforeEach(function() {
-      callUrlData = {
-        callUrl: "http://call.invalid/fakeToken",
-        expiresAt: 1000
-      };
-
-      fakeClient = {
-        requestCallUrl: function(_, cb) {
-          cb(null, callUrlData);
-        }
-      };
-
-      sandbox.stub(notifications, "reset");
-      view = TestUtils.renderIntoDocument(
-        React.createElement(loop.panel.CallUrlResult, {
-          notifications: notifications,
-          client: fakeClient
-        }));
-    });
-
-    describe("Rendering the component should generate a call URL", function() {
-
-      beforeEach(function() {
-        document.mozL10n.initialize({
-          getStrings: function(key) {
-            var text;
-
-            if (key === "share_email_subject4")
-              text = "email-subject";
-            else if (key === "share_email_body4")
-              text = "{{callUrl}}";
-
-            return JSON.stringify({textContent: text});
-          }
-        });
-      });
-
-      it("should make a request to requestCallUrl", function() {
-        sandbox.stub(fakeClient, "requestCallUrl");
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-
-        sinon.assert.calledOnce(view.props.client.requestCallUrl);
-        sinon.assert.calledWithExactly(view.props.client.requestCallUrl,
-                                       sinon.match.string, sinon.match.func);
-      });
-
-      it("should set the call url form in a pending state", function() {
-        // Cancel requestCallUrl effect to keep the state pending
-        fakeClient.requestCallUrl = sandbox.stub();
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.CallUrlResult, {
-          notifications: notifications,
-          client: fakeClient
-        }));
-
-        expect(view.state.pending).eql(true);
-      });
-
-      it("should update state with the call url received", function() {
-        expect(view.state.pending).eql(false);
-        expect(view.state.callUrl).eql(callUrlData.callUrl);
-      });
-
-      it("should clear the pending state when a response is received",
-        function() {
-          expect(view.state.pending).eql(false);
-        });
-
-      it("should update CallUrlResult with the call url", function() {
-        var urlField = view.getDOMNode().querySelector("input[type='url']");
-
-        expect(urlField.value).eql(callUrlData.callUrl);
-      });
-
-      it("should have 0 pending notifications", function() {
-        expect(view.props.notifications.length).eql(0);
-      });
-
-      it("should display a share button for email", function() {
-        fakeClient.requestCallUrl = sandbox.stub();
-        var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.CallUrlResult, {
-          notifications: notifications,
-          client: fakeClient
-        }));
-        view.setState({pending: false, callUrl: "http://example.com"});
-
-        TestUtils.findRenderedDOMComponentWithClass(view, "button-email");
-        TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
-
-        sinon.assert.calledOnce(composeCallUrlEmail);
-        sinon.assert.calledWithExactly(composeCallUrlEmail, "http://example.com");
-      });
-
-      it("should feature a copy button capable of copying the call url when clicked", function() {
-        fakeClient.requestCallUrl = sandbox.stub();
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.CallUrlResult, {
-          notifications: notifications,
-          client: fakeClient
-        }));
-        view.setState({
-          pending: false,
-          copied: false,
-          callUrl: "http://example.com",
-          callUrlExpiry: 6000
-        });
-
-        TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
-
-        sinon.assert.calledOnce(navigator.mozLoop.copyString);
-        sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
-          view.state.callUrl);
-      });
-
-      it("should note the call url expiry when the url is copied via button",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
-
-          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
-          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
-            6000);
-        });
-
-      it("should call mozLoop.telemetryAdd when the url is copied via button",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          // Multiple clicks should result in the URL being counted only once.
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-copy"));
-
-          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
-          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
-                                  "LOOP_CLIENT_CALL_URL_SHARED",
-                                  true);
-        });
-
-      it("should note the call url expiry when the url is emailed",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
-
-          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
-          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
-            6000);
-        });
-
-      it("should call mozLoop.telemetryAdd when the url is emailed",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          // Multiple clicks should result in the URL being counted only once.
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
-          TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-email"));
-
-          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
-          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
-                                  "LOOP_CLIENT_CALL_URL_SHARED",
-                                  true);
-        });
-
-      it("should note the call url expiry when the url is copied manually",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          var urlField = view.getDOMNode().querySelector("input[type='url']");
-          TestUtils.Simulate.copy(urlField);
-
-          sinon.assert.calledOnce(navigator.mozLoop.noteCallUrlExpiry);
-          sinon.assert.calledWithExactly(navigator.mozLoop.noteCallUrlExpiry,
-            6000);
-        });
-
-      it("should call mozLoop.telemetryAdd when the url is copied manually",
-        function() {
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-          view.setState({
-            pending: false,
-            copied: false,
-            callUrl: "http://example.com",
-            callUrlExpiry: 6000
-          });
-
-          // Multiple copies should result in the URL being counted only once.
-          var urlField = view.getDOMNode().querySelector("input[type='url']");
-          TestUtils.Simulate.copy(urlField);
-          TestUtils.Simulate.copy(urlField);
-
-          sinon.assert.calledOnce(navigator.mozLoop.telemetryAdd);
-          sinon.assert.calledWith(navigator.mozLoop.telemetryAdd,
-                                  "LOOP_CLIENT_CALL_URL_SHARED",
-                                  true);
-        });
-
-      it("should notify the user when the operation failed", function() {
-        fakeClient.requestCallUrl = function(_, cb) {
-          cb("fake error");
-        };
-        sandbox.stub(notifications, "errorL10n");
-        TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.CallUrlResult, {
-            notifications: notifications,
-            client: fakeClient
-          }));
-
-        sinon.assert.calledOnce(notifications.errorL10n);
-        sinon.assert.calledWithExactly(notifications.errorL10n,
-                                       "unable_retrieve_url");
-      });
     });
   });
 

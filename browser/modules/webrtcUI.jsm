@@ -28,6 +28,7 @@ this.webrtcUI = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("webrtc:Request", this);
+    mm.addMessageListener("webrtc:CancelRequest", this);
     mm.addMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
@@ -42,6 +43,7 @@ this.webrtcUI = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
     mm.removeMessageListener("webrtc:Request", this);
+    mm.removeMessageListener("webrtc:CancelRequest", this);
     mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
@@ -125,6 +127,9 @@ this.webrtcUI = {
       case "webrtc:Request":
         prompt(aMessage.target, aMessage.data);
         break;
+      case "webrtc:CancelRequest":
+        removePrompt(aMessage.target, aMessage.data);
+        break;
       case "webrtc:UpdatingIndicators":
         webrtcUI._streams = [];
         break;
@@ -166,7 +171,9 @@ function getHost(uri, href) {
       host = uri.specIgnoringRef;
     } else {
       // This is unfortunate, but we should display *something*...
-      host = bundle.getString("getUserMedia.sharingMenuUnknownHost");
+      const kBundleURI = "chrome://browser/locale/browser.properties";
+      let bundle = Services.strings.createBundle(kBundleURI);
+      host = bundle.GetStringFromName("getUserMedia.sharingMenuUnknownHost");
     }
   }
   return host;
@@ -435,6 +442,15 @@ function prompt(aBrowser, aRequest) {
     chromeWin.PopupNotifications.show(aBrowser, "webRTC-shareDevices", message,
                                       anchorId, mainAction, secondaryActions,
                                       options);
+  notification.callID = aRequest.callID;
+}
+
+function removePrompt(aBrowser, aCallId) {
+  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let notification =
+    chromeWin.PopupNotifications.getNotification("webRTC-shareDevices", aBrowser);
+  if (notification && notification.callID == aCallId)
+    notification.remove();
 }
 
 function getGlobalIndicator() {

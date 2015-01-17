@@ -141,28 +141,17 @@ loop.shared.views = (function(_, OT, l10n) {
    * Conversation view.
    */
   var ConversationView = React.createClass({
-    mixins: [Backbone.Events, sharedMixins.AudioMixin],
+    mixins: [
+      Backbone.Events,
+      sharedMixins.AudioMixin,
+      sharedMixins.MediaSetupMixin
+    ],
 
     propTypes: {
       sdk: React.PropTypes.object.isRequired,
       video: React.PropTypes.object,
       audio: React.PropTypes.object,
       initiate: React.PropTypes.bool
-    },
-
-    // height set to 100%" to fix video layout on Google Chrome
-    // @see https://bugzilla.mozilla.org/show_bug.cgi?id=1020445
-    publisherConfig: {
-      insertMode: "append",
-      width: "100%",
-      height: "100%",
-      style: {
-        audioLevelDisplayMode: "off",
-        bugDisplayMode: "off",
-        buttonDisplayMode: "off",
-        nameDisplayMode: "off",
-        videoDisabledDisplayMode: "off"
-      }
     },
 
     getDefaultProps: function() {
@@ -180,12 +169,6 @@ loop.shared.views = (function(_, OT, l10n) {
       };
     },
 
-    componentWillMount: function() {
-      if (this.props.initiate) {
-        this.publisherConfig.publishVideo = this.props.video.enabled;
-      }
-    },
-
     componentDidMount: function() {
       if (this.props.initiate) {
         this.listenTo(this.props.model, "session:connected",
@@ -197,26 +180,6 @@ loop.shared.views = (function(_, OT, l10n) {
                                          "session:ended"].join(" "),
                                          this.stopPublishing);
         this.props.model.startSession();
-      }
-
-      /**
-       * OT inserts inline styles into the markup. Using a listener for
-       * resize events helps us trigger a full width/height on the element
-       * so that they update to the correct dimensions.
-       * XXX: this should be factored as a mixin.
-       */
-      window.addEventListener('orientationchange', this.updateVideoContainer);
-      window.addEventListener('resize', this.updateVideoContainer);
-    },
-
-    updateVideoContainer: function() {
-      var localStreamParent = document.querySelector('.local .OT_publisher');
-      var remoteStreamParent = document.querySelector('.remote .OT_subscriber');
-      if (localStreamParent) {
-        localStreamParent.style.width = "100%";
-      }
-      if (remoteStreamParent) {
-        remoteStreamParent.style.height = "100%";
       }
     },
 
@@ -248,7 +211,10 @@ loop.shared.views = (function(_, OT, l10n) {
      */
     _streamCreated: function(event) {
       var incoming = this.getDOMNode().querySelector(".remote");
-      this.props.model.subscribe(event.stream, incoming, this.publisherConfig);
+      this.props.model.subscribe(event.stream, incoming,
+        this.getDefaultPublisherConfig({
+          publishVideo: this.props.video.enabled
+        }));
     },
 
     /**
@@ -263,7 +229,7 @@ loop.shared.views = (function(_, OT, l10n) {
 
       // XXX move this into its StreamingVideo component?
       this.publisher = this.props.sdk.initPublisher(
-        outgoing, this.publisherConfig);
+        outgoing, this.getDefaultPublisherConfig({publishVideo: this.props.video.enabled}));
 
       // Suppress OT GuM custom dialog, see bug 1018875
       this.listenTo(this.publisher, "accessDialogOpened accessDenied",
