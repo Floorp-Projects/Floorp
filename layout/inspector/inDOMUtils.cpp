@@ -748,7 +748,8 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
     GetOtherValuesForProperty(propertyParserVariant, array);
   } else {
     // Property is shorthand.
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID,
+                                         nsCSSProps::eEnabledForAllContent) {
       // Get colors (once) first.
       uint32_t propertyParserVariant = nsCSSProps::ParserVariant(*subproperty);
       if (propertyParserVariant & VARIANT_COLOR) {
@@ -756,7 +757,8 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
         break;
       }
     }
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID,
+                                         nsCSSProps::eEnabledForAllContent) {
       uint32_t propertyParserVariant = nsCSSProps::ParserVariant(*subproperty);
       if (propertyParserVariant & VARIANT_KEYWORD) {
         GetKeywordsForProperty(*subproperty, array);
