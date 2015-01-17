@@ -2390,6 +2390,24 @@ CSS_PROP_BACKENDONLY(
     "",
     0,
     kPageMarksKTable)
+CSS_PROP_LOGICAL(
+    max-block-size,
+    max_block_size,
+    MaxBlockSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HKLPO | VARIANT_CALC,
+    kWidthKTable,
+    MaxSize,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     max-height,
     max_height,
@@ -2404,6 +2422,23 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mMaxHeight),
     eStyleAnimType_Coord)
+CSS_PROP_LOGICAL(
+    max-inline-size,
+    max_inline_size,
+    MaxInlineSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HKLPO | VARIANT_CALC,
+    kWidthKTable,
+    MaxSize,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     max-width,
     max_width,
