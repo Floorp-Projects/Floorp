@@ -12,18 +12,77 @@ var gSheet = document.getElementById("sheet");
 var gTest  = document.getElementById("test");
 
 // list of groups of physical and logical properties, such as
+//
 // { left: "margin-left", right: "margin-right",
+//   top: "margin-top", bottom: "margin-bottom",
 //   inlineStart: "margin-inline-start", inlineEnd: "margin-inline-end",
-//   type: "length" }
-// where the type is a key from the gValues object
+//   blockStart: "margin-block-start", blockEnd: "margin-block-end",
+//   type: "length", prerequisites: "..." }
+//
+// where the type is a key from the gValues object and the prerequisites
+// is a declaration including gCSSProperties' listed prerequisites for
+// all four physical properties.
 var gPropertyGroups;
 
 // values to use while testing
 var gValues = {
-  "length":       ["1px", "2px", "3px"],
-  "color":        ["rgb(1, 1, 1)", "rgb(2, 2, 2)", "rgb(3, 3, 3)"],
-  "border-style": ["solid", "dashed", "dotted"],
+  "length":       ["1px", "2px", "3px", "4px", "5px"],
+  "color":        ["rgb(1, 1, 1)", "rgb(2, 2, 2)", "rgb(3, 3, 3)", "rgb(4, 4, 4)", "rgb(5, 5, 5)"],
+  "border-style": ["solid", "dashed", "dotted", "double", "groove"],
 };
+
+// six unique overall writing modes
+var gWritingModes = [
+  { style: [
+      "writing-mode: horizontal-tb; text-orientation: mixed; direction: ltr; ",
+      "writing-mode: horizontal-tb; text-orientation: upright; direction: ltr; ",
+      "writing-mode: horizontal-tb; text-orientation: sideways-right; direction: ltr; ",
+      // XXX See the todo()s below.
+      // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: ltr; ",
+      // "writing-mode: horizontal-tb; text-orientation: sideways; direction: ltr; ",
+    ],
+    blockStart: "top", blockEnd: "bottom", inlineStart: "left", inlineEnd: "right" },
+  { style: [
+      "writing-mode: horizontal-tb; text-orientation: mixed; direction: rtl; ",
+      "writing-mode: horizontal-tb; text-orientation: upright; direction: rtl; ",
+      "writing-mode: horizontal-tb; text-orientation: sideways-right; direction: rtl; ",
+      // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: rtl; ",
+      // "writing-mode: horizontal-tb; text-orientation: sideways; direction: rtl; ",
+    ],
+    blockStart: "top", blockEnd: "bottom", inlineStart: "right", inlineEnd: "left" },
+  { style: [
+      "writing-mode: vertical-rl; text-orientation: mixed; direction: rtl; ",
+      "writing-mode: vertical-rl; text-orientation: upright; direction: rtl; ",
+      "writing-mode: vertical-rl; text-orientation: sideways-right; direction: rtl; ",
+      // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: ltr; ",
+      // "writing-mode: vertical-rl; text-orientation: sideways; direction: rtl; ",
+    ],
+    blockStart: "right", blockEnd: "left", inlineStart: "bottom", inlineEnd: "top" },
+  { style: [
+      "writing-mode: vertical-rl; text-orientation: mixed; direction: ltr; ",
+      "writing-mode: vertical-rl; text-orientation: upright; direction: ltr; ",
+      "writing-mode: vertical-rl; text-orientation: sideways-right; direction: ltr; ",
+      // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: rtl; ",
+      // "writing-mode: vertical-rl; text-orientation: sideways; direction: ltr; ",
+    ],
+    blockStart: "right", blockEnd: "left", inlineStart: "top", inlineEnd: "bottom" },
+  { style: [
+      "writing-mode: vertical-lr; text-orientation: mixed; direction: rtl; ",
+      "writing-mode: vertical-lr; text-orientation: upright; direction: rtl; ",
+      "writing-mode: vertical-lr; text-orientation: sideways-right; direction: rtl; ",
+      // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: ltr; ",
+      // "writing-mode: vertical-lr; text-orientation: sideways; direction: ltr; ",
+    ],
+    blockStart: "left", blockEnd: "right", inlineStart: "bottom", inlineEnd: "top" },
+  { style: [
+      "writing-mode: vertical-lr; text-orientation: mixed; direction: ltr; ",
+      "writing-mode: vertical-lr; text-orientation: upright; direction: ltr; ",
+      "writing-mode: vertical-lr; text-orientation: sideways-right; direction: ltr; ",
+      // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: rtl; ",
+      // "writing-mode: vertical-lr; text-orientation: sideways; direction: rtl; ",
+    ],
+    blockStart: "left", blockEnd: "right", inlineStart: "top", inlineEnd: "bottom" },
+];
 
 function init() {
   gPropertyGroups = [];
@@ -42,22 +101,53 @@ function init() {
       } else {
         throw `unexpected property ${p}`;
       }
-      gPropertyGroups.push({
+      var group = {
         left:        p.replace("-inline-end", "-left"),
         right:       p.replace("-inline-end", "-right"),
+        top:         p.replace("-inline-end", "-top"),
+        bottom:      p.replace("-inline-end", "-bottom"),
         inlineStart: p.replace("-inline-end", "-inline-start"),
         inlineEnd:   p,
+        blockStart:  p.replace("-inline-end", "-block-start"),
+        blockEnd:    p.replace("-inline-end", "-block-end"),
         type:        valueType
-      });
+      };
+      group.prerequisites =
+        make_declaration(gCSSProperties[group.top].prerequisites) +
+        make_declaration(gCSSProperties[group.right].prerequisites) +
+        make_declaration(gCSSProperties[group.bottom].prerequisites) +
+        make_declaration(gCSSProperties[group.left].prerequisites);
+      gPropertyGroups.push(group);
     }
   }
+
+  // Assume that sideways-left and sideways keywords are still not parsed yet
+  // for text-orientation.  When we start supporting these keywords, the
+  // entries in the .style properties of the gWritingModes objects above
+  // should be uncommented.
+  var s = document.createElement("style");
+  document.body.appendChild(s);
+
+  s.textContent = "div { }";
+  s.sheet.cssRules[0].style.textOrientation = "sideways-left";
+  todo(s.sheet.cssRules[0].style.textOrientation, "sideways-left",
+       "uncomment sideways-left cases from gWritingModes and " +
+       "remove this todo()!");
+
+  s.textContent = "div { }";
+  s.sheet.cssRules[0].style.textOrientation = "sideways";
+  todo(s.sheet.cssRules[0].style.textOrientation, "sideways",
+       "uncomment sideways cases from gWritingModes and " +
+       "remove this todo()!");
+
+  s.remove();
 }
 
 function test_computed_values(aTestName, aRules, aExpectedValues) {
   gSheet.textContent = aRules;
   var cs = getComputedStyle(gTest);
   aExpectedValues.forEach(function(aPair) {
-    is(cs.getPropertyValue(aPair[0]), aPair[1], `${aTestName} ${aPair[0]}`);
+    is(cs.getPropertyValue(aPair[0]), aPair[1], `${aTestName}, ${aPair[0]}`);
   });
   gSheet.textContent = "";
 }
@@ -83,186 +173,130 @@ function start() {
   document.body.appendChild(script);
 }
 
+function run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
+  var values = gValues[aGroup.type];
+  var decl;
+
+  // Test that logical properties are converted to their physical
+  // equivalent correctly when all four are present on a single
+  // declaration, with no overwriting of previous properties and
+  // no physical properties present.  We put the writing mode properties
+  // on a separate declaration to test that the computed values of these
+  // properties are used, rather than those on the same declaration.
+
+  decl = aGroup.prerequisites +
+         `${aGroup.inlineStart}: ${values[0]}; ` +
+         `${aGroup.inlineEnd}: ${values[1]}; ` +
+         `${aGroup.blockStart}: ${values[2]}; ` +
+         `${aGroup.blockEnd}: ${values[3]}; `;
+  test_computed_values('logical properties on one declaration, writing ' +
+                         'mode properties on another, ' +
+                         `'${aWritingModeDecl}'`,
+                       `.test { ${aWritingModeDecl} } ` +
+                       `.test { ${decl} }`,
+                       [[aGroup[aWritingMode.inlineStart], values[0]],
+                        [aGroup[aWritingMode.inlineEnd],   values[1]],
+                        [aGroup[aWritingMode.blockStart],  values[2]],
+                        [aGroup[aWritingMode.blockEnd],    values[3]]]);
+
+  // Test that logical and physical properties are cascaded together,
+  // honoring their relative order on a single declaration.
+
+  // (a) with a single logical property after the physical ones
+
+  ["inlineStart", "inlineEnd", "blockStart", "blockEnd"].forEach(function(aLogicalSide) {
+    decl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.left}: ${values[0]}; ` +
+           `${aGroup.right}: ${values[1]}; ` +
+           `${aGroup.top}: ${values[2]}; ` +
+           `${aGroup.bottom}: ${values[3]}; ` +
+           `${aGroup[aLogicalSide]}: ${values[4]}; `;
+    var expected = ["left", "right", "top", "bottom"].map(
+      (side, i) => [aGroup[side],
+                    values[side == aWritingMode[aLogicalSide] ? 4 : i]]
+    );
+    test_computed_values(`${aLogicalSide} last on single declaration, ` +
+                           `'${aWritingModeDecl}'`,
+                         `.test { ${decl} }`,
+                         expected);
+  });
+
+  // (b) with a single physical property after the logical ones
+
+  ["left", "right", "top", "bottom"].forEach(function(aPhysicalSide) {
+    decl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.inlineStart}: ${values[0]}; ` +
+           `${aGroup.inlineEnd}: ${values[1]}; ` +
+           `${aGroup.blockStart}: ${values[2]}; ` +
+           `${aGroup.blockEnd}: ${values[3]}; ` +
+           `${aGroup[aPhysicalSide]}: ${values[4]}; `;
+    var expected = ["inlineStart", "inlineEnd", "blockStart", "blockEnd"].map(
+      (side, i) => [aGroup[aWritingMode[side]],
+                    values[aWritingMode[side] == aPhysicalSide ? 4 : i]]
+    );
+    test_computed_values(`${aPhysicalSide} last on single declaration, ` +
+                           `'${aWritingModeDecl}'`,
+                         `.test { ${decl} }`,
+                         expected);
+  });
+
+
+  // Test that logical and physical properties are cascaded properly when
+  // on different declarations.
+
+  var loDecl;  // lower specifity
+  var hiDecl;  // higher specificity
+
+  // (a) with a logical property in the high specificity rule
+
+  loDecl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.left}: ${values[0]}; ` +
+           `${aGroup.right}: ${values[1]}; ` +
+           `${aGroup.top}: ${values[2]}; ` +
+           `${aGroup.bottom}: ${values[3]}; `;
+
+  ["inlineStart", "inlineEnd", "blockStart", "blockEnd"].forEach(function(aLogicalSide) {
+    hiDecl = `${aGroup[aLogicalSide]}: ${values[4]}; `;
+    var expected = ["left", "right", "top", "bottom"].map(
+      (side, i) => [aGroup[side],
+                    values[side == aWritingMode[aLogicalSide] ? 4 : i]]
+    );
+    test_computed_values(`${aLogicalSide}, two declarations, ` +
+                           `'${aWritingModeDecl}'`,
+                         `#test { ${hiDecl} } ` +
+                         `.test { ${loDecl} }`,
+                         expected);
+  });
+
+  // (b) with a physical property in the high specificity rule
+
+  loDecl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.inlineStart}: ${values[0]}; ` +
+           `${aGroup.inlineEnd}: ${values[1]}; ` +
+           `${aGroup.blockStart}: ${values[2]}; ` +
+           `${aGroup.blockEnd}: ${values[3]}; `;
+
+  ["left", "right", "top", "bottom"].forEach(function(aPhysicalSide) {
+    hiDecl = `${aGroup[aPhysicalSide]}: ${values[4]}; `;
+    var expected = ["inlineStart", "inlineEnd", "blockStart", "blockEnd"].map(
+      (side, i) => [aGroup[aWritingMode[side]],
+                    values[aWritingMode[side] == aPhysicalSide ? 4 : i]]
+    );
+    test_computed_values(`${aPhysicalSide}, two declarations, ` +
+                           `'${aWritingModeDecl}'`,
+                         `#test { ${hiDecl} } ` +
+                         `.test { ${loDecl} }`,
+                         expected);
+  });
+}
+
 function run_tests() {
   gPropertyGroups.forEach(function(aGroup) {
-    var values = gValues[aGroup.type];
-    var decl;
-
-    // Test that logical properties are converted to their physical equivalent
-    // correctly when present on a single declaration, with no overwriting of
-    // previous properties.
-
-    decl = `${aGroup.inlineStart}: ${values[0]}; ` +
-           `${aGroup.inlineEnd}: ${values[1]}; ` +
-           make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-           make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline single declaration",
-                         `.test { direction: ltr; ${decl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[1]]]);
-
-    test_computed_values("rtl inline single declaration",
-                         `.test { direction: rtl; ${decl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[0]]]);
-
-    // Test that logical and physical properties are cascaded together, honoring
-    // their relative order on a single declaration.
-
-    decl = `${aGroup.left}: ${values[0]}; ` +
-           `${aGroup.right}: ${values[1]}; ` +
-           `${aGroup.inlineStart}: ${values[2]}; ` +
-           make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-           make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline-start single declaration, logical last",
-                         `.test { direction: ltr; ${decl} }`,
-                         [[aGroup.left,  values[2]],
-                          [aGroup.right, values[1]]]);
-
-    test_computed_values("rtl inline-start single declaration, logical last",
-                         `.test { direction: rtl; ${decl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    decl = `${aGroup.left}: ${values[0]}; ` +
-           `${aGroup.right}: ${values[1]}; ` +
-           `${aGroup.inlineEnd}: ${values[2]}; ` +
-           make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-           make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline-end single declaration, logical last",
-                         `.test { direction: ltr; ${decl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    test_computed_values("rtl inline-end single declaration, logical last",
-                         `.test { direction: rtl; ${decl} }`,
-                         [[aGroup.left,  values[2]],
-                          [aGroup.right, values[1]]]);
-
-    decl = `${aGroup.inlineStart}: ${values[0]}; ` +
-           `${aGroup.inlineEnd}: ${values[1]}; ` +
-           `${aGroup.left}: ${values[2]}; ` +
-           make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-           make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline left single declaration, physical last",
-                         `.test { direction: ltr; ${decl} }`,
-                         [[aGroup.left,  values[2]],
-                          [aGroup.right, values[1]]]);
-
-    test_computed_values("rtl inline left single declaration, physical last",
-                         `.test { direction: rtl; ${decl} }`,
-                         [[aGroup.left,  values[2]],
-                          [aGroup.right, values[0]]]);
-
-    decl = `${aGroup.inlineStart}: ${values[0]}; ` +
-           `${aGroup.inlineEnd}: ${values[1]}; ` +
-           `${aGroup.right}: ${values[2]}; ` +
-           make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-           make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline right single declaration, physical last",
-                         `.test { direction: ltr; ${decl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    test_computed_values("rtl inline right single declaration, physical last",
-                         `.test { direction: rtl; ${decl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[2]]]);
-
-    // Test that logical and physical properties are cascaded properly when on
-    // different declarations.
-
-    var hiDecl;  // higher specificity
-    var loDecl;  // lower specifity
-
-    hiDecl = `${aGroup.inlineStart}: ${values[0]}; `;
-    loDecl = `${aGroup.left}: ${values[1]}; ` +
-             `${aGroup.right}: ${values[2]}; ` +
-             make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-             make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline-start two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: ltr; ${loDecl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    test_computed_values("rtl inline-start two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: rtl; ${loDecl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[0]]]);
-
-    hiDecl = `${aGroup.inlineEnd}: ${values[0]}; `;
-
-    test_computed_values("ltr inline-end two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: ltr; ${loDecl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[0]]]);
-
-    test_computed_values("rtl inline-end two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: rtl; ${loDecl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    hiDecl = `${aGroup.left}: ${values[0]}; `;
-    loDecl = `${aGroup.inlineStart}: ${values[1]}; ` +
-             `${aGroup.inlineEnd}: ${values[2]}; ` +
-             make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-             make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr inline left two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: ltr; ${loDecl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[2]]]);
-
-    test_computed_values("rtl inline left two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: rtl; ${loDecl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[1]]]);
-
-    hiDecl = `${aGroup.right}: ${values[0]}; `;
-
-    test_computed_values("ltr inline right two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: ltr; ${loDecl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[0]]]);
-
-    test_computed_values("rtl inline right two declarations",
-                         `#test { ${hiDecl} } ` +
-                         `.test { direction: rtl; ${loDecl} }`,
-                         [[aGroup.left,  values[2]],
-                          [aGroup.right, values[0]]]);
-
-    // Test that the computed value of direction is used, not the value on
-    // the declaration.
-
-    loDecl = `${aGroup.inlineStart}: ${values[0]}; ` +
-             `${aGroup.inlineEnd}: ${values[1]}; ` +
-             make_declaration(gCSSProperties[aGroup.left].prerequisites) +
-             make_declaration(gCSSProperties[aGroup.right].prerequisites);
-
-    test_computed_values("ltr on different declaration",
-                         `#test { direction: ltr; } ` +
-                         `.test { direction: rtl; ${loDecl} }`,
-                         [[aGroup.left,  values[0]],
-                          [aGroup.right, values[1]]]);
-
-    test_computed_values("rtl on different declaration",
-                         `#test { direction: rtl; } ` +
-                         `.test { direction: ltr; ${loDecl} }`,
-                         [[aGroup.left,  values[1]],
-                          [aGroup.right, values[0]]]);
+    gWritingModes.forEach(function(aWritingMode) {
+      aWritingMode.style.forEach(function(aWritingModeDecl) {
+        run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl);
+      });
+    });
   });
 
   SimpleTest.finish();
