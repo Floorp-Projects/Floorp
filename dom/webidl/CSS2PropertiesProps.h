@@ -17,9 +17,11 @@
   DO_PROP(name, method, id, flags, pref)
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
 
 #include "nsCSSPropList.h"
 
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 #undef CSS_PROP_SHORTHAND

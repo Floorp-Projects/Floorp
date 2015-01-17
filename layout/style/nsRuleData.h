@@ -116,7 +116,9 @@ struct nsRuleData
   #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_,           \
                              parsevariant_, kwtable_)                        \
     /* empty; backend-only structs are not in nsRuleData  */
+  #define CSS_PROP_LIST_EXCLUDE_LOGICAL
   #include "nsCSSPropList.h"
+  #undef CSS_PROP_LIST_EXCLUDE_LOGICAL
   #undef CSS_PROP
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
   #undef CSS_PROP_BACKENDONLY
