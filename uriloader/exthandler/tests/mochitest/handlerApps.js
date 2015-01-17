@@ -9,15 +9,6 @@ const Cc = SpecialPowers.Cc;
 
 function test() {
 
-  const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
-  const isOSXMavericks = navigator.userAgent.indexOf("Mac OS X 10.9") != -1;
-  const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
-  if (isOSXMtnLion || isOSXMavericks || isOSXYosemite ) {
-    todo(false, "This test fails on OS X 10.8, 10.9, 10.10, see bug 786938");
-    SimpleTest.finish();
-    return;
-  }
-
   // set up the web handler object
   var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
     createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
