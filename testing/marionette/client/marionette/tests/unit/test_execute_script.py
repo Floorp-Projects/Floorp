@@ -79,6 +79,11 @@ let prefs = Components.classes["@mozilla.org/preferences-service;1"]
         self.assertTrue(isinstance(result, float))
         self.assertEqual(result, expected_result)
 
+    def test_null_argument(self):
+        result = self.marionette.execute_script("return arguments[0]",
+                                                [None])
+        self.assertIs(result, None)
+
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
         super(TestExecuteChrome, self).setUp()

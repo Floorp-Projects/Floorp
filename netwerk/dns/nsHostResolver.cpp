@@ -1380,10 +1380,6 @@ nsHostResolver::ThreadFunc(void *arg)
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
              rec->host));
 
-        int flags = PR_AI_ADDRCONFIG;
-        if (!(rec->flags & RES_CANON_NAME))
-            flags |= PR_AI_NOCANONNAME;
-
         TimeStamp startTime = TimeStamp::Now();
         MOZ_EVENT_TRACER_EXEC(rec, "net::dns::resolve");
 
@@ -1397,10 +1393,10 @@ nsHostResolver::ThreadFunc(void *arg)
         // because PR_GetAddrInfoByName doesn't support PR_AF_INET6.
         bool disableIPv4 = rec->af == PR_AF_INET6;
         uint16_t af = disableIPv4 ? PR_AF_UNSPEC : rec->af;
-        nsresult status = GetAddrInfo(rec->host, af, flags, &ai, getTtl);
+        nsresult status = GetAddrInfo(rec->host, af, rec->flags, &ai, getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host, af, flags, &ai, getTtl);
+            status = GetAddrInfo(rec->host, af, rec->flags, &ai, getTtl);
         }
 #endif
 

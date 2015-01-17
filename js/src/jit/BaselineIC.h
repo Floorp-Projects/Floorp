@@ -335,9 +335,6 @@ class ICEntry
 #define IC_STUB_KIND_LIST(_)    \
     _(WarmUpCounter_Fallback)   \
                                 \
-    _(Profiler_Fallback)        \
-    _(Profiler_PushFunction)    \
-                                \
     _(TypeMonitor_Fallback)     \
     _(TypeMonitor_SingleObject) \
     _(TypeMonitor_TypeObject)   \
@@ -1122,11 +1119,6 @@ class ICStubCompiler
     // given label.
     void guardProfilingEnabled(MacroAssembler &masm, Register scratch, Label *skip);
 
-    // Higher-level helper to emit an update to the profiler pseudo-stack.
-    void emitProfilingUpdate(MacroAssembler &masm, Register pcIdx, Register scratch,
-                             uint32_t stubPcOffset);
-    void emitProfilingUpdate(MacroAssembler &masm, GeneralRegisterSet regs, uint32_t stubPcOffset);
-
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
         MOZ_ASSERT(!regs.has(BaselineStackReg));
@@ -1225,91 +1217,6 @@ class ICWarmUpCounter_Fallback : public ICFallbackStub
 
         ICWarmUpCounter_Fallback *getStub(ICStubSpace *space) {
             return ICWarmUpCounter_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
-// Profiler_Fallback
-
-class ICProfiler_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    explicit ICProfiler_Fallback(JitCode *stubCode)
-      : ICFallbackStub(ICStub::Profiler_Fallback, stubCode)
-    { }
-
-  public:
-    static inline ICProfiler_Fallback *New(ICStubSpace *space, JitCode *code) {
-        if (!code)
-            return nullptr;
-        return space->allocate<ICProfiler_Fallback>(code);
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        explicit Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::Profiler_Fallback)
-        { }
-
-        ICProfiler_Fallback *getStub(ICStubSpace *space) {
-            return ICProfiler_Fallback::New(space, getStubCode());
-        }
-    };
-};
-
-// Profiler_PushFunction
-
-class ICProfiler_PushFunction : public ICStub
-{
-    friend class ICStubSpace;
-
-  protected:
-    const char *str_;
-    HeapPtrScript script_;
-
-    ICProfiler_PushFunction(JitCode *stubCode, const char *str, HandleScript script);
-
-  public:
-    static inline ICProfiler_PushFunction *New(ICStubSpace *space, JitCode *code,
-                                               const char *str, HandleScript script)
-    {
-        if (!code)
-            return nullptr;
-        return space->allocate<ICProfiler_PushFunction>(code, str, script);
-    }
-
-    HeapPtrScript &script() {
-        return script_;
-    }
-
-    static size_t offsetOfStr() {
-        return offsetof(ICProfiler_PushFunction, str_);
-    }
-    static size_t offsetOfScript() {
-        return offsetof(ICProfiler_PushFunction, script_);
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        const char *str_;
-        RootedScript script_;
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx, const char *str, HandleScript script)
-          : ICStubCompiler(cx, ICStub::Profiler_PushFunction),
-            str_(str),
-            script_(cx, script)
-        { }
-
-        ICProfiler_PushFunction *getStub(ICStubSpace *space) {
-            return ICProfiler_PushFunction::New(space, getStubCode(), str_, script_);
         }
     };
 };

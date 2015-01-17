@@ -192,7 +192,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
 
   bool lineBreakBeforeOpen = LineBreakBeforeOpen(ns, name);
 
-  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
+  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     if (mColPos && lineBreakBeforeOpen) {
       AppendNewLineToString(aStr);
     }
@@ -225,7 +225,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
   MaybeEnterInPreContent(content);
 
   // for block elements, we increase the indentation
-  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw)
+  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel())
     IncrIndentation(name);
 
   // Need to keep track of OL and LI elements in order to get ordinal number 
@@ -280,8 +280,8 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     ++mDisableEntityEncoding;
   }
 
-  if ((mDoFormat || forceFormat) && !mPreLevel &&
-    !mDoRaw && LineBreakAfterOpen(ns, name)) {
+  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel() &&
+    LineBreakAfterOpen(ns, name)) {
     AppendNewLineToString(aStr);
   }
 
@@ -312,18 +312,18 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   bool forceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
                      content->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
-  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
+  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     DecrIndentation(name);
   }
 
   if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
 
-    if (script && script->IsMalformed()) {
+    if (ShouldMaintainPreLevel() && script && script->IsMalformed()) {
       // We're looking at a malformed script tag. This means that the end tag
       // was missing in the source. Imitate that here by not serializing the end
       // tag.
-      --mPreLevel;
+      --PreLevel();
       return NS_OK;
     }
   }
@@ -351,7 +351,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
     }
   }
 
-  if ((mDoFormat || forceFormat) && !mPreLevel && !mDoRaw) {
+  if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
 
     bool lineBreakBeforeClose = LineBreakBeforeClose(ns, name);
 
@@ -377,8 +377,8 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
 
   MaybeLeaveFromPreContent(content);
 
-  if ((mDoFormat || forceFormat) && !mPreLevel
-      && !mDoRaw && LineBreakAfterClose(ns, name)) {
+  if ((mDoFormat || forceFormat)&& !mDoRaw  && !PreLevel()
+      && LineBreakAfterClose(ns, name)) {
     AppendNewLineToString(aStr);
   }
   else {

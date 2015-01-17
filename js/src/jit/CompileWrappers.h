@@ -34,6 +34,12 @@ class CompileRuntime
     // &mainThread.jitTop
     const void *addressOfJitTop();
 
+    // &mainThread.jitActivation
+    const void *addressOfJitActivation();
+
+    // &mainThread.profilingActivation
+    const void *addressOfProfilingActivation();
+
     // rt->mainThread.jitStackLimit;
     const void *addressOfJitStackLimit();
 

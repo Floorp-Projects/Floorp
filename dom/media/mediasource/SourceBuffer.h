@@ -135,6 +135,12 @@ private:
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
 
+  // Implement the "Append Error Algorithm".
+  // Will call endOfStream() with "decode" error if aDecodeError is true.
+  // 3.5.3 Append Error Algorithm
+  // http://w3c.github.io/media-source/#sourcebuffer-append-error
+  void AppendError(bool aDecoderError);
+
   // Implements the "Prepare Append Algorithm".  Returns true if the append
   // may continue, or false (with aRv set) on error.
   bool PrepareAppend(ErrorResult& aRv);

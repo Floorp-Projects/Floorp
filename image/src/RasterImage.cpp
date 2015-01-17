@@ -761,8 +761,11 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame,
 }
 
 already_AddRefed<layers::Image>
-RasterImage::GetCurrentImage()
+RasterImage::GetCurrentImage(ImageContainer* aContainer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+
   RefPtr<SourceSurface> surface =
     GetFrameInternal(FRAME_CURRENT, FLAG_NONE, /* aShouldSyncNotify = */ false);
   if (!surface) {
@@ -771,16 +774,13 @@ RasterImage::GetCurrentImage()
     return nullptr;
   }
 
-  if (!mImageContainer) {
-    mImageContainer = LayerManager::CreateImageContainer();
-  }
-
   CairoImage::Data cairoData;
   GetWidth(&cairoData.mSize.width);
   GetHeight(&cairoData.mSize.height);
   cairoData.mSourceSurface = surface;
 
-  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::CAIRO_SURFACE);
+  nsRefPtr<layers::Image> image =
+    aContainer->CreateImage(ImageFormat::CAIRO_SURFACE);
   NS_ASSERTION(image, "Failed to create Image");
 
   static_cast<CairoImage*>(image.get())->SetData(cairoData);
@@ -792,8 +792,13 @@ RasterImage::GetCurrentImage()
 NS_IMETHODIMP
 RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aManager);
+
   int32_t maxTextureSize = aManager->GetMaxTextureSize();
-  if (mSize.width > maxTextureSize || mSize.height > maxTextureSize) {
+  if (!mHasSize ||
+      mSize.width > maxTextureSize ||
+      mSize.height > maxTextureSize) {
     *_retval = nullptr;
     return NS_OK;
   }
@@ -802,30 +807,27 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
     mProgressTracker->OnUnlockedDraw();
   }
 
-  if (!mImageContainer) {
-    mImageContainer = mImageContainerCache;
-  }
-
-  if (mImageContainer) {
-    *_retval = mImageContainer;
-    NS_ADDREF(*_retval);
+  nsRefPtr<layers::ImageContainer> container = mImageContainer.get();
+  if (container) {
+    container.forget(_retval);
     return NS_OK;
   }
 
-  nsRefPtr<layers::Image> image = GetCurrentImage();
+  // We need a new ImageContainer, so create one.
+  container = LayerManager::CreateImageContainer();
+
+  nsRefPtr<layers::Image> image = GetCurrentImage(container);
   if (!image) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mImageContainer->SetCurrentImageInTransaction(image);
 
-  *_retval = mImageContainer;
-  NS_ADDREF(*_retval);
-  // We only need to be careful about holding on to the image when it is
-  // discardable by the OS.
-  if (CanDiscard()) {
-    mImageContainerCache = mImageContainer;
-    mImageContainer = nullptr;
-  }
+  // |image| holds a reference to a SourceSurface which in turn holds a lock on
+  // the current frame's VolatileBuffer, ensuring that it doesn't get freed as
+  // long as the layer system keeps this ImageContainer alive.
+  container->SetCurrentImageInTransaction(image);
+
+  mImageContainer = container;
+  container.forget(_retval);
 
   return NS_OK;
 }
@@ -833,16 +835,19 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 void
 RasterImage::UpdateImageContainer()
 {
-  if (!mImageContainer) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<layers::ImageContainer> container = mImageContainer.get();
+  if (!container) {
     return;
   }
 
-  nsRefPtr<layers::Image> image = GetCurrentImage();
+  nsRefPtr<layers::Image> image = GetCurrentImage(container);
   if (!image) {
     return;
   }
 
-  mImageContainer->SetCurrentImage(image);
+  container->SetCurrentImage(image);
 }
 
 size_t

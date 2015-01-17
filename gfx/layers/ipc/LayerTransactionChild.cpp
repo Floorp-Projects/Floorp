@@ -75,7 +75,7 @@ LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
 }
 
 bool
-LayerTransactionChild::RecvParentAsyncMessages(const InfallibleTArray<AsyncParentMessageData>& aMessages)
+LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
 {
   for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
     const AsyncParentMessageData& message = aMessages[i];

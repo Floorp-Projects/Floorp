@@ -74,7 +74,7 @@ private:
                     const nsString& aValue);
   bool RecvLoadDone(const nsCString& aScope,
                     const nsresult& aRv);
-  bool RecvScopesHavingData(const InfallibleTArray<nsCString>& aScopes);
+  bool RecvScopesHavingData(nsTArray<nsCString>&& aScopes);
   bool RecvLoadUsage(const nsCString& aScope,
                      const int64_t& aUsage);
   bool RecvError(const nsresult& aRv);

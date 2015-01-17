@@ -145,7 +145,7 @@ CheckHashTablesAfterMovingGC(JSRuntime *rt);
 
 #ifdef JSGC_COMPACTING
 struct MovingTracer : JSTracer {
-    MovingTracer(JSRuntime *rt) : JSTracer(rt, Visit, TraceWeakMapKeysValues) {}
+    explicit MovingTracer(JSRuntime *rt) : JSTracer(rt, Visit, TraceWeakMapKeysValues) {}
 
     static void Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind);
     static bool IsMovingTracer(JSTracer *trc) {

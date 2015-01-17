@@ -2269,7 +2269,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                     if (isRTL) {
                         glyphRect -= gfxPoint(advance, 0);
                     }
-                    glyphRect += gfxPoint(x, 0);
+                    glyphRect += glyphPt;
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                     x += direction*advance;
                 }

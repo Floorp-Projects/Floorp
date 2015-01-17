@@ -71,8 +71,8 @@ public:
   }
 
   // PImageBridge
-  virtual bool RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply) MOZ_OVERRIDE;
-  virtual bool RecvUpdateNoSwap(const EditArray& aEdits) MOZ_OVERRIDE;
+  virtual bool RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply) MOZ_OVERRIDE;
+  virtual bool RecvUpdateNoSwap(EditArray&& aEdits) MOZ_OVERRIDE;
 
   virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
 
@@ -85,7 +85,7 @@ public:
   virtual bool DeallocPTextureParent(PTextureParent* actor) MOZ_OVERRIDE;
 
   virtual bool
-  RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessageData>& aMessages) MOZ_OVERRIDE;
+  RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages) MOZ_OVERRIDE;
 
   // Shutdown step 1
   virtual bool RecvWillStop() MOZ_OVERRIDE;

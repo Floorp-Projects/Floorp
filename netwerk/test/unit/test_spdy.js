@@ -231,6 +231,33 @@ function test_spdy_xhr() {
   req.send(null);
 }
 
+var concurrent_channels = [];
+
+var SpdyConcurrentListener = function() {};
+
+SpdyConcurrentListener.prototype = new SpdyCheckListener();
+SpdyConcurrentListener.prototype.count = 0;
+SpdyConcurrentListener.prototype.target = 0;
+
+SpdyConcurrentListener.prototype.onStopRequest = function(request, ctx, status) {
+  this.count++;
+  do_check_true(this.isSpdyConnection);
+  if (this.count == this.target) {
+    run_next_test();
+    do_test_finished();
+  }
+};
+
+function test_spdy_concurrent() {
+  var concurrent_listener = new SpdyConcurrentListener();
+  concurrent_listener.target = 201;
+  for (var i = 0; i < concurrent_listener.target; i++) {
+    concurrent_channels[i] = makeChan("https://localhost:4443/750ms");
+    concurrent_channels[i].loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    concurrent_channels[i].asyncOpen(concurrent_listener, null);
+  }
+}
+
 // Test to make sure we get multiplexing right
 function test_spdy_multiplex() {
   var chan1 = makeChan("https://localhost:4443/multiplex1");
@@ -320,6 +347,7 @@ function test_spdy_post_big() {
 // a stalled stream when a SETTINGS frame arrives
 var tests = [ test_spdy_post_big
             , test_spdy_basic
+	    , test_spdy_concurrent
             , test_spdy_push1
             , test_spdy_push2
             , test_spdy_push3

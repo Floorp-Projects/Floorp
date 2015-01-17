@@ -593,6 +593,14 @@ parent:
     sync LoadPlugin(uint32_t pluginId);
 
     /**
+     * This call is used by asynchronous plugin instantiation to notify the
+     * content parent that it is now safe to initiate the plugin bridge for
+     * the specified plugin id. When this call returns, the requested bridge
+     * connection has been made.
+     */
+    sync ConnectPluginBridge(uint32_t aPluginId);
+
+    /**
      * This call returns the set of plugins loaded in the chrome
      * process. However, in many cases this set will not have changed since the
      * last FindPlugins message. Consequently, the chrome process increments an

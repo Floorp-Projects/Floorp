@@ -1272,7 +1272,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   DrawDebugOverlay(drawTarget, aTileOrigin.x * mResolution,
-                   aTileOrigin.y * mPresShellResolution, GetTileLength(), GetTileLength());
+                   aTileOrigin.y * GetPresShellResolution(), GetTileLength(), GetTileLength());
 #endif
 
   ctxt = nullptr;

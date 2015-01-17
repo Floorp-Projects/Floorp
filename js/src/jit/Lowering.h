@@ -248,7 +248,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInArray(MInArray *ins);
     void visitInstanceOf(MInstanceOf *ins);
     void visitCallInstanceOf(MCallInstanceOf *ins);
-    void visitProfilerStackOp(MProfilerStackOp *ins);
     void visitIsCallable(MIsCallable *ins);
     void visitIsObject(MIsObject *ins);
     void visitHasClass(MHasClass *ins);

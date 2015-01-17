@@ -56,9 +56,6 @@ class BaselineFrame
         // Eval frame, see the "eval frames" comment.
         EVAL             = 1 << 7,
 
-        // Frame has profiler entry pushed.
-        HAS_PUSHED_SPS_FRAME = 1 << 8,
-
         // Frame has over-recursed on an early check.
         OVER_RECURSED    = 1 << 9,
 
@@ -306,18 +303,6 @@ class BaselineFrame
     JSScript *evalScript() const {
         MOZ_ASSERT(isEvalFrame());
         return evalScript_;
-    }
-
-    bool hasPushedSPSFrame() const {
-        return flags_ & HAS_PUSHED_SPS_FRAME;
-    }
-
-    void setPushedSPSFrame() {
-        flags_ |= HAS_PUSHED_SPS_FRAME;
-    }
-
-    void unsetPushedSPSFrame() {
-        flags_ &= ~HAS_PUSHED_SPS_FRAME;
     }
 
     bool overRecursed() const {

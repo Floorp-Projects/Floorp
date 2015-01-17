@@ -98,6 +98,10 @@ class JitCode : public gc::TenuredCell
     uint8_t *rawEnd() const {
         return code_ + insnSize_;
     }
+    bool containsNativePC(const void *addr) const {
+        const uint8_t *addr_u8 = (const uint8_t *) addr;
+        return raw() <= addr_u8 && addr_u8 < rawEnd();
+    }
     size_t instructionsSize() const {
         return insnSize_;
     }
@@ -193,8 +197,8 @@ struct IonScript
     // Number of times this script bailed out without invalidation.
     uint32_t numBailouts_;
 
-    // Flag set if IonScript was compiled with SPS profiling enabled.
-    bool hasSPSInstrumentation_;
+    // Flag set if IonScript was compiled with profiling enabled.
+    bool hasProfilingInstrumentation_;
 
     // Flag for if this script is getting recompiled.
     uint32_t recompiling_;
@@ -412,14 +416,14 @@ struct IonScript
     bool bailoutExpected() const {
         return numBailouts_ > 0;
     }
-    void setHasSPSInstrumentation() {
-        hasSPSInstrumentation_ = true;
+    void setHasProfilingInstrumentation() {
+        hasProfilingInstrumentation_ = true;
     }
-    void clearHasSPSInstrumentation() {
-        hasSPSInstrumentation_ = false;
+    void clearHasProfilingInstrumentation() {
+        hasProfilingInstrumentation_ = false;
     }
-    bool hasSPSInstrumentation() const {
-        return hasSPSInstrumentation_;
+    bool hasProfilingInstrumentation() const {
+        return hasProfilingInstrumentation_;
     }
     void setTraceLoggerEvent(TraceLoggerEvent &event) {
         traceLoggerScriptEvent_ = event;
