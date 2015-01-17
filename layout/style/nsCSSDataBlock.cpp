@@ -588,7 +588,7 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
-                                         nsCSSProps::eEnabledForAllContent) {
+                                         nsCSSProps::eIgnoreEnabledState) {
       ClearLonghandProperty(*p);
     }
   } else {
@@ -609,6 +609,7 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 bool
 nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                           nsCSSProperty aPropID,
+                                          nsCSSProps::EnabledState aEnabledState,
                                           bool aIsImportant,
                                           bool aOverrideImportant,
                                           bool aMustCallValueAppended,
@@ -626,8 +627,7 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
     // properties available in these contexts also have all of their
     // subproperties available in these contexts.
     bool changed = false;
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
-                                         nsCSSProps::eEnabledForAllContent) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID, aEnabledState) {
         changed |= DoTransferFromBlock(aFromBlock, *p,
                                        aIsImportant, aOverrideImportant,
                                        aMustCallValueAppended, aDeclaration);
