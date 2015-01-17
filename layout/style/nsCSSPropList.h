@@ -2758,158 +2758,76 @@ CSS_PROP_PADDING(
     nullptr,
     offsetof(nsStylePadding, mPadding),
     eStyleAnimType_Sides_Bottom)
-CSS_PROP_SHORTHAND(
+CSS_PROP_LOGICAL(
     -moz-padding-end,
     padding_end,
     CSS_PROP_DOMPROP_PREFIXED(PaddingEnd),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_PADDING(
-    padding-end-value,
-    padding_end_value,
-    PaddingEndValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_STORES_CALC,
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL,
     "",
-    VARIANT_HLP | VARIANT_CALC, // for internal use
+    VARIANT_HLP | VARIANT_CALC,
     nullptr,
+    Padding,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
+CSS_PROP_LOGICAL(
+    -moz-padding-start,
+    padding_start,
+    CSS_PROP_DOMPROP_PREFIXED(PaddingStart),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        // This is required by the UA stylesheet and can't be overridden.
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HLP | VARIANT_CALC,
+    nullptr,
+    Padding,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_PADDING(
     padding-left,
     padding_left,
     PaddingLeft,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_PADDING(
-    padding-left-value,
-    padding_left_value,
-    PaddingLeftValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_REPORT_OTHER_NAME |
-        CSS_PROPERTY_STORES_CALC,
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_HLP | VARIANT_CALC, // for internal use
+    VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePadding, mPadding),
     eStyleAnimType_Sides_Left)
 CSS_PROP_PADDING(
-    padding-left-ltr-source,
-    padding_left_ltr_source,
-    PaddingLeftLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        // This is required by the UA stylesheet and can't be overridden.
-        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_PADDING(
-    padding-left-rtl-source,
-    padding_left_rtl_source,
-    PaddingLeftRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        // This is required by the UA stylesheet and can't be overridden.
-        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
     padding-right,
     padding_right,
     PaddingRight,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_PADDING(
-    padding-right-value,
-    padding_right_value,
-    PaddingRightValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_REPORT_OTHER_NAME |
-        CSS_PROPERTY_STORES_CALC,
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
-    VARIANT_HLP | VARIANT_CALC, // for internal use
+    VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePadding, mPadding),
     eStyleAnimType_Sides_Right)
-CSS_PROP_PADDING(
-    padding-right-ltr-source,
-    padding_right_ltr_source,
-    PaddingRightLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        // This is required by the UA stylesheet and can't be overridden.
-        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_PADDING(
-    padding-right-rtl-source,
-    padding_right_rtl_source,
-    PaddingRightRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-padding-start,
-    padding_start,
-    CSS_PROP_DOMPROP_PREFIXED(PaddingStart),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_PADDING(
-    padding-start-value,
-    padding_start_value,
-    PaddingStartValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        // This is required by the UA stylesheet and can't be overridden.
-        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
-        CSS_PROPERTY_STORES_CALC,
-    "",
-    VARIANT_HLP | VARIANT_CALC, // for internal use
-    nullptr,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_PADDING(
     padding-top,
     padding_top,

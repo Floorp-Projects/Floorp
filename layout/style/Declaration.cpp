@@ -400,10 +400,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     case eCSSProperty_margin_right:
     case eCSSProperty_margin_start:
     case eCSSProperty_margin_end:
-    case eCSSProperty_padding_left:
-    case eCSSProperty_padding_right:
-    case eCSSProperty_padding_start:
-    case eCSSProperty_padding_end:
     case eCSSProperty_border_left_color:
     case eCSSProperty_border_left_style:
     case eCSSProperty_border_left_width:
