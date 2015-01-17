@@ -238,7 +238,7 @@ class IonBuilder
 
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
-                            ObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
+                            ObjectVector &targets, uint32_t maxTargets);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);
@@ -817,7 +817,7 @@ class IonBuilder
 
     // Call functions
     InliningStatus inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
-                                  bool lambda, CallInfo &callInfo);
+                                  CallInfo &callInfo);
     bool inlineCalls(CallInfo &callInfo, const ObjectVector &targets, ObjectVector &originals,
                      BoolVector &choiceSet, MGetPropertyCache *maybeCache);
 

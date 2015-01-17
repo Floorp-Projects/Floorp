@@ -722,9 +722,14 @@ CodeGenerator::visitFunctionDispatch(LFunctionDispatch *lir)
     // Compare function pointers, except for the last case.
     for (size_t i = 0; i < casesWithFallback - 1; i++) {
         MOZ_ASSERT(i < mir->numCases());
-        JSFunction *func = mir->getCase(i);
         LBlock *target = skipTrivialBlocks(mir->getCaseBlock(i))->lir();
-        masm.branchPtr(Assembler::Equal, input, ImmGCPtr(func), target->label());
+        JSFunction *func = mir->getCase(i);
+        if (types::TypeObject *funcType = mir->getCaseTypeObject(i)) {
+            masm.branchPtr(Assembler::Equal, Address(input, JSObject::offsetOfType()),
+                           ImmGCPtr(funcType), target->label());
+        } else {
+            masm.branchPtr(Assembler::Equal, input, ImmGCPtr(func), target->label());
+        }
     }
 
     // Jump to the last case.
