@@ -9644,7 +9644,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
         if (nsCSSProps::IsShorthand(aPropID)) {
           // If this is a shorthand property, we store the token stream on each
           // of its corresponding longhand properties.
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
+                                               nsCSSProps::eEnabledForAllContent) {
             nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
             tokenStream->mPropertyID = *p;
             tokenStream->mShorthandPropertyID = aPropID;
@@ -14743,7 +14744,11 @@ CSSParserImpl::ParseAll()
     return false;
   }
 
-  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, eCSSProperty_all) {
+  // It's unlikely we'll want to use 'all' from within a UA style sheet, so
+  // instead of computing the correct EnabledState value we just expand out
+  // to all content-visible properties.
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, eCSSProperty_all,
+                                       nsCSSProps::eEnabledForAllContent) {
     AppendValue(*p, value);
   }
   return true;

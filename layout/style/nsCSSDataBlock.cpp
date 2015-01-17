@@ -587,7 +587,8 @@ void
 nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
+                                         nsCSSProps::eEnabledForAllContent) {
       ClearLonghandProperty(*p);
     }
   } else {
@@ -619,8 +620,14 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                    aMustCallValueAppended, aDeclaration);
     }
 
+    // We can pass eIgnoreEnabledState (here, and in ClearProperty above) rather
+    // than a value corresponding to whether we're parsing a UA style sheet or
+    // certified app because we assert in nsCSSProps::AddRefTable that shorthand
+    // properties available in these contexts also have all of their
+    // subproperties available in these contexts.
     bool changed = false;
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
+                                         nsCSSProps::eEnabledForAllContent) {
         changed |= DoTransferFromBlock(aFromBlock, *p,
                                        aIsImportant, aOverrideImportant,
                                        aMustCallValueAppended, aDeclaration);
