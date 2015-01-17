@@ -188,6 +188,38 @@ nsCSSProps::AddRefTable(void)
 
       #undef OBSERVE_PROP
     }
+
+#ifdef DEBUG
+    {
+      // Assert that if CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS or
+      // CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP is used on
+      // a shorthand property that all of its component longhands also
+      // has the flag.
+      static uint32_t flagsToCheck[] = {
+        CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS,
+        CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP
+      };
+      for (nsCSSProperty shorthand = eCSSProperty_COUNT_no_shorthands;
+           shorthand < eCSSProperty_COUNT;
+           shorthand = nsCSSProperty(shorthand + 1)) {
+        for (size_t i = 0; i < ArrayLength(flagsToCheck); i++) {
+          uint32_t flag = flagsToCheck[i];
+          if (!nsCSSProps::PropHasFlags(shorthand, flag)) {
+            continue;
+          }
+          for (const nsCSSProperty* p =
+                 nsCSSProps::SubpropertyEntryFor(shorthand);
+               *p != eCSSProperty_UNKNOWN;
+               ++p) {
+            MOZ_ASSERT(nsCSSProps::PropHasFlags(*p, flag),
+                       "all subproperties of a property with a "
+                       "CSS_PROPERTY_ALWAYS_ENABLED_* flag must also have "
+                       "the flag");
+          }
+        }
+      }
+    }
+#endif
   }
 }
 
