@@ -2943,22 +2943,42 @@ nsBlockFrame::IsSelfEmpty()
   // Blocks which are margin-roots (including inline-blocks) cannot be treated
   // as empty for margin-collapsing and other purposes. They're more like
   // replaced elements.
-  if (GetStateBits() & NS_BLOCK_MARGIN_ROOT)
+  if (GetStateBits() & NS_BLOCK_MARGIN_ROOT) {
     return false;
+  }
 
   const nsStylePosition* position = StylePosition();
+  bool vertical = GetWritingMode().IsVertical();
 
-  if (IsNonAutoNonZeroHeight(position->mMinHeight) ||
-      IsNonAutoNonZeroHeight(position->mHeight))
-    return false;
+  if (vertical) {
+    if (IsNonAutoNonZeroHeight(position->mMinWidth) ||
+        IsNonAutoNonZeroHeight(position->mWidth)) {
+      return false;
+    }
+  } else {
+    if (IsNonAutoNonZeroHeight(position->mMinHeight) ||
+        IsNonAutoNonZeroHeight(position->mHeight)) {
+      return false;
+    }
+  }
 
   const nsStyleBorder* border = StyleBorder();
   const nsStylePadding* padding = StylePadding();
-  if (border->GetComputedBorderWidth(NS_SIDE_TOP) != 0 ||
-      border->GetComputedBorderWidth(NS_SIDE_BOTTOM) != 0 ||
-      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
-      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom())) {
-    return false;
+
+  if (vertical) {
+    if (border->GetComputedBorderWidth(NS_SIDE_LEFT) != 0 ||
+        border->GetComputedBorderWidth(NS_SIDE_RIGHT) != 0 ||
+        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
+        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight())) {
+      return false;
+    }
+  } else {
+    if (border->GetComputedBorderWidth(NS_SIDE_TOP) != 0 ||
+        border->GetComputedBorderWidth(NS_SIDE_BOTTOM) != 0 ||
+        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
+        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom())) {
+      return false;
+    }
   }
 
   if (HasOutsideBullet() && !BulletIsEmpty()) {
