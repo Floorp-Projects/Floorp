@@ -103,9 +103,11 @@ function init() {
   for (var p in gCSSProperties) {
     var type = gCSSProperties[p].type;
 
-    if (type == CSS_TYPE_SHORTHAND_AND_LONGHAND && /-inline-end/.test(p)) {
+    if ((type == CSS_TYPE_SHORTHAND_AND_LONGHAND ||
+         type == CSS_TYPE_LONGHAND && gCSSProperties[p].logical) &&
+        /-inline-end/.test(p)) {
       var valueType;
-      if (/margin|padding|width/.test(p)) {
+      if (/margin|padding|width|offset/.test(p)) {
         valueType = "length";
       } else if (/color/.test(p)) {
         valueType = "color";
@@ -115,16 +117,23 @@ function init() {
         throw `unexpected property ${p}`;
       }
       var group = {
-        left:        p.replace("-inline-end", "-left"),
-        right:       p.replace("-inline-end", "-right"),
-        top:         p.replace("-inline-end", "-top"),
-        bottom:      p.replace("-inline-end", "-bottom"),
         inlineStart: p.replace("-inline-end", "-inline-start"),
         inlineEnd:   p,
         blockStart:  p.replace("-inline-end", "-block-start"),
         blockEnd:    p.replace("-inline-end", "-block-end"),
         type:        valueType
       };
+      if (/^offset/.test(p)) {
+        group.left   = "left";
+        group.right  = "right";
+        group.top    = "top";
+        group.bottom = "bottom";
+      } else {
+        group.left   = p.replace("-inline-end", "-left");
+        group.right  = p.replace("-inline-end", "-right");
+        group.top    = p.replace("-inline-end", "-top");
+        group.bottom = p.replace("-inline-end", "-bottom");
+      }
       group.prerequisites =
         make_declaration(gCSSProperties[group.top].prerequisites) +
         make_declaration(gCSSProperties[group.right].prerequisites) +
