@@ -481,6 +481,7 @@ CompositorParent::RecvWillStop()
       if (lts->mParent == this) {
         mLayerManager->ClearCachedResources(lts->mRoot);
         lts->mLayerManager = nullptr;
+        lts->mParent = nullptr;
       }
     }
     mLayerManager->Destroy();
@@ -1709,7 +1710,9 @@ CrossProcessCompositorParent::ForceComposite(LayerTransactionParent* aLayerTree)
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     parent = sIndirectLayerTrees[id].mParent;
   }
-  parent->ForceComposite(aLayerTree);
+  if (parent) {
+    parent->ForceComposite(aLayerTree);
+  }
 }
 
 bool

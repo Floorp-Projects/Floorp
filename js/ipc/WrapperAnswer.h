@@ -46,7 +46,7 @@ class WrapperAnswer : public virtual JavaScriptShared
 
     bool RecvIsExtensible(const ObjectId &objId, ReturnStatus *rs,
                           bool *result);
-    bool RecvCallOrConstruct(const ObjectId &objId, const nsTArray<JSParam> &argv,
+    bool RecvCallOrConstruct(const ObjectId &objId, InfallibleTArray<JSParam> &&argv,
                              const bool &construct, ReturnStatus *rs, JSVariant *result,
                              nsTArray<JSParam> *outparams);
     bool RecvHasInstance(const ObjectId &objId, const JSVariant &v, ReturnStatus *rs, bool *bp);

@@ -86,6 +86,21 @@ var m = {
   }
 };
 
+var runlater = function() {};
+runlater.prototype = {
+  req : null,
+  resp : null,
+
+  onTimeout : function onTimeout() {
+    this.resp.writeHead(200);
+    this.resp.end("It's all good 750ms.");
+  }
+};
+
+function executeRunLater(arg) {
+  arg.onTimeout();
+}
+
 var h11required_conn = null;
 var h11required_header = "yes";
 var didRst = false;
@@ -109,6 +124,14 @@ function handleRequest(req, res) {
     res.writeHead(200);
     res.end('ok');
     process.exit();
+  }
+
+  if (u.pathname === '/750ms') {
+    var rl = new runlater();
+    rl.req = req;
+    rl.resp = res;
+    setTimeout(executeRunLater, 750, rl);
+    return;
   }
 
   else if ((u.pathname === '/multiplex1') && (req.httpVersionMajor === 2)) {

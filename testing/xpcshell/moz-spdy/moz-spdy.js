@@ -74,6 +74,21 @@ function finishPost(res, content) {
   res.end(content);
 }
 
+var runlater = function() {};
+runlater.prototype = {
+  req : null,
+  resp : null,
+
+  onTimeout : function onTimeout() {
+    this.resp.writeHead(200);
+    this.resp.end("It's all good spdy 750ms.");
+  }
+};
+
+function executeRunLater(arg) {
+  arg.onTimeout();
+}
+
 function handleRequest(req, res) {
   var u = url.parse(req.url);
   var content = getHttpContent(u.pathname);
@@ -83,6 +98,16 @@ function handleRequest(req, res) {
     res.setHeader('X-Spdy-StreamId', '' + req.streamID);
   } else {
     res.setHeader('X-Connection-Spdy', 'no');
+  }
+
+console.log(u.pathname);
+
+  if (u.pathname === '/750ms') {
+    var rl = new runlater();
+    rl.req = req;
+    rl.resp = res;
+    setTimeout(executeRunLater, 750, rl);
+    return;
   }
 
   if (u.pathname == '/exit') {

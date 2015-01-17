@@ -84,10 +84,10 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                             bool *result) {
         return Answer::RecvIsExtensible(ObjectId::deserialize(objId), rs, result);
     }
-    bool RecvCallOrConstruct(const uint64_t &objId, const nsTArray<JSParam> &argv,
-                               const bool &construct, ReturnStatus *rs, JSVariant *result,
-                               nsTArray<JSParam> *outparams) {
-        return Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), argv, construct, rs, result, outparams);
+    bool RecvCallOrConstruct(const uint64_t &objId, InfallibleTArray<JSParam> &&argv,
+                             const bool &construct, ReturnStatus *rs, JSVariant *result,
+                             nsTArray<JSParam> *outparams) {
+        return Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), Move(argv), construct, rs, result, outparams);
     }
     bool RecvHasInstance(const uint64_t &objId, const JSVariant &v, ReturnStatus *rs, bool *bp) {
         return Answer::RecvHasInstance(ObjectId::deserialize(objId), v, rs, bp);

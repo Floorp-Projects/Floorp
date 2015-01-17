@@ -175,7 +175,8 @@ BaselineCompiler::compile()
 
     prologueOffset_.fixup(&masm);
     epilogueOffset_.fixup(&masm);
-    spsPushToggleOffset_.fixup(&masm);
+    profilerEnterFrameToggleOffset_.fixup(&masm);
+    profilerExitFrameToggleOffset_.fixup(&masm);
 #ifdef JS_TRACE_LOGGING
     traceLoggerEnterToggleOffset_.fixup(&masm);
     traceLoggerExitToggleOffset_.fixup(&masm);
@@ -188,7 +189,8 @@ BaselineCompiler::compile()
     mozilla::UniquePtr<BaselineScript, JS::DeletePolicy<BaselineScript> > baselineScript(
         BaselineScript::New(script, prologueOffset_.offset(),
                             epilogueOffset_.offset(),
-                            spsPushToggleOffset_.offset(),
+                            profilerEnterFrameToggleOffset_.offset(),
+                            profilerExitFrameToggleOffset_.offset(),
                             traceLoggerEnterToggleOffset_.offset(),
                             traceLoggerExitToggleOffset_.offset(),
                             postDebugPrologueOffset_.offset(),
@@ -242,10 +244,6 @@ BaselineCompiler::compile()
     if (cx->zone()->needsIncrementalBarrier())
         baselineScript->toggleBarriers(true);
 
-    // All SPS instrumentation is emitted toggled off.  Toggle them on if needed.
-    if (cx->runtime()->spsProfiler.enabled())
-        baselineScript->toggleSPS(true);
-
 #ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
     baselineScript->initTraceLogger(cx->runtime(), script);
@@ -263,16 +261,29 @@ BaselineCompiler::compile()
     if (compileDebugInstrumentation_)
         baselineScript->setHasDebugInstrumentation();
 
-    // Register a native => bytecode mapping entry for this script if needed.
-    if (cx->runtime()->jitRuntime()->isNativeToBytecodeMapEnabled(cx->runtime())) {
+    // If profiler instrumentation is enabled, toggle instrumentation on.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        baselineScript->toggleProfilerInstrumentation(true);
+
+    // Always register a native => bytecode mapping entry, since profiler can be
+    // turned on with baseline jitcode on stack, and baseline jitcode cannot be invalidated.
+    {
         JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%d (%p)",
                     script->filename(), script->lineno(), baselineScript.get());
+
+        // Generate profiling string.
+        char *str = JitcodeGlobalEntry::createScriptString(cx, script);
+        if (!str)
+            return Method_Error;
+
         JitcodeGlobalEntry::BaselineEntry entry;
-        entry.init(code->raw(), code->raw() + code->instructionsSize(), script);
+        entry.init(code->raw(), code->rawEnd(), script, str);
 
         JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-        if (!globalTable->addEntry(entry))
+        if (!globalTable->addEntry(entry, cx->runtime())) {
+            entry.destroy();
             return Method_Error;
+        }
 
         // Mark the jitcode as having a bytecode map.
         code->setHasBytecodeMap();
@@ -324,6 +335,8 @@ BaselineCompiler::emitPrologue()
     masm.pushReturnAddress();
     masm.checkStackAlignment();
 #endif
+    emitProfilerEnterFrame();
+
     masm.push(BaselineFrameReg);
     masm.mov(BaselineStackReg, BaselineFrameReg);
 
@@ -412,9 +425,6 @@ BaselineCompiler::emitPrologue()
     if (!emitArgumentTypeChecks())
         return false;
 
-    if (!emitSPSPush())
-        return false;
-
     return true;
 }
 
@@ -432,11 +442,10 @@ BaselineCompiler::emitEpilogue()
         return false;
 #endif
 
-    // Pop SPS frame if necessary
-    emitSPSPop();
-
     masm.mov(BaselineFrameReg, BaselineStackReg);
     masm.pop(BaselineFrameReg);
+
+    emitProfilerExitFrame();
 
     masm.ret();
     return true;
@@ -827,33 +836,34 @@ BaselineCompiler::emitTraceLoggerExit()
 }
 #endif
 
-bool
-BaselineCompiler::emitSPSPush()
+void
+BaselineCompiler::emitProfilerEnterFrame()
 {
-    // Enter the IC, guarded by a toggled jump (initially disabled).
-    Label noPush;
-    CodeOffsetLabel toggleOffset = masm.toggledJump(&noPush);
-    MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
-    ICProfiler_Fallback::Compiler compiler(cx);
-    if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
-        return false;
-    masm.bind(&noPush);
+    // Store stack position to lastProfilingFrame variable, guarded by a toggled jump.
+    // Starts off initially disabled.
+    Label noInstrument;
+    CodeOffsetLabel toggleOffset = masm.toggledJump(&noInstrument);
+    masm.profilerEnterFrame(BaselineStackReg, R0.scratchReg());
+    masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(spsPushToggleOffset_.offset() == 0);
-    spsPushToggleOffset_ = toggleOffset;
-    return true;
+    MOZ_ASSERT(profilerEnterFrameToggleOffset_.offset() == 0);
+    profilerEnterFrameToggleOffset_ = toggleOffset;
 }
 
 void
-BaselineCompiler::emitSPSPop()
+BaselineCompiler::emitProfilerExitFrame()
 {
-    // If profiler entry was pushed on this frame, pop it.
-    Label noPop;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_PUSHED_SPS_FRAME), &noPop);
-    masm.spsPopFrameSafe(&cx->runtime()->spsProfiler, R1.scratchReg());
-    masm.bind(&noPop);
+    // Store previous frame to lastProfilingFrame variable, guarded by a toggled jump.
+    // Starts off initially disabled.
+    Label noInstrument;
+    CodeOffsetLabel toggleOffset = masm.toggledJump(&noInstrument);
+    masm.profilerExitFrame();
+    masm.bind(&noInstrument);
+
+    // Store the start offset in the appropriate location.
+    MOZ_ASSERT(profilerExitFrameToggleOffset_.offset() == 0);
+    profilerExitFrameToggleOffset_ = toggleOffset;
 }
 
 MethodStatus
@@ -3629,6 +3639,19 @@ BaselineCompiler::emit_JSOP_RESUME()
 
     masm.jump(&returnTarget);
     masm.bind(&genStart);
+
+    // If profiler instrumentation is on, update lastProfilingFrame on
+    // current JitActivation
+    {
+        Register scratchReg = scratch2;
+        Label skip;
+        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skip);
+        masm.loadPtr(AbsoluteAddress(cx->mainThread().addressOfProfilingActivation()), scratchReg);
+        masm.storePtr(BaselineStackReg,
+                      Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()));
+        masm.bind(&skip);
+    }
 
     // Construct BaselineFrame.
     masm.push(BaselineFrameReg);

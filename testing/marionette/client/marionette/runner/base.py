@@ -25,6 +25,10 @@ from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
 import mozversion
 
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+
 class MarionetteTest(TestResult):
 
     @property
@@ -376,7 +380,9 @@ class BaseMarionetteOptions(OptionParser):
         self.add_option('--server-root',
                         dest='server_root',
                         action='store',
-                        help='sets the web server\'s root directory to the given path')
+                        help='url to a webserver or path to a document root from which content '
+                        'resources are served (default: {}).'.format(os.path.join(
+                            os.path.dirname(here), 'www')))
         self.add_option('--gecko-log',
                         dest='gecko_log',
                         action='store',
@@ -610,19 +616,22 @@ class BaseMarionetteTestRunner(object):
         self.failures = []
 
     def start_httpd(self, need_external_ip):
-        host = "127.0.0.1"
-        if need_external_ip:
-            host = moznetwork.get_ip()
-        docroot = self.server_root or os.path.join(os.path.dirname(os.path.dirname(__file__)), 'www')
-        if not os.path.isdir(docroot):
-            raise Exception("Server root %s is not a valid path" % docroot)
-        self.httpd = MozHttpd(host=host,
-                              port=0,
-                              docroot=docroot)
-        self.httpd.start()
-        self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
-        self.logger.info('running webserver on %s' % self.marionette.baseurl)
-
+        if self.server_root is None or os.path.isdir(self.server_root):
+            host = '127.0.0.1'
+            if need_external_ip:
+                host = moznetwork.get_ip()
+            docroot = self.server_root or os.path.join(os.path.dirname(here), 'www')
+            if not os.path.isdir(docroot):
+                raise Exception('Server root %s is not a valid path' % docroot)
+            self.httpd = MozHttpd(host=host,
+                                  port=0,
+                                  docroot=docroot)
+            self.httpd.start()
+            self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
+            self.logger.info('running webserver on %s' % self.marionette.baseurl)
+        else:
+            self.marionette.baseurl = self.server_root
+            self.logger.info('using content from %s' % self.marionette.baseurl)
 
     def _build_kwargs(self):
         kwargs = {

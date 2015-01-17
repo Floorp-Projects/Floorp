@@ -44,5 +44,8 @@ assertDeepEq(Array.from([0, , , ,]), [0, undefined, undefined, undefined]);
 // Even on non-iterable objects.
 assertDeepEq(Array.from({length: 4}), [undefined, undefined, undefined, undefined]);
 
+// Array.from should coerce negative lengths to zero.
+assertDeepEq(Array.from({length: -1}), []);
+
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);

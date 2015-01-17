@@ -90,7 +90,9 @@ struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
 };
 
 bool
-mozilla::plugins::SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent)
+mozilla::plugins::SetupBridge(uint32_t aPluginId,
+                              dom::ContentParent* aContentParent,
+                              bool aForceBridgeNow)
 {
     nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     nsRefPtr<nsNPAPIPlugin> plugin;
@@ -100,7 +102,7 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentPa
     }
     PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
     chromeParent->SetContentParent(aContentParent);
-    if (chromeParent->IsStartingAsync()) {
+    if (!aForceBridgeNow && chromeParent->IsStartingAsync()) {
         // We'll handle the bridging asynchronously
         return true;
     }
@@ -1778,12 +1780,8 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
     bool initOk = aError == NPERR_NO_ERROR;
     if (initOk) {
         SetPluginFuncs(mNPPIface);
-        if (mIsStartingAsync) {
-            if (SendAssociatePluginId()) {
-                PPluginModule::Bridge(mContentParent, this);
-            } else {
-                initOk = false;
-            }
+        if (mIsStartingAsync && !SendAssociatePluginId()) {
+            initOk = false;
         }
     }
     mNPInitialized = initOk;
@@ -1878,7 +1876,6 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
     bool ok = true;
     if (mContentParent) {
         if ((ok = SendAssociatePluginId())) {
-            PPluginModule::Bridge(mContentParent, this);
             ok = mContentParent->SendLoadPluginResult(mPluginId,
                                                       aError == NPERR_NO_ERROR);
         }

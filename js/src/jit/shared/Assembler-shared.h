@@ -897,6 +897,7 @@ class AssemblerShared
     Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
 
   protected:
+    Vector<CodeOffsetLabel, 0, SystemAllocPolicy> profilerCallSites_;
     bool enoughMemory_;
     bool embedsNurseryPointers_;
 
@@ -916,6 +917,10 @@ class AssemblerShared
 
     bool oom() const {
         return !enoughMemory_;
+    }
+
+    void appendProfilerCallSite(CodeOffsetLabel label) {
+        enoughMemory_ &= profilerCallSites_.append(label);
     }
 
     bool embedsNurseryPointers() const {

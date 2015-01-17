@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1075702
+-->
+<head>
+  <meta charset="utf-8">
+  <title> Test for Bug 1075702 </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"> </script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"> </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1075702"> Mozilla Bug 1075702 </a>
+<p id="display"></p>
+
+<pre id="test">
+<script type="application/javascript">
+
+  /** Test for Bug 1075702 **/
+  // test: Element.removeAttributeNode()
+
+  var a1 = document.createAttribute("aa");
+  a1.nodeValue = "lowercase";
+
+  var a2 = document.createAttribute("AA");
+  a2.nodeValue = "UPPERCASE";
+
+  document.documentElement.setAttributeNode(a1);
+  document.documentElement.setAttributeNode(a2);
+
+  is(document.documentElement.getAttributeNS("", "aa"), null, "Should be NULL!");
+  is(document.documentElement.getAttributeNS("", "AA"), "UPPERCASE", "Should be UPPERCASE!");
+
+  var removedNodeAccordingToEvent;
+
+  function mutationHandler(aEvent) {
+    removedNodeAccordingToEvent = aEvent.relatedNode;
+  }
+
+  var test1 = document.createElement("div");
+  test1.setAttribute("x", "y");
+  removedNodeAccordingToEvent = null;
+
+  function testremoveNamedItemNS() {
+    test1.addEventListener("DOMAttrModified", mutationHandler, true);
+    var removedNodeAccordingToRemoveNamedItemNS = test1.attributes.removeNamedItemNS(null, "x");
+    test1.removeEventListener("DOMAttrModified", mutationHandler, true);
+    ise(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItemNS, "Node removed according to event is not same as node removed by removeNamedItemNS.");
+  }
+
+  testremoveNamedItemNS();
+
+  var test2 = document.createElement("div");
+  test2.setAttribute("x", "y");
+  removedNodeAccordingToEvent = null;
+
+  function testremoveNamedItem() {
+    test2.addEventListener("DOMAttrModified", mutationHandler, true);
+    var removedNodeAccordingToRemoveNamedItem = test2.attributes.removeNamedItem("x");
+    test2.removeEventListener("DOMAttrModified", mutationHandler, true);
+    ise(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItem, "Node removed according to event is not same as node removed by removeNamedItem.");
+  }
+
+  testremoveNamedItem();
+
+</script>
+</body>
+</html>

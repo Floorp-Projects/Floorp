@@ -101,10 +101,7 @@ public:
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime,
-       int64_t aStartTime,
-       int64_t aEndTime,
-       int64_t aCurrentTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 

@@ -548,6 +548,13 @@ def _cxxConstRefType(ipdltype, side):
     t.ref = 1
     return t
 
+def _cxxMoveRefType(ipdltype, side):
+    t = _cxxBareType(ipdltype, side)
+    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isShmem()):
+        t.ref = 2
+        return t
+    return _cxxConstRefType(ipdltype, side)
+
 def _cxxPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
@@ -602,6 +609,10 @@ necessarily a C++ reference."""
         """Return this decl's C++ type as a const, 'reference' type."""
         return _cxxConstRefType(self.ipdltype, side)
 
+    def rvalueRefType(self, side):
+        """Return this decl's C++ type as an r-value 'reference' type."""
+        return _cxxMoveRefType(self.ipdltype, side)
+
     def ptrToType(self, side):
         return _cxxPtrToType(self.ipdltype, side)
 
@@ -613,6 +624,12 @@ necessarily a C++ reference."""
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             return self.bareType(side)
         return self.constRefType(side)
+
+    def moveType(self, side):
+        """Return this decl's C++ Type with move semantics."""
+        if self.ipdltype.isIPDL() and self.ipdltype.isActor():
+            return self.bareType(side)
+        return self.rvalueRefType(side);
 
     def outType(self, side):
         """Return this decl's C++ Type with outparam semantics."""
@@ -939,6 +956,8 @@ class MessageDecl(ipdl.ast.MessageDecl):
         def makeDecl(d, sems):
             if sems is 'in':
                 return Decl(d.inType(side), d.name)
+            elif sems is 'move':
+                return Decl(d.moveType(side), d.name)
             elif sems is 'out':
                 return Decl(d.outType(side), d.name)
             else: assert 0
@@ -962,7 +981,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         cxxargs = [ ]
 
         if params:
-            cxxargs.extend([ p.var() for p in self.params ])
+            cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
 
         for ret in self.returns:
             if retsems is 'in':
@@ -2809,7 +2828,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 implicit = (not isdtor)
                 recvDecl = MethodDecl(
                     md.recvMethod().name,
-                    params=md.makeCxxParams(paramsems='in', returnsems='out',
+                    params=md.makeCxxParams(paramsems='move', returnsems='out',
                                             side=self.side, implicit=implicit),
                     ret=Type.BOOL, virtual=1)
 

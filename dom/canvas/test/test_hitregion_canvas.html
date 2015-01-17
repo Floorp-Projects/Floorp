@@ -33,10 +33,26 @@ function test_hitregions() {
     ctx.addHitRegion({control: e});
     ctx.addHitRegion({id: "a", control: d});
     ctx.addHitRegion({id: "a", control: d});
-    
+
     ctx.removeHitRegion("a");
     ctx.removeHitRegion("a");
     ctx.removeHitRegion("b");
+
+    ctx.clearHitRegions();
+  } catch (e) {
+      _thrown_outer = true;
+  }
+  ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
+
+  var _thrown_outer = false;
+  try {
+    ctx.rect(10,10,100,100);
+    ctx.addHitRegion({control: d});
+    ctx.addHitRegion({control: e});
+    ctx.addHitRegion({id: "a", control: d});
+    ctx.addHitRegion({id: "a", control: d});
+
+    ctx.clearHitRegions();
   } catch (e) {
       _thrown_outer = true;
   }
