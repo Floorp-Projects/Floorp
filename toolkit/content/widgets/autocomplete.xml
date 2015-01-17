@@ -1106,6 +1106,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <parameter name="aHeight"/>
         <body>
           <![CDATA[
+          if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
+            return aURL;
+          }
           let width  = Math.round(aWidth * aWin.devicePixelRatio);
           let height = Math.round(aHeight * aWin.devicePixelRatio);
           return aURL + (aURL.contains("#") ? "&" : "#") +
