@@ -700,10 +700,6 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             MOZ_ASSERT(player->GetSource()->Properties().Length() == 1,
                        "Should have one animation property for a transition");
             nsCSSProperty prop = player->GetSource()->Properties()[0].mProperty;
-            if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
-            {
-              prop = nsCSSProps::OtherNameFor(prop);
-            }
             TimeDuration duration =
               player->GetSource()->Timing().mIterationDuration;
             events.AppendElement(
