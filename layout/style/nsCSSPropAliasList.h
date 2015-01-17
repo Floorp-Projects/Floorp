@@ -139,3 +139,11 @@ CSS_PROP_ALIAS(-moz-text-decoration-style,
                text_decoration_style,
                MozTextDecorationStyle,
                "")
+CSS_PROP_ALIAS(padding-inline-end,
+               padding_end,
+               PaddingInlineEnd,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(padding-inline-start,
+               padding_start,
+               PaddingInlineStart,
+               "layout.css.vertical-text.enabled")

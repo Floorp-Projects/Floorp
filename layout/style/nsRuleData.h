@@ -77,7 +77,7 @@ struct nsRuleData
                       "calling nsRuleData::ValueFor on property not in mSIDs");
     NS_ABORT_IF_FALSE(sid != eStyleStruct_BackendOnly &&
                       indexInStruct != size_t(-1),
-                      "backend-only property");
+                      "backend-only or logical property");
 
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
