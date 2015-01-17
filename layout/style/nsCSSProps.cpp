@@ -2556,6 +2556,14 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 };
 
 
+static const nsCSSProperty gOffsetLogicalGroupTable[] = {
+  eCSSProperty_top,
+  eCSSProperty_right,
+  eCSSProperty_bottom,
+  eCSSProperty_left,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gMaxSizeLogicalGroupTable[] = {
   eCSSProperty_max_height,
   eCSSProperty_max_width,
