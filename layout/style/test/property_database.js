@@ -4642,6 +4642,10 @@ function logical_box_prop_get_computed(cs, property)
 
   if (/^-moz-/.test(property)) {
     property = physicalize(property.substring(5), inlineMapping, "");
+  } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
+    property = property.substring(7);  // we want "top" not "offset-top", e.g.
+    property = physicalize(property, blockMapping, "block-");
+    property = physicalize(property, blockMapping, "inline-");
   } else if (/-(block|inline)-(start|end)/.test(property)) {
     property = physicalize(property, blockMapping, "block-");
     property = physicalize(property, inlineMapping, "inline-");
@@ -5102,6 +5106,86 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
         "calc(3*25px + 50%)",
       ],
       invalid_values: ["none", "5" ]
+    },
+    "offset-block-end": {
+      domProp: "offsetBlockEnd",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* FIXME: run tests with multiple prerequisites */
+      prerequisites: { "position": "relative" },
+      /* XXX 0 may or may not be equal to auto */
+      initial_values: [ "auto" ],
+      other_values: [ "32px", "-3em", "12%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: []
+    },
+    "offset-block-start": {
+      domProp: "offsetBlockStart",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* FIXME: run tests with multiple prerequisites */
+      prerequisites: { "position": "relative" },
+      /* XXX 0 may or may not be equal to auto */
+      initial_values: [ "auto" ],
+      other_values: [ "32px", "-3em", "12%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: []
+    },
+    "offset-inline-end": {
+      domProp: "offsetInlineEnd",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* FIXME: run tests with multiple prerequisites */
+      prerequisites: { "position": "relative" },
+      /* XXX 0 may or may not be equal to auto */
+      initial_values: [ "auto" ],
+      other_values: [ "32px", "-3em", "12%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: []
+    },
+    "offset-inline-start": {
+      domProp: "offsetInlineStart",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* FIXME: run tests with multiple prerequisites */
+      prerequisites: { "position": "relative" },
+      /* XXX 0 may or may not be equal to auto */
+      initial_values: [ "auto" ],
+      other_values: [ "32px", "-3em", "12%",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(50%)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 50%)",
+      ],
+      invalid_values: []
     },
     "padding-block-end": {
       domProp: "paddingBlockEnd",

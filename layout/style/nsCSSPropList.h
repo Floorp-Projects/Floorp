@@ -2561,6 +2561,70 @@ CSS_PROP_POSITION(
     kBackgroundPositionKTable,
     offsetof(nsStylePosition, mObjectPosition),
     eStyleAnimType_Custom)
+CSS_PROP_LOGICAL(
+    offset-block-end,
+    offset_block_end,
+    OffsetBlockEnd,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
+    Offset,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    offset-block-start,
+    offset_block_start,
+    OffsetBlockStart,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
+    Offset,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    offset-inline-end,
+    offset_inline_end,
+    OffsetInlineEnd,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
+    Offset,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    offset-inline-start,
+    offset_inline_start,
+    OffsetInlineStart,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
+    Offset,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_DISPLAY(
     opacity,
     opacity,
