@@ -9384,10 +9384,14 @@ class MDispatchInstruction
     // Map from JSFunction* -> MBasicBlock.
     struct Entry {
         JSFunction *func;
+        // If |func| has a singleton type, |funcType| is null. Otherwise,
+        // |funcType| holds the TypeObject for |func|, and dispatch guards
+        // on the type instead of directly on the function.
+        types::TypeObject *funcType;
         MBasicBlock *block;
 
-        Entry(JSFunction *func, MBasicBlock *block)
-          : func(func), block(block)
+        Entry(JSFunction *func, types::TypeObject *funcType, MBasicBlock *block)
+          : func(func), funcType(funcType), block(block)
         { }
     };
     Vector<Entry, 4, JitAllocPolicy> map_;
@@ -9455,14 +9459,17 @@ class MDispatchInstruction
     }
 
   public:
-    void addCase(JSFunction *func, MBasicBlock *block) {
-        map_.append(Entry(func, block));
+    void addCase(JSFunction *func, types::TypeObject *funcType, MBasicBlock *block) {
+        map_.append(Entry(func, funcType, block));
     }
     uint32_t numCases() const {
         return map_.length();
     }
     JSFunction *getCase(uint32_t i) const {
         return map_[i].func;
+    }
+    types::TypeObject *getCaseTypeObject(uint32_t i) const {
+        return map_[i].funcType;
     }
     MBasicBlock *getCaseBlock(uint32_t i) const {
         return map_[i].block;
