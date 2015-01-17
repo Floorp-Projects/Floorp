@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_dom_TCPServerSocketParent_h
+#define mozilla_dom_TCPServerSocketParent_h
+
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/PTCPServerSocketParent.h"
 #include "nsITCPSocketParent.h"
 #include "nsITCPServerSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMTCPSocket.h"
+
+class nsITCPServerSocketInternal;
 
 namespace mozilla {
 namespace dom {
@@ -19,11 +23,13 @@ class TCPServerSocketParent : public mozilla::net::PTCPServerSocketParent
                             , public nsITCPServerSocketParent
 {
 public:
+  static bool SocketEnabled(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
   NS_DECL_CYCLE_COLLECTION_CLASS(TCPServerSocketParent)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSITCPSERVERSOCKETPARENT
 
-  TCPServerSocketParent() : mNeckoParent(nullptr), mIPCOpen(false) {}
+  TCPServerSocketParent();
 
   bool Init(PNeckoParent* neckoParent, const uint16_t& aLocalPort, const uint16_t& aBacklog,
             const nsString& aBinaryType);
@@ -38,15 +44,17 @@ public:
   void ReleaseIPDLReference();
 
 private:
-  ~TCPServerSocketParent() {}
+  ~TCPServerSocketParent();
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   PNeckoParent* mNeckoParent;
   nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
-  nsCOMPtr<nsIDOMTCPServerSocket> mServerSocket;
+  nsCOMPtr<nsITCPServerSocketInternal> mServerSocket;
   bool mIPCOpen;
 };
 
 } // namespace dom
 } // namespace mozilla
+
+#endif // mozilla_dom_TCPServerSocketParent_h

@@ -3,11 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-#include "nsITCPSocketParent.idl"
 
-interface nsIDOMTCPServerSocket;
+interface nsITCPSocketParent;
 
-/** 
+/**
  * Interface required to allow the TCP server-socket object in the parent process
  * to talk to the parent IPC actor.
  * It is used in the server socket implementation on the parent side.

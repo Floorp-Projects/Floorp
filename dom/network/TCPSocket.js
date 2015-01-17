@@ -134,7 +134,6 @@ TCPSocket.prototype = {
     send: 'r',
     readyState: 'r',
     binaryType: 'r',
-    listen: 'r',
     onopen: 'rw',
     ondrain: 'rw',
     ondata: 'rw',
@@ -649,20 +648,6 @@ TCPSocket.prototype = {
     } else {
       this._waitingForStartTLS = true;
     }
-  },
-
-  listen: function ts_listen(localPort, options, backlog) {
-    // in the testing case, init won't be called and
-    // hasPrivileges will be null. We want to proceed to test.
-    if (this._hasPrivileges !== true && this._hasPrivileges !== null) {
-      throw new Error("TCPSocket does not have permission in this context.\n");
-    }
-    let that = new TCPServerSocket(this.useWin);
-
-    options = options || { binaryType : this.binaryType };
-    backlog = backlog || -1;
-    that.listen(localPort, options, backlog);
-    return that;
   },
 
   close: function ts_close() {
