@@ -133,6 +133,18 @@ for (var prop in gCSSProperties) {
        "being a logical property");
   }
 }
+
+/*
+ * Test that axis is only specified for logical properties.
+ */
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.axis) {
+    ok(info.logical,
+       "property '" + prop + "' is listed as an logical property due to its " +
+       "being listed as an axis-related property");
+  }
+}
 </script>
 </pre>
 </body>

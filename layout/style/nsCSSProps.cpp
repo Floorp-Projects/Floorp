@@ -2556,6 +2556,12 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 };
 
 
+static const nsCSSProperty gSizeLogicalGroupTable[] = {
+  eCSSProperty_height,
+  eCSSProperty_width,
+  eCSSProperty_UNKNOWN
+};
+
 const nsCSSProperty* const
 nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
 #define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
