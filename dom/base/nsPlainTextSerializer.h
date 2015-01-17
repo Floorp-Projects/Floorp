@@ -115,6 +115,7 @@ private:
   bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
 
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
+  bool IsElementBlock(mozilla::dom::Element* aElement);
 
 private:
   nsString         mCurrentLine;
