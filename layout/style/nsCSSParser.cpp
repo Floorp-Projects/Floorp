@@ -630,8 +630,6 @@ protected:
   bool ParseTreePseudoElement(nsAtomList **aPseudoElementArgs);
 #endif
 
-  void InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties);
-
   // Property specific parsing routines
   bool ParseBackground();
 
@@ -688,8 +686,6 @@ protected:
   bool ParseBorderSpacing();
   bool ParseBorderSide(const nsCSSProperty aPropIDs[],
                          bool aSetAllSides);
-  bool ParseDirectionalBorderSide(const nsCSSProperty aPropIDs[],
-                                    int32_t aSourceType);
   bool ParseBorderStyle();
   bool ParseBorderWidth();
 
@@ -889,8 +885,6 @@ protected:
   bool ParseBoxProperties(const nsCSSProperty aPropIDs[]);
   bool ParseGroupedBoxProperty(int32_t aVariantMask,
                                nsCSSValue& aValue);
-  bool ParseDirectionalBoxProperty(nsCSSProperty aProperty,
-                                     int32_t aSourceType);
   bool ParseBoxCornerRadius(const nsCSSProperty aPropID);
   bool ParseBoxCornerRadiiInternals(nsCSSValue array[]);
   bool ParseBoxCornerRadii(const nsCSSProperty aPropIDs[]);
@@ -9312,25 +9306,6 @@ CSSParserImpl::ParseGroupedBoxProperty(int32_t aVariantMask,
 }
 
 bool
-CSSParserImpl::ParseDirectionalBoxProperty(nsCSSProperty aProperty,
-                                           int32_t aSourceType)
-{
-  const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(aProperty);
-  NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
-               "not box property with physical vs. logical cascading");
-  nsCSSValue value;
-  if (!ParseSingleValueProperty(value, subprops[0])) {
-    return false;
-  }
-
-  AppendValue(subprops[0], value);
-  nsCSSValue typeVal(aSourceType, eCSSUnit_Enumerated);
-  AppendValue(subprops[1], typeVal);
-  AppendValue(subprops[2], typeVal);
-  return true;
-}
-
-bool
 CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
   nsCSSValue dimenX, dimenY;
@@ -10042,16 +10017,6 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
   // explicitly do NOT have a default case to let the compiler
   // help find missing descriptors
   return false;
-}
-
-void
-CSSParserImpl::InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties)
-{
-  nsCSSValue physical(NS_BOXPROP_SOURCE_PHYSICAL, eCSSUnit_Enumerated);
-  for (const nsCSSProperty *prop = aSourceProperties;
-       *prop != eCSSProperty_UNKNOWN; ++prop) {
-    AppendValue(*prop, physical);
-  }
 }
 
 static nsCSSValue
@@ -11146,40 +11111,6 @@ CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
     for (int32_t index = 0; index < numProps; index++) {
       AppendValue(aPropIDs[index], values[index]);
     }
-  }
-  return true;
-}
-
-bool
-CSSParserImpl::ParseDirectionalBorderSide(const nsCSSProperty aPropIDs[],
-                                          int32_t aSourceType)
-{
-  const int32_t numProps = 3;
-  nsCSSValue  values[numProps];
-
-  int32_t found = ParseChoice(values, aPropIDs, numProps);
-  if (found < 1) {
-    return false;
-  }
-
-  if ((found & 1) == 0) { // Provide default border-width
-    values[0].SetIntValue(NS_STYLE_BORDER_WIDTH_MEDIUM, eCSSUnit_Enumerated);
-  }
-  if ((found & 2) == 0) { // Provide default border-style
-    values[1].SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-  }
-  if ((found & 4) == 0) { // text color will be used
-    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  }
-  for (int32_t index = 0; index < numProps; index++) {
-    const nsCSSProperty* subprops =
-      nsCSSProps::SubpropertyEntryFor(aPropIDs[index + numProps]);
-    NS_ASSERTION(subprops[3] == eCSSProperty_UNKNOWN,
-                 "not box property with physical vs. logical cascading");
-    AppendValue(subprops[0], values[index]);
-    nsCSSValue typeVal(aSourceType, eCSSUnit_Enumerated);
-    AppendValue(subprops[1], typeVal);
-    AppendValue(subprops[2], typeVal);
   }
   return true;
 }

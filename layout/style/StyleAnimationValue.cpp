@@ -2539,13 +2539,9 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
                     "we should only be able to actively animate nodes that "
                     "are in a document");
 
-  nsCSSProperty propToParse =
-    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_REPORT_OTHER_NAME)
-      ? nsCSSProps::OtherNameFor(aProperty) : aProperty;
-
   // Parse specified value into a temporary css::StyleRule
   nsRefPtr<css::StyleRule> styleRule =
-    BuildStyleRule(propToParse, aTargetElement, aSpecifiedValue, aUseSVGMode);
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
   if (!styleRule) {
     return false;
   }

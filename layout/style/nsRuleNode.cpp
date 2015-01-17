@@ -2569,65 +2569,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   return nullptr;
 }
 
-/*
- * This function handles cascading of *-left or *-right box properties
- * against *-start (which is L for LTR and R for RTL) or *-end (which is
- * R for LTR and L for RTL).
- *
- * Cascading these properties correctly is hard because we need to
- * cascade two properties as one, but which two properties depends on a
- * third property ('direction').  We solve this by treating each of
- * these properties (say, 'margin-start') as a shorthand that sets a
- * property containing the value of the property specified
- * ('margin-start-value') and sets a pair of properties
- * ('margin-left-ltr-source' and 'margin-right-rtl-source') saying which
- * of the properties we use.  Thus, when we want to compute the value of
- * 'margin-left' when 'direction' is 'ltr', we look at the value of
- * 'margin-left-ltr-source', which tells us whether to use the highest
- * 'margin-left' in the cascade or the highest 'margin-start'.
- *
- * Finally, since we can compute the normal (*-left and *-right)
- * properties in a loop, this function works by modifying the data we
- * will use in that loop (which the caller must copy from the const
- * input).
- */
-void
-nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
-                                 const nsCSSValue& aLTRSource,
-                                 const nsCSSValue& aRTLSource,
-                                 const nsCSSValue& aLTRLogicalValue,
-                                 const nsCSSValue& aRTLLogicalValue,
-                                 mozilla::css::Side aSide,
-                                 nsCSSRect& aValueRect,
-                                 bool& aCanStoreInRuleTree)
-{
-  bool LTRlogical = aLTRSource.GetUnit() == eCSSUnit_Enumerated &&
-                      aLTRSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
-  bool RTLlogical = aRTLSource.GetUnit() == eCSSUnit_Enumerated &&
-                      aRTLSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
-  if (LTRlogical || RTLlogical) {
-    // We can't cache anything on the rule tree if we use any data from
-    // the style context, since data cached in the rule tree could be
-    // used with a style context with a different value.
-    aCanStoreInRuleTree = false;
-    uint8_t dir = aContext->StyleVisibility()->mDirection;
-
-    if (dir == NS_STYLE_DIRECTION_LTR) {
-      if (LTRlogical)
-        aValueRect.*(nsCSSRect::sides[aSide]) = aLTRLogicalValue;
-    } else {
-      if (RTLlogical)
-        aValueRect.*(nsCSSRect::sides[aSide]) = aRTLLogicalValue;
-    }
-  } else if (aLTRLogicalValue.GetUnit() == eCSSUnit_Inherit ||
-             aRTLLogicalValue.GetUnit() == eCSSUnit_Inherit) {
-    // It actually is valid to store this in the ruletree, since
-    // LTRlogical and RTLlogical are both false, but doing that will
-    // trigger asserts.  Silence those.
-    aCanStoreInRuleTree = false;
-  }
-}
-
 /**
  * Begin an nsRuleNode::Compute*Data function for an inherited struct.
  *
