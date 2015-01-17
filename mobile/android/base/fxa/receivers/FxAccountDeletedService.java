@@ -6,6 +6,8 @@ package org.mozilla.gecko.fxa.receivers;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 
@@ -63,6 +65,9 @@ public class FxAccountDeletedService extends IntentService {
     // Delete client database and non-local tabs.
     Logger.info(LOG_TAG, "Deleting the entire clients database and non-local tabs");
     FennecTabsRepository.deleteNonLocalClientsAndTabs(context);
+
+    // Remove any displayed notifications.
+    new FxAccountNotificationManager(FxAccountSyncAdapter.NOTIFICATION_ID).clear(context);
   }
 
   public static void deletePickle(final Context context) {
