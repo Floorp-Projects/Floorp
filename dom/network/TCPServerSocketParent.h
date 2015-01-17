@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_TCPServerSocketParent_h
-#define mozilla_dom_TCPServerSocketParent_h
-
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/PTCPServerSocketParent.h"
 #include "nsITCPSocketParent.h"
 #include "nsITCPServerSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-
-class nsITCPServerSocketInternal;
+#include "nsIDOMTCPSocket.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +23,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSITCPSERVERSOCKETPARENT
 
-  TCPServerSocketParent();
+  TCPServerSocketParent() : mNeckoParent(nullptr), mIPCOpen(false) {}
 
   bool Init(PNeckoParent* neckoParent, const uint16_t& aLocalPort, const uint16_t& aBacklog,
             const nsString& aBinaryType);
@@ -42,17 +38,15 @@ public:
   void ReleaseIPDLReference();
 
 private:
-  ~TCPServerSocketParent();
+  ~TCPServerSocketParent() {}
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   PNeckoParent* mNeckoParent;
   nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
-  nsCOMPtr<nsITCPServerSocketInternal> mServerSocket;
+  nsCOMPtr<nsIDOMTCPServerSocket> mServerSocket;
   bool mIPCOpen;
 };
 
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_TCPServerSocketParent_h
