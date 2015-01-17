@@ -39,6 +39,7 @@ let os = Cc["@mozilla.org/observer-service;1"]
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+Components.utils.import("resource://testing-common/PlacesTestUtils.jsm");
 
 let checkDestination = false,
     checkFileName = false;
@@ -185,7 +186,7 @@ function endTest() {
 
   Services.prefs.clearUserPref("browser.download.useToolkitUI");
 
-  waitForClearHistory(SimpleTest.finish);
+  PlacesTestUtils.clearHistory().then(SimpleTest.finish);
 }
 
   ]]>
