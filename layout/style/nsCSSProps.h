@@ -210,6 +210,21 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // This property's unitless values are pixels.
 #define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
 
+// This property is a logical property for one of the two block axis
+// sides (such as margin-block-start or margin-block-end).  Must only be
+// set if CSS_PROPERTY_LOGICAL is set.  When not set, the logical
+// property is for one of the two inline axis sides (such as
+// margin-inline-start or margin-inline-end).
+#define CSS_PROPERTY_LOGICAL_BLOCK_AXIS           (1<<25)
+
+// This property is a logical property for the "end" edge of the
+// axis determined by the presence or absence of
+// CSS_PROPERTY_LOGICAL_BLOCK_AXIS (such as margin-block-end or
+// margin-inline-end).  Must only be set if CSS_PROPERTY_LOGICAL is set.
+// When not set, the logical property is for the "start" edge (such as
+// margin-block-start or margin-inline-start).
+#define CSS_PROPERTY_LOGICAL_END_EDGE             (1<<26)
+
 /**
  * Types of animatable values.
  */

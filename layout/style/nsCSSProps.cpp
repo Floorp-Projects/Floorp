@@ -2770,7 +2770,13 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)     \
   static_assert(!((flags_) & CSS_PROPERTY_LOGICAL),                         \
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL flag");
+                "the CSS_PROPERTY_LOGICAL flag");                           \
+  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_BLOCK_AXIS),              \
+                "only properties defined with CSS_PROP_LOGICAL can use "    \
+                "the CSS_PROPERTY_LOGICAL_BLOCK_AXIS flag");                \
+  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE),                \
+                "only properties defined with CSS_PROP_LOGICAL can use "    \
+                "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
                          kwtable_, stylestruct_, stylestructoffset_,        \
                          animtype_)                                         \
