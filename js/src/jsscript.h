@@ -1012,6 +1012,11 @@ class JSScript : public js::gc::TenuredCell
     // correctly.
     bool typesGeneration_:1;
 
+    // Do not relazify this script. This is only used by the relazify()
+    // testing function for scripts that are on the stack. Usually we don't
+    // relazify functions in compartments with scripts on the stack.
+    bool doNotRelazify_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1316,6 +1321,10 @@ class JSScript : public js::gc::TenuredCell
         typesGeneration_ = (bool) generation;
     }
 
+    void setDoNotRelazify(bool b) {
+        doNotRelazify_ = b;
+    }
+
     bool hasAnyIonScript() const {
         return hasIonScript();
     }
@@ -1395,7 +1404,7 @@ class JSScript : public js::gc::TenuredCell
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) &&
-               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
+               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript() && !doNotRelazify_;
     }
     void setLazyScript(js::LazyScript *lazy) {
         lazyScript = lazy;
