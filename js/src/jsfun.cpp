@@ -486,17 +486,22 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
         MOZ_ASSERT(!IsInternalFunctionObject(obj));
 
         RootedValue v(cx);
-        uint32_t attrs;
+
+        // Since f.length and f.name are configurable, they could be resolved
+        // and then deleted:
+        //     function f(x) {}
+        //     assertEq(f.length, 1);
+        //     delete f.length;
+        //     assertEq(f.name, "f");
+        //     delete f.name;
+        // Afterwards, asking for f.length or f.name again will cause this
+        // resolve hook to run again. Defining the property again the second
+        // time through would be a bug.
+        //     assertEq(f.length, 0);  // gets Function.prototype.length!
+        //     assertEq(f.name, "");  // gets Function.prototype.name!
+        // We use the RESOLVED_LENGTH and RESOLVED_NAME flags as a hack to prevent this
+        // bug.
         if (isLength) {
-            // Since f.length is configurable, it could be resolved and then deleted:
-            //     function f(x) {}
-            //     assertEq(f.length, 1);
-            //     delete f.length;
-            // Afterwards, asking for f.length again will cause this resolve
-            // hook to run again. Defining the property again the second
-            // time through would be a bug.
-            //     assertEq(f.length, 0);  // gets Function.prototype.length!
-            // We use the RESOLVED_LENGTH flag as a hack to prevent this bug.
             if (fun->hasResolvedLength())
                 return true;
 
@@ -505,17 +510,20 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             uint16_t length = fun->hasScript() ? fun->nonLazyScript()->funLength() :
                 fun->nargs() - fun->hasRest();
             v.setInt32(length);
-            attrs = JSPROP_READONLY;
         } else {
+            if (fun->hasResolvedName())
+                return true;
+
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
-            attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         }
 
-        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, attrs))
+        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, JSPROP_READONLY))
             return false;
 
         if (isLength)
             fun->setResolvedLength();
+        else
+            fun->setResolvedName();
 
         *resolvedp = true;
         return true;
