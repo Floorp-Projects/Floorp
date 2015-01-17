@@ -3,41 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-#include "nsITCPSocketChild.idl"
 
-// Bug 797561 - Expose a server tcp socket API to web applications
-/**
- * nsIDOMTCPServerSocket
- *
- * An interface to a server socket that can accept incoming connections for gaia apps.
- */
-[scriptable, uuid(821638a1-5327-416d-8031-668764f2ec04)]
-interface nsIDOMTCPServerSocket : nsISupports
-{
-  /**
-   * The port of this server socket object.
-   */
-  readonly attribute unsigned short localPort;
-
-  /**
-   * The onconnect event handler is called when a client connection is accepted.
-   * The data attribute of the event passed to the onconnect handler will be a TCPSocket
-   * instance, which is used for communication between client and server. 
-   */
-  attribute jsval onconnect;
-
-  /**
-   * The onerror handler will be called when the listen of a server socket is aborted.
-   * The data attribute of the event passed to the onerror handler will have a
-   * description of the kind of error.
-   */
-  attribute jsval onerror;
-
-  /**
-   * Close the server socket.
-   */
-  void close();
-};
+interface nsITCPSocketChild;
 
 /**
  * Internal interfaces for use in cross-process server-socket implementation.
@@ -48,16 +15,13 @@ interface nsIDOMTCPServerSocket : nsISupports
  * on the parent and child side for an IPC protocol implementation.
  */
 
-[scriptable, uuid(b64b1e68-4efa-497c-b0d8-69f067ad5ec8)]
-interface nsITCPServerSocketInternal : nsISupports 
+[scriptable, uuid(03520F9E-7989-4604-870A-A67DFFD846DC)]
+interface nsITCPServerSocketInternal : nsISupports
 {
   /**
-   * Initialization after creating a TCP server socket object.
-   *
-   * @param windowVal
-   *        An object to create ArrayBuffer for this window. See Bug 831107.
+   * Close the server socket.
    */
-  void init(in jsval windowVal);
+  void close();
 
   /** 
    * Listen on a port
@@ -89,4 +53,9 @@ interface nsITCPServerSocketInternal : nsISupports
    */
   void callListenerError(in DOMString message, in DOMString filename,
                          in uint32_t lineNumber, in uint32_t columnNumber);
+
+  /**
+   * Called by the parent process when there is no DOM window available.
+   */
+  void initWithGlobal(in nsISupports global);
 };

@@ -16,6 +16,10 @@ if CONFIG['MOZ_B2G_RIL']:
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
+EXPORTS += [
+    'TCPServerSocketParent.h',
+]
+
 EXPORTS.mozilla.dom += [
     'UDPSocket.h',
 ]
@@ -80,6 +84,8 @@ IPDL_SOURCES += [
 ]
 
 FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += ['/dom/base']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
