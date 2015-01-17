@@ -671,6 +671,24 @@ CSS_PROP_DISPLAY(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // XXX bug 3935
+CSS_PROP_LOGICAL(
+    block-size,
+    block_size,
+    BlockSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    Size,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     border,
     border,
@@ -2118,6 +2136,23 @@ CSS_PROP_UIRESET(
     "",
     VARIANT_HK,
     kIMEModeKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    inline-size,
+    inline_size,
+    InlineSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    Size,
+    Position,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(

@@ -7462,7 +7462,14 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
 
-  SetCoord(*aRuleData->ValueForHeight(), pos->mHeight, parentPos->mHeight,
+  // We can get enumerated values for height (-moz-min-content,
+  // -moz-max-content, etc.) since we parse the logical block-size property
+  // with all the values that width accepts.  If we get a value we don't
+  // support on height, turn it into unset.
+  const nsCSSValue* height = aRuleData->ValueForHeight();
+  SetCoord(height->GetUnit() == eCSSUnit_Enumerated ?
+             nsCSSValue(eCSSUnit_Unset) : *height,
+           pos->mHeight, parentPos->mHeight,
            SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
