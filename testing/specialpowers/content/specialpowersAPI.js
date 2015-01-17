@@ -1107,6 +1107,14 @@ SpecialPowersAPI.prototype = {
     });
   },
 
+  // Turn on debug information from UserCustomizations.jsm
+  debugUserCustomizations: function(value) {
+    this._sendSyncMessage("SPWebAppService", {
+      op: "debug-customizations",
+      value: value
+    });
+  },
+
   // Restore the launchable property to its default value.
   flushAllAppsLaunchable: function() {
     this._sendSyncMessage("SPWebAppService", {

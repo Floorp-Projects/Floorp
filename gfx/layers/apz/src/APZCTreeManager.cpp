@@ -956,13 +956,13 @@ void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const ZoomConstraints& aConstraints)
 {
+  MonitorAutoLock lock(mTreeLock);
   nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
 
   // For a given layers id, non-root APZCs inherit the zoom constraints
   // of their root.
   if (node && node->GetApzc()->IsRootForLayersId()) {
-    MonitorAutoLock lock(mTreeLock);
     UpdateZoomConstraintsRecursively(node.get(), aConstraints);
   }
 }
@@ -1168,10 +1168,10 @@ APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid,
-                               GuidComparator aComparator)
+APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
 {
-  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, aComparator);
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
   MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
   nsRefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
   return apzc.forget();
@@ -1181,7 +1181,7 @@ already_AddRefed<HitTestingTreeNode>
 APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
                                GuidComparator aComparator)
 {
-  MonitorAutoLock lock(mTreeLock);
+  mTreeLock.AssertCurrentThreadOwns();
   nsRefPtr<HitTestingTreeNode> target = FindTargetNode(mRootNode, aGuid, aComparator);
   return target.forget();
 }
@@ -1262,8 +1262,9 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
     }
     if (!scrollParent) {
       ScrollableLayerGuid guid(parent->GetGuid().mLayersId, 0, apzc->GetScrollHandoffParentId());
-      nsRefPtr<AsyncPanZoomController> scrollParentPtr = GetTargetAPZC(guid, &GuidComparatorIgnoringPresShell);
-      scrollParent = scrollParentPtr.get();
+      nsRefPtr<HitTestingTreeNode> node = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+      MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
+      scrollParent = node ? node->GetApzc() : nullptr;
     }
     apzc = scrollParent;
   }

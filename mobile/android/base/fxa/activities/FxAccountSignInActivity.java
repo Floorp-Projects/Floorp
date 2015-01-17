@@ -111,7 +111,7 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     FxAccountClient client = new FxAccountClient20(serverURI, executor);
     try {
       hideRemoteError();
-      new FxAccountSignInTask(this, this, email, passwordStretcher, client, delegate).execute();
+      new FxAccountSignInTask(this, this, email, passwordStretcher, client, getQueryParameters(), delegate).execute();
     } catch (Exception e) {
       showRemoteError(e, R.string.fxaccount_sign_in_unknown_error);
     }
