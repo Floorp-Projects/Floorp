@@ -1248,6 +1248,7 @@ CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
 bool
 CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   NotifyChildCreated(child);
   return true;
 }
@@ -1255,7 +1256,7 @@ CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 void
 CompositorParent::NotifyChildCreated(const uint64_t& aChild)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   sIndirectLayerTrees[aChild].mParent = this;
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
@@ -1263,8 +1264,8 @@ CompositorParent::NotifyChildCreated(const uint64_t& aChild)
 bool
 CompositorParent::RecvAdoptChild(const uint64_t& child)
 {
-  NotifyChildCreated(child);
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  NotifyChildCreated(child);
   if (sIndirectLayerTrees[child].mLayerTree) {
     sIndirectLayerTrees[child].mLayerTree->mLayerManager = mLayerManager;
   }
