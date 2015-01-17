@@ -7462,10 +7462,10 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
 
-  // We can get enumerated values for height (-moz-min-content,
-  // -moz-max-content, etc.) since we parse the logical block-size property
-  // with all the values that width accepts.  If we get a value we don't
-  // support on height, turn it into unset.
+  // We can get enumerated values for {,min-,max-}height (-moz-min-content,
+  // -moz-max-content, etc.) since we parse the logical properties with all the
+  // values that width accepts.  If we get a value we don't support on these
+  // properties, turn them into unset.
   const nsCSSValue* height = aRuleData->ValueForHeight();
   SetCoord(height->GetUnit() == eCSSUnit_Enumerated ?
              nsCSSValue(eCSSUnit_Unset) : *height,
@@ -7477,7 +7477,10 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            SETCOORD_LPAH | SETCOORD_INITIAL_AUTO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
-  SetCoord(*aRuleData->ValueForMaxHeight(), pos->mMaxHeight, parentPos->mMaxHeight,
+  const nsCSSValue* maxHeight = aRuleData->ValueForMaxHeight();
+  SetCoord(maxHeight->GetUnit() == eCSSUnit_Enumerated ?
+             nsCSSValue(eCSSUnit_Unset) : *maxHeight,
+           pos->mMaxHeight, parentPos->mMaxHeight,
            SETCOORD_LPOH | SETCOORD_INITIAL_NONE | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
