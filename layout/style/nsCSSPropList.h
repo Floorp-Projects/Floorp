@@ -2333,152 +2333,66 @@ CSS_PROP_MARGIN(
     nullptr,
     offsetof(nsStyleMargin, mMargin),
     eStyleAnimType_Sides_Bottom)
-CSS_PROP_SHORTHAND(
+CSS_PROP_LOGICAL(
     -moz-margin-end,
     margin_end,
     CSS_PROP_DOMPROP_PREFIXED(MarginEnd),
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_MARGIN(
-    margin-end-value,
-    margin_end_value,
-    MarginEndValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
+        CSS_PROPERTY_APPLIES_TO_PAGE_RULE |
+        CSS_PROPERTY_LOGICAL,
     "",
-    VARIANT_AHLP | VARIANT_CALC, // for internal use
+    VARIANT_AHLP | VARIANT_CALC,
     nullptr,
+    Margin,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
+CSS_PROP_LOGICAL(
+    -moz-margin-start,
+    margin_start,
+    CSS_PROP_DOMPROP_PREFIXED(MarginStart),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_APPLIES_TO_PAGE_RULE |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_AHLP | VARIANT_CALC,
+    nullptr,
+    Margin,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_MARGIN(
     margin-left,
     margin_left,
     MarginLeft,
-    CSS_PROPERTY_PARSE_FUNCTION |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_APPLIES_TO_PAGE_RULE |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_MARGIN(
-    margin-left-value,
-    margin_left_value,
-    MarginLeftValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME |
-        CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
     "",
-    VARIANT_AHLP | VARIANT_CALC, // for internal use
+    VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStyleMargin, mMargin),
     eStyleAnimType_Sides_Left)
 CSS_PROP_MARGIN(
-    margin-left-ltr-source,
-    margin_left_ltr_source,
-    MarginLeftLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_MARGIN(
-    margin-left-rtl-source,
-    margin_left_rtl_source,
-    MarginLeftRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
     margin-right,
     margin_right,
     MarginRight,
-    CSS_PROPERTY_PARSE_FUNCTION |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_APPLIES_TO_PAGE_RULE |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_MARGIN(
-    margin-right-value,
-    margin_right_value,
-    MarginRightValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME |
-        CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
     "",
-    VARIANT_AHLP | VARIANT_CALC, // for internal use
+    VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStyleMargin, mMargin),
     eStyleAnimType_Sides_Right)
-CSS_PROP_MARGIN(
-    margin-right-ltr-source,
-    margin_right_ltr_source,
-    MarginRightLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_MARGIN(
-    margin-right-rtl-source,
-    margin_right_rtl_source,
-    MarginRightRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-margin-start,
-    margin_start,
-    CSS_PROP_DOMPROP_PREFIXED(MarginStart),
-    CSS_PROPERTY_PARSE_FUNCTION |
-    CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_MARGIN(
-    margin-start-value,
-    margin_start_value,
-    MarginStartValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_APPLIES_TO_PAGE_RULE,
-    "",
-    VARIANT_AHLP | VARIANT_CALC, // for internal use
-    nullptr,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_MARGIN(
     margin-top,
     margin_top,
