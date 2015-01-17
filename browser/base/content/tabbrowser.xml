@@ -1492,6 +1492,10 @@
             if (wasActive)
               aBrowser.focus();
 
+            let evt = document.createEvent("Events");
+            evt.initEvent("TabRemotenessChange", true, false);
+            tab.dispatchEvent(evt);
+
             return true;
           ]]>
         </body>

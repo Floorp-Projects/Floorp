@@ -98,6 +98,11 @@ class MessageListener
         return RIPChildWins;
     }
 
+    virtual void OnEnteredSyncSend() {
+    }
+    virtual void OnExitedSyncSend() {
+    }
+
     virtual void ProcessRemoteNativeEventsInInterruptCall() {
     }
 

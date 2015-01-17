@@ -201,6 +201,8 @@ public:
   // Does not accept nullptr and should never fail.
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
 
+  nsPluginTag* PluginWithId(uint32_t aId);
+
   nsresult GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin);
   nsresult GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPlugin);
   void NotifyContentModuleDestroyed(uint32_t aPluginId);
@@ -276,7 +278,6 @@ private:
     
   // Returns the first plugin at |path|
   nsPluginTag* FirstPluginWithPath(const nsCString& path);
-  nsPluginTag* PluginWithId(uint32_t aId);
 
   nsresult EnsurePrivateDirServiceProvider();
 
