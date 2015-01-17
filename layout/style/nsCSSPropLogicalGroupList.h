@@ -22,6 +22,20 @@
 //     is defined by the margin shorthand.  The name_ argument must
 //     be the method_ name of the shorthand (so Margin rather than
 //     margin).
+//
+//   CSS_PROP_LOGICAL_GROUP_BOX(name_)
+//     Defines a logical property group whose corresponding physical
+//     properties are a set of four box properties which are not
+//     already represented by an existing shorthand property.  For
+//     example, the logical property group for
+//     offset-{block,inline}-{start,end} contains the top, right,
+//     bottom and left physical properties, but there is no shorthand
+//     that sets those four properties.  The name_ argument must be
+//     capitalized LikeSo and must not collide with the name of a
+//     property's DOM method (its method_ in nsCSSPropList.h).  A
+//     table must be defined in nsCSSProps.cpp named
+//     g<name_>LogicalGroupTable containing the four physical properties
+//     in top/right/bottom/left order.
 
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderColor)
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderStyle)
