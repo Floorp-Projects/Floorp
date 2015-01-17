@@ -82,8 +82,10 @@ BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
   AssertIsOnBackgroundThread();
 
   if (aOrigin == mOrigin && aChannel == mChannel) {
-    // We need to duplicate data only if we have blobs.
-    if (aData.blobsParent().IsEmpty()) {
+    // We need to duplicate data only if we have blobs or if the manager of
+    // them is different than the manager of this parent actor.
+    if (aData.blobsParent().IsEmpty() ||
+        static_cast<BlobParent*>(aData.blobsParent()[0])->GetBackgroundManager() == Manager()) {
       unused << SendNotify(aData);
       return;
     }
