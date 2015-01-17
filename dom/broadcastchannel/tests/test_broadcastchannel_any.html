@@ -75,15 +75,42 @@ function compare(a, b) {
 }
 
 function runTest() {
+  var count = 2;
+
   var bc = new BroadcastChannel("foobar");
   ok(bc, "BroadcastChannel can be created");
 
   bc.onmessage = function(event) {
+    ok(count < 2, "Still comparing...");
+    info("bc: " + currentTest);
     compare(event.data, currentTest);
+    ++count;
+    next();
+  }
+
+  var bc2 = new BroadcastChannel("foobar");
+  ok(bc2, "BroadcastChannel can be created");
+
+  var toSkip = true;
+  bc2.onmessage = function(event) {
+    toSkip = !toSkip;
+    if (toSkip) return;
+
+    ok(count < 2, "Still comparing...");
+    info("bc2: " + currentTest);
+    compare(event.data, currentTest);
+    ++count;
     next();
   }
 
   function next() {
+    if (count < 2) {
+      return;
+    }
+
+    is(count, 2, "Just 2 comparations");
+    count = 0;
+
     if (!tests.length) {
       SimpleTest.finish();
       return;
@@ -91,6 +118,7 @@ function runTest() {
 
     currentTest = tests.shift();
     bc.postMessage(currentTest);
+    info("Posted: " + currentTest);
   }
 
   var worker = new Worker("broadcastchannel_worker_any.js");
