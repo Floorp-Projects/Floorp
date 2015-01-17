@@ -16,6 +16,7 @@
 #include "nsStyleSet.h"
 #include "nsStyleContext.h"
 #include "nsIDocument.h"
+#include "WritingModes.h"
 
 using namespace mozilla;
 
@@ -171,51 +172,34 @@ MapSinglePropertyInto(nsCSSProperty aProp,
 static inline void
 EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
 {
-  uint8_t direction = aRuleData->mStyleContext->StyleVisibility()->mDirection;
-  bool ltr = direction == NS_STYLE_DIRECTION_LTR;
+  bool isBlock =
+    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_BLOCK_AXIS);
+  bool isEnd =
+    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_END_EDGE);
 
-  switch (aProperty) {
-    case eCSSProperty_margin_end:
-      aProperty = ltr ? eCSSProperty_margin_right : eCSSProperty_margin_left;
-      break;
-    case eCSSProperty_margin_start:
-      aProperty = ltr ? eCSSProperty_margin_left : eCSSProperty_margin_right;
-      break;
-    case eCSSProperty_padding_end:
-      aProperty = ltr ? eCSSProperty_padding_right : eCSSProperty_padding_left;
-      break;
-    case eCSSProperty_padding_start:
-      aProperty = ltr ? eCSSProperty_padding_left : eCSSProperty_padding_right;
-      break;
-    case eCSSProperty_border_end_color:
-      aProperty = ltr ? eCSSProperty_border_right_color :
-                        eCSSProperty_border_left_color;
-      break;
-    case eCSSProperty_border_end_style:
-      aProperty = ltr ? eCSSProperty_border_right_style :
-                        eCSSProperty_border_left_style;
-      break;
-    case eCSSProperty_border_end_width:
-      aProperty = ltr ? eCSSProperty_border_right_width :
-                        eCSSProperty_border_left_width;
-      break;
-    case eCSSProperty_border_start_color:
-      aProperty = ltr ? eCSSProperty_border_left_color :
-                        eCSSProperty_border_right_color;
-      break;
-    case eCSSProperty_border_start_style:
-      aProperty = ltr ? eCSSProperty_border_left_style :
-                        eCSSProperty_border_right_style;
-      break;
-    case eCSSProperty_border_start_width:
-      aProperty = ltr ? eCSSProperty_border_left_width :
-                        eCSSProperty_border_right_width;
-      break;
-    default:
-      NS_ABORT_IF_FALSE(nsCSSProps::PropHasFlags(aProperty,
-                                                 CSS_PROPERTY_LOGICAL),
-                        "unhandled logical property");
+  LogicalEdge edge = isEnd ? eLogicalEdgeEnd : eLogicalEdgeStart;
+
+  // We handle block axis logical properties separately to save a bit of
+  // work that the WritingMode constructor does that is unnecessary
+  // unless we have an inline axis property.
+  mozilla::css::Side side;
+  if (isBlock) {
+    uint8_t wm = aRuleData->mStyleContext->StyleVisibility()->mWritingMode;
+    side = WritingMode::PhysicalSideForBlockAxis(wm, edge);
+  } else {
+    WritingMode wm(aRuleData->mStyleContext);
+    side = wm.PhysicalSideForInlineAxis(edge);
   }
+
+  nsCSSProperty shorthand = nsCSSProps::BoxShorthandFor(aProperty);
+  const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(shorthand);
+  MOZ_ASSERT(subprops[0] != eCSSProperty_UNKNOWN &&
+             subprops[1] != eCSSProperty_UNKNOWN &&
+             subprops[2] != eCSSProperty_UNKNOWN &&
+             subprops[3] != eCSSProperty_UNKNOWN &&
+             subprops[4] == eCSSProperty_UNKNOWN,
+             "expected four-element subproperty table");
+  aProperty = subprops[side];
 }
 
 void

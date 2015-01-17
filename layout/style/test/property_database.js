@@ -4542,24 +4542,78 @@ var gCSSProperties = {
 
 function logical_box_prop_get_computed(cs, property)
 {
-  var ltr = cs.getPropertyValue("direction") == "ltr";
+  // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
+
+  // Use defaults for these two properties in case the vertical text
+  // pref (which they live behind) is turned off.
+  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
+  var textOrientation = cs.getPropertyValue("text-orientation") || "mixed";
+
+  var direction = cs.getPropertyValue("direction");
+
+  // We only need to distinguish between text-orientation values of
+  // sideways-left and {mixed,upright,sideways-right} (which we will
+  // call "others").
+
+  if (textOrientation == "sideways") {
+    // text-orientation does not contribute to the logical to physical
+    // mapping when writing-mode is horizontal-tb, so it doesn't matter
+    // that we convert it to sideways-left in that case.
+    textOrientation = writingMode == "vertical-rl" ? "others" : "sideways-left";
+  } else if (textOrientation != "sideways-left") {
+    textOrientation = "others";
+  }
+
+  // keys in blockMappings are writing-mode values
+  var blockMappings = {
+    "horizontal-tb": { "start": "top",   "end": "bottom" },
+    "vertical-rl":   { "start": "right", "end": "left"   },
+    "vertical-lr":   { "start": "left",  "end": "right"  },
+  };
+
+  // keys in inlineMappings are regular expressions that match against
+  // a {writing-mode,text-orientation,direction} triple as a space-
+  // separated string
+  var inlineMappings = {
+    "horizontal-tb \\S+ ltr":        { "start": "left",   "end": "right"  },
+    "horizontal-tb \\S+ rtl":        { "start": "right",  "end": "left"   },
+    "vertical-.. sideways-left ltr": { "start": "bottom", "end": "top"    },
+    "vertical-.. sideways-left rtl": { "start": "top",    "end": "bottom" },
+    "vertical-.. others ltr":        { "start": "top",    "end": "bottom" },
+    "vertical-.. others rtl":        { "start": "bottom", "end": "top"    },
+  };
+
+  var blockMapping = blockMappings[writingMode];
+  var inlineMapping;
+
+  // test each regular expression in inlineMappings against the
+  // {writing-mode,text-orientation,direction} triple
+  var key = `${writingMode} ${textOrientation} ${direction}`;
+  for (var k in inlineMappings) {
+    if (new RegExp(k).test(key)) {
+      inlineMapping = inlineMappings[k];
+      break;
+    }
+  }
+
+  if (!blockMapping || !inlineMapping) {
+    throw "Unexpected writing mode property values";
+  }
+
+  function physicalize(aProperty, aMapping, aLogicalPrefix) {
+    for (var logicalSide in aMapping) {
+      var physicalSide = aMapping[logicalSide];
+      logicalSide = aLogicalPrefix + logicalSide;
+      aProperty = aProperty.replace(logicalSide, physicalSide);
+    }
+    return aProperty;
+  }
+
   if (/^-moz-/.test(property)) {
-    property = property.substring(5);
-    if (ltr) {
-      property = property.replace("-start", "-left")
-                         .replace("-end", "-right");
-    } else {
-      property = property.replace("-start", "-right")
-                         .replace("-end", "-left");
-    }
-  } else if (/-inline-(start|end)/.test(property)) {
-    if (ltr) {
-      property = property.replace("-inline-start", "-left")
-                         .replace("-inline-end", "-right");
-    } else {
-      property = property.replace("-inline-start", "-right")
-                         .replace("-inline-end", "-left");
-    }
+    property = physicalize(property.substring(5), inlineMapping, "");
+  } else if (/-(block|inline)-(start|end)/.test(property)) {
+    property = physicalize(property, blockMapping, "block-");
+    property = physicalize(property, inlineMapping, "inline-");
   } else {
     throw "Unexpected property";
   }
