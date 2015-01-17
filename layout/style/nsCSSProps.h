@@ -471,6 +471,19 @@ public:
     return gPropertyIndexInStruct[aProperty];
   }
 
+  /**
+   * Returns the shorthand property which sets the four physical box side
+   * properties for which the argument is one of the corresponding logical
+   * box properties.  For example, given eCSSProperty_margin_block_start,
+   * returns eCSSProperty_margin.
+   *
+   * (Note that the running time of this function is proportional to the
+   * number of logical longhand properties that exist.  If we start
+   * getting too many of these properties, we should make gBoxShorthandTable
+   * be a simple array of eCSSProperty_COUNT length.)
+   */
+  static nsCSSProperty BoxShorthandFor(nsCSSProperty aProperty);
+
 private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];
 
