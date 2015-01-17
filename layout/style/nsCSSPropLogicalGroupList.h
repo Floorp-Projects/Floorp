@@ -13,7 +13,9 @@
 // margin-top, margin-right, margin-bottom and margin-left.
 //
 // Logical property groups are defined below using one of the following
-// macros:
+// macros, where the name_ argument must be capitalized LikeThis and
+// must not collide with the name of a property's DOM method (its
+// method_ in nsCSSPropList.h):
 //
 //   CSS_PROP_LOGICAL_GROUP_SHORTHAND(name_)
 //     Defines a logical property group whose corresponding physical
@@ -30,12 +32,18 @@
 //     example, the logical property group for
 //     offset-{block,inline}-{start,end} contains the top, right,
 //     bottom and left physical properties, but there is no shorthand
-//     that sets those four properties.  The name_ argument must be
-//     capitalized LikeSo and must not collide with the name of a
-//     property's DOM method (its method_ in nsCSSPropList.h).  A
-//     table must be defined in nsCSSProps.cpp named
-//     g<name_>LogicalGroupTable containing the four physical properties
-//     in top/right/bottom/left order.
+//     that sets those four properties.  A table must be defined in
+//     nsCSSProps.cpp named g<name_>LogicalGroupTable containing the
+//     four physical properties in top/right/bottom/left order.
+//
+//   CSS_PROP_LOGICAL_GROUP_AXIS(name_)
+//     Defines a logical property group whose corresponding physical
+//     properties are a set of two axis-related properties.  For
+//     example, the logical property group for {block,inline}-size
+//     contains the width and height properties.  A table must be
+//     defined in nCSSProps.cpp named g<name_>LogicalGroupTable
+//     containing the two physical properties in vertical/horizontal
+//     order, followed by an nsCSSProperty_UNKNOWN entry.
 
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderColor)
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderStyle)

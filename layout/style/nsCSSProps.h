@@ -130,7 +130,14 @@
 // list.
 #define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
 
-// Flag (1<<7) is currently free.
+// This is a logical property that represents some value associated with
+// a logical axis rather than a logical box side, and thus has two
+// corresponding physical properties it could set rather than four.  For
+// example, the block-size logical property has this flag set, as it
+// represents the size in either the block or inline axis dimensions, and
+// has two corresponding physical properties, width and height.  Must not
+// be used in conjunction with CSS_PROPERTY_LOGICAL_END_EDGE.
+#define CSS_PROPERTY_LOGICAL_AXIS                 (1<<7)
 
 // This property allows calc() between lengths and percentages and
 // stores such calc() expressions in its style structs (typically in an
