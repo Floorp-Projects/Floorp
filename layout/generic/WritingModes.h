@@ -29,7 +29,14 @@
    NS_ASSERTION(param == GetWritingMode(), "writing-mode mismatch")
 
 namespace mozilla {
-// Logical side constants for use in various places.
+
+// Physical axis constants.
+enum PhysicalAxis {
+  eAxisVertical      = 0x0,
+  eAxisHorizontal    = 0x1
+};
+
+// Logical axis, edge and side constants for use in various places.
 enum LogicalAxis {
   eLogicalAxisBlock  = 0x0,
   eLogicalAxisInline = 0x1
