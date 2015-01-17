@@ -84,4 +84,13 @@ enum nsCSSCounterDesc {
   eCSSCounterDesc_COUNT
 };
 
+enum nsCSSPropertyLogicalGroup {
+  eCSSPropertyLogicalGroup_UNKNOWN = -1,
+#define CSS_PROP_LOGICAL_GROUP_SHORTHAND(name_) \
+  eCSSPropertyLogicalGroup_##name_,
+#include "nsCSSPropLogicalGroupList.h"
+#undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
+  eCSSPropertyLogicalGroup_COUNT
+};
+
 #endif /* nsCSSProperty_h___ */

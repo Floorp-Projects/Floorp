@@ -191,15 +191,14 @@ EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
     side = wm.PhysicalSideForInlineAxis(edge);
   }
 
-  nsCSSProperty shorthand = nsCSSProps::BoxShorthandFor(aProperty);
-  const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(shorthand);
-  MOZ_ASSERT(subprops[0] != eCSSProperty_UNKNOWN &&
-             subprops[1] != eCSSProperty_UNKNOWN &&
-             subprops[2] != eCSSProperty_UNKNOWN &&
-             subprops[3] != eCSSProperty_UNKNOWN &&
-             subprops[4] == eCSSProperty_UNKNOWN,
+  const nsCSSProperty* props = nsCSSProps::LogicalGroup(aProperty);
+  MOZ_ASSERT(props[0] != eCSSProperty_UNKNOWN &&
+             props[1] != eCSSProperty_UNKNOWN &&
+             props[2] != eCSSProperty_UNKNOWN &&
+             props[3] != eCSSProperty_UNKNOWN &&
+             props[4] == eCSSProperty_UNKNOWN,
              "expected four-element subproperty table");
-  aProperty = subprops[side];
+  aProperty = props[side];
 }
 
 void
