@@ -924,13 +924,16 @@
 
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
 
-          // Check for unmodified left-click, and use default behavior
           var searchBar = BrowserSearch.searchBar;
-          searchBar.telemetrySearchDetails = {
-            index: controller.selection.currentIndex,
-            kind: "mouse"
-          };
+          var popupForSearchBar = searchBar && searchBar.textbox == this.mInput;
+          if (popupForSearchBar) {
+            searchBar.telemetrySearchDetails = {
+              index: controller.selection.currentIndex,
+              kind: "mouse"
+            };
+          }
 
+          // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
             controller.handleEnter(true);
@@ -938,7 +941,7 @@
           }
 
           // Check for middle-click or modified clicks on the search bar
-          if (searchBar && searchBar.textbox == this.mInput) {
+          if (popupForSearchBar) {
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
 
