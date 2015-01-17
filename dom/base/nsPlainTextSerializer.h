@@ -116,6 +116,7 @@ protected:
 
 private:
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
+  bool IsElementBlock(mozilla::dom::Element* aElement);
 
 protected:
   nsString         mCurrentLine;
