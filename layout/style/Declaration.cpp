@@ -69,7 +69,8 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
   NS_ABORT_IF_FALSE(!mData && !mImportantData, "Expand didn't null things out");
 
   if (nsCSSProps::IsShorthand(aProperty)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
+                                         nsCSSProps::eEnabledForAllContent) {
       data.ClearLonghandProperty(*p);
       mOrder.RemoveElement(static_cast<uint32_t>(*p));
     }
@@ -168,7 +169,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
   uint32_t totalCount = 0, importantCount = 0,
            initialCount = 0, inheritCount = 0, unsetCount = 0,
            matchingTokenStreamCount = 0, nonMatchingTokenStreamCount = 0;
-  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
+                                       nsCSSProps::eEnabledForAllContent) {
     if (*p == eCSSProperty__x_system_font) {
       // The system-font subproperty doesn't count.
       continue;
@@ -1122,7 +1124,8 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
     return mImportantData->ValueFor(aProperty) != nullptr;
   }
 
-  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
+                                       nsCSSProps::eEnabledForAllContent) {
     if (*p == eCSSProperty__x_system_font) {
       // The system_font subproperty doesn't count.
       continue;

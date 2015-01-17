@@ -229,7 +229,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                      &startedAny, &whichStarted);
         }
       } else if (nsCSSProps::IsShorthand(property)) {
-        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+            subprop, property, nsCSSProps::eEnabledForAllContent) {
           ConsiderStartingTransition(*subprop, t, aElement, collection,
                                      aOldStyleContext, aNewStyleContext,
                                      &startedAny, &whichStarted);
@@ -268,7 +269,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
             allTransitionProperties.AddProperty(p);
           }
         } else if (nsCSSProps::IsShorthand(property)) {
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+              subprop, property, nsCSSProps::eEnabledForAllContent) {
             allTransitionProperties.AddProperty(*subprop);
           }
         } else {
