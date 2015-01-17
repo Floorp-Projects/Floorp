@@ -30,8 +30,41 @@
 
 namespace mozilla {
 // Logical side constants for use in various places.
-enum LogicalSide { eLogicalSideBStart, eLogicalSideBEnd,
-                   eLogicalSideIStart, eLogicalSideIEnd };
+enum LogicalAxis {
+  eLogicalAxisBlock  = 0x0,
+  eLogicalAxisInline = 0x1
+};
+enum LogicalEdge {
+  eLogicalEdgeStart  = 0x0,
+  eLogicalEdgeEnd    = 0x1
+};
+enum LogicalSide {
+  eLogicalSideBStart = (eLogicalAxisBlock  << 1) | eLogicalEdgeStart,  // 0x0
+  eLogicalSideBEnd   = (eLogicalAxisBlock  << 1) | eLogicalEdgeEnd,    // 0x1
+  eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
+  eLogicalSideIEnd   = (eLogicalAxisInline << 1) | eLogicalEdgeEnd     // 0x3
+};
+
+inline bool IsInline(LogicalSide aSide) { return aSide & 0x2; }
+inline bool IsBlock(LogicalSide aSide) { return !IsInline(aSide); }
+inline bool IsEnd(LogicalSide aSide) { return aSide & 0x1; }
+inline bool IsStart(LogicalSide aSide) { return !IsEnd(aSide); }
+
+inline LogicalAxis GetAxis(LogicalSide aSide)
+{
+  return IsInline(aSide) ? eLogicalAxisInline : eLogicalAxisBlock;
+}
+
+inline LogicalEdge GetEdge(LogicalSide aSide)
+{
+  return IsEnd(aSide) ? eLogicalEdgeEnd : eLogicalEdgeStart;
+}
+
+inline LogicalSide
+MakeLogicalSide(LogicalAxis aAxis, LogicalEdge aEdge)
+{
+  return LogicalSide((aAxis << 1) | aEdge);
+}
 
 enum LogicalSideBits {
   eLogicalSideBitsNone   = 0,
@@ -206,6 +239,78 @@ public:
    * baseline remains centered.
    */
   bool IsSideways() const { return !!(mWritingMode & eSidewaysMask); }
+
+  static mozilla::Side PhysicalSideForBlockAxis(uint8_t aWritingModeValue,
+                                                LogicalEdge aEdge)
+  {
+    // indexes are NS_STYLE_WRITING_MODE_* values, which are the same as these
+    // two-bit values:
+    //   bit 0 = the eOrientationMask value
+    //   bit 1 = the eBlockFlowMask value
+    static const mozilla::css::Side kLogicalBlockSides[][2] = {
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // horizontal-tb
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // vertical-rl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // (horizontal-bt)
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // vertical-lr
+    };
+
+    NS_ASSERTION(aWritingModeValue < 4, "invalid aWritingModeValue value");
+    return kLogicalBlockSides[aWritingModeValue][aEdge];
+  }
+
+  mozilla::Side PhysicalSideForInlineAxis(LogicalEdge aEdge) const
+  {
+    // indexes are four-bit values:
+    //   bit 0 = the eOrientationMask value
+    //   bit 1 = the eInlineFlowMask value
+    //   bit 2 = the eBlockFlowMask value
+    //   bit 3 = the eLineOrientMask value
+    static const mozilla::css::Side kLogicalInlineSides[][2] = {
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb                  ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl                    ltr
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb                  rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl                    rtl
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)  (inverted)    ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-lr      sideways-left rtl
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)  (inverted)    rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-lr      sideways-left ltr
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb    (inverted)    rtl
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl      sideways-left rtl
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb    (inverted)    ltr
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl      sideways-left ltr
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)                ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-lr                    ltr
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)                rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-lr                    rtl
+    };
+
+    // Inline axis sides depend on all three of writing-mode, text-orientation
+    // and direction, which are encoded in the eOrientationMask,
+    // eInlineFlowMask, eBlockFlowMask and eLineOrientMask bits.  Use these four
+    // bits to index into kLogicalInlineSides.
+    static_assert(eOrientationMask == 0x01 && eInlineFlowMask == 0x02 &&
+                  eBlockFlowMask == 0x04 && eLineOrientMask == 0x08,
+                  "unexpected mask values");
+    int index = mWritingMode & 0x0F;
+    return kLogicalInlineSides[index][aEdge];
+  }
+
+  /**
+   * Returns the physical side corresponding to the specified logical side,
+   * given the current writing mode.
+   */
+  mozilla::Side PhysicalSide(LogicalSide aSide) const
+  {
+    if (IsBlock(aSide)) {
+      static_assert(eOrientationMask == 0x01 && eBlockFlowMask == 0x04,
+                    "unexpected mask values");
+      int wm = ((mWritingMode & eBlockFlowMask) >> 1) |
+               (mWritingMode & eOrientationMask);
+      return PhysicalSideForBlockAxis(wm, GetEdge(aSide));
+    }
+
+    return PhysicalSideForInlineAxis(GetEdge(aSide));
+  }
 
   /**
    * Default constructor gives us a horizontal, LTR writing mode.
