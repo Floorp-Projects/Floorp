@@ -122,6 +122,17 @@ for (var prop in gCSSProperties) {
      "must have non-initial values for property '" + prop + "'");
 }
 
+/*
+ * Test that only longhand properties are listed as logical properties.
+ */
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.logical) {
+    is(info.type, CSS_TYPE_LONGHAND,
+       "property '" + prop + "' is listed as CSS_TYPE_LONGHAND due to its " +
+       "being a logical property");
+  }
+}
 </script>
 </pre>
 </body>
