@@ -766,7 +766,7 @@ let SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
-        this._crashedBrowsers.add(aEvent.originalTarget.permanentKey);
+        this.onBrowserCrashed(win, aEvent.originalTarget);
         break;
     }
     this._clearRestoringWindows();
@@ -1459,6 +1459,29 @@ let SessionStoreInternal = {
     // Default delay of 2 seconds gives enough time to catch multiple TabHide
     // events due to changing groups in Panorama.
     this.saveStateDelayed(aWindow);
+  },
+
+  /**
+   * Handler for the event that is fired when a <xul:browser> crashes.
+   *
+   * @param aWindow
+   *        The window that the crashed browser belongs to.
+   * @param aBrowser
+   *        The <xul:browser> that is now in the crashed state.
+   */
+  onBrowserCrashed: function(aWindow, aBrowser) {
+    this._crashedBrowsers.add(aBrowser.permanentKey);
+    // If we never got around to restoring this tab, clear its state so
+    // that we don't try restoring if the user switches to it before
+    // reviving the crashed browser. This is throwing away the information
+    // that the tab was in a pending state when the browser crashed, which
+    // is an explicit choice. For now, when restoring all crashed tabs, based
+    // on a user preference we'll either restore all of them at once, or only
+    // restore the selected tab and lazily restore the rest. We'll make no
+    // efforts at this time to be smart and restore all of the tabs that had
+    // been in a restored state at the time of the crash.
+    let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
+    this._resetLocalTabRestoringState(tab);
   },
 
   onGatherTelemetry: function() {
