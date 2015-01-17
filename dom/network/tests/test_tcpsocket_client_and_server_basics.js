@@ -127,7 +127,7 @@ function waitForConnection(listeningServer) {
     // Because of the event model of sockets, we can't use the
     // listenForEventsOnSocket mechanism; we need to hook up listeners during
     // the connect event.
-    listeningServer.onconnect = function(ev) {
+    listeningServer.onconnect = function(socket) {
       // Clobber the listener to get upset if it receives any more connections
       // after this.
       listeningServer.onconnect = function() {
@@ -135,13 +135,9 @@ function waitForConnection(listeningServer) {
       };
       ok(true, 'Listening server accepted socket');
       resolve({
-        socket: ev.socket,
-        queue: listenForEventsOnSocket(ev.socket, 'server')
+        socket: socket,
+        queue: listenForEventsOnSocket(socket, 'server')
       });
-    };
-    listeningServer.onerror = function(ev) {
-      ok(false, 'Received an error when not expecting one.');
-      reject();
     };
   });
 }
@@ -175,16 +171,17 @@ function* test_basics() {
   // test was using.
   let serverPort = 8085;
 
+  let TCPSocket = navigator.mozTCPSocket;
   // - Start up a listening socket.
-  let listeningServer = new mozTCPServerSocket(serverPort,
-                                               { binaryType: 'arraybuffer' },
-                                               SERVER_BACKLOG);
+  let listeningServer = TCPSocket.listen(serverPort,
+                                         { binaryType: 'arraybuffer' },
+                                         SERVER_BACKLOG);
 
   let connectedPromise = waitForConnection(listeningServer);
 
   // -- Open a connection to the server
-  let clientSocket = new mozTCPSocket('127.0.0.1', serverPort,
-                                      { binaryType: 'arraybuffer' });
+  let clientSocket = TCPSocket.open('127.0.0.1', serverPort,
+                                    { binaryType: 'arraybuffer' });
   let clientQueue = listenForEventsOnSocket(clientSocket, 'client');
 
   // (the client connects)
@@ -290,8 +287,8 @@ function* test_basics() {
 
   // -- Re-establish connection
   connectedPromise = waitForConnection(listeningServer);
-  clientSocket = new mozTCPSocket('127.0.0.1', serverPort,
-                                  { binaryType: 'arraybuffer' });
+  clientSocket = TCPSocket.open('127.0.0.1', serverPort,
+                                { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
 
@@ -317,8 +314,8 @@ function* test_basics() {
 
   // -- Re-establish connection
   connectedPromise = waitForConnection(listeningServer);
-  clientSocket = new mozTCPSocket('127.0.0.1', serverPort,
-                                  { binaryType: 'arraybuffer' });
+  clientSocket = TCPSocket.open('127.0.0.1', serverPort,
+                                { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
 
@@ -346,7 +343,7 @@ function* test_basics() {
                          'server received/client sent');
   // And a close.
   is((yield serverQueue.waitForEvent()).type, 'close',
-     'The close event should fire after a large send that returned true.');
+     'The drain event should fire after a large send that returned true.');
 
 
   // -- Close the listening server (and try to connect)
@@ -355,8 +352,8 @@ function* test_basics() {
   listeningServer.close();
 
   // - try and connect, get an error
-  clientSocket = new mozTCPSocket('127.0.0.1', serverPort,
-                                  { binaryType: 'arraybuffer' });
+  clientSocket = TCPSocket.open('127.0.0.1', serverPort,
+                                { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'error', 'fail to connect');
   is(clientSocket.readyState, 'closed',

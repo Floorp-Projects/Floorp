@@ -9,9 +9,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
-let global = this;
 
 function TCPSocketParentIntermediary() {
 }
@@ -19,7 +16,7 @@ function TCPSocketParentIntermediary() {
 TCPSocketParentIntermediary.prototype = {
   _setCallbacks: function(aParentSide, socket) {
     aParentSide.initJS(this);
-    this._socket = socket.getInternalSocket();
+    this._socket = socket;
 
     // Create handlers for every possible callback that attempt to trigger
     // corresponding callbacks on the child object.
@@ -41,10 +38,12 @@ TCPSocketParentIntermediary.prototype = {
 
   open: function(aParentSide, aHost, aPort, aUseSSL, aBinaryType,
                  aAppId, aInBrowser) {
-    let socket = new global.mozTCPSocket(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
+    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
+    let socket = baseSocket.open(aHost, aPort, {useSecureTransport: aUseSSL, binaryType: aBinaryType});
+    if (!socket)
+      return null;
 
-    let socketInternal = socket.getInternalSocket();
-    socketInternal.initWithGlobal(global);
+    let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
     socketInternal.setAppId(aAppId);
     socketInternal.setInBrowser(aInBrowser);
 
@@ -54,23 +53,24 @@ TCPSocketParentIntermediary.prototype = {
 
     // Handlers are set to the JS-implemented socket object on the parent side.
     this._setCallbacks(aParentSide, socket);
-    return socketInternal;
+    return socket;
   },
 
   listen: function(aTCPServerSocketParent, aLocalPort, aBacklog, aBinaryType,
                    aAppId, aInBrowser) {
-    let serverSocket = new global.mozTCPServerSocket(aLocalPort, { binaryType: aBinaryType }, aBacklog);
-    let serverSocketInternal = serverSocket.getInternalSocket();
-    serverSocketInternal.initWithGlobal(global);
+    let baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
+    let serverSocket = baseSocket.listen(aLocalPort, { binaryType: aBinaryType }, aBacklog);
+    if (!serverSocket)
+      return null;
 
     let localPort = serverSocket.localPort;
 
-    serverSocket["onconnect"] = function(event) {
+    serverSocket["onconnect"] = function(socket) {
       var socketParent = Cc["@mozilla.org/tcp-socket-parent;1"]
                             .createInstance(Ci.nsITCPSocketParent);
       var intermediary = new TCPSocketParentIntermediary();
 
-      let socketInternal = event.socket.getInternalSocket();
+      let socketInternal = socket.QueryInterface(Ci.nsITCPSocketInternal);
       socketInternal.setAppId(aAppId);
       socketInternal.setInBrowser(aInBrowser);
       socketInternal.setOnUpdateBufferedAmountHandler(
@@ -79,11 +79,11 @@ TCPSocketParentIntermediary.prototype = {
       // Handlers are set to the JS-implemented socket object on the parent side,
       // so that the socket parent object can communicate data
       // with the corresponding socket child object through IPC.
-      intermediary._setCallbacks(socketParent, event.socket);
+      intermediary._setCallbacks(socketParent, socket);
       // The members in the socket parent object are set with arguments,
       // so that the socket parent object can communicate data
       // with the JS socket object on the parent side via the intermediary object.
-      socketParent.setSocketAndIntermediary(socketInternal, intermediary);
+      socketParent.setSocketAndIntermediary(socket, intermediary);
       aTCPServerSocketParent.sendCallbackAccept(socketParent);
     };
 
@@ -94,7 +94,7 @@ TCPSocketParentIntermediary.prototype = {
                                                  error.lineNumber, error.columnNumber);
     };
 
-    return serverSocketInternal;
+    return serverSocket;
   },
 
   onRecvSendString: function(aData, aTrackingNumber) {
