@@ -2436,6 +2436,47 @@ CSS_PROP_SHORTHAND(
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "")
+CSS_PROP_LOGICAL(
+    padding-block-end,
+    padding_block_end,
+    PaddingBlockEnd,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        // This is required by the UA stylesheet and can't be overridden.
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HLP | VARIANT_CALC,
+    nullptr,
+    padding,
+    Padding,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    padding-block-start,
+    padding_block_start,
+    PaddingBlockStart,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        // This is required by the UA stylesheet and can't be overridden.
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HLP | VARIANT_CALC,
+    nullptr,
+    padding,
+    Padding,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_PADDING(
     padding-bottom,
     padding_bottom,
