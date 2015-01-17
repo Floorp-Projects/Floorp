@@ -12,7 +12,7 @@ const TEST_URI = NetUtil.newURI("http://www.mozilla.org/");
 
 registerCleanupFunction(function* () {
   yield PlacesUtils.bookmarks.eraseEverything();
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function* test_date_container() {
