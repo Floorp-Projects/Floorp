@@ -558,13 +558,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
   }
 }
 
-nsCSSProperty
-nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
-{
-  NS_ABORT_IF_FALSE(false, "bad caller");
-  return eCSSProperty_UNKNOWN;
-}
-
 /***************************************************************************/
 
 const KTableValue nsCSSProps::kAnimationDirectionKTable[] = {
@@ -839,12 +832,6 @@ const KTableValue nsCSSProps::kBorderWidthKTable[] = {
   eCSSKeyword_thin, NS_STYLE_BORDER_WIDTH_THIN,
   eCSSKeyword_medium, NS_STYLE_BORDER_WIDTH_MEDIUM,
   eCSSKeyword_thick, NS_STYLE_BORDER_WIDTH_THICK,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const KTableValue nsCSSProps::kBoxPropSourceKTable[] = {
-  eCSSKeyword_physical,     NS_BOXPROP_SOURCE_PHYSICAL,
-  eCSSKeyword_logical,      NS_BOXPROP_SOURCE_LOGICAL,
   eCSSKeyword_UNKNOWN,-1
 };
 
