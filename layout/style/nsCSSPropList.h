@@ -2467,6 +2467,41 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mMinHeight),
     eStyleAnimType_Coord)
+CSS_PROP_LOGICAL(
+    min-block-size,
+    min_block_size,
+    MinBlockSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    MinSize,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    min-inline-size,
+    min_inline_size,
+    MinInlineSize,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_AHKLP | VARIANT_CALC,
+    kWidthKTable,
+    MinSize,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     min-width,
     min_width,

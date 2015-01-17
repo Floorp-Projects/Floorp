@@ -2562,6 +2562,12 @@ static const nsCSSProperty gMaxSizeLogicalGroupTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gMinSizeLogicalGroupTable[] = {
+  eCSSProperty_min_height,
+  eCSSProperty_min_width,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gSizeLogicalGroupTable[] = {
   eCSSProperty_height,
   eCSSProperty_width,
