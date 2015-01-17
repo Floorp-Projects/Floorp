@@ -242,18 +242,21 @@ public:
      * from |aFromBlock| to this block.  The property being transferred
      * is !important if |aIsImportant| is true, and should replace an
      * existing !important property regardless of its own importance
-     * if |aOverrideImportant| is true.
+     * if |aOverrideImportant| is true.  |aEnabledState| is used to
+     * determine which longhand components of |aPropID| (if it is a
+     * shorthand) to transfer.
      *
      * Returns true if something changed, false otherwise.  Calls
      * |ValueAppended| on |aDeclaration| if the property was not
      * previously set, or in any case if |aMustCallValueAppended| is true.
      */
     bool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
-                             nsCSSProperty aPropID,
-                             bool aIsImportant,
-                             bool aOverrideImportant,
-                             bool aMustCallValueAppended,
-                             mozilla::css::Declaration* aDeclaration);
+                           nsCSSProperty aPropID,
+                           nsCSSProps::EnabledState aEnabledState,
+                           bool aIsImportant,
+                           bool aOverrideImportant,
+                           bool aMustCallValueAppended,
+                           mozilla::css::Declaration* aDeclaration);
 
     /**
      * Copies the values for aPropID into the specified aRuleData object.
