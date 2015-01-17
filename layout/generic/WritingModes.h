@@ -247,6 +247,37 @@ public:
    */
   bool IsSideways() const { return !!(mWritingMode & eSidewaysMask); }
 
+  static mozilla::PhysicalAxis PhysicalAxisForLogicalAxis(
+                                              uint8_t aWritingModeValue,
+                                              LogicalAxis aAxis)
+  {
+    // This relies on bit 0 of a writing-value mode indicating vertical
+    // orientation and bit 0 of a LogicalAxis value indicating the inline axis,
+    // so that it can correctly form mozilla::PhysicalAxis values using bit
+    // manipulation.
+    static_assert(NS_STYLE_WRITING_MODE_HORIZONTAL_TB == 0 &&
+                  NS_STYLE_WRITING_MODE_VERTICAL_RL == 1 &&
+                  NS_STYLE_WRITING_MODE_VERTICAL_LR == 3 &&
+                  eLogicalAxisBlock == 0 &&
+                  eLogicalAxisInline == 1 &&
+                  eAxisVertical == 0 && 
+                  eAxisHorizontal == 1,
+                  "unexpected writing-mode, logical axis or physical axis "
+                  "constant values");
+    return mozilla::PhysicalAxis((aWritingModeValue ^ aAxis) & 0x1);
+  }
+
+  mozilla::PhysicalAxis PhysicalAxis(LogicalAxis aAxis) const
+  {
+    // This will set wm to either NS_STYLE_WRITING_MODE_HORIZONTAL_TB or
+    // NS_STYLE_WRITING_MODE_VERTICAL_RL, and not the other two (real
+    // and hypothetical) values.  But this is fine; we only need to
+    // distinguish between vertical and horizontal in
+    // PhysicalAxisForLogicalAxis.
+    int wm = mWritingMode & eOrientationMask;
+    return PhysicalAxisForLogicalAxis(wm, aAxis);
+  }
+
   static mozilla::Side PhysicalSideForBlockAxis(uint8_t aWritingModeValue,
                                                 LogicalEdge aEdge)
   {
