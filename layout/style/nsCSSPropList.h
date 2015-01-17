@@ -745,70 +745,6 @@ CSS_PROP_SHORTHAND(
         CSS_PROPERTY_HASHLESS_COLOR_QUIRK,
     "")
 CSS_PROP_SHORTHAND(
-    -moz-border-end,
-    border_end,
-    CSS_PROP_DOMPROP_PREFIXED(BorderEnd),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-CSS_PROP_SHORTHAND(
-    -moz-border-end-color,
-    border_end_color,
-    CSS_PROP_DOMPROP_PREFIXED(BorderEndColor),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-end-color-value,
-    border_end_color_value,
-    BorderEndColorValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HCK, // used only internally
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-border-end-style,
-    border_end_style,
-    CSS_PROP_DOMPROP_PREFIXED(BorderEndStyle),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-end-style-value,
-    border_end_style_value,
-    BorderEndStyleValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HK, // used only internally
-    kBorderStyleKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-border-end-width,
-    border_end_width,
-    CSS_PROP_DOMPROP_PREFIXED(BorderEndWidth),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-end-width-value,
-    border_end_width_value,
-    BorderEndWidthValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HKL | VARIANT_CALC,
-    kBorderWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
     border-image,
     border_image,
     BorderImage,
@@ -871,59 +807,118 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
+    -moz-border-end,
+    border_end,
+    CSS_PROP_DOMPROP_PREFIXED(BorderEnd),
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_LOGICAL(
+    -moz-border-end-color,
+    border_end_color,
+    CSS_PROP_DOMPROP_PREFIXED(BorderEndColor),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HCK,
+    kBorderColorKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    -moz-border-end-style,
+    border_end_style,
+    CSS_PROP_DOMPROP_PREFIXED(BorderEndStyle),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HK,
+    kBorderStyleKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    -moz-border-end-width,
+    border_end_width,
+    CSS_PROP_DOMPROP_PREFIXED(BorderEndWidth),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HKL | VARIANT_CALC,
+    kBorderWidthKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
+    -moz-border-start,
+    border_start,
+    CSS_PROP_DOMPROP_PREFIXED(BorderStart),
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_LOGICAL(
+    -moz-border-start-color,
+    border_start_color,
+    CSS_PROP_DOMPROP_PREFIXED(BorderStartColor),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HCK,
+    kBorderColorKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    -moz-border-start-style,
+    border_start_style,
+    CSS_PROP_DOMPROP_PREFIXED(BorderStartStyle),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HK,
+    kBorderStyleKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    -moz-border-start-width,
+    border_start_width,
+    CSS_PROP_DOMPROP_PREFIXED(BorderStartWidth),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL,
+    "",
+    VARIANT_HKL | VARIANT_CALC,
+    kBorderWidthKTable,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
     border-left,
     border_left,
     BorderLeft,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_SHORTHAND(
+CSS_PROP_BORDER(
     border-left-color,
     border_left_color,
     BorderLeftColor,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_HASHLESS_COLOR_QUIRK,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-left-color-value,
-    border_left_color_value,
-    BorderLeftColorValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_HASHLESS_COLOR_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK, // used only internally
+    VARIANT_HCK,
     kBorderColorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
-CSS_PROP_BORDER(
-    border-left-color-ltr-source,
-    border_left_color_ltr_source,
-    BorderLeftColorLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-left-color-rtl-source,
-    border_left_color_rtl_source,
-    BorderLeftColorRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_BORDER(
     -moz-border-left-colors,
     border_left_colors,
@@ -936,151 +931,50 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_SHORTHAND(
+CSS_PROP_BORDER(
     border-left-style,
     border_left_style,
     BorderLeftStyle,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "") // on/off will need reflow
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-left-style-value,
-    border_left_style_value,
-    BorderLeftStyleValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
-    VARIANT_HK, // used only internally
+    VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    border-left-style-ltr-source,
-    border_left_style_ltr_source,
-    BorderLeftStyleLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-left-style-rtl-source,
-    border_left_style_rtl_source,
-    BorderLeftStyleRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
     border-left-width,
     border_left_width,
     BorderLeftWidth,
-    CSS_PROPERTY_PARSE_FUNCTION |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-left-width-value,
-    border_left_width_value,
-    BorderLeftWidthValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
-CSS_PROP_BORDER(
-    border-left-width-ltr-source,
-    border_left_width_ltr_source,
-    BorderLeftWidthLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-left-width-rtl-source,
-    border_left_width_rtl_source,
-    BorderLeftWidthRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_SHORTHAND(
     border-right,
     border_right,
     BorderRight,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_SHORTHAND(
+CSS_PROP_BORDER(
     border-right-color,
     border_right_color,
     BorderRightColor,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_HASHLESS_COLOR_QUIRK,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-right-color-value,
-    border_right_color_value,
-    BorderRightColorValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_HASHLESS_COLOR_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
     "",
-    VARIANT_HCK, // used only internally
+    VARIANT_HCK,
     kBorderColorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
-CSS_PROP_BORDER(
-    border-right-color-ltr-source,
-    border_right_color_ltr_source,
-    BorderRightColorLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-right-color-rtl-source,
-    border_right_color_rtl_source,
-    BorderRightColorRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_BORDER(
     -moz-border-right-colors,
     border_right_colors,
@@ -1093,97 +987,31 @@ CSS_PROP_BORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_SHORTHAND(
+CSS_PROP_BORDER(
     border-right-style,
     border_right_style,
     BorderRightStyle,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "") // on/off will need reflow
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-right-style-value,
-    border_right_style_value,
-    BorderRightStyleValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
-    VARIANT_HK, // used only internally
+    VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    border-right-style-ltr-source,
-    border_right_style_ltr_source,
-    BorderRightStyleLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-right-style-rtl-source,
-    border_right_style_rtl_source,
-    BorderRightStyleRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
     border-right-width,
     border_right_width,
     BorderRightWidth,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-right-width-value,
-    border_right_width_value,
-    BorderRightWidthValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_REPORT_OTHER_NAME,
+        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
-CSS_PROP_BORDER(
-    border-right-width-ltr-source,
-    border_right_width_ltr_source,
-    BorderRightWidthLTRSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_BORDER(
-    border-right-width-rtl-source,
-    border_right_width_rtl_source,
-    BorderRightWidthRTLSource,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_DIRECTIONAL_SOURCE,
-    "",
-    0,
-    kBoxPropSourceKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_TABLEBORDER(
     border-spacing,
     border_spacing,
@@ -1196,70 +1024,6 @@ CSS_PROP_TABLEBORDER(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
-CSS_PROP_SHORTHAND(
-    -moz-border-start,
-    border_start,
-    CSS_PROP_DOMPROP_PREFIXED(BorderStart),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-CSS_PROP_SHORTHAND(
-    -moz-border-start-color,
-    border_start_color,
-    CSS_PROP_DOMPROP_PREFIXED(BorderStartColor),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-start-color-value,
-    border_start_color_value,
-    BorderStartColorValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HCK, // used only internally
-    kBorderColorKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-border-start-style,
-    border_start_style,
-    CSS_PROP_DOMPROP_PREFIXED(BorderStartStyle),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-start-style-value,
-    border_start_style_value,
-    BorderStartStyleValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HK, // used only internally
-    kBorderStyleKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
-CSS_PROP_SHORTHAND(
-    -moz-border-start-width,
-    border_start_width,
-    CSS_PROP_DOMPROP_PREFIXED(BorderStartWidth),
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(
-    border-start-width-value,
-    border_start_width_value,
-    BorderStartWidthValue,
-    CSS_PROPERTY_PARSE_INACCESSIBLE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
-    "",
-    VARIANT_HKL | VARIANT_CALC,
-    kBorderWidthKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-#endif
 CSS_PROP_SHORTHAND(
     border-style,
     border_style,

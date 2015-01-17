@@ -697,7 +697,8 @@ var gCSSProperties = {
   "-moz-border-end-color": {
     domProp: "MozBorderEndColor",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -706,7 +707,8 @@ var gCSSProperties = {
   "-moz-border-end-style": {
     domProp: "MozBorderEndStyle",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
@@ -716,7 +718,8 @@ var gCSSProperties = {
   "-moz-border-end-width": {
     domProp: "MozBorderEndWidth",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     prerequisites: { "-moz-border-end-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
@@ -940,7 +943,8 @@ var gCSSProperties = {
   "-moz-border-start-color": {
     domProp: "MozBorderStartColor",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -949,7 +953,8 @@ var gCSSProperties = {
   "-moz-border-start-style": {
     domProp: "MozBorderStartStyle",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
@@ -959,7 +964,8 @@ var gCSSProperties = {
   "-moz-border-start-width": {
     domProp: "MozBorderStartWidth",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
     get_computed: logical_box_prop_get_computed,
     prerequisites: { "-moz-border-start-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
@@ -2144,7 +2150,7 @@ var gCSSProperties = {
   "border-left-color": {
     domProp: "borderLeftColor",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -2154,7 +2160,7 @@ var gCSSProperties = {
   "border-left-style": {
     domProp: "borderLeftStyle",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -2163,7 +2169,7 @@ var gCSSProperties = {
   "border-left-width": {
     domProp: "borderLeftWidth",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     prerequisites: { "border-left-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -2191,7 +2197,7 @@ var gCSSProperties = {
   "border-right-color": {
     domProp: "borderRightColor",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -2201,7 +2207,7 @@ var gCSSProperties = {
   "border-right-style": {
     domProp: "borderRightStyle",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     /* XXX hidden is sometimes the same as initial */
     initial_values: [ "none" ],
     other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -2210,7 +2216,7 @@ var gCSSProperties = {
   "border-right-width": {
     domProp: "borderRightWidth",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LONGHAND,
     prerequisites: { "border-right-style": "solid" },
     initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
     other_values: [ "thin", "thick", "1px", "2em",
@@ -4627,6 +4633,108 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
                         "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                         "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
+    },
+    "border-inline-end": {
+      domProp: "borderInlineEnd",
+      inherited: false,
+      type: CSS_TYPE_TRUE_SHORTHAND,
+      alias_for: "-moz-border-end",
+      subproperties: [ "border-inline-end-color", "border-inline-end-style", "border-inline-end-width" ],
+      initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+      other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+      invalid_values: [ "5%", "5", "5 green none" ]
+    },
+    "border-inline-end-color": {
+      domProp: "borderInlineEndColor",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-end-color",
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "currentColor" ],
+      other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    },
+    "border-inline-end-style": {
+      domProp: "borderInlineEndStyle",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-end-style",
+      get_computed: logical_box_prop_get_computed,
+      /* XXX hidden is sometimes the same as initial */
+      initial_values: [ "none" ],
+      other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+      invalid_values: []
+    },
+    "border-inline-end-width": {
+      domProp: "borderInlineEndWidth",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-end-width",
+      get_computed: logical_box_prop_get_computed,
+      prerequisites: { "border-inline-end-style": "solid" },
+      initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
+      other_values: [ "thin", "thick", "1px", "2em",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(0em)",
+        "calc(0px)",
+        "calc(5em)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 5em)",
+      ],
+      invalid_values: [ "5%", "5" ]
+    },
+    "border-inline-start": {
+      domProp: "borderInlineStart",
+      inherited: false,
+      type: CSS_TYPE_TRUE_SHORTHAND,
+      alias_for: "-moz-border-start",
+      subproperties: [ "border-inline-start-color", "border-inline-start-style", "border-inline-start-width" ],
+      initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
+      other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
+      invalid_values: [ "5%", "5", "5 green solid" ]
+    },
+    "border-inline-start-color": {
+      domProp: "borderInlineStartColor",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-start-color",
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "currentColor" ],
+      other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    },
+    "border-inline-start-style": {
+      domProp: "borderInlineStartStyle",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-start-style",
+      get_computed: logical_box_prop_get_computed,
+      /* XXX hidden is sometimes the same as initial */
+      initial_values: [ "none" ],
+      other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+      invalid_values: []
+    },
+    "border-inline-start-width": {
+      domProp: "borderInlineStartWidth",
+      inherited: false,
+      type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+      alias_for: "-moz-border-start-width",
+      get_computed: logical_box_prop_get_computed,
+      prerequisites: { "border-inline-start-style": "solid" },
+      initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
+      other_values: [ "thin", "thick", "1px", "2em",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(0em)",
+        "calc(0px)",
+        "calc(5em)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 5em)",
+      ],
+      invalid_values: [ "5%", "5" ]
     },
     "margin-inline-end": {
       domProp: "marginInlineEnd",
