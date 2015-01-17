@@ -1882,7 +1882,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t version : 8;
 
         uint32_t numFreeVariables : 24;
-        uint32_t numInnerFunctions : 23;
+        uint32_t numInnerFunctions : 22;
 
         uint32_t generatorKindBits : 2;
 
@@ -1890,6 +1890,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t strict : 1;
         uint32_t bindingsAccessedDynamically : 1;
         uint32_t hasDebuggerStatement : 1;
+        uint32_t hasDirectEval : 1;
         uint32_t directlyInsideEval : 1;
         uint32_t usesArgumentsApplyAndThis : 1;
         uint32_t hasBeenCloned : 1;
@@ -2013,6 +2014,13 @@ class LazyScript : public gc::TenuredCell
     }
     void setHasDebuggerStatement() {
         p_.hasDebuggerStatement = true;
+    }
+
+    bool hasDirectEval() const {
+        return p_.hasDirectEval;
+    }
+    void setHasDirectEval() {
+        p_.hasDirectEval = true;
     }
 
     bool directlyInsideEval() const {

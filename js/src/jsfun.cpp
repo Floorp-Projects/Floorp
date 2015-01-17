@@ -1422,12 +1422,19 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         RootedScript script(cx, lazy->maybeScript());
 
+        // Only functions without inner functions or direct eval are
+        // re-lazified. Functions with either of those are on the static scope
+        // chain of their inner functions, or in the case of eval, possibly
+        // eval'd inner functions. This prohibits re-lazification as
+        // StaticScopeIter queries isHeavyweight of those functions, which
+        // requires a non-lazy script.
+        bool canRelazify = !lazy->numInnerFunctions() && !lazy->hasDirectEval();
+
         if (script) {
             fun->setUnlazifiedScript(script);
             // Remember the lazy script on the compiled script, so it can be
             // stored on the function again in case of re-lazification.
-            // Only functions without inner functions are re-lazified.
-            if (!lazy->numInnerFunctions())
+            if (canRelazify)
                 script->setLazyScript(lazy);
             return true;
         }
@@ -1451,7 +1458,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         // Additionally, the lazy script cache is not used during incremental
         // GCs, to avoid resurrecting dead scripts after incremental sweeping
         // has started.
-        if (!lazy->numInnerFunctions() && !JS::IsIncrementalGCInProgress(cx->runtime())) {
+        if (canRelazify && !JS::IsIncrementalGCInProgress(cx->runtime())) {
             LazyScriptCache::Lookup lookup(cx, lazy);
             cx->runtime()->lazyScriptCache.lookup(lookup, script.address());
         }
@@ -1496,7 +1503,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             lazy->initScript(script);
 
         // Try to insert the newly compiled script into the lazy script cache.
-        if (!lazy->numInnerFunctions()) {
+        if (canRelazify) {
             // A script's starting column isn't set by the bytecode emitter, so
             // specify this from the lazy script so that if an identical lazy
             // script is encountered later a match can be determined.
