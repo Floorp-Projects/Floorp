@@ -302,7 +302,7 @@ public:
                                            uint32_t aLineNumber,
                                            uint32_t aLineOffset);
 
-  nsCSSProperty LookupEnabledProperty(const nsAString& aProperty) {
+  nsCSSProps::EnabledState PropertyEnabledState() const {
     static_assert(nsCSSProps::eEnabledForAllContent == 0,
                   "nsCSSProps::eEnabledForAllContent should be zero for "
                   "this bitfield to work");
@@ -313,7 +313,11 @@ public:
     if (mIsChromeOrCertifiedApp) {
       enabledState |= nsCSSProps::eEnabledInChromeOrCertifiedApp;
     }
-    return nsCSSProps::LookupProperty(aProperty, enabledState);
+    return enabledState;
+  }
+
+  nsCSSProperty LookupEnabledProperty(const nsAString& aProperty) {
+    return nsCSSProps::LookupProperty(aProperty, PropertyEnabledState());
   }
 
 protected:
@@ -1531,7 +1535,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                                        aChanged)) {
       // Do it the slow way
       aDeclaration->ExpandTo(&mData);
-      *aChanged = mData.TransferFromBlock(mTempData, aPropID, aIsImportant,
+      *aChanged = mData.TransferFromBlock(mTempData, aPropID,
+                                          PropertyEnabledState(), aIsImportant,
                                           true, false, aDeclaration);
       aDeclaration->CompressFrom(&mData);
     }
@@ -6594,6 +6599,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                                          status == ePriority_Important, false);
   } else {
     *aChanged |= mData.TransferFromBlock(mTempData, propID,
+                                         PropertyEnabledState(),
                                          status == ePriority_Important,
                                          false, aMustCallValueAppended,
                                          aDeclaration);
