@@ -875,14 +875,14 @@ void DemangleSymbol(const char* aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#if __GLIBC__ > 2 || __GLIBC_MINOR > 1
+#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #define HAVE___LIBC_STACK_END 1
 #else
 #define HAVE___LIBC_STACK_END 0
 #endif
 
 #if HAVE___LIBC_STACK_END
-extern void* __libc_stack_end; // from ld-linux.so
+extern MOZ_EXPORT void* __libc_stack_end; // from ld-linux.so
 #endif
 namespace mozilla {
 nsresult
