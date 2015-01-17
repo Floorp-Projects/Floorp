@@ -21,6 +21,7 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
@@ -69,6 +70,7 @@ using namespace mozilla::plugins::parent;
 using namespace CrashReporter;
 #endif
 
+static const char kContentTimeoutPref[] = "dom.ipc.plugins.contentTimeoutSecs";
 static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
 static const char kParentTimeoutPref[] = "dom.ipc.plugins.parentTimeoutSecs";
 static const char kLaunchTimeoutPref[] = "dom.ipc.plugins.processLaunchTimeoutSecs";
@@ -259,6 +261,22 @@ PRCList PluginModuleMapping::sModuleListHead =
 
 bool PluginModuleMapping::sIsLoadModuleOnStack = false;
 
+void
+mozilla::plugins::TerminatePlugin(uint32_t aPluginId)
+{
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsPluginTag* pluginTag = host->PluginWithId(aPluginId);
+    if (!pluginTag || !pluginTag->mPlugin) {
+        return;
+    }
+
+    nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mPlugin;
+    PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
+    chromeParent->TerminateChildProcess(MessageLoop::current());
+}
+
 /* static */ PluginLibrary*
 PluginModuleContentParent::LoadModule(uint32_t aPluginId)
 {
@@ -288,6 +306,8 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId)
         // forget it here.
         mapping.forget();
     }
+
+    parent->mPluginId = aPluginId;
 
     return parent;
 }
@@ -327,6 +347,8 @@ PluginModuleContentParent::Initialize(mozilla::ipc::Transport* aTransport,
     // applies to the top level and all sub plugin protocols since they
     // all share the same channel.
     parent->GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+
+    TimeoutChanged(kContentTimeoutPref, parent);
 
     // moduleMapping is linked into PluginModuleMapping::sModuleListHead and is
     // needed later, so since this function is returning successfully we
@@ -517,6 +539,12 @@ PluginModuleParent::~PluginModuleParent()
 PluginModuleContentParent::PluginModuleContentParent()
     : PluginModuleParent(false)
 {
+    Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
+}
+
+PluginModuleContentParent::~PluginModuleContentParent()
+{
+    Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
 
 PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath, uint32_t aPluginId)
@@ -650,7 +678,7 @@ PluginModuleChromeParent::WriteExtraDataForMinidump(AnnotationTable& notes)
 #endif  // MOZ_CRASHREPORTER
 
 void
-PluginModuleChromeParent::SetChildTimeout(const int32_t aChildTimeout)
+PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
 {
     int32_t timeoutMs = (aChildTimeout > 0) ? (1000 * aChildTimeout) :
                       MessageChannel::kNoTimeout;
@@ -658,24 +686,33 @@ PluginModuleChromeParent::SetChildTimeout(const int32_t aChildTimeout)
 }
 
 void
-PluginModuleChromeParent::TimeoutChanged(const char* aPref, void* aModule)
+PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
+    PluginModuleParent* module = static_cast<PluginModuleParent*>(aModule);
+
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifndef XP_WIN
     if (!strcmp(aPref, kChildTimeoutPref)) {
+      MOZ_ASSERT(module->IsChrome());
       // The timeout value used by the parent for children
       int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-      static_cast<PluginModuleChromeParent*>(aModule)->SetChildTimeout(timeoutSecs);
+      module->SetChildTimeout(timeoutSecs);
 #else
     if (!strcmp(aPref, kChildTimeoutPref) ||
         !strcmp(aPref, kHangUIMinDisplayPref) ||
         !strcmp(aPref, kHangUITimeoutPref)) {
-      static_cast<PluginModuleChromeParent*>(aModule)->EvaluateHangUIState(true);
+      MOZ_ASSERT(module->IsChrome());
+      static_cast<PluginModuleChromeParent*>(module)->EvaluateHangUIState(true);
 #endif // XP_WIN
     } else if (!strcmp(aPref, kParentTimeoutPref)) {
       // The timeout value used by the child for its parent
+      MOZ_ASSERT(module->IsChrome());
       int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
-      unused << static_cast<PluginModuleChromeParent*>(aModule)->SendSetParentHangTimeout(timeoutSecs);
+      unused << static_cast<PluginModuleChromeParent*>(module)->SendSetParentHangTimeout(timeoutSecs);
+    } else if (!strcmp(aPref, kContentTimeoutPref)) {
+      MOZ_ASSERT(!module->IsChrome());
+      int32_t timeoutSecs = Preferences::GetInt(kContentTimeoutPref, 0);
+      module->SetChildTimeout(timeoutSecs);
     }
 }
 
@@ -857,6 +894,23 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     TerminateChildProcess(MessageLoop::current());
     GetIPCChannel()->CloseWithTimeout();
     return false;
+}
+
+bool
+PluginModuleContentParent::ShouldContinueFromReplyTimeout()
+{
+    nsRefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
+    if (!monitor) {
+        return true;
+    }
+    monitor->NotifyPluginHang(mPluginId);
+    return true;
+}
+
+void
+PluginModuleContentParent::OnExitedSyncSend()
+{
+    ProcessHangMonitor::ClearHang();
 }
 
 void

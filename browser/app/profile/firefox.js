@@ -1804,5 +1804,11 @@ pref("extensions.interposition.prefetching", true);
 
 pref("browser.defaultbrowser.notificationbar", false);
 
-// How many milliseconds to wait for a CPOW response from the child process.
-pref("dom.ipc.cpow.timeout", 0);
+// How often to check for CPOW timeouts. CPOWs are only timed out by
+// the hang monitor.
+pref("dom.ipc.cpow.timeout", 500);
+
+// Enable e10s hang monitoring (slow script checking and plugin hang
+// detection).
+pref("dom.ipc.processHangMonitor", true);
+pref("dom.ipc.reportProcessHangs", true);
