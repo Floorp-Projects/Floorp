@@ -11,7 +11,7 @@
 var gSheet = document.getElementById("sheet");
 var gTest  = document.getElementById("test");
 
-// list of groups of physical and logical properties, such as
+// list of groups of physical and logical box properties, such as
 //
 // { left: "margin-left", right: "margin-right",
 //   top: "margin-top", bottom: "margin-bottom",
@@ -22,7 +22,14 @@ var gTest  = document.getElementById("test");
 // where the type is a key from the gValues object and the prerequisites
 // is a declaration including gCSSProperties' listed prerequisites for
 // all four physical properties.
-var gPropertyGroups;
+var gBoxPropertyGroups;
+
+// list of groups of physical and logical axis properties, such as
+//
+// { horizontal: "width", vertical: "height",
+//   inline: "inline-size", block: "block-size",
+//   type: "length", prerequisites: "..." }
+var gAxisPropertyGroups;
 
 // values to use while testing
 var gValues = {
@@ -41,7 +48,8 @@ var gWritingModes = [
       // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: ltr; ",
       // "writing-mode: horizontal-tb; text-orientation: sideways; direction: ltr; ",
     ],
-    blockStart: "top", blockEnd: "bottom", inlineStart: "left", inlineEnd: "right" },
+    blockStart: "top", blockEnd: "bottom", inlineStart: "left", inlineEnd: "right",
+    block: "vertical", inline: "horizontal" },
   { style: [
       "writing-mode: horizontal-tb; text-orientation: mixed; direction: rtl; ",
       "writing-mode: horizontal-tb; text-orientation: upright; direction: rtl; ",
@@ -49,7 +57,8 @@ var gWritingModes = [
       // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: rtl; ",
       // "writing-mode: horizontal-tb; text-orientation: sideways; direction: rtl; ",
     ],
-    blockStart: "top", blockEnd: "bottom", inlineStart: "right", inlineEnd: "left" },
+    blockStart: "top", blockEnd: "bottom", inlineStart: "right", inlineEnd: "left",
+    block: "vertical", inline: "horizontal" },
   { style: [
       "writing-mode: vertical-rl; text-orientation: mixed; direction: rtl; ",
       "writing-mode: vertical-rl; text-orientation: upright; direction: rtl; ",
@@ -57,7 +66,8 @@ var gWritingModes = [
       // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: ltr; ",
       // "writing-mode: vertical-rl; text-orientation: sideways; direction: rtl; ",
     ],
-    blockStart: "right", blockEnd: "left", inlineStart: "bottom", inlineEnd: "top" },
+    blockStart: "right", blockEnd: "left", inlineStart: "bottom", inlineEnd: "top",
+    block: "horizontal", inline: "vertical" },
   { style: [
       "writing-mode: vertical-rl; text-orientation: mixed; direction: ltr; ",
       "writing-mode: vertical-rl; text-orientation: upright; direction: ltr; ",
@@ -65,7 +75,8 @@ var gWritingModes = [
       // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: rtl; ",
       // "writing-mode: vertical-rl; text-orientation: sideways; direction: ltr; ",
     ],
-    blockStart: "right", blockEnd: "left", inlineStart: "top", inlineEnd: "bottom" },
+    blockStart: "right", blockEnd: "left", inlineStart: "top", inlineEnd: "bottom",
+    block: "horizontal", inline: "vertical" },
   { style: [
       "writing-mode: vertical-lr; text-orientation: mixed; direction: rtl; ",
       "writing-mode: vertical-lr; text-orientation: upright; direction: rtl; ",
@@ -73,7 +84,8 @@ var gWritingModes = [
       // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: ltr; ",
       // "writing-mode: vertical-lr; text-orientation: sideways; direction: ltr; ",
     ],
-    blockStart: "left", blockEnd: "right", inlineStart: "bottom", inlineEnd: "top" },
+    blockStart: "left", blockEnd: "right", inlineStart: "bottom", inlineEnd: "top",
+    block: "horizontal", inline: "vertical" },
   { style: [
       "writing-mode: vertical-lr; text-orientation: mixed; direction: ltr; ",
       "writing-mode: vertical-lr; text-orientation: upright; direction: ltr; ",
@@ -81,11 +93,12 @@ var gWritingModes = [
       // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: rtl; ",
       // "writing-mode: vertical-lr; text-orientation: sideways; direction: rtl; ",
     ],
-    blockStart: "left", blockEnd: "right", inlineStart: "top", inlineEnd: "bottom" },
+    blockStart: "left", blockEnd: "right", inlineStart: "top", inlineEnd: "bottom",
+    block: "horizontal", inline: "vertical" },
 ];
 
 function init() {
-  gPropertyGroups = [];
+  gBoxPropertyGroups = [];
 
   for (var p in gCSSProperties) {
     var type = gCSSProperties[p].type;
@@ -117,9 +130,23 @@ function init() {
         make_declaration(gCSSProperties[group.right].prerequisites) +
         make_declaration(gCSSProperties[group.bottom].prerequisites) +
         make_declaration(gCSSProperties[group.left].prerequisites);
-      gPropertyGroups.push(group);
+      gBoxPropertyGroups.push(group);
     }
   }
+
+  // We don't populate this automatically since the only entries we have, for
+  // inline-size etc., don't lend themselves to automatically determining
+  // the names "width", "height", "min-width", etc.
+  gAxisPropertyGroups = [];
+  ["", "max-", "min-"].forEach(function(aPrefix) {
+    gAxisPropertyGroups.push({
+      horizontal: `${aPrefix}width`, vertical: `${aPrefix}height`,
+      inline: `${aPrefix}inline-size`, block: `${aPrefix}block-size`,
+      type: "length",
+      prerequisites:
+        make_declaration(gCSSProperties[`${aPrefix}height`].prerequisites)
+    });
+  });
 
   // Assume that sideways-left and sideways keywords are still not parsed yet
   // for text-orientation.  When we start supporting these keywords, the
@@ -173,11 +200,117 @@ function start() {
   document.body.appendChild(script);
 }
 
-function run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
+function run_axis_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
   var values = gValues[aGroup.type];
   var decl;
 
-  // Test that logical properties are converted to their physical
+  // Test that logical axis properties are converted to their physical
+  // equivalent correctly when all four are present on a single
+  // declaration, with no overwriting of previous properties and
+  // no physical properties present.  We put the writing mode properties
+  // on a separate declaration to test that the computed values of these
+  // properties are used, rather than those on the same declaration.
+
+  decl = aGroup.prerequisites +
+         `${aGroup.inline}: ${values[0]}; ` +
+         `${aGroup.block}: ${values[1]}; `;
+  test_computed_values('logical properties on one declaration, writing ' +
+                         'mode properties on another, ' +
+                         `'${aWritingModeDecl}'`,
+                       `.test { ${aWritingModeDecl} } ` +
+                       `.test { ${decl} }`,
+                       [[aGroup[aWritingMode.inline], values[0]],
+                        [aGroup[aWritingMode.block],  values[1]]]);
+
+
+  // Test that logical and physical axis properties are cascaded together,
+  // honoring their relative order on a single declaration.
+
+  // (a) with a single logical property after the physical ones
+
+  ["inline", "block"].forEach(function(aLogicalAxis) {
+    decl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.horizontal}: ${values[0]}; ` +
+           `${aGroup.vertical}: ${values[1]}; ` +
+           `${aGroup[aLogicalAxis]}: ${values[2]}; `;
+    var expected = ["horizontal", "vertical"].map(
+      (axis, i) => [aGroup[axis],
+                    values[axis == aWritingMode[aLogicalAxis] ? 2 : i]]
+    );
+    test_computed_values(`${aLogicalAxis} last on single declaration, ` +
+                           `'${aWritingModeDecl}'`,
+                         `.test { ${decl} }`,
+                         expected);
+  });
+
+  // (b) with a single physical property after the logical ones
+
+  ["horizontal", "vertical"].forEach(function(aPhysicalAxis) {
+    decl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.inline}: ${values[0]}; ` +
+           `${aGroup.block}: ${values[1]}; ` +
+           `${aGroup[aPhysicalAxis]}: ${values[2]}; `;
+    var expected = ["inline", "block"].map(
+      (axis, i) => [aGroup[aWritingMode[axis]],
+                    values[aWritingMode[axis] == aPhysicalAxis ? 2 : i]]
+    );
+    test_computed_values(`${aPhysicalAxis} last on single declaration, ` +
+                           `'${aWritingModeDecl}'`,
+                         `.test { ${decl} }`,
+                         expected);
+  });
+
+
+  // Test that logical and physical axis properties are cascaded properly when
+  // on different declarations.
+
+  var loDecl;  // lower specifity
+  var hiDecl;  // higher specificity
+
+  // (a) with a logical property in the high specificity rule
+
+  loDecl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.horizontal}: ${values[0]}; ` +
+           `${aGroup.vertical}: ${values[1]}; `;
+
+  ["inline", "block"].forEach(function(aLogicalAxis) {
+    hiDecl = `${aGroup[aLogicalAxis]}: ${values[2]}; `;
+    var expected = ["horizontal", "vertical"].map(
+      (axis, i) => [aGroup[axis],
+                    values[axis == aWritingMode[aLogicalAxis] ? 2 : i]]
+    );
+    test_computed_values(`${aLogicalAxis}, two declarations, ` +
+                           `'${aWritingModeDecl}'`,
+                         `#test { ${hiDecl} } ` +
+                         `.test { ${loDecl} }`,
+                         expected);
+  });
+
+  // (b) with a physical property in the high specificity rule
+
+  loDecl = aWritingModeDecl + aGroup.prerequisites +
+           `${aGroup.inline}: ${values[0]}; ` +
+           `${aGroup.block}: ${values[1]}; `;
+
+  ["horizontal", "vertical"].forEach(function(aPhysicalAxis) {
+    hiDecl = `${aGroup[aPhysicalAxis]}: ${values[2]}; `;
+    var expected = ["inline", "block"].map(
+      (axis, i) => [aGroup[aWritingMode[axis]],
+                    values[aWritingMode[axis] == aPhysicalAxis ? 2 : i]]
+    );
+    test_computed_values(`${aPhysicalAxis}, two declarations, ` +
+                           `'${aWritingModeDecl}'`,
+                         `#test { ${hiDecl} } ` +
+                         `.test { ${loDecl} }`,
+                         expected);
+  });
+}
+
+function run_box_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
+  var values = gValues[aGroup.type];
+  var decl;
+
+  // Test that logical box properties are converted to their physical
   // equivalent correctly when all four are present on a single
   // declaration, with no overwriting of previous properties and
   // no physical properties present.  We put the writing mode properties
@@ -199,7 +332,7 @@ function run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
                         [aGroup[aWritingMode.blockStart],  values[2]],
                         [aGroup[aWritingMode.blockEnd],    values[3]]]);
 
-  // Test that logical and physical properties are cascaded together,
+  // Test that logical and physical box properties are cascaded together,
   // honoring their relative order on a single declaration.
 
   // (a) with a single logical property after the physical ones
@@ -241,7 +374,7 @@ function run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
   });
 
 
-  // Test that logical and physical properties are cascaded properly when
+  // Test that logical and physical box properties are cascaded properly when
   // on different declarations.
 
   var loDecl;  // lower specifity
@@ -291,10 +424,18 @@ function run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl) {
 }
 
 function run_tests() {
-  gPropertyGroups.forEach(function(aGroup) {
+  gBoxPropertyGroups.forEach(function(aGroup) {
     gWritingModes.forEach(function(aWritingMode) {
       aWritingMode.style.forEach(function(aWritingModeDecl) {
-        run_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl);
+        run_box_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl);
+      });
+    });
+  });
+
+  gAxisPropertyGroups.forEach(function(aGroup) {
+    gWritingModes.forEach(function(aWritingMode) {
+      aWritingMode.style.forEach(function(aWritingModeDecl) {
+        run_axis_test_for_writing_mode(aGroup, aWritingMode, aWritingModeDecl);
       });
     });
   });
