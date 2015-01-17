@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * a list of groups of logical properties, for preprocessing
+ */
+
+// A logical property group is one that defines the corresponding physical
+// longhand properties that could be set by a given set of logical longhand
+// properties.  For example, the logical property group for margin-block-start
+// (and the other three logical margin properties) is one that contains
+// margin-top, margin-right, margin-bottom and margin-left.
+//
+// Logical property groups are defined below using one of the following
+// macros:
+//
+//   CSS_PROP_LOGICAL_GROUP_SHORTHAND(name_)
+//     Defines a logical property group whose corresponding physical
+//     properties are those in a given shorthand.  For example, the
+//     logical property group for margin-{block,inline}-{start,end}
+//     is defined by the margin shorthand.  The name_ argument must
+//     be the method_ name of the shorthand (so Margin rather than
+//     margin).
+
+CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderColor)
+CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderStyle)
+CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderWidth)
+CSS_PROP_LOGICAL_GROUP_SHORTHAND(Margin)
+CSS_PROP_LOGICAL_GROUP_SHORTHAND(Padding)

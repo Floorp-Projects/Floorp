@@ -2556,21 +2556,30 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 };
 
 
-// Mapping of logical longhand properties to the shorthand that sets the four
-// corresponding physical properties.  The format is pairs of values,
-// where the first is the logical longhand property and the second is the
-// shorthand, stored in a flat array (like KTableValue arrays).
-static const nsCSSProperty gBoxShorthandTable[] = {
+const nsCSSProperty* const
+nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
+#define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
+#include "nsCSSPropLogicalGroupList.h"
+#undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
+};
+
+// Mapping of logical longhand properties to their logical group (which
+// represents the physical longhands the logical properties an correspond
+// to).  The format is pairs of values, where the first is the logical
+// longhand property (an nsCSSProperty) and the second is the logical group
+// (an nsCSSPropertyLogicalGroup), stored in a flat array (like KTableValue
+// arrays).
+static const int gLogicalGroupMappingTable[] = {
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, boxshorthand_, stylestruct_,             \
+                         kwtable_, group_, stylestruct_,                    \
                          stylestructoffset_, animtype_)                     \
-  eCSSProperty_##id_, eCSSProperty_##boxshorthand_,
+  eCSSProperty_##id_, eCSSPropertyLogicalGroup_##group_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LOGICAL
 };
 
-/* static */ nsCSSProperty
-nsCSSProps::BoxShorthandFor(nsCSSProperty aProperty)
+/* static */ const nsCSSProperty*
+nsCSSProps::LogicalGroup(nsCSSProperty aProperty)
 {
   NS_ABORT_IF_FALSE(0 <= aProperty &&
                       aProperty < eCSSProperty_COUNT_no_shorthands,
@@ -2578,14 +2587,14 @@ nsCSSProps::BoxShorthandFor(nsCSSProperty aProperty)
   NS_ABORT_IF_FALSE(nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL),
                     "aProperty must be a logical longhand property");
 
-  for (size_t i = 0; i < ArrayLength(gBoxShorthandTable); i += 2) {
-    if (gBoxShorthandTable[i] == aProperty) {
-      return gBoxShorthandTable[i + 1];
+  for (size_t i = 0; i < ArrayLength(gLogicalGroupMappingTable); i += 2) {
+    if (gLogicalGroupMappingTable[i] == aProperty) {
+      return kLogicalGroupTable[gLogicalGroupMappingTable[i + 1]];
     }
   }
 
-  NS_ABORT_IF_FALSE(false, "missing gBoxShorthandTable entry");
-  return eCSSProperty_UNKNOWN;
+  NS_ABORT_IF_FALSE(false, "missing gLogicalGroupMappingTable entry");
+  return nullptr;
 }
 
 
@@ -2781,7 +2790,7 @@ nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
                                parsevariant_, kwtable_)            \
       size_t(-1),
   #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                           kwtable_, boxshorthand_, stylestruct_,             \
+                           kwtable_, group_, stylestruct_,                    \
                            stylestructoffset_, animtype_)                     \
       size_t(-1),
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
@@ -2829,7 +2838,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
                 "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, boxshorthand_, stylestruct_,             \
+                         kwtable_, group_, stylestruct_,                    \
                          stylestructoffset_, animtype_)                     \
   static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
                 "properties defined with CSS_PROP_LOGICAL must also use "   \
