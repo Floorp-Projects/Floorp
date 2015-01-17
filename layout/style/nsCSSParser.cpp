@@ -6632,6 +6632,16 @@ static const nsCSSProperty kBorderEndIDs[] = {
   eCSSProperty_border_end_style,
   eCSSProperty_border_end_color
 };
+static const nsCSSProperty kBorderBlockStartIDs[] = {
+  eCSSProperty_border_block_start_width,
+  eCSSProperty_border_block_start_style,
+  eCSSProperty_border_block_start_color
+};
+static const nsCSSProperty kBorderBlockEndIDs[] = {
+  eCSSProperty_border_block_end_width,
+  eCSSProperty_border_block_end_style,
+  eCSSProperty_border_block_end_color
+};
 static const nsCSSProperty kColumnRuleIDs[] = {
   eCSSProperty__moz_column_rule_width,
   eCSSProperty__moz_column_rule_style,
@@ -9698,6 +9708,10 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseBorderSpacing();
   case eCSSProperty_border_style:
     return ParseBorderStyle();
+  case eCSSProperty_border_block_end:
+    return ParseBorderSide(kBorderBlockEndIDs, false);
+  case eCSSProperty_border_block_start:
+    return ParseBorderSide(kBorderBlockStartIDs, false);
   case eCSSProperty_border_bottom:
     return ParseBorderSide(kBorderBottomIDs, false);
   case eCSSProperty_border_end:

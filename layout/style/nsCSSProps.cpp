@@ -2262,6 +2262,24 @@ static const nsCSSProperty gBorderSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gBorderBlockEndSubpropTable[] = {
+  // Declaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
+  eCSSProperty_border_block_end_width,
+  eCSSProperty_border_block_end_style,
+  eCSSProperty_border_block_end_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderBlockStartSubpropTable[] = {
+  // Declaration.cpp outputs the subproperties in this order.
+  // It also depends on the color being third.
+  eCSSProperty_border_block_start_width,
+  eCSSProperty_border_block_start_style,
+  eCSSProperty_border_block_start_color,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gBorderBottomSubpropTable[] = {
   // Declaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
