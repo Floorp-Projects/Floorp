@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * Manifest scope
+ * https://w3c.github.io/manifest/#scope-member
+ **/
+'use strict';
+var expected = 'Expect non-string scope to be undefined';
+typeTests.forEach((type) => {
+  data.jsonText = JSON.stringify({
+    scope: type
+  });
+  var result = processor.process(data);
+  ise(result.scope, undefined, expected);
+});
+
+var expected = 'Expect different origin to be treated as undefined';
+data.jsonText = JSON.stringify({
+  scope: 'http://not-same-origin'
+});
+var result = processor.process(data);
+ise(result.scope, undefined, expected);
+
+var expected = 'Expect the empty string to be treated as undefined.';
+data.jsonText = JSON.stringify({
+  scope: ''
+});
+var result = processor.process(data);
+ise(result.scope, undefined, expected);
+
+var expected = 'Resolve URLs relative to manifest.';
+var URLs = ['path', '/path', '../../path'];
+URLs.forEach((url) => {
+  data.jsonText = JSON.stringify({
+    scope: url,
+    start_url: "/path"
+  });
+  var absURL = new URL(url, manifestURL).toString();
+  var result = processor.process(data);
+  console.log(result);
+  ise(String(result.scope), absURL, expected);
+});
+
+var expected = 'If start URL is not in scope, return undefined.';
+data.jsonText = JSON.stringify({
+  scope: 'foo',
+  start_url: 'bar'
+});
+var result = processor.process(data);
+ise(result.scope, undefined, expected);
+
+var expected = 'If start URL is in scope, use the scope.';
+data.jsonText = JSON.stringify({
+  start_url: 'foobar',
+  scope: 'foo'
+});
+var result = processor.process(data);
+ise(result.scope.toString(), new URL('foo', manifestURL).toString(), expected);
+
+var expected = 'Expect start_url to be ' + new URL('foobar', manifestURL).toString();
+ise(result.start_url.toString(), new URL('foobar', manifestURL).toString(), expected);
+
+var expected = 'If start URL is in scope, use the scope.';
+data.jsonText = JSON.stringify({
+  start_url: '/foo/',
+  scope: '/foo/'
+});
+var result = processor.process(data);
+ise(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+
+var expected = 'If start URL is in scope, use the scope.';
+data.jsonText = JSON.stringify({
+  start_url: '.././foo/',
+  scope: '../foo/'
+});
+var result = processor.process(data);
+ise(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+
+  </script>
+</head>

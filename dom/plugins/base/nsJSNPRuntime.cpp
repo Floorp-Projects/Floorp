@@ -1774,8 +1774,7 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
     return;
   }
 
-  // The hazard analysis thinks that PL_DHashTableOperate() can GC but this is
-  // not possible if we pass PL_DHASH_LOOKUP.
+  // Calling PL_DHashTableLookup() will not result in GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>

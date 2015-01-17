@@ -16,6 +16,7 @@ describe("loop.contacts", function() {
   var fakeDoneButtonText = "Fake Done";
   var sandbox;
   var fakeWindow;
+  var notifications;
 
   beforeEach(function(done) {
     sandbox = sinon.sandbox.create();
@@ -59,8 +60,11 @@ describe("loop.contacts", function() {
       };
       navigator.mozLoop.contacts = {getAll: sandbox.stub()};
 
+      notifications = new loop.shared.models.NotificationCollection();
       listView = TestUtils.renderIntoDocument(
-        React.createElement(loop.contacts.ContactsList));
+        React.createElement(loop.contacts.ContactsList, {
+          notifications: notifications
+        }));
     });
 
     afterEach(function() {
@@ -83,6 +87,34 @@ describe("loop.contacts", function() {
 
           sinon.assert.calledOnce(fakeWindow.close);
         });
+    });
+
+    describe("#handleImportButtonClick", function() {
+      it("should notify the end user from a succesful import", function() {
+        sandbox.stub(notifications, "successL10n");
+        navigator.mozLoop.startImport = function(opts, cb) {
+          cb(null, {total: 42});
+        };
+
+        listView.handleImportButtonClick();
+
+        sinon.assert.calledWithExactly(
+          notifications.successL10n,
+          "import_contacts_success_message",
+          {total: 42});
+      });
+
+      it("should notify the end user from any encountered error", function() {
+        sandbox.stub(notifications, "errorL10n");
+        navigator.mozLoop.startImport = function(opts, cb) {
+          cb(new Error("fake error"));
+        };
+
+        listView.handleImportButtonClick();
+
+        sinon.assert.calledWithExactly(notifications.errorL10n,
+                                       "import_contacts_failure_message");
+      });
     });
   });
 

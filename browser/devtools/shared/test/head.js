@@ -12,6 +12,7 @@ SimpleTest.registerCleanupFunction(() => {
 });
 
 const TEST_URI_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
+const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
 
 /**
  * Open a new tab at a URL and call a callback on load

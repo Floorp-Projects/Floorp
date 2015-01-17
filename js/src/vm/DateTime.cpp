@@ -31,7 +31,9 @@ ComputeLocalTime(time_t local, struct tm *ptm)
 static bool
 ComputeUTCTime(time_t t, struct tm *ptm)
 {
-#ifdef HAVE_GMTIME_R
+#if defined(_WIN32)
+    return gmtime_s(ptm, &t) == 0;
+#elif defined(HAVE_GMTIME_R)
     return gmtime_r(&t, ptm);
 #else
     struct tm *otm = gmtime(&t);

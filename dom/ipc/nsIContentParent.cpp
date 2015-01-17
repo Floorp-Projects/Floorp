@@ -180,7 +180,7 @@ nsIContentParent::GetOrCreateActorForBlob(File* aBlob)
 bool
 nsIContentParent::RecvSyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal,
                                   InfallibleTArray<nsString>* aRetvals)
 {
@@ -207,7 +207,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
 bool
 nsIContentParent::RecvRpcMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
-                                 const InfallibleTArray<CpowEntry>& aCpows,
+                                 InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
                                  InfallibleTArray<nsString>* aRetvals)
 {
@@ -234,7 +234,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
 bool
 nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
                                    const ClonedMessageData& aData,
-                                   const InfallibleTArray<CpowEntry>& aCpows,
+                                   InfallibleTArray<CpowEntry>&& aCpows,
                                    const IPC::Principal& aPrincipal)
 {
   // FIXME Permission check in Content process

@@ -115,7 +115,7 @@ nsIContentChild::GetOrCreateActorForBlob(File* aBlob)
 bool
 nsIContentChild::RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal)
 {
   nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;

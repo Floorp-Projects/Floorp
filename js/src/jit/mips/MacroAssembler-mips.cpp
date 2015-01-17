@@ -3604,6 +3604,18 @@ MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void *handler)
               JSReturnOperand);
     ma_move(StackPointer, BaselineFrameReg);
     pop(BaselineFrameReg);
+
+    // If profiling is enabled, then update the lastProfilingFrame to refer to caller
+    // frame before returning.
+    {
+        Label skipProfilingInstrumentation;
+        // Test if profiler enabled.
+        AbsoluteAddress addressOfEnabled(GetJitContext()->runtime->spsProfiler().addressOfEnabled());
+        branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skipProfilingInstrumentation);
+        profilerExitFrame();
+        bind(&skipProfilingInstrumentation);
+    }
+
     ret();
 
     // If we are bailing out to baseline to handle an exception, jump to
@@ -3668,4 +3680,19 @@ MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperan
     branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
 
     bind(&done);
+}
+
+void
+MacroAssemblerMIPSCompat::profilerEnterFrame(Register reg)
+{
+    AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
+    loadPtr(activation, scratch);
+    storePtr(framePtr, Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
+}
+
+void
+MacroAssemblerMIPSCompat::profilerExitFrame()
+{
+    branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }

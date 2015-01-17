@@ -271,6 +271,33 @@ function test_http2_xhr() {
   req.send(null);
 }
 
+var concurrent_channels = [];
+
+var Http2ConcurrentListener = function() {};
+
+Http2ConcurrentListener.prototype = new Http2CheckListener();
+Http2ConcurrentListener.prototype.count = 0;
+Http2ConcurrentListener.prototype.target = 0;
+
+Http2ConcurrentListener.prototype.onStopRequest = function(request, ctx, status) {
+  this.count++;
+  do_check_true(this.isHttp2Connection);
+  if (this.count == this.target) {
+    run_next_test();
+    do_test_finished();
+  }
+};
+
+function test_http2_concurrent() {
+  var concurrent_listener = new Http2ConcurrentListener();
+  concurrent_listener.target = 201;
+  for (var i = 0; i < concurrent_listener.target; i++) {
+    concurrent_channels[i] = makeChan("https://localhost:6944/750ms");
+    concurrent_channels[i].loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    concurrent_channels[i].asyncOpen(concurrent_listener, null);
+  }
+}
+
 // Test to make sure we get multiplexing right
 function test_http2_multiplex() {
   var chan1 = makeChan("https://localhost:6944/multiplex1");
@@ -533,6 +560,23 @@ function test_http2_pushapi_1() {
   chan.asyncOpen(listener, chan);
 }
 
+var WrongSuiteListener = function() {};
+WrongSuiteListener.prototype = new Http2CheckListener();
+WrongSuiteListener.prototype.shouldBeHttp2 = false;
+WrongSuiteListener.prototype.onStopRequest = function(request, ctx, status) {
+  prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
+  Http2CheckListener.prototype.onStopRequest.call(this);
+};
+
+// test that we use h1 without the mandatory cipher suite available
+function test_http2_wrongsuite() {
+  prefs.setBoolPref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", false);
+  var chan = makeChan("https://localhost:6944/wrongsuite");
+  chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION | Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  var listener = new WrongSuiteListener();
+  chan.asyncOpen(listener, null);
+}
+
 function test_http2_h11required_stream() {
   var chan = makeChan("https://localhost:6944/h11required_stream");
   var listener = new Http2CheckListener();
@@ -581,6 +625,7 @@ function test_complete() {
 // a stalled stream when a SETTINGS frame arrives
 var tests = [ test_http2_post_big
             , test_http2_basic
+            , test_http2_concurrent
             , test_http2_basic_unblocked_dep
             , test_http2_nospdy
             , test_http2_push1
@@ -601,6 +646,7 @@ var tests = [ test_http2_post_big
             , test_http2_h11required_stream
             , test_http2_h11required_session
             , test_http2_retry_rst
+            , test_http2_wrongsuite
 
             // cleanup
             , test_complete

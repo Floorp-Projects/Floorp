@@ -40,6 +40,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     BailoutFrameInfo bailoutData(jitActivations, sp);
     JitFrameIterator iter(jitActivations);
     MOZ_ASSERT(!iter.ionScript()->invalidated());
+    CommonFrameLayout *currentFramePtr = iter.current();
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     TraceLogTimestamp(logger, TraceLogger_Bailout);
@@ -49,31 +50,17 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
-    bool poppedLastSPSFrame = false;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, false, bailoutInfo,
-                                           /* excInfo = */ nullptr, &poppedLastSPSFrame);
+                                           /* excInfo = */ nullptr);
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
     MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
-        // If the bailout failed, then bailout trampoline will pop the
-        // current frame and jump straight to exception handling code when
-        // this function returns.  Any SPS entry pushed for this frame will
-        // be silently forgotten.
-        //
-        // We call ExitScript here to ensure that if the ionScript had SPS
-        // instrumentation, then the SPS entry for it is popped.
-        //
-        // However, if the bailout was during argument check, then a
-        // pseudostack frame would not have been pushed in the first
-        // place, so don't pop anything in that case.
-        bool popSPSFrame = iter.ionScript()->hasSPSInstrumentation() &&
-                           (SnapshotIterator(iter).bailoutKind() != Bailout_ArgumentCheck) &&
-                           !poppedLastSPSFrame;
         JSScript *script = iter.script();
-        probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           /* popSPSFrame = */ false);
 
         EnsureExitFrame(iter.jsFrame());
     }
@@ -88,6 +75,26 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     // stack. As the bailed frame is one of them, we have to decrement it now.
     if (iter.ionScript()->invalidated())
         iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
+
+    // NB: Commentary on how |lastProfilingFrame| is set from bailouts.
+    //
+    // Once we return to jitcode, any following frames might get clobbered,
+    // but the current frame will not (as it will be clobbered "in-place"
+    // with a baseline frame that will share the same frame prefix).
+    // However, there may be multiple baseline frames unpacked from this
+    // single Ion frame, which means we will need to once again reset
+    // |lastProfilingFrame| to point to the correct unpacked last frame
+    // in |FinishBailoutToBaseline|.
+    //
+    // In the case of error, the jitcode will jump immediately to an
+    // exception handler, which will unwind the frames and properly set
+    // the |lastProfilingFrame| to point to the frame being resumed into
+    // (see |AutoResetLastProfilerFrameOnReturnFromException|).
+    //
+    // In both cases, we want to temporarily set the |lastProfilingFrame|
+    // to the current frame being bailed out, and then fix it up later.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        cx->mainThread().jitActivation->setLastProfilingFrame(currentFramePtr);
 
     return retval;
 }
@@ -106,6 +113,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     JitActivationIterator jitActivations(cx->runtime());
     BailoutFrameInfo bailoutData(jitActivations, sp);
     JitFrameIterator iter(jitActivations);
+    CommonFrameLayout *currentFramePtr = iter.current();
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     TraceLogTimestamp(logger, TraceLogger_Invalidation);
@@ -118,9 +126,8 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
-    bool poppedLastSPSFrame = false;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true, bailoutInfo,
-                                           /* excInfo = */ nullptr, &poppedLastSPSFrame);
+                                           /* excInfo = */ nullptr);
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
@@ -138,11 +145,9 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         // However, if the bailout was during argument check, then a
         // pseudostack frame would not have been pushed in the first
         // place, so don't pop anything in that case.
-        bool popSPSFrame = iter.ionScript()->hasSPSInstrumentation() &&
-                           (SnapshotIterator(iter).bailoutKind() != Bailout_ArgumentCheck) &&
-                           !poppedLastSPSFrame;
         JSScript *script = iter.script();
-        probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           /* popSPSFrame = */ false);
 
         JitFrameLayout *frame = iter.jsFrame();
         JitSpew(JitSpew_IonInvalidate, "Bailout failed (%s): converting to exit frame",
@@ -160,6 +165,10 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     }
 
     iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
+
+    // Make the frame being bailed out the top profiled frame.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        cx->mainThread().jitActivation->setLastProfilingFrame(currentFramePtr);
 
     return retval;
 }
@@ -181,7 +190,7 @@ uint32_t
 jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
                              ResumeFromException *rfe,
                              const ExceptionBailoutInfo &excInfo,
-                             bool *overrecursed, bool *poppedLastSPSFrameOut)
+                             bool *overrecursed)
 {
     // We can be propagating debug mode exceptions without there being an
     // actual exception pending. For instance, when we return false from an
@@ -194,10 +203,11 @@ jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
     JitActivationIterator jitActivations(cx->runtime());
     BailoutFrameInfo bailoutData(jitActivations, frame.frame());
     JitFrameIterator iter(jitActivations);
+    CommonFrameLayout *currentFramePtr = iter.current();
 
     BaselineBailoutInfo *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true,
-                                           &bailoutInfo, &excInfo, poppedLastSPSFrameOut);
+                                           &bailoutInfo, &excInfo);
 
     if (retval == BAILOUT_RETURN_OK) {
         MOZ_ASSERT(bailoutInfo);
@@ -225,6 +235,10 @@ jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
         else
             MOZ_ASSERT(retval == BAILOUT_RETURN_FATAL_ERROR);
     }
+
+    // Make the frame being bailed out the top profiled frame.
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+        cx->mainThread().jitActivation->setLastProfilingFrame(currentFramePtr);
 
     return retval;
 }

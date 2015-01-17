@@ -27,13 +27,21 @@ this.ContentWebRTC = {
     Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
   },
 
+  // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
+  handleEvent: function(aEvent) {
+    let contentWindow = aEvent.target.defaultView;
+    let mm = getMessageManagerForWindow(contentWindow);
+    for (let key of contentWindow.pendingGetUserMediaRequests.keys())
+      mm.sendAsyncMessage("webrtc:CancelRequest", key);
+  },
+
   receiveMessage: function(aMessage) {
     switch (aMessage.name) {
       case "webrtc:Allow":
         let callID = aMessage.data.callID;
         let contentWindow = Services.wm.getOuterWindowWithId(aMessage.data.windowID);
         let devices = contentWindow.pendingGetUserMediaRequests.get(callID);
-        contentWindow.pendingGetUserMediaRequests.delete(callID);
+        forgetRequest(contentWindow, callID);
 
         let allowedDevices = Cc["@mozilla.org/supports-array;1"]
                                .createInstance(Ci.nsISupportsArray);
@@ -112,8 +120,10 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     return;
   }
 
-  if (!aContentWindow.pendingGetUserMediaRequests)
+  if (!aContentWindow.pendingGetUserMediaRequests) {
     aContentWindow.pendingGetUserMediaRequests = new Map();
+    aContentWindow.addEventListener("unload", ContentWebRTC);
+  }
   aContentWindow.pendingGetUserMediaRequests.set(aCallID, devices);
 
   let request = {
@@ -143,9 +153,17 @@ function denyRequest(aData, aError) {
     return;
   let contentWindow = Services.wm.getOuterWindowWithId(aData.windowID);
   if (contentWindow.pendingGetUserMediaRequests)
-    contentWindow.pendingGetUserMediaRequests.delete(aData.callID);
+    forgetRequest(contentWindow, aData.callID);
 }
 
+function forgetRequest(aContentWindow, aCallID) {
+  aContentWindow.pendingGetUserMediaRequests.delete(aCallID);
+  if (aContentWindow.pendingGetUserMediaRequests.size)
+    return;
+
+  aContentWindow.removeEventListener("unload", ContentWebRTC);
+  aContentWindow.pendingGetUserMediaRequests = null;
+}
 
 function updateIndicators() {
   let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;

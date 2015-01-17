@@ -334,14 +334,16 @@
               Cu.reportError(ex);
             }
 
-            function loadCurrent() {
+            let loadCurrent = () => {
               openUILinkIn(url, "current", {
                 allowThirdPartyFixup: true,
                 disallowInheritPrincipal: !mayInheritPrincipal,
                 allowPinnedTabHostChange: true,
                 postData: postData
               });
-            }
+              // Ensure the start of the URL is visible for UX reasons:
+              this.selectionStart = this.selectionEnd = 0;
+            };
 
             // Focus the content area before triggering loads, since if the load
             // occurs in a new tab, we want focus to be restored to the content
@@ -1149,7 +1151,8 @@
 
         let header = document.getAnonymousElementByAttribute(this, "anonid",
                                                              "search-panel-one-offs-header")
-        header.collapsed = list.collapsed = !engines.length;
+        // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
+        header.hidden = list.collapsed = !engines.length;
 
         // 49px is the min-width of each search engine button,
         // adapt this const when changing the css.

@@ -505,7 +505,6 @@
           this.doSearch(textValue, where, aEngine);
 
           if (!selection || (selection.index == -1)) {
-            let target = aEvent.originalTarget;
             let source = "unknown";
             let type = "unknown";
             if (aEvent instanceof KeyboardEvent) {
@@ -514,6 +513,7 @@
                 source = "oneoff";
               }
             } else if (aEvent instanceof MouseEvent) {
+              let target = aEvent.originalTarget;
               type = "mouse";
               if (target.classList.contains("searchbar-engine-one-off-item")) {
                 source = "oneoff";

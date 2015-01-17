@@ -29,9 +29,10 @@ SuggestAutoComplete.prototype = {
   },
 
   get _suggestionLabel() {
-    delete this._suggestionLabel;
     let bundle = Services.strings.createBundle("chrome://global/locale/search/search.properties");
-    return this._suggestionLabel = bundle.GetStringFromName("suggestion_label");
+    let label = bundle.GetStringFromName("suggestion_label");
+    Object.defineProperty(SuggestAutoComplete.prototype, "_suggestionLabel", {value: label});
+    return label;
   },
 
   /**

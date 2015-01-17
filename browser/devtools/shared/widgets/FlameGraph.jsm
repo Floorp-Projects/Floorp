@@ -827,12 +827,20 @@ let FlameGraphUtils = {
    *
    * @param array samples
    *        A list of { time, frames: [{ location }] } objects.
+   * @param object options [optional]
+   *        Additional options supported by this operation:
+   *          - flattenRecursion: specifies if identical consecutive frames
+   *                              should be omitted from the output
+   *          - filterFrames: predicate used for filtering all frames, passing
+   *                          in each frame, its index and the sample array
+   *          - showIdleBlocks: adds "idle" blocks when no frames are available
+   *                            using the provided localized text
    * @param array out [optional]
    *        An output storage to reuse for storing the flame graph data.
    * @return array
    *         The flame graph data.
    */
-  createFlameGraphDataFromSamples: function(samples, out = []) {
+  createFlameGraphDataFromSamples: function(samples, options = {}, out = []) {
     // 1. Create a map of colors to arrays, representing buckets of
     // blocks inside the flame graph pyramid sharing the same style.
 
@@ -849,6 +857,24 @@ let FlameGraphUtils = {
 
     for (let { frames, time } of samples) {
       let frameIndex = 0;
+
+      // Flatten recursion if preferred, by removing consecutive frames
+      // sharing the same location.
+      if (options.flattenRecursion) {
+        frames = frames.filter(this._isConsecutiveDuplicate);
+      }
+
+      // Apply a provided filter function. This can be used, for example, to
+      // filter out platform frames if only content-related function calls
+      // should be taken into consideration.
+      if (options.filterFrames) {
+        frames = frames.filter(options.filterFrames);
+      }
+
+      // If no frames are available, add a pseudo "idle" block in between.
+      if (options.showIdleBlocks && frames.length == 0) {
+        frames = [{ location: options.showIdleBlocks || "" }];
+      }
 
       for (let { location } of frames) {
         let prevFrame = prevFrames[frameIndex];
@@ -892,6 +918,22 @@ let FlameGraphUtils = {
     }
 
     return out;
+  },
+
+  /**
+   * Checks if the provided frame is the same as the next one in a sample.
+   *
+   * @param object e
+   *        An object containing a { location } property.
+   * @param number index
+   *        The index of the object in the parent array.
+   * @param array array
+   *        The parent array.
+   * @return boolean
+   *         True if the next frame shares the same location, false otherwise.
+   */
+  _isConsecutiveDuplicate: function(e, index, array) {
+    return index < array.length - 1 && e.location != array[index + 1].location;
   },
 
   /**

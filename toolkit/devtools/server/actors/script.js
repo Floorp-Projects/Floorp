@@ -1701,6 +1701,18 @@ ThreadActor.prototype = {
         if (aValue === null) {
           return { type: "null" };
         }
+      else if(aValue.optimizedOut ||
+              aValue.uninitialized ||
+              aValue.missingArguments) {
+          // The slot is optimized out, an uninitialized binding, or
+          // arguments on a dead scope
+          return {
+            type: "null",
+            optimizedOut: aValue.optimizedOut,
+            uninitialized: aValue.uninitialized,
+            missingArguments: aValue.missingArguments
+          };
+        }
         return this.objectGrip(aValue, aPool);
 
       case "symbol":
@@ -4864,20 +4876,14 @@ EnvironmentActor.prototype = {
     }
     for each (let name in parameterNames) {
       let arg = {};
-
       let value = this.obj.getVariable(name);
-      // The slot is optimized out.
-      // FIXME: Need actual UI, bug 941287.
-      if (value && value.optimizedOut) {
-        continue;
-      }
 
       // TODO: this part should be removed in favor of the commented-out part
       // below when getVariableDescriptor lands (bug 725815).
       let desc = {
         value: value,
         configurable: false,
-        writable: true,
+        writable: !(value && value.optimizedOut),
         enumerable: true
       };
 
@@ -4905,19 +4911,16 @@ EnvironmentActor.prototype = {
       }
 
       let value = this.obj.getVariable(name);
-      // The slot is optimized out, arguments on a dead scope, or an
-      // uninitialized binding.
-      // FIXME: Need actual UI, bug 941287.
-      if (value && (value.optimizedOut || value.missingArguments || value.uninitialized)) {
-        continue;
-      }
 
       // TODO: this part should be removed in favor of the commented-out part
       // below when getVariableDescriptor lands.
       let desc = {
         value: value,
         configurable: false,
-        writable: true,
+        writable: !(value &&
+                    (value.optimizedOut ||
+                     value.uninitialized ||
+                     value.missingArguments)),
         enumerable: true
       };
 

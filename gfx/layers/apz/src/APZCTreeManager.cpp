@@ -246,7 +246,7 @@ ComputeClipRegion(GeckoContentController* aController,
     // resolution.
     LayoutDeviceToParentLayerScale parentCumulativeResolution =
           aLayer.Metrics().GetCumulativeResolution()
-        / ParentLayerToLayerScale(aLayer.Metrics().mPresShellResolution);
+        / ParentLayerToLayerScale(aLayer.Metrics().GetPresShellResolution());
     // Not sure what rounding option is the most correct here, but if we ever
     // figure it out we can change this. For now I'm rounding in to minimize
     // the chances of getting a complex region.

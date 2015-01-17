@@ -194,6 +194,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var StandaloneRoomView = React.createClass({displayName: "StandaloneRoomView",
     mixins: [
       Backbone.Events,
+      sharedMixins.MediaSetupMixin,
       sharedMixins.RoomsAudioMixin
     ],
 
@@ -231,61 +232,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       this.setState(this.props.activeRoomStore.getStoreState());
     },
 
-    /**
-     * Returns either the required DOMNode
-     *
-     * @param {String} className The name of the class to get the element for.
-     */
-    _getElement: function(className) {
-      return this.getDOMNode().querySelector(className);
-    },
-
-     /**
-     * Returns the required configuration for publishing video on the sdk.
-     */
-    _getPublisherConfig: function() {
-      // height set to 100%" to fix video layout on Google Chrome
-      // @see https://bugzilla.mozilla.org/show_bug.cgi?id=1020445
-      return {
-        insertMode: "append",
-        width: "100%",
-        height: "100%",
-        publishVideo: true,
-        style: {
-          audioLevelDisplayMode: "off",
-          bugDisplayMode: "off",
-          buttonDisplayMode: "off",
-          nameDisplayMode: "off",
-          videoDisabledDisplayMode: "off"
-        }
-      };
-    },
-
-    /**
-     * Used to update the video container whenever the orientation or size of the
-     * display area changes.
-     */
-    updateVideoContainer: function() {
-      var localStreamParent = this._getElement('.local .OT_publisher');
-      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
-      if (localStreamParent) {
-        localStreamParent.style.width = "100%";
-      }
-      if (remoteStreamParent) {
-        remoteStreamParent.style.height = "100%";
-      }
-    },
-
     componentDidMount: function() {
-      /**
-       * OT inserts inline styles into the markup. Using a listener for
-       * resize events helps us trigger a full width/height on the element
-       * so that they update to the correct dimensions.
-       * XXX: this should be factored as a mixin, bug 1104930
-       */
-      window.addEventListener('orientationchange', this.updateVideoContainer);
-      window.addEventListener('resize', this.updateVideoContainer);
-
       // Adding a class to the document body element from here to ease styling it.
       document.body.classList.add("is-standalone-room");
     },
@@ -305,7 +252,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
           nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
-          publisherConfig: this._getPublisherConfig(),
+          publisherConfig: this.getDefaultPublisherConfig({publishVideo: true}),
           getLocalElementFunc: this._getElement.bind(this, ".local"),
           getRemoteElementFunc: this._getElement.bind(this, ".remote")
         }));

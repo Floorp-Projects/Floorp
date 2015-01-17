@@ -660,9 +660,11 @@ pkix_ForwardBuilderState_IsIOPending(
  * DESCRIPTION:
  *
  *  This Function takes two Certificates cast in "obj1" and "obj2",
- *  compares their validity NotAfter dates and returns the result at
- *  "pResult". The comparison key(s) can be expanded by using other
- *  data in the Certificate in the future.
+ *  compares them to determine which is a more preferable certificate
+ *  for chain building. This Function is suitable for use as a
+ *  comparator callback for pkix_List_BubbleSort, setting "*pResult" to
+ *  > 0 if "obj1" is less desirable than "obj2" and < 0 if "obj1"
+ *  is more desirable than "obj2".
  *
  * PARAMETERS:
  *  "obj1"
@@ -691,14 +693,14 @@ pkix_Build_SortCertComparator(
 {
         PKIX_PL_Date *date1 = NULL;
         PKIX_PL_Date *date2 = NULL;
-        PKIX_Boolean result = PKIX_FALSE;
+        PKIX_Int32 result = 0;
 
         PKIX_ENTER(BUILD, "pkix_Build_SortCertComparator");
         PKIX_NULLCHECK_THREE(obj1, obj2, pResult);
 
         /*
          * For sorting candidate certificates, we use NotAfter date as the
-         * sorted key for now (can be expanded if desired in the future).
+         * comparison key for now (can be expanded if desired in the future).
          *
          * In PKIX_BuildChain, the List of CertStores was reordered so that
          * trusted CertStores are ahead of untrusted CertStores. That sort, or
@@ -727,7 +729,12 @@ pkix_Build_SortCertComparator(
                 plContext),
                 PKIX_OBJECTCOMPARATORFAILED);
 
-        *pResult = !result;
+        /*
+         * Invert the result, so that if date1 is greater than date2,
+         * obj1 is sorted before obj2. This is because pkix_List_BubbleSort
+         * sorts in ascending order.
+         */
+        *pResult = -result;
 
 cleanup:
 

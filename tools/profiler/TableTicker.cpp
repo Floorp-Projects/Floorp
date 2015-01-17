@@ -391,9 +391,9 @@ static
 void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
                     PseudoStack *stack, void *lastpc)
 {
-  // Pseudo-frames with the ASMJS flag are just annotations and should not be
-  // recorded in the profile.
-  if (entry.hasFlag(StackEntry::ASMJS))
+  // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations
+  // and should not be recorded in the profile.
+  if (entry.hasFlag(StackEntry::BEGIN_PSEUDO_JS))
     return;
 
   int lineno = -1;
@@ -455,10 +455,19 @@ struct NativeStack
   size_t count;
 };
 
-struct JSFrame
-{
-    void* stackAddress;
-    const char* label;
+mozilla::Atomic<bool> WALKING_JS_STACK(false);
+
+struct AutoWalkJSStack {
+  bool walkAllowed;
+
+  AutoWalkJSStack() : walkAllowed(false) {
+    walkAllowed = WALKING_JS_STACK.compareExchange(false, true);
+  }
+
+  ~AutoWalkJSStack() {
+    if (walkAllowed)
+        WALKING_JS_STACK = false;
+  }
 };
 
 static
@@ -472,20 +481,28 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
   // need to iterate oldest-to-youngest when adding entries to aProfile.
 
-  JSFrame jsFrames[1000];
   uint32_t jsCount = 0;
-  if (aSample && pseudoStack->mRuntime) {
-    JS::ProfilingFrameIterator::RegisterState registerState;
-    registerState.pc = aSample->pc;
-    registerState.sp = aSample->sp;
+  JS::ProfilingFrameIterator::Frame jsFrames[1000];
+  {
+    AutoWalkJSStack autoWalkJSStack;
+    const uint32_t maxFrames = mozilla::ArrayLength(jsFrames);
+
+    if (aSample && pseudoStack->mRuntime && autoWalkJSStack.walkAllowed) {
+      JS::ProfilingFrameIterator::RegisterState registerState;
+      registerState.pc = aSample->pc;
+      registerState.sp = aSample->sp;
 #ifdef ENABLE_ARM_LR_SAVING
-    registerState.lr = aSample->lr;
+      registerState.lr = aSample->lr;
 #endif
 
-    JS::ProfilingFrameIterator jsIter(pseudoStack->mRuntime, registerState);
-    for (; jsCount < mozilla::ArrayLength(jsFrames) && !jsIter.done(); ++jsCount, ++jsIter) {
-      jsFrames[jsCount].stackAddress = jsIter.stackAddress();
-      jsFrames[jsCount].label = jsIter.label();
+      JS::ProfilingFrameIterator jsIter(pseudoStack->mRuntime, registerState);
+      for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
+        uint32_t extracted = jsIter.extractStack(jsFrames, jsCount, maxFrames);
+        MOZ_ASSERT(extracted <= (maxFrames - jsCount));
+        jsCount += extracted;
+        if (jsCount == maxFrames)
+          break;
+      }
     }
   }
 
@@ -501,87 +518,72 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   int32_t jsIndex = jsCount - 1;
   int32_t nativeIndex = aNativeStack.count - 1;
 
+  uint8_t *lastPseudoCppStackAddr = nullptr;
+
   // Iterate as long as there is at least one frame remaining.
   while (pseudoIndex != pseudoCount || jsIndex >= 0 || nativeIndex >= 0) {
-    // There are 1 to 3 frames available. Find and add the oldest. Handle pseudo
-    // frames first, since there are two special cases that must be considered
-    // before everything else.
+    // There are 1 to 3 frames available. Find and add the oldest.
+
+    uint8_t *pseudoStackAddr = nullptr;
+    uint8_t *jsStackAddr = nullptr;
+    uint8_t *nativeStackAddr = nullptr;
+
     if (pseudoIndex != pseudoCount) {
       volatile StackEntry &pseudoFrame = pseudoFrames[pseudoIndex];
 
-      // isJs pseudo-stack frames assume the stackAddress of the preceding isCpp
-      // pseudo-stack frame. If we arrive at an isJs pseudo frame, we've already
-      // encountered the preceding isCpp stack frame and it was oldest, we can
-      // assume the isJs frame is oldest without checking other frames.
-      if (pseudoFrame.isJs()) {
-          addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
+      if (pseudoFrame.isCpp())
+        lastPseudoCppStackAddr = (uint8_t *) pseudoFrame.stackAddress();
+
+      // Skip any pseudo-stack JS frames which are marked isOSR
+      // Pseudostack frames are marked isOSR when the JS interpreter
+      // enters a jit frame on a loop edge (via on-stack-replacement,
+      // or OSR).  To avoid both the pseudoframe and jit frame being
+      // recorded (and showing up twice), the interpreter marks the
+      // interpreter pseudostack entry with the OSR flag to ensure that
+      // it doesn't get counted.
+      if (pseudoFrame.isJs() && pseudoFrame.isOSR()) {
           pseudoIndex++;
           continue;
       }
 
-      // Currently, only asm.js frames use the JS stack and Ion/Baseline/Interp
-      // frames use the pseudo stack. In the optimized asm.js->Ion call path, no
-      // isCpp frame is pushed, leading to the callstack:
-      //   old | pseudo isCpp | asm.js | pseudo isJs | new
-      // Since there is no interleaving isCpp pseudo frame between the asm.js
-      // and isJs pseudo frame, the above isJs logic will render the callstack:
-      //   old | pseudo isCpp | pseudo isJs | asm.js | new
-      // which is wrong. To deal with this, a pseudo isCpp frame pushed right
-      // before entering asm.js flagged with StackEntry::ASMJS. When we see this
-      // flag, we first push all the asm.js frames (up to the next frame with a
-      // stackAddress) before pushing the isJs frames. There is no Ion->asm.js
-      // fast path, so we don't have to worry about asm.js->Ion->asm.js.
-      //
-      // (This and the above isJs special cases can be removed once all JS
-      // execution modes switch from the pseudo stack to the JS stack.)
-      if (pseudoFrame.hasFlag(StackEntry::ASMJS)) {
-        void *stopStackAddress = nullptr;
-        for (uint32_t i = pseudoIndex + 1; i != pseudoCount; i++) {
-          if (pseudoFrames[i].isCpp()) {
-            stopStackAddress = pseudoFrames[i].stackAddress();
-            break;
-          }
-        }
-
-        if (nativeIndex >= 0) {
-          stopStackAddress = std::max(stopStackAddress, aNativeStack.sp_array[nativeIndex]);
-        }
-
-        while (jsIndex >= 0 && jsFrames[jsIndex].stackAddress > stopStackAddress) {
-          addDynamicTag(aProfile, 'c', jsFrames[jsIndex].label);
-          jsIndex--;
-        }
-
-        pseudoIndex++;
-        continue;
-      }
-
-      // Finally, consider the normal case of a plain C++ pseudo-frame.
-      if ((jsIndex < 0 || pseudoFrame.stackAddress() > jsFrames[jsIndex].stackAddress) &&
-          (nativeIndex < 0 || pseudoFrame.stackAddress() > aNativeStack.sp_array[nativeIndex]))
-      {
-        // The (C++) pseudo-frame is the oldest.
-        addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
-        pseudoIndex++;
-        continue;
-      }
+      MOZ_ASSERT(lastPseudoCppStackAddr);
+      pseudoStackAddr = lastPseudoCppStackAddr;
     }
 
-    if (jsIndex >= 0) {
-      // Test whether the JS frame is the oldest.
-      JSFrame &jsFrame = jsFrames[jsIndex];
-      if ((pseudoIndex == pseudoCount || jsFrame.stackAddress > pseudoFrames[pseudoIndex].stackAddress()) &&
-          (nativeIndex < 0 || jsFrame.stackAddress > aNativeStack.sp_array[nativeIndex]))
-      {
-        // The JS frame is the oldest.
-        addDynamicTag(aProfile, 'c', jsFrame.label);
-        jsIndex--;
-        continue;
-      }
+    if (jsIndex >= 0)
+      jsStackAddr = (uint8_t *) jsFrames[jsIndex].stackAddress;
+
+    if (nativeIndex >= 0)
+      nativeStackAddr = (uint8_t *) aNativeStack.sp_array[nativeIndex];
+
+    // Sanity checks.
+    MOZ_ASSERT_IF(pseudoStackAddr, pseudoStackAddr != jsStackAddr &&
+                                   pseudoStackAddr != nativeStackAddr);
+    MOZ_ASSERT_IF(jsStackAddr, jsStackAddr != pseudoStackAddr &&
+                               jsStackAddr != nativeStackAddr);
+    MOZ_ASSERT_IF(nativeStackAddr, nativeStackAddr != pseudoStackAddr &&
+                                   nativeStackAddr != jsStackAddr);
+
+    // Check to see if pseudoStack frame is top-most.
+    if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
+      MOZ_ASSERT(pseudoIndex < pseudoCount);
+      volatile StackEntry &pseudoFrame = pseudoFrames[pseudoIndex];
+      addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
+      pseudoIndex++;
+      continue;
     }
 
-    // If execution reaches this point, there must be a native frame and it must
-    // be the oldest.
+    // Check to see if JS jit stack frame is top-most
+    if (jsStackAddr > nativeStackAddr) {
+      MOZ_ASSERT(jsIndex >= 0);
+      addDynamicTag(aProfile, 'c', jsFrames[jsIndex].label);
+      jsIndex--;
+      continue;
+    }
+
+    // If we reach here, there must be a native stack entry and it must be the
+    // greatest entry.
+    MOZ_ASSERT(nativeStackAddr);
     MOZ_ASSERT(nativeIndex >= 0);
     aProfile.addTag(ProfileEntry('l', (void*)aNativeStack.pc_array[nativeIndex]));
     nativeIndex--;
@@ -737,6 +739,7 @@ void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddL
 
 void TableTicker::Tick(TickSample* sample)
 {
+  // Don't allow for ticks to happen within other ticks.
   if (HasUnwinderThread()) {
     UnwinderTick(sample);
   } else {

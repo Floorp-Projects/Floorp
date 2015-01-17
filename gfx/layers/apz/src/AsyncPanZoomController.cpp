@@ -2775,8 +2775,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       // since the repaint request.
       float totalResolutionChange = aLayerMetrics.GetCumulativeResolution().scale
                                   / mFrameMetrics.GetCumulativeResolution().scale;
-      float presShellResolutionChange = aLayerMetrics.mPresShellResolution
-                                      / mFrameMetrics.mPresShellResolution;
+      float presShellResolutionChange = aLayerMetrics.GetPresShellResolution()
+                                      / mFrameMetrics.GetPresShellResolution();
       mFrameMetrics.ZoomBy(totalResolutionChange / presShellResolutionChange);
     } else {
       // Take the new zoom as either device scale or composition width or
@@ -2791,7 +2791,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     }
     mFrameMetrics.mCompositionBounds = aLayerMetrics.mCompositionBounds;
     mFrameMetrics.SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
-    mFrameMetrics.mPresShellResolution = aLayerMetrics.mPresShellResolution;
+    mFrameMetrics.SetPresShellResolution(aLayerMetrics.GetPresShellResolution());
     mFrameMetrics.SetCumulativeResolution(aLayerMetrics.GetCumulativeResolution());
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
 

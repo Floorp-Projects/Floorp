@@ -66,10 +66,10 @@ ContentBridgeChild::DeferredDestroy()
 bool
 ContentBridgeChild::RecvAsyncMessage(const nsString& aMsg,
                                      const ClonedMessageData& aData,
-                                     const InfallibleTArray<jsipc::CpowEntry>& aCpows,
+                                     InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                      const IPC::Principal& aPrincipal)
 {
-  return nsIContentChild::RecvAsyncMessage(aMsg, aData, aCpows, aPrincipal);
+  return nsIContentChild::RecvAsyncMessage(aMsg, aData, Move(aCpows), aPrincipal);
 }
 
 PBlobChild*

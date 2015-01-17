@@ -92,8 +92,6 @@ class TestWindowHandles(MarionetteTestCase):
         self.assertEqual(len(self.marionette.window_handles), 1)
         self.marionette.switch_to_window(start_tab)
 
-    # This sequence triggers an exception in Marionette:register with e10s on (bug 1120809).
-    @skip_if_e10s
     def test_tab_and_window_handles(self):
         start_tab = self.marionette.current_window_handle
         start_chrome_window = self.marionette.current_chrome_window_handle

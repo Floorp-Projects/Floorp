@@ -106,7 +106,8 @@ SpdyPushedStream31::ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *co
 
   // the write side of a pushed transaction just involves manipulating a little state
   SpdyStream31::mSentFinOnData = 1;
-  SpdyStream31::mSynFrameComplete = 1;
+  SpdyStream31::mRequestHeadersDone = 1;
+  SpdyStream31::mSynFrameGenerated = 1;
   SpdyStream31::ChangeState(UPSTREAM_COMPLETE);
   *count = 0;
   return NS_OK;
@@ -282,13 +283,13 @@ SpdyPush31TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
     mIsDone = true;
   }
 
-  if (Available()) {
+  if (Available() || mIsDone) {
     SpdyStream31 *consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(("SpdyPush31TransactionBuffer::WriteSegments notifying connection "
-            "consumer data available 0x%X [%u]\n",
-            mPushStream->StreamID(), Available()));
+            "consumer data available 0x%X [%u] done=%d\n",
+            mPushStream->StreamID(), Available(), mIsDone));
       mPushStream->ConnectPushedStream(consumer);
     }
   }
