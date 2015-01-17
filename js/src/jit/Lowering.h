@@ -220,6 +220,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGuardObject(MGuardObject *ins);
     void visitGuardString(MGuardString *ins);
     void visitGuardShapePolymorphic(MGuardShapePolymorphic *ins);
+    void visitPolyInlineGuard(MPolyInlineGuard *ins);
     void visitAssertRange(MAssertRange *ins);
     void visitCallGetProperty(MCallGetProperty *ins);
     void visitDeleteProperty(MDeleteProperty *ins);
