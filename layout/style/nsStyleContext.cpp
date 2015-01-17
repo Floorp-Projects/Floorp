@@ -1030,9 +1030,9 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
   NS_ASSERTION(aProperty == eCSSProperty_color ||
                aProperty == eCSSProperty_background_color ||
                aProperty == eCSSProperty_border_top_color ||
-               aProperty == eCSSProperty_border_right_color_value ||
+               aProperty == eCSSProperty_border_right_color ||
                aProperty == eCSSProperty_border_bottom_color ||
-               aProperty == eCSSProperty_border_left_color_value ||
+               aProperty == eCSSProperty_border_left_color ||
                aProperty == eCSSProperty_outline_color ||
                aProperty == eCSSProperty__moz_column_rule_color ||
                aProperty == eCSSProperty_text_decoration_color ||
