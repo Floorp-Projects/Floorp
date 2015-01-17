@@ -155,3 +155,35 @@ CSS_PROP_ALIAS(margin-inline-start,
                margin_start,
                MarginInlineStart,
                "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-end,
+               border_end,
+               BorderInlineEnd,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-end-color,
+               border_end_color,
+               BorderInlineEndColor,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-end-style,
+               border_end_style,
+               BorderInlineEndStyle,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-end-width,
+               border_end_width,
+               BorderInlineEndWidth,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-start,
+               border_start,
+               BorderInlineStart,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-start-color,
+               border_start_color,
+               BorderInlineStartColor,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-start-style,
+               border_start_style,
+               BorderInlineStartStyle,
+               "layout.css.vertical-text.enabled")
+CSS_PROP_ALIAS(border-inline-start-width,
+               border_start_width,
+               BorderInlineStartWidth,
+               "layout.css.vertical-text.enabled")

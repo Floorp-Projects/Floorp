@@ -768,10 +768,10 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     nscolor color;
     if (value && presContext->UseDocumentColors() &&
         value->GetColorValue(color)) {
-      nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColorValue();
+      nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColor();
       if (borderLeftColor->GetUnit() == eCSSUnit_Null)
         borderLeftColor->SetColorValue(color);
-      nsCSSValue* borderRightColor = aData->ValueForBorderRightColorValue();
+      nsCSSValue* borderRightColor = aData->ValueForBorderRightColor();
       if (borderRightColor->GetUnit() == eCSSUnit_Null)
         borderRightColor->SetColorValue(color);
       nsCSSValue* borderTopColor = aData->ValueForBorderTopColor();
@@ -792,10 +792,10 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         borderThickness = borderValue->GetIntegerValue();
 
       // by default, set all border sides to the specified width
-      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidthValue();
+      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
       if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
         borderLeftWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidthValue();
+      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
       if (borderRightWidth->GetUnit() == eCSSUnit_Null)
         borderRightWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
       nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();

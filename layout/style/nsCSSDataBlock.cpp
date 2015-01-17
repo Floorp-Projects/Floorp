@@ -187,6 +187,30 @@ EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
     case eCSSProperty_padding_start:
       aProperty = ltr ? eCSSProperty_padding_left : eCSSProperty_padding_right;
       break;
+    case eCSSProperty_border_end_color:
+      aProperty = ltr ? eCSSProperty_border_right_color :
+                        eCSSProperty_border_left_color;
+      break;
+    case eCSSProperty_border_end_style:
+      aProperty = ltr ? eCSSProperty_border_right_style :
+                        eCSSProperty_border_left_style;
+      break;
+    case eCSSProperty_border_end_width:
+      aProperty = ltr ? eCSSProperty_border_right_width :
+                        eCSSProperty_border_left_width;
+      break;
+    case eCSSProperty_border_start_color:
+      aProperty = ltr ? eCSSProperty_border_left_color :
+                        eCSSProperty_border_right_color;
+      break;
+    case eCSSProperty_border_start_style:
+      aProperty = ltr ? eCSSProperty_border_left_style :
+                        eCSSProperty_border_right_style;
+      break;
+    case eCSSProperty_border_start_width:
+      aProperty = ltr ? eCSSProperty_border_left_width :
+                        eCSSProperty_border_right_width;
+      break;
     default:
       NS_ABORT_IF_FALSE(nsCSSProps::PropHasFlags(aProperty,
                                                  CSS_PROPERTY_LOGICAL),
