@@ -854,12 +854,12 @@ MapInheritedTableAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // don't have any set.
       nsCSSValue padVal(float(value->GetIntegerValue()), eCSSUnit_Pixel);
 
-      nsCSSValue* paddingLeft = aData->ValueForPaddingLeftValue();
+      nsCSSValue* paddingLeft = aData->ValueForPaddingLeft();
       if (paddingLeft->GetUnit() == eCSSUnit_Null) {
         *paddingLeft = padVal;
       }
 
-      nsCSSValue* paddingRight = aData->ValueForPaddingRightValue();
+      nsCSSValue* paddingRight = aData->ValueForPaddingRight();
       if (paddingRight->GetUnit() == eCSSUnit_Null) {
         *paddingRight = padVal;
       }

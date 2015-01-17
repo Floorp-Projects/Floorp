@@ -23,11 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   var paddingSubProps = utils.getSubpropertiesForCSSProperty("padding");
   arraysEqual(paddingSubProps,
               [ "padding-top",
-                "padding-right-value",
+                "padding-right",
                 "padding-bottom",
-                "padding-left-value",
-                "padding-left-ltr-source", "padding-left-rtl-source",
-                "padding-right-ltr-source", "padding-right-rtl-source" ],
+                "padding-left" ],
               "'padding' subproperties");
 
   var displaySubProps = utils.getSubpropertiesForCSSProperty("color");
