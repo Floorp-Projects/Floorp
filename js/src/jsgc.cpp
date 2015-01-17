@@ -1098,9 +1098,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBitsValid(false),
-    majorGCRequested(0),
     majorGCTriggerReason(JS::gcreason::NO_REASON),
-    minorGCRequested(false),
     minorGCTriggerReason(JS::gcreason::NO_REASON),
     majorGCNumber(0),
     jitReleaseNumber(0),
@@ -3144,10 +3142,9 @@ js::MarkCompartmentActive(InterpreterFrame *fp)
 void
 GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
 {
-    if (majorGCRequested)
+    if (majorGCRequested())
         return;
 
-    majorGCRequested = true;
     majorGCTriggerReason = reason;
     rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
@@ -3156,10 +3153,9 @@ void
 GCRuntime::requestMinorGC(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    if (minorGCRequested)
+    if (minorGCRequested())
         return;
 
-    minorGCRequested = true;
     minorGCTriggerReason = reason;
     rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
@@ -6059,7 +6055,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JS::gcreason::Reason r
 
     AutoTraceSession session(rt, MajorCollecting);
 
-    majorGCRequested = false;
+    majorGCTriggerReason = JS::gcreason::NO_REASON;
     interFrameGC = true;
 
     number++;
@@ -6441,7 +6437,7 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 void
 GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes)
 {
-    minorGCRequested = false;
+    minorGCTriggerReason = JS::gcreason::NO_REASON;
     TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, pretenureTypes);
@@ -6490,14 +6486,14 @@ GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
 {
     // This method returns whether a major GC was performed.
 
-    if (minorGCRequested) {
+    if (minorGCRequested()) {
         if (cx)
             minorGC(cx, minorGCTriggerReason);
         else
             minorGC(minorGCTriggerReason);
     }
 
-    if (majorGCRequested) {
+    if (majorGCRequested()) {
         if (!isIncrementalGCInProgress())
             startGC(GC_NORMAL, majorGCTriggerReason);
         else
