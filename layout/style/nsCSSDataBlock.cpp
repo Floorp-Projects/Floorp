@@ -172,33 +172,63 @@ MapSinglePropertyInto(nsCSSProperty aProp,
 static inline void
 EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
 {
+  bool isAxisProperty =
+    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_AXIS);
   bool isBlock =
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_BLOCK_AXIS);
-  bool isEnd =
-    nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_END_EDGE);
 
-  LogicalEdge edge = isEnd ? eLogicalEdgeEnd : eLogicalEdgeStart;
+  int index;
 
-  // We handle block axis logical properties separately to save a bit of
-  // work that the WritingMode constructor does that is unnecessary
-  // unless we have an inline axis property.
-  mozilla::css::Side side;
-  if (isBlock) {
+  if (isAxisProperty) {
+    LogicalAxis logicalAxis = isBlock ? eLogicalAxisBlock : eLogicalAxisInline;
     uint8_t wm = aRuleData->mStyleContext->StyleVisibility()->mWritingMode;
-    side = WritingMode::PhysicalSideForBlockAxis(wm, edge);
+    PhysicalAxis axis =
+      WritingMode::PhysicalAxisForLogicalAxis(wm, logicalAxis);
+
+    // We rely on physical axis constants values matching the order of the
+    // physical properties in the logical group array.
+    static_assert(eAxisVertical == 0 && eAxisHorizontal == 1,
+                  "unexpected axis constant values");
+    index = axis;
   } else {
-    WritingMode wm(aRuleData->mStyleContext);
-    side = wm.PhysicalSideForInlineAxis(edge);
+    bool isEnd =
+      nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_END_EDGE);
+
+    LogicalEdge edge = isEnd ? eLogicalEdgeEnd : eLogicalEdgeStart;
+
+    // We handle block axis logical properties separately to save a bit of
+    // work that the WritingMode constructor does that is unnecessary
+    // unless we have an inline axis property.
+    mozilla::css::Side side;
+    if (isBlock) {
+      uint8_t wm = aRuleData->mStyleContext->StyleVisibility()->mWritingMode;
+      side = WritingMode::PhysicalSideForBlockAxis(wm, edge);
+    } else {
+      WritingMode wm(aRuleData->mStyleContext);
+      side = wm.PhysicalSideForInlineAxis(edge);
+    }
+
+    // We rely on the physical side constant values matching the order of
+    // the physical properties in the logical group array.
+    static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+                  "unexpected side constant values");
+    index = side;
   }
 
   const nsCSSProperty* props = nsCSSProps::LogicalGroup(aProperty);
-  MOZ_ASSERT(props[0] != eCSSProperty_UNKNOWN &&
-             props[1] != eCSSProperty_UNKNOWN &&
-             props[2] != eCSSProperty_UNKNOWN &&
-             props[3] != eCSSProperty_UNKNOWN &&
-             props[4] == eCSSProperty_UNKNOWN,
-             "expected four-element subproperty table");
-  aProperty = props[side];
+#ifdef DEBUG
+  {
+    size_t len = isAxisProperty ? 2 : 4;
+    for (size_t i = 0; i < len; i++) {
+      MOZ_ASSERT(props[i] != eCSSProperty_UNKNOWN,
+                 "unexpected logical group length");
+    }
+    MOZ_ASSERT(props[len] == eCSSProperty_UNKNOWN,
+               "unexpected logical group length");
+  }
+#endif
+  aProperty = props[index];
 }
 
 void

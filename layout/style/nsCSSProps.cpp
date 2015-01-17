@@ -2559,9 +2559,11 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 const nsCSSProperty* const
 nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
 #define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
+#define CSS_PROP_LOGICAL_GROUP_AXIS(name_) g##name_##LogicalGroupTable,
 #define CSS_PROP_LOGICAL_GROUP_BOX(name_) g##name_##LogicalGroupTable,
 #include "nsCSSPropLogicalGroupList.h"
 #undef CSS_PROP_LOGICAL_GROUP_BOX
+#undef CSS_PROP_LOGICAL_GROUP_AXIS
 #undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
 };
 
@@ -2826,13 +2828,15 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   #undef CSS_PROP_ALIAS
 };
 
-// Check that all properties defined using CSS_PROP_*_LOGICAL macros use
-// the CSS_PROPERTY_LOGICAL flag.
+// Check that all logical property flags are used appropriately.
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,         \
                  kwtable_, stylestruct_, stylestructoffset_, animtype_)     \
   static_assert(!((flags_) & CSS_PROPERTY_LOGICAL),                         \
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
                 "the CSS_PROPERTY_LOGICAL flag");                           \
+  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_AXIS),                    \
+                "only properties defined with CSS_PROP_LOGICAL can use "    \
+                "the CSS_PROPERTY_LOGICAL_AXIS flag");                      \
   static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_BLOCK_AXIS),              \
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
                 "the CSS_PROPERTY_LOGICAL_BLOCK_AXIS flag");                \
@@ -2847,7 +2851,11 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
                 "the CSS_PROPERTY_LOGICAL flag");                           \
   static_assert(!((flags_) & CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED),    \
                 "CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED has no effect "  \
-                "on logical properties");
+                "on logical properties");                                   \
+  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
+                  ((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE)),              \
+                "CSS_PROPERTY_LOGICAL_END_EDGE makes no sense when used "   \
+                "with CSS_PROPERTY_LOGICAL_AXIS");
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LOGICAL
 #undef CSS_PROP
