@@ -79,6 +79,7 @@ public:
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)  \
   CSS_PROP(name_, id_, method_, flags_, pref_, X, X, X, X, X)
 #include "nsCSSPropList.h"
@@ -89,6 +90,7 @@ public:
 #undef CSS_PROP_ALIAS
 
 #undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
