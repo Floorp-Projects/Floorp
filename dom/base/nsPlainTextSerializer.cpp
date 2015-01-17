@@ -91,6 +91,8 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mPreFormatted = false;
   mStartedOutput = false;
 
+  mPreformattedBlockBoundary = false;
+
   // initialize the tag stack to zero:
   // The stack only ever contains pointers to static atoms, so they don't
   // need refcounting.
@@ -166,6 +168,8 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
 
   mLineBreakDue = false;
   mFloatingLines = -1;
+
+  mPreformattedBlockBoundary = false;
 
   if (mFlags & nsIDocumentEncoder::OutputFormatted) {
     // Get some prefs that controls how we do formatted output
@@ -435,6 +439,16 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     // Ignore child nodes.
     mIgnoredChildNodeLevel++;
     return NS_OK;
+  }
+
+  if (mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+    if (mPreformattedBlockBoundary && DoOutput()) {
+      // Should always end a line, but get no more whitespace
+      if (mFloatingLines < 0)
+        mFloatingLines = 0;
+      mLineBreakDue = true;
+    }
+    mPreformattedBlockBoundary = false;
   }
 
   if (mFlags & nsIDocumentEncoder::OutputRaw) {
@@ -767,6 +781,14 @@ nsPlainTextSerializer::DoCloseContainer(nsIAtom* aTag)
     return NS_OK;
   }
 
+  if (mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
+    if (DoOutput() && IsInPre() && IsElementBlock(mElement)) {
+      // If we're closing a preformatted block element, output a line break
+      // when we find a new container.
+      mPreformattedBlockBoundary = true;
+    }
+  }
+
   if (mFlags & nsIDocumentEncoder::OutputRaw) {
     // Raw means raw.  Don't even think about doing anything fancy
     // here like indenting, adding line breaks or any other
@@ -1036,6 +1058,8 @@ nsPlainTextSerializer::DoAddText(bool aIsLineBreak, const nsAString& aText)
 nsresult
 nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
 {
+  mPreformattedBlockBoundary = false;
+
   // If we don't want any output, just return
   if (!DoOutput()) {
     return NS_OK;
