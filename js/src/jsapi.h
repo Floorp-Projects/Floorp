@@ -2087,29 +2087,6 @@ JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 extern JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
-#ifdef JS_DEBUG
-
-/*
- * Debug-only method to dump the object graph of heap-allocated things.
- *
- * fp:              file for the dump output.
- * start:           when non-null, dump only things reachable from start
- *                  thing. Otherwise dump all things reachable from the
- *                  runtime roots.
- * startKind:       trace kind of start if start is not null. Must be
- *                  JSTRACE_OBJECT when start is null.
- * thingToFind:     dump only paths in the object graph leading to thingToFind
- *                  when non-null.
- * maxDepth:        the upper bound on the number of edges to descend from the
- *                  graph roots.
- * thingToIgnore:   thing to ignore during the graph traversal when non-null.
- */
-extern JS_PUBLIC_API(bool)
-JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind kind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore);
-
-#endif
-
 /*
  * Garbage collector API.
  */
