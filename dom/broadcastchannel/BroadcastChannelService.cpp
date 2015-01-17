@@ -5,6 +5,8 @@
 
 #include "BroadcastChannelService.h"
 #include "BroadcastChannelParent.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 #ifdef XP_WIN
@@ -89,6 +91,19 @@ struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
   {
     MOZ_ASSERT(aParent);
     MOZ_COUNT_CTOR(PostMessageData);
+
+    // We need to keep the array alive for the life-time of this
+    // PostMessageData.
+    if (!aData.blobsParent().IsEmpty()) {
+      mFiles.SetCapacity(aData.blobsParent().Length());
+
+      for (uint32_t i = 0, len = aData.blobsParent().Length(); i < len; ++i) {
+        nsRefPtr<FileImpl> impl =
+          static_cast<BlobParent*>(aData.blobsParent()[i])->GetBlobImpl();
+       MOZ_ASSERT(impl);
+       mFiles.AppendElement(impl);
+      }
+    }
   }
 
   ~PostMessageData()
@@ -98,6 +113,7 @@ struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
 
   BroadcastChannelParent* mParent;
   const ClonedMessageData& mData;
+  nsTArray<nsRefPtr<FileImpl>> mFiles;
   const nsString mOrigin;
   const nsString mChannel;
 };
