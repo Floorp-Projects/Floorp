@@ -7157,5 +7157,32 @@
     "n_buckets" : 50,
     "extended_statistics_ok": true,
     "description": "The number of saved signons in storage"
+  },
+  "FENNEC_SYNC11_MIGRATION_SENTINELS_SEEN": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "The number of Sync 1.1 -> Sync 1.5 migration sentinels seen by Android Sync."
+  },
+  "FENNEC_SYNC11_MIGRATIONS_FAILED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "The number of Sync 1.1 -> Sync 1.5 migrations that failed during Android Sync."
+  },
+  "FENNEC_SYNC11_MIGRATIONS_SUCCEEDED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "The number of Sync 1.1 -> Sync 1.5 migrations that succeeded during Android Sync."
+  },
+  "FENNEC_SYNC11_MIGRATION_NOTIFICATIONS_OFFERED": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 5,
+    "description": "The number of Sync 1.5 'complete upgrade/migration' notifications offered by Android Sync."
+  },
+  "FENNEC_SYNC11_MIGRATIONS_COMPLETED": {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "The number of Sync 1.5 migrations completed by Android Sync."
   }
 }
