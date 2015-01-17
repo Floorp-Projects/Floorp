@@ -4688,6 +4688,88 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
                         "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                         "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
     },
+    "border-block-end-color": {
+      domProp: "borderBlockEndColor",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "currentColor" ],
+      other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    },
+    "border-block-end-style": {
+      domProp: "borderBlockEndStyle",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* XXX hidden is sometimes the same as initial */
+      initial_values: [ "none" ],
+      other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+      invalid_values: []
+    },
+    "border-block-end-width": {
+      domProp: "borderBlockEndWidth",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      prerequisites: { "border-block-end-style": "solid" },
+      initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
+      other_values: [ "thin", "thick", "1px", "2em",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(0em)",
+        "calc(0px)",
+        "calc(5em)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 5em)",
+      ],
+      invalid_values: [ "5%", "5" ]
+    },
+    "border-block-start-color": {
+      domProp: "borderBlockStartColor",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      initial_values: [ "currentColor" ],
+      other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    },
+    "border-block-start-style": {
+      domProp: "borderBlockStartStyle",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      /* XXX hidden is sometimes the same as initial */
+      initial_values: [ "none" ],
+      other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+      invalid_values: []
+    },
+    "border-block-start-width": {
+      domProp: "borderBlockStartWidth",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      logical: true,
+      get_computed: logical_box_prop_get_computed,
+      prerequisites: { "border-block-start-style": "solid" },
+      initial_values: [ "medium", "3px", "calc(4px - 1px)" ],
+      other_values: [ "thin", "thick", "1px", "2em",
+        "calc(2px)",
+        "calc(-2px)",
+        "calc(0em)",
+        "calc(0px)",
+        "calc(5em)",
+        "calc(3*25px)",
+        "calc(25px*3)",
+        "calc(3*25px + 5em)",
+      ],
+      invalid_values: [ "5%", "5" ]
+    },
     "border-inline-end": {
       domProp: "borderInlineEnd",
       inherited: false,

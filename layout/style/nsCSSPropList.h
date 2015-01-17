@@ -676,6 +676,103 @@ CSS_PROP_SHORTHAND(
     Border,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
+CSS_PROP_LOGICAL(
+    border-block-end-color,
+    border_block_end_color,
+    BorderBlockEndColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HCK,
+    kBorderColorKTable,
+    border_color,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    border-block-end-style,
+    border_block_end_style,
+    BorderBlockEndStyle,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HK,
+    kBorderStyleKTable,
+    border_style,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    border-block-end-width,
+    border_block_end_width,
+    BorderBlockEndWidth,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS |
+        CSS_PROPERTY_LOGICAL_END_EDGE,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HKL | VARIANT_CALC,
+    kBorderWidthKTable,
+    border_width,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    border-block-start-color,
+    border_block_start_color,
+    BorderBlockStartColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HCK,
+    kBorderColorKTable,
+    border_color,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    border-block-start-style,
+    border_block_start_style,
+    BorderBlockStartStyle,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HK,
+    kBorderStyleKTable,
+    border_style,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_LOGICAL(
+    border-block-start-width,
+    border_block_start_width,
+    BorderBlockStartWidth,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_LOGICAL |
+        CSS_PROPERTY_LOGICAL_BLOCK_AXIS,
+    "layout.css.vertical-text.enabled",
+    VARIANT_HKL | VARIANT_CALC,
+    kBorderWidthKTable,
+    border_width,
+    Border,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     border-bottom,
     border_bottom,
