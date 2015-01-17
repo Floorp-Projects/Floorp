@@ -619,18 +619,11 @@ MarionetteServerConnection.prototype = {
           Services.prefs.setBoolPref('marionette.debugging.clicktostart', false);
         } catch (e) { }
         if (clickToStart && (appName != "B2G")) {
-          let nbox = win.gBrowser.getNotificationBox();
-          let message = "Starting marionette tests with chrome debugging enabled...";
-          let buttons = [{
-            label: "Start execution of marionette tests",
-            accessKey: 'S',
-            callback: () => this.startBrowser(win, true)
-          }];
-          nbox.appendNotification(message, null, null,
-                                  nbox.PRIORITY_WARNING_MEDIUM, buttons);
-        } else {
-          this.startBrowser(win, true);
+          let pService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(Ci.nsIPromptService);
+          pService.alert(win, "", "Click to start execution of marionette tests");
         }
+        this.startBrowser(win, true);
       }
     }
 
@@ -2933,8 +2926,10 @@ MarionetteServerConnection.prototype = {
         // This code processes the content listener's registration information
         // and either accepts the listener, or ignores it
         let nullPrevious = (this.curBrowser.curFrameId == null);
-        let listenerWindow =
-                            Services.wm.getOuterWindowWithId(message.json.value);
+        let listenerWindow = null;
+        try {
+          listenerWindow = Services.wm.getOuterWindowWithId(message.json.value);
+        } catch (ex) { }
 
         //go in here if we're already in a remote frame.
         if (this.curBrowser.frameManager.currentRemoteFrame !== null &&

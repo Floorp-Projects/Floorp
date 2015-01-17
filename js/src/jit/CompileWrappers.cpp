@@ -41,6 +41,18 @@ CompileRuntime::addressOfJitTop()
 }
 
 const void *
+CompileRuntime::addressOfJitActivation()
+{
+    return &runtime()->mainThread.jitActivation;
+}
+
+const void *
+CompileRuntime::addressOfProfilingActivation()
+{
+    return (const void *) &runtime()->mainThread.profilingActivation_;
+}
+
+const void *
 CompileRuntime::addressOfJitStackLimit()
 {
     return runtime()->mainThread.addressOfJitStackLimit();

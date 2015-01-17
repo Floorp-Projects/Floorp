@@ -529,6 +529,7 @@ class GCRuntime
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
+    void decommitArena(ArenaHeader *aheader, AutoLockGC &lock);
 
     void releaseHeldRelocatedArenas();
 
@@ -595,8 +596,8 @@ class GCRuntime
     void decommitAllWithoutUnlocking(const AutoLockGC &lock);
     void decommitArenas(AutoLockGC &lock);
     void expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock);
-    void queueZonesForBackgroundSweep(js::gc::ZoneList& zones);
-    void sweepBackgroundThings(js::gc::ZoneList &zones, ThreadType threadType);
+    void queueZonesForBackgroundSweep(ZoneList &zones);
+    void sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
     bool compactPhase(bool lastGC);
@@ -752,7 +753,7 @@ class GCRuntime
     bool foundBlackGrayEdges;
 
     /* Singly linekd list of zones to be swept in the background. */
-    js::gc::ZoneList backgroundSweepZones;
+    ZoneList backgroundSweepZones;
     /*
      * Free LIFO blocks are transferred to this allocator before being freed on
      * the background GC thread.

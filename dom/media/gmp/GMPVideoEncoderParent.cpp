@@ -288,7 +288,7 @@ EncodedCallback(GMPVideoEncoderCallbackProxy* aCallback,
 
 bool
 GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
-                                   const nsTArray<uint8_t>& aCodecSpecificInfo)
+                                   InfallibleTArray<uint8_t>&& aCodecSpecificInfo)
 {
   if (!mCallback) {
     return false;
@@ -320,7 +320,7 @@ GMPVideoEncoderParent::RecvError(const GMPErr& aError)
 }
 
 bool
-GMPVideoEncoderParent::RecvParentShmemForPool(Shmem& aFrameBuffer)
+GMPVideoEncoderParent::RecvParentShmemForPool(Shmem&& aFrameBuffer)
 {
   if (aFrameBuffer.IsWritable()) {
     mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,

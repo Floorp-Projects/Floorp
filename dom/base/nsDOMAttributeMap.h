@@ -152,6 +152,8 @@ public:
     return SetNamedItemInternal(aAttr, false, aError);
   }
   already_AddRefed<Attr>
+  RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo, ErrorResult& aError);
+  already_AddRefed<Attr>
   RemoveNamedItem(const nsAString& aName, ErrorResult& aError);
  
   Attr* Item(uint32_t aIndex);

@@ -97,8 +97,9 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
   nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-       int64_t aCurrentTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+
+  void CancelSeek() MOZ_OVERRIDE;
 
   // Acquires the decoder monitor, and is thus callable on any thread.
   nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
@@ -192,24 +193,15 @@ private:
   // to be added to the track buffer.
   MediaPromiseHolder<SeekPromise> mSeekPromise;
   int64_t mPendingSeekTime;
-  int64_t mPendingStartTime;
-  int64_t mPendingEndTime;
-  int64_t mPendingCurrentTime;
   bool mWaitingForSeekData;
+  bool mAudioIsSeeking;
+  bool mVideoIsSeeking;
 
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
   bool mDropVideoBeforeThreshold;
 
   bool mEnded;
-
-  // For a seek to complete we need to send a sample with
-  // the mDiscontinuity field set to true once we have the
-  // first decoded sample. These flags are set during seeking
-  // so we can detect when we have the first decoded sample
-  // after a seek.
-  bool mAudioIsSeeking;
-  bool mVideoIsSeeking;
 
   bool mHasEssentialTrackBuffers;
 

@@ -172,19 +172,6 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
     if (fp->hasReturnValue())
         setReturnValue(fp->returnValue());
 
-    // If the interpreter pushed an SPS frame when it entered the function, the
-    // interpreter will pop it after the OSR trampoline returns.  In order for
-    // the Baseline frame to have its SPS flag set, it must have its own SPS
-    // frame, which the Baseline code will pop on return.  Note that the
-    // profiler may have been enabled or disabled after the function was entered
-    // but before OSR.
-    JSContext *cx = GetJSContextFromJitCode();
-    SPSProfiler *p = &(cx->runtime()->spsProfiler);
-    if (p->enabled()) {
-        p->enter(fp->script(), fp->maybeFun());
-        flags_ |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
-    }
-
     frameSize_ = BaselineFrame::FramePointerOffset +
         BaselineFrame::Size() +
         numStackValues * sizeof(Value);
@@ -195,6 +182,8 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
         *valueSlot(i) = fp->slots()[i];
 
     if (fp->isDebuggee()) {
+        JSContext *cx = GetJSContextFromJitCode();
+
         // For debuggee frames, update any Debugger.Frame objects for the
         // InterpreterFrame to point to the BaselineFrame.
 

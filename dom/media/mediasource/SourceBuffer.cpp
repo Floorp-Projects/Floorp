@@ -233,7 +233,7 @@ SourceBuffer::Ended()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsAttached());
   MSE_DEBUG("SourceBuffer(%p)::Ended", this);
-  mTrackBuffer->DiscardDecoder();
+  mTrackBuffer->EndCurrentDecoder();
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
@@ -332,7 +332,7 @@ SourceBuffer::CheckEndTime()
   // Check if we need to update mMediaSource duration
   double endTime = GetBufferedEnd();
   if (endTime > mMediaSource->Duration()) {
-    mMediaSource->SetDuration(endTime);
+    mMediaSource->SetDuration(endTime, MSRangeRemovalAction::SKIP);
   }
 }
 
@@ -347,25 +347,48 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
-  if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
-    Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
-    ErrorResult dummy;
-    mMediaSource->EndOfStream(decodeError, dummy);
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+  if (aLength) {
+    if (!mTrackBuffer->AppendData(aData, aLength, mTimestampOffset * USECS_PER_S)) {
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<bool>(this, &SourceBuffer::AppendError, true);
+      NS_DispatchToMainThread(event);
+      return;
+    }
 
-  if (mTrackBuffer->HasInitSegment()) {
-    mMediaSource->QueueInitializationEvent();
-  }
+    if (mTrackBuffer->HasInitSegment()) {
+      mMediaSource->QueueInitializationEvent();
+    }
 
-  CheckEndTime();
+    CheckEndTime();
+  }
 
   // Run the final step of the buffer append algorithm asynchronously to
   // ensure the SourceBuffer's updating flag transition behaves as required
   // by the spec.
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
   NS_DispatchToMainThread(event);
+}
+
+void
+SourceBuffer::AppendError(bool aDecoderError)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    return;
+  }
+  mTrackBuffer->ResetParserState();
+
+  mUpdating = false;
+
+  QueueAsyncSimpleEvent("error");
+  QueueAsyncSimpleEvent("updateend");
+
+  if (aDecoderError) {
+    Optional<MediaSourceEndOfStreamError> decodeError(
+      MediaSourceEndOfStreamError::Decode);
+    ErrorResult dummy;
+    mMediaSource->EndOfStream(decodeError, dummy);
+  }
 }
 
 bool

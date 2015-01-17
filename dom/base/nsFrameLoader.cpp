@@ -2304,7 +2304,7 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 bool
 nsFrameLoader::DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
 {
-  mozilla::dom::PBrowserParent* tabParent = GetRemoteBrowser();
+  auto* tabParent = static_cast<TabParent*>(GetRemoteBrowser());
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }

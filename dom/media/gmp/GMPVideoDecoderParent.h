@@ -71,7 +71,7 @@ private:
   virtual bool RecvDrainComplete() MOZ_OVERRIDE;
   virtual bool RecvResetComplete() MOZ_OVERRIDE;
   virtual bool RecvError(const GMPErr& aError) MOZ_OVERRIDE;
-  virtual bool RecvParentShmemForPool(Shmem& aEncodedBuffer) MOZ_OVERRIDE;
+  virtual bool RecvParentShmemForPool(Shmem&& aEncodedBuffer) MOZ_OVERRIDE;
   virtual bool AnswerNeedShmem(const uint32_t& aFrameBufferSize,
                                Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;

@@ -39,6 +39,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'frame-script-utils.js',
     'inplace-editor.js',
     'observable-object.js',
+    'options-view.js',
     'telemetry.js',
     'theme-switching.js',
     'theme.js',

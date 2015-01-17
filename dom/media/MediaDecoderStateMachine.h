@@ -171,11 +171,18 @@ public:
   // must be obtained before calling this. It is in units of microseconds.
   int64_t GetDuration();
 
+  // Time of the last frame in the media, in microseconds or INT64_MAX if
+  // media has an infinite duration.
+  // Accessed on state machine, decode, and main threads.
+  // Access controlled by decoder monitor.
+  int64_t GetEndTime();
+
   // Called from the main thread to set the duration of the media resource
   // if it is able to be obtained via HTTP headers. Called from the
   // state machine thread to set the duration if it is obtained from the
   // media metadata. The decoder monitor must be obtained before calling this.
   // aDuration is in microseconds.
+  // A value of INT64_MAX will be treated as infinity.
   void SetDuration(int64_t aDuration);
 
   // Called while decoding metadata to set the end time of the media
@@ -621,6 +628,8 @@ protected:
   // The decoder monitor must be held.
   void EnqueueLoadedMetadataEvent();
 
+  void EnqueueFirstFrameLoadedEvent();
+
   // Dispatches a task to the decode task queue to begin decoding content.
   // This is threadsafe and can be called on any thread.
   // The decoder monitor must be held.
@@ -832,7 +841,13 @@ protected:
   // Time of the last frame in the media, in microseconds. This is the
   // end time of the last frame in the media. Accessed on state
   // machine, decode, and main threads. Access controlled by decoder monitor.
+  // It will be set to -1 if the duration is infinite
   int64_t mEndTime;
+
+  // Will be set when SetDuration has been called with a value != -1
+  // mDurationSet false doesn't indicate that we do not have a valid duration
+  // as mStartTime and mEndTime could have been set separately.
+  bool mDurationSet;
 
   // Position to seek to in microseconds when the seek state transition occurs.
   // The decoder monitor lock must be obtained before reading or writing
@@ -1097,6 +1112,10 @@ protected:
   // until this completes.
   bool mWaitingForDecoderSeek;
 
+  // True if we're in the process of canceling a seek. This allows us to avoid
+  // invoking CancelSeek() multiple times.
+  bool mCancelingSeek;
+
   // We record the playback position before we seek in order to
   // determine where the seek terminated relative to the playback position
   // we were at before the seek.
@@ -1110,16 +1129,19 @@ protected:
 
   MediaDecoderOwner::NextFrameStatus mLastFrameStatus;
 
-  // True if we are back from DECODER_STATE_DORMANT state, and we can skip
+  // mDecodingFrozenAtStateDecoding: turn on/off at
+  //                                 SetDormant/Seek,Play.
+  bool mDecodingFrozenAtStateDecoding;
+
+  // True if we are back from DECODER_STATE_DORMANT state and
+  // LoadedMetadataEvent was already sent.
+  bool mSentLoadedMetadataEvent;
+  // True if we are back from DECODER_STATE_DORMANT state and
+  // FirstFrameLoadedEvent was already sent, then we can skip
   // SetStartTime because the mStartTime already set before. Also we don't need
   // to decode any audio/video since the MediaDecoder will trigger a seek
   // operation soon.
-  // mDecodingFrozenAtStateMetadata: turn on/off at
-  //                                 SetDormant/FinishDecodeMetadata.
-  // mDecodingFrozenAtStateDecoding: turn on/off at
-  //                                 SetDormant/Seek,Play.
-  bool mDecodingFrozenAtStateMetadata;
-  bool mDecodingFrozenAtStateDecoding;
+  bool mSentFirstFrameLoadedEvent;
 };
 
 } // namespace mozilla;

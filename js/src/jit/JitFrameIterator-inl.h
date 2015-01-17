@@ -16,6 +16,19 @@
 namespace js {
 namespace jit {
 
+inline JitFrameLayout *
+JitProfilingFrameIterator::framePtr()
+{
+    MOZ_ASSERT(!done());
+    return (JitFrameLayout *) fp_;
+}
+
+inline JSScript *
+JitProfilingFrameIterator::frameScript()
+{
+    return ScriptFromCalleeToken(framePtr()->calleeToken());
+}
+
 inline BaselineFrame *
 JitFrameIterator::baselineFrame() const
 {

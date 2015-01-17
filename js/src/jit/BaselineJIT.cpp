@@ -42,7 +42,9 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
-                               uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
+                               uint32_t profilerEnterToggleOffset,
+                               uint32_t profilerExitToggleOffset,
+                               uint32_t traceLoggerEnterToggleOffset,
                                uint32_t traceLoggerExitToggleOffset,
                                uint32_t postDebugPrologueOffset)
   : method_(nullptr),
@@ -51,10 +53,8 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     dependentAsmJSModules_(nullptr),
     prologueOffset_(prologueOffset),
     epilogueOffset_(epilogueOffset),
-#ifdef DEBUG
-    spsOn_(false),
-#endif
-    spsPushToggleOffset_(spsPushToggleOffset),
+    profilerEnterToggleOffset_(profilerEnterToggleOffset),
+    profilerExitToggleOffset_(profilerExitToggleOffset),
 #ifdef JS_TRACE_LOGGING
 # ifdef DEBUG
     traceLoggerScriptsEnabled_(false),
@@ -342,8 +342,9 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
 
 BaselineScript *
 BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilogueOffset,
-                    uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
-                    uint32_t traceLoggerExitToggleOffset, uint32_t postDebugPrologueOffset,
+                    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
+                    uint32_t traceLoggerEnterToggleOffset, uint32_t traceLoggerExitToggleOffset,
+                    uint32_t postDebugPrologueOffset,
                     size_t icEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries, size_t yieldEntries)
 {
@@ -370,8 +371,9 @@ BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilog
     if (!script)
         return nullptr;
     new (script) BaselineScript(prologueOffset, epilogueOffset,
-                                spsPushToggleOffset, traceLoggerEnterToggleOffset,
-                                traceLoggerExitToggleOffset, postDebugPrologueOffset);
+                                profilerEnterToggleOffset, profilerExitToggleOffset,
+                                traceLoggerEnterToggleOffset, traceLoggerExitToggleOffset,
+                                postDebugPrologueOffset);
 
     size_t offsetCursor = sizeof(BaselineScript);
     MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
@@ -847,25 +849,6 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
     }
 }
 
-void
-BaselineScript::toggleSPS(bool enable)
-{
-    MOZ_ASSERT(enable == !(bool)spsOn_);
-
-    JitSpew(JitSpew_BaselineIC, "  toggling SPS %s for BaselineScript %p",
-            enable ? "on" : "off", this);
-
-    // Toggle the jump
-    CodeLocationLabel pushToggleLocation(method_, CodeOffsetLabel(spsPushToggleOffset_));
-    if (enable)
-        Assembler::ToggleToCmp(pushToggleLocation);
-    else
-        Assembler::ToggleToJmp(pushToggleLocation);
-#ifdef DEBUG
-    spsOn_ = enable;
-#endif
-}
-
 #ifdef JS_TRACE_LOGGING
 void
 BaselineScript::initTraceLogger(JSRuntime *runtime, JSScript *script)
@@ -949,6 +932,29 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
 #endif
 }
 #endif
+
+void
+BaselineScript::toggleProfilerInstrumentation(bool enable)
+{
+    if (enable == isProfilerInstrumentationOn())
+        return;
+
+    JitSpew(JitSpew_BaselineIC, "  toggling profiling %s for BaselineScript %p",
+            enable ? "on" : "off", this);
+
+    // Toggle the jump
+    CodeLocationLabel enterToggleLocation(method_, CodeOffsetLabel(profilerEnterToggleOffset_));
+    CodeLocationLabel exitToggleLocation(method_, CodeOffsetLabel(profilerExitToggleOffset_));
+    if (enable) {
+        Assembler::ToggleToCmp(enterToggleLocation);
+        Assembler::ToggleToCmp(exitToggleLocation);
+        flags_ |= uint32_t(PROFILER_INSTRUMENTATION_ON);
+    } else {
+        Assembler::ToggleToJmp(enterToggleLocation);
+        Assembler::ToggleToJmp(exitToggleLocation);
+        flags_ &= ~uint32_t(PROFILER_INSTRUMENTATION_ON);
+    }
+}
 
 void
 BaselineScript::purgeOptimizedStubs(Zone *zone)
@@ -1045,14 +1051,14 @@ jit::AddSizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf,
 }
 
 void
-jit::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
+jit::ToggleBaselineProfiling(JSRuntime *runtime, bool enable)
 {
     for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
         for (gc::ZoneCellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (!script->hasBaselineScript())
                 continue;
-            script->baselineScript()->toggleSPS(enable);
+            script->baselineScript()->toggleProfilerInstrumentation(enable);
         }
     }
 }

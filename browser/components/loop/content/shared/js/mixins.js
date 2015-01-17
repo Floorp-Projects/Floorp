@@ -153,6 +153,75 @@ loop.shared.mixins = (function() {
   };
 
   /**
+   * Media setup mixin. Provides a common location for settings for the media
+   * elements and handling updates of the media containers.
+   */
+  var MediaSetupMixin = {
+    componentDidMount: function() {
+      rootObject.addEventListener('orientationchange', this.updateVideoContainer);
+      rootObject.addEventListener('resize', this.updateVideoContainer);
+    },
+
+    componentWillUnmount: function() {
+      rootObject.removeEventListener('orientationchange', this.updateVideoContainer);
+      rootObject.removeEventListener('resize', this.updateVideoContainer);
+    },
+
+    /**
+     * Used to update the video container whenever the orientation or size of the
+     * display area changes.
+     */
+    updateVideoContainer: function() {
+      var localStreamParent = this._getElement('.local .OT_publisher');
+      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
+      if (localStreamParent) {
+        localStreamParent.style.width = "100%";
+      }
+      if (remoteStreamParent) {
+        remoteStreamParent.style.height = "100%";
+      }
+    },
+
+    /**
+     * Returns the default configuration for publishing media on the sdk.
+     *
+     * @param {Object} options An options object containing:
+     * - publishVideo A boolean set to true to publish video when the stream is initiated.
+     */
+    getDefaultPublisherConfig: function(options) {
+      options = options || {};
+      if (!"publishVideo" in options) {
+        throw new Error("missing option publishVideo");
+      }
+
+      // height set to 100%" to fix video layout on Google Chrome
+      // @see https://bugzilla.mozilla.org/show_bug.cgi?id=1020445
+      return {
+        insertMode: "append",
+        width: "100%",
+        height: "100%",
+        publishVideo: options.publishVideo,
+        style: {
+          audioLevelDisplayMode: "off",
+          bugDisplayMode: "off",
+          buttonDisplayMode: "off",
+          nameDisplayMode: "off",
+          videoDisabledDisplayMode: "off"
+        }
+      };
+    },
+
+    /**
+     * Returns either the required DOMNode
+     *
+     * @param {String} className The name of the class to get the element for.
+     */
+    _getElement: function(className) {
+      return this.getDOMNode().querySelector(className);
+    }
+  };
+
+  /**
    * Audio mixin. Allows playing a single audio file and ensuring it
    * is stopped when the component is unmounted.
    */
@@ -308,6 +377,7 @@ loop.shared.mixins = (function() {
     DocumentVisibilityMixin: DocumentVisibilityMixin,
     DocumentLocationMixin: DocumentLocationMixin,
     DocumentTitleMixin: DocumentTitleMixin,
+    MediaSetupMixin: MediaSetupMixin,
     UrlHashChangeMixin: UrlHashChangeMixin,
     WindowCloseMixin: WindowCloseMixin
   };

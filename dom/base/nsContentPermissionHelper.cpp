@@ -474,7 +474,7 @@ RemotePermissionRequest::DoAllow(JS::HandleValue aChoices)
 // PContentPermissionRequestChild
 bool
 RemotePermissionRequest::Recv__delete__(const bool& aAllow,
-                                        const nsTArray<PermissionChoice>& aChoices)
+                                        InfallibleTArray<PermissionChoice>&& aChoices)
 {
   if (aAllow && mWindow->IsCurrentInnerWindow()) {
     // Use 'undefined' if no choice is provided.

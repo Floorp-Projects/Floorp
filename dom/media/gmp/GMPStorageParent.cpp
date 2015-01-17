@@ -540,7 +540,7 @@ GMPStorageParent::RecvRead(const nsCString& aRecordName)
 
 bool
 GMPStorageParent::RecvWrite(const nsCString& aRecordName,
-                            const InfallibleTArray<uint8_t>& aBytes)
+                            InfallibleTArray<uint8_t>&& aBytes)
 {
   LOGD(("%s::%s: %p record=%s", __CLASS__, __FUNCTION__, this, aRecordName.get()));
 

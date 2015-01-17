@@ -36,8 +36,8 @@ public:
   virtual bool RecvGetNativePluginPort(uintptr_t* value) MOZ_OVERRIDE;
   virtual bool RecvResize(const nsIntRect& aRect) MOZ_OVERRIDE;
   virtual bool RecvMove(const double& aX, const double& aY) MOZ_OVERRIDE;
-  virtual bool RecvSetWindowClipRegion(const nsTArray<nsIntRect>& Regions,
-                                        const bool& aIntersectWithExisting) MOZ_OVERRIDE;
+  virtual bool RecvSetWindowClipRegion(InfallibleTArray<nsIntRect>&& Regions,
+				       const bool& aIntersectWithExisting) MOZ_OVERRIDE;
 
 private:
   // The tab our connection is associated with.

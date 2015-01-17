@@ -821,7 +821,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.SetScrollOffset(CSSPoint(10, 10));
   metrics.SetScrollableRect(CSSRect(0, 0, 50, 50));
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale(2));
-  metrics.mPresShellResolution = 2.0f;
+  metrics.SetPresShellResolution(2.0f);
   metrics.SetZoom(CSSToParentLayerScale(6));
   metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(3));
   metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);

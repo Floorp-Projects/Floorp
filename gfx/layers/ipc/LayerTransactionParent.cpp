@@ -190,7 +190,7 @@ LayerTransactionParent::GetCompositorBackendType() const
 }
 
 bool
-LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
+LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
                                          const uint64_t& aTransactionId,
                                          const TargetConfig& targetConfig,
                                          const bool& isFirstPaint,
@@ -199,7 +199,7 @@ LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
                                          const bool& isRepeatTransaction,
                                          const mozilla::TimeStamp& aTransactionStart)
 {
-  return RecvUpdate(cset, aTransactionId, targetConfig, isFirstPaint,
+  return RecvUpdate(Move(cset), aTransactionId, targetConfig, isFirstPaint,
       scheduleComposite, paintSequenceNumber, isRepeatTransaction,
       aTransactionStart, nullptr);
 }
@@ -220,7 +220,7 @@ private:
 };
 
 bool
-LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
+LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
                                    const uint64_t& aTransactionId,
                                    const TargetConfig& targetConfig,
                                    const bool& isFirstPaint,
@@ -878,7 +878,7 @@ LayerTransactionParent::DeallocPTextureParent(PTextureParent* actor)
 }
 
 bool
-LayerTransactionParent::RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessageData>& aMessages)
+LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages)
 {
   AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this);
 
