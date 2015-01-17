@@ -7,11 +7,8 @@
 #include "TCPSocketParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
-#include "nsGlobalWindow.h"
-#include "nsITCPServerSocketInternal.h"
 
 namespace mozilla {
 namespace dom {
@@ -33,16 +30,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPServerSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsITCPServerSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-TCPServerSocketParent::TCPServerSocketParent()
-: mNeckoParent(nullptr)
-, mIPCOpen(false)
-{
-}
-
-TCPServerSocketParent::~TCPServerSocketParent()
-{
-}
 
 void
 TCPServerSocketParent::ReleaseIPDLReference()

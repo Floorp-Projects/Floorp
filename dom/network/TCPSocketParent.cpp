@@ -6,7 +6,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsJSUtils.h"
-#include "nsITCPSocketInternal.h"
+#include "nsIDOMTCPSocket.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -350,11 +350,12 @@ TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVa
 }
 
 NS_IMETHODIMP
-TCPSocketParent::SetSocketAndIntermediary(nsITCPSocketInternal *aSocket,
-                                          nsITCPSocketIntermediary *aIntermediary)
+TCPSocketParent::SetSocketAndIntermediary(nsIDOMTCPSocket *socket,
+                                          nsITCPSocketIntermediary *intermediary,
+                                          JSContext* cx)
 {
-  mSocket = aSocket;
-  mIntermediary = aIntermediary;
+  mSocket = socket;
+  mIntermediary = intermediary;
   return NS_OK;
 }
 

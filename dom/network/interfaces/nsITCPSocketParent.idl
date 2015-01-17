@@ -4,15 +4,15 @@
 
 #include "domstubs.idl"
 
-interface nsITCPSocketInternal;
-interface nsITCPServerSocketInternal;
+interface nsIDOMTCPSocket;
+interface nsIDOMTCPServerSocket;
 interface nsITCPServerSocketParent;
 interface nsITCPSocketIntermediary;
 
 // Interface required to allow the TCP socket object (TCPSocket.js) in the
 // parent process to talk to the parent IPC actor, TCPSocketParent, which
 // is written in C++.
-[scriptable, uuid(03B864C8-AAA9-4062-943E-AE6397070E0D)]
+[scriptable, uuid(6f040bf0-6852-11e3-949a-0800200c9a66)]
 interface nsITCPSocketParent : nsISupports
 {
   [implicit_jscontext] void initJS(in jsval intermediary);
@@ -40,8 +40,8 @@ interface nsITCPSocketParent : nsISupports
   //        The socket on the parent side.
   // @param intermediary
   //        Intermediate class object. See nsITCPSocketIntermediary.
-  void setSocketAndIntermediary(in nsITCPSocketInternal socket,
-                                in nsITCPSocketIntermediary intermediary);
+  [implicit_jscontext] void setSocketAndIntermediary(in nsIDOMTCPSocket socket,
+                                                     in nsITCPSocketIntermediary intermediary);
 
   // When parent's buffered amount is updated and it wants to inform child to
   // update the bufferedAmount as well.
@@ -68,18 +68,18 @@ interface nsITCPSocketParent : nsISupports
 [scriptable, uuid(aa9bd46d-26bf-4ba8-9c18-ba02482c02f0)]
 interface nsITCPSocketIntermediary : nsISupports {
   // Open the connection to the server with the given parameters
-  nsITCPSocketInternal open(in nsITCPSocketParent parent,
-                            in DOMString host, in unsigned short port,
-                            in boolean useSSL, in DOMString binaryType,
-                            in unsigned long appId,
-                            in boolean inBrowser);
+  nsIDOMTCPSocket open(in nsITCPSocketParent parent,
+                       in DOMString host, in unsigned short port,
+                       in boolean useSSL, in DOMString binaryType,
+                       in unsigned long appId,
+                       in boolean inBrowser);
 
   // Listen on a port
-  nsITCPServerSocketInternal listen(in nsITCPServerSocketParent parent,
-                                    in unsigned short port, in unsigned short backlog,
-                                    in DOMString binaryType,
-                                    in unsigned long appId,
-                                    in boolean inBrowser);
+  nsIDOMTCPServerSocket listen(in nsITCPServerSocketParent parent,
+                               in unsigned short port, in unsigned short backlog,
+                               in DOMString binaryType,
+                               in unsigned long appId,
+                               in boolean inBrowser);
 
   // Called when received a child request to send a string.
   void onRecvSendString(in DOMString data, in uint32_t trackingNumber);

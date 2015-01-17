@@ -61,7 +61,7 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                               "nsIBinaryOutputStream",
                               "setOutputStream"),
       TCPSocket = new (CC("@mozilla.org/tcp-socket;1",
-                     "nsITCPSocketInternal"))();
+                     "nsIDOMTCPSocket"))();
 
 const gInChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                   .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
@@ -269,10 +269,9 @@ function connectSock() {
   server.reset();
   var yayFuncs = makeJointSuccess(['serveropen', 'clientopen']);
 
-  sock = new mozTCPSocket(
+  sock = TCPSocket.open(
     '127.0.0.1', server.listener.port,
     { binaryType: 'arraybuffer' });
-  sock.getInternalSocket().initWithGlobal(this);
 
   sock.onopen = yayFuncs.clientopen;
   sock.ondrain = null;
@@ -311,7 +310,7 @@ function childbuffered() {
   server.ondata = makeExpectData(
     'ondata', DATA_ARRAY, false, yays.serverdata);
 
-  let internalSocket = sock.getInternalSocket();
+  let internalSocket = sock.QueryInterface(Ci.nsITCPSocketInternal);
   internalSocket.updateBufferedAmount(65535, // almost reach buffering threshold
                                       0);
   if (sock.send(DATA_ARRAY_BUFFER)) {
@@ -336,7 +335,7 @@ function childnotbuffered() {
   if (sock.send(BIG_ARRAY_BUFFER)) {
     do_throw("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
   }
-  let internalSocket = sock.getInternalSocket();
+  let internalSocket = sock.QueryInterface(Ci.nsITCPSocketInternal);
   internalSocket.updateBufferedAmount(0, // setting zero will clear waitForDrain in sock.
                                       1);
 

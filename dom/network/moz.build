@@ -16,10 +16,6 @@ if CONFIG['MOZ_B2G_RIL']:
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-EXPORTS += [
-    'TCPSocketUtils.h',
-]
-
 EXPORTS.mozilla.dom += [
     'UDPSocket.h',
 ]
@@ -42,7 +38,6 @@ UNIFIED_SOURCES += [
     'TCPServerSocketParent.cpp',
     'TCPSocketChild.cpp',
     'TCPSocketParent.cpp',
-    'TCPSocketUtils.cpp',
     'UDPSocket.cpp',
     'UDPSocketChild.cpp',
     'UDPSocketParent.cpp',
@@ -85,8 +80,6 @@ IPDL_SOURCES += [
 ]
 
 FAIL_ON_WARNINGS = True
-
-LOCAL_INCLUDES += ['/dom/base']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
