@@ -460,8 +460,6 @@ nsPropertiesParser::ParseBuffer(const char16_t* aBuffer,
 nsPersistentProperties::nsPersistentProperties()
   : mIn(nullptr)
 {
-  mSubclass = static_cast<nsIPersistentProperties*>(this);
-
   PL_DHashTableInit(&mTable, &property_HashTableOps,
                     sizeof(PropertyTableEntry), 16);
 
@@ -500,7 +498,7 @@ nsPersistentProperties::Load(nsIInputStream* aIn)
     return NS_ERROR_FAILURE;
   }
 
-  nsPropertiesParser parser(mSubclass);
+  nsPropertiesParser parser(this);
 
   uint32_t nProcessed;
   // If this 4096 is changed to some other value, make sure to adjust
@@ -550,16 +548,6 @@ NS_IMETHODIMP
 nsPersistentProperties::Save(nsIOutputStream* aOut, const nsACString& aHeader)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
-{
-  if (aSubclass) {
-    mSubclass = aSubclass;
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
