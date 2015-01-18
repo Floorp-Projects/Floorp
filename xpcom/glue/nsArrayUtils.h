@@ -25,7 +25,7 @@ public:
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
 private:
-  nsIArray*  mArray;
+  nsIArray* MOZ_NON_OWNING_REF mArray;
   uint32_t   mIndex;
   nsresult*  mErrorPtr;
 };
