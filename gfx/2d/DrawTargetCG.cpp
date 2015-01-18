@@ -1108,7 +1108,19 @@ DrawTargetCG::StrokeRect(const Rect &aRect,
     DrawGradient(mColorSpace, cg, aPattern, extents);
   } else {
     SetStrokeFromPattern(cg, mColorSpace, aPattern);
-    CGContextStrokeRect(cg, RectToCGRect(aRect));
+    // We'd like to use CGContextStrokeRect(cg, RectToCGRect(aRect));
+    // Unfortunately, newer versions of OS X no longer start at the top-left
+    // corner and stroke clockwise as older OS X versions and all the other
+    // Moz2D backends do. (Newer versions start at the top right-hand corner
+    // and stroke counter-clockwise.) For consistency we draw the rect by hand.
+    CGRect rect = RectToCGRect(aRect);
+    CGContextBeginPath(cg);
+    CGContextMoveToPoint(cg, CGRectGetMinX(rect), CGRectGetMinY(rect));
+    CGContextAddLineToPoint(cg, CGRectGetMaxX(rect), CGRectGetMinY(rect));
+    CGContextAddLineToPoint(cg, CGRectGetMaxX(rect), CGRectGetMaxY(rect));
+    CGContextAddLineToPoint(cg, CGRectGetMinX(rect), CGRectGetMaxY(rect));
+    CGContextClosePath(cg);
+    CGContextStrokePath(cg);
   }
 
   fixer.Fix(mCg);
