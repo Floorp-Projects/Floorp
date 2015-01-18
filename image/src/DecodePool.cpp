@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
+#include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
 
@@ -127,35 +128,36 @@ private:
 
 #ifdef MOZ_NUWA_PROCESS
 
-class RIDThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener
+class DecodePoolNuwaListener MOZ_FINAL : public nsIThreadPoolListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITHREADPOOLLISTENER
-  
-  RIDThreadPoolListener() { }
 
-private:
-  ~RIDThreadPoolListener() { }
-};
-
-NS_IMPL_ISUPPORTS(RIDThreadPoolListener, nsIThreadPoolListener)
-
-NS_IMETHODIMP
-RIDThreadPoolListener::OnThreadCreated()
-{
+  NS_IMETHODIMP OnThreadCreated()
+  {
     if (IsNuwaProcess()) {
-        NuwaMarkCurrentThread(static_cast<void(*)(void*)>(nullptr), nullptr);
+      NuwaMarkCurrentThread(static_cast<void(*)(void*)>(nullptr), nullptr);
     }
     return NS_OK;
-}
+  }
 
-NS_IMETHODIMP
-RIDThreadPoolListener::OnThreadShuttingDown()
+  NS_IMETHODIMP OnThreadShuttingDown() { return NS_OK; }
+
+private:
+  ~DecodePoolNuwaListener() { }
+};
+
+NS_IMPL_ISUPPORTS(DecodePoolNuwaListener, nsIThreadPoolListener)
+
+class RegisterDecodeIOThreadWithNuwaRunnable : public nsRunnable
 {
+public:
+  NS_IMETHOD Run()
+  {
+    NuwaMarkCurrentThread(static_cast<void(*)(void*)>(nullptr), nullptr);
     return NS_OK;
-}
-
+  }
+};
 #endif // MOZ_NUWA_PROCESS
 
 
@@ -166,6 +168,13 @@ RIDThreadPoolListener::OnThreadShuttingDown()
 /* static */ StaticRefPtr<DecodePool> DecodePool::sSingleton;
 
 NS_IMPL_ISUPPORTS(DecodePool, nsIObserver)
+
+/* static */ void
+DecodePool::Initialize()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  DecodePool::Singleton();
+}
 
 /* static */ DecodePool*
 DecodePool::Singleton()
@@ -180,8 +189,9 @@ DecodePool::Singleton()
 }
 
 DecodePool::DecodePool()
-  : mThreadPoolMutex("Thread Pool")
+  : mMutex("image::DecodePool")
 {
+  // Initialize the thread pool.
   mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
   MOZ_RELEASE_ASSERT(mThreadPool,
                      "Should succeed in creating image decoding thread pool");
@@ -200,8 +210,20 @@ DecodePool::DecodePool()
 
 #ifdef MOZ_NUWA_PROCESS
   if (IsNuwaProcess()) {
-    mThreadPool->SetListener(new RIDThreadPoolListener());
+    mThreadPool->SetListener(new DecodePoolNuwaListener());
   }
+#endif
+
+  // Initialize the I/O thread.
+  nsresult rv = NS_NewNamedThread("ImageIO", getter_AddRefs(mIOThread));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv) && mIOThread,
+                     "Should successfully create image I/O thread");
+
+#ifdef MOZ_NUWA_PROCESS
+  nsCOMPtr<nsIRunnable> worker = new RegisterDecodeIOThreadWithNuwaRunnable();
+  rv = mIOThread->Dispatch(worker, NS_DISPATCH_NORMAL);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                     "Should register decode IO thread with Nuwa process");
 #endif
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -221,15 +243,20 @@ DecodePool::Observe(nsISupports*, const char* aTopic, const char16_t*)
   MOZ_ASSERT(strcmp(aTopic, "xpcom-shutdown-threads") == 0, "Unexpected topic");
 
   nsCOMPtr<nsIThreadPool> threadPool;
+  nsCOMPtr<nsIThread> ioThread;
 
   {
-    MutexAutoLock threadPoolLock(mThreadPoolMutex);
-    threadPool = mThreadPool;
-    mThreadPool = nullptr;
+    MutexAutoLock lock(mMutex);
+    threadPool.swap(mThreadPool);
+    ioThread.swap(mIOThread);
   }
 
   if (threadPool) {
     threadPool->Shutdown();
+  }
+
+  if (ioThread) {
+    ioThread->Shutdown();
   }
 
   return NS_OK;
@@ -244,7 +271,7 @@ DecodePool::AsyncDecode(Decoder* aDecoder)
 
   // Dispatch to the thread pool if it exists. If it doesn't, we're currently
   // shutting down, so it's OK to just drop the job on the floor.
-  MutexAutoLock threadPoolLock(mThreadPoolMutex);
+  MutexAutoLock threadPoolLock(mMutex);
   if (mThreadPool) {
     mThreadPool->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
   }
@@ -274,8 +301,16 @@ DecodePool::SyncDecodeIfPossible(Decoder* aDecoder)
 already_AddRefed<nsIEventTarget>
 DecodePool::GetEventTarget()
 {
-  MutexAutoLock threadPoolLock(mThreadPoolMutex);
+  MutexAutoLock threadPoolLock(mMutex);
   nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mThreadPool);
+  return target.forget();
+}
+
+already_AddRefed<nsIEventTarget>
+DecodePool::GetIOEventTarget()
+{
+  MutexAutoLock threadPoolLock(mMutex);
+  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mIOThread);
   return target.forget();
 }
 
