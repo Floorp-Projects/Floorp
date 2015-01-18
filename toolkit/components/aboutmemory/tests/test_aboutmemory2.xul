@@ -106,7 +106,7 @@
       SimpleTest.waitForClipboard(
         function(aActual) {
           mostRecentActual = aActual;
-          return aActual === aExpected;
+          return aActual.trim() === aExpected.trim();
         },
         function() {
           synthesizeKey("A", {accelKey: true});
