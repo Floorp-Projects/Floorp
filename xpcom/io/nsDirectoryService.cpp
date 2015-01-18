@@ -298,7 +298,7 @@ nsDirectoryService::GetKeys(uint32_t* aCount, char*** aKeys)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-struct FileData
+struct MOZ_STACK_CLASS FileData
 {
   FileData(const char* aProperty, const nsIID& aUUID)
     : property(aProperty)
@@ -309,7 +309,7 @@ struct FileData
   }
 
   const char*   property;
-  nsISupports*  data;
+  nsCOMPtr<nsISupports> data;
   bool          persistent;
   const nsIID&  uuid;
 };
@@ -329,13 +329,13 @@ FindProviderFile(nsIDirectoryServiceProvider* aElement, FileData* aData)
           nsCOMPtr<nsISimpleEnumerator> unionFiles;
 
           NS_NewUnionEnumerator(getter_AddRefs(unionFiles),
-                                (nsISimpleEnumerator*)aData->data, newFiles);
+                                (nsISimpleEnumerator*)aData->data.get(), newFiles);
 
           if (unionFiles) {
             unionFiles.swap(*(nsISimpleEnumerator**)&aData->data);
           }
         } else {
-          NS_ADDREF(aData->data = newFiles);
+          aData->data = newFiles;
         }
 
         aData->persistent = false; // Enumerators can never be persistent
@@ -380,20 +380,20 @@ nsDirectoryService::Get(const char* aProp, const nsIID& aUuid, void** aResult)
   }
   if (fileData.data) {
     if (fileData.persistent) {
-      Set(aProp, static_cast<nsIFile*>(fileData.data));
+      Set(aProp, static_cast<nsIFile*>(fileData.data.get()));
     }
     nsresult rv = (fileData.data)->QueryInterface(aUuid, aResult);
-    NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
+    fileData.data = nullptr; // AddRef occurs in FindProviderFile()
     return rv;
   }
 
   FindProviderFile(static_cast<nsIDirectoryServiceProvider*>(this), &fileData);
   if (fileData.data) {
     if (fileData.persistent) {
-      Set(aProp, static_cast<nsIFile*>(fileData.data));
+      Set(aProp, static_cast<nsIFile*>(fileData.data.get()));
     }
     nsresult rv = (fileData.data)->QueryInterface(aUuid, aResult);
-    NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
+    fileData.data = nullptr; // AddRef occurs in FindProviderFile()
     return rv;
   }
 
