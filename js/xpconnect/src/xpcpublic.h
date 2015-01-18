@@ -206,7 +206,11 @@ class XPCStringConvert
     // would take a lot more machinery.
     struct ZoneStringCache
     {
-        nsStringBuffer* mBuffer;
+        // mString owns mBuffer.  mString is a JS thing, so it can only die
+        // during GC.  We clear mString and mBuffer during GC.  As long as
+        // the above holds, mBuffer should not be a dangling pointer, so
+        // using this as a cache key should be safe.
+        void* mBuffer;
         JSString* mString;
     };
 
