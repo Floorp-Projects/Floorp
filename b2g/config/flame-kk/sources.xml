@@ -145,13 +145,13 @@
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="30b96dfca99cb384bf520a16b81f3aba56f09907"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="c00de33ebfad57ae79ad5f93c2819ee2c40c8bcd"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="6b58ab45e3e56c1fc20708cc39fa2264c52558df"/>
+  <project name="platform/frameworks/av" path="frameworks/av" revision="65f5144987afff35a932262c0c5fad6ecce0c04a"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="da8e6bc53c8bc669da0bb627904d08aa293f2497"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="a46a9f1ac0ed5662d614c277cbb14eb3f332f365"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="7196881a0e9dd7bfbbcf0af64c8064e70f0fa094"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="8d7676dfb68ee0cd069affedd5d1e97316a184ba"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="2a1ded216a91bf62a72b1640cf01ab4998f37028"/>
-  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="f8bec8a61dc0f2581fa72a31d4144084b47ef7cf"/>
+  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="a74adcf8d88320d936daa8d20ce88ca0107fb916"/>
   <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="9883ea57b0668d8f60dba025d4522dfa69a1fbfa"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="a558dc844bf5144fc38603fd8f4df8d9557052a5"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="57ee1320ed7b4a1a1274d8f3f6c177cd6b9becb2"/>
@@ -161,5 +161,5 @@
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="0c557e136bb615923aad0f5c69da4e869523efc5"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="d8952a42771045fca73ec600e2b42a4c7129d723"/>
-  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="018b44e52b2bac5d3631d559550e88a4b68c6e67"/>
+  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4c187c1f3a0dffd8e51a961735474ea703535b99"/>
 </manifest>
