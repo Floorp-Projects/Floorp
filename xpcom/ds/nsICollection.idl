@@ -45,7 +45,7 @@ class nsQueryElementAt : public nsCOMPtr_helper
       virtual nsresult NS_FASTCALL operator()( const nsIID& aIID, void** ) const;
 
     private:
-      nsICollection*  mCollection;
+      nsICollection* MOZ_NON_OWNING_REF mCollection;
       uint32_t        mIndex;
       nsresult*       mErrorPtr;
   };
