@@ -64,6 +64,11 @@ public:
 
   IntSize Size() const { return mSize; }
 
+  SurfaceKey WithNewFlags(uint32_t aFlags) const
+  {
+    return SurfaceKey(mSize, mSVGContext, mAnimationTime, aFlags);
+  }
+
 private:
   SurfaceKey(const IntSize& aSize,
              const Maybe<SVGImageContext>& aSVGContext,
@@ -171,12 +176,19 @@ struct SurfaceCache
    *
    * @param aImageKey    Key data identifying which image the surface belongs to.
    * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
+   * @param aAlternateFlags If not Nothing(), a different set of flags than the
+   *                        ones specified in @aSurfaceKey which are also
+   *                        acceptable to the caller. This is more efficient
+   *                        than calling Lookup() twice, which requires taking a
+   *                        lock each time.
    *
    * @return a DrawableFrameRef to the imgFrame wrapping the requested surface,
    *         or an empty DrawableFrameRef if not found.
    */
   static DrawableFrameRef Lookup(const ImageKey    aImageKey,
-                                 const SurfaceKey& aSurfaceKey);
+                                 const SurfaceKey& aSurfaceKey,
+                                 const Maybe<uint32_t>& aAlternateFlags
+                                   = Nothing());
 
   /**
    * Insert a surface into the cache. If a surface with the same ImageKey and
