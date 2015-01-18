@@ -699,10 +699,9 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     nsAutoCString mimeType;
     nsresult rv = httpChannel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
-      // Image object not created until OnDataAvailable, so forward to static
-      // DecodePool directly.
+      // Retarget OnDataAvailable to the DecodePool's IO thread.
       nsCOMPtr<nsIEventTarget> target =
-        DecodePool::Singleton()->GetEventTarget();
+        DecodePool::Singleton()->GetIOEventTarget();
       rv = retargetable->RetargetDeliveryTo(target);
     }
     PR_LOG(GetImgLog(), PR_LOG_WARNING,
