@@ -334,7 +334,7 @@ fi
 # Even after dropping 10.6 support, MOZ_PIE would not be useful since it's the
 # default (and clang says the -pie option is not used).
 # On other Unix systems, some file managers (Nautilus) can't start PIE programs
-if test -n "$gonkdir" -a "$ANDROID_VERSION" -ge 16; then
+if test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 16; then
     MOZ_PIE=1
 else
     MOZ_PIE=

@@ -19,11 +19,17 @@ function PlacesViewBase(aPlace, aOptions) {
 PlacesViewBase.prototype = {
   // The xul element that holds the entire view.
   _viewElt: null,
-  get viewElt() this._viewElt,
+  get viewElt() {
+    return this._viewElt;
+  },
 
-  get associatedElement() this._viewElt,
+  get associatedElement() {
+    return this._viewElt;
+  },
 
-  get controllers() this._viewElt.controllers,
+  get controllers() {
+    return this._viewElt.controllers;
+  },
 
   // The xul element that represents the root container.
   _rootElt: null,
@@ -37,7 +43,9 @@ PlacesViewBase.prototype = {
      Components.interfaces.nsISupportsWeakReference]),
 
   _place: "",
-  get place() this._place,
+  get place() {
+    return this._place;
+  },
   set place(val) {
     this._place = val;
 
@@ -54,7 +62,9 @@ PlacesViewBase.prototype = {
   },
 
   _result: null,
-  get result() this._result,
+  get result() {
+    return this._result;
+  },
   set result(val) {
     if (this._result == val)
       return val;
@@ -86,7 +96,9 @@ PlacesViewBase.prototype = {
   },
 
   _options: null,
-  get options() this._options,
+  get options() {
+    return this._options;
+  },
   set options(val) {
     if (!val)
       val = {};
@@ -115,9 +127,13 @@ PlacesViewBase.prototype = {
     return node;
   },
 
-  get controller() this._controller,
+  get controller() {
+    return this._controller;
+  },
 
-  get selType() "single",
+  get selType() {
+    return "single";
+  },
   selectItems: function() { },
   selectAll: function() { },
 
@@ -136,7 +152,9 @@ PlacesViewBase.prototype = {
     return null;
   },
 
-  get hasSelection() this.selectedNode != null,
+  get hasSelection() {
+    return this.selectedNode != null;
+  },
 
   get selectedNodes() {
     let selectedNode = this.selectedNode;
@@ -154,7 +172,9 @@ PlacesViewBase.prototype = {
     return [this.selectedNodes];
   },
 
-  get draggableSelection() [this._draggedElt],
+  get draggableSelection() {
+    return [this._draggedElt];
+  },
 
   get insertionPoint() {
     // There is no insertion point for history queries, so bail out now and
@@ -752,7 +772,9 @@ PlacesViewBase.prototype = {
                                  .direction == "rtl";
   },
 
-  get ownerWindow() window,
+  get ownerWindow() {
+    return window;
+  },
 
   /**
    * Adds an "Open All in Tabs" menuitem to the bottom of the popup.
