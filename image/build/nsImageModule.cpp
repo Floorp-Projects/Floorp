@@ -9,8 +9,8 @@
 #include "mozilla/ModuleUtils.h"
 #include "nsMimeTypes.h"
 
+#include "DecodePool.h"
 #include "ImageFactory.h"
-#include "RasterImage.h"
 #include "ShutdownTracker.h"
 #include "SurfaceCache.h"
 
@@ -92,7 +92,7 @@ mozilla::image::InitModule()
 
   mozilla::image::ShutdownTracker::Initialize();
   mozilla::image::ImageFactory::Initialize();
-  mozilla::image::RasterImage::Initialize();
+  mozilla::image::DecodePool::Initialize();
   mozilla::image::SurfaceCache::Initialize();
   imgLoader::GlobalInit();
   sInitialized = true;
