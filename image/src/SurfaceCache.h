@@ -63,6 +63,9 @@ public:
   }
 
   IntSize Size() const { return mSize; }
+  Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
+  float AnimationTime() const { return mAnimationTime; }
+  uint32_t Flags() const { return mFlags; }
 
   SurfaceKey WithNewFlags(uint32_t aFlags) const
   {
@@ -189,6 +192,28 @@ struct SurfaceCache
                                  const SurfaceKey& aSurfaceKey,
                                  const Maybe<uint32_t>& aAlternateFlags
                                    = Nothing());
+
+  /**
+   * Looks up the best matching surface in the cache and returns a drawable
+   * reference to the imgFrame containing it.
+   *
+   * Returned surfaces may vary from the requested surface only in terms of
+   * size, unless @aAlternateFlags is specified.
+   *
+   * @param aImageKey    Key data identifying which image the surface belongs to.
+   * @param aSurfaceKey  Key data which identifies the ideal surface to return.
+   * @param aAlternateFlags If not Nothing(), a different set of flags than the
+   *                        ones specified in @aSurfaceKey which are also
+   *                        acceptable to the caller. This is much more
+   *                        efficient than calling LookupBestMatch() twice.
+   *
+   * @return a DrawableFrameRef to the imgFrame wrapping a surface similar to
+   *         the requested surface, or an empty DrawableFrameRef if not found.
+   */
+  static DrawableFrameRef LookupBestMatch(const ImageKey    aImageKey,
+                                          const SurfaceKey& aSurfaceKey,
+                                          const Maybe<uint32_t>& aAlternateFlags
+                                            = Nothing());
 
   /**
    * Insert a surface into the cache. If a surface with the same ImageKey and
