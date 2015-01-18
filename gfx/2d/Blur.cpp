@@ -17,6 +17,10 @@
 #include "DataSurfaceHelpers.h"
 #include "Tools.h"
 
+#ifdef BUILD_ARM_NEON
+#include "mozilla/arm.h"
+#endif
+
 using namespace std;
 
 namespace mozilla {
@@ -544,6 +548,7 @@ AlphaBoxBlur::Blur(uint8_t* aData)
       if (!integralImage) {
         return;
       }
+
 #ifdef USE_SSE2
       if (Factory::HasSSE2()) {
         BoxBlur_SSE2(aData, horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
@@ -551,6 +556,16 @@ AlphaBoxBlur::Blur(uint8_t* aData)
         BoxBlur_SSE2(aData, horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
                      verticalLobes[1][1], integralImage, integralImageStride);
         BoxBlur_SSE2(aData, horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
+                     verticalLobes[2][1], integralImage, integralImageStride);
+      } else
+#endif
+#ifdef BUILD_ARM_NEON
+      if (mozilla::supports_neon()) {
+        BoxBlur_NEON(aData, horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
+                     verticalLobes[0][1], integralImage, integralImageStride);
+        BoxBlur_NEON(aData, horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
+                     verticalLobes[1][1], integralImage, integralImageStride);
+        BoxBlur_NEON(aData, horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
                      verticalLobes[2][1], integralImage, integralImageStride);
       } else
 #endif
