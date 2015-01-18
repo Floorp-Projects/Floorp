@@ -128,6 +128,24 @@ public:
   }
 
   /**
+   * If this decoder supports downscale-during-decode, sets the target size that
+   * this image should be decoded to.
+   *
+   * If this decoder *doesn't* support downscale-during-decode, returns
+   * NS_ERROR_NOT_AVAILABLE. If the provided size is unacceptable, returns
+   * another error.
+   *
+   * Returning NS_OK from this method is a promise that the decoder will decode
+   * the image to the requested target size unless it encounters an error.
+   *
+   * This must be called before Init() is called.
+   */
+  virtual nsresult SetTargetSize(const nsIntSize& aSize)
+  {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  /**
    * Set whether should send partial invalidations.
    *
    * If @aSend is true, we'll send partial invalidations when decoding the first
@@ -233,6 +251,12 @@ public:
     PostSize(aSize.width, aSize.height, aOrientation);
   }
 
+  nsIntSize GetSize() const
+  {
+    MOZ_ASSERT(HasSize());
+    return mImageMetadata.GetSize();
+  }
+
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
@@ -332,9 +356,19 @@ protected:
                      int32_t aTimeout = 0,
                      BlendMethod aBlendMethod = BlendMethod::OVER);
 
-  // Called by the decoders when they have a region to invalidate. We may not
-  // actually pass these invalidations on right away.
-  void PostInvalidation(nsIntRect& aRect);
+  /**
+   * Called by the decoders when they have a region to invalidate. We may not
+   * actually pass these invalidations on right away.
+   *
+   * @param aRect The invalidation rect in the coordinate system of the unscaled
+   *              image (that is, the image at its intrinsic size).
+   * @param aRectAtTargetSize If not Nothing(), the invalidation rect in the
+   *                          coordinate system of the scaled image (that is,
+   *                          the image at our target decoding size). This must
+   *                          be supplied if we're downscaling during decode.
+   */
+  void PostInvalidation(const nsIntRect& aRect,
+                        const Maybe<nsIntRect>& aRectAtTargetSize = Nothing());
 
   // Called by the decoders when they have successfully decoded the image. This
   // may occur as the result of the decoder getting to the appropriate point in
