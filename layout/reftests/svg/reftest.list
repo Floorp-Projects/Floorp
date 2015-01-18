@@ -332,6 +332,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
 == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
 == stroke-dasharray-02.svg pass.svg
+== stroke-dasharray-03.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
