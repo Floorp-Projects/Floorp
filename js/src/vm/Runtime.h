@@ -1051,6 +1051,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* A context has been created on this runtime. */
     bool                haveCreatedContext;
 
+    /*
+     * Allow relazifying functions in compartments that are active. This is
+     * only used by the relazifyFunctions() testing function.
+     */
+    bool                allowRelazificationForTesting;
+
     /* Linked list of all Debugger objects in the runtime. */
     mozilla::LinkedList<js::Debugger> debuggerList;
 

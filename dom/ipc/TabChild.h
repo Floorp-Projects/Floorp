@@ -180,7 +180,7 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
-    virtual nsIWebNavigation* WebNavigation() = 0;
+    virtual nsIWebNavigation* WebNavigation() const = 0;
     virtual nsIWidget* WebWidget() = 0;
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
     bool IsAsyncPanZoomEnabled();
@@ -206,7 +206,7 @@ protected:
     // Get the DOMWindowUtils for the top-level window in this tab.
     already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils();
     // Get the Document for the top-level window in this tab.
-    already_AddRefed<nsIDocument> GetDocument();
+    already_AddRefed<nsIDocument> GetDocument() const;
 
     // Wrapper for nsIDOMWindowUtils.setCSSViewport(). This updates some state
     // variables local to this class before setting it.
@@ -418,7 +418,7 @@ public:
                                        PIndexedDBPermissionRequestChild* aActor)
                                        MOZ_OVERRIDE;
 
-    virtual nsIWebNavigation* WebNavigation() MOZ_OVERRIDE { return mWebNav; }
+    virtual nsIWebNavigation* WebNavigation() const MOZ_OVERRIDE { return mWebNav; }
     virtual nsIWidget* WebWidget() MOZ_OVERRIDE { return mWidget; }
 
     /** Return the DPI of the widget this TabChild draws to. */
@@ -610,6 +610,9 @@ private:
     void SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
                                        const mozilla::layers::ScrollableLayerGuid& aGuid,
                                        const uint64_t& aInputBlockId);
+
+    // Get the pres shell resolution of the document in this tab.
+    float GetPresShellResolution() const;
 
     void SetTabId(const TabId& aTabId)
     {

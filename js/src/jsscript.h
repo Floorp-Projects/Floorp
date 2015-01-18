@@ -1012,6 +1012,11 @@ class JSScript : public js::gc::TenuredCell
     // correctly.
     bool typesGeneration_:1;
 
+    // Do not relazify this script. This is only used by the relazify()
+    // testing function for scripts that are on the stack. Usually we don't
+    // relazify functions in compartments with scripts on the stack.
+    bool doNotRelazify_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1316,6 +1321,10 @@ class JSScript : public js::gc::TenuredCell
         typesGeneration_ = (bool) generation;
     }
 
+    void setDoNotRelazify(bool b) {
+        doNotRelazify_ = b;
+    }
+
     bool hasAnyIonScript() const {
         return hasIonScript();
     }
@@ -1395,7 +1404,7 @@ class JSScript : public js::gc::TenuredCell
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) &&
-               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
+               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript() && !doNotRelazify_;
     }
     void setLazyScript(js::LazyScript *lazy) {
         lazyScript = lazy;
@@ -1873,7 +1882,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t version : 8;
 
         uint32_t numFreeVariables : 24;
-        uint32_t numInnerFunctions : 23;
+        uint32_t numInnerFunctions : 22;
 
         uint32_t generatorKindBits : 2;
 
@@ -1881,6 +1890,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t strict : 1;
         uint32_t bindingsAccessedDynamically : 1;
         uint32_t hasDebuggerStatement : 1;
+        uint32_t hasDirectEval : 1;
         uint32_t directlyInsideEval : 1;
         uint32_t usesArgumentsApplyAndThis : 1;
         uint32_t hasBeenCloned : 1;
@@ -2004,6 +2014,13 @@ class LazyScript : public gc::TenuredCell
     }
     void setHasDebuggerStatement() {
         p_.hasDebuggerStatement = true;
+    }
+
+    bool hasDirectEval() const {
+        return p_.hasDirectEval;
+    }
+    void setHasDirectEval() {
+        p_.hasDirectEval = true;
     }
 
     bool directlyInsideEval() const {

@@ -486,17 +486,22 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
         MOZ_ASSERT(!IsInternalFunctionObject(obj));
 
         RootedValue v(cx);
-        uint32_t attrs;
+
+        // Since f.length and f.name are configurable, they could be resolved
+        // and then deleted:
+        //     function f(x) {}
+        //     assertEq(f.length, 1);
+        //     delete f.length;
+        //     assertEq(f.name, "f");
+        //     delete f.name;
+        // Afterwards, asking for f.length or f.name again will cause this
+        // resolve hook to run again. Defining the property again the second
+        // time through would be a bug.
+        //     assertEq(f.length, 0);  // gets Function.prototype.length!
+        //     assertEq(f.name, "");  // gets Function.prototype.name!
+        // We use the RESOLVED_LENGTH and RESOLVED_NAME flags as a hack to prevent this
+        // bug.
         if (isLength) {
-            // Since f.length is configurable, it could be resolved and then deleted:
-            //     function f(x) {}
-            //     assertEq(f.length, 1);
-            //     delete f.length;
-            // Afterwards, asking for f.length again will cause this resolve
-            // hook to run again. Defining the property again the second
-            // time through would be a bug.
-            //     assertEq(f.length, 0);  // gets Function.prototype.length!
-            // We use the RESOLVED_LENGTH flag as a hack to prevent this bug.
             if (fun->hasResolvedLength())
                 return true;
 
@@ -505,17 +510,20 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             uint16_t length = fun->hasScript() ? fun->nonLazyScript()->funLength() :
                 fun->nargs() - fun->hasRest();
             v.setInt32(length);
-            attrs = JSPROP_READONLY;
         } else {
+            if (fun->hasResolvedName())
+                return true;
+
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
-            attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         }
 
-        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, attrs))
+        if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr, JSPROP_READONLY))
             return false;
 
         if (isLength)
             fun->setResolvedLength();
+        else
+            fun->setResolvedName();
 
         *resolvedp = true;
         return true;
@@ -754,7 +762,9 @@ JSFunction::trace(JSTracer *trc)
             // This information can either be a LazyScript, or the name of a
             // self-hosted function which can be cloned over again. The latter
             // is stored in the first extended slot.
-            if (IS_GC_MARKING_TRACER(trc) && !compartment()->hasBeenEntered() &&
+            JSRuntime *rt = trc->runtime();
+            if (IS_GC_MARKING_TRACER(trc) &&
+                (rt->allowRelazificationForTesting || !compartment()->hasBeenEntered()) &&
                 !compartment()->isDebuggee() && !compartment()->isSelfHosting &&
                 u.i.s.script_->isRelazifiable() && (!isSelfHostedBuiltin() || isExtended()))
             {
@@ -1412,12 +1422,19 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         RootedScript script(cx, lazy->maybeScript());
 
+        // Only functions without inner functions or direct eval are
+        // re-lazified. Functions with either of those are on the static scope
+        // chain of their inner functions, or in the case of eval, possibly
+        // eval'd inner functions. This prohibits re-lazification as
+        // StaticScopeIter queries isHeavyweight of those functions, which
+        // requires a non-lazy script.
+        bool canRelazify = !lazy->numInnerFunctions() && !lazy->hasDirectEval();
+
         if (script) {
             fun->setUnlazifiedScript(script);
             // Remember the lazy script on the compiled script, so it can be
             // stored on the function again in case of re-lazification.
-            // Only functions without inner functions are re-lazified.
-            if (!lazy->numInnerFunctions())
+            if (canRelazify)
                 script->setLazyScript(lazy);
             return true;
         }
@@ -1441,7 +1458,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         // Additionally, the lazy script cache is not used during incremental
         // GCs, to avoid resurrecting dead scripts after incremental sweeping
         // has started.
-        if (!lazy->numInnerFunctions() && !JS::IsIncrementalGCInProgress(cx->runtime())) {
+        if (canRelazify && !JS::IsIncrementalGCInProgress(cx->runtime())) {
             LazyScriptCache::Lookup lookup(cx, lazy);
             cx->runtime()->lazyScriptCache.lookup(lookup, script.address());
         }
@@ -1486,7 +1503,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             lazy->initScript(script);
 
         // Try to insert the newly compiled script into the lazy script cache.
-        if (!lazy->numInnerFunctions()) {
+        if (canRelazify) {
             // A script's starting column isn't set by the bytecode emitter, so
             // specify this from the lazy script so that if an identical lazy
             // script is encountered later a match can be determined.
@@ -1517,7 +1534,7 @@ JSFunction::relazify(JSTracer *trc)
 {
     JSScript *script = nonLazyScript();
     MOZ_ASSERT(script->isRelazifiable());
-    MOZ_ASSERT(!compartment()->hasBeenEntered());
+    MOZ_ASSERT(trc->runtime()->allowRelazificationForTesting || !compartment()->hasBeenEntered());
     MOZ_ASSERT(!compartment()->isDebuggee());
 
     // If the script's canonical function isn't lazy, we have to mark the
