@@ -31,14 +31,22 @@ namespace image {
 ImageFactory::Initialize()
 { }
 
+static bool
+ShouldDownscaleDuringDecode(const nsCString& aMimeType)
+{
+  // Not enabled for anything yet.
+  return false;
+}
+
 static uint32_t
-ComputeImageFlags(ImageURL* uri, bool isMultiPart)
+ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
 {
   nsresult rv;
 
   // We default to the static globals.
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
   bool doDecodeOnDraw = gfxPrefs::ImageMemDecodeOnDraw();
+  bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
   // discarding and decode-on-draw for chrome URLS.
@@ -56,10 +64,15 @@ ComputeImageFlags(ImageURL* uri, bool isMultiPart)
     isDiscardable = doDecodeOnDraw = false;
   }
 
+  // Downscale-during-decode is only enabled for certain content types.
+  if (doDownscaleDuringDecode && !ShouldDownscaleDuringDecode(aMimeType)) {
+    doDownscaleDuringDecode = false;
+  }
+
   // For multipart/x-mixed-replace, we basically want a direct channel to the
-  // decoder. Disable both for this case as well.
+  // decoder. Disable everything for this case.
   if (isMultiPart) {
-    isDiscardable = doDecodeOnDraw = false;
+    isDiscardable = doDecodeOnDraw = doDownscaleDuringDecode = false;
   }
 
   // We have all the information we need.
@@ -72,6 +85,9 @@ ComputeImageFlags(ImageURL* uri, bool isMultiPart)
   }
   if (isMultiPart) {
     imageFlags |= Image::INIT_FLAG_TRANSIENT;
+  }
+  if (doDownscaleDuringDecode) {
+    imageFlags |= Image::INIT_FLAG_DOWNSCALE_DURING_DECODE;
   }
 
   return imageFlags;
@@ -89,7 +105,7 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
              "Pref observers should have been initialized already");
 
   // Compute the image's initialization flags.
-  uint32_t imageFlags = ComputeImageFlags(aURI, aIsMultiPart);
+  uint32_t imageFlags = ComputeImageFlags(aURI, aMimeType, aIsMultiPart);
 
   // Select the type of image to create based on MIME type.
   if (aMimeType.EqualsLiteral(IMAGE_SVG_XML)) {
