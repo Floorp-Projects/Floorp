@@ -6,7 +6,7 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/aboutSessionRestore.css
+* skin/classic/browser/aboutSessionRestore.css                  (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutWelcomeBack.css                     (../shared/aboutWelcomeBack.css)
   skin/classic/browser/aboutCertError.css
@@ -21,7 +21,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif
-  skin/classic/browser/aboutTabCrashed.css
+  skin/classic/browser/aboutTabCrashed.css                      (../shared/aboutTabCrashed.css)
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css
 * skin/classic/browser/devedition.css

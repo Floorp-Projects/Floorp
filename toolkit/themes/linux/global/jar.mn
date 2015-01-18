@@ -58,6 +58,7 @@ toolkit.jar:
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
    skin/classic/global/in-content/check.svg                    (../../shared/in-content/check.svg)
+   skin/classic/global/in-content/check-partial.svg            (../../shared/in-content/check-partial.svg)
    skin/classic/global/in-content/dropdown.svg                 (../../shared/in-content/dropdown.svg)
    skin/classic/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
    skin/classic/global/in-content/radio.svg                    (../../shared/in-content/radio.svg)

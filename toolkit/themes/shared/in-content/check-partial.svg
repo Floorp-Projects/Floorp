@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0"
+     y="0"
+     width="21"
+     height="21"
+     viewBox="0 0 21 21">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: #2292d0;
+    }
+    use[id$="-inverted"] {
+      fill: #fff;
+      stroke: #0095dd;
+      stroke-width: 0.5;
+    }
+    use[id$="-native"] {
+      fill: -moz-dialogText;
+    }
+  </style>
+  <defs style="display: none;">
+    <rect id="check-shape" x="3" y="9" width="15" height="3"/>
+  </defs>
+  <use id="check-partial" xlink:href="#check-shape"/>
+  <use id="check-partial-inverted" xlink:href="#check-shape"/>
+  <use id="check-partial-native" xlink:href="#check-shape"/>
+</svg>
