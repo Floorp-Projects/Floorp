@@ -17,6 +17,7 @@
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
 
+class nsIThread;
 class nsIThreadPool;
 
 namespace mozilla {
@@ -41,6 +42,10 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  /// Initializes the singleton instance. Should be called from the main thread.
+  static void Initialize();
+
+  /// Returns the singleton instance.
   static DecodePool* Singleton();
 
   /// Ask the DecodePool to run @aDecoder asynchronously and return immediately.
@@ -70,6 +75,15 @@ public:
   already_AddRefed<nsIEventTarget> GetEventTarget();
 
   /**
+   * Returns an event target interface to the DecodePool's I/O thread. Callers
+   * who want to deliver data to workers on the DecodePool can use this event
+   * target.
+   *
+   * @return An nsIEventTarget interface to the thread pool's I/O thread.
+   */
+  already_AddRefed<nsIEventTarget> GetIOEventTarget();
+
+  /**
    * Creates a worker which can be used to attempt further decoding using the
    * provided decoder.
    *
@@ -91,11 +105,10 @@ private:
 
   static StaticRefPtr<DecodePool> sSingleton;
 
-  // mThreadPoolMutex protects mThreadPool. For all RasterImages R,
-  // R::mDecodingMonitor must be acquired before mThreadPoolMutex
-  // if both are acquired; the other order may cause deadlock.
-  Mutex                     mThreadPoolMutex;
+  // mMutex protects mThreadPool and mIOThread.
+  Mutex                     mMutex;
   nsCOMPtr<nsIThreadPool>   mThreadPool;
+  nsCOMPtr<nsIThread>       mIOThread;
 };
 
 } // namespace image
