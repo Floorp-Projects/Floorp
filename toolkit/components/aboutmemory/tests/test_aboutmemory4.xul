@@ -54,7 +54,7 @@
       let actual = SpecialPowers.getClipboardData("text/unicode");
       actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
 
-      if (actual === aExpected) {
+      if (actual.trim() === aExpected.trim()) {
         SimpleTest.ok(true, "Clipboard has the expected contents");
         aNext();
       } else {
