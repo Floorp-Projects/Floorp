@@ -5085,7 +5085,7 @@ if test -n "$MOZ_WEBRTC"; then
 fi
 
 dnl Temporary until webrtc works on gonk-L
-if test -n "$gonkdir" -a "$ANDROID_VERSION" -ge 21; then
+if test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 21; then
     MOZ_WEBRTC=
 fi
 
