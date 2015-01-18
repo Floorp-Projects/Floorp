@@ -9,6 +9,7 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'buffered_stun_socket_unittest',
         'ice_unittest',
         'nrappkit_unittest',
+        'proxy_tunnel_socket_unittest',
         'rlogringbuffer_unittest',
         'runnable_utils_unittest',
         'simpletokenbucket_unittest',
