@@ -24,6 +24,7 @@ html|h1 {
   font-size: 2.5em;
   font-weight: lighter;
   line-height: 1.2;
+  color: #333;
   margin: 0;
   margin-bottom: .5em;
 }
@@ -384,7 +385,6 @@ xul|textbox[disabled="true"] {
 html|a,
 xul|*.text-link,
 xul|*.inline-link {
-  font-size: 1.25rem;
   line-height: 22px;
   color: #0095dd;
   text-decoration: none;
