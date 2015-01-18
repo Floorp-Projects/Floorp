@@ -444,7 +444,7 @@ CacheFileInputStream::ReleaseChunk()
     mWaitingForUpdate = false;
   }
 
-  mFile->ReleaseOutsideLock(mChunk.forget().take());
+  mFile->ReleaseOutsideLock(mChunk.forget());
 }
 
 void
