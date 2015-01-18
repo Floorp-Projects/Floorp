@@ -44,6 +44,7 @@ extern "C" {
 #include "nr_socket.h"
 #include "nr_resolver.h"
 #include "nr_interface_prioritizer.h"
+#include "nr_socket_wrapper.h"
 #include "stun_client_ctx.h"
 #include "stun_server_ctx.h"
 #include "turn_client_ctx.h"
@@ -132,6 +133,7 @@ struct nr_ice_ctx_ {
 
   nr_resolver *resolver;                      /* The resolver to use */
   nr_interface_prioritizer *interface_prioritizer;  /* Priority decision logic */
+  nr_socket_wrapper_factory *turn_tcp_socket_wrapper; /* The TURN TCP socket wrapper to use */
 
   nr_ice_foundation_head foundations;
 
@@ -173,6 +175,7 @@ int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers, int
 int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers, int ct);
 int nr_ice_ctx_set_resolver(nr_ice_ctx *ctx, nr_resolver *resolver);
 int nr_ice_ctx_set_interface_prioritizer(nr_ice_ctx *ctx, nr_interface_prioritizer *prioritizer);
+int nr_ice_ctx_set_turn_tcp_socket_wrapper(nr_ice_ctx *ctx, nr_socket_wrapper_factory *wrapper);
 int nr_ice_ctx_set_trickle_cb(nr_ice_ctx *ctx, nr_ice_trickle_candidate_cb cb, void *cb_arg);
 
 #define NR_ICE_MAX_ATTRIBUTE_SIZE 256
