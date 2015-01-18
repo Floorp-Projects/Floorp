@@ -45,8 +45,8 @@ private:
 
     void InitStreams();
 
-    struct ReadSegmentsState {
-        nsIInputStream* mThisStream;
+    struct MOZ_STACK_CLASS ReadSegmentsState {
+        nsCOMPtr<nsIInputStream> mThisStream;
         nsWriteSegmentFun mWriter;
         void* mClosure;
     };
