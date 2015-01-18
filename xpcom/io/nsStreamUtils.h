@@ -240,9 +240,9 @@ NS_WriteSegmentThunk(nsIInputStream* aInputStream, void* aClosure,
                      const char* aFromSegment, uint32_t aToOffset,
                      uint32_t aCount, uint32_t* aWriteCount);
 
-struct nsWriteSegmentThunk
+struct MOZ_STACK_CLASS nsWriteSegmentThunk
 {
-  nsIInputStream* mStream;
+  nsCOMPtr<nsIInputStream> mStream;
   nsWriteSegmentFun mFun;
   void* mClosure;
 };
