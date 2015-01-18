@@ -315,7 +315,7 @@ RasterImage::Init(const char* aMimeType,
   // transient images.
   MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
                (!(aFlags & INIT_FLAG_DISCARDABLE) &&
-                !(aFlags & INIT_FLAG_DECODE_ON_DRAW),
+                !(aFlags & INIT_FLAG_DECODE_ON_DRAW) &&
                 !(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE)),
              "Illegal init flags for transient image");
 
@@ -1369,24 +1369,7 @@ RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
 NS_IMETHODIMP
 RasterImage::RequestDecode()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mError) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!mHasSize) {
-    mWantFullDecode = true;
-    return NS_OK;
-  }
-
-  // Look up the first frame of the image, which will implicitly start decoding
-  // if it's not available right now.
-  // XXX(seth): Passing false for aShouldSyncNotify here has the effect of
-  // decoding asynchronously, but that's not obvious from the argument name.
-  // This API needs to be reworked.
-  LookupFrame(0, mSize, DECODE_FLAGS_DEFAULT, /* aShouldSyncNotify = */ false);
-
-  return NS_OK;
+  return RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
 }
 
 /* void startDecode() */
@@ -1398,20 +1381,38 @@ RasterImage::StartDecoding()
       NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
   }
 
+  return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE);
+}
+
+NS_IMETHODIMP
+RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError) {
     return NS_ERROR_FAILURE;
   }
+
   if (!mHasSize) {
     mWantFullDecode = true;
     return NS_OK;
   }
 
+  // Fall back to our intrinsic size if we don't support
+  // downscale-during-decode.
+  nsIntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
+
+  // Sync decode small images if requested.
+  bool shouldSyncDecodeSmallImages = aFlags & FLAG_SYNC_DECODE;
+
   // Look up the first frame of the image, which will implicitly start decoding
   // if it's not available right now.
   // XXX(seth): Passing true for aShouldSyncNotify here has the effect of
-  // synchronously decoding small images, but that's not obvious from the
-  // argument name. This API needs to be reworked.
-  LookupFrame(0, mSize, DECODE_FLAGS_DEFAULT, /* aShouldSyncNotify = */ true);
+  // synchronously decoding small images, while passing false has the effect of
+  // decoding asynchronously, but that's not obvious from the argument name.
+  // This API needs to be reworked.
+  LookupFrame(0, targetSize, DecodeFlags(aFlags),
+              /* aShouldSyncNotify = */ shouldSyncDecodeSmallImages);
 
   return NS_OK;
 }
