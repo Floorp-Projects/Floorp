@@ -40,6 +40,35 @@
             android:hint="@string/fxaccount_create_account_year_of_birth"
             android:inputType="none" />
 
+        <LinearLayout
+            android:id="@+id/month_day_combo"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="1" >
+
+            <EditText
+                android:id="@+id/month_edit"
+                style="@style/FxAccountEditItem"
+                android:layout_marginRight="10dp"
+                android:drawableRight="@drawable/fxaccount_ddarrow_inactive"
+                android:focusable="false"
+                android:layout_weight="0.5"
+                android:maxLength="3"
+                android:hint="@string/fxaccount_create_account_month_of_birth"
+                android:inputType="none" />
+
+            <EditText
+                android:id="@+id/day_edit"
+                style="@style/FxAccountEditItem"
+                android:layout_marginLeft="10dp"
+                android:drawableRight="@drawable/fxaccount_ddarrow_inactive"
+                android:focusable="false"
+                android:layout_weight="0.5"
+                android:hint="@string/fxaccount_create_account_day_of_birth"
+                android:inputType="none" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/policy"
             style="@style/FxAccountLinkifiedItem"

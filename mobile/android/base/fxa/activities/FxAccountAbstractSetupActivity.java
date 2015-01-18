@@ -63,6 +63,8 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
   public static final String EXTRA_PASSWORD = "password";
   public static final String EXTRA_PASSWORD_SHOWN = "password_shown";
   public static final String EXTRA_YEAR = "year";
+  public static final String EXTRA_MONTH = "month";
+  public static final String EXTRA_DAY = "day";
   public static final String EXTRA_EXTRAS = "extras";
 
   public static final String JSON_KEY_AUTH = "auth";
