@@ -42,7 +42,7 @@ public:
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
 private:
-  nsIWeakReference*  mWeakPtr;
+  nsIWeakReference* MOZ_NON_OWNING_REF mWeakPtr;
   nsresult*          mErrorPtr;
 };
 
