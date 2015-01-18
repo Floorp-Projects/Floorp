@@ -599,12 +599,15 @@ Decoder::PostFrameStop(Opacity aFrameOpacity /* = Opacity::TRANSPARENT */,
   // If we're not sending partial invalidations, then we send an invalidation
   // here when the first frame is complete.
   if (!mSendPartialInvalidations && !mIsAnimated) {
-    mInvalidRect.UnionRect(mInvalidRect, mCurrentFrame->GetRect());
+    mInvalidRect.UnionRect(mInvalidRect,
+                           nsIntRect(nsIntPoint(0, 0), GetSize()));
   }
 }
 
 void
-Decoder::PostInvalidation(nsIntRect& aRect)
+Decoder::PostInvalidation(const nsIntRect& aRect,
+                          const Maybe<nsIntRect>& aRectAtTargetSize
+                            /* = Nothing() */)
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Can't invalidate when not mid-frame!");
@@ -614,7 +617,7 @@ Decoder::PostInvalidation(nsIntRect& aRect)
   // or we're past the first frame.
   if (mSendPartialInvalidations && !mIsAnimated) {
     mInvalidRect.UnionRect(mInvalidRect, aRect);
-    mCurrentFrame->ImageUpdated(aRect);
+    mCurrentFrame->ImageUpdated(aRectAtTargetSize.valueOr(aRect));
   }
 }
 
