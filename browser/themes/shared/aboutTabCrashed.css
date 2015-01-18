@@ -1,0 +1,11 @@
+.title {
+  background-image: url("chrome://browser/skin/tab-crashed.svg");
+}
+
+#report-box {
+  display: none;
+}
+
+.crashDumpAvailable #report-box {
+  display: block
+}
