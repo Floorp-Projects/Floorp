@@ -76,7 +76,7 @@ enum EParserSpecial
   eParserSpecial_Unicode        // parsing a \Uxxx value
 };
 
-class nsPropertiesParser
+class MOZ_STACK_CLASS nsPropertiesParser
 {
 public:
   explicit nsPropertiesParser(nsIPersistentProperties* aProps)
@@ -177,7 +177,7 @@ private:
   EParserState mState;
   // if we see a '\' then we enter this special state
   EParserSpecial mSpecialState;
-  nsIPersistentProperties* mProps;
+  nsCOMPtr<nsIPersistentProperties> mProps;
 };
 
 inline bool
