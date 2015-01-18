@@ -1677,8 +1677,10 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     /* Step 4-6, 10-11. */
     RootedAtom name(cx, target->is<JSFunction>() ? target->as<JSFunction>().atom() : nullptr);
 
+    JSFunction::Flags flags = target->isConstructor() ? JSFunction::NATIVE_CTOR
+                                                      : JSFunction::NATIVE_FUN;
     RootedObject funobj(cx, NewFunction(cx, js::NullPtr(), CallOrConstructBoundFunction, length,
-                                        JSFunction::NATIVE_CTOR, target, name));
+                                        flags, target, name));
     if (!funobj)
         return nullptr;
 

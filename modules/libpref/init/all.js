@@ -3792,7 +3792,7 @@ pref("image.mem.decode_bytes_at_a_time", 16384);
 
 // Minimum timeout for expiring unused images from the surface cache, in
 // milliseconds. This controls how long we store cached temporary surfaces.
-pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60ms
+pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60s
 
 // Maximum size for the surface cache, in kilobytes.
 pref("image.mem.surfacecache.max_size_kb", 1048576); // 1GB
