@@ -7,7 +7,7 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/privacy.js"/>
 
-<preferences id="privacyPreferences">
+<preferences id="privacyPreferences" hidden="true" data-category="panePrivacy">
 
   <!-- Tracking -->
   <preference id="privacy.donottrackheader.enabled"

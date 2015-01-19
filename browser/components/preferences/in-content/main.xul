@@ -7,7 +7,7 @@
 <script type="application/javascript" 
         src="chrome://browser/content/preferences/in-content/main.js"/>
 
-<preferences id="mainPreferences">
+<preferences id="mainPreferences" hidden="true" data-category="paneGeneral">
 
 #ifdef E10S_TESTING_ONLY
     <preference id="browser.tabs.remote.autostart"
