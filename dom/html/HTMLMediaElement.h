@@ -217,8 +217,6 @@ public:
   layers::ImageContainer* GetImageContainer();
 
   // Dispatch events
-  using nsGenericHTMLElement::DispatchEvent;
-  virtual nsresult DispatchEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
   virtual nsresult DispatchAsyncEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
 
   // Dispatch events that were raised while in the bfcache
@@ -979,6 +977,11 @@ protected:
   // Gets a reference to the MediaElement's TextTrackManager. If the
   // MediaElement doesn't yet have one then it will create it.
   TextTrackManager* GetOrCreateTextTrackManager();
+
+  class nsAsyncEventRunner;
+  using nsGenericHTMLElement::DispatchEvent;
+  // For nsAsyncEventRunner.
+  nsresult DispatchEvent(const nsAString& aName);
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
