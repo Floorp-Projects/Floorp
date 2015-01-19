@@ -294,6 +294,10 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.loadPtr(slotScopeChain, R1.scratchReg());
     }
 
+    // The call will push the return address on the stack, thus we check that
+    // the stack would be aligned once the call is complete.
+    masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
+
     // Call the function with pushing return address to stack.
     masm.ma_callJitHalfPush(reg_code);
 
