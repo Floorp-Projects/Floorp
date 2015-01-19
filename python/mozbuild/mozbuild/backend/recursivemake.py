@@ -612,7 +612,6 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _add_unified_build_rules(self, makefile, unified_source_mapping,
                                  output_directory,
-                                 extra_dependencies=[],
                                  unified_files_makefile_variable='unified_files',
                                  include_curdir_build_rules=True,
                                  poison_windows_h=False):
@@ -631,10 +630,6 @@ class RecursiveMakeBackend(CommonBackend):
                                              all_sources))
 
         for unified_file, source_filenames in unified_source_mapping:
-            if extra_dependencies:
-                rule = makefile.create_rule([unified_file])
-                rule.add_dependencies(extra_dependencies)
-
             # The rule we just defined is only for cases where the cpp files get
             # blown away and we need to regenerate them.  The rule doesn't correctly
             # handle source files being added/removed/renamed.  Therefore, we
