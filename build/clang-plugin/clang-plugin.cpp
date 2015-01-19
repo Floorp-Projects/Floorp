@@ -241,7 +241,10 @@ public:
         }
         unsigned ctorID = Diag.getDiagnosticIDs()->getCustomDiagID(
           DiagnosticIDs::Error, "bad implicit conversion constructor for %0");
+        unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+          DiagnosticIDs::Note, "consider adding the explicit keyword to the constructor");
         Diag.Report(ctor->getLocation(), ctorID) << d->getDeclName();
+        Diag.Report(ctor->getLocation(), noteID);
       }
     }
 
