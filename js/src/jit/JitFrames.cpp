@@ -2928,21 +2928,21 @@ JitProfilingFrameIterator::operator++()
     JitFrameLayout *frame = framePtr();
     FrameType prevType = frame->prevType();
 
-    if (prevType == JitFrame_IonJS) {
+    if (prevType == JitFrame_IonJS || prevType == JitFrame_Unwound_IonJS) {
         returnAddressToFp_ = frame->returnAddress();
         fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(frame);
         type_ = JitFrame_IonJS;
         return;
     }
 
-    if (prevType == JitFrame_BaselineJS) {
+    if (prevType == JitFrame_BaselineJS || prevType == JitFrame_Unwound_BaselineJS) {
         returnAddressToFp_ = frame->returnAddress();
         fp_ = GetPreviousRawFrame<JitFrameLayout, uint8_t *>(frame);
         type_ = JitFrame_BaselineJS;
         return;
     }
 
-    if (prevType == JitFrame_BaselineStub) {
+    if (prevType == JitFrame_BaselineStub || prevType == JitFrame_Unwound_BaselineStub) {
         BaselineStubFrameLayout *stubFrame =
             GetPreviousRawFrame<JitFrameLayout, BaselineStubFrameLayout *>(frame);
         MOZ_ASSERT(stubFrame->prevType() == JitFrame_BaselineJS);
@@ -2954,7 +2954,7 @@ JitProfilingFrameIterator::operator++()
         return;
     }
 
-    if (prevType == JitFrame_Rectifier) {
+    if (prevType == JitFrame_Rectifier || prevType == JitFrame_Unwound_Rectifier) {
         RectifierFrameLayout *rectFrame =
             GetPreviousRawFrame<JitFrameLayout, RectifierFrameLayout *>(frame);
         FrameType rectPrevType = rectFrame->prevType();
