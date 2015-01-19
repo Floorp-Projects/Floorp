@@ -30,6 +30,10 @@ from ..frontend.data import (
 
 from collections import defaultdict
 
+from ..util import (
+    group_unified_files,
+)
+
 class XPIDLManager(object):
     """Helps manage XPCOM IDLs in the context of the build system."""
     def __init__(self, config):
@@ -255,9 +259,16 @@ class CommonBackend(BuildBackend):
                               '%sParent.cpp' % root])
             return files
 
-        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
 
-        self._handle_ipdl_sources(sorted_ipdl_sources, ipdl_cppsrcs)
+        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+        unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
+                                                          unified_prefix='UnifiedProtocols',
+                                                          unified_suffix='cpp',
+                                                          files_per_unified_file=16))
+
+        self._write_unified_files(unified_source_mapping, ipdl_dir, poison_windows_h=False)
+        self._handle_ipdl_sources(ipdl_dir, sorted_ipdl_sources, unified_source_mapping)
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
