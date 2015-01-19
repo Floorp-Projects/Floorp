@@ -2513,30 +2513,19 @@ Matrix4x4 AsyncPanZoomController::GetOverscrollTransform() const {
   float scaleX = 1 + kStretchFactor * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
   float scaleY = 1 + kStretchFactor * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
 
-  // If an axis is in underscroll, the interpretation of its overscroll
-  // amount changes: instead of stretching along that axis, we compress.
-  if (mX.IsInUnderscroll()) {
-    scaleX = 1 / scaleX;
-  }
-  if (mY.IsInUnderscroll()) {
-    scaleY = 1 / scaleY;
-  }
-
   // The scale is applied relative to the origin of the composition bounds, i.e.
   // it keeps the top-left corner of the content in place. This is fine if we
   // are overscrolling at the top or on the left, but if we are overscrolling
   // at the bottom or on the right, we want the bottom or right edge of the
   // content to stay in place instead, so we add a translation to compensate.
   ParentLayerPoint translation;
-  bool overscrolledOnRight = (mX.GetOverscroll() > 0 && !mX.IsInUnderscroll())
-                          || (mX.GetOverscroll() < 0 && mX.IsInUnderscroll());
+  bool overscrolledOnRight = mX.GetOverscroll() > 0;
   if (overscrolledOnRight) {
     ParentLayerCoord overscrolledCompositionWidth = scaleX * compositionSize.width;
     ParentLayerCoord extraCompositionWidth = overscrolledCompositionWidth - compositionSize.width;
     translation.x = -extraCompositionWidth;
   }
-  bool overscrolledAtBottom = (mY.GetOverscroll() > 0 && !mY.IsInUnderscroll())
-                           || (mY.GetOverscroll() < 0 && mY.IsInUnderscroll());
+  bool overscrolledAtBottom = mY.GetOverscroll() > 0;
   if (overscrolledAtBottom) {
     ParentLayerCoord overscrolledCompositionHeight = scaleY * compositionSize.height;
     ParentLayerCoord extraCompositionHeight = overscrolledCompositionHeight - compositionSize.height;
