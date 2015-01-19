@@ -26,7 +26,9 @@
 #define STACK_SIZE_PARAM_IS_A_RESERVATION   0x00010000    // Threads only
 #endif
 
-#if 1
+#define LOGGING_ENABLED
+
+#ifdef LOGGING_ENABLED
 #  define LOG(...) do {         \
   fprintf(stderr, __VA_ARGS__); \
   fprintf(stderr, "\n");        \
@@ -107,7 +109,16 @@ typedef HANDLE (WINAPI *set_mm_thread_characteristics_function)(
 typedef BOOL (WINAPI *revert_mm_thread_characteristics_function)(HANDLE handle);
 
 extern cubeb_ops const wasapi_ops;
+
+int wasapi_stream_stop(cubeb_stream * stm);
+int wasapi_stream_start(cubeb_stream * stm);
+void close_wasapi_stream(cubeb_stream * stm);
+HRESULT setup_wasapi_stream(cubeb_stream * stm);
+
 }
+
+struct cubeb_stream;
+
 
 struct cubeb
 {
@@ -119,6 +130,108 @@ struct cubeb
   revert_mm_thread_characteristics_function revert_mm_thread_characteristics;
 };
 
+
+class wasapi_endpoint_notification_client : public IMMNotificationClient
+{
+public:
+  /* The implementation of MSCOM was copied from MSDN. */
+  ULONG STDMETHODCALLTYPE
+  AddRef()
+  {
+    return InterlockedIncrement(&ref_count);
+  }
+
+  ULONG STDMETHODCALLTYPE
+  Release()
+  {
+    ULONG ulRef = InterlockedDecrement(&ref_count);
+    if (0 == ulRef) {
+      delete this;
+    }
+    return ulRef;
+  }
+
+  HRESULT STDMETHODCALLTYPE
+  QueryInterface(REFIID riid, VOID **ppvInterface)
+  {
+    if (IID_IUnknown == riid) {
+      AddRef();
+      *ppvInterface = (IUnknown*)this;
+    } else if (__uuidof(IMMNotificationClient) == riid) {
+      AddRef();
+      *ppvInterface = (IMMNotificationClient*)this;
+    } else {
+      *ppvInterface = NULL;
+      return E_NOINTERFACE;
+    }
+    return S_OK;
+  }
+
+  wasapi_endpoint_notification_client(cubeb_stream * stm)
+    : ref_count(1)
+    , stm(stm)
+  { }
+
+  HRESULT STDMETHODCALLTYPE
+  OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR device_id)
+  {
+    /* we don't support capture for now. */
+    if (flow == eCapture) {
+      return S_OK;
+    }
+    /* all our streams are eMultimedia for now */
+    if (role != eMultimedia) {
+      return S_OK;
+    }
+
+    auto_com autocom;
+
+    /* Close the stream */
+    wasapi_stream_stop(stm);
+    close_wasapi_stream(stm);
+    /* Reopen a stream and start it immediately. This will automatically pick the
+     * new default device for this role. */
+    setup_wasapi_stream(stm);
+    wasapi_stream_start(stm);
+
+    return S_OK;
+  }
+
+  /* The remaining methods are not implemented, they simply log when called (if
+   * log is enabled), for debugging. */
+  HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR device_id)
+  {
+    LOG("Audio device added.");
+    return S_OK;
+  };
+
+  HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR device_id)
+  {
+    LOG("Audio device removed.");
+    return S_OK;
+  }
+
+  HRESULT STDMETHODCALLTYPE
+  OnDeviceStateChanged(LPCWSTR device_id, DWORD new_state)
+  {
+    LOG("Audio device state changed.");
+    return S_OK;
+  }
+
+  HRESULT STDMETHODCALLTYPE
+  OnPropertyValueChanged(LPCWSTR device_id, const PROPERTYKEY key)
+  {
+    LOG("Audio device property value changed.");
+    return S_OK;
+  }
+private:
+  /* refcount for this instance, necessary to implement MSCOM semantics. */
+  LONG ref_count;
+  /* Pointer to the stream. It is guaranteed that this pointer is
+   * always valid. */
+  cubeb_stream * stm;
+};
+
 struct cubeb_stream
 {
   cubeb * context;
@@ -127,9 +240,18 @@ struct cubeb_stream
    * does not resample nor upmix itself. */
   cubeb_stream_params mix_params;
   cubeb_stream_params stream_params;
+  /* The latency initially requested for this stream. */
+  unsigned latency;
   cubeb_state_callback state_callback;
   cubeb_data_callback data_callback;
   void * user_ptr;
+
+  /* Lifetime considerations:
+   * - client, render_client, audio_clock and audio_stream_volume are interface
+   *   pointer to the IAudioClient.
+   * - The lifetime for device_enumerator and notification_client, resampler,
+   *   mix_buffer are the same as the cubeb_stream instance. */
+
   /* Main handle on the WASAPI stream. */
   IAudioClient * client;
   /* Interface pointer to use the event-driven interface. */
@@ -138,6 +260,13 @@ struct cubeb_stream
   IAudioClock * audio_clock;
   /* Interface pointer to use the volume facilities. */
   IAudioStreamVolume * audio_stream_volume;
+  /* Device enumerator to be able to be notified when the default
+   * device change. */
+  IMMDeviceEnumerator * device_enumerator;
+  /* Device notification client, to be able to be notified when the default
+   * audio device changes and route the audio to the new default audio output
+   * device */
+  wasapi_endpoint_notification_client * notification_client;
   /* This event is set by the stream_stop and stream_destroy
    * function, so the render loop can exit properly. */
   HANDLE shutdown_event;
@@ -372,12 +501,55 @@ BOOL WINAPI revert_mm_thread_characteristics_noop(HANDLE mmcss_handle)
   return true;
 }
 
+HRESULT register_notification_client(cubeb_stream * stm)
+{
+  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+                                NULL, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(&stm->device_enumerator));
+
+  if (FAILED(hr)) {
+    LOG("Could not get device enumerator: %x", hr);
+    return hr;
+  }
+
+  stm->notification_client = new wasapi_endpoint_notification_client(stm);
+
+  hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client);
+
+  if (FAILED(hr)) {
+    LOG("Could not register endpoint notification callback: %x", hr);
+    return hr;
+  }
+
+  return hr;
+}
+
+HRESULT unregister_notification_client(cubeb_stream * stm)
+{
+  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+                                NULL, CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARGS(&stm->device_enumerator));
+
+  if (FAILED(hr)) {
+    LOG("Could not get device enumerator: %x", hr);
+    return hr;
+  }
+
+  stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client);
+
+  SafeRelease(stm->notification_client);
+  SafeRelease(stm->device_enumerator);
+
+  return S_OK;
+}
+
 HRESULT get_default_endpoint(IMMDevice ** device)
 {
   IMMDeviceEnumerator * enumerator;
   HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
                                 NULL, CLSCTX_INPROC_SERVER,
                                 IID_PPV_ARGS(&enumerator));
+
   if (FAILED(hr)) {
     LOG("Could not get device enumerator.");
     return hr;
@@ -388,7 +560,7 @@ HRESULT get_default_endpoint(IMMDevice ** device)
    * and eCommunication ("Voice communication"). */
   hr = enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, device);
   if (FAILED(hr)) {
-    LOG("Could not get default audio endpoint.");
+    LOG("Could not get default audio endpoint. %d", __LINE__);
     SafeRelease(enumerator);
     return hr;
   }
@@ -650,46 +822,14 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
   }
 }
 
-int
-wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
-                   char const * stream_name, cubeb_stream_params stream_params,
-                   unsigned int latency, cubeb_data_callback data_callback,
-                   cubeb_state_callback state_callback, void * user_ptr)
+int setup_wasapi_stream(cubeb_stream * stm)
 {
   HRESULT hr;
+  IMMDevice * device;
   WAVEFORMATEX * mix_format;
+
   auto_com com;
 
-  assert(context && stream);
-
-  cubeb_stream * stm = (cubeb_stream *)calloc(1, sizeof(cubeb_stream));
-
-  assert(stm);
-
-  stm->context = context;
-  stm->data_callback = data_callback;
-  stm->state_callback = state_callback;
-  stm->user_ptr = user_ptr;
-  stm->stream_params = stream_params;
-  stm->draining = false;
-
-  stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
-  stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
-
-  if (!stm->shutdown_event) {
-    LOG("Can't create the shutdown event, error: %x.", GetLastError());
-    wasapi_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-
-  if (!stm->refill_event) {
-    SafeRelease(stm->shutdown_event);
-    LOG("Can't create the refill event, error: %x.", GetLastError());
-    wasapi_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-
-  IMMDevice * device;
   hr = get_default_endpoint(&device);
   if (FAILED(hr)) {
     LOG("Could not get default endpoint, error: %x", hr);
@@ -700,8 +840,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   /* Get a client. We will get all other interfaces we need from
    * this pointer. */
   hr = device->Activate(__uuidof(IAudioClient),
-                        CLSCTX_INPROC_SERVER,
-                        NULL, (void **)&stm->client);
+      CLSCTX_INPROC_SERVER,
+      NULL, (void **)&stm->client);
   SafeRelease(device);
   if (FAILED(hr)) {
     LOG("Could not activate the device to get an audio client: error: %x", hr);
@@ -710,7 +850,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   /* We have to distinguish between the format the mixer uses,
-  * and the format the stream we want to play uses. */
+   * and the format the stream we want to play uses. */
   hr = stm->client->GetMixFormat(&mix_format);
   if (FAILED(hr)) {
     LOG("Could not fetch current mix format from the audio client: error: %x", hr);
@@ -718,7 +858,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  handle_channel_layout(stm, &mix_format, &stream_params);
+  handle_channel_layout(stm, &mix_format, &stm->stream_params);
 
   /* Shared mode WASAPI always supports float32 sample format, so this
    * is safe. */
@@ -727,12 +867,12 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->mix_params.channels = mix_format->nChannels;
 
   hr = stm->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                               AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
-                               AUDCLNT_STREAMFLAGS_NOPERSIST,
-                               ms_to_hns(latency),
-                               0,
-                               mix_format,
-                               NULL);
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
+      AUDCLNT_STREAMFLAGS_NOPERSIST,
+      ms_to_hns(stm->latency),
+      0,
+      mix_format,
+      NULL);
 
   CoTaskMemFree(mix_format);
 
@@ -750,7 +890,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   if (should_upmix(stm) || should_downmix(stm)) {
-    stm->mix_buffer = (float *) malloc(frames_to_bytes_before_mix(stm, stm->buffer_frame_count));
+    stm->mix_buffer = (float *)malloc(frames_to_bytes_before_mix(stm, stm->buffer_frame_count));
   }
 
   hr = stm->client->SetEventHandle(stm->refill_event);
@@ -761,7 +901,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->GetService(__uuidof(IAudioRenderClient),
-                               (void **)&stm->render_client);
+      (void **)&stm->render_client);
   if (FAILED(hr)) {
     LOG("Could not get the render client %x.", hr);
     wasapi_stream_destroy(stm);
@@ -769,7 +909,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->GetService(__uuidof(IAudioClock),
-                               (void **)&stm->audio_clock);
+      (void **)&stm->audio_clock);
   if (FAILED(hr)) {
     LOG("Could not get the IAudioClock, %x", hr);
     wasapi_stream_destroy(stm);
@@ -777,7 +917,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->GetService(__uuidof(IAudioStreamVolume),
-                               (void **)&stm->audio_stream_volume);
+      (void **)&stm->audio_stream_volume);
   if (FAILED(hr)) {
     LOG("Could not get the IAudioStreamVolume %x.", hr);
     wasapi_stream_destroy(stm);
@@ -795,21 +935,89 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
    * and copy it over, so we are always resampling the number
    * of channels of the stream, not the number of channels
    * that WASAPI wants. */
-  stm->resampler = cubeb_resampler_create(stm, stream_params,
-                                          stm->mix_params.rate,
-                                          data_callback,
-                                          stm->buffer_frame_count,
-                                          user_ptr,
-                                          CUBEB_RESAMPLER_QUALITY_DESKTOP);
+  stm->resampler = cubeb_resampler_create(stm, stm->stream_params,
+      stm->mix_params.rate,
+      stm->data_callback,
+      stm->buffer_frame_count,
+      stm->user_ptr,
+      CUBEB_RESAMPLER_QUALITY_DESKTOP);
   if (!stm->resampler) {
     LOG("Could not get a resampler");
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
+  return CUBEB_OK;
+}
+
+int
+wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
+                   char const * stream_name, cubeb_stream_params stream_params,
+                   unsigned int latency, cubeb_data_callback data_callback,
+                   cubeb_state_callback state_callback, void * user_ptr)
+{
+  HRESULT hr;
+  int rv;
+  auto_com com;
+
+  assert(context && stream);
+
+  cubeb_stream * stm = (cubeb_stream *)calloc(1, sizeof(cubeb_stream));
+
+  assert(stm);
+
+  stm->context = context;
+  stm->data_callback = data_callback;
+  stm->state_callback = state_callback;
+  stm->user_ptr = user_ptr;
+  stm->stream_params = stream_params;
+  stm->draining = false;
+  stm->latency = latency;
+
+  stm->shutdown_event = CreateEvent(NULL, 0, 0, NULL);
+  stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
+
+  if (!stm->shutdown_event) {
+    LOG("Can't create the shutdown event, error: %x.", GetLastError());
+    wasapi_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
+  if (!stm->refill_event) {
+    SafeRelease(stm->shutdown_event);
+    LOG("Can't create the refill event, error: %x.", GetLastError());
+    wasapi_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
+  rv = setup_wasapi_stream(stm);
+  if (rv != CUBEB_OK) {
+    return rv;
+  }
+
+  hr = register_notification_client(stm);
+  if (FAILED(hr)) {
+    /* this is not fatal, we can still play audio, but we won't be able
+     * to keep using the default audio endpoint if it changes. */
+    LOG("failed to register notification client, %x", hr);
+  }
+
   *stream = stm;
 
   return CUBEB_OK;
+}
+
+void close_wasapi_stream(cubeb_stream * stm)
+{
+  assert(stm);
+
+  SafeRelease(stm->client);
+  SafeRelease(stm->render_client);
+  SafeRelease(stm->audio_clock);
+
+  cubeb_resampler_destroy(stm->resampler);
+
+  free(stm->mix_buffer);
 }
 
 void wasapi_stream_destroy(cubeb_stream * stm)
@@ -826,14 +1034,10 @@ void wasapi_stream_destroy(cubeb_stream * stm)
   SafeRelease(stm->shutdown_event);
   SafeRelease(stm->refill_event);
 
-  SafeRelease(stm->client);
-  SafeRelease(stm->render_client);
-  SafeRelease(stm->audio_clock);
-  SafeRelease(stm->audio_stream_volume);
+  close_wasapi_stream(stm);
 
-  cubeb_resampler_destroy(stm->resampler);
+  unregister_notification_client(stm);
 
-  free(stm->mix_buffer);
   free(stm);
 }
 
