@@ -626,8 +626,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 
 @BINPATH@/components/Payment.js
 @BINPATH@/components/PaymentFlowInfo.js
+@BINPATH@/components/PaymentProvider.js
 @BINPATH@/components/Payment.manifest
 @BINPATH@/components/PaymentsUI.js
+@BINPATH@/components/PaymentProviderStrategy.js
 
 #ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/SafeBrowsing.jsm
