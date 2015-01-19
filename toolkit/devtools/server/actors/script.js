@@ -110,15 +110,15 @@ BreakpointActorMap.prototype = {
       }
     }
 
-    query.actor = query.source ? query.source.actor : undefined;
+    query.sourceActorID = query.sourceActor ? query.sourceActor.actorID : undefined;
     query.beginColumn = query.column ? query.column : undefined;
     query.endColumn = query.column ? query.column + 1 : undefined;
 
-    for (let actor of findKeys(this._actors, query.actor))
-    for (let line of findKeys(this._actors[actor], query.line))
-    for (let beginColumn of findKeys(this._actors[actor][line], query.beginColumn))
-    for (let endColumn of findKeys(this._actors[actor][line][beginColumn], query.endColumn)) {
-      yield this._actors[actor][line][beginColumn][endColumn];
+    for (let sourceActorID of findKeys(this._actors, query.sourceActorID))
+    for (let line of findKeys(this._actors[sourceActorID], query.line))
+    for (let beginColumn of findKeys(this._actors[sourceActorID][line], query.beginColumn))
+    for (let endColumn of findKeys(this._actors[sourceActorID][line][beginColumn], query.endColumn)) {
+      yield this._actors[sourceActorID][line][beginColumn][endColumn];
     }
   },
 
@@ -157,24 +157,25 @@ BreakpointActorMap.prototype = {
    *        The instance of BreakpointActor to be set to the given location.
    */
   setActor: function (location, actor) {
-    let { source, line, column } = location;
+    let { sourceActor, line, column } = location;
 
+    let sourceActorID = sourceActor.actorID;
     let beginColumn = column ? column : 0;
     let endColumn = column ? column + 1 : Infinity;
 
-    if (!this._actors[source.actor]) {
-      this._actors[source.actor] = [];
+    if (!this._actors[sourceActorID]) {
+      this._actors[sourceActorID] = [];
     }
-    if (!this._actors[source.actor][line]) {
-      this._actors[source.actor][line] = [];
+    if (!this._actors[sourceActorID][line]) {
+      this._actors[sourceActorID][line] = [];
     }
-    if (!this._actors[source.actor][line][beginColumn]) {
-      this._actors[source.actor][line][beginColumn] = [];
+    if (!this._actors[sourceActorID][line][beginColumn]) {
+      this._actors[sourceActorID][line][beginColumn] = [];
     }
-    if (!this._actors[source.actor][line][beginColumn][endColumn]) {
+    if (!this._actors[sourceActorID][line][beginColumn][endColumn]) {
       ++this._size;
     }
-    this._actors[source.actor][line][beginColumn][endColumn] = actor;
+    this._actors[sourceActorID][line][beginColumn][endColumn] = actor;
   },
 
   /**
@@ -188,24 +189,25 @@ BreakpointActorMap.prototype = {
    *        - column (optional)
    */
   deleteActor: function (location) {
-    let { source, line, column } = location;
+    let { sourceActor, line, column } = location;
 
+    let sourceActorID = sourceActor.actorID;
     let beginColumn = column ? column : 0;
     let endColumn = column ? column + 1 : Infinity;
 
-    if (this._actors[source.actor]) {
-      if (this._actors[source.actor][line]) {
-        if (this._actors[source.actor][line][beginColumn]) {
-          if (this._actors[source.actor][line][beginColumn][endColumn]) {
+    if (this._actors[sourceActorID]) {
+      if (this._actors[sourceActorID][line]) {
+        if (this._actors[sourceActorID][line][beginColumn]) {
+          if (this._actors[sourceActorID][line][beginColumn][endColumn]) {
             --this._size;
           }
-          delete this._actors[source.actor][line][beginColumn][endColumn];
-          if (Object.keys(this._actors[source.actor][line][beginColumn]).length === 0) {
-            delete this._actors[source.actor][line][beginColumn];
+          delete this._actors[sourceActorID][line][beginColumn][endColumn];
+          if (Object.keys(this._actors[sourceActorID][line][beginColumn]).length === 0) {
+            delete this._actors[sourceActorID][line][beginColumn];
           }
         }
-        if (Object.keys(this._actors[source.actor][line]).length === 0) {
-          delete this._actors[source.actor][line];
+        if (Object.keys(this._actors[sourceActorID][line]).length === 0) {
+          delete this._actors[sourceActorID][line];
         }
       }
     }
@@ -1209,7 +1211,7 @@ ThreadActor.prototype = {
           return;
         }
         let bpActor = this.breakpointActorMap.getActor({
-          source: sourceActor.form(),
+          sourceActor: sourceActor,
           line: location.line
         });
         dbg_assert(bpActor, "Breakpoint actor must be created");
@@ -2041,7 +2043,7 @@ ThreadActor.prototype = {
     // Set any stored breakpoints.
     let endLine = aScript.startLine + aScript.lineCount - 1;
     let source = this.sources.createNonSourceMappedActor(aScript.source);
-    for (let bpActor of this.breakpointActorMap.findActors({ source: source.form() })) {
+    for (let bpActor of this.breakpointActorMap.findActors({ sourceActor: source })) {
       // Limit the search to the line numbers contained in the new script.
       if (bpActor.location.line >= aScript.startLine
           && bpActor.location.line <= endLine) {
@@ -2930,7 +2932,7 @@ SourceActor.prototype = {
    */
   setBreakpoint: function (aLocation, aOnlyThisScript=null) {
     const location = {
-      source: this.form(),
+      sourceActor: this,
       line: aLocation.line,
       column: aLocation.column,
       condition: aLocation.condition
@@ -2975,7 +2977,7 @@ SourceActor.prototype = {
 
     const { line, entryPoints } = result;
     const actualLocation = line !== location.line
-          ? { source: { actor: this.actorID }, line }
+                         ? { sourceActor: this, line }
       : undefined;
 
     if (actualLocation) {
