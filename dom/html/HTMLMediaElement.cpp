@@ -204,7 +204,7 @@ protected:
   uint32_t mLoadID;
 };
 
-class nsAsyncEventRunner : public nsMediaEvent
+class HTMLMediaElement::nsAsyncEventRunner : public nsMediaEvent
 {
 private:
   nsString mName;
