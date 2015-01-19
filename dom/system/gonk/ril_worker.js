@@ -152,7 +152,10 @@ BufObject.prototype = {
    *        original main thread message object that led to the RIL request.
    */
   newParcel: function(type, options) {
-    if (DEBUG) this.context.debug("New outgoing parcel of type " + type);
+    if (DEBUG) {
+      this.context.debug("New outgoing parcel of type " + type +
+                         ", token " + this.mToken);
+    }
 
     // We're going to leave room for the parcel size at the beginning.
     this.outgoingIndex = this.PARCEL_SIZE_SIZE;
