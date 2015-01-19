@@ -33,25 +33,25 @@ const CATEGORIES = [
  * To be kept in sync with the js::ProfileEntry::Category in ProfilingStack.h
  */
 const CATEGORY_MAPPINGS = {
-  "8": CATEGORIES[0],    // js::ProfileEntry::Category::OTHER
-  "16": CATEGORIES[1],   // js::ProfileEntry::Category::CSS
-  "32": CATEGORIES[2],   // js::ProfileEntry::Category::JS
-  "64": CATEGORIES[3],   // js::ProfileEntry::Category::GC
-  "128": CATEGORIES[3],  // js::ProfileEntry::Category::CC
-  "256": CATEGORIES[4],  // js::ProfileEntry::Category::NETWORK
-  "512": CATEGORIES[5],  // js::ProfileEntry::Category::GRAPHICS
-  "1024": CATEGORIES[6], // js::ProfileEntry::Category::STORAGE
-  "2048": CATEGORIES[7], // js::ProfileEntry::Category::EVENTS
+  "16": CATEGORIES[0],      // js::ProfileEntry::Category::OTHER
+  "32": CATEGORIES[1],      // js::ProfileEntry::Category::CSS
+  "64": CATEGORIES[2],      // js::ProfileEntry::Category::JS
+  "128": CATEGORIES[3],     // js::ProfileEntry::Category::GC
+  "256": CATEGORIES[3],     // js::ProfileEntry::Category::CC
+  "512": CATEGORIES[4],     // js::ProfileEntry::Category::NETWORK
+  "1024": CATEGORIES[5],    // js::ProfileEntry::Category::GRAPHICS
+  "2048": CATEGORIES[6],    // js::ProfileEntry::Category::STORAGE
+  "4096": CATEGORIES[7],    // js::ProfileEntry::Category::EVENTS
 };
 
 // Human-readable "other" category bitmask. Older Geckos don't have all the
 // necessary instrumentation in the sampling profiler backend for creating
 // a categories graph, in which case we default to the "other" category.
-const CATEGORY_OTHER = 8;
+const CATEGORY_OTHER = 16;
 
 // Human-readable JIT category bitmask. Certain pseudo-frames in a sample,
 // like "EnterJIT", don't have any associated `cateogry` information.
-const CATEGORY_JIT = 32;
+const CATEGORY_JIT = 64;
 
 // Exported symbols.
 exports.L10N = L10N;
