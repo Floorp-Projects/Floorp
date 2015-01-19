@@ -254,7 +254,7 @@ public:
     assign(aOther.take());
     return *this;
   }
-  RefPtr& operator=(const already_AddRefed<T>& aOther)
+  RefPtr& operator=(already_AddRefed<T>& aOther)
   {
     assign(aOther.take());
     return *this;
