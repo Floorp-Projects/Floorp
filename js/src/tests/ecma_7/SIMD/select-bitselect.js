@@ -6,6 +6,7 @@
  */
 
 var float32x4 = SIMD.float32x4;
+var float64x2 = SIMD.float64x2;
 var int32x4 = SIMD.int32x4;
 
 function select(mask, ifTrue, ifFalse) {
@@ -27,38 +28,38 @@ function testSelect(type, inputs) {
     for (var i = 0; i < 16; i++) {
         var mask = int32x4.bool(!!(i & 1), !!((i >> 1) & 1), !!((i >> 2) & 1), !!((i >> 3) & 1));
         for ([x, y] of inputs)
-            assertEqX4(type.select(mask, x, y), select(mask, x, y));
+            assertEqVec(type.select(mask, x, y), select(mask, x, y));
     }
 }
 
-function bitselect(ScalarTypedArray, mask, ifTrue, ifFalse) {
-    var m = simdToArray(mask);
-
-    var tv = new ScalarTypedArray(simdToArray(ifTrue));
-    var fv = new ScalarTypedArray(simdToArray(ifFalse));
-
-    tv = new Int32Array(tv.buffer);
-    fv = new Int32Array(fv.buffer);
-    var res = new Int32Array(4);
-
-    for (var i = 0; i < 4; i++) {
-        var t = 0;
-        for (var bit = 0; bit < 32; bit++) {
-            var readVal = (m[i] >> bit) & 1 ? tv[i] : fv[i];
-            var readBit = (readVal >> bit) & 1;
-            t |= readBit << bit;
-        }
-        res[i] = t;
+function int32x4FromTypeBits(type, vec) {
+    switch (type) {
+      case float32x4:
+          return int32x4.fromFloat32x4Bits(vec);
+      case float64x2:
+          return int32x4.fromFloat64x2Bits(vec);
+      case int32x4:
+          return vec;
+      default:
+          throw new TypeError("Unknown SIMD type.");
     }
+}
 
-    res = new ScalarTypedArray(res.buffer);
-    return Array.prototype.map.call(res, x => x);
+function bitselect(type, mask, ifTrue, ifFalse) {
+    var tv = int32x4FromTypeBits(type, ifTrue);
+    var fv = int32x4FromTypeBits(type, ifFalse);
+    var tr = int32x4.and(mask, tv);
+    var fr = int32x4.and(int32x4.not(mask), fv);
+    var orApplied = int32x4.or(tr, fr);
+    var converted = type == int32x4 ? orApplied : type.fromInt32x4Bits(orApplied);
+    return simdToArray(converted);
 }
 
 function findCorrespondingScalarTypedArray(type) {
     switch (type) {
         case int32x4: return Int32Array;
         case float32x4: return Float32Array;
+        case float64x2: return Float64Array;
         default: throw new Error("undefined scalar typed array");
     }
 }
@@ -73,7 +74,7 @@ function testBitSelectSimple(type, inputs) {
     for (var i = 0; i < 16; i++) {
         var mask = int32x4.bool(!!(i & 1), !!((i >> 1) & 1), !!((i >> 2) & 1), !!((i >> 3) & 1));
         for ([x, y] of inputs)
-            assertEqX4(type.bitselect(mask, x, y), bitselect(ScalarTypedArray, mask, x, y));
+            assertEqVec(type.bitselect(mask, x, y), bitselect(type, mask, x, y));
     }
 }
 
@@ -91,7 +92,7 @@ function testBitSelectComplex(type, inputs) {
     var ScalarTypedArray = findCorrespondingScalarTypedArray(type);
     for (var mask of masks) {
         for ([x, y] of inputs)
-            assertEqX4(type.bitselect(mask, x, y), bitselect(ScalarTypedArray, mask, x, y));
+            assertEqVec(type.bitselect(mask, x, y), bitselect(type, mask, x, y));
     }
 }
 
@@ -114,6 +115,19 @@ function test() {
     testSelect(float32x4, inputs);
     testBitSelectSimple(float32x4, inputs);
     testBitSelectComplex(float32x4, inputs);
+
+    inputs = [
+        [float64x2(0.125,4.25), float64x2(9.75,16.125)],
+        [float64x2(1.5,2.75), float64x2(3.25,4.5)],
+        [float64x2(-1.5,-0), float64x2(NaN,-Infinity)],
+        [float64x2(1,-2), float64x2(13.37,3.13)],
+        [float64x2(1.5,2.75), float64x2(NaN,Infinity)],
+        [float64x2(-NaN,-Infinity), float64x2(9.75,16.125)]
+    ];
+
+    testSelect(float64x2, inputs);
+    testBitSelectSimple(float64x2, inputs);
+    testBitSelectComplex(float64x2, inputs);
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);

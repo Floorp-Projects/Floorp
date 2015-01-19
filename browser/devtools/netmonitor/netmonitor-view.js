@@ -2104,8 +2104,7 @@ NetworkDetailsView.prototype = {
     //   2) come from a target that provides security information.
     let hasSecurityInfo = aData.securityState &&
                           aData.securityState !== "insecure";
-
-    $("#security-tab").hidden = !hasSecurityInfo;
+    this.sidebar.toggleTab(hasSecurityInfo, "security-tab", "security-tabpanel");
 
     // Switch to the "Headers" tabpanel if the "Preview" previously selected
     // and this is not an HTML response or "Security" was selected but this

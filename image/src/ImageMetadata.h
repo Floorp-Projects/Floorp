@@ -53,6 +53,7 @@ public:
 
   int32_t GetWidth() const { return mSize->width; }
   int32_t GetHeight() const { return mSize->height; }
+  nsIntSize GetSize() const { return *mSize; }
   Orientation GetOrientation() const { return *mOrientation; }
 
 private:
