@@ -4,10 +4,12 @@
 
 from __future__ import unicode_literals
 
+import itertools
 import hashlib
 import os
 import unittest
 import shutil
+import string
 import sys
 import tempfile
 
@@ -19,6 +21,7 @@ from mozunit import (
 
 from mozbuild.util import (
     FileAvoidWrite,
+    group_unified_files,
     hash_file,
     memoize,
     memoized_property,
@@ -660,6 +663,25 @@ class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
 
         self.assertEqual(len(l), 3)
 
+class TestGroupUnifiedFiles(unittest.TestCase):
+    FILES = ['%s.cpp' % letter for letter in string.ascii_lowercase]
+
+    def test_multiple_files(self):
+        mapping = list(group_unified_files(self.FILES, 'Unified', 'cpp', 5))
+
+        def check_mapping(index, expected_num_source_files):
+            (unified_file, source_files) = mapping[index]
+
+            self.assertEqual(unified_file, 'Unified%d.cpp' % index)
+            self.assertEqual(len(source_files), expected_num_source_files)
+
+        all_files = list(itertools.chain(*[files for (_, files) in mapping]))
+        self.assertEqual(len(all_files), len(self.FILES))
+        self.assertEqual(set(all_files), set(self.FILES))
+
+        expected_amounts = [5, 5, 5, 5, 5, 1]
+        for i, amount in enumerate(expected_amounts):
+            check_mapping(i, amount)
 
 if __name__ == '__main__':
     main()

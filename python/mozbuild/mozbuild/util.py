@@ -13,6 +13,7 @@ import difflib
 import errno
 import functools
 import hashlib
+import itertools
 import os
 import stat
 import sys
@@ -875,3 +876,38 @@ def TypedList(type, base_class=List):
     class _TypedList(TypedListMixin, base_class):
         TYPE = type
     return _TypedList
+
+def group_unified_files(files, unified_prefix, unified_suffix,
+                        files_per_unified_file):
+    """Return an iterator of (unified_filename, source_filenames) tuples.
+
+    We compile most C and C++ files in "unified mode"; instead of compiling
+    ``a.cpp``, ``b.cpp``, and ``c.cpp`` separately, we compile a single file
+    that looks approximately like::
+
+       #include "a.cpp"
+       #include "b.cpp"
+       #include "c.cpp"
+
+    This function handles the details of generating names for the unified
+    files, and determining which original source files go in which unified
+    file."""
+
+    # Our last returned list of source filenames may be short, and we
+    # don't want the fill value inserted by izip_longest to be an
+    # issue.  So we do a little dance to filter it out ourselves.
+    dummy_fill_value = ("dummy",)
+    def filter_out_dummy(iterable):
+        return itertools.ifilter(lambda x: x != dummy_fill_value,
+                                 iterable)
+
+    # From the itertools documentation, slightly modified:
+    def grouper(n, iterable):
+        "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+        args = [iter(iterable)] * n
+        return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
+
+    for i, unified_group in enumerate(grouper(files_per_unified_file,
+                                              files)):
+        just_the_filenames = list(filter_out_dummy(unified_group))
+        yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
