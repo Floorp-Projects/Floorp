@@ -52,11 +52,16 @@ public:
    * multipart/x-mixed-replace image parts fall into this category.) If this
    * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ON_DRAW must not be
    * set.
+   *
+   * INIT_FLAG_DOWNSCALE_DURING_DECODE: The container should attempt to
+   * downscale images during decoding instead of decoding them to their
+   * intrinsic size.
    */
-  static const uint32_t INIT_FLAG_NONE           = 0x0;
-  static const uint32_t INIT_FLAG_DISCARDABLE    = 0x1;
-  static const uint32_t INIT_FLAG_DECODE_ON_DRAW = 0x2;
-  static const uint32_t INIT_FLAG_TRANSIENT      = 0x4;
+  static const uint32_t INIT_FLAG_NONE                     = 0x0;
+  static const uint32_t INIT_FLAG_DISCARDABLE              = 0x1;
+  static const uint32_t INIT_FLAG_DECODE_ON_DRAW           = 0x2;
+  static const uint32_t INIT_FLAG_TRANSIENT                = 0x4;
+  static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x8;
 
   /**
    * Creates a new image container.

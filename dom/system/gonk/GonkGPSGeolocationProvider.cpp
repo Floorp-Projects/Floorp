@@ -59,6 +59,10 @@ static bool gDebug_isLoggingEnabled = false;
 static bool gDebug_isGPSLocationIgnored = false;
 static const char* kNetworkConnStateChangedTopic = "network-connection-state-changed";
 static const char* kMozSettingsChangedTopic = "mozsettings-changed";
+#ifdef MOZ_B2G_RIL
+static const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+static const char* kSettingRilDefaultServiceId = "ril.data.defaultServiceId";
+#endif
 // Both of these settings can be toggled in the Gaia Developer settings screen.
 static const char* kSettingDebugEnabled = "geolocation.debugging.enabled";
 static const char* kSettingDebugGpsIgnored = "geolocation.debugging.gps-locations-ignored";
@@ -289,6 +293,10 @@ GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
 #ifdef MOZ_B2G_RIL
   , mSupportsMSB(false)
   , mSupportsMSA(false)
+  , mRilDataServiceId(0)
+  , mNumberOfRilServices(1)
+  , mObservingNetworkConnStateChange(false)
+  , mObservingSettingsChange(false)
 #endif
   , mSupportsSingleShot(false)
   , mSupportsTimeInjection(false)
@@ -714,17 +722,24 @@ GonkGPSGeolocationProvider::SetupAGPS()
     return;
   }
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->AddObserver(this, kNetworkConnStateChangedTopic, false);
-  }
+  // Request RIL date service ID for correct RadioInterface object first due to
+  // multi-SIM case needs it to handle AGPS related stuffs. For single SIM, 0
+  // will be returned as default RIL data service ID.
+  RequestSettingValue(kSettingRilDefaultServiceId);
+}
 
+void
+GonkGPSGeolocationProvider::UpdateRadioInterface()
+{
   nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
-  if (ril) {
-    // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
-    // MultiSIM configuration
-    ril->GetRadioInterface(0 /* clientId */, getter_AddRefs(mRadioInterface));
-  }
+  NS_ENSURE_TRUE_VOID(ril);
+  ril->GetRadioInterface(mRilDataServiceId, getter_AddRefs(mRadioInterface));
+}
+
+bool
+GonkGPSGeolocationProvider::IsValidRilServiceId(uint32_t aServiceId)
+{
+  return aServiceId < mNumberOfRilServices;
 }
 #endif // MOZ_B2G_RIL
 
@@ -848,9 +863,12 @@ GonkGPSGeolocationProvider::Startup()
   // Setup an observer to watch changes to the setting.
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
+    MOZ_ASSERT(!mObservingSettingsChange);
     nsresult rv = observerService->AddObserver(this, kMozSettingsChangedTopic, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("geo: Gonk GPS AddObserver failed");
+    } else {
+      mObservingSettingsChange = true;
     }
   }
 
@@ -872,6 +890,9 @@ GonkGPSGeolocationProvider::Startup()
   }
 
   mStarted = true;
+#ifdef MOZ_B2G_RIL
+  mNumberOfRilServices = Preferences::GetUint(kPrefRilNumRadioInterfaces, 1);
+#endif
   return NS_OK;
 }
 
@@ -906,11 +927,15 @@ GonkGPSGeolocationProvider::Shutdown()
     rv = obs->RemoveObserver(this, kNetworkConnStateChangedTopic);
     if (NS_FAILED(rv)) {
       NS_WARNING("geo: Gonk GPS network state RemoveObserver failed");
+    } else {
+      mObservingNetworkConnStateChange = false;
     }
 #endif
     rv = obs->RemoveObserver(this, kMozSettingsChangedTopic);
     if (NS_FAILED(rv)) {
       NS_WARNING("geo: Gonk GPS mozsettings RemoveObserver failed");
+    } else {
+      mObservingSettingsChange = false;
     }
   }
 
@@ -1043,6 +1068,15 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
       gDebug_isLoggingEnabled =
         setting.mValue.isBoolean() ? setting.mValue.toBoolean() : false;
       return NS_OK;
+    } else if (setting.mKey.EqualsASCII(kSettingRilDefaultServiceId)) {
+      if (!setting.mValue.isNumber() ||
+          !IsValidRilServiceId(setting.mValue.toNumber())) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      mRilDataServiceId = setting.mValue.toNumber();
+      UpdateRadioInterface();
+      return NS_OK;
     }
   }
 
@@ -1070,6 +1104,32 @@ GonkGPSGeolocationProvider::Handle(const nsAString& aName,
       if (!apn.IsEmpty()) {
         SetAGpsDataConn(apn);
       }
+    }
+  } else if (aName.EqualsASCII(kSettingRilDefaultServiceId)) {
+    uint32_t id = 0;
+    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    NS_ENSURE_TRUE(cx, NS_OK);
+    if (!JS::ToUint32(cx, aResult, &id)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!IsValidRilServiceId(id)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    mRilDataServiceId = id;
+    UpdateRadioInterface();
+
+    MOZ_ASSERT(!mObservingNetworkConnStateChange);
+
+    // Now we know which service ID to deal with, observe necessary topic then
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_OK);
+
+    if (NS_FAILED(obs->AddObserver(this, kNetworkConnStateChangedTopic, false))) {
+      NS_WARNING("Failed to add network state changed observer!");
+    } else {
+      mObservingNetworkConnStateChange = true;
     }
   }
 #endif // MOZ_B2G_RIL

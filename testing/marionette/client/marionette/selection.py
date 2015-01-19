@@ -105,7 +105,7 @@ class SelectionManager(object):
         last_rect_list = self.selection_rect_list(range_count - 1)
         last_list_length = last_rect_list['length']
         first_rect, last_rect = first_rect_list['0'], last_rect_list[str(last_list_length - 1)]
-        origin_x, origin_y = self.element.location['x'], self.element.location['y']
+        origin_x, origin_y = self.element.rect['x'], self.element.rect['y']
 
         if self.element.get_attribute('dir') == 'rtl':  # such as Arabic
             start_pos, end_pos = 'right', 'left'

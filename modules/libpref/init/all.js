@@ -3752,12 +3752,19 @@ pref("browser.zoom.reflowZoom.reflowTimeout", 500);
  */
 pref("browser.zoom.reflowZoom.reflowTextOnPageLoad", true);
 
+//
 // Image-related prefs
+//
+
 // The maximum size, in bytes, of the decoded images we cache
 pref("image.cache.size", 5242880);
+
 // A weight, from 0-1000, to place on time when comparing to size.
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
+
+// Whether we attempt to downscale images during decoding.
+pref("image.downscale-during-decode.enabled", false);
 
 // The default Accept header sent for images loaded over HTTP(S)
 pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
