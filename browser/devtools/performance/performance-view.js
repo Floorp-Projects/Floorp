@@ -29,6 +29,7 @@ let PerformanceView = {
     return promise.all([
       RecordingsView.initialize(),
       OverviewView.initialize(),
+      ToolbarView.initialize(),
       DetailsView.initialize()
     ]);
   },
@@ -46,6 +47,7 @@ let PerformanceView = {
     return promise.all([
       RecordingsView.destroy(),
       OverviewView.destroy(),
+      ToolbarView.destroy(),
       DetailsView.destroy()
     ]);
   },

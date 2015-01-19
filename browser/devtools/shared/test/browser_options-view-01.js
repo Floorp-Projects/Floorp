@@ -44,6 +44,10 @@ function* testOptionsView(tab) {
   // Test buttons update when preferences update outside of the menu
   Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, false);
   Services.prefs.setBoolPref(BRANCH + BLACK_BOX_PREF, true);
+
+  is(options.getPref(PRETTY_PRINT_PREF), false, "getPref returns correct value");
+  is(options.getPref(BLACK_BOX_PREF), true, "getPref returns correct value");
+
   is(ppEl.getAttribute("checked"), "", "menuitems update when preferences change");
   is(bbEl.getAttribute("checked"), "true", "menuitems update when preferences change");
 
@@ -65,6 +69,8 @@ function* testOptionsView(tab) {
   is(events.length, 4, "two 'pref-changed' events fired");
   is(events[2], "auto-pretty-print", "correct pref passed in 'pref-changed' event (auto-pretty-print)");
   is(events[3], "auto-black-box", "correct pref passed in 'pref-changed' event (auto-black-box)");
+
+  yield options.destroy();
 }
 
 function wait(window) {
