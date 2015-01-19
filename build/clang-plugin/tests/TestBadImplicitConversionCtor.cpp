@@ -1,9 +1,9 @@
 #define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 
 struct Foo {
-  Foo(int); // expected-error {{bad implicit conversion constructor for 'Foo'}}
-  Foo(int, char=0); // expected-error {{bad implicit conversion constructor for 'Foo'}}
-  Foo(...); // expected-error {{bad implicit conversion constructor for 'Foo'}}
+  Foo(int); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
+  Foo(int, char=0); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
+  Foo(...); // expected-error {{bad implicit conversion constructor for 'Foo'}} expected-note {{consider adding the explicit keyword to the constructor}}
   Foo(int, unsigned);
   Foo(Foo&);
   Foo(const Foo&);
