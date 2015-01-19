@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ImageMetadata_h___
-#define ImageMetadata_h___
+#ifndef mozilla_image_src_ImageMetadata_h
+#define mozilla_image_src_ImageMetadata_h
 
 #include <stdint.h>
 #include "mozilla/Maybe.h"
@@ -25,7 +25,7 @@ public:
     : mHotspotX(-1)
     , mHotspotY(-1)
     , mLoopCount(-1)
-  {}
+  { }
 
   // Set the metadata this object represents on an image.
   void SetOnImage(RasterImage* image);
@@ -71,4 +71,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // ImageMetadata_h___
+#endif // mozilla_image_src_ImageMetadata_h
