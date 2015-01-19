@@ -153,6 +153,7 @@ public:
   NS_IMETHOD SetRedirectionLimit(uint32_t value) MOZ_OVERRIDE;
   NS_IMETHOD IsNoStoreResponse(bool *value) MOZ_OVERRIDE;
   NS_IMETHOD IsNoCacheResponse(bool *value) MOZ_OVERRIDE;
+  NS_IMETHOD IsPrivateResponse(bool *value) MOZ_OVERRIDE;
   NS_IMETHOD GetResponseStatus(uint32_t *aValue) MOZ_OVERRIDE;
   NS_IMETHOD GetResponseStatusText(nsACString& aValue) MOZ_OVERRIDE;
   NS_IMETHOD GetRequestSucceeded(bool *aValue) MOZ_OVERRIDE;

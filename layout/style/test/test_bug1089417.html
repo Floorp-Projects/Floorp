@@ -24,6 +24,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1089417
     is(fwin.getComputedStyle(fdoc.documentElement).backgroundColor,
        "rgb(0, 128, 0)",
        "media query change should have restyled");
+
+    f.height = "200";
+    fdoc.getElementById("s").disabled = true;
+    fdoc.getElementById("s").disabled = false;
+    is(fwin.getComputedStyle(fdoc.documentElement).backgroundColor,
+       "rgb(255, 0, 0)",
+       "media query change should have restyled");
     SimpleTest.finish();
   }
 

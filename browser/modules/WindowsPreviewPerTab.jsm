@@ -203,7 +203,9 @@ PreviewController.prototype = {
   // Resizes the canvasPreview to 0x0, essentially freeing its memory.
   // updateCanvasPreview() will detect the size mismatch as a resize event
   // the next time it is called.
-  resetCanvasPreview: function () this.resizeCanvasPreview(0, 0),
+  resetCanvasPreview: function () {
+    this.resizeCanvasPreview(0, 0);
+  },
 
   resizeCanvasPreview: function (width, height) {
     this.canvasPreview.width = width;

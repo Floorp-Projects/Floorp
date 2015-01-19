@@ -34,6 +34,7 @@
 #include "gfxContext.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
@@ -315,14 +316,21 @@ RasterImage::Init(const char* aMimeType,
   // transient images.
   MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
                (!(aFlags & INIT_FLAG_DISCARDABLE) &&
-                !(aFlags & INIT_FLAG_DECODE_ON_DRAW)),
-             "Transient images can't be discardable or decode-on-draw");
+                !(aFlags & INIT_FLAG_DECODE_ON_DRAW) &&
+                !(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE)),
+             "Illegal init flags for transient image");
 
   // Store initialization data
   mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
+  mDownscaleDuringDecode = !!(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE);
+
+#ifndef MOZ_ENABLE_SKIA
+  // Downscale-during-decode requires Skia.
+  mDownscaleDuringDecode = false;
+#endif
 
   // Lock this image's surfaces in the SurfaceCache if we're not discardable.
   if (!mDiscardable) {
@@ -330,8 +338,7 @@ RasterImage::Init(const char* aMimeType,
   }
 
   // Create the initial size decoder.
-  nsresult rv = Decode(DecodeStrategy::ASYNC, DECODE_FLAGS_DEFAULT,
-                       /* aDoSizeDecode = */ true);
+  nsresult rv = Decode(DecodeStrategy::ASYNC, Nothing(), DECODE_FLAGS_DEFAULT);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -463,7 +470,7 @@ RasterImage::GetType()
 
 DrawableFrameRef
 RasterImage::LookupFrameInternal(uint32_t aFrameNum,
-                                 const nsIntSize& aSize,
+                                 const IntSize& aSize,
                                  uint32_t aFlags)
 {
   if (!mAnim) {
@@ -478,10 +485,30 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
     return mAnim->GetCompositedFrame(aFrameNum);
   }
 
-  return SurfaceCache::Lookup(ImageKey(this),
-                              RasterSurfaceKey(aSize.ToIntSize(),
-                                               DecodeFlags(aFlags),
-                                               aFrameNum));
+  Maybe<uint32_t> alternateFlags;
+  if (IsOpaque()) {
+    // If we're opaque, we can always substitute a frame that was decoded with a
+    // different decode flag for premultiplied alpha, because that can only
+    // matter for frames with transparency.
+    alternateFlags = Some(aFlags ^ FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
+  }
+
+  // We don't want any substitution for sync decodes (except the premultiplied
+  // alpha optimization above), so we use SurfaceCache::Lookup in this case.
+  if (aFlags & FLAG_SYNC_DECODE) {
+    return SurfaceCache::Lookup(ImageKey(this),
+                                RasterSurfaceKey(aSize,
+                                                 DecodeFlags(aFlags),
+                                                 aFrameNum),
+                                alternateFlags);
+  }
+
+  // We'll return the best match we can find to the requested frame.
+  return SurfaceCache::LookupBestMatch(ImageKey(this),
+                                       RasterSurfaceKey(aSize,
+                                                        DecodeFlags(aFlags),
+                                                        aFrameNum),
+                                       alternateFlags);
 }
 
 DrawableFrameRef
@@ -492,30 +519,32 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  DrawableFrameRef ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
+  IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
+                        ? aSize.ToIntSize()
+                        : mSize.ToIntSize();
 
-  if (!ref && IsOpaque() && aFrameNum == 0) {
-    // We can use non-premultiplied alpha frames when premultipled alpha is
-    // requested, or vice versa, if this image is opaque. Try again with the bit
-    // toggled.
-    ref = LookupFrameInternal(aFrameNum, aSize,
-                              aFlags ^ FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
+  DrawableFrameRef ref = LookupFrameInternal(aFrameNum, requestedSize, aFlags);
+
+  if (!ref && !mHasSize) {
+    // We can't request a decode without knowing our intrinsic size. Give up.
+    return DrawableFrameRef();
   }
 
-  if (!ref) {
+  if (!ref || ref->GetImageSize() != requestedSize) {
     // The OS threw this frame away. We need to redecode if we can.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
-    WantDecodedFrames(aFlags, aShouldSyncNotify);
+    WantDecodedFrames(ThebesIntSize(requestedSize), aFlags, aShouldSyncNotify);
 
-    // If we were able to sync decode, we should already have the frame. If we
-    // had to decode asynchronously, maybe we've gotten lucky.
-    ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
-
-    if (!ref) {
-      // We didn't successfully redecode, so just fail.
-      return DrawableFrameRef();
+    // If we can sync decode, we should already have the frame.
+    if ((aFlags & FLAG_SYNC_DECODE) && aShouldSyncNotify) {
+      ref = LookupFrameInternal(aFrameNum, requestedSize, aFlags);
     }
+  }
+
+  if (!ref) {
+    // We still weren't able to get a frame. Give up.
+    return DrawableFrameRef();
   }
 
   if (ref->GetCompositingFailed()) {
@@ -1122,8 +1151,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
     // We need to guarantee that we've gotten the image's size, or at least
     // determined that we won't be able to get it, before we deliver the load
     // event. That means we have to do a synchronous size decode here.
-    Decode(DecodeStrategy::SYNC_IF_POSSIBLE, DECODE_FLAGS_DEFAULT,
-           /* aDoSizeDecode = */ true);
+    Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Nothing(), DECODE_FLAGS_DEFAULT);
   }
 
   // Determine our final status, giving precedence to Necko failure codes. We
@@ -1249,13 +1277,16 @@ RasterImage::CanDiscard() {
 
 // Sets up a decoder for this image.
 already_AddRefed<Decoder>
-RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
+RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
 {
   // Make sure we actually get size before doing a full decode.
-  if (aDoSizeDecode) {
-    MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
-  } else {
+  if (aSize) {
     MOZ_ASSERT(mHasSize, "Must do a size decode before a full decode!");
+    MOZ_ASSERT(mDownscaleDuringDecode || *aSize == mSize,
+               "Can only decode to our intrinsic size if we're not allowed to "
+               "downscale-during-decode");
+  } else {
+    MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
   }
 
   // Figure out which decoder we want.
@@ -1296,27 +1327,38 @@ RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
-  decoder->SetSizeDecode(aDoSizeDecode);
+  decoder->SetSizeDecode(!aSize);
   decoder->SetSendPartialInvalidations(!mHasBeenDecoded);
   decoder->SetImageIsTransient(mTransient);
   decoder->SetDecodeFlags(DecodeFlags(aFlags));
-  if (!aDoSizeDecode) {
+  if (aSize) {
     // We already have the size; tell the decoder so it can preallocate a
     // frame.  By default, we create an ARGB frame with no offset. If decoders
     // need a different type, they need to ask for it themselves.
+    // XXX(seth): Note that we call SetSize() and NeedNewFrame() with the
+    // image's intrinsic size, but AllocateFrame with our target size.
     decoder->SetSize(mSize, mOrientation);
-    decoder->NeedNewFrame(0, 0, 0, mSize.width, mSize.height,
+    decoder->NeedNewFrame(0, 0, 0, aSize->width, aSize->height,
                           SurfaceFormat::B8G8R8A8);
-    decoder->AllocateFrame();
+    decoder->AllocateFrame(*aSize);
   }
   decoder->SetIterator(mSourceBuffer->Iterator());
+
+  // Set a target size for downscale-during-decode if applicable.
+  if (mDownscaleDuringDecode && aSize && *aSize != mSize) {
+    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aSize);
+    MOZ_ASSERT(nsresult(rv) != NS_ERROR_NOT_AVAILABLE,
+               "We're downscale-during-decode but decoder doesn't support it?");
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  }
+
   decoder->Init();
 
   if (NS_FAILED(decoder->GetDecoderError())) {
     return nullptr;
   }
 
-  if (!aDoSizeDecode) {
+  if (!aSize) {
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
     mDecodeCount++;
     Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(mDecodeCount);
@@ -1336,12 +1378,13 @@ RasterImage::CreateDecoder(bool aDoSizeDecode, uint32_t aFlags)
 }
 
 void
-RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
+RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
+                               bool aShouldSyncNotify)
 {
   if (aShouldSyncNotify) {
     // We can sync notify, which means we can also sync decode.
     if (aFlags & FLAG_SYNC_DECODE) {
-      Decode(DecodeStrategy::SYNC_IF_POSSIBLE, aFlags);
+      Decode(DecodeStrategy::SYNC_IF_POSSIBLE, Some(aSize), aFlags);
       return;
     }
 
@@ -1349,12 +1392,12 @@ RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
     // case that we're redecoding an image (see bug 845147).
     Decode(mHasBeenDecoded ? DecodeStrategy::ASYNC
                            : DecodeStrategy::SYNC_FOR_SMALL_IMAGES,
-           aFlags);
+           Some(aSize), aFlags);
     return;
   }
 
   // We can't sync notify, so do an async decode.
-  Decode(DecodeStrategy::ASYNC, aFlags);
+  Decode(DecodeStrategy::ASYNC, Some(aSize), aFlags);
 }
 
 //******************************************************************************
@@ -1362,24 +1405,7 @@ RasterImage::WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify)
 NS_IMETHODIMP
 RasterImage::RequestDecode()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mError) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!mHasSize) {
-    mWantFullDecode = true;
-    return NS_OK;
-  }
-
-  // Look up the first frame of the image, which will implicitly start decoding
-  // if it's not available right now.
-  // XXX(seth): Passing false for aShouldSyncNotify here has the effect of
-  // decoding asynchronously, but that's not obvious from the argument name.
-  // This API needs to be reworked.
-  LookupFrame(0, mSize, DECODE_FLAGS_DEFAULT, /* aShouldSyncNotify = */ false);
-
-  return NS_OK;
+  return RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
 }
 
 /* void startDecode() */
@@ -1391,20 +1417,38 @@ RasterImage::StartDecoding()
       NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
   }
 
+  return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE);
+}
+
+NS_IMETHODIMP
+RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError) {
     return NS_ERROR_FAILURE;
   }
+
   if (!mHasSize) {
     mWantFullDecode = true;
     return NS_OK;
   }
 
+  // Fall back to our intrinsic size if we don't support
+  // downscale-during-decode.
+  nsIntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
+
+  // Sync decode small images if requested.
+  bool shouldSyncDecodeSmallImages = aFlags & FLAG_SYNC_DECODE;
+
   // Look up the first frame of the image, which will implicitly start decoding
   // if it's not available right now.
   // XXX(seth): Passing true for aShouldSyncNotify here has the effect of
-  // synchronously decoding small images, but that's not obvious from the
-  // argument name. This API needs to be reworked.
-  LookupFrame(0, mSize, DECODE_FLAGS_DEFAULT, /* aShouldSyncNotify = */ true);
+  // synchronously decoding small images, while passing false has the effect of
+  // decoding asynchronously, but that's not obvious from the argument name.
+  // This API needs to be reworked.
+  LookupFrame(0, targetSize, DecodeFlags(aFlags),
+              /* aShouldSyncNotify = */ shouldSyncDecodeSmallImages);
 
   return NS_OK;
 }
@@ -1418,29 +1462,30 @@ RasterImage::IsDecoded()
 
 NS_IMETHODIMP
 RasterImage::Decode(DecodeStrategy aStrategy,
-                    uint32_t aFlags,
-                    bool aDoSizeDecode /* = false */)
+                    const Maybe<nsIntSize>& aSize,
+                    uint32_t aFlags)
 {
-  MOZ_ASSERT(aDoSizeDecode || NS_IsMainThread());
+  MOZ_ASSERT(!aSize || NS_IsMainThread());
 
   if (mError) {
     return NS_ERROR_FAILURE;
   }
 
   // If we don't have a size yet, we can't do any other decoding.
-  if (!mHasSize && !aDoSizeDecode) {
+  if (!mHasSize && aSize) {
     mWantFullDecode = true;
     return NS_OK;
   }
 
   // Create a decoder.
-  nsRefPtr<Decoder> decoder = CreateDecoder(aDoSizeDecode, aFlags);
+  nsRefPtr<Decoder> decoder = CreateDecoder(aSize, aFlags);
   if (!decoder) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!aDoSizeDecode) {
-    // Send out early notifications right away.
+  if (aSize) {
+    // This isn't a size decode (which doesn't send any early notifications), so
+    // send out notifications right away.
     NotifyProgress(decoder->TakeProgress(),
                    decoder->TakeInvalidRect(),
                    decoder->GetDecodeFlags());
@@ -1495,6 +1540,11 @@ RasterImage::CanScale(GraphicsFilter aFilter,
     return false;
   }
 
+  // We don't HQ scale images that we can downscale during decode.
+  if (mDownscaleDuringDecode) {
+    return false;
+  }
+
   // We don't use the scaler for animated or transient images to avoid doing a
   // bunch of work on an image that just gets thrown away.
   if (mAnim || mTransient) {
@@ -1528,6 +1578,40 @@ RasterImage::CanScale(GraphicsFilter aFilter,
   gfxFloat minFactor = gfxPrefs::ImageHQDownscalingMinFactor() / 1000.0;
   return (scale.width < minFactor || scale.height < minFactor);
 #endif
+}
+
+bool
+RasterImage::CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags)
+{
+  // Check basic requirements: downscale-during-decode is enabled for this
+  // image, we have all the source data and know our size, the flags allow us to
+  // do it, and a 'good' filter is being used.
+  if (!mDownscaleDuringDecode || !mHasSize ||
+      !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
+    return false;
+  }
+
+  // We don't downscale animated images during decode.
+  if (mAnim) {
+    return false;
+  }
+
+  // Never upscale.
+  if (aSize.width >= mSize.width || aSize.height >= mSize.height) {
+    return false;
+  }
+
+  // Zero or negative width or height is unacceptable.
+  if (aSize.width < 1 || aSize.height < 1) {
+    return false;
+  }
+
+  // There's no point in scaling if we can't store the result.
+  if (!SurfaceCache::CanHold(aSize.ToIntSize())) {
+    return false;
+  }
+
+  return true;
 }
 
 void
@@ -1654,13 +1738,14 @@ RasterImage::Draw(gfxContext* aContext,
     mProgressTracker->OnUnlockedDraw();
   }
 
-  // XXX(seth): For now, we deliberately don't look up a frame of size aSize
-  // (though DrawWithPreDownscaleIfNeeded will do so later). It doesn't make
-  // sense to do so until we support downscale-during-decode. Right now we need
-  // to make sure that we always touch an mSize-sized frame so that we have
-  // something to HQ scale.
+  // If we're not using GraphicsFilter::FILTER_GOOD, we shouldn't high-quality
+  // scale or downscale during decode.
+  uint32_t flags = aFilter == GraphicsFilter::FILTER_GOOD
+                 ? aFlags
+                 : aFlags & ~FLAG_HIGH_QUALITY_SCALING;
+
   DrawableFrameRef ref =
-    LookupFrame(GetRequestedFrameIndex(aWhichFrame), mSize, aFlags);
+    LookupFrame(GetRequestedFrameIndex(aWhichFrame), aSize, flags);
   if (!ref) {
     // Getting the frame (above) touches the image and kicks off decoding.
     if (mDrawStartTime.IsNull()) {
@@ -1673,7 +1758,7 @@ RasterImage::Draw(gfxContext* aContext,
                                ref->IsImageComplete();
 
   DrawWithPreDownscaleIfNeeded(Move(ref), aContext, aSize,
-                               aRegion, aFilter, aFlags);
+                               aRegion, aFilter, flags);
 
   if (shouldRecordTelemetry) {
       TimeDuration drawLatency = TimeStamp::Now() - mDrawStartTime;
@@ -1938,7 +2023,10 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
 
   nsIntSize destSize(ceil(aDest.width), ceil(aDest.height));
 
-  if (CanScale(aFilter, destSize, aFlags)) {
+  if (aFilter == GraphicsFilter::FILTER_GOOD &&
+      CanDownscaleDuringDecode(destSize, aFlags)) {
+    return destSize;
+  } else if (CanScale(aFilter, destSize, aFlags)) {
     DrawableFrameRef frameRef =
       SurfaceCache::Lookup(ImageKey(this),
                            RasterSurfaceKey(destSize.ToIntSize(),

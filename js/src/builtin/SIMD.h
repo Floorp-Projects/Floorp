@@ -22,6 +22,8 @@
 
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                            \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1, 0)                              \
+  V(fromFloat64x2, (FuncConvert<Float64x2, Float32x4> ), 1, 0)                      \
+  V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Float32x4>), 1, 0)               \
   V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1, 0)                          \
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1, 0)                   \
   V(neg, (UnaryFunc<Float32x4, Neg, Float32x4>), 1, 0)                              \
@@ -64,7 +66,7 @@
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                          \
   V(bitselect, BitSelect<Float32x4>, 3, 0)                                          \
-  V(clamp, Float32x4Clamp, 3, 0)                                                    \
+  V(clamp, Clamp<Float32x4>, 3, 0)                                                  \
   V(select, Select<Float32x4>, 3, 0)
 
 #define FLOAT32X4_SHUFFLE_FUNCTION_LIST(V)                                          \
@@ -77,9 +79,60 @@
   FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                                \
   FLOAT32X4_SHUFFLE_FUNCTION_LIST(V)
 
+#define FLOAT64X2_UNARY_FUNCTION_LIST(V)                                            \
+  V(abs, (UnaryFunc<Float64x2, Abs, Float64x2>), 1, 0)                              \
+  V(fromFloat32x4, (FuncConvert<Float32x4, Float64x2> ), 1, 0)                      \
+  V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Float64x2>), 1, 0)               \
+  V(fromInt32x4, (FuncConvert<Int32x4, Float64x2> ), 1, 0)                          \
+  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float64x2>), 1, 0)                   \
+  V(neg, (UnaryFunc<Float64x2, Neg, Float64x2>), 1, 0)                              \
+  V(reciprocal, (UnaryFunc<Float64x2, Rec, Float64x2>), 1, 0)                       \
+  V(reciprocalSqrt, (UnaryFunc<Float64x2, RecSqrt, Float64x2>), 1, 0)               \
+  V(splat, (FuncSplat<Float64x2>), 1, 0)                                            \
+  V(sqrt, (UnaryFunc<Float64x2, Sqrt, Float64x2>), 1, 0)
+
+#define FLOAT64X2_BINARY_FUNCTION_LIST(V)                                           \
+  V(add, (BinaryFunc<Float64x2, Add, Float64x2>), 2, 0)                             \
+  V(div, (BinaryFunc<Float64x2, Div, Float64x2>), 2, 0)                             \
+  V(equal, (CompareFunc<Float64x2, Equal>), 2, 0)                                   \
+  V(greaterThan, (CompareFunc<Float64x2, GreaterThan>), 2, 0)                       \
+  V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual>), 2, 0)         \
+  V(lessThan, (CompareFunc<Float64x2, LessThan>), 2, 0)                             \
+  V(lessThanOrEqual, (CompareFunc<Float64x2, LessThanOrEqual>), 2, 0)               \
+  V(load,    (Load<Float64x2, 2>), 2, 0)                                            \
+  V(loadX,   (Load<Float64x2, 1>), 2, 0)                                            \
+  V(max, (BinaryFunc<Float64x2, Maximum, Float64x2>), 2, 0)                         \
+  V(maxNum, (BinaryFunc<Float64x2, MaxNum, Float64x2>), 2, 0)                       \
+  V(min, (BinaryFunc<Float64x2, Minimum, Float64x2>), 2, 0)                         \
+  V(minNum, (BinaryFunc<Float64x2, MinNum, Float64x2>), 2, 0)                       \
+  V(mul, (BinaryFunc<Float64x2, Mul, Float64x2>), 2, 0)                             \
+  V(notEqual, (CompareFunc<Float64x2, NotEqual>), 2, 0)                             \
+  V(store,    (Store<Float64x2, 2>), 3, 0)                                          \
+  V(storeX,   (Store<Float64x2, 1>), 3, 0)                                          \
+  V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2, 0)                             \
+  V(withX, (FuncWith<Float64x2, WithX>), 2, 0)                                      \
+  V(withY, (FuncWith<Float64x2, WithY>), 2, 0)
+
+#define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                          \
+  V(bitselect, BitSelect<Float64x2>, 3, 0)                                          \
+  V(clamp, Clamp<Float64x2>, 3, 0)                                                  \
+  V(select, Select<Float64x2>, 3, 0)
+
+#define FLOAT64X2_SHUFFLE_FUNCTION_LIST(V)                                          \
+  V(swizzle, Swizzle<Float64x2>, 2, 0)                                              \
+  V(shuffle, Shuffle<Float64x2>, 3, 0)
+
+#define FLOAT64X2_FUNCTION_LIST(V)                                                  \
+  FLOAT64X2_UNARY_FUNCTION_LIST(V)                                                  \
+  FLOAT64X2_BINARY_FUNCTION_LIST(V)                                                 \
+  FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                                \
+  FLOAT64X2_SHUFFLE_FUNCTION_LIST(V)
+
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                              \
   V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0)                         \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1, 0)                 \
+  V(fromFloat64x2, (FuncConvert<Float64x2, Int32x4>), 1, 0)                         \
+  V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Int32x4>), 1, 0)                 \
   V(neg, (UnaryFunc<Int32x4, Neg, Int32x4>), 1, 0)                                  \
   V(not, (UnaryFunc<Int32x4, Not, Int32x4>), 1, 0)                                  \
   V(splat, (FuncSplat<Int32x4>), 0, 0)
@@ -212,6 +265,26 @@ struct Float32x4 {
     }
 };
 
+struct Float64x2 {
+    typedef double Elem;
+    static const unsigned lanes = 2;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::TYPE_FLOAT64;
+
+    static TypeDescr &GetTypeDescr(GlobalObject &global) {
+        return global.float64x2TypeDescr().as<TypeDescr>();
+    }
+    static Elem toType(Elem a) {
+        return a;
+    }
+    static bool toType(JSContext *cx, JS::HandleValue v, Elem *out) {
+        *out = v.toNumber();
+        return true;
+    }
+    static void setReturn(CallArgs &args, Elem value) {
+        args.rval().setDouble(JS::CanonicalizeNaN(value));
+    }
+};
+
 struct Int32x4 {
     typedef int32_t Elem;
     static const unsigned lanes = 4;
@@ -245,6 +318,12 @@ extern bool                                                          \
 simd_float32x4_##Name(JSContext *cx, unsigned argc, Value *vp);
 FLOAT32X4_FUNCTION_LIST(DECLARE_SIMD_FLOAT32X4_FUNCTION)
 #undef DECLARE_SIMD_FLOAT32X4_FUNCTION
+
+#define DECLARE_SIMD_FLOAT64X2_FUNCTION(Name, Func, Operands, Flags) \
+extern bool                                                          \
+simd_float64x2_##Name(JSContext *cx, unsigned argc, Value *vp);
+FLOAT64X2_FUNCTION_LIST(DECLARE_SIMD_FLOAT64X2_FUNCTION)
+#undef DECLARE_SIMD_FLOAT64X2_FUNCTION
 
 #define DECLARE_SIMD_INT32x4_FUNCTION(Name, Func, Operands, Flags)   \
 extern bool                                                          \
