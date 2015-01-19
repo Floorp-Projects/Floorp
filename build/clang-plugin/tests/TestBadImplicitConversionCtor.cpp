@@ -32,3 +32,10 @@ struct Barn {
   Barn(int, char=0) = delete;
   Barn(...) = delete;
 };
+
+struct Abstract {
+  Abstract(int);
+  Abstract(int, char=0);
+  Abstract(...);
+  virtual void f() = 0;
+};
