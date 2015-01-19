@@ -255,6 +255,12 @@ DynamicImage::StartDecoding()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DynamicImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
+{
+  return NS_OK;
+}
+
 bool
 DynamicImage::IsDecoded()
 {
