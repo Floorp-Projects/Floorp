@@ -10,6 +10,7 @@ import os
 import re
 
 import mozpack.path as mozpath
+import mozwebidlcodegen
 
 from .base import BuildBackend
 
@@ -278,6 +279,52 @@ class CommonBackend(BuildBackend):
         with self._write_file(path) as fh:
             s = json.dumps(self._test_manager.tests_by_path)
             fh.write(s)
+
+    def _handle_webidl_collection(self, webidls):
+        if not webidls.all_stems():
+            return
+
+        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom', 'bindings')
+
+        all_inputs = set(webidls.all_static_sources())
+        for s in webidls.all_non_static_basenames():
+            all_inputs.add(mozpath.join(bindings_dir, s))
+
+        generated_events_stems = webidls.generated_events_stems()
+        exported_stems = webidls.all_regular_stems()
+
+        # The WebIDL manager reads configuration from a JSON file. So, we
+        # need to write this file early.
+        o = dict(
+            webidls=sorted(all_inputs),
+            generated_events_stems=sorted(generated_events_stems),
+            exported_stems=sorted(exported_stems),
+            example_interfaces=sorted(webidls.example_interfaces),
+        )
+
+        file_lists = mozpath.join(bindings_dir, 'file-lists.json')
+        with self._write_file(file_lists) as fh:
+            json.dump(o, fh, sort_keys=True, indent=2)
+
+        manager = mozwebidlcodegen.create_build_system_manager(
+            self.environment.topsrcdir,
+            self.environment.topobjdir,
+            mozpath.join(self.environment.topobjdir, 'dist')
+        )
+
+        # Bindings are compiled in unified mode to speed up compilation and
+        # to reduce linker memory size. Note that test bindings are separated
+        # from regular ones so tests bindings aren't shipped.
+        unified_source_mapping = list(group_unified_files(webidls.all_regular_cpp_basenames(),
+                                                          unified_prefix='UnifiedBindings',
+                                                          unified_suffix='cpp',
+                                                          files_per_unified_file=32))
+        self._write_unified_files(unified_source_mapping, bindings_dir,
+                                  poison_windows_h=True)
+        self._handle_webidl_build(bindings_dir, unified_source_mapping,
+                                  webidls,
+                                  manager.expected_build_output_files(),
+                                  manager.GLOBAL_DEFINE_FILES)
 
     def _write_unified_file(self, unified_file, source_filenames,
                             output_directory, poison_windows_h=False):
