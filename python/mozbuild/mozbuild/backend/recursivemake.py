@@ -408,15 +408,16 @@ class RecursiveMakeBackend(CommonBackend):
                 unified_prefix = unified_prefix.replace('/', '_')
 
                 suffix = obj.canonical_suffix[1:]
-                self._add_unified_build_rules(backend_file, source_files,
+                unified_prefix='Unified_%s_%s' % (suffix, unified_prefix)
+                unified_source_mapping = list(group_unified_files(source_files,
+                                                                  unified_prefix=unified_prefix,
+                                                                  unified_suffix=suffix,
+                                                                  files_per_unified_file=files_per_unification))
+                self._add_unified_build_rules(backend_file,
+                    unified_source_mapping,
                     backend_file.objdir,
-                    unified_prefix='Unified_%s_%s' % (
-                        suffix,
-                        unified_prefix),
-                    unified_suffix=suffix,
                     unified_files_makefile_variable=var,
-                    include_curdir_build_rules=False,
-                    files_per_unified_file=files_per_unification)
+                    include_curdir_build_rules=False)
                 backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
             else:
                 backend_file.write('%s += %s\n' % (
@@ -609,33 +610,25 @@ class RecursiveMakeBackend(CommonBackend):
                 mozpath.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
             root_deps_mk.dump(root_deps, removal_guard=False)
 
-    def _add_unified_build_rules(self, makefile, files, output_directory,
-                                 unified_prefix='Unified',
-                                 unified_suffix='cpp',
+    def _add_unified_build_rules(self, makefile, unified_source_mapping,
+                                 output_directory,
                                  extra_dependencies=[],
                                  unified_files_makefile_variable='unified_files',
                                  include_curdir_build_rules=True,
-                                 poison_windows_h=False,
-                                 files_per_unified_file=16):
+                                 poison_windows_h=False):
 
         # In case it's a generator.
-        files = sorted(files)
+        unified_source_mapping = sorted(unified_source_mapping)
 
         explanation = "\n" \
             "# We build files in 'unified' mode by including several files\n" \
             "# together into a single source file.  This cuts down on\n" \
-            "# compilation times and debug information size.  %d was chosen as\n" \
-            "# a reasonable compromise between clobber rebuild time, incremental\n" \
-            "# rebuild time, and compiler memory usage." % files_per_unified_file
+            "# compilation times and debug information size."
         makefile.add_statement(explanation)
 
-        unified_source_mapping = list(group_unified_files(files,
-                                                          unified_prefix=unified_prefix,
-                                                          unified_suffix=unified_suffix,
-                                                          files_per_unified_file=files_per_unified_file))
         all_sources = ' '.join(source for source, _ in unified_source_mapping)
         makefile.add_statement('%s := %s' % (unified_files_makefile_variable,
-                                               all_sources))
+                                             all_sources))
 
         for unified_file, source_filenames in unified_source_mapping:
             if extra_dependencies:
@@ -1266,8 +1259,11 @@ INSTALL_TARGETS += %(prefix)s
 
         mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
 
-        self._add_unified_build_rules(mk, ipdl_cppsrcs, ipdl_dir,
-                                      unified_prefix='UnifiedProtocols',
+        unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
+                                                          unified_prefix='UnifiedProtocols',
+                                                          unified_suffix='cpp',
+                                                          files_per_unified_file=16))
+        self._add_unified_build_rules(mk, unified_source_mapping, ipdl_dir,
                                       unified_files_makefile_variable='CPPSRCS')
 
         mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
@@ -1349,13 +1345,15 @@ INSTALL_TARGETS += %(prefix)s
         # Bindings are compiled in unified mode to speed up compilation and
         # to reduce linker memory size. Note that test bindings are separated
         # from regular ones so tests bindings aren't shipped.
+        unified_source_mapping = list(group_unified_files(webidls.all_regular_cpp_basenames(),
+                                                          unified_prefix='UnifiedBindings',
+                                                          unified_suffix='cpp',
+                                                          files_per_unified_file=32))
         self._add_unified_build_rules(mk,
-            webidls.all_regular_cpp_basenames(),
+            unified_source_mapping,
             bindings_dir,
-            unified_prefix='UnifiedBindings',
             unified_files_makefile_variable='unified_binding_cpp_files',
-            poison_windows_h=True,
-            files_per_unified_file=32)
+            poison_windows_h=True)
 
         webidls_mk = mozpath.join(bindings_dir, 'webidlsrcs.mk')
         with self._write_file(webidls_mk) as fh:
