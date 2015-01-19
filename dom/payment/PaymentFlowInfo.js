@@ -16,7 +16,9 @@ PaymentFlowInfo.prototype = {
   classID: Components.ID("{b8bce4e7-fbf0-4719-a634-b1bf9018657c}"),
   uri: null,
   jwt: null,
-  requestMethod: null
+  requestMethod: null,
+  name: null,
+  description: null
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentFlowInfo]);

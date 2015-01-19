@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(560cc17c-9df5-49ea-a953-b175553ef5c4)]
+[scriptable, uuid(f3fe3b48-fe81-4ec9-90ab-648ac9403466)]
 interface nsIPaymentFlowInfo : nsISupports
 {
   // Payment provider uri.
@@ -16,4 +16,10 @@ interface nsIPaymentFlowInfo : nsISupports
   // Payment providers expect the payment information as GET or POST
   // parameters.
   attribute DOMString requestMethod;
+
+  // Payment provider name.
+  attribute DOMString name;
+
+  // Payment provider description.
+  attribute DOMString description;
 };
