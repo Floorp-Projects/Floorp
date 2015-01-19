@@ -35,10 +35,8 @@
   <project name="device/sample" path="device/sample" revision="9c19bbbe0793ebdc427277dc37f9bb4ae20bccb2"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="18f1b5e28734183ff8073fe86dc46bc4ebba8a59"/>
   <project name="platform/bionic" path="bionic" revision="e36fba720d5327bf5532dfcde013239080f38b56"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="dc8da21282a0c68328d05268433d19b0f2f6a15c"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="5cac78cb53f1b08386d64379c4bf61ecfbf5f56b"/>
   <project name="platform/external/bsdiff" path="external/bsdiff" revision="23e322ab19fb7d74c2c37e40ce364d9f709bdcee"/>
   <project name="platform/external/bzip2" path="external/bzip2" revision="1cb636bd8e9e5cdfd5d5b2909a122f6e80db62de"/>
   <project name="platform/external/checkpolicy" path="external/checkpolicy" revision="0d73ef7049feee794f14cf1af88d05dae8139914"/>
@@ -102,11 +100,8 @@
   <project name="platform/external/webrtc" path="external/webrtc" revision="446452f84e9cc4c75d8e80f6f05e24793397a19d"/>
   <project name="platform/external/yaffs2" path="external/yaffs2" revision="a2cff2275e1b501ff478b03757d6e4f05fddc2db"/>
   <project name="platform/external/zlib" path="external/zlib" revision="6eb3570ff8fa71bd83bb375b4bf09804c6089fed"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="08d8f3d58fe78840103ea3d39044bc474d686e94"/>
-  <project name="platform/frameworks/native" path="frameworks/native" revision="5be7d8ca7bb5e193e092c39fd4f164189527b895"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="dbbe673145107e99883f62bafd70c5f43f11065c"/>
   <project name="platform/frameworks/wilhelm" path="frameworks/wilhelm" revision="f0c3b4edf597c40aae4ea311575f39c8bcf203df"/>
-  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="9a60e685a9fb38a716f18a89cd872942f75b4706"/>
   <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="adb52b35ecb523bd332854945c09828ee887e575"/>
   <project name="platform/libcore" path="libcore" revision="baf7d8068dd501cfa338d3a8b1b87216d6ce0571"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="50c4430e32849530ced32680fd6ee98963b3f7ac"/>
@@ -118,18 +113,12 @@
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5a48c04c4bb5f079bc757e29864a42427378e051"/>
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="aa3adea9c18ae00d36e597d5890cf14cb7dfb105"/>
   <project name="platform/system/extras" path="system/extras" revision="576f57b6510de59c08568b53c0fb60588be8689e"/>
-  <project name="platform/system/media" path="system/media" revision="20c2fb4c896aa59f2e8379d755f439dc59a5cf9b"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="fe95bc6f83af5c18a73aa86c96e7fa7f79b91477"/>
   <project name="platform/system/netd" path="system/netd" revision="a6531f7befb49b1c81bc0de7e51c5482b308e1c5"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
   <project name="platform/system/vold" path="system/vold" revision="42fa2a0f14f965970a4b629a176bbd2666edf017"/>
   <project name="platform/external/curl" path="external/curl" revision="e68addd988448959ea8157c5de637346b4180c33"/>
   <project name="platform/external/icu4c" path="external/icu4c" revision="d3ec7428eb276db43b7ed0544e09344a6014806c"/>
-  <remove-project name="platform/frameworks/base"/>
-  <remove-project name="platform/frameworks/native"/>
-  <remove-project name="platform/hardware/libhardware"/>
-  <remove-project name="platform/external/bluetooth/bluedroid"/>
-  <remove-project name="platform/system/media"/>
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <!--original fetch url was git://github.com/t2m-foxfone/-->
   <remote fetch="https://git.mozilla.org/external/t2m-foxfone" name="t2m"/>
@@ -140,7 +129,6 @@
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="a814b2e2dfdda7140cb3a357617dc4fbb1435e76"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="0865bc4134b67220df4058625fba29305d6b10c3"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
-  <remove-project name="platform/bootable/recovery"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="26e78a979f3090dc196219e268467620b6c40ec5"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="30b96dfca99cb384bf520a16b81f3aba56f09907"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
