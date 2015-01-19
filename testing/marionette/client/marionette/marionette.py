@@ -1397,7 +1397,7 @@ class Marionette(object):
         assert(isinstance(response, list))
         elements = []
         for x in response:
-            elements.append(HTMLElement(self, x))
+            elements.append(HTMLElement(self, x['ELEMENT']))
         return elements
 
     def get_active_element(self):
