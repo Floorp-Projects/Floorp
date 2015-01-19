@@ -4,7 +4,7 @@
 
 <!-- Content panel -->
 
-<preferences id="contentPreferences">
+<preferences id="contentPreferences" hidden="true" data-category="paneContent">
 
   <!-- Popups -->
   <preference id="dom.disable_open_during_load"

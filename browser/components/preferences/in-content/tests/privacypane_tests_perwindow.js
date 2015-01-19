@@ -9,6 +9,7 @@ function runTestOnPrivacyPrefPane(testFunc) {
     browser.addEventListener("Initialized", function(aEvent) {
       browser.removeEventListener("Initialized", arguments.callee, true);
       is(browser.contentWindow.location.href, "about:preferences", "Checking if the preferences tab was opened");
+      browser.contentWindow.gotoPref("panePrivacy");
       testFunc(browser.contentWindow);
       gBrowser.removeCurrentTab();
       testRunner.runNext();
