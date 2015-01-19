@@ -28,7 +28,7 @@ browser.jar:
     content/browser/preferences/languages.js
 *   content/browser/preferences/main.xul
 *   content/browser/preferences/main.js
-*   content/browser/preferences/permissions.xul
+    content/browser/preferences/permissions.xul
 *   content/browser/preferences/permissions.js
 *   content/browser/preferences/preferences.xul
     content/browser/preferences/preferences.js
@@ -48,5 +48,5 @@ browser.jar:
     content/browser/preferences/search.js
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
-*   content/browser/preferences/translation.xul
+    content/browser/preferences/translation.xul
     content/browser/preferences/translation.js
