@@ -13,10 +13,6 @@ namespace mozilla
 class MockMediaDecoderOwner : public MediaDecoderOwner
 {
 public:
-  virtual nsresult DispatchEvent(const nsAString& aName) MOZ_OVERRIDE
-  {
-    return NS_OK;
-  }
   virtual nsresult DispatchAsyncEvent(const nsAString& aName) MOZ_OVERRIDE
   {
     return NS_OK;
