@@ -23,16 +23,14 @@ static const RegisterSet AllRegs =
   RegisterSet(GeneralRegisterSet(Registers::AllMask),
               FloatRegisterSet(FloatRegisters::AllMask));
 
-/* This method generates a trampoline on x64 for a c++ function with
- * the following signature:
- *   bool blah(void *code, int argc, Value *argv, JSObject *scopeChain,
- *               Value *vp)
- *   ...using standard x64 fastcall calling convention
- */
+// Generates a trampoline for calling Jit compiled code from a C++ function.
+// The trampoline use the EnterJitCode signature, with the standard x64 fastcall
+// calling convention.
 JitCode *
 JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
     MacroAssembler masm(cx);
+    masm.assertStackAlignment(ABIStackAlignment, -int32_t(sizeof(uintptr_t)) /* return address */);
 
     const Register reg_code  = IntArgReg0;
     const Register reg_argc  = IntArgReg1;
@@ -89,16 +87,23 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     // Remember number of bytes occupied by argument vector
     masm.mov(reg_argc, r13);
-    masm.shll(Imm32(3), r13);
+    masm.shll(Imm32(3), r13);   // r13 = argc * sizeof(Value)
+    static_assert(sizeof(Value) == 1 << 3, "Constant is baked in assembly code");
 
-    // Guarantee 16-byte alignment.
-    // We push argc, callee token, frame size, and return address.
-    // The latter two are 16 bytes together, so we only consider argc and the
-    // token.
+    // Guarantee stack alignment of Jit frames.
+    //
+    // This code compensates for the offset created by the copy of the vector of
+    // arguments, such that the jit frame will be aligned once the return
+    // address is pushed on the stack.
+    //
+    // In the computation of the offset, we omit the size of the JitFrameLayout
+    // which is pushed on the stack, as the JitFrameLayout size is a multiple of
+    // the JitStackAlignment.
     masm.mov(rsp, r12);
     masm.subq(r13, r12);
-    masm.subq(Imm32(8), r12);
-    masm.andl(Imm32(0xf), r12);
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
+    masm.andl(Imm32(JitStackAlignment - 1), r12);
     masm.subq(r12, rsp);
 
     /***************************************************************
@@ -257,6 +262,10 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.bind(&notOsr);
         masm.movq(scopeChain, R1.scratchReg());
     }
+
+    // The call will push the return address on the stack, thus we check that
+    // the stack would be aligned once the call is complete.
+    masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     // Call function.
     masm.call(reg_code);
