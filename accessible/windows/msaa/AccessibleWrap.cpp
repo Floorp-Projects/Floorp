@@ -80,7 +80,13 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
   *ppv = nullptr;
 
-  if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
+  if (IID_IUnknown == iid)
+    *ppv = static_cast<IAccessible*>(this);
+
+  if (!*ppv && IsProxy())
+    return E_NOINTERFACE;
+
+  if (IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
   else if (IID_IEnumVARIANT == iid) {
     // Don't support this interface for leaf elements.
