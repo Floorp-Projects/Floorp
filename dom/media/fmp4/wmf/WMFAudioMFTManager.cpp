@@ -128,34 +128,47 @@ WMFAudioMFTManager::Init()
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   // Setup input/output media types
-  RefPtr<IMFMediaType> type;
+  RefPtr<IMFMediaType> inputType;
 
-  hr = wmf::MFCreateMediaType(byRef(type));
+  hr = wmf::MFCreateMediaType(byRef(inputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+  hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  hr = type->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
+  hr = inputType->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  hr = type->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, mAudioRate);
+  hr = inputType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, mAudioRate);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  hr = type->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mAudioChannels);
+  hr = inputType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, mAudioChannels);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   if (mStreamType == AAC) {
-    hr = type->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0); // Raw AAC packet
+    hr = inputType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0); // Raw AAC packet
     NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-    hr = type->SetBlob(MF_MT_USER_DATA,
-                       mUserData.Elements(),
-                       mUserData.Length());
+    hr = inputType->SetBlob(MF_MT_USER_DATA,
+                            mUserData.Elements(),
+                            mUserData.Length());
     NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
   }
 
-  hr = decoder->SetMediaTypes(type, MFAudioFormat_PCM);
+  RefPtr<IMFMediaType> outputType;
+  hr = wmf::MFCreateMediaType(byRef(outputType));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  hr = outputType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  hr = outputType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  hr = decoder->SetMediaTypes(inputType, outputType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   mDecoder = decoder;
