@@ -1236,20 +1236,14 @@ INSTALL_TARGETS += %(prefix)s
 
         self.summary.makefile_out_count += 1
 
-    def _handle_ipdl_sources(self, sorted_ipdl_sources, ipdl_cppsrcs):
+    def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
+                             unified_ipdl_cppsrcs_mapping):
         # Write out a master list of all IPDL source files.
-        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
         mk = Makefile()
 
         mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
 
-        unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
-                                                          unified_prefix='UnifiedProtocols',
-                                                          unified_suffix='cpp',
-                                                          files_per_unified_file=16))
-
-        self._write_unified_files(unified_source_mapping, ipdl_dir, poison_windows_h=False)
-        self._add_unified_build_rules(mk, unified_source_mapping, ipdl_dir,
+        self._add_unified_build_rules(mk, unified_ipdl_cppsrcs_mapping,
                                       unified_files_makefile_variable='CPPSRCS')
 
         mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
