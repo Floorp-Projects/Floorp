@@ -314,9 +314,6 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                                   getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
-  // We need to request the icon be decoded (bug 573583, bug 705516).
-  mIconRequest->StartDecoding();
-
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -331,6 +328,27 @@ nsMenuItemIconX::Notify(imgIRequest* aRequest,
                         int32_t aType,
                         const nsIntRect* aData)
 {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    // Make sure the image loaded successfully.
+    uint32_t status = imgIRequest::STATUS_ERROR;
+    if (NS_FAILED(aRequest->GetImageStatus(&status)) ||
+        (status & imgIRequest::STATUS_ERROR)) {
+      mIconRequest->Cancel(NS_BINDING_ABORTED);
+      mIconRequest = nullptr;
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    MOZ_ASSERT(image);
+
+    // Ask the image to decode at its intrinsic size.
+    int32_t width = 0, height = 0;
+    image->GetWidth(&width);
+    image->GetHeight(&height);
+    image->RequestDecodeForSize(nsIntSize(width, height), imgIContainer::FLAG_NONE);
+  }
+
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     return OnFrameComplete(aRequest);
   }
