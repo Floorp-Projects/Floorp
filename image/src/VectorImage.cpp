@@ -899,6 +899,15 @@ VectorImage::StartDecoding()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
+{
+  // Nothing to do for SVG images, though in theory we could rasterize to the
+  // provided size ahead of time if we supported off-main-thread SVG
+  // rasterization...
+  return NS_OK;
+}
+
 bool
 VectorImage::IsDecoded()
 {

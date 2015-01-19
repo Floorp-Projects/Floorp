@@ -82,6 +82,8 @@ private:
   void InjectLocation(double latitude, double longitude, float accuracy);
   void RequestSettingValue(const char* aKey);
 #ifdef MOZ_B2G_RIL
+  void UpdateRadioInterface();
+  bool IsValidRilServiceId(uint32_t aServiceId);
   void SetupAGPS();
   int32_t GetDataConnectionState();
   void SetAGpsDataConn(nsAString& aApn);
@@ -101,6 +103,13 @@ private:
 #ifdef MOZ_B2G_RIL
   bool mSupportsMSB;
   bool mSupportsMSA;
+  uint32_t mRilDataServiceId;
+  // mNumberOfRilServices indicates how many SIM slots supported on device, and
+  // RadioInterfaceLayer.js takes responsibility to set up the corresponding
+  // preference value.
+  uint32_t mNumberOfRilServices;
+  bool mObservingNetworkConnStateChange;
+  bool mObservingSettingsChange;
 #endif
   bool mSupportsSingleShot;
   bool mSupportsTimeInjection;

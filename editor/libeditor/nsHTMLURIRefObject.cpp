@@ -39,32 +39,6 @@
     q:      cite
  */
 
-/* Here is how to open a channel for testing
-   (from embed/qa/testembed/Tests.cpp):
-
-  nsCOMPtr<nsIChannel> theChannel;
-  nsCString uri;
-  nsCOMPtr<nsIURI> theURI;
-  rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
-  if (!theURI)
-    error;
-  rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nullptr, theLoadGroup);
-  if (!theChannel)
-    error;
-  nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-  if (!theLoadGroup)
-    error;
-		nsCOMPtr<nsIStreamListener> listener(static_cast<nsIStreamListener*>(qaBrowserImpl));
-		//nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
-		//qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
-		// this calls nsIStreamListener::OnDataAvailable()
-		rv = theChannel->AsyncOpen(listener, nullptr);
-
-		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
-    // Now we can do things on nsIRequest (like what?)
- */
-
 #include "nsHTMLURIRefObject.h"
 
 #include "mozilla/mozalloc.h"
