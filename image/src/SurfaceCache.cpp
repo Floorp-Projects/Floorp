@@ -248,6 +248,23 @@ public:
     return surface.forget();
   }
 
+  already_AddRefed<CachedSurface>
+  LookupBestMatch(const SurfaceKey&      aSurfaceKey,
+                  const Maybe<uint32_t>& aAlternateFlags)
+  {
+    // Try for a perfect match first.
+    nsRefPtr<CachedSurface> surface;
+    mSurfaces.Get(aSurfaceKey, getter_AddRefs(surface));
+    if (surface) {
+      return surface.forget();
+    }
+
+    // There's no perfect match, so find the best match we can.
+    MatchContext matchContext(aSurfaceKey, aAlternateFlags);
+    ForEach(TryToImproveMatch, &matchContext);
+    return matchContext.mBestMatch.forget();
+  }
+
   void ForEach(SurfaceTable::EnumReadFunction aFunction, void* aData)
   {
     mSurfaces.EnumerateRead(aFunction, aData);
@@ -257,6 +274,75 @@ public:
   bool IsLocked() const { return mLocked; }
 
 private:
+  struct MatchContext
+  {
+    MatchContext(const SurfaceKey& aIdealKey,
+                 const Maybe<uint32_t>& aAlternateFlags)
+      : mIdealKey(aIdealKey)
+      , mAlternateFlags(aAlternateFlags)
+    { }
+
+    const SurfaceKey& mIdealKey;
+    const Maybe<uint32_t> mAlternateFlags;
+    nsRefPtr<CachedSurface> mBestMatch;
+  };
+
+  static PLDHashOperator TryToImproveMatch(const SurfaceKey& aSurfaceKey,
+                                           CachedSurface*    aSurface,
+                                           void*             aContext)
+  {
+    auto context = static_cast<MatchContext*>(aContext);
+    const SurfaceKey& idealKey = context->mIdealKey;
+
+    // Matching the animation time and SVG context is required.
+    if (aSurfaceKey.AnimationTime() != idealKey.AnimationTime() ||
+        aSurfaceKey.SVGContext() != idealKey.SVGContext()) {
+      return PL_DHASH_NEXT;
+    }
+
+    // Matching the flags is required, but we can match the alternate flags as
+    // well if some were provided.
+    if (aSurfaceKey.Flags() != idealKey.Flags() &&
+        Some(aSurfaceKey.Flags()) != context->mAlternateFlags) {
+      return PL_DHASH_NEXT;
+    }
+
+    // Anything is better than nothing! (Within the constraints we just
+    // checked, of course.)
+    if (!context->mBestMatch) {
+      context->mBestMatch = aSurface;
+      return PL_DHASH_NEXT;
+    }
+
+    MOZ_ASSERT(context->mBestMatch, "Should have a current best match");
+    SurfaceKey bestMatchKey = context->mBestMatch->GetSurfaceKey();
+
+    // Compare sizes. We use an area-based heuristic here instead of computing a
+    // truly optimal answer, since it seems very unlikely to make a difference
+    // for realistic sizes.
+    int64_t idealArea = idealKey.Size().width * idealKey.Size().height;
+    int64_t surfaceArea = aSurfaceKey.Size().width * aSurfaceKey.Size().height;
+    int64_t bestMatchArea =
+      bestMatchKey.Size().width * bestMatchKey.Size().height;
+
+    // If the best match is smaller than the ideal size, prefer bigger sizes.
+    if (bestMatchArea < idealArea) {
+      if (surfaceArea > bestMatchArea) {
+        context->mBestMatch = aSurface;
+      }
+      return PL_DHASH_NEXT;
+    }
+
+    // Other, prefer sizes closer to the ideal size, but still not smaller.
+    if (idealArea <= surfaceArea && surfaceArea < bestMatchArea) {
+      context->mBestMatch = aSurface;
+      return PL_DHASH_NEXT;
+    }
+
+    // This surface isn't an improvement over the current best match.
+    return PL_DHASH_NEXT;
+  }
+
   SurfaceTable mSurfaces;
   bool         mLocked;
 };
@@ -444,6 +530,45 @@ public:
       // entry as well.
       Remove(surface);
       return DrawableFrameRef();
+    }
+
+    if (!surface->IsLocked()) {
+      mExpirationTracker.MarkUsed(surface);
+    }
+
+    return ref;
+  }
+
+  DrawableFrameRef LookupBestMatch(const ImageKey         aImageKey,
+                                   const SurfaceKey&      aSurfaceKey,
+                                   const Maybe<uint32_t>& aAlternateFlags)
+  {
+    nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
+    if (!cache)
+      return DrawableFrameRef();  // No cached surfaces for this image.
+
+    // Repeatedly look up the best match, trying again if the resulting surface
+    // has been freed by the operating system, until we can either lock a
+    // surface for drawing or there are no matching surfaces left.
+    // XXX(seth): This is O(N^2), but N is expected to be very small. If we
+    // encounter a performance problem here we can revisit this.
+
+    nsRefPtr<CachedSurface> surface;
+    DrawableFrameRef ref;
+    while (true) {
+      surface = cache->LookupBestMatch(aSurfaceKey, aAlternateFlags);
+      if (!surface) {
+        return DrawableFrameRef();  // Lookup in the per-image cache missed.
+      }
+
+      ref = surface->DrawableRef();
+      if (ref) {
+        break;
+      }
+
+      // The surface was released by the operating system. Remove the cache
+      // entry as well.
+      Remove(surface);
     }
 
     if (!surface->IsLocked()) {
@@ -787,15 +912,37 @@ SurfaceCache::Shutdown()
 }
 
 /* static */ DrawableFrameRef
-SurfaceCache::Lookup(const ImageKey    aImageKey,
-                     const SurfaceKey& aSurfaceKey)
+SurfaceCache::Lookup(const ImageKey         aImageKey,
+                     const SurfaceKey&      aSurfaceKey,
+                     const Maybe<uint32_t>& aAlternateFlags /* = Nothing() */)
 {
   if (!sInstance) {
     return DrawableFrameRef();
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
-  return sInstance->Lookup(aImageKey, aSurfaceKey);
+
+  DrawableFrameRef ref = sInstance->Lookup(aImageKey, aSurfaceKey);
+  if (!ref && aAlternateFlags) {
+    ref = sInstance->Lookup(aImageKey,
+                            aSurfaceKey.WithNewFlags(*aAlternateFlags));
+  }
+
+  return ref;
+}
+
+/* static */ DrawableFrameRef
+SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
+                              const SurfaceKey&      aSurfaceKey,
+                              const Maybe<uint32_t>& aAlternateFlags
+                                /* = Nothing() */)
+{
+  if (!sInstance) {
+    return DrawableFrameRef();
+  }
+
+  MutexAutoLock lock(sInstance->GetMutex());
+  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey, aAlternateFlags);
 }
 
 /* static */ InsertOutcome

@@ -558,7 +558,7 @@ protected:
   uint32_t mNoListenerForEvent : 23;
 
   nsAutoTObserverArray<Listener, 2> mListeners;
-  dom::EventTarget* mTarget;  // WEAK
+  dom::EventTarget* MOZ_NON_OWNING_REF mTarget;
   nsCOMPtr<nsIAtom> mNoListenerForEventAtom;
 
   friend class ELMCreationDetector;

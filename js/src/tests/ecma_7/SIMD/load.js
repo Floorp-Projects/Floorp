@@ -5,11 +5,11 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Our float32array will have 16 elements
-const SIZE_ARRAY = 16;
+// Our array for int32x4 and float32x4 will have 16 elements
+const SIZE_32_ARRAY = 16;
+const SIZE_64_ARRAY = 8;
 
-// 1 float32 == 4 bytes
-const SIZE_BYTES = SIZE_ARRAY * 4;
+const SIZE_BYTES = SIZE_32_ARRAY * 4;
 
 function MakeComparator(kind, arr) {
     var bpe = arr.BYTES_PER_ELEMENT;
@@ -28,10 +28,14 @@ function MakeComparator(kind, arr) {
         sizeOfLaneElem = 4;
         typedArrayCtor = Float32Array;
         break;
+      case 'float64x2':
+        sizeOfLaneElem = 8;
+        typedArrayCtor = Float64Array;
+        break;
       default:
         assertEq(true, false, "unknown SIMD kind");
     }
-
+    var lanes = 16 / sizeOfLaneElem;
     // Reads (numElemToRead * sizeOfLaneElem) bytes in arr, and reinterprets
     // these bytes as a typed array equivalent to the typed SIMD vector.
     var slice = function(start, numElemToRead) {
@@ -49,31 +53,38 @@ function MakeComparator(kind, arr) {
         return new typedArrayCtor(new Uint8Array(asArray).buffer);
     }
 
+    var assertFunc = (lanes == 2) ? assertEqX2 : assertEqX4;
+    var type = SIMD[kind];
     return {
         loadX: function(index) {
-            var v = SIMD[kind].loadX(arr, index);
-            assertEqX4(v, slice(index, 1));
+            var v = type.loadX(arr, index);
+            assertFunc(v, slice(index, 1));
         },
 
         loadXY: function(index) {
-            var v = SIMD[kind].loadXY(arr, index);
-            assertEqX4(v, slice(index, 2));
+            if (lanes < 4)
+                return;
+            var v = type.loadXY(arr, index);
+            assertFunc(v, slice(index, 2));
         },
 
-        loadXYZ: function(index) {
-            var v = SIMD[kind].loadXYZ(arr, index);
-            assertEqX4(v, slice(index, 3));
+       loadXYZ: function(index) {
+           if (lanes < 4)
+               return;
+           var v = type.loadXYZ(arr, index);
+           assertFunc(v, slice(index, 3));
         },
 
         load: function(index) {
-            var v = SIMD[kind].load(arr, index);
-            assertEqX4(v, slice(index, 4));
+           var v = type.load(arr, index);
+           assertFunc(v, slice(index, 4));
         }
     }
 }
 
 function testLoad(kind, TA) {
-    for (var i = SIZE_ARRAY; i--;)
+    var lanes = TA.length / 4;
+    for (var i = TA.length; i--;)
         TA[i] = i;
 
     for (var ta of [
@@ -97,7 +108,7 @@ function testLoad(kind, TA) {
         var C = MakeComparator(kind, ta);
         var bpe = ta.BYTES_PER_ELEMENT;
 
-        var lastValidArgLoadX   = (SIZE_BYTES - 4)  / bpe | 0;
+        var lastValidArgLoadX   = (SIZE_BYTES - (lanes == 4 ? 4 : 8))  / bpe | 0;
         var lastValidArgLoadXY  = (SIZE_BYTES - 8)  / bpe | 0;
         var lastValidArgLoadXYZ = (SIZE_BYTES - 12) / bpe | 0;
         var lastValidArgLoad    = (SIZE_BYTES - 16) / bpe | 0;
@@ -121,25 +132,30 @@ function testLoad(kind, TA) {
         C.loadXY(2);
         C.loadXY(3);
         C.loadXY(lastValidArgLoadXY);
-        assertThrowsInstanceOf(() => SIMD[kind].loadXY(ta, lastValidArgLoadXY + 1), RangeError);
 
         C.loadXYZ(0);
         C.loadXYZ(1);
         C.loadXYZ(2);
         C.loadXYZ(3);
         C.loadXYZ(lastValidArgLoadXYZ);
-        assertThrowsInstanceOf(() => SIMD[kind].loadXYZ(ta, lastValidArgLoadXYZ + 1), RangeError);
+
+        if (lanes >= 4) {
+            assertThrowsInstanceOf(() => SIMD[kind].loadXY(ta, lastValidArgLoadXY + 1), RangeError);
+            assertThrowsInstanceOf(() => SIMD[kind].loadXYZ(ta, lastValidArgLoadXYZ + 1), RangeError);
+        }
     }
 
-    // Test ToInt32 behavior
-    var v = SIMD[kind].load(TA, 12.5);
-    assertEqX4(v, [12, 13, 14, 15]);
+    if (lanes == 4) {
+        // Test ToInt32 behavior
+        var v = SIMD[kind].load(TA, 12.5);
+        assertEqX4(v, [12, 13, 14, 15]);
 
-    var obj = {
-        valueOf: function() { return 12 }
+        var obj = {
+            valueOf: function() { return 12 }
+        }
+        var v = SIMD[kind].load(TA, obj);
+        assertEqX4(v, [12, 13, 14, 15]);
     }
-    var v = SIMD[kind].load(TA, obj);
-    assertEqX4(v, [12, 13, 14, 15]);
 
     var obj = {
         valueOf: function() { throw new TypeError("i ain't a number"); }
@@ -147,8 +163,9 @@ function testLoad(kind, TA) {
     assertThrowsInstanceOf(() => SIMD[kind].load(TA, obj), TypeError);
 }
 
-testLoad('float32x4', new Float32Array(SIZE_ARRAY));
-testLoad('int32x4', new Int32Array(SIZE_ARRAY));
+testLoad('float32x4', new Float32Array(SIZE_32_ARRAY));
+testLoad('float64x2', new Float64Array(SIZE_64_ARRAY));
+testLoad('int32x4', new Int32Array(SIZE_32_ARRAY));
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

@@ -296,7 +296,7 @@ private:
                                                     bool aShouldSyncNotify = true);
 
   DrawableFrameRef LookupFrameInternal(uint32_t aFrameNum,
-                                       const nsIntSize& aSize,
+                                       const gfx::IntSize& aSize,
                                        uint32_t aFlags);
   DrawableFrameRef LookupFrame(uint32_t aFrameNum,
                                const nsIntSize& aSize,
@@ -325,12 +325,26 @@ private:
   // Decoding.
   //////////////////////////////////////////////////////////////////////////////
 
-  already_AddRefed<Decoder> CreateDecoder(bool aDoSizeDecode, uint32_t aFlags);
+  /**
+   * Creates and runs a decoder, either synchronously or asynchronously
+   * according to @aStrategy. Passes the provided target size @aSize and decode
+   * flags @aFlags to CreateDecoder. If a size decode is desired, pass Nothing
+   * for @aSize.
+   */
+  NS_IMETHOD Decode(DecodeStrategy aStrategy,
+                    const Maybe<nsIntSize>& aSize,
+                    uint32_t aFlags);
 
-  void WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
+  /**
+   * Creates a new decoder with a target size of @aSize and decode flags
+   * specified by @aFlags. If a size decode is desired, pass Nothing() for
+   * @aSize.
+   */
+  already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
+                                          uint32_t aFlags);
 
-  NS_IMETHOD Decode(DecodeStrategy aStrategy, uint32_t aFlags,
-                    bool aDoSizeDecode = false);
+  void WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
+                         bool aShouldSyncNotify);
 
 private: // data
   nsIntSize                  mSize;
@@ -378,6 +392,7 @@ private: // data
   bool                       mDiscardable:1;   // Is container discardable?
   bool                       mHasSourceData:1; // Do we have source data?
   bool                       mHasBeenDecoded:1; // Decoded at least once?
+  bool                       mDownscaleDuringDecode:1;
 
   // Whether we're waiting to start animation. If we get a StartAnimation() call
   // but we don't yet have more than one frame, mPendingAnimation is set so that
@@ -407,6 +422,9 @@ private: // data
 
   // Determines whether we can perform an HQ scale with the given parameters.
   bool CanScale(GraphicsFilter aFilter, const nsIntSize& aSize, uint32_t aFlags);
+
+  // Determines whether we can downscale during decode with the given parameters.
+  bool CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags);
 
   // Called by the HQ scaler when a new scaled frame is ready.
   void NotifyNewScaledFrame();

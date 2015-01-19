@@ -24,7 +24,6 @@ GeckoSimplePrograms([
     'TestDNS',
     'TestIncrementalDownload',
     'TestOpen',
-    'TestPageLoad',
     'TestProtocols',
     'TestServ',
     'TestStandardURL',
@@ -38,7 +37,6 @@ GeckoSimplePrograms([
 #SIMPLE_PROGRAMS += [
 #    TestIDN',
 #    TestIOThreads',
-#    TestPerf',
 #    TestSocketTransport',
 #    TestStreamChannel',
 #    TestStreamPump',
