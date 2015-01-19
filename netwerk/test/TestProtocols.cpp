@@ -649,7 +649,7 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         NS_RELEASE(callbacks);
         if (NS_FAILED(rv)) {
-            LOG(("ERROR: NS_OpenURI failed for %s [rv=%x]\n", aUrlString, rv));
+            LOG(("ERROR: NS_NewChannel failed for %s [rv=%x]\n", aUrlString, rv));
             return rv;
         }
 

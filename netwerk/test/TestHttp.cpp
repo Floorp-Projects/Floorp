@@ -171,7 +171,7 @@ int main(int argc, char **argv)
                            nsILoadInfo::SEC_NORMAL,
                            nsIContentPolicy::TYPE_OTHER);
 
-        RETURN_IF_FAILED(rv, "NS_OpenURI");
+        RETURN_IF_FAILED(rv, "NS_NewChannel");
 
         rv = chan->AsyncOpen(listener, nullptr);
         RETURN_IF_FAILED(rv, "AsyncOpen");
