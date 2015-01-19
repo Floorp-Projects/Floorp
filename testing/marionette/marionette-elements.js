@@ -310,6 +310,7 @@ ElementManager.prototype = {
           result = [];
           for (let i = 0; i < val.length; ++i) {
             result.push(this.wrapValue(val[i]));
+
           }
         }
         else if (val == null) {
@@ -470,7 +471,7 @@ ElementManager.prototype = {
       if (isArrayLike) {
         let ids = []
         for (let i = 0 ; i < found.length ; i++) {
-          ids.push(this.addToKnownElements(found[i]));
+          ids.push({'ELEMENT': this.addToKnownElements(found[i])});
         }
         on_success(ids, command_id);
       } else {
