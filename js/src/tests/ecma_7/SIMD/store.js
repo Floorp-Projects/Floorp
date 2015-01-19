@@ -32,16 +32,18 @@ function testStore(ta, kind, i, v) {
     assertChanged(ta, i, [v.x]);
 
     reset(ta);
-    SIMD[kind].storeXY(ta, i, v);
-    assertChanged(ta, i, [v.x, v.y]);
-
-    reset(ta);
-    SIMD[kind].storeXYZ(ta, i, v);
-    assertChanged(ta, i, [v.x, v.y, v.z]);
-
-    reset(ta);
     SIMD[kind].store(ta, i, v);
-    assertChanged(ta, i, [v.x, v.y, v.z, v.w]);
+    assertChanged(ta, i, simdToArray(v));
+
+    if (simdLength(v) > 2) {
+        reset(ta);
+        SIMD[kind].storeXY(ta, i, v);
+        assertChanged(ta, i, [v.x, v.y]);
+
+        reset(ta);
+        SIMD[kind].storeXYZ(ta, i, v);
+        assertChanged(ta, i, [v.x, v.y, v.z]);
+    }
 }
 
 function testStoreInt32x4() {
@@ -78,8 +80,32 @@ function testStoreFloat32x4() {
     assertThrowsInstanceOf(() => SIMD.int32x4.store(F32, 0, v), TypeError);
 }
 
+function testStoreFloat64x2() {
+    var F64 = new Float64Array(16);
+
+    var v = SIMD.float64x2(1, 2);
+    testStore(F64, 'float64x2', 0, v);
+    testStore(F64, 'float64x2', 1, v);
+    testStore(F64, 'float64x2', 14, v);
+
+    var v = SIMD.float64x2(NaN, -0);
+    testStore(F64, 'float64x2', 0, v);
+    testStore(F64, 'float64x2', 1, v);
+    testStore(F64, 'float64x2', 14, v);
+
+    var v = SIMD.float64x2(-Infinity, +Infinity);
+    testStore(F64, 'float64x2', 0, v);
+    testStore(F64, 'float64x2', 1, v);
+    testStore(F64, 'float64x2', 14, v);
+
+    assertThrowsInstanceOf(() => SIMD.float64x2.store(F64), TypeError);
+    assertThrowsInstanceOf(() => SIMD.float64x2.store(F64, 0), TypeError);
+    assertThrowsInstanceOf(() => SIMD.float32x4.store(F64, 0, v), TypeError);
+}
+
 testStoreInt32x4();
 testStoreFloat32x4();
+testStoreFloat64x2();
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
