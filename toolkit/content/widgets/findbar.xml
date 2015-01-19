@@ -215,10 +215,15 @@
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
 
+      <!--
+        - For tests that need to know when the find bar is finished
+        - initializing, we store a promise to notify on.
+        -->
+      <field name="_startFindDeferred">null</field>
+
       <property name="prefillWithSelection"
                 onget="return this.getAttribute('prefillwithselection') != 'false'"
                 onset="this.setAttribute('prefillwithselection', val); return val;"/>
-      <field name="_selectionMaxLen">150</field>
 
       <method name="getElement">
         <parameter name="aAnonymousID"/>
@@ -1026,43 +1031,6 @@
         ]]></body>
       </method>
 
-      <method name="_getInitialSelection">
-        <body><![CDATA[
-          let focusedElement = document.commandDispatcher.focusedElement;
-          let selText;
-
-          if (focusedElement instanceof Components.interfaces.nsIDOMNSEditableElement &&
-              focusedElement.editor &&
-              focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
-          {
-            // The user may have a selection in an input or textarea
-            selText = focusedElement.editor.selectionController
-              .getSelection(Components.interfaces.nsISelectionController.SELECTION_NORMAL)
-              .toString();
-          }
-          else {
-            // Look for any selected text on the actual page
-            let focusedWindow = document.commandDispatcher.focusedWindow;
-            if (focusedWindow.top == this._browser.contentWindow)
-              selText = focusedWindow.getSelection().toString();
-          }
-
-          if (!selText)
-            return "";
-
-          // Process our text to get rid of unwanted characters
-          if (selText.length > this._selectionMaxLen) {
-            let pattern = new RegExp("^(?:\\s*.){0," + this._selectionMaxLen + "}");
-            pattern.test(selText);
-            selText = RegExp.lastMatch;
-          }
-          return selText.replace(/^\s+/, "")
-                        .replace(/\s+$/, "")
-                        .replace(/\s+/g, " ")
-                        .substr(0, this._selectionMaxLen);
-        ]]></body>
-      </method>
-
       <method name="_dispatchFindEvent">
         <parameter name="aType"/>
         <parameter name="aFindPrevious"/>
@@ -1102,28 +1070,29 @@
                                --this._flashFindBar);
           }
 
+          let {PromiseUtils} =
+            Components.utils.import("resource://gre/modules/PromiseUtils.jsm", {});
+          this._startFindDeferred = PromiseUtils.defer();
+          let startFindPromise = this._startFindDeferred.promise;
+
           if (this.prefillWithSelection)
             userWantsPrefill =
               prefsvc.getBoolPref("accessibility.typeaheadfind.prefillwithselection");
 
-          let initialString = null;
-          if (this.prefillWithSelection && userWantsPrefill)
-            initialString = this._getInitialSelection();
-#ifdef XP_MACOSX
-          if (!initialString) {
-            let clipboardSearchString = this.browser.finder.clipboardSearchString;
-            if (clipboardSearchString)
-              initialString = clipboardSearchString;
+          if (this.prefillWithSelection && userWantsPrefill) {
+            // NB: We have to focus this._findField here so tests that send
+            // key events can open and close the find bar synchronously.
+            this._findField.focus();
+            this.browser.finder.getInitialSelection();
+            return startFindPromise;
           }
-#endif
 
-          if (initialString)
-            this._findField.value = initialString;
-
-          this._enableFindButtons(!!this._findField.value);
-
-          this._findField.select();
-          this._findField.focus();
+          // If userWantsPrefill is false but prefillWithSelection is true,
+          // then we might need to check the selection clipboard. Call
+          // onCurrentSelection to do so.
+          // Note: this.onCurrentSelection clears this._startFindDeferred.
+          this.onCurrentSelection("", true);
+          return startFindPromise;
         ]]></body>
       </method>
 
@@ -1135,7 +1104,7 @@
         -->
       <method name="onFindCommand">
         <body><![CDATA[
-          this.startFind(this.FIND_NORMAL);
+          return this.startFind(this.FIND_NORMAL);
         ]]></body>
       </method>
 
@@ -1148,10 +1117,8 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           let findString = this._browser.finder.searchString || this._findField.value;
-          if (!findString) {
-            this.startFind();
-            return;
-          }
+          if (!findString)
+            return this.startFind();
 
           // We dispatch the findAgain event here instead of in _findAgain since
           // if there is a find event handler that prevents the default then
@@ -1261,6 +1228,33 @@
           } else {
             this._foundMatches.hidden = true;
             this._foundMatches.value = "";
+          }
+        ]]></body>
+      </method>
+
+      <method name="onCurrentSelection">
+        <parameter name="aSelectionString" />
+        <parameter name="aIsInitialSelection" />
+        <body><![CDATA[
+#ifdef XP_MACOSX
+          if (aIsInitialSelection && !aSelectionString) {
+            let clipboardSearchString = this.browser.finder.clipboardSearchString;
+            if (clipboardSearchString)
+              aSelectionString = clipboardSearchString;
+          }
+#endif
+
+          if (aSelectionString)
+            this._findField.value = aSelectionString;
+
+          if (aIsInitialSelection) {
+            this._enableFindButtons(!!this._findField.value);
+            this._findField.select();
+            this._findField.focus();
+            if (this._startFindDeferred) {
+              this._startFindDeferred.resolve();
+              this._startFindDeferred = null;
+            }
           }
         ]]></body>
       </method>
