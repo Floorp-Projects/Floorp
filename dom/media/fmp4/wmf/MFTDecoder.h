@@ -33,11 +33,11 @@ public:
   //
   // Params:
   //  - aInputType needs at least major and minor types set.
-  //  - aOutputSubType is the minor type of the same major type e.g.
-  //    MFVideoFormat_H264. This is used to select the output type out
+  //  - aOutputType needs at least major and minor types set.
+  //    This is used to select the matching output type out
   //    of all the available output types of the MFT.
   HRESULT SetMediaTypes(IMFMediaType* aInputType,
-                        const GUID& aOutputSubType);
+                        IMFMediaType* aOutputType);
 
   // Returns the MFT's IMFAttributes object.
   TemporaryRef<IMFAttributes> GetAttributes();
@@ -92,7 +92,7 @@ private:
 
   RefPtr<IMFTransform> mDecoder;
 
-  GUID mOutputSubtype;
+  RefPtr<IMFMediaType> mOutputType;
 
   // True if the IMFTransform allocates the samples that it returns.
   bool mMFTProvidesOutputSamples;
