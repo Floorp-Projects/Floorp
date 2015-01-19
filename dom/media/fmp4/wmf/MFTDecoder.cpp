@@ -102,6 +102,11 @@ MFTDecoder::SetDecoderOutputType()
       continue;
     }
     if (subtype == mOutputSubtype) {
+      if (subtype == MFAudioFormat_PCM) {
+        // Set output to PCM 16 bits, we can ignore errors.
+        outputType->SetUINT32(MF_MT_SAMPLE_SIZE, 2);
+        outputType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+      }
       hr = mDecoder->SetOutputType(0, outputType, 0);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       return S_OK;
