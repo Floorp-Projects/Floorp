@@ -163,6 +163,11 @@ ElementStyle.prototype = {
   },
 
   destroy: function() {
+    if (this.destroyed) {
+      return;
+    }
+    this.destroyed = true;
+
     this.dummyElement = null;
     this.dummyElementPromise.then(dummyElement => {
       dummyElement.remove();
@@ -193,6 +198,10 @@ ElementStyle.prototype = {
       matchedSelectors: true,
       filter: this.showUserAgentStyles ? "ua" : undefined,
     }).then(entries => {
+      if (this.destroyed) {
+        return;
+      }
+
       // Make sure the dummy element has been created before continuing...
       return this.dummyElementPromise.then(() => {
         if (this.populated != populated) {
@@ -1035,7 +1044,7 @@ TextProperty.prototype = {
   setValue: function(aValue, aPriority, force=false) {
     let store = this.rule.elementStyle.store;
 
-    if (aValue !== this.editor.committed.value || force) {
+    if (this.editor && aValue !== this.editor.committed.value || force) {
       store.userProperties.setProperty(this.rule.style, this.name, aValue);
     }
 
@@ -1524,8 +1533,8 @@ CssRuleView.prototype = {
       this.element.parentNode.removeChild(this.element);
     }
 
-    if (this.elementStyle) {
-      this.elementStyle.destroy();
+    if (this._elementStyle) {
+      this._elementStyle.destroy();
     }
 
     this.popup.destroy();
@@ -1575,14 +1584,23 @@ CssRuleView.prototype = {
       return;
     }
 
-    // Repopulate the element style.
-    this._populate(true);
+    // Repopulate the element style once the current modifications are done.
+    let promises = [];
+    for (let rule of this._elementStyle.rules) {
+      if (rule._applyingModifications) {
+        promises.push(rule._applyingModifications);
+      }
+    }
+
+    return promise.all(promises).then(() => {
+      return this._populate(true);
+    });
   },
 
   _populate: function(clearRules = false) {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
-      if (this._elementStyle != elementStyle) {
+      if (this._elementStyle != elementStyle || this.isDestroyed) {
         return;
       }
 
@@ -1628,7 +1646,11 @@ CssRuleView.prototype = {
   clear: function() {
     this._clearRules();
     this._viewedElement = null;
-    this._elementStyle = null;
+
+    if (this._elementStyle) {
+      this._elementStyle.destroy();
+      this._elementStyle = null;
+    }
   },
 
   /**
