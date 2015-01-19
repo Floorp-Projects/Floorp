@@ -609,32 +609,6 @@ class RecursiveMakeBackend(CommonBackend):
                 mozpath.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
             root_deps_mk.dump(root_deps, removal_guard=False)
 
-    def _write_unified_file(self, unified_file, source_filenames,
-                            output_directory, poison_windows_h=False):
-        with self._write_file(mozpath.join(output_directory, unified_file)) as f:
-            f.write('#define MOZ_UNIFIED_BUILD\n')
-            includeTemplate = '#include "%(cppfile)s"'
-            if poison_windows_h:
-                includeTemplate += (
-                    '\n'
-                    '#ifdef _WINDOWS_\n'
-                    '#error "%(cppfile)s included windows.h"\n'
-                    "#endif")
-            includeTemplate += (
-                '\n'
-                '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
-                '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
-                'so it cannot be built in unified mode."\n'
-                '#undef PL_ARENA_CONST_ALIGN_MASK\n'
-                '#endif\n'
-                '#ifdef INITGUID\n'
-                '#error "%(cppfile)s defines INITGUID, '
-                'so it cannot be built in unified mode."\n'
-                '#undef INITGUID\n'
-                '#endif')
-            f.write('\n'.join(includeTemplate % { "cppfile": s } for
-                              s in source_filenames))
-
     def _add_unified_build_rules(self, makefile, files, output_directory,
                                  unified_prefix='Unified',
                                  unified_suffix='cpp',
