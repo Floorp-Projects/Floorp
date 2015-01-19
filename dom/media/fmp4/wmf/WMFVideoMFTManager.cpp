@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include "WMFVideoMFTManager.h"
 #include "MediaDecoderReader.h"
 #include "WMFUtils.h"
@@ -362,7 +363,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
                                             mImageContainer,
                                             aStreamOffset,
-                                            pts,
+                                            std::max(0LL, pts),
                                             duration,
                                             b,
                                             false,
