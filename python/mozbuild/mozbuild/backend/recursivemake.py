@@ -629,14 +629,8 @@ class RecursiveMakeBackend(CommonBackend):
         makefile.add_statement('%s := %s' % (unified_files_makefile_variable,
                                              all_sources))
 
-        for unified_file, source_filenames in unified_source_mapping:
-            # The rule we just defined is only for cases where the cpp files get
-            # blown away and we need to regenerate them.  The rule doesn't correctly
-            # handle source files being added/removed/renamed.  Therefore, we
-            # generate them here also to make sure everything's up-to-date.
-            self._write_unified_file(unified_file, source_filenames,
-                                     output_directory,
-                                     poison_windows_h=poison_windows_h)
+        self._write_unified_files(unified_source_mapping, output_directory,
+                                  poison_windows_h)
 
         if include_curdir_build_rules:
             makefile.add_statement('\n'
