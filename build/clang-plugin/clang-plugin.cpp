@@ -220,7 +220,7 @@ public:
       }
     }
 
-    if (isInterestingDecl(d)) {
+    if (!d->isAbstract() && isInterestingDecl(d)) {
       for (CXXRecordDecl::ctor_iterator ctor = d->ctor_begin(),
            e = d->ctor_end(); ctor != e; ++ctor) {
         // Ignore non-converting ctors
