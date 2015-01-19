@@ -13767,3 +13767,35 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString &aProvider,
   }
 #endif
 }
+
+NS_IMETHODIMP
+nsDocShell::SetPaymentRequestId(const nsAString& aPaymentRequestId)
+{
+    mPaymentRequestId = aPaymentRequestId;
+    return NS_OK;
+}
+
+nsString
+nsDocShell::GetInheritedPaymentRequestId()
+{
+    if (!mPaymentRequestId.IsEmpty()) {
+      return mPaymentRequestId;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+    GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+    nsCOMPtr<nsIDocShell> parent = do_QueryInterface(parentAsItem);
+    if (!parent) {
+      return mPaymentRequestId;
+    }
+    return static_cast<nsDocShell*>(
+        parent.get())->GetInheritedPaymentRequestId();
+}
+
+NS_IMETHODIMP
+nsDocShell::GetPaymentRequestId(nsAString& aPaymentRequestId)
+{
+    aPaymentRequestId = GetInheritedPaymentRequestId();
+    return NS_OK;
+}
