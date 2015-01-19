@@ -24,12 +24,28 @@ var startTest = function(test, token) {
 
   var numVideoElementsFinished = 0;
 
+  var ondurationchange = function(ev) {
+    var v = ev.target;
+    info(v.testName + " got durationchange");
+    v.durationchange = true;
+  };
+  var onresize = function(ev) {
+    var v = ev.target;
+    info(v.testName + " got resize");
+    ok(!v.resize, v.testName + " should only fire resize once for same size");
+    v.resize = true;
+    ok(v.durationchange, v.testName +
+       " durationchange event should have been emitted before resize");
+    is(v.videoWidth, test.width, v.testName + " width should be set on resize");
+    is(v.videoHeight, test.height, v.testName + " height should be set on resize");
+  };
   var onloadedmetadata = function(ev) {
     var v = ev.target;
+    info(v.testName + " got loadedmetadata");
     ok(!v.loadedmetadata, v.testName + " should only fire loadedmetadata once");
     v.loadedmetadata = true;
-    is(v.videoWidth, test.width, v.testName + " video width should be set on loadedmetadata");
-    is(v.videoHeight, test.height, v.testName + " video height should be set on loadedmetadata");
+    ok(v.resize, v.testName +
+       " resize event should have been emitted before loadedmetadata");
 
     numVideoElementsFinished += 1;
     if (v === v1) {
@@ -45,6 +61,10 @@ var startTest = function(test, token) {
     }
   };
   var setupElement = function(v, id) {
+    v.durationchange = false;
+    v.ondurationchange = ondurationchange;
+    v.resize = false;
+    v.onresize = onresize;
     v.loadedmetadata = false;
     v.onloadedmetadata = onloadedmetadata;
     document.body.appendChild(v);
