@@ -40,14 +40,15 @@ enum EnterJitEbpArgumentOffset {
     ARG_RESULT          = 9 * sizeof(void *)
 };
 
-/*
- * Generates a trampoline for a C++ function with the EnterJitCode signature,
- * using the standard cdecl calling convention.
- */
+
+// Generates a trampoline for calling Jit compiled code from a C++ function.
+// The trampoline use the EnterJitCode signature, with the standard cdecl
+// calling convention.
 JitCode *
 JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
     MacroAssembler masm(cx);
+    masm.assertStackAlignment(ABIStackAlignment, -int32_t(sizeof(uintptr_t)) /* return address */);
 
     // Save old stack frame pointer, set new stack frame pointer.
     masm.push(ebp);
@@ -68,20 +69,22 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.loadPtr(Address(ebp, ARG_ARGC), eax);
     masm.shll(Imm32(3), eax);
 
-    // We need to ensure that the stack is aligned on a 12-byte boundary, so
-    // inside the JIT function the stack is 16-byte aligned. Our stack right
-    // now might not be aligned on some platforms (win32, gcc) so we factor
-    // this possibility in, and simulate what the new stack address would be.
-    //   +argc * 8 for arguments
-    //   +4 for pushing alignment
-    //   +4 for pushing the callee token
-    //   +4 for pushing the return address
+    // Guarantee stack alignment of Jit frames.
+    //
+    // This code compensates for the offset created by the copy of the vector of
+    // arguments, such that the jit frame will be aligned once the return
+    // address is pushed on the stack.
+    //
+    // In the computation of the offset, we omit the size of the JitFrameLayout
+    // which is pushed on the stack, as the JitFrameLayout size is a multiple of
+    // the JitStackAlignment.
     masm.movl(esp, ecx);
     masm.subl(eax, ecx);
-    masm.subl(Imm32(4 * 3), ecx);
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
 
     // ecx = ecx & 15, holds alignment.
-    masm.andl(Imm32(15), ecx);
+    masm.andl(Imm32(JitStackAlignment - 1), ecx);
     masm.subl(ecx, esp);
 
     /***************************************************************
@@ -248,6 +251,10 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.bind(&notOsr);
         masm.loadPtr(Address(ebp, ARG_SCOPECHAIN), R1.scratchReg());
     }
+
+    // The call will push the return address on the stack, thus we check that
+    // the stack would be aligned once the call is complete.
+    masm.assertStackAlignment(JitStackAlignment, sizeof(uintptr_t));
 
     /***************************************************************
         Call passed-in code, get return value and fill in the
