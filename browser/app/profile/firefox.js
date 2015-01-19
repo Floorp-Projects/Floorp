@@ -1434,6 +1434,9 @@ pref("devtools.profiler.ui.flatten-tree-recursion", true);
 pref("devtools.profiler.ui.show-platform-data", false);
 pref("devtools.profiler.ui.show-idle-blocks", true);
 
+// The default Performance UI settings
+pref("devtools.performance.ui.invert-call-tree", true);
+
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
 
