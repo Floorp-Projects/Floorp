@@ -35,6 +35,9 @@ function runTest(win) {
   // Test if advanced pane is opened correctly
   win.gotoPref("paneAdvanced");
   for (let element of elements) {
+    if (element.nodeName == "preferences") {
+      continue;
+    }
     let attributeValue = element.getAttribute("data-category");
     if (attributeValue == "paneAdvanced") {
       is_element_visible(element, "Advanced elements should be visible");
