@@ -6,6 +6,7 @@
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
 #include "mp4_demuxer/MoofParser.h"
+#include "mp4_demuxer/SinfParser.h"
 #include "media/stagefright/MediaSource.h"
 #include "MediaResource.h"
 
@@ -108,24 +109,40 @@ MP4Sample* SampleIterator::GetNext()
   }
 
   if (!s->mCencRange.IsNull()) {
+    MoofParser* parser = mIndex->mMoofParser.get();
+
+    if (!parser || !parser->mSinf.IsValid()) {
+      return nullptr;
+    }
+
+    uint8_t ivSize = parser->mSinf.mDefaultIVSize;
+
     // The size comes from an 8 bit field
     nsAutoTArray<uint8_t, 256> cenc;
     cenc.SetLength(s->mCencRange.Length());
-    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, &cenc[0], cenc.Length(),
+    if (!mIndex->mSource->ReadAt(s->mCencRange.mStart, cenc.Elements(), cenc.Length(),
                                  &bytesRead) || bytesRead != cenc.Length()) {
       return nullptr;
     }
     ByteReader reader(cenc);
     sample->crypto.valid = true;
-    reader.ReadArray(sample->crypto.iv, 16);
-    if (reader.Remaining()) {
+    sample->crypto.iv_size = ivSize;
+
+    if (!reader.ReadArray(sample->crypto.iv, ivSize)) {
+      return nullptr;
+    }
+
+    if (reader.CanRead16()) {
       uint16_t count = reader.ReadU16();
+
+      if (reader.Remaining() < count * 6) {
+        return nullptr;
+      }
+
       for (size_t i = 0; i < count; i++) {
         sample->crypto.plain_sizes.AppendElement(reader.ReadU16());
         sample->crypto.encrypted_sizes.AppendElement(reader.ReadU32());
       }
-      reader.ReadArray(sample->crypto.iv, 16);
-      sample->crypto.iv_size = 16;
     }
   }
 
