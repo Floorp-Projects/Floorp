@@ -45,7 +45,7 @@ let samples = [{
 function test() {
   let { ThreadNode } = devtools.require("devtools/profiler/tree-model");
 
-  let root = new ThreadNode(samples, undefined, undefined, undefined, true);
+  let root = new ThreadNode(samples, { invertTree: true });
 
   is(Object.keys(root.calls).length, 2,
      "Should get the 2 youngest frames, not the 1 oldest frame");
