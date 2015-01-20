@@ -23,7 +23,7 @@ SpanningCellSorter::SpanningCellSorter()
 
 SpanningCellSorter::~SpanningCellSorter()
 {
-    if (mHashTable.ops) {
+    if (mHashTable.IsInitialized()) {
         PL_DHashTableFinish(&mHashTable);
     }
     delete [] mSortedHashTable;
@@ -70,7 +70,7 @@ SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol)
         i->next = mArray[index];
         mArray[index] = i;
     } else {
-        if (!mHashTable.ops) {
+        if (!mHashTable.IsInitialized()) {
             PL_DHashTableInit(&mHashTable, &HashTableOps,
                               sizeof(HashTableEntry));
         }
@@ -145,7 +145,7 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
             /* prepare to enumerate the hash */
             mState = ENUMERATING_HASH;
             mEnumerationIndex = 0;
-            if (mHashTable.ops) {
+            if (mHashTable.IsInitialized()) {
                 HashTableEntry **sh =
                     new HashTableEntry*[mHashTable.EntryCount()];
                 if (!sh) {
@@ -160,7 +160,9 @@ SpanningCellSorter::GetNext(int32_t *aColSpan)
             }
             /* fall through */
         case ENUMERATING_HASH:
-            if (mHashTable.ops && mEnumerationIndex < mHashTable.EntryCount()) {
+            if (mHashTable.IsInitialized() &&
+                mEnumerationIndex < mHashTable.EntryCount())
+            {
                 Item *result = mSortedHashTable[mEnumerationIndex]->mItems;
                 *aColSpan = mSortedHashTable[mEnumerationIndex]->mColSpan;
                 NS_ASSERTION(result, "holes in hash table");

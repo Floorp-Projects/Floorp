@@ -53,10 +53,10 @@ nsNSSShutDownList::nsNSSShutDownList()
 
 nsNSSShutDownList::~nsNSSShutDownList()
 {
-  if (mObjects.ops) {
+  if (mObjects.IsInitialized()) {
     PL_DHashTableFinish(&mObjects);
   }
-  if (mPK11LogoutCancelObjects.ops) {
+  if (mPK11LogoutCancelObjects.IsInitialized()) {
     PL_DHashTableFinish(&mPK11LogoutCancelObjects);
   }
   PR_ASSERT(this == singleton);

@@ -173,7 +173,7 @@ nsCertTree::nsCertTree() : mTreeArray(nullptr)
 
 void nsCertTree::ClearCompareHash()
 {
-  if (mCompareCache.ops) {
+  if (mCompareCache.IsInitialized()) {
     PL_DHashTableFinish(&mCompareCache);
   }
 }

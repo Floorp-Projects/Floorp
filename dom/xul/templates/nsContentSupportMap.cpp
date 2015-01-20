@@ -15,14 +15,14 @@ nsContentSupportMap::Init()
 void
 nsContentSupportMap::Finish()
 {
-    if (mMap.ops)
+    if (mMap.IsInitialized())
         PL_DHashTableFinish(&mMap);
 }
 
 nsresult
 nsContentSupportMap::Remove(nsIContent* aElement)
 {
-    if (!mMap.ops)
+    if (!mMap.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsIContent* child = aElement;

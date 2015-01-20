@@ -139,7 +139,7 @@ nsLoadGroup::~nsLoadGroup()
     DebugOnly<nsresult> rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
-    if (mRequests.ops) {
+    if (mRequests.IsInitialized()) {
         PL_DHashTableFinish(&mRequests);
     }
 
