@@ -5716,6 +5716,7 @@ class MMathFunction
     bool canRecoverOnBailout() const MOZ_OVERRIDE {
         switch(function_) {
           case Sin:
+          case Log:
           case Round:
             return true;
           default:
