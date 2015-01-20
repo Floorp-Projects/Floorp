@@ -43,7 +43,7 @@ class TextureClientX11 : public TextureClient
 
   virtual gfx::DrawTarget* BorrowDrawTarget() MOZ_OVERRIDE;
 
-  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
   virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
 
