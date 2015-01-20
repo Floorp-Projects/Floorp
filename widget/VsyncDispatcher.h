@@ -79,6 +79,8 @@ public:
 
 private:
   virtual ~RefreshTimerVsyncDispatcher();
+  void UpdateVsyncStatus();
+  bool NeedsVsync();
 
   Mutex mRefreshTimersLock;
   nsRefPtr<VsyncObserver> mParentRefreshTimer;
