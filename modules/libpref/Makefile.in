@@ -12,7 +12,7 @@ GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 GARBAGE		+= greprefs.js
 
 # TODO bug 813259 external files should be defined near their location in the source tree.
-grepref_files = $(topsrcdir)/netwerk/base/public/security-prefs.js $(srcdir)/init/all.js
+grepref_files = $(topsrcdir)/netwerk/base/security-prefs.js $(srcdir)/init/all.js
 
 ifdef MOZ_DATA_REPORTING
 grepref_files += $(topsrcdir)/services/datareporting/datareporting-prefs.js

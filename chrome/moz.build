@@ -35,7 +35,7 @@ GENERATED_INCLUDES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/netwerk/base/src',
+    '/netwerk/base',
     '/netwerk/protocol/res',
     '/xpcom/components'
 ]
