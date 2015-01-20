@@ -352,7 +352,7 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("onidpvalidationerror");
 
     this._pc = new this._win.PeerConnectionImpl();
-    this._taskChain = this._win.Promise.resolve();
+    this._operationsChain = this._win.Promise.resolve();
 
     this.__DOM_IMPL__._innerObject = this;
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
@@ -385,14 +385,11 @@ RTCPeerConnection.prototype = {
                                             this.dispatchEvent.bind(this));
   },
 
-  /**
-   * Add a function to the task chain.
-   *   onSuccess - legacy callback (optional)
-   *   onError   - legacy callback (optional)
-   */
-  _queue: function(func, onSuccess, onError) {
+  // Add a function to the internal operations chain.
+
+  _chain: function(func) {
     this._checkClosed(); // out here DOMException line-numbers work.
-    let p = this._taskChain.then(() => {
+    let p = this._operationsChain.then(() => {
       // Don't _checkClosed() inside the chain, because it throws, and spec
       // behavior as of this writing is to NOT reject outstanding promises on
       // close. This is what happens most of the time anyways, as the c++ code
@@ -402,9 +399,26 @@ RTCPeerConnection.prototype = {
         return func();
       }
     });
-    this._taskChain = p.catch(() => {}); // don't propagate errors in taskChain!
-    return onSuccess? p.then(this._wrapLegacyCallback(onSuccess),
-                             this._wrapLegacyCallback(onError)) : p;
+    // don't propagate errors in the operations chain (this is a fork of p).
+    this._operationsChain = p.catch(() => {});
+    return p;
+  },
+
+  // This wrapper helps implement legacy callbacks in a manner that produces
+  // correct line-numbers in errors, provided that methods validate their inputs
+  // before putting themselves on the pc's operations chain.
+
+  _legacyCatch: function(onSuccess, onError, func) {
+    if (!onSuccess) {
+      return func();
+    }
+    try {
+      return func().then(this._wrapLegacyCallback(onSuccess),
+                         this._wrapLegacyCallback(onError));
+    } catch (e) {
+      this._wrapLegacyCallback(onError)(e);
+      return this._win.Promise.resolve(); // avoid webidl TypeError
+    }
   },
 
   _wrapLegacyCallback: function(func) {
@@ -537,144 +551,140 @@ RTCPeerConnection.prototype = {
   },
 
   createOffer: function(optionsOrOnSuccess, onError, options) {
-
-    // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
-    // Note that webidl bindings make o.mandatory implicit but not o.optional.
-    function convertLegacyOptions(o) {
-      // Detect (mandatory OR optional) AND no other top-level members.
-      let lcy = ((o.mandatory && Object.keys(o.mandatory).length) || o.optional) &&
-                Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
-      if (!lcy) {
-        return false;
-      }
-      let old = o.mandatory || {};
-      if (o.mandatory) {
-        delete o.mandatory;
-      }
-      if (o.optional) {
-        o.optional.forEach(one => {
-          // The old spec had optional as an array of objects w/1 attribute each.
-          // Assumes our JS-webidl bindings only populate passed-in properties.
-          let key = Object.keys(one)[0];
-          if (key && old[key] === undefined) {
-            old[key] = one[key];
-          }
-        });
-        delete o.optional;
-      }
-      o.offerToReceiveAudio = old.OfferToReceiveAudio;
-      o.offerToReceiveVideo = old.OfferToReceiveVideo;
-      o.mozDontOfferDataChannel = old.MozDontOfferDataChannel;
-      o.mozBundleOnly = old.MozBundleOnly;
-      Object.keys(o).forEach(k => {
-        if (o[k] === undefined) {
-          delete o[k];
-        }
-      });
-      return true;
-    }
-
     let onSuccess;
-    if (optionsOrOnSuccess && typeof optionsOrOnSuccess === "function") {
+    if (typeof optionsOrOnSuccess == "function") {
       onSuccess = optionsOrOnSuccess;
     } else {
       options = optionsOrOnSuccess;
-      onError = undefined;
     }
-    if (options && convertLegacyOptions(options)) {
-      this.logWarning(
-          "Mandatory/optional in createOffer options is deprecated! Use " +
-          JSON.stringify(options) + " instead (note the case difference)!",
-          null, 0);
-    }
-    return this._queue(() => this._createOffer(options), onSuccess, onError);
-  },
+    return this._legacyCatch(onSuccess, onError, () => {
 
-  _createOffer: function(options) {
-    return new this._win.Promise((resolve, reject) => {
-      this._onCreateOfferSuccess = resolve;
-      this._onCreateOfferFailure = reject;
-      this._impl.createOffer(options);
-    });
-  },
+      // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
+      // Note that webidl bindings make o.mandatory implicit but not o.optional.
+      function convertLegacyOptions(o) {
+        // Detect (mandatory OR optional) AND no other top-level members.
+        let lcy = ((o.mandatory && Object.keys(o.mandatory).length) || o.optional) &&
+                  Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
+        if (!lcy) {
+          return false;
+        }
+        let old = o.mandatory || {};
+        if (o.mandatory) {
+          delete o.mandatory;
+        }
+        if (o.optional) {
+          o.optional.forEach(one => {
+            // The old spec had optional as an array of objects w/1 attribute each.
+            // Assumes our JS-webidl bindings only populate passed-in properties.
+            let key = Object.keys(one)[0];
+            if (key && old[key] === undefined) {
+              old[key] = one[key];
+            }
+          });
+          delete o.optional;
+        }
+        o.offerToReceiveAudio = old.OfferToReceiveAudio;
+        o.offerToReceiveVideo = old.OfferToReceiveVideo;
+        o.mozDontOfferDataChannel = old.MozDontOfferDataChannel;
+        o.mozBundleOnly = old.MozBundleOnly;
+        Object.keys(o).forEach(k => {
+          if (o[k] === undefined) {
+            delete o[k];
+          }
+        });
+        return true;
+      }
 
-  _createAnswer: function() {
-    return new this._win.Promise((resolve, reject) => {
-      if (!this.remoteDescription) {
-        throw new this._win.DOMException("setRemoteDescription not called",
-                                         "InvalidStateError");
+      if (options && convertLegacyOptions(options)) {
+        this.logWarning(
+            "Mandatory/optional in createOffer options is deprecated! Use " +
+            JSON.stringify(options) + " instead (note the case difference)!",
+            null, 0);
       }
-      if (this.remoteDescription.type != "offer") {
-        throw new this._win.DOMException("No outstanding offer",
-                                         "InvalidStateError");
-      }
-      this._onCreateAnswerSuccess = resolve;
-      this._onCreateAnswerFailure = reject;
-      this._impl.createAnswer();
+      return this._chain(() => new this._win.Promise((resolve, reject) => {
+        this._onCreateOfferSuccess = resolve;
+        this._onCreateOfferFailure = reject;
+        this._impl.createOffer(options);
+      }));
     });
   },
 
   createAnswer: function(onSuccess, onError) {
-    return this._queue(() => this._createAnswer(), onSuccess, onError);
+    return this._legacyCatch(onSuccess, onError, () => {
+      return this._chain(() => new this._win.Promise((resolve, reject) => {
+        // We give up line-numbers in errors by doing this here, but do all
+        // state-checks inside the chain, to support the legacy feature that
+        // callers don't have to wait for setRemoteDescription to finish.
+        if (!this.remoteDescription) {
+          throw new this._win.DOMException("setRemoteDescription not called",
+                                           "InvalidStateError");
+        }
+        if (this.remoteDescription.type != "offer") {
+          throw new this._win.DOMException("No outstanding offer",
+                                           "InvalidStateError");
+        }
+        this._onCreateAnswerSuccess = resolve;
+        this._onCreateAnswerFailure = reject;
+        this._impl.createAnswer();
+      }));
+    });
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
-    this._localType = desc.type;
+    return this._legacyCatch(onSuccess, onError, () => {
+      this._localType = desc.type;
 
-    let type;
-    switch (desc.type) {
-      case "offer":
-        type = Ci.IPeerConnection.kActionOffer;
-        break;
-      case "answer":
-        type = Ci.IPeerConnection.kActionAnswer;
-        break;
-      case "pranswer":
-        throw new this._win.DOMException("pranswer not yet implemented",
-                                         "NotSupportedError");
-      default:
-        throw new this._win.DOMException(
-            "Invalid type " + desc.type + " provided to setLocalDescription",
-            "InvalidParameterError");
-    }
-
-    return this._queue(() => this._setLocalDescription(type, desc.sdp),
-                       onSuccess, onError);
-  },
-
-  _setLocalDescription: function(type, sdp) {
-    return new this._win.Promise((resolve, reject) => {
-      this._onSetLocalDescriptionSuccess = resolve;
-      this._onSetLocalDescriptionFailure = reject;
-      this._impl.setLocalDescription(type, sdp);
+      let type;
+      switch (desc.type) {
+        case "offer":
+          type = Ci.IPeerConnection.kActionOffer;
+          break;
+        case "answer":
+          type = Ci.IPeerConnection.kActionAnswer;
+          break;
+        case "pranswer":
+          throw new this._win.DOMException("pranswer not yet implemented",
+                                           "NotSupportedError");
+        default:
+          throw new this._win.DOMException(
+              "Invalid type " + desc.type + " provided to setLocalDescription",
+              "InvalidParameterError");
+      }
+      return this._chain(() => new this._win.Promise((resolve, reject) => {
+        this._onSetLocalDescriptionSuccess = resolve;
+        this._onSetLocalDescriptionFailure = reject;
+        this._impl.setLocalDescription(type, desc.sdp);
+      }));
     });
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
-    this._remoteType = desc.type;
+    return this._legacyCatch(onSuccess, onError, () => {
+      this._remoteType = desc.type;
 
-    let type;
-    switch (desc.type) {
-      case "offer":
-        type = Ci.IPeerConnection.kActionOffer;
-        break;
-      case "answer":
-        type = Ci.IPeerConnection.kActionAnswer;
-        break;
-      case "pranswer":
-        throw new this._win.DOMException("pranswer not yet implemented",
-                                         "NotSupportedError");
-      default:
-        throw new this._win.DOMException(
-            "Invalid type " + desc.type + " provided to setRemoteDescription",
-            "InvalidParameterError");
-    }
+      let type;
+      switch (desc.type) {
+        case "offer":
+          type = Ci.IPeerConnection.kActionOffer;
+          break;
+        case "answer":
+          type = Ci.IPeerConnection.kActionAnswer;
+          break;
+        case "pranswer":
+          throw new this._win.DOMException("pranswer not yet implemented",
+                                           "NotSupportedError");
+        default:
+          throw new this._win.DOMException(
+              "Invalid type " + desc.type + " provided to setRemoteDescription",
+              "InvalidParameterError");
+      }
 
-    // Have to get caller's origin outside of Promise constructor and pass it in
-    let origin = Cu.getWebIDLCallerPrincipal().origin;
+      // Have to get caller's origin outside of Promise constructor and pass it in
+      let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-    return this._queue(() => this._setRemoteDescription(type, desc.sdp, origin),
-                       onSuccess, onError);
+      return this._chain(() => new this._win.Promise((resolve, reject) =>
+        this._setRemoteDescriptionImpl(type, desc.sdp, origin, resolve, reject)));
+    });
   },
 
   /**
@@ -697,11 +707,6 @@ RTCPeerConnection.prototype = {
       this.dispatchEvent(new this._win.Event("peeridentity"));
     }
     return good;
-  },
-
-  _setRemoteDescription: function(type, sdp, origin) {
-    return new this._win.Promise((resolve, reject) =>
-      this._setRemoteDescriptionImpl(type, sdp, origin, resolve, reject));
   },
 
   _setRemoteDescriptionImpl: function(type, sdp, origin, onSuccess, onError) {
@@ -793,21 +798,17 @@ RTCPeerConnection.prototype = {
                                      "NotSupportedError");
   },
 
-  addIceCandidate: function(cand, onSuccess, onError) {
-    if (!cand.candidate && !cand.sdpMLineIndex) {
-      throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
-                                       "InvalidParameterError");
-    }
-    return this._queue(() => this._addIceCandidate(cand), onSuccess, onError);
-  },
-
-  _addIceCandidate: function(cand) {
-    return new this._win.Promise((resolve, reject) => {
-      this._onAddIceCandidateSuccess = resolve;
-      this._onAddIceCandidateError = reject;
-
-      this._impl.addIceCandidate(cand.candidate, cand.sdpMid || "",
-                                 cand.sdpMLineIndex);
+  addIceCandidate: function(c, onSuccess, onError) {
+    return this._legacyCatch(onSuccess, onError, () => {
+      if (!c.candidate && !c.sdpMLineIndex) {
+        throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
+                                         "InvalidParameterError");
+      }
+      return this._chain(() => new this._win.Promise((resolve, reject) => {
+        this._onAddIceCandidateSuccess = resolve;
+        this._onAddIceCandidateError = reject;
+        this._impl.addIceCandidate(c.candidate, c.sdpMid || "", c.sdpMLineIndex);
+      }));
     });
   },
 
@@ -978,14 +979,12 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSuccess, onError) {
-    return this._queue(() => this._getStats(selector), onSuccess, onError);
-  },
-
-  _getStats: function(selector) {
-    return new this._win.Promise((resolve, reject) => {
-      this._onGetStatsSuccess = resolve;
-      this._onGetStatsFailure = reject;
-      this._impl.getStats(selector);
+    return this._legacyCatch(onSuccess, onError, () => {
+      return this._chain(() => new this._win.Promise((resolve, reject) => {
+        this._onGetStatsSuccess = resolve;
+        this._onGetStatsFailure = reject;
+        this._impl.getStats(selector);
+      }));
     });
   },
 
@@ -1350,7 +1349,7 @@ RTCRtpSender.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   replaceTrack: function(withTrack) {
-    return this._pc._queue(() => this._pc._replaceTrack(this, withTrack));
+    return this._pc._chain(() => this._pc._replaceTrack(this, withTrack));
   }
 };
 
