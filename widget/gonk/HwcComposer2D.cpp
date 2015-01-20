@@ -195,8 +195,7 @@ HwcComposer2D::EnableVsync(bool aEnable)
       return false;
     }
 
-    device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, aEnable);
-    return aEnable;
+    return !device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, aEnable) && aEnable;
 #else
     return false;
 #endif
