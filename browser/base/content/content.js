@@ -27,6 +27,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormSubmitObserver",
   "resource:///modules/FormSubmitObserver.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
+  "resource://gre/modules/AboutReader.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
   let ssdp = Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
   // Register targets
@@ -452,6 +456,76 @@ let AboutHomeListener = {
 };
 AboutHomeListener.init(this);
 
+let AboutReaderListener = {
+  _savedArticle: null,
+
+  init: function() {
+    addEventListener("AboutReaderContentLoaded", this, false, true);
+    addEventListener("pageshow", this, false);
+    addEventListener("pagehide", this, false);
+    addMessageListener("Reader:SavedArticleGet", this);
+  },
+
+  receiveMessage: function(message) {
+    switch (message.name) {
+      case "Reader:SavedArticleGet":
+        sendAsyncMessage("Reader:SavedArticleData", { article: this._savedArticle });
+        break;
+    }
+  },
+
+  get isAboutReader() {
+    return content.document.documentURI.startsWith("about:reader");
+  },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.originalTarget.defaultView != content) {
+      return;
+    }
+
+    switch (aEvent.type) {
+      case "AboutReaderContentLoaded":
+        if (!this.isAboutReader) {
+          return;
+        }
+
+        if (content.document.body) {
+          // Update the toolbar icon to show the "reader active" icon.
+          sendAsyncMessage("Reader:UpdateReaderButton");
+          new AboutReader(global, content);
+        }
+        break;
+
+      case "pagehide":
+        // Reader mode is disabled until proven enabled.
+        this._savedArticle = null;
+        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
+        break;
+
+      case "pageshow":
+        if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader) {
+          return;
+        }
+
+        ReaderMode.parseDocument(content.document).then(article => {
+          // The loaded page may have changed while we were parsing the document.
+          // Make sure we've got the current one.
+          let currentURL = Services.io.newURI(content.document.documentURI, null, null).specIgnoringRef;
+
+          // Do nothing if there's no article or the page in this tab has changed.
+          if (article == null || (article.url != currentURL)) {
+            return;
+          }
+
+          this._savedArticle = article;
+          sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
+
+        }).catch(e => Cu.reportError("Error parsing document: " + e));
+        break;
+    }
+  }
+};
+AboutReaderListener.init();
 
 // An event listener for custom "WebChannelMessageToChrome" events on pages
 addEventListener("WebChannelMessageToChrome", function (e) {
