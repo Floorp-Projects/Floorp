@@ -571,13 +571,13 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
 
   newTargetA = new DrawTargetD2D();
   if (!newTargetA->Init(aTextureA, aFormat)) {
-    gfxWarning() << "Failed to create draw target for D3D10 texture.";
+    gfxWarning() << "Failed to create dual draw target for D3D10 texture.";
     return nullptr;
   }
 
   newTargetB = new DrawTargetD2D();
   if (!newTargetB->Init(aTextureB, aFormat)) {
-    gfxWarning() << "Failed to create draw target for D3D10 texture.";
+    gfxWarning() << "Failed to create new draw target for D3D10 texture.";
     return nullptr;
   }
 
@@ -633,7 +633,7 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
     return retVal;
   }
 
-  gfxWarning() << "Failed to create draw target for D3D10 texture.";
+  gfxWarning() << "Failed to create draw target for D3D11 texture.";
 
   // Failed
   return nullptr;
