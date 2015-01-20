@@ -358,6 +358,9 @@ TextureClientD3D11::BorrowDrawTarget()
     MOZ_ASSERT(mTexture10);
     mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture10, mFormat);
   }
+  if (!mDrawTarget) {
+      gfxWarning() << "Invalid draw target for borrowing";
+  }
   return mDrawTarget;
 }
 
