@@ -21,13 +21,11 @@ NS_IMPL_RELEASE_INHERITED(BluetoothPairingListener, DOMEventTargetHelper)
 
 BluetoothPairingListener::BluetoothPairingListener(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
+  , mHasListenedToSignal(false)
 {
   MOZ_ASSERT(aWindow);
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
-                                     this);
+  TryListeningToBluetoothSignal();
 }
 
 already_AddRefed<BluetoothPairingListener>
@@ -133,4 +131,40 @@ BluetoothPairingListener::DisconnectFromOwner()
   NS_ENSURE_TRUE_VOID(bs);
   bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
                                        this);
+}
+
+void
+BluetoothPairingListener::EventListenerAdded(nsIAtom* aType)
+{
+  DOMEventTargetHelper::EventListenerAdded(aType);
+
+  TryListeningToBluetoothSignal();
+}
+
+void
+BluetoothPairingListener::TryListeningToBluetoothSignal()
+{
+  if (mHasListenedToSignal) {
+    // We've handled prior pending pairing requests
+    return;
+  }
+
+  // Listen to bluetooth signal only if all pairing event handlers have been
+  // attached. All pending pairing requests queued in BluetoothService would
+  // be fired when pairing listener starts listening to bluetooth signal.
+  if (!HasListenersFor(nsGkAtoms::ondisplaypasskeyreq) ||
+      !HasListenersFor(nsGkAtoms::onenterpincodereq) ||
+      !HasListenersFor(nsGkAtoms::onpairingconfirmationreq) ||
+      !HasListenersFor(nsGkAtoms::onpairingconsentreq)) {
+    BT_LOGR("Pairing listener is not ready to handle pairing requests!");
+    return;
+  }
+
+  // Start listening to bluetooth signal to handle pairing requests
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
+                                     this);
+
+  mHasListenedToSignal = true;
 }

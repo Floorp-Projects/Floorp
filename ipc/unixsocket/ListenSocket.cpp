@@ -225,20 +225,7 @@ ListenSocketIO::OnAccepted(int aFd,
 
   RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
 
-  nsRefPtr<nsRunnable> runnable;
-
-  if (NS_SUCCEEDED(mCOSocketIO->Accept(aFd, aAddr, aAddrLen))) {
-    runnable =
-      new SocketIOEventRunnable<ListenSocketIO>(
-        this, SocketIOEventRunnable<ListenSocketIO>::CONNECT_SUCCESS);
-    return;
-  } else {
-    runnable =
-      new SocketIOEventRunnable<ListenSocketIO>(
-        this, SocketIOEventRunnable<ListenSocketIO>::CONNECT_ERROR);
-  }
-
-  NS_DispatchToMainThread(runnable);
+  mCOSocketIO->Accept(aFd, aAddr, aAddrLen);
 }
 
 void
@@ -262,6 +249,12 @@ ListenSocketIO::OnListening()
   }
 
   AddWatchers(READ_WATCHER, true);
+
+  /* We signal a successful 'connection' to a local address for listening. */
+  nsRefPtr<nsRunnable> runnable =
+      new SocketIOEventRunnable<ListenSocketIO>(
+        this, SocketIOEventRunnable<ListenSocketIO>::CONNECT_SUCCESS);
+  NS_DispatchToMainThread(runnable);
 }
 
 void
