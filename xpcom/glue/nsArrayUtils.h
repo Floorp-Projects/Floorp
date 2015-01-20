@@ -22,7 +22,8 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const
+    MOZ_OVERRIDE;
 
 private:
   nsIArray* MOZ_NON_OWNING_REF mArray;

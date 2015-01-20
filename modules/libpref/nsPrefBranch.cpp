@@ -555,7 +555,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   *aChildArray = nullptr;
   *aCount = 0;
 
-  if (!gHashTable.ops)
+  if (!gHashTable.IsInitialized())
     return NS_ERROR_NOT_INITIALIZED;
 
   // this will contain a list of all the pref name strings

@@ -161,7 +161,6 @@ nsCertTree::nsCertTree() : mTreeArray(nullptr)
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-  mCompareCache.ops = nullptr;
   mNSSComponent = do_GetService(kNSSComponentCID);
   mOverrideService = do_GetService("@mozilla.org/security/certoverride;1");
   // Might be a different service if someone is overriding the contract
@@ -174,9 +173,8 @@ nsCertTree::nsCertTree() : mTreeArray(nullptr)
 
 void nsCertTree::ClearCompareHash()
 {
-  if (mCompareCache.ops) {
+  if (mCompareCache.IsInitialized()) {
     PL_DHashTableFinish(&mCompareCache);
-    mCompareCache.ops = nullptr;
   }
 }
 
@@ -185,7 +183,6 @@ nsresult nsCertTree::InitCompareHash()
   ClearCompareHash();
   if (!PL_DHashTableInit(&mCompareCache, &gMapOps,
                          sizeof(CompareCacheHashEntryPtr), fallible_t(), 64)) {
-    mCompareCache.ops = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

@@ -251,6 +251,10 @@ protected:
   // actual overscroll amount.
   ParentLayerCoord ApplyResistance(ParentLayerCoord aOverscroll) const;
 
+  // Helper function to disable overscroll transformations triggered by
+  // SampleOverscrollAnimation().
+  void StopSamplingOverscrollAnimation();
+
   // Helper function for SampleOverscrollAnimation().
   void StepOverscrollAnimation(double aStepDurationMilliseconds);
 

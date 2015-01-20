@@ -153,7 +153,7 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null param unexpected");
 
-  if (mPlaceholderMap.ops) {
+  if (mPlaceholderMap.IsInitialized()) {
     PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
                                             (PL_DHashTableLookup(const_cast<PLDHashTable*>(&mPlaceholderMap),
                                 aFrame));
@@ -171,7 +171,7 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-  if (!mPlaceholderMap.ops) {
+  if (!mPlaceholderMap.IsInitialized()) {
     PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps,
                       sizeof(PlaceholderMapEntry));
   }
@@ -193,7 +193,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
 
-  if (mPlaceholderMap.ops) {
+  if (mPlaceholderMap.IsInitialized()) {
     PL_DHashTableRemove(&mPlaceholderMap,
                         aPlaceholderFrame->GetOutOfFlowFrame());
   }
@@ -211,10 +211,9 @@ UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
 void
 nsFrameManager::ClearPlaceholderFrameMap()
 {
-  if (mPlaceholderMap.ops) {
+  if (mPlaceholderMap.IsInitialized()) {
     PL_DHashTableEnumerate(&mPlaceholderMap, UnregisterPlaceholders, nullptr);
     PL_DHashTableFinish(&mPlaceholderMap);
-    mPlaceholderMap.ops = nullptr;
   }
 }
 
