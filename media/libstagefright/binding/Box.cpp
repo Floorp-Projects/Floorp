@@ -48,8 +48,8 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
         !byteRange->Contains(bigLengthRange) ||
         !mContext->mSource->CachedReadAt(aOffset, bigLength,
-                                         sizeof(bigLengthRange), &bytes) ||
-        bytes != sizeof(bigLengthRange)) {
+                                         sizeof(bigLength), &bytes) ||
+        bytes != sizeof(bigLength)) {
       return;
     }
     size = BigEndian::readUint64(bigLength);
