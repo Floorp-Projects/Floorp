@@ -7,7 +7,6 @@
 #include "jsarray.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
@@ -49,7 +48,6 @@ using namespace js::types;
 using mozilla::Abs;
 using mozilla::ArrayLength;
 using mozilla::CeilingLog2;
-using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsNaN;
 
@@ -1074,13 +1072,7 @@ js::ArrayJoin(JSContext *cx, HandleObject obj, HandleLinearString sepstr, uint32
     // The separator will be added |length - 1| times, reserve space for that
     // so that we don't have to unnecessarily grow the buffer.
     size_t seplen = sepstr->length();
-    CheckedInt<uint32_t> res = CheckedInt<uint32_t>(seplen) * (length - 1);
-    if (length > 0 && !res.isValid()) {
-        js_ReportAllocationOverflow(cx);
-        return nullptr;
-    }
-
-    if (length > 0 && !sb.reserve(res.value()))
+    if (length > 0 && !sb.reserve(seplen * (length - 1)))
         return nullptr;
 
     // Various optimized versions of steps 7-10.
