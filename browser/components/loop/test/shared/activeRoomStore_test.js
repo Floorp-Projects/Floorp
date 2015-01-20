@@ -6,9 +6,9 @@ var sharedActions = loop.shared.actions;
 describe("loop.store.ActiveRoomStore", function () {
   "use strict";
 
-  var SERVER_CODES = loop.store.SERVER_CODES;
+  var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var ROOM_STATES = loop.store.ROOM_STATES;
-  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
   var fakeMultiplexGum;
 
@@ -94,7 +94,7 @@ describe("loop.store.ActiveRoomStore", function () {
     });
 
     it("should set the state to `FULL` on server error room full", function() {
-      fakeError.errno = SERVER_CODES.ROOM_FULL;
+      fakeError.errno = REST_ERRNOS.ROOM_FULL;
 
       store.roomFailure({error: fakeError});
 
@@ -105,27 +105,27 @@ describe("loop.store.ActiveRoomStore", function () {
       store.roomFailure({error: fakeError});
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
-      expect(store._storeState.failureReason).eql(FAILURE_REASONS.UNKNOWN);
+      expect(store._storeState.failureReason).eql(FAILURE_DETAILS.UNKNOWN);
     });
 
     it("should set the failureReason to EXPIRED_OR_INVALID on server error: " +
       "invalid token", function() {
-        fakeError.errno = SERVER_CODES.INVALID_TOKEN;
+        fakeError.errno = REST_ERRNOS.INVALID_TOKEN;
 
         store.roomFailure({error: fakeError});
 
         expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
-        expect(store._storeState.failureReason).eql(FAILURE_REASONS.EXPIRED_OR_INVALID);
+        expect(store._storeState.failureReason).eql(FAILURE_DETAILS.EXPIRED_OR_INVALID);
       });
 
     it("should set the failureReason to EXPIRED_OR_INVALID on server error: " +
       "expired", function() {
-        fakeError.errno = SERVER_CODES.EXPIRED;
+        fakeError.errno = REST_ERRNOS.EXPIRED;
 
         store.roomFailure({error: fakeError});
 
         expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
-        expect(store._storeState.failureReason).eql(FAILURE_REASONS.EXPIRED_OR_INVALID);
+        expect(store._storeState.failureReason).eql(FAILURE_DETAILS.EXPIRED_OR_INVALID);
       });
 
     it("should reset the multiplexGum", function() {
