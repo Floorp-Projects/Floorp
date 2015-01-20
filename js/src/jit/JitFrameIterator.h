@@ -160,6 +160,12 @@ class JitFrameIterator
     bool isBaselineStub() const {
         return type_ == JitFrame_BaselineStub;
     }
+    bool isBaselineStubMaybeUnwound() const {
+        return type_ == JitFrame_BaselineStub || type_ == JitFrame_Unwound_BaselineStub;
+    }
+    bool isRectifierMaybeUnwound() const {
+        return type_ == JitFrame_Rectifier || type_ == JitFrame_Unwound_Rectifier;
+    }
     bool isBareExit() const;
     template <typename T> bool isExitFrameLayout() const;
 
