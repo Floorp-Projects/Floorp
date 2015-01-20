@@ -452,12 +452,18 @@ public:
     virtual void EnableVsync() MOZ_OVERRIDE
     {
       MOZ_ASSERT(NS_IsMainThread());
+      if (IsVsyncEnabled()) {
+        return;
+      }
       mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(true);
     }
 
     virtual void DisableVsync() MOZ_OVERRIDE
     {
       MOZ_ASSERT(NS_IsMainThread());
+      if (!IsVsyncEnabled()) {
+        return;
+      }
       mVsyncEnabled = HwcComposer2D::GetInstance()->EnableVsync(false);
     }
 
