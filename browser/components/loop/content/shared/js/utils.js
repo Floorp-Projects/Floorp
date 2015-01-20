@@ -17,7 +17,24 @@ loop.shared.utils = (function(mozL10n) {
     AUDIO_ONLY: "audio"
   };
 
-  var FAILURE_REASONS = {
+  var REST_ERRNOS = {
+    INVALID_TOKEN: 105,
+    EXPIRED: 111,
+    USER_UNAVAILABLE: 122,
+    ROOM_FULL: 202
+  };
+
+  var WEBSOCKET_REASONS = {
+    ANSWERED_ELSEWHERE: "answered-elsewhere",
+    BUSY: "busy",
+    CANCEL: "cancel",
+    CLOSED: "closed",
+    MEDIA_FAIL: "media-fail",
+    REJECT: "reject",
+    TIMEOUT: "timeout"
+  };
+
+  var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
     COULD_NOT_CONNECT: "reason-could-not-connect",
     NETWORK_DISCONNECTED: "reason-network-disconnected",
@@ -118,7 +135,9 @@ loop.shared.utils = (function(mozL10n) {
 
   return {
     CALL_TYPES: CALL_TYPES,
-    FAILURE_REASONS: FAILURE_REASONS,
+    FAILURE_DETAILS: FAILURE_DETAILS,
+    REST_ERRNOS: REST_ERRNOS,
+    WEBSOCKET_REASONS: WEBSOCKET_REASONS,
     Helper: Helper,
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,

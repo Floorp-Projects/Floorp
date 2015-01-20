@@ -11,7 +11,7 @@ var loop = loop || {};
 loop.standaloneRoomViews = (function(mozL10n) {
   "use strict";
 
-  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
@@ -59,9 +59,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
      */
     _getFailureString: function() {
       switch(this.props.failureReason) {
-        case FAILURE_REASONS.MEDIA_DENIED:
+        case FAILURE_DETAILS.MEDIA_DENIED:
           return mozL10n.get("rooms_media_denied_message");
-        case FAILURE_REASONS.EXPIRED_OR_INVALID:
+        case FAILURE_DETAILS.EXPIRED_OR_INVALID:
           return mozL10n.get("rooms_unavailable_notification_message");
         default:
           return mozL10n.get("status_error");
