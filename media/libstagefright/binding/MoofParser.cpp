@@ -286,21 +286,43 @@ public:
 void
 Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
 {
-  if (!aMdhd.mTimescale) {
+  if (!aTfhd.IsValid() || !aTfdt.IsValid() ||
+      !aMdhd.IsValid() || !aEdts.IsValid()) {
     return;
   }
 
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   if ((flags & 0x404) == 0x404) {
     // Can't use these flags together
     reader->DiscardRemaining();
+    mValid = true;
     return;
   }
   uint8_t version = flags >> 24;
 
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t sampleCount = reader->ReadU32();
   if (sampleCount == 0) {
+    mValid = true;
+    return;
+  }
+
+  size_t need =
+    ((flags & 1) ? sizeof(uint32_t) : 0) +
+    ((flags & 4) ? sizeof(uint32_t) : 0);
+  uint16_t flag[] = { 0x100, 0x200, 0x400, 0x800, 0 };
+  for (size_t i = 0; flag[i]; i++) {
+    if (flags & flag[i]) {
+      need += sizeof(uint32_t) * sampleCount;
+    }
+  }
+  if (reader->Remaining() < need) {
     return;
   }
 
@@ -354,13 +376,22 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
   }
   mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
       ctsOrder.LastElement()->mCompositionRange.end);
+  mValid = true;
 }
 
 Tkhd::Tkhd(Box& aBox)
 {
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
+  size_t need =
+    3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(int32_t);
+  if (reader->Remaining() < need) {
+    return;
+  }
   if (version == 0) {
     mCreationTime = reader->ReadU32();
     mModificationTime = reader->ReadU32();
@@ -378,13 +409,23 @@ Tkhd::Tkhd(Box& aBox)
   }
   // More stuff that we don't care about
   reader->DiscardRemaining();
+  mValid = true;
 }
 
 Mdhd::Mdhd(Box& aBox)
 {
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
+  size_t need =
+    3*(version ? sizeof(int64_t) : sizeof(int32_t)) + 2*sizeof(uint32_t);
+  if (reader->Remaining() < need) {
+    return;
+  }
+
   if (version == 0) {
     mCreationTime = reader->ReadU32();
     mModificationTime = reader->ReadU32();
@@ -398,17 +439,24 @@ Mdhd::Mdhd(Box& aBox)
   }
   // language and pre_defined=0
   reader->ReadU32();
+  if (mTimescale) {
+    mValid = true;
+  }
 }
 
 Trex::Trex(Box& aBox)
 {
   BoxReader reader(aBox);
+  if (reader->Remaining() < 6*sizeof(uint32_t)) {
+    return;
+  }
   mFlags = reader->ReadU32();
   mTrackId = reader->ReadU32();
   mDefaultSampleDescriptionIndex = reader->ReadU32();
   mDefaultSampleDuration = reader->ReadU32();
   mDefaultSampleSize = reader->ReadU32();
   mDefaultSampleFlags = reader->ReadU32();
+  mValid = true;
 }
 
 Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex)
@@ -418,7 +466,20 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex)
   MOZ_ASSERT(aBox.Parent()->Parent()->IsType("moof"));
 
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   mFlags = reader->ReadU32();
+  size_t need = sizeof(uint32_t) /* trackid */;
+  uint8_t flag[] = { 1, 2, 8, 0x10, 0x20, 0 };
+  for (size_t i = 0; flag[i]; i++) {
+    if (mFlags & flag[i]) {
+      need += sizeof(uint32_t);
+    }
+  }
+  if (reader->Remaining() < need) {
+    return;
+  }
   mBaseDataOffset =
     mFlags & 1 ? reader->ReadU32() : aBox.Parent()->Parent()->Offset();
   mTrackId = reader->ReadU32();
@@ -434,19 +495,28 @@ Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex)
   if (mFlags & 0x20) {
     mDefaultSampleFlags = reader->ReadU32();
   }
+  mValid = true;
 }
 
 Tfdt::Tfdt(Box& aBox)
 {
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
+  size_t need = version ? sizeof(uint64_t) : sizeof(uint32_t) ;
+  if (reader->Remaining() < need) {
+    return;
+  }
   if (version == 0) {
     mBaseMediaDecodeTime = reader->ReadU32();
   } else if (version == 1) {
     mBaseMediaDecodeTime = reader->ReadU64();
   }
   reader->DiscardRemaining();
+  mValid = true;
 }
 
 Edts::Edts(Box& aBox)
@@ -458,9 +528,16 @@ Edts::Edts(Box& aBox)
   }
 
   BoxReader reader(child);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
-
+  size_t need =
+    sizeof(uint32_t) + 2*(version ? sizeof(int64_t) : sizeof(uint32_t));
+  if (reader->Remaining() < need) {
+    return;
+  }
   uint32_t entryCount = reader->ReadU32();
   NS_ASSERTION(entryCount == 1, "Can't handle videos with multiple edits");
   if (entryCount != 1) {
@@ -483,9 +560,16 @@ Edts::Edts(Box& aBox)
 Saiz::Saiz(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
 {
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
-
+  size_t need =
+    ((flags & 1) ? 2*sizeof(uint32_t) : 0) + sizeof(uint8_t) + sizeof(uint32_t);
+  if (reader->Remaining() < need) {
+    return;
+  }
   if (flags & 1) {
     mAuxInfoType = reader->ReadU32();
     mAuxInfoTypeParameter = reader->ReadU32();
@@ -497,21 +581,34 @@ Saiz::Saiz(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
       mSampleInfoSize.AppendElement(defaultSampleInfoSize);
     }
   } else {
-    reader->ReadArray(mSampleInfoSize, count);
+    if (!reader->ReadArray(mSampleInfoSize, count)) {
+      return;
+    }
   }
+  mValid = true;
 }
 
 Saio::Saio(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
 {
   BoxReader reader(aBox);
+  if (!reader->CanReadType<uint32_t>()) {
+    return;
+  }
   uint32_t flags = reader->ReadU32();
   uint8_t version = flags >> 24;
-
+  size_t need = ((flags & 1) ? (2*sizeof(uint32_t)) : 0) + sizeof(uint32_t);
+  if (reader->Remaining() < need) {
+    return;
+  }
   if (flags & 1) {
     mAuxInfoType = reader->ReadU32();
     mAuxInfoTypeParameter = reader->ReadU32();
   }
   size_t count = reader->ReadU32();
+  need = (version ? sizeof(uint64_t) : sizeof(uint32_t)) * count;
+  if (reader->Remaining() < count) {
+    return;
+  }
   mOffsets.SetCapacity(count);
   if (version == 0) {
     for (size_t i = 0; i < count; i++) {
@@ -522,5 +619,6 @@ Saio::Saio(Box& aBox) : mAuxInfoType("sinf"), mAuxInfoTypeParameter(0)
       mOffsets.AppendElement(reader->ReadU64());
     }
   }
+  mValid = true;
 }
 }
