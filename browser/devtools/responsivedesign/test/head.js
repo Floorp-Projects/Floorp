@@ -123,3 +123,92 @@ function openComputedView() {
 function openRuleView() {
   return openInspectorSideBar("ruleview");
 }
+
+
+/**
+ * Add a new test tab in the browser and load the given url.
+ * @param {String} url The url to be loaded in the new tab
+ * @return a promise that resolves to the tab object when the url is loaded
+ */
+let addTab = Task.async(function* (url) {
+  info("Adding a new tab with URL: '" + url + "'");
+
+  window.focus();
+
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let browser = tab.linkedBrowser;
+
+  yield once(browser, "load", true);
+  info("URL '" + url + "' loading complete");
+
+  return tab;
+});
+
+/**
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        info("Got event: '" + eventName + "' on " + target + ".");
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
+}
+
+function wait(ms) {
+  let def = promise.defer();
+  setTimeout(def.resolve, ms);
+  return def.promise;
+}
+
+function synthesizeKeyFromKeyTag(aKeyId) {
+  let key = document.getElementById(aKeyId);
+  isnot(key, null, "Successfully retrieved the <key> node");
+
+  let modifiersAttr = key.getAttribute("modifiers");
+
+  let name = null;
+
+  if (key.getAttribute("keycode"))
+    name = key.getAttribute("keycode");
+  else if (key.getAttribute("key"))
+    name = key.getAttribute("key");
+
+  isnot(name, null, "Successfully retrieved keycode/key");
+
+  let modifiers = {
+    shiftKey: modifiersAttr.match("shift"),
+    ctrlKey: modifiersAttr.match("ctrl"),
+    altKey: modifiersAttr.match("alt"),
+    metaKey: modifiersAttr.match("meta"),
+    accelKey: modifiersAttr.match("accel")
+  }
+
+  EventUtils.synthesizeKey(name, modifiers);
+}
+
+function nextTick() {
+  let def = promise.defer();
+  executeSoon(() => def.resolve())
+  return def.promise;
+}
