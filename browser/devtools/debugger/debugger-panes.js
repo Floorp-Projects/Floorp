@@ -1897,6 +1897,9 @@ VariableBubbleView.prototype = {
         emitter: this._editorContainer,
         event: "scroll",
         useCapture: true
+      }, {
+        emitter: DebuggerController._toolbox.target,
+        event: "thread-resumed"
       }]
     });
     this._tooltip.defaultPosition = EDITOR_VARIABLE_POPUP_POSITION;
