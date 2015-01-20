@@ -904,6 +904,7 @@ public:
   }
 
   virtual bool IsLabelable() const MOZ_OVERRIDE;
+  virtual bool IsInteractiveHTMLContent() const MOZ_OVERRIDE;
 
   static bool TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */);
 
