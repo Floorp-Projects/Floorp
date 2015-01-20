@@ -22,6 +22,7 @@ public:
   explicit SampleIterator(Index* aIndex);
   MP4Sample* GetNext();
   void Seek(Microseconds aTime);
+  Microseconds GetNextKeyframeTime();
 
 private:
   Sample* Get();
