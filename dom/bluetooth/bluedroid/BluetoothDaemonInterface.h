@@ -129,9 +129,14 @@ protected:
   void OnConnectError(enum Channel aChannel);
   void OnDisconnect(enum Channel aChannel);
 
+  nsresult CreateRandomAddressString(const nsACString& aPrefix,
+                                     unsigned long aPostfixLength,
+                                     nsACString& aAddress);
+
 private:
   void DispatchError(BluetoothResultHandler* aRes, BluetoothStatus aStatus);
 
+  nsCString mListenSocketName;
   nsRefPtr<BluetoothDaemonListenSocket> mListenSocket;
   nsRefPtr<BluetoothDaemonChannel> mCmdChannel;
   nsRefPtr<BluetoothDaemonChannel> mNtfChannel;
