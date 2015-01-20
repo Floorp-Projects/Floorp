@@ -244,6 +244,15 @@ class Resources(ContextDerived):
             defs.update(defines)
         self.defines = defs
 
+class JsPreferenceFile(ContextDerived):
+    """Context derived container object for a Javascript preference file.
+
+    Paths are assumed to be relative to the srcdir."""
+    __slots__ = ('path')
+
+    def __init__(self, context, path):
+        ContextDerived.__init__(self, context)
+        self.path = path
 
 class IPDLFile(ContextDerived):
     """Describes an individual .ipdl source file."""
