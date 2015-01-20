@@ -4,8 +4,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-PREF_JS_EXPORTS = $(srcdir)/pref/firefox-branding.js
-
 # On Windows only do this step for browser, skip for metro.
 ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows browser)
 BRANDING_FILES := \
