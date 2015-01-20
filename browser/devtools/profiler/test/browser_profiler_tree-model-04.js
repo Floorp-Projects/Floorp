@@ -11,7 +11,7 @@ function test() {
 
   // Create a root node from a given samples array, filtering by time.
 
-  let root = new ThreadNode(gSamples, true, 11, 18);
+  let root = new ThreadNode(gSamples, { startTime: 11, endTime: 18, contentOnly: true });
 
   // Test the root node.
 

@@ -85,12 +85,17 @@ let CallTreeView = {
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree: function (profilerData, beginAt, endAt, options) {
+  _prepareCallTree: function (profilerData, startTime, endTime, options) {
     let threadSamples = profilerData.profile.threads[0].samples;
     let contentOnly = !Prefs.showPlatformData;
     let invertTree = PerformanceController.getPref("invert-call-tree");
 
-    let threadNode = new ThreadNode(threadSamples, contentOnly, beginAt, endAt, invertTree);
+    let threadNode = new ThreadNode(threadSamples,
+      { startTime, endTime, contentOnly, invertTree });
+
+    // If we have an empty profile (no samples), then don't invert the tree, as
+    // it would hide the root node and a completely blank call tree space can be
+    // mis-interpreted as an error.
     options.inverted = invertTree && threadNode.samples > 0;
 
     return threadNode;
