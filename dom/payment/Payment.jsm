@@ -378,6 +378,8 @@ let PaymentManager =  {
     paymentFlowInfo.uri = aPaymentProvider.uri;
     paymentFlowInfo.requestMethod = aPaymentProvider.requestMethod;
     paymentFlowInfo.jwt = aJwt;
+    paymentFlowInfo.name = aPaymentProvider.name;
+    paymentFlowInfo.description = aPaymentProvider.description;
 
     let glue = Cc["@mozilla.org/payment/ui-glue;1"]
                .createInstance(Ci.nsIPaymentUIGlue);
