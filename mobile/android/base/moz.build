@@ -323,6 +323,7 @@ gbjar.sources += [
     'home/RemoteTabsExpandableListFragment.java',
     'home/RemoteTabsExpandableListState.java',
     'home/RemoteTabsPanel.java',
+    'home/RemoteTabsSplitPlaneFragment.java',
     'home/RemoteTabsStaticFragment.java',
     'home/SearchEngine.java',
     'home/SearchEngineRow.java',
