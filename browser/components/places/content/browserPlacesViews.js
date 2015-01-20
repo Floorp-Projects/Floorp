@@ -1038,7 +1038,7 @@ PlacesToolbar.prototype = {
     else {
       button = document.createElement("toolbarbutton");
       button.className = "bookmark-item";
-      button.setAttribute("label", aChild.title);
+      button.setAttribute("label", aChild.title || "");
       let icon = aChild.icon;
       if (icon)
         button.setAttribute("image",
@@ -1866,7 +1866,7 @@ PlacesPanelMenuView.prototype = {
       button.className = "bookmark-item";
       if (typeof this.options.extraClasses.entry == "string")
         button.classList.add(this.options.extraClasses.entry);
-      button.setAttribute("label", aChild.title);
+      button.setAttribute("label", aChild.title || "");
       let icon = aChild.icon;
       if (icon)
         button.setAttribute("image",
