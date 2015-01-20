@@ -15,7 +15,7 @@ interface nsIPropertyElement : nsISupports {
   attribute AString value;
 };
 
-[scriptable, uuid(1A180F60-93B2-11d2-9B8B-00805F8A16D9)]
+[scriptable, uuid(706867af-0400-4faa-beb1-0dae87308784)]
 interface nsIPersistentProperties : nsIProperties
 {
   /**
@@ -28,12 +28,6 @@ interface nsIPersistentProperties : nsIProperties
    * output the values to the stream - results will be in UTF8
    */
   void save(in nsIOutputStream output, in AUTF8String header);
-
-  /**
-   * call subclass() to make future calls to load() set the properties
-   * in this "superclass" instead
-   */
-  void subclass(in nsIPersistentProperties superclass);
 
   /**
    * get an enumeration of nsIPropertyElement objects,

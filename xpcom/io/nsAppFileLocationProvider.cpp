@@ -457,7 +457,7 @@ public:
   }
 
 protected:
-  nsIDirectoryServiceProvider* mProvider;
+  nsCOMPtr<nsIDirectoryServiceProvider> mProvider;
   const char** mCurrentKey;
   nsCOMPtr<nsIFile> mNext;
 
