@@ -121,6 +121,9 @@ private:
   bool IsWaitingOnCodecResource();
   virtual bool IsWaitingOnCDMResource() MOZ_OVERRIDE;
 
+  Microseconds GetNextKeyframeTime();
+  bool ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
+
   size_t SizeOfQueue(TrackType aTrack);
 
   nsRefPtr<MP4Stream> mStream;

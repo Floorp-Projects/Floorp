@@ -14,7 +14,11 @@ enum HitTestResult {
   HitNothing,
   HitLayer,
   HitDispatchToContentRegion,
-  HitOverscrolledApzc,
+};
+
+enum CancelAnimationFlags : uint32_t {
+  Default = 0,            /* Cancel all animations */
+  ExcludeOverscroll = 1   /* Don't clear overscroll */
 };
 
 }

@@ -64,7 +64,7 @@ public:
     mInstance(aInstance), mCallback(aCallback), mArg(aArg) { }
   virtual ~TNotification() { mInstance = nullptr; }
 
-  virtual void Process()
+  virtual void Process() MOZ_OVERRIDE
   {
     (mInstance->*mCallback)(mArg);
 
@@ -91,8 +91,8 @@ class NotificationController MOZ_FINAL : public EventQueue,
 public:
   NotificationController(DocAccessible* aDocument, nsIPresShell* aPresShell);
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
 
@@ -203,7 +203,7 @@ private:
   NotificationController& operator = (const NotificationController&);
 
   // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime);
+  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE;
 
 private:
   /**

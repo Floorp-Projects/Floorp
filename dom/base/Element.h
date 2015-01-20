@@ -1296,7 +1296,7 @@ public:
                                    nsIContent* aContent,
                                    nsIDocument* aDoc);
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 private:
   virtual ~RemoveFromBindingManagerRunnable();
   nsRefPtr<nsBindingManager> mManager;
