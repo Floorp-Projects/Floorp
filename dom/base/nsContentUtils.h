@@ -363,11 +363,6 @@ public:
    */
   static bool IsHTMLBlock(nsIAtom* aLocalName);
 
-  /**
-   * Is the HTML local name a void element?
-   */
-  static bool IsHTMLVoid(nsIAtom* aLocalName);
-
   enum ParseHTMLIntegerResultFlags {
     eParseHTMLInteger_NoFlags               = 0,
     eParseHTMLInteger_IsPercent             = 1 << 0,

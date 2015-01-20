@@ -109,6 +109,7 @@ static const uint32_t ABIStackAlignment = 16;
 static const uint32_t ABIStackAlignment = 4;
 #endif
 static const uint32_t CodeAlignment = 16;
+static const uint32_t JitStackAlignment = 16;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
@@ -118,9 +119,13 @@ static const bool SupportsSimd = true;
 static const uint32_t SimdMemoryAlignment = 16;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,
-  "Code alignment should be larger than any of the alignment which are used for "
+  "Code alignment should be larger than any of the alignments which are used for "
   "the constant sections of the code buffer.  Thus it should be larger than the "
   "alignment for SIMD constants.");
+
+static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
+  "Stack alignment should be larger than any of the alignments which are used for "
+  "spilled values.  Thus it should be larger than the alignment for SIMD accesses.");
 
 static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 

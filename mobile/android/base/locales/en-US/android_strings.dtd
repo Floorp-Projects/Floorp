@@ -213,6 +213,8 @@ size. -->
 
 <!ENTITY pref_media_autoplay_enabled "Allow autoplay">
 <!ENTITY pref_media_autoplay_enabled_summary "Control if websites can autoplay videos and other media content">
+<!ENTITY pref_zoom_force_enabled "Always enable zoom">
+<!ENTITY pref_zoom_force_enabled_summary "Force override so you can zoom any page">
 
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">

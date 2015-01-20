@@ -99,7 +99,7 @@ public:
   nsIFrame* GetLegend() const;
 
 protected:
-  nsRect    mLegendRect;
+  mozilla::LogicalRect mLegendRect;
   nscoord   mLegendSpace;
 };
 
