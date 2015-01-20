@@ -398,12 +398,6 @@ public:
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
   /**
-   * Return true if we're currently building a display list for a
-   * nested presshell.
-   */
-  bool IsInSubdocument() { return mPresShellStates.Length() > 1; }
-
-  /**
    * @return true if images have been set to decode synchronously.
    */
   bool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
@@ -480,20 +474,11 @@ public:
    */
   void RegisterThemeGeometry(uint8_t aWidgetType,
                              const nsIntRect& aRect) {
-    if (mIsPaintingToWindow) {
-      mThemeGeometries.AppendElement(ThemeGeometry(aWidgetType, aRect));
+    if (mIsPaintingToWindow && mPresShellStates.Length() == 1) {
+      ThemeGeometry geometry(aWidgetType, aRect);
+      mThemeGeometries.AppendElement(geometry);
     }
   }
-
-  /**
-   * Adjusts mWindowDraggingRegion to take into account aFrame. If aFrame's
-   * -moz-window-dragging value is |drag|, its border box is added to the
-   * collected dragging region; if the value is |no-drag|, the border box is
-   * subtracted from the region.
-   */
-  void AdjustWindowDraggingRegion(nsIFrame* aFrame);
-
-  const nsRegion& GetWindowDraggingRegion() { return mWindowDraggingRegion; }
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -776,7 +761,6 @@ private:
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
   nsRegion                       mWindowOpaqueRegion;
-  nsRegion                       mWindowDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
