@@ -15,6 +15,7 @@
 
 #include "Decoder.h"
 
+#include "Downscaler.h"
 #include "nsAutoPtr.h"
 
 #include "nsIInputStream.h"
@@ -55,6 +56,8 @@ public:
   nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
+  virtual nsresult SetTargetSize(const nsIntSize& aSize) MOZ_OVERRIDE;
+
   virtual void InitInternal() MOZ_OVERRIDE;
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
   virtual void FinishInternal() MOZ_OVERRIDE;
@@ -65,6 +68,8 @@ public:
 protected:
   Orientation ReadOrientationFromEXIF();
   void OutputScanlines(bool* suspend);
+
+  Maybe<Downscaler> mDownscaler;
 
 public:
   struct jpeg_decompress_struct mInfo;
