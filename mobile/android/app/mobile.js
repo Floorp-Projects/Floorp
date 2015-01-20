@@ -697,26 +697,6 @@ pref("network.manage-offline-status", true);
 // increase the timeout clamp for background tabs to 15 minutes
 pref("dom.min_background_timeout_value", 900000);
 
-// The default state of reader mode works on loaded a page.
-pref("reader.parse-on-load.enabled", true);
-
-// Force to enable reader mode to parse on loaded a page.
-// Allow reader mode even on low-memory platforms
-pref("reader.parse-on-load.force-enabled", false);
-
-// The default of font size in reader (1-5)
-pref("reader.font_size", 3);
-
-// The default color scheme in reader (light, dark, sepia, auto)
-// auto = color automatically adjusts according to ambient light level
-pref("reader.color_scheme", "auto");
-
-// The font type in reader (sans-serif, serif)
-pref("reader.font_type", "sans-serif");
-
-// Used to show a first-launch tip in reader
-pref("reader.has_used_toolbar", false);
-
 // Media plugins for libstagefright playback on android
 pref("media.plugins.enabled", true);
 
