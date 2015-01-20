@@ -2215,7 +2215,11 @@ ContainerState::PopPaintedLayerData()
   layer->SetLayerBounds(layerBounds);
 
 #ifdef MOZ_DUMP_PAINTING
-  layer->AddExtraDumpInfo(nsCString(data->mLog));
+  if (PaintedLayerData* containingPld = mLayerBuilder->GetContainingPaintedLayerData()) {
+    containingPld->mLayer->AddExtraDumpInfo(nsCString(data->mLog));
+  } else {
+    layer->AddExtraDumpInfo(nsCString(data->mLog));
+  }
 #endif
 
   nsIntRegion transparentRegion;
@@ -3323,6 +3327,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       entry->mContainerLayerGeneration = mContainerLayerGeneration;
     }
     if (tempManager) {
+      FLB_LOG_PAINTED_LAYER_DECISION(aLayerData, "Creating nested FLB for item %p\n", aItem);
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
       layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData);
 
