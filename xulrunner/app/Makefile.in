@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PREF_JS_EXPORTS = $(srcdir)/xulrunner.js
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
