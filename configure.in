@@ -10,7 +10,6 @@ dnl ========================================================
 AC_PREREQ(2.13)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
-AC_EXEEXT
 AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
