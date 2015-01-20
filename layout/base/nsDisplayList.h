@@ -3223,6 +3223,11 @@ public:
                           nsDisplayItem* aItem) MOZ_OVERRIDE;
 
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
+
+  void MarkHoisted() { mHoisted = true; }
+
+private:
+  bool mHoisted;
 };
 
 /**

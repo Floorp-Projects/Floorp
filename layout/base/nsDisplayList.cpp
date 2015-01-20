@@ -4602,6 +4602,7 @@ nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
   nsIFrame* aScrolledFrame,
   nsIFrame* aScrollFrame)
   : nsDisplayScrollLayer(aBuilder, aScrollFrame, aScrolledFrame, aScrollFrame)
+  , mHoisted(false)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollInfoLayer);
@@ -4626,9 +4627,12 @@ nsDisplayScrollInfoLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   // Only build scrollinfo layers if event-regions are disabled, so that the
   // compositor knows where the inactive scrollframes are. When event-regions
-  // are enabled, the dispatch-to-content regions provide this information to
-  // the APZ code.
-  if (gfxPrefs::LayoutEventRegionsEnabled()) {
+  // are enabled, the dispatch-to-content regions generally provide this
+  // information to the APZ code. However, in some cases, there might be
+  // content that cannot be layerized, and so needs to scroll synchronously.
+  // To handle those cases (which are indicated by setting mHoisted to true), we
+  // still want to generate scrollinfo layers.
+  if (gfxPrefs::LayoutEventRegionsEnabled() && !mHoisted) {
     return nullptr;
   }
   return nsDisplayScrollLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
@@ -4640,7 +4644,7 @@ nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         const ContainerLayerParameters& aParameters)
 {
   // See comment in BuildLayer
-  if (gfxPrefs::LayoutEventRegionsEnabled()) {
+  if (gfxPrefs::LayoutEventRegionsEnabled() && !mHoisted) {
     return LAYER_NONE;
   }
   return LAYER_ACTIVE_EMPTY;
