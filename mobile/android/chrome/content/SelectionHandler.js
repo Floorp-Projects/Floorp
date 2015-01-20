@@ -1024,9 +1024,15 @@ var SelectionHandler = {
     if (selection) {
       // Remove our listener before we clear the selection
       selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
-      // Clear selection without clearing the anchorNode or focusNode
+
+      // Remove the selection. For editables, we clear selection without losing
+      // element focus. For non-editables, just clear all.
       if (selection.rangeCount != 0) {
-        selection.collapseToStart();
+        if (this.isElementEditableText(this._targetElement)) {
+          selection.collapseToStart();
+        } else {
+          selection.removeAllRanges();
+        }
       }
     }
   },

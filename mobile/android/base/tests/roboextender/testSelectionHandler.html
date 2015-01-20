@@ -102,7 +102,7 @@ function testSelectDivAtPoint() {
     selection.collapseToStart();
 
     return Promise.all([
-      ok(selection.getRangeAt(0).collapsed, "Selection should be collapsed"),
+      ok(selection.collapsed, "Selection should be collapsed"),
       ok(!sh.isSelectionActive(), "Selection should not be active"),
     ]);
   });
