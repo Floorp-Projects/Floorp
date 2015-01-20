@@ -17,6 +17,7 @@
     function runTests() {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = SpecialPowers.DOMWindowUtils;
+      var scale = utils.screenPixelsPerCSSPixel;
 
       var plugin1 = document.getElementById("plugin1"); // What we're testing.
       var plugin2 = document.getElementById("plugin2"); // Dummy.
@@ -55,8 +56,8 @@
       is(initialStateUnknown, true, "Initial state should be unknown, assumed false.");
 
       // Give the plugin focus (the window is already focused).
-      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseDown, 0, plugin1);
-      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseUp, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), true, "(1) Plugin should have focus.");
@@ -78,8 +79,8 @@
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Take focus from the plugin.
-      utils.sendNativeMouseEvent(plugin2X, plugin2Y, NSLeftMouseDown, 0, plugin2);
-      utils.sendNativeMouseEvent(plugin2X, plugin2Y, NSLeftMouseUp, 0, plugin2);
+      utils.sendNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseDown, 0, plugin2);
+      utils.sendNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseUp, 0, plugin2);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), false, "(4) Plugin should not have focus.");
@@ -89,8 +90,8 @@
       // changes that took place while the window was inactive.
 
       // Give the plugin focus (the window is already focused).
-      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseDown, 0, plugin1);
-      utils.sendNativeMouseEvent(plugin1X, plugin1Y, NSLeftMouseUp, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1);
+      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1);
       expectedEventCount++;
 
       // Blur the window.
