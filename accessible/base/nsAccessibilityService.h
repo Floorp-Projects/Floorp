@@ -251,6 +251,8 @@ GetAccService()
 inline bool
 IPCAccessibilityActive()
 {
+  // Don't allow IPC accessibility to ride the 37 train.
+  return false;
 #ifdef MOZ_B2G
   return false;
 #else
