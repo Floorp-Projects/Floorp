@@ -244,15 +244,6 @@ ParseNodeAllocator::allocNode()
     return p;
 }
 
-/* used only by static create methods of subclasses */
-
-ParseNode *
-ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, FullParseHandler *handler)
-{
-    const Token &tok = handler->currentToken();
-    return handler->new_<ParseNode>(kind, JSOP_NOP, arity, tok.pos);
-}
-
 ParseNode *
 ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
                   FullParseHandler *handler)
