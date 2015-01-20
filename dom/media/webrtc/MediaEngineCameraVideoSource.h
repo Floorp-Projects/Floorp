@@ -49,8 +49,8 @@ public:
     return false;
   }
 
-  virtual const MediaSourceType GetMediaSource() MOZ_OVERRIDE {
-      return MediaSourceType::Camera;
+  virtual const dom::MediaSourceEnum GetMediaSource() MOZ_OVERRIDE {
+      return dom::MediaSourceEnum::Camera;
   }
 
   virtual nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE
