@@ -51,6 +51,7 @@ EXPORTS += [
     'GMPStorageParent.h',
     'GMPTimerChild.h',
     'GMPTimerParent.h',
+    'GMPUtils.h',
     'GMPVideoDecoderChild.h',
     'GMPVideoDecoderParent.h',
     'GMPVideoDecoderProxy.h',
