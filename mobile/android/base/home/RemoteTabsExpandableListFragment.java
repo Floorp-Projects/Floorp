@@ -236,7 +236,7 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
         mList.addFooterView(mFooterView, null, true);
 
         // Initialize adapter
-        mAdapter = new RemoteTabsExpandableListAdapter(R.layout.home_remote_tabs_group, R.layout.home_remote_tabs_child, null);
+        mAdapter = new RemoteTabsExpandableListAdapter(R.layout.home_remote_tabs_group, R.layout.home_remote_tabs_child, null, true);
         mList.setAdapter(mAdapter);
 
         // Now the adapter is wrapped; we can remove our footer view.
