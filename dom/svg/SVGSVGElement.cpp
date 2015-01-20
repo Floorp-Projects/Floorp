@@ -7,7 +7,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 
 #include "nsGkAtoms.h"
@@ -1248,30 +1247,32 @@ SVGSVGElement::ClearTransformProperty()
   return UnsetProperty(nsGkAtoms::transform);
 }
 
-float
+int32_t
 SVGSVGElement::GetIntrinsicWidth()
 {
   if (mLengthAttributes[ATTR_WIDTH].IsPercentage()) {
-    return UnspecifiedNaN<float>();
+    return -1;
   }
   // Passing |this| as a SVGSVGElement* invokes the variant of GetAnimValue
   // that uses the passed argument as the context, but that's fine since we
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
-  return std::max(mLengthAttributes[ATTR_WIDTH].GetAnimValue(this), 0.f);
+  float width = mLengthAttributes[ATTR_WIDTH].GetAnimValue(this);
+  return nsSVGUtils::ClampToInt(width);
 }
 
-float
+int32_t
 SVGSVGElement::GetIntrinsicHeight()
 {
   if (mLengthAttributes[ATTR_HEIGHT].IsPercentage()) {
-    return UnspecifiedNaN<float>();
+    return -1;
   }
   // Passing |this| as a SVGSVGElement* invokes the variant of GetAnimValue
   // that uses the passed argument as the context, but that's fine since we
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
-  return std::max(mLengthAttributes[ATTR_HEIGHT].GetAnimValue(this), 0.f);
+  float height = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(this);
+  return nsSVGUtils::ClampToInt(height);
 }
 
 } // namespace dom

@@ -6,7 +6,6 @@
 #include "SVGDocumentWrapper.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/FloatingPoint.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
@@ -67,25 +66,6 @@ SVGDocumentWrapper::DestroyViewer()
     mViewer->Destroy();
     mViewer = nullptr;
   }
-}
-
-bool
-SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
-                                     int32_t& aResult)
-{
-  SVGSVGElement* rootElem = GetRootSVGElem();
-  NS_ABORT_IF_FALSE(rootElem, "root elem missing or of wrong type");
-
-  // Get the width or height SVG object
-  float length = (aDimension == eWidth) ? rootElem->GetIntrinsicWidth()
-                                        : rootElem->GetIntrinsicHeight();
-
-  if (!IsFinite(length)) {
-    return false; // Percentage size
-  }
-
-  aResult = nsSVGUtils::ClampToInt(length);
-  return true;
 }
 
 nsIFrame*

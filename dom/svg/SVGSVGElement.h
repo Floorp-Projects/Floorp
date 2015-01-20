@@ -148,12 +148,13 @@ public:
   // public helpers:
 
   /**
-   * Returns the user-unit width/height if those dimensions are not specified
-   * as percentage values. If they are specified as percentage values then this
-   * element does not have intrinsic width/height and these methods return NaN.
+   * Returns -1 if the width/height is a percentage, else returns the user unit
+   * length clamped to fit in a int32_t.
+   * XXX see bug 1112533 comment 3 - we should fix drawImage so that we can
+   * change these methods to make zero the error flag for percentages.
    */
-  float GetIntrinsicWidth();
-  float GetIntrinsicHeight();
+  int32_t GetIntrinsicWidth();
+  int32_t GetIntrinsicHeight();
 
   /**
    * Returns true if this element has a base/anim value for its "viewBox"
