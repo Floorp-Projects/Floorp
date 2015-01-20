@@ -29,6 +29,10 @@
                         android:title="@string/pref_media_autoplay_enabled"
                         android:summary="@string/pref_media_autoplay_enabled_summary" />
 
+    <CheckBoxPreference android:key="browser.ui.zoom.force-user-scalable"
+                        android:title="@string/pref_zoom_force_enabled"
+                        android:summary="@string/pref_zoom_force_enabled_summary" />
+
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
         <CheckBoxPreference

@@ -12,7 +12,7 @@ interface nsIPaymentUIGlueCallback : nsISupports
     void onresult(in DOMString requestId, in DOMString result);
 };
 
-[scriptable, uuid(4dda9aa0-df88-4dcd-a583-199e516fa438)]
+[scriptable, uuid(4dc09e33-d395-4e1d-acb4-e85415181270)]
 interface nsIPaymentUIGlue : nsISupports
 {
     // The 'paymentRequestsInfo' contains the payment request information
@@ -26,5 +26,7 @@ interface nsIPaymentUIGlue : nsISupports
                          in nsIPaymentFlowInfo paymentFlowInfo,
                          in nsIPaymentUIGlueCallback errorCb);
 
-    void cleanup();
+    // The promise resolves with no value as soon as the payment window is
+    // closed.
+    jsval /*Promise*/ closePaymentFlow(in DOMString requestId);
 };

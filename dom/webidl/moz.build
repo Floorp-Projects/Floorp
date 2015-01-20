@@ -809,3 +809,8 @@ if CONFIG['MOZ_EME']:
         'MediaKeySession.webidl',
         'MediaKeySystemAccess.webidl',
     ]
+
+if CONFIG['MOZ_PAY']:
+    WEBIDL_FILES += [
+        'MozPaymentProvider.webidl'
+    ]
