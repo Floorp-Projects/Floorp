@@ -9,3 +9,8 @@ DIRS += ['components']
 XPI_NAME = 'simple'
 
 JAR_MANIFESTS += ['jar.mn']
+
+JS_PREFERENCE_FILES += [
+    'simple-prefs.js',
+]
+

@@ -14,4 +14,3 @@ SYNC_PP_FLAGS := \
 SYNC_PP_PATH = $(FINAL_TARGET)/modules/services-sync
 PP_TARGETS += SYNC_PP
 
-PREF_JS_EXPORTS := $(srcdir)/services-sync.js
