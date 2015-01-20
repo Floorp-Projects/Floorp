@@ -62,17 +62,18 @@ public:
     NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
                                   nsISupportsArray * anArrayTransferables,
                                   nsIScriptableRegion * aRegion,
-                                  uint32_t aActionType);
-    NS_IMETHOD StartDragSession();
-    NS_IMETHOD EndDragSession(bool aDoneDrag);
+                                  uint32_t aActionType) MOZ_OVERRIDE;
+    NS_IMETHOD StartDragSession() MOZ_OVERRIDE;
+    NS_IMETHOD EndDragSession(bool aDoneDrag) MOZ_OVERRIDE;
 
     // nsIDragSession
-    NS_IMETHOD SetCanDrop            (bool             aCanDrop);
-    NS_IMETHOD GetCanDrop            (bool            *aCanDrop);
-    NS_IMETHOD GetNumDropItems       (uint32_t * aNumItems);
+    NS_IMETHOD SetCanDrop            (bool             aCanDrop) MOZ_OVERRIDE;
+    NS_IMETHOD GetCanDrop            (bool            *aCanDrop) MOZ_OVERRIDE;
+    NS_IMETHOD GetNumDropItems       (uint32_t * aNumItems) MOZ_OVERRIDE;
     NS_IMETHOD GetData               (nsITransferable * aTransferable,
-                                      uint32_t aItemIndex);
-    NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor, bool *_retval);
+                                      uint32_t aItemIndex) MOZ_OVERRIDE;
+    NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor,
+                                      bool *_retval) MOZ_OVERRIDE;
 
     // Methods called from nsWindow to handle responding to GTK drag
     // destination signals
