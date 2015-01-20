@@ -44,6 +44,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
+
 var expectedAnchor = null;
 var expectedSide = "", expectedAnchorEdge = "", expectedPack = "", expectedAlignment = "";
 var zoomFactor = 1;
@@ -292,7 +294,8 @@ function checkPanelPosition(panel)
       adj = hwinpos + parseInt(getComputedStyle(panel, "").marginRight);
       if (iscentered)
         adj += Math.round(anchorRect.width) / 2;
-      isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, "anchored on right");
+      if (!isOSXYosemite)
+        isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, "anchored on right");
       break;
   }
 
