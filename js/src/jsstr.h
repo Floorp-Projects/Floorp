@@ -425,10 +425,6 @@ bool
 str_replace_regexp_raw(JSContext *cx, HandleString string, HandleObject regexp,
                        HandleString replacement, MutableHandleValue rval);
 
-JSString *
-str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern,
-                        HandleString replacement);
-
 bool
 str_replace_string_raw(JSContext *cx, HandleString string, HandleString pattern,
                        HandleString replacement, MutableHandleValue rval);
