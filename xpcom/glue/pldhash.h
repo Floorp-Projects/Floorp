@@ -222,6 +222,22 @@ private:
 #endif
 
 public:
+  // All the other fields are initialized in Init(), but we zero |ops| here
+  // because it's used to determine if Init() has been called.
+  MOZ_CONSTEXPR PLDHashTable()
+    : ops(nullptr)
+    , mHashShift(0)
+    , mRecursionLevel(0)
+    , mEntrySize(0)
+    , mEntryCount(0)
+    , mRemovedCount(0)
+    , mGeneration(0)
+    , mEntryStore(nullptr)
+#ifdef PL_DHASHMETER
+    , mStats()
+#endif
+  {}
+
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
    * We store mHashShift rather than sizeLog2 to optimize the collision-free

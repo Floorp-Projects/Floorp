@@ -984,7 +984,6 @@ nsContentList::RemoveFromHashtable()
 
   if (gContentListHashTable.EntryCount() == 0) {
     PL_DHashTableFinish(&gContentListHashTable);
-    gContentListHashTable.ops = nullptr;
   }
 }
 
@@ -1025,7 +1024,6 @@ nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable()
 
   if (gFuncStringContentListHashTable.EntryCount() == 0) {
     PL_DHashTableFinish(&gFuncStringContentListHashTable);
-    gFuncStringContentListHashTable.ops = nullptr;
   }
 }
 

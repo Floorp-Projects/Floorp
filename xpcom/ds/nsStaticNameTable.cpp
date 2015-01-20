@@ -106,7 +106,6 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
   , mNullStr("")
 {
   MOZ_COUNT_CTOR(nsStaticCaseInsensitiveNameTable);
-  mNameTable.ops = nullptr;
 }
 
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
@@ -142,7 +141,6 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
   if (!PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
                          sizeof(NameTableEntry), fallible_t(),
                          aLength)) {
-    mNameTable.ops = nullptr;
     return false;
   }
 
