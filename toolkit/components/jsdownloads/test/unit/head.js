@@ -793,15 +793,6 @@ add_task(function test_common_initialize()
     createInstance: function (aOuter, aIid) {
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
-        promptForSaveToFile: function (aLauncher, aWindowContext,
-                                       aDefaultFileName,
-                                       aSuggestedFileExtension,
-                                       aForcePrompt)
-        {
-          throw new Components.Exception(
-                             "Synchronous promptForSaveToFile not implemented.",
-                             Cr.NS_ERROR_NOT_AVAILABLE);
-        },
         promptForSaveToFileAsync: function (aLauncher, aWindowContext,
                                             aDefaultFileName,
                                             aSuggestedFileExtension,
