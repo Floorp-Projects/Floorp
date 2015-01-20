@@ -300,8 +300,8 @@ public:
    */
   void SwapElements(nsTHashtable<EntryType>& aOther)
   {
-    MOZ_ASSERT_IF(this->mTable.ops && aOther.mTable.ops,
-                  this->mTable.ops == aOther.mTable.ops);
+    MOZ_ASSERT_IF(this->mTable.Ops() && aOther.mTable.Ops(),
+                  this->mTable.Ops() == aOther.mTable.Ops());
     mozilla::Swap(this->mTable, aOther.mTable);
   }
 
@@ -408,7 +408,7 @@ nsTHashtable<EntryType>::nsTHashtable(nsTHashtable<EntryType>&& aOther)
 
   // Indicate that aOther is not initialized.  This will make its destructor a
   // nop, which is what we want.
-  aOther.mTable.ops = nullptr;
+  aOther.mTable.SetOps(nullptr);
 }
 
 template<class EntryType>
