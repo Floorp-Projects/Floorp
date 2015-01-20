@@ -187,6 +187,46 @@ add_task(function* formHistory() {
   yield msg("reset");
 });
 
+add_task(function* composition() {
+  yield setUp();
+
+  let state = yield msg("startComposition", { data: "" });
+  checkState(state, "", [], -1);
+  state = yield msg("updateComposition", { data: "x" });
+  checkState(state, "", [], -1);
+  state = yield msg("changeComposition", { data: "x", waitForSuggestions: true });
+  checkState(state, "x", ["xfoo", "xbar"], -1);
+
+  // Mouse over the first suggestion.
+  state = yield msg("mousemove", 0);
+  checkState(state, "x", ["xfoo", "xbar"], 0);
+
+  // Mouse over the second suggestion.
+  state = yield msg("mousemove", 1);
+  checkState(state, "x", ["xfoo", "xbar"], 1);
+
+  // Click the second suggestion.  This should make it sticky.  To make sure it
+  // sticks, trigger suggestions again and cycle through them by pressing Down
+  // until nothing is selected again.
+  state = yield msg("mousedown", 1);
+
+  checkState(state, "xbar", [], -1);
+
+  state = yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  checkState(state, "xbar", ["xbarfoo", "xbarbar"], -1);
+
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xbarfoo", ["xbarfoo", "xbarbar"], 0);
+
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xbarbar", ["xbarfoo", "xbarbar"], 1);
+
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xbar", ["xbarfoo", "xbarbar"], -1);
+
+  yield msg("reset");
+});
+
 
 let gDidInitialSetUp = false;
 
