@@ -9,6 +9,7 @@ const PATH = "/browser/browser/components/sessionstore/test/";
  * Remove all cookies to start off a clean slate.
  */
 add_task(function* test_setup() {
+  requestLongerTimeout(2);
   Services.cookies.removeAll();
 });
 
