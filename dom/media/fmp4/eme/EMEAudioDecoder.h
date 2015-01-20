@@ -18,7 +18,7 @@
 namespace mozilla {
 
 class EMEAudioDecoder : public MediaDataDecoder
-                      , public GMPAudioDecoderProxyCallback
+                      , public GMPAudioDecoderCallbackProxy
 {
   typedef mp4_demuxer::MP4Sample MP4Sample;
   typedef mp4_demuxer::AudioDecoderConfig AudioDecoderConfig;
@@ -37,7 +37,7 @@ public:
   virtual nsresult Drain() MOZ_OVERRIDE;
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
-  // GMPAudioDecoderProxyCallback implementation.
+  // GMPAudioDecoderCallbackProxy implementation.
   virtual void Decoded(const nsTArray<int16_t>& aPCM,
                        uint64_t aTimeStamp,
                        uint32_t aChannels,
