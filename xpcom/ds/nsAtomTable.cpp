@@ -354,7 +354,6 @@ NS_PurgeAtomTable()
     }
 #endif
     PL_DHashTableFinish(&gAtomTable);
-    gAtomTable.ops = nullptr;
   }
 }
 

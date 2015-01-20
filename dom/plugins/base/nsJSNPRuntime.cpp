@@ -419,8 +419,6 @@ DestroyNPObjWrapperTable()
   MOZ_ASSERT(sNPObjWrappers.EntryCount() == 0);
 
   PL_DHashTableFinish(&sNPObjWrappers);
-
-  sNPObjWrappers.ops = nullptr;
 }
 
 static void

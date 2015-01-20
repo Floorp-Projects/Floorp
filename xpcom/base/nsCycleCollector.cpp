@@ -832,10 +832,7 @@ private:
   PLDHashTable mPtrToNodeMap;
 
 public:
-  CCGraph() : mRootCount(0)
-  {
-    mPtrToNodeMap.ops = nullptr;
-  }
+  CCGraph() : mRootCount(0) {}
 
   ~CCGraph()
   {
@@ -858,7 +855,6 @@ public:
     mWeakMaps.Clear();
     mRootCount = 0;
     PL_DHashTableFinish(&mPtrToNodeMap);
-    mPtrToNodeMap.ops = nullptr;
   }
 
 #ifdef DEBUG

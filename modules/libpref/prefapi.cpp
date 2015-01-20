@@ -149,7 +149,6 @@ nsresult PREF_Init()
         if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
                                sizeof(PrefHashEntry), fallible_t(),
                                PREF_HASHTABLE_INITIAL_LENGTH)) {
-            gHashTable.ops = nullptr;
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -184,7 +183,6 @@ void PREF_CleanupPrefs()
 {
     if (gHashTable.ops) {
         PL_DHashTableFinish(&gHashTable);
-        gHashTable.ops = nullptr;
         PL_FinishArenaPool(&gPrefNameArena);
     }
 }

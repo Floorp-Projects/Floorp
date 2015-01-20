@@ -238,8 +238,6 @@ nsHTMLStyleSheet::nsHTMLStyleSheet(nsIDocument* aDocument)
   , mTableTHRule(new TableTHRule())
 {
   MOZ_ASSERT(aDocument);
-  mMappedAttrTable.ops = nullptr;
-  mLangRuleTable.ops = nullptr;
 }
 
 nsHTMLStyleSheet::~nsHTMLStyleSheet()
@@ -427,11 +425,9 @@ nsHTMLStyleSheet::Reset()
 
   if (mLangRuleTable.ops) {
     PL_DHashTableFinish(&mLangRuleTable);
-    mLangRuleTable.ops = nullptr;
   }
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
-    mMappedAttrTable.ops = nullptr;
   }
 }
 

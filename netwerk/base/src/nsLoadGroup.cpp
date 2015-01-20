@@ -132,11 +132,6 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
 #endif
 
     LOG(("LOADGROUP [%x]: Created.\n", this));
-
-    // Initialize the ops in the hash to null to make sure we get
-    // consistent errors if someone fails to call ::Init() on an
-    // nsLoadGroup.
-    mRequests.ops = nullptr;
 }
 
 nsLoadGroup::~nsLoadGroup()
