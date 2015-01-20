@@ -126,6 +126,8 @@ bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
     return false;
   }
 
+  StopSamplingOverscrollAnimation();
+
   ParentLayerCoord displacement = aDisplacement;
 
   // First consume any overscroll in the opposite direction along this axis.
@@ -160,12 +162,13 @@ ParentLayerCoord Axis::ApplyResistance(ParentLayerCoord aRequestedOverscroll) co
   // The actual overscroll is the requested overscroll multiplied by this
   // factor; this should prevent overscrolling by more than the composition
   // length.
-  float resistanceFactor = 1 - fabsf(mOverscroll) / GetCompositionLength();
+  float resistanceFactor = 1 - fabsf(GetOverscroll()) / GetCompositionLength();
   return resistanceFactor < 0 ? ParentLayerCoord(0) : aRequestedOverscroll * resistanceFactor;
 }
 
 void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
+  StopSamplingOverscrollAnimation();
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
 #ifdef DEBUG
@@ -198,6 +201,12 @@ ParentLayerCoord Axis::GetOverscroll() const {
   MOZ_ASSERT((result.value * mOverscrollOffset.value) >= 0.0f);
 
   return result;
+}
+
+void Axis::StopSamplingOverscrollAnimation() {
+  ParentLayerCoord overscroll = GetOverscroll();
+  ClearOverscroll();
+  mOverscroll = overscroll;
 }
 
 void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {

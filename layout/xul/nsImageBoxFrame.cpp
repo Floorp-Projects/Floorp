@@ -434,8 +434,7 @@ nsImageBoxFrame::GetContainer(LayerManager* aManager)
   }
   
   nsRefPtr<ImageContainer> container;
-  nsresult rv = imgCon->GetImageContainer(aManager, getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  imgCon->GetImageContainer(aManager, getter_AddRefs(container));
   return container.forget();
 }
 

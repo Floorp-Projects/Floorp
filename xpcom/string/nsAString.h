@@ -43,7 +43,7 @@ public:
   typedef char char_type;
 
   virtual int operator()(const char_type*, const char_type*,
-                         uint32_t, uint32_t) const;
+                         uint32_t, uint32_t) const MOZ_OVERRIDE;
 };
 
 class nsCaseInsensitiveCStringArrayComparator
