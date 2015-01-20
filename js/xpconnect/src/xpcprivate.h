@@ -623,8 +623,6 @@ public:
     void DeleteSingletonScopes();
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
-
-    void OnProcessNextEvent() { mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes(); }
     void OnAfterProcessNextEvent() { mSlowScriptCheckpoint = mozilla::TimeStamp(); }
 
     nsTArray<nsXPCWrappedJS*>& WrappedJSToReleaseArray() { return mWrappedJSToReleaseArray; }
