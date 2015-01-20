@@ -11,6 +11,8 @@ loop.conversationViews = (function(mozL10n) {
 
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
+  var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
@@ -770,8 +772,8 @@ loop.conversationViews = (function(mozL10n) {
       var callStateReason =
         this.props.store.getStoreState("callStateReason");
 
-      if (callStateReason === "reject" || callStateReason === "busy" ||
-          callStateReason === "user-unknown") {
+      if (callStateReason === WEBSOCKET_REASONS.REJECT || callStateReason === WEBSOCKET_REASONS.BUSY ||
+          callStateReason === REST_ERRNOS.USER_UNAVAILABLE) {
         var contactDisplayName = _getContactDisplayName(this.props.contact);
         if (contactDisplayName.length) {
           return mozL10n.get(
