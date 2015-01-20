@@ -94,7 +94,7 @@ Box::Read(nsTArray<uint8_t>* aDest)
 {
   aDest->SetLength(mRange.mEnd - mChildOffset);
   size_t bytes;
-  if (!mContext->mSource->CachedReadAt(mChildOffset, &(*aDest)[0],
+  if (!mContext->mSource->CachedReadAt(mChildOffset, aDest->Elements(),
                                        aDest->Length(), &bytes) ||
       bytes != aDest->Length()) {
     // Byte ranges are being reported incorrectly
