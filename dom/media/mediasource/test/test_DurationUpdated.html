@@ -27,25 +27,25 @@ runWithMSE(function (ms, v) {
           v.addEventListener("loadedmetadata", function () {
             v.addEventListener("durationchange", function () {
               durationChangeCount++;
-              if (durationChangeCount == 1) {
-                sb.addEventListener('updateend', function(e) {
-                  sb.removeEventListener('updateend', arguments.callee);
-                  sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-                });
-              }
             });
             // Set mediasource duration to 0, so future appendBuffer
             // will update the mediasource duration
             // setting ms.duration will fire updatestart/update/updateend
-            //  event as per w3c spec
+            // event as per w3c spec followed by a durationchange
             ms.duration = 0;
           });
+        } else if (updateCount == 2) {
+          // will fire updatestart/update/updateend
+          // and a durationchange
+          sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+        } else if (updateCount == 3) {
+          // this will not fire durationchange as new duration == old duration
+          ms.endOfStream();
         }
       });
     });
   });
-
-  v.addEventListener("loadeddata", function () {
+  ms.addEventListener("sourceended", function () {
     // XXX: Duration should be exactly 4.0, see bug 1065207.
     is(durationChangeCount, 2, "durationchange not fired as many times as expected");
     ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
