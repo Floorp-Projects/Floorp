@@ -292,6 +292,10 @@ static EventRegions
 GetEventRegions(const LayerMetricsWrapper& aLayer)
 {
   if (gfxPrefs::LayoutEventRegionsEnabled()) {
+    if (aLayer.IsScrollInfoLayer()) {
+      return EventRegions(nsIntRegion(ParentLayerIntRect::ToUntyped(
+        RoundedToInt(aLayer.Metrics().mCompositionBounds))));
+    }
     return aLayer.GetEventRegions();
   }
   return EventRegions(aLayer.GetVisibleRegion());
