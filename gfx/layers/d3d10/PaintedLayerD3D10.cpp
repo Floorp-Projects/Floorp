@@ -299,7 +299,7 @@ PaintedLayerD3D10::VerifyContentType(SurfaceMode aMode)
       mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, format);
 
       if (!mDrawTarget) {
-        NS_WARNING("Failed to create drawtarget for PaintedLayerD3D10.");
+        gfxWarning() << "Failed to create drawtarget for PaintedLayerD3D10.";
         return;
       }
 
@@ -468,8 +468,7 @@ PaintedLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMod
     }
 
     if (!mDrawTarget) {
-      NS_WARNING("Failed to create DrawTarget for PaintedLayerD3D10.");
-      mDrawTarget = nullptr;
+      gfxWarning() << "Failed to create DrawTarget for PaintedLayerD3D10.";
       return;
     }
   }

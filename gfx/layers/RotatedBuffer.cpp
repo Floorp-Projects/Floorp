@@ -364,7 +364,7 @@ RotatedContentBuffer::EnsureBufferOnWhite()
   }
 
   NS_WARN_IF_FALSE(mDTBufferOnWhite, "no buffer");
-  return mDTBufferOnWhite;
+  return !!mDTBufferOnWhite;
 }
 
 bool
