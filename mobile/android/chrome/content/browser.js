@@ -177,7 +177,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
     "Reader:ShowToast",
     "Reader:ToolbarVisibility",
     "Reader:SystemUIVisibility",
-    "Reader:UpdateIsArticle",
+    "Reader:UpdateReaderButton",
   ], "chrome://browser/content/Reader.js"],
 ].forEach(aScript => {
   let [name, messages, script] = aScript;
@@ -3281,7 +3281,6 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.isArticle = false;
   this.hasTouchListener = false;
   this.browserWidth = 0;
   this.browserHeight = 0;
@@ -4872,10 +4871,6 @@ Tab.prototype = {
           ViewportHandler.updateMetadata(this, false);
         break;
     }
-  },
-
-  get readerActive() {
-    return this.browser.currentURI.spec.startsWith("about:reader");
   },
 
   // nsIBrowserTab

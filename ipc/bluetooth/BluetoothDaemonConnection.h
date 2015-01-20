@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/ipc/ConnectionOrientedSocket.h"
 #include "mozilla/ipc/SocketBase.h"
 #include "nsError.h"
 #include "nsAutoPtr.h"
@@ -105,15 +106,32 @@ protected:
  * PDUs. PDU receiving is performed by |BluetoothDaemonPDUConsumer|.
  */
 class BluetoothDaemonConnection : public SocketBase
+                                , public ConnectionOrientedSocket
 {
 public:
   BluetoothDaemonConnection();
   virtual ~BluetoothDaemonConnection();
 
+  // SocketBase
+  //
+
   nsresult ConnectSocket(BluetoothDaemonPDUConsumer* aConsumer);
   void     CloseSocket();
 
   nsresult Send(BluetoothDaemonPDU* aPDU);
+
+  // ConnectionOrientedSocket
+  //
+
+  virtual ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+
+protected:
+
+  // Prepares an instance of |BluetoothDaemonConnection| in DISCONNECTED
+  // state for accepting a connection. Subclasses implementing |GetIO|
+  // need to call this method.
+  ConnectionOrientedSocketIO*
+    PrepareAccept(BluetoothDaemonPDUConsumer* aConsumer);
 
 private:
   BluetoothDaemonConnectionIO* mIO;
