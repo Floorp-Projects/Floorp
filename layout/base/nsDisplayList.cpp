@@ -4619,11 +4619,30 @@ nsDisplayScrollInfoLayer::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   return nsDisplayWrapList::GetBounds(aBuilder, aSnap);
 }
 
+already_AddRefed<Layer>
+nsDisplayScrollInfoLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                     LayerManager* aManager,
+                                     const ContainerLayerParameters& aContainerParameters)
+{
+  // Only build scrollinfo layers if event-regions are disabled, so that the
+  // compositor knows where the inactive scrollframes are. When event-regions
+  // are enabled, the dispatch-to-content regions provide this information to
+  // the APZ code.
+  if (gfxPrefs::LayoutEventRegionsEnabled()) {
+    return nullptr;
+  }
+  return nsDisplayScrollLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+}
+
 LayerState
 nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
                                         const ContainerLayerParameters& aParameters)
 {
+  // See comment in BuildLayer
+  if (gfxPrefs::LayoutEventRegionsEnabled()) {
+    return LAYER_NONE;
+  }
   return LAYER_ACTIVE_EMPTY;
 }
 
