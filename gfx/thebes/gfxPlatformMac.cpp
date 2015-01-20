@@ -436,8 +436,8 @@ public:
   {
   public:
     OSXDisplay()
+      : mDisplayLink(nullptr)
     {
-      EnableVsync();
     }
 
     ~OSXDisplay()

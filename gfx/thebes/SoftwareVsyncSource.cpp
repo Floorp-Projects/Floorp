@@ -29,7 +29,6 @@ SoftwareDisplay::SoftwareDisplay()
   const double rate = 1000 / 60.0;
   mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
-  EnableVsync();
 }
 
 void
