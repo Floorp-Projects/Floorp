@@ -442,7 +442,6 @@ public:
   public:
     GonkDisplay() : mVsyncEnabled(false)
     {
-      EnableVsync();
     }
 
     ~GonkDisplay()
@@ -484,11 +483,14 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<VsyncSource> vsyncSource = new GonkVsyncSource();
-    if (!vsyncSource->GetGlobalDisplay().IsVsyncEnabled()) {
+    nsRefPtr<GonkVsyncSource> vsyncSource = new GonkVsyncSource();
+    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
+    display.EnableVsync();
+    if (!display.IsVsyncEnabled()) {
         NS_WARNING("Error enabling gonk vsync. Falling back to software vsync\n");
         return gfxPlatform::CreateHardwareVsyncSource();
     }
+    display.DisableVsync();
     return vsyncSource.forget();
 #else
     NS_WARNING("Hardware vsync not supported on android yet");
