@@ -298,6 +298,18 @@ js::math_ceil_impl(double x)
 }
 
 bool
+js::math_ceil_handle(JSContext *cx, HandleValue v, MutableHandleValue res)
+{
+    double d;
+    if(!ToNumber(cx, v, &d))
+        return false;
+
+    double result = math_ceil_impl(d);
+    res.setDouble(result);
+    return true;
+}
+
+bool
 js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -310,10 +322,7 @@ js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
     double x;
     if (!ToNumber(cx, args[0], &x))
         return false;
-
-    double z = math_ceil_impl(x);
-    args.rval().setNumber(z);
-    return true;
+    return math_ceil_handle(cx, args[0], args.rval());
 }
 
 bool
@@ -435,7 +444,7 @@ bool
 js::math_floor_handle(JSContext *cx, HandleValue v, MutableHandleValue r)
 {
     double d;
-    if(!ToNumber(cx, v, &d))
+    if (!ToNumber(cx, v, &d))
         return false;
 
     double z = math_floor_impl(d);

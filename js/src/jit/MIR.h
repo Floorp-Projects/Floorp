@@ -10739,6 +10739,10 @@ class MCeil
         return congruentIfOperandsEqual(ins);
     }
     void computeRange(TempAllocator &alloc) MOZ_OVERRIDE;
+    bool writeRecoverData(CompactBufferWriter &writer) const MOZ_OVERRIDE;
+    bool canRecoverOnBailout() const MOZ_OVERRIDE {
+        return true;
+    }
 
     ALLOW_CLONE(MCeil)
 };

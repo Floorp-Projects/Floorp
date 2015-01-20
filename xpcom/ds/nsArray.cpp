@@ -10,9 +10,10 @@
 #include "nsThreadUtils.h"
 
 // used by IndexOf()
-struct findIndexOfClosure
+struct MOZ_STACK_CLASS findIndexOfClosure
 {
-  nsISupports* targetElement;
+  // This is only used for pointer comparison, so we can just use a void*.
+  void* targetElement;
   uint32_t startIndex;
   uint32_t resultIndex;
 };

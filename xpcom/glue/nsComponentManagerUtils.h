@@ -26,7 +26,7 @@ nsresult CallGetClassObject(const char* aContractID, const nsIID& aIID,
                             void** aResult);
 
 
-class nsCreateInstanceByCID : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsCreateInstanceByCID : public nsCOMPtr_helper
 {
 public:
   nsCreateInstanceByCID(const nsCID& aCID, nsISupports* aOuter,
@@ -45,7 +45,7 @@ private:
   nsresult*       mErrorPtr;
 };
 
-class nsCreateInstanceByContractID : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsCreateInstanceByContractID : public nsCOMPtr_helper
 {
 public:
   nsCreateInstanceByContractID(const char* aContractID, nsISupports* aOuter,
@@ -64,7 +64,7 @@ private:
   nsresult*     mErrorPtr;
 };
 
-class nsCreateInstanceFromFactory : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsCreateInstanceFromFactory : public nsCOMPtr_helper
 {
 public:
   nsCreateInstanceFromFactory(nsIFactory* aFactory, nsISupports* aOuter,
@@ -123,7 +123,7 @@ do_CreateInstance(nsIFactory* aFactory, nsISupports* aOuter,
 }
 
 
-class nsGetClassObjectByCID : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsGetClassObjectByCID : public nsCOMPtr_helper
 {
 public:
   nsGetClassObjectByCID(const nsCID& aCID, nsresult* aErrorPtr)
@@ -139,7 +139,7 @@ private:
   nsresult*       mErrorPtr;
 };
 
-class nsGetClassObjectByContractID : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsGetClassObjectByContractID : public nsCOMPtr_helper
 {
 public:
   nsGetClassObjectByContractID(const char* aContractID, nsresult* aErrorPtr)
