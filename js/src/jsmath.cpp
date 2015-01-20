@@ -319,9 +319,6 @@ js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
     return math_ceil_handle(cx, args[0], args.rval());
 }
 
@@ -515,12 +512,7 @@ js::math_fround(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    float f;
-    if (!RoundFloat32(cx, args[0], &f))
-        return false;
-
-    args.rval().setDouble(static_cast<double>(f));
-    return true;
+    return RoundFloat32(cx, args[0], args.rval());
 }
 
 #if defined(SOLARIS) && defined(__GNUC__)
