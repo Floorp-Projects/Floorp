@@ -132,6 +132,8 @@ const CommandFunc NetworkUtils::sWifiEnableChain[] = {
   NetworkUtils::startSoftAP,
   NetworkUtils::setInterfaceUp,
   NetworkUtils::tetherInterface,
+  NetworkUtils::addInterfaceToLocalNetwork,
+  NetworkUtils::addRouteToLocalNetwork,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::tetheringStatus,
   NetworkUtils::startTethering,
@@ -146,6 +148,7 @@ const CommandFunc NetworkUtils::sWifiDisableChain[] = {
   NetworkUtils::stopAccessPointDriver,
   NetworkUtils::wifiFirmwareReload,
   NetworkUtils::untetherInterface,
+  NetworkUtils::removeInterfaceFromLocalNetwork,
   NetworkUtils::preTetherInterfaceList,
   NetworkUtils::postTetherInterfaceList,
   NetworkUtils::disableNat,
@@ -173,6 +176,8 @@ const CommandFunc NetworkUtils::sWifiRetryChain[] = {
   NetworkUtils::startSoftAP,
   NetworkUtils::setInterfaceUp,
   NetworkUtils::tetherInterface,
+  NetworkUtils::addInterfaceToLocalNetwork,
+  NetworkUtils::addRouteToLocalNetwork,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::tetheringStatus,
   NetworkUtils::startTethering,
@@ -191,6 +196,8 @@ const CommandFunc NetworkUtils::sUSBEnableChain[] = {
   NetworkUtils::enableNat,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::tetherInterface,
+  NetworkUtils::addInterfaceToLocalNetwork,
+  NetworkUtils::addRouteToLocalNetwork,
   NetworkUtils::tetheringStatus,
   NetworkUtils::startTethering,
   NetworkUtils::setDnsForwarders,
@@ -199,6 +206,7 @@ const CommandFunc NetworkUtils::sUSBEnableChain[] = {
 
 const CommandFunc NetworkUtils::sUSBDisableChain[] = {
   NetworkUtils::untetherInterface,
+  NetworkUtils::removeInterfaceFromLocalNetwork,
   NetworkUtils::preTetherInterfaceList,
   NetworkUtils::postTetherInterfaceList,
   NetworkUtils::disableNat,
@@ -734,6 +742,48 @@ void NetworkUtils::tetherInterface(CommandChain* aChain,
   doCommand(command, aChain, aCallback);
 }
 
+void NetworkUtils::addInterfaceToLocalNetwork(CommandChain* aChain,
+                                              CommandCallback aCallback,
+                                              NetworkResultOptions& aResult)
+{
+  // Skip the command for sdk version < 20.
+  if (SDK_VERSION < 20) {
+    aResult.mResultCode = 0;
+    aResult.mResultReason = NS_ConvertUTF8toUTF16("");
+    aCallback(aChain, false, aResult);
+    return;
+  }
+
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network interface add local %s",
+           GET_CHAR(mInternalIfname));
+
+  doCommand(command, aChain, aCallback);
+}
+
+void NetworkUtils::addRouteToLocalNetwork(CommandChain* aChain,
+                                          CommandCallback aCallback,
+                                          NetworkResultOptions& aResult)
+{
+  // Skip the command for sdk version < 20.
+  if (SDK_VERSION < 20) {
+    aResult.mResultCode = 0;
+    aResult.mResultReason = NS_ConvertUTF8toUTF16("");
+    aCallback(aChain, false, aResult);
+    return;
+  }
+
+  char command[MAX_COMMAND_SIZE];
+  uint32_t prefix = atoi(GET_CHAR(mPrefix));
+  uint32_t ip = inet_addr(GET_CHAR(mIp));
+  char* networkAddr = getNetworkAddr(ip, prefix);
+
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network route add local %s %s/%s",
+           GET_CHAR(mInternalIfname), networkAddr, GET_CHAR(mPrefix));
+
+  doCommand(command, aChain, aCallback);
+}
+
 void NetworkUtils::preTetherInterfaceList(CommandChain* aChain,
                                           CommandCallback aCallback,
                                           NetworkResultOptions& aResult)
@@ -847,12 +897,38 @@ void NetworkUtils::untetherInterface(CommandChain* aChain,
   doCommand(command, aChain, aCallback);
 }
 
+void NetworkUtils::removeInterfaceFromLocalNetwork(CommandChain* aChain,
+                                                   CommandCallback aCallback,
+                                                   NetworkResultOptions& aResult)
+{
+  // Skip the command for sdk version < 20.
+  if (SDK_VERSION < 20) {
+    aResult.mResultCode = 0;
+    aResult.mResultReason = NS_ConvertUTF8toUTF16("");
+    aCallback(aChain, false, aResult);
+    return;
+  }
+
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "network interface remove local %s",
+           GET_CHAR(mIfname));
+
+  doCommand(command, aChain, aCallback);
+}
+
 void NetworkUtils::setDnsForwarders(CommandChain* aChain,
                                     CommandCallback aCallback,
                                     NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %s %s", GET_CHAR(mDns1), GET_CHAR(mDns2));
+
+  if (SDK_VERSION >= 20) {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %d %s %s",
+             GET_FIELD(mNetId), GET_CHAR(mDns1), GET_CHAR(mDns2));
+  } else {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "tether dns set %s %s",
+             GET_CHAR(mDns1), GET_CHAR(mDns2));
+  }
 
   doCommand(command, aChain, aCallback);
 }
@@ -2123,6 +2199,15 @@ CommandResult NetworkUtils::setWifiTethering(NetworkParams& aOptions)
   }
   dumpParams(aOptions, "WIFI");
 
+  if (SDK_VERSION >= 20) {
+    NetIdManager::NetIdInfo netIdInfo;
+    if (!mNetIdManager.lookup(aOptions.mExternalIfname, &netIdInfo)) {
+      ERROR("No such interface: %s", GET_CHAR(mExternalIfname));
+      return -1;
+    }
+    aOptions.mNetId = netIdInfo.mNetId;
+  }
+
   if (enable) {
     NU_DBG("Starting Wifi Tethering on %s <-> %s",
            GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
@@ -2154,6 +2239,15 @@ CommandResult NetworkUtils::setUSBTethering(NetworkParams& aOptions)
     }
   }
   dumpParams(aOptions, "USB");
+
+  if (SDK_VERSION >= 20) {
+    NetIdManager::NetIdInfo netIdInfo;
+    if (!mNetIdManager.lookup(aOptions.mExternalIfname, &netIdInfo)) {
+      ERROR("No such interface: %s", GET_CHAR(mExternalIfname));
+      return -1;
+    }
+    aOptions.mNetId = netIdInfo.mNetId;
+  }
 
   if (enable) {
     NU_DBG("Starting USB Tethering on %s <-> %s",
