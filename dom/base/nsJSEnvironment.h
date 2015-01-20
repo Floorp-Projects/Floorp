@@ -192,7 +192,7 @@ public:
     : mReport(aReport)
   {}
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     mReport->LogToConsole();
     return NS_OK;

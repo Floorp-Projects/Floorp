@@ -167,7 +167,7 @@ public:
    */
   uint32_t EnumerateRead(EnumReadFunction aEnumFunc, void* aUserArg) const
   {
-    NS_ASSERTION(this->mTable.ops,
+    NS_ASSERTION(this->mTable.IsInitialized(),
                  "nsBaseHashtable was not initialized properly.");
 
     s_EnumReadArgs enumData = { aEnumFunc, aUserArg };
@@ -199,7 +199,7 @@ public:
    */
   uint32_t Enumerate(EnumFunction aEnumFunc, void* aUserArg)
   {
-    NS_ASSERTION(this->mTable.ops,
+    NS_ASSERTION(this->mTable.IsInitialized(),
                  "nsBaseHashtable was not initialized properly.");
 
     s_EnumArgs enumData = { aEnumFunc, aUserArg };

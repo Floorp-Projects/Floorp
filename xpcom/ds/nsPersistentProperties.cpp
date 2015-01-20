@@ -469,7 +469,7 @@ nsPersistentProperties::nsPersistentProperties()
 nsPersistentProperties::~nsPersistentProperties()
 {
   PL_FinishArenaPool(&mArena);
-  if (mTable.ops) {
+  if (mTable.IsInitialized()) {
     PL_DHashTableFinish(&mTable);
   }
 }

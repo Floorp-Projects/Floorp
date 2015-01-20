@@ -1729,7 +1729,7 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
     Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx) :
       mAcc(aAcc), mContent(aContent), mIdx(aIdx) { }
 
-    NS_IMETHOD Run()
+    NS_IMETHOD Run() MOZ_OVERRIDE
     {
       if (mAcc)
         mAcc->DispatchClickEvent(mContent, mIdx);

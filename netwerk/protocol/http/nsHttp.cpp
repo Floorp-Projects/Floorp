@@ -96,7 +96,7 @@ static const PLDHashTableOps ops = {
 nsresult
 nsHttp::CreateAtomTable()
 {
-    MOZ_ASSERT(!sAtomTable.ops, "atom table already initialized");
+    MOZ_ASSERT(!sAtomTable.IsInitialized(), "atom table already initialized");
 
     if (!sLock) {
         sLock = new Mutex("nsHttp.sLock");
@@ -107,7 +107,6 @@ nsHttp::CreateAtomTable()
     // headers right off the bat.
     if (!PL_DHashTableInit(&sAtomTable, &ops, sizeof(PLDHashEntryStub),
                            fallible_t(), NUM_HTTP_ATOMS + 10)) {
-        sAtomTable.ops = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -135,9 +134,8 @@ nsHttp::CreateAtomTable()
 void
 nsHttp::DestroyAtomTable()
 {
-    if (sAtomTable.ops) {
+    if (sAtomTable.IsInitialized()) {
         PL_DHashTableFinish(&sAtomTable);
-        sAtomTable.ops = nullptr;
     }
 
     while (sHeapAtoms) {
@@ -164,7 +162,7 @@ nsHttp::ResolveAtom(const char *str)
 {
     nsHttpAtom atom = { nullptr };
 
-    if (!str || !sAtomTable.ops)
+    if (!str || !sAtomTable.IsInitialized())
         return atom;
 
     MutexAutoLock lock(*sLock);

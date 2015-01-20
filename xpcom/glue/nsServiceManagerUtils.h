@@ -45,7 +45,8 @@ public:
   {
   }
 
-  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const;
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const
+    MOZ_OVERRIDE;
 protected:
   const char*                 mCategory;
   const char*                 mEntry;
