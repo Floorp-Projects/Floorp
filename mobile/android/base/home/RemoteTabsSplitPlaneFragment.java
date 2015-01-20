@@ -88,7 +88,7 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
             public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
                 final RemoteClient client = (RemoteClient) adapter.getItemAtPosition(position);
                 if (client != null) {
-                    // TODO : sState.setClientAsSelected(client.guid);
+                    sState.setClientAsSelected(client.guid);
                     mTabsAdapter.clear();
                     for (RemoteTab tab : client.tabs) {
                         mTabsAdapter.add(tab);
@@ -261,13 +261,28 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
             mClientsAdapter.clear();
             mTabsAdapter.clear();
 
+            RemoteClient selectedClient = null;
             for (int i = 0; i < mAdapter.getGroupCount(); i++) {
-                RemoteClient client = (RemoteClient) mAdapter.getGroup(i);
+                final RemoteClient client = (RemoteClient) mAdapter.getGroup(i);
                 mClientsAdapter.add(client);
+
+                if (i == 0) {
+                    // Fallback to most recent client when selected client guid not found.
+                    selectedClient = client;
+                }
+
+                if (client.guid.equals(sState.selectedClient)) {
+                    selectedClient = client;
+                }
+            }
+
+            final List<RemoteTab> visibleTabs = (selectedClient != null) ? selectedClient.tabs : new ArrayList<RemoteTab>();
+            for (RemoteTab tab : visibleTabs) {
+                mTabsAdapter.add(tab);
             }
 
             // Update the selected client and notify data has changed both the list views.
-            // TODO: sState.setClientAsSelected(selectedClient);
+            sState.setClientAsSelected(selectedClient != null ? selectedClient.guid : null);
             mTabsAdapter.notifyDataSetChanged();
             mClientsAdapter.notifyDataSetChanged();
         }
@@ -335,8 +350,7 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
 
             // Update the background based on the state of the selected client.
             final RemoteClient client = getItem(position);
-            // TODO : final boolean isSelected = client.guid.equals(sState.selectedClient);
-            final boolean isSelected = false;
+            final boolean isSelected = client.guid.equals(sState.selectedClient);
             adapter.updateClientsItemView(isSelected, context, view, getItem(position));
             return view;
         }
