@@ -53,6 +53,24 @@ NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
+void
+nsCanvasFrame::ShowCustomContentContainer()
+{
+  if (mCustomContentContainer) {
+    mCustomContentContainer->UnsetAttr(kNameSpaceID_None, nsGkAtoms::hidden, true);
+  }
+}
+
+void
+nsCanvasFrame::HideCustomContentContainer()
+{
+  if (mCustomContentContainer) {
+    mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
+                                     NS_LITERAL_STRING("true"),
+                                     true);
+  }
+}
+
 nsresult
 nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
@@ -124,6 +142,11 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   for (size_t i = 0; i < len; ++i) {
     nsCOMPtr<Element> node = doc->GetAnonymousContents()[i]->GetContentNode();
     mCustomContentContainer->AppendChildTo(node->AsContent(), true);
+  }
+
+  // Only create a frame for mCustomContentContainer if it has some children.
+  if (len == 0) {
+    HideCustomContentContainer();
   }
 
   return NS_OK;
