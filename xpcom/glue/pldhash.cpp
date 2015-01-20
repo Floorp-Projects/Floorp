@@ -227,8 +227,6 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
     return false;
   }
 
-  ops = aOps;
-
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = MinCapacity(aLength);
@@ -255,6 +253,9 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
   }
   memset(mEntryStore, 0, nbytes);
   METER(memset(&mStats, 0, sizeof(mStats)));
+
+  // Set this only once we reach a point where we know we can't fail.
+  ops = aOps;
 
 #ifdef DEBUG
   mRecursionLevel = 0;
@@ -333,6 +334,8 @@ PLDHashTable::Finish()
     }
     entryAddr += mEntrySize;
   }
+
+  ops = nullptr;
 
   DECREMENT_RECURSION_LEVEL(this);
   MOZ_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(this));

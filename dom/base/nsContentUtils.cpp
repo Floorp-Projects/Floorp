@@ -1776,7 +1776,6 @@ nsContentUtils::Shutdown()
 
     if (sEventListenerManagersHash.EntryCount() == 0) {
       PL_DHashTableFinish(&sEventListenerManagersHash);
-      sEventListenerManagersHash.ops = nullptr;
     }
   }
 

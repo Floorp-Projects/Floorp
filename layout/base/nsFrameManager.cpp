@@ -214,7 +214,6 @@ nsFrameManager::ClearPlaceholderFrameMap()
   if (mPlaceholderMap.ops) {
     PL_DHashTableEnumerate(&mPlaceholderMap, UnregisterPlaceholders, nullptr);
     PL_DHashTableFinish(&mPlaceholderMap);
-    mPlaceholderMap.ops = nullptr;
   }
 }
 

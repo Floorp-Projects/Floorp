@@ -19,14 +19,12 @@ SpanningCellSorter::SpanningCellSorter()
   , mSortedHashTable(nullptr)
 {
     memset(mArray, 0, sizeof(mArray));
-    mHashTable.ops = nullptr;
 }
 
 SpanningCellSorter::~SpanningCellSorter()
 {
     if (mHashTable.ops) {
         PL_DHashTableFinish(&mHashTable);
-        mHashTable.ops = nullptr;
     }
     delete [] mSortedHashTable;
 }

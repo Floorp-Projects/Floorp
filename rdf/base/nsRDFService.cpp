@@ -723,11 +723,6 @@ RDFServiceImpl::gRDFService;
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nullptr)
 {
-    mResources.ops = nullptr;
-    mLiterals.ops = nullptr;
-    mInts.ops = nullptr;
-    mDates.ops = nullptr;
-    mBlobs.ops = nullptr;
     gRDFService = this;
 }
 

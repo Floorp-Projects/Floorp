@@ -107,7 +107,6 @@ nsHttp::CreateAtomTable()
     // headers right off the bat.
     if (!PL_DHashTableInit(&sAtomTable, &ops, sizeof(PLDHashEntryStub),
                            fallible_t(), NUM_HTTP_ATOMS + 10)) {
-        sAtomTable.ops = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -137,7 +136,6 @@ nsHttp::DestroyAtomTable()
 {
     if (sAtomTable.ops) {
         PL_DHashTableFinish(&sAtomTable);
-        sAtomTable.ops = nullptr;
     }
 
     while (sHeapAtoms) {

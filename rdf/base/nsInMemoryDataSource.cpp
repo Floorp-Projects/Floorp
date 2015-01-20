@@ -780,8 +780,6 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 {
     NS_INIT_AGGREGATED(aOuter);
 
-    mForwardArcs.ops = nullptr;
-    mReverseArcs.ops = nullptr;
     mPropagateChanges = true;
     MOZ_COUNT_CTOR(InMemoryDataSource);
 }
