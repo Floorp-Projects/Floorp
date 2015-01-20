@@ -12,9 +12,9 @@
 #include "nsTArray.h"
 #include "mozilla/gmp/GMPTypes.h"
 
-class GMPAudioDecoderProxyCallback : public GMPCallbackBase {
+class GMPAudioDecoderCallbackProxy : public GMPCallbackBase {
 public:
-  virtual ~GMPAudioDecoderProxyCallback() {}
+  virtual ~GMPAudioDecoderCallbackProxy() {}
   // Note: aChannelCount and aSamplesPerSecond may not be consistent from
   // one invocation to the next.
   virtual void Decoded(const nsTArray<int16_t>& aPCM,
@@ -36,7 +36,7 @@ public:
                               uint32_t aBitsPerChannel,
                               uint32_t aSamplesPerSecond,
                               nsTArray<uint8_t>& aExtraData,
-                              GMPAudioDecoderProxyCallback* aCallback) = 0;
+                              GMPAudioDecoderCallbackProxy* aCallback) = 0;
   virtual nsresult Decode(mozilla::gmp::GMPAudioSamplesImpl& aSamples) = 0;
   virtual nsresult Reset() = 0;
   virtual nsresult Drain() = 0;
