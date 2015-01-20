@@ -56,7 +56,7 @@ TestSysVShmemParent::Main()
 
 
 bool
-TestSysVShmemParent::RecvTake(Shmem& mem, Shmem& unsafe,
+TestSysVShmemParent::RecvTake(Shmem&& mem, Shmem&& unsafe,
                           const size_t& expectedSize)
 {
     if (mem.Size<char>() != expectedSize)
@@ -85,7 +85,7 @@ TestSysVShmemParent::RecvTake(Shmem& mem, Shmem& unsafe,
 // Child
 
 bool
-TestSysVShmemChild::RecvGive(Shmem& mem, Shmem& unsafe, const size_t& expectedSize)
+TestSysVShmemChild::RecvGive(Shmem&& mem, Shmem&& unsafe, const size_t& expectedSize)
 {
     if (mem.Size<char>() != expectedSize)
         fail("expected shmem size %lu, but it has size %lu",
