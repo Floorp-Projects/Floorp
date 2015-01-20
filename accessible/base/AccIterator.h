@@ -247,6 +247,48 @@ private:
   nsAString::index_type mCurrIdx;
 };
 
+
+/**
+ * Iterates over related accessible referred by aria-owns.
+ */
+class ARIAOwnedByIterator MOZ_FINAL : public RelatedAccIterator
+{
+public:
+  explicit ARIAOwnedByIterator(const Accessible* aDependent);
+  virtual ~ARIAOwnedByIterator() { }
+
+  virtual Accessible* Next() MOZ_OVERRIDE;
+
+private:
+  ARIAOwnedByIterator() = delete;
+  ARIAOwnedByIterator(const ARIAOwnedByIterator&) = delete;
+  ARIAOwnedByIterator& operator = (const ARIAOwnedByIterator&) = delete;
+
+  const Accessible* mDependent;
+};
+
+
+/**
+ * Iterates over related accessible referred by aria-owns.
+ */
+class ARIAOwnsIterator MOZ_FINAL : public AccIterable
+{
+public:
+  explicit ARIAOwnsIterator(const Accessible* aOwner);
+  virtual ~ARIAOwnsIterator() { }
+
+  virtual Accessible* Next() MOZ_OVERRIDE;
+
+private:
+  ARIAOwnsIterator() = delete;
+  ARIAOwnsIterator(const ARIAOwnsIterator&) = delete;
+  ARIAOwnsIterator& operator = (const ARIAOwnsIterator&) = delete;
+
+  IDRefsIterator mIter;
+  const Accessible* mOwner;
+};
+
+
 /**
  * Iterator that points to a single accessible returning it on the first call
  * to Next().
