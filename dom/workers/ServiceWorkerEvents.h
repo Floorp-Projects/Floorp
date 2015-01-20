@@ -38,7 +38,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
   {
-    return mozilla::dom::InstallPhaseEventBinding_workers::Wrap(aCx, this);
+    return mozilla::dom::InstallPhaseEventBinding::Wrap(aCx, this);
   }
 
   static already_AddRefed<InstallPhaseEvent>
@@ -90,7 +90,7 @@ public:
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
   {
-    return mozilla::dom::InstallEventBinding_workers::Wrap(aCx, this);
+    return mozilla::dom::InstallEventBinding::Wrap(aCx, this);
   }
 
   static already_AddRefed<InstallEvent>
