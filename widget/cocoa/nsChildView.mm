@@ -118,7 +118,6 @@ extern "C" {
 
   typedef CFTypeRef CGSRegionObj;
   CGError CGSNewRegionWithRect(const CGRect *rect, CGSRegionObj *outRegion);
-  CGError CGSNewRegionWithRectList(const CGRect *rects, int rectCount, CGSRegionObj *outRegion);
 }
 
 // defined in nsMenuBarX.mm
@@ -201,7 +200,6 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (APZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
-- (void)updateWindowDraggableState;
 
 @end
 
@@ -218,11 +216,6 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 
 @interface NSView(NSThemeFrameCornerRadius)
 - (float)roundedCornerRadius;
-@end
-
-@interface NSView(DraggableRegion)
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove;
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove forUnderTitlebar:(BOOL)aForUnderTitlebar;
 @end
 
 // Starting with 10.7 the bottom corners of all windows are rounded.
@@ -2745,15 +2738,6 @@ nsChildView::DoRemoteComposition(const nsIntRect& aRenderRect)
   [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
 }
 
-void
-nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
-{
-  if (mDraggableRegion != aRegion) {
-    mDraggableRegion = aRegion;
-    [(ChildView*)mView updateWindowDraggableState];
-  }
-}
-
 #ifdef ACCESSIBILITY
 already_AddRefed<a11y::Accessible>
 nsChildView::GetDocumentAccessible()
@@ -3608,9 +3592,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (BOOL)mouseDownCanMoveWindow
 {
-  // Return YES so that _regionForOpaqueDescendants gets called, where the
-  // actual draggable region will be assembled.
-  return YES;
+  return [[self window] isMovableByWindowBackground];
 }
 
 -(void)updateGLContext
@@ -4845,9 +4827,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Check to see if we are double-clicking in the titlebar.
   CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
-  LayoutDeviceIntPoint pos = geckoEvent.refPoint;
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
-      mGeckoChild->GetDraggableRegion().Contains(pos.x, pos.y) &&
+      [[self window] isMovableByWindowBackground] &&
       [self shouldMinimizeOnTitlebarDoubleClick] &&
       [[self window] isKindOfClass:[ToolbarWindow class]] &&
       (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
@@ -4897,77 +4878,24 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchEvent(&event, status);
 }
 
-- (void)updateWindowDraggableState
+- (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent
 {
-  // Trigger update to the window server.
-  [[self window] setMovableByWindowBackground:NO];
-  [[self window] setMovableByWindowBackground:YES];
-}
-
-// aRect is in view coordinates relative to this NSView.
-- (CGRect)convertToFlippedWindowCoordinates:(NSRect)aRect
-{
-  // First, convert the rect to regular window coordinates...
-  NSRect inWindowCoords = [self convertRect:aRect toView:nil];
-  // ... and then flip it again because window coordinates have their origin
-  // in the bottom left corner, and we need it to be in the top left corner.
-  inWindowCoords.origin.y = [[self window] frame].size.height - NSMaxY(inWindowCoords);
-  return NSRectToCGRect(inWindowCoords);
-}
-
-static CGSRegionObj
-NewCGSRegionFromRegion(const nsIntRegion& aRegion,
-                       CGRect (^aRectConverter)(const nsIntRect&))
-{
-  nsTArray<CGRect> rects;
-  nsIntRegionRectIterator iter(aRegion);
-  for (;;) {
-    const nsIntRect* r = iter.Next();
-    if (!r)
-      break;
-    rects.AppendElement(aRectConverter(*r));
+  if (!theEvent || !mGeckoChild) {
+    return;
   }
 
-  CGSRegionObj region;
-  CGSNewRegionWithRectList(rects.Elements(), rects.Length(), &region);
-  return region;
-}
-
-// This function is called with forMove:YES to calculate the draggable region
-// of the window which will be submitted to the window server. Window dragging
-// is handled on the window server without calling back into our process, so it
-// also works while our app is unresponsive.
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove
-{
-  if (!aForMove || !mGeckoChild) {
-    return [super _regionForOpaqueDescendants:aRect forMove:aForMove];
+  nsCocoaWindow* windowWidget = mGeckoChild->GetXULWindowWidget();
+  if (!windowWidget) {
+    return;
   }
 
-  nsIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
+  // We assume later on that sending a hit test event won't cause widget destruction.
+  WidgetMouseEvent hitTestEvent(true, NS_MOUSE_MOZHITTEST, mGeckoChild,
+                                WidgetMouseEvent::eReal);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&hitTestEvent];
+  bool result = mGeckoChild->DispatchWindowEvent(hitTestEvent);
 
-  nsIntRegion opaqueRegion;
-  opaqueRegion.Sub(boundingRect, mGeckoChild->GetDraggableRegion());
-
-  return NewCGSRegionFromRegion(opaqueRegion, ^(const nsIntRect& r) {
-    return [self convertToFlippedWindowCoordinates:mGeckoChild->DevPixelsToCocoaPoints(r)];
-  });
-}
-
-// Starting with 10.10, in addition to the traditional
-// -[NSView _regionForOpaqueDescendants:forMove:] method, there's a new form with
-// an additional forUnderTitlebar argument, which is sometimes called instead of
-// the old form. We need to override the new variant as well.
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect
-                                    forMove:(BOOL)aForMove
-                           forUnderTitlebar:(BOOL)aForUnderTitlebar
-{
-  if (!aForMove || !mGeckoChild) {
-    return [super _regionForOpaqueDescendants:aRect
-                                      forMove:aForMove
-                             forUnderTitlebar:aForUnderTitlebar];
-  }
-
-  return [self _regionForOpaqueDescendants:aRect forMove:aForMove];
+  [windowWidget->GetCocoaWindow() setMovableByWindowBackground:result];
 }
 
 - (void)handleMouseMoved:(NSEvent*)theEvent
