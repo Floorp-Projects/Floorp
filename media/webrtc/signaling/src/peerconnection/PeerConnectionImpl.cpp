@@ -468,20 +468,32 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
                                             IceConfiguration *aDst)
 {
 #ifdef MOZILLA_INTERNAL_API
-  if (!aSrc.mIceServers.WasPassed()) {
-    return NS_OK;
+  if (aSrc.mIceServers.WasPassed()) {
+    for (size_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
+      nsresult rv = AddIceServer(aSrc.mIceServers.Value()[i], aDst);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
-  for (uint32_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
-    const RTCIceServer& server = aSrc.mIceServers.Value()[i];
-    NS_ENSURE_TRUE(server.mUrl.WasPassed(), NS_ERROR_UNEXPECTED);
+#endif
+  return NS_OK;
+}
 
+nsresult
+PeerConnectionImpl::AddIceServer(const RTCIceServer &aServer,
+                                 IceConfiguration *aDst)
+{
+#ifdef MOZILLA_INTERNAL_API
+  NS_ENSURE_STATE(aServer.mUrls.WasPassed());
+  NS_ENSURE_STATE(aServer.mUrls.Value().IsStringSequence());
+  auto &urls = aServer.mUrls.Value().GetAsStringSequence();
+  for (size_t i = 0; i < urls.Length(); i++) {
     // Without STUN/TURN handlers, NS_NewURI returns nsSimpleURI rather than
     // nsStandardURL. To parse STUN/TURN URI's to spec
     // http://tools.ietf.org/html/draft-nandakumar-rtcweb-stun-uri-02#section-3
     // http://tools.ietf.org/html/draft-petithuguenin-behave-turn-uri-03#section-3
     // we parse out the query-string, and use ParseAuthority() on the rest
     nsRefPtr<nsIURI> url;
-    nsresult rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
+    nsresult rv = NS_NewURI(getter_AddRefs(url), urls[i]);
     NS_ENSURE_SUCCESS(rv, rv);
     bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
     url->SchemeIs("stun", &isStun);
@@ -542,8 +554,8 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
       port = (isStuns || isTurns)? 5349 : 3478;
 
     if (isTurn || isTurns) {
-      NS_ConvertUTF16toUTF8 credential(server.mCredential);
-      NS_ConvertUTF16toUTF8 username(server.mUsername);
+      NS_ConvertUTF16toUTF8 credential(aServer.mCredential);
+      NS_ConvertUTF16toUTF8 username(aServer.mUsername);
 
       // Bug 1039655 - TURN TCP is not e10s ready
       if ((transport == kNrIceTransportTcp) &&
