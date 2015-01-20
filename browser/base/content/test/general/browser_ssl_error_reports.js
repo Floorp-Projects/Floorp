@@ -1,14 +1,15 @@
-var badPin = "https://include-subdomains.pinning.example.com";
-var enabledPref = false;
-var automaticPref = false;
-var urlPref = "security.ssl.errorReporting.url";
-var enforcement_level = 1;
+let badChainURL = "https://badchain.include-subdomains.pinning.example.com";
+let noCertURL = "https://fail-handshake.example.com";
+let enabledPref = false;
+let automaticPref = false;
+let urlPref = "security.ssl.errorReporting.url";
+let enforcement_level = 1;
 
 function loadFrameScript() {
   let mm = Cc["@mozilla.org/globalmessagemanager;1"]
            .getService(Ci.nsIMessageListenerManager);
   const ROOT = getRootDirectory(gTestPath);
-  mm.loadFrameScript(ROOT+"browser_bug846489_content.js", true);
+  mm.loadFrameScript(ROOT + "browser_ssl_error_reports_content.js", true);
 }
 
 add_task(function*(){
@@ -16,7 +17,8 @@ add_task(function*(){
   loadFrameScript();
   SimpleTest.requestCompleteLog();
   yield testSendReportDisabled();
-  yield testSendReportManual();
+  yield testSendReportManual(badChainURL, "succeed");
+  yield testSendReportManual(noCertURL, "nocert");
   yield testSendReportAuto();
   yield testSendReportError();
   yield testSetAutomatic();
@@ -26,9 +28,9 @@ add_task(function*(){
 function createNetworkErrorMessagePromise(aBrowser) {
   return new Promise(function(resolve, reject) {
     // Error pages do not fire "load" events, so use a progressListener.
-    var originalDocumentURI = aBrowser.contentDocument.documentURI;
+    let originalDocumentURI = aBrowser.contentDocument.documentURI;
 
-    var progressListener = {
+    let progressListener = {
       onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
         // Make sure nothing other than an error page is loaded.
         if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
@@ -42,7 +44,7 @@ function createNetworkErrorMessagePromise(aBrowser) {
         if (doc.getElementById("reportCertificateError")) {
           // Wait until the documentURI changes (from about:blank) this should
           // be the error page URI.
-          var documentURI = doc.documentURI;
+          let documentURI = doc.documentURI;
           if (documentURI == originalDocumentURI) {
             return;
           }
@@ -50,13 +52,13 @@ function createNetworkErrorMessagePromise(aBrowser) {
           aWebProgress.removeProgressListener(progressListener,
             Ci.nsIWebProgress.NOTIFY_LOCATION |
             Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
-          var matchArray = /about:neterror\?.*&d=([^&]*)/.exec(documentURI);
+          let matchArray = /about:neterror\?.*&d=([^&]*)/.exec(documentURI);
           if (!matchArray) {
             reject("no network error message found in URI")
           return;
           }
 
-          var errorMsg = matchArray[1];
+          let errorMsg = matchArray[1];
           resolve(decodeURIComponent(errorMsg));
         }
       },
@@ -74,7 +76,7 @@ function createNetworkErrorMessagePromise(aBrowser) {
 // check we can set the 'automatically send' pref
 let testSetAutomatic = Task.async(function*() {
   setup();
-  let tab = gBrowser.addTab(badPin, {skipAnimation: true});
+  let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -119,12 +121,13 @@ let testSetAutomatic = Task.async(function*() {
 });
 
 // test that manual report sending (with button clicks) works
-let testSendReportManual = Task.async(function*() {
+let testSendReportManual = Task.async(function*(testURL, suffix) {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
-  Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?succeed");
+  Services.prefs.setCharPref("security.ssl.errorReporting.url",
+    "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?" + suffix);
 
-  let tab = gBrowser.addTab(badPin, {skipAnimation: true});
+  let tab = gBrowser.addTab(testURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -134,7 +137,8 @@ let testSendReportManual = Task.async(function*() {
   let netError = createNetworkErrorMessagePromise(browser);
   yield netError;
   netError.then(function(val){
-    is(val.startsWith("An error occurred during a connection to include-subdomains.pinning.example.com"), true ,"ensure the correct error message came from about:neterror");
+    is(val.startsWith("An error occurred during a connection to"), true,
+                      "ensure the correct error message came from about:neterror");
   });
 
   // Check the report starts on click
@@ -185,7 +189,7 @@ let testSendReportAuto = Task.async(function*() {
   Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", true);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?succeed");
 
-  let tab = gBrowser.addTab(badPin, {skipAnimation: true});
+  let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -234,7 +238,7 @@ let testSendReportError = Task.async(function*() {
   Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", true);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?error");
 
-  let tab = gBrowser.addTab(badPin, {skipAnimation: true});
+  let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -255,12 +259,12 @@ let testSendReportError = Task.async(function*() {
   let reportErrors = new Promise(function(resolve, reject) {
     mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
       switch(message.data.reportStatus) {
-      case "complete":
-        reject(message.data.reportStatus);
-        break;
-      case "error":
-        resolve(message.data.reportStatus);
-        break;
+        case "complete":
+          reject(message.data.reportStatus);
+          break;
+        case "error":
+          resolve(message.data.reportStatus);
+          break;
       }
     });
   });
@@ -276,7 +280,7 @@ let testSendReportDisabled = Task.async(function*() {
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", false);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://offdomain.com");
 
-  let tab = gBrowser.addTab(badPin, {skipAnimation: true});
+  let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
@@ -289,12 +293,12 @@ let testSendReportDisabled = Task.async(function*() {
   let reportErrors = new Promise(function(resolve, reject) {
     mm.addMessageListener("ssler-test:SSLErrorReportStatus", function(message) {
       switch(message.data.reportStatus) {
-      case "complete":
-        reject(message.data.reportStatus);
-        break;
-      case "error":
-        resolve(message.data.reportStatus);
-        break;
+        case "complete":
+          reject(message.data.reportStatus);
+          break;
+        case "error":
+          resolve(message.data.reportStatus);
+          break;
       }
     });
   });
