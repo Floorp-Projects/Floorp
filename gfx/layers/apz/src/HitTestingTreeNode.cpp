@@ -174,7 +174,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
   // convert into Layer coordinate space
   gfx::Matrix4x4 localTransform = mTransform;
   if (mApzc) {
-    localTransform = localTransform * gfx::Matrix4x4(mApzc->GetCurrentAsyncTransform());
+    localTransform = localTransform * mApzc->GetCurrentAsyncTransformWithOverscroll();
   }
   gfx::Point4D point = localTransform.Inverse().ProjectPoint(aPoint.ToUnknownPoint());
   return point.HasPositiveWCoord()
