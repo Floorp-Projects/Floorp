@@ -228,6 +228,91 @@ add_test(function test_stk_terminal_response_get_input_empty_string() {
 });
 
 /**
+ * Verify STK terminal response : GET INPUT with 160 unpacked characters.
+ *
+ * @See |TERMINAL RESPONSE: GET INPUT 1.8.1| of 27.22.4.3.1 GET INPUT (normal)
+ *      in TS 102 384.
+ */
+add_test(function test_stk_terminal_response_get_input_160_unpacked_characters() {
+  let worker = newUint8SupportOutgoingIndexWorker();
+  let context = worker.ContextPool._contexts[0];
+  let buf = context.Buf;
+  let pduHelper = context.GsmPDUHelper;
+  let iccPduHelper = context.ICCPDUHelper;
+  let TEST_TEXT_STRING = "***1111111111###" +
+                         "***2222222222###" +
+                         "***3333333333###" +
+                         "***4444444444###" +
+                         "***5555555555###" +
+                         "***6666666666###" +
+                         "***7777777777###" +
+                         "***8888888888###" +
+                         "***9999999999###" +
+                         "***0000000000###";
+
+  buf.sendParcel = function() {
+    // Type
+    do_check_eq(this.readInt32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
+
+    // Token : we don't care
+    this.readInt32();
+
+    // Data Size, 352 = 2 * (TLV_COMMAND_DETAILS_SIZE(5) +
+    //                       TLV_DEVICE_ID_SIZE(4) +
+    //                       TLV_RESULT_SIZE(3) +
+    //                       TEXT LENGTH(164))
+    do_check_eq(this.readInt32(), 352);
+
+    // Command Details, Type-Length-Value
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 3);
+    do_check_eq(pduHelper.readHexOctet(), 0x01);
+    do_check_eq(pduHelper.readHexOctet(), STK_CMD_GET_INPUT);
+    do_check_eq(pduHelper.readHexOctet(), 0x00);
+
+    // Device Identifies, Type-Length-Value(Source ID-Destination ID)
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_DEVICE_ID);
+    do_check_eq(pduHelper.readHexOctet(), 2);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_ME);
+    do_check_eq(pduHelper.readHexOctet(), STK_DEVICE_ID_SIM);
+
+    // Result
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_RESULT |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    do_check_eq(pduHelper.readHexOctet(), 1);
+    do_check_eq(pduHelper.readHexOctet(), STK_RESULT_OK);
+
+    // Text
+    do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_TEXT_STRING |
+                                          COMPREHENSIONTLV_FLAG_CR);
+    // C-TLV Length Encoding: 161 = 0x81 0xA1
+    do_check_eq(pduHelper.readHexOctet(), 0x81);
+    do_check_eq(pduHelper.readHexOctet(), 0xA1);
+    do_check_eq(pduHelper.readHexOctet(), STK_TEXT_CODING_GSM_8BIT);
+    do_check_eq(iccPduHelper.read8BitUnpackedToString(160), TEST_TEXT_STRING);
+
+    run_next_test();
+  };
+
+  let response = {
+    command: {
+      commandNumber: 0x01,
+      typeOfCommand: STK_CMD_GET_INPUT,
+      commandQualifier: 0x00,
+      options: {
+        minLength: 160,
+        maxLength: 160,
+        text: TEST_TEXT_STRING
+      }
+    },
+    input: TEST_TEXT_STRING,
+    resultCode: STK_RESULT_OK
+  };
+  context.RIL.sendStkTerminalResponse(response);
+});
+
+/**
  * Verify STK terminal response : GET_INKEY - YES/NO request
  */
 add_test(function test_stk_terminal_response_get_inkey() {
