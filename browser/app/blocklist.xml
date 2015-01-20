@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1419896968000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1421170069000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -866,6 +866,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i816" id="noOpus@outlook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i528" id="008abed2-b43a-46c9-9a5b-a771c87b82da@1ad61d53-2bdc-4484-a26b-b888ecae1906.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1012,12 +1018,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i76" id="crossriderapp3924@crossrider.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -1112,6 +1112,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i812" id="{1e4ea5fc-09e5-4f45-a43b-c048304899fc}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i710" id="{e0352044-1439-48ba-99b6-b05ed1a4d2de}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -1160,7 +1166,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i354" id="{c0c2693d-2ee8-47b4-9df7-b67a0ee31988}">
+      <emItem  blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1349,6 +1355,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i820" id="{aab02ab1-33cf-4dfa-8a9f-f4e60e976d27}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i692" id="/^(j003-lqgrmgpcekslhg|SupraSavings|j003-dkqonnnthqjnkq|j003-kaggrpmirxjpzh)@jetpack$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1482,6 +1494,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i518" id="/^({d6e79525-4524-4707-9b97-1d70df8e7e59}|{ddb4644d-1a37-4e6d-8b6e-8e35e2a8ea6c}|{e55007f4-80c5-418e-ac33-10c4d60db01e}|{e77d8ca6-3a60-4ae9-8461-53b22fa3125b}|{e89a62b7-248e-492f-9715-43bf8c507a2f}|{5ce3e0cb-aa83-45cb-a7da-a2684f05b8f3})$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i354" id="{c0c2693d-2ee8-47b4-9df7-b67a0ee31988}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1823,12 +1841,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i760" id="toolbar11093@freshy.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i818" id="contentarget@maildrop.cc">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
-                  <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i142" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
@@ -2063,6 +2079,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i814" id="liiros@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -2166,6 +2188,14 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i760" id="toolbar11093@freshy.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i324" id="/^((34qEOefiyYtRJT@IM5Munavn\.com)|(Mro5Fm1Qgrmq7B@ByrE69VQfZvZdeg\.com)|(KtoY3KGxrCe5ie@yITPUzbBtsHWeCdPmGe\.com)|(9NgIdLK5Dq4ZMwmRo6zk@FNt2GCCLGyUuOD\.com)|(NNux7bWWW@RBWyXdnl6VGls3WAwi\.com)|(E3wI2n@PEHTuuNVu\.com)|(2d3VuWrG6JHBXbQdbr@3BmSnQL\.com))$/">
