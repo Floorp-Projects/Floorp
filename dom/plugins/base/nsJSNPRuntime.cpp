@@ -402,7 +402,7 @@ DestroyJSObjWrapperTable()
 static bool
 CreateNPObjWrapperTable()
 {
-  MOZ_ASSERT(!sNPObjWrappers.ops);
+  MOZ_ASSERT(!sNPObjWrappers.IsInitialized());
 
   if (!RegisterGCCallbacks()) {
     return false;
@@ -437,7 +437,7 @@ OnWrapperDestroyed()
       DestroyJSObjWrapperTable();
     }
 
-    if (sNPObjWrappers.ops) {
+    if (sNPObjWrappers.IsInitialized()) {
       // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
       DestroyNPObjWrapperTable();
@@ -1747,7 +1747,7 @@ NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
-    if (sNPObjWrappers.ops) {
+    if (sNPObjWrappers.IsInitialized()) {
       PL_DHashTableRemove(&sNPObjWrappers, npobj);
     }
   }
@@ -1763,7 +1763,7 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
   // The wrapper JSObject has been moved, so we need to update the entry in the
   // sNPObjWrappers hash table, if present.
 
-  if (!sNPObjWrappers.ops) {
+  if (!sNPObjWrappers.IsInitialized()) {
     return;
   }
 
@@ -1822,7 +1822,7 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
     return;
   }
 
-  if (!sNPObjWrappers.ops) {
+  if (!sNPObjWrappers.IsInitialized()) {
     // No hash yet (or any more), no used wrappers available.
 
     return;
@@ -1872,7 +1872,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     return nullptr;
   }
 
-  if (!sNPObjWrappers.ops) {
+  if (!sNPObjWrappers.IsInitialized()) {
     // No hash yet (or any more), initialize it.
     if (!CreateNPObjWrapperTable()) {
       return nullptr;
@@ -2028,7 +2028,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   // Use the safe JSContext here as we're not always able to find the
   // JSContext associated with the NPP any more.
   AutoSafeJSContext cx;
-  if (sNPObjWrappers.ops) {
+  if (sNPObjWrappers.IsInitialized()) {
     NppAndCx nppcx = { npp, cx };
     PL_DHashTableEnumerate(&sNPObjWrappers,
                            NPObjWrapperPluginDestroyedCallback, &nppcx);

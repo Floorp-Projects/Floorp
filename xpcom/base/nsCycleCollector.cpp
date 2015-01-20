@@ -836,7 +836,7 @@ public:
 
   ~CCGraph()
   {
-    if (mPtrToNodeMap.ops) {
+    if (mPtrToNodeMap.IsInitialized()) {
       PL_DHashTableFinish(&mPtrToNodeMap);
     }
   }
@@ -862,7 +862,7 @@ public:
   {
     return mNodes.IsEmpty() && mEdges.IsEmpty() &&
            mWeakMaps.IsEmpty() && mRootCount == 0 &&
-           !mPtrToNodeMap.ops;
+           !mPtrToNodeMap.IsInitialized();
   }
 #endif
 
