@@ -910,6 +910,7 @@ MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
         return true;
       case Sin:
+      case Log:
         writer.writeUnsigned(uint32_t(RInstruction::Recover_MathFunction));
         writer.writeByte(function_);
         return true;
@@ -932,6 +933,16 @@ RMathFunction::recover(JSContext *cx, SnapshotIterator &iter) const
         RootedValue result(cx);
 
         if (!js::math_sin_handle(cx, arg, &result))
+            return false;
+
+        iter.storeInstructionResult(result);
+        return true;
+      }
+      case MMathFunction::Log: {
+        RootedValue arg(cx, iter.read());
+        RootedValue result(cx);
+
+        if (!js::math_log_handle(cx, arg, &result))
             return false;
 
         iter.storeInstructionResult(result);
