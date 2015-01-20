@@ -3002,10 +3002,6 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
-  if (IsVideo() && mHasVideo) {
-    mMediaSize = aInfo->mVideo.mDisplay;
-    DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
-  }
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
@@ -3646,10 +3642,6 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
 
 void HTMLMediaElement::UpdateMediaSize(nsIntSize size)
 {
-  if (IsVideo() && mReadyState != HAVE_NOTHING && mMediaSize != size) {
-    DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
-  }
-
   mMediaSize = size;
   UpdateReadyStateForData(mLastNextFrameStatus);
 }
