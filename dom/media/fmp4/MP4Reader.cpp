@@ -107,7 +107,6 @@ InvokeAndRetry(ThisType* aThisVal, ReturnType(ThisType::*aMethod)(), MP4Stream* 
   }
 }
 
-
 MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mAudio(MediaData::AUDIO_DATA, Preferences::GetUint("media.mp4-audio-decode-ahead", 2))
@@ -196,6 +195,7 @@ MP4Reader::InitLayersBackendType()
 }
 
 static bool sIsEMEEnabled = false;
+static bool sDemuxSkipToNextKeyframe = true;
 
 nsresult
 MP4Reader::Init(MediaDecoderReader* aCloneDonor)
@@ -217,6 +217,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
   if (!sSetupPrefCache) {
     sSetupPrefCache = true;
     Preferences::AddBoolVarCache(&sIsEMEEnabled, "media.eme.enabled", false);
+    Preferences::AddBoolVarCache(&sDemuxSkipToNextKeyframe, "media.fmp4.demux-skip", true);
   }
 
   return NS_OK;
@@ -519,6 +520,29 @@ MP4Reader::GetDecoderData(TrackType aTrack)
   return mVideo;
 }
 
+Microseconds
+MP4Reader::GetNextKeyframeTime()
+{
+  MonitorAutoLock mon(mDemuxerMonitor);
+  return mDemuxer->GetNextKeyframeTime();
+}
+
+bool
+MP4Reader::ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
+{
+  // The MP4Reader doesn't do normal skip-to-next-keyframe if the demuxer
+  // has exposes where the next keyframe is. We can then instead skip only
+  // if the time threshold (the current playback position) is after the next
+  // keyframe in the stream. This means we'll only skip frames that we have
+  // no hope of ever playing.
+  Microseconds nextKeyframe = -1;
+  if (!sDemuxSkipToNextKeyframe ||
+      (nextKeyframe = GetNextKeyframeTime()) == -1) {
+    return aSkipToNextKeyframe;
+  }
+  return nextKeyframe < aTimeThreshold;
+}
+
 nsRefPtr<MediaDecoderReader::VideoDataPromise>
 MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
                             int64_t aTimeThreshold)
@@ -537,7 +561,7 @@ MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_ASSERT(HasVideo() && mPlatform && mVideo.mDecoder);
 
   bool eos = false;
-  if (aSkipToNextKeyframe) {
+  if (ShouldSkip(aSkipToNextKeyframe, aTimeThreshold)) {
     uint32_t parsed = 0;
     eos = !SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed);
     if (!eos && NS_FAILED(mVideo.mDecoder->Flush())) {
