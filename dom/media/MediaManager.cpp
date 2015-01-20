@@ -522,9 +522,9 @@ MediaDevice::GetFacingMode(nsAString& aFacingMode)
 NS_IMETHODIMP
 MediaDevice::GetMediaSource(nsAString& aMediaSource)
 {
-  if (mMediaSource == MediaSourceType::Microphone) {
+  if (mMediaSource == dom::MediaSourceEnum::Microphone) {
     aMediaSource.Assign(NS_LITERAL_STRING("microphone"));
-  } else if (mMediaSource == MediaSourceType::Window) { // this will go away
+  } else if (mMediaSource == dom::MediaSourceEnum::Window) { // this will go away
     aMediaSource.Assign(NS_LITERAL_STRING("window"));
   } else { // all the rest are shared
     aMediaSource.Assign(NS_ConvertUTF8toUTF16(
@@ -948,7 +948,7 @@ template<class DeviceType, class ConstraintsType>
 static void
   GetSources(MediaEngine *engine,
              ConstraintsType &aConstraints,
-             void (MediaEngine::* aEnumerate)(MediaSourceType,
+             void (MediaEngine::* aEnumerate)(dom::MediaSourceEnum,
                  nsTArray<nsRefPtr<typename DeviceType::Source> >*),
              nsTArray<nsRefPtr<DeviceType>>& aResult,
              const char* media_device_name = nullptr)
@@ -960,10 +960,8 @@ static void
   SourceSet candidateSet;
   {
     nsTArray<nsRefPtr<typename DeviceType::Source> > sources;
-    // all MediaSourceEnums are contained in MediaSourceType
 
-    (engine->*aEnumerate)((MediaSourceType)(aConstraints.mMediaSourceEnumValue),
-                          &sources);
+    (engine->*aEnumerate)(aConstraints.mMediaSourceEnumValue, &sources);
     /**
       * We're allowing multiple tabs to access the same camera for parity
       * with Chrome.  See bug 811757 for some of the issues surrounding
@@ -2403,9 +2401,9 @@ GetUserMediaCallbackMediaStreamListener::StopScreenWindowSharing()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   if (mVideoSource && !mStopped &&
-      (mVideoSource->GetMediaSource() == MediaSourceType::Screen ||
-       mVideoSource->GetMediaSource() == MediaSourceType::Application ||
-       mVideoSource->GetMediaSource() == MediaSourceType::Window)) {
+      (mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Screen ||
+       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Application ||
+       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Window)) {
     // Stop the whole stream if there's no audio; just the video track if we have both
     MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
       new MediaOperationTask(mAudioSource ? MEDIA_STOP_TRACK : MEDIA_STOP,
