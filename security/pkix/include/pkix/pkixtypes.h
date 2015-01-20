@@ -268,7 +268,7 @@ public:
 
   // Called as soon as we think we have a valid chain but before revocation
   // checks are done. This function can be used to compute additional checks,
-  // especilaly checks that require the entire certificate chain. This callback
+  // especially checks that require the entire certificate chain. This callback
   // can also be used to save a copy of the built certificate chain for later
   // use.
   //

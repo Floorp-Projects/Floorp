@@ -291,16 +291,10 @@ function test_origin() {
 }
 
 var prefs;
-var predictor_pref;
-var preconnect_min_pref;
-var cleaned_up_pref;
 
 function cleanup() {
   observer.cleaningUp = true;
   predictor.reset();
-  prefs.setIntPref("network.predictor.preconnect-min-confidence", preconnect_min_pref);
-  prefs.setBoolPref("network.predictor.enabled", predictor_pref);
-  prefs.setBoolPref("network.predictor.cleaned-up", cleaned_up_pref);
 }
 
 var tests = [
@@ -355,11 +349,17 @@ function run_test() {
   tests.forEach(add_test);
   profile = do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  preconnect_min_pref = prefs.getIntPref("network.predictor.preconnect-min-confidence");
-  predictor_pref = prefs.getBoolPref("network.predictor.enabled");
-  cleaned_up_pref = prefs.getBoolPref("network.predictor.cleaned-up");
   prefs.setBoolPref("network.predictor.enabled", true);
   prefs.setBoolPref("network.predictor.cleaned-up", true);
+  prefs.setBoolPref("browser.cache.use_new_backend_temp", true);
+  prefs.setIntPref("browser.cache.use_new_backend", 1);
+  do_register_cleanup(() => {
+      prefs.clearUserPref("network.predictor.preconnect-min-confidence");
+      prefs.clearUserPref("network.predictor.enabled");
+      prefs.clearUserPref("network.predictor.cleaned-up");
+      prefs.clearUserPref("browser.cache.use_new_backend_temp");
+      prefs.clearUserPref("browser.cache.use_new_backend");
+  });
   predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
   registerObserver();
   run_next_test();

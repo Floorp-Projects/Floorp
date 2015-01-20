@@ -70,7 +70,6 @@ AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
 WMFAudioMFTManager::WMFAudioMFTManager(
   const mp4_demuxer::AudioDecoderConfig& aConfig)
   : mAudioChannels(aConfig.channel_count)
-  , mAudioBytesPerSample(aConfig.bits_per_sample / 8)
   , mAudioRate(aConfig.samples_per_second)
   , mAudioFrameOffset(0)
   , mAudioFrameSum(0)
@@ -264,7 +263,8 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     mMustRecaptureAudioPosition = false;
   }
   MOZ_ASSERT(numFramesToStrip >= 0);
-  int32_t numSamples = currentLength / mAudioBytesPerSample;
+  // We can assume PCM 16 output.
+  int32_t numSamples = currentLength / 2;
   int32_t numFrames = numSamples / mAudioChannels;
   int32_t offset = std::min<int32_t>(numFramesToStrip, numFrames);
   numFrames -= offset;
@@ -279,8 +279,6 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
 
   nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[numSamples]);
 
-  // Just assume PCM output for now...
-  MOZ_ASSERT(mAudioBytesPerSample == 2);
   int16_t* pcm = ((int16_t*)data) + (offset * mAudioChannels);
   MOZ_ASSERT(pcm >= (int16_t*)data);
   MOZ_ASSERT(pcm <= (int16_t*)(data + currentLength));

@@ -83,8 +83,8 @@ function httpRequest(aUrl, aOptions) {
   }
 
   // Handle adding postData as defined above.
-  let POSTData = aOptions.postData || "";
-  if (Array.isArray(POSTData)) {
+  let POSTData = aOptions.postData || null;
+  if (POSTData && Array.isArray(POSTData)) {
     xhr.setRequestHeader("Content-Type",
                          "application/x-www-form-urlencoded; charset=utf-8");
     POSTData = POSTData.map(function(p) p[0] + "=" + percentEncode(p[1]))

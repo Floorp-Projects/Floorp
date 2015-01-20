@@ -351,7 +351,7 @@ nsPlainTextSerializer::AppendElementStart(Element* aElement,
   nsresult rv;
   nsIAtom* id = GetIdForContent(mElement);
 
-  bool isContainer = !nsContentUtils::IsHTMLVoid(id);
+  bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
   mOutputString = &aStr;
 
@@ -384,7 +384,7 @@ nsPlainTextSerializer::AppendElementEnd(Element* aElement,
   nsresult rv;
   nsIAtom* id = GetIdForContent(mElement);
 
-  bool isContainer = !nsContentUtils::IsHTMLVoid(id);
+  bool isContainer = !FragmentOrElement::IsHTMLVoid(id);
 
   mOutputString = &aStr;
 

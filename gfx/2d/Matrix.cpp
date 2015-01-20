@@ -6,6 +6,7 @@
 #include "Matrix.h"
 #include "Tools.h"
 #include <algorithm>
+#include <ostream>
 #include <math.h>
 
 #include "mozilla/FloatingPoint.h" // for UnspecifiedNaN
@@ -14,6 +15,18 @@ using namespace std;
 
 namespace mozilla {
 namespace gfx {
+
+std::ostream&
+operator<<(std::ostream& aStream, const Matrix& aMatrix)
+{
+  return aStream << "[ " << aMatrix._11
+                 << " "  << aMatrix._12
+                 << "; " << aMatrix._21
+                 << " "  << aMatrix._22
+                 << "; " << aMatrix._31
+                 << " "  << aMatrix._32
+                 << "; ]";
+}
 
 Matrix
 Matrix::Rotation(Float aAngle)

@@ -68,7 +68,10 @@ public:
 
   enum { ALLOW_MEMMOVE = true };
 
-  nsIAtom* mAtom;
+  // mAtom only points to objects of type PermanentAtomImpl, which are not
+  // really refcounted.  But since these entries live in a global hashtable,
+  // this reference is essentially owning.
+  nsIAtom* MOZ_OWNING_REF mAtom;
 };
 
 /**
@@ -155,8 +158,6 @@ public:
   PermanentAtomImpl() {}
 
   ~PermanentAtomImpl();
-  NS_IMETHOD_(MozExternalRefCountType) AddRef();
-  NS_IMETHOD_(MozExternalRefCountType) Release();
 
   virtual bool IsPermanent();
 
@@ -168,13 +169,20 @@ public:
   {
     return ::operator new(aSize);
   }
+
+private:
+  NS_IMETHOD_(MozExternalRefCountType) AddRef();
+  NS_IMETHOD_(MozExternalRefCountType) Release();
 };
 
 //----------------------------------------------------------------------
 
 struct AtomTableEntry : public PLDHashEntryHdr
 {
-  AtomImpl* mAtom;
+  // These references are either to non-permanent atoms, in which case they are
+  // non-owning, or they are to permanent atoms that are not really refcounted.
+  // The exact lifetime rules are documented in AtomTableClearEntry.
+  AtomImpl* MOZ_NON_OWNING_REF mAtom;
 };
 
 struct AtomTableKey

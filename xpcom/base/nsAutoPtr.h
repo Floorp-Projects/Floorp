@@ -762,7 +762,7 @@ operator!=(NSCAP_Zero* aLhs, const nsAutoArrayPtr<T>& aRhs)
 /*****************************************************************************/
 
 template<class T>
-class nsQueryObject : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryObject : public nsCOMPtr_helper
 {
 public:
   explicit nsQueryObject(T* aRawPtr)
@@ -782,7 +782,7 @@ private:
 };
 
 template<class T>
-class nsQueryObjectWithError : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryObjectWithError : public nsCOMPtr_helper
 {
 public:
   nsQueryObjectWithError(T* aRawPtr, nsresult* aErrorPtr)
