@@ -716,12 +716,6 @@ WorkerDataStore::Sync(JSContext* aCx,
 }
 
 void
-WorkerDataStore::SetDataStoreImpl(DataStoreImpl& aStore, ErrorResult& aRv)
-{
-  NS_NOTREACHED("We don't use this for the WorkerDataStore!");
-}
-
-void
 WorkerDataStore::SetBackingDataStore(
   const nsMainThreadPtrHandle<DataStore>& aBackingStore)
 {
