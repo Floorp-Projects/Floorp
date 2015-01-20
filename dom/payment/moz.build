@@ -6,6 +6,14 @@
 
 DIRS += ['interfaces']
 
+EXPORTS.mozilla.dom += [
+    'PaymentProviderUtils.h',
+]
+
+SOURCES += [
+    'PaymentProviderUtils.cpp',
+]
+
 EXTRA_PP_JS_MODULES += [
     'Payment.jsm',
 ]
@@ -13,7 +21,19 @@ EXTRA_PP_JS_MODULES += [
 EXTRA_COMPONENTS += [
     'Payment.js',
     'Payment.manifest',
-    'PaymentFlowInfo.js',
+    'PaymentFlowInfo.js'
+]
+
+EXTRA_PP_COMPONENTS += [
+    'PaymentProvider.js'
+]
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/dom/base'
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
