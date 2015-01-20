@@ -74,6 +74,15 @@
       testRelation("treeitem1", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem2", RELATION_NODE_CHILD_OF, "tree");
 
+      // aria-owns, bad relations
+      testRelation("ariaowns_container", RELATION_NODE_CHILD_OF, null);
+      testRelation("ariaowns_self", RELATION_NODE_CHILD_OF, null);
+      testRelation("ariaowns_uncle", RELATION_NODE_CHILD_OF, "ariaowns_self");
+
+      testRelation("ariaowns_container", RELATION_NODE_PARENT_OF, null);
+      testRelation("ariaowns_self", RELATION_NODE_PARENT_OF, "ariaowns_uncle");
+      testRelation("ariaowns_uncle", RELATION_NODE_PARENT_OF, null);
+
       // 'node child of' relation for outlineitem role
       testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
@@ -309,6 +318,12 @@
       <div role="treeitem" id="treeitem7">Super light green</div>
     </div>
   </div>
+
+  <div id="ariaowns_container">
+    <div id="ariaowns_self"
+         aria-owns="aria_ownscontainer ariaowns_self ariaowns_uncle"></div>
+  </div>
+  <div id="ariaowns_uncle"></div>
 
   <div aria-owns="simplegrid-ownrow" role="grid" id="simplegrid">
     <div role="row" id="simplegrid-row1" aria-level="1">
