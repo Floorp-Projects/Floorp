@@ -23,6 +23,9 @@ public:
 
   explicit HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo);
 
+  // Element
+  virtual bool IsInteractiveHTMLContent() const MOZ_OVERRIDE;
+
   // nsIDOMHTMLMediaElement
   using HTMLMediaElement::GetPaused;
 
