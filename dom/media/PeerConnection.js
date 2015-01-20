@@ -679,94 +679,40 @@ RTCPeerConnection.prototype = {
               "InvalidParameterError");
       }
 
-      // Have to get caller's origin outside of Promise constructor and pass it in
+      // Get caller's origin before chaining and pass it in
       let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-      return this._chain(() => new this._win.Promise((resolve, reject) =>
-        this._setRemoteDescriptionImpl(type, desc.sdp, origin, resolve, reject)));
+      return this._chain(() => {
+        let expectedIdentity = this._impl.peerIdentity;
+
+        // Do setRemoteDescription and identity validation in parallel
+        let p = new this._win.Promise((resolve, reject) => {
+          this._onSetRemoteDescriptionSuccess = resolve;
+          this._onSetRemoteDescriptionFailure = reject;
+          this._impl.setRemoteDescription(type, desc.sdp);
+        });
+
+        let pp = new Promise(resolve =>
+            this._remoteIdp.verifyIdentityFromSDP(desc.sdp, origin, resolve))
+        .then(msg => {
+          // If this pc has an identity already, then identity in sdp must match
+          if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
+            throw new this._win.DOMException(
+                "Peer Identity mismatch, expected: " + expectedIdentity,
+                "IncompatibleSessionDescriptionError");
+          }
+          if (msg) {
+            // Set new identity and generate an event.
+            this._impl.peerIdentity = msg.identity;
+            this._peerIdentity = new this._win.RTCIdentityAssertion(
+              this._remoteIdp.provider, msg.identity);
+            this.dispatchEvent(new this._win.Event("peeridentity"));
+          }
+        });
+        // Only wait for Idp validation if we need identity matching.
+        return expectedIdentity? this._win.Promise.all([p, pp]).then(() => {}) : p;
+      });
     });
-  },
-
-  /**
-   * Takes a result from the IdP and checks it against expectations.
-   * If OK, generates events.
-   * Returns true if it is either present and valid, or if there is no
-   * need for identity.
-   */
-  _processIdpResult: function(message) {
-    let good = !!message;
-    // This might be a valid assertion, but if we are constrained to a single peer
-    // identity, then we also need to make sure that the assertion matches
-    if (good && this._impl.peerIdentity) {
-      good = (message.identity === this._impl.peerIdentity);
-    }
-    if (good) {
-      this._impl.peerIdentity = message.identity;
-      this._peerIdentity = new this._win.RTCIdentityAssertion(
-        this._remoteIdp.provider, message.identity);
-      this.dispatchEvent(new this._win.Event("peeridentity"));
-    }
-    return good;
-  },
-
-  _setRemoteDescriptionImpl: function(type, sdp, origin, onSuccess, onError) {
-    let idpComplete = false;
-    let setRemoteComplete = false;
-    let idpError = null;
-    let isDone = false;
-
-    // we can run the IdP validation in parallel with setRemoteDescription this
-    // complicates much more than would be ideal, but it ensures that the IdP
-    // doesn't hold things up too much when it's not on the critical path
-    let allDone = () => {
-      if (!setRemoteComplete || !idpComplete || isDone) {
-        return;
-      }
-      // May be null if the user didn't supply success/failure callbacks.
-      // Violation of spec, but we allow it for now
-      onSuccess();
-      isDone = true;
-    };
-
-    let setRemoteDone = () => {
-      setRemoteComplete = true;
-      allDone();
-    };
-
-    // If we aren't waiting for something specific, allow this
-    // to complete asynchronously.
-    let idpDone;
-    if (!this._impl.peerIdentity) {
-      idpDone = this._processIdpResult.bind(this);
-      idpComplete = true; // lie about this for allDone()
-    } else {
-      idpDone = message => {
-        let idpGood = this._processIdpResult(message);
-        if (!idpGood) {
-          // iff we are waiting for a very specific peerIdentity
-          // call the error callback directly and then close
-          idpError = "Peer Identity mismatch, expected: " +
-            this._impl.peerIdentity;
-          onError(idpError);
-          this.close();
-        } else {
-          idpComplete = true;
-          allDone();
-        }
-      };
-    }
-
-    try {
-      this._remoteIdp.verifyIdentityFromSDP(sdp, origin, idpDone);
-    } catch (e) {
-      // if processing the SDP for identity doesn't work
-      this.logWarning(e.message, e.fileName, e.lineNumber);
-      idpDone(null);
-    }
-
-    this._onSetRemoteDescriptionSuccess = setRemoteDone;
-    this._onSetRemoteDescriptionFailure = onError;
-    this._impl.setRemoteDescription(type, sdp);
   },
 
   setIdentityProvider: function(provider, protocol, username) {
