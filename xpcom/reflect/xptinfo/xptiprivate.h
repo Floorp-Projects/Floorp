@@ -304,7 +304,9 @@ private:
 
     xptiInterfaceEntry*     mParent;      // Valid only when fully resolved
 
-    xptiInterfaceInfo*      mInfo;        // May come and go.
+    xptiInterfaceInfo* MOZ_UNSAFE_REF("The safety of this pointer is ensured "
+                                      "by the semantics of xptiWorkingSet.")
+                            mInfo;        // May come and go.
     xptiInfoFlags           mFlags;
     char                    mName[1];     // Always last. Sized to fit.
 };
@@ -347,8 +349,7 @@ public:
 public:
     explicit xptiInterfaceInfo(xptiInterfaceEntry* entry);
 
-    void Invalidate() 
-        {NS_IF_RELEASE(mParent); mEntry = nullptr;}
+    void Invalidate();
 
 private:
 
@@ -372,7 +373,7 @@ private:
 
 private:
     xptiInterfaceEntry* mEntry;
-    xptiInterfaceInfo*  mParent;
+    nsRefPtr<xptiInterfaceInfo> mParent;
 };
 
 /***************************************************************************/

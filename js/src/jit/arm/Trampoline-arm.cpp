@@ -150,11 +150,25 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.loadPtr(slot_vp, r10);
     masm.unboxInt32(Address(r10, 0), r10);
 
-    // Subtract off the size of the arguments from the stack pointer, store
-    // elsewhere.
-    aasm->as_sub(r4, sp, O2RegImmShift(r1, LSL, 3)); //r4 = sp - argc*8
-    // Get the final position of the stack pointer into the stack pointer.
-    aasm->as_sub(sp, r4, Imm8(16)); // sp' = sp - argc*8 - 16
+    // Guarantee stack alignment of Jit frames.
+    //
+    // This code moves the stack pointer to the location where it should be when
+    // we enter the Jit frame.  It moves the stack pointer such that we have
+    // enough space reserved for pushing the arguments, and the JitFrameLayout.
+    // The stack pointer is also aligned on the alignment expected by the Jit
+    // frames.
+    //
+    // At the end the register r4, is a pointer to the stack where the first
+    // argument is expected by the Jit frame.
+    //
+    aasm->as_sub(r4, sp, O2RegImmShift(r1, LSL, 3));    // r4 = sp - argc*8
+    masm.ma_and(Imm32(~(JitStackAlignment - 1)), r4, r4);
+    // r4 is now the aligned on the bottom of the list of arguments.
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
+    // sp' = ~(JitStackAlignment - 1) & (sp - argc * sizeof(Value)) - sizeof(JitFrameLayout)
+    aasm->as_sub(sp, r4, Imm8(sizeof(JitFrameLayout)));
+
     // Get a copy of the number of args to use as a decrement counter, also set
     // the zero condition code.
     aasm->as_mov(r5, O2Reg(r1), SetCond);
@@ -311,6 +325,10 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         MOZ_ASSERT(R1.scratchReg() != r0);
         masm.loadPtr(Address(r11, offsetof(EnterJITStack, scopeChain)), R1.scratchReg());
     }
+
+    // The space for the return address is already reserved. Check that it is
+    // correctly aligned for a Jit frame.
+    masm.assertStackAlignment(JitStackAlignment);
 
     // Call the function.
     masm.ma_callJitNoPush(r0);

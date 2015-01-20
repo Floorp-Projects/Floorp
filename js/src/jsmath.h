@@ -303,6 +303,9 @@ extern bool
 math_acos(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+math_ceil_handle(JSContext *cx, HandleValue value, MutableHandleValue res);
+
+extern bool
 math_ceil(JSContext *cx, unsigned argc, Value *vp);
 
 extern double

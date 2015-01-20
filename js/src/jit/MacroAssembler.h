@@ -7,6 +7,8 @@
 #ifndef jit_MacroAssembler_h
 #define jit_MacroAssembler_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "jscompartment.h"
 
 #if defined(JS_CODEGEN_X86)
@@ -1234,11 +1236,28 @@ class MacroAssembler : public MacroAssemblerSpecific
         PopRegsInMask(liveRegs);
     }
 
-    void assertStackAlignment(uint32_t alignment) {
+    void assertStackAlignment(uint32_t alignment, int32_t offset = 0) {
 #ifdef DEBUG
-        Label ok;
+        Label ok, bad;
         MOZ_ASSERT(IsPowerOfTwo(alignment));
-        branchTestPtr(Assembler::Zero, StackPointer, Imm32(alignment - 1), &ok);
+
+        // Wrap around the offset to be a non-negative number.
+        offset %= alignment;
+        if (offset < 0)
+            offset += alignment;
+
+        // Test if each bit from offset is set.
+        uint32_t off = offset;
+        while (off) {
+            uint32_t lowestBit = 1 << mozilla::CountTrailingZeroes32(off);
+            branchTestPtr(Assembler::Zero, StackPointer, Imm32(lowestBit), &bad);
+            off ^= lowestBit;
+        }
+
+        // Check that all remaining bits are zero.
+        branchTestPtr(Assembler::Zero, StackPointer, Imm32((alignment - 1) ^ offset), &ok);
+
+        bind(&bad);
         breakpoint();
         bind(&ok);
 #endif

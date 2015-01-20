@@ -38,7 +38,9 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
     mOverscroll(0),
-    mInUnderscroll(false)
+    mFirstOverscrollAnimationSample(0),
+    mOverscrollOffset(0),
+    mOverscrollScale(1.0f)
 {
 }
 
@@ -190,11 +192,12 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
 }
 
 ParentLayerCoord Axis::GetOverscroll() const {
-  return mOverscroll;
-}
+  ParentLayerCoord result = (mOverscroll - mOverscrollOffset) / mOverscrollScale;
 
-bool Axis::IsInUnderscroll() const {
-  return mInUnderscroll;
+  // Assert that we return overscroll in the correct direction
+  MOZ_ASSERT((result.value * mOverscrollOffset.value) >= 0.0f);
+
+  return result;
 }
 
 void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
@@ -218,6 +221,7 @@ void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
   // Apply spring force.
   float springForce = -1 * kSpringStiffness * mOverscroll;
   // Assume unit mass, so force = acceleration.
+  float oldVelocity = mVelocity;
   mVelocity += springForce * aStepDurationMilliseconds;
 
   // Apply dampening.
@@ -225,21 +229,38 @@ void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
   AXIS_LOG("%p|%s sampled overscroll animation, leaving velocity at %f\n",
     mAsyncPanZoomController, Name(), mVelocity);
 
-  // Adjust the amount of overscroll based on the velocity.
-  // Note that we allow for oscillations. mInUnderscroll tracks whether
-  // we are currently in a state where we have overshot and the spring is
-  // displaced in the other direction.
-  float oldOverscroll = mOverscroll;
-  mOverscroll += (mVelocity * aStepDurationMilliseconds);
-  bool signChange = (oldOverscroll * mOverscroll) < 0;
-  if (signChange) {
-    // If the sign of mOverscroll changed, we have either entered underscroll
-    // or exited it.
-    mInUnderscroll = !mInUnderscroll;
+  // At the peak of each oscillation, record new offset and scaling factors for
+  // overscroll, to ensure that GetOverscroll always returns a value of the
+  // same sign, and that this value is correctly adjusted as the spring is
+  // dampened.
+  bool velocitySignChange = (oldVelocity * mVelocity) < 0;
+  if (mFirstOverscrollAnimationSample == 0.0f) {
+    mFirstOverscrollAnimationSample = mOverscroll;
+
+    // It's possible to start sampling overscroll with velocity == 0, or
+    // velocity in the opposite direction of overscroll, so make sure we
+    // correctly record the peak in this case.
+    if ((mOverscroll >= 0 ? oldVelocity : -oldVelocity) <= 0.0f) {
+      velocitySignChange = true;
+    }
   }
+  if (velocitySignChange) {
+    bool oddOscillation = (mOverscroll.value * mFirstOverscrollAnimationSample.value) < 0.0f;
+    mOverscrollOffset = oddOscillation ? mOverscroll : -mOverscroll;
+    mOverscrollScale = 2.0f;
+  }
+
+  // Adjust the amount of overscroll based on the velocity.
+  // Note that we allow for oscillations.
+  mOverscroll += (mVelocity * aStepDurationMilliseconds);
 }
 
 bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
+  // Short-circuit early rather than running through all the sampling code.
+  if (mVelocity == 0.0f && mOverscroll == 0.0f) {
+    return false;
+  }
+
   // We approximate the curve traced out by the velocity of the spring
   // over time by breaking up the curve into small segments over which we
   // consider the velocity to be constant. If the animation is sampled
@@ -267,9 +288,8 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
     // velocity and overscroll are already low.
     AXIS_LOG("%p|%s oscillation dropped below threshold, going to rest\n",
       mAsyncPanZoomController, Name());
-    mOverscroll = 0;
+    ClearOverscroll();
     mVelocity = 0;
-    mInUnderscroll = false;
     return false;
   }
 
@@ -283,6 +303,9 @@ bool Axis::IsOverscrolled() const {
 
 void Axis::ClearOverscroll() {
   mOverscroll = 0;
+  mFirstOverscrollAnimationSample = 0;
+  mOverscrollOffset = 0;
+  mOverscrollScale = 1.0f;
 }
 
 ParentLayerCoord Axis::PanStart() const {

@@ -31,7 +31,7 @@ interface nsICollection : nsISerializable
 #include "nsCOMPtr.h"
 #endif
 
-class nsQueryElementAt : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryElementAt : public nsCOMPtr_helper
   {
     public:
       nsQueryElementAt( nsICollection* aCollection, uint32_t aIndex, nsresult* aErrorPtr )
@@ -45,7 +45,7 @@ class nsQueryElementAt : public nsCOMPtr_helper
       virtual nsresult NS_FASTCALL operator()( const nsIID& aIID, void** ) const;
 
     private:
-      nsICollection*  mCollection;
+      nsICollection* MOZ_NON_OWNING_REF mCollection;
       uint32_t        mIndex;
       nsresult*       mErrorPtr;
   };

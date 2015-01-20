@@ -978,8 +978,8 @@ TabChild::Observe(nsISupports *aSubject,
         // until we we get an inner size.
         if (HasValidInnerSize()) {
           InitializeRootMetrics();
-          utils->SetResolution(mLastRootMetrics.GetPresShellResolution(),
-                               mLastRootMetrics.GetPresShellResolution());
+          utils->SetResolutionAndScaleTo(mLastRootMetrics.GetPresShellResolution(),
+                                         mLastRootMetrics.GetPresShellResolution());
           HandlePossibleViewportChange(mInnerSize);
         }
       }
@@ -1309,9 +1309,9 @@ NS_IMETHODIMP
 TabChild::SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY,
                              int32_t aCx, int32_t aCy)
 {
-  NS_NOTREACHED("TabChild::SetDimensions not supported in TabChild");
+  unused << PBrowserChild::SendSetDimensions(aFlags, aX, aY, aCx, aCy);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
