@@ -41,6 +41,7 @@
 #include "VideoUtils.h"
 
 using namespace android;
+using namespace mozilla::layers;
 
 namespace mozilla {
 
@@ -806,11 +807,49 @@ MediaCodecReader::TextureClientRecycleCallback(TextureClient* aClient)
     if (!mTextureClientIndexes.Get(aClient, &index)) {
       return;
     }
+
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
+    sp<Fence> fence = aClient->GetReleaseFenceHandle().mFence;
+    if (fence.get() && fence->isValid()) {
+      mPendingReleaseItems.AppendElement(ReleaseItem(index, fence));
+    } else {
+      mPendingReleaseItems.AppendElement(ReleaseItem(index, nullptr));
+    }
+#else
+    mPendingReleaseItems.AppendElement(ReleaseItem(index));
+#endif
     mTextureClientIndexes.Remove(aClient);
   }
 
-  if (mVideoTrack.mCodec != nullptr) {
-    mVideoTrack.mCodec->releaseOutputBuffer(index);
+  if (mVideoTrack.mReleaseBufferTaskQueue->IsEmpty()) {
+    RefPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this,
+                           &MediaCodecReader::WaitFenceAndReleaseOutputBuffer);
+    mVideoTrack.mReleaseBufferTaskQueue->Dispatch(task);
+  }
+}
+
+void
+MediaCodecReader::WaitFenceAndReleaseOutputBuffer()
+{
+  nsTArray<ReleaseItem> releasingItems;
+  {
+    MutexAutoLock autoLock(mTextureClientIndexesLock);
+    releasingItems.AppendElements(mPendingReleaseItems);
+    mPendingReleaseItems.Clear();
+  }
+
+  for (size_t i = 0; i < releasingItems.Length(); i++) {
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
+    sp<Fence> fence;
+    fence = releasingItems[i].mReleaseFence;
+    if (fence.get() && fence->isValid()) {
+      fence->waitForever("MediaCodecReader");
+    }
+#endif
+    if (mVideoTrack.mCodec != nullptr) {
+      mVideoTrack.mCodec->releaseOutputBuffer(releasingItems[i].mReleaseIndex);
+    }
   }
 }
 
@@ -1250,15 +1289,20 @@ MediaCodecReader::DestroyMediaSources()
 void
 MediaCodecReader::ShutdownTaskQueues()
 {
-  if(mAudioTrack.mTaskQueue) {
+  if (mAudioTrack.mTaskQueue) {
     mAudioTrack.mTaskQueue->BeginShutdown();
     mAudioTrack.mTaskQueue->AwaitShutdownAndIdle();
     mAudioTrack.mTaskQueue = nullptr;
   }
-  if(mVideoTrack.mTaskQueue) {
+  if (mVideoTrack.mTaskQueue) {
     mVideoTrack.mTaskQueue->BeginShutdown();
     mVideoTrack.mTaskQueue->AwaitShutdownAndIdle();
     mVideoTrack.mTaskQueue = nullptr;
+  }
+  if (mVideoTrack.mReleaseBufferTaskQueue) {
+    mVideoTrack.mReleaseBufferTaskQueue->BeginShutdown();
+    mVideoTrack.mReleaseBufferTaskQueue->AwaitShutdownAndIdle();
+    mVideoTrack.mReleaseBufferTaskQueue = nullptr;
   }
 }
 
@@ -1274,6 +1318,8 @@ MediaCodecReader::CreateTaskQueues()
       !mVideoTrack.mTaskQueue) {
     mVideoTrack.mTaskQueue = CreateMediaDecodeTaskQueue();
     NS_ENSURE_TRUE(mVideoTrack.mTaskQueue, false);
+    mVideoTrack.mReleaseBufferTaskQueue = CreateMediaDecodeTaskQueue();
+    NS_ENSURE_TRUE(mVideoTrack.mReleaseBufferTaskQueue, false);
   }
 
   return true;
