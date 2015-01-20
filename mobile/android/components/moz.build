@@ -20,7 +20,6 @@ EXTRA_COMPONENTS += [
     'FilePicker.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
-    'PaymentsUI.js',
     'PromptService.js',
     'SiteSpecificUserAgent.js',
     'Snippets.js',
@@ -28,6 +27,12 @@ EXTRA_COMPONENTS += [
     'WebappsUpdateTimer.js',
     'XPIDialogService.js',
 ]
+
+if CONFIG['MOZ_PAY']:
+    EXTRA_COMPONENTS += [
+        'PaymentProviderStrategy.js',
+        'PaymentsUI.js'
+    ]
 
 EXTRA_PP_COMPONENTS += [
     'AboutRedirector.js',
