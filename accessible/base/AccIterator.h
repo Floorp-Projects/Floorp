@@ -43,7 +43,7 @@ public:
    * Return next accessible complying with filter function. Return the first
    * accessible for the first time.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   AccIterator();
@@ -89,7 +89,7 @@ public:
   /**
    * Return next related accessible for the given dependent accessible.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   RelatedAccIterator();
@@ -123,7 +123,7 @@ public:
   /**
    * Return next label accessible associated with the given element.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   HTMLLabelIterator();
@@ -150,7 +150,7 @@ public:
   /**
    * Return next output accessible associated with the given element.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   HTMLOutputIterator();
@@ -173,7 +173,7 @@ public:
   /**
    * Return next label accessible associated with the given element.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   XULLabelIterator();
@@ -196,7 +196,7 @@ public:
   /**
    * Return next description accessible associated with the given element.
    */
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   XULDescriptionIterator();
@@ -234,7 +234,7 @@ public:
   nsIContent* GetElem(const nsDependentSubstring& aID);
 
   // AccIterable
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   IDRefsIterator();
@@ -257,7 +257,7 @@ public:
   explicit SingleAccIterator(Accessible* aTarget): mAcc(aTarget) { }
   virtual ~SingleAccIterator() { }
 
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   SingleAccIterator();
@@ -278,7 +278,7 @@ public:
     mContainer(aItemContainer), mAnchor(nullptr) { }
   virtual ~ItemIterator() { }
 
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   ItemIterator() = delete;
@@ -300,7 +300,7 @@ public:
                       int32_t aRowIdx);
   virtual ~XULTreeItemIterator() { }
 
-  virtual Accessible* Next();
+  virtual Accessible* Next() MOZ_OVERRIDE;
 
 private:
   XULTreeItemIterator() = delete;

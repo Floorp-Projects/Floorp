@@ -88,9 +88,12 @@ OverscrollHandoffChain::FlushRepaints() const
 }
 
 void
-OverscrollHandoffChain::CancelAnimations() const
+OverscrollHandoffChain::CancelAnimations(CancelAnimationFlags aFlags) const
 {
-  ForEachApzc(&AsyncPanZoomController::CancelAnimation);
+  MOZ_ASSERT(Length() > 0);
+  for (uint32_t i = 0; i < Length(); ++i) {
+    mChain[i]->CancelAnimation(aFlags);
+  }
 }
 
 void

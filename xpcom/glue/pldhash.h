@@ -128,7 +128,7 @@ typedef enum PLDHashOperator
  *
  * The return value, op, is treated as a set of flags.  If op is PL_DHASH_NEXT,
  * then continue enumerating.  If op contains PL_DHASH_REMOVE, then clear (via
- * aTable->ops->clearEntry) and free entry.  Then we check whether op contains
+ * aTable->mOps->clearEntry) and free entry.  Then we check whether op contains
  * PL_DHASH_STOP; if so, stop enumerating and return the number of live entries
  * that were enumerated so far.  Return the total number of live entries when
  * enumeration completes normally.
@@ -176,14 +176,8 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  */
 class PLDHashTable
 {
-public:
-  /*
-   * Virtual operations; see below. This field is public because it's commonly
-   * zeroed to indicate that a table is no longer live.
-   */
-  const PLDHashTableOps* ops;
-
 private:
+  const PLDHashTableOps* mOps;        /* Virtual operations; see below. */
   int16_t             mHashShift;     /* multiplicative hash shift */
   /*
    * |mRecursionLevel| is only used in debug builds, but is present in opt
@@ -222,6 +216,29 @@ private:
 #endif
 
 public:
+  // The most important thing here is that we zero |mOps| because it's used to
+  // determine if Init() has been called. (The use of MOZ_CONSTEXPR means all
+  // the other members must be initialized too.)
+  MOZ_CONSTEXPR PLDHashTable()
+    : mOps(nullptr)
+    , mHashShift(0)
+    , mRecursionLevel(0)
+    , mEntrySize(0)
+    , mEntryCount(0)
+    , mRemovedCount(0)
+    , mGeneration(0)
+    , mEntryStore(nullptr)
+#ifdef PL_DHASHMETER
+    , mStats()
+#endif
+  {}
+
+  bool IsInitialized() const { return !!mOps; }
+
+  // These should be used rarely.
+  const PLDHashTableOps* const Ops() { return mOps; }
+  void SetOps(const PLDHashTableOps* aOps) { mOps = aOps; }
+
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
    * We store mHashShift rather than sizeLog2 to optimize the collision-free
@@ -381,7 +398,7 @@ struct PLDHashTableOps
 };
 
 /*
- * Default implementations for the above ops.
+ * Default implementations for the above mOps.
  */
 
 PLDHashNumber PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
@@ -429,7 +446,7 @@ PLDHashTable* PL_NewDHashTable(
 
 /*
  * Free |aTable|'s entry storage and |aTable| itself (both via
- * aTable->ops->freeTable). Use this function to destroy a PLDHashTable that
+ * aTable->mOps->freeTable). Use this function to destroy a PLDHashTable that
  * was allocated on the heap via PL_NewDHashTable().
  */
 void PL_DHashTableDestroy(PLDHashTable* aTable);
@@ -456,9 +473,9 @@ MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
   uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
- * Free |aTable|'s entry storage (via aTable->ops->freeTable). Use this function
- * to destroy a PLDHashTable that is allocated on the stack or in static memory
- * and was created via PL_DHashTableInit().
+ * Free |aTable|'s entry storage (via aTable->mOps->freeTable). Use this
+ * function to destroy a PLDHashTable that is allocated on the stack or in
+ * static memory and was created via PL_DHashTableInit().
  */
 void PL_DHashTableFinish(PLDHashTable* aTable);
 
@@ -480,7 +497,7 @@ PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey);
  *
  * If entry is null upon return, then either the table is severely overloaded,
  * and memory can't be allocated for entry storage. Or if
- * aTable->ops->initEntry is non-null, the aTable->ops->initEntry op may have
+ * aTable->mOps->initEntry is non-null, the aTable->mOps->initEntry op may have
  * returned false.
  *
  * Otherwise, aEntry->keyHash has been set so that PL_DHASH_ENTRY_IS_BUSY(entry)
@@ -496,7 +513,7 @@ PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
  *
  *  PL_DHashTableRemove(table, key);
  *
- * If key's entry is found, it is cleared (via table->ops->clearEntry) and
+ * If key's entry is found, it is cleared (via table->mOps->clearEntry) and
  * the entry is marked so that PL_DHASH_ENTRY_IS_FREE(entry).  This operation
  * returns null unconditionally; you should ignore its return value.
  */
@@ -521,7 +538,7 @@ PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
 /**
  * Measure the size of the table's entry storage, and if
  * |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
- * pointed to by entries.  Doesn't measure |ops| because it's often shared
+ * pointed to by entries.  Doesn't measure |mOps| because it's often shared
  * between tables.
  */
 size_t PL_DHashTableSizeOfExcludingThis(

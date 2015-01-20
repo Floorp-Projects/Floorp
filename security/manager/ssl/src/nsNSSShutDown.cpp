@@ -46,8 +46,6 @@ nsNSSShutDownList::nsNSSShutDownList()
 :mListLock("nsNSSShutDownList.mListLock")
 {
   mActiveSSLSockets = 0;
-  mPK11LogoutCancelObjects.ops = nullptr;
-  mObjects.ops = nullptr;
   PL_DHashTableInit(&mObjects, &gSetOps, sizeof(ObjectHashEntry));
   PL_DHashTableInit(&mPK11LogoutCancelObjects, &gSetOps,
                     sizeof(ObjectHashEntry));
@@ -55,13 +53,11 @@ nsNSSShutDownList::nsNSSShutDownList()
 
 nsNSSShutDownList::~nsNSSShutDownList()
 {
-  if (mObjects.ops) {
+  if (mObjects.IsInitialized()) {
     PL_DHashTableFinish(&mObjects);
-    mObjects.ops = nullptr;
   }
-  if (mPK11LogoutCancelObjects.ops) {
+  if (mPK11LogoutCancelObjects.IsInitialized()) {
     PL_DHashTableFinish(&mPK11LogoutCancelObjects);
-    mPK11LogoutCancelObjects.ops = nullptr;
   }
   PR_ASSERT(this == singleton);
   singleton = nullptr;

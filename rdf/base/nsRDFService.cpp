@@ -723,11 +723,6 @@ RDFServiceImpl::gRDFService;
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nullptr)
 {
-    mResources.ops = nullptr;
-    mLiterals.ops = nullptr;
-    mInts.ops = nullptr;
-    mDates.ops = nullptr;
-    mBlobs.ops = nullptr;
     gRDFService = this;
 }
 
@@ -775,15 +770,15 @@ RDFServiceImpl::~RDFServiceImpl()
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nullptr;
     }
-    if (mResources.ops)
+    if (mResources.IsInitialized())
         PL_DHashTableFinish(&mResources);
-    if (mLiterals.ops)
+    if (mLiterals.IsInitialized())
         PL_DHashTableFinish(&mLiterals);
-    if (mInts.ops)
+    if (mInts.IsInitialized())
         PL_DHashTableFinish(&mInts);
-    if (mDates.ops)
+    if (mDates.IsInitialized())
         PL_DHashTableFinish(&mDates);
-    if (mBlobs.ops)
+    if (mBlobs.IsInitialized())
         PL_DHashTableFinish(&mBlobs);
     gRDFService = nullptr;
 }

@@ -45,7 +45,7 @@ public:
   AtkSocketAccessible(nsIContent* aContent, DocAccessible* aDoc,
                       const nsCString& aPlugId);
 
-  virtual void Shutdown();
+  virtual void Shutdown() MOZ_OVERRIDE;
 
   virtual void GetNativeInterface(void** aOutAccessible) MOZ_OVERRIDE;
 };

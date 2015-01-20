@@ -186,7 +186,7 @@ InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
         INPQ_LOG("block %p tagged as fast-motion\n", touch);
       }
     }
-    aBlock->GetOverscrollHandoffChain()->CancelAnimations();
+    aBlock->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll);
   }
 }
 
