@@ -131,8 +131,8 @@ protected:
 private:
   void DispatchError(BluetoothResultHandler* aRes, BluetoothStatus aStatus);
 
-  nsAutoPtr<BluetoothDaemonChannel> mCmdChannel;
-  nsAutoPtr<BluetoothDaemonChannel> mNtfChannel;
+  nsRefPtr<BluetoothDaemonChannel> mCmdChannel;
+  nsRefPtr<BluetoothDaemonChannel> mNtfChannel;
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
 
   nsTArray<nsRefPtr<BluetoothResultHandler> > mResultHandlerQ;
