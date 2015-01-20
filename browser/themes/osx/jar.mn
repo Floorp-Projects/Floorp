@@ -135,6 +135,8 @@ browser.jar:
   skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-popup-blocked@2x.png
+  skin/classic/browser/reader-mode-16.png             (../shared/reader/reader-mode-16.png)
+  skin/classic/browser/reader-mode-16@2x.png          (../shared/reader/reader-mode-16@2x.png)
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-16@2x.png
   skin/classic/browser/webRTC-shareDevice-64.png
