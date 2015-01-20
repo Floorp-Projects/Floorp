@@ -41,6 +41,7 @@ VsyncSource::GetRefreshTimerVsyncDispatcher()
 
 VsyncSource::Display::Display()
   : mDispatcherLock("display dispatcher lock")
+  , mRefreshTimerNeedsVsync(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mRefreshTimerVsyncDispatcher = new RefreshTimerVsyncDispatcher();
@@ -72,10 +73,13 @@ VsyncSource::Display::AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aC
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCompositorVsyncDispatcher);
-  MutexAutoLock lock(mDispatcherLock);
-  if (!mCompositorVsyncDispatchers.Contains(aCompositorVsyncDispatcher)) {
-    mCompositorVsyncDispatchers.AppendElement(aCompositorVsyncDispatcher);
+  { // scope lock
+    MutexAutoLock lock(mDispatcherLock);
+    if (!mCompositorVsyncDispatchers.Contains(aCompositorVsyncDispatcher)) {
+      mCompositorVsyncDispatchers.AppendElement(aCompositorVsyncDispatcher);
+    }
   }
+  UpdateVsyncStatus();
 }
 
 void
@@ -83,8 +87,43 @@ VsyncSource::Display::RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher*
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCompositorVsyncDispatcher);
-  MutexAutoLock lock(mDispatcherLock);
-  mCompositorVsyncDispatchers.RemoveElement(aCompositorVsyncDispatcher);
+  { // Scope lock
+    MutexAutoLock lock(mDispatcherLock);
+    if (mCompositorVsyncDispatchers.Contains(aCompositorVsyncDispatcher)) {
+      mCompositorVsyncDispatchers.RemoveElement(aCompositorVsyncDispatcher);
+    }
+  }
+  UpdateVsyncStatus();
+}
+
+void
+VsyncSource::Display::NotifyRefreshTimerVsyncStatus(bool aEnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mRefreshTimerNeedsVsync = aEnable;
+  UpdateVsyncStatus();
+}
+
+void
+VsyncSource::Display::UpdateVsyncStatus()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // WARNING: This function SHOULD NOT BE CALLED WHILE HOLDING LOCKS
+  // NotifyVsync grabs a lock to dispatch vsync events
+  // When disabling vsync, we wait for the underlying thread to stop on some platforms
+  // We can deadlock if we wait for the underlying vsync thread to stop
+  // while the vsync thread is in NotifyVsync.
+  bool enableVsync = false;
+  { // scope lock
+    MutexAutoLock lock(mDispatcherLock);
+    enableVsync = !mCompositorVsyncDispatchers.IsEmpty() || mRefreshTimerNeedsVsync;
+  }
+
+  if (enableVsync) {
+    EnableVsync();
+  } else {
+    DisableVsync();
+  }
 }
 
 nsRefPtr<RefreshTimerVsyncDispatcher>
