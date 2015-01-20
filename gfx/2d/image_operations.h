@@ -31,6 +31,8 @@
 
 #include "skia/SkTypes.h"
 #include "Types.h"
+#include "convolver.h"
+#include "skia/SkRect.h"
 
 class SkBitmap;
 struct SkIRect;
@@ -151,6 +153,132 @@ class ImageOperations {
                                  int dest_width, int dest_height,
                                  const SkIRect& dest_subset);
 };
+
+// Returns the ceiling/floor as an integer.
+inline int CeilInt(float val) {
+  return static_cast<int>(ceil(val));
+}
+inline int FloorInt(float val) {
+  return static_cast<int>(floor(val));
+}
+
+// Filter function computation -------------------------------------------------
+
+// Evaluates the box filter, which goes from -0.5 to +0.5.
+inline float EvalBox(float x) {
+  return (x >= -0.5f && x < 0.5f) ? 1.0f : 0.0f;
+}
+
+// Evaluates the Lanczos filter of the given filter size window for the given
+// position.
+//
+// |filter_size| is the width of the filter (the "window"), outside of which
+// the value of the function is 0. Inside of the window, the value is the
+// normalized sinc function:
+//   lanczos(x) = sinc(x) * sinc(x / filter_size);
+// where
+//   sinc(x) = sin(pi*x) / (pi*x);
+inline float EvalLanczos(int filter_size, float x) {
+  if (x <= -filter_size || x >= filter_size)
+    return 0.0f;  // Outside of the window.
+  if (x > -std::numeric_limits<float>::epsilon() &&
+      x < std::numeric_limits<float>::epsilon())
+    return 1.0f;  // Special case the discontinuity at the origin.
+  float xpi = x * static_cast<float>(M_PI);
+  return (sin(xpi) / xpi) *  // sinc(x)
+          sin(xpi / filter_size) / (xpi / filter_size);  // sinc(x/filter_size)
+}
+
+// Evaluates the Hamming filter of the given filter size window for the given
+// position.
+//
+// The filter covers [-filter_size, +filter_size]. Outside of this window
+// the value of the function is 0. Inside of the window, the value is sinus
+// cardinal multiplied by a recentered Hamming function. The traditional
+// Hamming formula for a window of size N and n ranging in [0, N-1] is:
+//   hamming(n) = 0.54 - 0.46 * cos(2 * pi * n / (N-1)))
+// In our case we want the function centered for x == 0 and at its minimum
+// on both ends of the window (x == +/- filter_size), hence the adjusted
+// formula:
+//   hamming(x) = (0.54 -
+//                 0.46 * cos(2 * pi * (x - filter_size)/ (2 * filter_size)))
+//              = 0.54 - 0.46 * cos(pi * x / filter_size - pi)
+//              = 0.54 + 0.46 * cos(pi * x / filter_size)
+inline float EvalHamming(int filter_size, float x) {
+  if (x <= -filter_size || x >= filter_size)
+    return 0.0f;  // Outside of the window.
+  if (x > -std::numeric_limits<float>::epsilon() &&
+      x < std::numeric_limits<float>::epsilon())
+    return 1.0f;  // Special case the sinc discontinuity at the origin.
+  const float xpi = x * static_cast<float>(M_PI);
+
+  return ((sin(xpi) / xpi) *  // sinc(x)
+          (0.54f + 0.46f * cos(xpi / filter_size)));  // hamming(x)
+}
+
+// ResizeFilter ----------------------------------------------------------------
+
+// Encapsulates computation and storage of the filters required for one complete
+// resize operation.
+
+namespace resize {
+
+  // Returns the number of pixels that the filer spans, in filter space (the
+  // destination image).
+  inline float GetFilterSupport(ImageOperations::ResizeMethod method,
+                                float scale) {
+    switch (method) {
+      case ImageOperations::RESIZE_BOX:
+        // The box filter just scales with the image scaling.
+        return 0.5f;  // Only want one side of the filter = /2.
+      case ImageOperations::RESIZE_HAMMING1:
+        // The Hamming filter takes as much space in the source image in
+        // each direction as the size of the window = 1 for Hamming1.
+        return 1.0f;
+      case ImageOperations::RESIZE_LANCZOS2:
+        // The Lanczos filter takes as much space in the source image in
+        // each direction as the size of the window = 2 for Lanczos2.
+        return 2.0f;
+      case ImageOperations::RESIZE_LANCZOS3:
+        // The Lanczos filter takes as much space in the source image in
+        // each direction as the size of the window = 3 for Lanczos3.
+        return 3.0f;
+      default:
+        return 1.0f;
+    }
+  }
+
+  // Computes one set of filters either horizontally or vertically. The caller
+  // will specify the "min" and "max" rather than the bottom/top and
+  // right/bottom so that the same code can be re-used in each dimension.
+  //
+  // |src_depend_lo| and |src_depend_size| gives the range for the source
+  // depend rectangle (horizontally or vertically at the caller's discretion
+  // -- see above for what this means).
+  //
+  // Likewise, the range of destination values to compute and the scale factor
+  // for the transform is also specified.
+  void ComputeFilters(ImageOperations::ResizeMethod method,
+                      int src_size, int dst_size,
+                      int dest_subset_lo, int dest_subset_size,
+                      ConvolutionFilter1D* output);
+
+  // Computes the filter value given the coordinate in filter space.
+  inline float ComputeFilter(ImageOperations::ResizeMethod method, float pos) {
+    switch (method) {
+      case ImageOperations::RESIZE_BOX:
+        return EvalBox(pos);
+      case ImageOperations::RESIZE_HAMMING1:
+        return EvalHamming(1, pos);
+      case ImageOperations::RESIZE_LANCZOS2:
+        return EvalLanczos(2, pos);
+      case ImageOperations::RESIZE_LANCZOS3:
+        return EvalLanczos(3, pos);
+      default:
+        return 0;
+    }
+  }
+}
 
 }  // namespace skia
 
