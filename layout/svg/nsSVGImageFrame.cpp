@@ -410,6 +410,10 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
 nsIFrame*
 nsSVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
+  if (!(GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) && !GetHitTestFlags()) {
+    return nullptr;
+  }
+
   Rect rect;
   SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&rect.x, &rect.y,

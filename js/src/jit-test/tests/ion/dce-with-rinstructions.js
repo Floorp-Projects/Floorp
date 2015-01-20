@@ -374,6 +374,14 @@ function rfloor_object(i) {
     return i;
 }
 
+var uceFault_ceil_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_number'));
+function rceil_number(i){
+    var x = Math.ceil(-i - 0.12010799100);
+    if (uceFault_ceil_number(i) ||uceFault_ceil_number(i))
+        assertEq(x, - i);
+    return i;
+}
+
 var uceFault_round_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
 function rround_number(i) {
     var x = Math.round(i + 1.4);
@@ -1109,6 +1117,7 @@ for (i = 0; i < 100; i++) {
     rinline_arguments_length_3(i, 0, 1);
     rfloor_number(i);
     rfloor_object(i);
+    rceil_number(i);
     rround_number(i);
     rround_double(i);
     rcharCodeAt(i);

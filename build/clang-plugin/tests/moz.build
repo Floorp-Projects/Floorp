@@ -9,6 +9,8 @@ SOURCES += [
     'TestCustomHeap.cpp',
     'TestGlobalClass.cpp',
     'TestMustOverride.cpp',
+    'TestNANTestingExpr.cpp',
+    'TestNANTestingExprC.c',
     'TestNoArithmeticExprInArgument.cpp',
     'TestNonHeapClass.cpp',
     'TestStackClass.cpp',

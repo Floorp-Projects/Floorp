@@ -684,12 +684,12 @@ xptiInterfaceInfo::BuildParent()
 {
     mozilla::ReentrantMonitorAutoEnter monitor(XPTInterfaceInfoManager::GetSingleton()->
                                     mWorkingSet.mTableReentrantMonitor);
-    NS_ASSERTION(mEntry && 
-                 mEntry->IsFullyResolved() && 
+    NS_ASSERTION(mEntry &&
+                 mEntry->IsFullyResolved() &&
                  !mParent &&
                  mEntry->Parent(),
                 "bad BuildParent call");
-    mParent = mEntry->Parent()->InterfaceInfo().take();
+    mParent = mEntry->Parent()->InterfaceInfo();
     return true;
 }
 
@@ -698,7 +698,7 @@ xptiInterfaceInfo::BuildParent()
 NS_IMPL_QUERY_INTERFACE(xptiInterfaceInfo, nsIInterfaceInfo)
 
 xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
-    : mEntry(entry), mParent(nullptr)
+    : mEntry(entry)
 {
     LOG_INFO_CREATE(this);
 }
@@ -706,8 +706,14 @@ xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
 xptiInterfaceInfo::~xptiInterfaceInfo() 
 {
     LOG_INFO_DESTROY(this);
-    NS_IF_RELEASE(mParent); 
     NS_ASSERTION(!mEntry, "bad state in dtor");
+}
+
+void
+xptiInterfaceInfo::Invalidate()
+{
+  mParent = nullptr;
+  mEntry = nullptr;
 }
 
 MozExternalRefCountType

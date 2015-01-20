@@ -389,6 +389,10 @@ protected:
                                         TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                         uint64_t* aLayersId) MOZ_OVERRIDE;
 
+    virtual bool RecvSetDimensions(const uint32_t& aFlags,
+                                   const int32_t& aX, const int32_t& aY,
+                                   const int32_t& aCx, const int32_t& aCy) MOZ_OVERRIDE;
+
     bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
 
     // IME

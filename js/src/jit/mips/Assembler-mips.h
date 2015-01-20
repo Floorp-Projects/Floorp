@@ -162,6 +162,7 @@ static MOZ_CONSTEXPR_VAR FloatRegister f30 = { FloatRegisters::f30, FloatRegiste
 // four-byte-aligned, sp register should be eight-byte-aligned.
 static const uint32_t ABIStackAlignment = 8;
 static const uint32_t CodeAlignment = 4;
+static const uint32_t JitStackAlignment = 8;
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
@@ -170,6 +171,7 @@ static const uint32_t CodeAlignment = 4;
 static const bool SupportsSimd = false;
 // TODO this is just a filler to prevent a build failure. The MIPS SIMD
 // alignment requirements still need to be explored.
+// TODO Copy the static_asserts from x64/x86 assembler files.
 static const uint32_t SimdMemoryAlignment = 8;
 
 static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;

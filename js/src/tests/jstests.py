@@ -308,6 +308,8 @@ def main():
 
     # Force Pacific time zone to avoid failures in Date tests.
     os.environ['TZ'] = 'PST8PDT'
+    # Force date strings to English.
+    os.environ['LC_TIME'] = 'en_US.UTF-8'
 
     results = None
     try:

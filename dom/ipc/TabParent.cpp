@@ -33,6 +33,7 @@
 #include "nsDebug.h"
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
+#include "nsIBaseWindow.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
@@ -735,6 +736,43 @@ TabParent::Show(const nsIntSize& size)
     }
 
     unused << SendShow(size, info, scrolling, textureFactoryIdentifier, layersId, renderFrame);
+}
+
+bool
+TabParent::RecvSetDimensions(const uint32_t& aFlags,
+                             const int32_t& aX, const int32_t& aY,
+                             const int32_t& aCx, const int32_t& aCy)
+{
+  MOZ_ASSERT(!(aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER),
+             "We should never see DIM_FLAGS_SIZE_INNER here!");
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  NS_ENSURE_TRUE(mFrameElement, true);
+  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+  NS_ENSURE_TRUE(docShell, true);
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(treeOwner);
+  NS_ENSURE_TRUE(treeOwnerAsWin, true);
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
+      aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    treeOwnerAsWin->SetPositionAndSize(aX, aY, aCx, aCy, true);
+    return true;
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+    treeOwnerAsWin->SetPosition(aX, aY);
+    return true;
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+    treeOwnerAsWin->SetSize(aCx, aCy, true);
+    return true;
+  }
+
+  MOZ_ASSERT(false, "Unknown flags!");
+  return false;
 }
 
 void

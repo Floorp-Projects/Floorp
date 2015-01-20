@@ -57,7 +57,9 @@ using namespace mozilla::dom;
 static const int kDefaultPeriod = 1000; // ms
 static bool gDebug_isLoggingEnabled = false;
 static bool gDebug_isGPSLocationIgnored = false;
+#ifdef MOZ_B2G_RIL
 static const char* kNetworkConnStateChangedTopic = "network-connection-state-changed";
+#endif
 static const char* kMozSettingsChangedTopic = "mozsettings-changed";
 #ifdef MOZ_B2G_RIL
 static const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
@@ -681,9 +683,10 @@ GonkGPSGeolocationProvider::StartGPS()
 #endif
 
   int positionMode = GPS_POSITION_MODE_STANDALONE;
-  bool singleShot = false;
 
 #ifdef MOZ_B2G_RIL
+  bool singleShot = false;
+
   // XXX: If we know this is a single shot request, use MSA can be faster.
   if (singleShot && mSupportsMSA) {
     positionMode = GPS_POSITION_MODE_MS_ASSISTED;

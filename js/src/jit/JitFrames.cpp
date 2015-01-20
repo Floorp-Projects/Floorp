@@ -3011,5 +3011,20 @@ InvalidationBailoutStack::checkInvariants() const
 #endif
 }
 
+void
+AssertValidJitStack(JSContext *cx)
+{
+    for (JitActivationIterator activations(cx->runtime()); !activations.done(); ++activations) {
+        JitFrameIterator frames(activations);
+        for (; !frames.done(); ++frames)
+            continue;
+
+        MOZ_RELEASE_ASSERT(frames.type() == JitFrame_Entry,
+          "The first frame of a Jit activation should be an entry frame");
+        MOZ_RELEASE_ASSERT(reinterpret_cast<size_t>(frames.fp()) % JitStackAlignment == 0,
+          "The entry frame should be properly aligned");
+    }
+}
+
 } // namespace jit
 } // namespace js
