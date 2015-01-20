@@ -43,8 +43,12 @@ let InspectorView = {
     this._onNodeSelect = this._onNodeSelect.bind(this);
     this._onDestroyNode = this._onDestroyNode.bind(this);
     this._onResize = this._onResize.bind(this);
+    this._onCommandClick = this._onCommandClick.bind(this);
 
     this.splitter.addEventListener("mouseup", this._onResize);
+    for (let $el of $$("#audio-node-toolbar toolbarbutton")) {
+      $el.addEventListener("command", this._onCommandClick);
+    }
     window.on(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
     gAudioNodes.on("remove", this._onDestroyNode);
   },
@@ -55,6 +59,11 @@ let InspectorView = {
   destroy: function () {
     this.unbindToggle();
     this.splitter.removeEventListener("mouseup", this._onResize);
+
+    $("#audio-node-toolbar toolbarbutton").removeEventListener("command", this._onCommandClick);
+    for (let $el of $$("#audio-node-toolbar toolbarbutton")) {
+      $el.removeEventListener("command", this._onCommandClick);
+    }
     window.off(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
     gAudioNodes.off("remove", this._onDestroyNode);
 
@@ -67,7 +76,7 @@ let InspectorView = {
    * Takes a AudioNodeView `node` and sets it as the current
    * node and scaffolds the inspector view based off of the new node.
    */
-  setCurrentAudioNode: function (node) {
+  setCurrentAudioNode: Task.async(function* (node) {
     this._currentNode = node || null;
 
     // If no node selected, set the inspector back to "no AudioNode selected"
@@ -81,10 +90,10 @@ let InspectorView = {
     else {
       $("#web-audio-editor-details-pane-empty").setAttribute("hidden", "true");
       $("#web-audio-editor-tabs").removeAttribute("hidden");
-      this._setTitle();
+      yield this._buildToolbar();
       window.emit(EVENTS.UI_INSPECTOR_NODE_SET, this._currentNode.id);
     }
-  },
+  }),
 
   /**
    * Returns the current AudioNodeView.
@@ -104,14 +113,25 @@ let InspectorView = {
     this.hideImmediately();
   },
 
-  /**
-   * Sets the title of the Inspector view
-   */
-  _setTitle: function () {
-    let node = this._currentNode;
-    let title = node.type.replace(/Node$/, "");
-    $("#web-audio-inspector-title").setAttribute("value", title);
-  },
+  _buildToolbar: Task.async(function* () {
+    let node = this.getCurrentAudioNode();
+
+    let bypassable = node.bypassable;
+    let bypassed = yield node.isBypassed();
+    let button = $("#audio-node-toolbar .bypass");
+
+    if (!bypassable) {
+      button.setAttribute("disabled", true);
+    } else {
+      button.removeAttribute("disabled");
+    }
+
+    if (!bypassable || bypassed) {
+      button.removeAttribute("checked");
+    } else {
+      button.setAttribute("checked", true);
+    }
+  }),
 
   /**
    * Event handlers
@@ -139,6 +159,27 @@ let InspectorView = {
   _onDestroyNode: function (node) {
     if (this._currentNode && this._currentNode.id === node.id) {
       this.setCurrentAudioNode(null);
+    }
+  },
+
+  _onCommandClick: function (e) {
+    let node = this.getCurrentAudioNode();
+    let button = e.target;
+    let command = button.getAttribute("data-command");
+    let checked = button.getAttribute("checked");
+
+    if (button.getAttribute("disabled")) {
+      return;
+    }
+
+    if (command === "bypass") {
+      if (checked) {
+        button.removeAttribute("checked");
+        node.bypass(true);
+      } else {
+        button.setAttribute("checked", true);
+        node.bypass(false);
+      }
     }
   }
 };
