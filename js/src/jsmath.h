@@ -171,9 +171,6 @@ extern double
 math_log_uncached(double x);
 
 extern bool
-math_log_handle(JSContext *cx, HandleValue val, MutableHandleValue res);
-
-extern bool
 math_sin(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern double
