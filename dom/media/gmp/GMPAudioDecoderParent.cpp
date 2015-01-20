@@ -48,7 +48,7 @@ GMPAudioDecoderParent::InitDecode(GMPAudioCodecType aCodecType,
                                   uint32_t aBitsPerChannel,
                                   uint32_t aSamplesPerSecond,
                                   nsTArray<uint8_t>& aExtraData,
-                                  GMPAudioDecoderProxyCallback* aCallback)
+                                  GMPAudioDecoderCallbackProxy* aCallback)
 {
   if (mIsOpen) {
     NS_WARNING("Trying to re-init an in-use GMP audio decoder!");
