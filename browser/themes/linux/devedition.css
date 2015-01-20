@@ -30,10 +30,14 @@
 #back-button > .toolbarbutton-icon,
 #forward-button > .toolbarbutton-icon {
   margin: 0;
-  border: none;
-  padding: 2px 6px;
+  border: 1px solid var(--chrome-nav-bar-controls-border-color);
+  padding: 2px 5px;
   background: var(--chrome-nav-buttons-background);
   box-shadow: none !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  -moz-border-start: none;
 }
 
 /* Override a box shadow for disabled back button */

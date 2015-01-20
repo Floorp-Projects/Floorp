@@ -20,10 +20,14 @@
   border-radius: 0 !important;
   width: auto !important;
   height: auto !important;
-  padding: 2px 6px !important;
+  padding: 2px 5px !important;
   margin: 0 !important;
-  border: none !important;
+  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
   box-shadow: none !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  -moz-border-start: none !important;
 }
 
 /* Override a box shadow for disabled back button */
