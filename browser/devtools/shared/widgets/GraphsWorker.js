@@ -19,17 +19,14 @@ self.onmessage = e => {
 /**
  * @see LineGraphWidget.prototype.setDataFromTimestamps in Graphs.jsm
  * @param number id
- * @param number width
- * @param number height
  * @param array timestamps
  * @param number interval
  */
 function plotTimestampsGraph(id, args) {
   let plottedData = plotTimestamps(args.timestamps, args.interval);
   let plottedMinMaxSum = getMinMaxSum(plottedData);
-  let sparsifiedData = sparsifyLineData(plottedData, plottedMinMaxSum, args);
 
-  let response = { id, plottedData: sparsifiedData, plottedMinMaxSum };
+  let response = { id, plottedData, plottedMinMaxSum };
   self.postMessage(response);
 }
 
@@ -53,48 +50,6 @@ function getMinMaxSum(source) {
   avgValue = sumValues / totalTicks;
 
   return { minValue, maxValue, avgValue };
-}
-
-/**
- * Reduce a data source for a line graph, based off of a minimum distance
- * between the points to render.
- */
-function sparsifyLineData(plottedData, plottedMinMaxSum, options) {
-  let { width: graphWidth, height: graphHeight } = options;
-  let { dataOffsetX, dampenValuesFactor } = options;
-  let { minSquaredDistanceBetweenPoints } = options;
-
-  let result = [];
-
-  let totalTicks = plottedData.length;
-  let maxValue = plottedMinMaxSum.maxValue;
-
-  let firstTick = totalTicks ? plottedData[0].delta : 0;
-  let lastTick = totalTicks ? plottedData[totalTicks - 1].delta : 0;
-  let dataScaleX = graphWidth / (lastTick - dataOffsetX);
-  let dataScaleY = graphHeight / maxValue * dampenValuesFactor;
-
-  let prevX = 0;
-  let prevY = 0;
-
-  for (let { delta, value } of plottedData) {
-    let currX = (delta - dataOffsetX) * dataScaleX;
-    let currY = graphHeight - value * dataScaleY;
-
-    if (delta == firstTick || delta == lastTick) {
-      result.push({ delta, value });
-      continue;
-    }
-
-    let dist = distSquared(prevX, prevY, currX, currY);
-    if (dist >= minSquaredDistanceBetweenPoints) {
-      result.push({ delta, value });
-      prevX = currX;
-      prevY = currY;
-    }
-  }
-
-  return result;
 }
 
 /**
@@ -149,13 +104,4 @@ function plotTimestamps(timestamps, interval = 100, clamp = 60) {
   }
 
   return timeline;
-}
-
-/**
- * Calculates the squared distance between two 2D points.
- */
-function distSquared(x0, y0, x1, y1) {
-  let xs = x1 - x0;
-  let ys = y1 - y0;
-  return xs * xs + ys * ys;
 }
