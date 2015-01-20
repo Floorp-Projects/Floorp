@@ -33,7 +33,7 @@ public:
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE { }
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor);
 
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 
