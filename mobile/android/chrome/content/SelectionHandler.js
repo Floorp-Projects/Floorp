@@ -8,6 +8,22 @@
 const PHONE_NUMBER_CONTAINERS = "td,div";
 
 var SelectionHandler = {
+
+  // Successful startSelection() or attachCaret().
+  ERROR_NONE: "",
+
+  // Error codes returned during startSelection().
+  START_ERROR_INVALID_MODE: "Invalid selection mode requested.",
+  START_ERROR_NONTEXT_INPUT: "Target element by definition contains no text.",
+  START_ERROR_NO_WORD_SELECTED: "No word selected at point.",
+  START_ERROR_SELECT_WORD_FAILED: "Word selection at point failed.",
+  START_ERROR_SELECT_ALL_PARAGRAPH_FAILED: "Select-All Paragraph failed.",
+  START_ERROR_NO_SELECTION: "Selection performed, but nothing resulted.",
+  START_ERROR_PROXIMITY: "Selection target and result seem unrelated.",
+
+  // Error codes returned during attachCaret().
+  ATTACH_ERROR_INCOMPATIBLE: "Element disabled, handled natively, or not editable.",
+
   HANDLE_TYPE_ANCHOR: "ANCHOR",
   HANDLE_TYPE_CARET: "CARET",
   HANDLE_TYPE_FOCUS: "FOCUS",
@@ -304,22 +320,23 @@ var SelectionHandler = {
     this._closeSelection();
 
     if (this._isNonTextInputElement(aElement)) {
-      return false;
+      return this.START_ERROR_NONTEXT_INPUT;
     }
 
     this._initTargetInfo(aElement, this.TYPE_SELECTION);
 
     // Perform the appropriate selection method, if we can't determine method, or it fails, return
-    if (!this._performSelection(aOptions)) {
+    let selectionResult = this._performSelection(aOptions);
+    if (selectionResult !== this.ERROR_NONE) {
       this._deactivate();
-      return false;
+      return selectionResult;
     }
 
     // Double check results of successful selection operation
     let selection = this._getSelection();
     if (!selection || selection.rangeCount == 0 || selection.getRangeAt(0).collapsed) {
       this._deactivate();
-      return false;
+      return this.START_ERROR_NO_SELECTION;
     }
 
     // Add a listener to end the selection if it's removed programatically
@@ -334,11 +351,10 @@ var SelectionHandler = {
     // Figure out the distance between the selection and the click
     let positions = this._getHandlePositions(scroll);
 
-    if (aOptions.mode == this.SELECT_AT_POINT && !this._selectionNearClick(scroll.X + aOptions.x,
-                                                                      scroll.Y + aOptions.y,
-                                                                      positions)) {
+    if (aOptions.mode == this.SELECT_AT_POINT &&
+        !this._selectionNearClick(scroll.X + aOptions.x, scroll.Y + aOptions.y, positions)) {
         this._closeSelection();
-        return false;
+        return this.START_ERROR_PROXIMITY;
     }
 
     // Determine position and show handles, open actionbar
@@ -348,7 +364,7 @@ var SelectionHandler = {
       handles: [this.HANDLE_TYPE_ANCHOR, this.HANDLE_TYPE_FOCUS]
     });
     this._updateMenu();
-    return true;
+    return this.ERROR_NONE;
   },
 
   /*
@@ -358,8 +374,12 @@ var SelectionHandler = {
     if (aOptions.mode == this.SELECT_AT_POINT) {
       // Clear any ranges selected outside SelectionHandler, by code such as Find-In-Page.
       this._contentWindow.getSelection().removeAllRanges();
-      if (!this._domWinUtils.selectAtPoint(aOptions.x, aOptions.y, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
-        return false;
+      try {
+        if (!this._domWinUtils.selectAtPoint(aOptions.x, aOptions.y, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
+          return this.START_ERROR_NO_WORD_SELECTED;
+        }
+      } catch (e) {
+        return this.START_ERROR_SELECT_WORD_FAILED;
       }
 
       // Perform additional phone-number "smart selection".
@@ -367,17 +387,22 @@ var SelectionHandler = {
         this._selectSmartPhoneNumber();
       }
 
-      return true;
+      return this.ERROR_NONE;
     }
 
+    // Only selectAll() assumed from this point.
     if (aOptions.mode != this.SELECT_ALL) {
-      Cu.reportError("SelectionHandler.js: _performSelection() Invalid selection mode " + aOptions.mode);
-      return false;
+      return this.START_ERROR_INVALID_MODE;
     }
 
     // HTMLPreElement is a #text node, SELECT_ALL implies entire paragraph
     if (this._targetElement instanceof HTMLPreElement)  {
-      return this._domWinUtils.selectAtPoint(1, 1, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+      try {
+        this._domWinUtils.selectAtPoint(1, 1, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+        return this.ERROR_NONE;
+      } catch (e) {
+        return this.START_ERROR_SELECT_ALL_PARAGRAPH_FAILED;
+      }
     }
 
     // Else default to selectALL Document
@@ -404,7 +429,7 @@ var SelectionHandler = {
       }
     }
 
-    return true;
+    return this.ERROR_NONE;
   },
 
   /*
@@ -708,7 +733,7 @@ var SelectionHandler = {
   attachCaret: function sh_attachCaret(aElement) {
     // Ensure it isn't disabled, isn't handled by Android native dialog, and is editable text element
     if (aElement.disabled || InputWidgetHelper.hasInputWidget(aElement) || !this.isElementEditableText(aElement)) {
-      return false;
+      return this.ATTACH_ERROR_INCOMPATIBLE;
     }
 
     this._initTargetInfo(aElement, this.TYPE_CURSOR);
@@ -728,7 +753,7 @@ var SelectionHandler = {
     });
     this._updateMenu();
 
-    return true;
+    return this.ERROR_NONE;
   },
 
   // Target initialization for both TYPE_CURSOR and TYPE_SELECTION
