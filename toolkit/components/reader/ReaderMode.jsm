@@ -61,8 +61,8 @@ let ReaderMode = {
   },
 
   /**
-   * Gets an article from a loaded browser's document. This method will parse the document
-   * if it does not find the article in the cache.
+   * Gets an article from a loaded browser's document. This method will not attempt
+   * to parse certain URIs (e.g. about: URIs).
    *
    * @param doc A document to parse.
    * @return {Promise}
@@ -73,13 +73,6 @@ let ReaderMode = {
     if (!this._shouldCheckUri(uri)) {
       this.log("Reader mode disabled for URI");
       return null;
-    }
-
-    // First, try to find a parsed article in the cache.
-    let article = yield this.getArticleFromCache(uri);
-    if (article) {
-      this.log("Page found in cache, return article immediately");
-      return article;
     }
 
     return yield this._readerParse(uri, doc);

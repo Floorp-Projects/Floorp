@@ -1812,3 +1812,6 @@ pref("dom.ipc.cpow.timeout", 500);
 // detection).
 pref("dom.ipc.processHangMonitor", true);
 pref("dom.ipc.reportProcessHangs", true);
+
+// Disable reader mode by default.
+pref("reader.parse-on-load.enabled", false);
