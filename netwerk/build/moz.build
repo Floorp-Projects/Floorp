@@ -21,7 +21,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../base/src',
+    '../base',
     '../cache',
     '../dns',
     '../mime',
