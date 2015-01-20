@@ -334,7 +334,10 @@ var SelectionHandler = {
 
     // Double check results of successful selection operation
     let selection = this._getSelection();
-    if (!selection || selection.rangeCount == 0 || selection.getRangeAt(0).collapsed) {
+    if (!selection ||
+        selection.rangeCount == 0 ||
+        selection.getRangeAt(0).collapsed ||
+        this._getSelectedText().length == 0) {
       this._deactivate();
       return this.START_ERROR_NO_SELECTION;
     }
