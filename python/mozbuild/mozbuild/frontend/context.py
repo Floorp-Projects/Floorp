@@ -648,6 +648,13 @@ VARIABLES = {
         populated by calling add_java_jar().
         """, 'libs'),
 
+    'JS_PREFERENCE_FILES': (StrictOrderingOnAppendList, list,
+        """Exported javascript files.
+
+        A list of files copied into the dist directory for packaging and installation.
+        Path will be defined for gre or application prefs dir based on what is building.
+        """, 'libs'),
+
     'LIBRARY_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for the entire library.
 

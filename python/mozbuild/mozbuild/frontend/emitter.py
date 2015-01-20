@@ -47,6 +47,7 @@ from .data import (
     IPDLFile,
     JARManifest,
     JavaScriptModules,
+    JsPreferenceFile,
     Library,
     Linkable,
     LinkageWrongKindError,
@@ -554,6 +555,9 @@ class TreeMetadataEmitter(LoggingMixin):
         resources = context.get('RESOURCE_FILES')
         if resources:
             yield Resources(context, resources, defines)
+
+        for pref in sorted(context['JS_PREFERENCE_FILES']):
+            yield JsPreferenceFile(context, pref)
 
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
