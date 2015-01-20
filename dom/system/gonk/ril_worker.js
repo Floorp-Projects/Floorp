@@ -2954,7 +2954,7 @@ RilObject.prototype = {
     GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_COMMAND_DETAILS |
                                COMPREHENSIONTLV_FLAG_CR);
     GsmPDUHelper.writeHexOctet(3);
-    if (response.command) {
+    if (command) {
       GsmPDUHelper.writeHexOctet(command.commandNumber);
       GsmPDUHelper.writeHexOctet(command.typeOfCommand);
       GsmPDUHelper.writeHexOctet(command.commandQualifier);
@@ -3032,6 +3032,24 @@ RilObject.prototype = {
         if (response.input !== undefined) {
             ComprehensionTlvHelper.writeTextStringTlv(response.input, coding);
         }
+      }
+    }
+
+    // Duration
+    if (response.resultCode === STK_RESULT_NO_RESPONSE_FROM_USER) {
+      // In TS102 223, 6.4.2 GET INKEY, "if the UICC requests a variable timeout,
+      // the terminal shall wait until either the user enters a single character
+      // or the timeout expires. The timer starts when the text is displayed on
+      // the screen and stops when the TERMINAL RESPONSE is sent. The terminal
+      // shall pass the total display text duration (command execution duration)
+      // to the UICC using the TERMINAL RESPONSE. The time unit of the response
+      // is identical to the time unit of the requested variable timeout."
+      let duration = command && command.options && command.options.duration;
+      if (duration) {
+        GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_DURATION);
+        GsmPDUHelper.writeHexOctet(2);
+        GsmPDUHelper.writeHexOctet(duration.timeUnit);
+        GsmPDUHelper.writeHexOctet(duration.timeInterval);
       }
     }
 
