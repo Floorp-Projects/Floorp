@@ -19,7 +19,7 @@ static bool test_pldhash_Init_capacity_ok()
   PLDHashTable t;
 
   // Check that the constructor nulls |ops|.
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -32,13 +32,13 @@ static bool test_pldhash_Init_capacity_ok()
   }
 
   // Check that Init() sets |ops|.
-  if (!t.ops) {
+  if (!t.IsInitialized()) {
     return false;
   }
 
   // Check that Finish() nulls |ops|.
   PL_DHashTableFinish(&t);
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -50,7 +50,7 @@ static bool test_pldhash_Init_capacity_too_large()
   PLDHashTable t;
 
   // Check that the constructor nulls |ops|.
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -64,7 +64,7 @@ static bool test_pldhash_Init_capacity_too_large()
   // Don't call PL_DHashTableFinish() here; it's not safe after Init() failure.
 
   // Check that |ops| is still null.
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -76,7 +76,7 @@ static bool test_pldhash_Init_overflow()
   PLDHashTable t;
 
   // Check that the constructor nulls |ops|.
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -99,7 +99,7 @@ static bool test_pldhash_Init_overflow()
   // Don't call PL_DHashTableFinish() here; it's not safe after Init() failure.
 
   // Check that |ops| is still null.
-  if (t.ops) {
+  if (t.IsInitialized()) {
     return false;
   }
 
@@ -130,8 +130,8 @@ static bool test_pldhash_grow_to_max_capacity()
   // This is infallible.
   PLDHashTable* t = PL_NewDHashTable(&ops, sizeof(PLDHashEntryStub), 128);
 
-  // Check that New() sets |ops|.
-  if (!t->ops) {
+  // Check that New() sets |t->ops|.
+  if (!t->IsInitialized()) {
     return false;
   }
 

@@ -222,8 +222,9 @@ private:
 #endif
 
 public:
-  // All the other fields are initialized in Init(), but we zero |ops| here
-  // because it's used to determine if Init() has been called.
+  // The most important thing here is that we zero |ops| because it's used to
+  // determine if Init() has been called. (The use of MOZ_CONSTEXPR means all
+  // the other members must be initialized too.)
   MOZ_CONSTEXPR PLDHashTable()
     : ops(nullptr)
     , mHashShift(0)
@@ -237,6 +238,8 @@ public:
     , mStats()
 #endif
   {}
+
+  bool IsInitialized() const { return !!ops; }
 
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.

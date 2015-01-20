@@ -96,7 +96,7 @@ static const PLDHashTableOps ops = {
 nsresult
 nsHttp::CreateAtomTable()
 {
-    MOZ_ASSERT(!sAtomTable.ops, "atom table already initialized");
+    MOZ_ASSERT(!sAtomTable.IsInitialized(), "atom table already initialized");
 
     if (!sLock) {
         sLock = new Mutex("nsHttp.sLock");
@@ -134,7 +134,7 @@ nsHttp::CreateAtomTable()
 void
 nsHttp::DestroyAtomTable()
 {
-    if (sAtomTable.ops) {
+    if (sAtomTable.IsInitialized()) {
         PL_DHashTableFinish(&sAtomTable);
     }
 
@@ -162,7 +162,7 @@ nsHttp::ResolveAtom(const char *str)
 {
     nsHttpAtom atom = { nullptr };
 
-    if (!str || !sAtomTable.ops)
+    if (!str || !sAtomTable.IsInitialized())
         return atom;
 
     MutexAutoLock lock(*sLock);
