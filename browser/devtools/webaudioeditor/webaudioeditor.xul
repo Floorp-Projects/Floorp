@@ -3,10 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webaudioeditor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/webaudioeditor.dtd">
   %debuggerDTD;
@@ -79,9 +79,6 @@
         </hbox>
         <splitter id="inspector-splitter" class="devtools-side-splitter"/>
         <vbox id="web-audio-inspector" hidden="true">
-          <hbox class="devtools-toolbar">
-            <label id="web-audio-inspector-title" value="&webAudioEditorUI.inspectorTitle;"></label>
-          </hbox>
           <deck id="web-audio-editor-details-pane" flex="1">
             <vbox id="web-audio-editor-details-pane-empty" flex="1">
               <label value="&webAudioEditorUI.inspectorEmpty;"></label>
@@ -89,6 +86,13 @@
             <tabbox id="web-audio-editor-tabs"
                     class="devtools-sidebar-tabs"
                     handleCtrlTab="false">
+              <toolbar id="audio-node-toolbar" class="devtools-toolbar">
+                <hbox class="devtools-toolbarbutton-group">
+                  <toolbarbutton class="bypass devtools-toolbarbutton"
+                                 data-command="bypass"
+                                 tabindex="0"/>
+                </hbox>
+              </toolbar>
               <tabs>
                 <tab id="properties-tab"
                      label="&webAudioEditorUI.tab.properties;"/>
