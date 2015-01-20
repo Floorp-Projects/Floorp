@@ -61,9 +61,7 @@ HelperAppDlg.prototype = {
   show: function (launcher, ctx, reason, usePrivateUI) {
     launcher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToFile;
     launcher.launchWithApplication(null, false);
-  },
-
-  promptForSaveToFile: function (launcher, ctx, defaultFile, suggestedExtension, forcePrompt) { }
+  }
 }
 
 // Stolen from XPCOMUtils, since this handy function is not public there
