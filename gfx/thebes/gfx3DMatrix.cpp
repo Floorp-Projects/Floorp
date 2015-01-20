@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -573,9 +573,19 @@ gfx3DMatrix::Inverse() const
 gfxPoint
 gfx3DMatrix::Transform(const gfxPoint& point) const
 {
-  Point3D vec3d(point.x, point.y, 0);
-  vec3d = Transform3D(vec3d);
-  return gfxPoint(vec3d.x, vec3d.y);
+  // Note: we don't use Transform3D here because passing point.x/y via
+  // a Point3D would lose precision and cause bugs, e.g. bug 1091709.
+  gfxFloat px = point.x;
+  gfxFloat py = point.y;
+
+  gfxFloat x = px * _11 + py * _21 + _41;
+  gfxFloat y = px * _12 + py * _22 + _42;
+  gfxFloat w = px * _14 + py * _24 + _44;
+
+  x /= w;
+  y /= w;
+
+  return gfxPoint(x, y);
 }
 
 Point3D
