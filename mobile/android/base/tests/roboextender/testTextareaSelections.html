@@ -1,0 +1,301 @@
+<html>
+  <head>
+    <title>Automated RTL/LTR Text Selection tests for Textareas</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <script type="application/javascript"
+      src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript">
+
+// Used to create handle movement events for SelectionHandler.
+const ANCHOR = "ANCHOR";
+const FOCUS = "FOCUS";
+
+// Used to specifiy midpoint selection text left/right of center.
+const EST_SEL_TEXT_BOUND_CHARS = 5;
+
+// Used to ensure calculated coords for handle movement events get us
+// "into" the next/prev line vertically.
+const EST_SEL_LINE_CHG_PTS = 10;
+
+
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://gre/modules/Geometry.jsm');
+
+// Distance between text selection lines. Reality tested, and also
+// Used to perform multi-line selection selections.
+var selectionLineHeight = 0;
+
+/* =================================================================================
+ *
+ * Start of all text selection tests, check initialization state.
+ */
+function startTests() {
+  testLTR_selectionPoints().
+    then(testRTL_selectionPoints).
+
+    then(test_selectionLineHeight).
+
+    then(finishTests, function(err) {
+      ok(false, "Error in selection test " + err);
+      finishTests();
+    });
+}
+
+/* =================================================================================
+ *
+ * LTR Textarea test will create a single line selection in the middle of the element
+ * and ensure that the anchor point is to the left of the focus point.
+ */
+function testLTR_selectionPoints() {
+  // Select entire LTRTextArea.
+  var sh = getSelectionHandler();
+  var element = document.getElementById("LTRTextarea");
+  sh.startSelection(element);
+
+  return Promise.all([
+    ok(sh.isSelectionActive(),
+      "testLTR_selectionPoints starts, selection should be active."),
+
+  ]).then(function() {
+    // setSelectionRange() (in editable elements), gets us a single-line selection of
+    // midpoint character +- EST_SEL_TEXT_BOUND_CHARS chars on either side.
+    var midpointSelCharOffset = (element.selectionStart + element.selectionEnd) / 2;
+    element.setSelectionRange(midpointSelCharOffset - EST_SEL_TEXT_BOUND_CHARS,
+                              midpointSelCharOffset + EST_SEL_TEXT_BOUND_CHARS);
+
+    // Grab values that are cleared by closing selection.
+    var selection = { anchorPt : new Point(sh._cache.anchorPt.x, sh._cache.anchorPt.y),
+                      focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
+    var midpointSelText = sh._getSelectedText();
+
+    // Close selection and complete test.
+    sh.observe(null, "TextSelection:End", {});
+
+    return Promise.all([
+      selectionExists(selection, "LTR Selection existed at points"),
+
+      is(midpointSelText, " plasma of", "LTR Selection should match expected text"),
+      is(selection.anchorPt.y, selection.focusPt.y,
+        "LTR Selection anchorPt should match focusPt vertically"),
+      lessThan(selection.anchorPt.x, selection.focusPt.x,
+        "LTR Selection anchorPt should be the left of focusPt"),
+      ok(!sh.isSelectionActive(),
+        "testLTR_selectionPoints finishes, selection should not be active."),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * RTL Textarea test will create a single line selection in the middle of the element
+ * and ensure that the anchor point is to the right of the focus point.
+ */
+function testRTL_selectionPoints() {
+  // Select entire RTLTextArea.
+  var sh = getSelectionHandler();
+  var element = document.getElementById("RTLTextarea");
+  sh.startSelection(element);
+
+  return Promise.all([
+    ok(sh.isSelectionActive(),
+      "testRTL_selectionPoints starts, selection should be active."),
+
+  ]).then(function() {
+    // setSelectionRange() (in editable elements), gets us a single-line selection of
+    // midpoint character +- EST_SEL_TEXT_BOUND_CHARS chars on either side.
+    var midpointSelCharOffset = (element.selectionStart + element.selectionEnd) / 2;
+    element.setSelectionRange(midpointSelCharOffset - EST_SEL_TEXT_BOUND_CHARS,
+                              midpointSelCharOffset + EST_SEL_TEXT_BOUND_CHARS);
+
+    // Grab values that are cleared by closing selection.
+    var selection = { anchorPt : new Point(sh._cache.anchorPt.x, sh._cache.anchorPt.y),
+                      focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
+    var midpointSelText = sh._getSelectedText();
+
+    // Close selection and complete test.
+    sh.observe(null, "TextSelection:End", {});
+
+    return Promise.all([
+      selectionExists(selection, "RTL Selection existed at points"),
+
+      is(midpointSelText, "ל גם את הב", "RTL Selection should match expected text"),
+      is(selection.anchorPt.y, selection.focusPt.y,
+        "RTL Selection anchorPt should match focusPt vertically"),
+      greaterThan(selection.anchorPt.x, selection.focusPt.x,
+        "RTL Selection anchorPt should be to the right of focusPt"),
+      ok(!sh.isSelectionActive(),
+        "testRTL_selectionPoints finishes, selection should not be active."),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * Textarea test will create (a) a single-line selection in the middle of the element,
+ * move the focus handle down a line creating (b) a two-line selection, and then
+ * ensure that the vertical distance between the bottom of (a) and (b) is > 0.
+ *
+ * The result is used later to ensure more-precise handle up/down movements.
+ */
+function test_selectionLineHeight() {
+  var sh = getSelectionHandler();
+  var element = document.getElementById("LTRTextarea");
+  var initialSelection = null;
+  var changedSelection = null;
+
+  // Select entire textarea, refine selection to midpoint string.
+  sh.startSelection(element);
+  var midpointSelCharOffset = (element.selectionStart + element.selectionEnd) / 2;
+  element.setSelectionRange(midpointSelCharOffset - EST_SEL_TEXT_BOUND_CHARS,
+                            midpointSelCharOffset + EST_SEL_TEXT_BOUND_CHARS);
+
+  // Note initial selection points.
+  initialSelection = { anchorPt : new Point(sh._cache.anchorPt.x, sh._cache.anchorPt.y),
+                       focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
+
+  // Force selection focus to next lower line (estimate distance required).
+  sh.observe(null, "TextSelection:Move",
+    JSON.stringify({ handleType : FOCUS,
+      x : initialSelection.focusPt.x,
+      y : initialSelection.focusPt.y + EST_SEL_LINE_CHG_PTS
+    })
+  );
+  sh.observe(null, "TextSelection:Position",
+    JSON.stringify({ handleType : FOCUS })
+  );
+
+  // Note changed selection points after handle movement.
+  changedSelection = { anchorPt : new Point(sh._cache.anchorPt.x, sh._cache.anchorPt.y),
+                       focusPt : new Point(sh._cache.focusPt.x, sh._cache.focusPt.y) };
+
+  // Note selection line height for reality test,
+  // and later handle movement calculations.
+  selectionLineHeight = changedSelection.focusPt.y - initialSelection.focusPt.y;
+
+  return Promise.all([
+    ok(sh.isSelectionActive(),
+      "test_selectionLineHeight starts, selection should be active."),
+
+  ]).then(function() {
+    // Complete test, and report.
+    sh.observe(null, "TextSelection:End", {});
+
+    return Promise.all([
+      greaterThan(selectionLineHeight, 0, "Distance from one line to another " +
+        "in a multi-line selection is greater than 0."),
+
+      ok(!sh.isSelectionActive(),
+        "test_selectionLineHeight finishes, selection should not be active."),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * After finish of all selection tests, wrap up and go home.
+ *
+ */
+function finishTests() {
+  Messaging.sendRequest({
+    type: "Robocop:testTextareaSelections",
+    result: true,
+    msg: "Done!",
+    done: true
+  });
+}
+
+/* ============================== Utility functions ======================
+ *
+ * Common functions available to all tests.
+ *
+ */
+function getSelectionHandler() {
+  return (!this._selectionHandler) ?
+    this._selectionHandler = Services.wm.getMostRecentWindow("navigator:browser").SelectionHandler :
+    this._selectionHandler;
+}
+
+function todo(result, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    todo: result,
+    msg: msg
+  });
+}
+
+function ok(result, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: result,
+    msg: msg
+  });
+}
+
+function is(one, two, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: one === two,
+    msg: msg + " : " + one + " === " + two
+  });
+}
+
+function lessThan(n1, n2, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: n1 < n2,
+    msg: msg + " : " + n1 + " < " + n2
+  });
+}
+
+function greaterThan(n1, n2, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: n1 > n2,
+    msg: msg + " : " + n1 + " > " + n2
+  });
+}
+
+function pointEquals(p1, p2, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: p1.equals(p2),
+    msg: msg + " : " + p1.toString() + " == " + p2.toString()
+  });
+}
+
+function pointNotEquals(p1, p2, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: !p1.equals(p2),
+    msg: msg + " : " + p1.toString() + " == " + p2.toString()
+  });
+}
+
+function selectionExists(selection, msg) {
+  return Messaging.sendRequestForResult({
+    type: "Robocop:testTextareaSelections",
+    result: !selection.anchorPt.equals(selection.focusPt),
+    msg: msg + " : anchor:" + selection.anchorPt.toString() +
+      " focus:" + selection.focusPt.toString()
+  });
+}
+
+/* =================================================================================
+ *
+ * Page definition for all tests.
+ *
+ */
+    </script>
+  </head>
+
+  <body onload="startTests();">
+    <textarea id="LTRTextarea" style="direction: ltr;" rows="10" cols="40"
+      readonly="true">Under sufficiently extreme conditions, quarks may become deconfined and exist as free particles. In the course of asymptotic freedom, the strong interaction becomes weaker at higher temperatures. Eventually, color confinement would be lost and an extremely hot plasma of freely moving quarks and gluons would be formed. This theoretical phase of matter is called quark-gluon plasma.[81] The exact conditions needed to give rise to this state are unknown and have been the subject of a great deal of speculation and experimentation.</textarea>
+
+    <textarea id="RTLTextarea" style="direction: rtl;" rows="10" cols="40"
+      readonly="true">טטיאנה קוזמינה, שהייתה 18, תלמיד תיכון בעפולה, עלה לישראל לפני כשנים עם האמא שלה, שהיה נשואה לאזרח ישראלי, כאשר אביה הביולוגי חתם על מסמך המאשר את המהלך שלה לישראל. האמא שלה היא בתהליך של התאזרחות חשב שזה כולל גם את הבת שלה, אבל ברגע שהיא הבינה כבר לפני כמה חודשים שהחברה המאוחדת לא נכללה בו, דחה את הבקשה לעבד גם לבת שלה. ואז הם קיבלו את הגור.וחד-קרן הגיעה, אבל הם לא הצליחו למצוא את קשת אז כולם אכלו ספגטי וכנפיים בופל חמים.</textarea>
+  </body>
+
+</html>
