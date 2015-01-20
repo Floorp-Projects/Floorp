@@ -498,7 +498,7 @@ private:
     // when starting a new speculative connection.
     uint32_t       mParallelSpeculativeConnectLimit;
 
-    // For Rate Pacing of HTTP/1 requests through a netwerk/base/src/EventTokenBucket
+    // For Rate Pacing of HTTP/1 requests through a netwerk/base/EventTokenBucket
     // Active requests <= *MinParallelism are not subject to the rate pacing
     bool           mRequestTokenBucketEnabled;
     uint16_t       mRequestTokenBucketMinParallelism;

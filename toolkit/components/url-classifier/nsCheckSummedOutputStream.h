@@ -12,7 +12,7 @@
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsString.h"
-#include "../../../netwerk/base/src/nsFileStreams.h"
+#include "../../../netwerk/base/nsFileStreams.h"
 #include "nsToolkitCompsCID.h"
 
 class nsCheckSummedOutputStream : public nsSafeFileOutputStream

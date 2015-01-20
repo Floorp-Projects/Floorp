@@ -48,7 +48,7 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../base/src',
+    '../base',
     '../cache',
 ]
 

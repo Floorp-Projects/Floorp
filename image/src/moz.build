@@ -66,7 +66,7 @@ LOCAL_INCLUDES += [
     # Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
     '/layout/svg',
     # For URI-related functionality
-    '/netwerk/base/src',
+    '/netwerk/base',
 ]
 
 # Because imgFrame.cpp includes "cairo.h"
