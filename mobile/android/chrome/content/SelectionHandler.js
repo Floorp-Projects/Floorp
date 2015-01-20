@@ -6,6 +6,7 @@
 
 // Define elements that bound phone number containers.
 const PHONE_NUMBER_CONTAINERS = "td,div";
+const DEFER_CLOSE_TRIGGER_MS = 125; // Grace period delay before deferred _closeSelection()
 
 var SelectionHandler = {
 
@@ -42,6 +43,7 @@ var SelectionHandler = {
   _draggingHandles: false, // True while user drags text selection handles
   _ignoreCompositionChanges: false, // Persist caret during IME composition updates
   _prevHandlePositions: [], // Avoid issuing duplicate "TextSelection:Position" messages
+  _deferCloseTimer: null, // Used to defer _closeSelection() actions during programmatic changes
 
   // TargetElement changes (text <--> no text) trigger actionbar UI update
   _prevTargetElementHasText: null,
@@ -105,6 +107,11 @@ var SelectionHandler = {
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
+    // Ignore all but selectionListener notifications during deferred _closeSelection().
+    if (this._deferCloseTimer) {
+      return;
+    }
+
     switch (aTopic) {
       // Update handle/caret position on page reflow (keyboard open/close,
       // dynamic DOM changes, orientation updates, etc).
@@ -232,6 +239,11 @@ var SelectionHandler = {
   },
 
   handleEvent: function sh_handleEvent(aEvent) {
+    // Ignore all but selectionListener notifications during deferred _closeSelection().
+    if (this._deferCloseTimer) {
+      return;
+    }
+
     switch (aEvent.type) {
       case "scroll":
         // Maintain position when top-level document is scrolled
@@ -284,7 +296,13 @@ var SelectionHandler = {
     };
   },
 
+  /**
+   * Observe and react to programmatic SelectionChange notifications.
+   */
   notifySelectionChanged: function sh_notifySelectionChanged(aDocument, aSelection, aReason) {
+    // Cancel any in-progress / deferred _closeSelection() action.
+    this._cancelDeferredCloseSelection();
+
     // Ignore selectionChange notifications during handle movements
     if (this._draggingHandles) {
       return;
@@ -297,10 +315,15 @@ var SelectionHandler = {
       return;
     }
 
-    // If selected text no longer exists, close
+    // If selected text no longer exists, schedule a deferred close action.
     if (!aSelection.toString()) {
-      this._closeSelection();
+      this._deferCloseSelection();
+      return;
     }
+
+    // Update the selection handle positions.
+    this._updateCacheForSelection();
+    this._positionHandles();
   },
 
   /*
@@ -1008,6 +1031,48 @@ var SelectionHandler = {
     this._closeSelection();
   },
 
+  /**
+   * Deferred _closeSelection() actions allow for brief periods where programmatic
+   * selection changes have effectively closed the selection, but we anticipate further
+   * activity that may restore it.
+   *
+   * At this point, we hide the UI handles, and stop responding to messages until
+   * either the final _closeSelection() is triggered, or until our Gecko selectionListener
+   * notices a subsequent programmatic selection that results in a new selection.
+   */
+  _deferCloseSelection: function() {
+    // Schedule the deferred _closeSelection() action.
+    this._deferCloseTimer = setTimeout((function() {
+      // Time is up! Close the selection.
+      this._deferCloseTimer = null;
+      this._closeSelection();
+    }).bind(this), DEFER_CLOSE_TRIGGER_MS);
+
+    // Hide any handles while deferClosed.
+    if (this._prevHandlePositions.length) {
+      let positions = this._prevHandlePositions;
+      for (let i in positions) {
+        positions[i].hidden = true;
+      }
+
+      Messaging.sendRequest({
+        type: "TextSelection:PositionHandles",
+        positions: positions,
+        rtl: this._isRTL
+      });
+    }
+  },
+
+  /**
+   * Cancel any current deferred _closeSelection() action.
+   */
+  _cancelDeferredCloseSelection: function() {
+    if (this._deferCloseTimer) {
+      clearTimeout(this._deferCloseTimer);
+      this._deferCloseTimer = null;
+    }
+  },
+
   /*
    * Shuts SelectionHandler down.
    */
@@ -1023,6 +1088,9 @@ var SelectionHandler = {
   },
 
   _clearSelection: function sh_clearSelection() {
+    // Cancel any in-progress / deferred _closeSelection() process.
+    this._cancelDeferredCloseSelection();
+
     let selection = this._getSelection();
     if (selection) {
       // Remove our listener before we clear the selection
@@ -1204,6 +1272,11 @@ var SelectionHandler = {
   },
 
   subdocumentScrolled: function sh_subdocumentScrolled(aElement) {
+    // Ignore all but selectionListener notifications during deferred _closeSelection().
+    if (this._deferCloseTimer) {
+      return;
+    }
+
     if (this._activeType == this.TYPE_NONE) {
       return;
     }
