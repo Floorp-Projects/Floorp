@@ -150,7 +150,7 @@ CanvasLayerD3D10::UpdateSurface()
   HRESULT hr = mTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &map);
 
   if (FAILED(hr)) {
-    NS_WARNING("Failed to lock CanvasLayer texture.");
+    gfxWarning() << "Failed to lock CanvasLayer texture.";
     return;
   }
 
@@ -158,9 +158,14 @@ CanvasLayerD3D10::UpdateSurface()
     Factory::CreateDrawTargetForD3D10Texture(mTexture,
                                              SurfaceFormat::R8G8B8A8);
 
+  if (!destTarget) {
+    gfxWarning() << "Invalid D3D10 texture target R8G8B8A8";
+    return;
+  }
+
   if (surf) {
     if (!ReadbackSharedSurface(surf, destTarget)) {
-      NS_WARNING("Failed to readback into texture.");
+      gfxWarning() << "Failed to readback into texture.";
     }
   } else if (mSurface) {
     Rect r(Point(0, 0), ToRect(mBounds).Size());
