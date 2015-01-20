@@ -50,6 +50,7 @@ if CONFIG['NIGHTLY_BUILD']:
 EXTRA_PP_JS_MODULES += [
     'AboutHome.jsm',
     'PluginContent.jsm',
+    'ReaderParent.jsm',
     'RecentWindow.jsm',
     'webrtcUI.jsm',
 ]
