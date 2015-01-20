@@ -832,14 +832,11 @@ private:
   PLDHashTable mPtrToNodeMap;
 
 public:
-  CCGraph() : mRootCount(0)
-  {
-    mPtrToNodeMap.ops = nullptr;
-  }
+  CCGraph() : mRootCount(0) {}
 
   ~CCGraph()
   {
-    if (mPtrToNodeMap.ops) {
+    if (mPtrToNodeMap.IsInitialized()) {
       PL_DHashTableFinish(&mPtrToNodeMap);
     }
   }
@@ -858,7 +855,6 @@ public:
     mWeakMaps.Clear();
     mRootCount = 0;
     PL_DHashTableFinish(&mPtrToNodeMap);
-    mPtrToNodeMap.ops = nullptr;
   }
 
 #ifdef DEBUG
@@ -866,7 +862,7 @@ public:
   {
     return mNodes.IsEmpty() && mEdges.IsEmpty() &&
            mWeakMaps.IsEmpty() && mRootCount == 0 &&
-           !mPtrToNodeMap.ops;
+           !mPtrToNodeMap.IsInitialized();
   }
 #endif
 

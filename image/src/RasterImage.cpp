@@ -35,6 +35,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Likely.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
@@ -271,6 +272,7 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mSourceBuffer(new SourceBuffer()),
   mFrameCount(0),
   mHasSize(false),
+  mBlockedOnload(false),
   mDecodeOnDraw(false),
   mTransient(false),
   mDiscardable(false),
@@ -1166,25 +1168,57 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
     DoError();
   }
 
-  // Notify our listeners, which will fire this image's load event.
   MOZ_ASSERT(mHasSize || mError, "Need to know size before firing load event");
   MOZ_ASSERT(!mHasSize ||
              (mProgressTracker->GetProgress() & FLAG_SIZE_AVAILABLE),
              "Should have notified that the size is available if we have it");
+
   Progress loadProgress = LoadCompleteProgress(aLastPart, mError, finalStatus);
+
+  if (mBlockedOnload) {
+    // For decode-on-draw images, we want to send notifications as if we've
+    // already finished decoding. Otherwise some observers will never even try
+    // to draw.
+    MOZ_ASSERT(mDecodeOnDraw, "Blocked onload but not decode-on-draw");
+    loadProgress |= FLAG_FRAME_COMPLETE |
+                    FLAG_DECODE_COMPLETE |
+                    FLAG_ONLOAD_UNBLOCKED;
+  }
+
+  // Notify our listeners, which will fire this image's load event.
   NotifyProgress(loadProgress);
 
   return finalStatus;
+}
+
+void
+RasterImage::BlockOnloadForDecodeOnDraw()
+{
+  if (mHasSourceData) {
+    // OnImageDataComplete got called before we got to run. No point in blocking
+    // onload now.
+    return;
+  }
+
+  // Block onload. We'll unblock it in OnImageDataComplete.
+  mBlockedOnload = true;
+  NotifyProgress(FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED);
 }
 
 nsresult
 RasterImage::OnImageDataAvailable(nsIRequest*,
                                   nsISupports*,
                                   nsIInputStream* aInStr,
-                                  uint64_t,
+                                  uint64_t aOffset,
                                   uint32_t aCount)
 {
   nsresult rv;
+
+  if (MOZ_UNLIKELY(mDecodeOnDraw && aOffset == 0)) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &RasterImage::BlockOnloadForDecodeOnDraw);
+    NS_DispatchToMainThread(runnable);
+  }
 
   // WriteToSourceBuffer always consumes everything it gets if it doesn't run
   // out of memory.
@@ -1405,6 +1439,11 @@ RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
 NS_IMETHODIMP
 RasterImage::RequestDecode()
 {
+  // For decode-on-draw images, we only act on RequestDecodeForSize.
+  if (mDecodeOnDraw) {
+    return NS_OK;
+  }
+
   return RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
 }
 
@@ -1415,6 +1454,11 @@ RasterImage::StartDecoding()
   if (!NS_IsMainThread()) {
     return NS_DispatchToMainThread(
       NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
+  }
+
+  // For decode-on-draw images, we only act on RequestDecodeForSize.
+  if (mDecodeOnDraw) {
+    return NS_OK;
   }
 
   return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE);
@@ -1457,7 +1501,7 @@ bool
 RasterImage::IsDecoded()
 {
   // XXX(seth): We need to get rid of this; it's not reliable.
-  return mHasBeenDecoded || mError;
+  return mHasBeenDecoded || mError || (mDecodeOnDraw && mHasSourceData);
 }
 
 NS_IMETHODIMP

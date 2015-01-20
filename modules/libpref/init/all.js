@@ -3789,7 +3789,7 @@ pref("image.mem.discardable", true);
 
 // Prevents images from automatically being decoded on load, instead allowing
 // them to be decoded on demand when they are drawn.
-pref("image.mem.decodeondraw", true);
+pref("image.mem.decodeondraw", false);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
@@ -4511,3 +4511,24 @@ pref("media.gmp-manager.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\
 pref("media.gmp-manager.certs.2.commonName", "aus4.mozilla.org");
 #endif
 
+// Whether or not to perform reader mode article parsing on page load.
+// If this pref is disabled, we will never show a reader mode icon in the toolbar.
+pref("reader.parse-on-load.enabled", true);
+
+// Force-enables reader mode parsing, even on low-memory platforms, where it
+// is disabled by default.
+pref("reader.parse-on-load.force-enabled", false);
+
+// The default relative font size in reader mode (1-5)
+pref("reader.font_size", 3);
+
+// The default color scheme in reader mode (light, dark, auto)
+// auto = color automatically adjusts according to ambient light level
+pref("reader.color_scheme", "auto");
+
+// The font type in reader (sans-serif, serif)
+pref("reader.font_type", "sans-serif");
+
+// Whether or not the user has interacted with the reader mode toolbar.
+// This is used to show a first-launch tip in reader mode.
+pref("reader.has_used_toolbar", false);

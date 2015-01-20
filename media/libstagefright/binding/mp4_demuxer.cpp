@@ -75,7 +75,8 @@ private:
 
 MP4Demuxer::MP4Demuxer(Stream* source, Microseconds aTimestampOffset, Monitor* aMonitor)
   : mPrivate(new StageFrightPrivate()), mSource(source),
-    mTimestampOffset(aTimestampOffset), mMonitor(aMonitor)
+    mTimestampOffset(aTimestampOffset), mMonitor(aMonitor),
+    mNextKeyframeTime(-1)
 {
   mPrivate->mExtractor = new MPEG4Extractor(new DataSourceAdapter(source));
 }
@@ -248,6 +249,9 @@ MP4Demuxer::DemuxVideoSample()
         sample->crypto.mode = mVideoConfig.crypto.mode;
         sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
       }
+      if (sample->composition_timestamp >= mNextKeyframeTime) {
+        mNextKeyframeTime = mPrivate->mVideoIterator->GetNextKeyframeTime();
+      }
     }
     return sample.forget();
   }
@@ -331,6 +335,16 @@ MP4Demuxer::GetEvictionOffset(Microseconds aTime)
     offset = std::min(offset, mPrivate->mIndexes[i]->GetEvictionOffset(aTime));
   }
   return offset == std::numeric_limits<uint64_t>::max() ? -1 : offset;
+}
+
+Microseconds
+MP4Demuxer::GetNextKeyframeTime()
+{
+  mMonitor->AssertCurrentThreadOwns();
+  if (!mPrivate->mVideoIterator) {
+    return -1;
+  }
+  return mNextKeyframeTime;
 }
 
 } // namespace mp4_demuxer

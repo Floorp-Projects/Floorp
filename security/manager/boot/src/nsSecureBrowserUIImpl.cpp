@@ -123,7 +123,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mOnStateLocationChangeReentranceDetection(0)
 #endif
 {
-  mTransferringRequests.ops = nullptr;
   ResetStateTracking();
   
 #if defined(PR_LOGGING)
@@ -134,9 +133,8 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 
 nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
-  if (mTransferringRequests.ops) {
+  if (mTransferringRequests.IsInitialized()) {
     PL_DHashTableFinish(&mTransferringRequests);
-    mTransferringRequests.ops = nullptr;
   }
 }
 
@@ -469,9 +467,8 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
 
   mDocumentRequestsInProgress = 0;
-  if (mTransferringRequests.ops) {
+  if (mTransferringRequests.IsInitialized()) {
     PL_DHashTableFinish(&mTransferringRequests);
-    mTransferringRequests.ops = nullptr;
   }
   PL_DHashTableInit(&mTransferringRequests, &gMapOps, sizeof(RequestHashEntry));
 }

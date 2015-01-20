@@ -27,7 +27,7 @@
 
 /*
  * The following DEBUG-only code is used to assert that calls to one of
- * table->ops or to an enumerator do not cause re-entry into a call that
+ * table->mOps or to an enumerator do not cause re-entry into a call that
  * can mutate the table.
  */
 #ifdef DEBUG
@@ -227,8 +227,6 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
     return false;
   }
 
-  ops = aOps;
-
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = MinCapacity(aLength);
@@ -255,6 +253,9 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
   }
   memset(mEntryStore, 0, nbytes);
   METER(memset(&mStats, 0, sizeof(mStats)));
+
+  // Set this only once we reach a point where we know we can't fail.
+  mOps = aOps;
 
 #ifdef DEBUG
   mRecursionLevel = 0;
@@ -329,10 +330,12 @@ PLDHashTable::Finish()
     PLDHashEntryHdr* entry = (PLDHashEntryHdr*)entryAddr;
     if (ENTRY_IS_LIVE(entry)) {
       METER(mStats.mRemoveEnums++);
-      ops->clearEntry(this, entry);
+      mOps->clearEntry(this, entry);
     }
     entryAddr += mEntrySize;
   }
+
+  mOps = nullptr;
 
   DECREMENT_RECURSION_LEVEL(this);
   MOZ_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(this));
@@ -366,7 +369,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash,
   }
 
   /* Hit: return entry. */
-  PLDHashMatchEntry matchEntry = ops->matchEntry;
+  PLDHashMatchEntry matchEntry = mOps->matchEntry;
   if (MATCH_ENTRY_KEYHASH(entry, aKeyHash) &&
       matchEntry(this, entry, aKey)) {
     METER(mStats.mHits++);
@@ -500,7 +503,7 @@ PLDHashTable::ChangeTable(int aDeltaLog2)
   char* oldEntryAddr;
   oldEntryAddr = oldEntryStore = mEntryStore;
   mEntryStore = newEntryStore;
-  PLDHashMoveEntry moveEntry = ops->moveEntry;
+  PLDHashMoveEntry moveEntry = mOps->moveEntry;
 #ifdef DEBUG
   mRecursionLevel = recursionLevelTmp;
 #endif
@@ -532,7 +535,7 @@ PLDHashTable::Operate(const void* aKey, PLDHashOperator aOp)
   MOZ_ASSERT(aOp == PL_DHASH_LOOKUP || mRecursionLevel == 0);
   INCREMENT_RECURSION_LEVEL(this);
 
-  PLDHashNumber keyHash = ops->hashKey(this, aKey);
+  PLDHashNumber keyHash = mOps->hashKey(this, aKey);
   keyHash *= PL_DHASH_GOLDEN_RATIO;
 
   /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
@@ -589,7 +592,7 @@ PLDHashTable::Operate(const void* aKey, PLDHashOperator aOp)
           mRemovedCount--;
           keyHash |= COLLISION_FLAG;
         }
-        if (ops->initEntry && !ops->initEntry(this, entry, aKey)) {
+        if (mOps->initEntry && !mOps->initEntry(this, entry, aKey)) {
           /* We haven't claimed entry yet; fail with null return. */
           memset(entry + 1, 0, mEntrySize - sizeof(*entry));
           entry = nullptr;
@@ -680,7 +683,7 @@ PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 
   /* Load keyHash first in case clearEntry() goofs it. */
   PLDHashNumber keyHash = aEntry->keyHash;
-  ops->clearEntry(this, aEntry);
+  mOps->clearEntry(this, aEntry);
   if (keyHash & COLLISION_FLAG) {
     MARK_ENTRY_REMOVED(aEntry);
     mRemovedCount++;

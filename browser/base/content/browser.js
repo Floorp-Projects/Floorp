@@ -198,6 +198,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "CastingApps",
 XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
   "resource://gre/modules/SimpleServiceDiscovery.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
+  "resource:///modules/ReaderParent.jsm");
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -4334,6 +4337,7 @@ var XULBrowserWindow = {
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
+    ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 
     gGestureSupport.restoreRotationState();
 

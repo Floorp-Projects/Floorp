@@ -1082,14 +1082,14 @@ public:
 
     RectAccumulator();
 
-    virtual void AddRect(const nsRect& aRect);
+    virtual void AddRect(const nsRect& aRect) MOZ_OVERRIDE;
   };
 
   struct RectListBuilder : public RectCallback {
     DOMRectList* mRectList;
 
     explicit RectListBuilder(DOMRectList* aList);
-    virtual void AddRect(const nsRect& aRect);
+    virtual void AddRect(const nsRect& aRect) MOZ_OVERRIDE;
   };
 
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);

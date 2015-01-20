@@ -145,11 +145,10 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 
 nsresult PREF_Init()
 {
-    if (!gHashTable.ops) {
+    if (!gHashTable.IsInitialized()) {
         if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
                                sizeof(PrefHashEntry), fallible_t(),
                                PREF_HASHTABLE_INITIAL_LENGTH)) {
-            gHashTable.ops = nullptr;
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -182,9 +181,8 @@ void PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 void PREF_CleanupPrefs()
 {
-    if (gHashTable.ops) {
+    if (gHashTable.IsInitialized()) {
         PL_DHashTableFinish(&gHashTable);
-        gHashTable.ops = nullptr;
         PL_FinishArenaPool(&gPrefNameArena);
     }
 }
@@ -466,7 +464,7 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
 
 bool PREF_HasUserPref(const char *pref_name)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return false;
 
     PrefHashEntry *pref = pref_HashTableLookup(pref_name);
@@ -480,7 +478,7 @@ bool PREF_HasUserPref(const char *pref_name)
 nsresult
 PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -504,7 +502,7 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default
 
 nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_default)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -528,7 +526,7 @@ nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_de
 
 nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_default)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -579,7 +577,7 @@ PREF_DeleteBranch(const char *branch_name)
 
     int len = (int)strlen(branch_name);
 
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     /* The following check insures that if the branch name already has a "."
@@ -602,7 +600,7 @@ PREF_DeleteBranch(const char *branch_name)
 nsresult
 PREF_ClearUserPref(const char *pref_name)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
@@ -648,7 +646,7 @@ PREF_ClearAllUserPrefs()
     MOZ_ASSERT(NS_IsMainThread());
 #endif
 
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nullptr);
@@ -659,7 +657,7 @@ PREF_ClearAllUserPrefs()
 
 nsresult PREF_LockPref(const char *key, bool lockit)
 {
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     PrefHashEntry* pref = pref_HashTableLookup(key);
@@ -745,7 +743,7 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     MOZ_ASSERT(NS_IsMainThread());
 #endif
 
-    if (!gHashTable.ops)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
     PrefHashEntry* pref = static_cast<PrefHashEntry*>(PL_DHashTableAdd(&gHashTable, key));
@@ -836,7 +834,7 @@ pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 PrefType
 PREF_GetPrefType(const char *pref_name)
 {
-    if (gHashTable.ops)
+    if (gHashTable.IsInitialized())
     {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref)
@@ -858,7 +856,7 @@ bool
 PREF_PrefIsLocked(const char *pref_name)
 {
     bool result = false;
-    if (gIsAnyPrefLocked && gHashTable.ops) {
+    if (gIsAnyPrefLocked && gHashTable.IsInitialized()) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
             result = true;

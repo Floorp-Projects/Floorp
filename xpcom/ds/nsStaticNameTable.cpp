@@ -106,7 +106,6 @@ nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
   , mNullStr("")
 {
   MOZ_COUNT_CTOR(nsStaticCaseInsensitiveNameTable);
-  mNameTable.ops = nullptr;
 }
 
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
@@ -118,7 +117,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
     }
     nsMemory::Free((void*)mNameArray);
   }
-  if (mNameTable.ops) {
+  if (mNameTable.IsInitialized()) {
     PL_DHashTableFinish(&mNameTable);
   }
   MOZ_COUNT_DTOR(nsStaticCaseInsensitiveNameTable);
@@ -129,7 +128,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
                                        int32_t aLength)
 {
   NS_ASSERTION(!mNameArray, "double Init");
-  NS_ASSERTION(!mNameTable.ops, "double Init");
+  NS_ASSERTION(!mNameTable.IsInitialized(), "double Init");
   NS_ASSERTION(aNames, "null name table");
   NS_ASSERTION(aLength, "0 length");
 
@@ -142,7 +141,6 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
   if (!PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
                          sizeof(NameTableEntry), fallible_t(),
                          aLength)) {
-    mNameTable.ops = nullptr;
     return false;
   }
 
@@ -187,7 +185,7 @@ int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.ops, "not inited");
+  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   const nsAFlatCString& str = PromiseFlatCString(aName);
 
@@ -205,7 +203,7 @@ int32_t
 nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.ops, "not inited");
+  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   const nsAFlatString& str = PromiseFlatString(aName);
 
@@ -223,7 +221,7 @@ const nsAFlatCString&
 nsStaticCaseInsensitiveNameTable::GetStringValue(int32_t aIndex)
 {
   NS_ASSERTION(mNameArray, "not inited");
-  NS_ASSERTION(mNameTable.ops, "not inited");
+  NS_ASSERTION(mNameTable.IsInitialized(), "not inited");
 
   if ((NOT_FOUND < aIndex) && ((uint32_t)aIndex < mNameTable.EntryCount())) {
     return mNameArray[aIndex];
