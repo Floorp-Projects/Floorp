@@ -17,12 +17,15 @@
 #ifdef XP_WIN
 #include <io.h>
 #include <windows.h>
+#include "mozilla/UniquePtr.h"
 #endif
 
 #ifdef ANDROID
 #include <android/log.h>
 #include <unistd.h>
 #endif
+
+using namespace mozilla;
 
 const char*
 NS_strspnp(const char* aDelims, const char* aStr)
@@ -338,13 +341,19 @@ vprintf_stderr(const char* aFmt, va_list aArgs)
   }
 
   if (IsDebuggerPresent()) {
-    char buf[2048];
-    va_list argsCpy;
-    VARARGS_ASSIGN(argsCpy, aArgs);
-    vsnprintf(buf, sizeof(buf), aFmt, argsCpy);
-    buf[sizeof(buf) - 1] = '\0';
-    va_end(argsCpy);
-    OutputDebugStringA(buf);
+    int lengthNeeded = _vscprintf(aFmt, aArgs);
+    if (lengthNeeded) {
+      lengthNeeded++;
+      auto buf = MakeUnique<char[]>(lengthNeeded);
+      if (buf) {
+        va_list argsCpy;
+        VARARGS_ASSIGN(argsCpy, aArgs);
+        vsnprintf(buf.get(), lengthNeeded, aFmt, argsCpy);
+        buf[lengthNeeded - 1] = '\0';
+        va_end(argsCpy);
+        OutputDebugStringA(buf.get());
+      }
+    }
   }
 
   FILE* fp = _fdopen(_dup(2), "a");

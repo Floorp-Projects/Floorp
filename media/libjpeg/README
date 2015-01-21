@@ -36,7 +36,6 @@ TO DO               Plans for future IJG releases.
 Other documentation files in the distribution are:
 
 User documentation:
-  install.txt       How to configure and install the IJG software.
   usage.txt         Usage instructions for cjpeg, djpeg, jpegtran,
                     rdjpgcom, and wrjpgcom.
   *.1               Unix-style man pages for programs (same info as usage.txt).
@@ -48,9 +47,9 @@ Programmer and internal documentation:
   structure.txt     Overview of the JPEG library's internal structure.
   coderules.txt     Coding style rules --- please read if you contribute code.
 
-Please read at least the files install.txt and usage.txt.  Some information
-can also be found in the JPEG FAQ (Frequently Asked Questions) article.  See
-ARCHIVE LOCATIONS below to find out where to obtain the FAQ article.
+Please read at least usage.txt.  Some information can also be found in the JPEG
+FAQ (Frequently Asked Questions) article.  See ARCHIVE LOCATIONS below to find
+out where to obtain the FAQ article.
 
 If you want to understand how the JPEG code works, we suggest reading one or
 more of the REFERENCES, then looking at the documentation files (in roughly
@@ -62,7 +61,7 @@ OVERVIEW
 
 This package contains C software to implement JPEG image encoding, decoding,
 and transcoding.  JPEG (pronounced "jay-peg") is a standardized compression
-method for full-color and gray-scale images.  JPEG's strong suit is compressing
+method for full-color and grayscale images.  JPEG's strong suit is compressing
 photographic images or other types of images that have smooth color and
 brightness transitions between neighboring pixels.  Images with sharp lines or
 other abrupt features may not compress well with JPEG, and a higher JPEG
