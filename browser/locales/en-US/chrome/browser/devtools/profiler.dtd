@@ -72,7 +72,35 @@
   -  a checkbox that inverts and un-inverts the profiler's call tree. -->
 <!ENTITY profilerUI.invertTree "Invert Call Tree">
 
-<!-- LOCALIZATION NOTE (profilerUI.invertTree.tooltiptext): This is the tooltip
-  -  for the tree-inverting checkbox's label.  -->
+<!-- LOCALIZATION NOTE (profilerUI.flattenTree.tooltiptext): This is the tooltip
+  -  for the tree-flattening checkbox's label.  -->
+<!ENTITY profilerUI.flattenTree.tooltiptext "Inverting the call tree displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
+
+<!-- LOCALIZATION NOTE (profilerUI.invertTree): This is the label shown next to
+  -  a checkbox that inverts and un-inverts the profiler's call tree. -->
+<!ENTITY profilerUI.invertTree             "Invert Call Tree">
 <!ENTITY profilerUI.invertTree.tooltiptext "Inverting the call tree displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
 
+<!-- LOCALIZATION NOTE (profilerUI.showPlatformData): This is the
+  -  label for the checkbox that toggles whether or not Gecko platform data
+  -  is displayed in the profiler. -->
+<!ENTITY profilerUI.showPlatformData             "Show Gecko Platform Data">
+<!ENTITY profilerUI.showPlatformData.tooltiptext "Showing platform data enables the JavaScript Profiler reports to include Gecko platform symbols.">
+
+<!-- LOCALIZATION NOTE (profilerUI.flattenTreeRecursion): This is the
+  -  label for the checkbox that toggles the flattening of tree recursion in inspected
+  -  functions in the profiler. -->
+<!ENTITY profilerUI.flattenTreeRecursion             "Flatten Tree Recursion">
+<!ENTITY profilerUI.flattenTreeRecursion.tooltiptext "Flatten recursion when inspecting functions.">
+
+<!-- LOCALIZATION NOTE (profilerUI.enableMemory): This string
+  -  is displayed next to a checkbox determining whether or not memory
+  -  measurements are enabled. -->
+<!ENTITY profilerUI.enableMemory             "Record Memory">
+<!ENTITY profilerUI.enableMemory.tooltiptext "Record memory consumption while profiling.">
+
+<!-- LOCALIZATION NOTE (profilerUI.enableFramerate): This string
+  -  is displayed next to a checkbox determining whether or not framerate
+  -  is recorded. -->
+<!ENTITY profilerUI.enableFramerate             "Record Framerate">
+<!ENTITY profilerUI.enableFramerate.tooltiptext "Record framerate while profiling.">

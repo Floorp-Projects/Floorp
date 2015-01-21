@@ -1429,15 +1429,20 @@ pref("devtools.timeline.hiddenMarkers", "[]");
   pref("devtools.performance_dev.enabled", false);
 #endif
 
-pref("devtools.performance.ui.show-timeline-memory", false);
-
 // The default Profiler UI settings
+// TODO remove `devtools.profiler.ui.` branches when performance
+// tool lands (bug 1075567)
 pref("devtools.profiler.ui.flatten-tree-recursion", true);
 pref("devtools.profiler.ui.show-platform-data", false);
 pref("devtools.profiler.ui.show-idle-blocks", true);
 
 // The default Performance UI settings
 pref("devtools.performance.ui.invert-call-tree", true);
+pref("devtools.performance.ui.flatten-tree-recursion", true);
+pref("devtools.performance.ui.show-platform-data", false);
+pref("devtools.performance.ui.show-idle-blocks", true);
+pref("devtools.performance.ui.enable-memory", false);
+pref("devtools.performance.ui.enable-framerate", true);
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
