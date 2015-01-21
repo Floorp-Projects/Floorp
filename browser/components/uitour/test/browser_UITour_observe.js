@@ -48,40 +48,4 @@ let tests = [
       UITour.notify("test-event-3", {key: "something"});
     });
   },
-  function test_background_tab(done) {
-    function listener(event, params) {
-      is(event, "test-event-background-1", "Correct event name");
-      is(params, null, "No param object");
-      gContentAPI.observe(null);
-      gBrowser.removeCurrentTab();
-      done();
-    }
-
-    gContentAPI.observe(listener, () => {
-      gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      isnot(gBrowser.selectedTab, gTestTab, "Make sure the selected tab changed");
-
-      UITour.notify("test-event-background-1");
-    });
-  },
-  // Make sure the tab isn't torn down when switching back to the tour one.
-  function test_background_then_foreground_tab(done) {
-    let blankTab = null;
-    function listener(event, params) {
-      is(event, "test-event-4", "Correct event name");
-      is(params, null, "No param object");
-      gContentAPI.observe(null);
-      gBrowser.removeTab(blankTab);
-      done();
-    }
-
-    gContentAPI.observe(listener, () => {
-      blankTab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
-      isnot(gBrowser.selectedTab, gTestTab, "Make sure the selected tab changed");
-      gBrowser.selectedTab = gTestTab;
-      is(gBrowser.selectedTab, gTestTab, "Switch back to the test tab");
-
-      UITour.notify("test-event-4");
-    });
-  },
 ];

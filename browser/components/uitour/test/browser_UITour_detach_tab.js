@@ -68,8 +68,8 @@ let tests = [
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
     is(selectedTab.linkedBrowser && selectedTab.linkedBrowser.contentDocument, gContentDoc, "Document should be selected in new window");
-    ok(UITour.tourBrowsersByWindow && UITour.tourBrowsersByWindow.has(gContentWindow), "Window should be known");
-    ok(UITour.tourBrowsersByWindow.get(gContentWindow).has(selectedTab.linkedBrowser), "Selected browser should be known");
+    ok(UITour.originTabs && UITour.originTabs.has(gContentWindow), "Window should be known");
+    ok(UITour.originTabs.get(gContentWindow).has(selectedTab), "Tab should be known");
 
     let shownPromise = promisePanelShown(gContentWindow);
     gContentAPI.showMenu("appMenu");
