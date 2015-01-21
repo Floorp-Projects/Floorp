@@ -319,9 +319,6 @@ js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
     return math_ceil_handle(cx, args[0], args.rval());
 }
 
@@ -515,12 +512,7 @@ js::math_fround(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    float f;
-    if (!RoundFloat32(cx, args[0], &f))
-        return false;
-
-    args.rval().setDouble(static_cast<double>(f));
-    return true;
+    return RoundFloat32(cx, args[0], args.rval());
 }
 
 #if defined(SOLARIS) && defined(__GNUC__)
@@ -533,7 +525,7 @@ double
 js::math_log_impl(MathCache *cache, double x)
 {
     LOG_IF_OUT_OF_RANGE(x);
-    return cache->lookup(log, x, MathCache::Log);
+    return cache->lookup(math_log_uncached, x, MathCache::Log);
 }
 
 double
@@ -546,6 +538,22 @@ js::math_log_uncached(double x)
 #undef LOG_IF_OUT_OF_RANGE
 
 bool
+js::math_log_handle(JSContext *cx, HandleValue val, MutableHandleValue res)
+{
+    double in;
+    if (!ToNumber(cx, val, &in))
+        return false;
+
+    MathCache *mathCache = cx->runtime()->getMathCache(cx);
+    if (!mathCache)
+        return false;
+
+    double out = math_log_impl(mathCache, in);
+    res.setNumber(out);
+    return true;
+}
+
+bool
 js::math_log(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -555,17 +563,7 @@ js::math_log(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache *mathCache = cx->runtime()->getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_log_impl(mathCache, x);
-    args.rval().setNumber(z);
-    return true;
+    return math_log_handle(cx, args[0], args.rval());
 }
 
 double

@@ -511,6 +511,7 @@ class ParseNode
 
     /* Boolean attributes. */
     bool isInParens() const                { return pn_parens; }
+    bool isLikelyIIFE() const              { return isInParens(); }
     void setInParens(bool enabled)         { pn_parens = enabled; }
     bool isUsed() const                    { return pn_used; }
     void setUsed(bool enabled)             { pn_used = enabled; }

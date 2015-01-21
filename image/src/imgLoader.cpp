@@ -460,8 +460,8 @@ NS_IMPL_ISUPPORTS(nsProgressNotificationProxy,
 NS_IMETHODIMP
 nsProgressNotificationProxy::OnProgress(nsIRequest* request,
                                         nsISupports* ctxt,
-                                        uint64_t progress,
-                                        uint64_t progressMax)
+                                        int64_t progress,
+                                        int64_t progressMax)
 {
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));

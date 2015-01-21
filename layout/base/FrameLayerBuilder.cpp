@@ -643,6 +643,11 @@ public:
     CollectOldLayers();
   }
 
+  ~ContainerState()
+  {
+    MOZ_ASSERT(mHoistedItems.IsEmpty());
+  }
+
   /**
    * This is the method that actually walks a display list and builds
    * the child layers.
@@ -718,6 +723,11 @@ public:
   void SetOuterVisibleRegionForLayer(Layer* aLayer,
                                      const nsIntRegion& aOuterVisibleRegion,
                                      const nsIntRect* aLayerContentsVisibleRect = nullptr) const;
+
+  void AddHoistedItem(nsDisplayItem* aItem)
+  {
+    mHoistedItems.AppendToTop(aItem);
+  }
 
 protected:
   friend class PaintedLayerData;
@@ -925,6 +935,11 @@ protected:
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mSnappingEnabled;
   bool                             mFlattenToSingleLayer;
+  /**
+   * In some cases we need to hoist nsDisplayScrollInfoLayer items out from a
+   * nested inactive container. This holds the items hoisted up from children.
+   */
+  nsDisplayList                    mHoistedItems;
 };
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
@@ -1093,7 +1108,7 @@ FrameLayerBuilder::Shutdown()
 
 void
 FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-                        PaintedLayerData* aLayerData)
+                        PaintedLayerData* aLayerData, ContainerState* aContainingContainerState)
 {
   mDisplayListBuilder = aBuilder;
   mRootPresContext = aBuilder->RootReferenceFrame()->PresContext()->GetRootPresContext();
@@ -1101,6 +1116,7 @@ FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
   mContainingPaintedLayer = aLayerData;
+  mContainingContainerState = aContainingContainerState;
   aManager->SetUserData(&gLayerManagerLayerBuilder, this);
 }
 
@@ -2215,7 +2231,11 @@ ContainerState::PopPaintedLayerData()
   layer->SetLayerBounds(layerBounds);
 
 #ifdef MOZ_DUMP_PAINTING
-  layer->AddExtraDumpInfo(nsCString(data->mLog));
+  if (PaintedLayerData* containingPld = mLayerBuilder->GetContainingPaintedLayerData()) {
+    containingPld->mLayer->AddExtraDumpInfo(nsCString(data->mLog));
+  } else {
+    layer->AddExtraDumpInfo(nsCString(data->mLog));
+  }
 #endif
 
   nsIntRegion transparentRegion;
@@ -2863,6 +2883,20 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       continue;
     }
 
+    nsDisplayItem::Type itemType = item->GetType();
+    if (itemType == nsDisplayItem::TYPE_SCROLL_INFO_LAYER &&
+        mLayerBuilder->GetContainingContainerState()) {
+      // We have encountered a scrollable area inside a nested (inactive)
+      // layer manager, so we need to hoist the item out into the parent; that
+      // way we will still generate a scrollinfo layer for it and the APZ can
+      // drive main-thread sync scrolling.
+      // Note: |item| is removed from aList and will be attached into the parent
+      // list, so we don't delete it here.
+      static_cast<nsDisplayScrollInfoLayer*>(item)->MarkHoisted();
+      mLayerBuilder->GetContainingContainerState()->AddHoistedItem(item);
+      continue;
+    }
+
     savedItems.AppendToTop(item);
 
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
@@ -2877,7 +2911,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
-    nsDisplayItem::Type itemType = item->GetType();
     bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
         static_cast<nsDisplayTransform*>(item)->ShouldPrerender(mBuilder);
     nsIntRect clipRect;
@@ -3128,6 +3161,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
     }
 
+    // Finish the hoisting process by taking the items from the child and adding
+    // them to the list here.
+    aList->AppendToBottom(&mHoistedItems);
+
     if (itemSameCoordinateSystemChildren &&
         itemSameCoordinateSystemChildren->NeedsTransparentSurface()) {
       aList->SetNeedsTransparentSurface();
@@ -3135,6 +3172,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   }
 
   aList->AppendToTop(&savedItems);
+  MOZ_ASSERT(mHoistedItems.IsEmpty());
 }
 
 void
@@ -3279,7 +3317,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                                         nsDisplayItem* aItem,
                                         const DisplayItemClip& aClip,
                                         const nsIntRect& aItemVisibleRect,
-                                        const ContainerState& aContainerState,
+                                        ContainerState& aContainerState,
                                         LayerState aLayerState,
                                         const nsPoint& aTopLeft)
 {
@@ -3323,8 +3361,9 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       entry->mContainerLayerGeneration = mContainerLayerGeneration;
     }
     if (tempManager) {
+      FLB_LOG_PAINTED_LAYER_DECISION(aLayerData, "Creating nested FLB for item %p\n", aItem);
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData);
+      layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData, &aContainerState);
 
       tempManager->BeginTransaction();
       if (mRetainingManager) {

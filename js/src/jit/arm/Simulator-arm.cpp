@@ -2717,9 +2717,14 @@ Simulator::decodeType01(SimInstruction *instr)
                 break;
               }
               case 7: { // BKPT
-                ArmDebugger dbg(this);
-                printf("Simulator hit BKPT.\n");
-                dbg.debug();
+                fprintf(stderr, "Simulator hit BKPT.\n");
+                if (getenv("ARM_SIM_DEBUGGER")) {
+                    ArmDebugger dbg(this);
+                    dbg.debug();
+                } else {
+                    fprintf(stderr, "Use ARM_SIM_DEBUGGER=1 to enter the builtin debugger.\n");
+                    MOZ_CRASH("ARM simulator breakpoint");
+                }
                 break;
               }
               default:
