@@ -65,12 +65,35 @@ order.2=C
         self.assertEqual(p.get_list('order'), ['A', 'B', 'C'])
 
 
+    def test_get_list_with_shared_prefix(self):
+        contents = StringIO('''
+list.0=A
+list.1=B
+list.2=C
+
+list.sublist.1=E
+list.sublist.0=D
+list.sublist.2=F
+
+list.sublist.second.0=G
+
+list.other.0=H
+''')
+        p = DotProperties(contents)
+        self.assertEqual(p.get_list('list'), ['A', 'B', 'C'])
+        self.assertEqual(p.get_list('list.sublist'), ['D', 'E', 'F'])
+        self.assertEqual(p.get_list('list.sublist.second'), ['G'])
+        self.assertEqual(p.get_list('list.other'), ['H'])
+
+
     def test_get_dict(self):
         contents = StringIO('''
 A.title=title A
 
 B.title=title B
 B.url=url B
+
+C=value
 ''')
         p = DotProperties(contents)
         self.assertEqual(p.get_dict('missing'), {})
@@ -80,6 +103,46 @@ B.url=url B
             p.get_dict('A', required_keys=['title', 'url'])
         with self.assertRaises(ValueError):
             p.get_dict('missing', required_keys=['key'])
+        # A key=value pair is considered to root an empty dict.
+        self.assertEqual(p.get_dict('C'), {})
+        with self.assertRaises(ValueError):
+            p.get_dict('C', required_keys=['missing_key'])
+
+
+    def test_get_dict_with_shared_prefix(self):
+        contents = StringIO('''
+A.title=title A
+A.subdict.title=title A subdict
+
+B.title=title B
+B.url=url B
+B.subdict.title=title B subdict
+B.subdict.url=url B subdict
+''')
+        p = DotProperties(contents)
+        self.assertEqual(p.get_dict('A'), {'title': 'title A'})
+        self.assertEqual(p.get_dict('B'), {'title': 'title B', 'url': 'url B'})
+        self.assertEqual(p.get_dict('A.subdict'),
+            {'title': 'title A subdict'})
+        self.assertEqual(p.get_dict('B.subdict'),
+            {'title': 'title B subdict', 'url': 'url B subdict'})
+
+    def test_get_dict_with_value_prefix(self):
+        contents = StringIO('''
+A.default=A
+A.default.B=B
+A.default.B.ignored=B ignored
+A.default.C=C
+A.default.C.ignored=C ignored
+''')
+        p = DotProperties(contents)
+        self.assertEqual(p.get('A.default'), 'A')
+        # This enumerates the properties.
+        self.assertEqual(p.get_dict('A.default'), {'B': 'B', 'C': 'C'})
+        # They can still be fetched directly.
+        self.assertEqual(p.get('A.default.B'), 'B')
+        self.assertEqual(p.get('A.default.C'), 'C')
+
 
     def test_unicode(self):
         contents = StringIO('''
