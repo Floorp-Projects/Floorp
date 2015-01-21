@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from marionette_driver.keys import Keys
+from keys import Keys
 
 
 class TestText(MarionetteTestCase):

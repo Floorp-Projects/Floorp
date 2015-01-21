@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from marionette_driver.errors import JavascriptException, MarionetteException
+from errors import JavascriptException, MarionetteException
 
 class TestSpecialPowersContent(MarionetteTestCase):
 
@@ -15,7 +15,7 @@ class TestSpecialPowersContent(MarionetteTestCase):
         SpecialPowers.setCharPref("%(pref)s", "%(value)s");
         return SpecialPowers.getCharPref("%(pref)s")
         """ % {'pref': self.testpref, 'value': self.testvalue}, special_powers=True);
-        self.assertEqual(result, self.testvalue)
+        self.assertEqual(result, self.testvalue) 
 
     def test_prefs_after_navigate(self):
         test_html = self.marionette.absolute_url("test.html")
