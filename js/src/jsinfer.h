@@ -293,7 +293,7 @@ public:
 };
 
 /* Flags and other state stored in TypeSet::flags */
-enum MOZ_ENUM_TYPE(uint32_t) {
+enum : uint32_t {
     TYPE_FLAG_UNDEFINED =   0x1,
     TYPE_FLAG_NULL      =   0x2,
     TYPE_FLAG_BOOLEAN   =   0x4,
@@ -352,7 +352,7 @@ enum MOZ_ENUM_TYPE(uint32_t) {
 typedef uint32_t TypeFlags;
 
 /* Flags and other state stored in TypeObject::flags */
-enum MOZ_ENUM_TYPE(uint32_t) {
+enum : uint32_t {
     /* Whether this type object is associated with some allocation site. */
     OBJECT_FLAG_FROM_ALLOCATION_SITE  = 0x1,
 
@@ -925,10 +925,7 @@ class TypeNewScript
 
     void trace(JSTracer *trc);
     void sweep();
-
-#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
-#endif
 
     void registerNewObject(PlainObject *res);
     void unregisterNewObject(PlainObject *res);
@@ -1241,9 +1238,7 @@ struct TypeObject : public gc::TenuredCell
         flags_ |= generation << OBJECT_FLAG_GENERATION_SHIFT;
     }
 
-#ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
-#endif
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
