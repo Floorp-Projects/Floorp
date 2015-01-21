@@ -153,6 +153,8 @@ class CircularRowBuffer {
   std::vector<unsigned char*> row_addresses_;
 };
 
+}  // namespace
+
 // Convolves horizontally along a single row. The row data is given in
 // |src_data| and continues for the [begin, end) of the filter.
 template<bool has_alpha>
@@ -267,7 +269,60 @@ void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
   }
 }
 
-}  // namespace
+void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
+                        int filter_length,
+                        unsigned char* const* source_data_rows,
+                        int width, unsigned char* out_row,
+                        bool has_alpha, bool use_sse2) {
+  int processed = 0;
+
+#if defined(USE_SSE2)
+  // If the binary was not built with SSE2 support, we had to fallback to C version.
+  int simd_width = width & ~3;
+  if (use_sse2 && simd_width) {
+    ConvolveVertically_SSE2(filter_values, filter_length,
+                            source_data_rows, 0, simd_width,
+                            out_row, has_alpha);
+    processed = simd_width;
+  }
+#endif
+    
+  if (width > processed) {
+    if (has_alpha) {
+      ConvolveVertically<true>(filter_values, filter_length, source_data_rows,
+                               processed, width, out_row);
+    } else {
+      ConvolveVertically<false>(filter_values, filter_length, source_data_rows,
+                                processed, width, out_row);
+    }
+  }
+}
+
+void ConvolveHorizontally(const unsigned char* src_data,
+                          const ConvolutionFilter1D& filter,
+                          unsigned char* out_row,
+                          bool has_alpha, bool use_sse2) {
+  int width = filter.num_values();
+  int processed = 0;
+#if defined(USE_SSE2)
+  int simd_width = width & ~3;
+  if (use_sse2 && simd_width) {
+    // SIMD implementation works with 4 pixels at a time.
+    // Therefore we process as much as we can using SSE and then use
+    // C implementation for leftovers
+    ConvolveHorizontally_SSE2(src_data, 0, simd_width, filter, out_row);
+    processed = simd_width;
+  }
+#endif
+
+  if (width > processed) {
+    if (has_alpha) {
+      ConvolveHorizontally<true>(src_data, processed, width, filter, out_row);
+    } else {
+      ConvolveHorizontally<false>(src_data, processed, width, filter, out_row);
+    }
+  }
+}
 
 // ConvolutionFilter1D ---------------------------------------------------------
 
@@ -462,24 +517,9 @@ void BGRAConvolve2D(const unsigned char* source_data,
     unsigned char* const* first_row_for_filter =
         &rows_to_convolve[filter_offset - first_row_in_circular_buffer];
 
-    int processed = 0;
-#if defined(USE_SSE2)
-    int simd_width = pixel_width & ~3;
-    if (use_sse2 && simd_width) {
-        ConvolveVertically_SSE2(filter_values, filter_length, first_row_for_filter,
-                                0, simd_width, cur_output_row, source_has_alpha);
-        processed = simd_width;
-    }
-#endif
-    if (source_has_alpha) {
-      ConvolveVertically<true>(filter_values, filter_length,
-                               first_row_for_filter,
-                               processed, pixel_width, cur_output_row);
-    } else {
-      ConvolveVertically<false>(filter_values, filter_length,
-                               first_row_for_filter,
-                               processed, pixel_width, cur_output_row);
-    }
+    ConvolveVertically(filter_values, filter_length,
+                       first_row_for_filter, pixel_width,
+                       cur_output_row, source_has_alpha, use_sse2);
   }
 }
 

@@ -55,7 +55,7 @@ public:
 
     // called to report socket status (see nsITransportEventSink)
     virtual void OnTransportStatus(nsITransport* transport,
-                                   nsresult status, uint64_t progress) = 0;
+                                   nsresult status, int64_t progress) = 0;
 
     // called to check the transaction status.
     virtual bool     IsDone() = 0;
@@ -198,7 +198,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
     nsAHttpConnection *Connection() MOZ_OVERRIDE; \
     void GetSecurityCallbacks(nsIInterfaceRequestor **) MOZ_OVERRIDE;       \
     void OnTransportStatus(nsITransport* transport, \
-                           nsresult status, uint64_t progress) MOZ_OVERRIDE; \
+                           nsresult status, int64_t progress) MOZ_OVERRIDE; \
     bool     IsDone() MOZ_OVERRIDE; \
     nsresult Status() MOZ_OVERRIDE; \
     uint32_t Caps() MOZ_OVERRIDE;   \

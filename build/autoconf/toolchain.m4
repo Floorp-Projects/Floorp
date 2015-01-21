@@ -172,7 +172,7 @@ AC_PROG_CXX
 
 AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
 AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
-MOZ_PATH_PROGS(AS, "${target_alias}-as" "${target}-as", :)
+AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
 AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
 AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
 AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)

@@ -556,7 +556,7 @@ TLSFilterTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 
 void
 TLSFilterTransaction::OnTransportStatus(nsITransport* aTransport,
-                                        nsresult aStatus, uint64_t aProgress)
+                                        nsresult aStatus, int64_t aProgress)
 {
   if (!mTransaction) {
     return;

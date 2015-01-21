@@ -40,6 +40,12 @@ HTMLAudioElement::~HTMLAudioElement()
 {
 }
 
+bool
+HTMLAudioElement::IsInteractiveHTMLContent() const
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::controls);
+}
+
 already_AddRefed<HTMLAudioElement>
 HTMLAudioElement::Audio(const GlobalObject& aGlobal,
                         const Optional<nsAString>& aSrc,

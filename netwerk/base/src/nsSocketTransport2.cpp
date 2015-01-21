@@ -983,8 +983,9 @@ nsSocketTransport::SendStatus(nsresult status)
             break;
         }
     }
-    if (sink)
-        sink->OnTransportStatus(this, status, progress, UINT64_MAX);
+    if (sink) {
+        sink->OnTransportStatus(this, status, progress, -1);
+    }
 }
 
 nsresult

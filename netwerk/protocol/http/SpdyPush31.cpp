@@ -210,7 +210,7 @@ SpdyPush31TransactionBuffer::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 
 void
 SpdyPush31TransactionBuffer::OnTransportStatus(nsITransport* transport,
-                                               nsresult status, uint64_t progress)
+                                               nsresult status, int64_t progress)
 {
 }
 

@@ -122,7 +122,7 @@ nsUserInfo::GetDomain(char * *aDomain)
         // try to get the hostname from the nodename
         // on machines that use DHCP, domainname may not be set
         // but the nodename might.
-        if (buf.nodename && buf.nodename[0]) {
+        if (buf.nodename[0]) {
             // if the nodename is foo.bar.org, use bar.org as the domain
             char *pos = strchr(buf.nodename,'.');
             if (pos) {

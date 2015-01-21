@@ -59,11 +59,6 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal,
-                  JSObject* aArg, const objectURLOptions& aOptions,
-                  nsString& aResult, ErrorResult& aRv);
-
-  static void
-  CreateObjectURL(const GlobalObject& aGlobal,
                   File& aArg, const objectURLOptions& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 

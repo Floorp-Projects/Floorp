@@ -45,9 +45,6 @@ public:
 
   void Close(JSContext *aCx, ErrorResult& aRv);
 
-  // We don't use this for the WorkerDataStore.
-  void SetDataStoreCursorImpl(DataStoreCursorImpl& aCursor);
-
   void SetBackingDataStoreCursor(
     const nsMainThreadPtrHandle<DataStoreCursor>& aBackingCursor);
 

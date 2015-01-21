@@ -188,12 +188,6 @@ WorkerDataStoreCursor::Close(JSContext* aCx, ErrorResult& aRv)
 }
 
 void
-WorkerDataStoreCursor::SetDataStoreCursorImpl(DataStoreCursorImpl& aCursor)
-{
-  NS_NOTREACHED("We don't use this for the WorkerDataStoreCursor!");
-}
-
-void
 WorkerDataStoreCursor::SetBackingDataStoreCursor(
   const nsMainThreadPtrHandle<DataStoreCursor>& aBackingCursor)
 {

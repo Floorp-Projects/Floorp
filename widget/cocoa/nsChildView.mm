@@ -1131,10 +1131,8 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // We want Cocoa 'points' (where there is a 1:1 mapping from pixels on low-DPI
-  // devices and a 4:1 mapping from pixels on retina devices).  These correspond
-  // to Gecko device pixels, which is what we are given.
-  NSPoint pt = NSMakePoint(aPoint.x, aPoint.y);
+  NSPoint pt =
+    nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
 
   // Move the mouse cursor to the requested position and reconnect it to the mouse.
   CGWarpMouseCursorPosition(NSPointToCGPoint(pt));
@@ -1596,8 +1594,6 @@ nsChildView::NotifyIME(const IMENotification& aIMENotification)
     case NOTIFY_IME_OF_FOCUS:
       if (mInputContext.IsPasswordEditor()) {
         TextInputHandler::EnableSecureEventInput();
-      } else {
-        TextInputHandler::EnsureSecureEventInputDisabled();
       }
 
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
@@ -1625,7 +1621,7 @@ nsChildView::SetInputContext(const InputContext& aContext,
 {
   NS_ENSURE_TRUE_VOID(mTextInputHandler);
 
-  if (mTextInputHandler->IsOrWouldBeFocused()) {
+  if (mTextInputHandler->IsFocused()) {
     if (aContext.IsPasswordEditor()) {
       TextInputHandler::EnableSecureEventInput();
     } else {

@@ -56,8 +56,8 @@ public:
     nsTransportStatusEvent(nsTransportEventSinkProxy *proxy,
                            nsITransport *transport,
                            nsresult status,
-                           uint64_t progress,
-                           uint64_t progressMax)
+                           int64_t progress,
+                           int64_t progressMax)
         : mProxy(proxy)
         , mTransport(transport)
         , mStatus(status)
@@ -87,8 +87,8 @@ public:
     // parameters to OnTransportStatus
     nsCOMPtr<nsITransport> mTransport;
     nsresult               mStatus;
-    uint64_t               mProgress;
-    uint64_t               mProgressMax;
+    int64_t                mProgress;
+    int64_t                mProgressMax;
 };
 
 NS_IMPL_ISUPPORTS(nsTransportEventSinkProxy, nsITransportEventSink)
@@ -96,8 +96,8 @@ NS_IMPL_ISUPPORTS(nsTransportEventSinkProxy, nsITransportEventSink)
 NS_IMETHODIMP
 nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
                                              nsresult status,
-                                             uint64_t progress,
-                                             uint64_t progressMax)
+                                             int64_t progress,
+                                             int64_t progressMax)
 {
     nsresult rv = NS_OK;
     nsRefPtr<nsTransportStatusEvent> event;
