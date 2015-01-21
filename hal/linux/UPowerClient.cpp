@@ -9,6 +9,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <mozilla/dom/battery/Constants.h>
 #include "nsAutoRef.h"
+#include <cmath>
 
 /*
  * Helper that manages the destruction of glib objects as soon as they leave
@@ -428,14 +429,14 @@ UPowerClient::UpdateSavedInfo(GHashTable* aHashTable)
   }
 
   /*
-   * The battery level might be very close to 100% (like 99.xxxx%) without
+   * The battery level might be very close to 100% (like 99%) without
    * increasing. It seems that upower sets the battery state as 'full' in that
    * case so we should trust it and not even try to get the value.
    */
   if (isFull) {
     mLevel = 1.0;
   } else {
-    mLevel = g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage")))*0.01;
+    mLevel = round(g_value_get_double(static_cast<const GValue*>(g_hash_table_lookup(aHashTable, "Percentage"))))*0.01;
   }
 
   if (isFull) {
