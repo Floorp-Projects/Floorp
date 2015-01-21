@@ -44,7 +44,6 @@ public:
   NS_IMETHOD BeginPage() MOZ_OVERRIDE { return NS_OK; }
   NS_IMETHOD EndPage() MOZ_OVERRIDE { return NS_OK; }
 
-  NS_IMETHOD GetPath (const char **aPath);    
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
   
 protected:

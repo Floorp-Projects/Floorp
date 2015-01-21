@@ -151,12 +151,6 @@ NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecQt::GetPath(const char** aPath)
-{
-    *aPath = mPath;
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextSpecQt::BeginDocument(
         const nsAString& aTitle,
         char16_t* aPrintToFileName,
