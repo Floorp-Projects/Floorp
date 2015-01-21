@@ -50,11 +50,11 @@ void AssertOnThread(nsIEventTarget* aTarget);
  * callbacks to be invoked (asynchronously, on a specified thread) when the
  * request is either completed (resolved) or cannot be completed (rejected).
  *
- * By default, resolve and reject callbacks are always invoked on the same thread
- * where Then() was invoked.
+ * When IsExclusive is true, the MediaPromise does a release-mode assertion that
+ * there is at most one call to either Then(...) or ChainTo(...).
  */
 template<typename T> class MediaPromiseHolder;
-template<typename ResolveValueT, typename RejectValueT>
+template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MediaPromise
 {
 public:
@@ -65,24 +65,23 @@ public:
   explicit MediaPromise(const char* aCreationSite)
     : mCreationSite(aCreationSite)
     , mMutex("MediaPromise Mutex")
+    , mHaveConsumer(false)
   {
     PROMISE_LOG("%s creating MediaPromise (%p)", mCreationSite, this);
   }
 
-  static nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>>
+  static nsRefPtr<MediaPromise>
   CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite)
   {
-    nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>> p =
-      new MediaPromise<ResolveValueT, RejectValueT>(aResolveSite);
+    nsRefPtr<MediaPromise> p = new MediaPromise(aResolveSite);
     p->Resolve(aResolveValue, aResolveSite);
     return p;
   }
 
-  static nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>>
+  static nsRefPtr<MediaPromise>
   CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite)
   {
-    nsRefPtr<MediaPromise<ResolveValueT, RejectValueT>> p =
-      new MediaPromise<ResolveValueT, RejectValueT>(aRejectSite);
+    nsRefPtr<MediaPromise> p = new MediaPromise(aRejectSite);
     p->Reject(aRejectValue, aRejectSite);
     return p;
   }
@@ -303,6 +302,7 @@ public:
                                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     MutexAutoLock lock(mMutex);
+    mHaveConsumer = true;
     nsRefPtr<ThenValueBase> thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
                                                       RejectMethodType>(aResponseTarget, aThisVal,
                                                                         aResolveMethod, aRejectMethod,
@@ -331,6 +331,7 @@ public:
   void ChainTo(already_AddRefed<MediaPromise> aChainedPromise, const char* aCallSite)
   {
     MutexAutoLock lock(mMutex);
+    mHaveConsumer = true;
     nsRefPtr<MediaPromise> chainedPromise = aChainedPromise;
     PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
                 aCallSite, this, chainedPromise.get(), (int) IsPending());
@@ -399,6 +400,7 @@ protected:
   Maybe<RejectValueType> mRejectValue;
   nsTArray<nsRefPtr<ThenValueBase>> mThenValues;
   nsTArray<nsRefPtr<MediaPromise>> mChainedPromises;
+  bool mHaveConsumer;
 };
 
 /*
