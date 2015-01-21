@@ -6,10 +6,10 @@
 <div id=log></div>
 <script>
 test(function() {
-		Object.defineProperty(WebSocket.prototype, 'url', {
-				get: function() { return 'foo'; }
-		});
-		var ws = new WebSocket('ws://example.invalid/');
-		assert_equals(ws.url, 'foo');
+    Object.defineProperty(WebSocket.prototype, 'url', {
+        get: function() { return 'foo'; }
+    });
+    var ws = new WebSocket('ws://example.invalid/');
+    assert_equals(ws.url, 'foo');
 });
 </script>
