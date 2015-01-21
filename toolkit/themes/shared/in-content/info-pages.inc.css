@@ -1,0 +1,85 @@
+@import url("chrome://global/skin/in-content/common.css");
+/* Body and container */
+body {
+  display: flex;
+  box-sizing: padding-box;
+  min-height: 100vh;
+  padding-top: 0;
+  padding-bottom: 0;
+  -moz-padding-start: calc(48px + 4.6em);
+  -moz-padding-end: 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  min-width: 13em;
+  max-width: 52em;
+}
+
+/* Typography */
+.title {
+  background-image: url("chrome://browser/skin/aboutNetError_info.svg");
+  background-position: left 0;
+  background-repeat: no-repeat;
+  background-size: auto;
+  -moz-margin-start: -2.3em;
+  -moz-padding-start: 2.3em;
+  font-size: 2.5em;
+}
+
+.title:-moz-dir(rtl) {
+  background-position: right 0;
+}
+
+.title-text {
+  border-bottom: 1px solid #C1C1C1;
+  font-size: inherit;
+  padding-bottom: 0.4em;
+}
+
+@media (max-width: 675px) {
+  body {
+    padding: 0 48px;
+  }
+
+  .title {
+    background-image: none !important;
+    -moz-padding-start: 0;
+    -moz-margin-start: 0;
+  }
+
+  .title-text {
+    padding-top: 0;
+  }
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  -moz-margin-start: 1em;
+}
+
+ul > li, ol > li {
+  margin-bottom: .5em;
+}
+
+ul {
+  list-style: disc;
+}
+
+/* Buttons */
+.button-container {
+  margin-top: 1.2em;
+}
+
+.button-container > button {
+  min-width: 150px;
+}
+
+/* Trees */
+tree {
+  min-height: 12em;
+  margin-top: 1.2em;
+  width: 100%;
+}
