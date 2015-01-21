@@ -65,7 +65,7 @@ using JS::CanonicalizeNaN;
 // a stable ID, it need not be at the end of the list and should not be used for
 // sizing data structures.
 
-enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
+enum StructuredDataType : uint32_t {
     /* Structured data types provided by the engine */
     SCTAG_FLOAT_MAX = 0xFFF00000,
     SCTAG_NULL = 0xFFFF0000,

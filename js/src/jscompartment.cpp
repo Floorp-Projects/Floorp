@@ -649,8 +649,6 @@ JSCompartment::sweepCrossCompartmentWrappers()
     }
 }
 
-#ifdef JSGC_COMPACTING
-
 void JSCompartment::fixupAfterMovingGC()
 {
     fixupGlobal();
@@ -666,8 +664,6 @@ JSCompartment::fixupGlobal()
     if (global)
         global_.set(MaybeForwarded(global));
 }
-
-#endif // JSGC_COMPACTING
 
 void
 JSCompartment::purge()

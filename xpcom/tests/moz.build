@@ -80,9 +80,6 @@ if CONFIG['MOZ_MEMORY']:
 
 # XXX Make these tests work in libxul builds.
 #CPP_UNIT_TESTS += [
-#    'TestPipes',
-#    'TestPriorityQueue',
-#    'TestStorageStream',
 #    'TestSynchronization',
 #    'TestTArray',
 #    'TestThreadPool',
