@@ -1967,7 +1967,7 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
   SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d status=%d",
               IsAudioDecoding(), mAudioRequestStatus);
 
-  if (mState >= DECODER_STATE_COMPLETED) {
+  if (mState >= DECODER_STATE_COMPLETED || mState == DECODER_STATE_DORMANT) {
     return NS_OK;
   }
 
@@ -2012,7 +2012,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
 
-  if (mState >= DECODER_STATE_COMPLETED) {
+  if (mState >= DECODER_STATE_COMPLETED || mState == DECODER_STATE_DORMANT) {
     return NS_OK;
   }
 
@@ -2766,12 +2766,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // Now that those threads are stopped, there's no possibility of
       // mPendingWakeDecoder being needed again. Revoke it.
       mPendingWakeDecoder = nullptr;
-      {
-        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-        // Wait for the thread decoding, if any, to exit.
-        DecodeTaskQueue()->AwaitIdle();
-        mReader->ReleaseMediaResources();
-      }
+      DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
+      NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
       mAudioRequestStatus = RequestStatus::Idle;
       mVideoRequestStatus = RequestStatus::Idle;
       return NS_OK;
