@@ -1,5 +1,5 @@
-FROM          quay.io/mozilla/base-build:0.0.1
-MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
+FROM          quay.io/mozilla/b2g-build:0.0.1
+MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 ENV PATH /tools/python27-mercurial/bin:/tools/python27/bin:/tools/tools/buildfarm/utils:$PATH:/home/worker/bin/
 ENV PYTHONPATH /tools/tools/lib/python:$PYTHONPATH
