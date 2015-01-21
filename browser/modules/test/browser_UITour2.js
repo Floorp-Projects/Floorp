@@ -67,28 +67,6 @@ let tests = [
       });
     }).then(null, Components.utils.reportError);
   },
-  taskify(function* test_pinnedTab() {
-    is(UITour.pinnedTabs.get(window), null, "Should not already have a pinned tab");
-
-    yield addPinnedTabPromise();
-
-    let tabInfo = UITour.pinnedTabs.get(window);
-    isnot(tabInfo, null, "Should have recorded data about a pinned tab after addPinnedTab()");
-    isnot(tabInfo.tab, null, "Should have added a pinned tab after addPinnedTab()");
-    is(tabInfo.tab.pinned, true, "Tab should be marked as pinned");
-
-    let tab = tabInfo.tab;
-
-    yield removePinnedTabPromise();
-    isnot(gBrowser.tabs[0], tab, "First tab should not be the pinned tab");
-    tabInfo = UITour.pinnedTabs.get(window);
-    is(tabInfo, null, "Should not have any data about the removed pinned tab after removePinnedTab()");
-
-    yield addPinnedTabPromise();
-    yield addPinnedTabPromise();
-    yield addPinnedTabPromise();
-    is(gBrowser.tabs[1].pinned, false, "After multiple calls of addPinnedTab, should still only have one pinned tab");
-  }),
   taskify(function* test_bookmarks_menu() {
     let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
 
