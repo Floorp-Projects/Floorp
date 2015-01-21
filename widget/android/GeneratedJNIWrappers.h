@@ -1934,6 +1934,21 @@ public:
 
     static mozilla::jni::Object::LocalRef RegisterCompositorWrapper();
 
+public:
+    struct updateZoomedView_t {
+        typedef LayerView Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        static constexpr char name[] = "updateZoomedView";
+        static constexpr char signature[] =
+                "(Ljava/nio/ByteBuffer;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode = mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static void updateZoomedView(mozilla::jni::Object::Param);
+
 };
 
 class NativePanZoomController : public mozilla::jni::Class<NativePanZoomController> {

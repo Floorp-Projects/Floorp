@@ -4980,7 +4980,12 @@ var BrowserEventHandler = {
     if (!target) {
       return;
     }
+
     this._inCluster = aEvent.hitCluster;
+    if (this._inCluster) {
+      return;  // No highlight for a cluster of links
+    }
+
     let uri = this._getLinkURI(target);
     if (uri) {
       try {
@@ -5097,6 +5102,7 @@ var BrowserEventHandler = {
 
         let data = JSON.parse(aData);
         let {x, y} = data;
+
         if (this._inCluster) {
           this._clusterClicked(x, y);
         } else {
@@ -5129,14 +5135,14 @@ var BrowserEventHandler = {
     }
   },
 
-  _clusterClicked: function sh_clusterClicked(aX, aY) {
-      Messaging.sendRequest({
-        type: "Gesture:clusteredLinksClicked",
-        clicPosition: {
-          x: aX,
-          y: aY
-        }
-      });
+  _clusterClicked: function(aX, aY) {
+    Messaging.sendRequest({
+      type: "Gesture:clusteredLinksClicked",
+      clickPosition: {
+        x: aX,
+        y: aY
+      }
+    });
   },
 
   onDoubleTap: function(aData) {

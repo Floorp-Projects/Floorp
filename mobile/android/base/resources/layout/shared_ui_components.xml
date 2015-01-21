@@ -25,6 +25,7 @@
                                        android:visibility="gone"/>
 
     <include layout="@layout/text_selection_handles"/>
+    <include layout="@layout/zoomed_view"/>
 
     <FrameLayout android:id="@+id/camera_layout"
                  android:layout_height="wrap_content"

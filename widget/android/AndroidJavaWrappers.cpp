@@ -538,6 +538,14 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case ZOOMEDVIEW: {
+            mX = jenv->GetDoubleField(jobj, jXField);
+            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
+            ReadPointArray(mPoints, jenv, jPoints, 2);
+            mByteBuffer = new RefCountedJavaObject(jenv, jenv->GetObjectField(jobj, jByteBufferField));
+            break;
+        }
+
         case SCREENORIENTATION_CHANGED: {
             mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
             break;
