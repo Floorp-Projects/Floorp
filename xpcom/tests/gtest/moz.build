@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestPipes.cpp',
     'TestPriorityQueue.cpp',
     'TestSnappyStreams.cpp',
+    'TestStorageStream.cpp',
     'TestStrings.cpp',
 ]
 
