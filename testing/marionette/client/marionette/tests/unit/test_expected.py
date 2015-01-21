@@ -4,11 +4,10 @@
 
 import urllib
 
-from marionette_driver import expected
-from marionette_driver.by import By
-
+import expected
 import marionette_test
 
+from by import By
 
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
