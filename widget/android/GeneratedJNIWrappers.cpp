@@ -980,6 +980,14 @@ mozilla::jni::Object::LocalRef LayerView::RegisterCompositorWrapper()
     return mozilla::jni::Method<RegisterCompositorWrapper_t>::Call(nullptr, nullptr);
 }
 
+constexpr char LayerView::updateZoomedView_t::name[];
+constexpr char LayerView::updateZoomedView_t::signature[];
+
+void LayerView::updateZoomedView(mozilla::jni::Object::Param a0)
+{
+    return mozilla::jni::Method<updateZoomedView_t>::Call(nullptr, nullptr, a0);
+}
+
 constexpr char NativePanZoomController::name[];
 
 constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::name[];
