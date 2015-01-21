@@ -22,6 +22,10 @@
     <dimen name="new_tablet_nav_button_width_half">21dp</dimen>
     <dimen name="new_tablet_nav_button_width_plus_half">63dp</dimen>
 
+    <!-- This is the system default for the vertical padding for the divider of the TabWidget.
+         Used to mimic the divider padding on the tablet tabs panel back button. -->
+    <dimen name="new_tablet_tab_panel_divider_vertical_padding">12dp</dimen>
+
     <dimen name="new_tablet_tab_strip_height">48dp</dimen>
     <dimen name="new_tablet_tab_strip_item_width">208dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-28dp</dimen>

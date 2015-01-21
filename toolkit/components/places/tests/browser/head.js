@@ -11,46 +11,12 @@ const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+                                  "resource://testing-common/PlacesTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-
-/**
- * Allows waiting for an observer notification once.
- *
- * @param aTopic
- *        Notification topic to observe.
- *
- * @return {Promise}
- * @resolves The array [aSubject, aData] from the observed notification.
- * @rejects Never.
- */
-function promiseTopicObserved(aTopic)
-{
-  let deferred = Promise.defer();
-
-  Services.obs.addObserver(
-    function PTO_observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(PTO_observe, aTopic);
-      deferred.resolve([aSubject, aData]);
-    }, aTopic, false);
-
-  return deferred.promise;
-}
-
-/**
- * Clears history asynchronously.
- *
- * @return {Promise}
- * @resolves When history has been cleared.
- * @rejects Never.
- */
-function promiseClearHistory() {
-  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  PlacesUtils.bhistory.removeAllPages();
-  return promise;
-}
 
 /**
  * Waits for all pending async statements on the default connection.
