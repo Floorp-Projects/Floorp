@@ -20,7 +20,7 @@ namespace mozilla {
 
 class SharedThreadPool;
 
-typedef MediaPromise<bool, bool> ShutdownPromise;
+typedef MediaPromise<bool, bool, false> ShutdownPromise;
 
 // Abstracts executing runnables in order in a thread pool. The runnables
 // dispatched to the MediaTaskQueue will be executed in the order in which
