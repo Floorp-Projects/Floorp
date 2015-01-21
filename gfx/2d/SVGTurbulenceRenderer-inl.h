@@ -125,8 +125,11 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::InitFromSeed(int32_t
   float gradient[4][sBSize][2];
   for (int32_t k = 0; k < 4; k++) {
     for (int32_t i = 0; i < sBSize; i++) {
-      float a = float((rand.Next() % (sBSize + sBSize)) - sBSize) / sBSize;
-      float b = float((rand.Next() % (sBSize + sBSize)) - sBSize) / sBSize;
+      float a, b;
+      do {
+        a = float((rand.Next() % (sBSize + sBSize)) - sBSize) / sBSize;
+        b = float((rand.Next() % (sBSize + sBSize)) - sBSize) / sBSize;
+      } while (a == 0 && b == 0);
       float s = sqrt(a * a + b * b);
       gradient[k][i][0] = a / s;
       gradient[k][i][1] = b / s;
