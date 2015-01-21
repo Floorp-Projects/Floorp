@@ -2,15 +2,15 @@
  * jsimd_x86_64.c
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright 2009-2011 D. R. Commander
- * 
+ * Copyright 2009-2011, 2014 D. R. Commander
+ *
  * Based on the x86 SIMD extension for IJG JPEG library,
  * Copyright (C) 1999-2006, MIYASAKA Masaru.
  * For conditions of distribution and use, see copyright notice in jsimdext.inc
  *
  * This file contains the interface between the "normal" portions
  * of the library and the SIMD implementations when running on a
- * x86_64 architecture.
+ * 64-bit x86 architecture.
  */
 
 #define JPEG_INTERNALS
@@ -80,6 +80,12 @@ jsimd_can_ycc_rgb (void)
   return 1;
 }
 
+GLOBAL(int)
+jsimd_can_ycc_rgb565 (void)
+{
+  return 0;
+}
+
 GLOBAL(void)
 jsimd_rgb_ycc_convert (j_compress_ptr cinfo,
                        JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
@@ -87,8 +93,7 @@ jsimd_rgb_ycc_convert (j_compress_ptr cinfo,
 {
   void (*sse2fct)(JDIMENSION, JSAMPARRAY, JSAMPIMAGE, JDIMENSION, int);
 
-  switch(cinfo->in_color_space)
-  {
+  switch(cinfo->in_color_space) {
     case JCS_EXT_RGB:
       sse2fct=jsimd_extrgb_ycc_convert_sse2;
       break;
@@ -126,8 +131,7 @@ jsimd_rgb_gray_convert (j_compress_ptr cinfo,
 {
   void (*sse2fct)(JDIMENSION, JSAMPARRAY, JSAMPIMAGE, JDIMENSION, int);
 
-  switch(cinfo->in_color_space)
-  {
+  switch(cinfo->in_color_space) {
     case JCS_EXT_RGB:
       sse2fct=jsimd_extrgb_gray_convert_sse2;
       break;
@@ -165,8 +169,7 @@ jsimd_ycc_rgb_convert (j_decompress_ptr cinfo,
 {
   void (*sse2fct)(JDIMENSION, JSAMPIMAGE, JDIMENSION, JSAMPARRAY, int);
 
-  switch(cinfo->out_color_space)
-  {
+  switch(cinfo->out_color_space) {
     case JCS_EXT_RGB:
       sse2fct=jsimd_ycc_extrgb_convert_sse2;
       break;
@@ -197,6 +200,13 @@ jsimd_ycc_rgb_convert (j_decompress_ptr cinfo,
   sse2fct(cinfo->output_width, input_buf, input_row, output_buf, num_rows);
 }
 
+GLOBAL(void)
+jsimd_ycc_rgb565_convert (j_decompress_ptr cinfo,
+                          JSAMPIMAGE input_buf, JDIMENSION input_row,
+                          JSAMPARRAY output_buf, int num_rows)
+{
+}
+
 GLOBAL(int)
 jsimd_can_h2v2_downsample (void)
 {
@@ -225,10 +235,8 @@ GLOBAL(void)
 jsimd_h2v2_downsample (j_compress_ptr cinfo, jpeg_component_info * compptr,
                        JSAMPARRAY input_data, JSAMPARRAY output_data)
 {
-  jsimd_h2v2_downsample_sse2(cinfo->image_width,
-                             cinfo->max_v_samp_factor,
-                             compptr->v_samp_factor,
-                             compptr->width_in_blocks,
+  jsimd_h2v2_downsample_sse2(cinfo->image_width, cinfo->max_v_samp_factor,
+                             compptr->v_samp_factor, compptr->width_in_blocks,
                              input_data, output_data);
 }
 
@@ -236,10 +244,8 @@ GLOBAL(void)
 jsimd_h2v1_downsample (j_compress_ptr cinfo, jpeg_component_info * compptr,
                        JSAMPARRAY input_data, JSAMPARRAY output_data)
 {
-  jsimd_h2v1_downsample_sse2(cinfo->image_width,
-                             cinfo->max_v_samp_factor,
-                             compptr->v_samp_factor,
-                             compptr->width_in_blocks,
+  jsimd_h2v1_downsample_sse2(cinfo->image_width, cinfo->max_v_samp_factor,
+                             compptr->v_samp_factor, compptr->width_in_blocks,
                              input_data, output_data);
 }
 
@@ -269,23 +275,21 @@ jsimd_can_h2v1_upsample (void)
 
 GLOBAL(void)
 jsimd_h2v2_upsample (j_decompress_ptr cinfo,
-                     jpeg_component_info * compptr, 
+                     jpeg_component_info * compptr,
                      JSAMPARRAY input_data,
                      JSAMPARRAY * output_data_ptr)
 {
-  jsimd_h2v2_upsample_sse2(cinfo->max_v_samp_factor,
-                           cinfo->output_width,
+  jsimd_h2v2_upsample_sse2(cinfo->max_v_samp_factor, cinfo->output_width,
                            input_data, output_data_ptr);
 }
 
 GLOBAL(void)
 jsimd_h2v1_upsample (j_decompress_ptr cinfo,
-                     jpeg_component_info * compptr, 
+                     jpeg_component_info * compptr,
                      JSAMPARRAY input_data,
                      JSAMPARRAY * output_data_ptr)
 {
-  jsimd_h2v1_upsample_sse2(cinfo->max_v_samp_factor,
-                           cinfo->output_width,
+  jsimd_h2v1_upsample_sse2(cinfo->max_v_samp_factor, cinfo->output_width,
                            input_data, output_data_ptr);
 }
 
@@ -321,24 +325,24 @@ jsimd_can_h2v1_fancy_upsample (void)
 
 GLOBAL(void)
 jsimd_h2v2_fancy_upsample (j_decompress_ptr cinfo,
-                           jpeg_component_info * compptr, 
+                           jpeg_component_info * compptr,
                            JSAMPARRAY input_data,
                            JSAMPARRAY * output_data_ptr)
 {
   jsimd_h2v2_fancy_upsample_sse2(cinfo->max_v_samp_factor,
-                                 compptr->downsampled_width,
-                                 input_data, output_data_ptr);
+                                 compptr->downsampled_width, input_data,
+                                 output_data_ptr);
 }
 
 GLOBAL(void)
 jsimd_h2v1_fancy_upsample (j_decompress_ptr cinfo,
-                           jpeg_component_info * compptr, 
+                           jpeg_component_info * compptr,
                            JSAMPARRAY input_data,
                            JSAMPARRAY * output_data_ptr)
 {
   jsimd_h2v1_fancy_upsample_sse2(cinfo->max_v_samp_factor,
-                                 compptr->downsampled_width,
-                                 input_data, output_data_ptr);
+                                 compptr->downsampled_width, input_data,
+                                 output_data_ptr);
 }
 
 GLOBAL(int)
@@ -379,8 +383,7 @@ jsimd_h2v2_merged_upsample (j_decompress_ptr cinfo,
 {
   void (*sse2fct)(JDIMENSION, JSAMPIMAGE, JDIMENSION, JSAMPARRAY);
 
-  switch(cinfo->out_color_space)
-  {
+  switch(cinfo->out_color_space) {
     case JCS_EXT_RGB:
       sse2fct=jsimd_h2v2_extrgb_merged_upsample_sse2;
       break;
@@ -419,8 +422,7 @@ jsimd_h2v1_merged_upsample (j_decompress_ptr cinfo,
 {
   void (*sse2fct)(JDIMENSION, JSAMPIMAGE, JDIMENSION, JSAMPARRAY);
 
-  switch(cinfo->out_color_space)
-  {
+  switch(cinfo->out_color_space) {
     case JCS_EXT_RGB:
       sse2fct=jsimd_h2v1_extrgb_merged_upsample_sse2;
       break;
@@ -728,26 +730,28 @@ jsimd_can_idct_float (void)
 
 GLOBAL(void)
 jsimd_idct_islow (j_decompress_ptr cinfo, jpeg_component_info * compptr,
-                JCOEFPTR coef_block, JSAMPARRAY output_buf,
-                JDIMENSION output_col)
+                  JCOEFPTR coef_block, JSAMPARRAY output_buf,
+                  JDIMENSION output_col)
 {
-  jsimd_idct_islow_sse2(compptr->dct_table, coef_block, output_buf, output_col);
+  jsimd_idct_islow_sse2(compptr->dct_table, coef_block, output_buf,
+                        output_col);
 }
 
 GLOBAL(void)
 jsimd_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
-                JCOEFPTR coef_block, JSAMPARRAY output_buf,
-                JDIMENSION output_col)
+                  JCOEFPTR coef_block, JSAMPARRAY output_buf,
+                  JDIMENSION output_col)
 {
-  jsimd_idct_ifast_sse2(compptr->dct_table, coef_block, output_buf, output_col);
+  jsimd_idct_ifast_sse2(compptr->dct_table, coef_block, output_buf,
+                        output_col);
 }
 
 GLOBAL(void)
 jsimd_idct_float (j_decompress_ptr cinfo, jpeg_component_info * compptr,
-                JCOEFPTR coef_block, JSAMPARRAY output_buf,
-                JDIMENSION output_col)
+                  JCOEFPTR coef_block, JSAMPARRAY output_buf,
+                  JDIMENSION output_col)
 {
-  jsimd_idct_float_sse2(compptr->dct_table, coef_block,
-                        output_buf, output_col);
+  jsimd_idct_float_sse2(compptr->dct_table, coef_block, output_buf,
+                        output_col);
 }
 
