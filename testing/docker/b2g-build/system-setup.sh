@@ -84,7 +84,7 @@ yum install -y                      \
 # Install mozilla specific packages
 
 # puppetagain packages
-base_url="http://puppetagain.pub.build.mozilla.org/data/repos/yum/releng/public/CentOS/6/x86_64/"
+base_url="http://mockbuild-repos.pub.build.mozilla.org/releng/public/CentOS/6/x86_64/"
 
 # Install Python 2.7, pip, and virtualenv (needed for things like mach)
 rpm -ih $base_url/mozilla-python27-2.7.3-1.el6.x86_64.rpm
