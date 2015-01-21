@@ -319,9 +319,7 @@ BitStringWithNoUnusedBits(Reader& input, /*out*/ Input& value)
   if (unusedBitsAtEnd != 0) {
     return Result::ERROR_BAD_DER;
   }
-  Reader::Mark mark(valueWithUnusedBits.GetMark());
-  valueWithUnusedBits.SkipToEnd();
-  return valueWithUnusedBits.GetInput(mark, value);
+  return valueWithUnusedBits.SkipToEnd(value);
 }
 
 static inline Result

@@ -45,19 +45,19 @@ SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint)
 }
 
 void
-ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, int32_t aStride)
+ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, const int32_t aStride)
 {
-  uint32_t* pixel = reinterpret_cast<uint32_t*>(aData);
+  int height = aSize.height, width = aSize.width * 4;
 
-  for (int row = 0; row < aSize.height; ++row) {
-    for (int column = 0; column < aSize.width; ++column) {
+  for (int row = 0; row < height; ++row) {
+    for (int column = 0; column < width; column += 4) {
 #ifdef IS_BIG_ENDIAN
-      pixel[column] |= 0x000000FF;
+      aData[column] = 0xFF;
 #else
-      pixel[column] |= 0xFF000000;
+      aData[column + 3] = 0xFF;
 #endif
     }
-    pixel += (aStride/4);
+    aData += aStride;
   }
 }
 

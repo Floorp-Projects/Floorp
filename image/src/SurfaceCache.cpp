@@ -532,7 +532,9 @@ public:
       return DrawableFrameRef();
     }
 
-    if (!surface->IsLocked()) {
+    if (cache->IsLocked()) {
+      LockSurface(surface);
+    } else {
       mExpirationTracker.MarkUsed(surface);
     }
 
@@ -571,7 +573,9 @@ public:
       Remove(surface);
     }
 
-    if (!surface->IsLocked()) {
+    if (cache->IsLocked()) {
+      LockSurface(surface);
+    } else {
       mExpirationTracker.MarkUsed(surface);
     }
 
@@ -607,17 +611,32 @@ public:
 
     cache->SetLocked(true);
 
-    // Try to lock all the surfaces the per-image cache is holding.
-    cache->ForEach(DoLockSurface, this);
+    // We don't relock this image's existing surfaces right away; instead, the
+    // image should arrange for Lookup() to touch them if they are still useful.
   }
 
   void UnlockImage(const ImageKey aImageKey)
   {
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
-    if (!cache)
-      return;  // Already unlocked and removed.
+    if (!cache || !cache->IsLocked()) {
+      return;  // Already unlocked.
+    }
 
     cache->SetLocked(false);
+
+    // Unlock all the surfaces the per-image cache is holding.
+    cache->ForEach(DoUnlockSurface, this);
+  }
+
+  void UnlockSurfaces(const ImageKey aImageKey)
+  {
+    nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
+    if (!cache || !cache->IsLocked()) {
+      return;  // Already unlocked.
+    }
+
+    // (Note that we *don't* unlock the per-image cache here; that's the
+    // difference between this and UnlockImage.)
 
     // Unlock all the surfaces the per-image cache is holding.
     cache->ForEach(DoUnlockSurface, this);
@@ -678,30 +697,25 @@ public:
     }
   }
 
+  void LockSurface(CachedSurface* aSurface)
+  {
+    if (aSurface->GetLifetime() == Lifetime::Transient ||
+        aSurface->IsLocked()) {
+      return;
+    }
+
+    StopTracking(aSurface);
+
+    // Lock the surface. This can fail.
+    aSurface->SetLocked(true);
+    StartTracking(aSurface);
+  }
+
   static PLDHashOperator DoStopTracking(const SurfaceKey&,
                                         CachedSurface*    aSurface,
                                         void*             aCache)
   {
     static_cast<SurfaceCacheImpl*>(aCache)->StopTracking(aSurface);
-    return PL_DHASH_NEXT;
-  }
-
-  static PLDHashOperator DoLockSurface(const SurfaceKey&,
-                                       CachedSurface*    aSurface,
-                                       void*             aCache)
-  {
-    if (aSurface->GetLifetime() == Lifetime::Transient ||
-        aSurface->IsLocked()) {
-      return PL_DHASH_NEXT;
-    }
-
-    auto cache = static_cast<SurfaceCacheImpl*>(aCache);
-    cache->StopTracking(aSurface);
-
-    // Lock the surface. This can fail.
-    aSurface->SetLocked(true);
-    cache->StartTracking(aSurface);
-
     return PL_DHASH_NEXT;
   }
 
@@ -996,6 +1010,15 @@ SurfaceCache::UnlockImage(Image* aImageKey)
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
     return sInstance->UnlockImage(aImageKey);
+  }
+}
+
+/* static */ void
+SurfaceCache::UnlockSurfaces(const ImageKey aImageKey)
+{
+  if (sInstance) {
+    MutexAutoLock lock(sInstance->GetMutex());
+    return sInstance->UnlockSurfaces(aImageKey);
   }
 }
 

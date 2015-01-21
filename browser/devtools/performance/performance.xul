@@ -18,12 +18,22 @@
   <script type="application/javascript" src="performance/performance-view.js"/>
   <script type="application/javascript" src="performance/recording-model.js"/>
   <script type="application/javascript" src="performance/views/overview.js"/>
+  <script type="application/javascript" src="performance/views/toolbar.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/details-call-tree.js"/>
   <script type="application/javascript" src="performance/views/details-waterfall.js"/>
   <script type="application/javascript" src="performance/views/details-flamegraph.js"/>
   <script type="application/javascript" src="performance/views/recordings.js"/>
 
+  <popupset id="performance-options-popupset">
+    <menupopup id="performance-options-menupopup">
+      <menuitem id="option-invert-call-tree"
+                type="checkbox"
+                data-pref="invert-call-tree"
+                label="&profilerUI.invertTree;"
+                tooltiptext="&profilerUI.invertTree.tooltiptext;"/>
+    </menupopup>
+  </popupset>
   <hbox class="theme-body" flex="1">
     <vbox id="recordings-pane">
       <toolbar id="recordings-toolbar"
@@ -57,6 +67,12 @@
                          data-view="flamegraph" />
         </hbox>
         <spacer flex="1"></spacer>
+        <hbox id="performance-toolbar-control-options" class="devtools-toolbarbutton-group">
+          <toolbarbutton id="performance-options-button"
+                         class="devtools-toolbarbutton devtools-option-toolbarbutton"
+                         popup="performance-options-menupopup"
+                         tooltiptext="&profilerUI.options.tooltiptext;"/>
+        </hbox>
       </toolbar>
 
       <vbox id="overview-pane">

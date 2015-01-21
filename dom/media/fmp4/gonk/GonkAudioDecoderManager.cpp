@@ -163,11 +163,18 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
       return NS_OK;
     }
     case android::INFO_FORMAT_CHANGED:
-    case android::INFO_OUTPUT_BUFFERS_CHANGED:
     {
       // If the format changed, update our cached info.
       GADM_LOG("Decoder format changed");
       return Output(aStreamOffset, aOutData);
+    }
+    case android::INFO_OUTPUT_BUFFERS_CHANGED:
+    {
+      GADM_LOG("Info Output Buffers Changed");
+      if (mDecoder->UpdateOutputBuffers()) {
+        return Output(aStreamOffset, aOutData);
+      }
+      return NS_ERROR_FAILURE;
     }
     case -EAGAIN:
     {

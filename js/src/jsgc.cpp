@@ -1064,21 +1064,6 @@ GCRuntime::releaseArena(ArenaHeader *aheader, const AutoLockGC &lock)
     return aheader->chunk()->releaseArena(rt, aheader, lock);
 }
 
-void
-GCRuntime::decommitArena(ArenaHeader *aheader, AutoLockGC &lock)
-{
-    aheader->zone->usage.removeGCArena();
-    if (isBackgroundSweeping())
-        aheader->zone->threshold.updateForRemovedArena(tunables);
-
-    bool ok;
-    {
-        AutoUnlockGC unlock(lock);
-        ok = MarkPagesUnused(aheader, ArenaSize);
-    }
-    return aheader->chunk()->releaseArena(rt, aheader, lock, Chunk::ArenaDecommitState(ok));
-}
-
 GCRuntime::GCRuntime(JSRuntime *rt) :
     rt(rt),
     systemZone(nullptr),
@@ -1098,9 +1083,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBitsValid(false),
-    majorGCRequested(0),
     majorGCTriggerReason(JS::gcreason::NO_REASON),
-    minorGCRequested(false),
     minorGCTriggerReason(JS::gcreason::NO_REASON),
     majorGCNumber(0),
     jitReleaseNumber(0),
@@ -2739,16 +2722,6 @@ ReleaseArenaList(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
     }
 }
 
-void
-DecommitArenaList(JSRuntime *rt, ArenaHeader *aheader, AutoLockGC &lock)
-{
-    ArenaHeader *next;
-    for (; aheader; aheader = next) {
-        next = aheader->next;
-        rt->gc.decommitArena(aheader, lock);
-    }
-}
-
 ArenaLists::~ArenaLists()
 {
     AutoLockGC lock(runtime_);
@@ -2793,7 +2766,7 @@ ArenaLists::forceFinalizeNow(FreeOp *fop, AllocKind thingKind, KeepArenasEnum ke
         return;
     arenaLists[thingKind].clear();
 
-    const size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
+    size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
@@ -2862,7 +2835,7 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, ArenaHeader *
     AllocKind thingKind = listHead->getAllocKind();
     Zone *zone = listHead->zone;
 
-    const size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
+    size_t thingsPerArena = Arena::thingsPerArena(Arena::thingSize(thingKind));
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
@@ -3144,10 +3117,9 @@ js::MarkCompartmentActive(InterpreterFrame *fp)
 void
 GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
 {
-    if (majorGCRequested)
+    if (majorGCRequested())
         return;
 
-    majorGCRequested = true;
     majorGCTriggerReason = reason;
     rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
@@ -3156,10 +3128,9 @@ void
 GCRuntime::requestMinorGC(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    if (minorGCRequested)
+    if (minorGCRequested())
         return;
 
-    minorGCRequested = true;
     minorGCTriggerReason = reason;
     rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
@@ -3194,7 +3165,7 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
         // The threshold has been surpassed, immediately trigger a GC,
         // which will be done non-incrementally.
         triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
-    } else if (usedBytes >= igcThresholdBytes && interFrameGC) {
+    } else if (usedBytes >= igcThresholdBytes) {
         // Reduce the delay to the start of the next incremental slice.
         if (zone->gcDelayBytes < ArenaSize)
             zone->gcDelayBytes = 0;
@@ -3402,7 +3373,7 @@ GCRuntime::sweepBackgroundThings(ZoneList &zones, LifoAlloc &freeBlocks, ThreadT
     }
 
     AutoLockGC lock(rt);
-    DecommitArenaList(rt, emptyArenas, lock);
+    ReleaseArenaList(rt, emptyArenas, lock);
     while (!zones.isEmpty())
         zones.removeFront();
 }
@@ -6059,7 +6030,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JS::gcreason::Reason r
 
     AutoTraceSession session(rt, MajorCollecting);
 
-    majorGCRequested = false;
+    majorGCTriggerReason = JS::gcreason::NO_REASON;
     interFrameGC = true;
 
     number++;
@@ -6441,7 +6412,7 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
 void
 GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::TypeObjectList *pretenureTypes)
 {
-    minorGCRequested = false;
+    minorGCTriggerReason = JS::gcreason::NO_REASON;
     TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, pretenureTypes);
@@ -6490,14 +6461,14 @@ GCRuntime::gcIfNeeded(JSContext *cx /* = nullptr */)
 {
     // This method returns whether a major GC was performed.
 
-    if (minorGCRequested) {
+    if (minorGCRequested()) {
         if (cx)
             minorGC(cx, minorGCTriggerReason);
         else
             minorGC(minorGCTriggerReason);
     }
 
-    if (majorGCRequested) {
+    if (majorGCRequested()) {
         if (!isIncrementalGCInProgress())
             startGC(GC_NORMAL, majorGCTriggerReason);
         else
