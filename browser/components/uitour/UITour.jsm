@@ -59,10 +59,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 this.UITour = {
   url: null,
   seenPageIDs: null,
-  pageIDSourceTabs: new WeakMap(),
-  pageIDSourceWindows: new WeakMap(),
-  /* Map from browser windows to a set of tabs in which a tour is open */
-  originTabs: new WeakMap(),
+  pageIDSourceBrowsers: new WeakMap(),
+  /* Map from browser chrome windows to a Set of <browser>s in which a tour is open (both visible and hidden) */
+  tourBrowsersByWindow: new WeakMap(),
   urlbarCapture: new WeakMap(),
   appMenuOpenForAnnotation: new Set(),
   availableTargetsCache: new WeakMap(),
@@ -385,12 +384,7 @@ this.UITour = {
         }
 
         this.addSeenPageID(data.pageID);
-
-        // Store tabs and windows separately so we don't need to loop over all
-        // tabs when a window is closed.
-        this.pageIDSourceTabs.set(tab, data.pageID);
-        this.pageIDSourceWindows.set(window, data.pageID);
-
+        this.pageIDSourceBrowsers.set(browser, data.pageID);
         this.setTelemetryBucket(data.pageID);
 
         break;
@@ -638,25 +632,30 @@ this.UITour = {
       }
     }
 
-    if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
-      if (!this.originTabs.has(window)) {
-        this.originTabs.set(window, new Set());
-      }
-
-      this.originTabs.get(window).add(tab);
-      tab.addEventListener("TabClose", this);
-      tab.addEventListener("TabBecomingWindow", this);
-      window.addEventListener("SSWindowClosing", this);
+    if (!this.tourBrowsersByWindow.has(window)) {
+      this.tourBrowsersByWindow.set(window, new Set());
     }
+    this.tourBrowsersByWindow.get(window).add(browser);
+
+    // We don't have a tab if it's being detached or we're in a <browser> without a tab.
+    if (tab) {
+      tab.addEventListener("TabClose", this);
+      if (!window.gMultiProcessBrowser) {
+        tab.addEventListener("TabBecomingWindow", this);
+      }
+    }
+
+    window.addEventListener("SSWindowClosing", this);
 
     return true;
   },
 
   handleEvent: function(aEvent) {
+    log.debug("handleEvent: type =", aEvent.type, "event =", aEvent);
     switch (aEvent.type) {
       case "pagehide": {
         let window = this.getChromeWindow(aEvent.target);
-        this.teardownTour(window);
+        this.teardownTourForWindow(window);
         break;
       }
 
@@ -665,42 +664,30 @@ this.UITour = {
         // Fall through
       case "TabClose": {
         let tab = aEvent.target;
-        if (this.pageIDSourceTabs.has(tab)) {
-          let pageID = this.pageIDSourceTabs.get(tab);
-
-          // Delete this from the window cache, so if the window is closed we
-          // don't expire this page ID twice.
-          let window = tab.ownerDocument.defaultView;
-          if (this.pageIDSourceWindows.get(window) == pageID)
-            this.pageIDSourceWindows.delete(window);
-
-          this.setExpiringTelemetryBucket(pageID, "closed");
-        }
-
         let window = tab.ownerDocument.defaultView;
-        this.teardownTour(window);
+        this.teardownTourForBrowser(window, tab.linkedBrowser, true);
         break;
       }
 
       case "TabSelect": {
+        let window = aEvent.target.ownerDocument.defaultView;
+
         if (aEvent.detail && aEvent.detail.previousTab) {
           let previousTab = aEvent.detail.previousTab;
-
-          if (this.pageIDSourceTabs.has(previousTab)) {
-            let pageID = this.pageIDSourceTabs.get(previousTab);
-            this.setExpiringTelemetryBucket(pageID, "inactive");
+          let openTourWindows = this.tourBrowsersByWindow.get(window);
+          if (openTourWindows.has(previousTab.linkedBrowser)) {
+            this.teardownTourForBrowser(window, previousTab.linkedBrowser, false);
           }
         }
 
-        let window = aEvent.target.ownerDocument.defaultView;
         let pendingDoc;
         if (this._detachingTab && this._pendingDoc && (pendingDoc = this._pendingDoc.get())) {
           let selectedTab = window.gBrowser.selectedTab;
           if (selectedTab.linkedBrowser.contentDocument == pendingDoc) {
-            if (!this.originTabs.get(window)) {
-              this.originTabs.set(window, new Set());
+            if (!this.tourBrowsersByWindow.get(window)) {
+              this.tourBrowsersByWindow.set(window, new Set());
             }
-            this.originTabs.get(window).add(selectedTab);
+            this.tourBrowsersByWindow.get(window).add(selectedTab.linkedBrowser);
             this.pendingDoc = null;
             this._detachingTab = false;
             while (this._queuedEvents.length) {
@@ -714,18 +701,12 @@ this.UITour = {
           }
         }
 
-        this.teardownTour(window);
         break;
       }
 
       case "SSWindowClosing": {
         let window = aEvent.target;
-        if (this.pageIDSourceWindows.has(window)) {
-          let pageID = this.pageIDSourceWindows.get(window);
-          this.setExpiringTelemetryBucket(pageID, "closed");
-        }
-
-        this.teardownTour(window, true);
+        this.teardownTourForWindow(window);
         break;
       }
 
@@ -760,29 +741,36 @@ this.UITour = {
     };
   },
 
-  teardownTour: function(aWindow, aWindowClosing = false) {
-    log.debug("teardownTour: aWindowClosing = " + aWindowClosing);
-    aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
-    aWindow.removeEventListener("SSWindowClosing", this);
+  /**
+   * Tear down a tour from a tab e.g. upon switching/closing tabs.
+   */
+  teardownTourForBrowser: function(aWindow, aBrowser, aTourPageClosing = false) {
+    log.debug("teardownTourForBrowser: aBrowser = ", aBrowser, aTourPageClosing);
 
-    let originTabs = this.originTabs.get(aWindow);
-    if (originTabs) {
-      for (let tab of originTabs) {
+    if (this.pageIDSourceBrowsers.has(aBrowser)) {
+      let pageID = this.pageIDSourceBrowsers.get(aBrowser);
+      this.setExpiringTelemetryBucket(pageID, aTourPageClosing ? "closed" : "inactive");
+    }
+
+    let openTourBrowsers = this.tourBrowsersByWindow.get(aWindow);
+    if (aTourPageClosing) {
+      let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
+      if (tab) { // Handle standalone <browser>
         tab.removeEventListener("TabClose", this);
         tab.removeEventListener("TabBecomingWindow", this);
+        if (openTourBrowsers) {
+          openTourBrowsers.delete(aBrowser);
+        }
       }
     }
-    this.originTabs.delete(aWindow);
 
-    if (!aWindowClosing) {
-      this.hideHighlight(aWindow);
-      this.hideInfo(aWindow);
-      // Ensure the menu panel is hidden before calling recreatePopup so popup events occur.
-      this.hideMenu(aWindow, "appMenu");
-      this.hideMenu(aWindow, "loop");
-    }
+    this.hideHighlight(aWindow);
+    this.hideInfo(aWindow);
+    // Ensure the menu panel is hidden before calling recreatePopup so popup events occur.
+    this.hideMenu(aWindow, "appMenu");
+    this.hideMenu(aWindow, "loop");
 
-    // Clean up panel listeners after we may have called hideMenu above.
+    // Clean up panel listeners after calling hideMenu above.
     aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hideAppMenuAnnotations);
     aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hideAppMenuAnnotations);
     aWindow.PanelUI.panel.removeEventListener("popuphidden", this.onPanelHidden);
@@ -792,6 +780,35 @@ this.UITour = {
 
     this.endUrlbarCapture(aWindow);
     this.resetTheme();
+
+    // If there are no more tour tabs left in the window, teardown the tour for the whole window.
+    if (!openTourBrowsers || openTourBrowsers.size == 0) {
+      this.teardownTourForWindow(aWindow);
+    }
+  },
+
+  /**
+   * Tear down all tours for a ChromeWindow.
+   */
+  teardownTourForWindow: function(aWindow) {
+    log.debug("teardownTourForWindow");
+    aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
+    aWindow.removeEventListener("SSWindowClosing", this);
+
+    let openTourBrowsers = this.tourBrowsersByWindow.get(aWindow);
+    if (openTourBrowsers) {
+      for (let browser of openTourBrowsers) {
+        if (this.pageIDSourceBrowsers.has(browser)) {
+          let pageID = this.pageIDSourceBrowsers.get(browser);
+          this.setExpiringTelemetryBucket(pageID, "closed");
+        }
+
+        let tab = aWindow.gBrowser.getTabForBrowser(browser);
+        tab.removeEventListener("TabClose", this);
+      }
+    }
+
+    this.tourBrowsersByWindow.delete(aWindow);
   },
 
   getChromeWindow: function(aContentDocument) {
@@ -1232,6 +1249,7 @@ this.UITour = {
   },
 
   showMenu: function(aWindow, aMenuName, aOpenCallback = null) {
+    log.debug("showMenu:", aMenuName);
     function openMenuButton(aMenuBtn) {
       if (!aMenuBtn || !aMenuBtn.boxObject || aMenuBtn.open) {
         if (aOpenCallback)
@@ -1296,6 +1314,7 @@ this.UITour = {
   },
 
   hideMenu: function(aWindow, aMenuName) {
+    log.debug("hideMenu:", aMenuName);
     function closeMenuButton(aMenuBtn) {
       if (aMenuBtn && aMenuBtn.boxObject)
         aMenuBtn.boxObject.openMenu(false);
@@ -1625,12 +1644,16 @@ this.UITour = {
       if (window.closed)
         continue;
 
-      let originTabs = this.originTabs.get(window);
-      if (!originTabs)
+      let openTourBrowsers = this.tourBrowsersByWindow.get(window);
+      if (!openTourBrowsers)
         continue;
 
-      for (let tab of originTabs) {
-        let messageManager = tab.linkedBrowser.messageManager;
+      for (let browser of openTourBrowsers) {
+        let messageManager = browser.messageManager;
+        if (!messageManager) {
+          log.error("notify: Trying to notify a browser without a messageManager", browser);
+          continue;
+        }
         let detail = {
           event: eventName,
           params: params,
