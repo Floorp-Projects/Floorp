@@ -104,6 +104,9 @@ browser.jar:
         skin/classic/browser/urlbar-arrow.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
+        skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
+        skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
+        skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
         skin/classic/browser/reader-mode-16.png                      (../shared/reader/reader-mode-16.png)
         skin/classic/browser/notification-pluginNormal.png           (../shared/plugins/notification-pluginNormal.png)
         skin/classic/browser/notification-pluginAlert.png            (../shared/plugins/notification-pluginAlert.png)
@@ -564,6 +567,9 @@ browser.jar:
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
         skin/classic/aero/browser/urlbar-history-dropmarker.png
+        skin/classic/aero/browser/session-restore.svg               (../shared/incontent-icons/session-restore.svg)
+        skin/classic/aero/browser/tab-crashed.svg                   (../shared/incontent-icons/tab-crashed.svg)
+        skin/classic/aero/browser/welcome-back.svg                  (../shared/incontent-icons/welcome-back.svg)
         skin/classic/aero/browser/reader-mode-16.png                (../shared/reader/reader-mode-16.png)
         skin/classic/aero/browser/notification-pluginNormal.png     (../shared/plugins/notification-pluginNormal.png)
         skin/classic/aero/browser/notification-pluginAlert.png      (../shared/plugins/notification-pluginAlert.png)
