@@ -419,13 +419,6 @@ case "$target" in
 
         if test "$_CC_MAJOR_VERSION" = "18"; then
             _CC_SUITE=12
-        elif test "$_CC_MAJOR_VERSION" = "19"; then
-            _CC_SUITE=14
-
-            # -Wv:18 disables all warnings introduced after VS2013
-            # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
-            CFLAGS="$CFLAGS -Wv:18"
-            CXXFLAGS="$CXXFLAGS -Wv:18"
         else
             AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
