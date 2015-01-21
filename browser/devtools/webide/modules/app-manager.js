@@ -99,7 +99,7 @@ let AppManager = exports.AppManager = {
       this.selectedRuntime = null;
     }
 
-    if (this.connection.status != Connection.Status.CONNECTED) {
+    if (!this.connected) {
       if (this._appsFront) {
         this._appsFront.off("install-progress", this.onInstallProgress);
         this._appsFront.unwatchApps();
@@ -134,6 +134,10 @@ let AppManager = exports.AppManager = {
     }
 
     this.update("connection");
+  },
+
+  get connected() {
+    return this.connection.status == Connection.Status.CONNECTED;
   },
 
   get apps() {
@@ -336,8 +340,7 @@ let AppManager = exports.AppManager = {
 
   connectToRuntime: function(runtime) {
 
-    if (this.connection.status == Connection.Status.CONNECTED &&
-        this.selectedRuntime === runtime) {
+    if (this.connected && this.selectedRuntime === runtime) {
       // Already connected
       return promise.resolve();
     }
@@ -350,7 +353,7 @@ let AppManager = exports.AppManager = {
       let onConnectedOrDisconnected = () => {
         this.connection.off(Connection.Events.CONNECTED, onConnectedOrDisconnected);
         this.connection.off(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
-        if (this.connection.status == Connection.Status.CONNECTED) {
+        if (this.connected) {
           deferred.resolve();
         } else {
           deferred.reject();
@@ -413,7 +416,7 @@ let AppManager = exports.AppManager = {
   },
 
   disconnectRuntime: function() {
-    if (this.connection.status != Connection.Status.CONNECTED) {
+    if (!this.connected) {
       return promise.resolve();
     }
     let deferred = promise.defer();
