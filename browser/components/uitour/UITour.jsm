@@ -63,8 +63,6 @@ this.UITour = {
   pageIDSourceWindows: new WeakMap(),
   /* Map from browser windows to a set of tabs in which a tour is open */
   originTabs: new WeakMap(),
-  /* Map from browser windows to a set of pinned tabs opened by (a) tour(s) */
-  pinnedTabs: new WeakMap(),
   urlbarCapture: new WeakMap(),
   appMenuOpenForAnnotation: new Set(),
   availableTargetsCache: new WeakMap(),
@@ -485,16 +483,6 @@ this.UITour = {
         break;
       }
 
-      case "addPinnedTab": {
-        this.ensurePinnedTab(window, true);
-        break;
-      }
-
-      case "removePinnedTab": {
-        this.removePinnedTab(window);
-        break;
-      }
-
       case "showMenu": {
         this.showMenu(window, data.name, () => {
           if (typeof data.showCallbackID == "string")
@@ -705,16 +693,9 @@ this.UITour = {
         }
 
         let window = aEvent.target.ownerDocument.defaultView;
-        let selectedTab = window.gBrowser.selectedTab;
-        let pinnedTab = this.pinnedTabs.get(window);
-        if (pinnedTab && pinnedTab.tab == selectedTab)
-          break;
-        let originTabs = this.originTabs.get(window);
-        if (originTabs && originTabs.has(selectedTab))
-          break;
-
         let pendingDoc;
         if (this._detachingTab && this._pendingDoc && (pendingDoc = this._pendingDoc.get())) {
+          let selectedTab = window.gBrowser.selectedTab;
           if (selectedTab.linkedBrowser.contentDocument == pendingDoc) {
             if (!this.originTabs.get(window)) {
               this.originTabs.set(window, new Set());
@@ -810,7 +791,6 @@ this.UITour = {
     loopPanel.removeEventListener("popuphiding", this.hideLoopPanelAnnotations);
 
     this.endUrlbarCapture(aWindow);
-    this.removePinnedTab(aWindow);
     this.resetTheme();
   },
 
@@ -872,14 +852,6 @@ this.UITour = {
     if (typeof aTargetName != "string" || !aTargetName) {
       log.warn("getTarget: Invalid target name specified");
       deferred.reject("Invalid target name specified");
-      return deferred.promise;
-    }
-
-    if (aTargetName == "pinnedTab") {
-      deferred.resolve({
-          targetName: aTargetName,
-          node: this.ensurePinnedTab(aWindow, aSticky)
-      });
       return deferred.promise;
     }
 
@@ -996,36 +968,6 @@ this.UITour = {
     LightweightThemeManager.resetPreview();
   },
 
-  ensurePinnedTab: function(aWindow, aSticky = false) {
-    let tabInfo = this.pinnedTabs.get(aWindow);
-
-    if (tabInfo) {
-      tabInfo.sticky = tabInfo.sticky || aSticky;
-    } else {
-      let url = Services.urlFormatter.formatURLPref("browser.uitour.pinnedTabUrl");
-
-      let tab = aWindow.gBrowser.addTab(url);
-      aWindow.gBrowser.pinTab(tab);
-      tab.addEventListener("TabClose", () => {
-        this.pinnedTabs.delete(aWindow);
-      });
-
-      tabInfo = {
-        tab: tab,
-        sticky: aSticky
-      };
-      this.pinnedTabs.set(aWindow, tabInfo);
-    }
-
-    return tabInfo.tab;
-  },
-
-  removePinnedTab: function(aWindow) {
-    let tabInfo = this.pinnedTabs.get(aWindow);
-    if (tabInfo)
-      aWindow.gBrowser.removeTab(tabInfo.tab);
-  },
-
   /**
    * @param aChromeWindow The chrome window that the highlight is in. Necessary since some targets
    *                      are in a sub-frame so the defaultView is not the same as the chrome
@@ -1127,10 +1069,6 @@ this.UITour = {
   },
 
   hideHighlight: function(aWindow) {
-    let tabData = this.pinnedTabs.get(aWindow);
-    if (tabData && !tabData.sticky)
-      this.removePinnedTab(aWindow);
-
     let highlighter = aWindow.document.getElementById("UITourHighlight");
     this._removeAnnotationPanelMutationObserver(highlighter.parentElement);
     highlighter.parentElement.hidePopup();
@@ -1529,10 +1467,7 @@ this.UITour = {
       }
       let targetObjects = yield Promise.all(promises);
 
-      let targetNames = [
-        "pinnedTab",
-      ];
-
+      let targetNames = [];
       for (let targetObject of targetObjects) {
         if (targetObject.node)
           targetNames.push(targetObject.targetName);
