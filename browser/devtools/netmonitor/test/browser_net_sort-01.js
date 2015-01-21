@@ -202,6 +202,7 @@ function test() {
           statusText: "Switching Protocols",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getStr("networkMenu.sizeUnavailable"),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
           time: true
         });
@@ -211,6 +212,7 @@ function test() {
           statusText: "Created",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
@@ -220,6 +222,7 @@ function test() {
           statusText: "See Other",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
           time: true
         });
@@ -229,6 +232,7 @@ function test() {
           statusText: "Not Found",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
@@ -238,6 +242,7 @@ function test() {
           statusText: "Not Implemented",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
           time: true
         });
