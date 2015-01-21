@@ -2530,9 +2530,8 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
       case SimdTypeDescr::TYPE_FLOAT32:
         simdType = MIRType_Float32x4;
         break;
-      default:
-        MOZ_CRASH("Unknown SIMD kind when generating MSimdBox instruction.");
-        return InliningStatus_NotInlined;
+      case SimdTypeDescr::TYPE_FLOAT64:
+        return InliningStatus_NotInlined; // :TODO: NYI (Bug 1124205)
     }
 
     // We do not inline SIMD constructors if the number of arguments does not
