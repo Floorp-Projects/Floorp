@@ -1,14 +1,13 @@
 from marionette_test import MarionetteTestCase
-
-from marionette_driver.by import By
-from marionette_driver.errors import NoSuchElementException, StaleElementException
+from by import By
+import urlparse
+from errors import NoSuchElementException, StaleElementException
 # noinspection PyUnresolvedReferences
-from marionette_driver.wait import Wait
+from wait import Wait
+from time import sleep
 
 import os
 import sys
-import urlparse
-from time import sleep
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 from serversetup import LoopTestServers
