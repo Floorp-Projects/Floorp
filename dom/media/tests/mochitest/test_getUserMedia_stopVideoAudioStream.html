@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
 -->
 <head>
   <meta charset="utf-8">
-  <title>mozGetUserMedia Stop Video Audio Stream</title>
+  <title>getUserMedia Stop Video Audio Stream</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia Stop Video Audio Stream</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">getUserMedia Stop Video Audio Stream</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <video id="testVideo"></video>
@@ -25,13 +25,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
    * ended event fired.
    */
   runTest(function () {
-    getUserMedia({video: true, audio: true}, function(stream) {
-      var testVideo = document.getElementById('testVideo');
-      var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
+    getUserMedia({video: true, audio: true})
+      .then(stream => {
+        var testVideo = document.getElementById('testVideo');
+        var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
 
-      streamPlayback.playMediaWithStreamStop(false, SimpleTest.finish,
-        generateErrorCallback());
-    }, generateErrorCallback());
+        return streamPlayback.playMediaWithStreamStop(false);
+      })
+      .then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>

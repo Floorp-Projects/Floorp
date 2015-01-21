@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
 -->
 <head>
   <meta charset="utf-8">
-  <title>mozGetUserMedia Basic Video Test</title>
+  <title>getUserMedia Basic Video Test</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Video Test</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">getUserMedia Basic Video Test</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <video id="testVideo"></video>
@@ -27,17 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
     var testVideo = document.getElementById('testVideo');
     var constraints = {video: true};
 
-    getUserMedia(constraints, function (aStream) {
+    getUserMedia(constraints).then(aStream => {
       checkMediaStreamTracks(constraints, aStream);
 
       var playback = new LocalMediaStreamPlayback(testVideo, aStream);
-      playback.playMedia(false, function () {
-        aStream.stop();
-        SimpleTest.finish();
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
-
+      return playback.playMedia(false);
+    }).then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>
