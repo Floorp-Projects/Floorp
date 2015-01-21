@@ -1469,7 +1469,7 @@ void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
                                    nsRenderingContext* aCtx)
 {
   static_cast<nsComboboxControlFrame*>(mFrame)
-    ->PaintFocus(*aCtx, ToReferenceFrame());
+    ->PaintFocus(*aCtx->GetDrawTarget(), ToReferenceFrame());
 }
 
 void
@@ -1511,7 +1511,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
-void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
+void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget,
                                         nsPoint aPt)
 {
   /* Do we need to do anything? */
@@ -1519,13 +1519,12 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || sFocused != this)
     return;
 
-  gfxContext* gfx = aRenderingContext.ThebesContext();
+  int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
-  gfx->Save();
   nsRect clipRect = mDisplayFrame->GetRect() + aPt;
-  gfx->Clip(NSRectToSnappedRect(clipRect,
-                                PresContext()->AppUnitsPerDevPixel(),
-                                *aRenderingContext.GetDrawTarget()));
+  aDrawTarget.PushClipRect(NSRectToSnappedRect(clipRect,
+                                               appUnitsPerDevPixel,
+                                               aDrawTarget));
 
   // REVIEW: Why does the old code paint mDisplayFrame again? We've
   // already painted it in the children above. So clipping it here won't do
@@ -1540,12 +1539,10 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   clipRect.width -= onePixel;
   clipRect.height -= onePixel;
-  Rect r =
-    ToRect(nsLayoutUtils::RectToGfxRect(clipRect, PresContext()->AppUnitsPerDevPixel()));
-  StrokeSnappedEdgesOfRect(r, *aRenderingContext.GetDrawTarget(),
-                           color, strokeOptions);
+  Rect r = ToRect(nsLayoutUtils::RectToGfxRect(clipRect, appUnitsPerDevPixel));
+  StrokeSnappedEdgesOfRect(r, aDrawTarget, color, strokeOptions);
 
-  gfx->Restore();
+  aDrawTarget.PopClip();
 }
 
 //---------------------------------------------------------
