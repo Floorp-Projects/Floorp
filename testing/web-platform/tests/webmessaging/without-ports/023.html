@@ -6,7 +6,7 @@
 <script>
 var Parent = function(){
   this.c = "xyz";
-}; 
+};
 
 var Child = function(a, b) {
   this.a = a;
@@ -14,7 +14,7 @@ var Child = function(a, b) {
 };
 Child.prototype = new Parent;
 
-async_test(function() { 
+async_test(function() {
   var obj = new Child(1, 2);
   var ch = new MessageChannel();
   ch.port1.onmessage = this.step_func(function(e) {
