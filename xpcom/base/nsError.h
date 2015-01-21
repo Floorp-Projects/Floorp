@@ -136,7 +136,7 @@
    * #define's for compatibility with old code.
    */
   #include "ErrorListCxxDefines.h"
-#elif defined(MOZ_HAVE_CXX11_ENUM_TYPE)
+#elif defined(__cplusplus)
   typedef enum tag_nsresult : uint32_t
   {
     #undef ERROR
@@ -144,21 +144,6 @@
     #include "ErrorList.h"
     #undef ERROR
   } nsresult;
-#elif defined(__cplusplus)
-  /*
-   * We're C++ in an old compiler lacking enum classes *and* typed enums (likely
-   * gcc < 4.5.1 as clang/MSVC have long supported one or both), or compiler
-   * support is unknown.  Yet nsresult must have unsigned 32-bit representation.
-   * So just make it a typedef, and implement the constants with global consts.
-   */
-  typedef uint32_t nsresult;
-
-  const nsresult
-  #undef ERROR
-  #define ERROR(key, val) key = val
-  #include "ErrorList.h"
-  #undef ERROR
-    ;
 #else
   /*
    * C doesn't have any way to fix the type underlying an enum, and enum
