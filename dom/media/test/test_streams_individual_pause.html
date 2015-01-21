@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1073406. Pausing a video element should not pause another playing the same stream.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id="video1" autoplay></video>
+<video id="video2" autoplay></video>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var getVideoImagePixelData = function(v) {
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+  var imgData = ctx.getImageData(canvas.width/2, canvas.height/2, 1, 1).data;
+  return "r" + imgData[0] +
+         "g" + imgData[1] +
+         "b" + imgData[2] +
+         "a" + imgData[3];
+}
+
+navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
+  var stream = stream;
+  var video1 = document.getElementById('video1');
+  var video2 = document.getElementById('video2');
+
+  var src = URL.createObjectURL(stream);
+  video1.src = src;
+  video2.src = src;
+
+  video1.onplaying = () => video1.pause();
+
+  var v1PausedImageData;
+  var v2PausedImageData;
+
+  video1.onpause = function() {
+    v1PausedImageData = getVideoImagePixelData(video1);
+    v2PausedImageData = getVideoImagePixelData(video2);
+    v2TimesToTest = 3;
+    video2.ontimeupdate = function() {
+      if (getVideoImagePixelData(video2) === v2PausedImageData) {
+        // Wait until video2 has progressed it's video.
+        // If it doesn't, we'll time out and fail.
+        info("video2 has not progressed. Waiting.");
+        return;
+      }
+
+      if (--v2TimesToTest > 0) {
+        // Wait for a while to be sure video1 would have gotten a frame
+        // if it is playing.
+        info("video2 progressed OK");
+        return;
+      }
+
+      video2.ontimeupdate = null;
+      ok(true, "video2 is playing");
+      isnot(video1.currentTime, video2.currentTime,
+            "v1 and v2 should not be at the same currentTime");
+      is(v1PausedImageData, getVideoImagePixelData(video1),
+         "video1 video frame should not have updated since video1 paused");
+      SimpleTest.finish();
+    };
+  };
+}, function(error) {
+  ok(false, "getUserMedia should not fail, got " + error.name);
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

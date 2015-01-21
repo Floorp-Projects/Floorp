@@ -83,19 +83,14 @@ HTMLLabelElement::Focus(ErrorResult& aError)
 }
 
 static bool
-EventTargetIn(WidgetEvent* aEvent, nsIContent* aChild, nsIContent* aStop)
+InInteractiveHTMLContent(nsIContent* aContent, nsIContent* aStop)
 {
-  nsCOMPtr<nsIContent> c = do_QueryInterface(aEvent->target);
-  nsIContent *content = c;
-  while (content) {
-    if (content == aChild) {
+  nsIContent* content = aContent;
+  while (content && content != aStop) {
+    if (content->IsElement() &&
+        content->AsElement()->IsInteractiveHTMLContent()) {
       return true;
     }
-
-    if (content == aStop) {
-      break;
-    }
-
     content = content->GetParent();
   }
   return false;
@@ -115,10 +110,15 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     return NS_OK;
   }
 
+  nsCOMPtr<nsIContent> target = do_QueryInterface(aVisitor.mEvent->target);
+  if (InInteractiveHTMLContent(target, this)) {
+    return NS_OK;
+  }
+
   // Strong ref because event dispatch is going to happen.
   nsRefPtr<Element> content = GetLabeledElement();
 
-  if (content && !EventTargetIn(aVisitor.mEvent, content, this)) {
+  if (content) {
     mHandlingEvent = true;
     switch (aVisitor.mEvent->message) {
       case NS_MOUSE_BUTTON_DOWN:

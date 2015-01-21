@@ -184,12 +184,20 @@ var ctrlTab = {
     return this.keys = keys;
   },
   _selectedIndex: 0,
-  get selected () this._selectedIndex < 0 ?
-                    document.activeElement :
-                    this.previews.item(this._selectedIndex),
-  get isOpen   () this.panel.state == "open" || this.panel.state == "showing" || this._timer,
-  get tabCount () this.tabList.length,
-  get tabPreviewCount () Math.min(this.maxTabPreviews, this.tabCount),
+  get selected () {
+    return this._selectedIndex < 0 ?
+             document.activeElement :
+             this.previews.item(this._selectedIndex);
+  },
+  get isOpen () {
+    return this.panel.state == "open" || this.panel.state == "showing" || this._timer;
+  },
+  get tabCount () {
+    return this.tabList.length;
+  },
+  get tabPreviewCount () {
+    return Math.min(this.maxTabPreviews, this.tabCount);
+  },
 
   get tabList () {
     return this._recentlyUsedTabs;

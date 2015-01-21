@@ -41,14 +41,6 @@
   -  on a button that remvoes all the recordings. -->
 <!ENTITY profilerUI.clearButton "Clear">
 
-<!-- LOCALIZATION NOTE (profilerUI.invertTree): This is the label shown next to
-  -  a checkbox that inverts and un-inverts the profiler's call tree. -->
-<!ENTITY profilerUI.invertTree "Invert Call Tree">
-
-<!-- LOCALIZATION NOTE (profilerUI.invertTree.tooltiptext): This is the tooltip
-  -  for the tree-inverting checkbox's label.  -->
-<!ENTITY profilerUI.invertTree.tooltiptext "Inverting the call tree displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
-
 <!-- LOCALIZATION NOTE (profilerUI.table.*): These strings are displayed
   -  in the call tree headers for a recording. -->
 <!ENTITY profilerUI.table.totalDuration   "Total Time (ms)">
@@ -61,3 +53,16 @@
 <!-- LOCALIZATION NOTE (profilerUI.newtab.tooltiptext): The tooltiptext shown
   -  on the "+" (new tab) button for a profile when a selection is available. -->
 <!ENTITY profilerUI.newtab.tooltiptext "Add new tab from selection">
+
+<!-- LOCALIZATION NOTE (profilerUI.options.tooltiptext): This is the tooltip
+  -  for the options button. -->
+<!ENTITY profilerUI.options.tooltiptext "Configure performance preferences.">
+
+<!-- LOCALIZATION NOTE (profilerUI.invertTree): This is the label shown next to
+  -  a checkbox that inverts and un-inverts the profiler's call tree. -->
+<!ENTITY profilerUI.invertTree "Invert Call Tree">
+
+<!-- LOCALIZATION NOTE (profilerUI.invertTree.tooltiptext): This is the tooltip
+  -  for the tree-inverting checkbox's label.  -->
+<!ENTITY profilerUI.invertTree.tooltiptext "Inverting the call tree displays the profiled call paths starting from the youngest frames and expanding out to the older frames.">
+
