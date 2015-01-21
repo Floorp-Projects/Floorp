@@ -7,6 +7,23 @@
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+// Step 1.
+test(function() {
+    assert_throws("TypeMismatchError", function() {
+        window.crypto.getRandomValues(new Float32Array(6))
+    }, "Float32Array")
+    assert_throws("TypeMismatchError", function() {
+        window.crypto.getRandomValues(new Float64Array(6))
+    }, "Float64Array")
+
+    assert_throws("TypeMismatchError", function() {
+        window.crypto.getRandomValues(new Float32Array(65537))
+    }, "Float32Array (too long)")
+    assert_throws("TypeMismatchError", function() {
+        window.crypto.getRandomValues(new Float64Array(65537))
+    }, "Float64Array (too long)")
+}, "Float arrays")
+
 test(function() {
     assert_equals(window.crypto.getRandomValues(new Int8Array(8)).constructor,
                   Int8Array, "crypto.getRandomValues(new Int8Array(8))")
