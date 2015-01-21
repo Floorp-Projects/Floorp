@@ -18,12 +18,13 @@
 #include "jerror.h"
 
 #include "gfxPlatform.h"
+#include "mozilla/Endian.h"
 
 extern "C" {
 #include "iccjpeg.h"
 }
 
-#if defined(IS_BIG_ENDIAN)
+#if MOZ_BIG_ENDIAN
 #define MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB JCS_EXT_XRGB
 #else
 #define MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB JCS_EXT_BGRX
