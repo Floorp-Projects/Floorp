@@ -5,10 +5,20 @@ task:
   metadata:
     source: http://todo.com/soon
     owner: {{owner}}
-  workerType: b2gtest
+  workerType: test-c4-2xlarge
   provisionerId: aws-provisioner
   schedulerId: task-graph-scheduler
+
+  scopes:
+    - 'docker-worker:image:{{#docker_image}}tester{{/docker_image}}'
+    - 'queue:define-task:aws-provisioner/test-c4-2xlarge'
+    - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
 
   payload:
     image: '{{#docker_image}}tester{{/docker_image}}'
     maxRunTime: 3600
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster

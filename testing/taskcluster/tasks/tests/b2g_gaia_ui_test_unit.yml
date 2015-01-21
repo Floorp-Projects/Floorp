@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Gaia Python Integration Unit Tests
+    name: '[TC] Gaia Python Integration Unit Tests'
     description: Gaia Python Integration Unit Tests run {{chunk}}
 
   scopes:
@@ -37,6 +37,6 @@ task:
   extra:
     treeherder:
       groupName: Gaia Python Integration Tests
-      groupSymbol: Gip
+      groupSymbol: tc-Gip
       symbol: 'u'
       productName: b2g

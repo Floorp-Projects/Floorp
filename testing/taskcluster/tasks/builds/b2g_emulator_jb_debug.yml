@@ -4,7 +4,15 @@ task:
   scopes:
     - 'docker-worker:cache:build-emulator-jb-debug'
   metadata:
-    name: B2G Emulator JB Debug
+    name: '[TC] B2G Emulator JB Debug'
+
+  extra:
+    treeherder:
+      collection:
+        debug: true
+      machine:
+        platform: b2g-emu-jb
+
   payload:
     cache:
       build-emulator-jb-debug: /home/worker/object-folder

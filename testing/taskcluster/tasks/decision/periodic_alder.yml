@@ -5,7 +5,7 @@ task:
   metadata:
     source: '{{source}}'
     owner: '{{owner}}'
-    name: Periodic task for testing.
+    name: 'Taskcluster decision task for {{project}}'
     description: |
       Decision task for testing purposes for alder.
 

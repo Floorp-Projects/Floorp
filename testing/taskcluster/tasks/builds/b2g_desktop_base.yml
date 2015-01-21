@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/build.yml'
 task:
   metadata:
-    name: B2G Desktop {{build_type}}
+    name: "[TC] B2G Desktop {{build_type}}"
     description: B2G Desktop {{build_type}}
 
   scopes:
@@ -25,6 +25,12 @@ task:
       - bin/build-b2g-desktop.sh
 
   extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      machine:
+        platform: b2g-linux64
+
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
