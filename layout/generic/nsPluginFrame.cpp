@@ -1003,7 +1003,11 @@ nsPluginFrame::NotifyPluginReflowObservers()
 void
 nsPluginFrame::DidSetWidgetGeometry()
 {
-#ifndef XP_MACOSX
+#if defined(XP_MACOSX)
+  if (mInstanceOwner) {
+    mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintEnable);
+  }
+#else
   if (!mWidget && mInstanceOwner) {
     // UpdateWindowVisibility will notify the plugin of position changes
     // by updating the NPWindow and calling NPP_SetWindow/AsyncSetWindow.
@@ -1014,8 +1018,6 @@ nsPluginFrame::DidSetWidgetGeometry()
       nsLayoutUtils::IsPopup(nsLayoutUtils::GetDisplayRootFrame(this)) ||
       !mNextConfigurationBounds.IsEmpty());
   }
-#else
-  CallSetWindow(false);
 #endif
 }
 
