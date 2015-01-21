@@ -26,8 +26,8 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HIGHLIGHTER_STYLESHEET_URI = "resource://gre/modules/devtools/server/actors/highlighter.css";
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 // How high is the nodeinfobar
-const NODE_INFOBAR_HEIGHT = 40; //px
-const NODE_INFOBAR_ARROW_SIZE = 15; // px
+const NODE_INFOBAR_HEIGHT = 34; //px
+const NODE_INFOBAR_ARROW_SIZE = 9; // px
 // Width of boxmodelhighlighter guides
 const GUIDE_STROKE_WIDTH = 1;
 // The minimum distance a line should be before it has an arrow marker-end
