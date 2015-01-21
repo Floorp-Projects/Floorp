@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     'TestSnappyStreams.cpp',
     'TestStorageStream.cpp',
     'TestStrings.cpp',
+    'TestSynchronization.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
