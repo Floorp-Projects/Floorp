@@ -7,6 +7,7 @@
 #include "nsTPriorityQueue.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "gtest/gtest.h"
 
 template<class T, class Compare>
 void
@@ -16,32 +17,13 @@ CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
   nsTPriorityQueue<T, Compare> copy(aQueue);
 
   for (uint32_t i = 0; i < aSequenceLength; i++) {
-    if (copy.IsEmpty()) {
-      printf("Number of elements in the queue is too short by %d.\n",
-          aSequenceLength - i);
-      exit(-1);
-    }
+    EXPECT_FALSE(copy.IsEmpty());
 
     T pop = copy.Pop();
-    if (pop != aExpectedSequence[i]) {
-      printf("Unexpected value in pop sequence at position %d\n", i);
-      printf("  Sequence:");
-      for (size_t j = 0; j < aSequenceLength; j++) {
-        printf(" %d", aExpectedSequence[j]);
-        if (j == i) {
-          printf("**");
-        }
-      }
-      printf("\n            ** Got %d instead\n", pop);
-      exit(-1);
-    }
+    EXPECT_EQ(pop, aExpectedSequence[i]);
   }
 
-  if (!copy.IsEmpty()) {
-    printf("Number of elements in the queue is too long by %d.\n",
-        copy.Length());
-    exit(-1);
-  }
+  EXPECT_TRUE(copy.IsEmpty());
 }
 
 template<class A>
@@ -52,11 +34,11 @@ public:
   }
 };
 
-int main()
+TEST(PriorityQueue, Main)
 {
   nsTPriorityQueue<int> queue;
 
-  NS_ABORT_IF_FALSE(queue.IsEmpty(), "Queue not initially empty");
+  EXPECT_TRUE(queue.IsEmpty());
 
   queue.Push(8);
   queue.Push(6);
@@ -64,9 +46,9 @@ int main()
   queue.Push(2);
   queue.Push(10);
   queue.Push(6);
-  NS_ABORT_IF_FALSE(queue.Top() == 2, "Unexpected queue top");
-  NS_ABORT_IF_FALSE(queue.Length() == 6, "Unexpected queue length");
-  NS_ABORT_IF_FALSE(!queue.IsEmpty(), "Queue empty when populated");
+  EXPECT_EQ(queue.Top(), 2);
+  EXPECT_EQ(queue.Length(), 6u);
+  EXPECT_FALSE(queue.IsEmpty());
   int expected[] = { 2, 4, 6, 6, 8, 10 };
   CheckPopSequence(queue, expected, sizeof(expected) / sizeof(expected[0]));
 
@@ -77,7 +59,7 @@ int main()
   CheckPopSequence(queue2, expected, sizeof(expected) / sizeof(expected[0]));
 
   queue.Clear();
-  NS_ABORT_IF_FALSE(queue.IsEmpty(), "Queue not emptied by Clear");
+  EXPECT_TRUE(queue.IsEmpty());
 
   // try same sequence with a max heap
   nsTPriorityQueue<int, MaxCompare<int> > max_queue;
@@ -87,10 +69,8 @@ int main()
   max_queue.Push(2);
   max_queue.Push(10);
   max_queue.Push(6);
-  NS_ABORT_IF_FALSE(max_queue.Top() == 10, "Unexpected queue top for max heap");
+  EXPECT_EQ(max_queue.Top(), 10);
   int expected_max[] = { 10, 8, 6, 6, 4, 2 };
   CheckPopSequence(max_queue, expected_max,
       sizeof(expected_max) / sizeof(expected_max[0]));
-
-  return 0;
 }

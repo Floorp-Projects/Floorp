@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     'TestEncoding.cpp',
     'TestExpirationTracker.cpp',
     'TestPipes.cpp',
+    'TestPriorityQueue.cpp',
     'TestSnappyStreams.cpp',
     'TestStrings.cpp',
 ]
