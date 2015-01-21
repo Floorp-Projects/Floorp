@@ -1873,7 +1873,7 @@ nsFtpState::Init(nsFtpChannel *channel)
         do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
 
     if (pps && !mChannel->ProxyInfo()) {
-        pps->AsyncResolve(mChannel->URI(), 0, this,
+        pps->AsyncResolve(mChannel, 0, this,
                           getter_AddRefs(mProxyRequest));
     }
 
@@ -2361,7 +2361,7 @@ nsFtpState::CloseWithStatus(nsresult status)
 }
 
 static nsresult
-CreateHTTPProxiedChannel(nsIURI *uri, nsIProxyInfo *pi, nsIChannel **newChannel)
+CreateHTTPProxiedChannel(nsIChannel *channel, nsIProxyInfo *pi, nsIChannel **newChannel)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
@@ -2377,11 +2377,14 @@ CreateHTTPProxiedChannel(nsIURI *uri, nsIProxyInfo *pi, nsIChannel **newChannel)
     if (NS_FAILED(rv))
         return rv;
 
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+
     return pph->NewProxiedChannel(uri, pi, 0, nullptr, newChannel);
 }
 
 NS_IMETHODIMP
-nsFtpState::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
+nsFtpState::OnProxyAvailable(nsICancelable *request, nsIChannel *channel,
                              nsIProxyInfo *pi, nsresult status)
 {
   mProxyRequest = nullptr;
@@ -2398,7 +2401,7 @@ nsFtpState::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
         LOG(("FTP:(%p) Configured to use a HTTP proxy channel\n", this));
 
         nsCOMPtr<nsIChannel> newChannel;
-        if (NS_SUCCEEDED(CreateHTTPProxiedChannel(uri, pi,
+        if (NS_SUCCEEDED(CreateHTTPProxiedChannel(channel, pi,
                                                   getter_AddRefs(newChannel))) &&
             NS_SUCCEEDED(mChannel->Redirect(newChannel,
                                             nsIChannelEventSink::REDIRECT_INTERNAL,
