@@ -22,36 +22,46 @@ SoftwareVsyncSource::~SoftwareVsyncSource()
 }
 
 SoftwareDisplay::SoftwareDisplay()
-  : mCurrentTaskMonitor("SoftwareVsyncCurrentTaskMonitor")
+  : mVsyncEnabled(false)
+  , mCurrentTaskMonitor("SoftwareVsyncCurrentTaskMonitor")
 {
   // Mimic 60 fps
   MOZ_ASSERT(NS_IsMainThread());
   const double rate = 1000 / 60.0;
   mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
-  EnableVsync();
 }
 
 void
 SoftwareDisplay::EnableVsync()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mozilla::MonitorAutoLock lock(mCurrentTaskMonitor);
-  mVsyncEnabled = true;
-  MOZ_ASSERT(!mVsyncThread->IsRunning());
-  MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start software vsync thread");
-  mCurrentVsyncTask = NewRunnableMethod(this,
-      &SoftwareDisplay::NotifyVsync,
-      mozilla::TimeStamp::Now());
-  mVsyncThread->message_loop()->PostTask(FROM_HERE, mCurrentVsyncTask);
+  if (IsVsyncEnabled()) {
+    return;
+  }
+
+  { // scope lock
+    mozilla::MonitorAutoLock lock(mCurrentTaskMonitor);
+    mVsyncEnabled = true;
+    MOZ_ASSERT(!mVsyncThread->IsRunning());
+    MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start software vsync thread");
+    mCurrentVsyncTask = NewRunnableMethod(this,
+        &SoftwareDisplay::NotifyVsync,
+        mozilla::TimeStamp::Now());
+    mVsyncThread->message_loop()->PostTask(FROM_HERE, mCurrentVsyncTask);
+  }
 }
 
 void
 SoftwareDisplay::DisableVsync()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!IsVsyncEnabled()) {
+    return;
+  }
+
   MOZ_ASSERT(mVsyncThread->IsRunning());
-  { // Scope lock
+  { // scope lock
     mozilla::MonitorAutoLock lock(mCurrentTaskMonitor);
     mVsyncEnabled = false;
     if (mCurrentVsyncTask) {

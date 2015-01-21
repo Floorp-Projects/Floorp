@@ -32,6 +32,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // Element
+  virtual bool IsInteractiveHTMLContent() const MOZ_OVERRIDE
+  {
+    return true;
+  }
+
   // nsIDOMHTMLLabelElement
   NS_DECL_NSIDOMHTMLLABELELEMENT
 

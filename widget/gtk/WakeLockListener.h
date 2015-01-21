@@ -30,7 +30,8 @@ public:
   static WakeLockListener* GetSingleton(bool aCreate = true);
   static void Shutdown();
 
-  nsresult Callback(const nsAString& topic, const nsAString& state);
+  virtual nsresult Callback(const nsAString& topic,
+                            const nsAString& state) MOZ_OVERRIDE;
 
 private:
   WakeLockListener();

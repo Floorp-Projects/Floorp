@@ -1477,7 +1477,7 @@ void
 nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                                         const nsAString& aType,
                                         bool aLengthComputable,
-                                        uint64_t aLoaded, uint64_t aTotal)
+                                        int64_t aLoaded, int64_t aTotal)
 {
   NS_ASSERTION(aTarget, "null target");
   NS_ASSERTION(!aType.IsEmpty(), "missing event type");
@@ -1497,7 +1497,7 @@ nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   init.mCancelable = false;
   init.mLengthComputable = aLengthComputable;
   init.mLoaded = aLoaded;
-  init.mTotal = (aTotal == UINT64_MAX) ? 0 : aTotal;
+  init.mTotal = (aTotal == -1) ? 0 : aTotal;
 
   nsRefPtr<ProgressEvent> event =
     ProgressEvent::Constructor(aTarget, aType, init);
@@ -2781,9 +2781,14 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     nsAutoCString defaultContentType;
     nsCOMPtr<nsIInputStream> postDataStream;
 
+    uint64_t size_u64;
     rv = GetRequestBody(aVariant, aBody, getter_AddRefs(postDataStream),
-                        &mUploadTotal, defaultContentType, charset);
+                        &size_u64, defaultContentType, charset);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // make sure it fits within js MAX_SAFE_INTEGER
+    mUploadTotal =
+      net::InScriptableRange(size_u64) ? static_cast<int64_t>(size_u64) : -1;
 
     if (postDataStream) {
       // If no content type header was set by the client, we set it to
@@ -3588,18 +3593,18 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
 }
 
 NS_IMETHODIMP
-nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, uint64_t aProgress, uint64_t aProgressMax)
+nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, int64_t aProgress, int64_t aProgressMax)
 {
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
   bool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
   // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
   // So, try to remove the headers, if possible.
-  bool lengthComputable = (aProgressMax != UINT64_MAX);
+  bool lengthComputable = (aProgressMax != -1);
   if (upload) {
-    uint64_t loaded = aProgress;
+    int64_t loaded = aProgress;
     if (lengthComputable) {
-      uint64_t headerSize = aProgressMax - mUploadTotal;
+      int64_t headerSize = aProgressMax - mUploadTotal;
       loaded -= headerSize;
     }
     mUploadLengthComputable = lengthComputable;

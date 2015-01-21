@@ -126,7 +126,7 @@ protected:
                               const uint64_t& offset,
                               const uint32_t& count) MOZ_OVERRIDE;
   bool RecvOnStopRequest(const nsresult& statusCode, const ResourceTimingStruct& timing) MOZ_OVERRIDE;
-  bool RecvOnProgress(const uint64_t& progress, const uint64_t& progressMax) MOZ_OVERRIDE;
+  bool RecvOnProgress(const int64_t& progress, const int64_t& progressMax) MOZ_OVERRIDE;
   bool RecvOnStatus(const nsresult& status) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& status) MOZ_OVERRIDE;
   bool RecvRedirect1Begin(const uint32_t& newChannel,
@@ -148,7 +148,7 @@ private:
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
   void DoOnStatus(nsIRequest* aRequest, nsresult status);
-  void DoOnProgress(nsIRequest* aRequest, uint64_t progress, uint64_t progressMax);
+  void DoOnProgress(nsIRequest* aRequest, int64_t progress, int64_t progressMax);
   void DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
                          uint64_t offset, uint32_t count);
   void DoPreOnStopRequest(nsresult aStatus);
@@ -212,7 +212,7 @@ private:
                           const uint64_t& offset,
                           const uint32_t& count);
   void OnStopRequest(const nsresult& channelStatus, const ResourceTimingStruct& timing);
-  void OnProgress(const uint64_t& progress, const uint64_t& progressMax);
+  void OnProgress(const int64_t& progress, const int64_t& progressMax);
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
