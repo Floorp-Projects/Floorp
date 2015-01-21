@@ -187,7 +187,7 @@ public:
     MOZ_ASSERT(mActor);
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(mActor);
     if (mActor->IsActorDestroyed()) {
@@ -221,7 +221,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel()
+  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
   {
     mActor = nullptr;
     return NS_OK;
@@ -247,13 +247,13 @@ public:
     MOZ_ASSERT(mBC);
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
     mBC->Shutdown();
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel()
+  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
   {
     mBC = nullptr;
     return NS_OK;
@@ -278,7 +278,7 @@ public:
     MOZ_ASSERT(mActor);
   }
 
-  NS_IMETHODIMP Run()
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(mActor);
     if (!mActor->IsActorDestroyed()) {
@@ -287,7 +287,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel()
+  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
   {
     mActor = nullptr;
     return NS_OK;
