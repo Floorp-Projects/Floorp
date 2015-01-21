@@ -9,7 +9,7 @@
 /**
  * An extension of nsIProtocolProxyService
  */
-[scriptable, uuid(bb52e571-4a0e-4363-83d0-52034910dd14)]
+[scriptable, uuid(b2e5b2c0-e21e-4845-b336-be6d60a38951)]
 interface nsIProtocolProxyService2 : nsIProtocolProxyService
 {
   /**
@@ -18,21 +18,12 @@ interface nsIProtocolProxyService2 : nsIProtocolProxyService
    */
   void reloadPAC();
 
-  /**
-   * This exists so Java(tm) can migrate to an asynchronous interface.
-   * Do not use this unless you are the plugin interface, and even then you
-   * ought to feel horribly guilty because you will create main thread jank.
-   *
-   * No documentation - it is deprecated!
-   **/
-  nsIProxyInfo deprecatedBlockingResolve(in nsIURI aURI, in unsigned long aFlags);
-
     /**
      * This method is identical to asyncResolve() except it may execute the
      * callback function immediately (i.e from the stack of asyncResolve2()) if
      * it is immediately ready to run. The nsICancelable return value will be
      * null in that case.
      */
-  nsICancelable asyncResolve2(in nsIURI aURI, in unsigned long aFlags,
+  nsICancelable asyncResolve2(in nsIChannel aChannel, in unsigned long aFlags,
                               in nsIProtocolProxyCallback aCallback);
 };
