@@ -769,20 +769,10 @@ MarionetteServerConnection.prototype = {
    * @return Sandbox
    *        Returns the sandbox
    */
-  createExecuteSandbox: function MDA_createExecuteSandbox(aWindow, marionette, args, specialPowers, command_id) {
-    try {
-      args = this.curBrowser.elementManager.convertWrappedArguments(args, aWindow);
-    }
-    catch(e) {
-      this.sendError(e.message, e.code, e.stack, command_id);
-      return;
-    }
-
+  createExecuteSandbox: function MDA_createExecuteSandbox(aWindow, marionette, specialPowers, command_id) {
     let _chromeSandbox = new Cu.Sandbox(aWindow,
        { sandboxPrototype: aWindow, wantXrays: false, sandboxName: ''});
     _chromeSandbox.global = _chromeSandbox;
-    _chromeSandbox.__namedArgs = this.curBrowser.elementManager.applyNamedArgs(args);
-    _chromeSandbox.__marionetteParams = args;
     _chromeSandbox.testUtils = utils;
 
     marionette.exports.forEach(function(fn) {
@@ -807,6 +797,20 @@ MarionetteServerConnection.prototype = {
     }
 
     return _chromeSandbox;
+  },
+
+  /**
+   * Apply arguments sent from the client to the current (possibly reused) execution
+   * sandbox.
+   */
+  applyArgumentsToSandbox: function MDA_applyArgumentsToSandbox(win, sandbox, args, command_id) {
+    try {
+      sandbox.__marionetteParams = this.curBrowser.elementManager.convertWrappedArguments(args, win);
+    }
+    catch(e) {
+      this.sendError(e.message, e.code, e.stack, command_id);
+    }
+    sandbox.__namedArgs = this.curBrowser.elementManager.applyNamedArgs(args);
   },
 
   /**
@@ -916,19 +920,20 @@ MarionetteServerConnection.prototype = {
     }
 
 
+    let curWindow = this.getCurrentWindow();
     if (!this.sandbox || newSandbox) {
-      let curWindow = this.getCurrentWindow();
       let marionette = new Marionette(this, curWindow, "chrome",
                                       this.marionetteLog,
                                       timeout, this.heartbeatCallback, this.testName);
       this.sandbox = this.createExecuteSandbox(curWindow,
                                                marionette,
-                                               aRequest.parameters.args,
                                                aRequest.parameters.specialPowers,
                                                command_id);
       if (!this.sandbox)
         return;
     }
+    this.applyArgumentsToSandbox(curWindow, this.sandbox, aRequest.parameters.args,
+                                 command_id)
 
     try {
       this.sandbox.finish = function chromeSandbox_finish() {
@@ -1138,12 +1143,13 @@ MarionetteServerConnection.prototype = {
                                       timeout, this.heartbeatCallback, this.testName);
       this.sandbox = this.createExecuteSandbox(curWindow,
                                                marionette,
-                                               aRequest.parameters.args,
                                                aRequest.parameters.specialPowers,
                                                command_id);
       if (!this.sandbox)
         return;
     }
+    this.applyArgumentsToSandbox(curWindow, this.sandbox, aRequest.parameters.args,
+                                 command_id)
 
     try {
 
