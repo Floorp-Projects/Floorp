@@ -153,6 +153,35 @@ MozNDEFRecord::MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf)
 }
 
 void
+MozNDEFRecord::GetAsURI(nsAString& aRetVal)
+{
+  aRetVal.SetIsVoid(true);
+  if (mTnf != TNF::Well_known) {
+    return;
+  }
+
+  JS::AutoCheckCannotGC nogc;
+  uint8_t* typeData = JS_GetUint8ArrayData(mType, nogc);
+  const char* uVal = RTDValues::strings[static_cast<uint32_t>(RTD::U)].value;
+  if (typeData[0] != uVal[0]) {
+    return;
+  }
+
+  uint32_t payloadLen;
+  uint8_t* payloadData;
+  js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &payloadData);
+  uint8_t id = payloadData[0];
+  if (id >= static_cast<uint8_t>(WellKnownURIPrefix::EndGuard_)) {
+    return;
+  }
+
+  using namespace mozilla::dom::WellKnownURIPrefixValues;
+  aRetVal.AssignASCII(strings[id].value);
+  aRetVal.Append(NS_ConvertUTF8toUTF16(
+    nsDependentCSubstring(reinterpret_cast<char*>(&payloadData[1]), payloadLen - 1)));
+}
+
+void
 MozNDEFRecord::InitType(JSContext* aCx, const Optional<Uint8Array>& aType)
 {
   if (!aType.WasPassed()) {
