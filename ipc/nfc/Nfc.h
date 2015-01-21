@@ -9,7 +9,7 @@
 #ifndef mozilla_ipc_Nfc_h
 #define mozilla_ipc_Nfc_h 1
 
-#include <mozilla/ipc/UnixSocket.h>
+#include <mozilla/ipc/StreamSocket.h>
 
 namespace mozilla {
 namespace ipc {
@@ -20,13 +20,15 @@ public:
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData) = 0;
 };
 
-class NfcConsumer MOZ_FINAL : public mozilla::ipc::UnixSocketConsumer
+class NfcConsumer MOZ_FINAL : public mozilla::ipc::StreamSocket
 {
 public:
   NfcConsumer(NfcSocketListener* aListener);
 
   void Shutdown();
   bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
+
+  ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
 
 private:
   void ReceiveSocketData(
