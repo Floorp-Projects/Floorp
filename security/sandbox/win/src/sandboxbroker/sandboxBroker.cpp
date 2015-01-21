@@ -171,6 +171,12 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
     mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
+  sandbox::MitigationFlags mitigations =
+    sandbox::MITIGATION_DEP;
+
+  result = mPolicy->SetProcessMitigations(mitigations);
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.
