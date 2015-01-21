@@ -85,6 +85,9 @@ browser.jar:
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/session-restore.svg                  (../shared/incontent-icons/session-restore.svg)
+  skin/classic/browser/tab-crashed.svg                      (../shared/incontent-icons/tab-crashed.svg)
+  skin/classic/browser/welcome-back.svg                     (../shared/incontent-icons/welcome-back.svg)
   skin/classic/browser/reader-mode-16.png             (../shared/reader/reader-mode-16.png)
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-64.png
