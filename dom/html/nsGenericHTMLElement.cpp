@@ -1791,6 +1791,15 @@ nsGenericHTMLElement::IsLabelable() const
          Tag() == nsGkAtoms::meter;
 }
 
+bool
+nsGenericHTMLElement::IsInteractiveHTMLContent() const
+{
+  return Tag() == nsGkAtoms::details ||
+         Tag() == nsGkAtoms::embed ||
+         Tag() == nsGkAtoms::keygen ||
+         HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+}
+
 already_AddRefed<UndoManager>
 nsGenericHTMLElement::GetUndoManager()
 {

@@ -440,9 +440,9 @@ nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result)
 
 void
 nsHttpPipeline::OnTransportStatus(nsITransport* transport,
-                                  nsresult status, uint64_t progress)
+                                  nsresult status, int64_t progress)
 {
-    LOG(("nsHttpPipeline::OnStatus [this=%p status=%x progress=%llu]\n",
+    LOG(("nsHttpPipeline::OnStatus [this=%p status=%x progress=%lld]\n",
         this, status, progress));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);

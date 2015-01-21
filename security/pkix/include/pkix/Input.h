@@ -269,9 +269,9 @@ public:
     input = end;
   }
 
-  void SkipToEnd(/*out*/ Input& skipped)
+  Result SkipToEnd(/*out*/ Input& skipped)
   {
-    (void) Skip(static_cast<size_t>(end - input), skipped);
+    return Skip(static_cast<size_t>(end - input), skipped);
   }
 
   Result EnsureLength(Input::size_type len)

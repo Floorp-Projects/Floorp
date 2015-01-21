@@ -6832,7 +6832,29 @@ class CGMethodCall(CGThing):
                                       argConversionStartsAt=argConversionStartsAt,
                                       isConstructor=isConstructor)
 
-        signatures = method.signatures()
+        def filteredSignatures(signatures, descriptor):
+            def typeExposedInWorkers(type):
+                return (not type.isGeckoInterface() or
+                        type.inner.isExternal() or
+                        type.inner.isExposedInAnyWorker())
+            if descriptor.workers:
+                # Filter out the signatures that should not be exposed in a
+                # worker.  The IDL parser enforces the return value being
+                # exposed correctly, but we have to check the argument types.
+                assert all(typeExposedInWorkers(sig[0]) for sig in signatures)
+                signatures = filter(
+                    lambda sig: all(typeExposedInWorkers(arg.type)
+                                    for arg in sig[1]),
+                    signatures)
+                if len(signatures) == 0:
+                    raise TypeError("%s.%s has a worker binding with no "
+                                    "signatures that take arguments exposed in "
+                                    "workers." %
+                                    (descriptor.interface.identifier.name,
+                                     method.identifier.name))
+            return signatures
+
+        signatures = filteredSignatures(method.signatures(), descriptor)
         if len(signatures) == 1:
             # Special case: we can just do a per-signature method call
             # here for our one signature and not worry about switching
@@ -6859,14 +6881,17 @@ class CGMethodCall(CGThing):
 
         argCountCases = []
         for argCountIdx, argCount in enumerate(allowedArgCounts):
-            possibleSignatures = method.signaturesForArgCount(argCount)
+            possibleSignatures = filteredSignatures(
+                method.signaturesForArgCount(argCount),
+                descriptor)
 
             # Try to optimize away cases when the next argCount in the list
             # will have the same code as us; if it does, we can fall through to
             # that case.
             if argCountIdx+1 < len(allowedArgCounts):
-                nextPossibleSignatures = \
-                    method.signaturesForArgCount(allowedArgCounts[argCountIdx+1])
+                nextPossibleSignatures = filteredSignatures(
+                    method.signaturesForArgCount(allowedArgCounts[argCountIdx+1]),
+                    descriptor)
             else:
                 nextPossibleSignatures = None
             if possibleSignatures == nextPossibleSignatures:

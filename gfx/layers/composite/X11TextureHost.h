@@ -41,7 +41,7 @@ public:
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "X11TextureHost"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "X11TextureHost"; }
 #endif
 
 protected:

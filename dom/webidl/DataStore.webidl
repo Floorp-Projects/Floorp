@@ -57,7 +57,7 @@ interface DataStore : EventTarget {
 };
 
 partial interface DataStore {
-  [ChromeOnly, Throws]
+  [ChromeOnly, Throws, Exposed=Window]
   void setDataStoreImpl(DataStoreImpl store);
 };
 
@@ -82,7 +82,7 @@ interface DataStoreCursor {
 };
 
 partial interface DataStoreCursor {
-  [ChromeOnly]
+  [ChromeOnly, Exposed=Window]
   void setDataStoreCursorImpl(DataStoreCursorImpl cursor);
 };
 

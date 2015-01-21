@@ -985,7 +985,7 @@ int64_t nsDocLoader::GetMaxTotalProgress()
 ////////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt, 
-                                      uint64_t aProgress, uint64_t aProgressMax)
+                                      int64_t aProgress, int64_t aProgressMax)
 {
   int64_t progressDelta = 0;
 
@@ -996,8 +996,8 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
     // Update info->mCurrentProgress before we call FireOnStateChange,
     // since that can make the "info" pointer invalid.
     int64_t oldCurrentProgress = info->mCurrentProgress;
-    progressDelta = int64_t(aProgress) - oldCurrentProgress;
-    info->mCurrentProgress = int64_t(aProgress);
+    progressDelta = aProgress - oldCurrentProgress;
+    info->mCurrentProgress = aProgress;
 
     // suppress sending STATE_TRANSFERRING if this is upload progress (see bug 240053)
     if (!info->mUploading && (int64_t(0) == oldCurrentProgress) && (int64_t(0) == info->mMaxProgress)) {
@@ -1017,13 +1017,13 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
 
       //
       // This is the first progress notification for the entry.  If
-      // (aMaxProgress > 0) then the content-length of the data is known,
+      // (aMaxProgress != -1) then the content-length of the data is known,
       // so update mMaxSelfProgress...  Otherwise, set it to -1 to indicate
       // that the content-length is no longer known.
       //
-      if (uint64_t(aProgressMax) != UINT64_MAX) {
-        mMaxSelfProgress  += int64_t(aProgressMax);
-        info->mMaxProgress = int64_t(aProgressMax);
+      if (aProgressMax != -1) {
+        mMaxSelfProgress  += aProgressMax;
+        info->mMaxProgress = aProgressMax;
       } else {
         mMaxSelfProgress   =  int64_t(-1);
         info->mMaxProgress =  int64_t(-1);

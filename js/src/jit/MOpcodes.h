@@ -102,6 +102,7 @@ namespace jit {
     _(Unbox)                                                                \
     _(GuardObject)                                                          \
     _(GuardString)                                                          \
+    _(PolyInlineGuard)                                                      \
     _(AssertRange)                                                          \
     _(ToDouble)                                                             \
     _(ToFloat32)                                                            \

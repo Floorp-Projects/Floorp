@@ -48,9 +48,11 @@ public:
 
 private:
   virtual ~CompositorVsyncDispatcher();
+  void ObserveVsync(bool aEnable);
 
   Mutex mCompositorObserverLock;
   nsRefPtr<VsyncObserver> mCompositorVsyncObserver;
+  bool mDidShutdown;
 };
 
 // Dispatch vsync event to ipc actor parent and chrome RefreshTimer.
@@ -77,6 +79,8 @@ public:
 
 private:
   virtual ~RefreshTimerVsyncDispatcher();
+  void UpdateVsyncStatus();
+  bool NeedsVsync();
 
   Mutex mRefreshTimersLock;
   nsRefPtr<VsyncObserver> mParentRefreshTimer;
