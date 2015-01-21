@@ -1415,6 +1415,17 @@ void
 RasterImage::WantDecodedFrames(const nsIntSize& aSize, uint32_t aFlags,
                                bool aShouldSyncNotify)
 {
+  if (mDownscaleDuringDecode) {
+    // We're about to decode again, which may mean that some of the previous
+    // sizes we've decoded at aren't useful anymore. We can allow them to
+    // expire from the cache by unlocking them here. When the decode finishes,
+    // it will send an invalidation that will cause all instances of this image
+    // to redraw. If this image is locked, any surfaces that are still useful
+    // will become locked again when LookupFrame touches them, and the remainder
+    // will eventually expire.
+    SurfaceCache::UnlockSurfaces(ImageKey(this));
+  }
+
   if (aShouldSyncNotify) {
     // We can sync notify, which means we can also sync decode.
     if (aFlags & FLAG_SYNC_DECODE) {

@@ -27,42 +27,45 @@ public:
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame, uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect);
+                                  const nsRect& aDirtyRect) MOZ_OVERRIDE;
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                             uint8_t aWidgetType, nsIntMargin* aResult);
+                             uint8_t aWidgetType,
+                             nsIntMargin* aResult) MOZ_OVERRIDE;
 
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
-                                              nsIFrame* aFrame,
-                                              uint8_t aWidgetType,
-                                              nsIntMargin* aResult);
+                                nsIFrame* aFrame,
+                                uint8_t aWidgetType,
+                                nsIntMargin* aResult) MOZ_OVERRIDE;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
-                                               nsIFrame* aFrame,
-                                               uint8_t aWidgetType,
-                                               nsRect* aOverflowRect);
+                                 nsIFrame* aFrame,
+                                 uint8_t aWidgetType,
+                                 nsRect* aOverflowRect) MOZ_OVERRIDE;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
                                   nsIFrame* aFrame, uint8_t aWidgetType,
-                                  nsIntSize* aResult, bool* aIsOverridable);
+                                  nsIntSize* aResult,
+                                  bool* aIsOverridable) MOZ_OVERRIDE;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint);
+                                nsIAtom* aAttribute,
+                                bool* aShouldRepaint) MOZ_OVERRIDE;
 
-  NS_IMETHOD ThemeChanged();
+  NS_IMETHOD ThemeChanged() MOZ_OVERRIDE;
 
   NS_IMETHOD_(bool) ThemeSupportsWidget(nsPresContext* aPresContext,
-                                          nsIFrame* aFrame,
-                                          uint8_t aWidgetType);
+                                        nsIFrame* aFrame,
+                                        uint8_t aWidgetType) MOZ_OVERRIDE;
 
-  NS_IMETHOD_(bool) WidgetIsContainer(uint8_t aWidgetType);
+  NS_IMETHOD_(bool) WidgetIsContainer(uint8_t aWidgetType) MOZ_OVERRIDE;
   
   NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
 
-  bool ThemeNeedsComboboxDropmarker();
+  virtual bool ThemeNeedsComboboxDropmarker() MOZ_OVERRIDE;
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                             uint8_t aWidgetType);
+                                             uint8_t aWidgetType) MOZ_OVERRIDE;
 
   nsNativeThemeGTK();
 

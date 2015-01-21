@@ -8,7 +8,7 @@ var loop = loop || {};
 loop.OTSdkDriver = (function() {
 
   var sharedActions = loop.shared.actions;
-  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
 
   /**
    * This is a wrapper for the OT sdk. It is used to translate the SDK events into
@@ -160,7 +160,7 @@ loop.OTSdkDriver = (function() {
       if (error) {
         console.error("Failed to complete connection", error);
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-          reason: FAILURE_REASONS.COULD_NOT_CONNECT
+          reason: FAILURE_DETAILS.COULD_NOT_CONNECT
         }));
         return;
       }
@@ -197,10 +197,10 @@ loop.OTSdkDriver = (function() {
       var reason;
       switch (event.reason) {
         case "networkDisconnected":
-          reason = FAILURE_REASONS.NETWORK_DISCONNECTED;
+          reason = FAILURE_DETAILS.NETWORK_DISCONNECTED;
           break;
         case "forceDisconnected":
-          reason = FAILURE_REASONS.EXPIRED_OR_INVALID;
+          reason = FAILURE_DETAILS.EXPIRED_OR_INVALID;
           break;
         default:
           // Other cases don't need to be handled.
@@ -278,7 +278,7 @@ loop.OTSdkDriver = (function() {
       event.preventDefault();
 
       this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-        reason: FAILURE_REASONS.MEDIA_DENIED
+        reason: FAILURE_DETAILS.MEDIA_DENIED
       }));
     },
 

@@ -44,23 +44,21 @@ exports.FrameNode.isContent = isContent;
  *
  * @param object threadSamples
  *        The raw samples array received from the backend.
- * @param boolean contentOnly [optional]
- *        @see ThreadNode.prototype.insert
- * @param number beginAt [optional]
- *        @see ThreadNode.prototype.insert
- * @param number endAt [optional]
- *        @see ThreadNode.prototype.insert
- * @param boolean invert [optional]
- *        @see ThreadNode.prototype.insert
+ * @param object options
+ *        Additional supported options, @see ThreadNode.prototype.insert
+ *          - number startTime [optional]
+ *          - number endTime [optional]
+ *          - boolean contentOnly [optional]
+ *          - boolean invertTree [optional]
  */
-function ThreadNode(threadSamples, contentOnly, beginAt, endAt, invert) {
+function ThreadNode(threadSamples, options = {}) {
   this.samples = 0;
   this.duration = 0;
   this.calls = {};
   this._previousSampleTime = 0;
 
   for (let sample of threadSamples) {
-    this.insert(sample, contentOnly, beginAt, endAt, invert);
+    this.insert(sample, options);
   }
 }
 
@@ -72,19 +70,18 @@ ThreadNode.prototype = {
    *        The { frames, time } sample, containing an array of frames and
    *        the time the sample was taken. This sample is assumed to be older
    *        than the most recently inserted one.
-   * @param boolean contentOnly [optional]
-   *        Specifies if platform frames shouldn't be taken into consideration.
-   * @param number beginAt [optional]
-   *        The earliest sample to start at (in milliseconds).
-   * @param number endAt [optional]
-   *        The latest sample to end at (in milliseconds).
-   * @param boolean inverted [optional]
-   *        Specifies if the call tree should be inverted (youngest -> oldest
-   *        frames).
+   * @param object options [optional]
+   *        Additional supported options:
+   *          - number startTime: the earliest sample to start at (in milliseconds)
+   *          - number endTime: the latest sample to end at (in milliseconds)
+   *          - boolean contentOnly: if platform frames shouldn't be used
+   *          - boolean invertTree: if the call tree should be inverted
    */
-  insert: function(sample, contentOnly = false, beginAt = 0, endAt = Infinity, inverted = false) {
+  insert: function(sample, options = {}) {
+    let startTime = options.startTime || 0;
+    let endTime = options.endTime || Infinity;
     let sampleTime = sample.time;
-    if (!sampleTime || sampleTime < beginAt || sampleTime > endAt) {
+    if (!sampleTime || sampleTime < startTime || sampleTime > endTime) {
       return;
     }
 
@@ -92,17 +89,20 @@ ThreadNode.prototype = {
 
     // Filter out platform frames if only content-related function calls
     // should be taken into consideration.
-    if (contentOnly) {
+    if (options.contentOnly) {
       // The (root) node is not considered a content function, it'll be removed.
       sampleFrames = sampleFrames.filter(isContent);
     } else {
       // Remove the (root) node manually.
       sampleFrames = sampleFrames.slice(1);
     }
+    // If no frames remain after filtering, then this is a leaf node, no need
+    // to continue.
     if (!sampleFrames.length) {
       return;
     }
-    if (inverted) {
+    // Invert the tree after filtering, if preferred.
+    if (options.invertTree) {
       sampleFrames.reverse();
     }
 

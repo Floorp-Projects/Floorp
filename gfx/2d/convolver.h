@@ -186,6 +186,17 @@ void BGRAConvolve2D(const unsigned char* source_data,
                     int output_byte_row_stride,
                     unsigned char* output);
 
+void ConvolveHorizontally(const unsigned char* src_data,
+                          const ConvolutionFilter1D& filter,
+                          unsigned char* out_row,
+                          bool has_alpha, bool use_sse2);
+
+void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
+                        int filter_length,
+                        unsigned char* const* source_data_rows,
+                        int pixel_width, unsigned char* out_row,
+                        bool has_alpha, bool use_sse2);
+
 }  // namespace skia
 
 #endif  // SKIA_EXT_CONVOLVER_H_
