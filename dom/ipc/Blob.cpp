@@ -3337,7 +3337,6 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   ParentBlobConstructorParams params(blobParams);
 
   if (NS_WARN_IF(!aManager->SendPBlobConstructor(actor, params))) {
-    BlobChild::Destroy(actor);
     return nullptr;
   }
 
@@ -3402,7 +3401,6 @@ BlobChild::SendSliceConstructor(ChildManagerType* aManager,
     return newActor;
   }
 
-  BlobChild::Destroy(newActor);
   return nullptr;
 }
 
@@ -3888,7 +3886,6 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
 
   ChildBlobConstructorParams params(id, blobParams);
   if (NS_WARN_IF(!aManager->SendPBlobConstructor(actor, params))) {
-    BlobParent::Destroy(actor);
     return nullptr;
   }
 
@@ -4051,7 +4048,6 @@ BlobParent::SendSliceConstructor(
     return newActor;
   }
 
-  BlobParent::Destroy(newActor);
   return nullptr;
 }
 
