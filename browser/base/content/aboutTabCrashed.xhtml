@@ -23,24 +23,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://global/skin/in-content/info-pages.css"/>
+    <link rel="stylesheet" type="text/css" media="all"
           href="chrome://browser/skin/aboutTabCrashed.css"/>
   </head>
 
   <body dir="&locale.dir;">
-    <div id="error-box">
-      <p id="main-error-msg">&tabCrashed.header;</p>
-      <p id="helper-error-msg">&tabCrashed.message;</p>
-    </div>
+    <div class="container">
+      <div class="title">
+        <h1 class="title-text">&tabCrashed.header;</h1>
+      </div>
+      <p>&tabCrashed.message;</p>
 
-    <div id="report-box">
-      <input type="checkbox" id="checkSendReport" checked="checked"/>
-      <label for="checkSendReport">&tabCrashed.checkSendReport;</label>
-    </div>
+      <div id="report-box">
+        <input type="checkbox" id="checkSendReport" checked="checked"/>
+        <label for="checkSendReport">&tabCrashed.checkSendReport;</label>
+      </div>
 
-    <div id="button-box">
-      <button id="tryAgain">&tabCrashed.tryAgain;</button>
+      <div class="button-container">
+        <button id="tryAgain">&tabCrashed.tryAgain;</button>
+      </div>
     </div>
   </body>
-
   <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutTabCrashed.js"/>
 </html>
