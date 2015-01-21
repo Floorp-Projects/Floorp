@@ -38,7 +38,9 @@
 # define access _access
 
 # define putenv _putenv
-# define stat _stat
+# if _MSC_VER < 1900
+#  define stat _stat
+# endif
 # define DELETE_DIR L"tobedeleted"
 # define CALLBACK_BACKUP_EXT L".moz-callback"
 
@@ -87,6 +89,7 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 # define NS_trmdir _wrmdir
 # define NS_tstat _wstat
 # define NS_tlstat _wstat // No symlinks on Windows
+# define NS_tstat_t _stat
 # define NS_tstrcat wcscat
 # define NS_tstrcmp wcscmp
 # define NS_tstricmp wcsicmp
@@ -130,6 +133,7 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 # define NS_trename rename
 # define NS_trmdir rmdir
 # define NS_tstat stat
+# define NS_tstat_t stat
 # define NS_tlstat lstat
 # define NS_tstrcat strcat
 # define NS_tstrcmp strcmp

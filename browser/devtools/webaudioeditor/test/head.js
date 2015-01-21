@@ -318,6 +318,12 @@ function mouseOver (win, element) {
   EventUtils.sendMouseEvent({ type: "mouseover" }, element, win);
 }
 
+function command (button) {
+  let ev = button.ownerDocument.createEvent("XULCommandEvent");
+  ev.initCommandEvent("command", true, true, button.ownerDocument.defaultView, 0, false, false, false, false, null);
+  button.dispatchEvent(ev);
+}
+
 function isVisible (element) {
   return !element.getAttribute("hidden");
 }

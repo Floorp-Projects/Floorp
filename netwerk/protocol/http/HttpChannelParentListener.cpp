@@ -47,6 +47,9 @@ NS_IMPL_ISUPPORTS(HttpChannelParentListener,
 NS_IMETHODIMP
 HttpChannelParentListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
+  MOZ_RELEASE_ASSERT(mRedirectChannelId == 0,
+    "The redirect must be finished before OnStartRequest is called!");
+
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
     "Cannot call OnStartRequest if suspended for diversion!");
 
@@ -87,6 +90,9 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
                                             uint64_t aOffset,
                                             uint32_t aCount)
 {
+  MOZ_RELEASE_ASSERT(mRedirectChannelId == 0,
+    "The redirect must be finished before OnDataAvaialble is called!");
+
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
     "Cannot call OnDataAvailable if suspended for diversion!");
 

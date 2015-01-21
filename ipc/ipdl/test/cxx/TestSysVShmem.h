@@ -24,8 +24,8 @@ public:
 
 protected:
     virtual bool RecvTake(
-            Shmem& mem,
-            Shmem& unsafe,
+            Shmem&& mem,
+            Shmem&& unsafe,
             const size_t& expectedSize) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
@@ -47,8 +47,8 @@ public:
 
 protected:
     virtual bool RecvGive(
-            Shmem& mem,
-            Shmem& unsafe,
+            Shmem&& mem,
+            Shmem&& unsafe,
             const size_t& expectedSize) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE

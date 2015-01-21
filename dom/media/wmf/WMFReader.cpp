@@ -17,6 +17,7 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "gfxWindowsPlatform.h"
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -107,6 +108,10 @@ WMFReader::InitializeDXVA()
   if (backend != LayersBackend::LAYERS_D3D9 &&
       backend != LayersBackend::LAYERS_D3D10 &&
       backend != LayersBackend::LAYERS_D3D11) {
+    return false;
+  }
+
+  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
     return false;
   }
 

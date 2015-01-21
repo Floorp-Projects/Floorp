@@ -16,7 +16,7 @@ import android.util.Log;
 public class GeckoConnectivityReceiver extends BroadcastReceiver {
     /*
      * Keep the below constants in sync with
-     * http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl
+     * http://mxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
      */
     private static final String LINK_DATA_UP = "up";
     private static final String LINK_DATA_DOWN = "down";
