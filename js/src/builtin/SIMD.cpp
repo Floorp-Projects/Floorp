@@ -384,9 +384,10 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
       case SimdTypeDescr::TYPE_FLOAT64: {
         double *mem = reinterpret_cast<double*>(result->typedMem());
         for (unsigned i = 0; i < 2; i++) {
-            if (!ToNumber(cx, args[i], &mem[i]))
+            if (!ToNumber(cx, args.get(i), &mem[i]))
                 return false;
         }
+        break;
       }
     }
     args.rval().setObject(*result);
