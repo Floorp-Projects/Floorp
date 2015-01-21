@@ -30,11 +30,31 @@
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-options-menupopup">
+      <menuitem id="option-show-platform-data"
+                type="checkbox"
+                data-pref="show-platform-data"
+                label="&profilerUI.showPlatformData;"
+                tooltiptext="&profilerUI.showPlatformData.tooltiptext;"/>
+      <menuitem id="option-enable-memory"
+                type="checkbox"
+                data-pref="enable-memory"
+                label="&profilerUI.enableMemory;"
+                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
+      <menuitem id="option-enable-framerate"
+                type="checkbox"
+                data-pref="enable-framerate"
+                label="&profilerUI.enableFramerate;"
+                tooltiptext="&profilerUI.enableFramerate.tooltiptext;"/>
       <menuitem id="option-invert-call-tree"
                 type="checkbox"
                 data-pref="invert-call-tree"
                 label="&profilerUI.invertTree;"
                 tooltiptext="&profilerUI.invertTree.tooltiptext;"/>
+      <menuitem id="option-flatten-tree-recursion"
+                type="checkbox"
+                data-pref="flatten-tree-recursion"
+                label="&profilerUI.flattenTreeRecursion;"
+                tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
     </menupopup>
   </popupset>
 
