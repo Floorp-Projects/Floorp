@@ -2171,12 +2171,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     nsNPAPIPluginInstance *inst =
       (nsNPAPIPluginInstance *) (npp ? npp->ndata : nullptr);
     double scaleFactor = inst ? inst->GetContentsScaleFactor() : 1.0;
-    // Work around a Flash bug that causes long hangs when Flash tries to
-    // display its camera and microphone access dialog while it thinks HiDPI
-    // support is available. This is Adobe bug ADBE 3921114, which should get
-    // fixed in a future release. When this happens we'll no longer need this
-    // workaround. See QUIRK_FLASH_HIDE_HIDPI_SUPPORT in PluginModuleChild.h,
-    // and also bug 1118615.
+    // Work around a Flash ActionScript bug that causes long hangs if
+    // Flash thinks HiDPI support is available. Adobe is tracking this as
+    // ADBE 3921114. If this turns out to be Adobe's fault and they fix it,
+    // we'll no longer need this quirk. See QUIRK_FLASH_HIDE_HIDPI_SUPPORT
+    // in PluginModuleChild.h, and also bug 1118615.
     if (inst) {
       const char *mimeType;
       inst->GetMIMEType(&mimeType);
