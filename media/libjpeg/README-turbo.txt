@@ -81,131 +81,6 @@ JPEG images:
 There is no significant performance advantage to either API when both are used
 to perform similar operations.
 
-======================
-Installation Directory
-======================
-
-This document assumes that libjpeg-turbo will be installed in the default
-directory (/opt/libjpeg-turbo on Un*x and Mac systems and
-c:\libjpeg-turbo[-gcc][64] on Windows systems.  If your installation of
-libjpeg-turbo resides in a different directory, then adjust the instructions
-accordingly.
-
-=============================
-Replacing libjpeg at Run Time
-=============================
-
-Un*x
-----
-
-If a Un*x application is dynamically linked with libjpeg, then you can replace
-libjpeg with libjpeg-turbo at run time by manipulating LD_LIBRARY_PATH.
-For instance:
-
-  [Using libjpeg]
-  > time cjpeg <vgl_5674_0098.ppm >vgl_5674_0098.jpg
-  real  0m0.392s
-  user  0m0.074s
-  sys   0m0.020s
-
-  [Using libjpeg-turbo]
-  > export LD_LIBRARY_PATH=/opt/libjpeg-turbo/{lib}:$LD_LIBRARY_PATH
-  > time cjpeg <vgl_5674_0098.ppm >vgl_5674_0098.jpg
-  real  0m0.109s
-  user  0m0.029s
-  sys   0m0.010s
-
-({lib} = lib32 or lib64, depending on whether you wish to use the 32-bit or the
-64-bit version of libjpeg-turbo.)
-
-System administrators can also replace the libjpeg symlinks in /usr/lib* with
-links to the libjpeg-turbo dynamic library located in /opt/libjpeg-turbo/{lib}.
-This will effectively accelerate every application that uses the libjpeg
-dynamic library on the system.
-
-Windows
--------
-
-If a Windows application is dynamically linked with libjpeg, then you can
-replace libjpeg with libjpeg-turbo at run time by backing up the application's
-copy of jpeg62.dll, jpeg7.dll, or jpeg8.dll (assuming the application has its
-own local copy of this library) and copying the corresponding DLL from
-libjpeg-turbo into the application's install directory.  The official
-libjpeg-turbo binary packages only provide jpeg62.dll.  If the application uses
-jpeg7.dll or jpeg8.dll instead, then it will be necessary to build
-libjpeg-turbo from source (see "libjpeg v7 and v8 API/ABI Emulation" below.)
-
-The following information is specific to the official libjpeg-turbo binary
-packages for Visual C++:
-
--- jpeg62.dll requires the Visual C++ 2008 C run-time DLL (msvcr90.dll).
-msvcr90.dll ships with more recent versions of Windows, but users of older
-Windows releases can obtain it from the Visual C++ 2008 Redistributable
-Package, which is available as a free download from Microsoft's web site.
-
--- Features of the libjpeg API that require passing a C run-time structure,
-such as a file handle, from an application to the library will probably not
-work with jpeg62.dll, unless the application is also built to use the Visual
-C++ 2008 C run-time DLL.  In particular, this affects jpeg_stdio_dest() and
-jpeg_stdio_src().
-
-Mac
----
-
-Mac applications typically embed their own copies of the libjpeg dylib inside
-the (hidden) application bundle, so it is not possible to globally replace
-libjpeg on OS X systems.  Replacing the application's version of the libjpeg
-dylib would generally involve copying libjpeg.*.dylib from libjpeg-turbo into
-the appropriate place in the application bundle and using install_name_tool to
-repoint the libjpeg-turbo dylib to its new directory.  This requires an
-advanced knowledge of OS X and would not survive an upgrade or a re-install of
-the application.  Thus, it is not recommended for most users.
-
-========================================
-Using libjpeg-turbo in Your Own Programs
-========================================
-
-For the most part, libjpeg-turbo should work identically to libjpeg, so in
-most cases, an application can be built against libjpeg and then run against
-libjpeg-turbo.  On Un*x systems and Cygwin, you can build against libjpeg-turbo
-instead of libjpeg by setting
-
-  CPATH=/opt/libjpeg-turbo/include
-  and
-  LIBRARY_PATH=/opt/libjpeg-turbo/{lib}
-
-({lib} = lib32 or lib64, depending on whether you are building a 32-bit or a
-64-bit application.)
-
-If using MinGW, then set
-
-  CPATH=/c/libjpeg-turbo-gcc[64]/include
-  and
-  LIBRARY_PATH=/c/libjpeg-turbo-gcc[64]/lib
-
-Building against libjpeg-turbo is useful, for instance, if you want to build an
-application that leverages the libjpeg-turbo colorspace extensions (see below.)
-On Un*x systems, you would still need to manipulate LD_LIBRARY_PATH or create
-appropriate symlinks to use libjpeg-turbo at run time.  On such systems, you
-can pass -R /opt/libjpeg-turbo/{lib} to the linker to force the use of
-libjpeg-turbo at run time rather than libjpeg (also useful if you want to
-leverage the colorspace extensions), or you can link against the libjpeg-turbo
-static library.
-
-To force a Un*x or MinGW application to link against the static version of
-libjpeg-turbo, you can use the following linker options:
-
-  -Wl,-Bstatic -ljpeg -Wl,-Bdynamic
-
-On OS X, simply add /opt/libjpeg-turbo/lib/libjpeg.a to the linker command
-line.
-
-To build Visual C++ applications using libjpeg-turbo, add
-c:\libjpeg-turbo[64]\include to the system or user INCLUDE environment
-variable and c:\libjpeg-turbo[64]\lib to the system or user LIB environment
-variable, and then link against either jpeg.lib (to use the DLL version of
-libjpeg-turbo) or jpeg-static.lib (to use the static version of libjpeg-turbo.)
-
 =====================
 Colorspace Extensions
 =====================
@@ -265,7 +140,7 @@ compression and decompression structures.  Unfortunately, due to the exposed
 nature of those structures, extending them also necessitated breaking backward
 ABI compatibility with previous libjpeg releases.  Thus, programs that were
 built to use libjpeg v7 or v8 did not work with libjpeg-turbo, since it is
-based on the libjpeg v6b code base.  Although libjpeg v7 and v8 are still not
+based on the libjpeg v6b code base.  Although libjpeg v7 and v8 are not
 as widely used as v6b, enough programs (including a few Linux distros) made
 the switch that there was a demand to emulate the libjpeg v7 and v8 ABIs
 in libjpeg-turbo.  It should be noted, however, that this feature was added
@@ -419,10 +294,25 @@ details.
 
 For the most part, libjpeg-turbo should produce identical output to libjpeg
 v6b.  The one exception to this is when using the floating point DCT/IDCT, in
-which case the outputs of libjpeg v6b and libjpeg-turbo are not guaranteed to
-be identical (the accuracy of the floating point DCT/IDCT is constant when
-using libjpeg-turbo's SIMD extensions, but otherwise, it can depend heavily on
-the compiler and compiler settings.)
+which case the outputs of libjpeg v6b and libjpeg-turbo can differ for the
+following reasons:
+
+-- The SSE/SSE2 floating point DCT implementation in libjpeg-turbo is ever so
+   slightly more accurate than the implementation in libjpeg v6b, but not by
+   any amount perceptible to human vision (generally in the range of 0.01 to
+   0.08 dB gain in PNSR.)
+-- When not using the SIMD extensions, libjpeg-turbo uses the more accurate
+   (and slightly faster) floating point IDCT algorithm introduced in libjpeg
+   v8a as opposed to the algorithm used in libjpeg v6b.  It should be noted,
+   however, that this algorithm basically brings the accuracy of the floating
+   point IDCT in line with the accuracy of the slow integer IDCT.  The floating
+   point DCT/IDCT algorithms are mainly a legacy feature, and they do not
+   produce significantly more accuracy than the slow integer algorithms (to put
+   numbers on this, the typical difference in PNSR between the two algorithms
+   is less than 0.10 dB, whereas changing the quality level by 1 in the upper
+   range of the quality scale is typically more like a 1.0 dB difference.)
+-- When not using the SIMD extensions, then the accuracy of the floating point
+   DCT/IDCT can depend on the compiler and compiler settings.
 
 While libjpeg-turbo does emulate the libjpeg v8 API/ABI, under the hood, it is
 still using the same algorithms as libjpeg v6b, so there are several specific
@@ -430,16 +320,14 @@ cases in which libjpeg-turbo cannot be expected to produce the same output as
 libjpeg v8:
 
 -- When decompressing using scaling factors of 1/2 and 1/4, because libjpeg v8
-   implements those scaling algorithms a bit differently than libjpeg v6b does,
-   and libjpeg-turbo's SIMD extensions are based on the libjpeg v6b behavior.
+   implements those scaling algorithms differently than libjpeg v6b does, and
+   libjpeg-turbo's SIMD extensions are based on the libjpeg v6b behavior.
 
 -- When using chrominance subsampling, because libjpeg v8 implements this
    with its DCT/IDCT scaling algorithms rather than with a separate
-   downsampling/upsampling algorithm.
-
--- When using the floating point IDCT, for the reasons stated above and also
-   because the floating point IDCT algorithm was modified in libjpeg v8a to
-   improve accuracy.
+   downsampling/upsampling algorithm.  In our testing, the subsampled/upsampled
+   output of libjpeg v8 is less accurate than that of libjpeg v6b for this
+   reason.
 
 -- When decompressing using a scaling factor > 1 and merged (AKA "non-fancy" or
    "non-smooth") chrominance upsampling, because libjpeg v8 does not support
