@@ -91,6 +91,7 @@ public:
     return mSize;
   }
 
+  void GetAsURI(nsAString& aRetVal);
 private:
   MozNDEFRecord() = delete;
   nsRefPtr<nsPIDOMWindow> mWindow;

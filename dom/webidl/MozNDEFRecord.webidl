@@ -108,6 +108,12 @@ interface MozNDEFRecord
    */
   [Constant]
   readonly attribute unsigned long size;
+
+  /**
+   * Returns this NDEF Record as URI, return null if this record cannot be
+   * decoded as a well-known URI record.
+   */
+  DOMString? getAsURI();
 };
 
 dictionary MozNDEFRecordOptions {
