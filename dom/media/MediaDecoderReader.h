@@ -50,10 +50,15 @@ public:
     CANCELED
   };
 
-  typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason> AudioDataPromise;
-  typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason> VideoDataPromise;
-  typedef MediaPromise<int64_t, nsresult> SeekPromise;
-  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue> WaitForDataPromise;
+  typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
+  typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
+  typedef MediaPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
+
+  // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
+  // But in the current architecture it's only ever used exclusively (by MDSM),
+  // so we mark it that way to verify our assumptions. If you have a use-case
+  // for multiple WaitForData consumers, feel free to flip the exclusivity here.
+  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue, /* IsExclusive = */ true> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
