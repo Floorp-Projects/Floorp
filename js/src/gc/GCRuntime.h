@@ -608,8 +608,8 @@ class GCRuntime
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
     ArenaHeader *relocateArenas();
-    void updateAllCellPointersParallel(ArenasToUpdate &source);
-    void updateAllCellPointersSerial(MovingTracer *trc, ArenasToUpdate &source);
+    void updateAllCellPointersParallel(MovingTracer *trc);
+    void updateAllCellPointersSerial(MovingTracer *trc);
     void updatePointersToRelocatedCells();
     void releaseRelocatedArenas(ArenaHeader *relocatedList);
     void releaseRelocatedArenasWithoutUnlocking(ArenaHeader *relocatedList, const AutoLockGC& lock);

@@ -2373,13 +2373,19 @@ namespace gc {
 
 struct ArenasToUpdate
 {
-    explicit ArenasToUpdate(JSRuntime *rt);
+    enum KindsToUpdate {
+        FOREGROUND = 1,
+        BACKGROUND = 2,
+        ALL = FOREGROUND | BACKGROUND
+    };
+    ArenasToUpdate(JSRuntime *rt, KindsToUpdate kinds);
     bool done() { return initialized && arena == nullptr; }
     ArenaHeader* next();
     ArenaHeader *getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
 
   private:
     bool initialized;
+    KindsToUpdate kinds;
     GCZonesIter zone;    // Current zone to process, unless zone.done()
     unsigned kind;       // Current alloc kind to process
     ArenaHeader *arena;  // Next arena to process
@@ -2390,16 +2396,25 @@ struct ArenasToUpdate
 bool ArenasToUpdate::shouldProcessKind(unsigned kind)
 {
     MOZ_ASSERT(kind < FINALIZE_LIMIT);
-    return
-        kind != FINALIZE_FAT_INLINE_STRING &&
-        kind != FINALIZE_STRING &&
-        kind != FINALIZE_EXTERNAL_STRING &&
-        kind != FINALIZE_SYMBOL;
+    if (kind == FINALIZE_FAT_INLINE_STRING ||
+        kind == FINALIZE_STRING ||
+        kind == FINALIZE_EXTERNAL_STRING ||
+        kind == FINALIZE_SYMBOL)
+    {
+        return false;
+    }
+
+    if (kind > FINALIZE_OBJECT_LAST || js::gc::IsBackgroundFinalized(AllocKind(kind)))
+        return (kinds & BACKGROUND) != 0;
+    else
+        return (kinds & FOREGROUND) != 0;
 }
 
-ArenasToUpdate::ArenasToUpdate(JSRuntime *rt)
-  : initialized(false), zone(rt, SkipAtoms)
-{}
+ArenasToUpdate::ArenasToUpdate(JSRuntime *rt, KindsToUpdate kinds)
+  : initialized(false), kinds(kinds), zone(rt, SkipAtoms)
+{
+    MOZ_ASSERT(kinds && !(kinds & ~ALL));
+}
 
 ArenaHeader *
 ArenasToUpdate::next()
@@ -2526,20 +2541,23 @@ UpdateCellPointersTask::run()
 } // namespace js
 
 void
-GCRuntime::updateAllCellPointersParallel(ArenasToUpdate &source)
+GCRuntime::updateAllCellPointersParallel(MovingTracer *trc)
 {
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
     const size_t minTasks = 2;
     const size_t maxTasks = 8;
     unsigned taskCount = Min(Max(HelperThreadState().cpuCount / 2, minTasks),
-                             maxTasks);
+                             maxTasks) + 1;
     UpdateCellPointersTask updateTasks[maxTasks];
 
+    ArenasToUpdate fgArenas(rt, ArenasToUpdate::FOREGROUND);
+    ArenasToUpdate bgArenas(rt, ArenasToUpdate::BACKGROUND);
     AutoLockHelperThreadState lock;
     unsigned i;
-    for (i = 0; i < taskCount && !source.done(); ++i) {
-        updateTasks[i].init(rt, &source, lock);
+    for (i = 0; i < taskCount && !bgArenas.done(); ++i) {
+        ArenasToUpdate *source = i == 0 ? &fgArenas : &bgArenas;
+        updateTasks[i].init(rt, source, lock);
         startTask(updateTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS);
     }
     unsigned tasksStarted = i;
@@ -2549,9 +2567,10 @@ GCRuntime::updateAllCellPointersParallel(ArenasToUpdate &source)
 }
 
 void
-GCRuntime::updateAllCellPointersSerial(MovingTracer *trc, ArenasToUpdate &source)
+GCRuntime::updateAllCellPointersSerial(MovingTracer *trc)
 {
-    while (ArenaHeader *arena = source.next())
+    ArenasToUpdate allArenas(rt, ArenasToUpdate::ALL);
+    while (ArenaHeader *arena = allArenas.next())
         UpdateCellPointers(trc, arena);
 }
 
@@ -2580,11 +2599,10 @@ GCRuntime::updatePointersToRelocatedCells()
     // Iterate through all cells that can contain JSObject pointers to update
     // them. Since updating each cell is independent we try to parallelize this
     // as much as possible.
-    ArenasToUpdate source(rt);
     if (CanUseExtraThreads())
-        updateAllCellPointersParallel(source);
+        updateAllCellPointersParallel(&trc);
     else
-        updateAllCellPointersSerial(&trc, source);
+        updateAllCellPointersSerial(&trc);
 
     // Mark roots to update them.
     {
