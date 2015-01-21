@@ -2906,13 +2906,18 @@ js::NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
             MaybeRooted<JSObject*, allowGC>::template downcastHandle<NativeObject>(obj);
 
         bool done;
-        if (!LookupOwnPropertyInline<allowGC>(cx, nobj, id, objp, propp, &done))
+        if (!LookupOwnPropertyInline<allowGC>(cx, nobj, id, propp, &done))
             return false;
         if (!done) {
             objp.set(nullptr);
             propp.set(nullptr);
             return true;
         }
+
+        if (propp)
+            objp.set(obj);
+        else
+            objp.set(nullptr);
     }
 
     if (!propp)
