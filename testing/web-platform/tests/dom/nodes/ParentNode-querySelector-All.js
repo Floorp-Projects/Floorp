@@ -239,3 +239,17 @@ function traverse(elem, fn) {
     elem = elem.nextSibling;
   }
 }
+
+function getNodeType(node) {
+  switch (node.nodeType) {
+    case Node.DOCUMENT_NODE:
+      return "document";
+    case Node.ELEMENT_NODE:
+      return node.parentNode ? "element" : "detached";
+    case Node.DOCUMENT_FRAGMENT_NODE:
+      return "fragment";
+    default:
+      console.log("Reached unreachable code path.");
+      return "unknown"; // This should never happen.
+  }
+}

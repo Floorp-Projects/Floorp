@@ -1,6 +1,5 @@
 mediasource-addsourcebuffer.html
 mediasource-append-buffer.html
-mediasource-append-stream.html
 mediasource-appendwindow.html
 mediasource-buffered.html
 mediasource-closed.html

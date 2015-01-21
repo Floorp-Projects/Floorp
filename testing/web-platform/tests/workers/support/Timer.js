@@ -31,7 +31,7 @@ function TimeoutHandler()
     postMessage("worker");
 
     id = setTimeout("TimeoutHandler()", 10);
-    
+
     if (count >= 2)
     {
         clearTimeout(id);
