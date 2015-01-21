@@ -16,25 +16,25 @@
         function onload_test() {
             if (window.performance !== undefined && window.performance.timing !== undefined && window.performance.timing.secureConnectionStart !== undefined)
             {
-                var context = new PerformanceContext(window.performance);                
+                var context = new PerformanceContext(window.performance);
                 var optionalAttribute = "secureConnectionStart";
                 try
                 {
                     context.mark(optionalAttribute);
-                    test_true(false, 
+                    test_true(false,
                               "window.performance.mark(\"" + optionalAttribute + "\") threw an exception when " +
                               optinalAttribute + " attribute of Navigation Timing is supported.");
                 }
                 catch(e)
                 {
-                    test_true(true, 
+                    test_true(true,
                               "window.performance.mark(\"" + optionalAttribute + "\") threw an exception when " +
                               optionalAttribute + " attribute of Navigation Timing is supported.");
-                
+
                     // confirm that a SYNTAX_ERR exception is thrown and not any other exception
                     test_equals(e.code,
                                 e.SYNTAX_ERR,
-                                "window.performance.mark(\"" + optionalAttribute + "\") threw a SYNTAX_ERR when " + 
+                                "window.performance.mark(\"" + optionalAttribute + "\") threw a SYNTAX_ERR when " +
                               optionalAttribute + " attribute of Navigation Timing is supported.");
                 }
             }

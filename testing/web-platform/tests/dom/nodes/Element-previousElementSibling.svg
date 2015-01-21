@@ -8,8 +8,8 @@
 <h:script src="/resources/testharnessreport.js"/>
 
 <text x="200" y="40" font-size="25" fill="black" text-anchor="middle">Test of previousElementSibling</text>
-<text id="parentEl" x="200" y="70" font-size="20" fill="black" text-anchor="middle">The result of <tspan id="first_element_child">this test</tspan> is 
-<tspan id="middle_element_child" font-weight="bold">unknown.</tspan>  
+<text id="parentEl" x="200" y="70" font-size="20" fill="black" text-anchor="middle">The result of <tspan id="first_element_child">this test</tspan> is
+<tspan id="middle_element_child" font-weight="bold">unknown.</tspan>
 
 
 

@@ -23,10 +23,10 @@
                 catch(e)
                 {
                     test_true(true, "window.performance.mark() threw an exception when invoke without a parameter.");
-                
-                    test_equals(e.name, 
+
+                    test_equals(e.name,
                                 "TypeError",
-                                "window.performance.mark() threw a TYPE_ERR exception when invoke without a parameter."); 
+                                "window.performance.mark() threw a TYPE_ERR exception when invoke without a parameter.");
                 }
             }
             else
@@ -44,10 +44,10 @@
                 catch(e)
                 {
                     test_true(true, "window.performance.measure() threw an exception when invoke without a parameter.");
-                
-                    test_equals(e.name, 
+
+                    test_equals(e.name,
                                 "TypeError",
-                                "window.performance.measure() threw a TYPE_ERR exception when invoke without a parameter."); 
+                                "window.performance.measure() threw a TYPE_ERR exception when invoke without a parameter.");
                 }
             }
             else

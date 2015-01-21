@@ -24,13 +24,13 @@
             isOpenCalled = true;
             testOpen.done();
         }), true);
-        
+
         wsocket.addEventListener('message', testMessage.step_func(function (evt) {
             assert_equals(evt.data, data);
             wsocket.close();
             testMessage.done();
         }), true);
-        
+
         wsocket.addEventListener('close', testClose.step_func(function (evt) {
             assert_true(isOpenCalled, "WebSocket connection should be open");
             assert_equals(evt.wasClean, true, "wasClean should be true");
