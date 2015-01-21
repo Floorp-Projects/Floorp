@@ -198,7 +198,7 @@ ParentLayerCoord Axis::GetOverscroll() const {
   ParentLayerCoord result = (mOverscroll - mOverscrollOffset) / mOverscrollScale;
 
   // Assert that we return overscroll in the correct direction
-  MOZ_ASSERT((result.value * mOverscrollOffset.value) >= 0.0f);
+  MOZ_ASSERT((result.value * mFirstOverscrollAnimationSample.value) >= 0.0f);
 
   return result;
 }
