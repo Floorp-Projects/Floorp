@@ -11,12 +11,8 @@
 function getBlobContent(blob) {
   return new Promise(resolve => {
     var reader = new FileReader();
-
     // Listen for 'onloadend' which will always be called after a success or failure
-    reader.onloadend = function (event) {
-      resolve(event.target.result);
-    };
-
+    reader.onloadend = event => resolve(event.target.result);
     reader.readAsText(blob);
   });
 }
@@ -39,17 +35,11 @@ function addInitialDataChannel(chain) {
 
   chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS', [
     function PC_LOCAL_VERIFY_DATA_CHANNEL_STATE(test) {
-      return test.pcLocal.dataChannels[0].opened
-        .then(() =>
-              ok(true, test.pcLocal + " dataChannels[0] switched to 'open'"));
+      return test.pcLocal.dataChannels[0].opened;
     },
 
     function PC_REMOTE_VERIFY_DATA_CHANNEL_STATE(test) {
-      return test.pcRemote.nextDataChannel
-        .then(channel => channel.opened)
-        .then(channel =>
-              is(channel.readyState, "open",
-                 test.pcRemote + " dataChannels[0] switched to 'open'"));
+      return test.pcRemote.nextDataChannel.then(channel => channel.opened);
     }
   ]);
   chain.removeAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS');
@@ -169,7 +159,7 @@ function addInitialDataChannel(chain) {
 
     function SEND_MESSAGE_THROUGH_LAST_OPENED_CHANNEL2(test) {
       var channels = test.pcRemote.dataChannels;
-      var message = "I am the walrus; Goo goo g' joob";
+      var message = "I am the walrus; Goo goo g'joob";
 
       return test.send(message).then(result => {
         is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
