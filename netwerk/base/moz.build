@@ -4,4 +4,281 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+XPIDL_SOURCES += [
+    'mozIThirdPartyUtil.idl',
+    'nsIApplicationCache.idl',
+    'nsIApplicationCacheChannel.idl',
+    'nsIApplicationCacheContainer.idl',
+    'nsIApplicationCacheService.idl',
+    'nsIArrayBufferInputStream.idl',
+    'nsIAsyncStreamCopier.idl',
+    'nsIAsyncStreamCopier2.idl',
+    'nsIAsyncVerifyRedirectCallback.idl',
+    'nsIAuthInformation.idl',
+    'nsIAuthModule.idl',
+    'nsIAuthPrompt.idl',
+    'nsIAuthPrompt2.idl',
+    'nsIAuthPromptAdapterFactory.idl',
+    'nsIAuthPromptCallback.idl',
+    'nsIAuthPromptProvider.idl',
+    'nsIBackgroundFileSaver.idl',
+    'nsIBufferedStreams.idl',
+    'nsIByteRangeRequest.idl',
+    'nsICacheInfoChannel.idl',
+    'nsICachingChannel.idl',
+    'nsICancelable.idl',
+    'nsIChannel.idl',
+    'nsIChannelEventSink.idl',
+    'nsIChildChannel.idl',
+    'nsIClassOfService.idl',
+    'nsIContentSniffer.idl',
+    'nsICryptoFIPSInfo.idl',
+    'nsICryptoHash.idl',
+    'nsICryptoHMAC.idl',
+    'nsIDashboard.idl',
+    'nsIDashboardEventNotifier.idl',
+    'nsIDivertableChannel.idl',
+    'nsIDownloader.idl',
+    'nsIEncodedChannel.idl',
+    'nsIExternalProtocolHandler.idl',
+    'nsIFileStreams.idl',
+    'nsIFileURL.idl',
+    'nsIForcePendingChannel.idl',
+    'nsIHttpPushListener.idl',
+    'nsIIncrementalDownload.idl',
+    'nsIInputStreamChannel.idl',
+    'nsIInputStreamPump.idl',
+    'nsIIOService.idl',
+    'nsIIOService2.idl',
+    'nsILoadContextInfo.idl',
+    'nsILoadGroup.idl',
+    'nsILoadGroupChild.idl',
+    'nsIMIMEInputStream.idl',
+    'nsIMultiPartChannel.idl',
+    'nsINestedURI.idl',
+    'nsINetAddr.idl',
+    'nsINetUtil.idl',
+    'nsINetworkInterceptController.idl',
+    'nsINetworkLinkService.idl',
+    'nsINetworkPredictor.idl',
+    'nsINetworkPredictorVerifier.idl',
+    'nsINetworkProperties.idl',
+    'nsINSSErrorsService.idl',
+    'nsINullChannel.idl',
+    'nsIParentChannel.idl',
+    'nsIParentRedirectingChannel.idl',
+    'nsIPermission.idl',
+    'nsIPermissionManager.idl',
+    'nsIPrivateBrowsingChannel.idl',
+    'nsIProgressEventSink.idl',
+    'nsIPrompt.idl',
+    'nsIProtocolHandler.idl',
+    'nsIProtocolProxyCallback.idl',
+    'nsIProtocolProxyFilter.idl',
+    'nsIProtocolProxyService.idl',
+    'nsIProtocolProxyService2.idl',
+    'nsIProxiedChannel.idl',
+    'nsIProxiedProtocolHandler.idl',
+    'nsIProxyInfo.idl',
+    'nsIRandomGenerator.idl',
+    'nsIRedirectChannelRegistrar.idl',
+    'nsIRedirectHistory.idl',
+    'nsIRedirectResultListener.idl',
+    'nsIRequest.idl',
+    'nsIRequestObserver.idl',
+    'nsIRequestObserverProxy.idl',
+    'nsIResumableChannel.idl',
+    'nsISecretDecoderRing.idl',
+    'nsISecureBrowserUI.idl',
+    'nsISecurityEventSink.idl',
+    'nsISecurityInfoProvider.idl',
+    'nsISerializationHelper.idl',
+    'nsIServerSocket.idl',
+    'nsISimpleStreamListener.idl',
+    'nsISiteSecurityService.idl',
+    'nsISocketTransport.idl',
+    'nsISocketTransportService.idl',
+    'nsISpeculativeConnect.idl',
+    'nsIStandardURL.idl',
+    'nsIStreamingProtocolController.idl',
+    'nsIStreamingProtocolService.idl',
+    'nsIStreamListener.idl',
+    'nsIStreamListenerTee.idl',
+    'nsIStreamLoader.idl',
+    'nsIStreamTransportService.idl',
+    'nsISyncStreamListener.idl',
+    'nsISystemProxySettings.idl',
+    'nsIThreadRetargetableRequest.idl',
+    'nsIThreadRetargetableStreamListener.idl',
+    'nsITimedChannel.idl',
+    'nsITLSServerSocket.idl',
+    'nsITraceableChannel.idl',
+    'nsITransport.idl',
+    'nsIUDPSocket.idl',
+    'nsIUDPSocketFilter.idl',
+    'nsIUnicharStreamLoader.idl',
+    'nsIUploadChannel.idl',
+    'nsIUploadChannel2.idl',
+    'nsIURI.idl',
+    'nsIURIChecker.idl',
+    'nsIURIClassifier.idl',
+    'nsIURIWithPrincipal.idl',
+    'nsIURL.idl',
+    'nsIURLParser.idl',
+    'nsPILoadGroupInternal.idl',
+    'nsPISocketTransportService.idl',
+]
+
+if CONFIG['MOZ_TOOLKIT_SEARCH']:
+    XPIDL_SOURCES += [
+        'nsIBrowserSearchService.idl',
+    ]
+
+XPIDL_MODULE = 'necko'
+
+EXPORTS += [
+    'netCore.h',
+    'nsASocketHandler.h',
+    'nsAsyncRedirectVerifyHelper.h',
+    'nsFileStreams.h',
+    'nsMIMEInputStream.h',
+    'nsNetUtil.h',
+    'nsReadLine.h',
+    'nsStreamListenerWrapper.h',
+    'nsTemporaryFileInputStream.h',
+    'nsURIHashKey.h',
+    'nsURLHelper.h',
+    'nsURLParsers.h',
+]
+
+EXPORTS.mozilla.net += [
+    'ChannelDiverterChild.h',
+    'ChannelDiverterParent.h',
+    'Dashboard.h',
+    'DashboardTypes.h',
+    'OfflineObserver.h',
+    'ReferrerPolicy.h',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    EXPORTS += [
+        'NetStatistics.h',
+    ]
+
+UNIFIED_SOURCES += [
+    'ArrayBufferInputStream.cpp',
+    'BackgroundFileSaver.cpp',
+    'ChannelDiverterChild.cpp',
+    'ChannelDiverterParent.cpp',
+    'Dashboard.cpp',
+    'EventTokenBucket.cpp',
+    'LoadContextInfo.cpp',
+    'NetworkActivityMonitor.cpp',
+    'nsAsyncRedirectVerifyHelper.cpp',
+    'nsAsyncStreamCopier.cpp',
+    'nsAuthInformationHolder.cpp',
+    'nsBase64Encoder.cpp',
+    'nsBaseChannel.cpp',
+    'nsBaseContentStream.cpp',
+    'nsBufferedStreams.cpp',
+    'nsChannelClassifier.cpp',
+    'nsDirectoryIndexStream.cpp',
+    'nsDNSPrefetch.cpp',
+    'nsDownloader.cpp',
+    'nsFileStreams.cpp',
+    'nsIncrementalDownload.cpp',
+    'nsInputStreamChannel.cpp',
+    'nsInputStreamPump.cpp',
+    'nsIOService.cpp',
+    'nsLoadGroup.cpp',
+    'nsMediaFragmentURIParser.cpp',
+    'nsMIMEInputStream.cpp',
+    'nsNetAddr.cpp',
+    'nsNetUtil.cpp',
+    'nsPACMan.cpp',
+    'nsPreloadedStream.cpp',
+    'nsProtocolProxyService.cpp',
+    'nsProxyInfo.cpp',
+    'nsRequestObserverProxy.cpp',
+    'nsSerializationHelper.cpp',
+    'nsServerSocket.cpp',
+    'nsSimpleNestedURI.cpp',
+    'nsSimpleStreamListener.cpp',
+    'nsSimpleURI.cpp',
+    'nsSocketTransport2.cpp',
+    'nsSocketTransportService2.cpp',
+    'nsStandardURL.cpp',
+    'nsStreamListenerTee.cpp',
+    'nsStreamListenerWrapper.cpp',
+    'nsStreamLoader.cpp',
+    'nsStreamTransportService.cpp',
+    'nsSyncStreamListener.cpp',
+    'nsTemporaryFileInputStream.cpp',
+    'nsTransportUtils.cpp',
+    'nsUDPSocket.cpp',
+    'nsUnicharStreamLoader.cpp',
+    'nsURIChecker.cpp',
+    'nsURLHelper.cpp',
+    'nsURLParsers.cpp',
+    'OfflineObserver.cpp',
+    'Predictor.cpp',
+    'ProxyAutoConfig.cpp',
+    'RedirectChannelRegistrar.cpp',
+    'StreamingProtocolService.cpp',
+    'Tickler.cpp',
+    'TLSServerSocket.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+        'nsAutodialWin.cpp',
+        'nsNativeConnectionHelper.cpp',
+        'nsURLHelperWin.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    SOURCES += [
+        'nsURLHelperOSX.cpp',
+    ]
+else:
+    SOURCES += [
+        'nsURLHelperUnix.cpp',
+    ]
+
+if CONFIG['MOZ_ENABLE_QTNETWORK']:
+    SOURCES += [
+        'nsAutodialQt.cpp',
+    ]
+
+EXTRA_JS_MODULES += [
+    'NetUtil.jsm',
+]
+
+FAIL_ON_WARNINGS = True
+
+MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/netwerk/protocol/http'
+]
+
+if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
+    LOCAL_INCLUDES += [
+        '/netwerk/protocol/rtsp/controller',
+        '/netwerk/protocol/rtsp/rtsp',
+    ]
+
+if CONFIG['MOZ_ENABLE_QTNETWORK']:
+    LOCAL_INCLUDES += [
+        '/netwerk/system/qt',
+    ]
+
+if CONFIG['ENABLE_TESTS']:
+    DEFINES['PREDICTOR_TESTS'] = True
+
+if CONFIG['MOZ_ENABLE_QTNETWORK']:
+    CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']

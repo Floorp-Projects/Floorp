@@ -18,6 +18,7 @@
 #include "mp4_demuxer/DecoderData.h"
 #include "prlog.h"
 #include "gfx2DGlue.h"
+#include "gfxWindowsPlatform.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -146,6 +147,10 @@ WMFVideoMFTManager::InitializeDXVA()
       (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
        mLayersBackend != LayersBackend::LAYERS_D3D10 &&
        mLayersBackend != LayersBackend::LAYERS_D3D11)) {
+    return false;
+  }
+
+  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
     return false;
   }
 

@@ -240,7 +240,7 @@ public class GeckoAppShell
     static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
     /* Keep in sync with constants found here:
-      http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl
+      http://mxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
     */
     static public final int LINK_TYPE_UNKNOWN = 0;
     static public final int LINK_TYPE_ETHERNET = 1;

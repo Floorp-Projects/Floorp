@@ -67,7 +67,7 @@ LOCAL_INCLUDES += [
     '/extensions/cookie',
     '/js/xpconnect/loader',
     '/js/xpconnect/src',
-    '/netwerk/base/src',
+    '/netwerk/base',
     '/netwerk/cookie',
     '/view',
 ]
