@@ -28,13 +28,13 @@ using namespace mozilla::ipc;
 
 namespace {
 
-const char* NFC_SOCKET_NAME = "/dev/socket/nfcd";
+static const char NFC_SOCKET_NAME[] = "/dev/socket/nfcd";
 
 // Network port to connect to for adb forwarded sockets when doing
 // desktop development.
-const uint32_t NFC_TEST_PORT = 6400;
+static const uint32_t NFC_TEST_PORT = 6400;
 
-class SendNfcSocketDataTask : public nsRunnable
+class SendNfcSocketDataTask MOZ_FINAL : public nsRunnable
 {
 public:
   SendNfcSocketDataTask(NfcConsumer* aConsumer, UnixSocketRawData* aRawData)
@@ -49,37 +49,33 @@ public:
     if (!mConsumer ||
       mConsumer->GetConnectionStatus() != SOCKET_CONNECTED) {
       // Probably shuting down.
-      delete mRawData;
       return NS_OK;
     }
 
-    mConsumer->SendSocketData(mRawData);
+    mConsumer->SendSocketData(mRawData.forget());
     return NS_OK;
   }
 
 private:
   NfcConsumer* mConsumer;
-  UnixSocketRawData* mRawData;
+  nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
-class NfcConnector : public mozilla::ipc::UnixSocketConnector
+class NfcConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
 {
 public:
   NfcConnector()
   { }
 
-  virtual ~NfcConnector()
-  { }
-
-  virtual int Create();
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
-                          const char* aAddress);
-  virtual bool SetUp(int aFd);
-  virtual bool SetUpListenSocket(int aFd);
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
-                             nsAString& aAddrStr);
+  int Create() MOZ_OVERRIDE;
+  bool CreateAddr(bool aIsServer,
+                  socklen_t& aAddrSize,
+                  sockaddr_any& aAddr,
+                  const char* aAddress) MOZ_OVERRIDE;
+  bool SetUp(int aFd) MOZ_OVERRIDE;
+  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+  void GetSocketAddr(const sockaddr_any& aAddr,
+                     nsAString& aAddrStr) MOZ_OVERRIDE;
 };
 
 int
