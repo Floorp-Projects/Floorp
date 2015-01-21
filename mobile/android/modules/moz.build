@@ -27,9 +27,21 @@ EXTRA_JS_MODULES += [
     'SharedPreferences.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
+    'WebappManager.jsm',
     'WebappManagerWorker.js',
 ]
 
+for var in ('ANDROID_PACKAGE_NAME', 'MOZ_APP_VERSION'):
+    DEFINES[var] = CONFIG[var]
+
+for var in ('NIGHTLY_BUILD', 'RELEASE_BUILD', 'MOZ_ACCESSIBILITY',
+    'MOZILLA_OFFICIAL', 'MOZ_OFFICIAL_BRANDING', 'MOZ_SERVICES_HEALTHREPORT',
+    'MOZ_DEVICES', 'MOZ_DEVICES', 'MOZ_SAFE_BROWSING',
+    'MOZ_TELEMETRY_REPORTING', 'MOZ_WEBRTC'):
+    if CONFIG[var]:
+        DEFINES[var] = 1
+
+# Keep it this way if at all possible.
 EXTRA_PP_JS_MODULES += [
-    'WebappManager.jsm',
+    'AppConstants.jsm',
 ]

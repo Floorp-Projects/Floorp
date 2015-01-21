@@ -81,12 +81,46 @@ g.edgePath.param-connection {
 
 .nodes rect {
   stroke: var(--theme-tab-toolbar-background);
+}
+.theme-light rect {
+  fill: var(--theme-tab-toolbar-background);
+}
+.theme-dark rect {
   fill: var(--theme-toolbar-background);
 }
 
+/**
+ * Bypassed Nodes
+ */
+
+.theme-light .nodes g.bypassed rect {
+  fill: url(chrome://browser/skin/devtools/filters.svg#bypass-light);
+}
+.theme-dark .nodes g.bypassed rect {
+  fill: url(chrome://browser/skin/devtools/filters.svg#bypass-dark);
+}
+.nodes g.bypassed.selected rect {
+  stroke: var(--theme-selection-background);
+}
+
+/*
+.nodes g.bypassed text {
+  opacity: 0.8;
+}
+*/
+
+/**
+ * Selected Nodes
+ */
 .nodes g.selected rect {
   fill: var(--theme-selection-background);
 }
+
+/* Don't style bypassed nodes text different because it'd be illegible in light-theme */
+.theme-light g.selected:not(.bypassed) text {
+  fill: var(--theme-toolbar-background);
+}
+
 
 /* Text in nodes and edges */
 text {
@@ -100,9 +134,6 @@ text {
   fill: var(--theme-body-color-alt);
 }
 
-.theme-light g.selected text {
-  fill: var(--theme-toolbar-background);
-}
 
 .nodes text {
   cursor: pointer;
@@ -177,6 +208,32 @@ text {
     background-image: url(alerticon-warning@2x.png);
   }
 }
+
+/**
+ * Inspector toolbar
+ */
+
+#audio-node-toolbar .bypass {
+  list-style-image: url(power.svg);
+}
+
+#audio-node-toolbar toolbarbutton[disabled] {
+  opacity: 0.5;
+  background-color: transparent;
+}
+
+.theme-dark #audio-node-toolbar toolbarbutton[checked] {
+  background-color: #1d4f73; /* Select Highlight Blue */
+}
+.theme-light #audio-node-toolbar toolbarbutton[checked] {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+}
+
+/* don't invert checked buttons so we can have white icons on light theme */
+#audio-node-toolbar toolbarbutton[checked] > .toolbarbutton-icon {
+  filter: none;
+}
+
 
 /**
  * Responsive Styles

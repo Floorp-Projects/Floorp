@@ -10,11 +10,6 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-#ifdef MOZ_CRASHREPORTER
-XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
-  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
-#endif
-
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
@@ -565,7 +560,10 @@ SessionStore.prototype = {
   },
 
   _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {
-#ifdef MOZ_CRASHREPORTER
+    let crashReporterBuilt = "nsICrashReporter" in Ci && Services.appinfo instanceof Ci.nsICrashReporter;
+    if (!crashReporterBuilt)
+      return;
+
     if (!aWindow.BrowserApp.selectedBrowser)
       return;
 
@@ -577,14 +575,13 @@ SessionStore.prototype = {
       }
       catch (ex) { } // ignore failures on about: URIs
 
-      CrashReporter.annotateCrashReport("URL", currentURI.spec);
+      Services.appinfo.annotateCrashReport("URL", currentURI.spec);
     }
     catch (ex) {
       // don't make noise when crashreporter is built but not enabled
-      if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
-        Components.utils.reportError("SessionStore:" + ex);
+      if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED)
+        Cu.reportError("SessionStore:" + ex);
     }
-#endif
   },
 
   _serializeHistoryEntry: function _serializeHistoryEntry(aEntry) {
