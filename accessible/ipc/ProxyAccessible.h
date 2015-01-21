@@ -39,6 +39,8 @@ public:
   { mChildren.InsertElementAt(aIdx, aChild); }
 
   uint32_t ChildrenCount() const { return mChildren.Length(); }
+  ProxyAccessible* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
+  bool MustPruneChildren() const;
 
   void Shutdown();
 

@@ -609,6 +609,11 @@ public:
   bool IsMenuPopup() const { return mType == eMenuPopupType; }
 
   bool IsProxy() const { return mType == eProxyType; }
+  ProxyAccessible* Proxy() const
+  {
+    MOZ_ASSERT(IsProxy());
+    return mBits.proxy;
+  }
 
   bool IsProgress() const { return mType == eProgressType; }
 
