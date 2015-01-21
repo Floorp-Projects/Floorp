@@ -2211,7 +2211,6 @@
         _doorhangerTitle.value =
           gNavigatorBundle.getFormattedString(
             "badContentBlocked.notblocked.message", [this._brandShortName]);
-
         if (this.notification.options.state &
             Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
           _doorhangerTitle.value =
@@ -2252,6 +2251,10 @@
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "tracking-protection";
         }
+        if (Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
+          let histogram = Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS");
+          histogram.add(0);
+        }
       ]]></constructor>
       <method name="disableMixedContentProtection">
         <body><![CDATA[
@@ -2283,7 +2286,7 @@
             null, null);
           // Add the current host in the 'trackingprotection' consumer of
           // the permission manager using a normalized URI. This effectively
-          // places this host on the tracking protection white list.
+          // places this host on the tracking protection allowlist.
           Services.perms.add(normalizedUrl,
             "trackingprotection", Services.perms.ALLOW_ACTION);
           // Telemetry for disable protection
@@ -2297,7 +2300,7 @@
         <body><![CDATA[
           // Remove the current host from the 'trackingprotection' consumer
           // of the permission manager. This effectively removes this host
-          // from the tracking protection white list (any list actually).
+          // from the tracking protection allowlist.
           Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
             "trackingprotection");
           // Telemetry for enable protection
