@@ -56,6 +56,7 @@ toolkit.jar:
 +  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
    skin/classic/global/menu/shared-menu-check.png              (../../shared/menu-check.png)
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
+*  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
    skin/classic/global/in-content/check.svg                    (../../shared/in-content/check.svg)
    skin/classic/global/in-content/dropdown.svg                 (../../shared/in-content/dropdown.svg)
    skin/classic/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
