@@ -22,6 +22,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 using namespace mozilla::ipc;
@@ -172,7 +173,7 @@ NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
 {
   mAddress = NFC_SOCKET_NAME;
 
-  ConnectSocket(new NfcConnector(), mAddress.get());
+  Connect(new NfcConnector(), mAddress.get());
 }
 
 void
@@ -181,7 +182,7 @@ NfcConsumer::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   mShutdown = true;
-  CloseSocket();
+  Close();
 }
 
 bool
@@ -216,7 +217,7 @@ void
 NfcConsumer::OnConnectError()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-  CloseSocket();
+  Close();
 }
 
 void
@@ -224,9 +225,14 @@ NfcConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
   if (!mShutdown) {
-    ConnectSocket(new NfcConnector(), mAddress.get(),
-                  GetSuggestedConnectDelayMs());
+    Connect(new NfcConnector(), mAddress.get(), GetSuggestedConnectDelayMs());
   }
+}
+
+ConnectionOrientedSocketIO*
+NfcConsumer::GetIO()
+{
+  return PrepareAccept(new NfcConnector());
 }
 
 } // namespace ipc
