@@ -81,6 +81,10 @@ automation/upload: automation/update-packaging
 # binaries/libs, and that's what we package/test.
 automation/pretty-package: automation/buildsymbols
 
+# The installer and packager both run stage-package, and may conflict
+# with each other.
+automation/installer: automation/package
+
 # The 'pretty' versions of targets run before the regular ones to avoid
 # conflicts in writing to the same files.
 automation/installer: automation/pretty-installer
