@@ -4902,11 +4902,15 @@ nsHttpChannel::BeginConnect()
             nsCOMPtr<nsIPrincipal> principal = GetPrincipal(false);
             bool tp = false;
             channelClassifier->ShouldEnableTrackingProtection(this, &tp);
-            nsresult response = NS_OK;
-            classifier->ClassifyLocal(principal, tp, &response);
-            if (NS_FAILED(response)) {
-                LOG(("nsHttpChannel::Found principal on local blocklist [this=%p]", this));
-                mLocalBlocklist = true;
+            // See bug 1122691
+            if (tp) {
+                nsresult response = NS_OK;
+                classifier->ClassifyLocal(principal, tp, &response);
+                if (NS_FAILED(response)) {
+                    LOG(("nsHttpChannel::Found principal on local blocklist "
+                         "[this=%p]", this));
+                    mLocalBlocklist = true;
+                }
             }
         }
     }
