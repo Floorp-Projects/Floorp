@@ -121,11 +121,11 @@ let AppManager = exports.AppManager = {
             this._appsFront = front;
             this._listTabsResponse = response;
             this.update("list-tabs-response");
-            return front.fetchIcons();
           })
           .then(() => {
             this.checkIfProjectIsRunning();
             this.update("runtime-apps-found");
+            front.fetchIcons();
           });
         } else {
           this._listTabsResponse = response;
