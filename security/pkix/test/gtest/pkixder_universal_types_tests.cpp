@@ -26,7 +26,6 @@
 #include <vector>
 #include <gtest/gtest.h>
 
-#include "pkix/bind.h"
 #include "pkixder.h"
 #include "pkixtestutil.h"
 #include "stdint.h"

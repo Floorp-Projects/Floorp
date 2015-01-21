@@ -24,7 +24,6 @@
 
 #include "pkixder.h"
 
-#include "pkix/bind.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix { namespace der {
