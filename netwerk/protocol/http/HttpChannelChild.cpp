@@ -531,7 +531,7 @@ HttpChannelChild::DoOnStatus(nsIRequest* aRequest, nsresult status)
 }
 
 void
-HttpChannelChild::DoOnProgress(nsIRequest* aRequest, uint64_t progress, uint64_t progressMax)
+HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress, int64_t progressMax)
 {
   LOG(("HttpChannelChild::DoOnProgress [this=%p]\n", this));
   if (mCanceled)
@@ -549,7 +549,8 @@ HttpChannelChild::DoOnProgress(nsIRequest* aRequest, uint64_t progress, uint64_t
     // OnProgress
     //
     if (progress > 0) {
-      MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
+      MOZ_ASSERT((progressMax == -1) || (progress <= progressMax),
+                 "unexpected progress values");
       mProgressSink->OnProgress(aRequest, nullptr, progress, progressMax);
     }
   }
@@ -692,8 +693,8 @@ class ProgressEvent : public ChannelEvent
 {
  public:
   ProgressEvent(HttpChannelChild* child,
-                const uint64_t& progress,
-                const uint64_t& progressMax)
+                const int64_t& progress,
+                const int64_t& progressMax)
   : mChild(child)
   , mProgress(progress)
   , mProgressMax(progressMax) {}
@@ -701,12 +702,12 @@ class ProgressEvent : public ChannelEvent
   void Run() { mChild->OnProgress(mProgress, mProgressMax); }
  private:
   HttpChannelChild* mChild;
-  uint64_t mProgress, mProgressMax;
+  int64_t mProgress, mProgressMax;
 };
 
 bool
-HttpChannelChild::RecvOnProgress(const uint64_t& progress,
-                                 const uint64_t& progressMax)
+HttpChannelChild::RecvOnProgress(const int64_t& progress,
+                                 const int64_t& progressMax)
 {
   if (mEventQ->ShouldEnqueue())  {
     mEventQ->Enqueue(new ProgressEvent(this, progress, progressMax));
@@ -717,10 +718,10 @@ HttpChannelChild::RecvOnProgress(const uint64_t& progress,
 }
 
 void
-HttpChannelChild::OnProgress(const uint64_t& progress,
-                             const uint64_t& progressMax)
+HttpChannelChild::OnProgress(const int64_t& progress,
+                             const int64_t& progressMax)
 {
-  LOG(("HttpChannelChild::OnProgress [this=%p progress=%llu/%llu]\n",
+  LOG(("HttpChannelChild::OnProgress [this=%p progress=%lld/%lld]\n",
        this, progress, progressMax));
 
   if (mCanceled)
@@ -737,7 +738,8 @@ HttpChannelChild::OnProgress(const uint64_t& progress,
   if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending)
   {
     if (progress > 0) {
-      MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
+      MOZ_ASSERT((progressMax == -1) || (progress <= progressMax),
+                 "unexpected progress values");
       mProgressSink->OnProgress(this, nullptr, progress, progressMax);
     }
   }
@@ -1373,7 +1375,7 @@ InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
 
 NS_IMETHODIMP
 InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
-                                    uint64_t aProgress, uint64_t aProgressMax)
+                                    int64_t aProgress, int64_t aProgressMax)
 {
   mOwner->DoOnProgress(mOwner, aProgress, aProgressMax);
   return NS_OK;
@@ -1396,9 +1398,8 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCon
 
     OnStatus(mOwner, aContext, NS_NET_STATUS_READING, NS_ConvertUTF8toUTF16(host).get());
 
-    uint64_t progressMax(uint64_t(mOwner->GetResponseHead()->ContentLength()));
-    uint64_t progress = aOffset + uint64_t(aCount);
-    OnProgress(mOwner, aContext, progress, progressMax);
+    int64_t progress = aOffset + aCount;
+    OnProgress(mOwner, aContext, progress, mOwner->GetResponseHead()->ContentLength());
   }
 
   mOwner->DoOnDataAvailable(mOwner, mContext, aInputStream, aOffset, aCount);

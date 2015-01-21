@@ -436,8 +436,8 @@ public:
   {
   public:
     OSXDisplay()
+      : mDisplayLink(nullptr)
     {
-      EnableVsync();
     }
 
     ~OSXDisplay()
@@ -448,6 +448,9 @@ public:
     virtual void EnableVsync() MOZ_OVERRIDE
     {
       MOZ_ASSERT(NS_IsMainThread());
+      if (IsVsyncEnabled()) {
+        return;
+      }
 
       // Create a display link capable of being used with all active displays
       // TODO: See if we need to create an active DisplayLink for each monitor in multi-monitor
@@ -473,6 +476,9 @@ public:
     virtual void DisableVsync() MOZ_OVERRIDE
     {
       MOZ_ASSERT(NS_IsMainThread());
+      if (!IsVsyncEnabled()) {
+        return;
+      }
 
       // Release the display link
       if (mDisplayLink) {

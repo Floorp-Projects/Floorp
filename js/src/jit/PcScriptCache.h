@@ -61,6 +61,9 @@ struct PcScriptCache
     }
 
     void add(uint32_t hash, uint8_t *addr, jsbytecode *pc, JSScript *script) {
+        MOZ_ASSERT(addr);
+        MOZ_ASSERT(pc);
+        MOZ_ASSERT(script);
         entries[hash].returnAddress = addr;
         entries[hash].pc = pc;
         entries[hash].script = script;
