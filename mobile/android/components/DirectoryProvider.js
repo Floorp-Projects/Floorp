@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#filter substitution
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -27,13 +26,13 @@ const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
 const WEBAPPS_DIR             = "webappsDir";
 const DOWNLOAD_DIR            = "DfltDwnld";
 
-const SYSTEM_DIST_PATH = "/system/@ANDROID_PACKAGE_NAME@/distribution";
+const SYSTEM_DIST_PATH = `/system/${AppConstants.ANDROID_PACKAGE_NAME}/distribution`;
 
 function DirectoryProvider() {}
 
 DirectoryProvider.prototype = {
   classID: Components.ID("{ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}"),
-  
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
                                          Ci.nsIDirectoryServiceProvider2]),
 
@@ -172,4 +171,3 @@ DirectoryProvider.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);
-
