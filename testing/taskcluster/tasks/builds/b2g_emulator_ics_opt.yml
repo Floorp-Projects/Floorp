@@ -4,12 +4,17 @@ task:
   scopes:
     - 'docker-worker:cache:build-emulator-ics-opt'
   metadata:
-    name: B2G Emulator ICS Opt
+    name: '[TC] B2G Emulator ICS Opt'
+
+  extra:
+    treeherder:
+      machine:
+        platform: b2g-emu-ics
 
   payload:
     cache:
       build-emulator-ics-opt: /home/worker/object-folder/
 
     env:
-      TARGET: 'emulator-ics'
+      TARGET: 'emulator'
 

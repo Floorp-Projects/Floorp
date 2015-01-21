@@ -4,7 +4,8 @@ task:
   scopes:
     - 'docker-worker:cache:build-nexus-4-user'
   metadata:
-    name: B2G Nexus 4 User
+    name: '[TC] B2G Nexus 4 User'
+
   payload:
     cache:
       build-nexus-4-user: /home/worker/object-folder
@@ -12,6 +13,12 @@ task:
       TARGET: 'nexus-4'
       DEBUG: 0
   extra:
+    treeherder:
+      symbol: B
+      groupSymbol: Nexus4
+      groupName: Nexus4 Device Image
+      machine:
+        platform: b2g-device-image
     locations:
       img: 'private/build/nexus-4.zip'
 

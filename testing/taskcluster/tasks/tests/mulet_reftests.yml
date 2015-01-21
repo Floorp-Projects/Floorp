@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Reftest
+    name: '[TC] Reftest'
     description: Reftest test run {{chunk}}
 
   scopes:
@@ -40,6 +40,6 @@ task:
   extra:
     treeherder:
       groupName: Reftest
-      groupSymbol: R
+      groupSymbol: tc-R
       symbol: 'R{{chunk}}'
       productName: b2g

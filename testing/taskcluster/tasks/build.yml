@@ -10,7 +10,7 @@ task:
     source: http://todo.com/soon
     owner: {{owner}}
 
-  workerType: b2gbuild
+  workerType: build-c4-2xlarge
   provisionerId: aws-provisioner
   schedulerId: task-graph-scheduler
 
@@ -19,6 +19,9 @@ task:
     # the board.
     - 'docker-worker:cache:tc-vcs'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
+    - 'queue:define-task:aws-provisioner/build-c4-2xlarge'
+    - 'queue:create-task:aws-provisioner/build-c4-2xlarge'
+
 
   payload:
     image: '{{#docker_image}}builder{{/docker_image}}'
@@ -48,4 +51,6 @@ task:
 
   extra:
     treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
       symbol: B

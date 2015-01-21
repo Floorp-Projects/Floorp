@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Gaia Unit Test OOP
+    name: '[TC] Gaia Unit Test OOP'
     description: Gaia Unit Test OOP
 
   scopes:

@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Mochitest
+    name: '[TC] Mochitest'
     description: Mochitest test run {{chunk}}
 
   payload:
@@ -32,6 +32,6 @@ task:
   extra:
     treeherder:
       groupName: Mochitest
-      groupSymbol: M
+      groupSymbol: tc-M
       symbol: '{{chunk}}'
       productName: b2g

@@ -69,7 +69,7 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_gaia_js_integration_tests.yml
-        chunks: 4
+        chunks: 10
   gaia-linter:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:

@@ -1,42 +1,40 @@
 ---
 metadata:
-  name: 'Task graph used to build try jobs'
+  name: 'Taskcluster decision task for {{project}}'
   description: |
     Try push for {{owner}} with {{comment}}.
   owner: "{{owner}}"
-  source: "{{source}}"
+  source: "{{{source}}}"
 
 scopes:
-  - "docker-worker:image:quay.io/mozilla/decision:*"
   - "queue:define-task:aws-provisioner/gecko-decision"
   - "queue:create-task:aws-provisioner/gecko-decision"
-  - "docker-worker:cache:tc-vcs-public-sources"
-  - "docker-worker:cache:build-emulator-jb-opt"
-  - "docker-worker:cache:build-mulet-linux-objects"
-  - "docker-worker:cache:build-emulator-ics-opt"
-  - "queue:define-task:aws-provisioner/b2gtest"
-  - "queue:create-task:aws-provisioner/b2gtest"
-  - "docker-worker:image:quay.io/mozilla/builder:*"
-  - "docker-worker:cache:tooltool-cache"
-  - "queue:define-task:aws-provisioner/b2gbuild"
-  - "queue:create-task:aws-provisioner/b2gbuild"
-  - "docker-worker:cache:build-emulator-kk-debug"
-  - "docker-worker:cache:build-b2g-desktop-objects"
-  - "docker-worker:cache:build-emulator-kk-opt"
-  - "docker-worker:cache:build-emulator-jb-debug"
+  - "docker-worker:cache:*"
+  - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
+  - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
+  - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
+  - 'queue:define-task:aws-provisioner/test-c4-2xlarge'
+  - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
+  - 'queue:define-task:aws-provisioner/build-c4-2xlarge'
+  - 'queue:create-task:aws-provisioner/build-c4-2xlarge'
   - "docker-worker:cache:tc-vcs"
+  - "docker-worker:image:quay.io/mozilla/builder:0.0.30"
+  - "queue:define-task:aws-provisioner/build-c4-2xlarge"
+  - "queue:create-task:aws-provisioner/build-c4-2xlarge"
   - "docker-worker:cache:sources-gecko"
-  - "docker-worker:cache:sources-gaia"
-  - "docker-worker:cache:build-emulator-ics-debug"
+  - "docker-worker:cache:build-mulet-linux-objects"
+  - "docker-worker:cache:tooltool-cache"
+  - "docker-worker:image:quay.io/mozilla/tester:0.0.9"
+
 tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
     task:
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
-        source: {{source}}
+        source: {{{source}}}
         owner: {{owner}}
-        name: Initial decision task for try
+        name: "[tc] Initial decision task for try ({{comment}})"
         description: |
           This is the single most important task as it decides how all other tasks
           get built.
@@ -47,11 +45,16 @@ tasks:
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
         - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
+        - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
+        - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
+
+      routes:
+        - "tc-treeherder-stage.{{project}}.{{revision_hash}}"
 
       payload:
         env:
           GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
-          GECKO_HEAD_REPOSITORY: '{{repository_url}}'
+          GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
 
@@ -80,6 +83,7 @@ tasks:
             --project='{{project}}'
             --message='{{comment}}'
             --owner='{{owner}}'
+            --revision-hash='{{revision_hash}}'
             --extend-graph > /home/worker/graph.json
         graphs:
           - /home/worker/graph.json
