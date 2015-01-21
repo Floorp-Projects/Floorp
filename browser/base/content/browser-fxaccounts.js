@@ -348,8 +348,8 @@ let gFxAccounts = {
     // An entryPoint param is used for server-side metrics.  If the current tab
     // is UITour, assume that it initiated the call to this method and override
     // the entryPoint accordingly.
-    if (UITour.originTabs.get(window) &&
-        UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+    if (UITour.tourBrowsersByWindow.get(window) &&
+        UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
       urlParams.entryPoint = "uitour";
     }
     let params = new URLSearchParams();
