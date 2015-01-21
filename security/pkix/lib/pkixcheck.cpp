@@ -24,7 +24,6 @@
 
 #include "pkixcheck.h"
 
-#include "pkix/bind.h"
 #include "pkixder.h"
 #include "pkixutil.h"
 
@@ -296,24 +295,6 @@ static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
 //  BasicConstraints ::= SEQUENCE {
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
-static Result
-DecodeBasicConstraints(Reader& input, /*out*/ bool& isCA,
-                       /*out*/ long& pathLenConstraint)
-{
-  if (der::OptionalBoolean(input, isCA) != Success) {
-    return Result::ERROR_EXTENSION_VALUE_INVALID;
-  }
-
-  // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
-  // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
-  // reasons, we don't check this for now.
-  if (der::OptionalInteger(input, UNLIMITED_PATH_LEN, pathLenConstraint)
-        != Success) {
-    return Result::ERROR_EXTENSION_VALUE_INVALID;
-  }
-
-  return Success;
-}
 
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
@@ -327,9 +308,19 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
 
   if (encodedBasicConstraints) {
     Reader input(*encodedBasicConstraints);
-    if (der::Nested(input, der::SEQUENCE,
-                    bind(DecodeBasicConstraints, _1, ref(isCA),
-                         ref(pathLenConstraint))) != Success) {
+    Result rv = der::Nested(input, der::SEQUENCE,
+                            [&isCA, &pathLenConstraint](Reader& r) {
+      Result rv = der::OptionalBoolean(r, isCA);
+      if (rv != Success) {
+        return rv;
+      }
+      // TODO(bug 985025): If isCA is false, pathLenConstraint
+      // MUST NOT be included (as per RFC 5280 section
+      // 4.2.1.9), but for compatibility reasons, we don't
+      // check this.
+      return der::OptionalInteger(r, UNLIMITED_PATH_LEN, pathLenConstraint);
+    });
+    if (rv != Success) {
       return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     if (der::End(input) != Success) {
@@ -488,10 +479,11 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
     bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
 
     Reader input(*encodedExtendedKeyUsage);
-    if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
-                      bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
-                           ref(found), ref(foundOCSPSigning)))
-          != Success) {
+    Result rv = der::NestedOf(input, der::SEQUENCE, der::OIDTag,
+                              der::EmptyAllowed::No, [&](Reader& r) {
+      return MatchEKU(r, requiredEKU, endEntityOrCA, found, foundOCSPSigning);
+    });
+    if (rv != Success) {
       return Result::ERROR_INADEQUATE_CERT_TYPE;
     }
     if (der::End(input) != Success) {
