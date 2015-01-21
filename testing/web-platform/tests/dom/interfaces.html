@@ -500,35 +500,35 @@ interface DOMSettableTokenList : DOMTokenList {
 var xmlDoc, domException, detachedRange, element;
 var idlArray;
 setup(function() {
-	xmlDoc = document.implementation.createDocument(null, "", null);
-	try { document.appendChild(document); } catch(e) { domException = e; }
-	detachedRange = document.createRange();
-	detachedRange.detach();
-	element = xmlDoc.createElementNS(null, "test");
-	element.setAttribute("bar", "baz");
+  xmlDoc = document.implementation.createDocument(null, "", null);
+  try { document.appendChild(document); } catch(e) { domException = e; }
+  detachedRange = document.createRange();
+  detachedRange.detach();
+  element = xmlDoc.createElementNS(null, "test");
+  element.setAttribute("bar", "baz");
 
-	idlArray = new IdlArray();
-	idlArray.add_idls(document.querySelector("script[type=text\\/plain]").textContent);
-	idlArray.add_objects({
-		DOMException: ['domException'],
-		Event: ['document.createEvent("Event")', 'new Event("foo")'],
-		CustomEvent: ['new CustomEvent("foo")'],
-		XMLDocument: ['xmlDoc'],
-		DOMImplementation: ['document.implementation'],
-		DocumentFragment: ['document.createDocumentFragment()'],
-		DocumentType: ['document.doctype'],
-		Element: ['element'],
-		Attr: ['document.querySelector("[id]").attributes[0]'],
-		Text: ['document.createTextNode("abc")'],
-		ProcessingInstruction: ['xmlDoc.createProcessingInstruction("abc", "def")'],
-		Comment: ['document.createComment("abc")'],
-		Range: ['document.createRange()', 'detachedRange'],
-		NodeIterator: ['document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null, false)'],
-		TreeWalker: ['document.createTreeWalker(document.body, NodeFilter.SHOW_ALL, null, false)'],
-		NodeList: ['document.querySelectorAll("script")'],
-		HTMLCollection: ['document.body.children'],
-		DOMTokenList: ['document.body.classList'],
-	});
+  idlArray = new IdlArray();
+  idlArray.add_idls(document.querySelector("script[type=text\\/plain]").textContent);
+  idlArray.add_objects({
+    DOMException: ['domException'],
+    Event: ['document.createEvent("Event")', 'new Event("foo")'],
+    CustomEvent: ['new CustomEvent("foo")'],
+    XMLDocument: ['xmlDoc'],
+    DOMImplementation: ['document.implementation'],
+    DocumentFragment: ['document.createDocumentFragment()'],
+    DocumentType: ['document.doctype'],
+    Element: ['element'],
+    Attr: ['document.querySelector("[id]").attributes[0]'],
+    Text: ['document.createTextNode("abc")'],
+    ProcessingInstruction: ['xmlDoc.createProcessingInstruction("abc", "def")'],
+    Comment: ['document.createComment("abc")'],
+    Range: ['document.createRange()', 'detachedRange'],
+    NodeIterator: ['document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null, false)'],
+    TreeWalker: ['document.createTreeWalker(document.body, NodeFilter.SHOW_ALL, null, false)'],
+    NodeList: ['document.querySelectorAll("script")'],
+    HTMLCollection: ['document.body.children'],
+    DOMTokenList: ['document.body.classList'],
+  });
 });
 idlArray.test();
 </script>

@@ -4,8 +4,8 @@
         <meta charset="utf-8" >
         <title>window.performance.timing in document navigation</title>
         <link rel="author" title="Google" href="http://www.google.com/" />
- 	<link rel="help" href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface"/>
-	<script src="/resources/testharness.js"></script>
+        <link rel="help" href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface"/>
+        <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
         <script src="resources/webperftestharness.js"></script>
     </head>
@@ -53,9 +53,9 @@
                     done();
                     return;
                 }
-            
+
                 timing = performanceNamespace.timing;
-            
+
                 window.removeEventListener("load", load_handler);
                 setTimeout("save_timing_after_load()", 0);
             }

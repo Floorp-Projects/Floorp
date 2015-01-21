@@ -102,7 +102,7 @@ function performance_entrylist_checker(type)
             test_true(isFinite(entry.duration), 'duration should be a number.');
         } else if (type === "mark") {
             test_greater_than(entry.startTime, 0, 'startTime should greater than 0.');
-            test_equals(entry.duration, 0, 'duration of mark should be 0.');            
+            test_equals(entry.duration, 0, 'duration of mark should be 0.');
         }
     }
 
@@ -137,7 +137,7 @@ function PerformanceContext(context)
     this.performanceContext = context;
 }
 
-PerformanceContext.prototype = 
+PerformanceContext.prototype =
 {
 
     initialMeasures: function(item, index, array)
