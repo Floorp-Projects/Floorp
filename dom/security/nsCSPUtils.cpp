@@ -510,14 +510,12 @@ void
 nsCSPHostSrc::setPort(const nsAString& aPort)
 {
   mPort = aPort;
-  ToLowerCase(mPort);
 }
 
 void
 nsCSPHostSrc::appendPath(const nsAString& aPath)
 {
   mPath.Append(aPath);
-  ToLowerCase(mPath);
 }
 
 /* ===== nsCSPKeywordSrc ===================== */
