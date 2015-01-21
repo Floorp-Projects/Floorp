@@ -12,7 +12,7 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="e0c735ec89df011ea7dd435087a9045ecff9ff9e">
+  <project name="platform_build" path="build" remote="b2g" revision="e06971db7acf7a35c32eb74d675a4e12e288e6be">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="gaia" path="gaia" remote="mozillaorg" revision="1c91c05b18af61f37da8e16e2d4beac5ffdb89f9"/>
@@ -129,7 +129,7 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="3dc574ecf7fe233f825233c88c08c2452169a36e"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="f5f7fa2fc26b96d2cbd0af4569c0036fe034bb43"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="a510f2d2d579e76421b0c84cd225c249b2da6f8a"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="97d63c256a047b491565d624aea1dd5f1f8593ea"/>
