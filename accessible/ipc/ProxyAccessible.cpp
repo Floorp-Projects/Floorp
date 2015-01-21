@@ -8,6 +8,7 @@
 #include "DocAccessibleParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/a11y/Platform.h"
+#include "mozilla/a11y/Role.h"
 
 namespace mozilla {
 namespace a11y {
@@ -47,6 +48,26 @@ ProxyAccessible::SetChildDoc(DocAccessibleParent* aParent)
     mChildren.Clear();
     mOuterDoc = false;
   }
+}
+
+bool
+ProxyAccessible::MustPruneChildren() const
+{
+  // this is the equivalent to nsAccUtils::MustPrune for proxies and should be
+  // kept in sync with that.
+  if (mRole != roles::MENUITEM && mRole != roles::COMBOBOX_OPTION
+      && mRole != roles::OPTION && mRole != roles::ENTRY
+      && mRole != roles::FLAT_EQUATION && mRole != roles::PASSWORD_TEXT
+      && mRole != roles::PUSHBUTTON && mRole != roles::TOGGLE_BUTTON
+      && mRole != roles::GRAPHIC && mRole != roles::SLIDER
+      && mRole != roles::PROGRESSBAR && mRole != roles::SEPARATOR)
+    return false;
+
+  if (mChildren.Length() != 1)
+    return false;
+
+  return mChildren[0]->Role() == roles::TEXT_LEAF
+    || mChildren[0]->Role() == roles::STATICTEXT;
 }
 
 uint64_t
