@@ -138,15 +138,12 @@ public:
   }
 
   virtual void InputDataExhausted() MOZ_OVERRIDE {
-    MOZ_CRASH();
   }
 
   virtual void DrainComplete() MOZ_OVERRIDE {
-    MOZ_CRASH();
   }
 
   virtual void ResetComplete() MOZ_OVERRIDE {
-    MOZ_CRASH();
   }
 
   virtual void Error(GMPErr aError) MOZ_OVERRIDE {
