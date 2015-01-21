@@ -39,7 +39,7 @@ if test $android_version -lt MIN_ANDROID_VERSION ; then
 fi
 
 case "$target" in
-arm-linux*-android*|*-linuxandroid*)
+arm-*linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
     ;;
 i?86-*android*)

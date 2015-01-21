@@ -20,7 +20,7 @@ chrome.jar:
   skin/aboutHealthReport.css                (aboutHealthReport.css)
 #endif
   skin/aboutMemory.css                      (aboutMemory.css)
-* skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
+  skin/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
   skin/aboutReader.css                      (aboutReader.css)
   skin/aboutSupport.css                     (aboutSupport.css)
   skin/browser.css                          (browser.css)

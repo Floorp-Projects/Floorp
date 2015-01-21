@@ -1,9 +1,11 @@
 /*
  * jcapimin.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1994-1998, Thomas G. Lane.
  * Modified 2003-2010 by Guido Vollbeding.
- * This file is part of the Independent JPEG Group's software.
+ * It was modified by The libjpeg-turbo Project to include only code relevant
+ * to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains application interface code for the compression half
@@ -33,12 +35,12 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
   int i;
 
   /* Guard against version mismatches between library and caller. */
-  cinfo->mem = NULL;		/* so jpeg_destroy knows mem mgr not called */
+  cinfo->mem = NULL;            /* so jpeg_destroy knows mem mgr not called */
   if (version != JPEG_LIB_VERSION)
     ERREXIT2(cinfo, JERR_BAD_LIB_VERSION, JPEG_LIB_VERSION, version);
-  if (structsize != SIZEOF(struct jpeg_compress_struct))
-    ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE, 
-	     (int) SIZEOF(struct jpeg_compress_struct), (int) structsize);
+  if (structsize != sizeof(struct jpeg_compress_struct))
+    ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE,
+             (int) sizeof(struct jpeg_compress_struct), (int) structsize);
 
   /* For debugging purposes, we zero the whole master structure.
    * But the application has already set the err pointer, and may have set
@@ -49,7 +51,7 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
   {
     struct jpeg_error_mgr * err = cinfo->err;
     void * client_data = cinfo->client_data; /* ignore Purify complaint here */
-    MEMZERO(cinfo, SIZEOF(struct jpeg_compress_struct));
+    MEMZERO(cinfo, sizeof(struct jpeg_compress_struct));
     cinfo->err = err;
     cinfo->client_data = client_data;
   }
@@ -85,7 +87,7 @@ jpeg_CreateCompress (j_compress_ptr cinfo, int version, size_t structsize)
 
   cinfo->script_space = NULL;
 
-  cinfo->input_gamma = 1.0;	/* in case application forgets */
+  cinfo->input_gamma = 1.0;     /* in case application forgets */
 
   /* OK, I'm ready */
   cinfo->global_state = CSTATE_START;
@@ -173,15 +175,15 @@ jpeg_finish_compress (j_compress_ptr cinfo)
     (*cinfo->master->prepare_for_pass) (cinfo);
     for (iMCU_row = 0; iMCU_row < cinfo->total_iMCU_rows; iMCU_row++) {
       if (cinfo->progress != NULL) {
-	cinfo->progress->pass_counter = (long) iMCU_row;
-	cinfo->progress->pass_limit = (long) cinfo->total_iMCU_rows;
-	(*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
+        cinfo->progress->pass_counter = (long) iMCU_row;
+        cinfo->progress->pass_limit = (long) cinfo->total_iMCU_rows;
+        (*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
       }
       /* We bypass the main controller and invoke coef controller directly;
        * all work is being done from the coefficient buffer.
        */
       if (! (*cinfo->coef->compress_data) (cinfo, (JSAMPIMAGE) NULL))
-	ERREXIT(cinfo, JERR_CANT_SUSPEND);
+        ERREXIT(cinfo, JERR_CANT_SUSPEND);
     }
     (*cinfo->master->finish_pass) (cinfo);
   }
@@ -202,9 +204,9 @@ jpeg_finish_compress (j_compress_ptr cinfo)
 
 GLOBAL(void)
 jpeg_write_marker (j_compress_ptr cinfo, int marker,
-		   const JOCTET *dataptr, unsigned int datalen)
+                   const JOCTET *dataptr, unsigned int datalen)
 {
-  JMETHOD(void, write_marker_byte, (j_compress_ptr info, int val));
+  void (*write_marker_byte) (j_compress_ptr info, int val);
 
   if (cinfo->next_scanline != 0 ||
       (cinfo->global_state != CSTATE_SCANNING &&
@@ -213,7 +215,7 @@ jpeg_write_marker (j_compress_ptr cinfo, int marker,
     ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
 
   (*cinfo->marker->write_marker_header) (cinfo, marker, datalen);
-  write_marker_byte = cinfo->marker->write_marker_byte;	/* copy for speed */
+  write_marker_byte = cinfo->marker->write_marker_byte; /* copy for speed */
   while (datalen--) {
     (*write_marker_byte) (cinfo, *dataptr);
     dataptr++;
@@ -248,14 +250,14 @@ jpeg_write_m_byte (j_compress_ptr cinfo, int val)
  * To produce a pair of files containing abbreviated tables and abbreviated
  * image data, one would proceed as follows:
  *
- *		initialize JPEG object
- *		set JPEG parameters
- *		set destination to table file
- *		jpeg_write_tables(cinfo);
- *		set destination to image file
- *		jpeg_start_compress(cinfo, FALSE);
- *		write data...
- *		jpeg_finish_compress(cinfo);
+ *              initialize JPEG object
+ *              set JPEG parameters
+ *              set destination to table file
+ *              jpeg_write_tables(cinfo);
+ *              set destination to image file
+ *              jpeg_start_compress(cinfo, FALSE);
+ *              write data...
+ *              jpeg_finish_compress(cinfo);
  *
  * jpeg_write_tables has the side effect of marking all tables written
  * (same as jpeg_suppress_tables(..., TRUE)).  Thus a subsequent start_compress

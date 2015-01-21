@@ -20,10 +20,10 @@ Cu.import("resource://gre/modules/Services.jsm");
  */
 
 /**
- * If a hang hasn't been reported for more than 5 seconds, assume the
+ * If a hang hasn't been reported for more than 10 seconds, assume the
  * content process has gotten unstuck (and hide the hang notification).
  */
-const HANG_EXPIRATION_TIME = 5000;
+const HANG_EXPIRATION_TIME = 10000;
 
 let ProcessHangMonitor = {
   /**

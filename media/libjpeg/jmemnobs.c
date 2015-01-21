@@ -1,8 +1,10 @@
 /*
  * jmemnobs.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1992-1996, Thomas G. Lane.
- * This file is part of the Independent JPEG Group's software.
+ * It was modified by The libjpeg-turbo Project to include only code and
+ * information relevant to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file provides a really simple implementation of the system-
@@ -18,11 +20,11 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "jmemsys.h"		/* import the system-dependent declarations */
+#include "jmemsys.h"            /* import the system-dependent declarations */
 
-#ifndef HAVE_STDLIB_H		/* <stdlib.h> should declare malloc(),free() */
-extern void * malloc JPP((size_t size));
-extern void free JPP((void *ptr));
+#ifndef HAVE_STDLIB_H           /* <stdlib.h> should declare malloc(),free() */
+extern void * malloc (size_t size);
+extern void free (void *ptr);
 #endif
 
 
@@ -46,19 +48,16 @@ jpeg_free_small (j_common_ptr cinfo, void * object, size_t sizeofobject)
 
 /*
  * "Large" objects are treated the same as "small" ones.
- * NB: although we include FAR keywords in the routine declarations,
- * this file won't actually work in 80x86 small/medium model; at least,
- * you probably won't be able to process useful-size images in only 64KB.
  */
 
-GLOBAL(void FAR *)
+GLOBAL(void *)
 jpeg_get_large (j_common_ptr cinfo, size_t sizeofobject)
 {
-  return (void FAR *) malloc(sizeofobject);
+  return (void *) malloc(sizeofobject);
 }
 
 GLOBAL(void)
-jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
+jpeg_free_large (j_common_ptr cinfo, void * object, size_t sizeofobject)
 {
   free(object);
 }
@@ -71,7 +70,7 @@ jpeg_free_large (j_common_ptr cinfo, void FAR * object, size_t sizeofobject)
 
 GLOBAL(size_t)
 jpeg_mem_available (j_common_ptr cinfo, size_t min_bytes_needed,
-		    size_t max_bytes_needed, size_t already_allocated)
+                    size_t max_bytes_needed, size_t already_allocated)
 {
   return max_bytes_needed;
 }
@@ -85,7 +84,7 @@ jpeg_mem_available (j_common_ptr cinfo, size_t min_bytes_needed,
 
 GLOBAL(void)
 jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
-			 long total_bytes_needed)
+                         long total_bytes_needed)
 {
   ERREXIT(cinfo, JERR_NO_BACKING_STORE);
 }
@@ -99,7 +98,7 @@ jpeg_open_backing_store (j_common_ptr cinfo, backing_store_ptr info,
 GLOBAL(long)
 jpeg_mem_init (j_common_ptr cinfo)
 {
-  return 0;			/* just set max_memory_to_use to 0 */
+  return 0;                     /* just set max_memory_to_use to 0 */
 }
 
 GLOBAL(void)
