@@ -7,7 +7,7 @@ describe("loop.OTSdkDriver", function () {
   "use strict";
 
   var sharedActions = loop.shared.actions;
-  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sandbox;
   var dispatcher, driver, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, publisherConfig, fakeEvent;
@@ -153,7 +153,7 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "connectionFailure"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("reason", FAILURE_REASONS.COULD_NOT_CONNECT));
+          sinon.match.hasOwn("reason", FAILURE_DETAILS.COULD_NOT_CONNECT));
       });
     });
   });
@@ -265,7 +265,7 @@ describe("loop.OTSdkDriver", function () {
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "connectionFailure"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
-            sinon.match.hasOwn("reason", FAILURE_REASONS.NETWORK_DISCONNECTED));
+            sinon.match.hasOwn("reason", FAILURE_DETAILS.NETWORK_DISCONNECTED));
         });
 
       it("should dispatch a connectionFailure action if the session was " +
@@ -278,7 +278,7 @@ describe("loop.OTSdkDriver", function () {
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "connectionFailure"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
-            sinon.match.hasOwn("reason", FAILURE_REASONS.EXPIRED_OR_INVALID));
+            sinon.match.hasOwn("reason", FAILURE_DETAILS.EXPIRED_OR_INVALID));
         });
     });
 
@@ -376,7 +376,7 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "connectionFailure"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("reason", FAILURE_REASONS.MEDIA_DENIED));
+          sinon.match.hasOwn("reason", FAILURE_DETAILS.MEDIA_DENIED));
       });
     });
 

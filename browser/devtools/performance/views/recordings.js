@@ -98,9 +98,9 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     // If a label is specified (e.g due to a call to `console.profile`),
     // then try reusing a pre-existing recording item, if there is one.
     // This is symmetrical to how `this.handleRecordingEnded` works.
-    if (recording.getLabel()) {
-      recordingItem = this.getItemForAttachment(e =>
-        e.getLabel() === recording.getLabel());
+    let profileLabel = recording.getLabel();
+    if (profileLabel) {
+      recordingItem = this.getItemForAttachment(e => e.getLabel() == profileLabel);
     }
     // Otherwise, create a new empty recording item.
     if (!recordingItem) {
@@ -114,8 +114,6 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     if (!recording.getLabel()) {
       this.selectedItem = recordingItem;
     }
-
-    this.emit(EVENTS.RECORDING_SELECTED, recording);
   },
 
   /**
@@ -125,15 +123,14 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    *        The model of the recording that just stopped.
    */
   _onRecordingStopped: function (_, recording) {
-    let profileLabel = recording.getLabel();
     let recordingItem;
 
     // If a label is specified (e.g due to a call to `console.profileEnd`),
     // then try reusing a pre-existing recording item, if there is one.
     // This is symmetrical to how `this.handleRecordingStarted` works.
+    let profileLabel = recording.getLabel();
     if (profileLabel) {
-      recordingItem = this.getItemForAttachment(e =>
-        e.profilerData.profileLabel == profileLabel);
+      recordingItem = this.getItemForAttachment(e => e.getLabel() == profileLabel);
     }
     // Otherwise, just use the first available recording item.
     if (!recordingItem) {
@@ -163,9 +160,6 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     // Render the recording item with finalized information (timing, etc)
     this.finalizeRecording(recordingItem);
-
-    // Fire the selection and allow to propogate.
-    this.emit(EVENTS.RECORDING_SELECTED, model);
   },
 
   /**

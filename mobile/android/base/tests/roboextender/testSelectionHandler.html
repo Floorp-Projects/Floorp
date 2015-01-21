@@ -27,6 +27,11 @@ function startTests() {
     then(testSelectTextarea).
     then(testReadonlyInput).
     then(testCloseSelection).
+    then(testStartSelectionFail).
+
+    then(testAttachCaret).
+    then(testAttachCaretFail).
+
     then(finishTests, function(err) {
       ok(false, "Error in selection test " + err);
       finishTests();
@@ -51,10 +56,12 @@ function testSelectAllDivs() {
 
   ]).then(function() {
     // Select all on a non-editable text node selects all the text in the page.
-    sh.startSelection(selDiv);
+    var startSelectionResult = sh.startSelection(selDiv);
     var selection = sh._getSelection();
 
     return Promise.all([
+      is(startSelectionResult, sh.ERROR_NONE,
+        "startSelection() should have completed successfully"),
       ok(sh.isSelectionActive(), "Selection should be active now"),
       is(selection.anchorNode, document.documentElement, "Anchor Node should be start of document"),
       is(selection.anchorOffset, 0, "Anchor offset should be 0"),
@@ -76,7 +83,7 @@ function testSelectDivAtPoint() {
 
   // Select word at point in <div>
   var rect = selDiv.getBoundingClientRect();
-  sh.startSelection(selDiv, {
+  var startSelectionResult = sh.startSelection(selDiv, {
     mode: sh.SELECT_AT_POINT,
     x: rect.left + 1,
     y: rect.top + 1
@@ -86,6 +93,8 @@ function testSelectDivAtPoint() {
   // Check the state of the selection handler after selecting at a point.
   return Promise.all([
     ok(sh.isSelectionActive(), "Selection should be active at start of testSelectDivAtPoint"),
+    is(startSelectionResult, sh.ERROR_NONE,
+      "startSelection() should have completed successfully"),
     is(selection.toString(), DIV_POINT_TEXT, "The first word in the <div> was selected"),
 
   ]).then(function() {
@@ -93,7 +102,7 @@ function testSelectDivAtPoint() {
     selection.collapseToStart();
 
     return Promise.all([
-      ok(selection.getRangeAt(0).collapsed, "Selection should be collapsed"),
+      ok(selection.collapsed, "Selection should be collapsed"),
       ok(!sh.isSelectionActive(), "Selection should not be active"),
     ]);
   });
@@ -116,10 +125,12 @@ function testSelectInput() {
 
   ]).then(function() {
     // Check the state of the selection handler after calling startSelection on it.
-    sh.startSelection(inputNode);
+    var startSelectionResult = sh.startSelection(inputNode);
     var selection = sh._getSelection();
 
     return Promise.all([
+      is(startSelectionResult, sh.ERROR_NONE,
+        "startSelection() should have completed successfully"),
       ok(sh.isSelectionActive(), "Selection should be active"),
       ok((sh._targetElement instanceof Ci.nsIDOMNSEditableElement), "Selected element is editable"),
       is(selection.toString(), INPUT_TEXT, "All text in the <input> was selected"),
@@ -139,11 +150,13 @@ function testSelectTextarea() {
   textareaNode.value = TEXTAREA_TEXT;
 
   // Change (still-active) selection from previous <input> field to <textarea>
-  sh.startSelection(textareaNode);
+  var startSelectionResult = sh.startSelection(textareaNode);
   var selection = sh._getSelection();
 
   return Promise.all([
     ok(sh.isSelectionActive(), "Selection should be active at start of testSelectTextarea"),
+    is(startSelectionResult, sh.ERROR_NONE,
+      "startSelection() should have completed successfully"),
     ok((sh._targetElement instanceof Ci.nsIDOMHTMLTextAreaElement), "Selected element is editable, and a <textarea>"),
     is(selection.toString(), TEXTAREA_TEXT, "All text in the <textarea> was selected"),
 
@@ -219,6 +232,121 @@ function testCloseSelection() {
     return ok(!sh.isSelectionActive(), "blur should close active selection");
   });
 }
+
+/* =================================================================================
+ *
+ * Various text selection tests to ensure we fail certain startSelection() requests.
+ *
+ */
+function testStartSelectionFail() {
+  var sh = getSelectionHandler();
+
+  return Promise.all([
+    ok(!sh.isSelectionActive(),
+      "Selection should not be active at start of testStartSelectionFail"),
+
+  ]).then(function() {
+    // We cannot perform an invalid selection request.
+    var element = document.getElementById("inputNode");
+    var rect = element.getBoundingClientRect();
+    var startSelectionResult = sh.startSelection(element, {
+      mode: "fooMode",
+      x: rect.left + 1,
+      y: rect.top + 1
+    });
+
+    return Promise.all([
+      is(startSelectionResult, sh.START_ERROR_INVALID_MODE,
+        "startSelection() should have failed predictably."),
+      ok(!sh.isSelectionActive(), "We cannot select text with a bad mode request."),
+    ]);
+
+  }).then(function() {
+    // Select all on a Button should fail.
+    var element = document.getElementById("inputButton");
+    var startSelectionResult = sh.startSelection(element);
+
+    return Promise.all([
+      is(startSelectionResult, sh.START_ERROR_NONTEXT_INPUT,
+        "startSelection() should have failed predictably."),
+      ok(!sh.isSelectionActive(), "We cannot select text in an input Button."),
+    ]);
+
+  }).then(function() {
+    // We cannot Select Word where no point exists.
+    var element = document.getElementById("inputNode");
+    var rect = element.getBoundingClientRect();
+    var startSelectionResult = sh.startSelection(element, {
+      mode: sh.SELECT_AT_POINT,
+      x: -1000,
+      y: -1000
+    });
+
+    return Promise.all([
+      is(startSelectionResult, sh.START_ERROR_SELECT_WORD_FAILED,
+        "startSelection() should have failed predictably."),
+      ok(!sh.isSelectionActive(), "We cannot select text at a bad location request."),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * Test to ensure we can attach a Caret to an input field.
+ *
+ */
+function testAttachCaret() {
+  var sh = getSelectionHandler();
+
+  return Promise.all([
+    ok(!sh.isSelectionActive(), "Selection should not be active at start of testAttachCaret"),
+
+  ]).then(function() {
+    var element = document.getElementById("inputNode");
+    element.value = INPUT_TEXT;
+    var attachCaretResult = sh.attachCaret(element);
+
+    return Promise.all([
+      is(attachCaretResult, sh.ERROR_NONE,
+        "attachCaret() should have completed successfully"),
+    ]);
+
+  }).then(function() {
+    sh.observe(null, "TextSelection:End", {});
+
+    return Promise.all([
+      ok(!sh.isSelectionActive(), "Selection should not be active at end of testAttachCaret"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * Test to ensure we fail certain attachCaret() requests.
+ *
+ */
+function testAttachCaretFail() {
+  var sh = getSelectionHandler();
+
+  return Promise.all([
+    is(sh._activeType, sh.TYPE_NONE,
+      "Selection should not be active at start of testAttachCaretFail."),
+
+  ]).then(function() {
+    // We cannot attach Caret into disabled input.
+    var element = document.getElementById("inputDisabled");
+    element.value = INPUT_TEXT;
+    var attachCaretResult = sh.attachCaret(element);
+
+    return Promise.all([
+      is(attachCaretResult, sh.ATTACH_ERROR_INCOMPATIBLE,
+        "attachCaret() should have failed predictably."),
+      is(sh._activeType, sh.TYPE_NONE,
+        "Selection should not be active at end of testAttachCaretFail."),
+    ]);
+  });
+}
+
 
 /* =================================================================================
  *
@@ -302,5 +430,8 @@ function is(one, two, msg) {
 
     <input id="readOnlyTextInput" type="text" readonly><br>
 
+    <input id="inputButton" type="button" value="Click me"><br>
+
+    <input id="inputDisabled" type="text" disabled><br>
   </body>
 </html>

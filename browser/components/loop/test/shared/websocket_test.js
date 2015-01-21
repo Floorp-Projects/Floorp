@@ -6,8 +6,11 @@
 
 var expect = chai.expect;
 
+
 describe("loop.CallConnectionWebSocket", function() {
   "use strict";
+
+  var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
   var sandbox,
       dummySocket;
@@ -80,7 +83,7 @@ describe("loop.CallConnectionWebSocket", function() {
         sandbox.clock.tick(5101);
 
         promise.then(function() {}, function(error) {
-          expect(error).to.be.equal("timeout");
+          expect(error).to.be.equal(WEBSOCKET_REASONS.TIMEOUT);
           done();
         });
       });
@@ -157,7 +160,7 @@ describe("loop.CallConnectionWebSocket", function() {
         sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
           messageType: "action",
           event: "terminate",
-          reason: "reject"
+          reason: WEBSOCKET_REASONS.REJECT
         }));
       });
     });
@@ -191,7 +194,7 @@ describe("loop.CallConnectionWebSocket", function() {
     });
 
     describe("#cancel", function() {
-      it("should send a terminate message to the server with a reason of cancel",
+      it("should send a terminate message to the server with a reason of WEBSOCKET_REASONS.CANCEL",
         function() {
           callWebSocket.promiseConnect();
 
@@ -201,13 +204,13 @@ describe("loop.CallConnectionWebSocket", function() {
           sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
             messageType: "action",
             event: "terminate",
-            reason: "cancel"
+            reason: WEBSOCKET_REASONS.CANCEL
           }));
         });
     });
 
     describe("#mediaFail", function() {
-      it("should send a terminate message to the server with a reason of media-fail",
+      it("should send a terminate message to the server with a reason of WEBSOCKET_REASONS.MEDIA_FAIL",
         function() {
           callWebSocket.promiseConnect();
 
@@ -217,7 +220,7 @@ describe("loop.CallConnectionWebSocket", function() {
           sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
             messageType: "action",
             event: "terminate",
-            reason: "media-fail"
+            reason: WEBSOCKET_REASONS.MEDIA_FAIL
           }));
         });
     });
@@ -234,7 +237,7 @@ describe("loop.CallConnectionWebSocket", function() {
           var eventData = {
             messageType: "progress",
             state: "terminate",
-            reason: "reject"
+            reason: WEBSOCKET_REASONS.REJECT
           };
 
           dummySocket.onmessage({
@@ -261,7 +264,7 @@ describe("loop.CallConnectionWebSocket", function() {
           var currentEventData = {
             messageType: "progress",
             state: "terminate",
-            reason: "reject"
+            reason: WEBSOCKET_REASONS.REJECT
           };
 
           dummySocket.onmessage({
@@ -277,7 +280,7 @@ describe("loop.CallConnectionWebSocket", function() {
           var eventData = {
             messageType: "progress",
             state: "terminate",
-            reason: "reject"
+            reason: WEBSOCKET_REASONS.REJECT
           };
 
           dummySocket.onmessage({

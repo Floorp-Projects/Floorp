@@ -14,10 +14,12 @@ let CallTreeView = {
     this._callTree = $(".call-tree-cells-container");
     this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(this);
     this._onRangeChange = this._onRangeChange.bind(this);
+    this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onLink = this._onLink.bind(this);
 
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
   },
@@ -28,6 +30,7 @@ let CallTreeView = {
   destroy: function () {
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
+    PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
   },
@@ -82,13 +85,17 @@ let CallTreeView = {
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree: function (profilerData, beginAt, endAt, options) {
+  _prepareCallTree: function (profilerData, startTime, endTime, options) {
     let threadSamples = profilerData.profile.threads[0].samples;
     let contentOnly = !Prefs.showPlatformData;
-    // TODO handle inverted tree bug 1102347
-    let invertTree = false;
+    let invertTree = PerformanceController.getPref("invert-call-tree");
 
-    let threadNode = new ThreadNode(threadSamples, contentOnly, beginAt, endAt, invertTree);
+    let threadNode = new ThreadNode(threadSamples,
+      { startTime, endTime, contentOnly, invertTree });
+
+    // If we have an empty profile (no samples), then don't invert the tree, as
+    // it would hide the root node and a completely blank call tree space can be
+    // mis-interpreted as an error.
     options.inverted = invertTree && threadNode.samples > 0;
 
     return threadNode;
@@ -114,6 +121,17 @@ let CallTreeView = {
 
     let contentOnly = !Prefs.showPlatformData;
     root.toggleCategories(!contentOnly);
+  },
+
+  /**
+   * Called when a preference under "devtools.performance.ui." is changed.
+   */
+  _onPrefChanged: function (_, prefName, value) {
+    if (prefName === "invert-call-tree") {
+      let { beginAt, endAt } = OverviewView.getRange();
+      let profilerData = PerformanceController.getCurrentRecording().getProfilerData();
+      this.render(profilerData, beginAt || void 0, endAt || void 0);
+    }
   }
 };
 

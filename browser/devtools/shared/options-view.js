@@ -8,7 +8,6 @@ const PREF_CHANGE_EVENT = "pref-changed";
 /**
  * OptionsView constructor. Takes several options, all required:
  * - branchName: The name of the prefs branch, like "devtools.debugger."
- * - window: The window the XUL elements live in.
  * - menupopup: The XUL `menupopup` item that contains the pref buttons.
  *
  * Fires an event, PREF_CHANGE_EVENT, with the preference name that changed as the second
@@ -17,8 +16,8 @@ const PREF_CHANGE_EVENT = "pref-changed";
  */
 const OptionsView = function (options={}) {
   this.branchName = options.branchName;
-  this.window = options.window;
   this.menupopup = options.menupopup;
+  this.window = this.menupopup.ownerDocument.defaultView;
   let { document } = this.window;
   this.$ = document.querySelector.bind(document);
   this.$$ = document.querySelectorAll.bind(document);
@@ -76,6 +75,13 @@ OptionsView.prototype = {
     this.prefObserver.off(PREF_CHANGE_EVENT, this._onPrefChange);
     this.menupopup.removeEventListener("popupshown", this._onPopupShown);
     this.menupopup.removeEventListener("popuphidden", this._onPopupHidden);
+  },
+
+  /**
+   * Returns the value for the specified `prefName`
+   */
+  getPref: function (prefName) {
+    return this.prefObserver.get(prefName);
   },
 
   /**
