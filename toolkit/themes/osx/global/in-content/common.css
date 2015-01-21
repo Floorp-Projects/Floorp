@@ -26,6 +26,10 @@ xul|button {
   margin-right: 4px;
 }
 
+xul|caption {
+  -moz-padding-start: 0;
+}
+
 xul|groupbox > xul|*.groupbox-body {
   padding: 0;
 }

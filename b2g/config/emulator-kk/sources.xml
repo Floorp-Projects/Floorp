@@ -12,15 +12,15 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="e0c735ec89df011ea7dd435087a9045ecff9ff9e">
+  <project name="platform_build" path="build" remote="b2g" revision="e06971db7acf7a35c32eb74d675a4e12e288e6be">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="5e98dc164b17fd6decb48a9eaddef0e55b82e249"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="e45c5dbdcfc2d598c889dfbea72fa11157422afe"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="320dad6b787c296ba701bca8377f71ab5fd72ee8"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
+  <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fe91ec3af5396edab45b15e546e21613785724b5"/>
@@ -116,7 +116,7 @@
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="f7d9bf71cf6693474f3f2a81a4ba62c0fc5646aa"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="b562b01c93de9578d5db537b6a602a38e1aaa0ce"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="387f03e815f57d536dd922706db1622bddba8d81"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="bdc5a9f9602652c3c2626e020da03674a2c2e1b6"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="8a05fd72770a3b1fc23f3216a45318ad393fc4ca"/>
   <project name="platform/system/extras" path="system/extras" revision="5356165f67f4a81c2ef28671c13697f1657590df"/>
   <project name="platform/system/media" path="system/media" revision="be0e2fe59a8043fa5200f75697df9220a99abe9d"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="fe95bc6f83af5c18a73aa86c96e7fa7f79b91477"/>
@@ -129,7 +129,7 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="c0e0019a6ec1a6199a9c7bc4ace041259f3b8512"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="f5f7fa2fc26b96d2cbd0af4569c0036fe034bb43"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="a510f2d2d579e76421b0c84cd225c249b2da6f8a"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="97d63c256a047b491565d624aea1dd5f1f8593ea"/>

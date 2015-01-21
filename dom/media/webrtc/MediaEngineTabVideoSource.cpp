@@ -32,7 +32,7 @@ using dom::ConstrainLongRange;
 NS_IMPL_ISUPPORTS(MediaEngineTabVideoSource, nsIDOMEventListener, nsITimerCallback)
 
 MediaEngineTabVideoSource::MediaEngineTabVideoSource()
-: mMonitor("MediaEngineTabVideoSource"), mTabSource(nullptr)
+: mData(NULL), mDataSize(0), mMonitor("MediaEngineTabVideoSource"), mTabSource(nullptr)
 {
 }
 
@@ -79,7 +79,6 @@ MediaEngineTabVideoSource::Notify(nsITimer*) {
 nsresult
 MediaEngineTabVideoSource::InitRunnable::Run()
 {
-  mVideoSource->mData = (unsigned char*)malloc(mVideoSource->mBufW * mVideoSource->mBufH * 4);
   if (mVideoSource->mWindowId != -1) {
     nsCOMPtr<nsPIDOMWindow> window  = nsGlobalWindow::GetOuterWindowWithId(mVideoSource->mWindowId);
     if (window) {
@@ -150,20 +149,10 @@ MediaEngineTabVideoSource::Allocate(const VideoTrackConstraintsN& aConstraints,
     }
   }
 
-  mBufW = aPrefs.GetWidth(false);
-  mBufH = aPrefs.GetHeight(false);
+  ConstrainLongRange defaultRange;
 
-  if (cWidth.mMin > mBufW) {
-    mBufW = cWidth.mMin;
-  } else if (cWidth.mMax < mBufW) {
-    mBufW = cWidth.mMax;
-  }
-
-  if (cHeight.mMin > mBufH) {
-    mBufH = cHeight.mMin;
-  } else if (cHeight.mMax < mBufH) {
-    mBufH = cHeight.mMax;
-  }
+  mBufWidthMax  = defaultRange.mMax > cWidth.mMax ? cWidth.mMax : aPrefs.GetWidth(false);
+  mBufHeightMax  = defaultRange.mMax > cHeight.mMax ? cHeight.mMax : aPrefs.GetHeight(false);
 
   mTimePerFrame = aPrefs.mFPS ? 1000 / aPrefs.mFPS : aPrefs.mFPS;
   return NS_OK;
@@ -213,35 +202,38 @@ MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
 
 void
 MediaEngineTabVideoSource::Draw() {
-
-  IntSize size(mBufW, mBufH);
-
-  nsresult rv;
-
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mWindow);
 
   if (!win) {
     return;
   }
 
-  int32_t width, height;
-  win->GetInnerWidth(&width);
-  win->GetInnerHeight(&height);
+  int32_t innerWidth, innerHeight;
+  win->GetInnerWidth(&innerWidth);
+  win->GetInnerHeight(&innerHeight);
 
-  if (width == 0 || height == 0) {
+  if (innerWidth == 0 || innerHeight == 0) {
     return;
   }
 
-  int32_t srcW;
-  int32_t srcH;
-
-  float aspectRatio = ((float) size.width) / size.height;
-  if (width / aspectRatio < height) {
-    srcW = width;
-    srcH = width / aspectRatio;
+  IntSize size;
+  // maintain source aspect ratio
+  if (mBufWidthMax/innerWidth < mBufHeightMax/innerHeight) {
+    size = IntSize(mBufWidthMax, (mBufWidthMax * ((float) innerHeight/innerWidth)));
   } else {
-    srcW = height * aspectRatio;
-    srcH = height;
+    size = IntSize((mBufHeightMax * ((float) innerWidth/innerHeight)), mBufHeightMax);
+  }
+
+  gfxImageFormat format = gfxImageFormat::RGB24;
+  uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
+
+  if (mDataSize < static_cast<size_t>(stride * size.height)) {
+    mDataSize = stride * size.height;
+    mData = static_cast<unsigned char*>(malloc(mDataSize));
+  }
+
+  if (!mData) {
+    return;
   }
 
   nsRefPtr<nsPresContext> presContext;
@@ -259,11 +251,8 @@ MediaEngineTabVideoSource::Draw() {
   if (!mScrollWithPage) {
     renderDocFlags |= nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
   }
-  nsRect r(0, 0, nsPresContext::CSSPixelsToAppUnits((float)srcW),
-           nsPresContext::CSSPixelsToAppUnits((float)srcH));
-
-  gfxImageFormat format = gfxImageFormat::RGB24;
-  uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
+  nsRect r(0, 0, nsPresContext::CSSPixelsToAppUnits((float)innerWidth),
+           nsPresContext::CSSPixelsToAppUnits((float)innerHeight));
 
   nsRefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
   RefPtr<DrawTarget> dt =
@@ -276,12 +265,10 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
   nsRefPtr<gfxContext> context = new gfxContext(dt);
-  context->SetMatrix(context->CurrentMatrix().Scale((float)size.width/srcW,
-                                                    (float)size.height/srcH));
+  context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/innerWidth),
+                                                    (((float) size.height)/innerHeight)));
 
-  rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
-
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_SUCCESS_VOID(presShell->RenderDocument(r, renderDocFlags, bgColor, context));
 
   RefPtr<SourceSurface> surface = dt->Snapshot();
   if (!surface) {
