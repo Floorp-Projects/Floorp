@@ -5,20 +5,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
 -->
 <head>
   <meta charset="utf-8">
-  <title>mozGetUserMedia Basic Video & Audio Test</title>
+  <title>getUserMedia Basic Video & Audio Test</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">mozGetUserMedia Basic Video & Audio Test</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=781534">getUserMedia Basic Video & Audio Test</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <video id="testVideoAudio"></video>
 </div>
 <pre id="test">
-<script type="application/javascript">
+  <script type="application/javascript">
   /**
    * Run a test to verify that we can complete a start and stop media playback
    * cycle for a video and audio LocalMediaStream on a video HTMLMediaElement.
@@ -27,16 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
     var testVideoAudio = document.getElementById('testVideoAudio');
     var constraints = {video: true, audio: true};
 
-    getUserMedia(constraints, function (aStream) {
+    getUserMedia(constraints).then(aStream => {
       checkMediaStreamTracks(constraints, aStream);
 
       var playback = new LocalMediaStreamPlayback(testVideoAudio, aStream);
-      playback.playMedia(false, function () {
-        aStream.stop();
-        SimpleTest.finish();
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
+      return playback.playMedia(false);
+    }).then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>
