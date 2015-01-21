@@ -12,7 +12,6 @@ loader.lazyGetter(this, "NetworkHelper", () => require("devtools/toolkit/webcons
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyImporter(this, "DevToolsUtils", "resource://gre/modules/devtools/DevToolsUtils.jsm");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
-loader.lazyImporter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
@@ -175,7 +174,7 @@ NetworkResponseListener.prototype = {
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
     let secinfo = this.httpActivity.channel.securityInfo;
-    let info = NetworkHelper.parseSecurityInfo(secinfo, this.request);
+    let info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
 
     this.httpActivity.owner.addSecurityInfo(info);
   }),
@@ -665,7 +664,9 @@ NetworkMonitor.prototype = {
 
     // see NM__onRequestBodySent()
     httpActivity.charset = win ? win.document.characterSet : null;
-    httpActivity.private = win ? PrivateBrowsingUtils.isWindowPrivate(win) : false;
+
+    aChannel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+    httpActivity.private = aChannel.isChannelPrivate;
 
     httpActivity.timings.REQUEST_HEADER = {
       first: aTimestamp,
@@ -751,6 +752,7 @@ NetworkMonitor.prototype = {
       channel: aChannel,
       charset: null, // see NM__onRequestHeader()
       url: aChannel.URI.spec,
+      hostname: aChannel.URI.host, // needed for host specific security info
       discardRequestBody: !this.saveRequestAndResponseBodies,
       discardResponseBody: !this.saveRequestAndResponseBodies,
       timings: {}, // internal timing information, see NM_observeActivity()

@@ -296,8 +296,9 @@ add_task(function* basicAuthorizationAndRegistration() {
   is(loopButton.getAttribute("state"), "", "state of loop button should be empty when not logged in");
 
   info("Login");
+  statusChangedPromise = promiseObserverNotified("loop-status-changed", "login");
   let tokenData = yield MozLoopService.logInToFxA();
-  yield promiseObserverNotified("loop-status-changed", "login");
+  yield statusChangedPromise;
   ise(tokenData.access_token, "code1_access_token", "Check access_token");
   ise(tokenData.scope, "profile", "Check scope");
   ise(tokenData.token_type, "bearer", "Check token_type");

@@ -77,6 +77,9 @@ add_task(function test_initialize_with_invalid_fxa_token() {
                  "FXA profile pref should be cleared if token was invalid");
     Assert.ok(MozLoopServiceInternal.errors.has("login"),
               "Initialization error should have been reported to UI");
+    Assert.ok(MozLoopServiceInternal.errors.has("login"));
+    Assert.ok(MozLoopServiceInternal.errors.get("login").friendlyDetailsButtonCallback,
+              "Check that there is a retry callback");
   });
 });
 
