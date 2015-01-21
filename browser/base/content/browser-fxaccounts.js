@@ -225,7 +225,7 @@ let gFxAccounts = {
 
   openAccountsPage: function () {
     let entryPoint = "menupanel";
-    if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+    if (UITour.tourBrowsersByWindow.get(window) && UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
       entryPoint = "uitour";
     }
     switchToTabHavingURI("about:accounts?entrypoint=" + entryPoint, true, {
@@ -235,7 +235,7 @@ let gFxAccounts = {
 
   openSignInAgainPage: function () {
     let entryPoint = "menupanel";
-    if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+    if (UITour.tourBrowsersByWindow.get(window) && UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
       entryPoint = "uitour";
     }
     switchToTabHavingURI("about:accounts?action=reauth&entrypoint=" + entryPoint, true, {
