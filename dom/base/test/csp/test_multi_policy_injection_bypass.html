@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717511
+-->
+<head>
+  <title>Test for Bug 717511</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<iframe style="width:200px;height:200px;" id='cspframe2'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/dom/base/test/";
+
+// These are test results: -1 means it hasn't run,
+// true/false is the pass/fail result.
+// This is not exhaustive, just double-checking the 'self' vs * policy conflict in the two HTTP headers.
+window.tests = {
+  img_good: -1,
+  img_bad: -1,
+  script_good: -1,
+  script_bad: -1,
+  img2_good: -1,
+  img2_bad: -1,
+  script2_good: -1,
+  script2_bad: -1,
+};
+
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "specialpowers-http-notify-request") {
+      //these things were allowed by CSP
+      var asciiSpec = data;
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /_good/.test(testid),
+                        asciiSpec + " allowed by csp");
+
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      // subject should be an nsIURI for csp-on-violate-policy
+      if (!SpecialPowers.can_QI(subject)) {
+        return;
+      }
+
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(
+                        SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                        "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /_bad/.test(testid),
+                        asciiSpec + " blocked by \"" + data + "\"");
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  is(result, true, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1)
+      return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_multi_policy_injection_bypass.html';
+document.getElementById('cspframe2').src = 'file_multi_policy_injection_bypass_2.html';
+</script>
+</pre>
+</body>
+</html>

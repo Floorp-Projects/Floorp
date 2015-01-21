@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 826805 - Allow http and https for scheme-less sources</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We are loading the following url (including a fragment portion):
+ *   https://example.com/tests/dom/base/test/csp/file_csp_path_matching.js#foo
+ * using different policies that lack specification of a scheme.
+ *
+ * Since the file is served over http:, the upgrade to https should be
+ * permitted by CSP in case no port is specified.
+ */
+
+var policies = [
+  ["allowed", "example.com"],
+  ["allowed", "example.com:443"],
+  ["blocked", "example.com:80"]
+]
+
+var counter = 0;
+var policy;
+
+function loadNextTest() {
+  if (counter == policies.length) {
+    SimpleTest.finish();
+  }
+  else {
+    policy = policies[counter++];
+    var src = "file_csp_testserver.sjs";
+    // append the file that should be served
+    src += "?file=" + escape("tests/dom/base/test/csp/file_csp_allow_https_schemes.html");
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape("default-src 'none'; script-src " + policy[1]);
+
+    document.getElementById("testframe").addEventListener("load", test, false);
+    document.getElementById("testframe").src = src;
+  }
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, policy[0], "should be " + policy[0] + " in test " + (counter - 1) + "!");
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content in test " + (counter - 1) + "!");
+  }
+  loadNextTest();
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>
