@@ -15,31 +15,6 @@
 #if defined(__cplusplus)
 
 /**
- * MOZ_ENUM_TYPE specifies the underlying numeric type for an enum.  It's
- * specified by placing MOZ_ENUM_TYPE(type) immediately after the enum name in
- * its declaration, and before the opening curly brace, like
- *
- *   enum MyEnum MOZ_ENUM_TYPE(uint16_t)
- *   {
- *     A,
- *     B = 7,
- *     C
- *   };
- *
- * In supporting compilers, the macro will expand to ": uint16_t".  The
- * compiler will allocate exactly two bytes for MyEnum and will require all
- * enumerators to have values between 0 and 65535.  (Thus specifying "B =
- * 100000" instead of "B = 7" would fail to compile.)  In old compilers the
- * macro expands to the empty string, and the underlying type is generally
- * undefined.
- */
-#ifdef MOZ_HAVE_CXX11_ENUM_TYPE
-#  define MOZ_ENUM_TYPE(type)   : type
-#else
-#  define MOZ_ENUM_TYPE(type)   /* no support */
-#endif
-
-/**
  * MOZ_BEGIN_ENUM_CLASS and MOZ_END_ENUM_CLASS provide access to the
  * strongly-typed enumeration feature of C++11 ("enum class").  If supported
  * by the compiler, an enum defined using these macros will not be implicitly
@@ -155,7 +130,7 @@
      class Name \
      { \
      public: \
-       enum Enum MOZ_ENUM_TYPE(type) \
+       enum Enum : type \
        {
 #  define MOZ_END_NESTED_ENUM_CLASS(Name) \
        }; \
