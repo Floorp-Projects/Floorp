@@ -327,6 +327,7 @@ NS_IMPL_ISUPPORTS(GPUAdapterReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
+  , mIsWARP(false)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;
@@ -1804,6 +1805,7 @@ gfxWindowsPlatform::InitD3D11Devices()
       MOZ_CRASH();
     }
 
+    mIsWARP = true;
     reporterWARP.SetSuccessful();
   }
 
