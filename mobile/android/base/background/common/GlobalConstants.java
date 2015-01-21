@@ -1,38 +1,25 @@
-//#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.background.common;
 
+import org.mozilla.gecko.AppConstants;
+
 /**
  * Preprocessed class for storing preprocessed values common to all
  * Android services.
  */
 public class GlobalConstants {
-  public static final String ANDROID_CPU_ARCH = "@ANDROID_CPU_ARCH@";
-
-  // One of 'beta', 'aurora', 'nightly', 'default'.
-  // If this is an official build, 'default' means 'release'.
-  // Otherwise, it means 'dev'.
-  public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
-//#ifdef MOZ_OFFICIAL_BRANDING
-  public static final boolean MOZ_OFFICIAL_BRANDING = true;
-//#else
-  public static final boolean MOZ_OFFICIAL_BRANDING = false;
-//#endif
-
-  public static final String MOZ_APP_DISPLAYNAME = "@MOZ_APP_DISPLAYNAME@";
-  public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
-  public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
-  public static final String BROWSER_INTENT_CLASS = "org.mozilla.gecko.BrowserApp";
+  public static final String BROWSER_INTENT_PACKAGE = AppConstants.ANDROID_PACKAGE_NAME;
+  public static final String BROWSER_INTENT_CLASS = AppConstants.BROWSER_INTENT_CLASS_NAME;
 
   /**
    * Bug 800244: this signing-level permission protects broadcast intents that
    * should be received only by the Firefox versions with the given Android
    * package name.
    */
-  public static final String PER_ANDROID_PACKAGE_PERMISSION = "@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE";
+  public static final String PER_ANDROID_PACKAGE_PERMISSION = AppConstants.ANDROID_PACKAGE_NAME + ".permission.PER_ANDROID_PACKAGE";
 
   public static final int SHARED_PREFERENCES_MODE = 0;
 

@@ -18,7 +18,6 @@ constants_jar.sources = [
 constants_jar.generated_sources = [
     'preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
-constants_jar.generated_sources += ['preprocessed/org/mozilla/gecko/' + f for f in sync_generated_java_files]
 
 resjar = add_java_jar('gecko-R')
 resjar.sources = []
