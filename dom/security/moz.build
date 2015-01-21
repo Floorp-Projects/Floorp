@@ -29,5 +29,5 @@ FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
-    '/netwerk/base/src',
+    '/netwerk/base',
 ]

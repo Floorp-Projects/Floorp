@@ -2470,6 +2470,8 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
             pc += len;
         }
 
+        fprintf(stdout, "%s\n", sprinter.string());
+
       bail:
         fclose(file);
     }
