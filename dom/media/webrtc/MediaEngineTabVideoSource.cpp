@@ -32,7 +32,7 @@ using dom::ConstrainLongRange;
 NS_IMPL_ISUPPORTS(MediaEngineTabVideoSource, nsIDOMEventListener, nsITimerCallback)
 
 MediaEngineTabVideoSource::MediaEngineTabVideoSource()
-: mMonitor("MediaEngineTabVideoSource"), mTabSource(nullptr), mDataSize(0), mData(NULL)
+: mData(NULL), mDataSize(0), mMonitor("MediaEngineTabVideoSource"), mTabSource(nullptr)
 {
 }
 
