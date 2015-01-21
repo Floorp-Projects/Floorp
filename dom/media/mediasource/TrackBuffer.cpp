@@ -339,7 +339,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
 
   bool evicted = toEvict < (totalSize - aThreshold);
   if (evicted) {
-    nsRefPtr<TimeRanges> ranges = new TimeRanges();
+    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
     mCurrentDecoder->GetBuffered(ranges);
     *aBufferStartTime = std::max(0.0, ranges->GetStartTime());
   }

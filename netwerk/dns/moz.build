@@ -62,5 +62,5 @@ GENERATED_FILES = [
 
 # need to include etld_data.inc
 LOCAL_INCLUDES += [
-    '../base/src',
+    '/netwerk/base',
 ]

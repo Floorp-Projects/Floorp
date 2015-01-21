@@ -71,7 +71,7 @@ TestDataStructuresParent::DeallocPTestDataStructuresSubParent(PTestDataStructure
 }
 
 bool TestDataStructuresParent::RecvTest1(
-        const InfallibleTArray<int>& ia,
+        InfallibleTArray<int>&& ia,
         InfallibleTArray<int>* oa)
 {
     test_assert(5 == ia.Length(), "wrong length");
@@ -84,7 +84,7 @@ bool TestDataStructuresParent::RecvTest1(
 }
 
 bool TestDataStructuresParent::RecvTest2(
-        const InfallibleTArray<PTestDataStructuresSubParent*>& i1,
+        InfallibleTArray<PTestDataStructuresSubParent*>&& i1,
         InfallibleTArray<PTestDataStructuresSubParent*>* o1)
 {
     test_assert(nactors == i1.Length(), "wrong #actors");
@@ -110,7 +110,7 @@ bool TestDataStructuresParent::RecvTest3(
 }
 
 bool TestDataStructuresParent::RecvTest4(
-        const InfallibleTArray<IntDouble>& i1,
+        InfallibleTArray<IntDouble>&& i1,
         InfallibleTArray<IntDouble>* o1)
 {
     test_assert(4 == i1.Length(), "wrong length");
@@ -171,7 +171,7 @@ TestDataStructuresParent::RecvTest7_0(const ActorWrapper& i1,
 }
 
 bool TestDataStructuresParent::RecvTest6(
-        const InfallibleTArray<IntDoubleArrays>& i1,
+        InfallibleTArray<IntDoubleArrays>&& i1,
         InfallibleTArray<IntDoubleArrays>* o1)
 {
     test_assert(3 == i1.Length(), "wrong length");
@@ -224,7 +224,7 @@ bool TestDataStructuresParent::RecvTest7(
 }
 
 bool TestDataStructuresParent::RecvTest8(
-        const InfallibleTArray<Actors>& i1,
+        InfallibleTArray<Actors>&& i1,
         InfallibleTArray<Actors>* o1)
 {
     test_assert(3 == i1.Length(), "wrong length");
@@ -276,7 +276,7 @@ bool TestDataStructuresParent::RecvTest9(
 }
 
 bool TestDataStructuresParent::RecvTest10(
-        const InfallibleTArray<Unions>& i1,
+        InfallibleTArray<Unions>&& i1,
         InfallibleTArray<Unions>* o1)
 {
     test_assert(42 == i1[0].get_int(), "wrong value");
@@ -438,14 +438,14 @@ bool TestDataStructuresParent::RecvTest16(
     return true;
 }
 
-bool TestDataStructuresParent::RecvTest17(const InfallibleTArray<Op>& sa)
+bool TestDataStructuresParent::RecvTest17(InfallibleTArray<Op>&& sa)
 {
     test_assert(sa.Length() == 1 && Op::TSetAttrs == sa[0].type(),
                 "wrong value");
     return true;
 }
 
-bool TestDataStructuresParent::RecvTest18(const RegionArray& ra)
+bool TestDataStructuresParent::RecvTest18(RegionArray&& ra)
 {
     for (RegionArray::index_type i = 0; i < ra.Length(); ++i) {
         nsIntRegionRectIterator it(ra[i]);

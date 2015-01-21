@@ -19,8 +19,8 @@
 %include "jsimdext.inc"
 
 ; --------------------------------------------------------------------------
-	SECTION	SEG_TEXT
-	BITS	32
+        SECTION SEG_TEXT
+        BITS    32
 ;
 ; Check if the CPU supports SIMD instructions
 ;
@@ -28,78 +28,78 @@
 ; jpeg_simd_cpu_support (void)
 ;
 
-	align	16
-	global	EXTN(jpeg_simd_cpu_support)
+        align   16
+        global  EXTN(jpeg_simd_cpu_support)
 
 EXTN(jpeg_simd_cpu_support):
-	push	ebx
-;	push	ecx		; need not be preserved
-;	push	edx		; need not be preserved
-;	push	esi		; unused
-	push	edi
+        push    ebx
+;       push    ecx             ; need not be preserved
+;       push    edx             ; need not be preserved
+;       push    esi             ; unused
+        push    edi
 
-	xor	edi,edi			; simd support flag
+        xor     edi,edi                 ; simd support flag
 
-	pushfd
-	pop	eax
-	mov	edx,eax
-	xor	eax, 1<<21		; flip ID bit in EFLAGS
-	push	eax
-	popfd
-	pushfd
-	pop	eax
-	xor	eax,edx
-	jz	short .return		; CPUID is not supported
+        pushfd
+        pop     eax
+        mov     edx,eax
+        xor     eax, 1<<21              ; flip ID bit in EFLAGS
+        push    eax
+        popfd
+        pushfd
+        pop     eax
+        xor     eax,edx
+        jz      short .return           ; CPUID is not supported
 
-	; Check for MMX instruction support
-	xor	eax,eax
-	cpuid
-	test	eax,eax
-	jz	short .return
+        ; Check for MMX instruction support
+        xor     eax,eax
+        cpuid
+        test    eax,eax
+        jz      short .return
 
-	xor	eax,eax
-	inc	eax
-	cpuid
-	mov	eax,edx			; eax = Standard feature flags
+        xor     eax,eax
+        inc     eax
+        cpuid
+        mov     eax,edx                 ; eax = Standard feature flags
 
-	test	eax, 1<<23		; bit23:MMX
-	jz	short .no_mmx
-	or	edi, byte JSIMD_MMX
+        test    eax, 1<<23              ; bit23:MMX
+        jz      short .no_mmx
+        or      edi, byte JSIMD_MMX
 .no_mmx:
-	test	eax, 1<<25		; bit25:SSE
-	jz	short .no_sse
-	or	edi, byte JSIMD_SSE
+        test    eax, 1<<25              ; bit25:SSE
+        jz      short .no_sse
+        or      edi, byte JSIMD_SSE
 .no_sse:
-	test	eax, 1<<26		; bit26:SSE2
-	jz	short .no_sse2
-	or	edi, byte JSIMD_SSE2
+        test    eax, 1<<26              ; bit26:SSE2
+        jz      short .no_sse2
+        or      edi, byte JSIMD_SSE2
 .no_sse2:
 
-	; Check for 3DNow! instruction support
-	mov	eax, 0x80000000
-	cpuid
-	cmp	eax, 0x80000000
-	jbe	short .return
+        ; Check for 3DNow! instruction support
+        mov     eax, 0x80000000
+        cpuid
+        cmp     eax, 0x80000000
+        jbe     short .return
 
-	mov	eax, 0x80000001
-	cpuid
-	mov	eax,edx			; eax = Extended feature flags
+        mov     eax, 0x80000001
+        cpuid
+        mov     eax,edx                 ; eax = Extended feature flags
 
-	test	eax, 1<<31		; bit31:3DNow!(vendor independent)
-	jz	short .no_3dnow
-	or	edi, byte JSIMD_3DNOW
+        test    eax, 1<<31              ; bit31:3DNow!(vendor independent)
+        jz      short .no_3dnow
+        or      edi, byte JSIMD_3DNOW
 .no_3dnow:
 
 .return:
-	mov	eax,edi
+        mov     eax,edi
 
-	pop	edi
-;	pop	esi		; unused
-;	pop	edx		; need not be preserved
-;	pop	ecx		; need not be preserved
-	pop	ebx
-	ret
+        pop     edi
+;       pop     esi             ; unused
+;       pop     edx             ; need not be preserved
+;       pop     ecx             ; need not be preserved
+        pop     ebx
+        ret
 
 ; For some reason, the OS X linker does not honor the request to align the
 ; segment unless we do this.
-	align	16
+        align   16

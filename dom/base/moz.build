@@ -411,7 +411,7 @@ LOCAL_INCLUDES += [
     '/layout/style',
     '/layout/svg',
     '/layout/xul',
-    '/netwerk/base/src',
+    '/netwerk/base',
     '/widget',
     '/xpcom/ds',
 ]
