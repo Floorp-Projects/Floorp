@@ -33,5 +33,5 @@ MSVC_ENABLE_PGO = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/netwerk/base/src',
+    '/netwerk/base',
 ]

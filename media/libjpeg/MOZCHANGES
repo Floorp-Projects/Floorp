@@ -12,8 +12,8 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
 * Copy win/jsimdcfg.inc to simd/.
 
-* Since libjpeg-turbo normally creates config.h and jconfig.h at build time and
-  we use pre-generated versions, changes to jconfig.h.in and win/config.h.in
+* Since libjpeg-turbo normally creates jconfig.h and jconfigint.h at build time
+  and we use pre-generated versions, changes to jconfig.h.in and jconfigint.h.in
   should be looked for and noted for later inclusion.
 
 * Now look through the new files and rm any which are npotb.  When I upgraded
@@ -43,10 +43,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
 * Restore files modified in the Mozilla repository.
 
-    $ hg revert --no-backup config.h jconfig.h Makefile.in MOZCHANGES \
+    $ hg revert --no-backup jconfig.h jconfigint.h Makefile.in MOZCHANGES \
       mozilla.diff simd/Makefile.in genTables.py
 
-* Update config.h and jconfig.h as noted previously.
+* Update jconfig.h and jconfigint.h as noted previously.
 
 * Apply Mozilla-specific changes to upstream files.
 
@@ -57,6 +57,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 * Finally, tell hg that we've added or removed some files:
 
     $ hg addremove
+
+== January 15, 2015 (libjpeg-turbo v1.4.0 r1481 2015-01-07) ==
+
+* Updated to v1.4.0 release.
 
 == March 24, 2014 (libjpeg-turbo v1.3.1 r1205 2014-03-22) ==
 

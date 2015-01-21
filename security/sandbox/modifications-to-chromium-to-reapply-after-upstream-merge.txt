@@ -3,4 +3,6 @@ Also, please update any existing links to their actual mozilla-central changeset
 
 https://hg.mozilla.org/mozilla-central/rev/365d1073111a
 https://hg.mozilla.org/mozilla-central/rev/0f763c186855
-https://bugzilla.mozilla.org/show_bug.cgi?id=1105729 bug1105729.patch
+https://hg.mozilla.org/mozilla-central/rev/d58c0218bb55
+https://bugzilla.mozilla.org/show_bug.cgi?id=1119072 (Part 3) vs2015-hashset-hashmap.patch
+https://bugzilla.mozilla.org/show_bug.cgi?id=1119072 (Part 6) vs2015-change-const-to-non-const-element.patch

@@ -31,7 +31,7 @@ ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
   uint8x8_t redVector = vdup_n_u8(redFactor);
   uint8x8_t greenVector = vdup_n_u8(greenFactor);
   uint8x8_t blueVector = vdup_n_u8(blueFactor);
-  uint8x8_t zeroVector = vdup_n_u8(0);
+  uint8x8_t fullBitVector = vdup_n_u8(255);
   uint8x8_t oneVector = vdup_n_u8(1);
   for (int32_t y = 0; y < aSize.height; y++) {
     // Calculate luminance by neon with 8 pixels per loop
@@ -43,7 +43,7 @@ ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
       gray = vshrn_n_u16(temp, 8); // gray = temp >> 8
 
       // Check alpha value
-      uint8x8_t alphaVector = vcgt_u8(argb.val[GFX_ARGB32_OFFSET_A], zeroVector);
+      uint8x8_t alphaVector = vtst_u8(argb.val[GFX_ARGB32_OFFSET_A], fullBitVector);
       gray = vmul_u8(gray, vand_u8(alphaVector, oneVector));
 
       // Put the result to the 8 pixels
