@@ -21,7 +21,7 @@ dictionary MediaTrackConstraints : MediaTrackConstraintSet {
 
 // TODO(jib): Remove in 6+ weeks (Bug 997365)
 dictionary MobileLegacyMediaTrackConstraintSet {
-    VideoFacingModeEnum facingMode;
+    DOMString facingMode;
 };
 
 interface MediaStreamTrack {
