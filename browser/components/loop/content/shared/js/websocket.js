@@ -8,6 +8,8 @@ var loop = loop || {};
 loop.CallConnectionWebSocket = (function() {
   "use strict";
 
+  var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
+
   // Response timeout is 5 seconds as per API.
   var kResponseTimeout = 5000;
 
@@ -66,7 +68,7 @@ loop.CallConnectionWebSocket = (function() {
 
           var timeout = setTimeout(function() {
             if (this.connectDetails && this.connectDetails.reject) {
-              this.connectDetails.reject("timeout");
+              this.connectDetails.reject(WEBSOCKET_REASONS.TIMEOUT);
               this._clearConnectionFlags();
             }
           }.bind(this), kResponseTimeout);
@@ -139,7 +141,7 @@ loop.CallConnectionWebSocket = (function() {
       this._send({
         messageType: "action",
         event: "terminate",
-        reason: "reject"
+        reason: WEBSOCKET_REASONS.REJECT
       });
     },
 
@@ -172,7 +174,7 @@ loop.CallConnectionWebSocket = (function() {
       this._send({
         messageType: "action",
         event: "terminate",
-        reason: "cancel"
+        reason: WEBSOCKET_REASONS.CANCEL
       });
     },
 
@@ -183,7 +185,7 @@ loop.CallConnectionWebSocket = (function() {
       this._send({
         messageType: "action",
         event: "terminate",
-        reason: "media-fail"
+        reason: WEBSOCKET_REASONS.MEDIA_FAIL
       });
     },
 
@@ -228,9 +230,9 @@ loop.CallConnectionWebSocket = (function() {
      * @param {Object} event The websocket onmessage event.
      */
     _onmessage: function(event) {
-      var msg;
+      var msgData;
       try {
-        msg = JSON.parse(event.data);
+        msgData = JSON.parse(event.data);
       } catch (x) {
         console.error("Error parsing received message:", x);
         return;
@@ -239,15 +241,15 @@ loop.CallConnectionWebSocket = (function() {
       this._log("WS Receiving", event.data);
 
       var previousState = this._lastServerState;
-      this._lastServerState = msg.state;
+      this._lastServerState = msgData.state;
 
-      switch(msg.messageType) {
+      switch(msgData.messageType) {
         case "hello":
-          this._completeConnection(msg.state);
+          this._completeConnection(msgData.state);
           break;
         case "progress":
-          this.trigger("progress:" + msg.state);
-          this.trigger("progress", msg, previousState);
+          this.trigger("progress:" + msgData.state);
+          this.trigger("progress", msgData, previousState);
           break;
       }
     },
