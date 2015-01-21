@@ -7,6 +7,8 @@
 #ifndef gc_GCRuntime_h
 #define gc_GCRuntime_h
 
+#include "mozilla/Atomics.h"
+
 #include "jsgc.h"
 
 #include "gc/Heap.h"
@@ -483,7 +485,9 @@ class GCRuntime
     bool areGrayBitsValid() { return grayBitsValid; }
     void setGrayBitsInvalid() { grayBitsValid = false; }
 
-    bool isGcNeeded() { return minorGCRequested || majorGCRequested; }
+    bool minorGCRequested() const { return minorGCTriggerReason != JS::gcreason::NO_REASON; }
+    bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
+    bool isGcNeeded() { return minorGCRequested() || majorGCRequested(); }
 
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
@@ -529,7 +533,6 @@ class GCRuntime
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
-    void decommitArena(ArenaHeader *aheader, AutoLockGC &lock);
 
     void releaseHeldRelocatedArenas();
 
@@ -699,10 +702,8 @@ class GCRuntime
      */
     bool grayBitsValid;
 
-    volatile uintptr_t majorGCRequested;
-    JS::gcreason::Reason majorGCTriggerReason;
+    mozilla::Atomic<JS::gcreason::Reason, mozilla::Relaxed> majorGCTriggerReason;
 
-    bool minorGCRequested;
     JS::gcreason::Reason minorGCTriggerReason;
 
     /* Incremented at the start of every major GC. */

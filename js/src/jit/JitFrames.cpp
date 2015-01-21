@@ -1476,49 +1476,63 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
     JitSpew(JitSpew_IonSnapshots, "Recover PC & Script from the last frame.");
 
+    // Recover the return address so that we can look it up in the
+    // PcScriptCache, as script/pc computation is expensive.
     JSRuntime *rt = cx->runtime();
-
-    // Recover the return address.
     JitActivationIterator iter(rt);
     JitFrameIterator it(iter);
-
-    // If the previous frame is a rectifier frame (maybe unwound),
-    // skip past it.
-    if (it.prevType() == JitFrame_Rectifier || it.prevType() == JitFrame_Unwound_Rectifier) {
+    uint8_t *retAddr;
+    if (it.type() == JitFrame_Exit) {
         ++it;
-        MOZ_ASSERT(it.prevType() == JitFrame_BaselineStub ||
-                   it.prevType() == JitFrame_BaselineJS ||
-                   it.prevType() == JitFrame_IonJS);
+
+        // Skip rectifier frames.
+        if (it.isRectifierMaybeUnwound()) {
+            ++it;
+            MOZ_ASSERT(it.isBaselineStub() || it.isBaselineJS() || it.isIonJS());
+        }
+
+        // Skip Baseline stub frames.
+        if (it.isBaselineStubMaybeUnwound()) {
+            ++it;
+            MOZ_ASSERT(it.isBaselineJS());
+        }
+
+        MOZ_ASSERT(it.isBaselineJS() || it.isIonJS());
+
+        // Don't use the return address if the BaselineFrame has an override pc.
+        // The override pc is cheap to get, so we won't benefit from the cache,
+        // and the override pc could change without the return address changing.
+        // Moreover, sometimes when an override pc is present during exception
+        // handling, the return address is set to nullptr as a sanity check,
+        // since we do not return to the frame that threw the exception.
+        if (!it.isBaselineJS() || !it.baselineFrame()->hasOverridePc()) {
+            retAddr = it.returnAddressToFp();
+            MOZ_ASSERT(retAddr);
+        } else {
+            retAddr = nullptr;
+        }
+    } else {
+        MOZ_ASSERT(it.isBailoutJS());
+        retAddr = it.returnAddress();
     }
 
-    // If the previous frame is a stub frame, skip the exit frame so that
-    // returnAddress below gets the return address into the BaselineJS
-    // frame.
-    if (it.prevType() == JitFrame_BaselineStub || it.prevType() == JitFrame_Unwound_BaselineStub) {
-        ++it;
-        MOZ_ASSERT(it.prevType() == JitFrame_BaselineJS);
+    uint32_t hash;
+    if (retAddr) {
+        hash = PcScriptCache::Hash(retAddr);
+
+        // Lazily initialize the cache. The allocation may safely fail and will not GC.
+        if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
+            rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
+            if (rt->ionPcScriptCache)
+                rt->ionPcScriptCache->clear(rt->gc.gcNumber());
+        }
+
+        if (rt->ionPcScriptCache && rt->ionPcScriptCache->get(rt, hash, retAddr, scriptRes, pcRes))
+            return;
     }
-
-    uint8_t *retAddr = it.returnAddress();
-    uint32_t hash = PcScriptCache::Hash(retAddr);
-    MOZ_ASSERT(retAddr != nullptr);
-
-    // Lazily initialize the cache. The allocation may safely fail and will not GC.
-    if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
-        rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
-        if (rt->ionPcScriptCache)
-            rt->ionPcScriptCache->clear(rt->gc.gcNumber());
-    }
-
-    // Attempt to lookup address in cache.
-    if (rt->ionPcScriptCache && rt->ionPcScriptCache->get(rt, hash, retAddr, scriptRes, pcRes))
-        return;
 
     // Lookup failed: undertake expensive process to recover the innermost inlined frame.
-    if (!it.isBailoutJS())
-        ++it; // Skip exit frame.
     jsbytecode *pc = nullptr;
-
     if (it.isIonJS() || it.isBailoutJS()) {
         InlineFrameIterator ifi(cx, &it);
         *scriptRes = ifi.script();
@@ -1532,7 +1546,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
         *pcRes = pc;
 
     // Add entry to cache.
-    if (rt->ionPcScriptCache)
+    if (retAddr && rt->ionPcScriptCache)
         rt->ionPcScriptCache->add(hash, retAddr, pc, *scriptRes);
 }
 
