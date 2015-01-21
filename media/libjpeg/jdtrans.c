@@ -1,8 +1,10 @@
 /*
  * jdtrans.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1995-1997, Thomas G. Lane.
- * This file is part of the Independent JPEG Group's software.
+ * It was modified by The libjpeg-turbo Project to include only code relevant
+ * to libjpeg-turbo.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains library routines for transcoding decompression,
@@ -16,7 +18,7 @@
 
 
 /* Forward declarations */
-LOCAL(void) transdecode_master_selection JPP((j_decompress_ptr cinfo));
+LOCAL(void) transdecode_master_selection (j_decompress_ptr cinfo);
 
 
 /*
@@ -55,20 +57,20 @@ jpeg_read_coefficients (j_decompress_ptr cinfo)
       int retcode;
       /* Call progress monitor hook if present */
       if (cinfo->progress != NULL)
-	(*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
+        (*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
       /* Absorb some more input */
       retcode = (*cinfo->inputctl->consume_input) (cinfo);
       if (retcode == JPEG_SUSPENDED)
-	return NULL;
+        return NULL;
       if (retcode == JPEG_REACHED_EOI)
-	break;
+        break;
       /* Advance progress counter if appropriate */
       if (cinfo->progress != NULL &&
-	  (retcode == JPEG_ROW_COMPLETED || retcode == JPEG_REACHED_SOS)) {
-	if (++cinfo->progress->pass_counter >= cinfo->progress->pass_limit) {
-	  /* startup underestimated number of scans; ratchet up one scan */
-	  cinfo->progress->pass_limit += (long) cinfo->total_iMCU_rows;
-	}
+          (retcode == JPEG_ROW_COMPLETED || retcode == JPEG_REACHED_SOS)) {
+        if (++cinfo->progress->pass_counter >= cinfo->progress->pass_limit) {
+          /* startup underestimated number of scans; ratchet up one scan */
+          cinfo->progress->pass_limit += (long) cinfo->total_iMCU_rows;
+        }
       }
     }
     /* Set state so that jpeg_finish_decompress does the right thing */
@@ -84,7 +86,7 @@ jpeg_read_coefficients (j_decompress_ptr cinfo)
   }
   /* Oops, improper usage */
   ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
-  return NULL;			/* keep compiler happy */
+  return NULL;                  /* keep compiler happy */
 }
 
 

@@ -1,60 +1,7 @@
-diff -up8 jchuff.c jchuff.c
---- jchuff.c	2012-12-30 21:42:18 -0500
-+++ jchuff.c	2013-02-16 19:37:01 -0500
-@@ -17,18 +17,20 @@
-  */
- 
- #define JPEG_INTERNALS
- #include "jinclude.h"
- #include "jpeglib.h"
- #include "jchuff.h"		/* Declarations shared with jcphuff.c */
- #include <limits.h>
- 
--static unsigned char jpeg_nbits_table[65536];
--static int jpeg_nbits_table_init = 0;
-+static const unsigned char jpeg_nbits_table[65536] = {
-+/* Number i needs jpeg_nbits_table[i] bits to be represented. */
-+#include "jpeg_nbits_table.h"
-+};
- 
- #ifndef min
-  #define min(a,b) ((a)<(b)?(a):(b))
- #endif
- 
- 
- /* Expanded entropy encoder object for Huffman encoding.
-  *
-@@ -266,25 +268,16 @@ jpeg_make_c_derived_tbl (j_compress_ptr 
- 
-   for (p = 0; p < lastp; p++) {
-     i = htbl->huffval[p];
-     if (i < 0 || i > maxsymbol || dtbl->ehufsi[i])
-       ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
-     dtbl->ehufco[i] = huffcode[p];
-     dtbl->ehufsi[i] = huffsize[p];
-   }
--
--  if(!jpeg_nbits_table_init) {
--    for(i = 0; i < 65536; i++) {
--      int nbits = 0, temp = i;
--      while (temp) {temp >>= 1;  nbits++;}
--      jpeg_nbits_table[i] = nbits;
--    }
--    jpeg_nbits_table_init = 1;
--  }
- }
- 
- 
- /* Outputting bytes to the file */
- 
- /* Emit a byte, taking 'action' if must suspend. */
- #define emit_byte(state,val,action)  \
- 	{ *(state)->next_output_byte++ = (JOCTET) (val);  \
-diff -up8 jmorecfg.h jmorecfg.h
---- jmorecfg.h	2013-01-06 12:59:42 -0500
-+++ jmorecfg.h	2013-02-16 19:37:01 -0500
+--- jmorecfg.h	2014-11-25 05:07:43.000000000 -0500
++++ jmorecfg.h	2015-01-14 21:46:56.465050782 -0500
 @@ -7,16 +7,17 @@
-  * Copyright (C) 2009, 2011, D. R. Commander.
+  * Copyright (C) 2009, 2011, 2014, D. R. Commander.
   * For conditions of distribution and use, see the accompanying README file.
   *
   * This file contains additional configuration options that customize the
@@ -65,13 +12,13 @@ diff -up8 jmorecfg.h jmorecfg.h
 +#include <stdint.h>
  
  /*
-  * Define BITS_IN_JSAMPLE as either
-  *   8   for 8-bit sample values (the usual setting)
-  *   12  for 12-bit sample values
-  * Only 8 and 12 are legal data precisions for lossy JPEG according to the
-  * JPEG standard, and the IJG code does not support anything else!
-  * We do not support run-time selection of data precision, sorry.
-@@ -128,45 +129,29 @@ typedef char JOCTET;
+  * Maximum number of components (color channels) allowed in JPEG image.
+  * To meet the letter of the JPEG spec, set this to 255.  However, darn
+  * few applications need more than 4 channels (maybe 5 for CMYK + alpha
+  * mask).  We recommend 10 as a reasonable compromise; use 4 if you are
+  * really short on memory.  (Each allowed component costs a hundred or so
+  * bytes of storage, whether actually used in an image or not.)
+@@ -116,45 +117,29 @@ typedef char JOCTET;
   * They must be at least as wide as specified; but making them too big
   * won't cost a huge amount of memory, so we don't provide special
   * extraction code like we did for JSAMPLE.  (In other words, these
@@ -102,14 +49,14 @@ diff -up8 jmorecfg.h jmorecfg.h
  
  /* INT16 must hold at least the values -32768..32767. */
  
--#ifndef XMD_H			/* X11/xmd.h correctly defines INT16 */
+-#ifndef XMD_H                   /* X11/xmd.h correctly defines INT16 */
 -typedef short INT16;
 -#endif
 +typedef int16_t INT16;
  
  /* INT32 must hold at least signed 32-bit values. */
  
--#ifndef XMD_H			/* X11/xmd.h correctly defines INT32 */
+-#ifndef XMD_H                   /* X11/xmd.h correctly defines INT32 */
 -typedef long INT32;
 -#endif
 +typedef int32_t INT32;
