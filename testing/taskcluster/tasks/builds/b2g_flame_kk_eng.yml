@@ -4,7 +4,16 @@ task:
   scopes:
     - 'docker-worker:cache:build-flame-kk-eng'
   metadata:
-    name: B2G Flame KK Eng
+    name: '[TC] B2G Flame KK Eng'
+
+  extra:
+    treeherder:
+      symbol: Be
+      groupSymbol: Flame-KK
+      groupName: Flame KitKat Device Image
+      machine:
+        platform: b2g-device-image
+
   payload:
     cache:
       build-flame-kk-eng: /home/worker/object-folder

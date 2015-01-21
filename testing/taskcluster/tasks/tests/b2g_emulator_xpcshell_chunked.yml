@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: XPCShell
+    name: '[TC] XPCShell'
     description: XPCShell test run {{chunk}}
 
   payload:

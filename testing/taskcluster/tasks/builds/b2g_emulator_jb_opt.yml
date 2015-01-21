@@ -4,7 +4,12 @@ task:
   scopes:
     - 'docker-worker:cache:build-emulator-jb-opt'
   metadata:
-    name: B2G JB Emulator Opt
+    name: '[TC] B2G JB Emulator Opt'
+
+  extra:
+    treeherder:
+      machine:
+        platform: b2g-emu-jb
 
   payload:
     cache:

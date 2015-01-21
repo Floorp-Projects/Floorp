@@ -4,7 +4,13 @@ task:
   scopes:
     - 'docker-worker:cache:build-emulator-kk-opt'
   metadata:
-    name: B2G KK Emulator Opt
+    name: '[TC] B2G KK Emulator Opt'
+
+  extra:
+    treeherder:
+      machine:
+        platform: b2g-emu-kk
+
   payload:
     cache:
       build-emulator-kk-opt: /home/worker/object-folder

@@ -36,6 +36,8 @@ REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 
 DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
 
+TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
+
 DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'mozilla-central', 'job_flags.yml'
@@ -97,7 +99,7 @@ class DecisionTask(object):
     @CommandArgument('--project',
         required=True,
         help='Treeherder project name')
-    @CommandArgument('--repository',
+    @CommandArgument('--url',
         required=True,
         help='Gecko repository to use as head repository.')
     @CommandArgument('--revision',
@@ -117,7 +119,7 @@ class DecisionTask(object):
             'source': 'http://todo.com/soon',
             'project': params['project'],
             'comment': params['comment'],
-            'repository_url': params['repository'],
+            'url': params['url'],
             'revision': params['revision'],
             'owner': params['owner'],
             'as_slugid': SlugidJar(),
@@ -151,6 +153,9 @@ class Graph(object):
         help='Commit revision to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
+    @CommandArgument('--revision-hash',
+            required=False,
+            help='Treeherder revision hash to attach results to')
     @CommandArgument('--project',
         required=True,
         help='Project to use for creating task graph. Example: --project=try')
@@ -190,14 +195,24 @@ class Graph(object):
             'from_now': json_time_from_now,
             'now': datetime.datetime.now().isoformat(),
             'mozharness_repository': params['mozharness_repository'],
-            'mozharness_rev': params['mozharness_rev']
+            'mozharness_rev': params['mozharness_rev'],
+            'revision_hash': params['revision_hash']
         }
+
+        treeherder_route = '{}.{}.{}'.format(
+            TREEHERDER_ROUTE_PREFIX,
+            params['project'],
+            params.get('revision_hash', '')
+        )
 
         # Task graph we are generating for taskcluster...
         graph = {
             'tasks': [],
             'scopes': []
         }
+
+        if params['revision_hash']:
+            graph['scopes'].append('queue:route:{}'.format(treeherder_route))
 
         graph['metadata'] = {
             'source': 'http://todo.com/what/goes/here',
@@ -211,6 +226,12 @@ class Graph(object):
             build_parameters = dict(parameters)
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
+
+            if 'routes' not in build_task['task']:
+                build_task['task']['routes'] = [];
+
+            if params['revision_hash']:
+                build_task['task']['routes'].append(treeherder_route)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
@@ -231,6 +252,25 @@ class Graph(object):
             graph['scopes'].append(define_task)
             graph['scopes'].extend(build_task['task'].get('scopes', []))
 
+            # Treeherder symbol configuration for the graph required for each
+            # build so tests know which platform they belong to.
+            build_treeherder_config = build_task['task']['extra']['treeherder']
+
+            if 'machine' not in build_treeherder_config:
+                message = '({}), extra.treeherder.machine required for all builds'
+                raise ValueError(message.format(build['task']))
+
+            if 'build' not in build_treeherder_config:
+                build_treeherder_config['build'] = \
+                    build_treeherder_config['machine']
+
+            if 'collection' not in build_treeherder_config:
+                build_treeherder_config['collection'] = { 'opt': True }
+
+            if len(build_treeherder_config['collection'].keys()) != 1:
+                message = '({}), extra.treeherder.collection must contain one type'
+                raise ValueError(message.fomrat(build['task']))
+
             for test in build['dependents']:
                 test = test['allowed_build_tasks'][build['task']]
                 test_parameters = copy.copy(build_parameters)
@@ -250,6 +290,32 @@ class Graph(object):
                         test_task['requires'] = []
 
                     test_task['requires'].append(test_parameters['build_slugid'])
+
+                    if 'treeherder' not in test_task['task']['extra']:
+                        test_task['task']['extra']['treeherder'] = {}
+
+                    # Copy over any treeherder configuration from the build so
+                    # tests show up under the same platform...
+                    test_treeherder_config = test_task['task']['extra']['treeherder']
+
+                    test_treeherder_config['collection'] = \
+                        build_treeherder_config.get('collection', {})
+
+                    test_treeherder_config['build'] = \
+                        build_treeherder_config.get('build', {})
+
+                    test_treeherder_config['machine'] = \
+                        build_treeherder_config.get('machine', {})
+
+                    if 'routes' not in test_task['task']:
+                        test_task['task']['routes'] = []
+
+                    if 'scopes' not in test_task['task']:
+                        test_task['task']['scopes'] = []
+
+                    if params['revision_hash']:
+                        test_task['task']['routes'].append(treeherder_route)
+                        test_task['task']['scopes'].append('queue:route:{}'.format(treeherder_route))
 
                     graph['tasks'].append(test_task)
 

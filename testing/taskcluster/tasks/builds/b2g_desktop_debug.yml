@@ -4,6 +4,11 @@ $inherits:
     build_type: 'debug'
 
 task:
+  extra:
+    treeherder:
+      collection:
+        debug: true
+
   payload:
     env:
       MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/debug'

@@ -51,7 +51,7 @@ tasks:
       payload:
         env:
           GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
-          GECKO_HEAD_REPOSITORY: '{{repository_url}}'
+          GECKO_HEAD_REPOSITORY: '{{url}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
 

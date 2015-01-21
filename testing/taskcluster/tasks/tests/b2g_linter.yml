@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Linter Test
+    name: '[TC] Gaia Linter'
     description: Linter Test
   scopes:
     - 'docker-worker:cache:sources-gaia'

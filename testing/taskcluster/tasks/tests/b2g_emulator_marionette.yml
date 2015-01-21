@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: Marionette Framework Unit Tests
+    name: '[TC] Marionette Framework Unit Tests'
     description: Marionette Framework Unit Tests test run
 
   payload:
