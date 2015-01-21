@@ -117,5 +117,5 @@ function networkTestFinished() {
   } else {
     p = Promise.resolve();
   }
-  return p.then(() => SimpleTest.finish());
+  return p.then(() => finish());
 }

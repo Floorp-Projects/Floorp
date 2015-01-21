@@ -122,18 +122,6 @@ function removeVP8(sdp) {
 }
 
 /**
- * A wrapper around runTest() which handles B2G network setup and teardown
- */
-function runNetworkTest(testFunction) {
-  // Use addEventListener to avoid SimpleTest hacking an .onload assignment
-  window.addEventListener('load', () => {
-    SimpleTest.waitForExplicitFinish();
-    startNetworkAndTest()
-      .then(() => realRunTest(testFunction));
-  });
-}
-
-/**
  * This class handles tests for peer connections.
  *
  * @constructor
@@ -242,7 +230,7 @@ PeerConnectionTest.prototype.closePC = function() {
  * Close the open data channels, followed by the underlying peer connection
  */
 PeerConnectionTest.prototype.close = function() {
-  var allChannels = (this.pcLocal ? this.pcLocal : this.pcRemote).dataChannels;
+  var allChannels = (this.pcLocal || this.pcRemote).dataChannels;
   return timerGuard(
     Promise.all(allChannels.map((channel, i) => this.closeDataChannels(i))),
     60000, "failed to close data channels")
@@ -317,8 +305,8 @@ PeerConnectionTest.prototype.send = function(data, options) {
 
   return new Promise(resolve => {
     // Register event handler for the target channel
-    target.onmessage = recv_data => {
-      resolve({ channel: target, data: recv_data });
+    target.onmessage = e => {
+      resolve({ channel: target, data: e.data });
     };
 
     source.send(data);
@@ -621,13 +609,14 @@ function DataChannelWrapper(dataChannel, peerConnectionWrapper) {
   /**
    * Setup appropriate callbacks
    */
-  guardEvent(this, this._channel, 'close');
-  guardEvent(this, this._channel, 'error');
-  guardEvent(this, this._channel, 'message', e => e.data);
+  createOneShotEventWrapper(this, this._channel, 'close');
+  createOneShotEventWrapper(this, this._channel, 'error');
+  createOneShotEventWrapper(this, this._channel, 'message');
 
   this.opened = timerGuard(new Promise(resolve => {
     this._channel.onopen = () => {
       this._channel.onopen = unexpectedEvent(this, 'onopen');
+      is(this.readyState, "open", "data channel is 'open' after 'onopen'");
       resolve(this);
     };
   }), 60000, "channel didn't open in time");
@@ -751,9 +740,7 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.dataChannels = [ ];
 
-  this.onAddStreamAudioCounter = 0;
-  this.onAddStreamVideoCounter = 0;
-  this.addStreamCallbacks = {};
+  this.onAddStreamFired = false;
 
   this._local_ice_candidates = [];
   this._remote_ice_candidates = [];
@@ -803,26 +790,15 @@ function PeerConnectionWrapper(label, configuration, h264) {
       self.onAddStreamVideoCounter += event.stream.getVideoTracks().length;
     }
     this.attachMedia(event.stream, type, 'remote');
+  };
 
-    Object.keys(this.addStreamCallbacks).forEach(name => {
-      info(this + " calling addStreamCallback " + name);
-      this.addStreamCallbacks[name]();
-    });
-   };
-
-  guardEvent(this, this._pc, 'datachannel', e => {
+  createOneShotEventWrapper(this, this._pc, 'datachannel');
+  this._pc.addEventListener('datachannel', e => {
     var wrapper = new DataChannelWrapper(e.channel, this);
     this.dataChannels.push(wrapper);
-    return wrapper;
   });
 
-  this.signalingStateCallbacks = {};
-  guardEvent(this, this._pc, 'signalingstatechange', e => {
-    Object.keys(this.signalingStateCallbacks).forEach(name => {
-      this.signalingStateCallbacks[name](e);
-    });
-    return e;
-  });
+  createOneShotEventWrapper(this, this._pc, 'signalingstatechange');
 }
 
 PeerConnectionWrapper.prototype = {
@@ -961,9 +937,9 @@ PeerConnectionWrapper.prototype = {
    */
   expectDataChannel: function(message) {
     this.nextDataChannel = new Promise(resolve => {
-      this.ondatachannel = channel => {
-        ok(channel, message);
-        resolve(channel);
+      this.ondatachannel = e => {
+        ok(e.channel, message);
+        resolve(e.channel);
       };
     });
   },
@@ -1082,16 +1058,16 @@ PeerConnectionWrapper.prototype = {
    */
   logSignalingState: function() {
     this.signalingStateLog = [this._pc.signalingState];
-    this.signalingStateCallbacks.logSignalingStatus = e => {
+    this._pc.addEventListener('signalingstatechange', e => {
       var newstate = this._pc.signalingState;
       var oldstate = this.signalingStateLog[this.signalingStateLog.length - 1]
-      if (Object.keys(signalingStateTransitions).indexOf(oldstate) != -1) {
-        ok(signalingStateTransitions[oldstate].indexOf(newstate) != -1, this + ": legal signaling state transition from " + oldstate + " to " + newstate);
+      if (Object.keys(signalingStateTransitions).indexOf(oldstate) >= 0) {
+        ok(signalingStateTransitions[oldstate].indexOf(newstate) >= 0, this + ": legal signaling state transition from " + oldstate + " to " + newstate);
       } else {
         ok(false, this + ": old signaling state " + oldstate + " missing in signaling transition array");
       }
       this.signalingStateLog.push(newstate);
-    };
+    });
   },
 
   /**
@@ -1376,7 +1352,7 @@ PeerConnectionWrapper.prototype = {
    *        The media constraints of the local and remote peer connection object
    */
   checkMediaTracks : function(constraintsRemote) {
-    var _checkMediaTracks = constraintsRemote => {
+    var _checkMediaTracks = () => {
       var localConstraintAudioTracks =
         this.countAudioTracksInMediaConstraint(this.constraints);
       var localStreams = this._pc.getLocalStreams();
@@ -1412,27 +1388,14 @@ PeerConnectionWrapper.prototype = {
 
     // TODO: remove this once Bugs 998552 and 998546 are closed
     if (this.onAddStreamFired || (expectedRemoteTracks == 0)) {
-      _checkMediaTracks(constraintsRemote);
+      _checkMediaTracks();
       return Promise.resolve();
     }
 
     info(this + " checkMediaTracks() got called before onAddStream fired");
-    // we rely on the outer mochitest timeout to catch the case where
-    // onaddstream never fires
-    var happy = new Promise(resolve => {
-      this.addStreamCallbacks.checkMediaTracks = resolve;
-    }).then(() => {
-      _checkMediaTracks(constraintsRemote);
-    });
-    var sad = wait(60000).then(() => {
-      if (!this.onAddStreamFired) {
-        // throw rather than call ok(false) because we only want this to be
-        // caught if the sad path fails the promise race with the happy path
-        throw new Error(this + " checkMediaTracks() timed out waiting" +
-                        " for onaddstream event to fire");
-      }
-    });
-    return Promise.race([ happy, sad ]);
+    var checkPromise = new Promise(r => this._pc.addEventListener('addstream', r))
+      .then(_checkMediaTracks);
+    return timerGuard(checkPromise, 60000, "onaddstream never fired");
   },
 
   verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions, isLocal) {
@@ -1770,20 +1733,14 @@ PeerConnectionWrapper.prototype = {
   }
 };
 
-function createHTML(options) {
-  window.addEventListener('load', () => {
-    realCreateHTML(options);
-  });
-}
-
-[
+var scriptsReady = Promise.all([
   "/tests/SimpleTest/SimpleTest.js",
   "head.js",
   "templates.js",
   "turnConfig.js",
   "dataChannel.js",
   "network.js"
-].forEach(script => {
+].map(script => {
   var el = document.createElement("script");
   if (typeof scriptRelativePath === 'string' && script.charAt(0) !== "/") {
     el.src = scriptRelativePath + script;
@@ -1791,4 +1748,18 @@ function createHTML(options) {
     el.src = script;
   }
   document.head.appendChild(el);
-});
+  return new Promise(r => { el.onload = r; el.onerror = r; });
+}));
+
+function createHTML(options) {
+  return scriptsReady.then(() => realCreateHTML(options));
+}
+
+function runNetworkTest(testFunction) {
+  return scriptsReady.then(() => {
+    if (window.SimpleTest) {
+      SimpleTest.waitForExplicitFinish();
+    }
+    return startNetworkAndTest();
+  }).then(() => runTestWhenReady(testFunction));
+}
