@@ -95,7 +95,7 @@
               </toolbar>
               <tabs>
                 <tab id="properties-tab"
-                     label="&webAudioEditorUI.tab.properties;"/>
+                     label="&webAudioEditorUI.tab.properties2;"/>
                 <tab id="automation-tab"
                      label="&webAudioEditorUI.tab.automation;"/>
               </tabs>
