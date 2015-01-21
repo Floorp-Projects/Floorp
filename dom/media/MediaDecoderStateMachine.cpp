@@ -2922,12 +2922,6 @@ MediaDecoderStateMachine::FlushDecoding()
     DecodeTaskQueue()->FlushAndDispatch(task);
   }
 
-  // These flags will be reset when the decoded data returned in OnAudioDecoded()
-  // and OnVideoDecoded(). Because the decode tasks are flushed, these flags need
-  // to be reset here.
-  mAudioRequestStatus = RequestStatus::Idle;
-  mVideoRequestStatus = RequestStatus::Idle;
-
   // We must reset playback so that all references to frames queued
   // in the state machine are dropped, else subsequent calls to Shutdown()
   // or ReleaseMediaResources() can fail on B2G.
