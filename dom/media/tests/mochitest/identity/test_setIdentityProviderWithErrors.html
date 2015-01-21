@@ -1,23 +1,20 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="../head.js"></script>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
   <script type="application/javascript" src="../pc.js"></script>
-  <script type="application/javascript" src="../templates.js"></script>
   <script type="application/javascript" src="identityevent.js"></script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    title: "Identity Provider returning errors is handled correctly"
+    title: "Identity Provider returning errors is handled correctly",
+    bug: "942367"
   });
 
-var test;
 runNetworkTest(function () {
-  test = new PeerConnectionTest();
+  var test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   // first example generates an error
   test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error', 'nobody');
