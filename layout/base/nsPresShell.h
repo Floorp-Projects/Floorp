@@ -868,6 +868,9 @@ protected:
   // applied to rendered layers.
   bool                      mScaleToResolution : 1;
 
+  // Whether the last chrome-only escape key event is consumed.
+  bool                      mIsLastChromeOnlyEscapeKeyConsumed : 1;
+
   static bool               sDisableNonTestMouseEvents;
 };
 

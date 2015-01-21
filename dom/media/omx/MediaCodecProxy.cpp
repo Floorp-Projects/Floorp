@@ -511,9 +511,13 @@ bool MediaCodecProxy::Prepare()
 
 bool MediaCodecProxy::UpdateOutputBuffers()
 {
-  if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from input!");
-    return false;
+  // Read Lock for mCodec
+  {
+    RWLock::AutoRLock autolock(mCodecLock);
+    if (mCodec == nullptr) {
+      MCP_LOG("MediaCodec has not been inited from UpdateOutputBuffers");
+      return false;
+    }
   }
 
   status_t err = getOutputBuffers(&mOutputBuffers);
@@ -527,9 +531,13 @@ bool MediaCodecProxy::UpdateOutputBuffers()
 status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
                                 int64_t aTimestampUsecs, uint64_t aflags)
 {
-  if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from input!");
-    return NO_INIT;
+  // Read Lock for mCodec
+  {
+    RWLock::AutoRLock autolock(mCodecLock);
+    if (mCodec == nullptr) {
+      MCP_LOG("MediaCodec has not been inited from input!");
+      return NO_INIT;
+    }
   }
 
   size_t index;
@@ -560,9 +568,13 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
 
 status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
 {
-  if (mCodec == nullptr) {
-    MCP_LOG("MediaCodec has not been inited from output!");
-    return NO_INIT;
+  // Read Lock for mCodec
+  {
+    RWLock::AutoRLock autolock(mCodecLock);
+    if (mCodec == nullptr) {
+      MCP_LOG("MediaCodec has not been inited from output!");
+      return NO_INIT;
+    }
   }
 
   size_t index = 0;

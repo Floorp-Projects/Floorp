@@ -15,11 +15,7 @@
 #include <vector>
 #include <sstream>
 
-#ifdef _MSC_VER
-#include <hash_set>
-#else
 #include <unordered_set>
-#endif
 
 struct IDWriteFactory;
 
@@ -154,11 +150,7 @@ public:
 private:
   friend class SourceSurfaceD2D1;
 
-#ifdef _MSC_VER
-  typedef stdext::hash_set<DrawTargetD2D1*> TargetSet;
-#else
   typedef std::unordered_set<DrawTargetD2D1*> TargetSet;
-#endif
 
   // This function will mark the surface as changing, and make sure any
   // copy-on-write snapshots are notified.

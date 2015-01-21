@@ -28,8 +28,12 @@
 #include "build/build_config.h"
 
 #if defined(COMPILER_MSVC)
+
+#pragma push_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
+#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
 #include <hash_map>
 #include <hash_set>
+#pragma pop_macro("_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS")
 
 #define BASE_HASH_NAMESPACE stdext
 

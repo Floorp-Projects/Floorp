@@ -132,7 +132,7 @@ LOCAL_INCLUDES += [
     '/hal/sandbox',
     '/js/ipc',
     '/layout/base',
-    '/netwerk/base/src',
+    '/netwerk/base',
     '/toolkit/xre',
     '/uriloader/exthandler',
     '/widget',
