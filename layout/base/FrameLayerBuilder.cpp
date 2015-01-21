@@ -2343,11 +2343,14 @@ ContainerState::PopPaintedLayerData()
     EventRegions regions;
     regions.mHitRegion = ScaleRegionToOutsidePixels(data->mHitRegion);
     // Points whose hit-region status we're not sure about need to be dispatched
-    // to the content thread.
+    // to the content thread. If a point is in both maybeHitRegion and hitRegion
+    // then it's not a "maybe" any more, and doesn't go into the dispatch-to-
+    // content region.
     nsIntRegion maybeHitRegion = ScaleRegionToOutsidePixels(data->mMaybeHitRegion);
     regions.mDispatchToContentHitRegion.Sub(maybeHitRegion, regions.mHitRegion);
-    regions.mDispatchToContentHitRegion.Or(regions.mDispatchToContentHitRegion,
-                                           ScaleRegionToOutsidePixels(data->mDispatchToContentHitRegion));
+    regions.mDispatchToContentHitRegion.OrWith(
+        ScaleRegionToOutsidePixels(data->mDispatchToContentHitRegion));
+    regions.mHitRegion.OrWith(maybeHitRegion);
 
     nsIntPoint translation = -GetTranslationForPaintedLayer(data->mLayer);
     regions.mHitRegion.MoveBy(translation);
