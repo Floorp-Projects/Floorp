@@ -21,10 +21,9 @@
 /* Windows configuration */
 #elif defined(_MSC_VER)
 
+#define inline __inline
 #define strncasecmp strnicmp
-#if _MSC_VER < 1900
 #define snprintf _snprintf
-#endif
 #define va_copy(a,b) ((a)=(b))
 
 #endif
