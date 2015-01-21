@@ -1,10 +1,6 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
@@ -15,9 +11,23 @@
     title: "Throw in PeerConnection callbacks"
   });
 
+runNetworkTest(function () {
+  function finish() {
+    window.onerror = oldOnError;
+    is(error_count, 7, "Seven expected errors verified.");
+    networkTestFinished();
+  }
+
+  function getFail() {
+    return err => {
+      window.onerror = oldOnError;
+      generateErrorCallback()(err);
+    };
+  }
+
   let error_count = 0;
   let oldOnError = window.onerror;
-  window.onerror = function (errorMsg, url, lineNumber) {
+  window.onerror = (errorMsg, url, lineNumber) => {
     if (errorMsg.indexOf("Expected") == -1) {
       getFail()(errorMsg);
     }
@@ -31,27 +41,21 @@
   }
 
   let pc0, pc1, pc2;
+  // Test failure callbacks (limited to 1 for now)
+  pc0 = new mozRTCPeerConnection();
+  pc0.createOffer(getFail(), function(err) {
+    pc1 = new mozRTCPeerConnection();
+    pc2 = new mozRTCPeerConnection();
 
-  runNetworkTest(function () {
-    error_count = 0;
-
-    // Test failure callbacks (limited to 1 for now)
-    pc0 = new mozRTCPeerConnection();
-    pc0.createOffer(getFail(), function(err) {
-      pc1 = new mozRTCPeerConnection();
-      pc2 = new mozRTCPeerConnection();
-
-      // Test success callbacks (happy path)
-      navigator.mozGetUserMedia({video:true, fake: true}, function(video1) {
-        pc1.addStream(video1);
-        pc1.createOffer(function(offer) {
-          pc1.setLocalDescription(offer, function() {
-            pc2.setRemoteDescription(offer, function() {
-              pc2.createAnswer(function(answer) {
-                pc2.setLocalDescription(answer, function() {
-                  pc1.setRemoteDescription(answer, function() {
-                    throw new Error("Expected");
-                  }, getFail());
+    // Test success callbacks (happy path)
+    navigator.mozGetUserMedia({video:true, fake: true}, function(video1) {
+      pc1.addStream(video1);
+      pc1.createOffer(function(offer) {
+        pc1.setLocalDescription(offer, function() {
+          pc2.setRemoteDescription(offer, function() {
+            pc2.createAnswer(function(answer) {
+              pc2.setLocalDescription(answer, function() {
+                pc1.setRemoteDescription(answer, function() {
                   throw new Error("Expected");
                 }, getFail());
                 throw new Error("Expected");
@@ -62,23 +66,13 @@
           }, getFail());
           throw new Error("Expected");
         }, getFail());
+        throw new Error("Expected");
       }, getFail());
-      throw new Error("Expected");
-    });
+    }, getFail());
+    throw new Error("Expected");
   });
+});
 
-  function finish() {
-    window.onerror = oldOnError;
-    is(error_count, 7, "Seven expected errors verified.");
-    networkTestFinished();
-  }
-
-  function getFail() {
-    return function (err) {
-      window.onerror = oldOnError;
-      generateErrorCallback()(err);
-    };
-  }
 </script>
 </pre>
 </body>
