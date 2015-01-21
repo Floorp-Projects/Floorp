@@ -13,7 +13,7 @@
 #limitations under the License.
 
 from marionette_test import MarionetteTestCase
-from marionette_driver.errors import MarionetteException
+from errors import MarionetteException
 
 class TestWindowPosition(MarionetteTestCase):
 
