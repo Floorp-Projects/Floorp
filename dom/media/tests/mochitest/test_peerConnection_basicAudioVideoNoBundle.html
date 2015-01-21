@@ -22,17 +22,17 @@
   var test;
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
-    test.chain.insertAfter('PC_LOCAL_CREATE_OFFER',
-    [['PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER',
-      function (test) {
-        test.originalOffer.sdp = test.originalOffer.sdp.replace(
-          /a=group:BUNDLE .*\r\n/g,
-          ""
-        );
-        info("Updated no bundle offer: " + JSON.stringify(test.originalOffer));
-        test.next();
-      }
-    ]]);
+    test.chain.insertAfter(
+      'PC_LOCAL_CREATE_OFFER',
+      [
+        function PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER(test) {
+          test.originalOffer.sdp = test.originalOffer.sdp.replace(
+              /a=group:BUNDLE .*\r\n/g,
+            ""
+          );
+          info("Updated no bundle offer: " + JSON.stringify(test.originalOffer));
+        }
+      ]);
     test.setMediaConstraints([{audio: true}, {video: true}],
                              [{audio: true}, {video: true}]);
     test.run();
