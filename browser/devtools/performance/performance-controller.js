@@ -44,6 +44,8 @@ devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
 devtools.lazyRequireGetter(this, "FrameNode",
   "devtools/profiler/tree-model", true);
+devtools.lazyRequireGetter(this, "OptionsView",
+  "devtools/shared/options-view", true);
 
 devtools.lazyImporter(this, "CanvasGraphUtils",
   "resource:///modules/devtools/Graphs.jsm");
@@ -56,8 +58,13 @@ devtools.lazyImporter(this, "FlameGraph",
 devtools.lazyImporter(this, "SideMenuWidget",
   "resource:///modules/devtools/SideMenuWidget.jsm");
 
+const BRANCH_NAME = "devtools.performance.ui.";
+
 // Events emitted by various objects in the panel.
 const EVENTS = {
+  // Fired by the OptionsView when a preference changes.
+  PREF_CHANGED: "Preformance:PrefChanged",
+
   // Emitted by the PerformanceController or RecordingView
   // when a recording model is selected
   RECORDING_SELECTED: "Performance:RecordingSelected",
@@ -166,14 +173,16 @@ let PerformanceController = {
    * Listen for events emitted by the current tab target and
    * main UI events.
    */
-  initialize: function() {
+  initialize: Task.async(function* () {
     this.startRecording = this.startRecording.bind(this);
     this.stopRecording = this.stopRecording.bind(this);
     this.importRecording = this.importRecording.bind(this);
     this.exportRecording = this.exportRecording.bind(this);
     this._onTimelineData = this._onTimelineData.bind(this);
     this._onRecordingSelectFromView = this._onRecordingSelectFromView.bind(this);
+    this._onPrefChanged = this._onPrefChanged.bind(this);
 
+    ToolbarView.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.on(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
@@ -184,12 +193,13 @@ let PerformanceController = {
     gFront.on("markers", this._onTimelineData); // timeline markers
     gFront.on("frames", this._onTimelineData); // stack frames
     gFront.on("memory", this._onTimelineData); // timeline memory
-  },
+  }),
 
   /**
    * Remove events handled by the PerformanceController
    */
   destroy: function() {
+    ToolbarView.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
     PerformanceView.off(EVENTS.UI_IMPORT_RECORDING, this.importRecording);
@@ -200,6 +210,14 @@ let PerformanceController = {
     gFront.off("markers", this._onTimelineData);
     gFront.off("frames", this._onTimelineData);
     gFront.off("memory", this._onTimelineData);
+  },
+
+  /**
+   * Get a preference setting from `prefName` via the underlying
+   * OptionsView in the ToolbarView.
+   */
+  getPref: function (prefName) {
+    return ToolbarView.optionsView.getPref(prefName);
   },
 
   /**
@@ -315,6 +333,14 @@ let PerformanceController = {
    */
   _onRecordingSelectFromView: function (_, recording) {
     this.setCurrentRecording(recording);
+  },
+
+  /**
+   * Fired when the ToolbarView fires a PREF_CHANGED event.
+   * with the value.
+   */
+  _onPrefChanged: function (_, prefName, value) {
+    this.emit(EVENTS.PREF_CHANGED, prefName, value);
   }
 };
 

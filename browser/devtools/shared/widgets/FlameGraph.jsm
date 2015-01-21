@@ -951,6 +951,10 @@ let FlameGraphUtils = {
     for (let i = 0, len = input.length; i < len; i++) {
       hash *= STRING_HASH_PRIME2;
       hash += input.charCodeAt(i);
+
+      if (hash > Number.MAX_SAFE_INTEGER / STRING_HASH_PRIME2) {
+        return hash;
+      }
     }
 
     return hash;
