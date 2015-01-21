@@ -56,7 +56,7 @@ function testNoCorsCtor() {
   ok(!r.headers.has("DNT"), "Appending forbidden header should fail");
 }
 
-var corsServerPath = "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?";
+var corsServerPath = "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?";
 function testModeNoCors() {
   // Fetch spec, section 4, step 4, response tainting should be set opaque, so
   // that fetching leads to an opaque filtered response in step 8.
