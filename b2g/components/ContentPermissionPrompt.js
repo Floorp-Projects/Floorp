@@ -35,9 +35,9 @@ var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptS
 let permissionSpecificChecker = {};
 
 XPCOMUtils.defineLazyServiceGetter(this,
-                                   "AudioManager",
-                                   "@mozilla.org/telephony/audiomanager;1",
-                                   "nsIAudioManager");
+                                   "TelephonyService",
+                                   "@mozilla.org/telephony/telephonyservice;1",
+                                   "nsITelephonyService");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
@@ -455,12 +455,29 @@ ContentPermissionPrompt.prototype = {
 (function() {
   // Do not allow GetUserMedia while in call.
   permissionSpecificChecker["audio-capture"] = function(request) {
-    if (AudioManager.phoneState === Ci.nsIAudioManager.PHONE_STATE_IN_CALL) {
-      request.cancel();
-      return true;
-    } else {
+    let forbid = false;
+
+    try {
+      // nsITelephonyService.enumerateCalls is synchronous.
+      TelephonyService.enumerateCalls({
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyListener]),
+        enumerateCallStateComplete: function() {},
+        enumerateCallState: function(callInfo) {
+          if (callInfo.callState == Ci.nsITelephonyService.CALL_STATE_CONNECTED) {
+            forbid = true;
+          }
+        },
+      });
+    } catch (e) {
+      // No restriction if Telephony service doesn't exist.
       return false;
     }
+
+    if (forbid) {
+      request.cancel();
+    }
+
+    return forbid;
   };
 })();
 
