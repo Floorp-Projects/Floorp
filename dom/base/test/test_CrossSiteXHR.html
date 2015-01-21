@@ -1,73 +1,58 @@
-if (typeof ok !== "function") {
-  function ok(a, msg) {
-    postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
-  }
+<!DOCTYPE HTML>
+<html>
+<head>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <title>Test for Cross Site XMLHttpRequest</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="initTest()">
+<p id="display">
+<iframe id=loader></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+const runPreflightTests = 1;
+const runCookieTests = 1;
+const runRedirectTests = 1;
+
+var gen;
+
+function initTest() {
+  SimpleTest.waitForExplicitFinish();
+  // Allow all cookies, then do the actual test initialization
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, initTestCallback);
 }
 
-if (typeof is !== "function") {
-  function is(a, b, msg) {
-    postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
-  }
+function initTestCallback() {
+  window.addEventListener("message", function(e) {
+    gen.send(e.data);
+  }, false);
+
+  gen = runTest();
+  
+  gen.next()
 }
 
-var path = "/tests/dom/base/test/";
+function runTest() {
+  var loader = document.getElementById('loader');
+  var loaderWindow = loader.contentWindow;
+  loader.onload = function () { gen.next() };
 
-function isNetworkError(response) {
-  return response.type == "error" && response.status === 0 && response.statusText === "";
-}
+  // Test preflight-less requests
+  basePath = "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?"
+  baseURL = "http://mochi.test:8888" + basePath;
 
-function isOpaqueResponse(response) {
-  return response.type == "opaque" && response.status === 0 && response.statusText === "";
-}
+  // Test preflighted requests
+  loader.src = "http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.html";
+  origin = "http://example.org";
+  yield undefined;
 
-function testModeSameOrigin() {
-  // Fetch spec Section 4, step 4, "request's mode is same-origin".
-  var req = new Request("http://example.com", { mode: "same-origin" });
-  return fetch(req).then(function(res) {
-    ok(isNetworkError(res), "Attempting to fetch a resource from a different origin with mode same-origin should fail.");
-  });
-}
-
-function testNoCorsCtor() {
-  // Request constructor Step 19.1
-  var simpleMethods = ["GET", "HEAD", "POST"];
-  for (var i = 0; i < simpleMethods.length; ++i) {
-    var r = new Request("http://example.com", { method: simpleMethods[i], mode: "no-cors" });
-    ok(true, "no-cors Request with simple method " + simpleMethods[i] + " is allowed.");
-  }
-
-  var otherMethods = ["DELETE", "OPTIONS", "PUT"];
-  for (var i = 0; i < otherMethods.length; ++i) {
-    try {
-      var r = new Request("http://example.com", { method: otherMethods[i], mode: "no-cors" });
-      ok(false, "no-cors Request with non-simple method " + otherMethods[i] + " is not allowed.");
-    } catch(e) {
-      ok(true, "no-cors Request with non-simple method " + otherMethods[i] + " is not allowed.");
-    }
-  }
-
-  // Request constructor Step 19.2, check guarded headers.
-  var r = new Request(".", { mode: "no-cors" });
-  r.headers.append("Content-Type", "multipart/form-data");
-  is(r.headers.get("content-type"), "multipart/form-data", "Appending simple header should succeed");
-  r.headers.append("custom", "value");
-  ok(!r.headers.has("custom"), "Appending custom header should fail");
-  r.headers.append("DNT", "value");
-  ok(!r.headers.has("DNT"), "Appending forbidden header should fail");
-}
-
-var corsServerPath = "/tests/dom/base/test/file_CrossSiteXHR_server.sjs?";
-function testModeNoCors() {
-  // Fetch spec, section 4, step 4, response tainting should be set opaque, so
-  // that fetching leads to an opaque filtered response in step 8.
-  var r = new Request("http://example.com" + corsServerPath + "status=200&allowOrigin=*", { mode: "no-cors" });
-  return fetch(r).then(function(res) {
-    ok(isOpaqueResponse(res), "no-cors Request fetch should result in opaque response");
-  });
-}
-
-function testModeCors() {
-  var tests = [// Plain request
+  tests =     [// Plain request
                { pass: 1,
                  method: "GET",
                  noAllowPreflight: 1,
@@ -112,7 +97,6 @@ function testModeCors() {
                             "Accept-Language": "sv-SE" },
                  noAllowPreflight: 1,
                },
-
                { pass: 0,
                  method: "GET",
                  headers: { "Content-Type": "foo/bar",
@@ -466,8 +450,27 @@ function testModeCors() {
                  allowMethods: "PU(T, DELETE",
                },
                { pass: 0,
+                 method: "MYMETHOD",
+                 allowMethods: "myMethod",
+               },
+               { pass: 0,
                  method: "PUT",
                  allowMethods: "put",
+               },
+
+               // Progress events
+               { pass: 1,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "Content-Type": "text/plain" },
+                 uploadProgress: "progress",
+               },
+               { pass: 0,
+                 method: "POST",
+                 body: "hi there",
+                 headers: { "Content-Type": "text/plain" },
+                 uploadProgress: "progress",
+                 noAllowPreflight: 1,
                },
 
                // Status messages
@@ -584,9 +587,10 @@ function testModeCors() {
                },
                ];
 
-  var baseURL = "http://example.org" + corsServerPath;
-  var origin = "http://mochi.test:8888";
-  var fetches = [];
+  if (!runPreflightTests) {
+    tests = [];
+  }
+
   for (test of tests) {
     var req = {
       url: baseURL + "allowOrigin=" + escape(test.origin || origin),
@@ -603,15 +607,11 @@ function testModeCors() {
     }
 
     if ("username" in test) {
-      var u = new URL(req.url);
-      u.username = test.username || "";
-      req.url = u.href;
+      req.username = test.username;
     }
 
     if ("password" in test) {
-      var u = new URL(req.url);
-      u.password = test.password || "";
-      req.url = u.href;
+      req.password = test.password;
     }
 
     if (test.noAllowPreflight)
@@ -656,76 +656,87 @@ function testModeCors() {
     if (test.preflightBody)
       req.url += "&preflightBody=" + escape(test.preflightBody);
 
-    var request = new Request(req.url, { method: req.method, mode: "cors",
-                                         headers: req.headers, body: req.body });
-    fetches.push((function(test, request) {
-      return fetch(request).then(function(res) {
-      dump("Response for " + request.url + "\n");
-        if (test.pass) {
-          ok(!isNetworkError(res),
-            "shouldn't have failed in test for " + test.toSource());
-          if (test.status) {
-            is(res.status, test.status, "wrong status in test for " + test.toSource());
-            is(res.statusText, test.statusMessage, "wrong status text for " + test.toSource());
+    loaderWindow.postMessage(req.toSource(), origin);
+    res = eval(yield);
+
+    if (test.pass) {
+      is(res.didFail, false,
+        "shouldn't have failed in test for " + test.toSource());
+      if (test.status) {
+        is(res.status, test.status, "wrong status in test for " + test.toSource());
+        is(res.statusText, test.statusMessage, "wrong status text for " + test.toSource());
+      }
+      else {
+        is(res.status, 200, "wrong status in test for " + test.toSource());
+        is(res.statusText, "OK", "wrong status text for " + test.toSource());
+      }
+      if (test.method !== "HEAD") {
+        is(res.responseXML, "<res>hello pass</res>",
+           "wrong responseXML in test for " + test.toSource());
+        is(res.responseText, "<res>hello pass</res>\n",
+           "wrong responseText in test for " + test.toSource());
+        is(res.events.join(","),
+           "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
+           "wrong responseText in test for " + test.toSource());
+      }
+      else {
+        is(res.responseXML, null,
+           "wrong responseXML in test for " + test.toSource());
+        is(res.responseText, "",
+           "wrong responseText in test for " + test.toSource());
+        is(res.events.join(","),
+           "opening,rs1,sending,loadstart,rs2,rs4,load,loadend",
+           "wrong responseText in test for " + test.toSource());
+      }
+      if (test.responseHeaders) {
+        for (header in test.responseHeaders) {
+          if (test.expectedResponseHeaders.indexOf(header) == -1) {
+            is(res.responseHeaders[header], null,
+               "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
+               test.toSource());
+	    is(res.allResponseHeaders[header], null,
+              "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
+              test.toSource());
           }
           else {
-            is(res.status, 200, "wrong status in test for " + test.toSource());
-            is(res.statusText, "OK", "wrong status text for " + test.toSource());
+            is(res.responseHeaders[header], test.responseHeaders[header],
+               "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
+               test.toSource());
+            is(res.allResponseHeaders[header], test.responseHeaders[header],
+              "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
+              test.toSource());
           }
-          if (test.responseHeaders) {
-            for (header in test.responseHeaders) {
-              if (test.expectedResponseHeaders.indexOf(header) == -1) {
-                is(res.headers.has(header), false,
-                   "|Headers.has()|wrong response header (" + header + ") in test for " +
-                   test.toSource());
-              }
-              else {
-                is(res.headers.get(header), test.responseHeaders[header],
-                   "|Headers.get()|wrong response header (" + header + ") in test for " +
-                   test.toSource());
-              }
-            }
-          }
-
-          return res.text().then(function(v) {
-            if (test.method !== "HEAD") {
-              is(v, "<res>hello pass</res>\n",
-                 "wrong responseText in test for " + test.toSource());
-            }
-            else {
-              is(v, "",
-                 "wrong responseText in HEAD test for " + test.toSource());
-            }
-          });
         }
-        else {
-          ok(isNetworkError(res),
-            "should have failed in test for " + test.toSource());
-          is(res.status, 0, "wrong status in test for " + test.toSource());
-          is(res.statusText, "", "wrong status text for " + test.toSource());
-          if (test.responseHeaders) {
-            for (header in test.responseHeaders) {
-              is(res.headers.get(header), null,
-                 "wrong response header (" + header + ") in test for " +
-                 test.toSource());
-            }
-          }
-
-          return res.text().then(function(v) {
-            is(v, "",
-               "wrong responseText in test for " + test.toSource());
-          });
+      }
+    }
+    else {
+      is(res.didFail, true,
+        "should have failed in test for " + test.toSource());
+      is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      if (!res.sendThrew) {
+        is(res.events.join(","),
+           "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+           "wrong events in test for " + test.toSource());
+      }
+      is(res.progressEvents, 0,
+         "wrong events in test for " + test.toSource());
+      if (test.responseHeaders) {
+        for (header in test.responseHeaders) {
+          is(res.responseHeaders[header], null,
+             "wrong response header (" + header + ") in test for " +
+             test.toSource());
         }
-      });
-    })(test, request));
+      }
+    }
   }
 
-  return Promise.all(fetches);
-}
-
-function testCredentials() {
-  var tests = [
-           { pass: 1,
+  // Test cookie behavior
+  tests = [{ pass: 1,
              method: "GET",
              withCred: 1,
              allowCred: 1,
@@ -796,18 +807,12 @@ function testCredentials() {
              allowCred: 1,
            },
            ];
-           // FIXME(nsm): Add "same-origin" credentials test
 
-  var baseURL = "http://example.org" + corsServerPath;
-  var origin = "http://mochi.test:8888";
+  if (!runCookieTests) {
+    tests = [];
+  }
 
-  var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
-    finalPromiseResolve = res;
-    finalPromiseReject = rej;
-  });
-
-  function makeRequest(test) {
+  for (test of tests) {
     req = {
       url: baseURL + "allowOrigin=" + escape(test.origin || origin),
       method: test.method,
@@ -830,54 +835,49 @@ function testCredentials() {
     if ("allowMethods" in test)
       req.url += "&allowMethods=" + escape(test.allowMethods);
 
-    return new Request(req.url, { method: req.method,
-                                  headers: req.headers,
-                                  credentials: req.withCred ? "include" : "omit" });
-  }
+    loaderWindow.postMessage(req.toSource(), origin);
 
-  function testResponse(res, test) {
+    res = eval(yield);
     if (test.pass) {
-      is(isNetworkError(res), false,
+      is(res.didFail, false,
         "shouldn't have failed in test for " + test.toSource());
       is(res.status, 200, "wrong status in test for " + test.toSource());
       is(res.statusText, "OK", "wrong status text for " + test.toSource());
-      return res.text().then(function(v) {
-        is(v, "<res>hello pass</res>\n",
-         "wrong text in test for " + test.toSource());
-      });
+      is(res.responseXML, "<res>hello pass</res>",
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
+         "wrong responseText in test for " + test.toSource());
     }
     else {
-      is(isNetworkError(res), true,
+      is(res.didFail, true,
         "should have failed in test for " + test.toSource());
-      return res.text().then(function(v) {
-        is(v, "",
-         "wrong text in test for " + test.toSource());
-      });
+      is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+         "wrong events in test for " + test.toSource());
+      is(res.progressEvents, 0,
+         "wrong events in test for " + test.toSource());
     }
   }
 
-  function runATest(i) {
-    var test = tests[i];
-    var request = makeRequest(test);
-    fetch(request).then(function(res) {
-      testResponse(res, test);
-      if (i < tests.length-1) {
-        runATest(i+1);
-      } else {
-        finalPromiseResolve();
-      }
-    }, finalPromiseReject);
-  }
+  // Make sure to clear cookies to avoid affecting other tests
+  document.cookie = "a=; path=/; expires=Thu, 01-Jan-1970 00:00:01 GMT"
+  is(document.cookie, "", "No cookies should be left over");
 
-  runATest(0);
-  return finalPromise;
-}
 
-function testRedirects() {
-  var origin = "http://mochi.test:8888";
+  // Test redirects
+  is(loader.src, "http://example.org/tests/dom/base/test/file_CrossSiteXHR_inner.html");
+  is(origin, "http://example.org");
 
-  var tests = [
-           { pass: 1,
+  tests = [{ pass: 1,
              method: "GET",
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
@@ -889,7 +889,7 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                       allowOrigin: origin
                     },
                     ],
@@ -899,7 +899,7 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                       allowOrigin: "*"
                     },
                     ],
@@ -909,15 +909,15 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                     },
                     ],
            },
            { pass: 1,
              method: "GET",
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin
@@ -926,14 +926,14 @@ function testRedirects() {
            },
            { pass: 0,
              method: "GET",
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                     },
                     ],
            },
@@ -942,13 +942,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8000",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: origin
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: origin
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin
                     },
                     ],
@@ -958,13 +958,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8000",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: origin
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: "*"
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: "*"
                     },
                     ],
@@ -974,13 +974,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8888",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: "*"
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: "*"
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: "*"
                     },
                     ],
@@ -990,13 +990,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8000",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: origin
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: "x"
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin
                     },
                     ],
@@ -1006,13 +1006,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8000",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: origin
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: "*"
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin
                     },
                     ],
@@ -1022,13 +1022,13 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin
                     },
-                    { server: "http://test2.mochi.test:8000",
+                    { server: "http://test2.example.org:8000",
                       allowOrigin: origin
                     },
-                    { server: "http://sub2.xn--lt-uia.mochi.test:8888",
+                    { server: "http://sub2.xn--lt-uia.example.org",
                       allowOrigin: "*"
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                     },
                     ],
            },
@@ -1036,7 +1036,7 @@ function testRedirects() {
              method: "POST",
              body: "hi there",
              headers: { "Content-Type": "text/plain" },
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin,
@@ -1049,7 +1049,7 @@ function testRedirects() {
              headers: { "Content-Type": "text/plain",
                         "my-header": "myValue",
                       },
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin,
@@ -1059,7 +1059,7 @@ function testRedirects() {
            },
            { pass: 0,
              method: "DELETE",
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin,
@@ -1075,7 +1075,7 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin,
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin,
                     },
                     ],
@@ -1085,7 +1085,7 @@ function testRedirects() {
              hops: [{ server: "http://example.com",
                       allowOrigin: origin,
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin,
                     },
                     ],
@@ -1098,7 +1098,7 @@ function testRedirects() {
                       },
              hops: [{ server: "http://example.com",
                     },
-                    { server: "http://sub1.test1.mochi.test:8888",
+                    { server: "http://sub1.test1.example.org",
                       allowOrigin: origin,
                       allowHeaders: "my-header",
                     },
@@ -1108,7 +1108,7 @@ function testRedirects() {
              method: "POST",
              body: "hi there",
              headers: { "Content-Type": "text/plain" },
-             hops: [{ server: "http://mochi.test:8888",
+             hops: [{ server: "http://example.org",
                     },
                     { server: "http://example.com",
                       allowOrigin: origin,
@@ -1125,7 +1125,7 @@ function testRedirects() {
                       allowOrigin: origin,
                       allowHeaders: "my-header",
                     },
-                    { server: "http://mochi.test:8888",
+                    { server: "http://example.org",
                       allowOrigin: origin,
                       allowHeaders: "my-header",
                     },
@@ -1133,10 +1133,13 @@ function testRedirects() {
            },
            ];
 
-  var fetches = [];
+  if (!runRedirectTests) {
+    tests = [];
+  }
+
   for (test of tests) {
     req = {
-      url: test.hops[0].server + corsServerPath + "hop=1&hops=" +
+      url: test.hops[0].server + basePath + "hop=1&hops=" +
            escape(test.hops.toSource()),
       method: test.method,
       headers: test.headers,
@@ -1148,62 +1151,46 @@ function testRedirects() {
         req.url += "&body=" + escape(test.body);
     }
 
-    var request = new Request(req.url, { method: req.method,
-                                         headers: req.headers,
-                                         body: req.body });
-    fetches.push((function(request, test) {
-      return fetch(request).then(function(res) {
-        if (test.pass) {
-          is(isNetworkError(res), false,
-            "shouldn't have failed in test for " + test.toSource());
-          is(res.status, 200, "wrong status in test for " + test.toSource());
-          is(res.statusText, "OK", "wrong status text for " + test.toSource());
-          is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
-          return res.text().then(function(v) {
-            is(v, "<res>hello pass</res>\n",
-               "wrong responseText in test for " + test.toSource());
-          });
-        }
-        else {
-          is(isNetworkError(res), true,
-            "should have failed in test for " + test.toSource());
-          is(res.status, 0, "wrong status in test for " + test.toSource());
-          is(res.statusText, "", "wrong status text for " + test.toSource());
-          return res.text().then(function(v) {
-            is(v, "",
-               "wrong responseText in test for " + test.toSource());
-          });
-        }
-      });
-    })(request, test));
-  }
+    loaderWindow.postMessage(req.toSource(), origin);
 
-  return Promise.all(fetches);
-}
-
-function runTest() {
-  var done = function() {
-    if (typeof SimpleTest === "object") {
-      SimpleTest.finish();
-    } else {
-      postMessage({ type: 'finish' });
+    res = eval(yield);
+    if (test.pass) {
+      is(res.didFail, false,
+        "shouldn't have failed in test for " + test.toSource());
+      is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.statusText, "OK", "wrong status text for " + test.toSource());
+      is(res.responseXML, "<res>hello pass</res>",
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
+         "wrong responseText in test for " + test.toSource());
+    }
+    else {
+      is(res.didFail, true,
+        "should have failed in test for " + test.toSource());
+      is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.statusText, "", "wrong status text for " + test.toSource());
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+         "wrong events in test for " + test.toSource());
+      is(res.progressEvents, 0,
+         "wrong progressevents in test for " + test.toSource());
     }
   }
 
-  testNoCorsCtor();
 
-  Promise.resolve()
-    .then(testModeSameOrigin)
-    .then(testModeNoCors)
-    .then(testModeCors)
-    .then(testCredentials)
-    .then(testRedirects)
-    // Put more promise based tests here.
-    .then(done)
-    .catch(function(e) {
-      ok(false, "Some test failed " + e);
-      done();
-    });
+  SimpleTest.finish();
+
+  yield undefined;
 }
 
-onmessage = runTest;
+</script>
+</pre>
+</body>
+</html>
