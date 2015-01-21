@@ -180,14 +180,6 @@ if (typeof Mozilla == 'undefined') {
 		nextTheme();
 	};
 
-	Mozilla.UITour.addPinnedTab = function() {
-		_sendEvent('addPinnedTab');
-	};
-
-	Mozilla.UITour.removePinnedTab = function() {
-		_sendEvent('removePinnedTab');
-	};
-
 	Mozilla.UITour.showMenu = function(name, callback) {
 		var showCallbackID;
 		if (callback)
