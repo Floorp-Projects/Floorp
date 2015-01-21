@@ -57,7 +57,11 @@ class DotProperties:
         for k, v in self._properties.iteritems():
             if not k.startswith(prefix):
                 continue
-            indexes.append(int(k[len(prefix):]))
+            key = k[len(prefix):]
+            if '.' in key:
+                # We have something like list.sublist.0.
+                continue
+            indexes.append(int(key))
         return [self._properties[prefix + str(index)] for index in sorted(indexes)]
 
     def get_dict(self, prefix, required_keys=[]):
@@ -71,7 +75,8 @@ class DotProperties:
         if not prefix.endswith('.'):
             prefix = prefix + '.'
 
-        D = dict((k[len(prefix):], v) for k, v in self._properties.iteritems() if k.startswith(prefix))
+        D = dict((k[len(prefix):], v) for k, v in self._properties.iteritems()
+                 if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
             if not required_key in D:
