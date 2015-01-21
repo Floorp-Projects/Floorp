@@ -1,5 +1,5 @@
-FROM          centos:centos6
-MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
+FROM          quay.io/mozilla/base-build:0.0.1
+MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 # Run system setup script; this ensures taht the whole process
 # boils down to a single docker layer
