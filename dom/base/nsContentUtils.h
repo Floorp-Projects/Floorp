@@ -1281,7 +1281,7 @@ public:
    * @param aDiscoverMode Set to eRecurseIntoChildren to descend recursively
    * into children.
    */
-  enum TextContentDiscoverMode MOZ_ENUM_TYPE(uint8_t) {
+  enum TextContentDiscoverMode : uint8_t {
     eRecurseIntoChildren, eDontRecurseIntoChildren
   };
 
@@ -2075,7 +2075,7 @@ public:
    */
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
-  enum AutocompleteAttrState MOZ_ENUM_TYPE(uint8_t)
+  enum AutocompleteAttrState : uint8_t
   {
     eAutocompleteAttrState_Unknown = 1,
     eAutocompleteAttrState_Invalid,
