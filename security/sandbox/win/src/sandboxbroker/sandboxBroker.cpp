@@ -172,6 +172,7 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   sandbox::MitigationFlags mitigations =
+    sandbox::MITIGATION_SEHOP |
     sandbox::MITIGATION_DEP;
 
   result = mPolicy->SetProcessMitigations(mitigations);
