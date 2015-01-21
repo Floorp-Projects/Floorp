@@ -1976,14 +1976,14 @@ ThreadActor.prototype = {
     // inside _addScript, we can accidentally set a breakpoint in a top level
     // script as a "closest match" because we wouldn't have added the child
     // scripts to the ScriptStore yet.
-    this.scripts.addScript(aScript);
-    this.scripts.addScripts(aScript.getChildScripts());
+    this.scripts.addScripts(this.dbg.findScripts({ source: aScript.source }));
 
     this._addScript(aScript);
 
-    // |onNewScript| is only fired for top level scripts (AKA staticLevel == 0),
-    // so we have to make sure to call |_addScript| on every child script as
-    // well to restore breakpoints in those scripts.
+    // `onNewScript` is only fired for top-level scripts (AKA staticLevel == 0),
+    // but top-level scripts have the wrong `lineCount` sometimes (bug 979094),
+    // so iterate over the immediate children to activate breakpoints for now
+    // (TODO bug 1124258: don't do this when `lineCount` bug is fixed)
     for (let s of aScript.getChildScripts()) {
       this._addScript(s);
     }
