@@ -6800,7 +6800,7 @@
     "description": "If any version of Firefox Sync is configured for this device"
   },
   "WEAVE_CONFIGURED_MASTER_PASSWORD": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "If both Firefox Sync and Master Password are configured for this device"
   },
@@ -6871,7 +6871,7 @@
     "description": "Algorithms used with WebCrypto (see table in WebCryptoTask.cpp)"
   },
   "MASTER_PASSWORD_ENABLED": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "If a master-password is enabled for this profile"
   },

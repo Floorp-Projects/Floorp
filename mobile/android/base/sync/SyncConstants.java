@@ -1,11 +1,10 @@
-//#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
-import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.AppConstants;
 
 /**
  * Preprocessed class for storing preprocessed values specific to Android Sync.
@@ -15,14 +14,14 @@ public class SyncConstants {
   public static final String SYNC_MAJOR_VERSION  = "1";
   public static final String SYNC_MINOR_VERSION  = "0";
   public static final String SYNC_VERSION_STRING = SYNC_MAJOR_VERSION + "." +
-                                                   GlobalConstants.MOZ_APP_VERSION + "." +
+                                                   AppConstants.MOZ_APP_VERSION + "." +
                                                    SYNC_MINOR_VERSION;
 
   public static final String USER_AGENT = "Firefox AndroidSync " +
                                           SYNC_VERSION_STRING + " (" +
-                                          GlobalConstants.MOZ_APP_DISPLAYNAME + ")";
+                                          AppConstants.MOZ_APP_DISPLAYNAME + ")";
 
-  public static final String ACCOUNTTYPE_SYNC = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@";
+  public static final String ACCOUNTTYPE_SYNC = AppConstants.MOZ_ANDROID_SHARED_ACCOUNT_TYPE;
 
   /**
    * Bug 790931: this action is broadcast when an Android Sync Account is
@@ -36,7 +35,7 @@ public class SyncConstants {
    * See {@link org.mozilla.gecko.sync.setup.SyncAccounts#makeSyncAccountDeletedIntent(android.content.Context, android.accounts.AccountManager, android.accounts.Account)}
    * for contents of the intent.
    */
-  public static final String SYNC_ACCOUNT_DELETED_ACTION = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.accounts.SYNC_ACCOUNT_DELETED_ACTION";
+  public static final String SYNC_ACCOUNT_DELETED_ACTION = AppConstants.MOZ_ANDROID_SHARED_ACCOUNT_TYPE + ".accounts.SYNC_ACCOUNT_DELETED_ACTION";
 
   /**
    * Bug 790931: version number of contents of SYNC_ACCOUNT_DELETED_ACTION
@@ -52,7 +51,7 @@ public class SyncConstants {
    * should be received only by Firefox versions sharing the same Android Sync
    * Account type.
    */
-  public static final String PER_ACCOUNT_TYPE_PERMISSION = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE";
+  public static final String PER_ACCOUNT_TYPE_PERMISSION = AppConstants.MOZ_ANDROID_SHARED_ACCOUNT_TYPE + ".permission.PER_ACCOUNT_TYPE";
 
   public static final String DEFAULT_AUTH_SERVER = "https://auth.services.mozilla.com/";
 

@@ -80,7 +80,7 @@ function consoleOpened(hud)
         name: "network message",
         text: "test-console.html",
         category: CATEGORY_NETWORK,
-        severity: SEVERITY_LOG,
+        severity: SEVERITY_INFO,
       },
     ],
   });
