@@ -104,7 +104,7 @@ BluetoothInterface::GetInstance()
 #ifdef MOZ_B2G_BT_BLUEDROID
   static const char sDefaultBackend[] = "bluedroid";
 #else
-  static const char const * sDefaultBackend = nullptr;
+  static const char* const sDefaultBackend = nullptr;
 #endif
 #endif
 
