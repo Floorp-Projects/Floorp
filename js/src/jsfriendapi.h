@@ -301,6 +301,7 @@ namespace js {
             js::proxy_SetGeneric,                                                       \
             js::proxy_SetProperty,                                                      \
             js::proxy_SetElement,                                                       \
+            js::proxy_GetOwnPropertyDescriptor,                                         \
             js::proxy_GetGenericAttributes,                                             \
             js::proxy_SetGenericAttributes,                                             \
             js::proxy_DeleteGeneric,                                                    \
@@ -363,6 +364,9 @@ proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<PropertyName*>
 extern JS_FRIEND_API(bool)
 proxy_SetElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp,
                  bool strict);
+extern JS_FRIEND_API(bool)
+proxy_GetOwnPropertyDescriptor(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                               JS::MutableHandle<JSPropertyDescriptor> desc);
 extern JS_FRIEND_API(bool)
 proxy_GetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp);
 extern JS_FRIEND_API(bool)
