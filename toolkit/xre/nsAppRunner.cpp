@@ -3102,13 +3102,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     if (NS_FAILED(rv))
       return 2;
 
-#ifdef XP_MACOSX
-    nsCOMPtr<nsIFile> parent;
-    greDir->GetParent(getter_AddRefs(parent));
-    greDir = parent.forget();
-    greDir->AppendNative(NS_LITERAL_CSTRING("Resources"));
-#endif
-
     greDir.forget(&mAppData->xreDirectory);
   }
 
