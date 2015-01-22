@@ -5,6 +5,8 @@
 "use strict";
 
 // Checks that RSA certs with key sizes below 1024 bits are rejected.
+// Checks that ECC certs using curves other than the NIST P-256, P-384 or P-521
+// curves are rejected.
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
@@ -53,6 +55,40 @@ function check_fail_ca(cert) {
                                 certificateUsageSSLCA);
 }
 
+/**
+ * Tests a cert chain.
+ *
+ * @param {String} rootKeyType
+ *        The key type of the root certificate, or the name of an elliptic
+ *        curve, as output by the 'openssl ecparam -list_curves' command.
+ * @param {Number} rootKeySize
+ * @param {String} intKeyType
+ * @param {Number} intKeySize
+ * @param {String} eeKeyType
+ * @param {Number} eeKeySize
+ * @param {Number} eeExpectedError
+ */
+function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
+                    eeKeyType, eeKeySize, eeExpectedError) {
+  let rootName = "root_" + rootKeyType + "_" + rootKeySize;
+  let intName = "int_" + intKeyType + "_" + intKeySize;
+  let eeName = "ee_" + eeKeyType + "_" + eeKeySize;
+
+  let intFullName = intName + "-" + rootName;
+  let eeFullName = eeName + "-" + intName + "-" + rootName;
+
+  load_cert(rootName, "CTu,CTu,CTu");
+  load_cert(intFullName, ",,");
+  let eeCert = certFromFile(eeFullName + ".der")
+
+  do_print("cert cn=" + eeCert.commonName);
+  do_print("cert o=" + eeCert.organization);
+  do_print("cert issuer cn=" + eeCert.issuerCommonName);
+  do_print("cert issuer o=" + eeCert.issuerOrganization);
+  checkCertErrorGeneric(certdb, eeCert, eeExpectedError,
+                        certificateUsageSSLServer);
+}
+
 function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
   let rootOKName = "root_" + keyType + "_" + adequateKeySize;
   let rootNotOKName = "root_" + keyType + "_" + inadequateKeySize;
@@ -86,8 +122,52 @@ function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
   check_fail(certFromFile(eeFullName + ".der"));
 }
 
+function checkECCChains() {
+  checkChain("prime256v1", 256,
+             "secp384r1", 384,
+             "secp521r1", 521,
+             0);
+  checkChain("prime256v1", 256,
+             "secp224r1", 224,
+             "prime256v1", 256,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  checkChain("prime256v1", 256,
+             "prime256v1", 256,
+             "secp224r1", 224,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  checkChain("secp224r1", 224,
+             "prime256v1", 256,
+             "prime256v1", 256,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  checkChain("prime256v1", 256,
+             "prime256v1", 256,
+             "secp256k1", 256,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  checkChain("secp256k1", 256,
+             "prime256v1", 256,
+             "prime256v1", 256,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+}
+
+function checkCombinationChains() {
+  checkChain("rsa", 2048,
+             "prime256v1", 256,
+             "secp384r1", 384,
+             0);
+  checkChain("rsa", 2048,
+             "prime256v1", 256,
+             "secp224r1", 224,
+             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  checkChain("prime256v1", 256,
+             "rsa", 1016,
+             "prime256v1", 256,
+             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+}
+
 function run_test() {
   checkForKeyType("rsa", 1016, 1024);
+  checkECCChains();
+  checkCombinationChains();
 
   run_next_test();
 }
