@@ -3,26 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Blur.h"
-
 #include <arm_neon.h>
 
 namespace mozilla {
 namespace gfx {
 
 MOZ_ALWAYS_INLINE
-uint32x4_t Divide(uint32x4_t aValues, uint32x4_t aDivisor)
+uint16x4_t Divide(uint32x4_t aValues, uint32x2_t aDivisor)
 {
   uint64x2_t roundingAddition = vdupq_n_u64(int64_t(1) << 31);
-  uint64x2_t multiplied21 = vmull_u32(vget_low_u32(aValues), vget_low_u32(aDivisor));
-  uint64x2_t multiplied43 = vmull_u32(vget_high_u32(aValues), vget_high_u32(aDivisor));
-  return vcombine_u32(vshrn_n_u64(vaddq_u64(multiplied21, roundingAddition), 32),
-                      vshrn_n_u64(vaddq_u64(multiplied43, roundingAddition), 32));
+  uint64x2_t multiplied21 = vmull_u32(vget_low_u32(aValues), aDivisor);
+  uint64x2_t multiplied43 = vmull_u32(vget_high_u32(aValues), aDivisor);
+  return vqmovn_u32(vcombine_u32(vshrn_n_u64(vaddq_u64(multiplied21, roundingAddition), 32),
+                                 vshrn_n_u64(vaddq_u64(multiplied43, roundingAddition), 32)));
 }
 
 MOZ_ALWAYS_INLINE
-uint32x4_t BlurFourPixels(const uint32x4_t& aTopLeft, const uint32x4_t& aTopRight,
-                       const uint32x4_t& aBottomRight, const uint32x4_t& aBottomLeft,
-                       const uint32x4_t& aDivisor)
+uint16x4_t BlurFourPixels(const uint32x4_t& aTopLeft, const uint32x4_t& aTopRight,
+                          const uint32x4_t& aBottomRight, const uint32x4_t& aBottomLeft,
+                          const uint32x2_t& aDivisor)
 {
   uint32x4_t values = vaddq_u32(vsubq_u32(vsubq_u32(aBottomRight, aTopRight), aBottomLeft), aTopLeft);
   return Divide(values, aDivisor);
@@ -202,7 +201,7 @@ AlphaBoxBlur::BoxBlur_NEON(uint8_t* aData,
                              aIntegralImage, aIntegralImageStride, aData,
                              mStride, size);
 
-  uint32x4_t divisor = vdupq_n_u32(reciprocal);
+  uint32x2_t divisor = vdup_n_u32(reciprocal);
 
   // This points to the start of the rectangle within the IntegralImage that overlaps
   // the surface being blurred.
@@ -237,28 +236,28 @@ AlphaBoxBlur::BoxBlur_NEON(uint8_t* aData,
       topRight = vld1q_u32(topRightBase + x);
       bottomRight = vld1q_u32(bottomRightBase + x);
       bottomLeft = vld1q_u32(bottomLeftBase + x);
-      uint32x4_t result1 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      uint16x4_t result1 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
       topLeft = vld1q_u32(topLeftBase + x + 4);
       topRight = vld1q_u32(topRightBase + x + 4);
       bottomRight = vld1q_u32(bottomRightBase + x + 4);
       bottomLeft = vld1q_u32(bottomLeftBase + x + 4);
-      uint32x4_t result2 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      uint16x4_t result2 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
       topLeft = vld1q_u32(topLeftBase + x + 8);
       topRight = vld1q_u32(topRightBase + x + 8);
       bottomRight = vld1q_u32(bottomRightBase + x + 8);
       bottomLeft = vld1q_u32(bottomLeftBase + x + 8);
-      uint32x4_t result3 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      uint16x4_t result3 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
       topLeft = vld1q_u32(topLeftBase + x + 12);
       topRight = vld1q_u32(topRightBase + x + 12);
       bottomRight = vld1q_u32(bottomRightBase + x + 12);
       bottomLeft = vld1q_u32(bottomLeftBase + x + 12);
-      uint32x4_t result4 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      uint16x4_t result4 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
-      uint8x8_t combine1 = vqmovn_u16(vcombine_u16(vqmovn_u32(result1), vqmovn_u32(result2)));
-      uint8x8_t combine2 = vqmovn_u16(vcombine_u16(vqmovn_u32(result3), vqmovn_u32(result4)));
+      uint8x8_t combine1 = vqmovn_u16(vcombine_u16(result1, result2));
+      uint8x8_t combine2 = vqmovn_u16(vcombine_u16(result3, result4));
       uint8x16_t final = vcombine_u8(combine1, combine2);
       vst1q_u8(data + stride * y + x, final);
     }
@@ -277,12 +276,9 @@ AlphaBoxBlur::BoxBlur_NEON(uint8_t* aData,
       uint32x4_t topRight = vld1q_u32(topRightBase + x);
       uint32x4_t bottomRight = vld1q_u32(bottomRightBase + x);
       uint32x4_t bottomLeft = vld1q_u32(bottomLeftBase + x);
-      uint32x4_t result = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
-      uint8x8_t final = vqmovn_u16(vcombine_u16(vqmovn_u32(result), vdup_n_u16(0)));
-      vst1_lane_u8(data + stride * y + x    , final, 0);
-      vst1_lane_u8(data + stride * y + x + 1, final, 1);
-      vst1_lane_u8(data + stride * y + x + 2, final, 2);
-      vst1_lane_u8(data + stride * y + x + 3, final, 3);
+      uint16x4_t result = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      uint32x2_t final = vreinterpret_u32_u8(vmovn_u16(vcombine_u16(result, vdup_n_u16(0))));
+      *(uint32_t*)(data + stride * y + x) = vget_lane_u32(final, 0);
     }
   }
 }
