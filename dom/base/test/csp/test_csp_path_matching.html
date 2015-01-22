@@ -62,6 +62,12 @@ var policies = [
   ["blocked", "test1.example.com:8888/tests"],
   ["blocked", "test1.example.com:8888/tests/dom/base/test/csp"],
   ["blocked", "test1.example.com:8888/tests/dom/base/test/csp/file_csp_path_matching.py"],
+
+  // case insensitive matching for scheme and host, but case sensitive matching for paths
+  ["allowed", "HTTP://test1.EXAMPLE.com/tests/"],
+  ["allowed", "test1.EXAMPLE.com/tests/"],
+  ["blocked", "test1.example.com/tests/dom/base/test/CSP/?foo=val"],
+  ["blocked", "test1.example.com/tests/dom/base/test/csp/FILE_csp_path_matching.js?foo=val"],
 ]
 
 var counter = 0;
