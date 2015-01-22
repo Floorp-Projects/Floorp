@@ -423,6 +423,31 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
     return pn;
 }
 
+template <>
+ParseNode *
+Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn);
+
+/*
+ * Used by Parser::cloneLeftHandSide to clone a default expression
+ * in the form of
+ *    [a = default] or {a: b = default}
+ */
+template <>
+ParseNode *
+Parser<FullParseHandler>::cloneDestructuringDefault(ParseNode *opn)
+{
+    MOZ_ASSERT(opn->isKind(PNK_ASSIGN));
+
+    ParseNode *target = cloneLeftHandSide(opn->pn_left);
+    if (!target)
+        return nullptr;
+    ParseNode *defaultNode = cloneParseTree(opn->pn_right);
+    if (!defaultNode)
+        return nullptr;
+
+    return handler.new_<BinaryNode>(opn->getKind(), JSOP_NOP, opn->pn_pos, target, defaultNode);
+}
+
 /*
  * Used by Parser::forStatement and comprehensionTail to clone the TARGET in
  *   for (var/const/let TARGET in EXPR)
@@ -463,7 +488,12 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
                     ParseNode *tag = cloneParseTree(opn2->pn_left);
                     if (!tag)
                         return nullptr;
-                    ParseNode *target = cloneLeftHandSide(opn2->pn_right);
+                    ParseNode *target;
+                    if (opn2->pn_right->isKind(PNK_ASSIGN)) {
+                        target = cloneDestructuringDefault(opn2->pn_right);
+                    } else {
+                        target = cloneLeftHandSide(opn2->pn_right);
+                    }
                     if (!target)
                         return nullptr;
 
@@ -477,6 +507,8 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
                 if (!target)
                     return nullptr;
                 pn2 = handler.new_<UnaryNode>(PNK_SPREAD, JSOP_NOP, opn2->pn_pos, target);
+            } else if (opn2->isKind(PNK_ASSIGN)) {
+                pn2 = cloneDestructuringDefault(opn2);
             } else {
                 pn2 = cloneLeftHandSide(opn2);
             }
