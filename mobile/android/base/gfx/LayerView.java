@@ -138,6 +138,14 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         GeckoAccessibility.setAccessibilityStateChangeListener(getContext());
     }
 
+    /**
+     * MotionEventHelper dragAsync() robocop tests can instruct
+     * PanZoomController not to generate longpress events.
+     */
+    public void setIsLongpressEnabled(boolean isLongpressEnabled) {
+        ((JavaPanZoomController) mPanZoomController).setIsLongpressEnabled(isLongpressEnabled);
+    }
+
     private static Point getEventRadius(MotionEvent event) {
         return new Point((int)event.getToolMajor() / 2,
                          (int)event.getToolMinor() / 2);
