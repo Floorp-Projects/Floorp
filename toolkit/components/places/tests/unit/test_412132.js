@@ -34,7 +34,7 @@ add_task(function changeuri_unvisited_bookmark()
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
   remove_all_bookmarks();
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function changeuri_visited_bookmark()
@@ -64,7 +64,7 @@ add_task(function changeuri_visited_bookmark()
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   remove_all_bookmarks();
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function changeuri_bookmark_still_bookmarked()
@@ -95,7 +95,7 @@ add_task(function changeuri_bookmark_still_bookmarked()
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
   remove_all_bookmarks();
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function changeuri_nonexistent_bookmark()
@@ -127,7 +127,7 @@ add_task(function changeuri_nonexistent_bookmark()
   tryChange(id);
 
   remove_all_bookmarks();
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 ///////////////////////////////////////////////////////////////////////////////

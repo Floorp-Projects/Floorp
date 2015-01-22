@@ -98,7 +98,7 @@ function reloadListener() {
 
 function reloadAsyncListener(aURI, aIsVisited) {
   ok(kUniqueURI.equals(aURI) && aIsVisited, "We have visited the URI.");
-  promiseClearHistory().then(finish);
+  PlacesTestUtils.clearHistory().then(finish);
 }
 
 registerCleanupFunction(function() {

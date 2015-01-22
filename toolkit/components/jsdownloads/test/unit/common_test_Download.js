@@ -2116,7 +2116,7 @@ add_task(function test_history()
   mustInterruptResponses();
 
   // We will wait for the visit to be notified during the download.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
   let promiseVisit = promiseWaitForVisit(httpUrl("interruptible.txt"));
 
   // Start a download that is not allowed to finish yet.
@@ -2128,7 +2128,7 @@ add_task(function test_history()
   do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
 
   // Restart and complete the download after clearing history.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
   download.cancel();
   continueResponses();
   yield download.start();
@@ -2144,7 +2144,7 @@ add_task(function test_history()
 add_task(function test_history_tryToKeepPartialData()
 {
   // We will wait for the visit to be notified during the download.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
   let promiseVisit =
       promiseWaitForVisit(httpUrl("interruptible_resumable.txt"));
 

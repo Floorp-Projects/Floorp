@@ -68,7 +68,7 @@ add_task(function pages_query()
   }
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function visits_query()
@@ -95,7 +95,7 @@ add_task(function visits_query()
   }
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function pages_searchterm_query()
@@ -119,7 +119,7 @@ add_task(function pages_searchterm_query()
   }
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function visits_searchterm_query()
@@ -146,7 +146,7 @@ add_task(function visits_searchterm_query()
   }
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function pages_searchterm_is_title_query()
@@ -170,7 +170,7 @@ add_task(function pages_searchterm_is_title_query()
   });
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function visits_searchterm_is_title_query()
@@ -195,5 +195,5 @@ add_task(function visits_searchterm_is_title_query()
   });
 
   root.containerOpen = false;
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });

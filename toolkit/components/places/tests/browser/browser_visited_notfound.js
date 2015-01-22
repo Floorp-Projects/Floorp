@@ -41,7 +41,7 @@ function continueTest(aOldFrecency) {
           is(aHidden, 0, "Page should not be hidden");
           fieldForUrl(aURI, "typed", function (aTyped) {
             is(aTyped, 0, "page should not be marked as typed");
-            promiseClearHistory().then(finish);
+            PlacesTestUtils.clearHistory().then(finish);
           });
         });
       });

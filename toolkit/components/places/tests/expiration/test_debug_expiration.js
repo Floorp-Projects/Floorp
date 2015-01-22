@@ -32,7 +32,7 @@ add_task(function test_expire_orphans()
   do_check_false(page_in_database("http://page3.mozilla.org/"));
 
   // Clean up.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_expire_orphans_optionalarg()
@@ -57,7 +57,7 @@ add_task(function test_expire_orphans_optionalarg()
   do_check_false(page_in_database("http://page3.mozilla.org/"));
 
   // Clean up.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_expire_limited()
@@ -77,7 +77,7 @@ add_task(function test_expire_limited()
   do_check_eq(visits_in_database("http://page2.mozilla.org/"), 1);
 
   // Clean up.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_expire_unlimited()
@@ -97,7 +97,7 @@ add_task(function test_expire_unlimited()
   do_check_false(page_in_database("http://page2.mozilla.org/"));
 
   // Clean up.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 function run_test()
