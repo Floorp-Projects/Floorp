@@ -1,8 +1,10 @@
 Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
+Note: security/sandbox/win/src has moved to security/sandbox/chromium/sandbox/win/src
 
 https://hg.mozilla.org/mozilla-central/rev/365d1073111a
 https://hg.mozilla.org/mozilla-central/rev/0f763c186855
 https://hg.mozilla.org/mozilla-central/rev/d58c0218bb55
-https://bugzilla.mozilla.org/show_bug.cgi?id=1119072 (Part 3) vs2015-hashset-hashmap.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=1119072 (Part 6) vs2015-change-const-to-non-const-element.patch
+https://hg.mozilla.org/mozilla-central/rev/e139be9249f2
+https://hg.mozilla.org/mozilla-central/rev/c827c112df81
+https://hg.mozilla.org/mozilla-central/rev/7df8d6639971
