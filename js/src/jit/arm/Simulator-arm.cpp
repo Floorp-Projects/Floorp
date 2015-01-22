@@ -29,6 +29,7 @@
 #include "jit/arm/Simulator-arm.h"
 
 #include "mozilla/Casting.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
@@ -2692,7 +2693,7 @@ Simulator::decodeType01(SimInstruction *instr)
                 if (instr->bits(27, 23) == 2) {
                     // Register operand. For now we only emit mask 0b1100.
                     int rm = instr->rmValue();
-                    uint32_t mask = instr->bits(19, 16);
+                    mozilla::DebugOnly<uint32_t> mask = instr->bits(19, 16);
                     MOZ_ASSERT(mask == (3 << 2));
 
                     uint32_t flags = get_register(rm);
