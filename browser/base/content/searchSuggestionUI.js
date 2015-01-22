@@ -57,6 +57,8 @@ function SearchSuggestionUIController(inputElement, tableParent, onClick=null,
 
   this._stickyInputValue = "";
   this._hideSuggestions();
+
+  this._ignoreInputEvent = false;
 }
 
 SearchSuggestionUIController.prototype = {
@@ -143,6 +145,10 @@ SearchSuggestionUIController.prototype = {
   },
 
   _onInput: function () {
+    if (this._ignoreInputEvent) {
+      this._ignoreInputEvent = false;
+      return;
+    }
     if (this.input.value) {
       this._getSuggestions();
     }
@@ -231,6 +237,15 @@ SearchSuggestionUIController.prototype = {
     let idx = this._indexOfTableRowOrDescendent(event.target);
     let suggestion = this.suggestionAtIndex(idx);
     this._stickyInputValue = suggestion;
+
+    // Commit composition string forcibly, because setting input value does not
+    // work if input has composition string (see bug 1115616 and bug 632744).
+    // Ignore input event for composition end to avoid getting suggestion again.
+    this._ignoreInputEvent = true;
+    this.input.blur();
+    this.input.focus();
+    this._ignoreInputEvent = false;
+
     this.input.value = suggestion;
     this.input.setAttribute("selection-index", idx);
     this.input.setAttribute("selection-kind", "mouse");
