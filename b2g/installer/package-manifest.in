@@ -12,19 +12,6 @@
 ; ; file comment
 ;
 
-; Due to Apple Mac OS X packaging requirements, files that are in the same
-; directory on other platforms must be located in different directories on
-; Mac OS X. The following defines allow specifying the Mac OS X bundle
-; location which also work on other platforms.
-;
-; @BINPATH@
-; Equals Contents/MacOS/ on Mac OS X and is the path to the main binary on other
-; platforms.
-;
-; @RESPATH@
-; Equals Contents/Resources/ on Mac OS X and is equivalent to @BINPATH@ on other
-; platforms.
-
 #filter substitution
 
 #ifdef XP_MACOSX
@@ -32,31 +19,31 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Plug-Ins/
-@RESPATH@
+@APPNAME@/Contents/Resources/
 #endif
 
 [@AB_CD@]
-@RESPATH@/chrome/@AB_CD@@JAREXT@
-@RESPATH@/chrome/@AB_CD@.manifest
-@RESPATH@/@PREF_DIR@/b2g-l10n.js
-@RESPATH@/searchplugins/*
-@RESPATH@/defaults/profile/bookmarks.html
-@RESPATH@/defaults/profile/localstore.rdf
-@RESPATH@/defaults/profile/mimeTypes.rdf
-@RESPATH@/defaults/profile/chrome/*
+@BINPATH@/chrome/@AB_CD@@JAREXT@
+@BINPATH@/chrome/@AB_CD@.manifest
+@BINPATH@/@PREF_DIR@/b2g-l10n.js
+@BINPATH@/searchplugins/*
+@BINPATH@/defaults/profile/bookmarks.html
+@BINPATH@/defaults/profile/localstore.rdf
+@BINPATH@/defaults/profile/mimeTypes.rdf
+@BINPATH@/defaults/profile/chrome/*
 #ifdef MOZ_UPDATER
-@RESPATH@/update.locale
-@RESPATH@/updater.ini
+@BINPATH@/update.locale
+@BINPATH@/updater.ini
 #endif
-@RESPATH@/dictionaries/*
-@RESPATH@/hyphenation/*
+@BINPATH@/dictionaries/*
+@BINPATH@/hyphenation/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
 #endif
 
 [xpcom]
 #ifndef XP_MACOSX
-@RESPATH@/dependentlibs.list
+@BINPATH@/dependentlibs.list
 #endif
 #ifdef GKMEDIAS_SHARED_LIBRARY
 @BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
@@ -98,12 +85,12 @@
 #endif
 #endif
 #ifdef ANDROID
-@RESPATH@/AndroidManifest.xml
-@RESPATH@/resources.arsc
-@RESPATH@/classes.dex
-@RESPATH@/res/drawable
-@RESPATH@/res/drawable-hdpi
-@RESPATH@/res/layout
+@BINPATH@/AndroidManifest.xml
+@BINPATH@/resources.arsc
+@BINPATH@/classes.dex
+@BINPATH@/res/drawable
+@BINPATH@/res/drawable-hdpi
+@BINPATH@/res/layout
 #endif
 #ifdef MOZ_GTK3
 @BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
@@ -118,537 +105,537 @@
 @BINPATH@/@MOZ_APP_NAME@-bin
 @BINPATH@/@MOZ_APP_NAME@
 #endif
-@RESPATH@/application.ini
-@RESPATH@/platform.ini
+@BINPATH@/application.ini
+@BINPATH@/platform.ini
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #endif
-@RESPATH@/blocklist.xml
-@RESPATH@/ua-update.json
+@BINPATH@/blocklist.xml
+@BINPATH@/ua-update.json
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-@RESPATH@/run-mozilla.sh
+@BINPATH@/run-mozilla.sh
 #endif
 #endif
 
 ; [Components]
-@RESPATH@/components/components.manifest
-@RESPATH@/components/alerts.xpt
+@BINPATH@/components/components.manifest
+@BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
 #ifdef XP_WIN32
 @BINPATH@/AccessibleMarshal.dll
 #endif
-@RESPATH@/components/accessibility.xpt
+@BINPATH@/components/accessibility.xpt
 #endif
-@RESPATH@/components/appshell.xpt
-@RESPATH@/components/appstartup.xpt
-@RESPATH@/components/autocomplete.xpt
-@RESPATH@/components/autoconfig.xpt
-@RESPATH@/components/browsercompsbase.xpt
-@RESPATH@/components/browser-element.xpt
-@RESPATH@/components/browser-feeds.xpt
-@RESPATH@/components/caps.xpt
-@RESPATH@/components/chardet.xpt
-@RESPATH@/components/chrome.xpt
-@RESPATH@/components/commandhandler.xpt
-@RESPATH@/components/commandlines.xpt
-@RESPATH@/components/compartments.xpt
-@RESPATH@/components/composer.xpt
-@RESPATH@/components/content_events.xpt
-@RESPATH@/components/content_html.xpt
-@RESPATH@/components/content_xslt.xpt
-@RESPATH@/components/cookie.xpt
-@RESPATH@/components/devtools_security.xpt
-@RESPATH@/components/directory.xpt
-@RESPATH@/components/diskspacewatcher.xpt
-@RESPATH@/components/docshell.xpt
-@RESPATH@/components/dom.xpt
-@RESPATH@/components/dom_activities.xpt
-@RESPATH@/components/dom_apps.xpt
-@RESPATH@/components/dom_audiochannel.xpt
-@RESPATH@/components/dom_base.xpt
-@RESPATH@/components/dom_system.xpt
+@BINPATH@/components/appshell.xpt
+@BINPATH@/components/appstartup.xpt
+@BINPATH@/components/autocomplete.xpt
+@BINPATH@/components/autoconfig.xpt
+@BINPATH@/components/browsercompsbase.xpt
+@BINPATH@/components/browser-element.xpt
+@BINPATH@/components/browser-feeds.xpt
+@BINPATH@/components/caps.xpt
+@BINPATH@/components/chardet.xpt
+@BINPATH@/components/chrome.xpt
+@BINPATH@/components/commandhandler.xpt
+@BINPATH@/components/commandlines.xpt
+@BINPATH@/components/compartments.xpt
+@BINPATH@/components/composer.xpt
+@BINPATH@/components/content_events.xpt
+@BINPATH@/components/content_html.xpt
+@BINPATH@/components/content_xslt.xpt
+@BINPATH@/components/cookie.xpt
+@BINPATH@/components/devtools_security.xpt
+@BINPATH@/components/directory.xpt
+@BINPATH@/components/diskspacewatcher.xpt
+@BINPATH@/components/docshell.xpt
+@BINPATH@/components/dom.xpt
+@BINPATH@/components/dom_activities.xpt
+@BINPATH@/components/dom_apps.xpt
+@BINPATH@/components/dom_audiochannel.xpt
+@BINPATH@/components/dom_base.xpt
+@BINPATH@/components/dom_system.xpt
 #ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/dom_wifi.xpt
-@RESPATH@/components/dom_system_gonk.xpt
+@BINPATH@/components/dom_wifi.xpt
+@BINPATH@/components/dom_system_gonk.xpt
 #endif
 #ifdef MOZ_B2G_RIL
-@RESPATH@/components/dom_icc.xpt
-@RESPATH@/components/dom_wappush.xpt
-@RESPATH@/components/dom_mobileconnection.xpt
+@BINPATH@/components/dom_icc.xpt
+@BINPATH@/components/dom_wappush.xpt
+@BINPATH@/components/dom_mobileconnection.xpt
 #endif
 #ifdef MOZ_B2G_BT
-@RESPATH@/components/dom_bluetooth.xpt
+@BINPATH@/components/dom_bluetooth.xpt
 #endif
-@RESPATH@/components/dom_canvas.xpt
-@RESPATH@/components/dom_contacts.xpt
-@RESPATH@/components/dom_alarm.xpt
-@RESPATH@/components/dom_core.xpt
-@RESPATH@/components/dom_css.xpt
-@RESPATH@/components/dom_devicestorage.xpt
-@RESPATH@/components/dom_events.xpt
-@RESPATH@/components/dom_geolocation.xpt
-@RESPATH@/components/dom_media.xpt
-@RESPATH@/components/dom_network.xpt
+@BINPATH@/components/dom_canvas.xpt
+@BINPATH@/components/dom_contacts.xpt
+@BINPATH@/components/dom_alarm.xpt
+@BINPATH@/components/dom_core.xpt
+@BINPATH@/components/dom_css.xpt
+@BINPATH@/components/dom_devicestorage.xpt
+@BINPATH@/components/dom_events.xpt
+@BINPATH@/components/dom_geolocation.xpt
+@BINPATH@/components/dom_media.xpt
+@BINPATH@/components/dom_network.xpt
 #ifdef MOZ_NFC
-@RESPATH@/components/dom_nfc.xpt
+@BINPATH@/components/dom_nfc.xpt
 #endif
-@RESPATH@/components/dom_notification.xpt
-@RESPATH@/components/dom_html.xpt
-@RESPATH@/components/dom_offline.xpt
-@RESPATH@/components/dom_payment.xpt
-@RESPATH@/components/dom_json.xpt
-@RESPATH@/components/dom_messages.xpt
-@RESPATH@/components/dom_power.xpt
-@RESPATH@/components/dom_quota.xpt
-@RESPATH@/components/dom_range.xpt
-@RESPATH@/components/dom_security.xpt
-@RESPATH@/components/dom_settings.xpt
-@RESPATH@/components/dom_permissionsettings.xpt
-@RESPATH@/components/dom_sidebar.xpt
-@RESPATH@/components/dom_cellbroadcast.xpt
-@RESPATH@/components/dom_mobilemessage.xpt
-@RESPATH@/components/dom_storage.xpt
-@RESPATH@/components/dom_stylesheets.xpt
-@RESPATH@/components/dom_telephony.xpt
-@RESPATH@/components/dom_threads.xpt
-@RESPATH@/components/dom_traversal.xpt
-@RESPATH@/components/dom_tv.xpt
-@RESPATH@/components/dom_views.xpt
-@RESPATH@/components/dom_voicemail.xpt
+@BINPATH@/components/dom_notification.xpt
+@BINPATH@/components/dom_html.xpt
+@BINPATH@/components/dom_offline.xpt
+@BINPATH@/components/dom_payment.xpt
+@BINPATH@/components/dom_json.xpt
+@BINPATH@/components/dom_messages.xpt
+@BINPATH@/components/dom_power.xpt
+@BINPATH@/components/dom_quota.xpt
+@BINPATH@/components/dom_range.xpt
+@BINPATH@/components/dom_security.xpt
+@BINPATH@/components/dom_settings.xpt
+@BINPATH@/components/dom_permissionsettings.xpt
+@BINPATH@/components/dom_sidebar.xpt
+@BINPATH@/components/dom_cellbroadcast.xpt
+@BINPATH@/components/dom_mobilemessage.xpt
+@BINPATH@/components/dom_storage.xpt
+@BINPATH@/components/dom_stylesheets.xpt
+@BINPATH@/components/dom_telephony.xpt
+@BINPATH@/components/dom_threads.xpt
+@BINPATH@/components/dom_traversal.xpt
+@BINPATH@/components/dom_tv.xpt
+@BINPATH@/components/dom_views.xpt
+@BINPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH
-@RESPATH@/components/dom_webspeechrecognition.xpt
+@BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
-@RESPATH@/components/dom_xbl.xpt
-@RESPATH@/components/dom_xpath.xpt
-@RESPATH@/components/dom_xul.xpt
-@RESPATH@/components/dom_time.xpt
-@RESPATH@/components/dom_engineeringmode.xpt
-@RESPATH@/components/dom_presentation.xpt
-@RESPATH@/components/downloads.xpt
-@RESPATH@/components/editor.xpt
-@RESPATH@/components/embed_base.xpt
-@RESPATH@/components/extensions.xpt
-@RESPATH@/components/exthandler.xpt
-@RESPATH@/components/exthelper.xpt
-@RESPATH@/components/fastfind.xpt
-@RESPATH@/components/feeds.xpt
+@BINPATH@/components/dom_xbl.xpt
+@BINPATH@/components/dom_xpath.xpt
+@BINPATH@/components/dom_xul.xpt
+@BINPATH@/components/dom_time.xpt
+@BINPATH@/components/dom_engineeringmode.xpt
+@BINPATH@/components/dom_presentation.xpt
+@BINPATH@/components/downloads.xpt
+@BINPATH@/components/editor.xpt
+@BINPATH@/components/embed_base.xpt
+@BINPATH@/components/extensions.xpt
+@BINPATH@/components/exthandler.xpt
+@BINPATH@/components/exthelper.xpt
+@BINPATH@/components/fastfind.xpt
+@BINPATH@/components/feeds.xpt
 #ifdef MOZ_GTK
-@RESPATH@/components/filepicker.xpt
+@BINPATH@/components/filepicker.xpt
 #endif
-@RESPATH@/components/find.xpt
-@RESPATH@/components/fuel.xpt
-@RESPATH@/components/gfx.xpt
-@RESPATH@/components/hal.xpt
-@RESPATH@/components/html5.xpt
-@RESPATH@/components/htmlparser.xpt
-@RESPATH@/components/identity.xpt
-@RESPATH@/components/imglib2.xpt
-@RESPATH@/components/imgicon.xpt
-@RESPATH@/components/inspector.xpt
-@RESPATH@/components/intl.xpt
-@RESPATH@/components/jar.xpt
-@RESPATH@/components/jsdebugger.xpt
-@RESPATH@/components/jsdownloads.xpt
-@RESPATH@/components/jsinspector.xpt
-@RESPATH@/components/layout_base.xpt
+@BINPATH@/components/find.xpt
+@BINPATH@/components/fuel.xpt
+@BINPATH@/components/gfx.xpt
+@BINPATH@/components/hal.xpt
+@BINPATH@/components/html5.xpt
+@BINPATH@/components/htmlparser.xpt
+@BINPATH@/components/identity.xpt
+@BINPATH@/components/imglib2.xpt
+@BINPATH@/components/imgicon.xpt
+@BINPATH@/components/inspector.xpt
+@BINPATH@/components/intl.xpt
+@BINPATH@/components/jar.xpt
+@BINPATH@/components/jsdebugger.xpt
+@BINPATH@/components/jsdownloads.xpt
+@BINPATH@/components/jsinspector.xpt
+@BINPATH@/components/layout_base.xpt
 #ifdef NS_PRINTING
-@RESPATH@/components/layout_printing.xpt
+@BINPATH@/components/layout_printing.xpt
 #endif
-@RESPATH@/components/layout_xul_tree.xpt
-@RESPATH@/components/layout_xul.xpt
-@RESPATH@/components/locale.xpt
-@RESPATH@/components/lwbrk.xpt
-@RESPATH@/components/migration.xpt
-@RESPATH@/components/mimetype.xpt
-@RESPATH@/components/mozfind.xpt
-@RESPATH@/components/necko_about.xpt
-@RESPATH@/components/necko_cache.xpt
-@RESPATH@/components/necko_cache2.xpt
-@RESPATH@/components/necko_cookie.xpt
-@RESPATH@/components/necko_dns.xpt
-@RESPATH@/components/necko_file.xpt
-@RESPATH@/components/necko_ftp.xpt
-@RESPATH@/components/necko_http.xpt
-@RESPATH@/components/necko_res.xpt
-@RESPATH@/components/necko_socket.xpt
-@RESPATH@/components/necko_strconv.xpt
-@RESPATH@/components/necko_viewsource.xpt
-@RESPATH@/components/necko_websocket.xpt
-@RESPATH@/components/necko_wifi.xpt
-@RESPATH@/components/necko_wyciwyg.xpt
+@BINPATH@/components/layout_xul_tree.xpt
+@BINPATH@/components/layout_xul.xpt
+@BINPATH@/components/locale.xpt
+@BINPATH@/components/lwbrk.xpt
+@BINPATH@/components/migration.xpt
+@BINPATH@/components/mimetype.xpt
+@BINPATH@/components/mozfind.xpt
+@BINPATH@/components/necko_about.xpt
+@BINPATH@/components/necko_cache.xpt
+@BINPATH@/components/necko_cache2.xpt
+@BINPATH@/components/necko_cookie.xpt
+@BINPATH@/components/necko_dns.xpt
+@BINPATH@/components/necko_file.xpt
+@BINPATH@/components/necko_ftp.xpt
+@BINPATH@/components/necko_http.xpt
+@BINPATH@/components/necko_res.xpt
+@BINPATH@/components/necko_socket.xpt
+@BINPATH@/components/necko_strconv.xpt
+@BINPATH@/components/necko_viewsource.xpt
+@BINPATH@/components/necko_websocket.xpt
+@BINPATH@/components/necko_wifi.xpt
+@BINPATH@/components/necko_wyciwyg.xpt
 #ifdef MOZ_RTSP
-@RESPATH@/components/necko_rtsp.xpt
+@BINPATH@/components/necko_rtsp.xpt
 #endif
-@RESPATH@/components/necko.xpt
-@RESPATH@/components/loginmgr.xpt
-@RESPATH@/components/parentalcontrols.xpt
+@BINPATH@/components/necko.xpt
+@BINPATH@/components/loginmgr.xpt
+@BINPATH@/components/parentalcontrols.xpt
 #ifdef MOZ_WEBRTC
-@RESPATH@/components/peerconnection.xpt
+@BINPATH@/components/peerconnection.xpt
 #endif
-@RESPATH@/components/places.xpt
-@RESPATH@/components/plugin.xpt
-@RESPATH@/components/pref.xpt
-@RESPATH@/components/prefetch.xpt
-@RESPATH@/components/profile.xpt
+@BINPATH@/components/places.xpt
+@BINPATH@/components/plugin.xpt
+@BINPATH@/components/pref.xpt
+@BINPATH@/components/prefetch.xpt
+@BINPATH@/components/profile.xpt
 #ifdef MOZ_ENABLE_PROFILER_SPS
-@RESPATH@/components/profiler.xpt
+@BINPATH@/components/profiler.xpt
 #endif
-@RESPATH@/components/proxyObject.xpt
-@RESPATH@/components/rdf.xpt
-@RESPATH@/components/satchel.xpt
-@RESPATH@/components/saxparser.xpt
-@RESPATH@/components/sessionstore.xpt
+@BINPATH@/components/proxyObject.xpt
+@BINPATH@/components/rdf.xpt
+@BINPATH@/components/satchel.xpt
+@BINPATH@/components/saxparser.xpt
+@BINPATH@/components/sessionstore.xpt
 #ifdef MOZ_SERVICES_SYNC
-@RESPATH@/components/services-crypto.xpt
+@BINPATH@/components/services-crypto.xpt
 #endif
-@RESPATH@/components/services-crypto-component.xpt
+@BINPATH@/components/services-crypto-component.xpt
 #ifdef MOZ_CAPTIVEDETECT
-@RESPATH@/components/captivedetect.xpt
+@BINPATH@/components/captivedetect.xpt
 #endif
-@RESPATH@/components/shellservice.xpt
-@RESPATH@/components/shistory.xpt
-@RESPATH@/components/spellchecker.xpt
-@RESPATH@/components/storage.xpt
-@RESPATH@/components/telemetry.xpt
-@RESPATH@/components/toolkit_asyncshutdown.xpt
-@RESPATH@/components/toolkit_filewatcher.xpt
-@RESPATH@/components/toolkit_finalizationwitness.xpt
-@RESPATH@/components/toolkit_formautofill.xpt
-@RESPATH@/components/toolkit_osfile.xpt
-@RESPATH@/components/toolkit_xulstore.xpt
-@RESPATH@/components/toolkitprofile.xpt
+@BINPATH@/components/shellservice.xpt
+@BINPATH@/components/shistory.xpt
+@BINPATH@/components/spellchecker.xpt
+@BINPATH@/components/storage.xpt
+@BINPATH@/components/telemetry.xpt
+@BINPATH@/components/toolkit_asyncshutdown.xpt
+@BINPATH@/components/toolkit_filewatcher.xpt
+@BINPATH@/components/toolkit_finalizationwitness.xpt
+@BINPATH@/components/toolkit_formautofill.xpt
+@BINPATH@/components/toolkit_osfile.xpt
+@BINPATH@/components/toolkit_xulstore.xpt
+@BINPATH@/components/toolkitprofile.xpt
 #ifdef MOZ_ENABLE_XREMOTE
-@RESPATH@/components/toolkitremote.xpt
+@BINPATH@/components/toolkitremote.xpt
 #endif
-@RESPATH@/components/txtsvc.xpt
-@RESPATH@/components/txmgr.xpt
+@BINPATH@/components/txtsvc.xpt
+@BINPATH@/components/txmgr.xpt
 #ifdef MOZ_USE_NATIVE_UCONV
-@RESPATH@/components/ucnative.xpt
+@BINPATH@/components/ucnative.xpt
 #endif
-@RESPATH@/components/uconv.xpt
-@RESPATH@/components/unicharutil.xpt
-@RESPATH@/components/update.xpt
-@RESPATH@/components/uriloader.xpt
-@RESPATH@/components/urlformatter.xpt
-@RESPATH@/components/webBrowser_core.xpt
-@RESPATH@/components/webbrowserpersist.xpt
-@RESPATH@/components/webshell_idls.xpt
-@RESPATH@/components/widget.xpt
+@BINPATH@/components/uconv.xpt
+@BINPATH@/components/unicharutil.xpt
+@BINPATH@/components/update.xpt
+@BINPATH@/components/uriloader.xpt
+@BINPATH@/components/urlformatter.xpt
+@BINPATH@/components/webBrowser_core.xpt
+@BINPATH@/components/webbrowserpersist.xpt
+@BINPATH@/components/webshell_idls.xpt
+@BINPATH@/components/widget.xpt
 #ifdef XP_MACOSX
-@RESPATH@/components/widget_cocoa.xpt
+@BINPATH@/components/widget_cocoa.xpt
 #endif
 #ifdef ANDROID
-@RESPATH@/components/widget_android.xpt
+@BINPATH@/components/widget_android.xpt
 #endif
-@RESPATH@/components/windowds.xpt
-@RESPATH@/components/windowwatcher.xpt
-@RESPATH@/components/xpcom_base.xpt
-@RESPATH@/components/xpcom_system.xpt
-@RESPATH@/components/xpcom_components.xpt
-@RESPATH@/components/xpcom_ds.xpt
-@RESPATH@/components/xpcom_io.xpt
-@RESPATH@/components/xpcom_threads.xpt
-@RESPATH@/components/xpcom_xpti.xpt
-@RESPATH@/components/xpconnect.xpt
-@RESPATH@/components/xulapp.xpt
-@RESPATH@/components/xul.xpt
-@RESPATH@/components/xultmpl.xpt
-@RESPATH@/components/zipwriter.xpt
+@BINPATH@/components/windowds.xpt
+@BINPATH@/components/windowwatcher.xpt
+@BINPATH@/components/xpcom_base.xpt
+@BINPATH@/components/xpcom_system.xpt
+@BINPATH@/components/xpcom_components.xpt
+@BINPATH@/components/xpcom_ds.xpt
+@BINPATH@/components/xpcom_io.xpt
+@BINPATH@/components/xpcom_threads.xpt
+@BINPATH@/components/xpcom_xpti.xpt
+@BINPATH@/components/xpconnect.xpt
+@BINPATH@/components/xulapp.xpt
+@BINPATH@/components/xul.xpt
+@BINPATH@/components/xultmpl.xpt
+@BINPATH@/components/zipwriter.xpt
 
 ; JavaScript components
-@RESPATH@/components/RequestSync.manifest
-@RESPATH@/components/RequestSyncManager.js
-@RESPATH@/components/RequestSyncScheduler.js
-@RESPATH@/components/ChromeNotifications.js
-@RESPATH@/components/ChromeNotifications.manifest
-@RESPATH@/components/ConsoleAPI.manifest
-@RESPATH@/components/ConsoleAPIStorage.js
-@RESPATH@/components/BrowserElementParent.manifest
-@RESPATH@/components/BrowserElementParent.js
-@RESPATH@/components/ContactManager.js
-@RESPATH@/components/ContactManager.manifest
-@RESPATH@/components/PhoneNumberService.js
-@RESPATH@/components/PhoneNumberService.manifest
-@RESPATH@/components/NotificationStorage.js
-@RESPATH@/components/NotificationStorage.manifest
-@RESPATH@/components/PermissionSettings.js
-@RESPATH@/components/PermissionSettings.manifest
-@RESPATH@/components/PermissionPromptService.js
-@RESPATH@/components/PermissionPromptService.manifest
-@RESPATH@/components/AlarmsManager.js
-@RESPATH@/components/AlarmsManager.manifest
-@RESPATH@/components/FeedProcessor.manifest
-@RESPATH@/components/FeedProcessor.js
-@RESPATH@/components/BrowserFeeds.manifest
-@RESPATH@/components/FeedConverter.js
-@RESPATH@/components/FeedWriter.js
-@RESPATH@/components/fuelApplication.manifest
-@RESPATH@/components/fuelApplication.js
-@RESPATH@/components/WebContentConverter.js
-@RESPATH@/components/BrowserComponents.manifest
-@RESPATH@/components/nsBrowserContentHandler.js
-@RESPATH@/components/nsBrowserGlue.js
-@RESPATH@/components/nsSetDefaultBrowser.manifest
-@RESPATH@/components/nsSetDefaultBrowser.js
-@RESPATH@/components/toolkitsearch.manifest
-@RESPATH@/components/nsTryToClose.manifest
-@RESPATH@/components/nsTryToClose.js
-@RESPATH@/components/passwordmgr.manifest
-@RESPATH@/components/nsLoginInfo.js
-@RESPATH@/components/nsLoginManager.js
-@RESPATH@/components/nsLoginManagerPrompter.js
-@RESPATH@/components/NetworkGeolocationProvider.manifest
-@RESPATH@/components/NetworkGeolocationProvider.js
+@BINPATH@/components/RequestSync.manifest
+@BINPATH@/components/RequestSyncManager.js
+@BINPATH@/components/RequestSyncScheduler.js
+@BINPATH@/components/ChromeNotifications.js
+@BINPATH@/components/ChromeNotifications.manifest
+@BINPATH@/components/ConsoleAPI.manifest
+@BINPATH@/components/ConsoleAPIStorage.js
+@BINPATH@/components/BrowserElementParent.manifest
+@BINPATH@/components/BrowserElementParent.js
+@BINPATH@/components/ContactManager.js
+@BINPATH@/components/ContactManager.manifest
+@BINPATH@/components/PhoneNumberService.js
+@BINPATH@/components/PhoneNumberService.manifest
+@BINPATH@/components/NotificationStorage.js
+@BINPATH@/components/NotificationStorage.manifest
+@BINPATH@/components/PermissionSettings.js
+@BINPATH@/components/PermissionSettings.manifest
+@BINPATH@/components/PermissionPromptService.js
+@BINPATH@/components/PermissionPromptService.manifest
+@BINPATH@/components/AlarmsManager.js
+@BINPATH@/components/AlarmsManager.manifest
+@BINPATH@/components/FeedProcessor.manifest
+@BINPATH@/components/FeedProcessor.js
+@BINPATH@/components/BrowserFeeds.manifest
+@BINPATH@/components/FeedConverter.js
+@BINPATH@/components/FeedWriter.js
+@BINPATH@/components/fuelApplication.manifest
+@BINPATH@/components/fuelApplication.js
+@BINPATH@/components/WebContentConverter.js
+@BINPATH@/components/BrowserComponents.manifest
+@BINPATH@/components/nsBrowserContentHandler.js
+@BINPATH@/components/nsBrowserGlue.js
+@BINPATH@/components/nsSetDefaultBrowser.manifest
+@BINPATH@/components/nsSetDefaultBrowser.js
+@BINPATH@/components/toolkitsearch.manifest
+@BINPATH@/components/nsTryToClose.manifest
+@BINPATH@/components/nsTryToClose.js
+@BINPATH@/components/passwordmgr.manifest
+@BINPATH@/components/nsLoginInfo.js
+@BINPATH@/components/nsLoginManager.js
+@BINPATH@/components/nsLoginManagerPrompter.js
+@BINPATH@/components/NetworkGeolocationProvider.manifest
+@BINPATH@/components/NetworkGeolocationProvider.js
 #ifdef MOZ_WEBRTC
-@RESPATH@/components/PeerConnection.js
-@RESPATH@/components/PeerConnection.manifest
+@BINPATH@/components/PeerConnection.js
+@BINPATH@/components/PeerConnection.manifest
 #endif
-@RESPATH@/components/SiteSpecificUserAgent.js
-@RESPATH@/components/SiteSpecificUserAgent.manifest
-@RESPATH@/components/storage-json.js
-@RESPATH@/components/crypto-SDR.js
-@RESPATH@/components/jsconsole-clhandler.manifest
-@RESPATH@/components/jsconsole-clhandler.js
-@RESPATH@/components/Downloads.manifest
-@RESPATH@/components/DownloadLegacy.js
-@RESPATH@/components/nsSidebar.manifest
-@RESPATH@/components/nsSidebar.js
-@RESPATH@/components/nsAsyncShutdown.manifest
-@RESPATH@/components/nsAsyncShutdown.js
-@RESPATH@/components/htmlMenuBuilder.js
-@RESPATH@/components/htmlMenuBuilder.manifest
-@RESPATH@/components/PresentationDeviceInfoManager.manifest
-@RESPATH@/components/PresentationDeviceInfoManager.js
+@BINPATH@/components/SiteSpecificUserAgent.js
+@BINPATH@/components/SiteSpecificUserAgent.manifest
+@BINPATH@/components/storage-json.js
+@BINPATH@/components/crypto-SDR.js
+@BINPATH@/components/jsconsole-clhandler.manifest
+@BINPATH@/components/jsconsole-clhandler.js
+@BINPATH@/components/Downloads.manifest
+@BINPATH@/components/DownloadLegacy.js
+@BINPATH@/components/nsSidebar.manifest
+@BINPATH@/components/nsSidebar.js
+@BINPATH@/components/nsAsyncShutdown.manifest
+@BINPATH@/components/nsAsyncShutdown.js
+@BINPATH@/components/htmlMenuBuilder.js
+@BINPATH@/components/htmlMenuBuilder.manifest
+@BINPATH@/components/PresentationDeviceInfoManager.manifest
+@BINPATH@/components/PresentationDeviceInfoManager.js
 
 ; WiFi, NetworkManager, NetworkStats
 #ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/DOMWifiManager.js
-@RESPATH@/components/DOMWifiManager.manifest
-@RESPATH@/components/DOMWifiP2pManager.js
-@RESPATH@/components/DOMWifiP2pManager.manifest
-@RESPATH@/components/NetworkInterfaceListService.js
-@RESPATH@/components/NetworkInterfaceListService.manifest
-@RESPATH@/components/NetworkManager.js
-@RESPATH@/components/NetworkManager.manifest
-@RESPATH@/components/NetworkService.js
-@RESPATH@/components/NetworkService.manifest
-@RESPATH@/components/NetworkStatsManager.js
-@RESPATH@/components/NetworkStatsManager.manifest
-@RESPATH@/components/NetworkStatsServiceProxy.js
-@RESPATH@/components/NetworkStatsServiceProxy.manifest
-@RESPATH@/components/WifiWorker.js
-@RESPATH@/components/WifiWorker.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
+@BINPATH@/components/DOMWifiP2pManager.js
+@BINPATH@/components/DOMWifiP2pManager.manifest
+@BINPATH@/components/NetworkInterfaceListService.js
+@BINPATH@/components/NetworkInterfaceListService.manifest
+@BINPATH@/components/NetworkManager.js
+@BINPATH@/components/NetworkManager.manifest
+@BINPATH@/components/NetworkService.js
+@BINPATH@/components/NetworkService.manifest
+@BINPATH@/components/NetworkStatsManager.js
+@BINPATH@/components/NetworkStatsManager.manifest
+@BINPATH@/components/NetworkStatsServiceProxy.js
+@BINPATH@/components/NetworkStatsServiceProxy.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
 
 ; Tethering
 #ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/TetheringManager.js
-@RESPATH@/components/TetheringManager.manifest
+@BINPATH@/components/TetheringManager.js
+@BINPATH@/components/TetheringManager.manifest
 #endif
 
 ; ResourceStats
 #ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/ResourceStats.js
-@RESPATH@/components/ResourceStats.manifest
-@RESPATH@/components/ResourceStatsManager.js
-@RESPATH@/components/ResourceStatsManager.manifest
+@BINPATH@/components/ResourceStats.js
+@BINPATH@/components/ResourceStats.manifest
+@BINPATH@/components/ResourceStatsManager.js
+@BINPATH@/components/ResourceStatsManager.manifest
 #endif // MOZ_WIDGET_GONK
 
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-@RESPATH@/components/CellBroadcastService.js
-@RESPATH@/components/CellBroadcastService.manifest
-@RESPATH@/components/MmsService.js
-@RESPATH@/components/MmsService.manifest
-@RESPATH@/components/MobileConnectionService.js
-@RESPATH@/components/MobileConnectionService.manifest
-@RESPATH@/components/MobileMessageDatabaseService.js
-@RESPATH@/components/MobileMessageDatabaseService.manifest
-@RESPATH@/components/RadioInterfaceLayer.js
-@RESPATH@/components/RadioInterfaceLayer.manifest
-@RESPATH@/components/RILContentHelper.js
-@RESPATH@/components/RILSystemMessengerHelper.js
-@RESPATH@/components/RILSystemMessengerHelper.manifest
-@RESPATH@/components/SmsService.js
-@RESPATH@/components/SmsService.manifest
-@RESPATH@/components/TelephonyAudioService.js
-@RESPATH@/components/TelephonyAudioService.manifest
-@RESPATH@/components/TelephonyService.js
-@RESPATH@/components/TelephonyService.manifest
-@RESPATH@/components/VoicemailService.js
-@RESPATH@/components/VoicemailService.manifest
+@BINPATH@/components/CellBroadcastService.js
+@BINPATH@/components/CellBroadcastService.manifest
+@BINPATH@/components/MmsService.js
+@BINPATH@/components/MmsService.manifest
+@BINPATH@/components/MobileConnectionService.js
+@BINPATH@/components/MobileConnectionService.manifest
+@BINPATH@/components/MobileMessageDatabaseService.js
+@BINPATH@/components/MobileMessageDatabaseService.manifest
+@BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/RadioInterfaceLayer.manifest
+@BINPATH@/components/RILContentHelper.js
+@BINPATH@/components/RILSystemMessengerHelper.js
+@BINPATH@/components/RILSystemMessengerHelper.manifest
+@BINPATH@/components/SmsService.js
+@BINPATH@/components/SmsService.manifest
+@BINPATH@/components/TelephonyAudioService.js
+@BINPATH@/components/TelephonyAudioService.manifest
+@BINPATH@/components/TelephonyService.js
+@BINPATH@/components/TelephonyService.manifest
+@BINPATH@/components/VoicemailService.js
+@BINPATH@/components/VoicemailService.manifest
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
 #ifndef MOZ_WIDGET_GONK
-@RESPATH@/components/extensions.manifest
-@RESPATH@/components/addonManager.js
-@RESPATH@/components/amContentHandler.js
-@RESPATH@/components/amInstallTrigger.js
-@RESPATH@/components/amWebInstallListener.js
-@RESPATH@/components/nsBlocklistService.js
-@RESPATH@/components/OopCommandLine.js
-@RESPATH@/components/CommandLine.js
+@BINPATH@/components/extensions.manifest
+@BINPATH@/components/addonManager.js
+@BINPATH@/components/amContentHandler.js
+@BINPATH@/components/amInstallTrigger.js
+@BINPATH@/components/amWebInstallListener.js
+@BINPATH@/components/nsBlocklistService.js
+@BINPATH@/components/OopCommandLine.js
+@BINPATH@/components/CommandLine.js
 #endif
 
 #ifdef MOZ_UPDATER
-@RESPATH@/components/nsUpdateService.manifest
-@RESPATH@/components/nsUpdateService.js
-@RESPATH@/components/nsUpdateServiceStub.js
+@BINPATH@/components/nsUpdateService.manifest
+@BINPATH@/components/nsUpdateService.js
+@BINPATH@/components/nsUpdateServiceStub.js
 #endif
-@RESPATH@/components/nsUpdateTimerManager.manifest
-@RESPATH@/components/nsUpdateTimerManager.js
-@RESPATH@/components/pluginGlue.manifest
-@RESPATH@/components/nsSessionStore.manifest
-@RESPATH@/components/nsSessionStartup.js
-@RESPATH@/components/nsSessionStore.js
-@RESPATH@/components/nsURLFormatter.manifest
-@RESPATH@/components/nsURLFormatter.js
-@RESPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
-@RESPATH@/components/txEXSLTRegExFunctions.manifest
-@RESPATH@/components/txEXSLTRegExFunctions.js
-@RESPATH@/components/toolkitplaces.manifest
-@RESPATH@/components/nsLivemarkService.js
-@RESPATH@/components/nsTaggingService.js
-@RESPATH@/components/nsPlacesDBFlush.js
-@RESPATH@/components/nsPlacesAutoComplete.manifest
-@RESPATH@/components/nsPlacesAutoComplete.js
-@RESPATH@/components/UnifiedComplete.manifest
-@RESPATH@/components/UnifiedComplete.js
-@RESPATH@/components/nsPlacesExpiration.js
-@RESPATH@/components/PlacesCategoriesStarter.js
-@RESPATH@/components/nsDefaultCLH.manifest
-@RESPATH@/components/nsDefaultCLH.js
-@RESPATH@/components/nsContentPrefService.manifest
-@RESPATH@/components/nsContentPrefService.js
-@RESPATH@/components/nsContentDispatchChooser.manifest
-@RESPATH@/components/nsContentDispatchChooser.js
-@RESPATH@/components/nsHandlerService.manifest
-@RESPATH@/components/nsHandlerService.js
-@RESPATH@/components/nsWebHandlerApp.manifest
-@RESPATH@/components/nsWebHandlerApp.js
-@RESPATH@/components/satchel.manifest
-@RESPATH@/components/nsFormAutoComplete.js
-@RESPATH@/components/nsFormHistory.js
-@RESPATH@/components/FormHistoryStartup.js
-@RESPATH@/components/nsInputListAutoComplete.js
-@RESPATH@/components/formautofill.manifest
-@RESPATH@/components/FormAutofillContentService.js
-@RESPATH@/components/FormAutofillStartup.js
-@RESPATH@/components/contentAreaDropListener.manifest
-@RESPATH@/components/contentAreaDropListener.js
-@RESPATH@/components/messageWakeupService.js
-@RESPATH@/components/messageWakeupService.manifest
-@RESPATH@/components/SettingsManager.js
-@RESPATH@/components/SettingsManager.manifest
-@RESPATH@/components/SettingsService.js
-@RESPATH@/components/SettingsService.manifest
-@RESPATH@/components/webvtt.xpt
-@RESPATH@/components/WebVTT.manifest
-@RESPATH@/components/WebVTTParserWrapper.js
+@BINPATH@/components/nsUpdateTimerManager.manifest
+@BINPATH@/components/nsUpdateTimerManager.js
+@BINPATH@/components/pluginGlue.manifest
+@BINPATH@/components/nsSessionStore.manifest
+@BINPATH@/components/nsSessionStartup.js
+@BINPATH@/components/nsSessionStore.js
+@BINPATH@/components/nsURLFormatter.manifest
+@BINPATH@/components/nsURLFormatter.js
+@BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
+@BINPATH@/components/txEXSLTRegExFunctions.manifest
+@BINPATH@/components/txEXSLTRegExFunctions.js
+@BINPATH@/components/toolkitplaces.manifest
+@BINPATH@/components/nsLivemarkService.js
+@BINPATH@/components/nsTaggingService.js
+@BINPATH@/components/nsPlacesDBFlush.js
+@BINPATH@/components/nsPlacesAutoComplete.manifest
+@BINPATH@/components/nsPlacesAutoComplete.js
+@BINPATH@/components/UnifiedComplete.manifest
+@BINPATH@/components/UnifiedComplete.js
+@BINPATH@/components/nsPlacesExpiration.js
+@BINPATH@/components/PlacesCategoriesStarter.js
+@BINPATH@/components/nsDefaultCLH.manifest
+@BINPATH@/components/nsDefaultCLH.js
+@BINPATH@/components/nsContentPrefService.manifest
+@BINPATH@/components/nsContentPrefService.js
+@BINPATH@/components/nsContentDispatchChooser.manifest
+@BINPATH@/components/nsContentDispatchChooser.js
+@BINPATH@/components/nsHandlerService.manifest
+@BINPATH@/components/nsHandlerService.js
+@BINPATH@/components/nsWebHandlerApp.manifest
+@BINPATH@/components/nsWebHandlerApp.js
+@BINPATH@/components/satchel.manifest
+@BINPATH@/components/nsFormAutoComplete.js
+@BINPATH@/components/nsFormHistory.js
+@BINPATH@/components/FormHistoryStartup.js
+@BINPATH@/components/nsInputListAutoComplete.js
+@BINPATH@/components/formautofill.manifest
+@BINPATH@/components/FormAutofillContentService.js
+@BINPATH@/components/FormAutofillStartup.js
+@BINPATH@/components/contentAreaDropListener.manifest
+@BINPATH@/components/contentAreaDropListener.js
+@BINPATH@/components/messageWakeupService.js
+@BINPATH@/components/messageWakeupService.manifest
+@BINPATH@/components/SettingsManager.js
+@BINPATH@/components/SettingsManager.manifest
+@BINPATH@/components/SettingsService.js
+@BINPATH@/components/SettingsService.manifest
+@BINPATH@/components/webvtt.xpt
+@BINPATH@/components/WebVTT.manifest
+@BINPATH@/components/WebVTTParserWrapper.js
 #ifdef MOZ_NFC
-@RESPATH@/components/nsNfc.manifest
-@RESPATH@/components/nsNfc.js
-@RESPATH@/components/Nfc.manifest
-@RESPATH@/components/Nfc.js
-@RESPATH@/components/NfcContentHelper.manifest
-@RESPATH@/components/NfcContentHelper.js
+@BINPATH@/components/nsNfc.manifest
+@BINPATH@/components/nsNfc.js
+@BINPATH@/components/Nfc.manifest
+@BINPATH@/components/Nfc.js
+@BINPATH@/components/NfcContentHelper.manifest
+@BINPATH@/components/NfcContentHelper.js
 #endif
 #ifdef MOZ_ENABLE_DBUS
-@RESPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
+@BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
-@RESPATH@/components/nsINIProcessor.manifest
-@RESPATH@/components/nsINIProcessor.js
-@RESPATH@/components/nsPrompter.manifest
-@RESPATH@/components/nsPrompter.js
+@BINPATH@/components/nsINIProcessor.manifest
+@BINPATH@/components/nsINIProcessor.js
+@BINPATH@/components/nsPrompter.manifest
+@BINPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_SYNC
-@RESPATH@/components/SyncComponents.manifest
-@RESPATH@/components/Weave.js
-@RESPATH@/components/WeaveCrypto.manifest
-@RESPATH@/components/WeaveCrypto.js
+@BINPATH@/components/SyncComponents.manifest
+@BINPATH@/components/Weave.js
+@BINPATH@/components/WeaveCrypto.manifest
+@BINPATH@/components/WeaveCrypto.js
 #endif
-@RESPATH@/components/servicesComponents.manifest
-@RESPATH@/components/cryptoComponents.manifest
+@BINPATH@/components/servicesComponents.manifest
+@BINPATH@/components/cryptoComponents.manifest
 #ifdef MOZ_SERVICES_HEALTHREPORT
-@RESPATH@/components/HealthReportComponents.manifest
-@RESPATH@/components/HealthReportService.js
+@BINPATH@/components/HealthReportComponents.manifest
+@BINPATH@/components/HealthReportService.js
 #endif
 #ifdef MOZ_CAPTIVEDETECT
-@RESPATH@/components/CaptivePortalDetectComponents.manifest
-@RESPATH@/components/captivedetect.js
+@BINPATH@/components/CaptivePortalDetectComponents.manifest
+@BINPATH@/components/captivedetect.js
 #endif
-@RESPATH@/components/TelemetryStartup.js
-@RESPATH@/components/TelemetryStartup.manifest
-@RESPATH@/components/XULStore.js
-@RESPATH@/components/XULStore.manifest
-@RESPATH@/components/Webapps.js
-@RESPATH@/components/Webapps.manifest
-@RESPATH@/components/AppsService.js
-@RESPATH@/components/AppsService.manifest
-@RESPATH@/components/Push.js
-@RESPATH@/components/Push.manifest
-@RESPATH@/components/PushServiceLauncher.js
+@BINPATH@/components/TelemetryStartup.js
+@BINPATH@/components/TelemetryStartup.manifest
+@BINPATH@/components/XULStore.js
+@BINPATH@/components/XULStore.manifest
+@BINPATH@/components/Webapps.js
+@BINPATH@/components/Webapps.manifest
+@BINPATH@/components/AppsService.js
+@BINPATH@/components/AppsService.manifest
+@BINPATH@/components/Push.js
+@BINPATH@/components/Push.manifest
+@BINPATH@/components/PushServiceLauncher.js
 
-@RESPATH@/components/InterAppComm.manifest
-@RESPATH@/components/InterAppCommService.js
-@RESPATH@/components/InterAppConnection.js
-@RESPATH@/components/InterAppMessagePort.js
+@BINPATH@/components/InterAppComm.manifest
+@BINPATH@/components/InterAppCommService.js
+@BINPATH@/components/InterAppConnection.js
+@BINPATH@/components/InterAppMessagePort.js
 
-@RESPATH@/components/nsDOMIdentity.js
-@RESPATH@/components/nsIDService.js
-@RESPATH@/components/Identity.manifest
+@BINPATH@/components/nsDOMIdentity.js
+@BINPATH@/components/nsIDService.js
+@BINPATH@/components/Identity.manifest
 
-@RESPATH@/components/SystemMessageInternal.js
-@RESPATH@/components/SystemMessageManager.js
-@RESPATH@/components/SystemMessageManager.manifest
-@RESPATH@/components/HCIEventTransactionSystemMessage.manifest
-@RESPATH@/components/HCIEventTransactionSystemMessageConfigurator.js
+@BINPATH@/components/SystemMessageInternal.js
+@BINPATH@/components/SystemMessageManager.js
+@BINPATH@/components/SystemMessageManager.manifest
+@BINPATH@/components/HCIEventTransactionSystemMessage.manifest
+@BINPATH@/components/HCIEventTransactionSystemMessageConfigurator.js
 
-@RESPATH@/components/Activities.manifest
-@RESPATH@/components/ActivityProxy.js
-@RESPATH@/components/ActivityRequestHandler.js
-@RESPATH@/components/ActivityWrapper.js
-@RESPATH@/components/ActivityMessageConfigurator.js
+@BINPATH@/components/Activities.manifest
+@BINPATH@/components/ActivityProxy.js
+@BINPATH@/components/ActivityRequestHandler.js
+@BINPATH@/components/ActivityWrapper.js
+@BINPATH@/components/ActivityMessageConfigurator.js
 
-@RESPATH@/components/TCPSocket.js
-@RESPATH@/components/TCPServerSocket.js
-@RESPATH@/components/TCPSocketParentIntermediary.js
-@RESPATH@/components/TCPSocket.manifest
+@BINPATH@/components/TCPSocket.js
+@BINPATH@/components/TCPServerSocket.js
+@BINPATH@/components/TCPSocketParentIntermediary.js
+@BINPATH@/components/TCPSocket.manifest
 
-@RESPATH@/components/Payment.js
-@RESPATH@/components/PaymentFlowInfo.js
-@RESPATH@/components/PaymentProvider.js
-@RESPATH@/components/Payment.manifest
+@BINPATH@/components/Payment.js
+@BINPATH@/components/PaymentFlowInfo.js
+@BINPATH@/components/PaymentProvider.js
+@BINPATH@/components/Payment.manifest
 
-@RESPATH@/components/DownloadsAPI.js
-@RESPATH@/components/DownloadsAPI.manifest
+@BINPATH@/components/DownloadsAPI.js
+@BINPATH@/components/DownloadsAPI.manifest
 
 ; InputMethod API
-@RESPATH@/components/MozKeyboard.js
-@RESPATH@/components/InputMethod.manifest
+@BINPATH@/components/MozKeyboard.js
+@BINPATH@/components/InputMethod.manifest
 
-@RESPATH@/components/EngineeringMode.manifest
-@RESPATH@/components/EngineeringModeAPI.js
-@RESPATH@/components/EngineeringModeService.js
+@BINPATH@/components/EngineeringMode.manifest
+@BINPATH@/components/EngineeringModeAPI.js
+@BINPATH@/components/EngineeringModeService.js
 
 #ifdef MOZ_DEBUG
-@RESPATH@/components/TestInterfaceJS.js
-@RESPATH@/components/TestInterfaceJS.manifest
+@BINPATH@/components/TestInterfaceJS.js
+@BINPATH@/components/TestInterfaceJS.manifest
 #endif
 
 ; Modules
-@RESPATH@/modules/*
+@BINPATH@/modules/*
 
 ; Safe Browsing
-@RESPATH@/components/nsURLClassifier.manifest
-@RESPATH@/components/nsUrlClassifierHashCompleter.js
-@RESPATH@/components/nsUrlClassifierListManager.js
-@RESPATH@/components/nsUrlClassifierLib.js
-@RESPATH@/components/url-classifier.xpt
+@BINPATH@/components/nsURLClassifier.manifest
+@BINPATH@/components/nsUrlClassifierHashCompleter.js
+@BINPATH@/components/nsUrlClassifierListManager.js
+@BINPATH@/components/nsUrlClassifierLib.js
+@BINPATH@/components/url-classifier.xpt
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
-@RESPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
+@BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
 #endif
 
 ; ANGLE on Win32
@@ -660,18 +647,18 @@
 #endif
 
 ; [Browser Chrome Files]
-@RESPATH@/chrome/browser@JAREXT@
-@RESPATH@/chrome/browser.manifest
-@RESPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
-@RESPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
-@RESPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
-@RESPATH@/chrome/toolkit@JAREXT@
-@RESPATH@/chrome/toolkit.manifest
+@BINPATH@/chrome/browser@JAREXT@
+@BINPATH@/chrome/browser.manifest
+@BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
+@BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
+@BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
+@BINPATH@/chrome/toolkit@JAREXT@
+@BINPATH@/chrome/toolkit.manifest
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-@RESPATH@/chrome/icons/default/default16.png
-@RESPATH@/chrome/icons/default/default32.png
-@RESPATH@/chrome/icons/default/default48.png
+@BINPATH@/chrome/icons/default/default16.png
+@BINPATH@/chrome/icons/default/default32.png
+@BINPATH@/chrome/icons/default/default48.png
 #endif
 #endif
 
@@ -679,91 +666,91 @@
 ; shell icons
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-@RESPATH@/icons/*.xpm
-@RESPATH@/icons/*.png
+@BINPATH@/icons/*.xpm
+@BINPATH@/icons/*.png
 #endif
 #endif
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 #ifdef MOZ_MULET
-@RESPATH@/browser/@PREF_DIR@/b2g.js
+@BINPATH@/browser/@PREF_DIR@/b2g.js
 #else
-@RESPATH@/@PREF_DIR@/b2g.js
+@BINPATH@/@PREF_DIR@/b2g.js
 #endif
-@RESPATH@/@PREF_DIR@/channel-prefs.js
-@RESPATH@/greprefs.js
-@RESPATH@/defaults/autoconfig/platform.js
-@RESPATH@/defaults/autoconfig/prefcalls.js
-@RESPATH@/defaults/profile/prefs.js
+@BINPATH@/@PREF_DIR@/channel-prefs.js
+@BINPATH@/greprefs.js
+@BINPATH@/defaults/autoconfig/platform.js
+@BINPATH@/defaults/autoconfig/prefcalls.js
+@BINPATH@/defaults/profile/prefs.js
 
 ; Services (gre) prefs
 #ifdef MOZ_SERVICES_SYNC
-@RESPATH@/defaults/pref/services-sync.js
+@BINPATH@/defaults/pref/services-sync.js
 #endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine.
-@RESPATH@/res/EditorOverride.css
-@RESPATH@/res/contenteditable.css
-@RESPATH@/res/designmode.css
-@RESPATH@/res/ImageDocument.css
-@RESPATH@/res/TopLevelImageDocument.css
-@RESPATH@/res/TopLevelVideoDocument.css
-@RESPATH@/res/table-add-column-after-active.gif
-@RESPATH@/res/table-add-column-after-hover.gif
-@RESPATH@/res/table-add-column-after.gif
-@RESPATH@/res/table-add-column-before-active.gif
-@RESPATH@/res/table-add-column-before-hover.gif
-@RESPATH@/res/table-add-column-before.gif
-@RESPATH@/res/table-add-row-after-active.gif
-@RESPATH@/res/table-add-row-after-hover.gif
-@RESPATH@/res/table-add-row-after.gif
-@RESPATH@/res/table-add-row-before-active.gif
-@RESPATH@/res/table-add-row-before-hover.gif
-@RESPATH@/res/table-add-row-before.gif
-@RESPATH@/res/table-remove-column-active.gif
-@RESPATH@/res/table-remove-column-hover.gif
-@RESPATH@/res/table-remove-column.gif
-@RESPATH@/res/table-remove-row-active.gif
-@RESPATH@/res/table-remove-row-hover.gif
-@RESPATH@/res/table-remove-row.gif
-@RESPATH@/res/text_caret.png
-@RESPATH@/res/text_caret@1.5x.png
-@RESPATH@/res/text_caret@2.25x.png
-@RESPATH@/res/text_caret@2x.png
-@RESPATH@/res/text_caret_tilt_left.png
-@RESPATH@/res/text_caret_tilt_left@1.5x.png
-@RESPATH@/res/text_caret_tilt_left@2.25x.png
-@RESPATH@/res/text_caret_tilt_left@2x.png
-@RESPATH@/res/text_caret_tilt_right.png
-@RESPATH@/res/text_caret_tilt_right@1.5x.png
-@RESPATH@/res/text_caret_tilt_right@2.25x.png
-@RESPATH@/res/text_caret_tilt_right@2x.png
-@RESPATH@/res/grabber.gif
+@BINPATH@/res/EditorOverride.css
+@BINPATH@/res/contenteditable.css
+@BINPATH@/res/designmode.css
+@BINPATH@/res/ImageDocument.css
+@BINPATH@/res/TopLevelImageDocument.css
+@BINPATH@/res/TopLevelVideoDocument.css
+@BINPATH@/res/table-add-column-after-active.gif
+@BINPATH@/res/table-add-column-after-hover.gif
+@BINPATH@/res/table-add-column-after.gif
+@BINPATH@/res/table-add-column-before-active.gif
+@BINPATH@/res/table-add-column-before-hover.gif
+@BINPATH@/res/table-add-column-before.gif
+@BINPATH@/res/table-add-row-after-active.gif
+@BINPATH@/res/table-add-row-after-hover.gif
+@BINPATH@/res/table-add-row-after.gif
+@BINPATH@/res/table-add-row-before-active.gif
+@BINPATH@/res/table-add-row-before-hover.gif
+@BINPATH@/res/table-add-row-before.gif
+@BINPATH@/res/table-remove-column-active.gif
+@BINPATH@/res/table-remove-column-hover.gif
+@BINPATH@/res/table-remove-column.gif
+@BINPATH@/res/table-remove-row-active.gif
+@BINPATH@/res/table-remove-row-hover.gif
+@BINPATH@/res/table-remove-row.gif
+@BINPATH@/res/text_caret.png
+@BINPATH@/res/text_caret@1.5x.png
+@BINPATH@/res/text_caret@2.25x.png
+@BINPATH@/res/text_caret@2x.png
+@BINPATH@/res/text_caret_tilt_left.png
+@BINPATH@/res/text_caret_tilt_left@1.5x.png
+@BINPATH@/res/text_caret_tilt_left@2.25x.png
+@BINPATH@/res/text_caret_tilt_left@2x.png
+@BINPATH@/res/text_caret_tilt_right.png
+@BINPATH@/res/text_caret_tilt_right@1.5x.png
+@BINPATH@/res/text_caret_tilt_right@2.25x.png
+@BINPATH@/res/text_caret_tilt_right@2x.png
+@BINPATH@/res/grabber.gif
 #ifdef XP_MACOSX
-@RESPATH@/res/cursors/*
+@BINPATH@/res/cursors/*
 #endif
-@RESPATH@/res/fonts/*
-@RESPATH@/res/dtd/*
-@RESPATH@/res/html/*
-@RESPATH@/res/language.properties
-@RESPATH@/res/entityTables/*
+@BINPATH@/res/fonts/*
+@BINPATH@/res/dtd/*
+@BINPATH@/res/html/*
+@BINPATH@/res/language.properties
+@BINPATH@/res/entityTables/*
 #ifdef XP_MACOSX
-@RESPATH@/res/MainMenu.nib/
+@BINPATH@/res/MainMenu.nib/
 #endif
 
 ; svg
-@RESPATH@/res/svg.css
-@RESPATH@/components/dom_svg.xpt
-@RESPATH@/components/dom_smil.xpt
+@BINPATH@/res/svg.css
+@BINPATH@/components/dom_svg.xpt
+@BINPATH@/components/dom_smil.xpt
 
 ; [Personal Security Manager]
 ;
 @BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
-@RESPATH@/components/pipboot.xpt
-@RESPATH@/components/pipnss.xpt
-@RESPATH@/components/pippki.xpt
+@BINPATH@/components/pipboot.xpt
+@BINPATH@/components/pipnss.xpt
+@BINPATH@/components/pippki.xpt
 @BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
@@ -782,8 +769,8 @@
 @BINPATH@/@DLL_PREFIX@nssdbm3.chk
 #endif
 #endif
-@RESPATH@/chrome/pippki@JAREXT@
-@RESPATH@/chrome/pippki.manifest
+@BINPATH@/chrome/pippki@JAREXT@
+@BINPATH@/chrome/pippki.manifest
 
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
@@ -821,13 +808,13 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/crashreporter.app/
 #else
 @BINPATH@/crashreporter@BIN_SUFFIX@
-@RESPATH@/crashreporter.crt
-@RESPATH@/crashreporter.ini
+@BINPATH@/crashreporter.crt
+@BINPATH@/crashreporter.ini
 #ifdef XP_UNIX
-@RESPATH@/Throbber-small.gif
+@BINPATH@/Throbber-small.gif
 #endif
 #endif
-@RESPATH@/crashreporter-override.ini
+@BINPATH@/crashreporter-override.ini
 #endif
 
 ; [Extensions]
@@ -846,61 +833,61 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/ssltunnel
 #endif
 #endif
-@RESPATH@/chrome/icons/
-@RESPATH@/chrome/chrome@JAREXT@
-@RESPATH@/chrome/chrome.manifest
-@RESPATH@/components/B2GComponents.manifest
+@BINPATH@/chrome/icons/
+@BINPATH@/chrome/chrome@JAREXT@
+@BINPATH@/chrome/chrome.manifest
+@BINPATH@/components/B2GComponents.manifest
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
 #if defined(ENABLE_MARIONETTE) || !defined(MOZ_WIDGET_GONK)
-@RESPATH@/chrome/marionette@JAREXT@
-@RESPATH@/chrome/marionette.manifest
-@RESPATH@/components/MarionetteComponents.manifest
-@RESPATH@/components/marionettecomponent.js
+@BINPATH@/chrome/marionette@JAREXT@
+@BINPATH@/chrome/marionette.manifest
+@BINPATH@/components/MarionetteComponents.manifest
+@BINPATH@/components/marionettecomponent.js
 #endif
-@RESPATH@/components/AlertsService.js
-@RESPATH@/components/ContentPermissionPrompt.js
+@BINPATH@/components/AlertsService.js
+@BINPATH@/components/ContentPermissionPrompt.js
 #ifdef MOZ_UPDATER
-@RESPATH@/components/UpdatePrompt.js
+@BINPATH@/components/UpdatePrompt.js
 #endif
-@RESPATH@/components/WebappsUpdateTimer.js
-@RESPATH@/components/DirectoryProvider.js
-@RESPATH@/components/ActivitiesGlue.js
-@RESPATH@/components/ProcessGlobal.js
-@RESPATH@/components/OMAContentHandler.js
-@RESPATH@/components/PaymentGlue.js
-@RESPATH@/components/PaymentProviderStrategy.js
-@RESPATH@/components/RecoveryService.js
-@RESPATH@/components/MailtoProtocolHandler.js
-@RESPATH@/components/SmsProtocolHandler.js
-@RESPATH@/components/TelProtocolHandler.js
-@RESPATH@/components/B2GAboutRedirector.js
-@RESPATH@/components/FilePicker.js
-@RESPATH@/components/HelperAppDialog.js
-@RESPATH@/components/DownloadsUI.js
-@RESPATH@/components/InterAppCommUIGlue.js
-@RESPATH@/components/SystemMessageGlue.js
-@RESPATH@/components/B2GAppMigrator.js
-@RESPATH@/components/B2GPresentationDevicePrompt.js
+@BINPATH@/components/WebappsUpdateTimer.js
+@BINPATH@/components/DirectoryProvider.js
+@BINPATH@/components/ActivitiesGlue.js
+@BINPATH@/components/ProcessGlobal.js
+@BINPATH@/components/OMAContentHandler.js
+@BINPATH@/components/PaymentGlue.js
+@BINPATH@/components/PaymentProviderStrategy.js
+@BINPATH@/components/RecoveryService.js
+@BINPATH@/components/MailtoProtocolHandler.js
+@BINPATH@/components/SmsProtocolHandler.js
+@BINPATH@/components/TelProtocolHandler.js
+@BINPATH@/components/B2GAboutRedirector.js
+@BINPATH@/components/FilePicker.js
+@BINPATH@/components/HelperAppDialog.js
+@BINPATH@/components/DownloadsUI.js
+@BINPATH@/components/InterAppCommUIGlue.js
+@BINPATH@/components/SystemMessageGlue.js
+@BINPATH@/components/B2GAppMigrator.js
+@BINPATH@/components/B2GPresentationDevicePrompt.js
 
 #ifndef MOZ_WIDGET_GONK
-@RESPATH@/components/SimulatorScreen.js
+@BINPATH@/components/SimulatorScreen.js
 #endif
 
-@RESPATH@/components/FxAccountsUIGlue.js
-@RESPATH@/components/services_fxaccounts.xpt
+@BINPATH@/components/FxAccountsUIGlue.js
+@BINPATH@/components/services_fxaccounts.xpt
 
-@RESPATH@/components/DataStore.manifest
-@RESPATH@/components/DataStoreImpl.js
-@RESPATH@/components/dom_datastore.xpt
+@BINPATH@/components/DataStore.manifest
+@BINPATH@/components/DataStoreImpl.js
+@BINPATH@/components/dom_datastore.xpt
 
-@RESPATH@/components/MobileIdentity.manifest
-@RESPATH@/components/MobileIdentity.js
-@RESPATH@/components/dom_mobileidentity.xpt
-@RESPATH@/components/MobileIdentityUIGlue.js
-@RESPATH@/components/services_mobileidentity.xpt
+@BINPATH@/components/MobileIdentity.manifest
+@BINPATH@/components/MobileIdentity.js
+@BINPATH@/components/dom_mobileidentity.xpt
+@BINPATH@/components/MobileIdentityUIGlue.js
+@BINPATH@/components/services_mobileidentity.xpt
 
 #ifdef MOZ_WEBSPEECH
-@RESPATH@/components/dom_webspeechsynth.xpt
+@BINPATH@/components/dom_webspeechsynth.xpt
 #endif
 
 #ifdef XP_MACOSX
@@ -909,10 +896,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 
 #ifdef PACKAGE_GAIA
 [gaia]
-@RESPATH@/gaia/*
+@BINPATH@/gaia/*
 @BINPATH@/b2g-bin@BIN_SUFFIX@
 #endif
 
 #ifdef PACKAGE_MOZTT
-@RESPATH@/fonts/*
+@BINPATH@/fonts/*
 #endif
