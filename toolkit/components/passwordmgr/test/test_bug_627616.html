@@ -35,8 +35,8 @@
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-        var uri = ios.newURI("http://example.com", null, null);
-        pps.asyncResolve(uri, 0, resolveCallback);
+        var channel = ios.newChannel("http://example.com", null, null);
+        pps.asyncResolve(channel, 0, resolveCallback);
     }
 
     function init2(proxyHost, proxyPort) {

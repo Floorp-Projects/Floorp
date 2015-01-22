@@ -4,12 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
-
 #include "mozilla/CondVar.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
-#include "nsAutoLock.h"
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -25,30 +24,16 @@ spawn(void (*run)(void*), void* arg)
                            0);
 }
 
-
-#define PASS()                                  \
-    do {                                        \
-        passed(__FUNCTION__);                   \
-        return NS_OK;                           \
-    } while (0)
-
-#define FAIL(why)                               \
-    do {                                        \
-        fail("%s | %s - %s", __FILE__, __FUNCTION__, why); \
-        return NS_ERROR_FAILURE;                \
-    } while (0)
-
 //-----------------------------------------------------------------------------
 // Sanity check: tests that can be done on a single thread
 //
-static nsresult
-Sanity()
+TEST(Synchronization, Sanity)
 {
     Mutex lock("sanity::lock");
     lock.Lock();
     lock.AssertCurrentThreadOwns();
     lock.Unlock();
-    
+
     {
         MutexAutoLock autolock(lock);
         lock.AssertCurrentThreadOwns();
@@ -62,7 +47,7 @@ Sanity()
     lock.AssertCurrentThreadOwns();
     lock.Unlock();
 
-    Monitor mon("sanity::monitor");
+    ReentrantMonitor mon("sanity::monitor");
     mon.Enter();
     mon.AssertCurrentThreadIn();
     mon.Enter();
@@ -72,11 +57,9 @@ Sanity()
     mon.Exit();
 
     {
-        MonitorAutoEnter automon(mon);
+        ReentrantMonitorAutoEnter automon(mon);
         mon.AssertCurrentThreadIn();
     }
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
@@ -94,8 +77,7 @@ MutexContention_thread(void* /*arg*/)
     }
 }
 
-static nsresult
-MutexContention()
+TEST(Synchronization, MutexContention)
 {
     gLock1 = new Mutex("lock1");
     // PURPOSELY not checking for OOM.  YAY!
@@ -109,8 +91,6 @@ MutexContention()
     PR_JoinThread(t3);
 
     delete gLock1;
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
@@ -122,14 +102,13 @@ static void
 MonitorContention_thread(void* /*arg*/)
 {
     for (int i = 0; i < 100000; ++i) {
-        gMon1->Enter();
-        gMon1->AssertCurrentThreadIn();
-        gMon1->Exit();
+        gMon1->Lock();
+        gMon1->AssertCurrentThreadOwns();
+        gMon1->Unlock();
     }
 }
 
-static nsresult
-MonitorContention()
+TEST(Synchronization, MonitorContention)
 {
     gMon1 = new Monitor("mon1");
 
@@ -142,12 +121,10 @@ MonitorContention()
     PR_JoinThread(t3);
 
     delete gMon1;
-
-    PASS();
 }
 
 
-static Monitor* gMon2;
+static ReentrantMonitor* gMon2;
 
 static void
 MonitorContention2_thread(void* /*arg*/)
@@ -165,10 +142,9 @@ MonitorContention2_thread(void* /*arg*/)
     }
 }
 
-static nsresult
-MonitorContention2()
+TEST(Synchronization, MonitorContention2)
 {
-    gMon2 = new Monitor("mon1");
+    gMon2 = new ReentrantMonitor("mon1");
 
     PRThread* t1 = spawn(MonitorContention2_thread, nullptr);
     PRThread* t2 = spawn(MonitorContention2_thread, nullptr);
@@ -179,12 +155,10 @@ MonitorContention2()
     PR_JoinThread(t3);
 
     delete gMon2;
-
-    PASS();
 }
 
 
-static Monitor* gMon3;
+static ReentrantMonitor* gMon3;
 static int32_t gMonFirst;
 
 static void
@@ -206,11 +180,10 @@ MonitorSyncSanity_thread(void* /*arg*/)
     gMon3->Exit();
 }
 
-static nsresult
-MonitorSyncSanity()
+TEST(Synchronization, MonitorSyncSanity)
 {
-    gMon3 = new Monitor("monitor::syncsanity");
-   
+    gMon3 = new ReentrantMonitor("monitor::syncsanity");
+
     for (int32_t i = 0; i < 10000; ++i) {
         gMonFirst = 1;
         PRThread* ping = spawn(MonitorSyncSanity_thread, nullptr);
@@ -220,8 +193,6 @@ MonitorSyncSanity()
     }
 
     delete gMon3;
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
@@ -246,8 +217,7 @@ CondVarSanity_thread(void* /*arg*/)
     gCvlock1->Unlock();
 }
 
-static nsresult
-CondVarSanity()
+TEST(Synchronization, CondVarSanity)
 {
     gCvlock1 = new Mutex("cvlock1");
     gCv1 = new CondVar(*gCvlock1, "cvlock1");
@@ -262,15 +232,12 @@ CondVarSanity()
 
     delete gCv1;
     delete gCvlock1;
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
 // AutoLock tests
 //
-static nsresult
-AutoLock()
+TEST(Synchronization, AutoLock)
 {
     Mutex l1("autolock");
     MutexAutoLock autol1(l1);
@@ -286,15 +253,12 @@ AutoLock()
     }
 
     l1.AssertCurrentThreadOwns();
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
 // AutoUnlock tests
 //
-static nsresult
-AutoUnlock()
+TEST(Synchronization, AutoUnlock)
 {
     Mutex l1("autounlock");
     Mutex l2("autounlock2");
@@ -316,29 +280,26 @@ AutoUnlock()
     l1.AssertCurrentThreadOwns();
 
     l1.Unlock();
-
-    PASS();
 }
 
 //-----------------------------------------------------------------------------
 // AutoMonitor tests
 //
-static nsresult
-AutoMonitor()
+TEST(Synchronization, AutoMonitor)
 {
-    Monitor m1("automonitor");
-    Monitor m2("automonitor2");
+    ReentrantMonitor m1("automonitor");
+    ReentrantMonitor m2("automonitor2");
 
     m1.Enter();
     m1.AssertCurrentThreadIn();
     {
-        MonitorAutoEnter autom1(m1);
+        ReentrantMonitorAutoEnter autom1(m1);
         m1.AssertCurrentThreadIn();
 
         m2.Enter();
         m2.AssertCurrentThreadIn();
         {
-            MonitorAutoEnter autom2(m2);
+            ReentrantMonitorAutoEnter autom2(m2);
             m1.AssertCurrentThreadIn();
             m2.AssertCurrentThreadIn();
         }
@@ -349,39 +310,4 @@ AutoMonitor()
     }
     m1.AssertCurrentThreadIn();
     m1.Exit();
-
-    PASS();
-}
-
-//-----------------------------------------------------------------------------
-
-int
-main(int argc, char** argv)
-{
-    ScopedXPCOM xpcom("Synchronization (" __FILE__ ")");
-    if (xpcom.failed())
-        return 1;
-
-    int rv = 0;
-
-    if (NS_FAILED(Sanity()))
-        rv = 1;
-    if (NS_FAILED(MutexContention()))
-        rv = 1;
-    if (NS_FAILED(MonitorContention()))
-        rv = 1;
-    if (NS_FAILED(MonitorContention2()))
-        rv = 1;
-    if (NS_FAILED(MonitorSyncSanity()))
-        rv = 1;
-    if (NS_FAILED(CondVarSanity()))
-        rv = 1;
-    if (NS_FAILED(AutoLock()))
-        rv = 1;
-    if (NS_FAILED(AutoUnlock()))
-        rv = 1;
-    if (NS_FAILED(AutoMonitor()))
-        rv = 1;
-
-    return rv;
 }
