@@ -1475,6 +1475,9 @@ nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32
   MutexAutoLock lock(mLock);
 
   EnsureSizeInitialized();
+  if (!aCount) {
+    return NS_OK;
+  }
   int64_t offset = 0;
   nsresult res = mSeekable->Tell(&offset);
   NS_ENSURE_SUCCESS(res,res);
@@ -1486,6 +1489,9 @@ nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32
     uint32_t bytesToRead = aCount - bytesRead;
     res = mInput->Read(aBuffer, bytesToRead, &x);
     bytesRead += x;
+    if (!x) {
+      res = NS_ERROR_FAILURE;
+    }
   } while (bytesRead != aCount && res == NS_OK);
 
   // Reset read head to original position so we don't disturb any other

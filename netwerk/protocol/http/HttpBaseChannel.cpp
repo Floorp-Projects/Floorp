@@ -73,6 +73,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mForceNoIntercept(false)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
+  , mProxyURI(nullptr)
   , mContentDispositionHint(UINT32_MAX)
   , mHttpHandler(gHttpHandler)
   , mReferrerPolicy(REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE)
@@ -1196,6 +1197,17 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   mReferrer = clone;
   mReferrerPolicy = referrerPolicy;
+  return NS_OK;
+}
+
+// Return the channel's proxy URI, or if it doesn't exist, the
+// channel's main URI.
+NS_IMETHODIMP
+HttpBaseChannel::GetProxyURI(nsIURI **aOut)
+{
+  NS_ENSURE_ARG_POINTER(aOut);
+  nsCOMPtr<nsIURI> result(mProxyURI);
+  result.forget(aOut);
   return NS_OK;
 }
 

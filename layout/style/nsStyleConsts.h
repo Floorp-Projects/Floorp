@@ -841,13 +841,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_HYPHENS_AUTO                   2
 
 // ruby-position, see nsStyleText
-#define NS_STYLE_RUBY_POSITION_OVER             0x01
-#define NS_STYLE_RUBY_POSITION_UNDER            0x02
-#define NS_STYLE_RUBY_POSITION_INTER_CHARACTER  0x04 // placeholder, not yet parsed
-#define NS_STYLE_RUBY_POSITION_RIGHT            0x08
-#define NS_STYLE_RUBY_POSITION_LEFT             0x10
-#define NS_STYLE_RUBY_POSITION_INITIAL \
-  (NS_STYLE_RUBY_POSITION_OVER | NS_STYLE_RUBY_POSITION_RIGHT)
+#define NS_STYLE_RUBY_POSITION_OVER             0
+#define NS_STYLE_RUBY_POSITION_UNDER            1
+#define NS_STYLE_RUBY_POSITION_INTER_CHARACTER  2 /* placeholder, not yet parsed */
 
 // See nsStyleText
 #define NS_STYLE_TEXT_SIZE_ADJUST_NONE          0

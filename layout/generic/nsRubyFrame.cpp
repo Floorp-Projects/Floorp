@@ -13,6 +13,7 @@
 #include "RubyUtils.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
+#include "mozilla/Maybe.h"
 
 using namespace mozilla;
 
@@ -197,23 +198,6 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
                                          borderPadding, lineWM, frameWM);
 }
 
-#ifdef DEBUG
-static void
-SanityCheckRubyPosition(int8_t aRubyPosition)
-{
-  uint8_t horizontalPosition = aRubyPosition &
-    (NS_STYLE_RUBY_POSITION_LEFT | NS_STYLE_RUBY_POSITION_RIGHT);
-  MOZ_ASSERT(horizontalPosition == NS_STYLE_RUBY_POSITION_LEFT ||
-             horizontalPosition == NS_STYLE_RUBY_POSITION_RIGHT);
-  uint8_t verticalPosition = aRubyPosition &
-    (NS_STYLE_RUBY_POSITION_OVER | NS_STYLE_RUBY_POSITION_UNDER |
-     NS_STYLE_RUBY_POSITION_INTER_CHARACTER);
-  MOZ_ASSERT(verticalPosition == NS_STYLE_RUBY_POSITION_OVER ||
-             verticalPosition == NS_STYLE_RUBY_POSITION_UNDER ||
-             verticalPosition == NS_STYLE_RUBY_POSITION_INTER_CHARACTER);
-}
-#endif
-
 void
 nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState,
@@ -339,39 +323,46 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     nscoord reservedISize = RubyUtils::GetReservedISize(textContainer);
     segmentISize = std::max(segmentISize, isize + reservedISize);
 
-    nscoord x, y;
     uint8_t rubyPosition = textContainer->StyleText()->mRubyPosition;
-#ifdef DEBUG
-    SanityCheckRubyPosition(rubyPosition);
-#endif
-    if (lineWM.IsVertical()) {
-      // writing-mode is vertical, so bsize is the annotation's *width*
-      if (rubyPosition & NS_STYLE_RUBY_POSITION_LEFT) {
-        x = offsetRect.X() - bsize;
-        offsetRect.SetLeftEdge(x);
-      } else {
-        x = offsetRect.XMost();
-        offsetRect.SetRightEdge(x + bsize);
-      }
-      y = offsetRect.Y();
+    MOZ_ASSERT(rubyPosition == NS_STYLE_RUBY_POSITION_OVER ||
+               rubyPosition == NS_STYLE_RUBY_POSITION_UNDER);
+    Maybe<Side> side;
+    if (rubyPosition == NS_STYLE_RUBY_POSITION_OVER) {
+      side.emplace(lineWM.PhysicalSide(eLineRelativeDirOver));
+    } else if (rubyPosition == NS_STYLE_RUBY_POSITION_UNDER) {
+      side.emplace(lineWM.PhysicalSide(eLineRelativeDirUnder));
     } else {
-      // writing-mode is horizontal, so bsize is the annotation's *height*
-      x = offsetRect.X();
-      if (rubyPosition & NS_STYLE_RUBY_POSITION_OVER) {
-        y = offsetRect.Y() - bsize;
-        offsetRect.SetTopEdge(y);
-      } else if (rubyPosition & NS_STYLE_RUBY_POSITION_UNDER) {
-        y = offsetRect.YMost();
-        offsetRect.SetBottomEdge(y + bsize);
-      } else {
-        // XXX inter-character support in bug 1055672
-        MOZ_ASSERT_UNREACHABLE("Unsupported ruby-position");
-        y = offsetRect.Y();
+      // XXX inter-character support in bug 1055672
+      MOZ_ASSERT_UNREACHABLE("Unsupported ruby-position");
+    }
+
+    nsPoint position;
+    if (side.isSome()) {
+      switch (side.value()) {
+      case eSideLeft:
+        offsetRect.SetLeftEdge(offsetRect.X() - bsize);
+        position = offsetRect.TopLeft();
+        break;
+      case eSideRight:
+        position = offsetRect.TopRight();
+        offsetRect.SetRightEdge(offsetRect.XMost() + bsize);
+        break;
+      case eSideTop:
+        offsetRect.SetTopEdge(offsetRect.Y() - bsize);
+        position = offsetRect.TopLeft();
+        break;
+      case eSideBottom:
+        position = offsetRect.BottomLeft();
+        offsetRect.SetBottomEdge(offsetRect.YMost() + bsize);
+        break;
       }
     }
     FinishReflowChild(textContainer, aPresContext, textMetrics,
-                      &textReflowState, x, y, 0);
+                      &textReflowState, position.x, position.y, 0);
   }
+  MOZ_ASSERT(LogicalSize(lineWM, baseRect.Size()).ISize(lineWM) ==
+             LogicalSize(lineWM, offsetRect.Size()).ISize(lineWM),
+             "Annotations should only be placed on the block directions");
 
   nscoord deltaISize = segmentISize - baseMetrics.ISize(lineWM);
   if (deltaISize <= 0) {
