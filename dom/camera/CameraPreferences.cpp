@@ -37,7 +37,6 @@ StaticRefPtr<CameraPreferences> CameraPreferences::sObserver;
 NS_IMPL_ISUPPORTS(CameraPreferences, nsIObserver);
 #endif
 
-#ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
 /* static */
 nsresult
 CameraPreferences::UpdatePref(const char* aPref, nsresult& aVal)
@@ -49,7 +48,6 @@ CameraPreferences::UpdatePref(const char* aPref, nsresult& aVal)
   }
   return rv;
 }
-#endif
 
 /* static */
 nsresult
@@ -156,7 +154,6 @@ CameraPreferences::PreferenceChanged(const char* aPref, void* aClosure)
   nsresult rv;
   switch (p.mValueType) {
     case kPrefValueIsNsResult:
-    #ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
       {
         nsresult& v = *p.mValue.mAsNsResult;
         rv = UpdatePref(aPref, v);
@@ -165,7 +162,6 @@ CameraPreferences::PreferenceChanged(const char* aPref, void* aClosure)
         }
       }
       break;
-    #endif
 
     case kPrefValueIsUint32:
       {
@@ -331,7 +327,6 @@ CameraPreferences::GetPref(const char* aPref, nsACString& aVal)
   return true;
 }
 
-#ifdef CAMERAPREFERENCES_HAVE_SEPARATE_UINT32_AND_NSRESULT
 /* static */
 bool
 CameraPreferences::GetPref(const char* aPref, nsresult& aVal)
@@ -359,7 +354,6 @@ CameraPreferences::GetPref(const char* aPref, nsresult& aVal)
   aVal = v;
   return true;
 }
-#endif
 
 /* static */
 bool

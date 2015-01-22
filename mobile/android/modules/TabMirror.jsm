@@ -7,7 +7,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
-const CONFIG = { iceServers: [{ "url": "stun:stun.services.mozilla.com" }] };
+const CONFIG = { iceServers: [{ "urls": ["stun:stun.services.mozilla.com"] }] };
 
 let log = Cu.import("resource://gre/modules/AndroidLog.jsm",
                     {}).AndroidLog.d.bind(null, "TabMirror");
