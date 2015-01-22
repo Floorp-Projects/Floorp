@@ -137,7 +137,7 @@ pkix_RevocationChecker_RegisterSelf(void *plContext)
         PKIX_RETURN(REVOCATIONCHECKER);
 }
 
-/* Sort methods by theirs priorities */
+/* Sort methods by their priorities (lower priority = higher preference) */
 static PKIX_Error *
 pkix_RevocationChecker_SortComparator(
         PKIX_PL_Object *obj1,
@@ -152,7 +152,13 @@ pkix_RevocationChecker_SortComparator(
     method1 = (pkix_RevocationMethod *)obj1;
     method2 = (pkix_RevocationMethod *)obj2;
     
-    *pResult = (method1->priority > method2->priority);
+    if (method1->priority < method2->priority) {
+      *pResult = -1;
+    } else if (method1->priority > method2->priority) {
+      *pResult = 1;
+    } else {
+      *pResult = 0;
+    }
     
     PKIX_RETURN(BUILD);
 }
