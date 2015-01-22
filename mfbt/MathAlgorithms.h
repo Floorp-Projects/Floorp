@@ -382,7 +382,7 @@ public:
   static uint_fast8_t compute(const T aValue)
   {
     // Check for <= 1 to avoid the == 0 undefined case.
-    return aValue <= 1 ? 0 : 64 - CountLeadingZeroes64(aValue - 1);
+    return aValue <= 1 ? 0u : 64u - CountLeadingZeroes64(aValue - 1);
   }
 };
 
