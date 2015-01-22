@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1121701</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1121701 **/
+
+  var testUrl1 = "data:text/html,<script>window.onpageshow = function(e) { opener.child1PageShow(e); } <" + "/script>";
+  var testUrl2 = "data:text/html,<script>window.onpageshow = function(e) { opener.child2PageShow(e); } <" + "/script>";
+  var testWin;
+
+  var page1LoadCount = 0;
+  function child1PageShow(e) {
+    ++page1LoadCount;
+    if (page1LoadCount == 1) {
+      SimpleTest.executeSoon(function() {
+        is(e.persisted, false, "Initial page load shouldn't be persisted.");
+        testWin.document.body.innerHTML = "modified";
+        testWin.onpagehide = function(e) {
+          testWin.onpagehide = null;
+          ok(e.persisted, "test page 1 should have been persisted");
+          is(testWin.document.body.innerHTML, "modified");
+        }
+        testWin.location.href = testUrl2;
+      });
+    } else if (page1LoadCount == 2) {
+      is(e.persisted, true, "Page load from bfcache should be persisted.");
+      is(testWin.document.body.innerHTML, "modified");
+      testWin.close();
+      SimpleTest.finish();
+    }
+  }
+
+  function child2PageShow(e) {
+    testWin.document.body.innerHTML = "<img>";
+    SimpleTest.executeSoon(function() {
+      testWin.onmessage = function() {
+        ok(true, "Got message");
+        testWin.document.body.firstChild.src = location.href;
+      }
+      testWin.onbeforeunload = function() {
+        testWin.postMessage("foo", "*");
+      }
+      testWin.history.back();
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    testWin = window.open(testUrl1);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121701">Mozilla Bug 1121701</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
