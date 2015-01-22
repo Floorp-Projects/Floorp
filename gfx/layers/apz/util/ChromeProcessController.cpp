@@ -97,3 +97,31 @@ ChromeProcessController::Destroy()
   MOZ_ASSERT(MessageLoop::current() == mUILoop);
   mWidget = nullptr;
 }
+
+float
+ChromeProcessController::GetPresShellResolution() const
+{
+  // The document in the chrome process cannot be zoomed, so its pres shell
+  // resolution is 1.
+  return 1.0f;
+}
+
+void
+ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
+                                         int32_t aModifiers,
+                                         const ScrollableLayerGuid& aGuid)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ChromeProcessController::HandleSingleTap,
+                          aPoint, aModifiers, aGuid));
+    return;
+  }
+
+  LayoutDevicePoint point =
+      APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, GetPresShellResolution())
+    * mWidget->GetDefaultScale();
+
+  APZCCallbackHelper::FireSingleTapEvent(point, mWidget);
+}
