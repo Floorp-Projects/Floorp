@@ -13,7 +13,8 @@ enum SelectionState {
   "collapsetostart",
   "collapsetoend",
   "blur",
-  "updateposition"
+  "updateposition",
+  "taponcaret"
 };
 
 dictionary SelectionStateChangedEventInit : EventInit {
