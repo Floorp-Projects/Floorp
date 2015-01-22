@@ -5111,6 +5111,8 @@ GCRuntime::endSweepingZoneGroup()
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCSweeping());
         zone->setGCState(Zone::Finished);
+        zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
+                                      schedulingState);
     }
 
     /* Start background thread to sweep zones if required. */
@@ -5547,8 +5549,6 @@ GCRuntime::finishCollection()
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting()) {
             MOZ_ASSERT(zone->isGCFinished() || zone->isGCCompacting());
-            zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
-                                          schedulingState);
             zone->setGCState(Zone::NoGC);
             zone->active = false;
         }
