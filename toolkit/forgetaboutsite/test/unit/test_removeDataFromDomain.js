@@ -19,6 +19,8 @@ Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+                                  "resource://testing-common/PlacesTestUtils.jsm");
 
 const COOKIE_EXPIRY = Math.round(Date.now() / 1000) + 60;
 const COOKIE_NAME = "testcookie";
@@ -414,7 +416,7 @@ function test_history_not_cleared_with_uri_contains_domain()
   do_check_true(yield promiseIsURIVisited(TEST_URI));
 
   // Clear history since we left something there from this test.
-  PlacesUtils.bhistory.removeAllPages();
+  yield PlacesTestUtils.clearHistory();
 }
 
 // Cookie Service

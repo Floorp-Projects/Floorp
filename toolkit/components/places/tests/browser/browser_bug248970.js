@@ -27,7 +27,7 @@ add_task(function () {
     });
   });
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 
    // Ensure we wait for the default bookmarks import.
   let bookmarksDeferred = Promise.defer();

@@ -57,7 +57,7 @@ function onClipboardReady() {
   is(tags.length, 0, "tags are gone");
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
 
-  waitForClearHistory(finish);
+  PlacesTestUtils.clearHistory().then(finish);
 }
 
 let tests = {

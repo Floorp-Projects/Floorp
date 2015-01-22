@@ -353,7 +353,7 @@ add_task(function test_history_expiration()
 
   // We must replace the visits added while executing the downloads with visits
   // that are older than 7 days, otherwise they will not be expired.
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
   yield promiseExpirableDownloadVisit();
   yield promiseExpirableDownloadVisit(httpUrl("interruptible.txt"));
 
@@ -396,7 +396,7 @@ add_task(function test_history_clear()
   yield downloadOne.start();
   yield downloadTwo.start();
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 
   // Wait for the removal notifications that may still be pending.
   yield deferred.promise;

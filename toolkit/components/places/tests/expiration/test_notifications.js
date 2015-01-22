@@ -12,8 +12,6 @@
 
 let os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
 
 let gObserver = {
   notifications: 0,
@@ -27,7 +25,7 @@ function run_test() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
-  hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+  PlacesTestUtils.clearHistory();
 
   do_timeout(2000, check_result);
   do_test_pending();

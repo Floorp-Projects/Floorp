@@ -157,7 +157,7 @@ function onLibraryAvailable() {
   // Cleanup.
   PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["dummyTag"]);
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-  waitForClearHistory(finish);
+  PlacesTestUtils.clearHistory().then(finish);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

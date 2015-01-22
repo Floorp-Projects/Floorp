@@ -34,7 +34,7 @@ add_test(function removed_bookmark()
       do_check_eq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
-      promiseClearHistory().then(run_next_test);
+      PlacesTestUtils.clearHistory().then(run_next_test);
     });
   });
 });
@@ -62,7 +62,7 @@ add_test(function removed_but_visited_bookmark()
         do_check_neq(frecencyForUrl(TEST_URI), 0);
 
         remove_all_bookmarks();
-        promiseClearHistory().then(run_next_test);
+        PlacesTestUtils.clearHistory().then(run_next_test);
       });
     });
   });
@@ -94,7 +94,7 @@ add_test(function remove_bookmark_still_bookmarked()
       do_check_neq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
-      promiseClearHistory().then(run_next_test);
+      PlacesTestUtils.clearHistory().then(run_next_test);
     });
   });
 });
@@ -122,7 +122,7 @@ add_test(function cleared_parent_of_visited_bookmark()
         do_check_neq(frecencyForUrl(TEST_URI), 0);
 
         remove_all_bookmarks();
-        promiseClearHistory().then(run_next_test);
+        PlacesTestUtils.clearHistory().then(run_next_test);
       });
     });
   });
@@ -156,7 +156,7 @@ add_test(function cleared_parent_of_bookmark_still_bookmarked()
       do_check_neq(frecencyForUrl(TEST_URI), 0);
 
       remove_all_bookmarks();
-      promiseClearHistory().then(run_next_test);
+      PlacesTestUtils.clearHistory().then(run_next_test);
     });
   });
 });

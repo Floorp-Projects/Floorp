@@ -70,7 +70,7 @@ function step()
               let checker = SCHEMES[scheme] ? do_check_true : do_check_false;
               checker(aIsVisited);
 
-              promiseClearHistory().then(function () {
+              PlacesTestUtils.clearHistory().then(function () {
                 history.isURIVisited(uri, function(aURI, aIsVisited) {
                   do_check_true(uri.equals(aURI));
                   do_check_false(aIsVisited);

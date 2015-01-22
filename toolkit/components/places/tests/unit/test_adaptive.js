@@ -373,7 +373,7 @@ add_task(function test_adaptive()
       Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
     }
 
-    yield promiseClearHistory();
+    yield PlacesTestUtils.clearHistory();
 
     deferEnsureResults = Promise.defer();
     yield test();

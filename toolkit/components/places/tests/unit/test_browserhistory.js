@@ -56,7 +56,7 @@ add_task(function* test_removePages() {
 
   // Cleanup.
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function* test_removePagesByTimeframe() {
@@ -97,8 +97,8 @@ add_task(function* test_removePagesFromHost_keepSubdomains() {
   do_check_eq(1, PlacesUtils.history.hasHistoryEntries);
 });
 
-add_task(function* test_removeAllPages() {
-  PlacesUtils.bhistory.removeAllPages();
+add_task(function* test_history_clear() {
+  yield PlacesTestUtils.clearHistory();
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 });
 

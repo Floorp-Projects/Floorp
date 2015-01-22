@@ -15,7 +15,7 @@ add_task(function*() {
     return;
   }
 
-  registerCleanupFunction(promiseClearHistory);
+  registerCleanupFunction(() => PlacesTestUtils.clearHistory());
 
   let visits = [];
   repeat(10, i => {

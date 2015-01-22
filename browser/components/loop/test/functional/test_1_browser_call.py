@@ -10,6 +10,8 @@ import os
 import sys
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
+import pyperclip
+
 from serversetup import LoopTestServers
 from config import *
 
@@ -39,12 +41,28 @@ class Test1BrowserCall(MarionetteTestCase):
             .until(lambda m: m.find_element(by, locator).is_displayed())
         return self.marionette.find_element(by, locator)
 
-    # XXX workaround for Marionette bug 1055309
+    def wait_for_subelement_displayed(self, parent, by, locator, timeout=None):
+        Wait(self.marionette, timeout,
+             ignored_exceptions=[NoSuchElementException, StaleElementException])\
+            .until(lambda m: parent.find_element(by, locator).is_displayed())
+        return parent.find_element(by, locator)
+
+    # XXX workaround for Marionette bug 1094246
     def wait_for_element_exists(self, by, locator, timeout=None):
         Wait(self.marionette, timeout,
              ignored_exceptions=[NoSuchElementException, StaleElementException]) \
             .until(lambda m: m.find_element(by, locator))
         return self.marionette.find_element(by, locator)
+
+    def wait_for_element_enabled(self, element, timeout=10):
+        Wait(self.marionette, timeout) \
+            .until(lambda e: element.is_enabled(),
+                   message="Timed out waiting for element to be enabled")
+
+    def wait_for_element_attribute_to_be_false(self, element, attribute, timeout=10):
+        Wait(self.marionette, timeout) \
+            .until(lambda e: element.get_attribute(attribute) == "false",
+                   message="Timeout out waiting for " + attribute + " to be false")
 
     def switch_to_panel(self):
         button = self.marionette.find_element(By.ID, "loop-button")
@@ -56,66 +74,80 @@ class Test1BrowserCall(MarionetteTestCase):
         frame = self.marionette.find_element(By.ID, "loop-panel-iframe")
         self.marionette.switch_to_frame(frame)
 
-    def load_and_verify_standalone_ui(self, url):
-        self.marionette.set_context("content")
-        self.marionette.navigate(url)
-
-    def start_a_conversation(self):
-        # TODO: wait for react elements
-        sleep(2)
-        button = self.marionette.find_element(By.CSS_SELECTOR, ".rooms .btn-info")
-
-        # click the element
-        button.click()
-
-    def get_and_verify_call_url(self):
-        # in the new room model we have to first start a conversation
-        self.start_a_conversation()
-
-        # TODO: wait for react elements
-        sleep(2)
-        call_url = self.marionette.find_element(By.CLASS_NAME, \
-                                                "room-url-link").text
-
-        self.assertIn(urlparse.urlparse(call_url).scheme, ['http', 'https'],
-                      "call URL returned by server " + call_url +
-                      " has invalid scheme")
-        return call_url
-
-    def start_and_verify_outgoing_call(self):
-        # TODO: wait for react elements
-        sleep(2)
-        # make the call!
-        call_button = self.marionette.find_element(By.CLASS_NAME,
-                                                   "btn-join")
-        call_button.click()
-
-    def accept_and_verify_incoming_call(self):
+    def switch_to_chatbox(self):
         self.marionette.set_context("chrome")
         self.marionette.switch_to_frame()
 
         # XXX should be using wait_for_element_displayed, but need to wait
-        # for Marionette bug 1055309 to be fixed.
+        # for Marionette bug 1094246 to be fixed.
         chatbox = self.wait_for_element_exists(By.TAG_NAME, 'chatbox')
         script = ("return document.getAnonymousElementByAttribute("
                   "arguments[0], 'class', 'chat-frame');")
         frame = self.marionette.execute_script(script, [chatbox])
         self.marionette.switch_to_frame(frame)
 
-        # expect a video container on desktop side
-        video = self.wait_for_element_displayed(By.CLASS_NAME, "media")
-        self.assertEqual(video.tag_name, "div", "expect a video container")
+    def switch_to_standalone(self):
+        self.marionette.set_context("content")
 
-    def hangup_call_and_verify_feedback(self):
-        self.marionette.set_context("chrome")
+    def local_start_a_conversation(self):
+        button = self.marionette.find_element(By.CSS_SELECTOR, ".rooms .btn-info")
+
+        self.wait_for_element_enabled(button, 120)
+
+        button.click()
+
+    def local_check_room_self_video(self):
+        self.switch_to_chatbox()
+
+        # expect a video container on desktop side
+        media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media")
+        self.assertEqual(media_container.tag_name, "div", "expect a video container")
+
+    def local_get_and_verify_room_url(self):
+        button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
+
+        button.click()
+
+        # click the element
+        room_url = pyperclip.paste()
+
+        self.assertIn(urlparse.urlparse(room_url).scheme, ['http', 'https'],
+                      "room URL returned by server " + room_url +
+                      " has invalid scheme")
+        return room_url
+
+    def standalone_load_and_join_room(self, url):
+        self.switch_to_standalone()
+        self.marionette.navigate(url)
+
+        # Join the room
+        join_button = self.wait_for_element_displayed(By.CLASS_NAME,
+                                                      "btn-join")
+        join_button.click()
+
+    # Assumes the standlone or the conversation window is selected first.
+    def check_remote_video(self):
+        # TODO: This is disabled currently due to bug 1122486
+        # video_wrapper = self.wait_for_element_displayed(By.CSS_SELECTOR, ".media .OT_subscriber .OT_video-container", 20)
+        # video = self.wait_for_subelement_displayed(video_wrapper, By.TAG_NAME, "video")
+
+        # self.wait_for_element_attribute_to_be_false(video, "paused")
+        # self.assertEqual(video.get_attribute("ended"), "false")
+
+        # Due to the above waits being disabled, we do a sleep.
+        sleep(15)
+
+    def standalone_check_remote_video(self):
+        self.switch_to_standalone()
+        self.check_remote_video()
+
+    def local_check_remote_video(self):
+        self.switch_to_chatbox()
+        self.check_remote_video()
+
+    def local_leave_room_and_verify_feedback(self):
         button = self.marionette.find_element(By.CLASS_NAME, "btn-hangup")
 
-        # XXX bug 1080095 For whatever reason, the click doesn't take effect
-        # unless we wait for a bit (even if we wait for the element to
-        # actually be displayed first, which we're not currently bothering
-        # with).  It's not entirely clear whether the click is being
-        # delivered in this case, or whether there's a Marionette bug here.
-        sleep(5)
         button.click()
 
         # check that the feedback form is displayed
@@ -125,22 +157,22 @@ class Test1BrowserCall(MarionetteTestCase):
     def test_1_browser_call(self):
         self.switch_to_panel()
 
-        call_url = self.get_and_verify_call_url()
+        self.local_start_a_conversation()
+
+        # Check the self video in the conversation window
+        self.local_check_room_self_video()
+
+        room_url = self.local_get_and_verify_room_url()
 
         # load the link clicker interface into the current content browser
-        self.load_and_verify_standalone_ui(call_url)
+        self.standalone_load_and_join_room(room_url)
 
-        self.start_and_verify_outgoing_call()
-
-        # Switch to the conversation window and answer
-        self.accept_and_verify_incoming_call()
-
-        # Let's wait for the call/media to get established.
-        # TODO: replace this with some media detection
-        sleep(5)
+        # Check we get the video streams
+        self.standalone_check_remote_video()
+        self.local_check_remote_video()
 
         # hangup the call
-        self.hangup_call_and_verify_feedback()
+        self.local_leave_room_and_verify_feedback()
 
     def tearDown(self):
         self.loop_test_servers.shutdown()

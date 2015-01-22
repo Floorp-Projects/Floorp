@@ -52,7 +52,7 @@ function test() {
         }
 
         win.close();
-        waitForClearHistory(finish);
+        PlacesTestUtils.clearHistory().then(finish);
       }
     })
   }
