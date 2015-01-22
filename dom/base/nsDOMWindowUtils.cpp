@@ -3151,8 +3151,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
 
   nsCString origin;
   nsresult rv =
-    quota::QuotaManager::GetInfoFromWindow(window, nullptr, &origin, nullptr,
-                                           nullptr);
+    quota::QuotaManager::GetInfoFromWindow(window, nullptr, &origin, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   IDBOpenDBOptions options;

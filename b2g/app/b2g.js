@@ -301,9 +301,6 @@ pref("gfx.content.azure.backends", "cairo");
 // Web Notifications
 pref("notification.feature.enabled", true);
 
-// IndexedDB
-pref("dom.indexedDB.warningQuota", 5);
-
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto

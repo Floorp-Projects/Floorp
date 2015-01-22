@@ -66,12 +66,10 @@ function testHarnessSteps() {
     }
   }
 
-  let limitedQuota = yield undefined;
+  yield undefined;
 
   info("Running" +
-       (testScriptFilename ? " '" + testScriptFilename + "'" : "") +
-       " with " +
-       (limitedQuota ? "" : "un") + "limited quota");
+       (testScriptFilename ? " '" + testScriptFilename + "'" : ""));
 
   info("Pushing preferences");
 
@@ -95,10 +93,6 @@ function testHarnessSteps() {
       {
         type: "indexedDB",
         allow: true,
-        context: document
-      }, {
-        type: "indexedDB-unlimited",
-        allow: !limitedQuota,
         context: document
       }
     ],
@@ -189,10 +183,10 @@ function testHarnessSteps() {
 }
 
 if (!window.runTest) {
-  window.runTest = function(limitedQuota)
+  window.runTest = function()
   {
     SimpleTest.waitForExplicitFinish();
-    testHarnessGenerator.send(limitedQuota);
+    testHarnessGenerator.next();
   }
 }
 

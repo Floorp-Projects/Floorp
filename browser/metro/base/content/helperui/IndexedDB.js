@@ -10,10 +10,6 @@ let IndexedDB = {
   _permissionsPrompt: "indexedDB-permissions-prompt",
   _permissionsResponse: "indexedDB-permissions-response",
 
-  _quotaPrompt: "indexedDB-quota-prompt",
-  _quotaResponse: "indexedDB-quota-response",
-  _quotaCancel: "indexedDB-quota-cancel",
-
   _notificationIcon: "indexedDB-notification-icon",
 
   receiveMessage: function(aMessage) {
@@ -33,14 +29,6 @@ let IndexedDB = {
     if (topic == this._permissionsPrompt) {
       type = "indexedDB";
       payload.responseTopic = this._permissionsResponse;
-    } else if (topic == this._quotaPrompt) {
-      type = "indexedDBQuota";
-      payload.responseTopic = this._quotaResponse;
-    } else if (topic == this._quotaCancel) {
-      payload.permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
-      browser.messageManager.sendAsyncMessage("IndexedDB:Response", payload);
-      // XXX Need to actually save this?
-      return;
     }
 
     let prompt = Cc["@mozilla.org/content-permission/prompt;1"].createInstance(Ci.nsIContentPermissionPrompt);

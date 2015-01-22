@@ -30,7 +30,6 @@ EXPORTS.mozilla.dom.quota += [
 ]
 
 UNIFIED_SOURCES += [
-    'CheckQuotaHelper.cpp',
     'FileStreams.cpp',
     'QuotaManager.cpp',
     'QuotaObject.cpp',
