@@ -38,7 +38,7 @@ public:
   virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
   virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
                                const ScrollableLayerGuid& aGuid,
                                uint64_t aInputBlockId) MOZ_OVERRIDE {}
@@ -52,6 +52,7 @@ private:
   MessageLoop* mUILoop;
 
   void InitializeRoot();
+  float GetPresShellResolution() const;
 };
 
 } // namespace layers
