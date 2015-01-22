@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bugs 1102211, 1102215, 1102213 - moving a lot of code, which broke non-clobber builds on m-i.
+Bugs 1101331 - See if a CLOBBER helps the situation any.
