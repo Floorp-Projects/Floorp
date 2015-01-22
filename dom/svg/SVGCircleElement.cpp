@@ -83,7 +83,7 @@ SVGCircleElement::GetLengthInfo()
 
 bool
 SVGCircleElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                    const Matrix& aTransform)
+                                    CapStyle aCapStyle, const Matrix& aTransform)
 {
   float x, y, r;
   GetAnimatedLengthValues(&x, &y, &r, nullptr);

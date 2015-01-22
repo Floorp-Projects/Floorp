@@ -31,7 +31,7 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                 const Matrix& aTransform) MOZ_OVERRIDE;
+                                 CapStyle aCapStyle, const Matrix& aTransform) MOZ_OVERRIDE;
   virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

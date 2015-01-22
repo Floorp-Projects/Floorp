@@ -54,7 +54,7 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual bool GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                 const Matrix& aTransform) MOZ_OVERRIDE;
+                                 CapStyle cap, const Matrix& aTransform) MOZ_OVERRIDE;
   virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:
