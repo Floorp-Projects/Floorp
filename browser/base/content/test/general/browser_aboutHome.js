@@ -381,6 +381,56 @@ let gTests = [
   }
 },
 {
+  desc: "Clicking suggestion list while composing",
+  setup: function() {},
+  run: function()
+  {
+    return Task.spawn(function* () {
+      // Start composition and type "x"
+      let input = gBrowser.contentDocument.getElementById("searchText");
+      input.focus();
+      EventUtils.synthesizeComposition({ type: "compositionstart", data: "" });
+      EventUtils.synthesizeComposition({ type: "compositionupdate", data: "x" });
+      EventUtils.synthesizeCompositionChange({
+        composition: {
+          string: "x",
+          clauses: [
+            { length: 1, attr: EventUtils.COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        caret: { start: 1, length: 0 }
+      });
+
+      // Wait for the search suggestions to become visible.
+      let table =
+        gBrowser.contentDocument.getElementById("searchSuggestionTable");
+      let deferred = Promise.defer();
+      let observer = new MutationObserver(() => {
+        if (input.getAttribute("aria-expanded") == "true") {
+          observer.disconnect();
+          ok(!table.hidden, "Search suggestion table unhidden");
+          deferred.resolve();
+        }
+      });
+      observer.observe(input, {
+        attributes: true,
+        attributeFilter: ["aria-expanded"],
+      });
+      yield deferred.promise;
+
+      // Click the second suggestion.
+      let expectedURL = Services.search.currentEngine.
+                        getSubmission("xbar", null, "homepage").
+                        uri.spec;
+      let loadPromise = waitForDocLoadAndStopIt(expectedURL);
+      let row = table.children[1];
+      EventUtils.sendMouseEvent({ type: "mousedown" }, row, gBrowser.contentWindow);
+      yield loadPromise;
+      ok(input.value == "xbar", "Suggestion is selected");
+    });
+  }
+},
+{
   desc: "Cmd+k should focus the search box in the page when the search box in the toolbar is absent",
   setup: function () {
     // Remove the search bar from toolbar
