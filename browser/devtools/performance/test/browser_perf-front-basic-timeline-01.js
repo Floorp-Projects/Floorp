@@ -21,7 +21,7 @@ function spawnTest () {
     markers: Promise.defer(),
     memory: Promise.defer(),
     ticks: Promise.defer()
-  }
+  };
 
   front.on("markers", handler);
   front.on("memory", handler);
@@ -56,29 +56,27 @@ function spawnTest () {
       is(typeof delta, "number", "received `delta` in memory event");
       ok(delta > lastMemoryDelta, "received `delta` in memory event");
       ok(measurement.total, "received `total` in memory event");
-      ok(measurement.domSize, "received `domSize` in memory event");
-      ok(measurement.jsObjectsSize, "received `jsObjectsSize` in memory event");
 
-      counters.memory.push({ delta: delta, measurement: measurement });
+      counters.memory.push({ delta, measurement });
       lastMemoryDelta = delta;
     }
     else if (name === "ticks") {
       let [delta, timestamps] = args;
       ok(delta > lastTickDelta, "received `delta` in ticks event");
 
-      // First tick doesn't contain any timestamps
-      if (counters.ticks.length) {
-        ok(timestamps.length, "received `timestamps` in ticks event");
-      }
+      // Timestamps aren't guaranteed to always contain tick events, since
+      // they're dependent on the refresh driver, which may be blocked.
 
-      counters.ticks.push({ delta: delta, timestamps: timestamps});
+      counters.ticks.push({ delta, timestamps });
       lastTickDelta = delta;
     }
     else {
-      throw new Error("unknown event");
+      throw new Error("unknown event " + name);
     }
 
-    if (name !== "markers" && counters[name].length === 3) {
+    if (name === "markers" && counters[name].length === 1 ||
+        name === "memory" && counters[name].length === 3 ||
+        name === "ticks" && counters[name].length === 3) {
       front.off(name, handler);
       deferreds[name].resolve();
     }
