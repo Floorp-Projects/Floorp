@@ -1,8 +1,9 @@
-The Web Platform Tests Project [![IRC chat](https://goo.gl/6nCIks)](http://irc.w3.org/?channels=testing)
-==============================
+Description
+===========
 
-These are test suites for 60+ Web-platform specifications, along
-with test-infrastructure code for running the tests.
+This is the test suites from a number of W3C Working Groups, including the HTML
+Working Group, the Web Apps Working Group, the Device APIs Working Group, and
+the Web Apps Security Working Group.
 
 Running the Tests
 =================
