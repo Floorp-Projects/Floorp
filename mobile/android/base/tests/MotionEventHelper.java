@@ -4,13 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.util.GeckoRequest;
-import org.mozilla.gecko.util.NativeJSObject;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Instrumentation;
 import android.os.SystemClock;
 import android.util.FloatMath;
@@ -166,30 +159,5 @@ class MotionEventHelper {
     public void doubleTap(float x, float y) {
         tap(x, y);
         tap(x, y);
-    }
-
-    /**
-     * dragSync() can accidentally trigger longpress events on slower devices.
-     * Consumers can instruct Gecko to ignore them.
-     */
-    public void disableGeckoLongpress() {
-        final JSONObject json = new JSONObject();
-        try {
-            json.put("isLongPressEnabled", 0);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - Error creating request to ignore longpress events.", e);
-            return;
-        }
-
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("ContextMenu:SetIsLongpressEnabled", json) {
-            @Override
-            public void onResponse(NativeJSObject response) {
-                Log.d(LOGTAG, "Gecko received request to ignore longpress events.");
-            }
-            @Override
-            public void onError(NativeJSObject error) {
-                Log.d(LOGTAG, "No response from Gecko on request to ignore longpress events.");
-            }
-        });
     }
 }
