@@ -12,6 +12,22 @@
 
 namespace mozilla {
 
+template<class EnumValuesStrings, class Enum>
+static const char* EnumToASCII(const EnumValuesStrings& aStrings, Enum aValue) {
+  return aStrings[uint32_t(aValue)].value;
+}
+
+template<class EnumValuesStrings, class Enum>
+static Enum StringToEnum(const EnumValuesStrings& aStrings, const nsAString& aValue,
+                         Enum aDefaultValue) {
+  for (size_t i = 0; aStrings[i].value; i++) {
+    if (aValue.EqualsASCII(aStrings[i].value)) {
+      return Enum(i);
+    }
+  }
+  return aDefaultValue;
+}
+
 // Normalized internal version of MediaTrackConstraints to simplify downstream
 // processing. This implementation-only helper is included as needed by both
 // MediaManager (for gUM camera selection) and MediaEngine (for applyConstraints).
@@ -25,6 +41,7 @@ public:
   bool mUnsupportedRequirement;
   MediaTrackConstraintSet mRequired;
   dom::Sequence<MediaTrackConstraintSet> mNonrequired;
+  dom::MediaSourceEnum mMediaSourceEnumValue;
 
   MediaTrackConstraintsN(const dom::MediaTrackConstraints &aOther,
                          const dom::EnumEntry* aStrings)
@@ -34,8 +51,8 @@ public:
   {
     if (mRequire.WasPassed()) {
       auto& array = mRequire.Value();
-      for (uint32_t i = 0; i < array.Length(); i++) {
-        auto value = ToEnum(array[i]);
+      for (size_t i = 0; i < array.Length(); i++) {
+        auto value = StringToEnum(mStrings, array[i], Kind::Other);
         if (value != Kind::Other) {
           mRequireN.AppendElement(value);
         } else {
@@ -43,18 +60,22 @@ public:
         }
       }
     }
-
     // treat MediaSource special because it's always required
     mRequired.mMediaSource = mMediaSource;
 
-    // we guarantee (int) equivalence from MediaSourceEnum ->MediaSourceType
-    // (but not the other way)
-    if (mMediaSource != dom::MediaSourceEnum::Camera && mAdvanced.WasPassed()) {
-      // iterate through advanced, forcing mediaSource to match "root"
-      auto& array = mAdvanced.Value();
-      for (uint32_t i = 0; i < array.Length(); i++) {
-        if (array[i].mMediaSource == dom::MediaSourceEnum::Camera) {
-          array[i].mMediaSource = mMediaSource;
+    mMediaSourceEnumValue = StringToEnum(dom::MediaSourceEnumValues::strings,
+                                         mMediaSource,
+                                         dom::MediaSourceEnum::Other);
+    if (mAdvanced.WasPassed()) {
+      if(mMediaSourceEnumValue != dom::MediaSourceEnum::Camera) {
+        // iterate through advanced, forcing mediaSource to match "root"
+        auto& array = mAdvanced.Value();
+        for (uint32_t i = 0; i < array.Length(); i++) {
+          auto& ms = array[i].mMediaSource;
+          if (ms.EqualsASCII(EnumToASCII(dom::MediaSourceEnumValues::strings,
+                                         dom::MediaSourceEnum::Camera))) {
+            ms = mMediaSource;
+          }
         }
       }
     }
@@ -69,14 +90,6 @@ protected:
     }
   }
 private:
-  Kind ToEnum(const nsAString& aSrc) {
-    for (size_t i = 0; mStrings[i].value; i++) {
-      if (aSrc.EqualsASCII(mStrings[i].value)) {
-        return Kind(i);
-      }
-    }
-    return Kind::Other;
-  }
   const dom::EnumEntry* mStrings;
 };
 

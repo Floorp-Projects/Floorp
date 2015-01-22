@@ -25,7 +25,7 @@ interface nsIURI;
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
  */
 
-[scriptable, uuid(4b967b6d-cd1c-49ae-a457-23ff76f5a2e8)]
+[scriptable, uuid(7b48d081-1dc1-4d08-b7a5-81491bf28c0e)]
 interface nsIHttpUpgradeListener : nsISupports
 {
     void onTransportAvailable(in nsISocketTransport   aTransport,
@@ -230,4 +230,10 @@ interface nsIHttpChannelInternal : nsISupports
      * channel after a remote classification verdict.
      */
     void continueBeginConnect();
+
+    /**
+     * Read the proxy URI, which, if non-null, will be used to resolve
+     * proxies for this channel.
+     */
+    readonly attribute nsIURI proxyURI;
 };

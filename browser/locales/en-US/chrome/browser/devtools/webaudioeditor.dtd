@@ -23,9 +23,9 @@
   -  while the page is refreshing and the tool waits for a audio context. -->
 <!ENTITY webAudioEditorUI.emptyNotice     "Waiting for an audio context to be created…">
 
-<!-- LOCALIZATION NOTE (webAudioEditorUI.tab.properties): This is the label shown
+<!-- LOCALIZATION NOTE (webAudioEditorUI.tab.properties2): This is the label shown
   -  for the properties tab view. -->
-<!ENTITY webAudioEditorUI.tab.properties  "Parameters">
+<!ENTITY webAudioEditorUI.tab.properties2 "Properties">
 
 <!-- LOCALIZATION NOTE (webAudioEditorUI.tab.automation): This is the label shown
   -  for the automation tab view. -->
