@@ -76,6 +76,7 @@ typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
 typedef struct nr_ice_stun_server_ nr_ice_stun_server;
 typedef struct nr_ice_turn_server_ nr_ice_turn_server;
 typedef struct nr_resolver_ nr_resolver;
+typedef struct nr_proxy_tunnel_config_ nr_proxy_tunnel_config;
 
 typedef void* NR_SOCKET;
 
@@ -171,6 +172,25 @@ class NrIceTurnServer : public NrIceStunServer {
   std::string transport_;
 };
 
+class NrIceProxyServer {
+ public:
+  NrIceProxyServer() :
+    host_(), port_(0) {
+  }
+
+  NrIceProxyServer(const std::string& host, uint16_t port) :
+    host_(host), port_(port) {
+  }
+
+  const std::string& host() const { return host_; }
+  uint16_t port() const { return port_; }
+
+ private:
+  std::string host_;
+  uint16_t port_;
+};
+
+
 class NrIceCtx {
  public:
   enum ConnectionState { ICE_CTX_INIT,
@@ -253,6 +273,10 @@ class NrIceCtx {
   // Provide the resolution provider. Must be called before
   // StartGathering.
   nsresult SetResolver(nr_resolver *resolver);
+
+  // Provide the proxy address. Must be called before
+  // StartGathering.
+  nsresult SetProxyServer(const NrIceProxyServer& proxy_server);
 
   // Start ICE gathering
   nsresult StartGathering();
