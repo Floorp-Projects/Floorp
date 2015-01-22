@@ -98,6 +98,8 @@ function goUpdateConsoleCommands() {
                         prefKey="network"/>
               <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
                         prefKey="netwarn"/>
+              <menuitem label="&btnConsoleXhr;" type="checkbox" autocheck="false"
+                        prefKey="netxhr"/>
               <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
                         prefKey="networkinfo"/>
               <menuseparator id="saveBodiesSeparator" />

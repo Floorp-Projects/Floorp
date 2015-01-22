@@ -1,15 +1,14 @@
-//#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.fxa;
 
-import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.AppConstants;
 
 public class FxAccountConstants {
   public static final String GLOBAL_LOG_TAG = "FxAccounts";
-  public static final String ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
+  public static final String ACCOUNT_TYPE = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE;
 
   public static final String DEFAULT_AUTH_SERVER_ENDPOINT = "https://api.accounts.firefox.com/v1";
   public static final String DEFAULT_TOKEN_SERVER_ENDPOINT = "https://token.services.mozilla.com/1.0/sync/1.5";
@@ -23,7 +22,7 @@ public class FxAccountConstants {
   // You must wait 15 minutes after failing an age check before trying to create a different account.
   public static final long MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS = 15 * 60 * 1000;
 
-  public static final String USER_AGENT = "Firefox-Android-FxAccounts/" + GlobalConstants.MOZ_APP_VERSION + " (" + GlobalConstants.MOZ_APP_DISPLAYNAME + ")";
+  public static final String USER_AGENT = "Firefox-Android-FxAccounts/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_DISPLAYNAME + ")";
 
   public static final String ACCOUNT_PICKLE_FILENAME = "fxa.account.json";
 
@@ -53,7 +52,7 @@ public class FxAccountConstants {
    *
    * See bug 790931 for additional information in the context of Sync.
    */
-  public static final String ACCOUNT_DELETED_ACTION = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.accounts.ACCOUNT_DELETED_ACTION";
+  public static final String ACCOUNT_DELETED_ACTION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".accounts.ACCOUNT_DELETED_ACTION";
 
   /**
    * Version number of contents of SYNC_ACCOUNT_DELETED_ACTION intent.
@@ -67,7 +66,7 @@ public class FxAccountConstants {
    * This signing-level permission protects broadcast intents that should be
    * received only by Firefox channels sharing the same Android Firefox Account type.
    */
-  public static final String PER_ACCOUNT_TYPE_PERMISSION = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE";
+  public static final String PER_ACCOUNT_TYPE_PERMISSION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".permission.PER_ACCOUNT_TYPE";
 
   /**
    * This action is broadcast when an Android Firefox Account's internal state
@@ -77,5 +76,5 @@ public class FxAccountConstants {
    * can be received only by Firefox versions sharing the same Android Firefox
    * Account type.
    */
-  public static final String ACCOUNT_STATE_CHANGED_ACTION = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.accounts.ACCOUNT_STATE_CHANGED_ACTION";
+  public static final String ACCOUNT_STATE_CHANGED_ACTION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".accounts.ACCOUNT_STATE_CHANGED_ACTION";
 }

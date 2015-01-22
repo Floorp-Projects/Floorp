@@ -145,25 +145,6 @@ function waitForCallbackResultPromise() {
   }, "callback should be called");
 }
 
-function addPinnedTabPromise() {
-  gContentAPI.addPinnedTab();
-  return waitForConditionPromise(() => {
-    let tabInfo = UITour.pinnedTabs.get(window);
-    if (!tabInfo) {
-      return false;
-    }
-    return tabInfo.tab.pinned;
-  });
-}
-
-function removePinnedTabPromise() {
-  gContentAPI.removePinnedTab();
-  return waitForConditionPromise(() => {
-    let tabInfo = UITour.pinnedTabs.get(window);
-    return tabInfo == null;
-  });
-}
-
 function promisePanelShown(win) {
   let panelEl = win.PanelUI.panel;
   return promisePanelElementShown(win, panelEl);
@@ -250,8 +231,6 @@ function UITourTest() {
       ok(!PanelUI.panel.hasAttribute("panelopen"), "The panel shouldn't have @panelopen");
       isnot(PanelUI.panel.state, "open", "The panel shouldn't be open");
       is(document.getElementById("PanelUI-menu-button").hasAttribute("open"), false, "Menu button should know that the menu is closed");
-
-      is(UITour.pinnedTabs.get(window), null, "Any pinned tab should be closed after UITour tab is closed");
 
       executeSoon(nextTest);
     });

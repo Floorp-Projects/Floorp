@@ -439,17 +439,22 @@ VideoDevice::SatisfiesConstraintSets(
   for (size_t i = 0; i < aConstraintSets.Length(); i++) {
     auto& c = *aConstraintSets[i];
     if (c.mFacingMode.WasPassed()) {
+      auto& value = c.mFacingMode.Value();
       nsString s;
       GetFacingMode(s);
-      if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
-          static_cast<uint32_t>(c.mFacingMode.Value())].value)) {
-        return false;
+      if (value.IsString()) {
+        if (s != value.GetAsString()) {
+          return false;
+        }
+      } else {
+        if (!value.GetAsStringSequence().Contains(s)) {
+          return false;
+        }
       }
     }
     nsString s;
     GetMediaSource(s);
-    if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
-        static_cast<uint32_t>(c.mMediaSource)].value)) {
+    if (s != c.mMediaSource) {
       return false;
     }
   }
@@ -517,9 +522,9 @@ MediaDevice::GetFacingMode(nsAString& aFacingMode)
 NS_IMETHODIMP
 MediaDevice::GetMediaSource(nsAString& aMediaSource)
 {
-  if (mMediaSource == MediaSourceType::Microphone) {
+  if (mMediaSource == dom::MediaSourceEnum::Microphone) {
     aMediaSource.Assign(NS_LITERAL_STRING("microphone"));
-  } else if (mMediaSource == MediaSourceType::Window) { // this will go away
+  } else if (mMediaSource == dom::MediaSourceEnum::Window) { // this will go away
     aMediaSource.Assign(NS_LITERAL_STRING("window"));
   } else { // all the rest are shared
     aMediaSource.Assign(NS_ConvertUTF8toUTF16(
@@ -943,7 +948,7 @@ template<class DeviceType, class ConstraintsType>
 static void
   GetSources(MediaEngine *engine,
              ConstraintsType &aConstraints,
-             void (MediaEngine::* aEnumerate)(MediaSourceType,
+             void (MediaEngine::* aEnumerate)(dom::MediaSourceEnum,
                  nsTArray<nsRefPtr<typename DeviceType::Source> >*),
              nsTArray<nsRefPtr<DeviceType>>& aResult,
              const char* media_device_name = nullptr)
@@ -955,8 +960,8 @@ static void
   SourceSet candidateSet;
   {
     nsTArray<nsRefPtr<typename DeviceType::Source> > sources;
-    // all MediaSourceEnums are contained in MediaSourceType
-    (engine->*aEnumerate)((MediaSourceType)((int)aConstraints.mMediaSource), &sources);
+
+    (engine->*aEnumerate)(aConstraints.mMediaSourceEnumValue, &sources);
     /**
       * We're allowing multiple tabs to access the same camera for parity
       * with Chrome.  See bug 811757 for some of the issues surrounding
@@ -1630,15 +1635,16 @@ MediaManager::GetUserMedia(
     auto& tc = c.mVideo.GetAsMediaTrackConstraints();
     if (!tc.mRequire.WasPassed() &&
         tc.mMandatory.mFacingMode.WasPassed() && !tc.mFacingMode.WasPassed()) {
-      tc.mFacingMode.Construct(tc.mMandatory.mFacingMode.Value());
+      tc.mFacingMode.Construct().SetAsString() = tc.mMandatory.mFacingMode.Value();
       tc.mRequire.Construct().AppendElement(NS_LITERAL_STRING("facingMode"));
     }
     if (tc.mOptional.WasPassed() && !tc.mAdvanced.WasPassed()) {
       tc.mAdvanced.Construct();
-      for (uint32_t i = 0; i < tc.mOptional.Value().Length(); i++) {
+      for (size_t i = 0; i < tc.mOptional.Value().Length(); i++) {
         if (tc.mOptional.Value()[i].mFacingMode.WasPassed()) {
           MediaTrackConstraintSet n;
-          n.mFacingMode.Construct(tc.mOptional.Value()[i].mFacingMode.Value());
+          n.mFacingMode.Construct().SetAsString() =
+              tc.mOptional.Value()[i].mFacingMode.Value();
           tc.mAdvanced.Value().AppendElement(n);
         }
       }
@@ -1654,8 +1660,8 @@ MediaManager::GetUserMedia(
     }
 
     if (tc.mAdvanced.WasPassed()) {
-      uint32_t length = tc.mAdvanced.Value().Length();
-      for (uint32_t i = 0; i < length; i++) {
+      size_t length = tc.mAdvanced.Value().Length();
+      for (size_t i = 0; i < length; i++) {
         if (tc.mAdvanced.Value()[i].mBrowserWindow.WasPassed()) {
           tc.mAdvanced.Value()[i].mBrowserWindow.Construct(-1);
         }
@@ -1679,33 +1685,45 @@ MediaManager::GetUserMedia(
 
   if (c.mVideo.IsMediaTrackConstraints()) {
     auto& tc = c.mVideo.GetAsMediaTrackConstraints();
-    // deny screensharing request if support is disabled
-    if (tc.mMediaSource != dom::MediaSourceEnum::Camera) {
-      if (tc.mMediaSource == dom::MediaSourceEnum::Browser) {
-        if (!Preferences::GetBool("media.getusermedia.browser.enabled", false)) {
-          return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
-        }
-      } else if (!Preferences::GetBool("media.getusermedia.screensharing.enabled", false)) {
-        return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
-      }
-      /* Deny screensharing if the requesting document is not from a host
-       on the whitelist. */
-      // Block screen/window sharing on Mac OSX 10.6 and WinXP until proved that they work
-      if (
+    MediaSourceEnum src = StringToEnum(dom::MediaSourceEnumValues::strings,
+                                       tc.mMediaSource,
+                                       dom::MediaSourceEnum::Other);
+    switch (src) {
+    case dom::MediaSourceEnum::Camera:
+      break;
+
+    case dom::MediaSourceEnum::Browser:
+    case dom::MediaSourceEnum::Screen:
+    case dom::MediaSourceEnum::Application:
+    case dom::MediaSourceEnum::Window:
+      // Deny screensharing request if support is disabled, or
+      // the requesting document is not from a host on the whitelist, or
+      // we're on Mac OSX 10.6 and WinXP until proved that they work
+      if (!Preferences::GetBool(((src == dom::MediaSourceEnum::Browser)?
+                                "media.getusermedia.browser.enabled" :
+                                "media.getusermedia.screensharing.enabled"),
+                                false) ||
 #if defined(XP_MACOSX) || defined(XP_WIN)
           (
-            !Preferences::GetBool("media.getusermedia.screensharing.allow_on_old_platforms", false) &&
+            !Preferences::GetBool("media.getusermedia.screensharing.allow_on_old_platforms",
+                                  false) &&
 #if defined(XP_MACOSX)
             !nsCocoaFeatures::OnLionOrLater()
 #endif
 #if defined (XP_WIN)
             !IsVistaOrLater()
 #endif
-           ) ||
+            ) ||
 #endif
           (!privileged && !HostHasPermission(*docURI))) {
         return task->Denied(NS_LITERAL_STRING("PermissionDeniedError"));
       }
+      break;
+
+    case dom::MediaSourceEnum::Microphone:
+    case dom::MediaSourceEnum::Other:
+    default:
+      return task->Denied(NS_LITERAL_STRING("NotFoundError"));
     }
   }
 
@@ -2383,9 +2401,9 @@ GetUserMediaCallbackMediaStreamListener::StopScreenWindowSharing()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   if (mVideoSource && !mStopped &&
-      (mVideoSource->GetMediaSource() == MediaSourceType::Screen ||
-       mVideoSource->GetMediaSource() == MediaSourceType::Application ||
-       mVideoSource->GetMediaSource() == MediaSourceType::Window)) {
+      (mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Screen ||
+       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Application ||
+       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Window)) {
     // Stop the whole stream if there's no audio; just the video track if we have both
     MediaManager::GetMessageLoop()->PostTask(FROM_HERE,
       new MediaOperationTask(mAudioSource ? MEDIA_STOP_TRACK : MEDIA_STOP,
