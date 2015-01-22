@@ -24,9 +24,6 @@ public class testFlingCorrectness extends PixelTest {
         // load page and check we're at 0,0
         loadAndVerifyBoxes(url);
 
-        // Tell Gecko to ignore any longpress events triggered by MEH.
-        meh.disableGeckoLongpress();
-
         // drag page upwards by 200 pixels (use two drags instead of one in case
         // the screen size is small)
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();

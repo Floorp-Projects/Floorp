@@ -246,7 +246,6 @@ pref("browser.uitour.enabled", true);
 pref("browser.uitour.loglevel", "Error");
 pref("browser.uitour.requireSecure", true);
 pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/themes/");
-pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pinned-tabs-keep-favorite-websites-open");
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 
 pref("browser.customizemode.tip0.shown", false);
@@ -1497,6 +1496,7 @@ pref("devtools.gcli.underscoreSrc", "https://cdnjs.cloudflare.com/ajax/libs/unde
 pref("devtools.webconsole.filter.network", true);
 pref("devtools.webconsole.filter.networkinfo", false);
 pref("devtools.webconsole.filter.netwarn", true);
+pref("devtools.webconsole.filter.netxhr", false);
 pref("devtools.webconsole.filter.csserror", true);
 pref("devtools.webconsole.filter.cssparser", false);
 pref("devtools.webconsole.filter.csslog", false);
@@ -1514,6 +1514,7 @@ pref("devtools.webconsole.filter.secwarn", true);
 pref("devtools.browserconsole.filter.network", true);
 pref("devtools.browserconsole.filter.networkinfo", false);
 pref("devtools.browserconsole.filter.netwarn", true);
+pref("devtools.browserconsole.filter.netxhr", false);
 pref("devtools.browserconsole.filter.csserror", true);
 pref("devtools.browserconsole.filter.cssparser", false);
 pref("devtools.browserconsole.filter.csslog", false);

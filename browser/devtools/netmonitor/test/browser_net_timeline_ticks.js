@@ -12,6 +12,12 @@ function test() {
     let { document, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
+    // Disable transferred size column support for this test.
+    // Without this, the waterfall only has enough room for one division, which
+    // would remove most of the value of this test.
+    document.querySelector("#requests-menu-transferred-header-box").hidden = true;
+    document.querySelector("#requests-menu-item-template .requests-menu-transferred").hidden = true;
+
     RequestsMenu.lazyUpdate = false;
 
     ok(document.querySelector("#requests-menu-waterfall-label"),
