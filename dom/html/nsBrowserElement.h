@@ -89,6 +89,9 @@ public:
   already_AddRefed<dom::DOMRequest> SetInputMethodActive(bool isActive,
                                                          ErrorResult& aRv);
 
+  void SetNFCFocus(bool isFocus,
+                   ErrorResult& aRv);
+
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;

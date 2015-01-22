@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(33e8571d-5e5d-4000-81cf-e01f5f85d424)]
+[scriptable, uuid(30361a5b-a3b8-4dbc-b464-e08761abb123)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -22,4 +22,6 @@ interface nsITabParent : nsISupports
   readonly attribute boolean useAsyncPanZoom;
 
   void setIsDocShellActive(in bool aIsActive);
+
+  readonly attribute uint64_t tabId;
 };
