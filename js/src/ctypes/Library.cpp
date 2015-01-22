@@ -289,8 +289,8 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   if (isFunction) {
     // Case 1).
     // Create a FunctionType representing the function.
-    fnObj = FunctionType::CreateInternal(cx,
-              args[1], args[2], &args.array()[3], args.length() - 3);
+    fnObj = FunctionType::CreateInternal(cx, args[1], args[2],
+                                         HandleValueArray::subarray(args, 3, args.length() - 3));
     if (!fnObj)
       return false;
 

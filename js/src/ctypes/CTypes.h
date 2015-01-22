@@ -492,8 +492,8 @@ namespace StructType {
 }
 
 namespace FunctionType {
-  JSObject* CreateInternal(JSContext* cx, jsval abi, jsval rtype,
-    jsval* argtypes, unsigned arglen);
+  JSObject* CreateInternal(JSContext* cx, HandleValue abi, HandleValue rtype,
+    const HandleValueArray& args);
 
   JSObject* ConstructWithObject(JSContext* cx, JSObject* typeObj,
     JSObject* refObj, PRFuncPtr fnptr, JSObject* result);
