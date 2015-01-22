@@ -263,6 +263,7 @@ public:
   FlexItem(nsHTMLReflowState& aFlexItemReflowState,
            float aFlexGrow, float aFlexShrink, nscoord aMainBaseSize,
            nscoord aMainMinSize, nscoord aMainMaxSize,
+           nscoord aTentativeCrossSize,
            nscoord aCrossMinSize, nscoord aCrossMaxSize,
            const FlexboxAxisTracker& aAxisTracker);
 
@@ -984,9 +985,14 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // This is enforced by the nsHTMLReflowState where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
-  // CROSS MIN/MAX SIZE
-  // ------------------
-
+  // CROSS SIZES (tentative cross size, min/max cross size)
+  // ------------------------------------------------------
+  // Grab the cross size from the reflow state. This might be the right value,
+  // or we might resolve it to something else in SizeItemInCrossAxis(); hence,
+  // it's tentative. See comment under "Cross Size Determination" for more.
+  nscoord tentativeCrossSize = GET_CROSS_COMPONENT(aAxisTracker,
+                                                   childRS.ComputedWidth(),
+                                                   childRS.ComputedHeight());
   nscoord crossMinSize = GET_CROSS_COMPONENT(aAxisTracker,
                                              childRS.ComputedMinWidth(),
                                              childRS.ComputedMinHeight());
@@ -1028,7 +1034,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
       // (Set min and max main-sizes to that size, too, to keep us from
       // clamping to any other size later on.)
       flexBaseSize = mainMinSize = mainMaxSize = widgetMainMinSize;
-      crossMinSize = crossMaxSize = widgetCrossMinSize;
+      tentativeCrossSize = crossMinSize = crossMaxSize = widgetCrossMinSize;
       isFixedSizeWidget = true;
     } else {
       // Variable-size widget: ensure our min/max sizes are at least as large
@@ -1036,6 +1042,9 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
       mainMinSize = std::max(mainMinSize, widgetMainMinSize);
       mainMaxSize = std::max(mainMaxSize, widgetMainMinSize);
 
+      if (tentativeCrossSize != NS_INTRINSICSIZE) {
+        tentativeCrossSize = std::max(tentativeCrossSize, widgetCrossMinSize);
+      }
       crossMinSize = std::max(crossMinSize, widgetCrossMinSize);
       crossMaxSize = std::max(crossMaxSize, widgetCrossMinSize);
     }
@@ -1045,6 +1054,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   FlexItem* item = new FlexItem(childRS,
                                 flexGrow, flexShrink, flexBaseSize,
                                 mainMinSize, mainMaxSize,
+                                tentativeCrossSize,
                                 crossMinSize, crossMaxSize,
                                 aAxisTracker);
 
@@ -1424,6 +1434,7 @@ nsFlexContainerFrame::
 FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
                    float aFlexGrow, float aFlexShrink, nscoord aFlexBaseSize,
                    nscoord aMainMinSize,  nscoord aMainMaxSize,
+                   nscoord aTentativeCrossSize,
                    nscoord aCrossMinSize, nscoord aCrossMaxSize,
                    const FlexboxAxisTracker& aAxisTracker)
   : mFrame(aFlexItemReflowState.frame),
@@ -1436,7 +1447,7 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
     mCrossMinSize(aCrossMinSize),
     mCrossMaxSize(aCrossMaxSize),
     mMainPosn(0),
-    mCrossSize(0),
+    mCrossSize(aTentativeCrossSize),
     mCrossPosn(0),
     mAscent(0),
     mShareOfWeightSoFar(0.0f),
@@ -3249,17 +3260,17 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   nsHTMLReflowState& aChildReflowState,
   FlexItem& aItem)
 {
-  // In vertical flexbox (with horizontal cross-axis), we can just trust the
-  // reflow state's computed-width as our cross-size. We also don't need to
-  // record the baseline because we'll have converted any "align-self:baseline"
-  // items to be "align-self:flex-start" in the FlexItem constructor.
-  // FIXME: Once we support writing-mode (vertical text), we will be able to
-  // have baseline-aligned items in a vertical flexbox, and we'll need to
-  // record baseline information here.
   if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
-    MOZ_ASSERT(aItem.GetAlignSelf() != NS_STYLE_ALIGN_ITEMS_BASELINE,
-               "In vert flex container, we depend on FlexItem constructor to "
-               "convert 'align-self: baseline' to 'align-self: flex-start'");
+    // XXXdholbert NOTE: For now, we should never hit this case, due to a
+    // !IsAxisHorizontal(aAxisTracker.GetCrossAxis()) check that guards this
+    // call in the caller. BUT, when we add support for vertical writing-modes,
+    // (in bug 1079155 or a dependency), we'll relax that check, and we'll need
+    // to be able to measure the baseline & width (given our resolved height)
+    // of vertical-writing-mode flex items here.
+    MOZ_ASSERT_UNREACHABLE("Caller should use tentative cross size instead "
+                           "of calling SizeItemInCrossAxis");
+    // (But if we do happen to get here, just trust the passed-in reflow state
+    // for our cross size [width].)
     aItem.SetCrossSize(aChildReflowState.ComputedWidth());
     return;
   }
@@ -3499,9 +3510,25 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   nscoord sumLineCrossSizes = 0;
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     for (FlexItem* item = line->GetFirstItem(); item; item = item->getNext()) {
-      // (If the item's already been stretched, or it's a strut, then it
-      // already knows its cross size.  Don't bother trying to recalculate it.)
-      if (!item->IsStretched() && !item->IsStrut()) {
+      // Note that we may already have the correct cross size. (We guess at it
+      // in GenerateFlexItemForChild(), and we also may resolve it early for
+      // stretched flex items.)
+      //
+      // We can skip measuring an item's cross size here in a few scenarios:
+      // (A) If the flex item has already been stretched, then we're imposing
+      //     the container's cross size on it; no need to measure.
+      // (B) If the flex item is a "strut", then it's just a placeholder with a
+      //     predetermined cross size; no need to measure.
+      // (C) If the item's main-size can't affect its cross-size, then the
+      //     item's tentative cross size (which we got from the reflow state in
+      //     GenerateFlexItemForChild()) is correct. So, no need to re-measure.
+      //     (For now, this is equivalent to checking if the cross-axis is
+      //     horizontal, because until we enable vertical writing-modes, an
+      //     element's computed width can't be influenced by its computed
+      //     height.)
+      if (!item->IsStretched() && // !A
+          !item->IsStrut() &&     // !B
+          !IsAxisHorizontal(aAxisTracker.GetCrossAxis())) { // !C
         WritingMode wm = item->Frame()->GetWritingMode();
         LogicalSize availSize = aReflowState.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
@@ -3511,6 +3538,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
           childReflowState.SetComputedWidth(item->GetMainSize());
         } else {
+          // XXXdholbert NOTE: For now, we'll never hit this case, due to the
+          // !IsAxisHorizontal(aAxisTracker.GetCrossAxis()) check above. But
+          // when we add support for vertical writing modes, we'll relax that
+          // check and be able to hit this code.
           childReflowState.SetComputedHeight(item->GetMainSize());
         }
         
