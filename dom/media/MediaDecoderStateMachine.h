@@ -955,6 +955,10 @@ protected:
   // we detect that the decode can't keep up with rendering.
   int64_t mAmpleAudioThresholdUsecs;
 
+  // If we're quick buffering, we'll remain in buffering mode while we have less than
+  // QUICK_BUFFERING_LOW_DATA_USECS of decoded data available.
+  int64_t mQuickBufferingLowDataThresholdUsecs;
+
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
   // behind. Otherwise our "we're falling behind" logic will trigger
