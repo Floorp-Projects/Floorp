@@ -6,8 +6,8 @@
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, OverviewView } = panel.panelWin;
-  let beginAt, endAt, params, _;
+  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+  let startTime, endTime, params, _;
 
   yield startRecording(panel);
 
@@ -19,29 +19,35 @@ function spawnTest () {
   // Wait for the overview graph to be rerendered *after* recording.
   yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
 
-  let graph = OverviewView.framerateGraph;
+  let graph = OverviewView.markersOverview;
   let MAX = graph.width;
 
   // Select the first half of the graph
   let results = onceSpread(OverviewView, EVENTS.OVERVIEW_RANGE_SELECTED);
   dragStart(graph, 0);
   dragStop(graph, MAX / 2);
+  [_, { startTime, endTime }] = yield results;
 
-  [_, { beginAt, endAt }] = yield results;
-
-  let actual = graph.getMappedSelection();
-  ise(beginAt, actual.min, "OVERVIEW_RANGE_SELECTED fired with beginAt value on click.");
-  ise(endAt, actual.max, "OVERVIEW_RANGE_SELECTED fired with endAt value on click.");
+  let mapStart = () => 0;
+  let mapEnd = () => PerformanceController.getCurrentRecording().getDuration();
+  let actual = graph.getMappedSelection({ mapStart, mapEnd });
+  is(graph.hasSelection(), true,
+    "A selection exists on the graph.");
+  is(startTime, actual.min,
+    "OVERVIEW_RANGE_SELECTED fired with startTime value on click.");
+  is(endTime, actual.max,
+    "OVERVIEW_RANGE_SELECTED fired with endTime value on click.");
 
   // Listen to deselection
   results = onceSpread(OverviewView, EVENTS.OVERVIEW_RANGE_CLEARED);
   dropSelection(graph);
   [_, params] = yield results;
 
-  is(graph.hasSelection(), false, "selection no longer on graph.");
-  is(params, undefined, "OVERVIEW_RANGE_CLEARED fired with no additional arguments.");
+  is(graph.hasSelection(), false,
+    "A selection no longer on the graph.");
+  is(params, undefined,
+    "OVERVIEW_RANGE_CLEARED fired with no additional arguments.");
 
-  panel.panelWin.clearNamedTimeout("graph-scroll");
   yield teardown(panel);
   finish();
 }
