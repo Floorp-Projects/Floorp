@@ -1307,7 +1307,18 @@ WatchdogMain(void *arg)
         // Don't request an interrupt callback unless the current script has
         // been running long enough that we might show the slow script dialog.
         // Triggering the callback from off the main thread can be expensive.
-        PRTime usecs = self->MinScriptRunTimeSeconds() * PR_USEC_PER_SEC;
+
+        // We want to avoid showing the slow script dialog if the user's laptop
+        // goes to sleep in the middle of running a script. To ensure this, we
+        // invoke the interrupt callback after only half the timeout has
+        // elapsed. The callback simply records the fact that it was called in
+        // the mSlowScriptSecondHalf flag. Then we wait another (timeout/2)
+        // seconds and invoke the callback again. This time around it sees
+        // mSlowScriptSecondHalf is set and so it shows the slow script
+        // dialog. If the computer is put to sleep during one of the (timeout/2)
+        // periods, the script still has the other (timeout/2) seconds to
+        // finish.
+        PRTime usecs = self->MinScriptRunTimeSeconds() * PR_USEC_PER_SEC / 2;
         if (manager->IsRuntimeActive() &&
             manager->TimeSinceLastRuntimeStateChange() >= usecs)
         {
@@ -1378,10 +1389,12 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
 {
     XPCJSRuntime *self = XPCJSRuntime::Get();
 
-    // If this is the first time the interrupt callback has fired since we last
-    // returned to the event loop, mark the checkpoint.
+    // Normally we record mSlowScriptCheckpoint when we start to process an
+    // event. However, we can run JS outside of event handlers. This code takes
+    // care of that case.
     if (self->mSlowScriptCheckpoint.IsNull()) {
         self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+        self->mSlowScriptSecondHalf = false;
         return true;
     }
 
@@ -1403,8 +1416,17 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
 
     // If there's no limit, or we're within the limit, let it go.
-    if (limit == 0 || duration.ToSeconds() < limit)
+    if (limit == 0 || duration.ToSeconds() < limit / 2.0)
         return true;
+
+    // In order to guard against time changes or laptops going to sleep, we
+    // don't trigger the slow script warning until (limit/2) seconds have
+    // elapsed twice.
+    if (!self->mSlowScriptSecondHalf) {
+        self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+        self->mSlowScriptSecondHalf = true;
+        return true;
+    }
 
     //
     // This has gone on long enough! Time to take action. ;-)
@@ -3197,7 +3219,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mUnprivilegedJunkScope(this->Runtime(), nullptr),
    mPrivilegedJunkScope(this->Runtime(), nullptr),
    mCompilationScope(this->Runtime(), nullptr),
-   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
+   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
+   mSlowScriptSecondHalf(false)
 {
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
