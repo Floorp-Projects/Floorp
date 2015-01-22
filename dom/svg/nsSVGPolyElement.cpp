@@ -122,7 +122,7 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
 bool
 nsSVGPolyElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                    const Matrix& aTransform)
+                                    CapStyle aCapStyle, const Matrix& aTransform)
 {
   const SVGPointList &points = mPoints.GetAnimValue();
 

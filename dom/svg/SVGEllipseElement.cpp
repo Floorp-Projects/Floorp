@@ -94,7 +94,7 @@ SVGEllipseElement::GetLengthInfo()
 
 bool
 SVGEllipseElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
-                                     const Matrix& aTransform)
+                                     CapStyle aCapStyle, const Matrix& aTransform)
 {
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
