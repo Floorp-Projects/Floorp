@@ -365,7 +365,7 @@ nsresult TestPaths() {
     { "connect-src http://www.example.com/foo%3bsessionid=12%2c34",
       "connect-src http://www.example.com/foo;sessionid=12,34" },
     { "connect-src http://test.com/pathIncludingAz19-._~!$&'()*+=:@",
-      "connect-src http://test.com/pathincludingaz19-._~!$&'()*+=:@" },
+      "connect-src http://test.com/pathIncludingAz19-._~!$&'()*+=:@" },
     { "script-src http://www.example.com:88/.js",
       "script-src http://www.example.com:88/.js" },
     { "script-src https://foo.com/_abc/abc_/_/_a_b_c_",
