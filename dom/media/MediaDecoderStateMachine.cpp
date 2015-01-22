@@ -254,7 +254,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
 
   mVideoPrerollFrames = mScheduler->IsRealTime() ? 0 : mAmpleVideoFrames / 2;
-  mAudioPrerollUsecs = mScheduler->IsRealTime() ? 0 : LOW_AUDIO_USECS * 2;
+  mAudioPrerollUsecs = mScheduler->IsRealTime() ? 0 : detail::LOW_AUDIO_USECS * 2;
 
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
