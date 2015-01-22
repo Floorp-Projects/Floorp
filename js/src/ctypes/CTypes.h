@@ -6,8 +6,6 @@
 #ifndef ctypes_CTypes_h
 #define ctypes_CTypes_h
 
-#include "mozilla/UniquePtr.h"
-
 #include "ffi.h"
 #include "jsalloc.h"
 #include "prlink.h"
@@ -23,6 +21,39 @@ namespace ctypes {
 /*******************************************************************************
 ** Utility classes
 *******************************************************************************/
+
+// Class that takes ownership of a pointer T*, and calls cx->delete_() or
+// cx->array_delete() upon destruction.
+template<class T>
+class AutoPtr {
+private:
+  typedef AutoPtr<T> self_type;
+
+public:
+  AutoPtr() : mPtr(nullptr) { }
+  explicit AutoPtr(T* ptr) : mPtr(ptr) { }
+  ~AutoPtr() { js_delete(mPtr); }
+
+  T*   operator->()         { return mPtr; }
+  bool operator!()          { return mPtr == nullptr; }
+  T&   operator[](size_t i) { return *(mPtr + i); }
+  // Note: we cannot safely provide an 'operator T*()', since this would allow
+  // the compiler to perform implicit conversion from one AutoPtr to another
+  // via the constructor AutoPtr(T*).
+
+  T*   get()         { return mPtr; }
+  void set(T* other) { MOZ_ASSERT(mPtr == nullptr); mPtr = other; }
+  T*   forget()      { T* result = mPtr; mPtr = nullptr; return result; }
+
+  self_type& operator=(T* rhs) { mPtr = rhs; return *this; }
+
+private:
+  // Do not allow copy construction or assignment from another AutoPtr.
+  AutoPtr(AutoPtr<T>&);
+  self_type& operator=(AutoPtr<T>& rhs);
+
+  T* mPtr;
+};
 
 // Container class for Vector, using SystemAllocPolicy.
 template<class T, size_t N = 0>
@@ -441,8 +472,6 @@ namespace PointerType {
   JSObject* GetBaseType(JSObject* obj);
 }
 
-typedef mozilla::UniquePtr<ffi_type, JS::DeletePolicy<ffi_type>> UniquePtrFFIType;
-
 namespace ArrayType {
   JSObject* CreateInternal(JSContext* cx, HandleObject baseType, size_t length,
     bool lengthDefined);
@@ -450,7 +479,7 @@ namespace ArrayType {
   JSObject* GetBaseType(JSObject* obj);
   size_t GetLength(JSObject* obj);
   bool GetSafeLength(JSObject* obj, size_t* result);
-  UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
+  ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }
 
 namespace StructType {
@@ -459,7 +488,7 @@ namespace StructType {
   const FieldInfoHash* GetFieldInfo(JSObject* obj);
   const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString *name);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
-  UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
+  ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }
 
 namespace FunctionType {
