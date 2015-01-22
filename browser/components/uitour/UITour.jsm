@@ -66,10 +66,7 @@ this.UITour = {
   appMenuOpenForAnnotation: new Set(),
   availableTargetsCache: new WeakMap(),
 
-  _detachingTab: false,
   _annotationPanelMutationObservers: new WeakMap(),
-  _queuedEvents: [],
-  _pendingDoc: null,
 
   highlightEffects: ["random", "wobble", "zoom", "color"],
   targets: new Map([
@@ -353,18 +350,6 @@ this.UITour = {
 
     if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
       contentDocument = browser.contentWindow.document;
-      if (!tab) {
-        // This should only happen while detaching a tab:
-        if (this._detachingTab) {
-          log.debug("Got event while detatching a tab");
-          this._queuedEvents.push(aEvent);
-          this._pendingDoc = Cu.getWeakReference(contentDocument);
-          return;
-        }
-        log.error("Discarding tabless UITour event (" + action + ") while not detaching a tab." +
-                       "This shouldn't happen!");
-        return;
-      }
     }
 
     switch (action) {
@@ -637,12 +622,9 @@ this.UITour = {
     }
     this.tourBrowsersByWindow.get(window).add(browser);
 
-    // We don't have a tab if it's being detached or we're in a <browser> without a tab.
+    // We don't have a tab if we're in a <browser> without a tab.
     if (tab) {
       tab.addEventListener("TabClose", this);
-      if (!window.gMultiProcessBrowser) {
-        tab.addEventListener("TabBecomingWindow", this);
-      }
     }
 
     window.addEventListener("SSWindowClosing", this);
@@ -659,9 +641,6 @@ this.UITour = {
         break;
       }
 
-      case "TabBecomingWindow":
-        this._detachingTab = true;
-        // Fall through
       case "TabClose": {
         let tab = aEvent.target;
         let window = tab.ownerDocument.defaultView;
@@ -672,32 +651,12 @@ this.UITour = {
       case "TabSelect": {
         let window = aEvent.target.ownerDocument.defaultView;
 
+        // Teardown the browser of the tab we just switched away from.
         if (aEvent.detail && aEvent.detail.previousTab) {
           let previousTab = aEvent.detail.previousTab;
           let openTourWindows = this.tourBrowsersByWindow.get(window);
           if (openTourWindows.has(previousTab.linkedBrowser)) {
             this.teardownTourForBrowser(window, previousTab.linkedBrowser, false);
-          }
-        }
-
-        let pendingDoc;
-        if (this._detachingTab && this._pendingDoc && (pendingDoc = this._pendingDoc.get())) {
-          let selectedTab = window.gBrowser.selectedTab;
-          if (selectedTab.linkedBrowser.contentDocument == pendingDoc) {
-            if (!this.tourBrowsersByWindow.get(window)) {
-              this.tourBrowsersByWindow.set(window, new Set());
-            }
-            this.tourBrowsersByWindow.get(window).add(selectedTab.linkedBrowser);
-            this.pendingDoc = null;
-            this._detachingTab = false;
-            while (this._queuedEvents.length) {
-              try {
-                this.onPageEvent(this._queuedEvents.shift());
-              } catch (ex) {
-                log.error(ex);
-              }
-            }
-            break;
           }
         }
 
@@ -757,7 +716,6 @@ this.UITour = {
       let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
       if (tab) { // Handle standalone <browser>
         tab.removeEventListener("TabClose", this);
-        tab.removeEventListener("TabBecomingWindow", this);
         if (openTourBrowsers) {
           openTourBrowsers.delete(aBrowser);
         }
