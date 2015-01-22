@@ -17,7 +17,11 @@ let UITourListener = {
     }
     addMessageListener("UITour:SendPageCallback", this);
     addMessageListener("UITour:SendPageNotification", this);
-    sendAsyncMessage("UITour:onPageEvent", {detail: event.detail, type: event.type});
+    sendAsyncMessage("UITour:onPageEvent", {
+      detail: event.detail,
+      type: event.type,
+      pageVisibilityState: content.document.visibilityState,
+    });
   },
 
   isTestingOrigin: function(aURI) {
