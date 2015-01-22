@@ -607,9 +607,10 @@ SelectionCarets::SelectWord()
       SELECTIONCARETS_LOG("Select a editable content %p with empty text",
                           editingHost);
       // Long tap on the content with empty text, no action for
-      // selectioncarets but need to dispatch the touchcarettap event
+      // selectioncarets but need to dispatch the taponcaret event
       // to support the short cut mode
-      DispatchCustomEvent(NS_LITERAL_STRING("touchcarettap"));
+      DispatchSelectionStateChangedEvent(GetSelection(),
+                                         SelectionState::Taponcaret);
       return NS_OK;
     }
   } else {

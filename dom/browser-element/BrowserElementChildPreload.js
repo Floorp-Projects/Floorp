@@ -625,6 +625,8 @@ BrowserElementChild.prototype = {
           // copied content easily
         } else if (e.states.indexOf('blur') == 0) {
           // Always dispatch to notify the blur for the focus content
+        } else if (e.states.indexOf('taponcaret') == 0) {
+          // Always dispatch to notify the caret be touched
         } else {
           return;
         }
