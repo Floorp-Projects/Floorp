@@ -124,6 +124,7 @@ function ElementStyle(aElement, aStore, aPageStyle, aShowUserAgentStyles) {
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
   this.showUserAgentStyles = aShowUserAgentStyles;
+  this.rules = [];
 
   // We don't want to overwrite this.store.userProperties so we only create it
   // if it doesn't already exist.
