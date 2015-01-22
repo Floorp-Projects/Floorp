@@ -969,7 +969,6 @@ nsHTMLEditor::IsVisBreak(nsINode* aNode)
   return true;
 }
 
-
 bool
 nsHTMLEditor::IsVisBreak(nsIDOMNode* aNode)
 {
@@ -977,17 +976,6 @@ nsHTMLEditor::IsVisBreak(nsIDOMNode* aNode)
   NS_ENSURE_TRUE(node, false);
   return IsVisBreak(node);
 }
-
-NS_IMETHODIMP
-nsHTMLEditor::BreakIsVisible(nsIDOMNode *aNode, bool *aIsVisible)
-{
-  NS_ENSURE_ARG_POINTER(aNode && aIsVisible);
-
-  *aIsVisible = IsVisBreak(aNode);
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsHTMLEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
