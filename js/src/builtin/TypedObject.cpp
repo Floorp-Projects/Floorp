@@ -2004,6 +2004,66 @@ TypedObject::obj_setArrayElement(JSContext *cx,
 }
 
 bool
+TypedObject::obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                                          MutableHandle<JSPropertyDescriptor> desc)
+{
+    Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
+    if (!typedObj->isAttached()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
+        return false;
+    }
+
+    Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
+    switch (descr->kind()) {
+      case type::Scalar:
+      case type::Reference:
+      case type::Simd:
+        break;
+
+      case type::Array:
+      {
+        uint32_t index;
+        if (js_IdIsIndex(id, &index)) {
+            if (!obj_getArrayElement(cx, typedObj, descr, index, desc.value()))
+                return false;
+            desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
+            desc.object().set(obj);
+            return true;
+        }
+
+        if (JSID_IS_ATOM(id, cx->names().length)) {
+            desc.value().setInt32(typedObj->length());
+            desc.setAttributes(JSPROP_READONLY | JSPROP_PERMANENT);
+            desc.object().set(obj);
+            return true;
+        }
+        break;
+      }
+
+      case type::Struct:
+      {
+        Rooted<StructTypeDescr*> descr(cx, &typedObj->typeDescr().as<StructTypeDescr>());
+
+        size_t fieldIndex;
+        if (!descr->fieldIndex(id, &fieldIndex))
+            break;
+
+        size_t offset = descr->fieldOffset(fieldIndex);
+        Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
+        if (!Reify(cx, fieldType, typedObj, offset, desc.value()))
+            return false;
+
+        desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
+        desc.object().set(obj);
+        return true;
+      }
+    }
+
+    desc.object().set(nullptr);
+    return true;
+}
+
+bool
 TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
                                      HandleId id, unsigned *attrsp)
 {
@@ -2365,6 +2425,7 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
             TypedObject::obj_setGeneric,                 \
             TypedObject::obj_setProperty,                \
             TypedObject::obj_setElement,                 \
+            TypedObject::obj_getOwnPropertyDescriptor,   \
             TypedObject::obj_getGenericAttributes,       \
             TypedObject::obj_setGenericAttributes,       \
             TypedObject::obj_deleteGeneric,              \

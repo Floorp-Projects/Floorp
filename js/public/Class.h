@@ -199,6 +199,9 @@ typedef bool
 (* StrictElementIdOp)(JSContext *cx, JS::HandleObject obj, uint32_t index,
                       JS::MutableHandleValue vp, bool strict);
 typedef bool
+(* GetOwnPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                     JS::MutableHandle<JSPropertyDescriptor> desc);
+typedef bool
 (* GenericAttributesOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp);
 typedef bool
 (* PropertyAttributesOp)(JSContext *cx, JS::HandleObject obj, JS::Handle<PropertyName*> name,
@@ -378,6 +381,7 @@ struct ObjectOps
     StrictGenericIdOp   setGeneric;
     StrictPropertyIdOp  setProperty;
     StrictElementIdOp   setElement;
+    GetOwnPropertyOp    getOwnPropertyDescriptor;
     GenericAttributesOp getGenericAttributes;
     GenericAttributesOp setGenericAttributes;
     DeleteGenericOp     deleteGeneric;
@@ -391,7 +395,7 @@ struct ObjectOps
 #define JS_NULL_OBJECT_OPS                                                    \
     {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,  \
      nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,  \
-     nullptr, nullptr, nullptr}
+     nullptr, nullptr, nullptr, nullptr}
 
 } // namespace js
 
@@ -402,7 +406,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[32];
+    void                *reserved[33];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
