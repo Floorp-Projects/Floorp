@@ -105,6 +105,7 @@ public:
   void SetNeedsComposite(bool aSchedule);
   bool NeedsComposite();
   void CancelCurrentCompositeTask();
+  void Destroy();
 
 private:
   virtual ~CompositorVsyncObserver();
@@ -114,6 +115,7 @@ private:
   void ObserveVsync();
   void UnobserveVsync();
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
+  void CancelCurrentSetNeedsCompositeTask();
 
   bool mNeedsComposite;
   bool mIsObservingVsync;
@@ -123,6 +125,9 @@ private:
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   CancelableTask* mCurrentCompositeTask;
+
+  mozilla::Monitor mSetNeedsCompositeMonitor;
+  CancelableTask* mSetNeedsCompositeTask;
 };
 
 class CompositorParent MOZ_FINAL : public PCompositorParent,
