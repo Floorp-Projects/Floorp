@@ -84,9 +84,16 @@ let PrefetcherRules = {};
 
 const PREF_PREFETCHING_ENABLED = "extensions.interposition.prefetching";
 
+function isPrimitive(v) {
+  if (!v)
+    return true;
+  let type = typeof(v);
+  return type !== "object" && type !== "function";
+}
+
 function objAddr(obj)
 {
-  if (obj && typeof(obj) == "object") {
+  if (!isPrimitive(obj)) {
     return String(obj) + "[" + Cu.getJSTestingFunctions().objectAddress(obj) + "]";
   }
   return String(obj);
@@ -146,7 +153,7 @@ PropertyOp.prototype.addObject = function(database, obj)
 
   logPrefetch("prop", obj, this.prop, propValue);
   database.cache(this.index, obj, has, propValue);
-  if (has && typeof(propValue) == "object" && propValue && this.outputTable) {
+  if (has && !isPrimitive(propValue) && this.outputTable) {
     database.add(this.outputTable, propValue);
   }
 }
@@ -184,7 +191,7 @@ MethodOp.prototype.addObject = function(database, obj)
 
   logPrefetch("method", obj, this.method + "(" + this.args + ")", result);
   database.cache(this.index, obj, result);
-  if (result && typeof(result) == "object" && this.outputTable) {
+  if (!isPrimitive(result) && this.outputTable) {
     database.add(this.outputTable, result);
   }
 }
@@ -239,7 +246,7 @@ CollectionOp.prototype.addObject = function(database, obj)
 
   database.cache(this.index, obj, ...elements);
   for (let i = 0; i < elements.length; i++) {
-    if (elements[i] && typeof(elements[i]) == "object" && this.outputTable) {
+    if (!isPrimitive(elements[i]) && this.outputTable) {
       database.add(this.outputTable, elements[i]);
     }
   }
@@ -395,7 +402,7 @@ let Prefetcher = {
     let cpows = [];
     for (let item of db.cached) {
       item = item.map((elt) => {
-        if (elt && typeof(elt) == "object") {
+        if (!isPrimitive(elt)) {
           if (!cpowIndexes.has(elt)) {
             let index = cpows.length;
             cpows.push(elt);
@@ -423,7 +430,7 @@ let Prefetcher = {
       // Replace anything of the form {cpow: <index>} with the actual
       // object in |cpows|.
       item = item.map((elt) => {
-        if (elt && typeof(elt) == "object") {
+        if (!isPrimitive(elt)) {
           return cpows[elt.cpow];
         }
         return elt;
