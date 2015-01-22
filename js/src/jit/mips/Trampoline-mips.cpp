@@ -274,7 +274,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
             AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
             masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
                           &skipProfilingInstrumentation);
-            masm.ma_add(realFramePtr, StackPointer, Imm32(sizeof(void*)));
+            masm.ma_addu(realFramePtr, StackPointer, Imm32(sizeof(void*)));
             masm.profilerEnterFrame(realFramePtr, scratch);
             masm.bind(&skipProfilingInstrumentation);
         }
@@ -1043,7 +1043,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
     Register scratch1 = t0;
     Register scratch2 = t1;
     Register scratch3 = t2;
-    Register scratch3 = t3;
+    Register scratch4 = t3;
 
     //
     // The code generated below expects that the current stack pointer points
@@ -1161,8 +1161,8 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
 
         // Store return frame in lastProfilingFrame.
         // scratch2 := StackPointer + Descriptor.size*1 + JitFrameLayout::Size();
-        masm.ma_add(scratch2, StackPointer, scratch1);
-        masm.ma_add(scratch2, scratch2, Imm32(JitFrameLayout::Size()));
+        masm.ma_addu(scratch2, StackPointer, scratch1);
+        masm.ma_addu(scratch2, scratch2, Imm32(JitFrameLayout::Size()));
         masm.storePtr(scratch2, lastProfilingFrame);
         masm.ret();
     }
@@ -1195,7 +1195,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
     //
     masm.bind(&handle_BaselineStub);
     {
-        masm.ma_add(scratch3, StackPointer, scratch1);
+        masm.ma_addu(scratch3, StackPointer, scratch1);
         Address stubFrameReturnAddr(scratch3,
                                     JitFrameLayout::Size() +
                                     BaselineStubFrameLayout::offsetOfReturnAddress());
@@ -1252,10 +1252,10 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
     masm.bind(&handle_Rectifier);
     {
         // scratch2 := StackPointer + Descriptor.size*1 + JitFrameLayout::Size();
-        masm.ma_add(scratch2, StackPointer, scratch1);
+        masm.ma_addu(scratch2, StackPointer, scratch1);
         masm.add32(Imm32(JitFrameLayout::Size()), scratch2);
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfDescriptor()), scratch3);
-        masm.ma_lsr(scratch1, scratch3, Imm32(FRAMESIZE_SHIFT));
+        masm.ma_srl(scratch1, scratch3, Imm32(FRAMESIZE_SHIFT));
         masm.and32(Imm32((1 << FRAMETYPE_BITS) - 1), scratch3);
 
         // Now |scratch1| contains Rect-Descriptor.Size
@@ -1273,7 +1273,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
         masm.storePtr(scratch3, lastProfilingCallSite);
 
         // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
-        masm.ma_add(scratch3, scratch2, scratch1);
+        masm.ma_addu(scratch3, scratch2, scratch1);
         masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);
         masm.ret();
@@ -1288,7 +1288,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext *cx)
             masm.bind(&checkOk);
         }
 #endif
-        masm.ma_add(scratch3, scratch2, scratch1);
+        masm.ma_addu(scratch3, scratch2, scratch1);
         Address stubFrameReturnAddr(scratch3, RectifierFrameLayout::Size() +
                                               BaselineStubFrameLayout::offsetOfReturnAddress());
         masm.loadPtr(stubFrameReturnAddr, scratch2);

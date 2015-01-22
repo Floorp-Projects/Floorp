@@ -184,6 +184,7 @@ class MacroAssemblerMIPS : public Assembler
     // arithmetic based ops
     // add
     void ma_addu(Register rd, Register rs, Imm32 imm);
+    void ma_addu(Register rd, Register rs, Register rt);
     void ma_addu(Register rd, Register rs);
     void ma_addu(Register rd, Imm32 imm);
     void ma_addTestOverflow(Register rd, Register rs, Register rt, Label *overflow);
