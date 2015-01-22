@@ -240,6 +240,7 @@ class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
 struct AudioChunk;
+class CameraPreviewMediaStream;
 
 /**
  * A stream of synchronized audio and video data. All (not blocked) streams
@@ -418,6 +419,7 @@ public:
   virtual SourceMediaStream* AsSourceStream() { return nullptr; }
   virtual ProcessedMediaStream* AsProcessedStream() { return nullptr; }
   virtual AudioNodeStream* AsAudioNodeStream() { return nullptr; }
+  virtual CameraPreviewMediaStream* AsCameraPreviewStream() { return nullptr; }
 
   // media graph thread only
   void Init();

@@ -2893,19 +2893,22 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
     return;
   }
 
-  // Now that we have access to |mSrcStream| we can pipe it to our shadow
-  // version |mPlaybackStream|. If two media elements are playing the
-  // same realtime DOMMediaStream, this allows them to pause playback
-  // independently of each other.
-  mPlaybackStream = DOMMediaStream::CreateTrackUnionStream(window);
-  mPlaybackStreamInputPort = mPlaybackStream->GetStream()->AsProcessedStream()->
-    AllocateInputPort(mSrcStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
+  // XXX Remove this if with CameraPreviewMediaStream per bug 1124630.
+  if (!mSrcStream->GetStream()->AsCameraPreviewStream()) {
+    // Now that we have access to |mSrcStream| we can pipe it to our shadow
+    // version |mPlaybackStream|. If two media elements are playing the
+    // same realtime DOMMediaStream, this allows them to pause playback
+    // independently of each other.
+    mPlaybackStream = DOMMediaStream::CreateTrackUnionStream(window);
+    mPlaybackStreamInputPort = mPlaybackStream->GetStream()->AsProcessedStream()->
+      AllocateInputPort(mSrcStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
 
-  nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
-  mPlaybackStream->CombineWithPrincipal(principal);
+    nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
+    mPlaybackStream->CombineWithPrincipal(principal);
 
-  // Let |mSrcStream| decide when the stream has finished.
-  GetSrcMediaStream()->AsProcessedStream()->SetAutofinish(true);
+    // Let |mSrcStream| decide when the stream has finished.
+    GetSrcMediaStream()->AsProcessedStream()->SetAutofinish(true);
+  }
 
   nsRefPtr<MediaStream> stream = mSrcStream->GetStream();
   if (stream) {
@@ -2953,7 +2956,9 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
   }
   mSrcStream->DisconnectTrackListListeners(AudioTracks(), VideoTracks());
 
-  mPlaybackStreamInputPort->Destroy();
+  if (mPlaybackStreamInputPort) {
+    mPlaybackStreamInputPort->Destroy();
+  }
 
   // Kill its reference to this element
   mSrcStreamListener->Forget();
