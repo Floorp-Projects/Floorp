@@ -5,33 +5,30 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
-// implement the nsIAppInfo interface, which is needed by Services.jsm and TelemetryPing.jsm.
-// updateAppInfo() creates and registers a minimal mock app-info.
+// implement the nsIAppInfo interface, which is needed by Services.jsm and
+// TelemetrySession.jsm. updateAppInfo() creates and registers a minimal mock app-info.
 Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
 function getSimpleMeasurementsFromTelemetryPing() {
-  return Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).
-    TelemetryPing.getPayload().simpleMeasurements;
+  return TelemetrySession.getPayload().simpleMeasurements;
 }
 
 function run_test() {
+  // Make profile available for |TelemetrySession.shutdown()|.
+  do_get_profile();
+
   do_test_pending();
   const Telemetry = Services.telemetry;
-  Telemetry.asyncFetchTelemetryData(function () {
-    try {
-      actualTest();
-    }
-    catch(e) {
-      do_throw("Failed: " + e);
-    }
-    do_test_finished();
-  });
+  Telemetry.asyncFetchTelemetryData(run_next_test);
 }
 
-function actualTest() {
+add_task(function* actualTest() {
+  yield TelemetrySession.setup();
+
   // Test the module logic
   let tmp = {};
   Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
@@ -66,5 +63,9 @@ function actualTest() {
   do_check_true(simpleMeasurements != null); // got simple measurements from ping data
   do_check_true(simpleMeasurements.foo > 1); // foo was included
   do_check_true(simpleMeasurements.bar > 1); // bar was included
-  do_check_null(simpleMeasurements.baz); // baz wasn't included since it wasn't added
-}
+  do_check_eq(undefined, simpleMeasurements.baz); // baz wasn't included since it wasn't added
+
+  yield TelemetrySession.shutdown();
+
+  do_test_finished();
+});
