@@ -1458,14 +1458,8 @@ static bool
 NativeLookupOwnProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
                         MutableHandle<Shape*> shapep)
 {
-    RootedObject pobj(cx);
     bool done;
-
-    if (!LookupOwnPropertyInline<CanGC>(cx, obj, id, &pobj, shapep, &done))
-        return false;
-    if (!done || pobj != obj)
-        shapep.set(nullptr);
-    return true;
+    return LookupOwnPropertyInline<CanGC>(cx, obj, id, shapep, &done);
 }
 
 template <AllowGC allowGC>
@@ -2072,12 +2066,8 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
     for (;;) {
         // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
         bool done;
-        RootedObject ancestor(cx);
-        if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &ancestor, &shape, &done))
+        if (!LookupOwnPropertyInline<CanGC>(cx, pobj, id, &shape, &done))
             return false;
-
-        if (!done || ancestor != pobj)
-            shape = nullptr;
 
         if (shape) {
             // Steps 5-6.
