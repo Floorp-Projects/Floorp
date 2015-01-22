@@ -20,7 +20,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
                 'NOMINMAX', '_CRT_RAND_S', 'CHROMIUM_SANDBOX_BUILD'):
         DEFINES[var] = True
 
-    LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
+    LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
     LOCAL_INCLUDES += ['/security']
     LOCAL_INCLUDES += ['/nsprpub']
