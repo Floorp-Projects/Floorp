@@ -7,21 +7,22 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
+std::string g_working_dir_path;
+
 int main(int argc, char **argv) {
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
-  std::string path = ".";
+  g_working_dir_path = ".";
 
   for (int i = 0; i < argc; i++) {
     if (!strcmp(argv[i], "-d")) {
-      path = argv[i + 1];
+      g_working_dir_path = argv[i + 1];
       ++i;
     }
   }
 
-  NSS_Initialize(path.c_str(), "", "", SECMOD_DB, NSS_INIT_READONLY);
+  NSS_Initialize(g_working_dir_path.c_str(), "", "", SECMOD_DB, NSS_INIT_READONLY);
   NSS_SetDomesticPolicy();
-
   int rv = RUN_ALL_TESTS();
 
   NSS_Shutdown();
