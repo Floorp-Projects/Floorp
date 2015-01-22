@@ -391,6 +391,7 @@ remove_token_certs(const void *k, void *v, void *a)
     nssPKIObject *object = &c->object;
     struct token_cert_dtor *dtor = a;
     PRUint32 i;
+    nssPKIObject_AddRef(object);
     nssPKIObject_Lock(object);
     for (i=0; i<object->numInstances; i++) {
 	if (object->instances[i]->token == dtor->token) {
@@ -409,6 +410,7 @@ remove_token_certs(const void *k, void *v, void *a)
 	}
     }
     nssPKIObject_Unlock(object);
+    nssPKIObject_Destroy(object);
     return;
 }
 

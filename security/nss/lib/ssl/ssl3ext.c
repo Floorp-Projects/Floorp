@@ -2258,7 +2258,7 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     SECStatus rv;
     SECItem algorithms;
     const unsigned char *b;
-    unsigned int numAlgorithms, i;
+    unsigned int numAlgorithms, i, j;
 
     /* Ignore this extension if we aren't doing TLS 1.2 or greater. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_2) {
@@ -2294,7 +2294,7 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     ss->ssl3.hs.numClientSigAndHash = 0;
 
     b = algorithms.data;
-    for (i = 0; i < numAlgorithms; i++) {
+    for (i = j = 0; i < numAlgorithms; i++) {
         unsigned char tls_hash = *(b++);
         unsigned char tls_sig = *(b++);
         SECOidTag hash = ssl3_TLSHashAlgorithmToOID(tls_hash);
@@ -2305,9 +2305,10 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
         }
         /* tls_sig support will be checked later in
          * ssl3_PickSignatureHashAlgorithm. */
-        ss->ssl3.hs.clientSigAndHash[i].hashAlg = hash;
-        ss->ssl3.hs.clientSigAndHash[i].sigAlg = tls_sig;
-        ss->ssl3.hs.numClientSigAndHash++;
+        ss->ssl3.hs.clientSigAndHash[j].hashAlg = hash;
+        ss->ssl3.hs.clientSigAndHash[j].sigAlg = tls_sig;
+        ++j;
+        ++ss->ssl3.hs.numClientSigAndHash;
     }
 
     if (!ss->ssl3.hs.numClientSigAndHash) {
