@@ -22,6 +22,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
     LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
+    LOCAL_INCLUDES += ['/security/sandbox']
     LOCAL_INCLUDES += ['/security']
     LOCAL_INCLUDES += ['/nsprpub']
 

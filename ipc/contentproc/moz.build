@@ -24,5 +24,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
         '/security',
+        '/security/sandbox',
         '/security/sandbox/chromium',
     ]
