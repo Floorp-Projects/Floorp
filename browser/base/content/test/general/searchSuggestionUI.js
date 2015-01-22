@@ -27,6 +27,33 @@ let messageHandlers = {
     wait(ack);
   },
 
+  startComposition: function (arg) {
+    let data = typeof(arg) == "string" ? arg : arg.data;
+    content.synthesizeComposition({ type: "compositionstart", data: data });
+    ack();
+  },
+
+  updateComposition: function (arg) {
+    let data = typeof(arg) == "string" ? arg : arg.data;
+    content.synthesizeComposition({ type: "compositionupdate", data: data });
+    ack();
+  },
+
+  changeComposition: function (arg) {
+    let data = typeof(arg) == "string" ? arg : arg.data;
+    content.synthesizeCompositionChange({
+      composition: {
+        string: data,
+        clauses: [
+          { length: data.length, attr: content.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      caret: { start: data.length, length: 0 }
+    });
+    let wait = arg.waitForSuggestions ? waitForSuggestions : cb => cb();
+    wait(ack);
+  },
+
   focus: function () {
     gController.input.focus();
     ack();
