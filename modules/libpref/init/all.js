@@ -4542,12 +4542,21 @@ pref("reader.font_size", 3);
 // (auto only works on platforms where the 'devicelight' event is enabled)
 pref("reader.color_scheme", "light");
 
+// Color scheme values available in reader mode UI.
+pref("reader.color_scheme.values", "[\"light\",\"dark\",\"sepia\"]");
+
 // The font type in reader (sans-serif, serif)
 pref("reader.font_type", "sans-serif");
+
+// Font type values available in reader mode UI.
+pref("reader.font_type.values", "[\"serif\",\"sans-serif\"]");
 
 // Whether or not the user has interacted with the reader mode toolbar.
 // This is used to show a first-launch tip in reader mode.
 pref("reader.has_used_toolbar", false);
+
+// Whether to use a vertical or horizontal toolbar.
+pref("reader.toolbar.vertical", true);
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
 // Whether to allow, on a Linux system that doesn't support the necessary sandboxing
