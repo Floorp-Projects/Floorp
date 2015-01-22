@@ -226,6 +226,23 @@ SVGImageElement::IsAttributeMapped(const nsIAtom* name) const
 
 /* For the purposes of the update/invalidation logic pretend to
    be a rectangle. */
+bool
+SVGImageElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
+                                   const Matrix& aTransform)
+{
+  Rect rect;
+  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width,
+                          &rect.height, nullptr);
+
+  if (rect.IsEmpty()) {
+    // Rendering of the element disabled
+    rect.SetEmpty(); // Make sure width/height are zero and not negative
+  }
+
+  *aBounds = aTransform.TransformBounds(rect);
+  return true;
+}
+
 TemporaryRef<Path>
 SVGImageElement::BuildPath(PathBuilder* aBuilder)
 {

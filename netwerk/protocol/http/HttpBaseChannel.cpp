@@ -2183,8 +2183,10 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       nsCOMPtr<nsIURI> uri;
       mRedirects[i]->GetURI(getter_AddRefs(uri));
       nsCString spec;
-      uri->GetSpec(spec);
-      LOG(("HttpBaseChannel::SetupReplacementChannel adding redirect %s "
+      if (uri) {
+        uri->GetSpec(spec);
+      }
+      LOG(("HttpBaseChannel::SetupReplacementChannel adding redirect \'%s\' "
            "[this=%p]", spec.get(), this));
 #endif
       httpInternal->AddRedirect(mRedirects[i]);

@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
@@ -64,7 +63,7 @@ function cleanUp() {
 
 function runNextTest() {
   if (gTestIndex == tests.length) {
-    waitForClearHistory(finish);
+    PlacesTestUtils.clearHistory().then(finish);
     return;
   }
 
@@ -135,16 +134,4 @@ var tests = [
 function getSiteItem(aHost) {
   return gBrowser.contentDocument.
                   querySelector(".site[value='" + aHost + "']");
-}
-
-// copied from toolkit/components/places/tests/head_common.js
-function waitForClearHistory(aCallback) {
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-      aCallback();
-    }
-  };
-  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-  PlacesUtils.bhistory.removeAllPages();
 }

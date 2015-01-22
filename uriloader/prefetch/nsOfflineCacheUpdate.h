@@ -76,7 +76,7 @@ public:
     nsresult GetStatus(uint16_t *aStatus);
 
 private:
-    enum LoadStatus MOZ_ENUM_TYPE(uint16_t) {
+    enum LoadStatus : uint16_t {
       UNINITIALIZED = 0U,
       REQUESTED = 1U,
       RECEIVING = 2U,

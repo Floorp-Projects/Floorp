@@ -48,7 +48,7 @@
 
     function runTest() {
       // The mochitest page is added to history.
-      waitForClearHistory(continue_test);
+      PlacesTestUtils.clearHistory().then(continue_test);
     }
 
     function continue_test() {
@@ -72,26 +72,9 @@
           ok(true, "No exceptions thrown");
 
           // Cleanup.
-          waitForClearHistory(SimpleTest.finish);
+          PlacesTestUtils.clearHistory().then(SimpleTest.finish);
         });
     }
-
-    /**
-     * Clears history invoking callback when done.
-     */
-    function waitForClearHistory(aCallback) {
-      const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-      let observer = {
-        observe: function(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
-          aCallback();
-        }
-      };
-      Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
-      let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-               getService(Ci.nsINavHistoryService);
-      hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-   }
 
   ]]></script>
 </window>

@@ -3257,6 +3257,8 @@ EmitDestructuringDeclsWithEmitter(ExclusiveContext *cx, BytecodeEmitter *bce, JS
                 MOZ_ASSERT(element->pn_kid->isKind(PNK_NAME));
                 target = element->pn_kid;
             }
+            if (target->isKind(PNK_ASSIGN))
+                target = target->pn_left;
             if (target->isKind(PNK_NAME)) {
                 if (!EmitName(cx, bce, prologOp, target))
                     return false;
@@ -3276,6 +3278,8 @@ EmitDestructuringDeclsWithEmitter(ExclusiveContext *cx, BytecodeEmitter *bce, JS
 
         ParseNode *target = member->isKind(PNK_MUTATEPROTO) ? member->pn_kid : member->pn_right;
 
+        if (target->isKind(PNK_ASSIGN))
+            target = target->pn_left;
         if (target->isKind(PNK_NAME)) {
             if (!EmitName(cx, bce, prologOp, target))
                 return false;
@@ -3341,7 +3345,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
  * lhs expression. (Same post-condition as EmitDestructuringOpsHelper)
  */
 static bool
-EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption emitOption)
+EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *target, VarEmitOption emitOption)
 {
     MOZ_ASSERT(emitOption != DefineVars);
 
@@ -3349,10 +3353,12 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
     // destructuring initialiser-form, call ourselves to handle it, then pop
     // the matched value. Otherwise emit an lvalue bytecode sequence followed
     // by an assignment op.
-    if (pn->isKind(PNK_SPREAD))
-        pn = pn->pn_kid;
-    if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
-        if (!EmitDestructuringOpsHelper(cx, bce, pn, emitOption))
+    if (target->isKind(PNK_SPREAD))
+        target = target->pn_kid;
+    else if (target->isKind(PNK_ASSIGN))
+        target = target->pn_left;
+    if (target->isKind(PNK_ARRAY) || target->isKind(PNK_OBJECT)) {
+        if (!EmitDestructuringOpsHelper(cx, bce, target, emitOption))
             return false;
         if (emitOption == InitializeVars) {
             // Per its post-condition, EmitDestructuringOpsHelper has left the
@@ -3363,15 +3369,15 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
     } else if (emitOption == PushInitialValues) {
         // The lhs is a simple name so the to-be-destructured value is
         // its initial value and there is nothing to do.
-        MOZ_ASSERT(pn->getOp() == JSOP_SETLOCAL || pn->getOp() == JSOP_INITLEXICAL);
-        MOZ_ASSERT(pn->pn_dflags & PND_BOUND);
+        MOZ_ASSERT(target->getOp() == JSOP_SETLOCAL || target->getOp() == JSOP_INITLEXICAL);
+        MOZ_ASSERT(target->pn_dflags & PND_BOUND);
     } else {
-        switch (pn->getKind()) {
+        switch (target->getKind()) {
           case PNK_NAME:
-            if (!BindNameToSlot(cx, bce, pn))
+            if (!BindNameToSlot(cx, bce, target))
                 return false;
 
-            switch (pn->getOp()) {
+            switch (target->getOp()) {
               case JSOP_SETNAME:
               case JSOP_STRICTSETNAME:
               case JSOP_SETGNAME:
@@ -3388,11 +3394,11 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                 // but the operands are on the stack in the wrong order for
                 // JSOP_SETPROP, so we have to add a JSOP_SWAP.
                 jsatomid atomIndex;
-                if (!bce->makeAtomIndex(pn->pn_atom, &atomIndex))
+                if (!bce->makeAtomIndex(target->pn_atom, &atomIndex))
                     return false;
 
-                if (!pn->isOp(JSOP_SETCONST)) {
-                    bool global = pn->isOp(JSOP_SETGNAME) || pn->isOp(JSOP_STRICTSETGNAME);
+                if (!target->isOp(JSOP_SETCONST)) {
+                    bool global = target->isOp(JSOP_SETGNAME) || target->isOp(JSOP_STRICTSETGNAME);
                     JSOp bindOp = global ? JSOP_BINDGNAME : JSOP_BINDNAME;
                     if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                         return false;
@@ -3400,7 +3406,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                         return false;
                 }
 
-                if (!EmitIndexOp(cx, pn->getOp(), atomIndex, bce))
+                if (!EmitIndexOp(cx, target->getOp(), atomIndex, bce))
                     return false;
                 break;
               }
@@ -3408,7 +3414,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
               case JSOP_SETLOCAL:
               case JSOP_SETARG:
               case JSOP_INITLEXICAL:
-                if (!EmitVarOp(cx, pn, pn->getOp(), bce))
+                if (!EmitVarOp(cx, target, target->getOp(), bce))
                     return false;
                 break;
 
@@ -3427,12 +3433,12 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             // In `[a.x] = [b]`, per spec, `b` is evaluated before `a`. Then we
             // need a property set -- but the operands are on the stack in the
             // wrong order for JSOP_SETPROP, so we have to add a JSOP_SWAP.
-            if (!EmitTree(cx, bce, pn->pn_expr))
+            if (!EmitTree(cx, bce, target->pn_expr))
                 return false;
             if (Emit1(cx, bce, JSOP_SWAP) < 0)
                 return false;
             JSOp setOp = bce->sc->strict ? JSOP_STRICTSETPROP : JSOP_SETPROP;
-            if (!EmitAtomOp(cx, pn, setOp, bce))
+            if (!EmitAtomOp(cx, target, setOp, bce))
                 return false;
             break;
           }
@@ -3443,14 +3449,14 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             // `[a[x]] = [b]`, is handled much the same way. The JSOP_SWAP
             // is emitted by EmitElemOperands.
             JSOp setOp = bce->sc->strict ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-            if (!EmitElemOp(cx, pn, setOp, bce))
+            if (!EmitElemOp(cx, target, setOp, bce))
                 return false;
             break;
           }
 
           case PNK_CALL:
-            MOZ_ASSERT(pn->pn_xflags & PNX_SETCALL);
-            if (!EmitTree(cx, bce, pn))
+            MOZ_ASSERT(target->pn_xflags & PNX_SETCALL);
+            if (!EmitTree(cx, bce, target))
                 return false;
 
             // Pop the call return value. Below, we pop the RHS too, balancing
@@ -3500,6 +3506,33 @@ EmitIteratorNext(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn=nullp
     return true;
 }
 
+/**
+ * EmitDefault will check if the value on top of the stack is "undefined".
+ * If so, it will replace that value on the stack with the value defined by |defaultExpr|.
+ */
+static bool
+EmitDefault(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *defaultExpr)
+{
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                          // VALUE VALUE
+        return false;
+    if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // VALUE VALUE UNDEFINED
+        return false;
+    if (Emit1(cx, bce, JSOP_STRICTEQ) < 0)                     // VALUE EQL?
+        return false;
+    // Emit source note to enable ion compilation.
+    if (NewSrcNote(cx, bce, SRC_IF) < 0)
+        return false;
+    ptrdiff_t jump = EmitJump(cx, bce, JSOP_IFEQ, 0);          // VALUE
+    if (jump < 0)
+        return false;
+    if (Emit1(cx, bce, JSOP_POP) < 0)                          // .
+        return false;
+    if (!EmitTree(cx, bce, defaultExpr))                       // DEFAULTVALUE
+        return false;
+    SetJumpOffsetAt(bce, jump);
+    return true;
+}
+
 static bool
 EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pattern,
                                 VarEmitOption emitOption)
@@ -3526,7 +3559,14 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
          * current property name "label" on the left of a colon in the object
          * initializer.
          */
-        if (member->isKind(PNK_SPREAD)) {
+        ParseNode *pndefault = nullptr;
+        ParseNode *elem = member;
+        if (elem->isKind(PNK_ASSIGN)) {
+            pndefault = elem->pn_right;
+            elem = elem->pn_left;
+        }
+
+        if (elem->isKind(PNK_SPREAD)) {
             /* Create a new array with the rest of the iterator */
             ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);          // ... OBJ? ITER ARRAY
             if (off < 0)
@@ -3581,8 +3621,11 @@ EmitDestructuringOpsArrayHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Pars
                 return false;
         }
 
+        if (pndefault && !EmitDefault(cx, bce, pndefault))
+            return false;
+
         // Destructure into the pattern the element contains.
-        ParseNode *subpattern = member;
+        ParseNode *subpattern = elem;
         if (subpattern->isKind(PNK_ELISION)) {
             // The value destructuring into an elision just gets ignored.
             if (Emit1(cx, bce, JSOP_POP) < 0)                          // ... OBJ? ITER
@@ -3683,6 +3726,12 @@ EmitDestructuringOpsObjectHelper(ExclusiveContext *cx, BytecodeEmitter *bce, Par
         // Get the property value if not done already.
         if (needsGetElem && !EmitElemOpBase(cx, bce, JSOP_GETELEM))    // ... OBJ PROP
             return false;
+
+        if (subpattern->isKind(PNK_ASSIGN)) {
+            if (!EmitDefault(cx, bce, subpattern->pn_right))
+                return false;
+            subpattern = subpattern->pn_left;
+        }
 
         // Destructure PROP per this member's subpattern.
         int32_t depthBefore = bce->stackDepth;

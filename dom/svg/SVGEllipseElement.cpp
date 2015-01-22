@@ -101,8 +101,7 @@ SVGEllipseElement::GetGeometryBounds(Rect* aBounds, Float aStrokeWidth,
 
   if (rx <= 0.f || ry <= 0.f) {
     // Rendering of the element is disabled
-    aBounds->MoveTo(x, y);
-    aBounds->SetEmpty();
+    *aBounds = Rect(aTransform * Point(x, y), Size());
     return true;
   }
 
