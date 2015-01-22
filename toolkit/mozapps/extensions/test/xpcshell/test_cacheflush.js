@@ -5,7 +5,7 @@
 // This verifies that flushing the zipreader cache happens when appropriate
 
 var gExpectedFile = null;
-var gCacheFlushed = false;
+var gCacheFlushCount = 0;
 
 var CacheFlushObserver = {
   observe: function(aSubject, aTopic, aData) {
@@ -15,16 +15,11 @@ var CacheFlushObserver = {
     do_check_true(gExpectedFile != null);
     do_check_true(aSubject instanceof AM_Ci.nsIFile);
     do_check_eq(aSubject.path, gExpectedFile.path);
-    gCacheFlushed = true;
-    gExpectedFile = null;
+    gCacheFlushCount++;
   }
 };
 
 function run_test() {
-  // This test only makes sense when leaving extensions packed
-  if (Services.prefs.getBoolPref("extensions.alwaysUnpack"))
-    return;
-
   do_test_pending();
   Services.obs.addObserver(CacheFlushObserver, "flush-cache-entry", false);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
@@ -45,8 +40,9 @@ function run_test_1() {
       gExpectedFile.append("addon1@tests.mozilla.org.xpi");
       aInstall.cancel();
 
-      do_check_true(gCacheFlushed);
-      gCacheFlushed = false;
+      do_check_eq(gCacheFlushCount, 1);
+      gExpectedFile = null;
+      gCacheFlushCount = 0;
 
       run_test_2();
     });
@@ -62,18 +58,24 @@ function run_test_2() {
     gExpectedFile.append("staged");
     gExpectedFile.append("addon1@tests.mozilla.org.xpi");
     restartManager();
-    do_check_true(gCacheFlushed);
-    gCacheFlushed = false;
+    do_check_eq(gCacheFlushCount, 1);
+    gExpectedFile = null;
+    gCacheFlushCount = 0;
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       // We should flush the installed XPI when uninstalling
+      do_check_true(a1 != null);
+      a1.uninstall();
+      do_check_eq(gCacheFlushCount, 0);
+
       gExpectedFile = gProfD.clone();
       gExpectedFile.append("extensions");
       gExpectedFile.append("addon1@tests.mozilla.org.xpi");
+      restartManager();
+      do_check_eq(gCacheFlushCount, 1);
+      gExpectedFile = null;
+      gCacheFlushCount = 0;
 
-      do_check_true(a1 != null);
-      a1.uninstall();
-      do_check_false(gCacheFlushed);
       do_execute_soon(run_test_3);
     });
   });
@@ -81,8 +83,6 @@ function run_test_2() {
 
 // Tests that the cache is flushed when installing a restartless add-on
 function run_test_3() {
-  restartManager();
-
   AddonManager.getInstallForFile(do_get_addon("test_cacheflush2"), function(aInstall) {
     aInstall.addListener({
       onInstallStarted: function(aInstall) {
@@ -94,8 +94,9 @@ function run_test_3() {
       },
 
       onInstallEnded: function(aInstall) {
-        do_check_true(gCacheFlushed);
-        gCacheFlushed = false;
+        do_check_eq(gCacheFlushCount, 1);
+        gExpectedFile = null;
+        gCacheFlushCount = 0;
 
         do_execute_soon(run_test_4);
       }
@@ -114,8 +115,9 @@ function run_test_4() {
     gExpectedFile.append("addon2@tests.mozilla.org.xpi");
 
     a2.uninstall();
-    do_check_true(gCacheFlushed);
-    gCacheFlushed = false;
+    do_check_eq(gCacheFlushCount, 2);
+    gExpectedFile = null;
+    gCacheFlushCount = 0;
 
     do_execute_soon(do_test_finished);
   });

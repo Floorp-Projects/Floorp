@@ -266,7 +266,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("Widget index of item: " + widgetIndex);
   info("Visible index of item: " + visibleIndex);
 
-  let { fuzzyUrl, status, statusText, type, fullMimeType, size, time } = aData;
+  let { fuzzyUrl, status, statusText, type, fullMimeType, transferred, size, time } = aData;
   let { attachment, target } = aRequestItem
 
   let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
@@ -320,6 +320,14 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     info("Tooltip type: " + tooltip);
     is(value, type, "The displayed type is incorrect.");
     is(tooltip, fullMimeType, "The tooltip type is incorrect.");
+  }
+  if (transferred !== undefined) {
+    let value = target.querySelector(".requests-menu-transferred").getAttribute("value");
+    let tooltip = target.querySelector(".requests-menu-transferred").getAttribute("tooltiptext");
+    info("Displayed transferred size: " + value);
+    info("Tooltip transferred size: " + tooltip);
+    is(value, transferred, "The displayed transferred size is incorrect.");
+    is(tooltip, transferred, "The tooltip transferred size is incorrect.");
   }
   if (size !== undefined) {
     let value = target.querySelector(".requests-menu-size").getAttribute("value");

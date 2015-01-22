@@ -190,6 +190,10 @@ AppValidator.prototype._getOriginURL = function () {
 };
 
 AppValidator.prototype.validateLaunchPath = function (manifest) {
+  // Addons don't use index page (yet?)
+  if (manifest.role && manifest.role === "addon") {
+    return promise.resolve();
+  }
   let deferred = promise.defer();
   // The launch_path field has to start with a `/`
   if (manifest.launch_path && manifest.launch_path[0] !== "/") {
