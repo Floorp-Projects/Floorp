@@ -944,14 +944,6 @@ LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
 extern bool
 HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
 
-template <AllowGC allowGC>
-extern bool
-NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
-                          typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
-                          typename MaybeRooted<jsid, allowGC>::HandleType id,
-                          typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                          typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
-
 /*
  * Deprecated. An easier-to-use version of LookupProperty that returns only the
  * property attributes.

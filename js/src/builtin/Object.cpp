@@ -60,13 +60,12 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
     /* Steps 1-2. */
     jsid id;
     if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
-        JSObject *obj = &args.thisv().toObject(), *pobj;
+        JSObject *obj = &args.thisv().toObject();
 
         /* Step 3. */
         Shape *shape;
-        if (!obj->is<ProxyObject>() &&
-            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
-                                            &pobj, &shape))
+        if (obj->isNative() &&
+            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &shape))
         {
             /* Step 4. */
             if (!shape) {
@@ -75,11 +74,9 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
             }
 
             /* Step 5. */
-            if (pobj->isNative()) {
-                unsigned attrs = GetShapeAttributes(pobj, shape);
-                args.rval().setBoolean((attrs & JSPROP_ENUMERATE) != 0);
-                return true;
-            }
+            unsigned attrs = GetShapeAttributes(obj, shape);
+            args.rval().setBoolean((attrs & JSPROP_ENUMERATE) != 0);
+            return true;
         }
     }
 
@@ -579,14 +576,16 @@ js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 
     HandleValue idValue = args.get(0);
 
+    // As an optimization, provide a fast path when rooting is not necessary and
+    // we can safely retrieve the object's shape.
+
     /* Step 1, 2. */
     jsid id;
     if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
-        JSObject *obj = &args.thisv().toObject(), *obj2;
+        JSObject *obj = &args.thisv().toObject();
         Shape *prop;
-        if (!obj->is<ProxyObject>() &&
-            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
-                                            &obj2, &prop))
+        if (obj->isNative() &&
+            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
         {
             args.rval().setBoolean(!!prop);
             return true;
