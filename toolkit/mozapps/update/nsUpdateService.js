@@ -3023,8 +3023,8 @@ UpdateService.prototype = {
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
     if (bs.isAddonBlocklisted(addon,
-                              gUpdates.update.appVersion,
-                              gUpdates.update.platformVersion))
+                              this._update.appVersion,
+                              this._update.platformVersion))
       return;
 
     // Compatibility or new version updates mean the same thing here.
