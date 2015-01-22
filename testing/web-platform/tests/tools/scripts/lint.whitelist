@@ -7,46 +7,8 @@
 
 ## Whitespace rules that we can't enforce yet ##
 
-INDENT TABS: .gitmodules
-INDENT TABS: app-uri/*
-INDENT TABS: conformance-checkers/*
-INDENT TABS: content-security-policy/*
-INDENT TABS: custom-elements/*
-INDENT TABS: DOMEvents/*
-INDENT TABS: eventsource/*
-INDENT TABS: html/*
-INDENT TABS: media-source/*
-INDENT TABS: old-tests/*
-INDENT TABS: pointerlock/*
-INDENT TABS: shadow-dom/*
-INDENT TABS: tools/*
-INDENT TABS: touch-events/*
-INDENT TABS: web-animations/*
-INDENT TABS: webaudio/*
-INDENT TABS: webdriver/*
-INDENT TABS: webvtt/*
-INDENT TABS: XMLHttpRequest/*
-
-TRAILING WHITESPACE: app-uri/*
-TRAILING WHITESPACE: battery-status/*
-TRAILING WHITESPACE: conformance-checkers/*
-TRAILING WHITESPACE: content-security-policy/*
-TRAILING WHITESPACE: custom-elements/*
-TRAILING WHITESPACE: DOMEvents/*
-TRAILING WHITESPACE: html/*
-TRAILING WHITESPACE: html-longdesc/*
-TRAILING WHITESPACE: media-source/*
-TRAILING WHITESPACE: microdata/*
-TRAILING WHITESPACE: old-tests/*
-TRAILING WHITESPACE: pointerevents/*
-TRAILING WHITESPACE: progress-events/*
-TRAILING WHITESPACE: shadow-dom/*
-TRAILING WHITESPACE: tools/*
-TRAILING WHITESPACE: webaudio/*
-TRAILING WHITESPACE: webdriver/*
-TRAILING WHITESPACE: WebIDL/*
-TRAILING WHITESPACE: webvtt/*
-TRAILING WHITESPACE: XMLHttpRequest/*
+INDENT TABS:*
+TRAILING WHITESPACE:*
 
 ## File types that should never be checked ##
 
@@ -63,10 +25,6 @@ TRAILING WHITESPACE: XMLHttpRequest/*
 *:*.webm
 *:*.mp4
 *:*.m4v
-*:*.ttf
-*:*.woff
-*:*.eot
-*:*.sfd
 
 ## Documentation ##
 
@@ -80,7 +38,7 @@ W3C-TEST.ORG:tools/*
 
 ### Test exclusions ##
 
-CR AT EOL:WebIDL/valid/idl/documentation-dos.widl
+CR AT EOL:WebIDL/tests/submissions/W3C/valid/idl/documentation-dos.widl
 CR AT EOL:cors/resources/cors-headers.asis
 CR AT EOL:html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
 CR AT EOL:webvtt/webvtt-file-format-parsing/webvtt-file-parsing/support/newlines.vtt
