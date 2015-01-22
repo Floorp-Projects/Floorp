@@ -531,7 +531,14 @@ public:
     mCrossPosn = aPosn;
   }
 
-  void SetAscent(nscoord aAscent) {
+  // After a FlexItem has had a reflow, this method can be used to cache its
+  // ascent, in case it's needed later for baseline-alignment or to establish
+  // the container's baseline.
+  // (NOTE: This can be marked 'const' even though it's modifying mAscent,
+  // because mAscent is mutable. It's nice for this to be 'const', because it
+  // means our final reflow can iterate over const FlexItem pointers, and we
+  // can be sure it's not modifying those FlexItems, except via this method.)
+  void SetAscent(nscoord aAscent) const {
     mAscent = aAscent;
   }
 
@@ -586,7 +593,8 @@ protected:
   nscoord mMainPosn;
   nscoord mCrossSize;
   nscoord mCrossPosn;
-  nscoord mAscent;
+  mutable nscoord mAscent; // Mutable b/c it's set lazily, & sometimes via a
+                           // const pointer. See comment above SetAscent().
 
   // Temporary state, while we're resolving flexible widths (for our main size)
   // XXXdholbert To save space, we could use a union to make these variables
@@ -1379,6 +1387,13 @@ nsFlexContainerFrame::
   }
 }
 
+// XXXdholbert Forward-decl, to let us call this helper-function from
+// MeasureFlexItemContentHeight. This helper-function is going away in my
+// next patch, so this forward-decl is extremely temporary.
+static void
+ResolveReflowedChildAscent(nsIFrame* aFrame,
+                           nsHTMLReflowMetrics& aChildDesiredSize);
+
 nscoord
 nsFlexContainerFrame::
   MeasureFlexItemContentHeight(nsPresContext* aPresContext,
@@ -1422,6 +1437,15 @@ nsFlexContainerFrame::
                     0, 0, flags);
 
   aFlexItem.SetHadMeasuringReflow();
+
+  // If this is the first child, save its ascent, since it may be what
+  // establishes the container's baseline. Also save the ascent if this child
+  // needs to be baseline-aligned. (Else, we don't care about ascent/baseline.)
+  if (aFlexItem.Frame() == mFrames.FirstChild() ||
+      aFlexItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
+    ResolveReflowedChildAscent(aFlexItem.Frame(), childDesiredSize);
+    aFlexItem.SetAscent(childDesiredSize.BlockStartAscent());
+  }
 
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
@@ -3331,8 +3355,11 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(childDesiredSize.Height() - crossAxisBorderPadding);
   }
 
-  // If we need to do baseline-alignment, store the child's ascent.
-  if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
+  // If this is the first child, save its ascent, since it may be what
+  // establishes the container's baseline. Also save the ascent if this child
+  // needs to be baseline-aligned. (Else, we don't care about baseline/ascent.)
+  if (aItem.Frame() == mFrames.FirstChild() ||
+      aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
     ResolveReflowedChildAscent(aItem.Frame(), childDesiredSize);
     aItem.SetAscent(childDesiredSize.BlockStartAscent());
   }
@@ -3741,13 +3768,25 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                         childDesiredSize, &childReflowState,
                         outerWM, framePos, containerWidth, 0);
 
+      // Save the first child's ascent; it may establish container's baseline.
+      if (item->Frame() == mFrames.FirstChild()) {
+        // XXXdholbert (This clause may look a bit odd right now, split as it
+        // is from the code immediately after it, which *uses* |item|'s saved
+        // ascent. It may superficially look like these clauses should just be
+        // merged. The separation will make more sense once we change this flex
+        // item's final reflow to be *optional*, in bug 1054010. That bug will
+        // shift *this* clause to a different logic level -- conditional on
+        // whether |item| needs a final reflow -- whereas the subsequent clause
+        // will not be shifted.)
+        ResolveReflowedChildAscent(item->Frame(), childDesiredSize);
+        item->SetAscent(childDesiredSize.BlockStartAscent());
+      }
+
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
       // children), then use this child's baseline as the container's baseline.
       if (item->Frame() == mFrames.FirstChild() &&
           flexContainerAscent == nscoord_MIN) {
-        ResolveReflowedChildAscent(item->Frame(), childDesiredSize);
-
         // (We use GetNormalPosition() instead of physicalPosn because we don't
         // want relative positioning on the child to affect the baseline that we
         // read from it).
