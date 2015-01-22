@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.gfx.LayerView;
+
 import android.app.Instrumentation;
 import android.os.SystemClock;
 import android.util.FloatMath;
@@ -18,11 +21,13 @@ class MotionEventHelper {
     private final Instrumentation mInstrumentation;
     private final int mSurfaceOffsetX;
     private final int mSurfaceOffsetY;
+    private final LayerView layerView;
 
     public MotionEventHelper(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
+        layerView = GeckoAppShell.getLayerView();
         Log.i(LOGTAG, "Initialized using offset (" + mSurfaceOffsetX + "," + mSurfaceOffsetY + ")");
     }
 
@@ -75,6 +80,8 @@ class MotionEventHelper {
         Thread t = new Thread() {
             @Override
             public void run() {
+                layerView.setIsLongpressEnabled(false);
+
                 int numEvents = (int)(durationMillis * DRAG_EVENTS_PER_SECOND / 1000);
                 float eventDx = (endX - startX) / numEvents;
                 float eventDy = (endY - startY) / numEvents;
@@ -97,6 +104,8 @@ class MotionEventHelper {
                 // do the last one using endX/endY directly to avoid rounding errors
                 downTime = move(downTime, endX, endY);
                 downTime = up(downTime, endX, endY);
+
+                layerView.setIsLongpressEnabled(true);
             }
         };
         t.start();
