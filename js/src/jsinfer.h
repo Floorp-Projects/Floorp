@@ -934,6 +934,8 @@ class TypeNewScript
     void rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type);
 
     static void make(JSContext *cx, TypeObject *type, JSFunction *fun);
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 /*
