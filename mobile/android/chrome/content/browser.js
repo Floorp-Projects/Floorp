@@ -6543,20 +6543,12 @@ var IndexedDB = {
   _permissionsPrompt: "indexedDB-permissions-prompt",
   _permissionsResponse: "indexedDB-permissions-response",
 
-  _quotaPrompt: "indexedDB-quota-prompt",
-  _quotaResponse: "indexedDB-quota-response",
-  _quotaCancel: "indexedDB-quota-cancel",
-
   init: function IndexedDB_init() {
     Services.obs.addObserver(this, this._permissionsPrompt, false);
-    Services.obs.addObserver(this, this._quotaPrompt, false);
-    Services.obs.addObserver(this, this._quotaCancel, false);
   },
 
   observe: function IndexedDB_observe(subject, topic, data) {
-    if (topic != this._permissionsPrompt &&
-        topic != this._quotaPrompt &&
-        topic != this._quotaCancel) {
+    if (topic != this._permissionsPrompt) {
       throw new Error("Unexpected topic!");
     }
 
@@ -6576,11 +6568,6 @@ var IndexedDB = {
     if (topic == this._permissionsPrompt) {
       message = strings.formatStringFromName("offlineApps.ask", [host], 1);
       responseTopic = this._permissionsResponse;
-    } else if (topic == this._quotaPrompt) {
-      message = strings.formatStringFromName("indexedDBQuota.wantsTo", [ host, data ], 2);
-      responseTopic = this._quotaResponse;
-    } else if (topic == this._quotaCancel) {
-      responseTopic = this._quotaResponse;
     }
 
     const firstTimeoutDuration = 300000; // 5 minutes
@@ -6605,13 +6592,6 @@ var IndexedDB = {
 
       // And tell the page that the popup timed out.
       observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
-    }
-
-    if (topic == this._quotaCancel) {
-      NativeWindow.doorhanger.hide(notificationID, tab.id);
-      timeoutNotification();
-      observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
-      return;
     }
 
     let buttons = [{

@@ -1104,7 +1104,7 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       MOZ_CRASH("Is this needed?!");
 
     case PrincipalInfo::TSystemPrincipalInfo:
-      QuotaManager::GetInfoForChrome(nullptr, &aOrigin, nullptr, nullptr);
+      QuotaManager::GetInfoForChrome(nullptr, &aOrigin, nullptr);
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
@@ -1118,7 +1118,6 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       rv = QuotaManager::GetInfoFromPrincipal(principal,
                                               nullptr,
                                               &aOrigin,
-                                              nullptr,
                                               nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;

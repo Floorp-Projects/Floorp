@@ -707,22 +707,16 @@ let IndexedDB = {
   _permissionsPrompt: "indexedDB-permissions-prompt",
   _permissionsResponse: "indexedDB-permissions-response",
 
-  _quotaPrompt: "indexedDB-quota-prompt",
-  _quotaResponse: "indexedDB-quota-response",
-  _quotaCancel: "indexedDB-quota-cancel",
-
   waitingObservers: [],
 
   init: function IndexedDBPromptHelper_init() {
     let os = Services.obs;
     os.addObserver(this, this._permissionsPrompt, false);
-    os.addObserver(this, this._quotaPrompt, false);
-    os.addObserver(this, this._quotaCancel, false);
     addMessageListener("IndexedDB:Response", this);
   },
 
   observe: function IndexedDBPromptHelper_observe(aSubject, aTopic, aData) {
-    if (aTopic != this._permissionsPrompt && aTopic != this._quotaPrompt && aTopic != this._quotaCancel) {
+    if (aTopic != this._permissionsPrompt) {
       throw new Error("Unexpected topic!");
     }
 
@@ -731,11 +725,6 @@ let IndexedDB = {
 
     let contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
     let contentDocument = contentWindow.document;
-
-    if (aTopic == this._quotaCancel) {
-      observer.observe(null, this._quotaResponse, Ci.nsIPermissionManager.UNKNOWN_ACTION);
-      return;
-    }
 
     // Remote to parent
     sendAsyncMessage("IndexedDB:Prompt", {
