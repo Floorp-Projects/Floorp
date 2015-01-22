@@ -542,4 +542,36 @@ nsBrowserElement::SetInputMethodActive(bool aIsActive,
   return req.forget().downcast<DOMRequest>();
 }
 
+void
+nsBrowserElement::SetNFCFocus(bool aIsFocus,
+                              ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  nsCOMPtr<nsIDOMElement> ownerElement;
+  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
+  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
+  if (!nsContentUtils::IsExactSitePermAllow(principal, "nfc-manager")) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  rv = mBrowserElementAPI->SetNFCFocus(aIsFocus);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+}
+
 } // namespace mozilla

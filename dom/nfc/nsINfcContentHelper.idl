@@ -102,6 +102,13 @@ interface nsINfcRequestCallback : nsISupports
   void notifyError(in DOMString errorMsg);
 };
 
+[scriptable, uuid(7ae46728-bc42-44bd-8093-bc7563abf52d)]
+interface nsINfcBrowserAPI : nsISupports
+{
+  void setFocusApp(in uint64_t tabId,
+                   in boolean isFocus);
+};
+
 [scriptable, uuid(b5194ae8-d5d5-482f-a73f-dd0d755a1972)]
 interface nsINfcContentHelper : nsISupports
 {
