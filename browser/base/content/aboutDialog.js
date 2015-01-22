@@ -490,7 +490,7 @@ appUpdater.prototype =
       return;
     }
 
-    this.selectPanel("apply");
+    this.selectPanel("applyBillboard");
   },
 
   /**
