@@ -143,6 +143,12 @@ text {
  * Inspector Styles
  */
 
+/* hide the variables view scope title as its redundant,
+ * because there's only one scope displayed. */
+.variables-view-scope > .title {
+  display: none;
+}
+
 #web-audio-inspector-title {
   margin: 6px;
 }

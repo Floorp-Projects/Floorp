@@ -5,11 +5,7 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.util.GeckoRequest;
-import org.mozilla.gecko.util.NativeJSObject;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.mozilla.gecko.gfx.LayerView;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
@@ -25,11 +21,13 @@ class MotionEventHelper {
     private final Instrumentation mInstrumentation;
     private final int mSurfaceOffsetX;
     private final int mSurfaceOffsetY;
+    private final LayerView layerView;
 
     public MotionEventHelper(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
+        layerView = GeckoAppShell.getLayerView();
         Log.i(LOGTAG, "Initialized using offset (" + mSurfaceOffsetX + "," + mSurfaceOffsetY + ")");
     }
 
@@ -82,6 +80,8 @@ class MotionEventHelper {
         Thread t = new Thread() {
             @Override
             public void run() {
+                layerView.setIsLongpressEnabled(false);
+
                 int numEvents = (int)(durationMillis * DRAG_EVENTS_PER_SECOND / 1000);
                 float eventDx = (endX - startX) / numEvents;
                 float eventDy = (endY - startY) / numEvents;
@@ -104,6 +104,8 @@ class MotionEventHelper {
                 // do the last one using endX/endY directly to avoid rounding errors
                 downTime = move(downTime, endX, endY);
                 downTime = up(downTime, endX, endY);
+
+                layerView.setIsLongpressEnabled(true);
             }
         };
         t.start();
@@ -166,30 +168,5 @@ class MotionEventHelper {
     public void doubleTap(float x, float y) {
         tap(x, y);
         tap(x, y);
-    }
-
-    /**
-     * dragSync() can accidentally trigger longpress events on slower devices.
-     * Consumers can instruct Gecko to ignore them.
-     */
-    public void disableGeckoLongpress() {
-        final JSONObject json = new JSONObject();
-        try {
-            json.put("isLongPressEnabled", 0);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - Error creating request to ignore longpress events.", e);
-            return;
-        }
-
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("ContextMenu:SetIsLongpressEnabled", json) {
-            @Override
-            public void onResponse(NativeJSObject response) {
-                Log.d(LOGTAG, "Gecko received request to ignore longpress events.");
-            }
-            @Override
-            public void onError(NativeJSObject error) {
-                Log.d(LOGTAG, "No response from Gecko on request to ignore longpress events.");
-            }
-        });
     }
 }

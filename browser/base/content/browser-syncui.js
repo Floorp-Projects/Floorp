@@ -305,7 +305,8 @@ let gSyncUI = {
           this.openPrefs();
         } else {
           // If the user is also in an uitour, set the entrypoint to `uitour`
-          if (UITour.originTabs.get(window) && UITour.originTabs.get(window).has(gBrowser.selectedTab)) {
+          if (UITour.tourBrowsersByWindow.get(window) &&
+              UITour.tourBrowsersByWindow.get(window).has(gBrowser.selectedBrowser)) {
             entryPoint = "uitour";
           }
           switchToTabHavingURI("about:accounts?entrypoint=" + entryPoint, true, {

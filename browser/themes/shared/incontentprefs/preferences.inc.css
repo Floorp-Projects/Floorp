@@ -141,6 +141,10 @@ treecol {
   -moz-margin-start: 0;
 }
 
+#handlersView {
+  height: 25em;
+}
+
 #handlersView > richlistitem {
   min-height: 36px !important;
 }
