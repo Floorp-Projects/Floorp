@@ -668,6 +668,13 @@ js::proxy_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
 }
 
 bool
+js::proxy_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                                   MutableHandle<JSPropertyDescriptor> desc)
+{
+    return Proxy::getOwnPropertyDescriptor(cx, obj, id, desc);
+}
+
+bool
 js::proxy_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     Rooted<PropertyDescriptor> desc(cx);
