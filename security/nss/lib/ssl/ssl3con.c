@@ -8744,11 +8744,11 @@ ssl3_PickSignatureHashAlgorithm(sslSocket *ss,
     unsigned int i, j;
     /* hashPreference expresses our preferences for hash algorithms, most
      * preferable first. */
-    static const PRUint8 hashPreference[] = {
-	tls_hash_sha256,
-	tls_hash_sha384,
-	tls_hash_sha512,
-	tls_hash_sha1,
+    static const SECOidTag hashPreference[] = {
+        SEC_OID_SHA256,
+        SEC_OID_SHA384,
+        SEC_OID_SHA512,
+        SEC_OID_SHA1,
     };
 
     switch (ss->ssl3.hs.kea_def->kea) {

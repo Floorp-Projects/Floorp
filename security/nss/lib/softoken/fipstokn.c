@@ -720,12 +720,21 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 		CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, 
 					CK_OBJECT_HANDLE_PTR phObject) {
     CK_OBJECT_CLASS * classptr;
+    CK_RV rv = CKR_OK;
 
-    SFTK_FIPSCHECK();
     CHECK_FORK();
 
     classptr = (CK_OBJECT_CLASS *)fc_getAttribute(pTemplate,ulCount,CKA_CLASS);
     if (classptr == NULL) return CKR_TEMPLATE_INCOMPLETE;
+
+    if (*classptr == CKO_NETSCAPE_NEWSLOT || *classptr == CKO_NETSCAPE_DELSLOT) {
+        if (sftk_fatalError)
+            return CKR_DEVICE_ERROR;
+    } else {
+        rv = sftk_fipsCheck();
+        if (rv != CKR_OK)
+            return rv;
+    }
 
     /* FIPS can't create keys from raw key material */
     if (SFTK_IS_NONPUBLIC_KEY_OBJECT(*classptr)) {

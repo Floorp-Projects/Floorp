@@ -1177,7 +1177,7 @@ typedef struct {
     /*
      * How many preferred methods are specified?
      * This is equivalent to the size of the array that 
-     *      preferred_revocation_methods points to.
+     *      preferred_methods points to.
      * It's allowed to set this value to zero,
      *      then NSS will decide which methods to prefer.
      */
@@ -1186,7 +1186,7 @@ typedef struct {
     /* Array that may specify an optional order of preferred methods.
      * Each array entry shall contain a method identifier as defined
      *   by CERTRevocationMethodIndex.
-     * The entry at index [0] specifies the method with highest preferrence.
+     * The entry at index [0] specifies the method with highest preference.
      * These methods will be tested first for locally available information.
      * Methods allowed for downloading will be attempted in the same order.
      */
