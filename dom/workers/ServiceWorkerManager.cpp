@@ -1421,6 +1421,90 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
   return false;
 }
 
+class ServiceWorkerUnregisterJob MOZ_FINAL : public ServiceWorkerJob
+{
+  nsRefPtr<ServiceWorkerRegistrationInfo> mRegistration;
+  const nsCString mScope;
+  nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
+
+  ~ServiceWorkerUnregisterJob()
+  { }
+
+public:
+  ServiceWorkerUnregisterJob(ServiceWorkerJobQueue* aQueue,
+                             const nsACString& aScope,
+                             nsIServiceWorkerUnregisterCallback* aCallback)
+    : ServiceWorkerJob(aQueue)
+    , mScope(aScope)
+    , mCallback(aCallback)
+  {
+    AssertIsOnMainThread();
+  }
+
+  void
+  Start() MOZ_OVERRIDE
+  {
+    AssertIsOnMainThread();
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableMethod(this, &ServiceWorkerUnregisterJob::UnregisterAndDone);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  }
+
+private:
+  // You probably want UnregisterAndDone().
+  nsresult
+  Unregister()
+  {
+    AssertIsOnMainThread();
+
+    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+    nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+      swm->GetDomainInfo(mScope);
+    MOZ_ASSERT(domainInfo);
+
+    // "Let registration be the result of running [[Get Registration]]
+    // algorithm passing scope as the argument."
+    nsRefPtr<ServiceWorkerRegistrationInfo> registration;
+    if (!domainInfo->mServiceWorkerRegistrationInfos.Get(mScope,
+                                                         getter_AddRefs(registration))) {
+      // "If registration is null, then, resolve promise with false."
+      return mCallback->UnregisterSucceeded(false);
+    }
+
+    MOZ_ASSERT(registration);
+
+    // "Set registration's uninstalling flag."
+    registration->mPendingUninstall = true;
+    // "Resolve promise with true"
+    nsresult rv = mCallback->UnregisterSucceeded(true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // "If no service worker client is using registration..."
+    if (!registration->IsControllingDocuments()) {
+      // "If registration's uninstalling flag is set.."
+      if (!registration->mPendingUninstall) {
+        return NS_OK;
+      }
+
+      // "Invoke [[Clear Registration]]..."
+      registration->Clear();
+      domainInfo->RemoveRegistration(registration);
+    }
+
+    return NS_OK;
+  }
+
+  // The unregister job is done irrespective of success or failure of any sort.
+  void
+  UnregisterAndDone()
+  {
+    Done(Unregister());
+  }
+};
+
 NS_IMETHODIMP
 ServiceWorkerManager::Unregister(nsIServiceWorkerUnregisterCallback* aCallback,
                                  const nsAString& aScope)
@@ -1428,78 +1512,26 @@ ServiceWorkerManager::Unregister(nsIServiceWorkerUnregisterCallback* aCallback,
   AssertIsOnMainThread();
   MOZ_ASSERT(aCallback);
 
+// This is not accessible by content, and callers should always ensure scope is
+// a correct URI, so this is wrapped in DEBUG
+#ifdef DEBUG
   nsCOMPtr<nsIURI> scopeURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+#endif
 
-  /*
-   * Implements the async aspects of the unregister algorithm.
-   */
-  class UnregisterRunnable : public nsRunnable
-  {
-    nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
-    nsCOMPtr<nsIURI> mScopeURI;
+  NS_ConvertUTF16toUTF8 scope(aScope);
+  nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+    GetDomainInfo(scope);
+  ServiceWorkerJobQueue* queue = domainInfo->GetOrCreateJobQueue(scope);
+  MOZ_ASSERT(queue);
 
-  public:
-    UnregisterRunnable(nsIServiceWorkerUnregisterCallback* aCallback,
-                       nsIURI* aScopeURI)
-      : mCallback(aCallback), mScopeURI(aScopeURI)
-    {
-      AssertIsOnMainThread();
-    }
-
-    NS_IMETHODIMP
-    Run()
-    {
-      AssertIsOnMainThread();
-
-      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
-      nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
-        swm->GetDomainInfo(mScopeURI);
-      MOZ_ASSERT(domainInfo);
-
-      nsCString spec;
-      nsresult rv = mScopeURI->GetSpecIgnoringRef(spec);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return mCallback->UnregisterFailed();
-      }
-
-      nsRefPtr<ServiceWorkerRegistrationInfo> registration;
-      if (!domainInfo->mServiceWorkerRegistrationInfos.Get(spec,
-                                                           getter_AddRefs(registration))) {
-        return mCallback->UnregisterSucceeded(false);
-      }
-
-      MOZ_ASSERT(registration);
-
-      registration->mPendingUninstall = true;
-      rv = mCallback->UnregisterSucceeded(true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // The "Wait until no document is using registration" can actually be
-      // handled by [[HandleDocumentUnload]] in Bug 1041340, so we simply check
-      // if the document is currently in use here.
-      if (!registration->IsControllingDocuments()) {
-        if (!registration->mPendingUninstall) {
-          return NS_OK;
-        }
-
-        registration->Clear();
-        domainInfo->RemoveRegistration(registration);
-      }
-
-      return NS_OK;
-    }
-  };
-
-  nsRefPtr<nsIRunnable> unregisterRunnable =
-    new UnregisterRunnable(aCallback, scopeURI);
-  return NS_DispatchToCurrentThread(unregisterRunnable);
+  nsRefPtr<ServiceWorkerUnregisterJob> job =
+    new ServiceWorkerUnregisterJob(queue, scope, aCallback);
+  queue->Append(job);
+  return NS_OK;
 }
 
 /* static */
@@ -2193,8 +2225,8 @@ ServiceWorkerManager::Update(const nsAString& aScope)
   nsRefPtr<ServiceWorkerUpdateFinishCallback> cb =
     new ServiceWorkerUpdateFinishCallback();
 
-  nsRefPtr<ServiceWorkerRegisterJob> job
-    = new ServiceWorkerRegisterJob(queue, registration, cb);
+  nsRefPtr<ServiceWorkerRegisterJob> job =
+    new ServiceWorkerRegisterJob(queue, registration, cb);
   queue->Append(job);
   return NS_OK;
 }
