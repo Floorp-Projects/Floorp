@@ -22,9 +22,6 @@ const MEMORY_GRAPH_HEIGHT = 30; // px
  * framerate, markers and memory over time.
  */
 let OverviewView = {
-  _beginAt: null,
-  _endAt: null,
-
   /**
    * Sets up the view with event binding.
    */
