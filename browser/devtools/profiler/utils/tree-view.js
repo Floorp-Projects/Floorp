@@ -56,20 +56,22 @@ exports.CallView = CallView;
  *        top-down). Defaults to false.
  */
 function CallView({ autoExpandDepth, caller, frame, level, hidden, inverted }) {
+  // Assume no indentation if the this tree item's level is not specified.
   level = level || 0;
+
+  // Don't increase indentation if this tree item is hidden.
   if (hidden) {
     level--;
   }
 
-  AbstractTreeItem.call(this, {
-    parent: caller,
-    level
-  });
+  AbstractTreeItem.call(this, { parent: caller, level });
 
-  this.caller = caller;
   this.autoExpandDepth = autoExpandDepth != null
     ? autoExpandDepth
-    : caller ? caller.autoExpandDepth : CALL_TREE_AUTO_EXPAND;
+    : caller ? caller.autoExpandDepth
+             : CALL_TREE_AUTO_EXPAND;
+
+  this.caller = caller;
   this.frame = frame;
   this.hidden = hidden;
   this.inverted = inverted;
@@ -93,16 +95,17 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     let selfPercentage;
     let selfDuration;
+
     if (!this._getChildCalls().length) {
       selfPercentage = framePercentage;
       selfDuration = this.frame.duration;
     } else {
-      let childrenPercentage = sum([this._getPercentage(c.samples)
-                                    for (c of this._getChildCalls())]);
-      selfPercentage = clamp(framePercentage - childrenPercentage, 0, 100);
+      let childrenPercentage = sum(
+        [this._getPercentage(c.samples) for (c of this._getChildCalls())]);
+      let childrenDuration = sum(
+        [c.duration for (c of this._getChildCalls())]);
 
-      let childrenDuration = sum([c.duration
-                                  for (c of this._getChildCalls())]);
+      selfPercentage = clamp(framePercentage - childrenPercentage, 0, 100);
       selfDuration = this.frame.duration - childrenDuration;
 
       if (this.inverted) {
