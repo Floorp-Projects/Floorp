@@ -3679,6 +3679,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       LogicalPoint framePos(outerWM, physicalPosn,
                             containerWidth - item->Frame()->GetRect().width);
 
+      // (Intentionally snapshotting this before ApplyRelativePositioning, to
+      // maybe use for setting the flex container's baseline.)
+      const nscoord itemNormalBPos = framePos.B(outerWM);
+
       WritingMode wm = item->Frame()->GetWritingMode();
       LogicalSize availSize = aReflowState.ComputedSize(wm);
       availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
@@ -3776,13 +3780,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // children), then use this child's baseline as the container's baseline.
       if (item->Frame() == mFrames.FirstChild() &&
           flexContainerAscent == nscoord_MIN) {
-        // (We use GetNormalPosition() instead of physicalPosn because we don't
-        // want relative positioning on the child to affect the baseline that we
-        // read from it).
-        flexContainerAscent = item->Frame()->GetLogicalNormalPosition(
-                                outerWM,
-                                childDesiredSize.Width()).B(outerWM) +
-                              item->ResolvedAscent();
+        flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
       }
     }
   }
