@@ -139,6 +139,16 @@ MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types, Barrie
         guardObjectType(obj, types, scratch, &fail);
         jump(&matched);
         bind(&fail);
+
+        // Type set guards might miss when an object's type changes and its
+        // properties become unknown, so check for this case.
+        if (obj == scratch)
+            extractObject(address, scratch);
+        loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
+        branchTestPtr(Assembler::NonZero,
+                      Address(scratch, types::TypeObject::offsetOfFlags()),
+                      Imm32(types::OBJECT_FLAG_UNKNOWN_PROPERTIES), &matched);
+
         assumeUnreachable("Unexpected object type");
 #endif
     }
