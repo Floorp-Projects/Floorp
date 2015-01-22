@@ -538,10 +538,11 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 
     Rooted<ArrayBufferObjectMaybeShared *> heap(cx);
     if (module.hasArrayView()) {
-        if (IsArrayBuffer(bufferVal) || IsSharedArrayBuffer(bufferVal))
-            heap = &AsAnyArrayBuffer(bufferVal);
-        else
-            return LinkFail(cx, "bad ArrayBuffer argument");
+        if (module.isSharedView() && !IsSharedArrayBuffer(bufferVal))
+            return LinkFail(cx, "shared views can only be constructed onto SharedArrayBuffer");
+        if (!module.isSharedView() && !IsArrayBuffer(bufferVal))
+            return LinkFail(cx, "unshared views can only be constructed onto ArrayBuffer");
+        heap = &AsAnyArrayBuffer(bufferVal);
         if (!LinkModuleToHeap(cx, module, heap))
             return false;
     }
