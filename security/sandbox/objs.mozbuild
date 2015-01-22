@@ -6,6 +6,8 @@
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     security_sandbox_lcppsrcs = [
+        'chromium-shim/base/logging.cpp',
+        'chromium-shim/sandbox/win/sandboxLogging.cpp',
         'chromium/base/at_exit.cc',
         'chromium/base/base_switches.cc',
         'chromium/base/callback_internal.cc',
@@ -16,7 +18,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/base/location.cc',
         'chromium/base/memory/ref_counted.cc',
         'chromium/base/memory/singleton.cc',
-        'chromium/base/shim/base/logging.cpp',
         'chromium/base/strings/nullable_string16.cc',
         'chromium/base/strings/string_number_conversions.cc',
         'chromium/base/strings/string_piece.cc',
@@ -60,7 +61,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/interception.cc',
         'win/src/interception_agent.cc',
         'win/src/job.cc',
-        'win/src/logging/sandboxLogging.cpp',
         'win/src/named_pipe_dispatcher.cc',
         'win/src/named_pipe_interception.cc',
         'win/src/named_pipe_policy.cc',
