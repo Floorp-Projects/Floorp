@@ -22,8 +22,7 @@ class Element;
 
 [ptr] native Element (mozilla::dom::Element);
 
-[scriptable, uuid(393a364f-e8e2-48a1-a271-a0067b6bac9b)]
-
+[scriptable, uuid(87ee993e-985f-4a43-a974-0d9512da2fb0)]
 interface nsIHTMLEditor : nsISupports
 {
 %{C++
@@ -550,11 +549,6 @@ interface nsIHTMLEditor : nsISupports
    * @return    true if CR in a paragraph creates a new paragraph
    */
   attribute boolean returnInParagraphCreatesNewParagraph;
-
-  /**
-   * Checks whether a BR node is visible to the user.
-   */
-  boolean breakIsVisible(in nsIDOMNode aNode);
 
   /**
    * Get an active editor's editing host in DOM window.  If this editor isn't
