@@ -7171,6 +7171,11 @@
     "kind": "boolean",
     "description": "Number of users who have password saving on globally"
   },
+  "PWMGR_USERNAME_PRESENT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a saved login has a username"
+  },
   "FENNEC_SYNC11_MIGRATION_SENTINELS_SEEN": {
     "expires_in_version": "45",
     "kind": "count",
