@@ -30,9 +30,6 @@ public class testVkbOverlap extends PixelTest {
         // scroll to the bottom of the page and let it settle
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
-
-        // Tell Gecko to ignore any longpress events triggered by MEH.
-        meh.disableGeckoLongpress();
         meh.dragSync(10, 150, 10, 50);
 
         // the input field has a green background, so let's count the number of green pixels

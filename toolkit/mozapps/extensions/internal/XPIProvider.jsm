@@ -4445,6 +4445,13 @@ this.XPIProvider = {
       if (aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         logger.debug("Removing manifest for " + aFile.path);
         Components.manager.removeBootstrappedManifestLocation(aFile);
+
+        let manifest = getURIForResourceInFile(aFile, "chrome.manifest");
+        for (let line of ChromeManifestParser.parseSync(manifest)) {
+          if (line.type == "resource") {
+            ResProtocolHandler.setSubstitution(line.args[0], null);
+          }
+        }
       }
       this.setTelemetry(aAddon.id, aMethod + "_MS", new Date() - timeStart);
     }
