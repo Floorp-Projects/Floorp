@@ -105,3 +105,43 @@ loop.store.createStore = (function() {
 
   return createStore;
 })();
+
+/**
+ * Store mixin generator. Usage:
+ *
+ *     StoreMixin.register({roomStore: new RoomStore(…)});
+ *     var Comp = React.createClass({
+ *       mixins: [StoreMixin("roomStore")]
+ *     });
+ */
+loop.store.StoreMixin = (function() {
+  var _stores = {};
+  function StoreMixin(id) {
+    function _getStore() {
+      if (!_stores[id]) {
+        throw new Error("Unavailable store " + id);
+      }
+      return _stores[id];
+    }
+    return {
+      getStore: function() {
+        return _getStore();
+      },
+      getStoreState: function() {
+        return this.getStore().getStoreState();
+      },
+      componentWillMount: function() {
+        this.getStore().on("change", function() {
+          this.setState(this.getStoreState());
+        }, this);
+      },
+      componentWillUnmount: function() {
+        this.getStore().off("change");
+      }
+    };
+  }
+  StoreMixin.register = function(stores) {
+    _.extend(_stores, stores);
+  };
+  return StoreMixin;
+})();
