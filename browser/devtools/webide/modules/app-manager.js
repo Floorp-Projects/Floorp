@@ -510,6 +510,12 @@ let AppManager = exports.AppManager = {
                                             project.manifest);
       }
 
+      // Addons don't have any document to load (yet?)
+      // So that there is no need to run them, installing is enough
+      if (project.manifest.role && project.manifest.role === "addon") {
+        return;
+      }
+
       let {app} = response;
       if (!app.running) {
         let deferred = promise.defer();
