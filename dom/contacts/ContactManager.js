@@ -90,9 +90,12 @@ ContactManager.prototype = {
   },
 
   _convertContact: function(aContact) {
-    let contact = Cu.cloneInto(aContact, this._window);
-    let newContact = new this._window.mozContact(contact.properties);
-    newContact.setMetadata(contact.id, contact.published, contact.updated);
+    let properties = aContact.properties;
+    if (properties.photo && properties.photo.length) {
+      properties.photo = Cu.cloneInto(properties.photo, this._window);
+    }
+    let newContact = new this._window.mozContact(aContact.properties);
+    newContact.setMetadata(aContact.id, aContact.published, aContact.updated);
     return newContact;
   },
 

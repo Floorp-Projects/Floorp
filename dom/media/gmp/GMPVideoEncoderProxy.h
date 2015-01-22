@@ -12,7 +12,7 @@
 #include "gmp-video-frame-encoded.h"
 
 #include "GMPCallbackBase.h"
-#include "mozilla/UniquePtr.h"
+#include "GMPUtils.h"
 
 class GMPVideoEncoderCallbackProxy : public GMPCallbackBase {
 public:
@@ -40,7 +40,7 @@ public:
                             GMPVideoEncoderCallbackProxy* aCallback,
                             int32_t aNumberOfCores,
                             uint32_t aMaxPayloadSize) = 0;
-  virtual GMPErr Encode(mozilla::UniquePtr<GMPVideoi420Frame> aInputFrame,
+  virtual GMPErr Encode(mozilla::GMPUniquePtr<GMPVideoi420Frame> aInputFrame,
                         const nsTArray<uint8_t>& aCodecSpecificInfo,
                         const nsTArray<GMPVideoFrameType>& aFrameTypes) = 0;
   virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
@@ -52,18 +52,5 @@ public:
   // interface/codec.
   virtual void Close() = 0;
 };
-
-namespace mozilla {
-
-template<>
-struct DefaultDelete<GMPVideoi420Frame>
-{
-  void operator()(GMPVideoi420Frame* aFrame) const
-  {
-    aFrame->Destroy();
-  }
-};
-
-} // namespace mozilla
 
 #endif // GMPVideoEncoderProxy_h_
