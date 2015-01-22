@@ -535,10 +535,10 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   LOGFONTW* ptrLogFont = nullptr;
   LOGFONTW logFont;
   NONCLIENTMETRICSW ncm;
-  HGDIOBJ hGDI;
   char16_t name[LF_FACESIZE];
+  bool useShellDlg = false;
 
-  // Depending on which stock font we want, there are three different
+  // Depending on which stock font we want, there are a couple of
   // places we might have to look it up.
   switch (anID) {
   case LookAndFeel::eFont_Icon:
@@ -549,11 +549,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
     ptrLogFont = &logFont;
     break;
 
-  case LookAndFeel::eFont_Menu:
-  case LookAndFeel::eFont_MessageBox:
-  case LookAndFeel::eFont_SmallCaption:
-  case LookAndFeel::eFont_StatusBar:
-  case LookAndFeel::eFont_Tooltips:
+  default:
     ncm.cbSize = sizeof(NONCLIENTMETRICSW);
     if (!::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                                  sizeof(ncm), (PVOID)&ncm, 0))
@@ -561,10 +557,11 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 
     switch (anID) {
     case LookAndFeel::eFont_Menu:
+    case LookAndFeel::eFont_PullDownMenu:
       ptrLogFont = &ncm.lfMenuFont;
       break;
-    case LookAndFeel::eFont_MessageBox:
-      ptrLogFont = &ncm.lfMessageFont;
+    case LookAndFeel::eFont_Caption:
+      ptrLogFont = &ncm.lfCaptionFont;
       break;
     case LookAndFeel::eFont_SmallCaption:
       ptrLogFont = &ncm.lfSmCaptionFont;
@@ -573,29 +570,21 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
     case LookAndFeel::eFont_Tooltips:
       ptrLogFont = &ncm.lfStatusFont;
       break;
+    case LookAndFeel::eFont_Widget:
+    case LookAndFeel::eFont_Dialog:
+    case LookAndFeel::eFont_Button:
+      // XXX It's not clear to me whether this is exactly the right
+      // set of LookAndFeel values to map to the dialog font; we may
+      // want to add or remove cases here after reviewing the visual
+      // results under various Windows versions.
+      useShellDlg = true;
+      // Fall through so that we can get size from lfMessageFont;
+      // but later we'll use the (virtual) "MS Shell Dlg 2" font name
+      // instead of the LOGFONT's.
+    default:
+      ptrLogFont = &ncm.lfMessageFont;
+      break;
     }
-    break;
-
-  case LookAndFeel::eFont_Widget:
-  case LookAndFeel::eFont_Window:      // css3
-  case LookAndFeel::eFont_Document:
-  case LookAndFeel::eFont_Workspace:
-  case LookAndFeel::eFont_Desktop:
-  case LookAndFeel::eFont_Info:
-  case LookAndFeel::eFont_Dialog:
-  case LookAndFeel::eFont_Button:
-  case LookAndFeel::eFont_PullDownMenu:
-  case LookAndFeel::eFont_List:
-  case LookAndFeel::eFont_Field:
-  case LookAndFeel::eFont_Caption:
-    hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
-    if (!hGDI)
-      return false;
-
-    if (::GetObjectW(hGDI, sizeof(logFont), &logFont) <= 0)
-      return false;
-
-    ptrLogFont = &logFont;
     break;
   }
 
@@ -649,9 +638,12 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 
   aFontStyle.systemFont = true;
 
-  name[0] = 0;
-  memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*sizeof(char16_t));
-  aFontName = name;
+  if (useShellDlg) {
+    aFontName = NS_LITERAL_STRING("MS Shell Dlg 2");
+  } else {
+    memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*sizeof(char16_t));
+    aFontName = name;
+  }
 
   return true;
 }
