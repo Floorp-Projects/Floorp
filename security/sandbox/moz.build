@@ -23,9 +23,9 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         DIRS += ['win/wow_helper']
 
     EXPORTS.mozilla.sandboxing += [
-        'win/src/logging/loggingCallbacks.h',
-        'win/src/logging/loggingTypes.h',
-        'win/src/logging/sandboxLogging.h',
+        'chromium-shim/sandbox/win/loggingCallbacks.h',
+        'chromium-shim/sandbox/win/loggingTypes.h',
+        'chromium-shim/sandbox/win/sandboxLogging.h',
     ]
 
     include('objs.mozbuild')
@@ -39,7 +39,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
                 'NOMINMAX', '_CRT_RAND_S', 'CHROMIUM_SANDBOX_BUILD'):
         DEFINES[var] = True
 
-    LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
+    LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
     LOCAL_INCLUDES += ['/security']
     LOCAL_INCLUDES += ['/nsprpub']
