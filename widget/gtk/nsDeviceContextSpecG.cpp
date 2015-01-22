@@ -110,9 +110,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 {
   *aSurface = nullptr;
 
-  const char *path;
-  GetPath(&path);
-
   double width, height;
   mPrintSettings->GetEffectivePageSize(&width, &height);
 
@@ -120,7 +117,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   width  /= TWIPS_PER_POINT_FLOAT;
   height /= TWIPS_PER_POINT_FLOAT;
 
-  DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
+  DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", mPath, width, height));
   nsresult rv;
 
   // Spool file. Use Glib's temporary file function since we're
@@ -256,12 +253,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
   gtk_page_setup_set_paper_size_and_default_margins(mGtkPageSetup, properPaperSize);
   gtk_paper_size_free(standardGtkPaperSize);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPath(const char **aPath)      
-{
-  *aPath = mPath;
   return NS_OK;
 }
 

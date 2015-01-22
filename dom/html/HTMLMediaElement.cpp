@@ -527,14 +527,14 @@ HTMLMediaElement::GetMozSrcObject() const
 void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream& aValue)
 {
-  mSrcAttrStream = &aValue;
-  Load();
+  SetMozSrcObject(&aValue);
 }
 
 void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream* aValue)
 {
-  SetMozSrcObject(*aValue);
+  mSrcAttrStream = aValue;
+  Load();
 }
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -2524,15 +2524,13 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // It's value may have changed, so update it.
     UpdatePreloadAction();
   }
+  mElementInTreeState = ELEMENT_INTREE;
+
   if (mDecoder) {
     // When the MediaElement is binding to tree, the dormant status is
     // aligned to document's hidden status.
-    nsIDocument* ownerDoc = OwnerDoc();
-    if (ownerDoc) {
-      mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
-    }
+    mDecoder->NotifyOwnerActivityChanged();
   }
-  mElementInTreeState = ELEMENT_INTREE;
 
   return rv;
 }
@@ -2543,12 +2541,14 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep,
   if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY)
     Pause();
 
-  if (mDecoder) {
-    mDecoder->SetDormantIfNecessary(true);
-  }
   mElementInTreeState = ELEMENT_NOT_INTREE_HAD_INTREE;
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (mDecoder) {
+    MOZ_ASSERT(IsHidden());
+    mDecoder->NotifyOwnerActivityChanged();
+  }
 }
 
 /* static */
@@ -3002,6 +3002,10 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
+  if (IsVideo() && mHasVideo) {
+    mMediaSize = aInfo->mVideo.mDisplay;
+    DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
+  }
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
   if (mDecoder && mDecoder->IsTransportSeekable() && mDecoder->IsMediaSeekable()) {
     ProcessMediaFragmentURI();
@@ -3519,6 +3523,21 @@ void HTMLMediaElement::CheckAutoplayDataReady()
   }
 }
 
+bool HTMLMediaElement::IsActive()
+{
+  nsIDocument* ownerDoc = OwnerDoc();
+  return ownerDoc && ownerDoc->IsActive() && ownerDoc->IsVisible();
+}
+
+bool HTMLMediaElement::IsHidden()
+{
+  if (mElementInTreeState == ELEMENT_NOT_INTREE_HAD_INTREE) {
+    return true;
+  }
+  nsIDocument* ownerDoc = OwnerDoc();
+  return !ownerDoc || ownerDoc->Hidden();
+}
+
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
 {
   if (mVideoFrameContainer)
@@ -3642,6 +3661,10 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
 
 void HTMLMediaElement::UpdateMediaSize(nsIntSize size)
 {
+  if (IsVideo() && mReadyState != HAVE_NOTHING && mMediaSize != size) {
+    DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
+  }
+
   mMediaSize = size;
   UpdateReadyStateForData(mLastNextFrameStatus);
 }
@@ -3698,15 +3721,7 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 
   if (mDecoder) {
     mDecoder->SetElementVisibility(!ownerDoc->Hidden());
-
-    if (mElementInTreeState == ELEMENT_NOT_INTREE_HAD_INTREE) {
-      mDecoder->SetDormantIfNecessary(true);
-    } else if (mElementInTreeState == ELEMENT_NOT_INTREE ||
-               mElementInTreeState == ELEMENT_INTREE) {
-      // The MediaElement had never been binded to tree, or in the tree now,
-      // align to document.
-      mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
-    }
+    mDecoder->NotifyOwnerActivityChanged();
   }
 
   // SetVisibilityState will update mMuted with MUTED_BY_AUDIO_CHANNEL via the
@@ -3716,10 +3731,9 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
     AutoNoJSAPI nojsapi;
     mAudioChannelAgent->SetVisibilityState(!ownerDoc->Hidden());
   }
-  bool suspendEvents = !ownerDoc->IsActive() || !ownerDoc->IsVisible();
-  bool pauseElement = suspendEvents || (mMuted & MUTED_BY_AUDIO_CHANNEL);
+  bool pauseElement = !IsActive() || (mMuted & MUTED_BY_AUDIO_CHANNEL);
 
-  SuspendOrResumeElement(pauseElement, suspendEvents);
+  SuspendOrResumeElement(pauseElement, !IsActive());
 
   AddRemoveSelfReference();
 }

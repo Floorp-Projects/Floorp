@@ -204,9 +204,11 @@ StackWalkInitCriticalAddress()
 
 struct WalkStackData
 {
+  // Are we walking the stack of the calling thread? Note that we need to avoid
+  // calling fprintf and friends if this is false, in order to avoid deadlocks.
+  bool walkCallingThread;
   uint32_t skipFrames;
   HANDLE thread;
-  bool walkCallingThread;
   HANDLE process;
   HANDLE eventStart;
   HANDLE eventEnd;
@@ -520,18 +522,10 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     return NS_ERROR_FAILURE;
   }
 
-  HANDLE targetThread = ::GetCurrentThread();
-  data.walkCallingThread = true;
-  if (aThread) {
-    HANDLE threadToWalk = reinterpret_cast<HANDLE>(aThread);
-    // walkCallingThread indicates whether we are walking the caller's stack
-    data.walkCallingThread = (threadToWalk == targetThread);
-    targetThread = threadToWalk;
-  }
-
-  // We need to avoid calling fprintf and friends if we're walking the stack of
-  // another thread, in order to avoid deadlocks.
-  const bool shouldBeThreadSafe = !!aThread;
+  HANDLE currentThread = ::GetCurrentThread();
+  HANDLE targetThread =
+    aThread ? reinterpret_cast<HANDLE>(aThread) : currentThread;
+  data.walkCallingThread = (targetThread == currentThread);
 
   // Have to duplicate handle to get a real handle.
   if (!myProcess) {
@@ -540,7 +534,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
                            ::GetCurrentProcess(),
                            &myProcess,
                            PROCESS_ALL_ACCESS, FALSE, 0)) {
-      if (!shouldBeThreadSafe) {
+      if (data.walkCallingThread) {
         PrintError("DuplicateHandle (process)");
       }
       return NS_ERROR_FAILURE;
@@ -551,7 +545,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
                          ::GetCurrentProcess(),
                          &myThread,
                          THREAD_ALL_ACCESS, FALSE, 0)) {
-    if (!shouldBeThreadSafe) {
+    if (data.walkCallingThread) {
       PrintError("DuplicateHandle (thread)");
     }
     return NS_ERROR_FAILURE;
@@ -595,7 +589,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
 
     walkerReturn = ::SignalObjectAndWait(data.eventStart,
                                          data.eventEnd, INFINITE, FALSE);
-    if (walkerReturn != WAIT_OBJECT_0 && !shouldBeThreadSafe) {
+    if (walkerReturn != WAIT_OBJECT_0 && data.walkCallingThread) {
       PrintError("SignalObjectAndWait (1)");
     }
     if (data.pc_count > data.pc_size) {
@@ -608,7 +602,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
       ::PostThreadMessage(gStackWalkThread, WM_USER, 0, (LPARAM)&data);
       walkerReturn = ::SignalObjectAndWait(data.eventStart,
                                            data.eventEnd, INFINITE, FALSE);
-      if (walkerReturn != WAIT_OBJECT_0 && !shouldBeThreadSafe) {
+      if (walkerReturn != WAIT_OBJECT_0 && data.walkCallingThread) {
         PrintError("SignalObjectAndWait (2)");
       }
     }

@@ -2239,14 +2239,6 @@ MBinaryArithInstruction::infer(TempAllocator &alloc, BaselineInspector *inspecto
 
     specialization_ = MIRType_None;
 
-    // Don't specialize if one operand could be an object or symbol. If we
-    // specialize as int32 or double based on baseline feedback, we could DCE
-    // this instruction and fail to invoke any valueOf methods.
-    if (getOperand(0)->mightBeType(MIRType_Object) || getOperand(1)->mightBeType(MIRType_Object))
-        return;
-    if (getOperand(0)->mightBeType(MIRType_Symbol) || getOperand(1)->mightBeType(MIRType_Symbol))
-        return;
-
     // Anything complex - strings, symbols, and objects - are not specialized
     // unless baseline type hints suggest it might be profitable
     if (!SimpleArithOperand(getOperand(0)) || !SimpleArithOperand(getOperand(1)))
