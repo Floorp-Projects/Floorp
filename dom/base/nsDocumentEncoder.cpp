@@ -47,9 +47,6 @@
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
-#include "nsIDocShell.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsComputedDOMStyle.h"
 
@@ -324,34 +321,17 @@ nsDocumentEncoder::IncludeInContext(nsINode *aNode)
 static
 bool
 IsInvisibleBreak(nsINode *aNode) {
-  // xxxehsan: we should probably figure out a way to determine
-  // if a BR node is visible without using the editor.
-  Element* elt = aNode->AsElement();
-  if (!elt->IsHTML(nsGkAtoms::br) ||
-      !aNode->IsEditable()) {
+  if (!aNode->IsElement() || !aNode->IsEditable()) {
+    return false;
+  }
+  nsIFrame* frame = aNode->AsElement()->GetPrimaryFrame();
+  if (!frame || frame->GetType() != nsGkAtoms::brFrame) {
     return false;
   }
 
-  // Grab the editor associated with the document
-  nsIDocument *doc = aNode->GetComposedDoc();
-  if (doc) {
-    nsPIDOMWindow *window = doc->GetWindow();
-    if (window) {
-      nsIDocShell *docShell = window->GetDocShell();
-      if (docShell) {
-        nsCOMPtr<nsIEditor> editor;
-        docShell->GetEditor(getter_AddRefs(editor));
-        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-        if (htmlEditor) {
-          bool isVisible = false;
-          nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
-          htmlEditor->BreakIsVisible(domNode, &isVisible);
-          return !isVisible;
-        }
-      }
-    }
-  }
-  return false;
+  // If the BRFrame has caused a visible line break, it should have a next
+  // sibling.
+  return !frame->GetNextSibling();
 }
 
 nsresult
