@@ -41,6 +41,8 @@
 <!ENTITY runtimeMenu_showMonitor_accesskey "M">
 <!ENTITY runtimeMenu_showDevicePrefs_label "Device Preferences">
 <!ENTITY runtimeMenu_showDevicePrefs_accesskey "D">
+<!ENTITY runtimeMenu_showSettings_label "Device Settings">
+<!ENTITY runtimeMenu_showSettings_accesskey "s">
 
 <!ENTITY viewMenu_label "View">
 <!ENTITY viewMenu_accesskey "V">
@@ -147,16 +149,26 @@
 <!ENTITY runtimedetails_requestPrivileges "request higher privileges">
 <!ENTITY runtimedetails_privilegesWarning "(Will reboot device. Requires root access.)">
 
+<!-- Device Preferences and Settings -->
+<!ENTITY device_typeboolean "Boolean">
+<!ENTITY device_typenumber "Integer">
+<!ENTITY device_typestring "String">
+<!ENTITY device_typeobject "Object">
+<!ENTITY device_typenone "Select a type">
+
 <!-- Device Preferences -->
-<!ENTITY devicepreferences_title "Device Preferences">
-<!ENTITY devicepreferences_search "Search preferences">
-<!ENTITY devicepreferences_newname "New preference name">
-<!ENTITY devicepreferences_newtext "Preference value">
-<!ENTITY devicepreferences_addnew "Add new preference">
-<!ENTITY devicepreferences_typeboolean "Boolean">
-<!ENTITY devicepreferences_typenumber "Integer">
-<!ENTITY devicepreferences_typestring "String">
-<!ENTITY devicepreferences_typenone "Select a type">
+<!ENTITY devicepreference_title "Device Preferences">
+<!ENTITY devicepreference_search "Search preferences">
+<!ENTITY devicepreference_newname "New preference name">
+<!ENTITY devicepreference_newtext "Preference value">
+<!ENTITY devicepreference_addnew "Add new preference">
+
+<!-- Device Settings -->
+<!ENTITY devicesetting_title "Device Settings">
+<!ENTITY devicesetting_search "Search settings">
+<!ENTITY devicesetting_newname "New setting name">
+<!ENTITY devicesetting_newtext "Setting value">
+<!ENTITY devicesetting_addnew "Add new setting">
 
 <!-- Monitor -->
 <!ENTITY monitor_title "Monitor">
