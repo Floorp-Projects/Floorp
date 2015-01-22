@@ -55,8 +55,7 @@ enum EnsureNSSOperator
   nssInitFailed = 2,
   nssShutdown = 3,
   nssEnsure = 100,
-  nssEnsureOnChromeOnly = 101,
-  nssEnsureChromeOrContent = 102,
+  nssEnsureOnChromeOnly = 101
 };
 
 extern bool EnsureNSSInitializedChromeOrContent();
