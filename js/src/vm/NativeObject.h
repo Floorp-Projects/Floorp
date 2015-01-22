@@ -1294,6 +1294,13 @@ NativeDeleteProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *s
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
+template <AllowGC allowGC>
+extern bool
+NativeLookupOwnProperty(ExclusiveContext *cx,
+                        typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+                        typename MaybeRooted<jsid, allowGC>::HandleType id,
+                        typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
+
 /*
  * On success, and if id was found, return true with *objp non-null and with a
  * property of *objp stored in *propp. If successful but id was not found,
