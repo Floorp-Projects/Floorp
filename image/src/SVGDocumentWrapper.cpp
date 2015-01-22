@@ -68,45 +68,6 @@ SVGDocumentWrapper::DestroyViewer()
   }
 }
 
-bool
-SVGDocumentWrapper::GetWidthOrHeight(Dimension aDimension,
-                                     int32_t& aResult)
-{
-  SVGSVGElement* rootElem = GetRootSVGElem();
-  NS_ABORT_IF_FALSE(rootElem, "root elem missing or of wrong type");
-
-  // Get the width or height SVG object
-  nsRefPtr<SVGAnimatedLength> domAnimLength;
-  if (aDimension == eWidth) {
-    domAnimLength = rootElem->Width();
-  } else {
-    NS_ABORT_IF_FALSE(aDimension == eHeight, "invalid dimension");
-    domAnimLength = rootElem->Height();
-  }
-  NS_ENSURE_TRUE(domAnimLength, false);
-
-  // Get the animated value from the object
-  nsRefPtr<DOMSVGLength> domLength = domAnimLength->AnimVal();
-  NS_ENSURE_TRUE(domLength, false);
-
-  // Check if it's a percent value (and fail if so)
-  uint16_t unitType;
-  nsresult rv = domLength->GetUnitType(&unitType);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (unitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    return false;
-  }
-
-  // Non-percent value - woot! Grab it & return it.
-  float floatLength;
-  rv = domLength->GetValue(&floatLength);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  aResult = nsSVGUtils::ClampToInt(floatLength);
-
-  return true;
-}
-
 nsIFrame*
 SVGDocumentWrapper::GetRootLayoutFrame()
 {

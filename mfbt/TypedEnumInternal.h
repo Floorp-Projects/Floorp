@@ -26,18 +26,15 @@
 #    define __has_extension __has_feature /* compatibility, for older versions of clang */
 #  endif
 #  if __has_extension(cxx_strong_enums)
-#    define MOZ_HAVE_CXX11_ENUM_TYPE
 #    define MOZ_HAVE_CXX11_STRONG_ENUMS
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 #    if MOZ_GCC_VERSION_AT_LEAST(4, 6, 3)
-#      define MOZ_HAVE_CXX11_ENUM_TYPE
 #      define MOZ_HAVE_CXX11_STRONG_ENUMS
 #    endif
 #  endif
 #elif defined(_MSC_VER)
-#  define MOZ_HAVE_CXX11_ENUM_TYPE
 #  define MOZ_HAVE_CXX11_STRONG_ENUMS
 #endif
 

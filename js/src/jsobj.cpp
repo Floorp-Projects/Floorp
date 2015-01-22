@@ -1232,32 +1232,10 @@ NewObject(ExclusiveContext *cx, types::TypeObject *type_, JSObject *parent, gc::
         obj = nobj;
     }
 
-    /*
-     * This will cancel an already-running incremental GC from doing any more
-     * slices, and it will prevent any future incremental GCs.
-     */
     bool globalWithoutCustomTrace = clasp->trace == JS_GlobalObjectTraceHook &&
                                     !cx->compartment()->options().getTrace();
-    if (clasp->trace &&
-        !globalWithoutCustomTrace &&
-        !(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS))
-    {
-        if (!cx->shouldBeJSContext())
-            return nullptr;
-        JSRuntime *rt = cx->asJSContext()->runtime();
-        rt->gc.disallowIncrementalGC();
-
-#ifdef DEBUG
-        if (rt->gc.gcMode() == JSGC_MODE_INCREMENTAL) {
-            fprintf(stderr,
-                    "The class %s has a trace hook but does not declare the\n"
-                    "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
-                    "implements write barriers and then set the flag.\n",
-                    clasp->name);
-            MOZ_CRASH();
-        }
-#endif
-    }
+    if (clasp->trace && !globalWithoutCustomTrace)
+        MOZ_RELEASE_ASSERT(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
 
     probes::CreateObject(cx, obj);
     return obj;
@@ -2928,13 +2906,18 @@ js::NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
             MaybeRooted<JSObject*, allowGC>::template downcastHandle<NativeObject>(obj);
 
         bool done;
-        if (!LookupOwnPropertyInline<allowGC>(cx, nobj, id, objp, propp, &done))
+        if (!LookupOwnPropertyInline<allowGC>(cx, nobj, id, propp, &done))
             return false;
         if (!done) {
             objp.set(nullptr);
             propp.set(nullptr);
             return true;
         }
+
+        if (propp)
+            objp.set(obj);
+        else
+            objp.set(nullptr);
     }
 
     if (!propp)
