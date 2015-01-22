@@ -215,6 +215,8 @@ CompositorVsyncObserver::CompositorVsyncObserver(CompositorParent* aCompositorPa
   , mCompositorParent(aCompositorParent)
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
+  , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
+  , mSetNeedsCompositeTask(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWidget != nullptr);
@@ -229,9 +231,28 @@ CompositorVsyncObserver::~CompositorVsyncObserver()
   MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   MOZ_ASSERT(!mIsObservingVsync);
   // The CompositorVsyncDispatcher is cleaned up before this in the nsBaseWidget, which stops vsync listeners
-  CancelCurrentCompositeTask();
   mCompositorParent = nullptr;
   mCompositorVsyncDispatcher = nullptr;
+}
+
+void
+CompositorVsyncObserver::Destroy()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  UnobserveVsync();
+  CancelCurrentCompositeTask();
+  CancelCurrentSetNeedsCompositeTask();
+}
+
+void
+CompositorVsyncObserver::CancelCurrentSetNeedsCompositeTask()
+{
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  MonitorAutoLock lock(mSetNeedsCompositeMonitor);
+  if (mSetNeedsCompositeTask) {
+    mSetNeedsCompositeTask->Cancel();
+    mSetNeedsCompositeTask = nullptr;
+  }
   mNeedsComposite = false;
 }
 
@@ -245,11 +266,16 @@ CompositorVsyncObserver::~CompositorVsyncObserver()
 void
 CompositorVsyncObserver::SetNeedsComposite(bool aNeedsComposite)
 {
-  if (aNeedsComposite && !CompositorParent::IsInCompositorThread()) {
-    CompositorParent::CompositorLoop()->PostTask(FROM_HERE,
-      NewRunnableMethod(this,
-                        &CompositorVsyncObserver::SetNeedsComposite,
-                        aNeedsComposite));
+  if (!CompositorParent::IsInCompositorThread()) {
+    MonitorAutoLock lock(mSetNeedsCompositeMonitor);
+    mSetNeedsCompositeTask = NewRunnableMethod(this,
+                                              &CompositorVsyncObserver::SetNeedsComposite,
+                                              aNeedsComposite);
+    CompositorParent::CompositorLoop()->PostTask(FROM_HERE, mSetNeedsCompositeTask);
+    return;
+  } else {
+    MonitorAutoLock lock(mSetNeedsCompositeMonitor);
+    mSetNeedsCompositeTask = nullptr;
   }
 
   mNeedsComposite = aNeedsComposite;
@@ -324,7 +350,7 @@ CompositorVsyncObserver::ObserveVsync()
 void
 CompositorVsyncObserver::UnobserveVsync()
 {
-  MOZ_ASSERT(CompositorParent::IsInCompositorThread() || NS_IsMainThread());
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   mCompositorVsyncDispatcher->SetCompositorVsyncObserver(nullptr);
   mIsObservingVsync = false;
 }
@@ -437,6 +463,7 @@ CompositorParent::Destroy()
   NS_ABORT_IF_FALSE(ManagedPLayerTransactionParent().Length() == 0,
                     "CompositorParent destroyed before managed PLayerTransactionParent");
 
+  MOZ_ASSERT(mPaused); // Ensure RecvWillStop was called
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
   if (mCompositor) {
@@ -454,7 +481,7 @@ CompositorParent::Destroy()
     sIndirectLayerTrees.erase(mRootLayerTreeID);
   }
   if (mCompositorVsyncObserver) {
-    mCompositorVsyncObserver->UnobserveVsync();
+    mCompositorVsyncObserver->Destroy();
     mCompositorVsyncObserver = nullptr;
   }
 }
@@ -793,7 +820,7 @@ CompositorParent::ScheduleSoftwareTimerComposition()
 {
   MOZ_ASSERT(!gfxPrefs::VsyncAlignedCompositor());
 
-  if (mCurrentCompositeTask || mPaused) {
+  if (mCurrentCompositeTask) {
     return;
   }
 
@@ -830,6 +857,10 @@ void
 CompositorParent::ScheduleComposition()
 {
   MOZ_ASSERT(IsInCompositorThread());
+  if (mPaused) {
+    return;
+  }
+
   if (gfxPrefs::VsyncAlignedCompositor()) {
     mCompositorVsyncObserver->SetNeedsComposite(true);
   } else {
