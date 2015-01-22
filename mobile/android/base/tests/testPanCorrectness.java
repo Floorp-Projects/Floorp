@@ -24,9 +24,6 @@ public class testPanCorrectness extends PixelTest {
         // load page and check we're at 0,0
         loadAndVerifyBoxes(url);
 
-        // Tell Gecko to ignore any longpress events triggered by MEH.
-        meh.disableGeckoLongpress();
-
         // drag page upwards by 100 pixels
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         meh.dragSync(10, 150, 10, 50);
