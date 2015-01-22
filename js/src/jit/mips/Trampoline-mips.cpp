@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jscompartment.h"
 
 #include "jit/Bailouts.h"
@@ -130,7 +132,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     const Register reg_code = a0;
     const Register reg_argc = a1;
     const Register reg_argv = a2;
-    const Register reg_frame = a3;
+    const mozilla::DebugOnly<Register> reg_frame = a3;
 
     MOZ_ASSERT(OsrFrameReg == reg_frame);
 
