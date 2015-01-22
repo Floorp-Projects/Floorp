@@ -652,7 +652,7 @@ StartGC(JSContext *cx, unsigned argc, Value *vp)
     JSRuntime *rt = cx->runtime();
     if (rt->gc.isIncrementalGCInProgress()) {
         RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Incremental GC already in progress");
+        JS_ReportError(cx, "Incremental GC already in progress");
         return false;
     }
 
