@@ -12871,9 +12871,16 @@ nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
     win->GetScriptableTop(getter_AddRefs(top));
     NS_ENSURE_TRUE(top, NS_ERROR_FAILURE);
 
-    // GetFrameElement, /not/ GetScriptableFrameElement -- if |top| is inside
-    // <iframe mozbrowser>, we want to return the iframe, not null.
-    return top->GetFrameElement(aElement);
+    nsCOMPtr<nsPIDOMWindow> piTop = do_QueryInterface(top);
+    NS_ENSURE_TRUE(piTop, NS_ERROR_FAILURE);
+
+    // GetFrameElementInternal, /not/ GetScriptableFrameElement -- if |top| is
+    // inside <iframe mozbrowser>, we want to return the iframe, not null.
+    // And we want to cross the content/chrome boundary.
+    nsCOMPtr<nsIDOMElement> elt =
+        do_QueryInterface(piTop->GetFrameElementInternal());
+    elt.forget(aElement);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
