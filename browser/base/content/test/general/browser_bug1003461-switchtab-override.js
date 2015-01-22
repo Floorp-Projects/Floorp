@@ -66,5 +66,5 @@ add_task(function* test_switchtab_override() {
   EventUtils.synthesizeKey("VK_SHIFT" , { type: "keyup" });
   yield deferred.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });

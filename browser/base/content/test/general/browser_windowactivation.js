@@ -84,6 +84,14 @@ function test() {
     }
   });
 
+  window.messageManager.addMessageListener("Test:ActivateEvent", function(message) {
+    ok(message.data.ok, "Test:ActivateEvent");
+  });
+
+  window.messageManager.addMessageListener("Test:DeactivateEvent", function(message) {
+    ok(message.data.ok, "Test:DeactivateEvent");
+  });
+
   browser1.addEventListener("load", check, true);
   browser2.addEventListener("load", check, true);
   browser1.contentWindow.location = testPage;
@@ -131,6 +139,25 @@ function childFunction()
   content.addEventListener("focus", function () {
     sendAsyncMessage("Test:FocusReceived", { });
   }, false);
+
+  var windowGotActivate = false;
+  var windowGotDeactivate = false;
+  addEventListener("activate", function() {
+      sendAsyncMessage("Test:ActivateEvent", { ok: !windowGotActivate });
+      windowGotActivate = false;
+    });
+  
+  addEventListener("deactivate", function() {
+      sendAsyncMessage("Test:DeactivateEvent", { ok: !windowGotDeactivate });
+      windowGotDeactivate = false;
+    });
+  content.addEventListener("activate", function() {
+      windowGotActivate = true;;
+    });
+  
+  content.addEventListener("deactivate", function() {
+      windowGotDeactivate = true;
+    });
 
   content.setInterval(function () {
     if (!expectingResponse) {

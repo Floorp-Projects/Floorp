@@ -106,7 +106,7 @@ add_task(function test_addVisitAndCheckGuid() {
   do_check_eq(root.getChild(0).bookmarkGuid, "");
   root.containerOpen = false;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_addItemsWithInvalidGUIDsFails() {
