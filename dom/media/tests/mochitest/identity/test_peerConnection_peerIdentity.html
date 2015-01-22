@@ -1,16 +1,21 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../head.js"></script>
   <script type="application/javascript" src="../pc.js"></script>
+  <script type="application/javascript" src="../templates.js"></script>
   <script type="application/javascript" src="../blacksilence.js"></script>
+  <script type="application/javascript" src="../turnConfig.js"></script>
 </head>
 <body>
+<div id="display"></div>
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    title: "setIdentityProvider leads to peerIdentity and assertions in SDP",
-    bug: "942367"
+    title: "setIdentityProvider leads to peerIdentity and assertions in SDP"
   });
 
 var test;
@@ -43,8 +48,9 @@ function theTest() {
   test.setIdentityProvider(test.pcLocal, 'test1.example.com', 'idp.html');
   test.setIdentityProvider(test.pcRemote, 'test2.example.com', 'idp.html');
   test.chain.append([
-
-    function PEER_IDENTITY_IS_SET_CORRECTLY(test) {
+  [
+    "PEER_IDENTITY_IS_SET_CORRECTLY",
+    function(test) {
       // no need to wait to check identity in this case,
       // setRemoteDescription should wait for the IdP to complete
       function checkIdentity(pc, pfx, idp, name) {
@@ -54,15 +60,26 @@ function theTest() {
 
       checkIdentity(test.pcLocal._pc, "local: ", "test2.example.com", "someone");
       checkIdentity(test.pcRemote._pc, "remote: ", "test1.example.com", "someone");
-    },
-
-    function REMOTE_STREAMS_ARE_RESTRICTED(test) {
-      var remoteStream = test.pcLocal._pc.getRemoteStreams()[0];
-      return Promise.all([
-        new Promise(done => audioIsSilence(true, remoteStream, done)),
-        new Promise(done => videoIsBlack(true, remoteStream, done))
-      ]);
+      test.next();
     }
+  ],
+  [
+    "REMOTE_STREAMS_ARE_RESTRICTED",
+    function(test) {
+      var remoteStream = test.pcLocal._pc.getRemoteStreams()[0];
+      var oneDone = false;
+      function done() {
+        if (!oneDone) {
+          oneDone = true;
+          return;
+        }
+        test.next();
+      }
+
+      audioIsSilence(true, remoteStream, done);
+      videoIsBlack(true, remoteStream, done);
+    }
+  ],
   ]);
   test.run();
 }
