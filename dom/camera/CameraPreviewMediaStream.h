@@ -42,6 +42,7 @@ class CameraPreviewMediaStream : public MediaStream
 public:
   explicit CameraPreviewMediaStream(DOMMediaStream* aWrapper);
 
+  virtual CameraPreviewMediaStream* AsCameraPreviewStream() MOZ_OVERRIDE { return this; };
   virtual void AddAudioOutput(void* aKey) MOZ_OVERRIDE;
   virtual void SetAudioOutputVolume(void* aKey, float aVolume) MOZ_OVERRIDE;
   virtual void RemoveAudioOutput(void* aKey) MOZ_OVERRIDE;
