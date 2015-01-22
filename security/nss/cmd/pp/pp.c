@@ -31,8 +31,7 @@ static void Usage(char *progName)
 	    SEC_CT_CERTIFICATE, SEC_CT_CERTIFICATE_REQUEST);
     fprintf(stderr, "%-14s %s (ci), %s (p7), %s or %s (n).\n", "", SEC_CT_CERTIFICATE_ID,
             SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
-    fprintf(stderr, "%-14s (Use either the long type name or the shortcut.)\n", "", SEC_CT_CERTIFICATE_ID,
-            SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
+    fprintf(stderr, "%-14s (Use either the long type name or the shortcut.)\n", "");
     fprintf(stderr, "%-14s Input is in ascii encoded form (RFC1113)\n",
 	    "-a");
     fprintf(stderr, "%-14s Define an input file to use (default is stdin)\n",

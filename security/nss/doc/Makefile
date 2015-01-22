@@ -39,19 +39,6 @@ version.xml:
 .PHONY : $(HTMLPAGES)
 .PHONY : $(TXTPAGES)
 
-#------------------------------------------
-# Package a tar ball for building in fedora
-# Include the makefile and .xml files only
-# man pages will be created at build time
-#------------------------------------------
-
-tarball:
-	rm -rf $(name); \
-	mkdir -p $(name)/nroff; \
-	cp Makefile $(name); \
-	cp *.xml $(name); \
-	tar cvjf $(name)-$(date).tar.bz2 $(name)
-
 #--------------------------------------------------------
 # manpages
 #--------------------------------------------------------
