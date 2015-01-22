@@ -418,6 +418,7 @@ gbjar.sources += [
     'tabs/TabHistoryFragment.java',
     'tabs/TabHistoryItemRow.java',
     'tabs/TabHistoryPage.java',
+    'tabs/TabPanelBackButton.java',
     'tabs/TabsGridLayout.java',
     'tabs/TabsLayoutAdapter.java',
     'tabs/TabsLayoutItemView.java',

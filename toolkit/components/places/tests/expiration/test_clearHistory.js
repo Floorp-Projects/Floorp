@@ -7,7 +7,7 @@
 /**
  * What this is aimed to test:
  *
- * bh.removeAllPages should expire everything but bookmarked pages and valid
+ * History.clear() should expire everything but bookmarked pages and valid
  * annos.
  */
 
@@ -82,7 +82,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_removeAllPages() {
+add_task(function test_historyClear() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -125,13 +125,8 @@ add_task(function test_removeAllPages() {
     add_old_anno(pageURI, "expire_months", "test", as.EXPIRE_MONTHS, 181);
   }
 
-  // Expire all visits for the bookmarks.  This does the same thing as the
-  // promiseClearHistory helper, but it is made explicit here because
-  // removeAllPages is the function we are testing.
-  let promise =
-      promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-  yield promise;
+  // Expire all visits for the bookmarks
+  yield PlacesUtils.history.clear();
 
   ["expire_days", "expire_weeks", "expire_months", "expire_session",
    "expire"].forEach(function(aAnno) {

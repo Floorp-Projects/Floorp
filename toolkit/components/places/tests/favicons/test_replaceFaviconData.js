@@ -83,7 +83,7 @@ add_task(function test_replaceFaviconData_validHistoryURI() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconData_overrideDefaultFavicon() {
@@ -115,7 +115,7 @@ add_task(function test_replaceFaviconData_overrideDefaultFavicon() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconData_replaceExisting() {
@@ -152,7 +152,7 @@ add_task(function test_replaceFaviconData_replaceExisting() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconData_unrelatedReplace() {
@@ -184,7 +184,7 @@ add_task(function test_replaceFaviconData_unrelatedReplace() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconData_badInputs() {
@@ -224,7 +224,7 @@ add_task(function test_replaceFaviconData_badInputs() {
 
   favicon.file.remove(false);
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconData_twiceReplace() {
@@ -259,5 +259,5 @@ add_task(function test_replaceFaviconData_twiceReplace() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });

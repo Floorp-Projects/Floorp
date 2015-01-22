@@ -72,7 +72,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(gRestyleSearchesPref);
   Services.search.currentEngine = gOriginalEngine;
   Services.search.removeEngine(gEngine);
-  return promiseClearHistory();
+  return PlacesTestUtils.clearHistory();
 });
 
 add_task(function*() {

@@ -7,7 +7,7 @@ FIREFOX_PREFERENCES = {
     # Some more changes might be necesarry to have this working in offline mode
     "media.peerconnection.default_iceservers": "[]",
     "media.peerconnection.use_document_iceservers": False,
-    "stun.allow_loopback": True,
+    "media.peerconnection.ice.loopback": True,
     "devtools.chrome.enabled": True,
     "devtools.debugger.prompt-connection": False,
     "devtools.debugger.remote-enabled": True,

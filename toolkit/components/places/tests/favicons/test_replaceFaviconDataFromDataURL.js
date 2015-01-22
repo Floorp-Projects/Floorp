@@ -85,7 +85,7 @@ add_task(function test_replaceFaviconDataFromDataURL_validHistoryURI() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
@@ -115,7 +115,7 @@ add_task(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_replaceExisting() {
@@ -148,7 +148,7 @@ add_task(function test_replaceFaviconDataFromDataURL_replaceExisting() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
@@ -178,7 +178,7 @@ add_task(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_badInputs() {
@@ -206,7 +206,7 @@ add_task(function test_replaceFaviconDataFromDataURL_badInputs() {
 
   favicon.file.remove(false);
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_twiceReplace() {
@@ -237,7 +237,7 @@ add_task(function test_replaceFaviconDataFromDataURL_twiceReplace() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
@@ -270,7 +270,7 @@ add_task(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 add_task(function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
@@ -303,7 +303,7 @@ add_task(function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
     });
   yield deferSetAndFetchFavicon.promise;
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });
 
 /* toBase64 copied from image/test/unit/test_encoder_png.js */

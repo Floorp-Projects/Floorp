@@ -50,7 +50,7 @@ function test()
     if (uri.spec != FINAL_URL)
       return;
     gBrowser.removeCurrentTab();
-    promiseClearHistory().then(finish);
+    PlacesTestUtils.clearHistory().then(finish);
   });
 
   Services.prefs.setBoolPref("places.history.enabled", false);

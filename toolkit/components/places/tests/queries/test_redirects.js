@@ -300,5 +300,5 @@ add_task(function test_redirects()
 
   remove_all_bookmarks();
 
-  yield promiseClearHistory();
+  yield PlacesTestUtils.clearHistory();
 });

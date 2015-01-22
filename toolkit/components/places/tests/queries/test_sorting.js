@@ -1272,6 +1272,6 @@ add_task(function test_sorting()
     test.check_reverse();
     // Execute cleanup tasks
     remove_all_bookmarks();
-    yield promiseClearHistory();
+    yield PlacesTestUtils.clearHistory();
   }
 });

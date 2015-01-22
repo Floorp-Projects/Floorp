@@ -31,7 +31,7 @@ function test() {
   });
 
 
-  waitForClearHistory(function () {
+  PlacesTestUtils.clearHistory().then(() => {
     historyObserver = {
       onTitleChanged: function(aURI, aPageTitle) {
         switch (++testNumber) {
@@ -89,7 +89,7 @@ function test() {
 
   function afterFirstVisitInPrivateWindow() {
      is(PlacesUtils.history.getPageTitle(TEST_URI), TITLE_2, "The title remains the same after visiting in private window");
-     waitForClearHistory(finish);
+     PlacesTestUtils.clearHistory().then(finish);
   }
 
   function whenPageLoad(aWin, aCallback) {
@@ -106,18 +106,6 @@ function test() {
       windowsToClose.push(aWin);
       executeSoon(function() { aCallback(aWin) });
     });
-  }
-
-  function waitForClearHistory(aCallback) {
-    let observer = {
-      observe: function(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-        aCallback();
-      }
-    };
-    Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
-
-    PlacesUtils.bhistory.removeAllPages();
   }
 }
 

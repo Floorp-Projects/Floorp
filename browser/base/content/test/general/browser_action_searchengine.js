@@ -26,7 +26,7 @@ add_task(function* () {
       gBrowser.removeTab(tab);
     } catch(ex) { /* tab may have already been closed in case of failure */ }
 
-    return promiseClearHistory();
+    return PlacesTestUtils.clearHistory();
   });
 
   yield promiseAutocompleteResultPopup("open a search");
