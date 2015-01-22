@@ -360,11 +360,12 @@ public:
   // called.
   virtual nsresult Play();
 
-  // Set/Unset dormant state if necessary.
+  // Notify activity of the decoder owner is changed.
+  // Based on the activity, dormant state is updated.
   // Dormant state is a state to free all scarce media resources
   //  (like hw video codec), did not decoding and stay dormant.
   // It is used to share scarece media resources in system.
-  virtual void SetDormantIfNecessary(bool aDormant);
+  virtual void NotifyOwnerActivityChanged();
 
   // Pause video playback.
   virtual void Pause();
@@ -1215,6 +1216,9 @@ protected:
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
+
+  // True if MediaDecoder is in dormant state.
+  bool mIsDormant;
 };
 
 } // namespace mozilla
