@@ -67,10 +67,21 @@ inline LogicalEdge GetEdge(LogicalSide aSide)
   return IsEnd(aSide) ? eLogicalEdgeEnd : eLogicalEdgeStart;
 }
 
+inline LogicalEdge GetOppositeEdge(LogicalEdge aEdge)
+{
+  // This relies on the only two LogicalEdge enum values being 0 and 1.
+  return LogicalEdge(1 - aEdge);
+}
+
 inline LogicalSide
 MakeLogicalSide(LogicalAxis aAxis, LogicalEdge aEdge)
 {
   return LogicalSide((aAxis << 1) | aEdge);
+}
+
+inline LogicalSide GetOppositeSide(LogicalSide aSide)
+{
+  return MakeLogicalSide(GetAxis(aSide), GetOppositeEdge(GetEdge(aSide)));
 }
 
 enum LogicalSideBits {
@@ -82,6 +93,13 @@ enum LogicalSideBits {
   eLogicalSideBitsBBoth = eLogicalSideBitsBStart | eLogicalSideBitsBEnd,
   eLogicalSideBitsIBoth = eLogicalSideBitsIStart | eLogicalSideBitsIEnd,
   eLogicalSideBitsAll = eLogicalSideBitsBBoth | eLogicalSideBitsIBoth
+};
+
+enum LineRelativeDir {
+  eLineRelativeDirOver  = eLogicalSideBStart,
+  eLineRelativeDirUnder = eLogicalSideBEnd,
+  eLineRelativeDirLeft  = eLogicalSideIStart,
+  eLineRelativeDirRight = eLogicalSideIEnd
 };
 
 /**
@@ -348,6 +366,19 @@ public:
     }
 
     return PhysicalSideForInlineAxis(GetEdge(aSide));
+  }
+
+  /**
+   * Returns the physical side corresponding to the specified
+   * line-relative direction, given the current writing mode.
+   */
+  mozilla::Side PhysicalSide(LineRelativeDir aDir) const
+  {
+    LogicalSide side = static_cast<LogicalSide>(aDir);
+    if (IsLineInverted()) {
+      side = GetOppositeSide(side);
+    }
+    return PhysicalSide(side);
   }
 
   /**

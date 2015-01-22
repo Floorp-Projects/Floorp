@@ -15,6 +15,15 @@
 #ifndef _LIBP_ALIGN_H_
 #define _LIBP_ALIGN_H_
 
+#ifdef _MSC_VER
+
+/*
+ * MSVC defines max_align_t as a double.
+ */
+typedef double max_align_t;
+
+#else
+
 /*
  *	a type with the most strict alignment requirements
  */
@@ -31,6 +40,8 @@ union max_align
 };
 
 typedef union max_align max_align_t;
+
+#endif
 
 #endif
 

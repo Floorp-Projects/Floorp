@@ -401,6 +401,16 @@ let NetMonitorController = {
   },
 
   /**
+   * Getter that tells if the server includes the transferred (compressed /
+   * encoded) response size.
+   * @type boolean
+   */
+  get supportsTransferredResponseSize() {
+    return this.webConsoleClient &&
+           this.webConsoleClient.traits.transferredResponseSize;
+  },
+
+  /**
    * Getter that tells if the server can do network performance statistics.
    * @type boolean
    */
@@ -606,6 +616,7 @@ NetworkEventsHandler.prototype = {
       case "responseContent":
         NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
           contentSize: aPacket.contentSize,
+          transferredSize: aPacket.transferredSize,
           mimeType: aPacket.mimeType
         });
         this.webConsoleClient.getResponseContent(actor, this._onResponseContent);

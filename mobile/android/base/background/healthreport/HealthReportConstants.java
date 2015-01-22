@@ -1,4 +1,3 @@
-//#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,12 +5,13 @@
 package org.mozilla.gecko.background.healthreport;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.AppConstants;
 
 public class HealthReportConstants {
-  public static final String HEALTH_AUTHORITY = "@ANDROID_PACKAGE_NAME@.health";
+  public static final String HEALTH_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".health";
   public static final String GLOBAL_LOG_TAG = "GeckoHealth";
 
-  public static final String USER_AGENT = "Firefox-Android-HealthReport/" + GlobalConstants.MOZ_APP_VERSION + " (" + GlobalConstants.MOZ_APP_DISPLAYNAME + ")";
+  public static final String USER_AGENT = "Firefox-Android-HealthReport/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_DISPLAYNAME + ")";
 
   /**
    * The earliest allowable value for the last ping time, corresponding to May 2nd 2013.
@@ -35,8 +35,8 @@ public class HealthReportConstants {
   public static final String PREF_PRUNE_INTENT_INTERVAL_MSEC = "healthreport_prune_intent_interval_msec";
   public static final long DEFAULT_PRUNE_INTENT_INTERVAL_MSEC = GlobalConstants.MILLISECONDS_PER_DAY;
 
-  public static final String ACTION_HEALTHREPORT_UPLOAD_PREF = "@ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF";
-  public static final String ACTION_HEALTHREPORT_PRUNE = "@ANDROID_PACKAGE_NAME@.HEALTHREPORT_PRUNE";
+  public static final String ACTION_HEALTHREPORT_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".HEALTHREPORT_UPLOAD_PREF";
+  public static final String ACTION_HEALTHREPORT_PRUNE = AppConstants.ANDROID_PACKAGE_NAME + ".HEALTHREPORT_PRUNE";
 
   public static final String PREF_MINIMUM_TIME_BETWEEN_UPLOADS = "healthreport_time_between_uploads";
   public static final long DEFAULT_MINIMUM_TIME_BETWEEN_UPLOADS = GlobalConstants.MILLISECONDS_PER_DAY;

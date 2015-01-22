@@ -65,6 +65,8 @@ function test() {
 
       is(requestItem.attachment.headersSize, undefined,
         "The headersSize should not yet be set.");
+      is(requestItem.attachment.transferredSize, undefined,
+        "The transferredSize should not yet be set.");
       is(requestItem.attachment.contentSize, undefined,
         "The contentSize should not yet be set.");
 
@@ -156,6 +158,8 @@ function test() {
     aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.UPDATING_RESPONSE_CONTENT, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
+      is(requestItem.attachment.transferredSize, "12",
+        "The transferredSize attachment has an incorrect value.");
       is(requestItem.attachment.contentSize, "12",
         "The contentSize attachment has an incorrect value.");
       is(requestItem.attachment.mimeType, "text/plain; charset=utf-8",
@@ -164,6 +168,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
+        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });
@@ -183,6 +188,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
+        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
       });
     });

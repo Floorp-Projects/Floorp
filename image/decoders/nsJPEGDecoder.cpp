@@ -537,7 +537,9 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             break;
 
           mInfo.output_scanline = 0;
-          mDownscaler->ResetForNextProgressivePass();
+          if (mDownscaler) {
+            mDownscaler->ResetForNextProgressivePass();
+          }
         }
       }
 

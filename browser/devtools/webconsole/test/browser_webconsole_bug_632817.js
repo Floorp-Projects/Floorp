@@ -21,10 +21,13 @@ function test()
 {
   const PREF = "devtools.webconsole.persistlog";
   let original = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
+  let originalXhr = Services.prefs.getBoolPref("devtools.webconsole.filter.netxhr");
   Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
+  Services.prefs.setBoolPref("devtools.webconsole.filter.netxhr", true);
   Services.prefs.setBoolPref(PREF, true);
   registerCleanupFunction(() => {
     Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", original);
+    Services.prefs.setBoolPref("devtools.webconsole.filter.netxhr", originalXhr);
     Services.prefs.clearUserPref(PREF);
   });
 
@@ -139,7 +142,7 @@ function testFormSubmission()
         {
           text: "test-data.json",
           category: CATEGORY_NETWORK,
-          severity: SEVERITY_LOG,
+          severity: SEVERITY_INFO,
           count: 2,
         },
       ],
