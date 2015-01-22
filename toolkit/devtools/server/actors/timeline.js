@@ -1,13 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 /**
  * Many Gecko operations (painting, reflows, restyle, ...) can be tracked
  * in real time. A marker is a representation of one operation. A marker
- * has a name, and start and end timestamps. Markers are stored in docShells.
+ * has a name, start and end timestamps. Markers are stored in docShells.
  *
  * This actor exposes this tracking mechanism to the devtools protocol.
  *
@@ -18,7 +17,6 @@
  *
  * When markers are available, an event is emitted:
  *   TimelineFront.on("markers", function(markers) {...})
- *
  */
 
 const {Ci, Cu} = require("chrome");
@@ -26,6 +24,7 @@ const protocol = require("devtools/server/protocol");
 const {method, Arg, RetVal, Option} = protocol;
 const events = require("sdk/event/core");
 const {setTimeout, clearTimeout} = require("sdk/timers");
+
 const {MemoryActor} = require("devtools/server/actors/memory");
 const {FramerateActor} = require("devtools/server/actors/framerate");
 const {StackFrameCache} = require("devtools/server/actors/utils/stack");
@@ -56,22 +55,20 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
   events: {
     /**
-     * "markers" events are emitted every DEFAULT_TIMELINE_DATA_PULL_TIMEOUT ms
-     * at most, when profile markers are found. A marker has the following
-     * properties:
-     * - start {Number} ms
-     * - end {Number} ms
-     * - name {String}
+     * The "markers" events emitted every DEFAULT_TIMELINE_DATA_PULL_TIMEOUT ms
+     * at most, when profile markers are found. The timestamps on each marker
+     * are relative to when recording was started.
      */
     "markers" : {
       type: "markers",
-      markers: Arg(0, "array:json"),
+      markers: Arg(0, "json"),
       endTime: Arg(1, "number")
     },
 
     /**
-     * "memory" events emitted in tandem with "markers", if this was enabled
-     * when the recording started.
+     * The "memory" events emitted in tandem with "markers", if this was enabled
+     * when the recording started. The `delta` timestamp on this measurement is
+     * relative to when recording was started.
      */
     "memory" : {
       type: "memory",
@@ -80,8 +77,9 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     },
 
     /**
-     * "ticks" events (from the refresh driver) emitted in tandem with "markers",
-     * if this was enabled when the recording started.
+     * The "ticks" events (from the refresh driver) emitted in tandem with
+     * "markers", if this was enabled when the recording started. All ticks
+     * are timestamps with a zero epoch.
      */
     "ticks" : {
       type: "ticks",
@@ -89,6 +87,11 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
       timestamps: Arg(1, "array-of-numbers-as-strings")
     },
 
+    /**
+     * The "frames" events emitted in tandem with "markers", containing
+     * JS stack frames. The `delta` timestamp on this frames packet is
+     * relative to when recording was started.
+     */
     "frames" : {
       type: "frames",
       delta: Arg(0, "number"),
@@ -96,6 +99,9 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
   },
 
+  /**
+   * Initializes this actor with the provided connection and tab actor.
+   */
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -118,6 +124,9 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     this.destroy();
   },
 
+  /**
+   * Destroys this actor, stopping recording first.
+   */
   destroy: function() {
     this.stop();
 
@@ -161,7 +170,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
   /**
    * At regular intervals, pop the markers from the docshell, and forward
-   * markers if any.
+   * markers, memory, tick and frames events, if any.
    */
   _pullTimelineData: function() {
     if (!this._isRecording) {
@@ -241,10 +250,10 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
 
     if (withMemory) {
-      this._memoryActor = new MemoryActor(this.conn, this.tabActor,
-                                          this._stackFrames);
+      this._memoryActor = new MemoryActor(this.conn, this.tabActor, this._stackFrames);
       events.emit(this, "memory", this._startTime, this._memoryActor.measure());
     }
+
     if (withTicks) {
       this._framerateActor = new FramerateActor(this.conn, this.tabActor);
       this._framerateActor.startRecording();
@@ -275,6 +284,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     if (this._memoryActor) {
       this._memoryActor = null;
     }
+
     if (this._framerateActor) {
       this._framerateActor.stopRecording();
       this._framerateActor = null;
@@ -313,7 +323,6 @@ exports.TimelineFront = protocol.FrontClass(TimelineActor, {
     protocol.Front.prototype.initialize.call(this, client, {actor: timelineActor});
     this.manage(this);
   },
-
   destroy: function() {
     protocol.Front.prototype.destroy.call(this);
   },

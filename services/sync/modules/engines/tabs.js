@@ -83,6 +83,17 @@ TabEngine.prototype = {
       urls.add(entry.urlHistory[0]);
     }
     return urls;
+  },
+
+  _reconcile: function (item) {
+    // Skip our own record.
+    // TabStore.itemExists tests only against our local client ID.
+    if (this._store.itemExists(item.id)) {
+      this._log.trace("Ignoring incoming tab item because of its id: " + item.id);
+      return false;
+    }
+
+    return SyncEngine.prototype._reconcile.call(this, item);
   }
 };
 
