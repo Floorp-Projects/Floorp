@@ -1803,7 +1803,14 @@ pref("dom.ipc.cpow.timeout", 500);
 // Enable e10s hang monitoring (slow script checking and plugin hang
 // detection).
 pref("dom.ipc.processHangMonitor", true);
+
+#ifdef DEBUG
+// Don't report hangs in DEBUG builds. They're too slow and often a
+// debugger is attached.
+pref("dom.ipc.reportProcessHangs", false);
+#else
 pref("dom.ipc.reportProcessHangs", true);
+#endif
 
 // Disable reader mode by default.
 pref("reader.parse-on-load.enabled", false);
