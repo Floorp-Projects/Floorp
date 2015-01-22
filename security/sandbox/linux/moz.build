@@ -19,7 +19,7 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
-    '../chromium-shim/base/logging.cpp',
+    '../chromium/base/shim/base/logging.cpp',
     '../chromium/sandbox/linux/seccomp-bpf/basicblock.cc',
     '../chromium/sandbox/linux/seccomp-bpf/codegen.cc',
     '../chromium/sandbox/linux/seccomp-bpf/die.cc',
@@ -38,7 +38,7 @@ if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True
 
-LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
+LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
 LOCAL_INCLUDES += ['/security/sandbox/chromium']
 
 if CONFIG['OS_TARGET'] != 'Android':
