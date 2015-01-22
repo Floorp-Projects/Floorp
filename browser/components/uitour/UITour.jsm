@@ -29,6 +29,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
+
+const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
+  "getConfiguration",
+  "getTreatmentTag",
+  "ping",
+  "registerPageID",
+  "setConfiguration",
+  "setTreatmentTag",
+]);
 const MAX_BUTTONS         = 4;
 
 const BUCKET_NAME         = "UITour";
@@ -326,7 +335,7 @@ this.UITour = {
     let tab = window.gBrowser.getTabForBrowser(browser);
     let messageManager = browser.messageManager;
 
-    log.debug("onPageEvent:", aEvent.detail);
+    log.debug("onPageEvent:", aEvent.detail, aMessage);
 
     if (typeof aEvent.detail != "object") {
       log.warn("Malformed event - detail not an object");
@@ -342,6 +351,13 @@ this.UITour = {
     let data = aEvent.detail.data;
     if (typeof data != "object") {
       log.warn("Malformed event - data not an object");
+      return false;
+    }
+
+    if ((aEvent.pageVisibilityState == "hidden" ||
+         aEvent.pageVisibilityState == "unloaded") &&
+        !BACKGROUND_PAGE_ACTIONS_ALLOWED.has(action)) {
+      log.warn("Ignoring disallowed action from a hidden page:", action);
       return false;
     }
 
