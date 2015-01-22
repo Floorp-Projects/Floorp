@@ -212,6 +212,10 @@ LoginManager.prototype = {
       let numPasswordsHist = Services.telemetry.getHistogramById("PWMGR_NUM_SAVED_PASSWORDS");
       numPasswordsHist.clear();
       numPasswordsHist.add(this.countLogins("", "", ""));
+
+      let isPwdSavedEnabledHist = Services.telemetry.getHistogramById("PWMGR_SAVING_ENABLED");
+      isPwdSavedEnabledHist.clear();
+      isPwdSavedEnabledHist.add(this._remember);
     },
 
 
