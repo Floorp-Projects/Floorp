@@ -20,10 +20,9 @@ function run_test() {
     removeCacheFile();
   });
 
-  // this will cause an "unknown host" error, but not report an external
-  // network connection in the tests (note that the hosts listed in
-  // server-locations.txt are *not* loaded for xpcshell tests...)
-  let url = "https://nocert.example.com:443";
+  // using a port > 2^32 causes an error to be reported.
+  let url = "http://localhost:111111111";
+
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   Services.search.init(() => {
     try {
