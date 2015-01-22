@@ -35,7 +35,7 @@ namespace js {
  * Nightly) and without (all others).  FIXME: Bug 1066322 - Enable ES6 symbols
  * in all builds.
  */
-static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 228;
+static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 230;
 static_assert(XDR_BYTECODE_VERSION_SUBTRAHEND % 2 == 0, "see the comment above");
 static const uint32_t XDR_BYTECODE_VERSION =
     uint32_t(0xb973c0de - (XDR_BYTECODE_VERSION_SUBTRAHEND
@@ -44,7 +44,7 @@ static const uint32_t XDR_BYTECODE_VERSION =
 #endif
                                                               ));
 
-static_assert(JSErr_Limit == 366,
+static_assert(JSErr_Limit == 367,
               "GREETINGS, POTENTIAL SUBTRAHEND INCREMENTER! If you added or "
               "removed MSG_DEFs from js.msg, you should increment "
               "XDR_BYTECODE_VERSION_SUBTRAHEND and update this assertion's "

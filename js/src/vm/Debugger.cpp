@@ -2640,6 +2640,14 @@ Debugger::getMemory(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/*
+ * Given a value used to designate a global (there's quite a variety; see the
+ * docs), return the actual designee.
+ *
+ * Note that this does not check whether the designee is marked "invisible to
+ * Debugger" or not; different callers need to handle invisible-to-Debugger
+ * globals in different ways.
+ */
 GlobalObject *
 Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
 {
@@ -3780,6 +3788,16 @@ Debugger::makeGlobalObjectReference(JSContext *cx, unsigned argc, Value *vp)
     Rooted<GlobalObject *> global(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
     if (!global)
         return false;
+
+    // If we create a D.O referring to a global in an invisible compartment,
+    // then from it we can reach function objects, scripts, environments, etc.,
+    // none of which we're ever supposed to see.
+    JSCompartment *globalCompartment = global->compartment();
+    if (globalCompartment->options().invisibleToDebugger()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                             JSMSG_DEBUG_INVISIBLE_COMPARTMENT);
+        return false;
+    }
 
     args.rval().setObject(*global);
     return dbg->wrapDebuggeeValue(cx, args.rval());
@@ -6991,6 +7009,16 @@ DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
     if (!unwrapped) {
         args.rval().setNull();
         return true;
+    }
+
+    // Don't allow unwrapping to create a D.O whose referent is in an
+    // invisible-to-Debugger global. (If our referent is a *wrapper* to such,
+    // and the wrapper is in a visible compartment, that's fine.)
+    JSCompartment *unwrappedCompartment = unwrapped->compartment();
+    if (unwrappedCompartment->options().invisibleToDebugger()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                             JSMSG_DEBUG_INVISIBLE_COMPARTMENT);
+        return false;
     }
 
     args.rval().setObject(*unwrapped);
