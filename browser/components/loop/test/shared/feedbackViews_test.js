@@ -25,10 +25,9 @@ describe("loop.shared.views.FeedbackView", function() {
     feedbackStore = new loop.store.FeedbackStore(dispatcher, {
       feedbackClient: fakeFeedbackClient
     });
+    loop.store.StoreMixin.register({feedbackStore: feedbackStore});
     comp = TestUtils.renderIntoDocument(
-      React.createElement(sharedViews.FeedbackView, {
-        feedbackStore: feedbackStore
-      }));
+      React.createElement(sharedViews.FeedbackView));
   });
 
   afterEach(function() {
