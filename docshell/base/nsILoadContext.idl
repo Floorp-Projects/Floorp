@@ -35,11 +35,14 @@ interface nsILoadContext : nsISupports
   readonly attribute nsIDOMWindow topWindow;
 
   /**
-   * topFrameElement is the <iframe> or <frame> element which contains the
-   * topWindow with which the load is associated.
+   * topFrameElement is the <iframe>, <frame>, or <browser> element which
+   * contains the topWindow with which the load is associated.
    *
    * Note that we may have a topFrameElement even when we don't have an
    * associatedWindow, if the topFrameElement's content lives out of process.
+   * topFrameElement is available in single-process and multiprocess contexts.
+   * Note that topFrameElement may be in chrome even when the nsILoadContext is
+   * associated with content.
    */
   readonly attribute nsIDOMElement topFrameElement;
 
