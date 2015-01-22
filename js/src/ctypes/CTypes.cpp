@@ -5588,84 +5588,85 @@ FunctionType::BuildSymbolName(JSString* name,
   }
 }
 
-static FunctionInfo*
-NewFunctionInfo(JSContext* cx,
-                jsval abiType,
-                jsval returnType,
-                jsval* argTypes,
-                unsigned argLength)
+static bool
+CreateFunctionInfo(JSContext* cx,
+                   HandleObject typeObj,
+                   HandleValue abiType,
+                   HandleObject returnType,
+                   const HandleValueArray& args)
 {
-  AutoPtr<FunctionInfo> fninfo(cx->new_<FunctionInfo>());
+  FunctionInfo *fninfo(cx->new_<FunctionInfo>());
   if (!fninfo) {
     JS_ReportOutOfMemory(cx);
-    return nullptr;
+    return false;
   }
+
+  // Stash the FunctionInfo in a reserved slot.
+  JS_SetReservedSlot(typeObj, SLOT_FNINFO, PRIVATE_TO_JSVAL(fninfo));
 
   ffi_abi abi;
   if (!GetABI(cx, abiType, &abi)) {
     JS_ReportError(cx, "Invalid ABI specification");
-    return nullptr;
+    return false;
   }
   fninfo->mABI = abiType.toObjectOrNull();
 
-  // prepare the result type
-  fninfo->mReturnType = PrepareReturnType(cx, returnType);
-  if (!fninfo->mReturnType)
-    return nullptr;
+  fninfo->mReturnType = returnType;
 
   // prepare the argument types
-  if (!fninfo->mArgTypes.reserve(argLength) ||
-      !fninfo->mFFITypes.reserve(argLength)) {
+  if (!fninfo->mArgTypes.reserve(args.length()) ||
+      !fninfo->mFFITypes.reserve(args.length())) {
     JS_ReportOutOfMemory(cx);
-    return nullptr;
+    return false;
   }
 
   fninfo->mIsVariadic = false;
 
-  for (uint32_t i = 0; i < argLength; ++i) {
+  for (uint32_t i = 0; i < args.length(); ++i) {
     bool isEllipsis;
-    if (!IsEllipsis(cx, argTypes[i], &isEllipsis))
+    if (!IsEllipsis(cx, args[i], &isEllipsis))
       return nullptr;
     if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
         JS_ReportError(cx, "\"...\" may not be the first and only parameter "
                        "type of a variadic function declaration");
-        return nullptr;
+        return false;
       }
-      if (i < argLength - 1) {
+      if (i < args.length() - 1) {
         JS_ReportError(cx, "\"...\" must be the last parameter type of a "
                        "variadic function declaration");
-        return nullptr;
+        return false;
       }
       if (GetABICode(fninfo->mABI) != ABI_DEFAULT) {
         JS_ReportError(cx, "Variadic functions must use the __cdecl calling "
                        "convention");
-        return nullptr;
+        return false;
       }
       break;
     }
 
-    JSObject* argType = PrepareType(cx, argTypes[i]);
+    JSObject* argType = PrepareType(cx, args[i]);
     if (!argType)
-      return nullptr;
+      return false;
 
     ffi_type* ffiType = CType::GetFFIType(cx, argType);
     if (!ffiType)
-      return nullptr;
+      return false;
 
     fninfo->mArgTypes.infallibleAppend(argType);
     fninfo->mFFITypes.infallibleAppend(ffiType);
   }
 
-  if (fninfo->mIsVariadic)
+  if (fninfo->mIsVariadic) {
     // wait to PrepareCIF until function is called
-    return fninfo.forget();
+    return true;
+  }
 
-  if (!PrepareCIF(cx, fninfo.get()))
-    return nullptr;
+  if (!PrepareCIF(cx, fninfo))
+    return false;
 
-  return fninfo.forget();
+  return true;
 }
 
 bool
@@ -5706,8 +5707,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
       return false;
   }
 
-  JSObject* result = CreateInternal(cx, args[0], args[1],
-      argTypes.begin(), argTypes.length());
+  JSObject* result = CreateInternal(cx, args[0], args[1], argTypes);
   if (!result)
     return false;
 
@@ -5717,35 +5717,33 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
 
 JSObject*
 FunctionType::CreateInternal(JSContext* cx,
-                             jsval abi,
-                             jsval rtype,
-                             jsval* argtypes,
-                             unsigned arglen)
+                             HandleValue abi,
+                             HandleValue rtype,
+                             const HandleValueArray& args)
 {
-  // Determine and check the types, and prepare the function CIF.
-  AutoPtr<FunctionInfo> fninfo(NewFunctionInfo(cx, abi, rtype, argtypes, arglen));
-  if (!fninfo)
+  // Prepare the result type
+  RootedObject returnType(cx, PrepareReturnType(cx, rtype));
+  if (!returnType)
     return nullptr;
 
   // Get ctypes.FunctionType.prototype and the common prototype for CData objects
   // of this type, from ctypes.CType.prototype.
-  RootedObject typeProto(cx, CType::GetProtoFromType(cx, fninfo->mReturnType,
-                                                     SLOT_FUNCTIONPROTO));
+  RootedObject typeProto(cx, CType::GetProtoFromType(cx, returnType, SLOT_FUNCTIONPROTO));
   if (!typeProto)
     return nullptr;
-  RootedObject dataProto(cx, CType::GetProtoFromType(cx, fninfo->mReturnType,
-                                                     SLOT_FUNCTIONDATAPROTO));
+  RootedObject dataProto(cx, CType::GetProtoFromType(cx, returnType, SLOT_FUNCTIONDATAPROTO));
   if (!dataProto)
     return nullptr;
 
   // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_function,
-                        nullptr, JSVAL_VOID, JSVAL_VOID, nullptr);
+  RootedObject typeObj(cx, CType::Create(cx, typeProto, dataProto, TYPE_function,
+                                         nullptr, JSVAL_VOID, JSVAL_VOID, nullptr));
   if (!typeObj)
     return nullptr;
 
-  // Stash the FunctionInfo in a reserved slot.
-  JS_SetReservedSlot(typeObj, SLOT_FNINFO, PRIVATE_TO_JSVAL(fninfo.forget()));
+  // Determine and check the types, and prepare the function CIF.
+  if (!CreateFunctionInfo(cx, typeObj, abi, returnType, args))
+      return nullptr;
 
   return typeObj;
 }
