@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
+interface nsIChannel;
 interface nsIProxyInfo;
 interface nsICancelable;
 
@@ -14,7 +14,7 @@ interface nsICancelable;
  * This interface serves as a closure for nsIProtocolProxyService's
  * asyncResolve method.
  */
-[scriptable, uuid(a9967200-f95e-45c2-beb3-9b060d874bfd)]
+[scriptable, uuid(fbb6eff6-0cc2-4d99-8d6f-0a12b462bdeb)]
 interface nsIProtocolProxyCallback : nsISupports
 {
   /**
@@ -23,8 +23,8 @@ interface nsIProtocolProxyCallback : nsISupports
    *
    * @param aRequest
    *        The value returned from asyncResolve.
-   * @param aURI
-   *        The URI passed to asyncResolve.
+   * @param aChannel
+   *        The channel passed to asyncResolve.
    * @param aProxyInfo
    *        The resulting proxy info or null if there is no associated proxy
    *        info for aURI.  As with the result of nsIProtocolProxyService's
@@ -36,7 +36,7 @@ interface nsIProtocolProxyCallback : nsISupports
    *        indicates the reason for the failure and aProxyInfo will be null.
    */
   void onProxyAvailable(in nsICancelable aRequest,
-                        in nsIURI aURI,
+                        in nsIChannel aChannel,
                         in nsIProxyInfo aProxyInfo,
                         in nsresult aStatus);
 };

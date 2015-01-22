@@ -86,6 +86,11 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #undef GetCurrentTime
 #endif
 
+// Certain constants get stored as member variables and then adjusted by various
+// scale factors on a per-decoder basis. We want to make sure to avoid using these
+// constants directly, so we put them in a namespace.
+namespace detail {
+
 // If audio queue has less than this many usecs of decoded audio, we won't risk
 // trying to decode the video, we'll skip decoding video up to the next
 // keyframe. We may increase this value for an individual decoder if we
@@ -97,6 +102,8 @@ static const uint32_t LOW_AUDIO_USECS = 300000;
 // LOW_AUDIO_USECS above) we'll also increase this value to ensure it's not
 // less than the low audio threshold.
 const int64_t AMPLE_AUDIO_USECS = 1000000;
+
+} // namespace detail
 
 // When we're only playing audio and we don't have a video stream, we divide
 // AMPLE_AUDIO_USECS and LOW_AUDIO_USECS by the following value. This reduces
@@ -126,6 +133,8 @@ static const int AUDIO_DURATION_USECS = 40000;
 // increase it by more.
 static const int THRESHOLD_FACTOR = 2;
 
+namespace detail {
+
 // If we have less than this much undecoded data available, we'll consider
 // ourselves to be running low on undecoded data. We determine how much
 // undecoded data we have remaining using the reader's GetBuffered()
@@ -136,6 +145,8 @@ static const int64_t LOW_DATA_THRESHOLD_USECS = 5000000;
 // the skip-to-keyframe logic can activate when we're running low on data.
 static_assert(LOW_DATA_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
               "LOW_DATA_THRESHOLD_USECS is too small");
+
+} // namespace detail
 
 // Amount of excess usecs of data to add in to the "should we buffer" calculation.
 static const uint32_t EXHAUSTED_DATA_MARGIN_USECS = 60000;
@@ -151,6 +162,8 @@ static const uint32_t EXHAUSTED_DATA_MARGIN_USECS = 60000;
 // back to buffering normally.
 static const uint32_t QUICK_BUFFER_THRESHOLD_USECS = 2000000;
 
+namespace detail {
+
 // If we're quick buffering, we'll remain in buffering mode while we have less than
 // QUICK_BUFFERING_LOW_DATA_USECS of decoded data available.
 static const uint32_t QUICK_BUFFERING_LOW_DATA_USECS = 1000000;
@@ -161,6 +174,8 @@ static const uint32_t QUICK_BUFFERING_LOW_DATA_USECS = 1000000;
 // QUICK_BUFFERING_LOW_DATA_USECS.
 static_assert(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS,
               "QUICK_BUFFERING_LOW_DATA_USECS is too large");
+
+} // namespace detail
 
 // The amount of instability we tollerate in calls to
 // MediaDecoderStateMachine::UpdateEstimatedDuration(); changes of duration
@@ -202,8 +217,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mPlaybackRate(1.0),
   mPreservesPitch(true),
   mAmpleVideoFrames(2),
-  mLowAudioThresholdUsecs(LOW_AUDIO_USECS),
-  mAmpleAudioThresholdUsecs(AMPLE_AUDIO_USECS),
+  mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
+  mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
+  mQuickBufferingLowDataThresholdUsecs(detail::QUICK_BUFFERING_LOW_DATA_USECS),
   mIsAudioPrerolling(false),
   mIsVideoPrerolling(false),
   mAudioRequestStatus(RequestStatus::Idle),
@@ -235,7 +251,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
     std::max<uint32_t>(Preferences::GetUint("media.video-queue.default-size", 10), 3);
 
   mBufferingWait = IsRealTime() ? 0 : 30;
-  mLowDataThresholdUsecs = IsRealTime() ? 0 : LOW_DATA_THRESHOLD_USECS;
+  mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
 
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
@@ -1022,7 +1038,7 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
           !HasLowUndecodedData())
       {
         mLowAudioThresholdUsecs =
-          std::min(THRESHOLD_FACTOR * DurationToUsecs(decodeTime), AMPLE_AUDIO_USECS);
+          std::min(THRESHOLD_FACTOR * DurationToUsecs(decodeTime), mAmpleAudioThresholdUsecs);
         mAmpleAudioThresholdUsecs = std::max(THRESHOLD_FACTOR * mLowAudioThresholdUsecs,
                                               mAmpleAudioThresholdUsecs);
         DECODER_LOG("Slow video decode, set mLowAudioThresholdUsecs=%lld mAmpleAudioThresholdUsecs=%lld",
@@ -2336,6 +2352,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
     // order to reduce memory usage.
     mAmpleAudioThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
     mLowAudioThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
+    mQuickBufferingLowDataThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
   }
 
   // Get potentially updated metadata
@@ -2803,7 +2820,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         bool isLiveStream = resource->GetLength() == -1;
         if ((isLiveStream || !mDecoder->CanPlayThrough()) &&
               elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
-              (mQuickBuffering ? HasLowDecodedData(QUICK_BUFFERING_LOW_DATA_USECS)
+              (mQuickBuffering ? HasLowDecodedData(mQuickBufferingLowDataThresholdUsecs)
                                : HasLowUndecodedData(mBufferingWait * USECS_PER_S)) &&
               mDecoder->IsExpectingMoreData())
         {
@@ -2921,12 +2938,6 @@ MediaDecoderStateMachine::FlushDecoding()
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     DecodeTaskQueue()->FlushAndDispatch(task);
   }
-
-  // These flags will be reset when the decoded data returned in OnAudioDecoded()
-  // and OnVideoDecoded(). Because the decode tasks are flushed, these flags need
-  // to be reset here.
-  mAudioRequestStatus = RequestStatus::Idle;
-  mVideoRequestStatus = RequestStatus::Idle;
 
   // We must reset playback so that all references to frames queued
   // in the state machine are dropped, else subsequent calls to Shutdown()

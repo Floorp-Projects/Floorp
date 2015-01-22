@@ -5706,15 +5706,11 @@ if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
     domProp: "rubyPosition",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "over right", "right over" ],
-    other_values: [
-      "over left", "under right", "under left",
-      "left over", "right under", "left under"
-    ],
+    initial_values: [ "over" ],
+    other_values: [ "under" ],
     invalid_values: [
-      "over", "under", "left", "right", "auto", "none", "not_a_position",
-      "over over", "over under", "left left", "left right",
-      "over left over", "right over left", "0", "100px", "50%"
+      "left", "right", "auto", "none", "not_a_position",
+      "over left", "right under", "0", "100px", "50%"
     ]
   };
 }

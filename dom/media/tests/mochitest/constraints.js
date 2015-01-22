@@ -23,24 +23,42 @@ var common_tests = [
     constraints: { video: { facingMode:'left', require:["facingMode"] },
                    fake: true },
     error: "NotFoundError" },
+  { message: "video overconstrained by facingMode array fails",
+    constraints: { video: { facingMode:['left', 'right'], require:["facingMode"] },
+                   fake: true },
+    error: "NotFoundError" },
   { message: "audio overconstrained by facingMode fails",
     constraints: { audio: { facingMode:'left', require:["facingMode"] },
                    fake: true },
     error: "NotFoundError" },
+  { message: "full screensharing requires permission",
+    constraints: { video: { mediaSource:'screen' } },
+    error: "PermissionDeniedError" },
+  { message: "application screensharing requires permission",
+    constraints: { video: { mediaSource:'application' } },
+    error: "PermissionDeniedError" },
+  { message: "window screensharing requires permission",
+    constraints: { video: { mediaSource:'window' } },
+    error: "PermissionDeniedError" },
+  { message: "browser screensharing requires permission",
+    constraints: { video: { mediaSource:'browser' } },
+    error: "PermissionDeniedError" },
+  { message: "unknown mediaSource fails",
+    constraints: { video: { mediaSource:'uncle' } },
+    error: "NotFoundError" },
   { message: "Success-path: optional video facingMode + audio ignoring facingMode",
     constraints: { fake: true,
-                   audio: { facingMode:'left',
-                            foo:0,
-                            advanced: [{ facingMode:'environment' },
-                                       { facingMode:'user' },
-                                       { bar:0 }] },
-                   video: { // TODO: Bug 767924 sequences in unions
-                            //facingMode:['left', 'right', 'user', 'environment'],
-                            //require:["facingMode"],
+                   audio: { mediaSource:'microphone',
                             facingMode:'left',
                             foo:0,
                             advanced: [{ facingMode:'environment' },
                                        { facingMode:'user' },
+                                       { bar:0 }] },
+                   video: { mediaSource:'camera',
+                            facingMode:['left', 'right', 'user', 'environment'],
+                            foo:0,
+                            advanced: [{ facingMode:'environment' },
+                                       { facingMode:['user'] },
                                        { bar:0 }] } },
     error: null }
 ];
@@ -63,12 +81,14 @@ function testConstraints(tests) {
     });
   }
 
-  var p = new Promise(function(resolve) { resolve(); });
+  var p = new Promise(r => SpecialPowers.pushPrefEnv({
+      set : [ ['media.getusermedia.browser.enabled', false],
+              ['media.getusermedia.screensharing.enabled', false] ]
+    }, r));
+
   tests.forEach(function(test) {
     p = testgum(p, test);
   });
-  p.catch(function(reason) {
-    ok(false, "Unexpected failure: " + reason.message);
-  })
+  p.catch(reason => ok(false, "Unexpected failure: " + reason.message))
   .then(SimpleTest.finish);
 }
