@@ -476,6 +476,12 @@ MacroAssemblerMIPS::ma_addu(Register rd, Register rs, Imm32 imm)
 }
 
 void
+MacroAssemblerMIPS::ma_addu(Register rd, Register rs, Register rt)
+{
+    as_addu(rd, rs, rt);
+}
+
+void
 MacroAssemblerMIPS::ma_addu(Register rd, Register rs)
 {
     as_addu(rd, rd, rs);
@@ -3683,7 +3689,7 @@ MacroAssemblerMIPSCompat::branchValueIsNurseryObject(Condition cond, ValueOperan
 }
 
 void
-MacroAssemblerMIPSCompat::profilerEnterFrame(Register reg)
+MacroAssemblerMIPSCompat::profilerEnterFrame(Register framePtr, Register scratch)
 {
     AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
     loadPtr(activation, scratch);
