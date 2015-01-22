@@ -484,6 +484,21 @@ LinearScanAllocator::isSpilledAt(LiveInterval *interval, CodePosition pos)
 bool
 LinearScanAllocator::populateSafepoints()
 {
+    // Populate all safepoints with this/argument slots. These are never changed
+    // by the allocator and are not necessarily populated by the code below.
+    size_t nargs = graph.getBlock(0)->mir()->info().nargs();
+    for (size_t i = 0; i < graph.numSafepoints(); i++) {
+        LSafepoint *safepoint = graph.getSafepoint(i)->safepoint();
+
+        if (!safepoint->addValueSlot(/* stack = */ false, THIS_FRAME_ARGSLOT * sizeof(Value)))
+            return false;
+
+        for (size_t j = 0; j < nargs; j++) {
+            if (!safepoint->addValueSlot(/* stack = */ false, (j + 1) * sizeof(Value)))
+                return false;
+        }
+    }
+
     size_t firstSafepoint = 0;
 
     for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
@@ -533,7 +548,7 @@ LinearScanAllocator::populateSafepoints()
                     safepoint->addSlotsOrElementsRegister(a->toGeneralReg()->reg());
 
                 if (isSpilledAt(interval, inputOf(ins))) {
-                    if (!safepoint->addSlotsOrElementsSlot(reg->canonicalSpillSlot()))
+                    if (!safepoint->addSlotsOrElementsSlot(true, reg->canonicalSpillSlot()))
                         return false;
                 }
             } else if (!IsNunbox(reg)) {
@@ -558,12 +573,12 @@ LinearScanAllocator::populateSafepoints()
                 if (isSpilledAt(interval, inputOf(ins))) {
 #ifdef JS_PUNBOX64
                     if (reg->type() == LDefinition::BOX) {
-                        if (!safepoint->addValueSlot(reg->canonicalSpillSlot()))
+                        if (!safepoint->addValueSlot(true, reg->canonicalSpillSlot()))
                             return false;
                     } else
 #endif
                     {
-                        if (!safepoint->addGcSlot(reg->canonicalSpillSlot()))
+                        if (!safepoint->addGcSlot(true, reg->canonicalSpillSlot()))
                             return false;
                     }
                 }
@@ -598,7 +613,7 @@ LinearScanAllocator::populateSafepoints()
                     // contiguously, so simply keep track of the base slot.
                     uint32_t payloadSlot = payload->canonicalSpillSlot();
                     uint32_t slot = BaseOfNunboxSlot(LDefinition::PAYLOAD, payloadSlot);
-                    if (!safepoint->addValueSlot(slot))
+                    if (!safepoint->addValueSlot(true, slot))
                         return false;
                 }
 
