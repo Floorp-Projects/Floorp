@@ -275,7 +275,7 @@ class ServiceWorkerManager MOZ_FINAL : public nsIServiceWorkerManager
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class QueueFireUpdateFoundRunnable;
-  friend class UnregisterRunnable;
+  friend class ServiceWorkerUnregisterJob;
 
 public:
   NS_DECL_ISUPPORTS
