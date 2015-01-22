@@ -40,7 +40,6 @@ DISABLE_STL_WRAPPING = True
 
 LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
 LOCAL_INCLUDES += ['/security/sandbox/chromium']
-LOCAL_INCLUDES += ['/security/sandbox']
 
 if CONFIG['OS_TARGET'] != 'Android':
     # Needed for clock_gettime with glibc < 2.17:
