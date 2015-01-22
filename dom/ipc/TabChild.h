@@ -196,10 +196,6 @@ public:
                                          const bool& aIsRoot,
                                          const mozilla::layers::ZoomConstraints& aConstraints) = 0;
 
-    nsEventStatus DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
-                                                const LayoutDevicePoint& aRefPoint,
-                                                nsIWidget* aWidget);
-
 protected:
     virtual ~TabChildBase();
     CSSSize GetPageSize(nsCOMPtr<nsIDocument> aDocument, const CSSSize& aViewport);
@@ -220,8 +216,6 @@ protected:
     // so we don't need things like this.
     void DispatchMessageManagerMessage(const nsAString& aMessageName,
                                        const nsAString& aJSONData);
-
-    nsEventStatus DispatchWidgetEvent(WidgetGUIEvent& event);
 
     void InitializeRootMetrics();
 
@@ -659,7 +653,6 @@ private:
     bool mPendingTouchPreventedResponse;
     ScrollableLayerGuid mPendingTouchPreventedGuid;
     uint64_t mPendingTouchPreventedBlockId;
-    void FireSingleTapEvent(LayoutDevicePoint aPoint);
 
     bool mTouchEndCancelled;
     bool mEndTouchIsClick;
