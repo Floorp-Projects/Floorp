@@ -159,6 +159,13 @@ public class AppConstants {
     false;
 //#endif
 
+    public static final boolean MOZ_ANDROID_READING_LIST_SERVICE =
+//#ifdef MOZ_ANDROID_READING_LIST_SERVICE
+    true;
+//#else
+    false;
+//#endif
+
     public static final boolean MOZ_TELEMETRY_ON_BY_DEFAULT =
 //#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     true;

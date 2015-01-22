@@ -19,10 +19,10 @@
   <script type="application/javascript" src="performance/recording-model.js"/>
   <script type="application/javascript" src="performance/views/overview.js"/>
   <script type="application/javascript" src="performance/views/toolbar.js"/>
-  <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/details-call-tree.js"/>
   <script type="application/javascript" src="performance/views/details-waterfall.js"/>
   <script type="application/javascript" src="performance/views/details-flamegraph.js"/>
+  <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/recordings.js"/>
 
   <popupset id="performance-options-popupset">
@@ -34,6 +34,7 @@
                 tooltiptext="&profilerUI.invertTree.tooltiptext;"/>
     </menupopup>
   </popupset>
+
   <hbox class="theme-body" flex="1">
     <vbox id="recordings-pane">
       <toolbar id="recordings-toolbar"
@@ -53,7 +54,8 @@
       </toolbar>
       <vbox id="recordings-list" flex="1"/>
     </vbox>
-    <vbox flex="1">
+
+    <vbox id="performance-pane" flex="1">
       <toolbar id="performance-toolbar" class="devtools-toolbar">
         <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
           <toolbarbutton id="select-waterfall-view"
@@ -80,6 +82,7 @@
         <hbox id="memory-overview"/>
         <hbox id="time-framerate"/>
       </vbox>
+
       <deck id="details-pane" flex="1">
         <hbox id="waterfall-view" flex="1">
           <vbox id="waterfall-breakdown" flex="1" />

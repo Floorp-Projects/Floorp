@@ -21,7 +21,7 @@ let test = Task.async(function*() {
     yield PerformanceController.importRecording("", file);
     ok(false, "The recording succeeded unexpectedly.");
   } catch (e) {
-    is(e.message, "Unrecognized recording data file.");
+    is(e.message, "Unrecognized recording data file.", "Message is correct.");
     ok(true, "The recording was cancelled.");
   }
 
