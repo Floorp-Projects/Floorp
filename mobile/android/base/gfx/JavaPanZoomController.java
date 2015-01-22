@@ -129,6 +129,8 @@ class JavaPanZoomController
     private boolean mNegateWheelScrollY;
     /* Whether the current event has been default-prevented. */
     private boolean mDefaultPrevented;
+    /* Whether longpress events are enabled, or suppressed by robocop tests. */
+    private boolean isLongpressEnabled;
 
     // Handler to be notified when overscroll occurs
     private Overscroll mOverscroll;
@@ -139,6 +141,7 @@ class JavaPanZoomController
         mX = new AxisX(mSubscroller);
         mY = new AxisY(mSubscroller);
         mTouchEventHandler = new TouchEventHandler(view.getContext(), view, this);
+        isLongpressEnabled = true;
 
         checkMainThread();
 
@@ -1348,8 +1351,20 @@ class JavaPanZoomController
         mWaitForDoubleTap = false;
     }
 
+    /**
+     * MotionEventHelper dragAsync() robocop tests can have us suppress
+     * longpress events that are spuriously created on slower test devices.
+     */
+    public void setIsLongpressEnabled(boolean isLongpressEnabled) {
+        this.isLongpressEnabled = isLongpressEnabled;
+    }
+
     @Override
     public void onLongPress(MotionEvent motionEvent) {
+        if (!isLongpressEnabled) {
+            return;
+        }
+
         GeckoEvent e = GeckoEvent.createLongPressEvent(motionEvent);
         GeckoAppShell.sendEventToGecko(e);
     }
