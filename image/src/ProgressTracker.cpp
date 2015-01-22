@@ -360,6 +360,15 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
     progress &= ~FLAG_ONLOAD_UNBLOCKED;
   }
 
+  // XXX(seth): Hack to work around the fact that some observers have bugs and
+  // need to get onload blocking notifications multiple times. We should fix
+  // those observers and remove this.
+  if ((aProgress & FLAG_DECODE_COMPLETE) &&
+      (mProgress & FLAG_ONLOAD_BLOCKED) &&
+      (mProgress & FLAG_ONLOAD_UNBLOCKED)) {
+    progress |= FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
+  }
+
   // Apply the changes.
   mProgress |= progress;
 
