@@ -92,16 +92,6 @@ function isStkText(aStkText, aExpectedStkText) {
   }
 }
 
-// Emulate Promise.jsm semantics.
-Promise.defer = function() { return new Deferred(); }
-function Deferred() {
-  this.promise = new Promise(function(resolve, reject) {
-    this.resolve = resolve;
-    this.reject = reject;
-  }.bind(this));
-  Object.freeze(this);
-}
-
 let _pendingEmulatorCmdCount = 0;
 
 /**
@@ -122,22 +112,20 @@ let _pendingEmulatorCmdCount = 0;
  * @return A deferred promise.
  */
 function runEmulatorCmdSafe(aCommand) {
-  let deferred = Promise.defer();
+  return new Promise(function(aResolve, aReject) {
+    ++_pendingEmulatorCmdCount;
+    runEmulatorCmd(aCommand, function(aResult) {
+      --_pendingEmulatorCmdCount;
 
-  ++_pendingEmulatorCmdCount;
-  runEmulatorCmd(aCommand, function(aResult) {
-    --_pendingEmulatorCmdCount;
-
-    ok(true, "Emulator response: " + JSON.stringify(aResult));
-    if (Array.isArray(aResult) &&
-        aResult[aResult.length - 1] === "OK") {
-      deferred.resolve(aResult);
-    } else {
-      deferred.reject(aResult);
-    }
+      ok(true, "Emulator response: " + JSON.stringify(aResult));
+      if (Array.isArray(aResult) &&
+          aResult[aResult.length - 1] === "OK") {
+        aResolve(aResult);
+      } else {
+        aReject(aResult);
+      }
+    });
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -175,46 +163,44 @@ let iccManager;
  * @return A deferred promise.
  */
 function ensureIccManager(aAdditionalPermissions) {
-  let deferred = Promise.defer();
+  return new Promise(function(aResolve, aReject) {
+    aAdditionalPermissions = aAdditionalPermissions || [];
 
-  aAdditionalPermissions = aAdditionalPermissions || [];
+    if (aAdditionalPermissions.indexOf("mobileconnection") < 0) {
+      aAdditionalPermissions.push("mobileconnection");
+    }
+    let permissions = [];
+    for (let perm of aAdditionalPermissions) {
+      permissions.push({ "type": perm, "allow": 1, "context": document });
+    }
 
-  if (aAdditionalPermissions.indexOf("mobileconnection") < 0) {
-    aAdditionalPermissions.push("mobileconnection");
-  }
-  let permissions = [];
-  for (let perm of aAdditionalPermissions) {
-    permissions.push({ "type": perm, "allow": 1, "context": document });
-  }
+    SpecialPowers.pushPermissions(permissions, function() {
+      ok(true, "permissions pushed: " + JSON.stringify(permissions));
 
-  SpecialPowers.pushPermissions(permissions, function() {
-    ok(true, "permissions pushed: " + JSON.stringify(permissions));
+      // Permission changes can't change existing Navigator.prototype
+      // objects, so grab our objects from a new Navigator.
+      workingFrame = document.createElement("iframe");
+      workingFrame.addEventListener("load", function load() {
+        workingFrame.removeEventListener("load", load);
 
-    // Permission changes can't change existing Navigator.prototype
-    // objects, so grab our objects from a new Navigator.
-    workingFrame = document.createElement("iframe");
-    workingFrame.addEventListener("load", function load() {
-      workingFrame.removeEventListener("load", load);
+        iccManager = workingFrame.contentWindow.navigator.mozIccManager;
 
-      iccManager = workingFrame.contentWindow.navigator.mozIccManager;
+        if (iccManager) {
+          ok(true, "navigator.mozIccManager is instance of " + iccManager.constructor);
+        } else {
+          ok(true, "navigator.mozIccManager is undefined");
+        }
 
-      if (iccManager) {
-        ok(true, "navigator.mozIccManager is instance of " + iccManager.constructor);
-      } else {
-        ok(true, "navigator.mozIccManager is undefined");
-      }
+        if (iccManager instanceof MozIccManager) {
+          aResolve(iccManager);
+        } else {
+          aReject();
+        }
+      });
 
-      if (iccManager instanceof MozIccManager) {
-        deferred.resolve(iccManager);
-      } else {
-        deferred.reject();
-      }
+      document.body.appendChild(workingFrame);
     });
-
-    document.body.appendChild(workingFrame);
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -290,17 +276,15 @@ function setRadioEnabled(aEnabled, aServiceId) {
  * @return A deferred promise.
  */
 function waitForTargetEvent(aEventTarget, aEventName, aMatchFun) {
-  let deferred = Promise.defer();
-
-  aEventTarget.addEventListener(aEventName, function onevent(aEvent) {
-    if (!aMatchFun || aMatchFun(aEvent)) {
-      aEventTarget.removeEventListener(aEventName, onevent);
-      ok(true, "Event '" + aEventName + "' got.");
-      deferred.resolve(aEvent);
-    }
+  return new Promise(function(aResolve, aReject) {
+    aEventTarget.addEventListener(aEventName, function onevent(aEvent) {
+      if (!aMatchFun || aMatchFun(aEvent)) {
+        aEventTarget.removeEventListener(aEventName, onevent);
+        ok(true, "Event '" + aEventName + "' got.");
+        aResolve(aEvent);
+      }
+    });
   });
-
-  return deferred.promise;
 }
 
 /**
