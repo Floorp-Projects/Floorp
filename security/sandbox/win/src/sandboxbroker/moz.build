@@ -24,6 +24,7 @@ for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'NOMINMAX',
     DEFINES[var] = True
 
 LOCAL_INCLUDES += [
+    '/security',
     '/security/sandbox/chromium',
 ]
 
