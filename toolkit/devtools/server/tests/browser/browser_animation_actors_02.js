@@ -47,6 +47,7 @@ function* theRightNumberOfPlayersIsReturned(walker, front) {
 function* playersCanBePausedAndResumed(walker, front) {
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
   let [player] = yield front.getAnimationPlayersForNode(node);
+  yield player.ready;
 
   ok(player.initialState, "The player has an initialState");
   ok(player.getCurrentState, "The player has the getCurrentState method");
