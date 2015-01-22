@@ -49,31 +49,25 @@ var tabPreviews = {
   capture: function tabPreviews_capture(aTab, aShouldCache) {
     let browser = aTab.linkedBrowser;
     let uri = browser.currentURI.spec;
-
-    // FIXME: The gBrowserThumbnails._shouldCapture determines whether
-    //        thumbnails should be written to disk. This should somehow be part
-    //        of the PageThumbs API. (bug 1062414)
-    if (aShouldCache &&
-        gBrowserThumbnails._shouldCapture(browser)) {
-      let img = new Image;
-
-      PageThumbs.captureAndStore(browser, function () {
-        img.src = PageThumbs.getThumbnailURL(uri);
-      });
-
-      aTab.__thumbnail = img;
-      aTab.__thumbnail_lastURI = uri;
-      return img;
-    }
-
     let canvas = PageThumbs.createCanvas(window);
-
-    if (aShouldCache) {
-      aTab.__thumbnail = canvas;
-      aTab.__thumbnail_lastURI = uri;
-    }
-
-    PageThumbs.captureToCanvas(browser, canvas);
+    PageThumbs.shouldStoreThumbnail(browser, (aDoStore) => {
+      if (aDoStore && aShouldCache) {
+        PageThumbs.captureAndStore(browser, function () {
+          let img = new Image;
+          img.src = PageThumbs.getThumbnailURL(uri);
+          aTab.__thumbnail = img;
+          aTab.__thumbnail_lastURI = uri;
+          canvas.getContext("2d").drawImage(img, 0, 0);
+        });
+      } else {
+        PageThumbs.captureToCanvas(browser, canvas, () => {
+          if (aShouldCache) {
+            aTab.__thumbnail = canvas;
+            aTab.__thumbnail_lastURI = uri;
+          }
+        });
+      }
+    });
     return canvas;
   },
 

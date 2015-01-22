@@ -101,5 +101,67 @@ this.PageThumbUtils = {
       width -= Math.floor(Math.abs(scaledWidth - thumbnailWidth) * scale);
 
     return [width, height, scale];
+  },
+
+  shouldStoreContentThumbnail: function (aDocument, aDocShell) {
+    // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as
+    //       that currently regresses Talos SVG tests.
+    if (aDocument instanceof Ci.nsIDOMXMLDocument) {
+      return false;
+    }
+
+    // Don't take screenshots of about: pages.
+    if (aDocShell.currentURI.schemeIs("about")) {
+      return false;
+    }
+
+    // There's no point in taking screenshot of loading pages.
+    if (aDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
+      return false;
+    }
+
+    let channel = aDocShell.currentDocumentChannel;
+
+    // No valid document channel. We shouldn't take a screenshot.
+    if (!channel) {
+      return false;
+    }
+
+    // Don't take screenshots of internally redirecting about: pages.
+    // This includes error pages.
+    let uri = channel.originalURI;
+    if (uri.schemeIs("about")) {
+      return false;
+    }
+
+    let httpChannel;
+    try {
+      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (e) { /* Not an HTTP channel. */ }
+
+    if (httpChannel) {
+      // Continue only if we have a 2xx status code.
+      try {
+        if (Math.floor(httpChannel.responseStatus / 100) != 2) {
+        return false;
+        }
+      } catch (e) {
+        // Can't get response information from the httpChannel
+        // because mResponseHead is not available.
+        return false;
+      }
+
+      // Cache-Control: no-store.
+      if (httpChannel.isNoStoreResponse()) {
+        return false;
+      }
+
+      // Don't capture HTTPS pages unless the user explicitly enabled it.
+      if (uri.schemeIs("https") &&
+          !Services.prefs.getBoolPref("browser.cache.disk_cache_ssl")) {
+        return false;
+      }
+    } // httpChannel
+    return true;
   }
 };

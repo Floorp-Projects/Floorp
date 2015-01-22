@@ -96,9 +96,13 @@ let gBrowserThumbnails = {
 
   _capture: function Thumbnails_capture(aBrowser) {
     // Only capture about:newtab top sites.
-    if (this._topSiteURLs.indexOf(aBrowser.currentURI.spec) >= 0 &&
-        this._shouldCapture(aBrowser))
-      PageThumbs.captureAndStoreIfStale(aBrowser);
+    if (this._topSiteURLs.indexOf(aBrowser.currentURI.spec) == -1)
+      return;
+    this._shouldCapture(aBrowser, function (aResult) {
+      if (aResult) {
+        PageThumbs.captureAndStoreIfStale(aBrowser);
+      }
+    });
   },
 
   _delayedCapture: function Thumbnails_delayedCapture(aBrowser) {
@@ -115,73 +119,13 @@ let gBrowserThumbnails = {
     this._timeouts.set(aBrowser, timeout);
   },
 
-  // FIXME: This should be part of the PageThumbs API. (bug 1062414)
-  _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+  _shouldCapture: function Thumbnails_shouldCapture(aBrowser, aCallback) {
     // Capture only if it's the currently selected tab.
-    if (aBrowser != gBrowser.selectedBrowser)
-      return false;
-
-    // Don't capture in per-window private browsing mode.
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
-      return false;
-
-    let doc = aBrowser.contentDocument;
-
-    // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as
-    //       that currently regresses Talos SVG tests.
-    if (doc instanceof SVGDocument || doc instanceof XMLDocument)
-      return false;
-
-    // Don't take screenshots of about: pages.
-    if (aBrowser.currentURI.schemeIs("about"))
-      return false;
-
-    // FIXME e10s work around, we need channel information. bug 1073957
-    if (!aBrowser.docShell)
-      return true;
-
-    // There's no point in taking screenshot of loading pages.
-    if (aBrowser.docShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE)
-      return false;
-
-    let channel = aBrowser.docShell.currentDocumentChannel;
-
-    // No valid document channel. We shouldn't take a screenshot.
-    if (!channel)
-      return false;
-
-    // Don't take screenshots of internally redirecting about: pages.
-    // This includes error pages.
-    let uri = channel.originalURI;
-    if (uri.schemeIs("about"))
-      return false;
-
-    let httpChannel;
-    try {
-      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (e) { /* Not an HTTP channel. */ }
-
-    if (httpChannel) {
-      // Continue only if we have a 2xx status code.
-      try {
-        if (Math.floor(httpChannel.responseStatus / 100) != 2)
-          return false;
-      } catch (e) {
-        // Can't get response information from the httpChannel
-        // because mResponseHead is not available.
-        return false;
-      }
-
-      // Cache-Control: no-store.
-      if (httpChannel.isNoStoreResponse())
-        return false;
-
-      // Don't capture HTTPS pages unless the user explicitly enabled it.
-      if (uri.schemeIs("https") && !this._sslDiskCacheEnabled)
-        return false;
+    if (aBrowser != gBrowser.selectedBrowser) {
+      aCallback(false);
+      return;
     }
-
-    return true;
+    PageThumbs.shouldStoreThumbnail(aBrowser, aCallback);
   },
 
   get _topSiteURLs() {
