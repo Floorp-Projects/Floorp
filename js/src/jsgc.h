@@ -454,11 +454,9 @@ class ArenaList {
         return *this;
     }
 
-#ifdef JSGC_COMPACTING
     ArenaHeader *removeRemainingArenas(ArenaHeader **arenap, const AutoLockGC &lock);
     ArenaHeader *pickArenasToRelocate(JSRuntime *runtime);
     ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated);
-#endif
 };
 
 /*
@@ -785,9 +783,7 @@ class ArenaLists
         MOZ_ASSERT(freeLists[kind].isEmpty());
     }
 
-#ifdef JSGC_COMPACTING
     ArenaHeader *relocateArenas(ArenaHeader *relocatedList);
-#endif
 
     void queueForegroundObjectsForSweep(FreeOp *fop);
     void queueForegroundThingsForSweep(FreeOp *fop);
@@ -1270,9 +1266,7 @@ inline void
 CheckGCThingAfterMovingGC(T *t)
 {
     MOZ_ASSERT_IF(t, !IsInsideNursery(t));
-#ifdef JSGC_COMPACTING
     MOZ_ASSERT_IF(t, !IsForwarded(t));
-#endif
 }
 
 inline void
@@ -1429,16 +1423,11 @@ struct AutoDisableProxyCheck
 
 struct AutoDisableCompactingGC
 {
-#ifdef JSGC_COMPACTING
     explicit AutoDisableCompactingGC(JSRuntime *rt);
     ~AutoDisableCompactingGC();
 
   private:
     gc::GCRuntime &gc;
-#else
-    explicit AutoDisableCompactingGC(JSRuntime *rt) {}
-    ~AutoDisableCompactingGC() {}
-#endif
 };
 
 void

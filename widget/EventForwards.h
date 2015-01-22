@@ -32,7 +32,7 @@ namespace mozilla {
 
 typedef uint8_t EventClassIDType;
 
-enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
+enum EventClassID : EventClassIDType
 {
   // The event class name will be:
   //   eBasicEventClass for WidgetEvent
@@ -77,7 +77,7 @@ enum CodeNameIndex
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
 
 typedef int8_t CommandInt;
-enum Command MOZ_ENUM_TYPE(CommandInt)
+enum Command : CommandInt
 {
   CommandDoNothing
 

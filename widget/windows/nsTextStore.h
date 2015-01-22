@@ -480,7 +480,7 @@ protected:
 
   struct PendingAction MOZ_FINAL
   {
-    enum ActionType MOZ_ENUM_TYPE(uint8_t)
+    enum ActionType : uint8_t
     {
       COMPOSITION_START,
       COMPOSITION_UPDATE,
@@ -635,7 +635,7 @@ protected:
     nsTextStore::Selection& mSelection;
 
     // The minimum offset of modified part of the text.
-    enum MOZ_ENUM_TYPE(uint32_t)
+    enum : uint32_t
     {
       NOT_MODIFIED = UINT32_MAX
     };

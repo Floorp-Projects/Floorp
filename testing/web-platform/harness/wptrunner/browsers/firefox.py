@@ -186,8 +186,16 @@ class FirefoxBrowser(Browser):
         # TODO: Maybe only set this if certutil won't launch?
         env = os.environ.copy()
         certutil_dir = os.path.dirname(self.binary)
-        env["LD_LIBRARY_PATH"] = certutil_dir
-        env["PATH"] = os.path.pathsep.join([certutil_dir, env["PATH"]])
+        if mozinfo.isMac:
+            env_var = "DYLD_LIBRARY_PATH"
+        elif mozinfo.isUnix:
+            env_var = "LD_LIBRARY_PATH"
+        else:
+            env_var = "PATH"
+
+
+        env[env_var] = (os.path.pathsep.join([certutil_dir, env[env_var]])
+                        if env_var in env else certutil_dir)
 
         def certutil(*args):
             cmd = [self.certutil_binary] + list(args)

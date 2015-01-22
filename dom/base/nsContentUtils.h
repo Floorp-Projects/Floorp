@@ -987,7 +987,10 @@ public:
 
   /**
    * This method creates and dispatches a trusted event to the chrome
-   * event handler.
+   * event handler (the parent object of the DOM Window in the event target
+   * chain). Note, chrome event handler is used even if aTarget is a chrome
+   * object. Use DispatchEventOnlyToChrome if the normal event dispatching is
+   * wanted in case aTarget is a chrome object.
    * Works only with events which can be created by calling
    * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDocument      The document which will be used to create the event,
@@ -1006,6 +1009,32 @@ public:
                                       bool aCanBubble,
                                       bool aCancelable,
                                       bool *aDefaultAction = nullptr);
+
+
+  /**
+   * This method creates and dispatches a trusted event.
+   * If aTarget is not a chrome object, the nearest chrome object in the
+   * propagation path will be used as the start of the event target chain.
+   * This method is different than DispatchChromeEvent, which always dispatches
+   * events to chrome event handler. DispatchEventOnlyToChrome works like
+   * DispatchTrustedEvent in the case aTarget is a chrome object.
+   * Works only with events which can be created by calling
+   * nsIDOMDocument::CreateEvent() with parameter "Events".
+   * @param aDoc           The document which will be used to create the event.
+   * @param aTarget        The target of the event, should be QIable to
+   *                       nsIDOMEventTarget.
+   * @param aEventName     The name of the event.
+   * @param aCanBubble     Whether the event can bubble.
+   * @param aCancelable    Is the event cancelable.
+   * @param aDefaultAction Set to true if default action should be taken,
+   *                       see nsIDOMEventTarget::DispatchEvent.
+   */
+  static nsresult DispatchEventOnlyToChrome(nsIDocument* aDoc,
+                                            nsISupports* aTarget,
+                                            const nsAString& aEventName,
+                                            bool aCanBubble,
+                                            bool aCancelable,
+                                            bool *aDefaultAction = nullptr);
 
   /**
    * Determines if an event attribute name (such as onclick) is valid for
@@ -1252,7 +1281,7 @@ public:
    * @param aDiscoverMode Set to eRecurseIntoChildren to descend recursively
    * into children.
    */
-  enum TextContentDiscoverMode MOZ_ENUM_TYPE(uint8_t) {
+  enum TextContentDiscoverMode : uint8_t {
     eRecurseIntoChildren, eDontRecurseIntoChildren
   };
 
@@ -2046,7 +2075,7 @@ public:
    */
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
-  enum AutocompleteAttrState MOZ_ENUM_TYPE(uint8_t)
+  enum AutocompleteAttrState : uint8_t
   {
     eAutocompleteAttrState_Unknown = 1,
     eAutocompleteAttrState_Invalid,
@@ -2253,7 +2282,8 @@ private:
                                 bool aCanBubble,
                                 bool aCancelable,
                                 bool aTrusted,
-                                bool *aDefaultAction = nullptr);
+                                bool *aDefaultAction = nullptr,
+                                bool aOnlyChromeDispatch = false);
 
   static void InitializeModifierStrings();
 
