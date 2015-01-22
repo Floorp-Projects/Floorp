@@ -4758,6 +4758,11 @@ class MTruncateToInt32
     }
 #endif
 
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return input()->type() < MIRType_Symbol;
+    }
+
     ALLOW_CLONE(MTruncateToInt32)
 };
 
