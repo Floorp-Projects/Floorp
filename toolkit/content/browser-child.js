@@ -454,6 +454,16 @@ addMessageListener("Browser:Thumbnail:Request", function (aMessage) {
   });
 });
 
+/**
+ * Remote isSafeForCapture request handler for PageThumbs.
+ */
+addMessageListener("Browser:Thumbnail:CheckState", function (aMessage) {
+  let result = PageThumbUtils.shouldStoreContentThumbnail(content, docShell);
+  sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
+    result: result
+  });
+});
+
 // The AddonsChild needs to be rooted so that it stays alive as long as
 // the tab.
 let AddonsChild = RemoteAddonsChild.init(this);

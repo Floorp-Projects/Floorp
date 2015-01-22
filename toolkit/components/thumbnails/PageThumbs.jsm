@@ -67,6 +67,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbUtils",
   "resource://gre/modules/PageThumbUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 /**
  * Utilities for dealing with promises and Task.jsm
@@ -210,6 +212,38 @@ this.PageThumbs = {
         aCallback(aCanvas);
       }
     });
+  },
+
+  /**
+   * Asynchronously check the state of aBrowser to see if it passes a set of
+   * predefined security checks. Consumers should refrain from storing
+   * thumbnails if these checks fail. Note the final result of this call is
+   * transitory as it is based on current navigation state and the type of
+   * content being displayed.
+   *
+   * @param aBrowser The target browser 
+   * @param aCallback(aResult) A callback invoked once security checks have
+   *   completed. aResult is a boolean indicating the combined result of the
+   *   security checks performed.
+   */
+  shouldStoreThumbnail: function (aBrowser, aCallback) {
+    // Don't capture in private browsing mode.
+    if (PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
+      aCallback(false);
+      return;
+    }
+    if (aBrowser.isRemoteBrowser) {
+      let mm = aBrowser.messageManager;
+      let resultFunc = function (aMsg) {
+        mm.removeMessageListener("Browser:Thumbnail:CheckState:Response", resultFunc);
+        aCallback(aMsg.data.result);
+      }
+      mm.addMessageListener("Browser:Thumbnail:CheckState:Response", resultFunc);
+      mm.sendAsyncMessage("Browser:Thumbnail:CheckState");
+    } else {
+      aCallback(PageThumbUtils.shouldStoreContentThumbnail(aBrowser.contentDocument,
+                                                           aBrowser.docShell));
+    }
   },
 
   // The background thumbnail service captures to canvas but doesn't want to
