@@ -224,10 +224,19 @@ JS_CopyPropertiesFrom(JSContext *cx, JS::HandleObject target, JS::HandleObject o
  * property of the given name exists on |obj|.
  *
  * On entry, |cx| must be same-compartment with |obj|.
+ *
+ * The copyBehavior argument controls what happens with
+ * non-configurable properties.
  */
+typedef enum  {
+    MakeNonConfigurableIntoConfigurable,
+    CopyNonConfigurableAsIs
+} PropertyCopyBehavior;
+
 extern JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, JS::HandleId id, JS::HandleObject target,
-                    JS::HandleObject obj);
+                    JS::HandleObject obj,
+                    PropertyCopyBehavior copyBehavior = CopyNonConfigurableAsIs);
 
 extern JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc);

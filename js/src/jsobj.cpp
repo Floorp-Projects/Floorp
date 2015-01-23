@@ -1639,7 +1639,8 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj, HandleObject rece
 
 JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
-                    HandleObject obj)
+                    HandleObject obj,
+                    PropertyCopyBehavior copyBehavior)
 {
     // |obj| and |cx| are generally not same-compartment with |target| here.
     assertSameCompartment(cx, obj, id);
@@ -1654,6 +1655,11 @@ JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
         return true;
     if (desc.setter() && !desc.hasSetterObject())
         return true;
+
+    if (copyBehavior == MakeNonConfigurableIntoConfigurable) {
+        // Mask off the JSPROP_PERMANENT bit.
+        desc.attributesRef() &= ~JSPROP_PERMANENT;
+    }
 
     JSAutoCompartment ac(cx, target);
     RootedId wrappedId(cx, id);
