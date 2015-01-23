@@ -22,6 +22,7 @@ function spawnTest () {
     "The same shared profiler connection is used by the panel's front.");
 
   yield sharedConnection.open();
+
   is(gProfilerConnectionsOpened, 1,
     "No additional profiler connections were opened.");
 

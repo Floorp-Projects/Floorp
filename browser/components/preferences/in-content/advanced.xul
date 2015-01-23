@@ -7,7 +7,7 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/advanced.js"/>
 
-<preferences id="advancedPreferences">
+<preferences id="advancedPreferences" hidden="true" data-category="paneAdvanced">
   <preference id="browser.preferences.advanced.selectedTabIndex"
               name="browser.preferences.advanced.selectedTabIndex"
               type="int"/>

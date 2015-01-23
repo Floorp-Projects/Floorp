@@ -35,7 +35,7 @@ add_task(function*() {
   let selection = TimelineView.markersOverview.getSelection();
 
   is((selection.start) | 0,
-     ((markers[0].start - interval.startTime) * TimelineView.markersOverview.dataScaleX) | 0,
+     (markers[0].start * TimelineView.markersOverview.dataScaleX) | 0,
     "The initial selection start is correct.");
 
   is((selection.end - selection.start) | 0,

@@ -21,15 +21,8 @@ devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
   "devtools/timeline/global", true);
 devtools.lazyRequireGetter(this, "L10N",
   "devtools/profiler/global", true);
-devtools.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/performance/io", true);
 devtools.lazyRequireGetter(this, "RecordingModel",
   "devtools/performance/recording-model", true);
-devtools.lazyRequireGetter(this, "RECORDING_IN_PROGRESS",
-  "devtools/performance/recording-model", true);
-devtools.lazyRequireGetter(this, "RECORDING_UNAVAILABLE",
-  "devtools/performance/recording-model", true);
-
 devtools.lazyRequireGetter(this, "MarkersOverview",
   "devtools/timeline/markers-overview", true);
 devtools.lazyRequireGetter(this, "MemoryOverview",
@@ -81,6 +74,8 @@ const EVENTS = {
   // When a recording is started or stopped via the PerformanceController
   RECORDING_STARTED: "Performance:RecordingStarted",
   RECORDING_STOPPED: "Performance:RecordingStopped",
+  RECORDING_WILL_START: "Performance:RecordingWillStart",
+  RECORDING_WILL_STOP: "Performance:RecordingWillStop",
 
   // When a recording is imported or exported via the PerformanceController
   RECORDING_IMPORTED: "Performance:RecordingImported",
@@ -106,15 +101,15 @@ const EVENTS = {
   // Emitted by the CallTreeView when a call tree has been rendered
   CALL_TREE_RENDERED: "Performance:UI:CallTreeRendered",
 
-  // When a source is shown in the JavaScript Debugger at a specific location.
-  SOURCE_SHOWN_IN_JS_DEBUGGER: "Performance:UI:SourceShownInJsDebugger",
-  SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger",
-
   // Emitted by the WaterfallView when it has been rendered
   WATERFALL_RENDERED: "Performance:UI:WaterfallRendered",
 
   // Emitted by the FlameGraphView when it has been rendered
-  FLAMEGRAPH_RENDERED: "Performance:UI:FlameGraphRendered"
+  FLAMEGRAPH_RENDERED: "Performance:UI:FlameGraphRendered",
+
+  // When a source is shown in the JavaScript Debugger at a specific location.
+  SOURCE_SHOWN_IN_JS_DEBUGGER: "Performance:UI:SourceShownInJsDebugger",
+  SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger"
 };
 
 /**
@@ -192,7 +187,7 @@ let PerformanceController = {
     gFront.on("ticks", this._onTimelineData); // framerate
     gFront.on("markers", this._onTimelineData); // timeline markers
     gFront.on("frames", this._onTimelineData); // stack frames
-    gFront.on("memory", this._onTimelineData); // timeline memory
+    gFront.on("memory", this._onTimelineData); // memory measurements
   }),
 
   /**
@@ -225,11 +220,13 @@ let PerformanceController = {
    * when the front has started to record.
    */
   startRecording: Task.async(function *() {
-    let recording = this.createNewRecording();
-    this.setCurrentRecording(recording);
-    yield recording.startRecording();
+    let recording = this._createRecording();
 
+    this.emit(EVENTS.RECORDING_WILL_START, recording);
+    yield recording.startRecording({ withTicks: true, withMemory: true });
     this.emit(EVENTS.RECORDING_STARTED, recording);
+
+    this.setCurrentRecording(recording);
   }),
 
   /**
@@ -238,13 +235,15 @@ let PerformanceController = {
    */
   stopRecording: Task.async(function *() {
     let recording = this._getLatestRecording();
-    yield recording.stopRecording();
 
+    this.emit(EVENTS.RECORDING_WILL_STOP, recording);
+    yield recording.stopRecording();
     this.emit(EVENTS.RECORDING_STOPPED, recording);
   }),
 
   /**
-   * Saves the current recording to a file.
+   * Saves the given recording to a file. Emits `EVENTS.RECORDING_EXPORTED`
+   * when the file was saved.
    *
    * @param RecordingModel recording
    *        The model that holds the recording data.
@@ -252,20 +251,19 @@ let PerformanceController = {
    *        The file to stream the data into.
    */
   exportRecording: Task.async(function*(_, recording, file) {
-    let recordingData = recording.getAllData();
-    yield PerformanceIO.saveRecordingToFile(recordingData, file);
-
-    this.emit(EVENTS.RECORDING_EXPORTED, recordingData);
+    yield recording.exportRecording(file);
+    this.emit(EVENTS.RECORDING_EXPORTED, recording);
   }),
 
   /**
-   * Loads a recording from a file, adding it to the recordings list.
+   * Loads a recording from a file, adding it to the recordings list. Emits
+   * `EVENTS.RECORDING_IMPORTED` when the file was loaded.
    *
    * @param nsILocalFile file
    *        The file to import the data from.
    */
   importRecording: Task.async(function*(_, file) {
-    let recording = this.createNewRecording();
+    let recording = this._createRecording();
     yield recording.importRecording(file);
 
     this.emit(EVENTS.RECORDING_IMPORTED, recording);
@@ -278,11 +276,8 @@ let PerformanceController = {
    * @return RecordingModel
    *         The newly created recording model.
    */
-  createNewRecording: function () {
-    let recording = new RecordingModel({
-      front: gFront,
-      performance: performance
-    });
+  _createRecording: function () {
+    let recording = new RecordingModel({ front: gFront, performance });
     this._recordings.push(recording);
 
     this.emit(EVENTS.RECORDING_CREATED, recording);

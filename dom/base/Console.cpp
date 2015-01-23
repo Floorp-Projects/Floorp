@@ -906,7 +906,7 @@ public:
     }
   }
 
-  virtual bool Equals(const TimelineMarker* aOther)
+  virtual bool Equals(const TimelineMarker* aOther) MOZ_OVERRIDE
   {
     if (!TimelineMarker::Equals(aOther)) {
       return false;
@@ -915,7 +915,7 @@ public:
     return GetCause() == aOther->GetCause();
   }
 
-  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
+  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) MOZ_OVERRIDE
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
       aMarker.mCauseName.Construct(GetCause());
