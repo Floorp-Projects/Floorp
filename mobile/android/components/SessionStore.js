@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -539,7 +539,7 @@ SessionStore.prototype = {
     }
 
     // Write only non-private data to disk
-    this._writeFile(this._sessionFile, JSON.stringify(normalData), aAsync);
+    this._writeFile(this._sessionFile, normalData, aAsync);
 
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
@@ -616,35 +616,40 @@ SessionStore.prototype = {
   },
 
   _writeFile: function ss_writeFile(aFile, aData, aAsync) {
-    let stateString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    stateString.data = aData;
-    Services.obs.notifyObservers(stateString, "sessionstore-state-write", "");
+    TelemetryStopwatch.start("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
+    let state = JSON.stringify(aData);
+    TelemetryStopwatch.finish("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
 
-    // Don't touch the file if an observer has deleted all state data
-    if (!stateString.data)
-      return;
-
+    Services.obs.notifyObservers(null, "sessionstore-state-write", "");
+ 
+    TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS");
     if (aAsync) {
-      let array = new TextEncoder().encode(aData);
+      let array = new TextEncoder().encode(state);
+      Services.telemetry.getHistogramById("FX_SESSION_RESTORE_FILE_SIZE_BYTES").add(array.byteLength);
+
       let pendingWrite = this._pendingWrite;
       OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
         // Make sure this._pendingWrite is the same value it was before we
         // fired off the async write. If the count is different, another write
         // is pending, so we shouldn't reset this._pendingWrite yet.
-        if (pendingWrite === this._pendingWrite)
+        if (pendingWrite === this._pendingWrite) {
           this._pendingWrite = 0;
+        }
+
+        TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS");
         Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
       }.bind(this));
     } else {
       this._pendingWrite = 0;
-      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
-                     createInstance(Ci.nsIFileOutputStream);
+      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       foStream.init(aFile, 0x02 | 0x08 | 0x20, 0666, 0);
-      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                      createInstance(Ci.nsIConverterOutputStream);
+      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
       converter.init(foStream, "UTF-8", 0, 0);
-      converter.writeString(aData);
+      converter.writeString(state);
       converter.close();
+
+      TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS");
+      Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
     }
   },
 
