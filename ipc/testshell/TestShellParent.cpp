@@ -54,8 +54,9 @@ bool
 TestShellCommandParent::SetCallback(JSContext* aCx,
                                     JS::Value aCallback)
 {
-  if (!mCallback.Hold(aCx)) {
-    return false;
+  if (!mCallback.initialized()) {
+    mCallback.init(aCx, aCallback);
+    return true;
   }
 
   mCallback = aCallback;
@@ -66,11 +67,12 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
 bool
 TestShellCommandParent::RunCallback(const nsString& aResponse)
 {
-  NS_ENSURE_TRUE(mCallback.ToJSObject(), false);
+  NS_ENSURE_TRUE(mCallback.isObject(), false);
 
   // We're about to run script via JS_CallFunctionValue, so we need an
   // AutoEntryScript. This is just for testing and not in any spec.
-  dom::AutoEntryScript aes(xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(mCallback.ToJSObject())));
+  dom::AutoEntryScript aes(
+      xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(&mCallback.toObject())));
   JSContext* cx = aes.cx();
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
 
@@ -90,7 +92,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
 void
 TestShellCommandParent::ReleaseCallback()
 {
-  mCallback.Release();
+  mCallback.reset();
 }
 
 bool

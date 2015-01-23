@@ -636,14 +636,15 @@ public:
 
     gfxFont *GetFont() const { return mFont; }
 
-    // returns true if features exist in output, false otherwise
-    static bool
+    static void
     MergeFontFeatures(const gfxFontStyle *aStyle,
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
                       const nsAString& aFamilyName,
                       bool aAddSmallCaps,
-                      nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures);
+                      PLDHashOperator (*aHandleFeature)(const uint32_t&,
+                                                        uint32_t&, void*),
+                      void* aHandleFeatureData);
 
 protected:
     // the font this shaper is working with

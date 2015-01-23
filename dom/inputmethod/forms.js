@@ -355,7 +355,7 @@ let FormAssistant = {
   },
 
   handleEvent: function fa_handleEvent(evt) {
-    let target = evt.target;
+    let target = evt.composedTarget;
 
     let range = null;
     switch (evt.type) {

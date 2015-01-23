@@ -67,6 +67,7 @@ ASTDEF(AST_EXPORT_BATCH_SPEC,     "ExportBatchSpecifier",           "exportBatch
 ASTDEF(AST_CASE,                  "SwitchCase",                     "switchCase")
 ASTDEF(AST_CATCH,                 "CatchClause",                    "catchClause")
 ASTDEF(AST_COMP_BLOCK,            "ComprehensionBlock",             "comprehensionBlock")
+ASTDEF(AST_COMP_IF,               "ComprehensionIf",                "comprehensionIf")
 
 ASTDEF(AST_ARRAY_PATT,            "ArrayPattern",                   "arrayPattern")
 ASTDEF(AST_OBJECT_PATT,           "ObjectPattern",                  "objectPattern")

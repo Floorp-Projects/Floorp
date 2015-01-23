@@ -11,6 +11,7 @@ SOURCES += [
     'TestMustOverride.cpp',
     'TestNANTestingExpr.cpp',
     'TestNANTestingExprC.c',
+    'TestNoAddRefReleaseOnReturn.cpp',
     'TestNoArithmeticExprInArgument.cpp',
     'TestNonHeapClass.cpp',
     'TestStackClass.cpp',

@@ -186,14 +186,24 @@ Nested(Reader& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
 //     Foo ::= SEQUENCE {
 //     }
 //
-// using a call like this:
+// using code like this:
 //
-//    rv = NestedOf(input, SEQEUENCE, SEQUENCE, bind(_1, Foo));
+//    Result Foo(Reader& r) { /*...*/ }
 //
-//    Result Foo(Reader& input) {
-//    }
+//    rv = der::NestedOf(input, der::SEQEUENCE, der::SEQUENCE, Foo);
 //
-// In this example, Foo will get called once for each element of foos.
+// or:
+//
+//    Result Bar(Reader& r, int value) { /*...*/ }
+//
+//    int value = /*...*/;
+//
+//    rv = der::NestedOf(input, der::SEQUENCE, [value](Reader& r) {
+//      return Bar(r, value);
+//    });
+//
+// In these examples the function will get called once for each element of
+// foos.
 //
 template <typename Decoder>
 inline Result
@@ -597,6 +607,8 @@ Result DigestAlgorithmIdentifier(Reader& input,
 
 Result SignatureAlgorithmIdentifier(Reader& input,
                                     /*out*/ SignatureAlgorithm& algorithm);
+
+Result NamedCurveOID(Reader& input, /*out*/ NamedCurve& namedCurve);
 
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between

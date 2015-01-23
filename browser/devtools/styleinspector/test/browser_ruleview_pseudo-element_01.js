@@ -167,7 +167,7 @@ function* testParagraph(inspector, view) {
   is
   (
     convertTextPropsToString(elementFirstLineRule.textProps),
-    "background: none repeat scroll 0% 0% blue",
+    "background: blue none repeat scroll 0% 0%",
     "Paragraph first-line properties are correct"
   );
 
@@ -191,7 +191,7 @@ function* testParagraph(inspector, view) {
   is
   (
     convertTextPropsToString(elementSelectionRule.textProps),
-    "color: white; background: none repeat scroll 0% 0% black",
+    "color: white; background: black none repeat scroll 0% 0%",
     "Paragraph first-letter properties are correct"
   );
 }

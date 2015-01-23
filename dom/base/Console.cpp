@@ -1268,7 +1268,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
     innerID.AppendInt(aData->mInnerIDNumber);
   }
 
-  if (NS_FAILED(mStorage->RecordPendingEvent(innerID, outerID, eventValue))) {
+  if (NS_FAILED(mStorage->RecordEvent(innerID, outerID, eventValue))) {
     NS_WARNING("Failed to record a console event.");
   }
 }

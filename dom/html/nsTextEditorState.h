@@ -276,7 +276,7 @@ private:
   nsCOMPtr<mozilla::dom::Element> mRootNode;
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;
   nsTextControlFrame* mBoundFrame;
-  nsTextInputListener* mTextListener;
+  nsRefPtr<nsTextInputListener> mTextListener;
   nsAutoPtr<nsCString> mValue;
   nsRefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.

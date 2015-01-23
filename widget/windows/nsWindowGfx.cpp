@@ -44,12 +44,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsDebug.h"
 #include "nsIXULRuntime.h"
 
-#ifdef MOZ_ENABLE_D3D9_LAYER
-#include "LayerManagerD3D9.h"
-#endif
-#ifdef MOZ_ENABLE_D3D10_LAYER
-#include "LayerManagerD3D10.h"
-#endif
 #include "mozilla/layers/CompositorParent.h"
 #include "ClientLayerManager.h"
 
@@ -521,37 +515,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
         }
         break;
-#ifdef MOZ_ENABLE_D3D9_LAYER
-      case LayersBackend::LAYERS_D3D9:
-        {
-          nsRefPtr<LayerManagerD3D9> layerManagerD3D9 =
-            static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager());
-          layerManagerD3D9->SetClippingRegion(region);
-          result = listener->PaintWindow(this, region);
-          if (layerManagerD3D9->DeviceWasRemoved()) {
-            mLayerManager->Destroy();
-            mLayerManager = nullptr;
-            // When our device was removed, we should have gfxWindowsPlatform
-            // check if its render mode is up to date!
-            gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-            Invalidate();
-          }
-        }
-        break;
-#endif
-#ifdef MOZ_ENABLE_D3D10_LAYER
-      case LayersBackend::LAYERS_D3D10:
-        {
-          gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-          LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
-          if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            Invalidate();
-          } else {
-            result = listener->PaintWindow(this, region);
-          }
-        }
-        break;
-#endif
       case LayersBackend::LAYERS_CLIENT:
         result = listener->PaintWindow(this, region);
         break;
