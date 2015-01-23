@@ -422,8 +422,8 @@ ProgressListener.prototype = {
   },
 
   onStateChange: function(webProgress, request, stateFlags, status) {
-    if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+    if (webProgress.isTopLevel &&
+        stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       this.callback();
     }
