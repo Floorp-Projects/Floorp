@@ -119,25 +119,30 @@ private:
 
   RefPtr<TextureClient> mFrontTex;
 
+  void ClearSurfaces();
+
 public:
   CanvasClientSharedSurface(CompositableForwarder* aLayerForwarder,
                             TextureFlags aFlags);
+
+  ~CanvasClientSharedSurface()
+  {
+    ClearSurfaces();
+  }
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE {
     return TextureInfo(CompositableType::IMAGE);
   }
 
   virtual void Clear() MOZ_OVERRIDE {
-    mFront = nullptr;
-    mPrevFront = nullptr;
-    mFrontTex = nullptr;
+    ClearSurfaces();
   }
 
   virtual void Update(gfx::IntSize aSize,
                       ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
 
   virtual void OnDetach() MOZ_OVERRIDE {
-    CanvasClientSharedSurface::Clear();
+    ClearSurfaces();
   }
 };
 
