@@ -12,6 +12,7 @@ EXTRA_COMPONENTS += [
     'B2GAboutRedirector.js',
     'B2GAppMigrator.js',
     'B2GPresentationDevicePrompt.js',
+    'BootstrapCommandLine.js',
     'ContentPermissionPrompt.js',
     'FilePicker.js',
     'FxAccountsUIGlue.js',
@@ -49,6 +50,7 @@ if CONFIG['MOZ_UPDATER']:
 
 EXTRA_JS_MODULES += [
     'AlertsHelper.jsm',
+    'Bootstraper.jsm',
     'ContentRequestHelper.jsm',
     'DebuggerActors.js',
     'ErrorPage.jsm',

@@ -477,6 +477,7 @@
 @BINPATH@/components/OopCommandLine.js
 @BINPATH@/components/CommandLine.js
 #endif
+@BINPATH@/components/BootstrapCommandLine.js
 
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
