@@ -49,6 +49,14 @@
                  other-animation 4s;
     }
 
+    .short {
+      top: 500px;
+      left: 10px;
+      background: red;
+
+      animation: simple-animation 2s
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -69,5 +77,6 @@
   <div class="ball multi"></div>
   <div class="ball delayed"></div>
   <div class="ball multi-finite"></div>
+  <div class="ball short"></div>
 </body>
 </html>
