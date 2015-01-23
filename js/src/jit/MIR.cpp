@@ -4175,16 +4175,18 @@ MTableSwitch::foldsTo(TempAllocator &alloc)
 }
 
 MDefinition *
-MArrayJoin::foldsTo(TempAllocator &alloc)
-{
+MArrayJoin::foldsTo(TempAllocator &alloc) {
+    // :TODO: Enable this optimization after fixing Bug 977966 test cases.
+    return this;
+
     MDefinition *arr = array();
 
     if (!arr->isStringSplit())
         return this;
 
-    setRecoveredOnBailout();
+    this->setRecoveredOnBailout();
     if (arr->hasLiveDefUses()) {
-        setNotRecoveredOnBailout();
+        this->setNotRecoveredOnBailout();
         return this;
     }
 
@@ -4198,9 +4200,7 @@ MArrayJoin::foldsTo(TempAllocator &alloc)
     MDefinition *replacement = sep();
 
     setNotRecoveredOnBailout();
-    MStringReplace *substr = MStringReplace::New(alloc, string, pattern, replacement);
-    substr->setFlatReplacement();
-    return substr;
+    return MStringReplace::New(alloc, string, pattern, replacement);
 }
 
 bool
