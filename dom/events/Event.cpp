@@ -362,6 +362,20 @@ Event::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
   return NS_OK;
 }
 
+EventTarget*
+Event::GetComposedTarget() const
+{
+  EventTarget* et = GetOriginalTarget();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(et);
+  if (!content) {
+    return et;
+  }
+  nsIContent* nonChrome = content->FindFirstNonChromeOnlyAccessContent();
+  return nonChrome ?
+    static_cast<EventTarget*>(nonChrome) :
+    static_cast<EventTarget*>(content->GetComposedDoc());
+}
+
 NS_IMETHODIMP_(void)
 Event::SetTrusted(bool aTrusted)
 {
