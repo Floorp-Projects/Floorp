@@ -75,6 +75,7 @@
 #include "PuppetWidget.h"
 #include "StructuredCloneUtils.h"
 #include "nsViewportInfo.h"
+#include "JavaScriptChild.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "mozilla/gfx/Matrix.h"
@@ -1519,7 +1520,6 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   nsString name(aName);
   nsAutoCString features(aFeatures);
   nsTArray<FrameScriptInfo> frameScripts;
-  nsCString urlToLoad;
 
   if (aIframeMoz) {
     newChild->SendBrowserFrameOpenWindow(this, url, name,
@@ -1559,8 +1559,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
                           name, NS_ConvertUTF8toUTF16(features),
                           NS_ConvertUTF8toUTF16(baseURIString),
                           aWindowIsNew,
-                          &frameScripts,
-                          &urlToLoad)) {
+                          &frameScripts)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -1591,10 +1590,6 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
     if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
       MOZ_CRASH();
     }
-  }
-
-  if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad);
   }
 
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
@@ -3008,7 +3003,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    CrossProcessCpowHolder cpows(Manager(), aCpows);
+    CpowIdHolder cpows(Manager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
   }

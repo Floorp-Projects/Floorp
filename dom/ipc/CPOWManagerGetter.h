@@ -10,14 +10,14 @@
 namespace mozilla {
 
 namespace jsipc {
-class CPOWManager;
+class JavaScriptShared;
 } /* namespace jsipc */
 
 namespace dom {
 class CPOWManagerGetter
 {
 public:
-  virtual mozilla::jsipc::CPOWManager* GetCPOWManager() = 0;
+  virtual mozilla::jsipc::JavaScriptShared* GetCPOWManager() = 0;
 };
 } /* namespace dom */
 

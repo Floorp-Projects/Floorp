@@ -10,7 +10,6 @@
 
 #include "JavaScriptShared.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "js/Class.h"
 #include "jsproxy.h"
 
@@ -149,6 +148,21 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                                    ReturnStatus *rs, bool *instanceof) = 0;
 };
+
+bool
+IsCPOW(JSObject *obj);
+
+bool
+IsWrappedCPOW(JSObject *obj);
+
+nsresult
+InstanceOf(JSObject *obj, const nsID *id, bool *bp);
+
+bool
+DOMInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp);
+
+void
+GetWrappedCPOWTag(JSObject *obj, nsACString &out);
 
 } // jsipc
 } // mozilla

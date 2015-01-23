@@ -672,8 +672,7 @@ JavaScriptShared::fromObjectOrNullVariant(JSContext *cx, ObjectOrNullVariant obj
     return fromObjectVariant(cx, objVar.get_ObjectVariant());
 }
 
-CrossProcessCpowHolder::CrossProcessCpowHolder(dom::CPOWManagerGetter *managerGetter,
-                                               const InfallibleTArray<CpowEntry> &cpows)
+CpowIdHolder::CpowIdHolder(dom::CPOWManagerGetter *managerGetter, const InfallibleTArray<CpowEntry> &cpows)
   : js_(nullptr),
     cpows_(cpows)
 {
@@ -683,7 +682,7 @@ CrossProcessCpowHolder::CrossProcessCpowHolder(dom::CPOWManagerGetter *managerGe
 }
 
 bool
-CrossProcessCpowHolder::ToObject(JSContext *cx, JS::MutableHandleObject objp)
+CpowIdHolder::ToObject(JSContext *cx, JS::MutableHandleObject objp)
 {
     if (!cpows_.Length())
         return true;
@@ -757,16 +756,4 @@ JavaScriptShared::Wrap(JSContext *cx, HandleObject aObj, InfallibleTArray<CpowEn
     }
 
     return true;
-}
-
-CPOWManager*
-mozilla::jsipc::CPOWManagerFor(PJavaScriptParent* aParent)
-{
-    return static_cast<JavaScriptParent *>(aParent);
-}
-
-CPOWManager*
-mozilla::jsipc::CPOWManagerFor(PJavaScriptChild* aChild)
-{
-    return static_cast<JavaScriptChild *>(aChild);
 }
