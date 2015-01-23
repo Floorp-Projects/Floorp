@@ -18,7 +18,7 @@ function testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  for each (let autoIncrement in [false, true]) {
+  for (let autoIncrement of [false, true]) {
     let objectStore =
       db.createObjectStore(autoIncrement, { keyPath: "id",
                                             autoIncrement: autoIncrement });
@@ -27,7 +27,7 @@ function testSteps()
       objectStore.add({ id: i, index: i });
     }
 
-    for each (let unique in [false, true]) {
+    for (let unique of [false, true]) {
       objectStore.createIndex(unique, "index", { unique: unique });
     }
 
@@ -39,7 +39,7 @@ function testSteps()
   event = yield undefined;
   is(event.type, "success", "expect a success event");
 
-  for each (let autoIncrement in [false, true]) {
+  for (let autoIncrement of [false, true]) {
     let objectStore = db.transaction(autoIncrement)
                         .objectStore(autoIncrement);
 
@@ -51,7 +51,7 @@ function testSteps()
     let objectStoreCount = event.target.result;
     let indexCount = event.target.result;
 
-    for each (let unique in [false, true]) {
+    for (let unique of [false, true]) {
       let index = db.transaction(autoIncrement, "readwrite")
                     .objectStore(autoIncrement)
                     .index(unique);

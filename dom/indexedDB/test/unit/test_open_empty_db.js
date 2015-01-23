@@ -16,7 +16,7 @@ function testSteps()
 
   const version = 1;
 
-  for each (let name in names) {
+  for (let name of names) {
     let request = indexedDB.open(name, version);
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
