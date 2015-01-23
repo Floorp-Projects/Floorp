@@ -4,10 +4,9 @@
 
 import sys
 
-import errors
 import marionette_test
-
-from errors import ErrorCodes
+from marionette_driver import errors
+from marionette_driver.errors import ErrorCodes
 
 def fake_cause():
     try:
