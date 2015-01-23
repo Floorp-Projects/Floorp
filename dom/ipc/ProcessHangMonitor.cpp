@@ -149,7 +149,7 @@ public:
   NS_IMETHOD TerminatePlugin() MOZ_OVERRIDE;
   NS_IMETHOD TerminateProcess() MOZ_OVERRIDE;
 
-  NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult);
+  NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult) MOZ_OVERRIDE;
 
   void Clear() { mContentParent = nullptr; mActor = nullptr; }
 

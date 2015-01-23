@@ -724,7 +724,7 @@ public:
                    nsISupports* aCtxt,
                    nsresult aStatus,
                    uint32_t aResultLength,
-                   const uint8_t* aResult)
+                   const uint8_t* aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
