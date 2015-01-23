@@ -402,7 +402,7 @@ function shutdownPlaces(aKeepAliveConnection)
 
 const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
 const FILENAME_BOOKMARKS_JSON = "bookmarks-" +
-  (new Date().toISOString().substr(0, 10)) + ".json";
+  (new Date().toLocaleFormat("%Y-%m-%d")) + ".json";
 
 /**
  * Creates a bookmarks.html file in the profile folder from a given source file.
@@ -514,7 +514,7 @@ function check_JSON_backup(aIsAutomaticBackup) {
     let bookmarksBackupDir = gProfD.clone();
     bookmarksBackupDir.append("bookmarkbackups");
     let files = bookmarksBackupDir.directoryEntries;
-    let backup_date = new Date().toISOString().substr(0, 10);
+    let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
     while (files.hasMoreElements()) {
       let entry = files.getNext().QueryInterface(Ci.nsIFile);
       if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
