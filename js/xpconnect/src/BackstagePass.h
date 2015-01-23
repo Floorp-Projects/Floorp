@@ -28,17 +28,17 @@ public:
   NS_DECL_NSIXPCSCRIPTABLE
   NS_DECL_NSICLASSINFO
 
-  virtual nsIPrincipal* GetPrincipal() {
+  virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE {
     return mPrincipal;
   }
 
-  virtual JSObject* GetGlobalJSObject();
+  virtual JSObject* GetGlobalJSObject() MOZ_OVERRIDE;
 
-  virtual void ForgetGlobalObject() {
+  void ForgetGlobalObject() {
     mWrapper = nullptr;
   }
 
-  virtual void SetGlobalObject(JSObject* global);
+  void SetGlobalObject(JSObject* global);
 
   explicit BackstagePass(nsIPrincipal *prin) :
     mPrincipal(prin)

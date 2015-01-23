@@ -929,11 +929,11 @@ class AssemblerShared
 
     ImmGCPtr noteMaybeNurseryPtr(ImmMaybeNurseryPtr ptr) {
         if (ptr.value && gc::IsInsideNursery(ptr.value)) {
-            // PJS FIXME bug 1121435
-            // FIXME: Ideally we'd assert this in all cases, but PJS needs to
-            //        compile IC's from off-main-thread; it will not touch
-            //        nursery pointers, however.
+            // noteMaybeNurseryPtr can be reached from off-thread compilation,
+            // though not with an actual nursery pointer argument in that case.
             MOZ_ASSERT(GetJitContext()->runtime->onMainThread());
+            // Do not be ion-compiling on the main thread.
+            MOZ_ASSERT(!GetJitContext()->runtime->mainThread()->ionCompiling);
             embedsNurseryPointers_ = true;
         }
         return ImmGCPtr(ptr);

@@ -15,6 +15,7 @@ const IOService = Cc["@mozilla.org/network/io-service;1"].
 
 const { deprecateFunction } = require('../util/deprecate');
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const FaviconService = Cc["@mozilla.org/browser/favicon-service;1"].
                           getService(Ci.nsIFaviconService);
 
@@ -51,7 +52,14 @@ exports.getFaviconURIForLocation = getFaviconURIForLocation;
  * @returns {String}
  */
 function getChromeURIContent(chromeURI) {
-  let channel = IOService.newChannel(chromeURI, null, null);
+  let channel = IOService.newChannel2(chromeURI,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
   let input = channel.open();
   let stream = Cc["@mozilla.org/binaryinputstream;1"].
                 createInstance(Ci.nsIBinaryInputStream);

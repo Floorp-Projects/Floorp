@@ -13,10 +13,6 @@
 #include "SurfaceTypes.h"
 #include "mozilla/WidgetUtils.h"
 
-#if defined(MOZ_ENABLE_D3D10_LAYER)
-# include "mozilla/layers/ShadowLayerUtilsD3D10.h"
-#endif
-
 #if defined(XP_MACOSX)
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 #endif

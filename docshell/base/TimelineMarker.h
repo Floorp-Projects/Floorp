@@ -75,8 +75,8 @@ public:
 
   JSObject* GetStack()
   {
-    if (mStackTrace) {
-      return mStackTrace->get();
+    if (mStackTrace.initialized()) {
+      return mStackTrace;
     }
     return nullptr;
   }
@@ -89,7 +89,7 @@ protected:
     if (ctx) {
       JS::RootedObject stack(ctx);
       if (JS::CaptureCurrentStack(ctx, &stack)) {
-        mStackTrace.emplace(ctx, stack.get());
+        mStackTrace.init(ctx, stack.get());
       } else {
         JS_ClearPendingException(ctx);
       }
@@ -107,7 +107,7 @@ private:
   // in this case changing nsDocShell to participate in cycle
   // collection was deemed too invasive, and the markers are only held
   // here temporarily to boot.
-  mozilla::Maybe<JS::PersistentRooted<JSObject*>> mStackTrace;
+  JS::PersistentRooted<JSObject*> mStackTrace;
 };
 
 #endif /* TimelineMarker_h__ */

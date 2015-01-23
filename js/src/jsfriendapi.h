@@ -1367,8 +1367,11 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
     // More or less an equivalent of JS_ReportErrorNumber/js_ReportErrorNumberVA
     // but fills in an ErrorReport instead of reporting it.  Uses varargs to
     // make it simpler to call js_ExpandErrorArguments.
-    void populateUncaughtExceptionReport(JSContext *cx, ...);
-    void populateUncaughtExceptionReportVA(JSContext *cx, va_list ap);
+    //
+    // Returns false if we fail to actually populate the ErrorReport
+    // for some reason (probably out of memory).
+    bool populateUncaughtExceptionReport(JSContext *cx, ...);
+    bool populateUncaughtExceptionReportVA(JSContext *cx, va_list ap);
 
     // We may have a provided JSErrorReport, so need a way to represent that.
     JSErrorReport *reportp;

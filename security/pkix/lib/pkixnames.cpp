@@ -34,7 +34,6 @@
 // constraints, the reference identifier is the entire encoded name constraint
 // extension value.
 
-#include "pkix/bind.h"
 #include "pkixcheck.h"
 #include "pkixutil.h"
 
@@ -468,10 +467,10 @@ SearchNames(/*optional*/ const Input* subjectAltName,
   //   SET SIZE (1..MAX) OF AttributeTypeAndValue
   Reader subjectReader(subject);
   return der::NestedOf(subjectReader, der::SEQUENCE, der::SET,
-                       der::EmptyAllowed::Yes,
-                       bind(SearchWithinRDN, _1, referenceIDType,
-                            referenceID, fallBackToEmailAddress,
-                            fallBackToCommonName, ref(match)));
+                       der::EmptyAllowed::Yes, [&](Reader& r) {
+    return SearchWithinRDN(r, referenceIDType, referenceID,
+                          fallBackToEmailAddress, fallBackToCommonName, match);
+  });
 }
 
 // RelativeDistinguishedName ::=
@@ -489,10 +488,11 @@ SearchWithinRDN(Reader& rdn,
                 /*in/out*/ MatchResult& match)
 {
   do {
-    Result rv = der::Nested(rdn, der::SEQUENCE,
-                            bind(SearchWithinAVA, _1, referenceIDType,
-                                 referenceID, fallBackToEmailAddress,
-                                 fallBackToCommonName, ref(match)));
+    Result rv = der::Nested(rdn, der::SEQUENCE, [&](Reader& r) {
+      return SearchWithinAVA(r, referenceIDType, referenceID,
+                             fallBackToEmailAddress, fallBackToCommonName,
+                             match);
+    });
     if (rv != Success) {
       return rv;
     }

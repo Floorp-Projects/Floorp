@@ -1436,7 +1436,7 @@ nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
   ColorPattern color(ToDeviceColor(isHorizontal ? Color(0.f, 0.f, 1.f, 1.f) :
-                                                  Color(1.f, 0.f, 0.f, 1.f));
+                                                  Color(1.f, 0.f, 0.f, 1.f)));
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
@@ -1466,13 +1466,14 @@ nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
   // place a green border around us.
   if (NS_SUBTREE_DIRTY(this)) {
     nsRect dirty(inner);
-    ColorPattern green(ToDeviceColor(Color0.f, 1.f, 0.f, 1.f)));
+    ColorPattern green(ToDeviceColor(Color(0.f, 1.f, 0.f, 1.f)));
     drawTarget->StrokeRect(NSRectToRect(dirty, appUnitsPerDevPixel), green);
   }
 }
 
 void
 nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
+{
   nsMargin border;
   GetBorder(border);
 
