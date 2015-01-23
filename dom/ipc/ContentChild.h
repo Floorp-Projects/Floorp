@@ -209,7 +209,7 @@ public:
     virtual PTestShellChild* AllocPTestShellChild() MOZ_OVERRIDE;
     virtual bool DeallocPTestShellChild(PTestShellChild*) MOZ_OVERRIDE;
     virtual bool RecvPTestShellConstructor(PTestShellChild*) MOZ_OVERRIDE;
-    jsipc::CPOWManager* GetCPOWManager() MOZ_OVERRIDE;
+    jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
 
     PMobileConnectionChild*
     SendPMobileConnectionConstructor(PMobileConnectionChild* aActor,

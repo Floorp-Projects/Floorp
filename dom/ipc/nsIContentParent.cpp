@@ -15,9 +15,9 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/unused.h"
 
+#include "JavaScriptParent.h"
 #include "nsFrameMessageManager.h"
 #include "nsIJSRuntimeService.h"
 #include "nsPrintfCString.h"
@@ -57,13 +57,17 @@ nsIContentParent::AllocPJavaScriptParent()
   svc->GetRuntime(&rt);
   NS_ENSURE_TRUE(svc, nullptr);
 
-  return NewJavaScriptParent(rt);
+  nsAutoPtr<JavaScriptParent> parent(new JavaScriptParent(rt));
+  if (!parent->init()) {
+    return nullptr;
+  }
+  return parent.forget();
 }
 
 bool
 nsIContentParent::DeallocPJavaScriptParent(PJavaScriptParent* aParent)
 {
-  ReleaseJavaScriptParent(aParent);
+  static_cast<JavaScriptParent*>(aParent)->decref();
   return true;
 }
 
@@ -193,7 +197,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CrossProcessCpowHolder cpows(this, aCpows);
+    CpowIdHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                         aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
   }
@@ -220,7 +224,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CrossProcessCpowHolder cpows(this, aCpows);
+    CpowIdHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                         aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
   }
@@ -246,7 +250,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-    CrossProcessCpowHolder cpows(this, aCpows);
+    CpowIdHolder cpows(this, aCpows);
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
                         aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
   }

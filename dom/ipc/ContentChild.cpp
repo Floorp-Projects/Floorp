@@ -41,7 +41,6 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
@@ -164,6 +163,7 @@
 #include "nsIPrincipal.h"
 #include "nsDeviceStorage.h"
 #include "AudioChannelService.h"
+#include "JavaScriptChild.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
@@ -1403,13 +1403,14 @@ ContentChild::DeallocPTestShellChild(PTestShellChild* shell)
     return true;
 }
 
-jsipc::CPOWManager*
+jsipc::JavaScriptShared*
 ContentChild::GetCPOWManager()
 {
     if (ManagedPJavaScriptChild().Length()) {
-        return CPOWManagerFor(ManagedPJavaScriptChild()[0]);
+        return static_cast<JavaScriptChild*>(ManagedPJavaScriptChild()[0]);
     }
-    return CPOWManagerFor(SendPJavaScriptConstructor());
+    JavaScriptChild* actor = static_cast<JavaScriptChild*>(SendPJavaScriptConstructor());
+    return actor;
 }
 
 bool
@@ -1910,7 +1911,7 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
     nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::sChildProcessManager;
     if (cpm) {
         StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForChild(aData);
-        CrossProcessCpowHolder cpows(this, aCpows);
+        CpowIdHolder cpows(this, aCpows);
         cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
                             aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
     }
