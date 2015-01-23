@@ -51,13 +51,12 @@ class Emulator(Device):
 
         self.arch = ArchContext(arch, self.app_ctx, binary=binary)
         self.resolution = resolution or '320x480'
+        self.tmpdir = tempfile.mkdtemp()
         self.sdcard = None
         if sdcard:
             self.sdcard = self.create_sdcard(sdcard)
-        self.userdata = os.path.join(self.arch.sysdir, 'userdata.img')
-        if userdata:
-            self.userdata = tempfile.NamedTemporaryFile(prefix='qemu-userdata')
-            shutil.copyfile(userdata, self.userdata)
+        self.userdata = tempfile.NamedTemporaryFile(prefix='userdata-qemu', dir=self.tmpdir)
+        self.initdata = userdata if userdata else os.path.join(self.arch.sysdir, 'userdata.img')
         self.no_window = no_window
 
         self.battery = EmulatorBattery(self)
@@ -72,7 +71,9 @@ class Emulator(Device):
         qemu_args = [self.arch.binary,
                      '-kernel', self.arch.kernel,
                      '-sysdir', self.arch.sysdir,
-                     '-data', self.userdata]
+                     '-data', self.userdata.name,
+                     '-initdata', self.initdata,
+                     '-wipe-data']
         if self.no_window:
             qemu_args.append('-no-window')
         if self.sdcard:
@@ -93,6 +94,11 @@ class Emulator(Device):
             return
 
         original_devices = set(self._get_online_devices())
+
+        # QEMU relies on atexit() to remove temporary files, which does not
+        # work since mozprocess uses SIGKILL to kill the emulator process.
+        # Use a customized temporary directory so we can clean it up.
+        os.environ['ANDROID_TMP'] = self.tmpdir
 
         qemu_log = None
         qemu_proc_args = {}
@@ -145,7 +151,7 @@ class Emulator(Device):
         :param sdcard_size: Size of partition to create, e.g '10MB'.
         """
         mksdcard = self.app_ctx.which('mksdcard')
-        path = tempfile.mktemp(prefix='sdcard')
+        path = tempfile.mktemp(prefix='sdcard', dir=self.tmpdir)
         sdargs = [mksdcard, '-l', 'mySdCard', sdcard_size, path]
         sd = subprocess.Popen(sdargs, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retcode = sd.wait()
@@ -163,9 +169,9 @@ class Emulator(Device):
             self.proc.kill()
             self.proc = None
 
-        # Remove temporary sdcard
-        if self.sdcard and os.path.isfile(self.sdcard):
-            os.remove(self.sdcard)
+        # Remove temporary files
+        self.userdata.close()
+        shutil.rmtree(self.tmpdir)
 
     # TODO this function is B2G specific and shouldn't live here
     @uses_marionette
