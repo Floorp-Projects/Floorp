@@ -330,8 +330,10 @@ IsInvisibleBreak(nsINode *aNode) {
   }
 
   // If the BRFrame has caused a visible line break, it should have a next
-  // sibling.
-  return !frame->GetNextSibling();
+  // sibling, or otherwise no siblings and a non-zero height.
+  bool visible = frame->GetNextSibling() ||
+                 (!frame->GetPrevSibling() && frame->GetRect().Height() != 0);
+  return !visible;
 }
 
 nsresult
