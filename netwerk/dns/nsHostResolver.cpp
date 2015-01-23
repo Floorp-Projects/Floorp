@@ -758,8 +758,8 @@ nsHostResolver::ResolveHost(const char            *host,
             nsHostDBEnt *he = static_cast<nsHostDBEnt *>
                                          (PL_DHashTableAdd(&mDB, &key));
 
-            // if the record is null, then HostDB_InitEntry failed.
-            if (!he || !he->rec) {
+            // if the record is null, the hash table OOM'd.
+            if (!he) {
                 LOG(("  Out of memory: no cache entry for [%s].\n", host));
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -834,7 +834,6 @@ nsHostResolver::ResolveHost(const char            *host,
                                  (unspecHe && unspecHe->rec),
                                 "Valid host entries should contain a record");
                     if (unspecHe &&
-                        unspecHe->rec &&
                         unspecHe->rec->HasUsableResult(TimeStamp::NowLoRes(), flags)) {
 
                         MOZ_ASSERT(unspecHe->rec->addr_info || unspecHe->rec->negative,
@@ -956,8 +955,8 @@ nsHostResolver::DetachCallback(const char            *host,
 
         nsHostKey key = { host, flags, af };
         nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                     (PL_DHashTableLookup(&mDB, &key));
-        if (he && he->rec) {
+                                     (PL_DHashTableSearch(&mDB, &key));
+        if (he) {
             // walk list looking for |callback|... we cannot assume
             // that it will be there!
             PRCList *node = he->rec->callbacks.next;
@@ -1304,8 +1303,8 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
     // Lookup the host record associated with host, flags & address family
     nsHostKey key = { host, flags, af };
     nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                      (PL_DHashTableLookup(&mDB, &key));
-    if (he && he->rec) {
+                      (PL_DHashTableSearch(&mDB, &key));
+    if (he) {
         nsHostRecord* recPtr = nullptr;
         PRCList *node = he->rec->callbacks.next;
         // Remove the first nsDNSAsyncRequest callback which matches the
