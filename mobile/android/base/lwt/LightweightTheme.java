@@ -14,6 +14,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.WindowUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
@@ -28,7 +29,6 @@ import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -204,8 +204,7 @@ public class LightweightTheme implements GeckoEventListener {
         }
 
         // Get the max display dimension so we can crop or expand the theme.
-        DisplayMetrics dm = mApplication.getResources().getDisplayMetrics();
-        int maxWidth = Math.max(dm.widthPixels, dm.heightPixels);
+        final int maxWidth = WindowUtils.getLargestDimension(mApplication);
 
         // The lightweight theme image's width and height.
         final int bitmapWidth = bitmap.getWidth();

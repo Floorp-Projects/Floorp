@@ -84,6 +84,7 @@ gujar.sources += [
     'util/ThreadUtils.java',
     'util/UIAsyncTask.java',
     'util/WebActivityMapper.java',
+    'util/WindowUtils.java',
 ]
 gujar.extra_jars = [
     'constants.jar',
