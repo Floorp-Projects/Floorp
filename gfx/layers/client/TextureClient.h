@@ -426,8 +426,10 @@ public:
    * If the texture flags contain TextureFlags::DEALLOCATE_CLIENT, the destruction
    * will be synchronously coordinated with the compositor side, otherwise it
    * will be done asynchronously.
+   * If sync is true, the destruction will be synchronous regardless of the
+   * texture's flags (bad for performance, use with care).
    */
-  void ForceRemove();
+  void ForceRemove(bool sync = false);
 
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle)
   {
