@@ -3383,11 +3383,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
         {
             SetIsActive(value);
         }
-        if (NS_SUCCEEDED(parentAsDocShell->GetIsPrerendered(&value))) {
-            if (value) {
-                SetIsPrerendered(true);
-            }
-        }
+        SetIsPrerendered(parentAsDocShell->GetIsPrerendered());
         if (NS_FAILED(parentAsDocShell->GetAllowDNSPrefetch(&value))) {
             value = false;
         }
