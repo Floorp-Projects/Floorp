@@ -10,12 +10,12 @@
 #include <string>
 #include <stdio.h>
 
-#include "nsAutoJSValHolder.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsString.h"
 #include "nsJSPrincipals.h"
 #include "nsContentUtils.h"
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
 struct JSPrincipals;
@@ -39,7 +39,7 @@ public:
     }
 
     JSObject* GetGlobalObject() {
-        return mGlobalHolder.ToJSObject();
+        return mGlobalHolder;
     }
 
     void SetIsQuitting() {
@@ -54,7 +54,7 @@ protected:
     bool Init();
 
 private:
-    nsAutoJSValHolder mGlobalHolder;
+    JS::PersistentRooted<JSObject *> mGlobalHolder;
 
     bool mQuitting;
 };
