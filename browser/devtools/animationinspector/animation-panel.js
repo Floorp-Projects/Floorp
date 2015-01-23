@@ -208,16 +208,20 @@ PlayerWidget.prototype = {
     titleHTML += L10N.getStr("player.animationDurationLabel");
     titleHTML += "<strong>" + L10N.getFormatStr("player.timeLabel",
       this.getFormattedTime(state.duration)) + "</strong>";
+
     if (state.delay) {
       titleHTML += L10N.getStr("player.animationDelayLabel");
       titleHTML += "<strong>" + L10N.getFormatStr("player.timeLabel",
         this.getFormattedTime(state.delay)) + "</strong>";
     }
-    titleHTML += L10N.getStr("player.animationIterationCountLabel");
-    let count = state.iterationCount || L10N.getStr("player.infiniteIterationCount");
-    titleHTML += "<strong>" + count + "</strong>";
-    titleHTML += "</span>"
 
+    if (state.iterationCount !== 1) {
+      titleHTML += L10N.getStr("player.animationIterationCountLabel");
+      let count = state.iterationCount || L10N.getStr("player.infiniteIterationCount");
+      titleHTML += "<strong>" + count + "</strong>";
+    }
+
+    titleHTML += "</span>";
     titleEl.innerHTML = titleHTML;
 
     // Timeline widget.
