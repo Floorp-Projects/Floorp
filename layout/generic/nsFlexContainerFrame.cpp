@@ -3683,6 +3683,93 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // maybe use for setting the flex container's baseline.)
       const nscoord itemNormalBPos = framePos.B(outerWM);
 
+      ReflowFlexItem(aPresContext, aAxisTracker, aReflowState,
+                     item, framePos, containerWidth);
+
+      // If this is our first child and we haven't established a baseline for
+      // the container yet (i.e. if we don't have 'align-self: baseline' on any
+      // children), then use this child's baseline as the container's baseline.
+      if (item->Frame() == mFrames.FirstChild() &&
+          flexContainerAscent == nscoord_MIN) {
+        flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
+      }
+    }
+  }
+
+  nsSize desiredContentBoxSize =
+    aAxisTracker.PhysicalSizeFromLogicalSizes(aContentBoxMainSize,
+                                              contentBoxCrossSize);
+
+  aDesiredSize.Width() = desiredContentBoxSize.width +
+    containerBorderPadding.LeftRight();
+  // Does *NOT* include bottom border/padding yet (we add that a bit lower down)
+  aDesiredSize.Height() = desiredContentBoxSize.height +
+    containerBorderPadding.top;
+
+  if (flexContainerAscent == nscoord_MIN) {
+    // Still don't have our baseline set -- this happens if we have no
+    // children (or if our children are huge enough that they have nscoord_MIN
+    // as their baseline... in which case, we'll use the wrong baseline, but no
+    // big deal)
+    NS_WARN_IF_FALSE(lines.getFirst()->IsEmpty(),
+                     "Have flex items but didn't get an ascent - that's odd "
+                     "(or there are just gigantic sizes involved)");
+    // Per spec, just use the bottom of content-box.
+    flexContainerAscent = aDesiredSize.Height();
+  }
+  aDesiredSize.SetBlockStartAscent(flexContainerAscent);
+
+  // Now: If we're complete, add bottom border/padding to desired height
+  // (unless that pushes us over available height, in which case we become
+  // incomplete (unless we already weren't asking for any height, in which case
+  // we stay complete to avoid looping forever)).
+  // NOTE: If we're auto-height, we allow our bottom border/padding to push us
+  // over the available height without requesting a continuation, for
+  // consistency with the behavior of "display:block" elements.
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+    // NOTE: We can't use containerBorderPadding.bottom for this, because if
+    // we're auto-height, ApplySkipSides will have zeroed it (because it
+    // assumed we might get a continuation). We have the correct value in
+    // aReflowState.ComputedPhyiscalBorderPadding().bottom, though, so we use that.
+    nscoord desiredHeightWithBottomBP =
+      aDesiredSize.Height() + aReflowState.ComputedPhysicalBorderPadding().bottom;
+
+    if (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ||
+        aDesiredSize.Height() == 0 ||
+        desiredHeightWithBottomBP <= aReflowState.AvailableHeight() ||
+        aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
+      // Update desired height to include bottom border/padding
+      aDesiredSize.Height() = desiredHeightWithBottomBP;
+    } else {
+      // We couldn't fit bottom border/padding, so we'll need a continuation.
+      NS_FRAME_SET_INCOMPLETE(aStatus);
+    }
+  }
+
+  // Overflow area = union(my overflow area, kids' overflow areas)
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, e.get());
+  }
+
+  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
+                                 aReflowState, aStatus);
+
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize)
+}
+
+void
+nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
+                                     const FlexboxAxisTracker& aAxisTracker,
+                                     const nsHTMLReflowState& aReflowState,
+                                     // XXXdholbert Adding "a" prefix to
+                                     // these args in a later patch:
+                                     const FlexItem* item,
+                                     LogicalPoint& framePos,
+                                     nscoord containerWidth)
+{
+      // XXXdholbert De-indenting this function in a later patch.
+      WritingMode outerWM = aReflowState.GetWritingMode();
       WritingMode wm = item->Frame()->GetWritingMode();
       LogicalSize availSize = aReflowState.ComputedSize(wm);
       availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
@@ -3774,77 +3861,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         // will not be shifted.)
         item->SetAscent(childDesiredSize.BlockStartAscent());
       }
-
-      // If this is our first child and we haven't established a baseline for
-      // the container yet (i.e. if we don't have 'align-self: baseline' on any
-      // children), then use this child's baseline as the container's baseline.
-      if (item->Frame() == mFrames.FirstChild() &&
-          flexContainerAscent == nscoord_MIN) {
-        flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
-      }
-    }
-  }
-
-  nsSize desiredContentBoxSize =
-    aAxisTracker.PhysicalSizeFromLogicalSizes(aContentBoxMainSize,
-                                              contentBoxCrossSize);
-
-  aDesiredSize.Width() = desiredContentBoxSize.width +
-    containerBorderPadding.LeftRight();
-  // Does *NOT* include bottom border/padding yet (we add that a bit lower down)
-  aDesiredSize.Height() = desiredContentBoxSize.height +
-    containerBorderPadding.top;
-
-  if (flexContainerAscent == nscoord_MIN) {
-    // Still don't have our baseline set -- this happens if we have no
-    // children (or if our children are huge enough that they have nscoord_MIN
-    // as their baseline... in which case, we'll use the wrong baseline, but no
-    // big deal)
-    NS_WARN_IF_FALSE(lines.getFirst()->IsEmpty(),
-                     "Have flex items but didn't get an ascent - that's odd "
-                     "(or there are just gigantic sizes involved)");
-    // Per spec, just use the bottom of content-box.
-    flexContainerAscent = aDesiredSize.Height();
-  }
-  aDesiredSize.SetBlockStartAscent(flexContainerAscent);
-
-  // Now: If we're complete, add bottom border/padding to desired height
-  // (unless that pushes us over available height, in which case we become
-  // incomplete (unless we already weren't asking for any height, in which case
-  // we stay complete to avoid looping forever)).
-  // NOTE: If we're auto-height, we allow our bottom border/padding to push us
-  // over the available height without requesting a continuation, for
-  // consistency with the behavior of "display:block" elements.
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
-    // NOTE: We can't use containerBorderPadding.bottom for this, because if
-    // we're auto-height, ApplySkipSides will have zeroed it (because it
-    // assumed we might get a continuation). We have the correct value in
-    // aReflowState.ComputedPhyiscalBorderPadding().bottom, though, so we use that.
-    nscoord desiredHeightWithBottomBP =
-      aDesiredSize.Height() + aReflowState.ComputedPhysicalBorderPadding().bottom;
-
-    if (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ||
-        aDesiredSize.Height() == 0 ||
-        desiredHeightWithBottomBP <= aReflowState.AvailableHeight() ||
-        aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-      // Update desired height to include bottom border/padding
-      aDesiredSize.Height() = desiredHeightWithBottomBP;
-    } else {
-      // We couldn't fit bottom border/padding, so we'll need a continuation.
-      NS_FRAME_SET_INCOMPLETE(aStatus);
-    }
-  }
-
-  // Overflow area = union(my overflow area, kids' overflow areas)
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, e.get());
-  }
-
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
-                                 aReflowState, aStatus);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize)
 }
 
 /* virtual */ nscoord
