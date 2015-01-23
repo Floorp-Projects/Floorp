@@ -469,7 +469,6 @@ protected:
   nsSizeMode            mOldSizeMode;
   nsSizeMode            mLastSizeMode;
   WindowHook            mWindowHook;
-  DWORD                 mAssumeWheelIsZoomUntil;
   uint32_t              mPickerDisplayCount;
   HICON                 mIconSmall;
   HICON                 mIconBig;
