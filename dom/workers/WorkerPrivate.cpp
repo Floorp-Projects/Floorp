@@ -1612,6 +1612,14 @@ private:
   bool mIsOffline;
 };
 
+#ifdef DEBUG
+static bool
+StartsWithExplicit(nsACString& s)
+{
+    return StringBeginsWith(s, NS_LITERAL_CSTRING("explicit/"));
+}
+#endif
+
 class WorkerJSRuntimeStats : public JS::RuntimeStats
 {
   const nsACString& mRtPath;
@@ -1644,6 +1652,9 @@ public:
     xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
     extras->pathPrefix = mRtPath;
     extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)aZone);
+
+    MOZ_ASSERT(StartsWithExplicit(extras->pathPrefix));
+
     aZoneStats->extra = extras;
   }
 
@@ -1669,6 +1680,9 @@ public:
 
     // This should never be used when reporting with workers (hence the "?!").
     extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");
+
+    MOZ_ASSERT(StartsWithExplicit(extras->jsPathPrefix));
+    MOZ_ASSERT(StartsWithExplicit(extras->domPathPrefix));
 
     extras->location = nullptr;
 
@@ -1905,15 +1919,14 @@ public:
     AssertIsOnMainThread();
 
     // Assumes that WorkerJSRuntimeStats will hold a reference to |path|, and
-    // not a copy, as TryToMapAddon() may later modify if.
+    // not a copy, as TryToMapAddon() may later modify it.
     nsCString path;
     WorkerJSRuntimeStats rtStats(path);
 
     {
       MutexAutoLock lock(mMutex);
 
-      if (!mWorkerPrivate ||
-          !mWorkerPrivate->BlockAndCollectRuntimeStats(&rtStats, aAnonymize)) {
+      if (!mWorkerPrivate) {
         // Returning NS_OK here will effectively report 0 memory.
         return NS_OK;
       }
@@ -1937,6 +1950,11 @@ public:
       path.AppendPrintf(", 0x%p)/", static_cast<void*>(mWorkerPrivate));
 
       TryToMapAddon(path);
+
+      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&rtStats, aAnonymize)) {
+        // Returning NS_OK here will effectively report 0 memory.
+        return NS_OK;
+      }
     }
 
     return xpc::ReportJSRuntimeExplicitTreeStats(rtStats, path,
