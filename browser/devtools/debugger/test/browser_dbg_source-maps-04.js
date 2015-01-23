@@ -115,16 +115,20 @@ function testHitBreakpoint() {
     is(aResponse.type, "resumed", "Type should be 'resumed'.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES).then(() => {
-      is(gFrames.itemCount, 1, "Should have one frame.");
+      is(gFrames.itemCount, 2, "Should have two frames.");
 
       // This is weird, but we need to let the debugger a chance to
       // update first
       executeSoon(() => {
         gDebugger.gThreadClient.resume(() => {
-          // We also need to make sure the next step doesn't add a
-          // "resumed" handler until this is completely finished
-          executeSoon(() => {
-            deferred.resolve();
+          gDebugger.gThreadClient.addOneTimeListener("paused", () => {
+            gDebugger.gThreadClient.resume(() => {
+              // We also need to make sure the next step doesn't add a
+              // "resumed" handler until this is completely finished
+              executeSoon(() => {
+                deferred.resolve();
+              });
+            });
           });
         });
       });
