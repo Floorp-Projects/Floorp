@@ -1520,6 +1520,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   nsString name(aName);
   nsAutoCString features(aFeatures);
   nsTArray<FrameScriptInfo> frameScripts;
+  nsCString urlToLoad;
 
   if (aIframeMoz) {
     newChild->SendBrowserFrameOpenWindow(this, url, name,
@@ -1559,7 +1560,8 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
                           name, NS_ConvertUTF8toUTF16(features),
                           NS_ConvertUTF8toUTF16(baseURIString),
                           aWindowIsNew,
-                          &frameScripts)) {
+                          &frameScripts,
+                          &urlToLoad)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -1590,6 +1592,10 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
     if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
       MOZ_CRASH();
     }
+  }
+
+  if (!urlToLoad.IsEmpty()) {
+    newChild->RecvLoadURL(urlToLoad);
   }
 
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
