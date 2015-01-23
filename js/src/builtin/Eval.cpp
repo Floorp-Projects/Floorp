@@ -428,7 +428,19 @@ js::DirectEvalStringFromIon(JSContext *cx,
     // the calling frame cannot be updated to store the new object.
     MOZ_ASSERT(thisValue.isObject() || thisValue.isUndefined() || thisValue.isNull());
 
-    return ExecuteKernel(cx, esg.script(), *scopeobj, thisValue, ExecuteType(DIRECT_EVAL),
+    // When eval'ing strict code in a non-strict context, compute the 'this'
+    // value to use from what the caller passed in. This isn't necessary if
+    // the callee is not strict, as it will compute the non-strict 'this'
+    // value as necessary while it executes.
+    RootedValue nthisValue(cx, thisValue);
+    if (!callerScript->strict() && esg.script()->strict() && !thisValue.isObject()) {
+        JSObject *obj = BoxNonStrictThis(cx, thisValue);
+        if (!obj)
+            return false;
+        nthisValue = ObjectValue(*obj);
+    }
+
+    return ExecuteKernel(cx, esg.script(), *scopeobj, nthisValue, ExecuteType(DIRECT_EVAL),
                          NullFramePtr() /* evalInFrame */, vp.address());
 }
 
