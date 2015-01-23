@@ -5687,8 +5687,9 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 }
 
 struct JSExceptionState {
+    JSExceptionState(JSContext *cx) : exception(cx) {}
     bool throwing;
-    jsval exception;
+    PersistentRootedValue exception;
 };
 
 JS_PUBLIC_API(JSExceptionState *)
@@ -5698,13 +5699,9 @@ JS_SaveExceptionState(JSContext *cx)
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    state = cx->pod_malloc<JSExceptionState>();
-    if (state) {
-        state->throwing =
-            JS_GetPendingException(cx, MutableHandleValue::fromMarkedLocation(&state->exception));
-        if (state->throwing && state->exception.isGCThing())
-            AddValueRoot(cx, &state->exception, "JSExceptionState.exception");
-    }
+    state = cx->new_<JSExceptionState>(cx);
+    if (state)
+        state->throwing = JS_GetPendingException(cx, &state->exception);
     return state;
 }
 
@@ -5715,7 +5712,7 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing)
-            JS_SetPendingException(cx, HandleValue::fromMarkedLocation(&state->exception));
+            JS_SetPendingException(cx, state->exception);
         else
             JS_ClearPendingException(cx);
         JS_DropExceptionState(cx, state);
@@ -5727,13 +5724,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (state) {
-        if (state->throwing && state->exception.isGCThing()) {
-            assertSameCompartment(cx, state->exception);
-            RemoveRoot(cx->runtime(), &state->exception);
-        }
-        js_free(state);
-    }
+    js_delete(state);
 }
 
 JS_PUBLIC_API(JSErrorReport *)
