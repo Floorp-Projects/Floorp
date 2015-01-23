@@ -13,13 +13,13 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/observers.js");
 
-const Prefs = new Preferences("services.common.tokenserverclient.");
+const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 
 /**
  * Represents a TokenServerClient error that occurred on the client.
@@ -140,7 +140,7 @@ TokenServerClientServerError.prototype._toStringFields = function() {
  */
 this.TokenServerClient = function TokenServerClient() {
   this._log = Log.repository.getLogger("Common.TokenServerClient");
-  this._log.level = Log.Level[Prefs.get("logger.level")];
+  this._log.level = Log.Level[Services.prefs.getCharPref(PREF_LOG_LEVEL)];
 }
 TokenServerClient.prototype = {
   /**
@@ -404,7 +404,7 @@ TokenServerClient.prototype = {
       }
     }
 
-    this._log.debug("Successful token response: " + result.id);
+    this._log.debug("Successful token response");
     cb(null, {
       id:       result.id,
       key:      result.key,
