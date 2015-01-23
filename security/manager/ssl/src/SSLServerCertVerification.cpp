@@ -351,7 +351,10 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
 
       SECCertTimeValidity validity = CERT_CheckCertValidTimes(cert, now, false);
       if (validity == secCertTimeUndetermined) {
-        PR_SetError(defaultErrorCodeToReport, 0);
+        // This only happens if cert is null. CERT_CheckCertValidTimes will
+        // have set the error code to SEC_ERROR_INVALID_ARGS. We should really
+        // be using mozilla::pkix here anyway.
+        MOZ_ASSERT(PR_GetError() == SEC_ERROR_INVALID_ARGS);
         return SECFailure;
       }
       if (validity == secCertTimeExpired) {
@@ -404,7 +407,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
       errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
     } else if (result != Success) {
-      PR_SetError(defaultErrorCodeToReport, 0);
+      PR_SetError(MapResultToPRErrorCode(result), 0);
       return SECFailure;
     }
   }
@@ -593,6 +596,13 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
                                   defaultErrorCodeToReport, collected_errors,
                                   errorCodeTrust, errorCodeMismatch,
                                   errorCodeExpired) != SECSuccess) {
+    // Attempt to enforce that if DetermineCertOverrideErrors failed,
+    // PR_SetError was set with a non-overridable error. This is because if we
+    // return from CreateCertErrorRunnable without calling
+    // infoObject->SetStatusErrorBits, we won't have the required information
+    // to actually add a certificate error override. This results in a broken
+    // UI which is annoying but not a security disaster.
+    MOZ_ASSERT(!ErrorIsOverridable(PR_GetError()));
     return nullptr;
   }
 
