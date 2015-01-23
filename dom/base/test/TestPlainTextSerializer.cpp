@@ -115,6 +115,29 @@ TestPrettyPrintedHtml()
 }
 
 nsresult
+TestPreElement()
+{
+  nsString test;
+  test.AppendLiteral(
+    "<html>" NS_LINEBREAK
+    "<body>" NS_LINEBREAK
+    "<pre>" NS_LINEBREAK
+    "  first" NS_LINEBREAK
+    "  second" NS_LINEBREAK
+    "</pre>" NS_LINEBREAK
+    "</body>" NS_LINEBREAK "</html>");
+
+  ConvertBufToPlainText(test, 0);
+  if (!test.EqualsLiteral("  first" NS_LINEBREAK "  second" NS_LINEBREAK NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
+}
+
+nsresult
 TestPlainTextSerializer()
 {
   nsString test;
@@ -135,6 +158,9 @@ TestPlainTextSerializer()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = TestPrettyPrintedHtml();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreElement();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add new tests here...
