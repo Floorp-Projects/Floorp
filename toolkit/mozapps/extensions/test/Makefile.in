@@ -8,6 +8,8 @@ TESTXPI = $(TESTROOT)/xpcshell/addons
 
 include $(topsrcdir)/config/rules.mk
 
+DOZIP := $(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/dozip.py
+
 libs::
 	rm -rf $(TESTXPI)
 	$(NSINSTALL) -D $(TESTXPI)
@@ -15,6 +17,6 @@ libs::
 		$(EXIT_ON_ERROR) \
 		for dir in $(ADDONSRC)/*; do \
 			base=`basename $$dir` ; \
-			(cd $$dir && zip -qr $(TESTXPI)/$$base.xpi *) \
+			(cd $$dir && $(DOZIP) $(TESTXPI)/$$base.xpi *) \
 		done \
 	fi
