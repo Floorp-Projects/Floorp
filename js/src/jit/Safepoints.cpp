@@ -17,15 +17,14 @@ using namespace jit;
 
 using mozilla::FloorLog2;
 
-SafepointWriter::SafepointWriter(uint32_t slotCount, uint32_t argumentCount)
-  : frameSlots_((slotCount / sizeof(intptr_t)) + 1), // Stack slot counts are inclusive.
-    argumentSlots_(argumentCount / sizeof(intptr_t))
+SafepointWriter::SafepointWriter(uint32_t slotCount)
+  : frameSlots_(slotCount / sizeof(intptr_t))
 { }
 
 bool
 SafepointWriter::init(TempAllocator &alloc)
 {
-    return frameSlots_.init(alloc) && argumentSlots_.init(alloc);
+    return frameSlots_.init(alloc);
 }
 
 uint32_t
@@ -130,32 +129,24 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 }
 
 static void
-WriteBitset(const BitSet &set, CompactBufferWriter &stream)
+MapSlotsToBitset(BitSet &set, CompactBufferWriter &stream, uint32_t nslots, uint32_t *slots)
 {
+    set.clear();
+
+    for (uint32_t i = 0; i < nslots; i++) {
+        // Slots are represented at a distance from |fp|. We divide by the
+        // pointer size, since we only care about pointer-sized/aligned slots
+        // here. Since the stack grows down, this means slots start at index 1,
+        // so we subtract 1 to pack the bitset.
+        MOZ_ASSERT(slots[i] % sizeof(intptr_t) == 0);
+        MOZ_ASSERT(slots[i] / sizeof(intptr_t) > 0);
+        set.insert(slots[i] / sizeof(intptr_t) - 1);
+    }
+
     size_t count = set.rawLength();
     const uint32_t *words = set.raw();
     for (size_t i = 0; i < count; i++)
         stream.writeUnsigned(words[i]);
-}
-
-static void
-MapSlotsToBitset(BitSet &stackSet, BitSet &argumentSet,
-                 CompactBufferWriter &stream, const LSafepoint::SlotList &slots)
-{
-    stackSet.clear();
-    argumentSet.clear();
-
-    for (uint32_t i = 0; i < slots.length(); i++) {
-        // Slots are represented at a distance from |fp|. We divide by the
-        // pointer size, since we only care about pointer-sized/aligned slots
-        // here.
-        MOZ_ASSERT(slots[i].slot % sizeof(intptr_t) == 0);
-        size_t index = slots[i].slot / sizeof(intptr_t);
-        (slots[i].stack ? stackSet : argumentSet).insert(index);
-    }
-
-    WriteBitset(stackSet, stream);
-    WriteBitset(argumentSet, stream);
 }
 
 void
@@ -168,7 +159,10 @@ SafepointWriter::writeGcSlots(LSafepoint *safepoint)
         JitSpew(JitSpew_Safepoints, "    gc slot: %d", slots[i]);
 #endif
 
-    MapSlotsToBitset(frameSlots_, argumentSlots_, stream_, slots);
+    MapSlotsToBitset(frameSlots_,
+                     stream_,
+                     slots.length(),
+                     slots.begin());
 }
 
 void
@@ -179,12 +173,10 @@ SafepointWriter::writeSlotsOrElementsSlots(LSafepoint *safepoint)
     stream_.writeUnsigned(slots.length());
 
     for (uint32_t i = 0; i < slots.length(); i++) {
-        if (!slots[i].stack)
-            MOZ_CRASH();
 #ifdef DEBUG
-        JitSpew(JitSpew_Safepoints, "    slots/elements slot: %d", slots[i].slot);
+        JitSpew(JitSpew_Safepoints, "    slots/elements slot: %d", slots[i]);
 #endif
-        stream_.writeUnsigned(slots[i].slot);
+        stream_.writeUnsigned(slots[i]);
     }
 }
 
@@ -198,7 +190,7 @@ SafepointWriter::writeValueSlots(LSafepoint *safepoint)
         JitSpew(JitSpew_Safepoints, "    gc value: %d", slots[i]);
 #endif
 
-    MapSlotsToBitset(frameSlots_, argumentSlots_, stream_, slots);
+    MapSlotsToBitset(frameSlots_, stream_, slots.length(), slots.begin());
 }
 
 #if defined(DEBUG) && defined(JS_NUNBOX32)
@@ -392,8 +384,7 @@ SafepointWriter::endEntry()
 SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
   : stream_(script->safepoints() + si->safepointOffset(),
             script->safepoints() + script->safepointsSize()),
-    frameSlots_((script->frameSlots() / sizeof(intptr_t)) + 1), // Stack slot counts are inclusive.
-    argumentSlots_(script->argumentSlots() / sizeof(intptr_t))
+    frameSlots_(script->frameSlots() / sizeof(intptr_t))
 {
     osiCallPointOffset_ = stream_.readUnsigned();
 
@@ -434,23 +425,15 @@ SafepointReader::advanceFromGcRegs()
 {
     currentSlotChunk_ = 0;
     nextSlotChunkNumber_ = 0;
-    currentSlotsAreStack_ = true;
 }
 
 bool
-SafepointReader::getSlotFromBitmap(SafepointSlotEntry *entry)
+SafepointReader::getSlotFromBitmap(uint32_t *slot)
 {
     while (currentSlotChunk_ == 0) {
         // Are there any more chunks to read?
-        if (currentSlotsAreStack_) {
-            if (nextSlotChunkNumber_ == BitSet::RawLengthForBits(frameSlots_)) {
-                nextSlotChunkNumber_ = 0;
-                currentSlotsAreStack_ = false;
-                continue;
-            }
-        } else if (nextSlotChunkNumber_ == BitSet::RawLengthForBits(argumentSlots_)) {
+        if (nextSlotChunkNumber_ == BitSet::RawLengthForBits(frameSlots_))
             return false;
-        }
 
         // Yes, read the next chunk.
         currentSlotChunk_ = stream_.readUnsigned();
@@ -462,17 +445,17 @@ SafepointReader::getSlotFromBitmap(SafepointSlotEntry *entry)
     uint32_t bit = FloorLog2(currentSlotChunk_);
     currentSlotChunk_ &= ~(1 << bit);
 
-    // Return the slot, and re-scale it by the pointer size, reversing the
-    // transformation in MapSlotsToBitset.
-    entry->stack = currentSlotsAreStack_;
-    entry->slot = (((nextSlotChunkNumber_ - 1) * BitSet::BitsPerWord) + bit) * sizeof(intptr_t);
+    // Return the slot, taking care to add 1 back in since it was subtracted
+    // when added in the original bitset, and re-scale it by the pointer size,
+    // reversing the transformation in MapSlotsToBitset.
+    *slot = (((nextSlotChunkNumber_ - 1) * BitSet::BitsPerWord) + bit + 1) * sizeof(intptr_t);
     return true;
 }
 
 bool
-SafepointReader::getGcSlot(SafepointSlotEntry *entry)
+SafepointReader::getGcSlot(uint32_t *slot)
 {
-    if (getSlotFromBitmap(entry))
+    if (getSlotFromBitmap(slot))
         return true;
     advanceFromGcSlots();
     return false;
@@ -484,13 +467,12 @@ SafepointReader::advanceFromGcSlots()
     // No, reset the counter.
     currentSlotChunk_ = 0;
     nextSlotChunkNumber_ = 0;
-    currentSlotsAreStack_ = true;
 }
 
 bool
-SafepointReader::getValueSlot(SafepointSlotEntry *entry)
+SafepointReader::getValueSlot(uint32_t *slot)
 {
-    if (getSlotFromBitmap(entry))
+    if (getSlotFromBitmap(slot))
         return true;
     advanceFromValueSlots();
     return false;
@@ -549,11 +531,10 @@ SafepointReader::advanceFromNunboxSlots()
 }
 
 bool
-SafepointReader::getSlotsOrElementsSlot(SafepointSlotEntry *entry)
+SafepointReader::getSlotsOrElementsSlot(uint32_t *slot)
 {
     if (!slotsOrElementsSlotsRemaining_--)
         return false;
-    entry->stack = true;
-    entry->slot = stream_.readUnsigned();
+    *slot = stream_.readUnsigned();
     return true;
 }

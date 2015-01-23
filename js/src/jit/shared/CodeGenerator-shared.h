@@ -85,6 +85,9 @@ class CodeGeneratorShared : public LElementVisitor
     // Vector of information about generated polymorphic inline caches.
     js::Vector<uint32_t, 0, SystemAllocPolicy> cacheList_;
 
+    // List of stack slots that have been pushed as arguments to an MCall.
+    js::Vector<uint32_t, 0, SystemAllocPolicy> pushedArgumentSlots_;
+
     // Patchable backedges generated for loops.
     Vector<PatchableBackedgeInfo, 0, SystemAllocPolicy> patchableBackedges_;
 
@@ -144,6 +147,9 @@ class CodeGeneratorShared : public LElementVisitor
     }
 
     typedef js::Vector<SafepointIndex, 8, SystemAllocPolicy> SafepointIndices;
+
+    bool markArgumentSlots(LSafepoint *safepoint);
+    void dropArguments(unsigned argc);
 
   protected:
 #ifdef CHECK_OSIPOINT_REGISTERS
