@@ -627,10 +627,10 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
 {                                                                                      \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
-  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure);           \
-  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed);                       \
-  NS_IMETHOD_(bool) CanSkipInCCReal(void *p);                                          \
-  NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                          \
+  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) MOZ_OVERRIDE; \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;          \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                             \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                             \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 }; \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)  \
