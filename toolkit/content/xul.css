@@ -242,6 +242,28 @@ caption {
   -moz-box-orient: vertical;
 }
 
+/******** draggable elements *********/
+
+%ifdef XP_MACOSX
+titlebar,
+toolbar:not([nowindowdrag="true"]):not([customizing="true"]),
+statusbar:not([nowindowdrag="true"]),
+windowdragbox {
+  -moz-window-dragging: drag;
+}
+
+/* The list below is non-comprehensive and will probably need some tweaking. */
+toolbarbutton,
+button,
+textbox,
+searchbar,
+tab,
+radio,
+splitter {
+  -moz-window-dragging: no-drag;
+}
+%endif
+
 /******* toolbar *******/
 
 toolbox {
