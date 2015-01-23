@@ -4,15 +4,14 @@
 subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
 
 let NS = {};
-subscriptLoader.loadSubScript("resource://gre/components/TelephonyService.js",
-                              NS);
+subscriptLoader.loadSubScript("resource://gre/modules/DialNumberUtils.jsm", NS);
 
 function run_test() {
   run_next_test();
 }
 
 function parseMMI(mmiString) {
-  return NS.TelephonyService.prototype._parseMMI(mmiString);
+  return NS.DialNumberUtils.parseMMI(mmiString);
 }
 
 add_test(function test_parseMMI_empty() {

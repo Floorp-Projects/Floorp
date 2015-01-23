@@ -61,13 +61,11 @@ const FMM_MESSAGES = [
   // time; if we did it before, the load would overwrite it.
   "SessionStore:restoreTabContentStarted",
 
-  // All network loads for a restoring tab are done, so we should consider
-  // restoring another tab in the queue.
-  "SessionStore:restoreTabContentComplete",
-
-  // The document has been restored, so the restore is done. We trigger
+  // All network loads for a restoring tab are done, so we should
+  // consider restoring another tab in the queue. The document has
+  // been restored, and forms have been filled. We trigger
   // SSTabRestored at this time.
-  "SessionStore:restoreDocumentComplete",
+  "SessionStore:restoreTabContentComplete",
 
   // A tab that is being restored was reloaded. We call restoreTabContent to
   // finish restoring it right away.
@@ -690,21 +688,14 @@ let SessionStoreInternal = {
             Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
           }
 
-          if (tab) {
-            SessionStoreInternal._resetLocalTabRestoringState(tab);
-            SessionStoreInternal.restoreNextTab();
-          }
-        }
-        break;
-      case "SessionStore:restoreDocumentComplete":
-        if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          // Document has been restored. Delete all the state associated
-          // with it and trigger SSTabRestored.
           let tab = browser.__SS_restore_tab;
 
           delete browser.__SS_restore_data;
           delete browser.__SS_restore_tab;
           delete browser.__SS_data;
+
+          SessionStoreInternal._resetLocalTabRestoringState(tab);
+          SessionStoreInternal.restoreNextTab();
 
           this._sendTabRestoredNotification(tab);
         }

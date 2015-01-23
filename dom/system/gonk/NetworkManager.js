@@ -344,14 +344,16 @@ NetworkManager.prototype = {
             gNetworkService.removeHostRoutes(network.name);
             this.setHostRoutes(network);
           }
+
+          // Remove pre-created default route and let setAndConfigureActive()
+          // to set default route only on preferred network
+          gNetworkService.removeDefaultRoute(network);
+
           // Dun type is a special case where we add the default route to a
           // secondary table.
           if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
             this.setSecondaryDefaultRoute(network);
           }
-          // Remove pre-created default route and let setAndConfigureActive()
-          // to set default route only on preferred network
-          gNetworkService.removeDefaultRoute(network);
 
           this._addSubnetRoutes(network);
           this.setAndConfigureActive();

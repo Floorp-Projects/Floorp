@@ -677,7 +677,7 @@ let UI = {
     }
 
     // Ignore unselection of project on runtime disconnection
-    if (AppManager.connection.status != Connection.Status.CONNECTED) {
+    if (!AppManager.connected) {
       return;
     }
 
@@ -729,7 +729,7 @@ let UI = {
     }
 
     // For other project types, we need to be connected to the runtime
-    if (AppManager.connection.status != Connection.Status.CONNECTED) {
+    if (!AppManager.connected) {
       return;
     }
 
@@ -821,7 +821,7 @@ let UI = {
     let debugCmd = document.querySelector("#cmd_toggleToolbox");
     let playButton = document.querySelector('#action-button-play');
 
-    if (!AppManager.selectedProject || AppManager.connection.status != Connection.Status.CONNECTED) {
+    if (!AppManager.selectedProject || !AppManager.connected) {
       playCmd.setAttribute("disabled", "true");
       stopCmd.setAttribute("disabled", "true");
       debugCmd.setAttribute("disabled", "true");
@@ -874,7 +874,7 @@ let UI = {
     let box = document.querySelector("#runtime-actions");
 
     let runtimePanelButton = document.querySelector("#runtime-panel-button");
-    if (AppManager.connection.status == Connection.Status.CONNECTED) {
+    if (AppManager.connected) {
       if (AppManager.deviceFront) {
         detailsCmd.removeAttribute("disabled");
         permissionsCmd.removeAttribute("disabled");
@@ -1103,8 +1103,7 @@ let Cmds = {
       return a.manifest.name > b.manifest.name;
     });
     let mainProcess = AppManager.isMainProcessDebuggable();
-    if (AppManager.connection.status == Connection.Status.CONNECTED &&
-        (sortedApps.length > 0 || mainProcess)) {
+    if (AppManager.connected && (sortedApps.length > 0 || mainProcess)) {
       runtimeappsHeaderNode.removeAttribute("hidden");
     } else {
       runtimeappsHeaderNode.setAttribute("hidden", "true");
@@ -1154,9 +1153,11 @@ let Cmds = {
 
     // But re-list them and rebuild, in case any tabs navigated since the last
     // time they were listed.
-    AppManager.listTabs().then(() => {
-      this._buildProjectPanelTabs();
-    });
+    if (AppManager.connected) {
+      AppManager.listTabs().then(() => {
+        this._buildProjectPanelTabs();
+      }).catch(console.error);
+    }
 
     return deferred.promise;
   },
@@ -1164,8 +1165,7 @@ let Cmds = {
   _buildProjectPanelTabs: function() {
     let tabs = AppManager.tabStore.tabs;
     let tabsHeaderNode = document.querySelector("#panel-header-tabs");
-    if (AppManager.connection.status == Connection.Status.CONNECTED &&
-        tabs.length > 0) {
+    if (AppManager.connected && tabs.length > 0) {
       tabsHeaderNode.removeAttribute("hidden");
     } else {
       tabsHeaderNode.setAttribute("hidden", "true");

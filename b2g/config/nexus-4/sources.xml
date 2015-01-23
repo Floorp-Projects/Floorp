@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="cba2f0bf49b882e0044c3cc583de8fcf83d2ffa4"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="2535321f1bd55e68fd52291b193693a8995f8e62"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fe91ec3af5396edab45b15e546e21613785724b5"/>
@@ -118,10 +118,10 @@
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="842e33e43a55ea44833b9e23e4d180fa17c843af"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5db24726f0f42124304195a6bdea129039eeeaeb"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="930ae098543881f47eac054677726ee4b998b2f8"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="d8040bc7850e326b297045ccbd51bfd7bf566a53"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="f0d6ce5f727eca4b10850c610a06a45772689a75"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="542d1f59dc331b472307e5bd043101d14d5a3a3e"/>
   <project name="platform/system/extras" path="system/extras" revision="18c1180e848e7ab8691940481f5c1c8d22c37b3e"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="fe95bc6f83af5c18a73aa86c96e7fa7f79b91477"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="8fcd25d64f0f67d1a6f7037a4c83ce6d95466770"/>
   <project name="platform/system/media" path="system/media" revision="d90b836f66bf1d9627886c96f3a2d9c3007fbb80"/>
   <project name="platform/system/netd" path="system/netd" revision="56112dd7b811301b718d0643a82fd5cac9522073"/>
   <project name="platform/system/security" path="system/security" revision="f48ff68fedbcdc12b570b7699745abb6e7574907"/>

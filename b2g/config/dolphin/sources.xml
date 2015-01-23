@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e06971db7acf7a35c32eb74d675a4e12e288e6be">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="cba2f0bf49b882e0044c3cc583de8fcf83d2ffa4"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="2535321f1bd55e68fd52291b193693a8995f8e62"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -116,10 +116,10 @@
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="f7d9bf71cf6693474f3f2a81a4ba62c0fc5646aa"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="cfcef469537869947abb9aa1d656774cc2678d4c"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5a48c04c4bb5f079bc757e29864a42427378e051"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="d8040bc7850e326b297045ccbd51bfd7bf566a53"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="f0d6ce5f727eca4b10850c610a06a45772689a75"/>
   <project name="platform/system/extras" path="system/extras" revision="10e78a05252b3de785f88c2d0b9ea8a428009c50"/>
   <project name="platform/system/media" path="system/media" revision="7ff72c2ea2496fa50b5e8a915e56e901c3ccd240"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="fe95bc6f83af5c18a73aa86c96e7fa7f79b91477"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="8fcd25d64f0f67d1a6f7037a4c83ce6d95466770"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
   <project name="platform/system/vold" path="system/vold" revision="2e43efe1b30d0b98574d293059556aebd2f46454"/>
