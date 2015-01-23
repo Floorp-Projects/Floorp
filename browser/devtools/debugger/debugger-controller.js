@@ -2393,19 +2393,24 @@ DebuggerController.HitCounts = new HitCounts();
  */
 Object.defineProperties(window, {
   "gTarget": {
-    get: function() DebuggerController._target
+    get: function() DebuggerController._target,
+    configurable: true
   },
   "gHostType": {
-    get: function() DebuggerView._hostType
+    get: function() DebuggerView._hostType,
+    configurable: true
   },
   "gClient": {
-    get: function() DebuggerController.client
+    get: function() DebuggerController.client,
+    configurable: true
   },
   "gThreadClient": {
-    get: function() DebuggerController.activeThread
+    get: function() DebuggerController.activeThread,
+    configurable: true
   },
   "gCallStackPageSize": {
-    get: function() CALL_STACK_PAGE_SIZE
+    get: function() CALL_STACK_PAGE_SIZE,
+    configurable: true
   }
 });
 
