@@ -54,8 +54,8 @@ const cases = [
 
   // yield expressions
   { expr: "yield 1",      top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg" },
-  { expr: "1, yield 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 9999], desc: "yield w/ arg at end of list" },
-  { expr: "yield 1, 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 9999], desc: "yield w/ arg in list" },
+  { expr: "1, yield 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 1], desc: "yield w/ arg at end of list" },
+  { expr: "yield 1, 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 3], desc: "yield w/ arg in list" },
   { expr: "(yield 1)",    top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized" },
   { expr: "(1, yield 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized" },
   { expr: "(yield 1, 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized" },
@@ -65,7 +65,7 @@ const cases = [
 
   // arguments
   { expr: "arguments",    top: null, fun: null, gen: null, genexp: null, desc: "arguments in list" },
-  { expr: "1, arguments", top: null, fun: null, gen: null, genexp: [FOR_OF_PAREN, 9999], desc: "arguments in list" },
+  { expr: "1, arguments", top: null, fun: null, gen: null, genexp: [FOR_OF_PAREN, 1], desc: "arguments in list" },
 
   // yield in generator expressions
   { expr: "(for (x of []) yield 1)",         top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg in genexp" },
@@ -115,7 +115,7 @@ function splitKeyword(str) {
 function expectError1(err, ctx, msg, lineNumber) {
   reportCompare('object', typeof err,     'exn for: ' + msg);
   reportCompare(ctx,      err.message,    'exn message for: ' + msg);
-  if (ctx !== BAD_GENERATOR_SYNTAX && ctx != PAREN_PAREN && ctx != FOR_OF_PAREN)
+  if (ctx !== BAD_GENERATOR_SYNTAX && ctx != PAREN_PAREN)
       reportCompare(lineNumber,    err.lineNumber, 'exn token for: ' + msg);
 }
 
