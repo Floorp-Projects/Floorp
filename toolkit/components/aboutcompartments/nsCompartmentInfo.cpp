@@ -22,24 +22,24 @@ public:
   NS_DECL_ISUPPORTS
 
   /* readonly attribute wstring compartmentName; */
-  NS_IMETHOD GetCompartmentName(nsAString& aCompartmentName){
+  NS_IMETHOD GetCompartmentName(nsAString& aCompartmentName) MOZ_OVERRIDE {
     aCompartmentName.Assign(mCompartmentName);
     return NS_OK;
   };
 
   /* readonly attribute unsigned long time; */
-  NS_IMETHOD GetTime(uint64_t* aTime) {
+  NS_IMETHOD GetTime(uint64_t* aTime) MOZ_OVERRIDE {
     *aTime = mTime;
     return NS_OK;
   }
   /* readonly attribute wstring addon id; */
-  NS_IMETHOD GetAddonId(nsAString& aAddonId){
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) MOZ_OVERRIDE {
     aAddonId.Assign(mAddonId);
     return NS_OK;
   };
 
   /* readonly attribute unsigned long CPOW time; */
-  NS_IMETHOD GetCPOWTime(uint64_t* aCPOWTime) {
+  NS_IMETHOD GetCPOWTime(uint64_t* aCPOWTime) MOZ_OVERRIDE {
     *aCPOWTime = mCPOWTime;
     return NS_OK;
   }
