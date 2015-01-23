@@ -17,6 +17,7 @@ class SelectionCaretsTest(MarionetteTestCase):
     _textarea_rtl_selector = (By.ID, 'textarea_rtl')
     _contenteditable_selector = (By.ID, 'contenteditable')
     _content_selector = (By.ID, 'content')
+    _contenteditable2_selector = (By.ID, 'contenteditable2')
 
     def setUp(self):
         # Code to execute before a tests are run.
@@ -38,6 +39,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         self._textarea_rtl = self.marionette.find_element(*self._textarea_rtl_selector)
         self._contenteditable = self.marionette.find_element(*self._contenteditable_selector)
         self._content = self.marionette.find_element(*self._content_selector)
+        self._contenteditable2 = self.marionette.find_element(*self._contenteditable2_selector)
 
     def _first_word_location(self, el):
         '''Get the location (x, y) of the first word in el.
@@ -97,6 +99,10 @@ class SelectionCaretsTest(MarionetteTestCase):
 
         x, y = self._first_word_location(el)
         self._long_press_to_select(el, x, y)
+
+        # Move the right caret to select more than one line
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        self.actions.flick(el, caret2_x, caret2_y, caret2_x, caret2_y+50,).perform()
 
         # Move the right caret to the end of the content.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
@@ -296,6 +302,15 @@ class SelectionCaretsTest(MarionetteTestCase):
     def test_content_non_editable_minimum_select_one_character_by_selection(self):
         self.openTestHtml(enabled=True)
         self._test_minimum_select_one_character(self._content, self.assertEqual)
+
+
+    ########################################################################
+    # <div> contenteditable2 test cases with selection carets enabled
+    ########################################################################
+    def test_aaa_contenteditable_minimum_select_one_character(self):
+        self.openTestHtml(enabled=True)
+        self._test_minimum_select_one_character(self._contenteditable2, self.assertEqual)
+
 
     def test_content_non_editable_focus_obtained_by_long_press_from_input(self):
         self.openTestHtml(enabled=True)
