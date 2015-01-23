@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1107443</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1107443 **/
+  try {
+    Object.defineProperty(window, "nosuchprop", { value: 5 });
+    throw "didn't throw";
+  } catch (e) {
+    ise(e instanceof TypeError, true,
+        "defineProperty(window) with a non-configurable property should " +
+        "throw a TypeError, instead got: " + e);
+    ise(Object.getOwnPropertyDescriptor(window, "nosuchprop"), undefined,
+        'Window should not have property after an attempt to define it failed');
+  }
+
+  Object.defineProperty(window, "nosuchprop", { value: 7, configurable: true });
+  var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
+  ise(typeof(desc), "object", "Should have a property now");
+  ise(desc.configurable, true, "Property should be configurable");
+  ise(desc.writable, false, "Property should be readonly");
+  ise(desc.value, 7, "Property should have the right value");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107443">Mozilla Bug 1107443</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
