@@ -3684,7 +3684,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       const nscoord itemNormalBPos = framePos.B(outerWM);
 
       ReflowFlexItem(aPresContext, aAxisTracker, aReflowState,
-                     item, framePos, containerWidth);
+                     *item, framePos, containerWidth);
 
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
@@ -3762,19 +3762,17 @@ void
 nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                                      const FlexboxAxisTracker& aAxisTracker,
                                      const nsHTMLReflowState& aReflowState,
-                                     // XXXdholbert Adding "a" prefix to
-                                     // these args in a later patch:
-                                     const FlexItem* item,
-                                     LogicalPoint& framePos,
-                                     nscoord containerWidth)
+                                     const FlexItem& aItem,
+                                     LogicalPoint& aFramePos,
+                                     nscoord aContainerWidth)
 {
       // XXXdholbert De-indenting this function in a later patch.
       WritingMode outerWM = aReflowState.GetWritingMode();
-      WritingMode wm = item->Frame()->GetWritingMode();
+      WritingMode wm = aItem.Frame()->GetWritingMode();
       LogicalSize availSize = aReflowState.ComputedSize(wm);
       availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         item->Frame(), availSize);
+                                         aItem.Frame(), availSize);
 
       // Keep track of whether we've overriden the child's computed height
       // and/or width, so we can set its resize flags accordingly.
@@ -3783,24 +3781,24 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
 
       // Override computed main-size
       if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-        childReflowState.SetComputedWidth(item->GetMainSize());
+        childReflowState.SetComputedWidth(aItem.GetMainSize());
         didOverrideComputedWidth = true;
       } else {
-        childReflowState.SetComputedHeight(item->GetMainSize());
+        childReflowState.SetComputedHeight(aItem.GetMainSize());
         didOverrideComputedHeight = true;
       }
 
       // Override reflow state's computed cross-size, for stretched items.
-      if (item->IsStretched()) {
-        MOZ_ASSERT(item->GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
+      if (aItem.IsStretched()) {
+        MOZ_ASSERT(aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
                    "stretched item w/o 'align-self: stretch'?");
         if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
-          childReflowState.SetComputedWidth(item->GetCrossSize());
+          childReflowState.SetComputedWidth(aItem.GetCrossSize());
           didOverrideComputedWidth = true;
         } else {
           // If this item's height is stretched, it's a relative height.
-          item->Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-          childReflowState.SetComputedHeight(item->GetCrossSize());
+          aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+          childReflowState.SetComputedHeight(aItem.GetCrossSize());
           didOverrideComputedHeight = true;
         }
       }
@@ -3812,7 +3810,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
       // If we're overriding the computed width or height, *and* we had an
       // earlier "measuring" reflow, then this upcoming reflow needs to be
       // treated as a resize.
-      if (item->HadMeasuringReflow()) {
+      if (aItem.HadMeasuringReflow()) {
         if (didOverrideComputedWidth) {
           // (This is somewhat redundant, since the reflow state already
           // sets mHResize whenever our computed width has changed since the
@@ -3830,9 +3828,9 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
 
       nsHTMLReflowMetrics childDesiredSize(childReflowState);
       nsReflowStatus childReflowStatus;
-      ReflowChild(item->Frame(), aPresContext,
+      ReflowChild(aItem.Frame(), aPresContext,
                   childDesiredSize, childReflowState,
-                  outerWM, framePos, containerWidth,
+                  outerWM, aFramePos, aContainerWidth,
                   0, childReflowStatus);
 
       // XXXdholbert Once we do pagination / splitting, we'll need to actually
@@ -3843,14 +3841,14 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                  "We gave flex item unconstrained available height, so it "
                  "should be complete");
 
-      childReflowState.ApplyRelativePositioning(&framePos, containerWidth);
+      childReflowState.ApplyRelativePositioning(&aFramePos, aContainerWidth);
 
-      FinishReflowChild(item->Frame(), aPresContext,
+      FinishReflowChild(aItem.Frame(), aPresContext,
                         childDesiredSize, &childReflowState,
-                        outerWM, framePos, containerWidth, 0);
+                        outerWM, aFramePos, aContainerWidth, 0);
 
       // Save the first child's ascent; it may establish container's baseline.
-      if (item->Frame() == mFrames.FirstChild()) {
+      if (aItem.Frame() == mFrames.FirstChild()) {
         // XXXdholbert (This clause may look a bit odd right now, split as it
         // is from the code immediately after it, which *uses* |item|'s saved
         // ascent. It may superficially look like these clauses should just be
@@ -3859,7 +3857,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
         // shift *this* clause to a different logic level -- conditional on
         // whether |item| needs a final reflow -- whereas the subsequent clause
         // will not be shifted.)
-        item->SetAscent(childDesiredSize.BlockStartAscent());
+        aItem.SetAscent(childDesiredSize.BlockStartAscent());
       }
 }
 
