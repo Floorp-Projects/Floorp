@@ -272,6 +272,11 @@ class ChainedIter
     T operator->() const { return get(); }
 };
 
+typedef js::HashMap<Value *,
+                    const char *,
+                    js::DefaultHasher<Value *>,
+                    js::SystemAllocPolicy> RootedValueMap;
+
 class GCRuntime
 {
   public:
@@ -284,8 +289,8 @@ class GCRuntime
     inline bool upcomingZealousGC();
     inline bool needZealousGC();
 
-    template <typename T> bool addRoot(T *rp, const char *name, JSGCRootType rootType);
-    void removeRoot(void *rp);
+    bool addRoot(Value *vp, const char *name);
+    void removeRoot(Value *vp);
     void setMarkStackLimit(size_t limit);
 
     void setParameter(JSGCParamKey key, uint32_t value);
@@ -665,7 +670,7 @@ class GCRuntime
     // so as to reduce the cost of operations on the available lists.
     ChunkPool             fullChunks_;
 
-    js::RootedValueMap rootsHash;
+    RootedValueMap rootsHash;
 
     size_t maxMallocBytes;
 
