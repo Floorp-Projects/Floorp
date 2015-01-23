@@ -43,8 +43,8 @@ public:
         if (!mMap.IsInitialized())
             return false;
 
-        PLDHashEntryHdr* hdr = PL_DHashTableLookup(&mMap, aElement);
-        if (PL_DHASH_ENTRY_IS_FREE(hdr))
+        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mMap, aElement);
+        if (!hdr)
             return false;
 
         Entry* entry = static_cast<Entry*>(hdr);

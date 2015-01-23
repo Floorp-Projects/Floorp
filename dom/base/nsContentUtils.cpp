@@ -3941,8 +3941,8 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
 
   EventListenerManagerMapEntry *entry =
     static_cast<EventListenerManagerMapEntry *>
-               (PL_DHashTableLookup(&sEventListenerManagersHash, aNode));
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+               (PL_DHashTableSearch(&sEventListenerManagersHash, aNode));
+  if (entry) {
     CycleCollectionNoteChild(cb, entry->mListenerManager.get(),
                              "[via hash] mListenerManager");
   }
@@ -3981,7 +3981,7 @@ nsContentUtils::GetExistingListenerManagerForNode(const nsINode *aNode)
   if (!aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
     return nullptr;
   }
-  
+
   if (!sEventListenerManagersHash.IsInitialized()) {
     // We're already shut down, don't bother creating an event listener
     // manager.
@@ -3991,8 +3991,8 @@ nsContentUtils::GetExistingListenerManagerForNode(const nsINode *aNode)
 
   EventListenerManagerMapEntry *entry =
     static_cast<EventListenerManagerMapEntry *>
-               (PL_DHashTableLookup(&sEventListenerManagersHash, aNode));
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+               (PL_DHashTableSearch(&sEventListenerManagersHash, aNode));
+  if (entry) {
     return entry->mListenerManager;
   }
 
@@ -4006,8 +4006,8 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
   if (sEventListenerManagersHash.IsInitialized()) {
     EventListenerManagerMapEntry *entry =
       static_cast<EventListenerManagerMapEntry *>
-                 (PL_DHashTableLookup(&sEventListenerManagersHash, aNode));
-    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+                 (PL_DHashTableSearch(&sEventListenerManagersHash, aNode));
+    if (entry) {
       nsRefPtr<EventListenerManager> listenerManager;
       listenerManager.swap(entry->mListenerManager);
       // Remove the entry and *then* do operations that could cause further
