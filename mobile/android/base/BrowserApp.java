@@ -153,8 +153,7 @@ public class BrowserApp extends GeckoApp
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
                                    ActionModeCompat.Presenter,
-                                   LayoutInflater.Factory,
-                                   TopSitesPanel.BrowserTilesRecorderProvider {
+                                   LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -257,8 +256,6 @@ public class BrowserApp extends GeckoApp
     private boolean mHideWebContentOnAnimationEnd;
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
-
-    private TilesRecorder mTilesRecorder;
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -654,8 +651,6 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
-
-        mTilesRecorder = new TilesRecorder();
     }
 
     private void setupSystemUITinting() {
@@ -3344,10 +3339,5 @@ public class BrowserApp extends GeckoApp
                                          osLocale,
                                          appLocale,
                                          previousSession);
-    }
-
-    @Override
-    public TilesRecorder getTilesRecorder() {
-        return mTilesRecorder;
     }
 }
