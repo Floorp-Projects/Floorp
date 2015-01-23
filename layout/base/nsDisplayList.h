@@ -513,7 +513,7 @@ public:
    */
   void AdjustWindowDraggingRegion(nsIFrame* aFrame);
 
-  const nsRegion& GetWindowDraggingRegion() { return mWindowDraggingRegion; }
+  const nsIntRegion& GetWindowDraggingRegion() { return mWindowDraggingRegion; }
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -875,7 +875,7 @@ private:
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
   nsRegion                       mWindowOpaqueRegion;
-  nsRegion                       mWindowDraggingRegion;
+  nsIntRegion                    mWindowDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
