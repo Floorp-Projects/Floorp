@@ -23,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(15b0e6cf-83da-4672-814e-cfa0b06ba31b)]
+[scriptable, uuid(fb861ca6-426f-4edf-844e-bbabec9bbc1a)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -102,6 +102,12 @@ interface nsIXULRuntime : nsISupports
    * and will be removed.
    */
   readonly attribute boolean keyboardMayHaveIME;
+
+  /**
+   * Indicates if the active accessibility client is UIA.
+   * DO NOT USE! This is temporary and will be removed.
+   */
+  readonly attribute boolean accessibilityIsUIA;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.
