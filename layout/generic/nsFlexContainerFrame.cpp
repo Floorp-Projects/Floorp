@@ -3766,99 +3766,98 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                                      LogicalPoint& aFramePos,
                                      nscoord aContainerWidth)
 {
-      // XXXdholbert De-indenting this function in a later patch.
-      WritingMode outerWM = aReflowState.GetWritingMode();
-      WritingMode wm = aItem.Frame()->GetWritingMode();
-      LogicalSize availSize = aReflowState.ComputedSize(wm);
-      availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         aItem.Frame(), availSize);
+  WritingMode outerWM = aReflowState.GetWritingMode();
+  WritingMode wm = aItem.Frame()->GetWritingMode();
+  LogicalSize availSize = aReflowState.ComputedSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+  nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+                                     aItem.Frame(), availSize);
 
-      // Keep track of whether we've overriden the child's computed height
-      // and/or width, so we can set its resize flags accordingly.
-      bool didOverrideComputedWidth = false;
-      bool didOverrideComputedHeight = false;
+  // Keep track of whether we've overriden the child's computed height
+  // and/or width, so we can set its resize flags accordingly.
+  bool didOverrideComputedWidth = false;
+  bool didOverrideComputedHeight = false;
 
-      // Override computed main-size
-      if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-        childReflowState.SetComputedWidth(aItem.GetMainSize());
-        didOverrideComputedWidth = true;
-      } else {
-        childReflowState.SetComputedHeight(aItem.GetMainSize());
-        didOverrideComputedHeight = true;
-      }
+  // Override computed main-size
+  if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+    childReflowState.SetComputedWidth(aItem.GetMainSize());
+    didOverrideComputedWidth = true;
+  } else {
+    childReflowState.SetComputedHeight(aItem.GetMainSize());
+    didOverrideComputedHeight = true;
+  }
 
-      // Override reflow state's computed cross-size, for stretched items.
-      if (aItem.IsStretched()) {
-        MOZ_ASSERT(aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
-                   "stretched item w/o 'align-self: stretch'?");
-        if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
-          childReflowState.SetComputedWidth(aItem.GetCrossSize());
-          didOverrideComputedWidth = true;
-        } else {
-          // If this item's height is stretched, it's a relative height.
-          aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-          childReflowState.SetComputedHeight(aItem.GetCrossSize());
-          didOverrideComputedHeight = true;
-        }
-      }
+  // Override reflow state's computed cross-size, for stretched items.
+  if (aItem.IsStretched()) {
+    MOZ_ASSERT(aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
+               "stretched item w/o 'align-self: stretch'?");
+    if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+      childReflowState.SetComputedWidth(aItem.GetCrossSize());
+      didOverrideComputedWidth = true;
+    } else {
+      // If this item's height is stretched, it's a relative height.
+      aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+      childReflowState.SetComputedHeight(aItem.GetCrossSize());
+      didOverrideComputedHeight = true;
+    }
+  }
 
-      // XXXdholbert Might need to actually set the correct margins in the
-      // reflow state at some point, so that they can be saved on the frame for
-      // UsedMarginProperty().  Maybe doesn't matter though...?
+  // XXXdholbert Might need to actually set the correct margins in the
+  // reflow state at some point, so that they can be saved on the frame for
+  // UsedMarginProperty().  Maybe doesn't matter though...?
 
-      // If we're overriding the computed width or height, *and* we had an
-      // earlier "measuring" reflow, then this upcoming reflow needs to be
-      // treated as a resize.
-      if (aItem.HadMeasuringReflow()) {
-        if (didOverrideComputedWidth) {
-          // (This is somewhat redundant, since the reflow state already
-          // sets mHResize whenever our computed width has changed since the
-          // previous reflow. Still, it's nice for symmetry, and it may become
-          // necessary once we support orthogonal flows.)
-          childReflowState.SetHResize(true);
-        }
-        if (didOverrideComputedHeight) {
-          childReflowState.SetVResize(true);
-        }
-      }
-      // NOTE: Be very careful about doing anything else with childReflowState
-      // after this point, because some of its methods (e.g. SetComputedWidth)
-      // internally call InitResizeFlags and stomp on mVResize & mHResize.
+  // If we're overriding the computed width or height, *and* we had an
+  // earlier "measuring" reflow, then this upcoming reflow needs to be
+  // treated as a resize.
+  if (aItem.HadMeasuringReflow()) {
+    if (didOverrideComputedWidth) {
+      // (This is somewhat redundant, since the reflow state already
+      // sets mHResize whenever our computed width has changed since the
+      // previous reflow. Still, it's nice for symmetry, and it may become
+      // necessary once we support orthogonal flows.)
+      childReflowState.SetHResize(true);
+    }
+    if (didOverrideComputedHeight) {
+      childReflowState.SetVResize(true);
+    }
+  }
+  // NOTE: Be very careful about doing anything else with childReflowState
+  // after this point, because some of its methods (e.g. SetComputedWidth)
+  // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
-      nsHTMLReflowMetrics childDesiredSize(childReflowState);
-      nsReflowStatus childReflowStatus;
-      ReflowChild(aItem.Frame(), aPresContext,
-                  childDesiredSize, childReflowState,
-                  outerWM, aFramePos, aContainerWidth,
-                  0, childReflowStatus);
+  nsHTMLReflowMetrics childDesiredSize(childReflowState);
+  nsReflowStatus childReflowStatus;
+  ReflowChild(aItem.Frame(), aPresContext,
+              childDesiredSize, childReflowState,
+              outerWM, aFramePos, aContainerWidth,
+              0, childReflowStatus);
 
-      // XXXdholbert Once we do pagination / splitting, we'll need to actually
-      // handle incomplete childReflowStatuses. But for now, we give our kids
-      // unconstrained available height, which means they should always
-      // complete.
-      MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
-                 "We gave flex item unconstrained available height, so it "
-                 "should be complete");
+  // XXXdholbert Once we do pagination / splitting, we'll need to actually
+  // handle incomplete childReflowStatuses. But for now, we give our kids
+  // unconstrained available height, which means they should always
+  // complete.
+  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+             "We gave flex item unconstrained available height, so it "
+             "should be complete");
 
-      childReflowState.ApplyRelativePositioning(&aFramePos, aContainerWidth);
+  childReflowState.ApplyRelativePositioning(&aFramePos, aContainerWidth);
 
-      FinishReflowChild(aItem.Frame(), aPresContext,
-                        childDesiredSize, &childReflowState,
-                        outerWM, aFramePos, aContainerWidth, 0);
+  FinishReflowChild(aItem.Frame(), aPresContext,
+                    childDesiredSize, &childReflowState,
+                    outerWM, aFramePos, aContainerWidth, 0);
 
-      // Save the first child's ascent; it may establish container's baseline.
-      if (aItem.Frame() == mFrames.FirstChild()) {
-        // XXXdholbert (This clause may look a bit odd right now, split as it
-        // is from the code immediately after it, which *uses* |item|'s saved
-        // ascent. It may superficially look like these clauses should just be
-        // merged. The separation will make more sense once we change this flex
-        // item's final reflow to be *optional*, in bug 1054010. That bug will
-        // shift *this* clause to a different logic level -- conditional on
-        // whether |item| needs a final reflow -- whereas the subsequent clause
-        // will not be shifted.)
-        aItem.SetAscent(childDesiredSize.BlockStartAscent());
-      }
+  // Save the first child's ascent; it may establish container's baseline.
+  if (aItem.Frame() == mFrames.FirstChild()) {
+    // XXXdholbert (This clause may look a bit odd right now, split as it
+    // is from the code immediately after it, which *uses* |item|'s saved
+    // ascent. It may superficially look like these clauses should just be
+    // merged. The separation will make more sense once we change this flex
+    // item's final reflow to be *optional*, in bug 1054010. That bug will
+    // shift *this* clause to a different logic level -- conditional on
+    // whether |item| needs a final reflow -- whereas the subsequent clause
+    // will not be shifted.)
+    aItem.SetAscent(childDesiredSize.BlockStartAscent());
+  }
 }
 
 /* virtual */ nscoord
