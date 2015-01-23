@@ -1312,11 +1312,6 @@ GCRuntime::finish()
     FreeChunkPool(rt, availableChunks_);
     FreeChunkPool(rt, emptyChunks_);
 
-    if (rootsHash.initialized())
-        rootsHash.clear();
-
-    FinishPersistentRootedChains(rt);
-
     if (lock) {
         PR_DestroyLock(lock);
         lock = nullptr;
@@ -1343,6 +1338,15 @@ js::gc::FinishPersistentRootedChains(JSRuntime *rt)
     FinishPersistentRootedChain(rt->scriptPersistentRooteds);
     FinishPersistentRootedChain(rt->stringPersistentRooteds);
     FinishPersistentRootedChain(rt->valuePersistentRooteds);
+}
+
+void
+GCRuntime::finishRoots()
+{
+    if (rootsHash.initialized())
+        rootsHash.clear();
+
+    FinishPersistentRootedChains(rt);
 }
 
 void
