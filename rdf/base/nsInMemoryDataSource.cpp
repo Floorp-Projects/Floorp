@@ -146,8 +146,7 @@ public:
 };
 
 
-struct Entry {
-    PLDHashEntryHdr mHdr;
+struct Entry : PLDHashEntryHdr {
     nsIRDFNode*     mNode;
     Assertion*      mAssertions;
 };
@@ -217,7 +216,7 @@ PLDHashOperator
 Assertion::DeletePropertyHashEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                                            uint32_t aNumber, void* aArg)
 {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
 
     Assertion* as = entry->mAssertions;
     while (as) {
@@ -322,20 +321,22 @@ public:
     GetForwardArcs(nsIRDFResource* u) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(&mForwardArcs, u);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nullptr; }
+            ? static_cast<Entry*>(hdr)->mAssertions
+            : nullptr;
+    }
 
     Assertion*
     GetReverseArcs(nsIRDFNode* v) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(&mReverseArcs, v);
         return PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
-            : nullptr; }
+            ? static_cast<Entry*>(hdr)->mAssertions
+            : nullptr;
+    }
 
     void
     SetForwardArcs(nsIRDFResource* u, Assertion* as) {
         if (as) {
-            Entry* entry = reinterpret_cast<Entry*>(PL_DHashTableAdd(&mForwardArcs, u));
+            Entry* entry = static_cast<Entry*>(PL_DHashTableAdd(&mForwardArcs, u));
             if (entry) {
                 entry->mNode = u;
                 entry->mAssertions = as;
@@ -349,7 +350,7 @@ public:
     void
     SetReverseArcs(nsIRDFNode* v, Assertion* as) {
         if (as) {
-            Entry* entry = reinterpret_cast<Entry*>(PL_DHashTableAdd(&mReverseArcs, v));
+            Entry* entry = static_cast<Entry*>(PL_DHashTableAdd(&mReverseArcs, v));
             if (entry) {
                 entry->mNode = v;
                 entry->mAssertions = as;
@@ -447,7 +448,7 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
             PLDHashEntryHdr* hdr = PL_DHashTableLookup(mNextAssertion->u.hash.mPropertyHash,
                 aProperty);
             mNextAssertion = PL_DHASH_ENTRY_IS_BUSY(hdr)
-                ? reinterpret_cast<Entry*>(hdr)->mAssertions
+                ? static_cast<Entry*>(hdr)->mAssertions
                 : nullptr;
         }
     }
@@ -593,7 +594,7 @@ InMemoryArcsEnumeratorImpl::ArcEnumerator(PLDHashTable* aTable,
                                        PLDHashEntryHdr* aHdr,
                                        uint32_t aNumber, void* aArg)
 {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     nsISupportsArray* resources = static_cast<nsISupportsArray*>(aArg);
 
     resources->AppendElement(entry->mNode);
@@ -828,7 +829,7 @@ PLDHashOperator
 InMemoryDataSource::DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                                            uint32_t aNumber, void* aArg)
 {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
 
     Assertion* as = entry->mAssertions;
     while (as) {
@@ -981,7 +982,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
     if (as && as->mHashEntry) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash, property);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         while (val) {
             if (tv == val->u.as.mTruthValue) {
@@ -1027,7 +1028,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
     if (as && as->mHashEntry) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash, property);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         while (val) {
             if ((val->u.as.mTarget == target) && (tv == (val->u.as.mTruthValue))) {
@@ -1140,7 +1141,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
     if (haveHash) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash, aProperty);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         while (val) {
             if (val->u.as.mTarget == aTarget) {
@@ -1182,7 +1183,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash,
             aProperty);
         Assertion *asRef = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         if (asRef)
         {
@@ -1194,7 +1195,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
             hdr = PL_DHashTableAdd(next->u.hash.mPropertyHash, aProperty);
             if (hdr)
             {
-                Entry* entry = reinterpret_cast<Entry*>(hdr);
+                Entry* entry = static_cast<Entry*>(hdr);
                 entry->mNode = aProperty;
                 entry->mAssertions = as;
             }
@@ -1277,13 +1278,13 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
     Assertion* prev = next;
     Assertion* root = next;
     Assertion* as = nullptr;
-    
+
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(next->u.hash.mPropertyHash,
             aProperty);
         prev = next = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         bool first = true;
         while (next) {
@@ -1307,7 +1308,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
                 PLDHashEntryHdr* hdr = PL_DHashTableAdd(root->u.hash.mPropertyHash,
                                      aProperty);
                 if (hdr) {
-                    Entry* entry = reinterpret_cast<Entry*>(hdr);
+                    Entry* entry = static_cast<Entry*>(hdr);
                     entry->mNode = aProperty;
                     entry->mAssertions = next->mNext;
                 }
@@ -1578,7 +1579,7 @@ InMemoryDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *resu
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, bool *result)
 {
     Assertion* ass = GetForwardArcs(aSource);
@@ -1586,7 +1587,7 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(ass->u.hash.mPropertyHash,
             aArc);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         if (val) {
             *result = true;
@@ -1649,7 +1650,7 @@ InMemoryDataSource::ResourceEnumerator(PLDHashTable* aTable,
                                        PLDHashEntryHdr* aHdr,
                                        uint32_t aNumber, void* aArg)
 {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     static_cast<nsCOMArray<nsIRDFNode>*>(aArg)->AppendObject(entry->mNode);
     return PL_DHASH_NEXT;
 }
@@ -1747,7 +1748,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(table,
             prop);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         if (val) {
             first->mNext = val->mNext;
@@ -1756,7 +1757,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         else {
             PLDHashEntryHdr* hdr = PL_DHashTableAdd(table, prop);
             if (hdr) {
-                Entry* entry = reinterpret_cast<Entry*>(hdr);
+                Entry* entry = static_cast<Entry*>(hdr);
                 entry->mNode = prop;
                 entry->mAssertions = first;
                 first->mNext = nullptr;
@@ -1812,7 +1813,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
         PLDHashEntryHdr* hdr = PL_DHashTableLookup(as->u.hash.mPropertyHash,
             aProperty);
         Assertion* val = PL_DHASH_ENTRY_IS_BUSY(hdr)
-            ? reinterpret_cast<Entry*>(hdr)->mAssertions
+            ? static_cast<Entry*>(hdr)->mAssertions
             : nullptr;
         while (val) {
             if ((val->u.as.mTarget == aTarget) &&
@@ -1906,7 +1907,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                                             uint32_t aNumber, void* aArg)
 {
     PLDHashOperator result = PL_DHASH_NEXT;
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     SweepInfo* info = static_cast<SweepInfo*>(aArg);
 
     Assertion* as = entry->mAssertions;
@@ -1948,7 +1949,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                 PL_DHashTableLookup(info->mReverseArcs, as->u.as.mTarget);
             NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(hdr), "no assertion in reverse arcs");
 
-            Entry* rentry = reinterpret_cast<Entry*>(hdr);
+            Entry* rentry = static_cast<Entry*>(hdr);
             Assertion* ras = rentry->mAssertions;
             Assertion* rprev = nullptr;
             while (ras) {
@@ -2006,7 +2007,7 @@ public:
 PLDHashOperator
 SubjectEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                   uint32_t aNumber, void* aArg) {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
 
     nsresult rv;
@@ -2048,7 +2049,7 @@ public:
 PLDHashOperator
 TriplesInnerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                   uint32_t aNumber, void* aArg) {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     Assertion* assertion = entry->mAssertions;
     TriplesInnerClosure* closure = 
         static_cast<TriplesInnerClosure*>(aArg);
@@ -2069,7 +2070,7 @@ TriplesInnerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
 PLDHashOperator
 TriplesEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
                   uint32_t aNumber, void* aArg) {
-    Entry* entry = reinterpret_cast<Entry*>(aHdr);
+    Entry* entry = static_cast<Entry*>(aHdr);
     VisitorClosure* closure = static_cast<VisitorClosure*>(aArg);
 
     nsresult rv;
