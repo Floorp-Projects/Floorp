@@ -129,10 +129,9 @@ public:
     NS_ASSERTION(mTable.IsInitialized(),
                  "nsTHashtable was not initialized properly.");
 
-    EntryType* entry = static_cast<EntryType*>(
-      PL_DHashTableLookup(const_cast<PLDHashTable*>(&mTable),
+    return static_cast<EntryType*>(
+      PL_DHashTableSearch(const_cast<PLDHashTable*>(&mTable),
                           EntryType::KeyToPointer(aKey)));
-    return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry : nullptr;
   }
 
   /**

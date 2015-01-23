@@ -556,6 +556,13 @@ PLDHashTable::Lookup(const void* aKey)
 }
 
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
+PLDHashTable::Search(const void* aKey)
+{
+  PLDHashEntryHdr* entry = Lookup(aKey);
+  return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry : nullptr;
+}
+
+MOZ_ALWAYS_INLINE PLDHashEntryHdr*
 PLDHashTable::Add(const void* aKey)
 {
   PLDHashNumber keyHash;
@@ -658,6 +665,12 @@ PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey)
 {
   return aTable->Lookup(aKey);
+}
+
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey)
+{
+  return aTable->Search(aKey);
 }
 
 PLDHashEntryHdr* PL_DHASH_FASTCALL
