@@ -4,6 +4,7 @@
 // Tests that selections in the flame graph widget work properly.
 
 let TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
+let TEST_BOUNDS = { startTime: 0, endTime: 150 };
 let TEST_WIDTH = 200;
 let TEST_HEIGHT = 100;
 
@@ -36,53 +37,53 @@ function* performTest() {
 }
 
 function testGraph(graph) {
-  graph.setData(TEST_DATA);
+  graph.setData({ data: TEST_DATA, bounds: TEST_BOUNDS });
 
-  is(graph.getDataWindowStart(), 0,
+  is(graph.getViewRange().startTime, 0,
     "The selection start boundary is correct (1).");
-  is(graph.getDataWindowEnd(), TEST_WIDTH,
+  is(graph.getViewRange().endTime, 150,
     "The selection end boundary is correct (1).");
 
   scroll(graph, 200, HORIZONTAL_AXIS, 10);
-  is(graph.getDataWindowStart() | 0, 100,
+  is(graph.getViewRange().startTime | 0, 75,
     "The selection start boundary is correct (2).");
-  is(graph.getDataWindowEnd() | 0, 200,
+  is(graph.getViewRange().endTime | 0, 150,
     "The selection end boundary is correct (2).");
 
   scroll(graph, -200, HORIZONTAL_AXIS, 10);
-  is(graph.getDataWindowStart() | 0, 50,
+  is(graph.getViewRange().startTime | 0, 37,
     "The selection start boundary is correct (3).");
-  is(graph.getDataWindowEnd() | 0, 150,
+  is(graph.getViewRange().endTime | 0, 112,
     "The selection end boundary is correct (3).");
 
   scroll(graph, 200, VERTICAL_AXIS, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 46,
+  is(graph.getViewRange().startTime | 0, 34,
     "The selection start boundary is correct (4).");
-  is(graph.getDataWindowEnd() | 0, 153,
+  is(graph.getViewRange().endTime | 0, 115,
     "The selection end boundary is correct (4).");
 
   scroll(graph, -200, VERTICAL_AXIS, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 50,
+  is(graph.getViewRange().startTime | 0, 37,
     "The selection start boundary is correct (5).");
-  is(graph.getDataWindowEnd() | 0, 149,
+  is(graph.getViewRange().endTime | 0, 112,
     "The selection end boundary is correct (5).");
 
   dragStart(graph, TEST_WIDTH / 2);
-  is(graph.getDataWindowStart() | 0, 50,
+  is(graph.getViewRange().startTime | 0, 37,
     "The selection start boundary is correct (6).");
-  is(graph.getDataWindowEnd() | 0, 149,
+  is(graph.getViewRange().endTime | 0, 112,
     "The selection end boundary is correct (6).");
 
   hover(graph, TEST_WIDTH / 2 - 10);
-  is(graph.getDataWindowStart() | 0, 55,
+  is(graph.getViewRange().startTime | 0, 41,
     "The selection start boundary is correct (7).");
-  is(graph.getDataWindowEnd() | 0, 154,
+  is(graph.getViewRange().endTime | 0, 116,
     "The selection end boundary is correct (7).");
 
   dragStop(graph, 10);
-  is(graph.getDataWindowStart() | 0, 95,
+  is(graph.getViewRange().startTime | 0, 71,
     "The selection start boundary is correct (8).");
-  is(graph.getDataWindowEnd() | 0, 194,
+  is(graph.getViewRange().endTime | 0, 145,
     "The selection end boundary is correct (8).");
 }
 

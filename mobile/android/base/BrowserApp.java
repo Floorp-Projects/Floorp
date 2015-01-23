@@ -3270,20 +3270,6 @@ public class BrowserApp extends GeckoApp
         return GeckoProfile.getDefaultProfileName(this);
     }
 
-    // We want a real BrowserDB.
-    @Override
-    protected BrowserDB.Factory getBrowserDBFactory() {
-        return new BrowserDB.Factory() {
-            @Override
-            public BrowserDB get(String profileName, File profileDir) {
-                // Note that we don't use the profile directory -- we
-                // send operations to the ContentProvider, which does
-                // its own thing.
-                return new LocalBrowserDB(profileName);
-            }
-        };
-    }
-
     /**
      * Launch UI that lets the user update Firefox.
      *
