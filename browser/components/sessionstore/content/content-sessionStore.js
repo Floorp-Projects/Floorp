@@ -97,9 +97,6 @@ let EventListener = {
 
     // Restore the form data and scroll position.
     gContentRestore.restoreDocument();
-
-    // Ask SessionStore.jsm to trigger SSTabRestored.
-    sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
   }
 };
 
@@ -152,7 +149,6 @@ let MessageListener = {
         if (!didStartLoad) {
           // Pretend that the load succeeded so that event handlers fire correctly.
           sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch: epoch});
-          sendAsyncMessage("SessionStore:restoreDocumentComplete", {epoch: epoch});
         }
         break;
       case "SessionStore:resetRestore":
