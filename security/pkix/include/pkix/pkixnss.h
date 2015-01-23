@@ -51,8 +51,9 @@ Result VerifySignedDataNSS(const SignedDataWithSignature& sd,
 Result DigestBufNSS(Input item, /*out*/ uint8_t* digestBuf,
                     size_t digestBufLen);
 
-// Checks, for RSA keys and DSA keys, that the modulus is at least the given
-// number of bits.
+// Checks, for RSA keys, that the modulus is at least the given number of bits.
+// Checks, for ECC keys, that the curve used is one of the NIST P-256, P-384,
+// or P-521 curves.
 Result CheckPublicKeyNSS(Input subjectPublicKeyInfo,
                          unsigned int minimumNonECCBits);
 

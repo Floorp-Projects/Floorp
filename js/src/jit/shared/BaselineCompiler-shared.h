@@ -92,6 +92,13 @@ class BaselineCompilerShared
         return &vecEntry;
     }
 
+    // Append an ICEntry without a stub.
+    bool appendICEntry(ICEntry::Kind kind, uint32_t returnOffset) {
+        ICEntry entry(script->pcToOffset(pc), kind);
+        entry.setReturnOffset(CodeOffsetLabel(returnOffset));
+        return icEntries_.append(entry);
+    }
+
     bool addICLoadLabel(CodeOffsetLabel label) {
         MOZ_ASSERT(!icEntries_.empty());
         ICLoadLabel loadLabel;
@@ -145,7 +152,7 @@ class BaselineCompilerShared
     bool callVMNonOp(const VMFunction &fun, CallVMPhase phase=POST_INITIALIZE) {
         if (!callVM(fun, phase))
             return false;
-        icEntries_.back().setForNonOpCallVM();
+        icEntries_.back().setFakeKind(ICEntry::Kind_NonOpCallVM);
         return true;
     }
 

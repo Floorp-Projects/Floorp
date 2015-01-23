@@ -9,6 +9,7 @@ function runTestOnPrivacyPrefPane(testFunc) {
     browser.addEventListener("Initialized", function(aEvent) {
       browser.removeEventListener("Initialized", arguments.callee, true);
       is(browser.contentWindow.location.href, "about:preferences", "Checking if the preferences tab was opened");
+      browser.contentWindow.gotoPref("panePrivacy");
       testFunc(browser.contentWindow);
       gBrowser.removeCurrentTab();
       testRunner.runNext();
@@ -39,6 +40,8 @@ function test_pane_visibility(win) {
     controlChanged(historymode);
     is(historypane.selectedPanel, win.document.getElementById(modes[mode]),
       "The correct pane should be selected for the " + mode + " mode");
+    is_element_visible(historypane.selectedPanel,
+                       "Correct pane should be visible for the " + mode + " mode");
   }
 }
 

@@ -222,6 +222,10 @@ public:
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
   WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
 
+  // Return the index into mTouches of the SingleTouchData with the given
+  // identifier, or -1 if there is no such SingleTouchData.
+  int32_t IndexOfTouch(int32_t aTouchIdentifier);
+
   // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
   // on the B2G emulator we can only receive mouse events, but we need to be
   // able to pan correctly. To do this, we convert the events into a format that

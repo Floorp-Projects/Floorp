@@ -4,6 +4,7 @@
 // Tests that selections in the flame graph widget work properly on HiDPI.
 
 let TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
+let TEST_BOUNDS = { startTime: 0, endTime: 150 };
 let TEST_WIDTH = 200;
 let TEST_HEIGHT = 100;
 let TEST_DPI_DENSITIY = 2;
@@ -37,19 +38,29 @@ function* performTest() {
 }
 
 function testGraph(graph) {
-  graph.setData(TEST_DATA);
+  graph.setData({ data: TEST_DATA, bounds: TEST_BOUNDS });
 
-  is(graph.getDataWindowStart(), 0,
+  is(graph.getViewRange().startTime, 0,
     "The selection start boundary is correct on HiDPI (1).");
-  is(graph.getDataWindowEnd(), TEST_WIDTH * TEST_DPI_DENSITIY,
+  is(graph.getViewRange().endTime, 150,
     "The selection end boundary is correct on HiDPI (1).");
+
+  is(graph.getOuterBounds().startTime, 0,
+    "The bounds start boundary is correct on HiDPI (1).");
+  is(graph.getOuterBounds().endTime, 150,
+    "The bounds end boundary is correct on HiDPI (1).");
 
   scroll(graph, 10000, HORIZONTAL_AXIS, 1);
 
-  is(graph.getDataWindowStart(), 380,
+  is(graph.getViewRange().startTime, 140,
     "The selection start boundary is correct on HiDPI (2).");
-  is(graph.getDataWindowEnd(), TEST_WIDTH * TEST_DPI_DENSITIY,
+  is(graph.getViewRange().endTime, 150,
     "The selection end boundary is correct on HiDPI (2).");
+
+  is(graph.getOuterBounds().startTime, 0,
+    "The bounds start boundary is correct on HiDPI (2).");
+  is(graph.getOuterBounds().endTime, 150,
+    "The bounds end boundary is correct on HiDPI (2).");
 }
 
 // EventUtils just doesn't work!

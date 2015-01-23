@@ -50,7 +50,15 @@ function setResourceSubstitution(domain, uri) {
 function readURI(uri) {
   let ioservice = Cc['@mozilla.org/network/io-service;1'].
     getService(Ci.nsIIOService);
-  let channel = ioservice.newChannel(uri, 'UTF-8', null);
+
+  let channel = ioservice.newChannel2(uri,
+                                      'UTF-8',
+                                      null,
+                                      null,      // aLoadingNode
+                                      systemPrincipal,
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
   let stream = channel.open();
 
   let cstream = Cc['@mozilla.org/intl/converter-input-stream;1'].

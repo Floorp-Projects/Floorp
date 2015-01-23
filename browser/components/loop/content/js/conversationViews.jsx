@@ -348,9 +348,7 @@ loop.conversationViews = (function(mozL10n) {
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
       conversationAppStore: React.PropTypes.instanceOf(
-        loop.store.ConversationAppStore).isRequired,
-      feedbackStore:
-        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
+        loop.store.ConversationAppStore).isRequired
     },
 
     getInitialState: function() {
@@ -426,7 +424,6 @@ loop.conversationViews = (function(mozL10n) {
 
           return (
             <sharedViews.FeedbackView
-              feedbackStore={this.props.feedbackStore}
               onAfterFeedbackReceived={this.closeWindow.bind(this)}
             />
           );
@@ -929,8 +926,7 @@ loop.conversationViews = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       store: React.PropTypes.instanceOf(
-        loop.store.ConversationStore).isRequired,
-      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
+        loop.store.ConversationStore).isRequired
     },
 
     getInitialState: function() {
@@ -969,7 +965,6 @@ loop.conversationViews = (function(mozL10n) {
 
       return (
         <sharedViews.FeedbackView
-          feedbackStore={this.props.feedbackStore}
           onAfterFeedbackReceived={this._closeWindow.bind(this)}
         />
       );

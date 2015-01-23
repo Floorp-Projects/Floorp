@@ -627,6 +627,21 @@ BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
 }
 
 ICEntry &
+BaselineScript::stackCheckICEntry(bool earlyCheck)
+{
+    // The stack check will always be at offset 0, so just do a linear search
+    // from the beginning. This is only needed for debug mode OSR, when
+    // patching a frame that has invoked a Debugger hook via the interrupt
+    // handler via the stack check, which is part of the prologue.
+    ICEntry::Kind kind = earlyCheck ? ICEntry::Kind_EarlyStackCheck : ICEntry::Kind_StackCheck;
+    for (size_t i = 0; i < numICEntries() && icEntry(i).pcOffset() == 0; i++) {
+        if (icEntry(i).kind() == kind)
+            return icEntry(i);
+    }
+    MOZ_CRASH("No stack check ICEntry found.");
+}
+
+ICEntry &
 BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
 {
     MOZ_ASSERT(returnAddr > method_->raw());

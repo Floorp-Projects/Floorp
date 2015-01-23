@@ -1501,130 +1501,6 @@ JS_strdup(JSRuntime *rt, const char *s)
 #undef JS_AddRoot
 
 JS_PUBLIC_API(bool)
-JS::AddValueRoot(JSContext *cx, JS::Heap<JS::Value> *vp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddValueRoot(cx, vp->unsafeGet(), nullptr);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddStringRoot(JSContext *cx, JS::Heap<JSString *> *rp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddStringRoot(cx, rp->unsafeGet(), nullptr);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddObjectRoot(JSContext *cx, JS::Heap<JSObject *> *rp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddObjectRoot(cx, rp->unsafeGet(), nullptr);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddNamedValueRoot(JSContext *cx, JS::Heap<JS::Value> *vp, const char *name)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddValueRoot(cx, vp->unsafeGet(), name);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddNamedValueRootRT(JSRuntime *rt, JS::Heap<JS::Value> *vp, const char *name)
-{
-    return AddValueRootRT(rt, vp->unsafeGet(), name);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddNamedStringRoot(JSContext *cx, JS::Heap<JSString *> *rp, const char *name)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddStringRoot(cx, rp->unsafeGet(), name);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddNamedObjectRoot(JSContext *cx, JS::Heap<JSObject *> *rp, const char *name)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddObjectRoot(cx, rp->unsafeGet(), name);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddNamedScriptRoot(JSContext *cx, JS::Heap<JSScript *> *rp, const char *name)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return AddScriptRoot(cx, rp->unsafeGet(), name);
-}
-
-/* We allow unrooting from finalizers within the GC */
-
-JS_PUBLIC_API(void)
-JS::RemoveValueRoot(JSContext *cx, JS::Heap<JS::Value> *vp)
-{
-    CHECK_REQUEST(cx);
-    RemoveRoot(cx->runtime(), (void *)vp);
-    *vp = UndefinedValue();
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveStringRoot(JSContext *cx, JS::Heap<JSString *> *rp)
-{
-    CHECK_REQUEST(cx);
-    RemoveRoot(cx->runtime(), (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveObjectRoot(JSContext *cx, JS::Heap<JSObject *> *rp)
-{
-    CHECK_REQUEST(cx);
-    RemoveRoot(cx->runtime(), (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveScriptRoot(JSContext *cx, JS::Heap<JSScript *> *rp)
-{
-    CHECK_REQUEST(cx);
-    RemoveRoot(cx->runtime(), (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveValueRootRT(JSRuntime *rt, JS::Heap<JS::Value> *vp)
-{
-    RemoveRoot(rt, (void *)vp);
-    *vp = UndefinedValue();
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveStringRootRT(JSRuntime *rt, JS::Heap<JSString *> *rp)
-{
-    RemoveRoot(rt, (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveObjectRootRT(JSRuntime *rt, JS::Heap<JSObject *> *rp)
-{
-    RemoveRoot(rt, (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(void)
-JS::RemoveScriptRootRT(JSRuntime *rt, JS::Heap<JSScript *> *rp)
-{
-    RemoveRoot(rt, (void *)rp);
-    *rp = nullptr;
-}
-
-JS_PUBLIC_API(bool)
 JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
     return rt->gc.addBlackRootsTracer(traceOp, data);
@@ -5687,8 +5563,9 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
 }
 
 struct JSExceptionState {
+    explicit JSExceptionState(JSContext *cx) : exception(cx) {}
     bool throwing;
-    jsval exception;
+    PersistentRootedValue exception;
 };
 
 JS_PUBLIC_API(JSExceptionState *)
@@ -5698,13 +5575,9 @@ JS_SaveExceptionState(JSContext *cx)
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    state = cx->pod_malloc<JSExceptionState>();
-    if (state) {
-        state->throwing =
-            JS_GetPendingException(cx, MutableHandleValue::fromMarkedLocation(&state->exception));
-        if (state->throwing && state->exception.isGCThing())
-            AddValueRoot(cx, &state->exception, "JSExceptionState.exception");
-    }
+    state = cx->new_<JSExceptionState>(cx);
+    if (state)
+        state->throwing = JS_GetPendingException(cx, &state->exception);
     return state;
 }
 
@@ -5715,7 +5588,7 @@ JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
     CHECK_REQUEST(cx);
     if (state) {
         if (state->throwing)
-            JS_SetPendingException(cx, HandleValue::fromMarkedLocation(&state->exception));
+            JS_SetPendingException(cx, state->exception);
         else
             JS_ClearPendingException(cx);
         JS_DropExceptionState(cx, state);
@@ -5727,13 +5600,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (state) {
-        if (state->throwing && state->exception.isGCThing()) {
-            assertSameCompartment(cx, state->exception);
-            RemoveRoot(cx->runtime(), &state->exception);
-        }
-        js_free(state);
-    }
+    js_delete(state);
 }
 
 JS_PUBLIC_API(JSErrorReport *)

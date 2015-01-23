@@ -1272,9 +1272,6 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
 
     const gfxFontStyle *style = mFont->GetStyle();
 
-    nsAutoTArray<hb_feature_t,20> features;
-    nsDataHashtable<nsUint32HashKey,uint32_t> mergedFeatures;
-
     // determine whether petite-caps falls back to small-caps
     bool addSmallCaps = false;
     if (style->variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
@@ -1291,16 +1288,16 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     }
 
     gfxFontEntry *entry = mFont->GetFontEntry();
-    if (MergeFontFeatures(style,
-                          entry->mFeatureSettings,
-                          aShapedText->DisableLigatures(),
-                          entry->FamilyName(),
-                          addSmallCaps,
-                          mergedFeatures))
-    {
-        // enumerate result and insert into hb_feature array
-        mergedFeatures.Enumerate(AddOpenTypeFeature, &features);
-    }
+
+    // insert any merged features into hb_feature array
+    nsAutoTArray<hb_feature_t,20> features;
+    MergeFontFeatures(style,
+                      entry->mFeatureSettings,
+                      aShapedText->DisableLigatures(),
+                      entry->FamilyName(),
+                      addSmallCaps,
+                      AddOpenTypeFeature,
+                      &features);
 
     bool isRightToLeft = aShapedText->IsRightToLeft();
     hb_buffer_t *buffer = hb_buffer_create();

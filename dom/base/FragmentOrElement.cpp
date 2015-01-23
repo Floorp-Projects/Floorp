@@ -2553,7 +2553,7 @@ IsVoidTag(nsIAtom* aTag)
   static const nsIAtom* voidElements[] = {
     nsGkAtoms::area, nsGkAtoms::base, nsGkAtoms::basefont,
     nsGkAtoms::bgsound, nsGkAtoms::br, nsGkAtoms::col,
-    nsGkAtoms::command, nsGkAtoms::embed, nsGkAtoms::frame,
+    nsGkAtoms::embed, nsGkAtoms::frame,
     nsGkAtoms::hr, nsGkAtoms::img, nsGkAtoms::input,
     nsGkAtoms::keygen, nsGkAtoms::link, nsGkAtoms::meta,
     nsGkAtoms::param, nsGkAtoms::source, nsGkAtoms::track,

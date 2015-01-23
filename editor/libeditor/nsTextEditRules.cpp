@@ -1198,7 +1198,9 @@ nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
   if (!aSelection || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   
   nsresult res = NS_OK;
-  *aOutString = *aInString;
+  if (!aOutString->Assign(*aInString, mozilla::fallible_t())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   if (aTruncated) {
     *aTruncated = false;
   }
@@ -1233,6 +1235,8 @@ nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
     const int32_t resultingDocLength = docLength - selectionLength - oldCompStrLength;
     if (resultingDocLength >= aMaxLength)
     {
+      // This call is guaranteed to reduce the capacity of the string, so it
+      // cannot cause an OOM.
       aOutString->Truncate();
       if (aTruncated) {
         *aTruncated = true;
@@ -1253,6 +1257,8 @@ nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
         }
         // XXX What should we do if we're removing IVS and its preceding
         //     character won't be removed?
+        // This call is guaranteed to reduce the capacity of the string, so it
+        // cannot cause an OOM.
         aOutString->Truncate(newLength);
         if (aTruncated) {
           *aTruncated = true;

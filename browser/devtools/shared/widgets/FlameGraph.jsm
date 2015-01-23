@@ -24,13 +24,12 @@ const GRAPH_RESIZE_EVENTS_DRAIN = 100; // ms
 
 const GRAPH_WHEEL_ZOOM_SENSITIVITY = 0.00035;
 const GRAPH_WHEEL_SCROLL_SENSITIVITY = 0.5;
-const GRAPH_MIN_SELECTION_WIDTH = 10; // ms
+const GRAPH_MIN_SELECTION_WIDTH = 20; // ms
 
 const TIMELINE_TICKS_MULTIPLE = 5; // ms
 const TIMELINE_TICKS_SPACING_MIN = 75; // px
 
 const OVERVIEW_HEADER_HEIGHT = 16; // px
-const OVERVIEW_HEADER_SAFE_BOUNDS = 50; // px
 const OVERVIEW_HEADER_TEXT_COLOR = "#18191a";
 const OVERVIEW_HEADER_TEXT_FONT_SIZE = 9; // px
 const OVERVIEW_HEADER_TEXT_FONT_FAMILY = "sans-serif";
@@ -53,9 +52,10 @@ const FLAME_GRAPH_BLOCK_TEXT_PADDING_RIGHT = 3; // px
  *
  * Example usage:
  *   let graph = new FlameGraph(node);
- *   let src = FlameGraphUtils.createFlameGraphDataFromSamples(samples);
  *   graph.once("ready", () => {
- *     graph.setData(src);
+ *     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples);
+ *     let bounds = { startTime, endTime };
+ *     graph.setData({ data, bounds });
  *   });
  *
  * Data source format:
@@ -120,6 +120,7 @@ function FlameGraph(parent, sharpness) {
     this._height = canvas.height = bounds.height * this._pixelRatio;
     this._ctx = canvas.getContext("2d");
 
+    this._bounds = new GraphSelection();
     this._selection = new GraphSelection();
     this._selectionDragger = new GraphSelectionDragger();
 
@@ -192,8 +193,10 @@ FlameGraph.prototype = {
     this._window.cancelAnimationFrame(this._animationId);
     this._iframe.remove();
 
+    this._bounds = null;
     this._selection = null;
     this._selectionDragger = null;
+    this._textWidthsCache = null;
 
     this._data = null;
 
@@ -230,12 +233,15 @@ FlameGraph.prototype = {
    * Sets the data source for this graph.
    *
    * @param object data
-   *        The data source. See the constructor for more information.
+   *        An object containing the following properties:
+   *          - data: the data source; see the constructor for more info
+   *          - bounds: the minimum/maximum { start, end }, in ms or px
+   *          - visible: optional, the shown { start, end }, in ms or px
    */
-  setData: function(data) {
+  setData: function({ data, bounds, visible }) {
     this._data = data;
-    this._selection = { start: 0, end: this._width };
-    this._shouldRedraw = true;
+    this.setOuterBounds(bounds);
+    this.setViewRange(visible || bounds);
   },
 
   /**
@@ -260,14 +266,45 @@ FlameGraph.prototype = {
   },
 
   /**
-   * Gets the start or end of this graph's selection, i.e. the 'data window'.
+   * Sets the maximum selection (i.e. the 'graph bounds').
+   * @param object { start, end }
+   */
+  setOuterBounds: function({ startTime, endTime }) {
+    this._bounds.start = startTime * this._pixelRatio;
+    this._bounds.end = endTime * this._pixelRatio;
+    this._shouldRedraw = true;
+  },
+
+  /**
+   * Sets the selection (i.e. the 'view range') bounds.
    * @return number
    */
-  getDataWindowStart: function() {
-    return this._selection.start;
+  setViewRange: function({ startTime, endTime }) {
+    this._selection.start = startTime * this._pixelRatio;
+    this._selection.end = endTime * this._pixelRatio;
+    this._shouldRedraw = true;
   },
-  getDataWindowEnd: function() {
-    return this._selection.end;
+
+  /**
+   * Gets the maximum selection (i.e. the 'graph bounds').
+   * @return number
+   */
+  getOuterBounds: function() {
+    return {
+      startTime: this._bounds.start / this._pixelRatio,
+      endTime: this._bounds.end / this._pixelRatio
+    };
+  },
+
+  /**
+   * Gets the current selection (i.e. the 'view range').
+   * @return number
+   */
+  getViewRange: function() {
+    return {
+      startTime: this._selection.start / this._pixelRatio,
+      endTime: this._selection.end / this._pixelRatio
+    };
   },
 
   /**
@@ -346,9 +383,6 @@ FlameGraph.prototype = {
     let canvasHeight = this._height;
     let scaledOffset = dataOffset * dataScale;
 
-    let safeBounds = OVERVIEW_HEADER_SAFE_BOUNDS * this._pixelRatio;
-    let availableWidth = canvasWidth - safeBounds;
-
     let fontSize = OVERVIEW_HEADER_TEXT_FONT_SIZE * this._pixelRatio;
     let fontFamily = OVERVIEW_HEADER_TEXT_FONT_FAMILY;
     let textPaddingLeft = OVERVIEW_HEADER_TEXT_PADDING_LEFT * this._pixelRatio;
@@ -361,10 +395,10 @@ FlameGraph.prototype = {
     ctx.strokeStyle = this.overviewTimelineStrokes;
     ctx.beginPath();
 
-    for (let x = 0; x < availableWidth + scaledOffset; x += tickInterval) {
-      let lineLeft = x - scaledOffset;
+    for (let x = -scaledOffset % tickInterval; x < canvasWidth; x += tickInterval) {
+      let lineLeft = x;
       let textLeft = lineLeft + textPaddingLeft;
-      let time = Math.round(x / dataScale / this._pixelRatio);
+      let time = Math.round((x / dataScale + dataOffset) / this._pixelRatio);
       let label = time + " " + this.timelineTickUnits;
       ctx.fillText(label, textLeft, textPaddingTop);
       ctx.moveTo(lineLeft, 0);
@@ -650,6 +684,7 @@ FlameGraph.prototype = {
       selection.end = dragger.anchor.end + (dragger.origin - mouseX) / selectionScale;
       this._normalizeSelectionBounds();
       this._shouldRedraw = true;
+      this.emit("selecting");
     }
   },
 
@@ -707,6 +742,7 @@ FlameGraph.prototype = {
 
     this._normalizeSelectionBounds();
     this._shouldRedraw = true;
+    this.emit("selecting");
   },
 
   /**
@@ -715,34 +751,33 @@ FlameGraph.prototype = {
    * wider than the allowed minimum width.
    */
   _normalizeSelectionBounds: function() {
-    let canvasWidth = this._width;
-    let canvasHeight = this._height;
+    let boundsStart = this._bounds.start;
+    let boundsEnd = this._bounds.end;
+    let selectionStart = this._selection.start;
+    let selectionEnd = this._selection.end;
 
-    let { start, end } = this._selection;
-    let minSelectionWidth = GRAPH_MIN_SELECTION_WIDTH * this._pixelRatio;
-
-    if (start < 0) {
-      start = 0;
+    if (selectionStart < boundsStart) {
+      selectionStart = boundsStart;
     }
-    if (end < 0) {
-      start = 0;
-      end = minSelectionWidth;
+    if (selectionEnd < boundsStart) {
+      selectionStart = boundsStart;
+      selectionEnd = GRAPH_MIN_SELECTION_WIDTH;
     }
-    if (end > canvasWidth) {
-      end = canvasWidth;
+    if (selectionEnd > boundsEnd) {
+      selectionEnd = boundsEnd;
     }
-    if (start > canvasWidth) {
-      end = canvasWidth;
-      start = canvasWidth - minSelectionWidth;
+    if (selectionStart > boundsEnd) {
+      selectionEnd = boundsEnd;
+      selectionStart = boundsEnd - GRAPH_MIN_SELECTION_WIDTH;
     }
-    if (end - start < minSelectionWidth) {
-      let midPoint = (start + end) / 2;
-      start = midPoint - minSelectionWidth / 2;
-      end = midPoint + minSelectionWidth / 2;
+    if (selectionEnd - selectionStart < GRAPH_MIN_SELECTION_WIDTH) {
+      let midPoint = (selectionStart + selectionEnd) / 2;
+      selectionStart = midPoint - GRAPH_MIN_SELECTION_WIDTH / 2;
+      selectionEnd = midPoint + GRAPH_MIN_SELECTION_WIDTH / 2;
     }
 
-    this._selection.start = start;
-    this._selection.end = end;
+    this._selection.start = selectionStart;
+    this._selection.end = selectionEnd;
   },
 
   /**
