@@ -258,8 +258,8 @@ public:
       }
       // Bilinear interpolation between adjacent samples in each table.
       float floorPhase = floorf(mPhase);
-      uint32_t j1 = floorPhase;
-      j1 &= indexMask;
+      int j1Signed = static_cast<int>(floorPhase);
+      uint32_t j1 = j1Signed & indexMask;
       uint32_t j2 = j1 + 1;
       j2 &= indexMask;
 

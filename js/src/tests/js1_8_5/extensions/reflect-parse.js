@@ -99,8 +99,18 @@ function taggedTemplate(tagPart, templatePart) Pattern({ type: "TaggedTemplate",
                 arguments : templatePart })
 function template(raw, cooked, ...args) Pattern([{ type: "CallSiteObject", raw: raw, cooked:
 cooked}, ...args])
-function compExpr(body, blocks, filter, style) Pattern({ type: "ComprehensionExpression", body, blocks, filter, style })
-function genExpr(body, blocks, filter, style) Pattern({ type: "GeneratorExpression", body, blocks, filter, style })
+function compExpr(body, blocks, filter, style) {
+  if (style == "legacy" || !filter)
+    return Pattern({ type: "ComprehensionExpression", body, blocks, filter, style });
+  else
+    return Pattern({ type: "ComprehensionExpression", body, blocks: blocks.concat(compIf(filter)), filter: null, style });
+}
+function genExpr(body, blocks, filter, style) {
+  if (style == "legacy" || !filter)
+    return Pattern({ type: "GeneratorExpression", body, blocks, filter, style });
+  else
+    return Pattern({ type: "GeneratorExpression", body, blocks: blocks.concat(compIf(filter)), filter: null, style });
+}
 function graphExpr(idx, body) Pattern({ type: "GraphExpression", index: idx, expression: body })
 function letExpr(head, body) Pattern({ type: "LetExpression", head: head, body: body })
 function idxExpr(idx) Pattern({ type: "GraphIndexExpression", index: idx })
@@ -108,6 +118,7 @@ function idxExpr(idx) Pattern({ type: "GraphIndexExpression", index: idx })
 function compBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: false })
 function compEachBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: true, of: false })
 function compOfBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: true })
+function compIf(test) Pattern({ type: "ComprehensionIf", test: test })
 
 function arrPatt(elts) Pattern({ type: "ArrayPattern", elements: elts })
 function objPatt(elts) Pattern({ type: "ObjectPattern", properties: elts })
@@ -919,6 +930,38 @@ assertLegacyAndModernArrayComp("[ [x,y,z] for (x of foo) for (y of bar) for (z o
                                [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
                                ident("p"));
 
+// Modern comprehensions with multiple ComprehensionIf.
+
+assertExpr("[for (x of foo) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], null, "modern"));
+assertExpr("[for (x of foo) if (c1) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                 compIf(ident("c1"))], null, "modern"));
+assertExpr("[for (x of foo) if (c1) if (c2) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                 compIf(ident("c1")), compIf(ident("c2"))], null, "modern"));
+
+assertExpr("[for (x of foo) if (c1) for (y of bar) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                 compIf(ident("c1")),
+                                 compOfBlock(ident("y"), ident("bar"))], null, "modern"));
+assertExpr("[for (x of foo) if (c1) for (y of bar) if (c2) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                 compIf(ident("c1")),
+                                 compOfBlock(ident("y"), ident("bar")),
+                                 compIf(ident("c2"))], null, "modern"));
+assertExpr("[for (x of foo) if (c1) if (c2) for (y of bar) if (c3) if (c4) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                 compIf(ident("c1")), compIf(ident("c2")),
+                                 compOfBlock(ident("y"), ident("bar")),
+                                 compIf(ident("c3")), compIf(ident("c4"))], null, "modern"));
+
+assertExpr("[for (x of y) if (false) for (z of w) if (0) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("y")),
+                                 compIf(lit(false)),
+                                 compOfBlock(ident("z"), ident("w")),
+                                 compIf(lit(0))], null, "modern"));
+
 // generator expressions
 
 assertExpr("( x         for (x in foo))",
@@ -990,6 +1033,32 @@ assertLegacyAndModernGenExpr("( [x,y,z] for (x of foo) for (y of bar) for (z of 
                              arrExpr([ident("x"), ident("y"), ident("z")]),
                              [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
                              ident("p"));
+
+// Modern generator comprehension with multiple ComprehensionIf.
+
+assertExpr("(for (x of foo) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], null, "modern"));
+assertExpr("(for (x of foo) if (c1) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                compIf(ident("c1"))], null, "modern"));
+assertExpr("(for (x of foo) if (c1) if (c2) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                compIf(ident("c1")), compIf(ident("c2"))], null, "modern"));
+
+assertExpr("(for (x of foo) if (c1) for (y of bar) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                compIf(ident("c1")),
+                                compOfBlock(ident("y"), ident("bar"))], null, "modern"));
+assertExpr("(for (x of foo) if (c1) for (y of bar) if (c2) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                compIf(ident("c1")),
+                                compOfBlock(ident("y"), ident("bar")),
+                                compIf(ident("c2"))], null, "modern"));
+assertExpr("(for (x of foo) if (c1) if (c2) for (y of bar) if (c3) if (c4) x)",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo")),
+                                compIf(ident("c1")), compIf(ident("c2")),
+                                compOfBlock(ident("y"), ident("bar")),
+                                compIf(ident("c3")), compIf(ident("c4"))], null, "modern"));
 
 // NOTE: it would be good to test generator expressions both with and without upvars, just like functions above.
 

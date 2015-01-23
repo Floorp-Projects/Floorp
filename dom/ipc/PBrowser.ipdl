@@ -132,7 +132,7 @@ parent:
                       nsString aName,
                       nsString aFeatures,
                       nsString aBaseURI)
-      returns (bool windowOpened, FrameScriptInfo[] frameScripts);
+      returns (bool windowOpened, FrameScriptInfo[] frameScripts, nsCString urlToLoad);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)

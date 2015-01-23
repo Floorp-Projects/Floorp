@@ -39,10 +39,18 @@ enum class DigestAlgorithm
   sha1 = 4,
 };
 
-// Named ECC Curves:
-//   * secp521r1 (OID 1.3.132.0.35, RFC 5480)
-//   * secp384r1 (OID 1.3.132.0.34, RFC 5480)
-//   * secp256r1 (OID 1.2.840.10045.3.17, RFC 5480)
+enum class NamedCurve
+{
+  // secp521r1 (OID 1.3.132.0.35, RFC 5480)
+  secp521r1 = 1,
+
+  // secp384r1 (OID 1.3.132.0.34, RFC 5480)
+  secp384r1 = 2,
+
+  // secp256r1 (OID 1.2.840.10045.3.1.7, RFC 5480)
+  secp256r1 = 3,
+};
+
 enum class SignatureAlgorithm
 {
   // ecdsa-with-SHA512 (OID 1.2.840.10045.4.3.4, RFC 5758 Section 3.2)
@@ -294,8 +302,8 @@ public:
                     /*optional*/ const Input* stapledOCSPresponse,
                     /*optional*/ const Input* aiaExtension) = 0;
 
-  // Check that the key size, algorithm, and parameters of the given public key
-  // are acceptable.
+  // Check that the key size, algorithm, elliptic curve used (if applicable),
+  // and parameters of the given public key are acceptable.
   //
   // VerifySignedData() should do the same checks that this function does, but
   // mainly for efficiency, some keys are not passed to VerifySignedData().

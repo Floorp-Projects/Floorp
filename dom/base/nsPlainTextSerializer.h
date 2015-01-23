@@ -32,7 +32,7 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-class nsPlainTextSerializer : public nsIContentSerializer
+class nsPlainTextSerializer MOZ_FINAL : public nsIContentSerializer
 {
 public:
   nsPlainTextSerializer();
@@ -67,8 +67,8 @@ public:
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr) MOZ_OVERRIDE;
 
-protected:
-  virtual ~nsPlainTextSerializer();
+private:
+  ~nsPlainTextSerializer();
 
   nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
@@ -114,10 +114,9 @@ protected:
 
   bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
 
-private:
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
 
-protected:
+private:
   nsString         mCurrentLine;
   uint32_t         mHeadLevel;
   bool             mAtFirstColumn;

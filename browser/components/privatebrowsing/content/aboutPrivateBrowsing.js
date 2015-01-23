@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 var stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService)
                                                          .createBundle("chrome://browser/locale/aboutPrivateBrowsing.properties");
 
-if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
   document.title = stringBundle.GetStringFromName("title.normal");
   setFavIcon("chrome://global/skin/icons/question-16.png");
 } else {
@@ -34,7 +34,7 @@ function setFavIcon(url) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+  if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
     document.body.setAttribute("class", "normal");
   }
 

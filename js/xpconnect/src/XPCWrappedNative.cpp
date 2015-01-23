@@ -505,7 +505,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 
                 if (cache)
                     cache->ClearWrapper();
-                wrapper->Release();
                 return rv;
             }
         }
@@ -573,7 +572,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mIdentity = aIdentity.take();
+    mIdentity = aIdentity;
     mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
     MOZ_ASSERT(mMaybeProto, "bad ctor param");
@@ -591,7 +590,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mIdentity = aIdentity.take();
+    mIdentity = aIdentity;
     mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
     MOZ_ASSERT(aScope, "bad ctor param");
@@ -627,10 +626,9 @@ XPCWrappedNative::Destroy()
     if (mIdentity) {
         XPCJSRuntime* rt = GetRuntime();
         if (rt && rt->GetDoingFinalization()) {
-            cyclecollector::DeferredFinalize(mIdentity);
-            mIdentity = nullptr;
+            cyclecollector::DeferredFinalize(mIdentity.forget().take());
         } else {
-            NS_RELEASE(mIdentity);
+            mIdentity = nullptr;
         }
     }
 
@@ -968,8 +966,8 @@ XPCWrappedNative::FlatJSObjectFinalized()
     MOZ_ASSERT(mIdentity, "bad pointer!");
 #ifdef XP_WIN
     // Try to detect free'd pointer
-    MOZ_ASSERT(*(int*)mIdentity != 0xdddddddd, "bad pointer!");
-    MOZ_ASSERT(*(int*)mIdentity != 0,          "bad pointer!");
+    MOZ_ASSERT(*(int*)mIdentity.get() != 0xdddddddd, "bad pointer!");
+    MOZ_ASSERT(*(int*)mIdentity.get() != 0,          "bad pointer!");
 #endif
 
     if (IsWrapperExpired()) {
@@ -2493,7 +2491,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
             XPC_LOG_ALWAYS(("mSet @ %x", mSet));
 
         XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.getPtr()));
-        XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity));
+        XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity.get()));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
 
         if (depth && mScriptableInfo) {
@@ -2562,7 +2560,7 @@ XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
     if (si) {
         fmt = "[object %s" FMT_ADDR FMT_STR(" (native") FMT_ADDR FMT_STR(")") "]";
     }
-    sz = JS_smprintf(fmt, name PARAM_ADDR(this) PARAM_ADDR(mIdentity));
+    sz = JS_smprintf(fmt, name PARAM_ADDR(this) PARAM_ADDR(mIdentity.get()));
 
     JS_smprintf_free(name);
 

@@ -61,6 +61,7 @@ SpecialPowers.prototype.sanityCheck = function() { return "foo"; };
 // This gets filled in in the constructor.
 SpecialPowers.prototype.DOMWindowUtils = undefined;
 SpecialPowers.prototype.Components = undefined;
+SpecialPowers.prototype.IsInNestedFrame = false;
 
 SpecialPowers.prototype._sendSyncMessage = function(msgname, msg) {
   if (this.SP_SYNC_MESSAGES.indexOf(msgname) == -1) {
@@ -163,6 +164,9 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
       mm.loadFrameScript(specialPowersBase + "MozillaLogger.js", false);
       mm.loadFrameScript(specialPowersBase + "specialpowersAPI.js", false);
       mm.loadFrameScript(specialPowersBase + "specialpowers.js", false);
+
+      let frameScript = "SpecialPowers.prototype.IsInNestedFrame=true;";
+      mm.loadFrameScript("data:," + frameScript, false);
     }
   }, "remote-browser-shown", false);
 };
@@ -174,7 +178,11 @@ function attachSpecialPowersToWindow(aWindow) {
         (aWindow !== undefined) &&
         (aWindow.wrappedJSObject) &&
         !(aWindow.wrappedJSObject.SpecialPowers)) {
-      aWindow.wrappedJSObject.SpecialPowers = new SpecialPowers(aWindow);
+      let sp = new SpecialPowers(aWindow);
+      aWindow.wrappedJSObject.SpecialPowers = sp;
+      if (sp.IsInNestedFrame) {
+        sp.addPermission("allowXULXBL", true, aWindow.document);
+      }
     }
   } catch(ex) {
     dump("TEST-INFO | specialpowers.js |  Failed to attach specialpowers to window exception: " + ex + "\n");
@@ -196,6 +204,7 @@ SpecialPowersManager.prototype = {
     attachSpecialPowersToWindow(window);
   }
 };
+
 
 var specialpowersmanager = new SpecialPowersManager();
 

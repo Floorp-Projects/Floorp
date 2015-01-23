@@ -171,7 +171,6 @@ public:
     SOLIDCOLORLAYER
   };
 
-  void SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D);
   // returns the register to be used for the mask texture, if appropriate
   uint32_t SetShaderMode(ShaderMode aMode, MaskType aMaskType);
 
@@ -186,12 +185,6 @@ public:
   bool DeviceWasRemoved() { return mDeviceWasRemoved; }
 
   uint32_t GetDeviceResetCount() { return mDeviceResetCount; }
-
-  /**
-   * We keep a list of all layers here that may have hardware resource allocated
-   * so we can clean their resources on reset.
-   */
-  nsTArray<LayerD3D9*> mLayersWithResources;
 
   int32_t GetMaxTextureSize() { return mMaxTextureSize; }
 
