@@ -277,6 +277,7 @@ class GCRuntime
   public:
     explicit GCRuntime(JSRuntime *rt);
     bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
+    void finishRoots();
     void finish();
 
     inline int zeal();
