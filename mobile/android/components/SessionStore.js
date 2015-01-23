@@ -584,6 +584,20 @@ SessionStore.prototype = {
     }
   },
 
+  /**
+   * Determines whether a given session history entry has been added dynamically.
+   */
+  isDynamic: function(aEntry) {
+    // aEntry.isDynamicallyAdded() is true for dynamically added
+    // <iframe> and <frameset>, but also for <html> (the root of the
+    // document) so we use aEntry.parent to ensure that we're not looking
+    // at the root of the document
+    return aEntry.parent && aEntry.isDynamicallyAdded();
+  },
+
+  /**
+  * Get an object that is a serialized representation of a History entry.
+  */
   _serializeHistoryEntry: function _serializeHistoryEntry(aEntry) {
     let entry = { url: aEntry.URI.spec };
 
@@ -646,7 +660,7 @@ SessionStore.prototype = {
       for (let i = 0; i < aEntry.childCount; i++) {
         let child = aEntry.GetChildAt(i);
 
-        if (child) {
+        if (child && !this.isDynamic(child)) {
           // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
           if (child.URI.schemeIs("wyciwyg")) {
             children = [];
@@ -654,9 +668,10 @@ SessionStore.prototype = {
           }
           children.push(this._serializeHistoryEntry(child));
         }
+      }
 
-        if (children.length)
-          entry.children = children;
+      if (children.length) {
+        entry.children = children;
       }
     }
 
