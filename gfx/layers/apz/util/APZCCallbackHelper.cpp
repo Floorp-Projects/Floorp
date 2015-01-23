@@ -106,121 +106,115 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const CSSPoint& aPoint, bool& aSuccess
   return geckoScrollPosition;
 }
 
+/**
+ * Scroll the scroll frame associated with |aContent| to the scroll position
+ * requested in |aMetrics|.
+ * The scroll offset in |aMetrics| is updated to reflect the actual scroll
+ * position.
+ * The displayport stored in |aMetrics| is updated to reflect any difference
+ * between the requested and actual scroll positions.
+ */
+static void
+ScrollFrame(nsIContent* aContent,
+            FrameMetrics& aMetrics)
+{
+  // Scroll the window to the desired spot
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
+  bool scrollUpdated = false;
+  CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
+
+  if (scrollUpdated) {
+    // Correct the display port due to the difference between mScrollOffset and the
+    // actual scroll offset.
+    AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
+  } else {
+    // For whatever reason we couldn't update the scroll offset on the scroll frame,
+    // which means the data APZ used for its displayport calculation is stale. Fall
+    // back to a sane default behaviour. Note that we don't tile-align the recentered
+    // displayport because tile-alignment depends on the scroll position, and the
+    // scroll position here is out of our control. See bug 966507 comment 21 for a
+    // more detailed explanation.
+    RecenterDisplayPort(aMetrics);
+  }
+
+  aMetrics.SetScrollOffset(actualScrollOffset);
+}
+
+static void
+SetDisplayPortMargins(nsIDOMWindowUtils* aUtils,
+                      nsIContent* aContent,
+                      FrameMetrics& aMetrics)
+{
+  if (!aContent) {
+    return;
+  }
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
+  if (!element) {
+    return;
+  }
+
+  ScreenMargin margins = aMetrics.GetDisplayPortMargins();
+  aUtils->SetDisplayPortMarginsForElement(margins.left,
+                                          margins.top,
+                                          margins.right,
+                                          margins.bottom,
+                                          element, 0);
+  CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
+  nsRect base(0, 0,
+              baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
+              baseCSS.height * nsPresContext::AppUnitsPerCSSPixel());
+  nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
+}
+
 void
 APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
                                     FrameMetrics& aMetrics)
 {
-    // Precondition checks
-    MOZ_ASSERT(aUtils);
-    MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
-    if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
-        return;
-    }
+  // Precondition checks
+  MOZ_ASSERT(aUtils);
+  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
+  if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+    return;
+  }
 
-    // Set the scroll port size, which determines the scroll range. For example if
-    // a 500-pixel document is shown in a 100-pixel frame, the scroll port length would
-    // be 100, and gecko would limit the maximum scroll offset to 400 (so as to prevent
-    // overscroll). Note that if the content here was zoomed to 2x, the document would
-    // be 1000 pixels long but the frame would still be 100 pixels, and so the maximum
-    // scroll range would be 900. Therefore this calculation depends on the zoom applied
-    // to the content relative to the container.
-    CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
-    aUtils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
+  // Set the scroll port size, which determines the scroll range. For example if
+  // a 500-pixel document is shown in a 100-pixel frame, the scroll port length would
+  // be 100, and gecko would limit the maximum scroll offset to 400 (so as to prevent
+  // overscroll). Note that if the content here was zoomed to 2x, the document would
+  // be 1000 pixels long but the frame would still be 100 pixels, and so the maximum
+  // scroll range would be 900. Therefore this calculation depends on the zoom applied
+  // to the content relative to the container.
+  // Note that this needs to happen before scrolling the frame (in UpdateFrameCommon),
+  // otherwise the scroll position may get clamped incorrectly.
+  CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
+  aUtils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
 
-    // Scroll the window to the desired spot
-    nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
-    bool scrollUpdated = false;
-    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
+  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  ScrollFrame(content, aMetrics);
 
-    if (scrollUpdated) {
-        // Correct the display port due to the difference between mScrollOffset and the
-        // actual scroll offset.
-        AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
-    } else {
-        // For whatever reason we couldn't update the scroll offset on the scroll frame,
-        // which means the data APZ used for its displayport calculation is stale. Fall
-        // back to a sane default behaviour. Note that we don't tile-align the recentered
-        // displayport because tile-alignment depends on the scroll position, and the
-        // scroll position here is out of our control. See bug 966507 comment 21 for a
-        // more detailed explanation.
-        RecenterDisplayPort(aMetrics);
-    }
+  // The pres shell resolution is updated by the the async zoom since the
+  // last paint.
+  float presShellResolution = aMetrics.GetPresShellResolution()
+                            * aMetrics.GetAsyncZoom().scale;
+  aUtils->SetResolutionAndScaleTo(presShellResolution, presShellResolution);
 
-    aMetrics.SetScrollOffset(actualScrollOffset);
-
-    // The pres shell resolution is updated by the the async zoom since the
-    // last paint.
-    float presShellResolution = aMetrics.GetPresShellResolution()
-                              * aMetrics.GetAsyncZoom().scale;
-    aUtils->SetResolutionAndScaleTo(presShellResolution, presShellResolution);
-
-    // Finally, we set the displayport.
-    nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
-    if (!content) {
-        return;
-    }
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(content);
-    if (!element) {
-        return;
-    }
-
-    ScreenMargin margins = aMetrics.GetDisplayPortMargins();
-    aUtils->SetDisplayPortMarginsForElement(margins.left,
-                                            margins.top,
-                                            margins.right,
-                                            margins.bottom,
-                                            element, 0);
-    CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
-    nsRect base(0, 0,
-                baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
-                baseCSS.height * nsPresContext::AppUnitsPerCSSPixel());
-    nsLayoutUtils::SetDisplayPortBaseIfNotSet(content, base);
+  SetDisplayPortMargins(aUtils, content, aMetrics);
 }
 
 void
 APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
                                    FrameMetrics& aMetrics)
 {
-    // Precondition checks
-    MOZ_ASSERT(aContent);
-    MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
-    if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
-        return;
-    }
+  // Precondition checks
+  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
 
-    nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent);
-    if (!utils) {
-        return;
-    }
-
-    // We currently do not support zooming arbitrary subframes. They can only
-    // be scrolled, so here we only have to set the scroll position and displayport.
-
-    nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
-    bool scrollUpdated = false;
-    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
-
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
-    if (element) {
-        if (scrollUpdated) {
-            AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
-        } else {
-            RecenterDisplayPort(aMetrics);
-        }
-        ScreenMargin margins = aMetrics.GetDisplayPortMargins();
-        utils->SetDisplayPortMarginsForElement(margins.left,
-                                               margins.top,
-                                               margins.right,
-                                               margins.bottom,
-                                               element, 0);
-        CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
-        nsRect base(0, 0,
-                    baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
-                    baseCSS.height * nsPresContext::AppUnitsPerCSSPixel());
-        nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
-    }
-
-    aMetrics.SetScrollOffset(actualScrollOffset);
+  // We don't currently support zooming for subframes, so nothing extra
+  // needs to be done beyond the tasks common to this and UpdateRootFrame.
+  ScrollFrame(aContent, aMetrics);
+  if (nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent)) {
+    SetDisplayPortMargins(utils, aContent, aMetrics);
+  }
 }
 
 already_AddRefed<nsIDOMWindowUtils>
