@@ -36,12 +36,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     is(utils.getClassName(unsafeWin), "Proxy", "can get a Proxy");
     is(utils.getClassName(unsafeWin.location), "Proxy", "deep wrapping works");
 
-    Object.defineProperty(unsafeWin, "defprop1", { value: 1, writable: true, enumerable: true });
+    Object.defineProperty(unsafeWin, "defprop1", { value: 1, writable: true, enumerable: true, configurable: true });
     /* TODO (bug 552854): the getter isn't visible in content.
     function checkWrapper(val) {
         ok(utils.getClassName(val) == "Proxy", "wrapped properly");
     }
-    Object.defineProperty(unsafeWin, "defprop2", { set: checkWrapper, enumerable: true });
+    Object.defineProperty(unsafeWin, "defprop2", { set: checkWrapper, enumerable: true, configurable: true });
     */
     unsafeWin.run_test(ok, win, unsafeWin);
 
