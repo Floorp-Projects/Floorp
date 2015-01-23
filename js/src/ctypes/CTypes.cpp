@@ -5619,7 +5619,7 @@ CreateFunctionInfo(JSContext* cx,
   for (uint32_t i = 0; i < args.length(); ++i) {
     bool isEllipsis;
     if (!IsEllipsis(cx, args[i], &isEllipsis))
-      return nullptr;
+      return false;
     if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {
