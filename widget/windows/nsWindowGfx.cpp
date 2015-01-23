@@ -44,9 +44,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsDebug.h"
 #include "nsIXULRuntime.h"
 
-#ifdef MOZ_ENABLE_D3D10_LAYER
-#include "LayerManagerD3D10.h"
-#endif
 #include "mozilla/layers/CompositorParent.h"
 #include "ClientLayerManager.h"
 
@@ -518,19 +515,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
         }
         break;
-#ifdef MOZ_ENABLE_D3D10_LAYER
-      case LayersBackend::LAYERS_D3D10:
-        {
-          gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-          LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
-          if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            Invalidate();
-          } else {
-            result = listener->PaintWindow(this, region);
-          }
-        }
-        break;
-#endif
       case LayersBackend::LAYERS_CLIENT:
         result = listener->PaintWindow(this, region);
         break;
