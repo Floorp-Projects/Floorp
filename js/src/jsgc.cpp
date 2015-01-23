@@ -1325,16 +1325,24 @@ GCRuntime::finish()
     FinishTrace();
 }
 
+template <typename T>
+static void
+FinishPersistentRootedChain(mozilla::LinkedList<PersistentRooted<T>>& list)
+{
+    while (!list.isEmpty())
+        list.getFirst()->reset();
+}
+
 void
 js::gc::FinishPersistentRootedChains(JSRuntime *rt)
 {
     /* The lists of persistent roots are stored on the shadow runtime. */
-    rt->functionPersistentRooteds.clear();
-    rt->idPersistentRooteds.clear();
-    rt->objectPersistentRooteds.clear();
-    rt->scriptPersistentRooteds.clear();
-    rt->stringPersistentRooteds.clear();
-    rt->valuePersistentRooteds.clear();
+    FinishPersistentRootedChain(rt->functionPersistentRooteds);
+    FinishPersistentRootedChain(rt->idPersistentRooteds);
+    FinishPersistentRootedChain(rt->objectPersistentRooteds);
+    FinishPersistentRootedChain(rt->scriptPersistentRooteds);
+    FinishPersistentRootedChain(rt->stringPersistentRooteds);
+    FinishPersistentRootedChain(rt->valuePersistentRooteds);
 }
 
 void
