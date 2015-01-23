@@ -297,11 +297,8 @@ this.FxAccounts = function (mockInternal) {
 function FxAccountsInternal() {
   this.version = DATA_FORMAT_VERSION;
 
-  // Make a local copy of these constants so we can mock it in testing
-  this.POLL_STEP = POLL_STEP;
+  // Make a local copy of this constant so we can mock it in testing
   this.POLL_SESSION = POLL_SESSION;
-  // We will create this.pollTimeRemaining below; it will initially be
-  // set to the value of POLL_SESSION.
 
   // We interact with the Firefox Accounts auth server in order to confirm that
   // a user's email has been verified and also to fetch the user's keys from
@@ -791,7 +788,7 @@ FxAccountsInternal.prototype = {
       // If we were already polling, stop and start again.  This could happen
       // if the user requested the verification email to be resent while we
       // were already polling for receipt of an earlier email.
-      this.pollTimeRemaining = this.POLL_SESSION;
+      this.pollStartDate = Date.now();
       if (!currentState.whenVerifiedDeferred) {
         currentState.whenVerifiedDeferred = Promise.defer();
         // This deferred might not end up with any handlers (eg, if sync
@@ -808,8 +805,6 @@ FxAccountsInternal.prototype = {
       .then((response) => {
         log.debug("checkEmailStatus -> " + JSON.stringify(response));
         if (response && response.verified) {
-          // Bug 947056 - Server should be able to tell FxAccounts.jsm to back
-          // off or stop polling altogether
           currentState.getUserAccountData()
             .then((data) => {
               data.verified = true;
@@ -829,31 +824,39 @@ FxAccountsInternal.prototype = {
           this.pollEmailStatusAgain(currentState, sessionToken);
         }
       }, error => {
+        let timeoutMs = undefined;
+        if (error && error.retryAfter) {
+          // If the server told us to back off, back off the requested amount.
+          timeoutMs = (error.retryAfter + 3) * 1000;
+        }
         // The server will return 401 if a request parameter is erroneous or
         // if the session token expired. Let's continue polling otherwise.
         if (!error || !error.code || error.code != 401) {
-          this.pollEmailStatusAgain(currentState, sessionToken);
+          this.pollEmailStatusAgain(currentState, sessionToken, timeoutMs);
         }
       });
   },
 
-  // Poll email status after a short timeout.
-  pollEmailStatusAgain: function (currentState, sessionToken) {
-    log.debug("polling with step = " + this.POLL_STEP);
-    this.pollTimeRemaining -= this.POLL_STEP;
-    log.debug("time remaining: " + this.pollTimeRemaining);
-    if (this.pollTimeRemaining > 0) {
-      this.currentTimer = setTimeout(() => {
-        this.pollEmailStatus(currentState, sessionToken, "timer");
-      }, this.POLL_STEP);
-      log.debug("started timer " + this.currentTimer);
-    } else {
+  // Poll email status using truncated exponential back-off.
+  pollEmailStatusAgain: function (currentState, sessionToken, timeoutMs) {
+    let ageMs = Date.now() - this.pollStartDate;
+    if (ageMs >= this.POLL_SESSION) {
       if (currentState.whenVerifiedDeferred) {
         let error = new Error("User email verification timed out.")
         currentState.whenVerifiedDeferred.reject(error);
         delete currentState.whenVerifiedDeferred;
       }
+      log.debug("polling session exceeded, giving up");
+      return;
     }
+    if (timeoutMs === undefined) {
+      let currentMinute = Math.ceil(ageMs / 60000);
+      timeoutMs = 1000 * (currentMinute <= 2 ? 5 : 15);
+    }
+    log.debug("polling with timeout = " + timeoutMs);
+    this.currentTimer = setTimeout(() => {
+      this.pollEmailStatus(currentState, sessionToken, "timer");
+    }, timeoutMs);
   },
 
   _requireHttps: function() {
