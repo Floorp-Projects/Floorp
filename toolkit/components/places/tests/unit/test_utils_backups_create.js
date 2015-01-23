@@ -23,7 +23,7 @@ add_task(function () {
     let randomDate = new Date(dateObj.getFullYear() - 1,
                               Math.floor(12 * Math.random()),
                               Math.floor(28 * Math.random()));
-    let dateString = randomDate.toISOString().substr(0, 10);
+    let dateString = randomDate.toLocaleFormat("%Y-%m-%d");
     if (dates.indexOf(dateString) == -1)
       dates.push(dateString);
   }
@@ -49,7 +49,7 @@ add_task(function () {
 
   yield PlacesBackups.create(NUMBER_OF_BACKUPS);
   // Add today's backup.
-  dates.push(dateObj.toISOString().substr(0, 10));
+  dates.push(dateObj.toLocaleFormat("%Y-%m-%d"));
 
   // Check backups.  We have 11 dates but we the max number is 10 so the
   // oldest backup should have been removed.
