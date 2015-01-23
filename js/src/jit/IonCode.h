@@ -225,9 +225,6 @@ struct IonScript
     // Number of bytes this function reserves on the stack.
     uint32_t frameSlots_;
 
-    // Number of bytes used passed in as formal arguments or |this|.
-    uint32_t argumentSlots_;
-
     // Frame size is the value that can be added to the StackPointer along
     // with the frame prefix to get a valid JitFrameLayout.
     uint32_t frameSize_;
@@ -329,7 +326,7 @@ struct IonScript
     IonScript();
 
     static IonScript *New(JSContext *cx, types::RecompileInfo recompileInfo,
-                          uint32_t frameSlots, uint32_t argumentSlots, uint32_t frameSize,
+                          uint32_t frameLocals, uint32_t frameSize,
                           size_t snapshotsListSize, size_t snapshotsRVATableSize,
                           size_t recoversSize, size_t bailoutEntries,
                           size_t constants, size_t safepointIndexEntries,
@@ -464,9 +461,6 @@ struct IonScript
     }
     uint32_t frameSlots() const {
         return frameSlots_;
-    }
-    uint32_t argumentSlots() const {
-        return argumentSlots_;
     }
     uint32_t frameSize() const {
         return frameSize_;

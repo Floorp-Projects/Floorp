@@ -738,7 +738,7 @@ IonScript::IonScript()
 
 IonScript *
 IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
-               uint32_t frameSlots, uint32_t argumentSlots, uint32_t frameSize,
+               uint32_t frameSlots, uint32_t frameSize,
                size_t snapshotsListSize, size_t snapshotsRVATableSize,
                size_t recoversSize, size_t bailoutEntries,
                size_t constants, size_t safepointIndices,
@@ -827,8 +827,6 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
     offsetCursor += paddedBackedgeSize;
 
     script->frameSlots_ = frameSlots;
-    script->argumentSlots_ = argumentSlots;
-
     script->frameSize_ = frameSize;
 
     script->recompileInfo_ = recompileInfo;
