@@ -956,6 +956,12 @@ assertExpr("[for (x of foo) if (c1) if (c2) for (y of bar) if (c3) if (c4) x]",
                                  compOfBlock(ident("y"), ident("bar")),
                                  compIf(ident("c3")), compIf(ident("c4"))], null, "modern"));
 
+assertExpr("[for (x of y) if (false) for (z of w) if (0) x]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("y")),
+                                 compIf(lit(false)),
+                                 compOfBlock(ident("z"), ident("w")),
+                                 compIf(lit(0))], null, "modern"));
+
 // generator expressions
 
 assertExpr("( x         for (x in foo))",
