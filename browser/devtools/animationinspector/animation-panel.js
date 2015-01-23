@@ -323,11 +323,12 @@ PlayerWidget.prototype = {
    */
   onStateChanged: function() {
     let state = this.player.state;
-    this.updatePlayPauseButton(state.playState);
+    this.updateWidgetState(state.playState);
 
     switch (state.playState) {
       case "finished":
-        this.destroy();
+        this.stopTimelineAnimation();
+        this.stopListeners();
         break;
       case "running":
         this.startTimelineAnimation();
@@ -347,7 +348,7 @@ PlayerWidget.prototype = {
   pause: function() {
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
-    this.updatePlayPauseButton("paused");
+    this.updateWidgetState("paused");
     return this.player.pause().then(() => {
       this.stopTimelineAnimation();
     });
@@ -361,12 +362,12 @@ PlayerWidget.prototype = {
   play: function() {
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
-    this.updatePlayPauseButton("running");
+    this.updateWidgetState("running");
     this.startTimelineAnimation();
     return this.player.play();
   },
 
-  updatePlayPauseButton: function(playState) {
+  updateWidgetState: function(playState) {
     this.el.className = "player-widget " + playState;
   },
 
