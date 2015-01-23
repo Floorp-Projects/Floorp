@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936056
     }
     get = desc.get;
     ok(get, "Couldn't find document getter");
-    Object.defineProperty(frames[0], "foo", { get: get });
+    Object.defineProperty(frames[0], "foo", { get: get, configurable: true });
 
     var barewordFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = foo; return doc.documentElement; })");
     var qualifiedFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = window.document; return doc.documentElement; })");
