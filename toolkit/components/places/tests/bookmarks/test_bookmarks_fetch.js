@@ -66,9 +66,6 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012",
                                                     index: -10 }),
                 /Invalid value for property 'index'/);
-  Assert.throws(() => PlacesUtils.bookmarks.fetch({ parentGuid: "123456789012",
-                                                    index: -1 }),
-                /Invalid value for property 'index'/);
 
   Assert.throws(() => PlacesUtils.bookmarks.fetch({ url: "http://te st/" }),
                 /Invalid value for property 'url'/);
@@ -239,6 +236,33 @@ add_task(function* fetch_byposition() {
   Assert.equal(bm2.url.href, "http://example.com/");
   Assert.equal(bm2.title, "a bookmark");
   Assert.ok(!("keyword" in bm2));
+});
+
+add_task(function* fetch_byposition_default_index() {
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                 url: "http://example.com/last",
+                                                 title: "last child" });
+  checkBookmarkObject(bm1);
+
+  let bm2 = yield PlacesUtils.bookmarks.fetch({ parentGuid: bm1.parentGuid,
+                                                index: PlacesUtils.bookmarks.DEFAULT_INDEX },
+                                              gAccumulator.callback);
+  checkBookmarkObject(bm2);
+  Assert.equal(gAccumulator.results.length, 1);
+  checkBookmarkObject(gAccumulator.results[0]);
+  Assert.deepEqual(gAccumulator.results[0], bm1);
+
+  Assert.deepEqual(bm1, bm2);
+  Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.equal(bm2.index, 1);
+  Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
+  Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+  Assert.equal(bm2.url.href, "http://example.com/last");
+  Assert.equal(bm2.title, "last child");
+  Assert.ok(!("keyword" in bm2));
+
+  yield PlacesUtils.bookmarks.remove(bm1.guid);
 });
 
 add_task(function* fetch_byurl_nonexisting() {
