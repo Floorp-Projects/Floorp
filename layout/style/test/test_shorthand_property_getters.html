@@ -213,6 +213,18 @@ is(e.style.cssText,
    'border: medium solid green;',
    "border DOES reset -moz-border-left-colors");
 
+// Test that the color goes at the beginning of the last item of the
+// background shorthand.
+// FIXME: Really the "repeat scroll 0% 0%" shouldn't be there.
+e.setAttribute("style", "background: url(foo.png) blue");
+is(e.style.cssText,
+   "background: blue url(\"foo.png\") repeat scroll 0% 0%;",
+   "color should be at start of single-item background");
+e.setAttribute("style", "background: url(bar.png), url(foo.png) blue");
+is(e.style.cssText,
+   "background: url(\"bar.png\") repeat scroll 0% 0%, blue url(\"foo.png\") repeat scroll 0% 0%;",
+   "color should be at start of single-item background");
+
 </script>
 </pre>
 </body>
