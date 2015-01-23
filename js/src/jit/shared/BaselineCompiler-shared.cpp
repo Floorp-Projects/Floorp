@@ -125,8 +125,5 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
 
     // Add a fake ICEntry (without stubs), so that the return offset to
     // pc mapping works.
-    ICEntry entry(script->pcToOffset(pc), ICEntry::Kind_CallVM);
-    entry.setReturnOffset(CodeOffsetLabel(callOffset));
-
-    return icEntries_.append(entry);
+    return appendICEntry(ICEntry::Kind_CallVM, callOffset);
 }
