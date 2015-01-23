@@ -49,6 +49,10 @@ class nsIPrincipal;
 #include "CoreLocationLocationProvider.h"
 #endif
 
+#ifdef XP_WIN
+#include "WindowsLocationProvider.h"
+#endif
+
 // Some limit to the number of get or watch geolocation requests
 // that a window can make.
 #define MAX_GEO_REQUESTS_PER_WINDOW  1500
@@ -807,6 +811,12 @@ nsresult nsGeolocationService::Init()
 #ifdef MOZ_WIDGET_COCOA
   if (Preferences::GetBool("geo.provider.use_corelocation", false)) {
     mProvider = new CoreLocationLocationProvider();
+  }
+#endif
+
+#ifdef XP_WIN
+  if (Preferences::GetBool("geo.provider.ms-windows-location", false)) {
+    mProvider = new WindowsLocationProvider();
   }
 #endif
 
