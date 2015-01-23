@@ -330,9 +330,12 @@ IsInvisibleBreak(nsINode *aNode) {
   }
 
   // If the BRFrame has caused a visible line break, it should have a next
-  // sibling, or otherwise no siblings and a non-zero height.
+  // sibling, or otherwise no siblings (or immediately after a br) and a
+  // non-zero height.
   bool visible = frame->GetNextSibling() ||
-                 (!frame->GetPrevSibling() && frame->GetRect().Height() != 0);
+                 ((!frame->GetPrevSibling() ||
+                   frame->GetPrevSibling()->GetType() == nsGkAtoms::brFrame) &&
+                  frame->GetRect().Height() != 0);
   return !visible;
 }
 
