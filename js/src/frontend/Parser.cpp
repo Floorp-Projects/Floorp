@@ -1626,6 +1626,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
         bool hasDefaults = false;
         Node duplicatedArg = null();
         Node list = null();
+        bool disallowDuplicateArgs = false;
 
         if (type == Getter) {
             report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
@@ -1647,6 +1648,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
               case TOK_LC:
               {
                 /* See comment below in the TOK_NAME case. */
+                disallowDuplicateArgs = true;
                 if (duplicatedArg) {
                     report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
                     return false;
@@ -1719,6 +1721,12 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
                     report(ParseError, false, null(), JSMSG_NO_REST_NAME);
                     return false;
                 }
+                disallowDuplicateArgs = true;
+                if (duplicatedArg) {
+                    // Has duplicated args before the rest parameter.
+                    report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
+                    return false;
+                }
                 goto TOK_NAME;
               }
 
@@ -1729,7 +1737,6 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
                     funbox->setStart(tokenStream);
 
                 RootedPropertyName name(context, tokenStream.currentName());
-                bool disallowDuplicateArgs = funbox->hasDestructuringArgs || hasDefaults;
                 if (!defineArg(funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
 
@@ -1747,6 +1754,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, FunctionType ty
                         report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
                         return false;
                     }
+                    disallowDuplicateArgs = true;
                     if (duplicatedArg) {
                         report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
                         return false;
