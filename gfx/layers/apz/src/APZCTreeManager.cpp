@@ -1371,6 +1371,10 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         }
         if (result == prevSiblingApzc) {
           APZCTM_LOG("Continuing search past probable scrollinfo info layer\n");
+          // We need to reset aOutHitResult in order to keep searching. This is
+          // ok because we know that we will at least hit prevSiblingApzc
+          // again, which is the same as result.
+          *aOutHitResult = HitNothing;
           continue;
         }
       }
