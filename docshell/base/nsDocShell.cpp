@@ -13187,7 +13187,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-  if (!IsOKToLoadURI(aURI)) {
+  if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 
@@ -13243,7 +13243,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
     *aRequest = nullptr;
   }
 
-  if (!IsOKToLoadURI(aURI)) {
+  if (!IsNavigationAllowed() || !IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 
