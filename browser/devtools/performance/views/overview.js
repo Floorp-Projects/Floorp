@@ -17,65 +17,88 @@ const MARKERS_GRAPH_ROW_HEIGHT = 10; // px
 const MARKERS_GROUP_VERTICAL_PADDING = 4; // px
 const MEMORY_GRAPH_HEIGHT = 30; // px
 
-const GRAPH_SCROLL_EVENTS_DRAIN = 50; // ms
-
 /**
  * View handler for the overview panel's time view, displaying
  * framerate, markers and memory over time.
  */
 let OverviewView = {
-  _beginAt: null,
-  _endAt: null,
-
   /**
    * Sets up the view with event binding.
    */
   initialize: Task.async(function *() {
+    this._onRecordingWillStart = this._onRecordingWillStart.bind(this);
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
+    this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingTick = this._onRecordingTick.bind(this);
-    this._onGraphMouseUp = this._onGraphMouseUp.bind(this);
-    this._onGraphScroll = this._onGraphScroll.bind(this);
+    this._onGraphSelecting = this._onGraphSelecting.bind(this);
 
-    yield this._showFramerateGraph();
     yield this._showMarkersGraph();
     yield this._showMemoryGraph();
+    yield this._showFramerateGraph();
 
-    this.framerateGraph.on("mouseup", this._onGraphMouseUp);
-    this.framerateGraph.on("scroll", this._onGraphScroll);
-    this.markersOverview.on("mouseup", this._onGraphMouseUp);
-    this.markersOverview.on("scroll", this._onGraphScroll);
-    this.memoryOverview.on("mouseup", this._onGraphMouseUp);
-    this.memoryOverview.on("scroll", this._onGraphScroll);
+    this.markersOverview.on("selecting", this._onGraphSelecting);
 
+    PerformanceController.on(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
+    PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+
+    // Populate this overview with some dummy initial data.
+    this.markersOverview.setData({ duration: 1000, markers: [] });
+    this.memoryOverview.setData([]);
+    this.framerateGraph.setData([]);
   }),
 
   /**
    * Unbinds events.
    */
   destroy: function () {
-    this.framerateGraph.off("mouseup", this._onGraphMouseUp);
-    this.framerateGraph.off("scroll", this._onGraphScroll);
-    this.markersOverview.off("mouseup", this._onGraphMouseUp);
-    this.markersOverview.off("scroll", this._onGraphScroll);
-    this.memoryOverview.off("mouseup", this._onGraphMouseUp);
-    this.memoryOverview.off("scroll", this._onGraphScroll);
+    this.markersOverview.off("selecting", this._onGraphSelecting);
 
-    clearNamedTimeout("graph-scroll");
+    PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
+    PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
   },
 
   /**
-   * Gets currently selected range's beginAt and endAt values.
+   * Sets the time interval selection for all graphs in this overview.
+   *
+   * @param object interval
+   *        The { starTime, endTime }, in milliseconds.
    */
-  getRange: function () {
-    return { beginAt: this._beginAt, endAt: this._endAt };
+  setTimeInterval: function(interval, options = {}) {
+    let recording = PerformanceController.getCurrentRecording();
+    if (recording == null) {
+      throw "A recording should be available in order to set the selection."
+    }
+    let mapStart = () => 0;
+    let mapEnd = () => recording.getDuration();
+    let selection = { start: interval.startTime, end: interval.endTime };
+    this._stopSelectionChangeEventPropagation = options.stopPropagation;
+    this.markersOverview.setMappedSelection(selection, { mapStart, mapEnd });
+    this._stopSelectionChangeEventPropagation = false;
+  },
+
+  /**
+   * Gets the time interval selection for all graphs in this overview.
+   *
+   * @return object
+   *         The { starTime, endTime }, in milliseconds.
+   */
+  getTimeInterval: function() {
+    let recording = PerformanceController.getCurrentRecording();
+    if (recording == null) {
+      throw "A recording should be available in order to get the selection."
+    }
+    let mapStart = () => 0;
+    let mapEnd = () => recording.getDuration();
+    let selection = this.markersOverview.getMappedSelection({ mapStart, mapEnd });
+    return { startTime: selection.min, endTime: selection.max };
   },
 
   /**
@@ -98,9 +121,6 @@ let OverviewView = {
     this.markersOverview.rowHeight = MARKERS_GRAPH_ROW_HEIGHT;
     this.markersOverview.groupPadding = MARKERS_GROUP_VERTICAL_PADDING;
     yield this.markersOverview.ready();
-
-    CanvasGraphUtils.linkAnimation(this.framerateGraph, this.markersOverview);
-    CanvasGraphUtils.linkSelection(this.framerateGraph, this.markersOverview);
   }),
 
   /**
@@ -111,8 +131,21 @@ let OverviewView = {
     this.memoryOverview.fixedHeight = MEMORY_GRAPH_HEIGHT;
     yield this.memoryOverview.ready();
 
-    CanvasGraphUtils.linkAnimation(this.framerateGraph, this.memoryOverview);
-    CanvasGraphUtils.linkSelection(this.framerateGraph, this.memoryOverview);
+    CanvasGraphUtils.linkAnimation(this.markersOverview, this.memoryOverview);
+    CanvasGraphUtils.linkSelection(this.markersOverview, this.memoryOverview);
+  }),
+
+  /**
+   * Sets up the framerate graph.
+   */
+  _showFramerateGraph: Task.async(function *() {
+    let metric = L10N.getStr("graphs.fps");
+    this.framerateGraph = new LineGraphWidget($("#time-framerate"), { metric });
+    this.framerateGraph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
+    yield this.framerateGraph.ready();
+
+    CanvasGraphUtils.linkAnimation(this.markersOverview, this.framerateGraph);
+    CanvasGraphUtils.linkSelection(this.markersOverview, this.framerateGraph);
   }),
 
   /**
@@ -123,19 +156,26 @@ let OverviewView = {
    */
   render: Task.async(function *(resolution) {
     let recording = PerformanceController.getCurrentRecording();
-    let interval = recording.getInterval();
+    let duration = recording.getDuration();
     let markers = recording.getMarkers();
     let memory = recording.getMemory();
     let timestamps = recording.getTicks();
 
-    this.markersOverview.setData({ interval, markers });
-    this.emit(EVENTS.MARKERS_GRAPH_RENDERED);
-
-    this.memoryOverview.setData({ interval, memory });
-    this.emit(EVENTS.MEMORY_GRAPH_RENDERED);
-
-    yield this.framerateGraph.setDataFromTimestamps(timestamps, resolution);
-    this.emit(EVENTS.FRAMERATE_GRAPH_RENDERED);
+    // Empty or older recordings might yield no markers, memory or timestamps.
+    if (markers) {
+      this.markersOverview.setData({ markers, duration });
+      this.emit(EVENTS.MARKERS_GRAPH_RENDERED);
+    }
+    if (memory) {
+      this.memoryOverview.dataDuration = duration;
+      this.memoryOverview.setData(memory);
+      this.emit(EVENTS.MEMORY_GRAPH_RENDERED);
+    }
+    if (timestamps) {
+      this.framerateGraph.dataDuration = duration;
+      yield this.framerateGraph.setDataFromTimestamps(timestamps, resolution);
+      this.emit(EVENTS.FRAMERATE_GRAPH_RENDERED);
+    }
 
     // Finished rendering all graphs in this overview.
     this.emit(EVENTS.OVERVIEW_RENDERED);
@@ -155,38 +195,19 @@ let OverviewView = {
    * Fired when the graph selection has changed. Called by
    * mouseup and scroll events.
    */
-  _onSelectionChange: function () {
-    if (this.framerateGraph.hasSelection()) {
-      let { min: beginAt, max: endAt } = this.framerateGraph.getMappedSelection();
-      this._beginAt = beginAt;
-      this._endAt = endAt;
-      this.emit(EVENTS.OVERVIEW_RANGE_SELECTED, { beginAt, endAt });
-    } else {
-      this._beginAt = null;
-      this._endAt = null;
+  _onGraphSelecting: function () {
+    let recording = PerformanceController.getCurrentRecording();
+    if (recording == null || this._stopSelectionChangeEventPropagation) {
+      return;
+    }
+    // If the range is smaller than a pixel (which can happen when performing
+    // a click on the graphs), treat this as a cleared selection.
+    let interval = this.getTimeInterval();
+    if (interval.endTime - interval.startTime < 1) {
       this.emit(EVENTS.OVERVIEW_RANGE_CLEARED);
+    } else {
+      this.emit(EVENTS.OVERVIEW_RANGE_SELECTED, interval);
     }
-  },
-
-  /**
-   * Listener handling the "mouseup" event for the framerate graph.
-   * Fires an event to be handled elsewhere.
-   */
-  _onGraphMouseUp: function () {
-    // Only fire a selection change event if the selection is actually enabled.
-    if (this.framerateGraph.selectionEnabled) {
-      this._onSelectionChange();
-    }
-  },
-
-  /**
-   * Listener handling the "scroll" event for the framerate graph.
-   * Fires a debounced event to be handled elsewhere.
-   */
-  _onGraphScroll: function () {
-    setNamedTimeout("graph-scroll", GRAPH_SCROLL_EVENTS_DRAIN, () => {
-      this._onSelectionChange();
-    });
   },
 
   /**
@@ -201,22 +222,33 @@ let OverviewView = {
   },
 
   /**
-   * Called when recording starts.
+   * Called when recording will start.
    */
-  _onRecordingStarted: function (_, recording) {
+  _onRecordingWillStart: function (_, recording) {
     this._checkSelection(recording);
-    this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
     this.framerateGraph.dropSelection();
   },
 
   /**
-   * Called when recording stops.
+   * Called when recording actually starts.
+   */
+  _onRecordingStarted: function (_, recording) {
+    this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
+  },
+
+  /**
+   * Called when recording will stop.
+   */
+  _onRecordingWillStop: function(_, recording) {
+    clearTimeout(this._timeoutId);
+    this._timeoutId = null;
+  },
+
+  /**
+   * Called when recording actually stops.
    */
   _onRecordingStopped: function (_, recording) {
     this._checkSelection(recording);
-    clearTimeout(this._timeoutId);
-    this._timeoutId = null;
-
     this.render(FRAMERATE_GRAPH_HIGH_RES_INTERVAL);
   },
 
@@ -224,7 +256,7 @@ let OverviewView = {
    * Called when a new recording is selected.
    */
   _onRecordingSelected: function (_, recording) {
-    this.framerateGraph.dropSelection();
+    this.markersOverview.dropSelection();
     this._checkSelection(recording);
 
     // If timeout exists, we have something recording, so
@@ -236,9 +268,9 @@ let OverviewView = {
 
   _checkSelection: function (recording) {
     let selectionEnabled = !recording.isRecording();
-    this.framerateGraph.selectionEnabled = selectionEnabled;
     this.markersOverview.selectionEnabled = selectionEnabled;
     this.memoryOverview.selectionEnabled = selectionEnabled;
+    this.framerateGraph.selectionEnabled = selectionEnabled;
   }
 };
 

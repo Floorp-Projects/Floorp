@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the call tree view renders after recording.
+ * Tests that the call tree view renders content after recording.
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
@@ -15,7 +15,7 @@ function spawnTest () {
   yield stopRecording(panel);
   yield rendered;
 
-  ok(true, "CallTreeView rendered on recording completed.");
+  ok(true, "CallTreeView rendered after recording is stopped.");
 
   yield startRecording(panel);
   yield busyWait(100);

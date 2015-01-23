@@ -582,8 +582,7 @@ describe("loop.conversationViews", function () {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.OutgoingConversationView, {
           dispatcher: dispatcher,
-          store: store,
-          feedbackStore: feedbackStore
+          store: store
         }));
     }
 
@@ -689,8 +688,7 @@ describe("loop.conversationViews", function () {
           client: client,
           conversation: conversation,
           sdk: {},
-          conversationAppStore: conversationAppStore,
-          feedbackStore: feedbackStore
+          conversationAppStore: conversationAppStore
         }));
     }
 
