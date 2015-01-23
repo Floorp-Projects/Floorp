@@ -187,7 +187,7 @@ protected:
   void ReflowFlexItem(nsPresContext* aPresContext,
                       const FlexboxAxisTracker& aAxisTracker,
                       const nsHTMLReflowState& aReflowState,
-                      const FlexItem* aItem,
+                      const FlexItem& aItem,
                       mozilla::LogicalPoint& aFramePos,
                       nscoord aContainerWidth);
 
