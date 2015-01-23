@@ -496,7 +496,7 @@ load 785555.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 test-pref(font.size.inflation.minTwips,120) load 794693.html
-asserts-if(!Android,8) load 798020-1.html
+asserts-if(!Android,4) load 798020-1.html
 load 798235-1.html
 load 799207-1.html
 load 799207-2.html
@@ -565,4 +565,5 @@ pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1037903.html
 load 1039454-1.html
 load 1042489.html
+load 1054010-1.html
 load 1058954-1.html

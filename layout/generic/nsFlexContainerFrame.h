@@ -172,6 +172,25 @@ protected:
                            FlexItem& aItem);
 
   /**
+   * Moves the given flex item's frame to the given LogicalPosition (modulo any
+   * relative positioning).
+   *
+   * This can be used in cases where we've already done a "measuring reflow"
+   * for the flex item at the correct size, and hence can skip its final reflow
+   * (but still need to move it to the right final position).
+   *
+   * @param aReflowState    The flex container's reflow state.
+   * @param aItem           The flex item whose frame should be moved.
+   * @param aFramePos       The position where the flex item's frame should
+   *                        be placed. (pre-relative positioning)
+   * @param aContainerWidth The flex container's width (required by some methods
+   *                        that we call, to interpret aFramePos correctly).
+   */
+  void MoveFlexItemToFinalPosition(const nsHTMLReflowState& aReflowState,
+                                   const FlexItem& aItem,
+                                   mozilla::LogicalPoint& aFramePos,
+                                   nscoord aContainerWidth);
+  /**
    * Helper-function to reflow a child frame, at its final position determined
    * by flex layout.
    *
