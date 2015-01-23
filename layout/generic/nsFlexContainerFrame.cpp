@@ -3683,8 +3683,27 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // maybe use for setting the flex container's baseline.)
       const nscoord itemNormalBPos = framePos.B(outerWM);
 
-      ReflowFlexItem(aPresContext, aAxisTracker, aReflowState,
-                     *item, framePos, containerWidth);
+      // Check if we actually need to reflow the item -- if we already reflowed
+      // it with the right size, we can just reposition it as-needed.
+      bool itemNeedsReflow = true; // (Start out assuming the worst.)
+      if (item->HadMeasuringReflow()) {
+        // We've already reflowed the child once. Was the size we gave it in
+        // that reflow the same as its final (post-flexing/stretching) size?
+        nsSize finalFlexedPhysicalSize =
+          aAxisTracker.PhysicalSizeFromLogicalSizes(item->GetMainSize(),
+                                                    item->GetCrossSize());
+        if (item->Frame()->GetSize() == finalFlexedPhysicalSize) {
+          // It has the correct size --> no need to reflow! Just make sure it's
+          // at the right position.
+          itemNeedsReflow = false;
+          MoveFlexItemToFinalPosition(aReflowState, *item, framePos,
+                                      containerWidth);
+        }
+      }
+      if (itemNeedsReflow) {
+        ReflowFlexItem(aPresContext, aAxisTracker, aReflowState,
+                       *item, framePos, containerWidth);
+      }
 
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
@@ -3756,6 +3775,32 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                  aReflowState, aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize)
+}
+
+void
+nsFlexContainerFrame::MoveFlexItemToFinalPosition(
+  const nsHTMLReflowState& aReflowState,
+  const FlexItem& aItem,
+  LogicalPoint& aFramePos,
+  nscoord aContainerWidth)
+{
+  WritingMode outerWM = aReflowState.GetWritingMode();
+
+  // If item is relpos, look up its offsets (cached from prev reflow)
+  LogicalMargin logicalOffsets(outerWM);
+  if (NS_STYLE_POSITION_RELATIVE == aItem.Frame()->StyleDisplay()->mPosition) {
+    FrameProperties props = aItem.Frame()->Properties();
+    nsMargin* cachedOffsets =
+      static_cast<nsMargin*>(props.Get(nsIFrame::ComputedOffsetProperty()));
+    MOZ_ASSERT(cachedOffsets,
+               "relpos previously-reflowed frame should've cached its offsets");
+    logicalOffsets = LogicalMargin(outerWM, *cachedOffsets);
+  }
+  nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
+                                              logicalOffsets, &aFramePos,
+                                              aContainerWidth);
+  aItem.Frame()->SetPosition(outerWM, aFramePos, aContainerWidth);
+  PositionChildViews(aItem.Frame());
 }
 
 void
