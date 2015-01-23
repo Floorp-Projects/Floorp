@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "JavaScriptParent.h"
 #include "nsXULAppAPI.h"
 
 using namespace base;
@@ -154,13 +154,14 @@ ContentBridgeParent::DeallocPBrowserParent(PBrowserParent* aParent)
 // This implementation is identical to ContentParent::GetCPOWManager but we can't
 // move it to nsIContentParent because it calls ManagedPJavaScriptParent() which
 // only exists in PContentParent and PContentBridgeParent.
-jsipc::CPOWManager*
+jsipc::JavaScriptShared*
 ContentBridgeParent::GetCPOWManager()
 {
   if (ManagedPJavaScriptParent().Length()) {
-    return CPOWManagerFor(ManagedPJavaScriptParent()[0]);
+    return static_cast<JavaScriptParent*>(ManagedPJavaScriptParent()[0]);
   }
-  return CPOWManagerFor(SendPJavaScriptConstructor());
+  JavaScriptParent* actor = static_cast<JavaScriptParent*>(SendPJavaScriptConstructor());
+  return actor;
 }
 
 } // namespace dom

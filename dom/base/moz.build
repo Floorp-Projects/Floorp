@@ -403,6 +403,7 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xpath',
     '/dom/xul',
     '/image/src',
+    '/js/ipc',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
     '/layout/base',

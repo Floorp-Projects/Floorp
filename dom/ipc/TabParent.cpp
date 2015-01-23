@@ -18,7 +18,6 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -66,6 +65,7 @@
 #include "PermissionMessageUtils.h"
 #include "StructuredCloneUtils.h"
 #include "ColorPickerParent.h"
+#include "JavaScriptParent.h"
 #include "FilePickerParent.h"
 #include "TabChild.h"
 #include "LoadContext.h"
@@ -273,7 +273,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mChromeFlags(aChromeFlags)
   , mInitedByParent(false)
   , mTabId(aTabId)
-  , mCreatingWindow(false)
+  , mSkipLoad(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -454,21 +454,17 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 struct MOZ_STACK_CLASS TabParent::AutoUseNewTab MOZ_FINAL
 {
 public:
-  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew, nsCString* aURLToLoad)
-   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew), mURLToLoad(aURLToLoad)
+  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew)
+   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew)
   {
     MOZ_ASSERT(!TabParent::sNextTabParent);
-    MOZ_ASSERT(!aNewTab->mCreatingWindow);
-
     TabParent::sNextTabParent = aNewTab;
-    aNewTab->mCreatingWindow = true;
-    aNewTab->mDelayedURL.Truncate();
+    aNewTab->mSkipLoad = true;
   }
 
   ~AutoUseNewTab()
   {
-    mNewTab->mCreatingWindow = false;
-    *mURLToLoad = mNewTab->mDelayedURL;
+    mNewTab->mSkipLoad = false;
 
     if (TabParent::sNextTabParent) {
       MOZ_ASSERT(TabParent::sNextTabParent == mNewTab);
@@ -480,7 +476,6 @@ public:
 private:
   TabParent* mNewTab;
   bool* mWindowIsNew;
-  nsCString* mURLToLoad;
 };
 
 bool
@@ -494,8 +489,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
                             const nsString& aFeatures,
                             const nsString& aBaseURI,
                             bool* aWindowIsNew,
-                            InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                            nsCString* aURLToLoad)
+                            InfallibleTArray<FrameScriptInfo>* aFrameScripts)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -536,7 +530,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
     params->SetReferrer(aBaseURI);
     params->SetIsPrivate(isPrivate);
 
-    AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
+    AutoUseNewTab aunt(newTab, aWindowIsNew);
 
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
     mBrowserDOMWindow->OpenURIInFrame(nullptr, params,
@@ -570,7 +564,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
 
   nsCOMPtr<nsIDOMWindow> window;
 
-  AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
+  AutoUseNewTab aunt(newTab, aWindowIsNew);
 
   rv = pwwatch->OpenWindow2(parent, finalURIString.get(),
                             NS_ConvertUTF16toUTF8(aName).get(),
@@ -607,7 +601,7 @@ bool
 TabParent::SendLoadRemoteScript(const nsString& aURL,
                                 const bool& aRunInGlobalScope)
 {
-  if (mCreatingWindow) {
+  if (mSkipLoad) {
     mDelayedFrameScripts.AppendElement(FrameScriptInfo(aURL, aRunInGlobalScope));
     return true;
   }
@@ -621,19 +615,17 @@ TabParent::LoadURL(nsIURI* aURI)
 {
     MOZ_ASSERT(aURI);
 
+    if (mSkipLoad) {
+        // Don't send the message if the child wants to load its own URL.
+        return;
+    }
+
     if (mIsDestroyed) {
         return;
     }
 
     nsCString spec;
     aURI->GetSpec(spec);
-
-    if (mCreatingWindow) {
-        // Don't send the message if the child wants to load its own URL.
-        MOZ_ASSERT(mDelayedURL.IsEmpty());
-        mDelayedURL = spec;
-        return;
-    }
 
     if (!mShown) {
         NS_WARNING(nsPrintfCString("TabParent::LoadURL(%s) called before "
@@ -1348,7 +1340,7 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CrossProcessCpowHolder cpows(Manager(), aCpows);
+  CpowIdHolder cpows(Manager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -1370,7 +1362,7 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CrossProcessCpowHolder cpows(Manager(), aCpows);
+  CpowIdHolder cpows(Manager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -1391,7 +1383,7 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CrossProcessCpowHolder cpows(Manager(), aCpows);
+  CpowIdHolder cpows(Manager(), aCpows);
   return ReceiveMessage(aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
 }
 

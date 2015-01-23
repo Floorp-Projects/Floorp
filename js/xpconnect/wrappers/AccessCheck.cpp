@@ -8,6 +8,7 @@
 
 #include "nsJSPrincipals.h"
 #include "nsGlobalWindow.h"
+#include "JavaScriptParent.h"
 
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
@@ -16,7 +17,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsJSUtils.h"
 

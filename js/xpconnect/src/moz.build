@@ -66,6 +66,7 @@ LOCAL_INCLUDES += [
     '/dom/html',
     '/dom/svg',
     '/dom/workers',
+    '/js/ipc',
     '/layout/base',
     '/layout/style',
     '/xpcom/reflect/xptinfo',
