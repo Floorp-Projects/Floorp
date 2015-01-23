@@ -118,6 +118,9 @@ class MutableHandleBase {};
 template <typename T>
 class HeapBase {};
 
+template <typename T>
+class PersistentRootedBase {};
+
 /*
  * js::NullPtr acts like a nullptr pointer in contexts that require a Handle.
  *
@@ -1098,8 +1101,10 @@ MutableHandle<T>::MutableHandle(PersistentRooted<T> *root)
  * marked when the object itself is marked.
  */
 template<typename T>
-class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T>> {
-    typedef mozilla::LinkedListElement<PersistentRooted<T>> Base;
+class PersistentRooted : public js::PersistentRootedBase<T>,
+                         private mozilla::LinkedListElement<PersistentRooted<T>>
+{
+    typedef mozilla::LinkedListElement<PersistentRooted<T>> ListBase;
 
     friend class mozilla::LinkedList<PersistentRooted>;
     friend class mozilla::LinkedListElement<PersistentRooted>;
@@ -1149,7 +1154,7 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T>>
     }
 
     bool initialized() {
-        return Base::isInList();
+        return ListBase::isInList();
     }
 
     void init(JSContext *cx) {
@@ -1175,7 +1180,7 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T>>
     void reset() {
         if (initialized()) {
             set(js::GCMethods<T>::initial());
-            Base::remove();
+            ListBase::remove();
         }
     }
 

@@ -1850,6 +1850,24 @@ class RootedBase<JS::Value> : public MutableValueOperations<JS::Rooted<JS::Value
     }
 };
 
+/*
+ * Augment the generic PersistentRooted<T> interface when T = Value with type-querying,
+ * value-extracting, and mutating operations.
+ */
+template <>
+class PersistentRootedBase<JS::Value> : public MutableValueOperations<JS::PersistentRooted<JS::Value>>
+{
+    friend class ValueOperations<JS::PersistentRooted<JS::Value>>;
+    const JS::Value * extract() const {
+        return static_cast<const JS::PersistentRooted<JS::Value>*>(this)->address();
+    }
+
+    friend class MutableValueOperations<JS::PersistentRooted<JS::Value>>;
+    JS::Value * extractMutable() {
+        return static_cast<JS::PersistentRooted<JS::Value>*>(this)->address();
+    }
+};
+
 } // namespace js
 
 inline jsval_layout
