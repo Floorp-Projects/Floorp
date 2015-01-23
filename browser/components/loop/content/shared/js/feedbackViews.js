@@ -216,42 +216,32 @@ loop.shared.views.FeedbackView = (function(l10n) {
    * Feedback view.
    */
   var FeedbackView = React.createClass({displayName: "FeedbackView",
-    mixins: [Backbone.Events],
+    mixins: [
+      Backbone.Events,
+      loop.store.StoreMixin("feedbackStore")
+    ],
 
     propTypes: {
-      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore),
       onAfterFeedbackReceived: React.PropTypes.func,
       // Used by the UI showcase.
       feedbackState: React.PropTypes.string
     },
 
     getInitialState: function() {
-      var storeState = this.props.feedbackStore.getStoreState();
+      var storeState = this.getStoreState();
       return _.extend({}, storeState, {
         feedbackState: this.props.feedbackState || storeState.feedbackState
       });
     },
 
-    componentWillMount: function() {
-      this.listenTo(this.props.feedbackStore, "change", this._onStoreStateChanged);
-    },
-
-    componentWillUnmount: function() {
-      this.stopListening(this.props.feedbackStore);
-    },
-
-    _onStoreStateChanged: function() {
-      this.setState(this.props.feedbackStore.getStoreState());
-    },
-
     reset: function() {
-      this.setState(this.props.feedbackStore.getInitialStoreState());
+      this.setState(this.getStore().getInitialStoreState());
     },
 
     handleHappyClick: function() {
       // XXX: If the user is happy, we directly send this information to the
       //      feedback API; this is a behavior we might want to revisit later.
-      this.props.feedbackStore.dispatchAction(new sharedActions.SendFeedback({
+      this.getStore().dispatchAction(new sharedActions.SendFeedback({
         happy: true,
         category: "",
         description: ""
@@ -259,7 +249,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
     },
 
     handleSadClick: function() {
-      this.props.feedbackStore.dispatchAction(
+      this.getStore().dispatchAction(
         new sharedActions.RequireFeedbackDetails());
     },
 
@@ -290,7 +280,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
         case FEEDBACK_STATES.DETAILS: {
           return (
             React.createElement(FeedbackForm, {
-              feedbackStore: this.props.feedbackStore, 
+              feedbackStore: this.getStore(), 
               reset: this.reset, 
               pending: this.state.feedbackState === FEEDBACK_STATES.PENDING})
             );

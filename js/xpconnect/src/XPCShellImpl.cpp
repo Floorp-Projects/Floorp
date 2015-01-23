@@ -570,13 +570,13 @@ Btoa(JSContext *cx, unsigned argc, Value *vp)
   return xpc::Base64Encode(cx, args[0], args.rval());
 }
 
-static Maybe<PersistentRootedValue> sScriptedInterruptCallback;
+static PersistentRootedValue sScriptedInterruptCallback;
 
 static bool
 XPCShellInterruptCallback(JSContext *cx)
 {
-    MOZ_ASSERT(sScriptedInterruptCallback);
-    RootedValue callback(cx, *sScriptedInterruptCallback);
+    MOZ_ASSERT(sScriptedInterruptCallback.initialized());
+    RootedValue callback(cx, sScriptedInterruptCallback);
 
     // If no interrupt callback was set by script, no-op.
     if (callback.isUndefined())
@@ -598,7 +598,7 @@ XPCShellInterruptCallback(JSContext *cx)
 static bool
 SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
-    MOZ_ASSERT(sScriptedInterruptCallback);
+    MOZ_ASSERT(sScriptedInterruptCallback.initialized());
 
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -609,7 +609,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 
     // Allow callers to remove the interrupt callback by passing undefined.
     if (args[0].isUndefined()) {
-        *sScriptedInterruptCallback = UndefinedValue();
+        sScriptedInterruptCallback = UndefinedValue();
         return true;
     }
 
@@ -619,7 +619,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    *sScriptedInterruptCallback = args[0];
+    sScriptedInterruptCallback = args[0];
 
     return true;
 }
@@ -1390,7 +1390,7 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
         // Override the default XPConnect interrupt callback. We could store the
         // old one and restore it before shutting down, but there's not really a
         // reason to bother.
-        sScriptedInterruptCallback.emplace(rt, UndefinedValue());
+        sScriptedInterruptCallback.init(rt, UndefinedValue());
         JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
         JS_SetErrorReporter(rt, XPCShellErrorReporter);
@@ -1524,8 +1524,6 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( nullptr );
     MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-
-    sScriptedInterruptCallback.reset();
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
     // test of late call and release (see above)

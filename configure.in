@@ -3595,7 +3595,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.17.3, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.17.4, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -3916,6 +3916,7 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
 MOZ_LOCALE_SWITCHER=
+MOZ_ANDROID_READING_LIST_SERVICE=
 MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
 MOZ_ANDROID_MLS_STUMBLER=
@@ -4990,6 +4991,13 @@ dnl = Include Search Activity on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_SEARCH_ACTIVITY"; then
     AC_DEFINE(MOZ_ANDROID_SEARCH_ACTIVITY)
+fi
+
+dnl ========================================================
+dnl = Include Reading List service on Android
+dnl ========================================================
+if test -n "$MOZ_ANDROID_READING_LIST_SERVICE"; then
+    AC_DEFINE(MOZ_ANDROID_READING_LIST_SERVICE)
 fi
 
 dnl ========================================================
@@ -8494,6 +8502,7 @@ AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
+AC_SUBST(MOZ_ANDROID_READING_LIST_SERVICE)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
 AC_SUBST(MOZ_ANDROID_SHARE_OVERLAY)
 AC_SUBST(MOZ_ANDROID_NEW_TABLET_UI)

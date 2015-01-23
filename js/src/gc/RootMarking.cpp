@@ -445,21 +445,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 
         for (RootRange r = rootsHash.all(); !r.empty(); r.popFront()) {
             const RootEntry &entry = r.front();
-            const char *name = entry.value().name ? entry.value().name : "root";
-            JSGCRootType type = entry.value().type;
-            void *key = entry.key();
-            if (type == JS_GC_ROOT_VALUE_PTR) {
-                MarkValueRoot(trc, reinterpret_cast<Value *>(key), name);
-            } else if (*reinterpret_cast<void **>(key)){
-                if (type == JS_GC_ROOT_STRING_PTR)
-                    MarkStringRoot(trc, reinterpret_cast<JSString **>(key), name);
-                else if (type == JS_GC_ROOT_OBJECT_PTR)
-                    MarkObjectRoot(trc, reinterpret_cast<JSObject **>(key), name);
-                else if (type == JS_GC_ROOT_SCRIPT_PTR)
-                    MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
-                else
-                    MOZ_CRASH("unexpected js::RootInfo::type value");
-            }
+            MarkValueRoot(trc, entry.key(), entry.value());
         }
 
         MarkPersistentRootedChains(trc);

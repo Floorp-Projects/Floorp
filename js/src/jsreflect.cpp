@@ -668,6 +668,7 @@ class NodeBuilder
 
     bool comprehensionBlock(HandleValue patt, HandleValue src, bool isForEach, bool isForOf, TokenPos *pos,
                             MutableHandleValue dst);
+    bool comprehensionIf(HandleValue test, TokenPos *pos, MutableHandleValue dst);
 
     bool comprehensionExpression(HandleValue body, NodeVector &blocks, HandleValue filter,
                                  bool isLegacy, TokenPos *pos, MutableHandleValue dst);
@@ -1410,6 +1411,18 @@ NodeBuilder::comprehensionBlock(HandleValue patt, HandleValue src, bool isForEac
 }
 
 bool
+NodeBuilder::comprehensionIf(HandleValue test, TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_COMP_IF]);
+    if (!cb.isNull())
+        return callback(cb, test, pos, dst);
+
+    return newNode(AST_COMP_IF, pos,
+                   "test", test,
+                   dst);
+}
+
+bool
 NodeBuilder::comprehensionExpression(HandleValue body, NodeVector &blocks, HandleValue filter,
                                      bool isLegacy, TokenPos *pos, MutableHandleValue dst)
 {
@@ -1795,6 +1808,7 @@ class ASTSerializer
     bool functionBody(ParseNode *pn, TokenPos *pos, MutableHandleValue dst);
 
     bool comprehensionBlock(ParseNode *pn, MutableHandleValue dst);
+    bool comprehensionIf(ParseNode *pn, MutableHandleValue dst);
     bool comprehension(ParseNode *pn, MutableHandleValue dst);
     bool generatorExpression(ParseNode *pn, MutableHandleValue dst);
 
@@ -2608,6 +2622,17 @@ ASTSerializer::comprehensionBlock(ParseNode *pn, MutableHandleValue dst)
 }
 
 bool
+ASTSerializer::comprehensionIf(ParseNode *pn, MutableHandleValue dst)
+{
+    LOCAL_ASSERT(pn->isKind(PNK_IF));
+    LOCAL_ASSERT(!pn->pn_kid3);
+
+    RootedValue patt(cx);
+    return pattern(pn->pn_kid1, &patt) &&
+           builder.comprehensionIf(patt, &pn->pn_pos, dst);
+}
+
+bool
 ASTSerializer::comprehension(ParseNode *pn, MutableHandleValue dst)
 {
     // There are two array comprehension flavors.
@@ -2619,24 +2644,28 @@ ASTSerializer::comprehension(ParseNode *pn, MutableHandleValue dst)
     LOCAL_ASSERT(next->isKind(PNK_FOR));
 
     NodeVector blocks(cx);
-
-    while (next->isKind(PNK_FOR)) {
-        RootedValue block(cx);
-        if (!comprehensionBlock(next, &block) || !blocks.append(block))
-            return false;
-        next = next->pn_right;
-    }
-
     RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
-
-    if (next->isKind(PNK_IF)) {
-        if (!optExpression(next->pn_kid1, &filter))
-            return false;
-        next = next->pn_kid2;
-    } else if (next->isKind(PNK_STATEMENTLIST) && next->pn_count == 0) {
-        /* FoldConstants optimized away the push. */
-        NodeVector empty(cx);
-        return builder.arrayExpression(empty, &pn->pn_pos, dst);
+    while (true) {
+        if (next->isKind(PNK_FOR)) {
+            RootedValue block(cx);
+            if (!comprehensionBlock(next, &block) || !blocks.append(block))
+                return false;
+            next = next->pn_right;
+        } else if (next->isKind(PNK_IF)) {
+            if (isLegacy) {
+                MOZ_ASSERT(filter.isMagic(JS_SERIALIZE_NO_NODE));
+                if (!optExpression(next->pn_kid1, &filter))
+                    return false;
+            } else {
+                // ES7 comprehension can contain multiple ComprehensionIfs.
+                RootedValue compif(cx);
+                if (!comprehensionIf(next, &compif) || !blocks.append(compif))
+                    return false;
+            }
+            next = next->pn_kid2;
+        } else {
+            break;
+        }
     }
 
     LOCAL_ASSERT(next->isKind(PNK_ARRAYPUSH));
@@ -2658,20 +2687,28 @@ ASTSerializer::generatorExpression(ParseNode *pn, MutableHandleValue dst)
     LOCAL_ASSERT(next->isKind(PNK_FOR));
 
     NodeVector blocks(cx);
-
-    while (next->isKind(PNK_FOR)) {
-        RootedValue block(cx);
-        if (!comprehensionBlock(next, &block) || !blocks.append(block))
-            return false;
-        next = next->pn_right;
-    }
-
     RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
-
-    if (next->isKind(PNK_IF)) {
-        if (!optExpression(next->pn_kid1, &filter))
-            return false;
-        next = next->pn_kid2;
+    while (true) {
+        if (next->isKind(PNK_FOR)) {
+            RootedValue block(cx);
+            if (!comprehensionBlock(next, &block) || !blocks.append(block))
+                return false;
+            next = next->pn_right;
+        } else if (next->isKind(PNK_IF)) {
+            if (isLegacy) {
+                MOZ_ASSERT(filter.isMagic(JS_SERIALIZE_NO_NODE));
+                if (!optExpression(next->pn_kid1, &filter))
+                    return false;
+            } else {
+                // ES7 comprehension can contain multiple ComprehensionIfs.
+                RootedValue compif(cx);
+                if (!comprehensionIf(next, &compif) || !blocks.append(compif))
+                    return false;
+            }
+            next = next->pn_kid2;
+        } else {
+            break;
+        }
     }
 
     LOCAL_ASSERT(next->isKind(PNK_SEMI) &&

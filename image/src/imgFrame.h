@@ -295,7 +295,7 @@ private: // methods
 
   uint32_t PaletteDataLength() const
   {
-    return mPaletteDepth ? (1 << mPaletteDepth) * sizeof(uint32_t)
+    return mPaletteDepth ? (size_t(1) << mPaletteDepth) * sizeof(uint32_t)
                          : 0;
   }
 

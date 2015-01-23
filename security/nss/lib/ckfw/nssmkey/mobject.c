@@ -1880,7 +1880,7 @@ nss_ckmk_CreateObject
 )
 {
   CK_OBJECT_CLASS objClass;
-  ckmkInternalObject *io;
+  ckmkInternalObject *io = NULL;
   CK_BBOOL isToken;
 
   /*

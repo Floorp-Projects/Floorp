@@ -169,9 +169,7 @@ loop.roomViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      feedbackStore:
-        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
     _renderInvitationOverlay: function() {
@@ -252,7 +250,6 @@ loop.roomViews = (function(mozL10n) {
         case ROOM_STATES.ENDED: {
           if (this.state.used)
             return <sharedViews.FeedbackView
-              feedbackStore={this.props.feedbackStore}
               onAfterFeedbackReceived={this.closeWindow}
             />;
 

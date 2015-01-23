@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mozglue.GeckoLoader;
@@ -18,6 +19,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.util.Log;
+
+import java.io.File;
 
 public class GeckoApplication extends Application 
     implements ContextGetter {
@@ -128,6 +131,26 @@ public class GeckoApplication extends Application
 
         // This getInstance call will force initialization of the NotificationHelper, but does nothing with the result
         NotificationHelper.getInstance(context).init();
+
+        // Make sure that all browser-ish applications default to the real LocalBrowserDB.
+        // GeckoView consumers use their own Application class, so this doesn't affect them.
+        // WebappImpl overrides this on creation.
+        //
+        // We need to do this before any access to the profile; it controls
+        // which database class is used.
+        //
+        // As such, this needs to occur before the GeckoView in GeckoApp is inflated -- i.e., in the
+        // GeckoApp constructor or earlier -- because GeckoView implicitly accesses the profile. This is earlier!
+        GeckoProfile.setBrowserDBFactory(new BrowserDB.Factory() {
+            @Override
+            public BrowserDB get(String profileName, File profileDir) {
+                // Note that we don't use the profile directory -- we
+                // send operations to the ContentProvider, which does
+                // its own thing.
+                return new LocalBrowserDB(profileName);
+            }
+        });
+
         super.onCreate();
     }
 

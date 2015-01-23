@@ -34,12 +34,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
 
         ok(editor1.canCopy(), "can copy, text");
         ok(editor1.canCut(), "can cut, text");
+        ok(editor1.canDelete(), "can delete, text");
 
         password.focus();
         password.select();
 
         ok(!editor2.canCopy(), "can copy, password");
         ok(!editor2.canCut(), "can cut, password");
+        ok(editor1.canDelete(), "can delete, password");
 
         SimpleTest.finish();
       }
