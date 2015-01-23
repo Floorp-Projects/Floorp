@@ -317,7 +317,6 @@ add_test(function test_polling_timeout() {
   });
 
   fxa.internal.POLL_SESSION = 1;
-  fxa.internal.POLL_STEP = 2;
 
   let p = fxa.internal.whenVerified({});
 
