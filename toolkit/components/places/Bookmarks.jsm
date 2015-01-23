@@ -533,7 +533,7 @@ let Bookmarks = Object.freeze({
       { parentGuid: { requiredIf: b => b.hasOwnProperty("index") }
       , index: { requiredIf: b => b.hasOwnProperty("parentGuid")
                , validIf: b => typeof(b.index) == "number" &&
-                               b.index >= 0 }
+                               b.index >= 0 || b.index == this.DEFAULT_INDEX }
       , keyword: { validIf: b => typeof(b.keyword) == "string" &&
                                  b.keyword.length > 0 }
       });
@@ -915,6 +915,7 @@ function* fetchBookmark(info) {
 
 function* fetchBookmarkByPosition(info) {
   let db = yield DBConnPromised;
+  let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
 
   let rows = yield db.executeCached(
     `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
@@ -926,8 +927,11 @@ function* fetchBookmarkByPosition(info) {
      LEFT JOIN moz_bookmarks p ON p.id = b.parent
      LEFT JOIN moz_keywords k ON k.id = b.keyword_id
      LEFT JOIN moz_places h ON h.id = b.fk
-     WHERE p.guid = :parentGuid AND b.position = :index
-    `, { parentGuid: info.parentGuid, index: info.index });
+     WHERE p.guid = :parentGuid
+     AND b.position = IFNULL(:index, (SELECT count(*) - 1
+                                      FROM moz_bookmarks
+                                      WHERE parent = p.id))
+    `, { parentGuid: info.parentGuid, index });
 
   return rows.length ? rowsToItemsArray(rows)[0] : null;
 }
