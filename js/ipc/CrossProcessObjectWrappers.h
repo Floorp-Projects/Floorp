@@ -38,10 +38,11 @@ class CPOWManager
                       InfallibleTArray<CpowEntry> *outCpows) = 0;
 };
 
-class CpowIdHolder : public CpowHolder
+class CrossProcessCpowHolder : public CpowHolder
 {
   public:
-    CpowIdHolder(dom::CPOWManagerGetter *managerGetter, const InfallibleTArray<CpowEntry> &cpows);
+    CrossProcessCpowHolder(dom::CPOWManagerGetter *managerGetter,
+                           const InfallibleTArray<CpowEntry> &cpows);
 
     bool ToObject(JSContext *cx, JS::MutableHandleObject objp);
 
