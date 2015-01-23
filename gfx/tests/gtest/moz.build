@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     # Test works but it doesn't assert anything
     #'gfxTextRunPerfTest.cpp',
     'TestTiledLayerBuffer.cpp',
+    'TestVsync.cpp',
 ]
 
 # Because of gkmedia on windows we won't find these
