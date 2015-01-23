@@ -239,16 +239,6 @@ public:
   virtual bool            AutoErase(HDC dc);
 
   /**
-   * Start allowing Direct3D9 to be used by widgets when GetLayerManager is
-   * called.
-   *
-   * @param aReinitialize Call GetLayerManager on widgets to ensure D3D9 is
-   *                      initialized, this is usually called when this function
-   *                      is triggered by timeout and not user/web interaction.
-   */
-  static void             StartAllowingD3D9(bool aReinitialize);
-
-  /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for
    * the window.
    *
@@ -314,8 +304,6 @@ protected:
   static BOOL    CALLBACK ClearResourcesCallback(HWND aChild, LPARAM aParam);
   static BOOL    CALLBACK EnumAllChildWindProc(HWND aWnd, LPARAM aParam);
   static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
-  static void             AllowD3D9Callback(nsWindow *aWindow);
-  static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
 
   /**
    * Window utilities
@@ -498,7 +486,6 @@ protected:
   static bool           sIsInMouseCapture;
   static int            sTrimOnMinimize;
   static const char*    sDefaultMainWindowClass;
-  static bool           sAllowD3D9;
 
   // Always use the helper method to read this property.  See bug 603793.
   static TriStateBool   sHasBogusPopupsDropShadowOnMultiMonitor;

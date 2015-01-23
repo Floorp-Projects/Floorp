@@ -44,7 +44,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     mozJSComponentLoader();
 
     // ModuleLoader
-    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
+    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile) MOZ_OVERRIDE;
 
     nsresult FindTargetObject(JSContext* aCx,
                               JS::MutableHandleObject aTargetObject);

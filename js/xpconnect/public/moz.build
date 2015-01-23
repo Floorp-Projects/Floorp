@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'nsAutoJSValHolder.h',
     'nsAXPCNativeCallContext.h',
     'nsTArrayHelpers.h',
     'SandboxPrivate.h',

@@ -30,12 +30,14 @@ mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
                              'CPS.1 = "http://mytestdomain.local/cps"')
 
 generated_ev_root_filenames = []
+generated_certs = []
 
 def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
                                    base_ext_text, signer_key_filename,
                                    signer_cert_filename, key_size, generate_ev):
     """
     Generates a certificate and imports it into the NSS DB if appropriate.
+    If an equivalent certificate has already been generated, it is reused.
 
     Arguments:
       key_type -- the type of key generated: potential values: 'rsa', or any of
@@ -78,6 +80,22 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
     # Use the organization field to store the cert nickname for easier debugging
     subject_string += '/O=' + cert_name
 
+    # Reuse the existing RSA EV root
+    if (generate_ev and key_type == 'rsa' and signer_key_filename == ''
+            and signer_cert_filename == '' and key_size == '2048'):
+        cert_name = 'evroot'
+        key_filename = '../test_ev_certs/evroot.key'
+        cert_filename = '../test_ev_certs/evroot.der'
+        CertUtils.import_cert_and_pkcs12(srcdir, key_filename,
+                                         '../test_ev_certs/evroot.p12',
+                                         cert_name, ',,')
+        return [cert_name, key_filename, cert_filename]
+
+    # Don't regenerate a previously generated cert
+    for cert in generated_certs:
+        if cert_name == cert[0]:
+            return cert
+
     [key_filename, cert_filename] = CertUtils.generate_cert_generic(
         db_dir,
         srcdir,
@@ -89,6 +107,7 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
         signer_cert_filename,
         subject_string,
         key_size)
+    generated_certs.append([cert_name, key_filename, cert_filename])
 
     if generate_ev:
         # The dest_dir argument of generate_pkcs12() is also set to db_dir as
@@ -103,6 +122,49 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
             generated_ev_root_filenames.append(cert_filename)
 
     return [cert_name, key_filename, cert_filename]
+
+def generate_cert_chain(root_key_type, root_key_size, int_key_type, int_key_size,
+                        ee_key_type, ee_key_size, generate_ev):
+    """
+    Generates a certificate chain and imports the individual certificates into
+    the NSS DB if appropriate.
+
+    Arguments:
+    (root|int|ee)_key_type -- the type of key generated: potential values: 'rsa',
+                              or any of the curves found by
+                              'openssl ecparam -list_curves'
+    (root|int|ee)_key_size -- public key size for the relevant cert
+    generate_ev -- whether EV certs should be generated
+    """
+    [root_nick, root_key_file, root_cert_file] = generate_and_maybe_import_cert(
+        root_key_type,
+        'root',
+        '',
+        ca_ext_text,
+        '',
+        '',
+        root_key_size,
+        generate_ev)
+
+    [int_nick, int_key_file, int_cert_file] = generate_and_maybe_import_cert(
+        int_key_type,
+        'int',
+        root_nick,
+        ca_ext_text,
+        root_key_file,
+        root_cert_file,
+        int_key_size,
+        generate_ev)
+
+    generate_and_maybe_import_cert(
+        ee_key_type,
+        'ee',
+        int_nick,
+        ee_ext_text,
+        int_key_file,
+        int_cert_file,
+        ee_key_size,
+        generate_ev)
 
 def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev):
     """
@@ -220,6 +282,46 @@ def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev
         inadequate_key_size,
         generate_ev)
 
+def generate_ecc_chains():
+    generate_cert_chain('prime256v1', '256',
+                        'secp384r1', '384',
+                        'secp521r1', '521',
+                        False)
+    generate_cert_chain('prime256v1', '256',
+                        'secp224r1', '224',
+                        'prime256v1', '256',
+                        False)
+    generate_cert_chain('prime256v1', '256',
+                        'prime256v1', '256',
+                        'secp224r1', '224',
+                        False)
+    generate_cert_chain('secp224r1', '224',
+                        'prime256v1', '256',
+                        'prime256v1', '256',
+                        False)
+    generate_cert_chain('prime256v1', '256',
+                        'prime256v1', '256',
+                        'secp256k1', '256',
+                        False)
+    generate_cert_chain('secp256k1', '256',
+                        'prime256v1', '256',
+                        'prime256v1', '256',
+                        False)
+
+def generate_combination_chains():
+    generate_cert_chain('rsa', '2048',
+                        'prime256v1', '256',
+                        'secp384r1', '384',
+                        False)
+    generate_cert_chain('rsa', '2048',
+                        'prime256v1', '256',
+                        'secp224r1', '224',
+                        False)
+    generate_cert_chain('prime256v1', '256',
+                        'rsa', '1016',
+                        'prime256v1', '256',
+                        False)
+
 # Create a NSS DB for use by the OCSP responder.
 CertUtils.init_nss_db(srcdir)
 
@@ -228,6 +330,8 @@ CertUtils.init_nss_db(srcdir)
 # that can be tested is 1016, less than 2048 is 2040 and so on.
 generate_certs('rsa', '1016', '1024', False)
 generate_certs('rsa', '2040', '2048', True)
+generate_ecc_chains()
+generate_combination_chains()
 
 # Print a blank line and the information needed to enable EV for any roots
 # generated by this script.

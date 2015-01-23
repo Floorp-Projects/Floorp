@@ -117,15 +117,31 @@ function registerSelf() {
 
 function emitTouchEventForIFrame(message) {
   message = message.json;
-  let frames = curFrame.document.getElementsByTagName("iframe");
-  let iframe = frames[message.index];
   let identifier = nextTouchId;
-  let tabParent = iframe.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.tabParent;
-  tabParent.injectTouchEvent(message.type, [identifier],
-                             [message.clientX], [message.clientY],
-                             [message.radiusX], [message.radiusY],
-                             [message.rotationAngle], [message.force],
-                             1, 0);
+
+  let domWindowUtils = curFrame.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var ratio = domWindowUtils.screenPixelsPerCSSPixel;
+
+  var typeForUtils;
+  switch (message.type) {
+    case 'touchstart':
+      typeForUtils = domWindowUtils.TOUCH_CONTACT;
+      break;
+    case 'touchend':
+      typeForUtils = domWindowUtils.TOUCH_REMOVE;
+      break;
+    case 'touchcancel':
+      typeForUtils = domWindowUtils.TOUCH_CANCEL;
+      break;
+    case 'touchmove':
+      typeForUtils = domWindowUtils.TOUCH_CONTACT;
+      break;
+  }
+  domWindowUtils.sendNativeTouchPoint(identifier, typeForUtils,
+    Math.round(message.screenX * ratio), Math.round(message.screenY * ratio),
+    message.force, 90);
 }
 
 /**
@@ -709,10 +725,12 @@ function emitTouchEvent(type, touch) {
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
       if (index != null) {
-        sendSyncMessage("Marionette:emitTouchEvent", {index: index, type: type, id: touch.identifier,
-                                                      clientX: touch.clientX, clientY: touch.clientY,
-                                                      radiusX: touch.radiusX, radiusY: touch.radiusY,
-                                                      rotation: touch.rotationAngle, force: touch.force});
+        sendSyncMessage("Marionette:emitTouchEvent",
+          { index: index, type: type, id: touch.identifier,
+            clientX: touch.clientX, clientY: touch.clientY,
+            screenX: touch.screenX, screenY: touch.screenY,
+            radiusX: touch.radiusX, radiusY: touch.radiusY,
+            rotation: touch.rotationAngle, force: touch.force });
         return;
       }
     }

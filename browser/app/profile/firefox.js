@@ -1182,6 +1182,12 @@ pref("browser.tabs.remote.desktopbehavior", true);
 // This will require a restart.
 pref("security.sandbox.windows.log", false);
 
+// Controls whether the Windows NPAPI plugin process is sandboxed by default.
+// To get a different setting for a particular plugin replace "default", with
+// the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
+pref("dom.ipc.plugins.sandbox.default", false);
+pref("dom.ipc.plugins.sandbox.flash", false);
+
 #if defined(MOZ_CONTENT_SANDBOX)
 // This controls whether the Windows content process sandbox is using a more
 // strict sandboxing policy.  This will require a restart.
@@ -1803,7 +1809,14 @@ pref("dom.ipc.cpow.timeout", 500);
 // Enable e10s hang monitoring (slow script checking and plugin hang
 // detection).
 pref("dom.ipc.processHangMonitor", true);
+
+#ifdef DEBUG
+// Don't report hangs in DEBUG builds. They're too slow and often a
+// debugger is attached.
+pref("dom.ipc.reportProcessHangs", false);
+#else
 pref("dom.ipc.reportProcessHangs", true);
+#endif
 
 // Disable reader mode by default.
 pref("reader.parse-on-load.enabled", false);
