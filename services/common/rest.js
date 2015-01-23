@@ -458,6 +458,7 @@ RESTRequest.prototype = {
     if (!statusSuccess) {
       let message = Components.Exception("", statusCode).name;
       let error = Components.Exception(message, statusCode);
+      this._log.debug(this.method + " " + uri + " failed: " + statusCode + " - " + message);
       this.onComplete(error);
       this.onComplete = this.onProgress = null;
       return;
