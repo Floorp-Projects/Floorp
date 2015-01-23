@@ -491,7 +491,8 @@ RtspMediaResource::RtspMediaResource(MediaDecoder* aDecoder,
     nsIChannel* aChannel, nsIURI* aURI, const nsACString& aContentType)
   : BaseMediaResource(aDecoder, aChannel, aURI, aContentType)
   , mIsConnected(false)
-  , mRealTime(false)
+  , mIsLiveStream(false)
+  , mHasTimestamp(true)
   , mIsSuspend(true)
 {
 #ifndef NECKO_PROTOCOL_rtsp
@@ -639,9 +640,6 @@ RtspMediaResource::OnMediaDataAvailable(uint8_t aTrackIdx,
   uint32_t frameType;
   meta->GetTimeStamp(&time);
   meta->GetFrameType(&frameType);
-  if (mRealTime) {
-    time = 0;
-  }
   mTrackBuffer[aTrackIdx]->WriteBuffer(data.BeginReading(), length, time,
                                        frameType);
   return NS_OK;
@@ -727,7 +725,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
   // If the durationUs is 0, imply the stream is live stream.
   if (durationUs) {
     // Not live stream.
-    mRealTime = false;
+    mIsLiveStream = false;
     mDecoder->SetInfinite(false);
     mDecoder->SetDuration((double)(durationUs) / USECS_PER_S);
   } else {
@@ -740,7 +738,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
       NS_DispatchToMainThread(event);
       return NS_ERROR_FAILURE;
     } else {
-      mRealTime = true;
+      mIsLiveStream = true;
       bool seekable = false;
       mDecoder->SetInfinite(true);
       mDecoder->SetMediaSeekable(seekable);

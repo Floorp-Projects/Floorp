@@ -233,6 +233,9 @@ struct RtspConnectionHandler : public AHandler {
     }
 
     void pause() {
+        if (!mSeekable) {
+            return;
+        }
         AString request = "PAUSE ";
         request.append(mSessionURL);
         request.append(" RTSP/1.0\r\n");
