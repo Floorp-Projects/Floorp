@@ -108,10 +108,7 @@ function DBConn(aForceNewConnection) {
     let dbConn = gDBConn = Services.storage.openDatabase(file);
 
     // Be sure to cleanly close this connection.
-    Services.obs.addObserver(function DBCloseCallback(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(DBCloseCallback, aTopic);
-      dbConn.asyncClose();
-    }, "profile-before-change", false);
+    promiseTopicObserved("profile-before-change").then(() => dbConn.asyncClose());
   }
 
   return gDBConn.connectionReady ? gDBConn : null;
@@ -379,15 +376,12 @@ function check_no_bookmarks() {
  */
 function promiseTopicObserved(aTopic)
 {
-  let deferred = Promise.defer();
-
-  Services.obs.addObserver(
-    function PTO_observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(PTO_observe, aTopic);
-      deferred.resolve([aSubject, aData]);
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observe(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(observe, aTopic);
+      resolve([aSubject, aData]);
     }, aTopic, false);
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -606,10 +600,7 @@ function is_time_ordered(before, after) {
  */
 function waitForConnectionClosed(aCallback)
 {
-  Services.obs.addObserver(function WFCCCallback() {
-    Services.obs.removeObserver(WFCCCallback, "places-connection-closed");
-    aCallback();
-  }, "places-connection-closed", false);
+  promiseTopicObserved("places-connection-closed").then(aCallback);
   shutdownPlaces();
 }
 
