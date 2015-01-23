@@ -66,26 +66,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'd3d9/Nv3DVUtils.cpp',
         ]
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
-        EXPORTS += [
-            'd3d10/LayerManagerD3D10.h',
-            'd3d10/ReadbackManagerD3D10.h',
-        ]
         EXPORTS.mozilla.layers += [
             'd3d11/CompositorD3D11.h',
             'd3d11/ReadbackManagerD3D11.h',
             'd3d11/TextureD3D11.h',
-            'ipc/ShadowLayerUtilsD3D10.h',
         ]
         UNIFIED_SOURCES += [
-            'd3d10/CanvasLayerD3D10.cpp',
-            'd3d10/ColorLayerD3D10.cpp',
-            'd3d10/ContainerLayerD3D10.cpp',
-            'd3d10/ImageLayerD3D10.cpp',
-            'd3d10/LayerManagerD3D10.cpp',
-            'd3d10/PaintedLayerD3D10.cpp',
-            'd3d10/ReadbackManagerD3D10.cpp',
             'd3d11/TextureD3D11.cpp',
-            'ipc/ShadowLayerUtilsD3D10.cpp',
         ]
         SOURCES += [
             'd3d11/CompositorD3D11.cpp',
