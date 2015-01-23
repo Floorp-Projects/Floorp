@@ -87,9 +87,6 @@
 #include "nsSHistory.h"
 #include "nsDocShellEditorData.h"
 #include "GeckoProfiler.h"
-#ifdef MOZ_ENABLE_PROFILER_SPS
-#include "ProfilerMarkers.h"
-#endif
 
 // Helper Classes
 #include "nsError.h"
@@ -2859,7 +2856,6 @@ unsigned long nsDocShell::gProfileTimelineRecordingsCount = 0;
 NS_IMETHODIMP
 nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 {
-#ifdef MOZ_ENABLE_PROFILER_SPS
   bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
   if (currentValue != aValue) {
     if (aValue) {
@@ -2875,9 +2871,6 @@ nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
   }
 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 NS_IMETHODIMP
@@ -2891,7 +2884,6 @@ nsresult
 nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
                           JS::MutableHandle<JS::Value> aProfileTimelineMarkers)
 {
-#ifdef MOZ_ENABLE_PROFILER_SPS
   // Looping over all markers gathered so far at the docShell level, whenever a
   // START marker is found, look for the corresponding END marker and build a
   // {name,start,end} JS object.
@@ -2993,9 +2985,6 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
   }
 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 nsresult
@@ -3010,33 +2999,27 @@ void
 nsDocShell::AddProfileTimelineMarker(const char* aName,
                                      TracingMetadata aMetaData)
 {
-#ifdef MOZ_ENABLE_PROFILER_SPS
   if (mProfileTimelineRecording) {
     TimelineMarker* marker = new TimelineMarker(this, aName, aMetaData);
     mProfileTimelineMarkers.AppendElement(marker);
   }
-#endif
 }
 
 void
 nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>& aMarker)
 {
-#ifdef MOZ_ENABLE_PROFILER_SPS
   if (mProfileTimelineRecording) {
     mProfileTimelineMarkers.AppendElement(aMarker.release());
   }
-#endif
 }
 
 void
 nsDocShell::ClearProfileTimelineMarkers()
 {
-#ifdef MOZ_ENABLE_PROFILER_SPS
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
     delete mProfileTimelineMarkers[i];
   }
   mProfileTimelineMarkers.Clear();
-#endif
 }
 
 nsIDOMStorageManager*
@@ -8233,14 +8216,6 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
 
     SetHistoryEntry(&mLSHE, aSHEntry);
 
-    // Add the request to our load group.  We do this before swapping out
-    // the content viewers so that consumers of STATE_START can access
-    // the old document.  We only deal with the toplevel load at this time --
-    // to be consistent with normal document loading, subframes cannot start
-    // loading until after data arrives, which is after STATE_START completes.
-
-    BeginRestore(viewer, true);
-
     // Post an event that will remove the request after we've returned
     // to the event loop.  This mimics the way it is called by nsIChannel
     // implementations.
@@ -8262,10 +8237,40 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
     return rv;
 }
 
+namespace {
+class MOZ_STACK_CLASS PresentationEventForgetter
+{
+public:
+  explicit PresentationEventForgetter(
+    nsRevocableEventPtr<nsDocShell::RestorePresentationEvent>& aRestorePresentationEvent)
+  : mRestorePresentationEvent(aRestorePresentationEvent)
+  , mEvent(aRestorePresentationEvent.get())
+  {
+  }
+
+  ~PresentationEventForgetter()
+  {
+    Forget();
+  }
+
+  void Forget()
+  {
+    if (mRestorePresentationEvent.get() == mEvent) {
+      mRestorePresentationEvent.Forget();
+      mEvent = nullptr;
+    }
+  }
+private:
+  nsRevocableEventPtr<nsDocShell::RestorePresentationEvent>& mRestorePresentationEvent;
+  nsRefPtr<nsDocShell::RestorePresentationEvent> mEvent;
+};
+}
+
 nsresult
 nsDocShell::RestoreFromHistory()
 {
-    mRestorePresentationEvent.Forget();
+    MOZ_ASSERT(mRestorePresentationEvent.IsPending());
+    PresentationEventForgetter forgetter(mRestorePresentationEvent);
 
     // This section of code follows the same ordering as CreateContentViewer.
     if (!mLSHE)
@@ -8318,6 +8323,24 @@ nsDocShell::RestoreFromHistory()
     // something else was loaded.  Don't finish restoring.
     if (mLSHE != origLSHE)
       return NS_OK;
+
+    // Add the request to our load group.  We do this before swapping out
+    // the content viewers so that consumers of STATE_START can access
+    // the old document.  We only deal with the toplevel load at this time --
+    // to be consistent with normal document loading, subframes cannot start
+    // loading until after data arrives, which is after STATE_START completes.
+
+    nsRefPtr<RestorePresentationEvent> currentPresentationRestoration =
+      mRestorePresentationEvent.get();
+    Stop();
+    // Make sure we're still restoring the same presentation.
+    // If we aren't, docshell is in process doing another load already.
+    NS_ENSURE_STATE(currentPresentationRestoration ==
+                    mRestorePresentationEvent.get());
+    BeginRestore(viewer, true);
+    NS_ENSURE_STATE(currentPresentationRestoration ==
+                    mRestorePresentationEvent.get());
+    forgetter.Forget();
 
     // Set mFiredUnloadEvent = false so that the unload handler for the
     // *new* document will fire.

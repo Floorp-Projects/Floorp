@@ -444,34 +444,67 @@ AbstractCanvasGraph.prototype = {
   },
 
   /**
+   * Sets the selection bounds, scaled to correlate with the data source ranges,
+   * such that a [0, max width] selection maps to [first value, last value].
+   *
+   * @param object selection
+   *        The selection's { start, end } values.
+   * @param object { mapStart, mapEnd } mapping [optional]
+   *        Invoked when retrieving the numbers in the data source representing
+   *        the first and last values, on the X axis.
+   */
+  setMappedSelection: function(selection, mapping = {}) {
+    if (!this.hasData()) {
+      throw "A data source is necessary for retrieving a mapped selection.";
+    }
+    if (!selection || selection.start == null || selection.end == null) {
+      throw "Invalid selection coordinates";
+    }
+
+    let { mapStart, mapEnd } = mapping;
+    let startTime = (mapStart || (e => e.delta))(this._data[0]);
+    let endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
+
+    // The selection's start and end values are not guaranteed to be ascending.
+    // Also make sure that the selection bounds fit inside the data bounds.
+    let min = Math.max(Math.min(selection.start, selection.end), startTime);
+    let max = Math.min(Math.max(selection.start, selection.end), endTime);
+    min = map(min, startTime, endTime, 0, this._width);
+    max = map(max, startTime, endTime, 0, this._width);
+
+    this.setSelection({ start: min, end: max });
+  },
+
+  /**
    * Gets the selection bounds, scaled to correlate with the data source ranges,
    * such that a [0, max width] selection maps to [first value, last value].
    *
-   * @param function unpack [optional]
+   * @param object { mapStart, mapEnd } mapping [optional]
    *        Invoked when retrieving the numbers in the data source representing
-   *        the first and last values, on the X axis. Currently, all graphs
-   *        store this in a "delta" property for all entries, but in the future
-   *        this may change as new graphs with different data source format
-   *        requirements are implemented.
+   *        the first and last values, on the X axis.
    * @return object
    *         The mapped selection's { min, max } values.
    */
-  getMappedSelection: function(unpack = e => e.delta) {
-    if (!this.hasData() || !this.hasSelection()) {
+  getMappedSelection: function(mapping = {}) {
+    if (!this.hasData()) {
+      throw "A data source is necessary for retrieving a mapped selection.";
+    }
+    if (!this.hasSelection() && !this.hasSelectionInProgress()) {
       return { min: null, max: null };
     }
-    let selection = this.getSelection();
-    let totalTicks = this._data.length;
-    let firstTick = unpack(this._data[0]);
-    let lastTick = unpack(this._data[totalTicks - 1]);
+
+    let { mapStart, mapEnd } = mapping;
+    let startTime = (mapStart || (e => e.delta))(this._data[0]);
+    let endTime = (mapEnd || (e => e.delta))(this._data[this._data.length - 1]);
 
     // The selection's start and end values are not guaranteed to be ascending.
     // This can happen, for example, when click & dragging from right to left.
     // Also make sure that the selection bounds fit inside the canvas bounds.
+    let selection = this.getSelection();
     let min = Math.max(Math.min(selection.start, selection.end), 0);
     let max = Math.min(Math.max(selection.start, selection.end), this._width);
-    min = map(min, 0, this._width, firstTick, lastTick);
-    max = map(max, 0, this._width, firstTick, lastTick);
+    min = map(min, 0, this._width, startTime, endTime);
+    max = map(max, 0, this._width, startTime, endTime);
 
     return { min: min, max: max };
   },
@@ -1226,8 +1259,13 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   dataOffsetX: 0,
 
   /**
-   * The scalar used to multiply the graph values to leave some headroom
-   * on the top.
+   * Optionally uses this value instead of the last tick in the data source
+   * to compute the horizontal scaling.
+   */
+  dataDuration: 0,
+
+  /**
+   * The scalar used to multiply the graph values to leave some headroom.
    */
   dampenValuesFactor: LINE_GRAPH_DAMPEN_VALUES,
 
@@ -1297,7 +1335,8 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       avgValue = sumValues / totalTicks;
     }
 
-    let dataScaleX = this.dataScaleX = width / (lastTick - this.dataOffsetX);
+    let duration = this.dataDuration || lastTick;
+    let dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
     let dataScaleY = this.dataScaleY = height / maxValue * this.dampenValuesFactor;
 
     // Draw the background.

@@ -98,24 +98,21 @@ Waterfall.prototype = {
   /**
    * Populates this view with the provided data source.
    *
-   * @param array markers
-   *        A list of markers received from the controller.
-   * @param number timeEpoch
-   *        The absolute time (in milliseconds) when the recording started.
-   * @param number startTime
-   *        The time (in milliseconds) to start drawing from.
-   * @param number endTime
-   *        The time (in milliseconds) to end drawing at.
+   * @param object data
+   *        An object containing the following properties:
+   *          - markers: a list of markers received from the controller
+   *          - interval: the { startTime, endTime }, in milliseconds
    */
-  setData: function(markers, timeEpoch, startTime, endTime) {
+  setData: function({ markers, interval }) {
     this.clearView();
     this._markers = markers;
+    this._interval = interval;
 
+    let { startTime, endTime } = interval;
     let dataScale = this._waterfallWidth / (endTime - startTime);
     this._drawWaterfallBackground(dataScale);
 
-    // Label the header as if the first possible marker was at T=0.
-    this._buildHeader(this._headerContents, startTime - timeEpoch, dataScale);
+    this._buildHeader(this._headerContents, startTime, dataScale);
     this._buildMarkers(this._listContents, markers, startTime, endTime, dataScale);
     this.selectRow(this._selectedRowIdx);
   },
@@ -226,13 +223,13 @@ Waterfall.prototype = {
     });
 
     for (let x = 0; x < this._waterfallWidth; x += tickInterval) {
-      let start = x + direction * WATERFALL_HEADER_TEXT_PADDING;
-      let time = Math.round(startTime + x / dataScale);
+      let left = x + direction * WATERFALL_HEADER_TEXT_PADDING;
+      let time = Math.round(x / dataScale + startTime);
       let label = this._l10n.getFormatStr("timeline.tick", time);
 
       let node = this._document.createElement("label");
       node.className = "plain waterfall-header-tick";
-      node.style.transform = "translateX(" + (start - offset) + "px)";
+      node.style.transform = "translateX(" + (left - offset) + "px)";
       node.setAttribute("value", label);
       ticks.appendChild(node);
     }
@@ -256,6 +253,7 @@ Waterfall.prototype = {
 
     for (let marker of markers) {
       markerIdx++;
+
       if (!isMarkerInRange(marker, startTime, endTime)) {
         continue;
       }
@@ -281,9 +279,9 @@ Waterfall.prototype = {
     }
     // Otherwise prepare flushing the outstanding markers after a small delay.
     else {
-      this._setNamedTimeout("flush-outstanding-markers",
-        WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY,
-        () => this._buildOutstandingMarkers(parent));
+      let delay = WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY;
+      let func = () => this._buildOutstandingMarkers(parent);
+      this._setNamedTimeout("flush-outstanding-markers", delay, func);
     }
 
     parent.appendChild(this._fragment);
@@ -353,7 +351,6 @@ Waterfall.prototype = {
    *        Index of the row to select. -1 clears the selection.
    */
   selectRow: function(idx) {
-    // Unselect
     let prev = this._listContents.children[this._selectedRowIdx];
     if (prev) {
       prev.classList.remove("selected");
@@ -365,6 +362,7 @@ Waterfall.prototype = {
     if (row && !row.hasAttribute("is-spacer")) {
       row.focus();
       row.classList.add("selected");
+
       let markerIdx = row.getAttribute("markerIdx");
       this.emit("selected", this._markers[markerIdx]);
       this.ensureRowIsVisible(row);
@@ -487,9 +485,9 @@ Waterfall.prototype = {
     bar.className = "waterfall-marker-bar";
     bar.style.backgroundColor = blueprint.fill;
     bar.style.borderColor = blueprint.stroke;
+    bar.style.transform = "translateX(" + (start - offset) + "px)";
     // Save border color. It will change when marker is selected.
     bar.setAttribute("borderColor", blueprint.stroke);
-    bar.style.transform = "translateX(" + (start - offset) + "px)";
     bar.setAttribute("type", marker.name);
     bar.setAttribute("width", Math.max(width, WATERFALL_MARKER_BAR_WIDTH_MIN));
     waterfall.appendChild(bar);

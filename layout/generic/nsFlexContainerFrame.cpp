@@ -292,6 +292,24 @@ public:
   nscoord GetCrossSize() const     { return mCrossSize;  }
   nscoord GetCrossPosition() const { return mCrossPosn; }
 
+  nscoord ResolvedAscent() const {
+    if (mAscent == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      // XXXdholbert We should probably be using the *container's* writing-mode
+      // here, instead of the item's -- though it doesn't much matter right
+      // now, because all of the baseline-handling code here essentially
+      // assumes that the container & items have the same writing-mode. This
+      // will matter more (& can be expanded/tested) once we officially support
+      // logical directions & vertical writing-modes in flexbox, in bug 1079155
+      // or a dependency.
+      WritingMode wm = mFrame->GetWritingMode();
+      // Use GetFirstLineBaseline(), or just GetBaseline() if that fails.
+      if (!nsLayoutUtils::GetFirstLineBaseline(wm, mFrame, &mAscent)) {
+        mAscent = mFrame->GetLogicalBaseline(wm);
+      }
+    }
+    return mAscent;
+  }
+
   // Convenience methods to compute the main & cross size of our *margin-box*.
   // The caller is responsible for telling us the right axis, so that we can
   // pull out the appropriate components of our margin/border/padding structs.
@@ -531,8 +549,15 @@ public:
     mCrossPosn = aPosn;
   }
 
-  void SetAscent(nscoord aAscent) {
-    mAscent = aAscent;
+  // After a FlexItem has had a reflow, this method can be used to cache its
+  // (possibly-unresolved) ascent, in case it's needed later for
+  // baseline-alignment or to establish the container's baseline.
+  // (NOTE: This can be marked 'const' even though it's modifying mAscent,
+  // because mAscent is mutable. It's nice for this to be 'const', because it
+  // means our final reflow can iterate over const FlexItem pointers, and we
+  // can be sure it's not modifying those FlexItems, except via this method.)
+  void SetAscent(nscoord aAscent) const {
+    mAscent = aAscent; // NOTE: this may be ASK_FOR_BASELINE
   }
 
   void SetHadMeasuringReflow() {
@@ -586,7 +611,8 @@ protected:
   nscoord mMainPosn;
   nscoord mCrossSize;
   nscoord mCrossPosn;
-  nscoord mAscent;
+  mutable nscoord mAscent; // Mutable b/c it's set & resolved lazily, sometimes
+                           // via const pointer. See comment above SetAscent().
 
   // Temporary state, while we're resolving flexible widths (for our main size)
   // XXXdholbert To save space, we could use a union to make these variables
@@ -1423,6 +1449,14 @@ nsFlexContainerFrame::
 
   aFlexItem.SetHadMeasuringReflow();
 
+  // If this is the first child, save its ascent, since it may be what
+  // establishes the container's baseline. Also save the ascent if this child
+  // needs to be baseline-aligned. (Else, we don't care about ascent/baseline.)
+  if (aFlexItem.Frame() == mFrames.FirstChild() ||
+      aFlexItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
+    aFlexItem.SetAscent(childDesiredSize.BlockStartAscent());
+  }
+
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
   nscoord childDesiredHeight = childDesiredSize.Height() -
@@ -1584,7 +1618,7 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
 
   mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[aCrossAxis][aEdge];
 
-  nscoord marginTopToBaseline = mAscent + mMargin.top;
+  nscoord marginTopToBaseline = ResolvedAscent() + mMargin.top;
 
   if (sideToMeasureFrom == eSideTop) {
     // Measuring from top (normal case): the distance from the margin-box top
@@ -3217,25 +3251,6 @@ FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
   }
 }
 
-// Helper method to take care of children who ASK_FOR_BASELINE, when
-// we need their baseline.
-static void
-ResolveReflowedChildAscent(nsIFrame* aFrame,
-                           nsHTMLReflowMetrics& aChildDesiredSize)
-{
-  WritingMode wm = aChildDesiredSize.GetWritingMode();
-  if (aChildDesiredSize.BlockStartAscent() ==
-      nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    // Use GetFirstLineBaseline(), or just GetBaseline() if that fails.
-    nscoord ascent;
-    if (nsLayoutUtils::GetFirstLineBaseline(wm, aFrame, &ascent)) {
-      aChildDesiredSize.SetBlockStartAscent(ascent);
-    } else {
-      aChildDesiredSize.SetBlockStartAscent(aFrame->GetLogicalBaseline(wm));
-    }
-  }
-}
-
 /**
  * Given the flex container's "logical ascent" (i.e. distance from the
  * flex container's content-box cross-start edge to its baseline), returns
@@ -3331,9 +3346,11 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(childDesiredSize.Height() - crossAxisBorderPadding);
   }
 
-  // If we need to do baseline-alignment, store the child's ascent.
-  if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
-    ResolveReflowedChildAscent(aItem.Frame(), childDesiredSize);
+  // If this is the first child, save its ascent, since it may be what
+  // establishes the container's baseline. Also save the ascent if this child
+  // needs to be baseline-aligned. (Else, we don't care about baseline/ascent.)
+  if (aItem.Frame() == mFrames.FirstChild() ||
+      aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
     aItem.SetAscent(childDesiredSize.BlockStartAscent());
   }
 }
@@ -3662,6 +3679,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       LogicalPoint framePos(outerWM, physicalPosn,
                             containerWidth - item->Frame()->GetRect().width);
 
+      // (Intentionally snapshotting this before ApplyRelativePositioning, to
+      // maybe use for setting the flex container's baseline.)
+      const nscoord itemNormalBPos = framePos.B(outerWM);
+
       WritingMode wm = item->Frame()->GetWritingMode();
       LogicalSize availSize = aReflowState.ComputedSize(wm);
       availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
@@ -3741,20 +3762,25 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                         childDesiredSize, &childReflowState,
                         outerWM, framePos, containerWidth, 0);
 
+      // Save the first child's ascent; it may establish container's baseline.
+      if (item->Frame() == mFrames.FirstChild()) {
+        // XXXdholbert (This clause may look a bit odd right now, split as it
+        // is from the code immediately after it, which *uses* |item|'s saved
+        // ascent. It may superficially look like these clauses should just be
+        // merged. The separation will make more sense once we change this flex
+        // item's final reflow to be *optional*, in bug 1054010. That bug will
+        // shift *this* clause to a different logic level -- conditional on
+        // whether |item| needs a final reflow -- whereas the subsequent clause
+        // will not be shifted.)
+        item->SetAscent(childDesiredSize.BlockStartAscent());
+      }
+
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
       // children), then use this child's baseline as the container's baseline.
       if (item->Frame() == mFrames.FirstChild() &&
           flexContainerAscent == nscoord_MIN) {
-        ResolveReflowedChildAscent(item->Frame(), childDesiredSize);
-
-        // (We use GetNormalPosition() instead of physicalPosn because we don't
-        // want relative positioning on the child to affect the baseline that we
-        // read from it).
-        flexContainerAscent = item->Frame()->GetLogicalNormalPosition(
-                                outerWM,
-                                childDesiredSize.Width()).B(outerWM) +
-                              childDesiredSize.BlockStartAscent();
+        flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
       }
     }
   }

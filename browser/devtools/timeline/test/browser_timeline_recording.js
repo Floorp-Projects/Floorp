@@ -16,6 +16,8 @@ add_task(function*() {
     "The timeline actor should not be recording when the tool starts.");
   is(TimelineController.getMarkers().length, 0,
     "There should be no markers available when the tool starts.");
+  is(TimelineController.getMemory().length, 0,
+    "There should be no memory measurements available when the tool starts.");
 
   yield TimelineController.toggleRecording();
 
@@ -25,6 +27,10 @@ add_task(function*() {
     "There are some markers available now.");
   ok((yield waitUntil(() => TimelineController.getMemory().length > 0)),
     "There are some memory measurements available now.");
+
+  info("Interval: " + TimelineController.getInterval().toSource());
+  info("Markers: " + TimelineController.getMarkers().toSource());
+  info("Memory: " + TimelineController.getMemory().toSource());
 
   ok("startTime" in TimelineController.getInterval(),
     "A `startTime` field was set on the recording data.");

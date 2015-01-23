@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525816
   (function() {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.requestLongerTimeout(TestRequests.length);
-    SimpleTest.requestFlakyTimeout("untriaged");
+    SimpleTest.requestFlakyTimeout("This is testing XHR timeouts.");
     var msg = "This test will take approximately " + (TestRequests.length * 10)
     msg += " seconds to complete, at most.";
     document.getElementById("content").firstChild.nodeValue = msg;

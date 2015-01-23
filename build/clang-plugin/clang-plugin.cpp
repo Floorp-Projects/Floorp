@@ -74,12 +74,18 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NoAddRefReleaseOnReturnChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
   NaNExprChecker nanExprChecker;
+  NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
   MatchFinder astMatcher;
 };
 
@@ -389,6 +395,12 @@ AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return MozChecker::hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
 }
 
+/// This matcher will match any function declaration that is marked to prohibit
+/// calling AddRef or Release on its return value.
+AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
+  return MozChecker::hasCustomAnnotation(&Node, "moz_no_addref_release_on_return");
+}
+
 /// This matcher will match all arithmetic binary operators.
 AST_MATCHER(BinaryOperator, binaryArithmeticOperator) {
   BinaryOperatorKind opcode = Node.getOpcode();
@@ -456,6 +468,17 @@ AST_MATCHER(BinaryOperator, isInSkScalarDotH) {
   auto &SourceManager = Finder->getASTContext().getSourceManager();
   SmallString<1024> FileName = SourceManager.getFilename(Loc);
   return llvm::sys::path::rbegin(FileName)->equals("SkScalar.h");
+}
+
+/// This matcher will match all accesses to AddRef or Release methods.
+AST_MATCHER(MemberExpr, isAddRefOrRelease) {
+  ValueDecl *Member = Node.getMemberDecl();
+  CXXMethodDecl *Method = dyn_cast<CXXMethodDecl>(Member);
+  if (Method) {
+    std::string Name = Method->getNameAsString();
+    return Name == "AddRef" || Name == "Release";
+  }
+  return false;
 }
 
 }
@@ -548,6 +571,12 @@ DiagnosticsMatcher::DiagnosticsMatcher()
           unless(anyOf(isInSystemHeader(), isInSkScalarDotH()))
       )).bind("node"),
     &nanExprChecker);
+
+  astMatcher.addMatcher(callExpr(callee(functionDecl(hasNoAddRefReleaseOnReturnAttr()).bind("func")),
+                                 hasParent(memberExpr(isAddRefOrRelease(),
+                                                      hasParent(callExpr())).bind("member")
+      )).bind("node"),
+    &noAddRefReleaseOnReturnChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -731,6 +760,19 @@ void DiagnosticsMatcher::NaNExprChecker::run(
     Diag.Report(expr->getLocStart(), errorID);
     Diag.Report(expr->getLocStart(), noteID);
   }
+}
+
+void DiagnosticsMatcher::NoAddRefReleaseOnReturnChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "%1 cannot be called on the return value of %0");
+  const Stmt *node = Result.Nodes.getNodeAs<Stmt>("node");
+  const FunctionDecl *func = Result.Nodes.getNodeAs<FunctionDecl>("func");
+  const MemberExpr *member = Result.Nodes.getNodeAs<MemberExpr>("member");
+  const CXXMethodDecl *method = dyn_cast<CXXMethodDecl>(member->getMemberDecl());
+
+  Diag.Report(node->getLocStart(), errorID) << func << method;
 }
 
 class MozCheckAction : public PluginASTAction {

@@ -24,14 +24,14 @@ using mozilla::AutoSafeJSContext;
 
 //*****************************************************************************
 
-static mozilla::Maybe<JS::PersistentRooted<JSObject *> > autoconfigSb;
+static JS::PersistentRooted<JSObject *> autoconfigSb;
 
 nsresult CentralizedAdminPrefManagerInit()
 {
     nsresult rv;
 
     // If the sandbox is already created, no need to create it again.
-    if (autoconfigSb)
+    if (autoconfigSb.initialized())
         return NS_OK;
 
     // Grab XPConnect.
@@ -53,14 +53,14 @@ nsresult CentralizedAdminPrefManagerInit()
 
     // Unwrap, store and root the sandbox.
     NS_ENSURE_STATE(sandbox->GetJSObject());
-    autoconfigSb.emplace(cx, js::UncheckedUnwrap(sandbox->GetJSObject()));
+    autoconfigSb.init(cx, js::UncheckedUnwrap(sandbox->GetJSObject()));
 
     return NS_OK;
 }
 
 nsresult CentralizedAdminPrefManagerFinish()
 {
-    if (autoconfigSb) {
+    if (autoconfigSb.initialized()) {
         AutoSafeJSContext cx;
         autoconfigSb.reset();
         JS_MaybeGC(cx);
@@ -103,12 +103,12 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     }
 
     AutoSafeJSContext cx;
-    JSAutoCompartment ac(cx, *autoconfigSb);
+    JSAutoCompartment ac(cx, autoconfigSb);
 
     nsAutoCString script(js_buffer, length);
     JS::RootedValue v(cx);
     rv = xpc->EvalInSandboxObject(NS_ConvertASCIItoUTF16(script), filename, cx,
-                                  *autoconfigSb, &v);
+                                  autoconfigSb, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

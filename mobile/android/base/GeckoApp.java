@@ -127,14 +127,6 @@ public abstract class GeckoApp
     SensorEventListener,
     Tabs.OnTabsChangedListener {
 
-    protected GeckoApp() {
-        // We need to do this before any access to the profile; it controls
-        // which database class is used.
-        // We thus need to do this before our GeckoView is inflated, because
-        // GeckoView implicitly accesses the profile.
-        GeckoProfile.setBrowserDBFactory(getBrowserDBFactory());
-    }
-
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
@@ -237,8 +229,6 @@ public abstract class GeckoApp
     public SharedPreferences getSharedPreferences() {
         return GeckoSharedPrefs.forApp(this);
     }
-
-    protected abstract BrowserDB.Factory getBrowserDBFactory();
 
     @Override
     public Activity getActivity() {

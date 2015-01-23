@@ -353,6 +353,7 @@ struct BaselineScript
     ICEntry &icEntryFromPCOffset(uint32_t pcOffset);
     ICEntry &icEntryFromPCOffset(uint32_t pcOffset, ICEntry *prevLookedUpEntry);
     ICEntry &callVMEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry &stackCheckICEntry(bool earlyCheck);
     ICEntry &icEntryFromReturnAddress(uint8_t *returnAddr);
     uint8_t *returnAddressForIC(const ICEntry &ent);
 

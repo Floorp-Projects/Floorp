@@ -221,6 +221,8 @@ public final class GeckoProfile {
             // It's a bit of a broken abstraction, but very tightly coupled, so we work around it
             // for now. We can't just have GeckoView set this, because then it would collide in
             // Fennec's use of GeckoView.
+            // We should never see this in Fennec itself, because GeckoApplication sets the factory
+            // in onCreate.
             Log.d(LOGTAG, "Defaulting to StubBrowserDB.");
             sDBFactory = StubBrowserDB.getFactory();
         }
