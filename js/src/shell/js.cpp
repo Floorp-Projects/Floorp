@@ -1651,8 +1651,21 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ConvertArguments(cx, args, "/ i", &gExitCode);
+    int32_t code;
+    if (!ToInt32(cx, args.get(0), &code))
+        return false;
 
+    // The fuzzers check the shell's exit code and assume a value >= 128 means
+    // the process crashed (for instance, SIGSEGV will result in code 139). On
+    // POSIX platforms, the exit code is 8-bit and negative values can also
+    // result in an exit code >= 128. We restrict the value to range [0, 127] to
+    // avoid false positives.
+    if (code < 0 || code >= 128) {
+        JS_ReportError(cx, "quit exit code should be in range 0-127");
+        return false;
+    }
+
+    gExitCode = code;
     gQuitting = true;
     return false;
 }
