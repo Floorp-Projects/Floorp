@@ -70,13 +70,13 @@ const cases = [
   // yield in generator expressions
   { expr: "(for (x of []) yield 1)",         top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg in genexp" },
   { expr: "(for (x of []) yield 1, 2)",      top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2],  gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg in list in genexp" },
-  { expr: "(for (x of []) 1, yield 2)",      top: [PAREN_PAREN, 9999], fun: [PAREN_PAREN, 9999],  gen: [PAREN_PAREN, 9999], genexp: [PAREN_PAREN, 9999], desc: "yield w/ arg at end of list in genexp" },
+  { expr: "(for (x of []) 1, yield 2)",      top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1],  gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg at end of list in genexp" },
   { expr: "(for (x of []) (yield 1))",       top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (yield 2))",    top: [PAREN_PAREN, 9999], fun: [PAREN_PAREN, 9999], gen: [PAREN_PAREN, 9999], genexp: [PAREN_PAREN, 9999], desc: "yield w/ arg, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (yield 2))",    top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg, parenthesized in list in genexp" },
   { expr: "(for (x of []) (1, yield 2))",    top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (2, yield 3))", top: [PAREN_PAREN, 9999], fun: [PAREN_PAREN, 9999], gen: [PAREN_PAREN, 9999], genexp: [PAREN_PAREN, 9999], desc: "yield w/ arg at end of list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (2, yield 3))", top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg at end of list, parenthesized in list in genexp" },
   { expr: "(for (x of []) (yield 1, 2))",    top: [YIELD_PAREN, 2], fun: [YIELD_PAREN, 2], gen: [YIELD_PAREN, 2], genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (yield 2, 3))", top: [PAREN_PAREN, 9999], fun: [PAREN_PAREN, 9999], gen: [PAREN_PAREN, 9999], genexp: [PAREN_PAREN, 9999], desc: "yield w/ arg in list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (yield 2, 3))", top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg in list, parenthesized in list in genexp" },
 
   // deeply nested yield in generator expressions
   { expr: "(for (x of []) (((1, yield 2))))",               top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield in genexp" },
@@ -84,11 +84,11 @@ const cases = [
 
   // arguments in generator expressions
   { expr: "(for (x of []) arguments)",         top: null, fun: null, gen: null, genexp: null, desc: "simple arguments in genexp" },
-  { expr: "(for (x of []) 1, arguments)",      top: [BAD_GENERATOR_SYNTAX, 9999], fun: [BAD_GENERATOR_SYNTAX, 9999], gen: [BAD_GENERATOR_SYNTAX, 9999], genexp: [BAD_GENERATOR_SYNTAX, 9999], desc: "arguments in list in genexp" },
+  { expr: "(for (x of []) 1, arguments)",      top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments in list in genexp" },
   { expr: "(for (x of []) (arguments))",       top: null, fun: null, gen: null, genexp: null, desc: "arguments, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (arguments))",    top: [BAD_GENERATOR_SYNTAX, 9999], fun: [BAD_GENERATOR_SYNTAX, 9999], gen: [BAD_GENERATOR_SYNTAX, 9999], genexp: [BAD_GENERATOR_SYNTAX, 9999], desc: "arguments, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (arguments))",    top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments, parenthesized in list in genexp" },
   { expr: "(for (x of []) (1, arguments))",    top: null, fun: null, gen: null, genexp: null, desc: "arguments in list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (2, arguments))", top: [BAD_GENERATOR_SYNTAX, 9999], fun: [BAD_GENERATOR_SYNTAX, 9999], gen: [BAD_GENERATOR_SYNTAX, 9999], genexp: [BAD_GENERATOR_SYNTAX, 9999], desc: "arguments in list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (2, arguments))", top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments in list, parenthesized in list in genexp" },
 
   // deeply nested arguments in generator expressions
   { expr: "(for (x of []) (((1, arguments))))",               top: null, fun: null, gen: null, genexp: null, desc: "deeply nested arguments in genexp" },
@@ -115,8 +115,7 @@ function splitKeyword(str) {
 function expectError1(err, ctx, msg, lineNumber) {
   reportCompare('object', typeof err,     'exn for: ' + msg);
   reportCompare(ctx,      err.message,    'exn message for: ' + msg);
-  if (ctx !== BAD_GENERATOR_SYNTAX && ctx != PAREN_PAREN)
-      reportCompare(lineNumber,    err.lineNumber, 'exn token for: ' + msg);
+  reportCompare(lineNumber,    err.lineNumber, 'exn token for: ' + msg);
 }
 
 function expectError(expr, wrapCtx, [expect, lineNumber], msg) {
