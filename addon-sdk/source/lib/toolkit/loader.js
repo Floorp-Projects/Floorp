@@ -172,7 +172,14 @@ function serializeStack(frames) {
 exports.serializeStack = serializeStack;
 
 function readURI(uri) {
-  let stream = NetUtil.newChannel(uri, 'UTF-8', null).open();
+  let stream = NetUtil.newChannel2(uri,
+                                   'UTF-8',
+                                   null,
+                                   null,      // aLoadingNode
+                                   systemPrincipal,
+                                   null,      // aTriggeringPrincipal
+                                   Ci.nsILoadInfo.SEC_NORMAL,
+                                   Ci.nsIContentPolicy.TYPE_OTHER).open();
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, {
     charset: 'UTF-8'
