@@ -233,7 +233,7 @@ this.PlacesBackups = {
     let dateObj = aDateObj || new Date();
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
-      return "bookmarks-" + dateObj.toISOString().substr(0, 10) + ".json" +
+      return "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json" +
                             (aCompress ? "lz4" : "");
   },
 
