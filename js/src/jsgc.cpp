@@ -2537,8 +2537,8 @@ GCRuntime::updateAllCellPointersParallel(MovingTracer *trc)
 
     const size_t minTasks = 2;
     const size_t maxTasks = 8;
-    unsigned taskCount = Min(Max(HelperThreadState().cpuCount / 2, minTasks),
-                             maxTasks) + 1;
+    unsigned taskCount = Min(Max(HelperThreadState().cpuCount / 2, minTasks) + 1,
+                             maxTasks);
     UpdateCellPointersTask updateTasks[maxTasks];
 
     ArenasToUpdate fgArenas(rt, ArenasToUpdate::FOREGROUND);
