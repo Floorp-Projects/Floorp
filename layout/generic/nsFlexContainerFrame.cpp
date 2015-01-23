@@ -3848,14 +3848,6 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
 
   // Save the first child's ascent; it may establish container's baseline.
   if (aItem.Frame() == mFrames.FirstChild()) {
-    // XXXdholbert (This clause may look a bit odd right now, split as it
-    // is from the code immediately after it, which *uses* |item|'s saved
-    // ascent. It may superficially look like these clauses should just be
-    // merged. The separation will make more sense once we change this flex
-    // item's final reflow to be *optional*, in bug 1054010. That bug will
-    // shift *this* clause to a different logic level -- conditional on
-    // whether |item| needs a final reflow -- whereas the subsequent clause
-    // will not be shifted.)
     aItem.SetAscent(childDesiredSize.BlockStartAscent());
   }
 }
