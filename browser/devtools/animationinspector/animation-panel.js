@@ -329,6 +329,7 @@ PlayerWidget.prototype = {
     switch (state.playState) {
       case "finished":
         this.stopTimelineAnimation();
+        this.displayTime(this.player.state.duration);
         this.stopListeners();
         break;
       case "running":
@@ -379,10 +380,12 @@ PlayerWidget.prototype = {
   startTimelineAnimation: function() {
     this.stopTimelineAnimation();
 
+    let state = this.player.state;
+
     let start = performance.now();
     let loop = () => {
       this.rafID = requestAnimationFrame(loop);
-      let now = this.player.state.currentTime + performance.now() - start;
+      let now = state.currentTime + performance.now() - start;
       this.displayTime(now);
     };
 
@@ -401,13 +404,22 @@ PlayerWidget.prototype = {
       time = Math.max(0, time - state.delay);
     }
 
+    // For finite animations, make sure the displayed time does not go beyond
+    // the animation total duration (this may happen due to the local
+    // requestAnimationFrame loop).
+    if (state.iterationCount) {
+      time = Math.min(time, state.iterationCount * state.duration);
+    }
+
+    // Set the time label value.
     this.timeDisplayEl.textContent = L10N.getFormatStr("player.timeLabel",
       this.getFormattedTime(time));
+
+    // Set the timeline slider value.
     if (!state.iterationCount && time !== state.duration) {
-      this.currentTimeEl.value = time % state.duration;
-    } else {
-      this.currentTimeEl.value = time;
+      time = time % state.duration;
     }
+    this.currentTimeEl.value = time;
   },
 
   /**
