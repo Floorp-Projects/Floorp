@@ -193,18 +193,6 @@ HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-static bool
-IsNodeInEditableRegion(nsINode* aNode)
-{
-  while (aNode) {
-    if (aNode->IsEditable()) {
-      return true;
-    }
-    aNode = aNode->GetParent();
-  }
-  return false;
-}
-
 bool
 HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
                                    bool *aIsFocusable, int32_t *aTabIndex)
@@ -226,9 +214,7 @@ HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
     }
   }
 
-  // Links that are in an editable region should never be focusable, even if
-  // they are in a contenteditable="false" region.
-  if (IsNodeInEditableRegion(this)) {
+  if (IsEditable()) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
