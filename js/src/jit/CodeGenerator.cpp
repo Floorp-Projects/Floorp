@@ -1634,7 +1634,6 @@ CodeGenerator::visitRegExpReplace(LRegExpReplace *lir)
 }
 
 typedef JSString *(*StringReplaceFn)(JSContext *, HandleString, HandleString, HandleString);
-static const VMFunction StringFlatReplaceInfo = FunctionInfo<StringReplaceFn>(js::str_flat_replace_string);
 static const VMFunction StringReplaceInfo = FunctionInfo<StringReplaceFn>(StringReplace);
 
 void
@@ -1654,9 +1653,6 @@ CodeGenerator::visitStringReplace(LStringReplace *lir)
         pushArg(ImmGCPtr(lir->string()->toConstant()->toString()));
     else
         pushArg(ToRegister(lir->string()));
-
-    if (lir->mir()->isFlatReplacement())
-        return callVM(StringFlatReplaceInfo, lir);
 
     callVM(StringReplaceInfo, lir);
 }
@@ -5905,6 +5901,7 @@ CodeGenerator::visitStringSplit(LStringSplit *lir)
     pushArg(ToRegister(lir->separator()));
     pushArg(ToRegister(lir->string()));
     pushArg(ImmGCPtr(lir->mir()->typeObject()));
+
     callVM(StringSplitInfo, lir);
 }
 
