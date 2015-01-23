@@ -7552,7 +7552,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition *typedObj,
 
     types::TemporaryTypeSet *observedTypes = bytecodeTypes(pc);
 
-    MInstruction *load;
+    MInstruction *load = nullptr;  // initialize to silence GCC warning
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        typedObj, name, observedTypes);
 
@@ -11634,7 +11634,7 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition *typedObj,
     size_t alignment = ReferenceTypeDescr::alignment(type);
     loadTypedObjectElements(typedObj, byteOffset, alignment, &elements, &scaledOffset, &adjustment);
 
-    MInstruction *store;
+    MInstruction *store = nullptr;  // initialize to silence GCC warning
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
         if (NeedsPostBarrier(info(), value))
