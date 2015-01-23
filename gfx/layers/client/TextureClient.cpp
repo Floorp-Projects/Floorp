@@ -494,10 +494,10 @@ TextureClient::KeepUntilFullDeallocation(KeepAlive* aKeep)
   mActor->mKeep = aKeep;
 }
 
-void TextureClient::ForceRemove()
+void TextureClient::ForceRemove(bool sync)
 {
   if (mValid && mActor) {
-    if (GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
+    if (sync || GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
       if (mActor->IPCOpen()) {
         mActor->SendClearTextureHostSync();
         mActor->SendRemoveTexture();
