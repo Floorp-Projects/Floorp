@@ -503,10 +503,10 @@ TextureClient::KeepUntilFullDeallocation(KeepAlive* aKeep)
   mActor->mKeep = aKeep;
 }
 
-void TextureClient::ForceRemove()
+void TextureClient::ForceRemove(bool sync)
 {
   if (mValid && mActor) {
-    if (GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
+    if (sync || GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
       MOZ_PERFORMANCE_WARNING("gfx", "TextureClient/Host pair requires synchronous deallocation");
       if (mActor->IPCOpen()) {
         mActor->SendClearTextureHostSync();

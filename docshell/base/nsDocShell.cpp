@@ -8216,14 +8216,6 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
 
     SetHistoryEntry(&mLSHE, aSHEntry);
 
-    // Add the request to our load group.  We do this before swapping out
-    // the content viewers so that consumers of STATE_START can access
-    // the old document.  We only deal with the toplevel load at this time --
-    // to be consistent with normal document loading, subframes cannot start
-    // loading until after data arrives, which is after STATE_START completes.
-
-    BeginRestore(viewer, true);
-
     // Post an event that will remove the request after we've returned
     // to the event loop.  This mimics the way it is called by nsIChannel
     // implementations.
@@ -8245,10 +8237,40 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
     return rv;
 }
 
+namespace {
+class MOZ_STACK_CLASS PresentationEventForgetter
+{
+public:
+  explicit PresentationEventForgetter(
+    nsRevocableEventPtr<nsDocShell::RestorePresentationEvent>& aRestorePresentationEvent)
+  : mRestorePresentationEvent(aRestorePresentationEvent)
+  , mEvent(aRestorePresentationEvent.get())
+  {
+  }
+
+  ~PresentationEventForgetter()
+  {
+    Forget();
+  }
+
+  void Forget()
+  {
+    if (mRestorePresentationEvent.get() == mEvent) {
+      mRestorePresentationEvent.Forget();
+      mEvent = nullptr;
+    }
+  }
+private:
+  nsRevocableEventPtr<nsDocShell::RestorePresentationEvent>& mRestorePresentationEvent;
+  nsRefPtr<nsDocShell::RestorePresentationEvent> mEvent;
+};
+}
+
 nsresult
 nsDocShell::RestoreFromHistory()
 {
-    mRestorePresentationEvent.Forget();
+    MOZ_ASSERT(mRestorePresentationEvent.IsPending());
+    PresentationEventForgetter forgetter(mRestorePresentationEvent);
 
     // This section of code follows the same ordering as CreateContentViewer.
     if (!mLSHE)
@@ -8301,6 +8323,24 @@ nsDocShell::RestoreFromHistory()
     // something else was loaded.  Don't finish restoring.
     if (mLSHE != origLSHE)
       return NS_OK;
+
+    // Add the request to our load group.  We do this before swapping out
+    // the content viewers so that consumers of STATE_START can access
+    // the old document.  We only deal with the toplevel load at this time --
+    // to be consistent with normal document loading, subframes cannot start
+    // loading until after data arrives, which is after STATE_START completes.
+
+    nsRefPtr<RestorePresentationEvent> currentPresentationRestoration =
+      mRestorePresentationEvent.get();
+    Stop();
+    // Make sure we're still restoring the same presentation.
+    // If we aren't, docshell is in process doing another load already.
+    NS_ENSURE_STATE(currentPresentationRestoration ==
+                    mRestorePresentationEvent.get());
+    BeginRestore(viewer, true);
+    NS_ENSURE_STATE(currentPresentationRestoration ==
+                    mRestorePresentationEvent.get());
+    forgetter.Forget();
 
     // Set mFiredUnloadEvent = false so that the unload handler for the
     // *new* document will fire.

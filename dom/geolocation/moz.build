@@ -10,9 +10,12 @@ EXPORTS += [
     'nsGeoPositionIPCSerialiser.h',
 ]
 
+SOURCES += [
+    'nsGeolocation.cpp',
+]
+
 UNIFIED_SOURCES += [
     'nsGeoGridFuzzer.cpp',
-    'nsGeolocation.cpp',
     'nsGeolocationSettings.cpp',
     'nsGeoPosition.cpp',
 ]
@@ -45,4 +48,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
         '/dom/system/mac',
     ]
-
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '/dom/system/windows',
+    ]

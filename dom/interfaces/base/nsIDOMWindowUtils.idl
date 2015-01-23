@@ -664,8 +664,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * drag - msg1-n:TOUCH_CONTACT (moving), msgn+1:TOUCH_REMOVE
    * hover drag - msg1-n:TOUCH_HOVER (moving), msgn+1:TOUCH_REMOVE
    *
-   * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will
-   * throw.
+   * Widget support: Windows 8.0+, Winrt/Win32. Gonk supports CONTACT, REMOVE,
+   * and CANCEL but no HOVER. Other widgets will throw.
    *
    * @param aPointerId The touch point id to create or update.
    * @param aTouchState one or more of the touch states listed above

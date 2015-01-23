@@ -32,6 +32,7 @@
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "pkix/ScopedPtr.h"
+#include "pkixder.h"
 #include "secerr.h"
 #include "sslerr.h"
 
@@ -57,8 +58,41 @@ CheckPublicKeySize(Input subjectPublicKeyInfo, unsigned int minimumNonECCBits,
 
   switch (publicKey.get()->keyType) {
     case ecKey:
-      // TODO(bug 1077790): We should check which curve.
+    {
+      SECKEYECParams* encodedParams = &publicKey.get()->u.ec.DEREncodedParams;
+      if (!encodedParams) {
+        return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
+      }
+
+      Input input;
+      Result rv = input.Init(encodedParams->data, encodedParams->len);
+      if (rv != Success) {
+        return rv;
+      }
+
+      Reader reader(input);
+      NamedCurve namedCurve;
+      rv = der::NamedCurveOID(reader, namedCurve);
+      if (rv != Success) {
+        return rv;
+      }
+
+      rv = der::End(reader);
+      if (rv != Success) {
+        return rv;
+      }
+
+      switch (namedCurve) {
+        case NamedCurve::secp256r1: // fall through
+        case NamedCurve::secp384r1: // fall through
+        case NamedCurve::secp521r1:
+          break;
+        default:
+          return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
+      }
+
       return Success;
+    }
     case rsaKey:
       if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < minimumNonECCBits) {
         return Result::ERROR_INADEQUATE_KEY_SIZE;

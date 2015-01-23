@@ -12,7 +12,7 @@
 #include "mozilla/ipc/PTestShellCommandParent.h"
 
 #include "js/TypeDecls.h"
-#include "nsAutoJSValHolder.h"
+#include "js/RootingAPI.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -58,7 +58,7 @@ protected:
   }
 
 private:
-  nsAutoJSValHolder mCallback;
+  JS::PersistentRooted<JS::Value> mCallback;
 };
 
 

@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  </head>
+  <body onload="start()">
+    <div onfocus="done()" contenteditable>foo<div contenteditable="false"><a href="#">bar</a></div>baz</div>
+    <script>
+      var div = document.querySelector("div");
+      function start() {
+        div.focus();
+      }
+      function done() {
+        var sel = getSelection();
+        sel.collapse(div, 0);
+        // Press Right four times to set the caret right before "baz"
+        for (var i = 0; i < 5; ++i) {
+          synthesizeKey("VK_RIGHT", {});
+        }
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

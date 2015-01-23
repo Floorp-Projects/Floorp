@@ -1279,6 +1279,8 @@ class MConstant : public MNullaryInstruction
     INSTRUCTION_HEADER(Constant)
     static MConstant *New(TempAllocator &alloc, const Value &v,
                           types::CompilerConstraintList *constraints = nullptr);
+    static MConstant *NewTypedValue(TempAllocator &alloc, const Value &v, MIRType type,
+                                    types::CompilerConstraintList *constraints = nullptr);
     static MConstant *NewAsmJS(TempAllocator &alloc, const Value &v, MIRType type);
     static MConstant *NewConstraintlessObject(TempAllocator &alloc, JSObject *v);
 
@@ -5702,6 +5704,8 @@ class MMathFunction
     bool possiblyCalls() const MOZ_OVERRIDE {
         return true;
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
 
     void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 

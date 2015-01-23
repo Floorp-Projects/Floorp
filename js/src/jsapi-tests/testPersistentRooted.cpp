@@ -38,8 +38,15 @@ const JSClass BarkWhenTracedClass::class_ = {
 
 struct Kennel {
     PersistentRootedObject obj;
+    Kennel() { }
     explicit Kennel(JSContext *cx) : obj(cx) { }
     Kennel(JSContext *cx, const HandleObject &woof) : obj(cx, woof) { }
+    void init(JSContext *cx, const HandleObject &woof) {
+        obj.init(cx, woof);
+    }
+    void clear() {
+        obj = nullptr;
+    }
 };
 
 // A function for allocating a Kennel and a barker. Only allocating
@@ -178,3 +185,35 @@ BEGIN_TEST(test_PersistentRootedAssign)
     return true;
 }
 END_TEST(test_PersistentRootedAssign)
+
+static PersistentRootedObject gGlobalRoot;
+
+// PersistentRooted instances can initialized in a separate step to allow for global PersistentRooteds.
+BEGIN_TEST(test_GlobalPersistentRooted)
+{
+    BarkWhenTracedClass::reset();
+
+    CHECK(!gGlobalRoot.initialized());
+
+    {
+        RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_, JS::NullPtr(), JS::NullPtr()));
+        CHECK(barker);
+
+        gGlobalRoot.init(cx, barker);
+    }
+
+    CHECK(gGlobalRoot.initialized());
+
+    // GC should be able to find our barker.
+    CHECK(GCFinalizesNBarkers(cx, 0));
+
+    gGlobalRoot.reset();
+    CHECK(!gGlobalRoot.initialized());
+
+    // Now GC should not be able to find the barker.
+    JS_GC(JS_GetRuntime(cx));
+    CHECK(BarkWhenTracedClass::finalizeCount == 1);
+
+    return true;
+}
+END_TEST(test_GlobalPersistentRooted)
