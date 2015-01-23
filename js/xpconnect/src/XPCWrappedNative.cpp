@@ -966,8 +966,8 @@ XPCWrappedNative::FlatJSObjectFinalized()
     MOZ_ASSERT(mIdentity, "bad pointer!");
 #ifdef XP_WIN
     // Try to detect free'd pointer
-    MOZ_ASSERT(*(int*)mIdentity != 0xdddddddd, "bad pointer!");
-    MOZ_ASSERT(*(int*)mIdentity != 0,          "bad pointer!");
+    MOZ_ASSERT(*(int*)mIdentity.get() != 0xdddddddd, "bad pointer!");
+    MOZ_ASSERT(*(int*)mIdentity.get() != 0,          "bad pointer!");
 #endif
 
     if (IsWrapperExpired()) {
