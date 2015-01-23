@@ -70,11 +70,11 @@ struct PLDHashTableOps;
  * Callback types are defined below and grouped into the PLDHashTableOps
  * structure, for single static initialization per hash table sub-type.
  *
- * Each hash table sub-type should nest the PLDHashEntryHdr structure at the
- * front of its particular entry type.  The keyHash member contains the result
- * of multiplying the hash code returned from the hashKey callback (see below)
- * by PL_DHASH_GOLDEN_RATIO, then constraining the result to avoid the magic 0
- * and 1 values.  The stored keyHash value is table size invariant, and it is
+ * Each hash table sub-type should make its entry type a subclass of
+ * PLDHashEntryHdr. The keyHash member contains the result of multiplying the
+ * hash code returned from the hashKey callback (see below) by
+ * PL_DHASH_GOLDEN_RATIO, then constraining the result to avoid the magic 0 and
+ * 1 values. The stored keyHash value is table size invariant, and it is
  * maintained automatically -- users should never set it, and its only uses
  * should be via the entry macros below.
  *

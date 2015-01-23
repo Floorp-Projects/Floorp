@@ -32,11 +32,12 @@ public:
         if (!hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        Entry* entry = reinterpret_cast<Entry*>(hdr);
+        Entry* entry = static_cast<Entry*>(hdr);
         NS_ASSERTION(entry->mMatch == nullptr, "over-writing entry");
         entry->mContent = aElement;
         entry->mMatch   = aMatch;
-        return NS_OK; }
+        return NS_OK;
+    }
 
     bool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
         if (!mMap.IsInitialized())
@@ -46,9 +47,10 @@ public:
         if (PL_DHASH_ENTRY_IS_FREE(hdr))
             return false;
 
-        Entry* entry = reinterpret_cast<Entry*>(hdr);
+        Entry* entry = static_cast<Entry*>(hdr);
         *aMatch = entry->mMatch;
-        return true; }
+        return true;
+    }
 
     nsresult Remove(nsIContent* aElement);
 
@@ -60,8 +62,7 @@ protected:
     void Init();
     void Finish();
 
-    struct Entry {
-        PLDHashEntryHdr  mHdr;
+    struct Entry : public PLDHashEntryHdr {
         nsIContent*      mContent;
         nsTemplateMatch* mMatch;
     };

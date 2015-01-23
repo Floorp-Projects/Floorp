@@ -11,8 +11,7 @@
 
 class nsTemplateMap {
 protected:
-    struct Entry {
-        PLDHashEntryHdr mHdr;
+    struct Entry : public PLDHashEntryHdr {
         nsIContent*     mContent;
         nsIContent*     mTemplate;
     };
@@ -38,8 +37,7 @@ public:
         NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableLookup(&mTable, aContent)),
                      "aContent already in map");
 
-        Entry* entry =
-            reinterpret_cast<Entry*>(PL_DHashTableAdd(&mTable, aContent));
+        Entry* entry = static_cast<Entry*>(PL_DHashTableAdd(&mTable, aContent));
 
         if (entry) {
             entry->mContent = aContent;
@@ -62,9 +60,9 @@ public:
     void
     GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
         Entry* entry =
-            reinterpret_cast<Entry*>(PL_DHashTableLookup(&mTable, aContent));
+            static_cast<Entry*>(PL_DHashTableLookup(&mTable, aContent));
 
-        if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
+        if (PL_DHASH_ENTRY_IS_BUSY(entry))
             NS_IF_ADDREF(*aResult = entry->mTemplate);
         else
             *aResult = nullptr;
