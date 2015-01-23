@@ -29,8 +29,8 @@
     addon.uninstall();
 
     Cu.import("resource://gre/modules/Services.jsm");
-    for each (var stage in [ "install", "startup", "shutdown", "uninstall" ]) {
-      for each (var symbol in [ "IDBKeyRange", "indexedDB" ]) {
+    for (var stage of [ "install", "startup", "shutdown", "uninstall" ]) {
+      for (var symbol of [ "IDBKeyRange", "indexedDB" ]) {
         let pref;
         try {
           pref = Services.prefs.getBoolPref("indexeddbtest.bootstrap." + stage +
