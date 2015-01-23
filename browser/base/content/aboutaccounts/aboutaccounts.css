@@ -12,3 +12,13 @@ html, body {
 #manage, #intro, #stage {
   display: none;
 }
+
+#oldsync {
+  background: none;
+  border: 0;
+  color: #0095dd;
+}
+
+#oldsync:focus {
+  outline: 1px dotted #0095dd;
+}

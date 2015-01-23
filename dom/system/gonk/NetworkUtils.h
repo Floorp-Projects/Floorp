@@ -392,6 +392,8 @@ private:
   static void enableIpv6(PARAMS);
   static void disableIpv6(PARAMS);
   static void setIpv6Enabled(PARAMS, bool aEnabled);
+  static void addRouteToSecondaryTable(PARAMS);
+  static void removeRouteFromSecondaryTable(PARAMS);
   static void defaultAsyncSuccessHandler(PARAMS);
 
 #undef PARAMS

@@ -7,7 +7,7 @@
 <script type="application/javascript" 
         src="chrome://browser/content/preferences/in-content/security.js"/>  
 
-<preferences id="securityPreferences">
+<preferences id="securityPreferences" hidden="true" data-category="paneSecurity">
   <!-- XXX buttons -->
   <preference id="pref.privacy.disable_button.view_passwords"
               name="pref.privacy.disable_button.view_passwords"

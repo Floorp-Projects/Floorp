@@ -14,42 +14,46 @@ let FlameGraphView = {
   initialize: Task.async(function* () {
     this._onRecordingStoppedOrSelected = this._onRecordingStoppedOrSelected.bind(this);
     this._onRangeChange = this._onRangeChange.bind(this);
+    this._onRangeChangeInGraph = this._onRangeChangeInGraph.bind(this);
+    this._onDetailsViewSelected = this._onDetailsViewSelected.bind(this);
 
     this.graph = new FlameGraph($("#flamegraph-view"));
     this.graph.timelineTickUnits = L10N.getStr("graphs.ms");
     yield this.graph.ready();
 
+    this.graph.on("selecting", this._onRangeChangeInGraph);
+
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
+    DetailsView.on(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
   }),
 
   /**
    * Unbinds events.
    */
   destroy: function () {
+    this.graph.off("selecting", this._onRangeChangeInGraph);
+
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onRangeChange);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_CLEARED, this._onRangeChange);
+    DetailsView.off(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
   },
 
   /**
    * Method for handling all the set up for rendering a new flamegraph.
+   *
+   * @param object interval [optional]
+   *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (profilerData) {
-    // Empty recordings might yield no profiler data.
-    if (profilerData.profile == null) {
-      return;
-    }
-    let samples = profilerData.profile.threads[0].samples;
-    let dataSrc = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
-      flattenRecursion: Prefs.flattenTreeRecursion,
-      filterFrames: !Prefs.showPlatformData && FrameNode.isContent,
-      showIdleBlocks: Prefs.showIdleBlocks && L10N.getStr("table.idle")
-    });
-    this.graph.setData(dataSrc);
+  render: function (interval={}) {
+    let recording = PerformanceController.getCurrentRecording();
+    let startTime = interval.startTime || 0;
+    let endTime = interval.endTime || recording.getDuration();
+    this.graph.setViewRange({ startTime, endTime });
     this.emit(EVENTS.FLAMEGRAPH_RENDERED);
   },
 
@@ -57,18 +61,50 @@ let FlameGraphView = {
    * Called when recording is stopped or selected.
    */
   _onRecordingStoppedOrSelected: function (_, recording) {
-    // If not recording, then this recording is done and we can render all of it
-    if (!recording.isRecording()) {
-      let profilerData = recording.getProfilerData();
-      this.render(profilerData);
+    if (recording.isRecording()) {
+      return;
     }
+    let profile = recording.getProfile();
+    let samples = profile.threads[0].samples;
+    let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+      flattenRecursion: Prefs.flattenTreeRecursion,
+      filterFrames: !Prefs.showPlatformData && FrameNode.isContent,
+      showIdleBlocks: Prefs.showIdleBlocks && L10N.getStr("table.idle")
+    });
+    let startTime = 0;
+    let endTime = recording.getDuration();
+    this.graph.setData({ data, bounds: { startTime, endTime } });
+    this.render();
   },
 
   /**
    * Fired when a range is selected or cleared in the OverviewView.
    */
-  _onRangeChange: function (_, params) {
-    // TODO bug 1105014
+  _onRangeChange: function (_, interval) {
+    if (DetailsView.isViewSelected(this)) {
+      this.render(interval);
+    } else {
+      this._dirty = true;
+      this._interval = interval;
+    }
+  },
+
+  /**
+   * Fired when a range is selected or cleared in the FlameGraph.
+   */
+  _onRangeChangeInGraph: function () {
+    let interval = this.graph.getViewRange();
+    OverviewView.setTimeInterval(interval, { stopPropagation: true });
+  },
+
+  /**
+   * Fired when a view is selected in the DetailsView.
+   */
+  _onDetailsViewSelected: function() {
+    if (DetailsView.isViewSelected(this) && this._dirty) {
+      this.render(this._interval);
+      this._dirty = false;
+    }
   }
 };
 
