@@ -180,6 +180,11 @@
         <attr name="strip" format="reference"/>
     </declare-styleable>
 
+    <declare-styleable name="TabPanelBackButton">
+        <attr name="rightDivider" format="reference"/>
+        <attr name="dividerVerticalPadding" format="dimension"/>
+    </declare-styleable>
+
     <declare-styleable name="EllipsisTextView">
         <attr name="ellipsizeAtLine" format="integer"/>
     </declare-styleable>
