@@ -181,7 +181,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         this.focusApp = id;
       } else if (this.focusApp == id){
         // Set focusApp to null means currently there is no foreground app.
-        this.focusApp = null;
+        this.focusApp = NFC.SYSTEM_APP_ID;
       }
     },
 
@@ -228,27 +228,30 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     },
 
     onTagFound: function onTagFound(message) {
+      let target = this.eventListeners[this.focusApp] ||
+                   this.eventListeners[NFC.SYSTEM_APP_ID];
+
       message.event = NFC.TAG_EVENT_FOUND;
-      for (let id in this.eventListeners) {
-        this.notifyDOMEvent(this.eventListeners[id], message);
-      }
+
+      this.notifyDOMEvent(target, message);
+
       delete message.event;
     },
 
     onTagLost: function onTagLost(sessionToken) {
-      for (let id in this.eventListeners) {
-        this.notifyDOMEvent(this.eventListeners[id],
-                            { event: NFC.TAG_EVENT_LOST,
-                              sessionToken: sessionToken });
-      }
+      let target = this.eventListeners[this.focusApp] ||
+                   this.eventListeners[NFC.SYSTEM_APP_ID];
+
+      this.notifyDOMEvent(target, { event: NFC.TAG_EVENT_LOST,
+                                    sessionToken: sessionToken });
     },
 
     onPeerEvent: function onPeerEvent(eventType, sessionToken) {
-      for (let id in this.eventListeners) {
-        this.notifyDOMEvent(this.eventListeners[id],
-                            { event: eventType,
-                              sessionToken: sessionToken });
-      }
+      let target = this.eventListeners[this.focusApp] ||
+                   this.eventListeners[NFC.SYSTEM_APP_ID];
+
+      this.notifyDOMEvent(target, { event: eventType,
+                                    sessionToken: sessionToken });
     },
 
     onRFStateChange: function onRFStateChange(rfState) {
