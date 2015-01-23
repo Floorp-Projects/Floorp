@@ -133,10 +133,6 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsThemeConstants.h"
 
-#ifdef MOZ_ENABLE_D3D10_LAYER
-#include "LayerManagerD3D10.h"
-#endif
-
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
 #include "KeyboardLayout.h"
@@ -3311,24 +3307,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     *aAllowRetaining = true;
   }
 
-#ifdef MOZ_ENABLE_D3D10_LAYER
-  if (mLayerManager) {
-    if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_D3D10)
-    {
-      LayerManagerD3D10 *layerManagerD3D10 =
-        static_cast<LayerManagerD3D10*>(mLayerManager.get());
-      if (layerManagerD3D10->device() !=
-          gfxWindowsPlatform::GetPlatform()->GetD3D10Device())
-      {
-        MOZ_ASSERT(!mLayerManager->IsInTransaction());
-
-        mLayerManager->Destroy();
-        mLayerManager = nullptr;
-      }
-    }
-  }
-#endif
-
   RECT windowRect;
   ::GetClientRect(mWnd, &windowRect);
 
@@ -3343,38 +3321,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   }
 
   if (!mLayerManager) {
-    // If D3D9 is not currently allowed but the permanent manager is required,
-    // -and- we're currently using basic layers, run through this check.
-    LayerManagerPrefs prefs;
-    GetLayerManagerPrefs(&prefs);
-
-    /* We don't currently support using an accelerated layer manager with
-     * transparent windows so don't even try. I'm also not sure if we even
-     * want to support this case. See bug #593471 */
-    if (eTransparencyTransparent == mTransparencyMode ||
-        prefs.mDisableAcceleration ||
-        windowRect.right - windowRect.left > MAX_ACCELERATED_DIMENSION ||
-        windowRect.bottom - windowRect.top > MAX_ACCELERATED_DIMENSION)
-      mUseLayersAcceleration = false;
-    else if (prefs.mAccelerateByDefault)
-      mUseLayersAcceleration = true;
-
-    if (mUseLayersAcceleration) {
-#ifdef MOZ_ENABLE_D3D10_LAYER
-      if (!prefs.mPreferD3D9 && !prefs.mPreferOpenGL) {
-        nsRefPtr<LayerManagerD3D10> layerManager =
-          new LayerManagerD3D10(this);
-        if (layerManager->Initialize(prefs.mForceAcceleration)) {
-          mLayerManager = layerManager;
-        }
-      }
-#endif
-    }
-
-    // Fall back to software if we couldn't use any hardware backends.
-    if (!mLayerManager) {
-      mLayerManager = CreateBasicLayerManager();
-    }
+    mLayerManager = CreateBasicLayerManager();
   }
 
   NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
