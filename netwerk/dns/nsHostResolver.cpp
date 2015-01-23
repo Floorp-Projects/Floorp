@@ -829,12 +829,11 @@ nsHostResolver::ResolveHost(const char            *host,
                     // First, search for an entry with AF_UNSPEC
                     const nsHostKey unspecKey = { host, flags, PR_AF_UNSPEC };
                     nsHostDBEnt *unspecHe = static_cast<nsHostDBEnt *>
-                        (PL_DHashTableLookup(&mDB, &unspecKey));
-                    NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(unspecHe) ||
-                                 (PL_DHASH_ENTRY_IS_BUSY(unspecHe) &&
-                                  unspecHe->rec),
+                        (PL_DHashTableSearch(&mDB, &unspecKey));
+                    NS_ASSERTION(!unspecHe ||
+                                 (unspecHe && unspecHe->rec),
                                 "Valid host entries should contain a record");
-                    if (PL_DHASH_ENTRY_IS_BUSY(unspecHe) &&
+                    if (unspecHe &&
                         unspecHe->rec &&
                         unspecHe->rec->HasUsableResult(TimeStamp::NowLoRes(), flags)) {
 

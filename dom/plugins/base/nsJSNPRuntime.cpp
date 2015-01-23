@@ -1772,12 +1772,12 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
     return;
   }
 
-  // Calling PL_DHashTableLookup() will not result in GC.
+  // Calling PL_DHashTableSearch() will not result in GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableLookup(&sNPObjWrappers, npobj));
-  MOZ_ASSERT(PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj);
+    (PL_DHashTableSearch(&sNPObjWrappers, npobj));
+  MOZ_ASSERT(entry && entry->mJSObj);
   MOZ_ASSERT(entry->mJSObj == old);
   entry->mJSObj = obj;
 }
@@ -1829,9 +1829,9 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
-    (PL_DHashTableLookup(&sNPObjWrappers, npobj));
+    (PL_DHashTableSearch(&sNPObjWrappers, npobj));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
+  if (entry && entry->mJSObj) {
     // Found a live NPObject wrapper, null out its JSObjects' private
     // data.
 
@@ -1913,9 +1913,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
       // Reload entry if the JS_NewObject call caused a GC and reallocated
       // the table (see bug 445229). This is guaranteed to succeed.
 
-      entry = static_cast<NPObjWrapperHashEntry *>
-        (PL_DHashTableLookup(&sNPObjWrappers, npobj));
-      NS_ASSERTION(entry && PL_DHASH_ENTRY_IS_BUSY(entry),
+      NS_ASSERTION(PL_DHashTableSearch(&sNPObjWrappers, npobj),
                    "Hashtable didn't find what we just added?");
   }
 

@@ -259,6 +259,7 @@ public:
   void Finish();
 
   PLDHashEntryHdr* Lookup(const void* aKey);
+  PLDHashEntryHdr* Search(const void* aKey);
   PLDHashEntryHdr* Add(const void* aKey);
   void Remove(const void* aKey);
 
@@ -489,6 +490,17 @@ void PL_DHashTableFinish(PLDHashTable* aTable);
  */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey);
+
+/*
+ * To lookup a key in table, call:
+ *
+ *  entry = PL_DHashTableSearch(table, key);
+ *
+ * If |entry| is non-null, key was found and it identifies entry.  If |entry|
+ * is null, key was not found.
+ */
+PLDHashEntryHdr* PL_DHASH_FASTCALL
+PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
 
 /*
  * To add an entry identified by key to table, call:

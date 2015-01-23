@@ -1354,19 +1354,8 @@ void nsDocLoader::RemoveRequestInfo(nsIRequest *aRequest)
 
 nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
 {
-  nsRequestInfo* info =
-    static_cast<nsRequestInfo*>
-               (PL_DHashTableLookup(&mRequestInfoHash, aRequest));
-
-  if (PL_DHASH_ENTRY_IS_FREE(info)) {
-    // Nothing found in the hash, return null.
-
-    return nullptr;
-  }
-
-  // Return what we found in the hash...
-
-  return info;
+  return static_cast<nsRequestInfo*>
+                    (PL_DHashTableSearch(&mRequestInfoHash, aRequest));
 }
 
 // PLDHashTable enumeration callback that just removes every entry

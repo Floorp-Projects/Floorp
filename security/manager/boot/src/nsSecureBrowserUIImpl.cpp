@@ -968,11 +968,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     { /* scope for the ReentrantMonitorAutoEnter */
       ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-      PLDHashEntryHdr *entry = PL_DHashTableLookup(&mTransferringRequests, aRequest);
-      if (PL_DHASH_ENTRY_IS_BUSY(entry))
-      {
+      if (PL_DHashTableSearch(&mTransferringRequests, aRequest)) {
         PL_DHashTableRemove(&mTransferringRequests, aRequest);
-
         requestHasTransferedData = true;
       }
     }
