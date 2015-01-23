@@ -1769,7 +1769,9 @@ ServiceWorkerManager::FireEventOnServiceWorkerRegistrations(
       NS_ConvertUTF16toUTF8 utf8Scope(regScope);
       if (utf8Scope.Equals(aRegistration->mScope)) {
         nsresult rv = target->DispatchTrustedEvent(aName);
-        NS_WARN_IF(NS_FAILED(rv));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          // Warn only.
+        }
       }
     }
   }
