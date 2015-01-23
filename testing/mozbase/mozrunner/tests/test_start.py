@@ -40,6 +40,6 @@ class MozrunnerStartTestCase(mozrunnertest.MozrunnerTestCase):
     def test_start_with_outputTimeout(self):
         """Start the process and set a timeout"""
         self.runner.start(outputTimeout=2)
-        sleep(5)
+        sleep(15)
 
         self.assertFalse(self.runner.is_running())
