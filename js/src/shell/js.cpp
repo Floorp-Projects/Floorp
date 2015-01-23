@@ -129,7 +129,7 @@ static size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
 static double MAX_TIMEOUT_INTERVAL = 1800.0;
 static double gTimeoutInterval = -1.0;
 static volatile bool gServiceInterrupt = false;
-static Maybe<JS::PersistentRootedValue> gInterruptFunc;
+static JS::PersistentRootedValue gInterruptFunc;
 
 static bool enableDisassemblyDumps = false;
 
@@ -364,7 +364,7 @@ ShellInterruptCallback(JSContext *cx)
     gServiceInterrupt = false;
 
     bool result;
-    RootedValue interruptFunc(cx, *gInterruptFunc);
+    RootedValue interruptFunc(cx, gInterruptFunc);
     if (!interruptFunc.isNull()) {
         JS::AutoSaveExceptionState savedExc(cx);
         JSAutoCompartment ac(cx, &interruptFunc.toObject());
@@ -3036,7 +3036,7 @@ CancelExecution(JSRuntime *rt)
     gServiceInterrupt = true;
     JS_RequestInterruptCallback(rt);
 
-    if (!gInterruptFunc->get().isNull()) {
+    if (!gInterruptFunc.isNull()) {
         static const char msg[] = "Script runs for too long, terminating.\n";
         fputs(msg, stderr);
     }
@@ -3083,7 +3083,7 @@ Timeout(JSContext *cx, unsigned argc, Value *vp)
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
         }
-        *gInterruptFunc = value;
+        gInterruptFunc = value;
     }
 
     args.rval().setUndefined();
@@ -3154,7 +3154,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
         JS_ReportError(cx, "Argument must be a function");
         return false;
     }
-    *gInterruptFunc = value;
+    gInterruptFunc = value;
 
     args.rval().setUndefined();
     return true;
@@ -6039,7 +6039,7 @@ main(int argc, char **argv, char **envp)
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
-    gInterruptFunc.emplace(rt, NullValue());
+    gInterruptFunc.init(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
     Maybe<JS::AutoDisableGenerationalGC> noggc;
@@ -6101,8 +6101,6 @@ main(int argc, char **argv, char **envp)
     DestroyContext(cx, true);
 
     KillWatchdog();
-
-    gInterruptFunc.reset();
 
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
     for (size_t i = 0; i < workerThreads.length(); i++)
