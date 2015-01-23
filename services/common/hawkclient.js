@@ -279,15 +279,10 @@ this.HawkClient.prototype = {
     };
 
     let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);
-    try {
-      if (method == "post" || method == "put" || method == "patch") {
-        request[method](payloadObj, onComplete);
-      } else {
-        request[method](onComplete);
-      }
-    } catch (ex) {
-      log.error("Failed to make hawk request", ex);
-      deferred.reject(ex);
+    if (method == "post" || method == "put" || method == "patch") {
+      request[method](payloadObj, onComplete);
+    } else {
+      request[method](onComplete);
     }
 
     return deferred.promise;
