@@ -60,6 +60,8 @@ VMFunction::addToFunctions()
 bool
 InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Value *rval)
 {
+    AutoArrayRooter argvRoot(cx, argc + 1, argv);
+
     RootedObject obj(cx, obj0);
     if (obj->is<JSFunction>()) {
         RootedFunction fun(cx, &obj->as<JSFunction>());
