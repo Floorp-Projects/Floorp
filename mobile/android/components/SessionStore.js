@@ -615,66 +615,90 @@ SessionStore.prototype = {
     }
   },
 
+  /**
+   * Writes the session state to a disk file, while doing some telemetry and notification
+   * bookkeeping.
+   * @param aFile nsIFile used for saving the session
+   * @param aData JSON session state
+   * @param aAsync boolelan used to determine the method of saving the state
+   */
   _writeFile: function ss_writeFile(aFile, aData, aAsync) {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
     let state = JSON.stringify(aData);
     TelemetryStopwatch.finish("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
 
+    // Convert data string to a utf-8 encoded array buffer
+    let buffer = new TextEncoder().encode(state);
+    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_FILE_SIZE_BYTES").add(buffer.byteLength);
+
     Services.obs.notifyObservers(null, "sessionstore-state-write", "");
+    let startWriteMs = Cu.now();
  
-    TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS");
-    if (aAsync) {
-      let array = new TextEncoder().encode(state);
-      Services.telemetry.getHistogramById("FX_SESSION_RESTORE_FILE_SIZE_BYTES").add(array.byteLength);
+    let pendingWrite = this._pendingWrite;
+    this._write(aFile, buffer, aAsync).then(() => {
+      let stopWriteMs = Cu.now();
 
-      let pendingWrite = this._pendingWrite;
-      OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(function onSuccess() {
-        // Make sure this._pendingWrite is the same value it was before we
-        // fired off the async write. If the count is different, another write
-        // is pending, so we shouldn't reset this._pendingWrite yet.
-        if (pendingWrite === this._pendingWrite) {
-          this._pendingWrite = 0;
-        }
+      // Make sure this._pendingWrite is the same value it was before we
+      // fired off the async write. If the count is different, another write
+      // is pending, so we shouldn't reset this._pendingWrite yet.
+      if (pendingWrite === this._pendingWrite) {
+        this._pendingWrite = 0;
+      }
 
-        TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS");
-        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
-      }.bind(this));
-    } else {
-      this._pendingWrite = 0;
-      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      foStream.init(aFile, 0x02 | 0x08 | 0x20, 0666, 0);
-      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
-      converter.init(foStream, "UTF-8", 0, 0);
-      converter.writeString(state);
-      converter.close();
-
-      TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS");
+      // We don't use a stopwatch here since the calls are async and stopwatches can only manage
+      // a single timer per histogram.
+      Services.telemetry.getHistogramById("FX_SESSION_RESTORE_WRITE_FILE_MS").add(Math.round(stopWriteMs - startWriteMs));
       Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
+    });
+  },
+
+  /**
+   * Writes the session state to a disk file, using async or sync methods
+   * @param aFile nsIFile used for saving the session
+   * @param aBuffer UTF-8 encoded ArrayBuffer of the session state
+   * @param aAsync boolelan used to determine the method of saving the state
+   * @return Promise that resolves when the file has been written
+   */
+  _write: function ss_write(aFile, aBuffer, aAsync) {
+    // Use async file writer and just return it's promise
+    if (aAsync) {
+      return OS.File.writeAtomic(aFile.path, aBuffer, { tmpPath: aFile.path + ".tmp" });
     }
+
+    // Convert buffer to an encoded string and sync write to disk
+    let bytes = String.fromCharCode.apply(null, new Uint16Array(aBuffer));
+    let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    stream.init(aFile, 0x02 | 0x08 | 0x20, 0666, 0);
+    stream.write(bytes, bytes.length);
+    stream.close();
+
+    // Return a resolved promise to make the caller happy
+    return Promise.resolve();
   },
 
   _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {
     let crashReporterBuilt = "nsICrashReporter" in Ci && Services.appinfo instanceof Ci.nsICrashReporter;
-    if (!crashReporterBuilt)
+    if (!crashReporterBuilt) {
       return;
+    }
 
-    if (!aWindow.BrowserApp.selectedBrowser)
+    if (!aWindow.BrowserApp.selectedBrowser) {
       return;
+    }
 
     try {
       let currentURI = aWindow.BrowserApp.selectedBrowser.currentURI.clone();
       // if the current URI contains a username/password, remove it
       try {
         currentURI.userPass = "";
-      }
-      catch (ex) { } // ignore failures on about: URIs
+      } catch (ex) { } // ignore failures on about: URIs
 
       Services.appinfo.annotateCrashReport("URL", currentURI.spec);
-    }
-    catch (ex) {
+    } catch (ex) {
       // don't make noise when crashreporter is built but not enabled
-      if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED)
+      if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
         Cu.reportError("SessionStore:" + ex);
+      }
     }
   },
 
