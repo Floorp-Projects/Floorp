@@ -56,13 +56,12 @@ class JSAPITest
 
     JSRuntime *rt;
     JSContext *cx;
-    JS::Heap<JSObject *> global;
+    JS::PersistentRootedObject global;
     bool knownFail;
     JSAPITestString msgs;
     JSCompartment *oldCompartment;
 
-    JSAPITest() : rt(nullptr), cx(nullptr), global(nullptr),
-                  knownFail(false), oldCompartment(nullptr) {
+    JSAPITest() : rt(nullptr), cx(nullptr), knownFail(false), oldCompartment(nullptr) {
         next = list;
         list = this;
     }
