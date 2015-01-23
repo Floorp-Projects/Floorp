@@ -292,12 +292,6 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
     return(0);
   }
 
-void nr_ice_candidate_destroy_cb(NR_SOCKET s, int h, void *cb_arg)
-  {
-    nr_ice_candidate *cand=cb_arg;
-    nr_ice_candidate_destroy(&cand);
-  }
-
 /* This algorithm is not super-fast, but I don't think we need a hash
    table just yet and it produces a small foundation string */
 static int nr_ice_get_foundation(nr_ice_ctx *ctx,nr_ice_candidate *cand)
