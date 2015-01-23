@@ -11,18 +11,12 @@ let Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// The console API events have to be scheduled when stored using
-// |recordPendingEvent|.
-const CALL_DELAY = 15 // milliseconds
-
 // This constant tells how many messages to process in a single timer execution.
 const MESSAGES_IN_INTERVAL = 1500
 
 const STORAGE_MAX_EVENTS = 200;
 
 var _consoleStorage = new Map();
-var _consolePendingStorage = new Map();
-var _timer;
 
 const CONSOLEAPISTORAGE_CID = Components.ID('{96cf7855-dfa9-4c6d-8276-f9705b4890f2}');
 
@@ -139,51 +133,6 @@ ConsoleAPIStorageService.prototype = {
 
     Services.obs.notifyObservers(aEvent, "console-api-log-event", aOuterId);
     Services.obs.notifyObservers(aEvent, "console-storage-cache-event", aId);
-  },
-
-  /**
-   * Similar to recordEvent, but these events are scheduled and stored any
-   * CALL_DELAY millisecs.
-   */
-  recordPendingEvent: function CS_recordPendingEvent(aId, aOuterId, aEvent)
-  {
-    if (!_consolePendingStorage.has(aId)) {
-      _consolePendingStorage.set(aId, []);
-    }
-
-    let storage = _consolePendingStorage.get(aId);
-    storage.push({ outerId: aOuterId, event: aEvent });
-
-    if (!_timer) {
-      _timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
-
-    let self = this;
-    _timer.initWithCallback(function() { self.flushPendingEvents(); },
-                            CALL_DELAY, Ci.nsITimer.TYPE_REPEATING_SLACK);
-  },
-
-  /**
-   * Processes the pending event queue.
-   */
-  flushPendingEvents: function CS_flushPendingEvents()
-  {
-    for (let [id, objs] of _consolePendingStorage) {
-      for (let i = 0; i < objs.length && i < MESSAGES_IN_INTERVAL; ++i) {
-        this.recordEvent(id, objs[i].outerId, objs[i].event);
-      }
-
-      if (objs.length <= MESSAGES_IN_INTERVAL) {
-        _consolePendingStorage.delete(id);
-      } else {
-        _consolePendingStorage.set(id, objs.splice(MESSAGES_IN_INTERVAL));
-      }
-    }
-
-    if (_timer && _consolePendingStorage.size == 0) {
-      _timer.cancel();
-      _timer = null;
-    }
   },
 
   /**
