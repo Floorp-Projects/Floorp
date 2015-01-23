@@ -6090,12 +6090,6 @@ CClosure::Create(JSContext* cx,
   MOZ_ASSERT(!fninfo->mIsVariadic);
   MOZ_ASSERT(GetABICode(fninfo->mABI) != ABI_WINAPI);
 
-  AutoPtr<ClosureInfo> cinfo(cx->new_<ClosureInfo>(JS_GetRuntime(cx)));
-  if (!cinfo) {
-    JS_ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
   // Get the prototype of the FunctionType object, of class CTypeProto,
   // which stores our JSContext for use with the closure.
   RootedObject proto(cx);
@@ -6105,12 +6099,13 @@ CClosure::Create(JSContext* cx,
   MOZ_ASSERT(CType::IsCTypeProto(proto));
 
   // Get a JSContext for use with the closure.
-  cinfo->cx = js::DefaultJSContext(JS_GetRuntime(cx));
+  JSContext *closeureCx = js::DefaultJSContext(JS_GetRuntime(cx));
 
   // Prepare the error sentinel value. It's important to do this now, because
   // we might be unable to convert the value to the proper type. If so, we want
   // the caller to know about it _now_, rather than some uncertain time in the
   // future when the error sentinel is actually needed.
+  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> errResult;
   if (!errVal.isUndefined()) {
 
     // Make sure the callback returns something.
@@ -6125,23 +6120,31 @@ CClosure::Create(JSContext* cx,
 
     // Allocate a buffer for the return value.
     size_t rvSize = CType::GetSize(fninfo->mReturnType);
-    cinfo->errResult = result->zone()->pod_malloc<uint8_t>(rvSize);
-    if (!cinfo->errResult)
+    errResult = result->zone()->make_pod_array<uint8_t>(rvSize);
+    if (!errResult)
       return nullptr;
 
     // Do the value conversion. This might fail, in which case we throw.
-    if (!ImplicitConvert(cx, errVal, fninfo->mReturnType, cinfo->errResult,
-                         false, nullptr))
+    if (!ImplicitConvert(cx, errVal, fninfo->mReturnType, errResult.get(), false, nullptr))
       return nullptr;
-  } else {
-    cinfo->errResult = nullptr;
+  }
+
+  ClosureInfo* cinfo = cx->new_<ClosureInfo>(JS_GetRuntime(cx));
+  if (!cinfo) {
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
   }
 
   // Copy the important bits of context into cinfo.
+  cinfo->cx = closeureCx;
+  cinfo->errResult = errResult.release();
   cinfo->closureObj = result;
   cinfo->typeObj = typeObj;
   cinfo->thisObj = thisObj;
   cinfo->jsfnObj = fnObj;
+
+  // Stash the ClosureInfo struct on our new object.
+  JS_SetReservedSlot(result, SLOT_CLOSUREINFO, PRIVATE_TO_JSVAL(cinfo));
 
   // Create an ffi_closure object and initialize it.
   void* code;
@@ -6153,14 +6156,11 @@ CClosure::Create(JSContext* cx,
   }
 
   ffi_status status = ffi_prep_closure_loc(cinfo->closure, &fninfo->mCIF,
-    CClosure::ClosureStub, cinfo.get(), code);
+    CClosure::ClosureStub, cinfo, code);
   if (status != FFI_OK) {
     JS_ReportError(cx, "couldn't create closure - libffi error");
     return nullptr;
   }
-
-  // Stash the ClosureInfo struct on our new object.
-  JS_SetReservedSlot(result, SLOT_CLOSUREINFO, PRIVATE_TO_JSVAL(cinfo.forget()));
 
   // Casting between void* and a function pointer is forbidden in C and C++.
   // Do it via an integral type.
