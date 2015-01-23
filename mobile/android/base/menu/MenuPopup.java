@@ -66,7 +66,9 @@ public class MenuPopup extends PopupWindow {
     @Override
     public void showAsDropDown(View anchor) {
         // Set a height, so that the popup will not be displayed below the bottom of the screen.
-        setHeight(mPopupMinHeight);
+        // We use the exact height of the internal content, which is the technique described in
+        // http://stackoverflow.com/a/7698709
+        setHeight(mPanel.getHeight());
 
         // Attempt to align the center of the popup with the center of the anchor. If the anchor is
         // near the edge of the screen, the popup will just align with the edge of the screen.
