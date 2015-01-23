@@ -144,10 +144,16 @@ EvaluateConstantOperands(TempAllocator &alloc, MBinaryInstruction *ins, bool *pt
         ret.setNumber(lhs.toNumber() * rhs.toNumber());
         break;
       case MDefinition::Op_Div:
-        ret.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
+        if (ins->toDiv()->isUnsigned())
+            ret.setInt32(rhs.isInt32(0) ? 0 : uint32_t(lhs.toInt32()) / uint32_t(rhs.toInt32()));
+        else
+            ret.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
         break;
       case MDefinition::Op_Mod:
-        ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
+        if (ins->toMod()->isUnsigned())
+            ret.setInt32(rhs.isInt32(0) ? 0 : uint32_t(lhs.toInt32()) % uint32_t(rhs.toInt32()));
+        else
+            ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
         break;
       default:
         MOZ_CRASH("NYI");
