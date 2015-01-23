@@ -16,6 +16,13 @@ dictionary NetworkStatsGetOptions
    */
   DOMString appManifestURL;
   DOMString serviceType;
+  /**
+   * If it is set as true, only the browsing traffic, which is generated from
+   * the mozbrowser iframe element within an app, is returned in result.
+   * If it is set as false or not set, the total traffic, which is generated
+   * from both the mozapp and mozbrowser iframe elements, is returned.
+   */
+  boolean browsingTrafficOnly;
 };
 
 dictionary NetworkStatsAlarmOptions
@@ -34,6 +41,13 @@ interface MozNetworkStats {
    * specified app.
    */
   readonly attribute DOMString    appManifestURL;
+
+  /**
+   * True if this stats is the browsing traffic of an app (the traffic generated
+   * by a mozbrowser iframe element).
+   * Otherwise this stats represents the total traffic of an app.
+   */
+  readonly attribute boolean      browsingTrafficOnly;
 
   /**
    * Service type is used to retrieve the corresponding "system-only" stats.
