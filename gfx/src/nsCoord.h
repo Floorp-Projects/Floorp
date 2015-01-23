@@ -213,8 +213,8 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
       // Cap the result, in case we're dealing with numbers near nscoord_MAX
       return std::min(nscoord_MAX, a - b);
     }
-  }
 #endif
+  }
 }
 
 inline float NSCoordToFloat(nscoord aCoord) {

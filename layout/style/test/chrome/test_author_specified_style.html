@@ -20,22 +20,22 @@ var values = [
 ];
 
 var properties = [
-  // property to test with  // fixed prefix to ignore from getAuthoredPropertyValue()
+  // property to test with  // fixed suffix to ignore from getAuthoredPropertyValue()
   "color",                  "",
   "background-color",       "",
-  "background",             "none repeat scroll 0% 0% "
+  "background",             " none repeat scroll 0% 0%"
 ];
 
 function runTest() {
   var span = document.createElement("span");
   for (var j = 0; j < properties.length; j += 2) {
     var propertyName = properties[j];
-    var expectedPrefix = properties[j + 1];
+    var expectedSuffix = properties[j + 1];
     for (var i = 0; i < values.length; i += 2) {
       var value = values[i];
       var expected = values[i + 1];
       span.setAttribute("style", propertyName + ": " + value);
-      is(span.style.getAuthoredPropertyValue(propertyName), expectedPrefix + expected, "specified " + value);
+      is(span.style.getAuthoredPropertyValue(propertyName), expected + expectedSuffix, "specified " + value);
     }
   }
 

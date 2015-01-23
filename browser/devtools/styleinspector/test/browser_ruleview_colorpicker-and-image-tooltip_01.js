@@ -23,7 +23,7 @@ add_task(function*() {
   let {toolbox, inspector, view} = yield openRuleView();
 
   let value = getRuleViewProperty(view, "body", "background").valueSpan;
-  let swatch = value.querySelector(".ruleview-colorswatch");
+  let swatch = value.querySelectorAll(".ruleview-colorswatch")[1];
   let url = value.querySelector(".theme-link");
   yield testImageTooltipAfterColorChange(swatch, url, view);
 });

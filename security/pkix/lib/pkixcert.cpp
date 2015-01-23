@@ -22,7 +22,6 @@
  * limitations under the License.
  */
 
-#include "pkix/bind.h"
 #include "pkixutil.h"
 
 namespace mozilla { namespace pkix {
@@ -140,9 +139,12 @@ BackCert::Init()
     }
   }
 
-  rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
-                               bind(&BackCert::RememberExtension, *this, _1,
-                                    _2, _3, _4));
+  rv = der::OptionalExtensions(
+         tbsCertificate, CSC | 3,
+         [this](Reader& extnID, const Input& extnValue, bool critical,
+                /*out*/ bool& understood) {
+           return RememberExtension(extnID, extnValue, critical, understood);
+         });
   if (rv != Success) {
     return rv;
   }
@@ -178,10 +180,8 @@ BackCert::Init()
   return der::End(tbsCertificate);
 }
 
-// XXX: The second value is of type |const Input&| instead of type |Input| due
-// to limitations in our std::bind polyfill.
 Result
-BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
+BackCert::RememberExtension(Reader& extnID, Input extnValue,
                             bool critical, /*out*/ bool& understood)
 {
   understood = false;

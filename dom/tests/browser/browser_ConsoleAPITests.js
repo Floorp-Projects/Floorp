@@ -5,7 +5,7 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
-var gWindow, gLevel, gArgs, gTestDriver, gStyle;
+var gWindow, gLevel, gArgs, gStyle;
 
 function test() {
   waitForExplicitFinish();
@@ -15,7 +15,7 @@ function test() {
   var browser = gBrowser.selectedBrowser;
 
   registerCleanupFunction(function () {
-    gWindow = gLevel = gArgs = gTestDriver = null;
+    gWindow = gLevel = gArgs = null;
     gBrowser.removeTab(tab);
   });
 
@@ -26,8 +26,7 @@ function test() {
     executeSoon(function test_executeSoon() {
       gWindow = browser.contentWindow;
       consoleAPISanityTest();
-      gTestDriver = observeConsoleTest();
-      gTestDriver.next();
+      observeConsoleTest();
     });
 
   }, false);
@@ -74,8 +73,6 @@ function testConsoleData(aMessageObject) {
       }
     }
   }
-
-  gTestDriver.next();
 }
 
 function testLocationData(aMessageObject) {
@@ -215,127 +212,100 @@ function observeConsoleTest() {
   let win = XPCNativeWrapper.unwrap(gWindow);
   expect("log", "arg");
   win.console.log("arg");
-  yield undefined;
 
   expect("info", "arg", "extra arg");
   win.console.info("arg", "extra arg");
-  yield undefined;
 
   expect("warn", "Lesson 1: PI is approximately equal to 3");
   win.console.warn("Lesson %d: %s is approximately equal to %1.0f",
                    1,
                    "PI",
                    3.14159);
-  yield undefined;
 
   expect("warn", "Lesson 1: PI is approximately equal to 3.14");
   win.console.warn("Lesson %d: %s is approximately equal to %1.2f",
                    1,
                    "PI",
                    3.14159);
-  yield undefined;
 
   expect("warn", "Lesson 1: PI is approximately equal to 3.141590");
   win.console.warn("Lesson %d: %s is approximately equal to %f",
                    1,
                    "PI",
                    3.14159);
-  yield undefined;
 
   expect("warn", "Lesson 1: PI is approximately equal to 3.1415900");
   win.console.warn("Lesson %d: %s is approximately equal to %0.7f",
                    1,
                    "PI",
                    3.14159);
-  yield undefined;
 
   expect("log", "%d, %s, %l");
   win.console.log("%d, %s, %l");
-  yield undefined;
 
   expect("log", "%a %b %g");
   win.console.log("%a %b %g");
-  yield undefined;
 
   expect("log", "%a %b %g", "a", "b");
   win.console.log("%a %b %g", "a", "b");
-  yield undefined;
 
   expect("log", "2, a, %l", 3);
   win.console.log("%d, %s, %l", 2, "a", 3);
-  yield undefined;
 
   // Bug #692550 handle null and undefined.
   expect("log", "null, undefined");
   win.console.log("%s, %s", null, undefined);
-  yield undefined;
 
   // Bug #696288 handle object as first argument.
   let obj = { a: 1 };
   expect("log", obj, "a");
   win.console.log(obj, "a");
-  yield undefined;
 
   expect("dir", win.toString());
   win.console.dir(win);
-  yield undefined;
 
   expect("error", "arg");
   win.console.error("arg");
-  yield undefined;
 
   expect("exception", "arg");
   win.console.exception("arg");
-  yield undefined;
 
   expect("log", "foobar");
   gStyle = ["color:red;foobar;;"];
   win.console.log("%cfoobar", gStyle[0]);
-  yield undefined;
 
   let obj4 = { d: 4 };
   expect("warn", "foobar", obj4, "test", "bazbazstr", "last");
   gStyle = [null, null, null, "color:blue;", "color:red"];
   win.console.warn("foobar%Otest%cbazbaz%s%clast", obj4, gStyle[3], "str", gStyle[4]);
-  yield undefined;
 
   let obj3 = { c: 3 };
   expect("info", "foobar", "bazbaz", obj3, "%comg", "color:yellow");
   gStyle = [null, "color:pink;"];
   win.console.info("foobar%cbazbaz", gStyle[1], obj3, "%comg", "color:yellow");
-  yield undefined;
 
   gStyle = null;
   let obj2 = { b: 2 };
   expect("log", "omg ", obj, " foo ", 4, obj2);
   win.console.log("omg %o foo %o", obj, 4, obj2);
-  yield undefined;
 
   expect("assert", "message");
   win.console.assert(false, "message");
-  yield undefined;
 
   expect("count", { label: "label a", count: 1 })
   win.console.count("label a");
-  yield undefined;
 
   expect("count", { label: "label b", count: 1 })
   win.console.count("label b");
-  yield undefined;
 
   expect("count", { label: "label a", count: 2 })
   win.console.count("label a");
-  yield undefined;
 
   expect("count", { label: "label b", count: 2 })
   win.console.count("label b");
-  yield undefined;
 
   startTraceTest();
-  yield undefined;
-
   startLocationTest();
-  yield undefined;
 }
 
 function consoleAPISanityTest() {

@@ -144,7 +144,8 @@ public:
                                   const nsString& aFeatures,
                                   const nsString& aBaseURI,
                                   bool* aWindowIsNew,
-                                  InfallibleTArray<FrameScriptInfo>* aFrameScripts) MOZ_OVERRIDE;
+                                  InfallibleTArray<FrameScriptInfo>* aFrameScripts,
+                                  nsCString* aURLToLoad) MOZ_OVERRIDE;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
@@ -489,14 +490,23 @@ private:
     static TabParent* sNextTabParent;
 
     // When loading a new tab or window via window.open, the child is
-    // responsible for loading the URL it wants into the new
-    // TabChild. Simultaneously, though, the parent sends a LoadURL message to
-    // every new PBrowser (usually for about:blank). This message usually
-    // arrives after the child has started to load the URL it wants, and
-    // overrides it. To prevent this, we set mSkipLoad to true when creating the
-    // new tab. This flag prevents the unwanted LoadURL message from being sent
-    // by the parent.
-    bool mSkipLoad;
+    // responsible for loading the URL it wants into the new TabChild. When the
+    // parent receives the CreateWindow message, though, it sends a LoadURL
+    // message, usually for about:blank. It's important for the about:blank load
+    // to get processed because the Firefox frontend expects every new window to
+    // immediately start loading something (see bug 1123090). However, we want
+    // the child to process the LoadURL message before it returns from
+    // ProvideWindow so that the URL sent from the parent doesn't override the
+    // child's URL. This is not possible using our IPC mechanisms. To solve the
+    // problem, we skip sending the LoadURL message in the parent and instead
+    // return the URL as a result from CreateWindow. The child simulates
+    // receiving a LoadURL message before returning from ProvideWindow.
+    //
+    // The mCreatingWindow flag is set while dispatching CreateWindow. During
+    // that time, any LoadURL calls are skipped and the URL is stored in
+    // mSkippedURL.
+    bool mCreatingWindow;
+    nsCString mDelayedURL;
 
     // When loading a new tab or window via window.open, we want to ensure that
     // frame scripts for that tab are loaded before any scripts start to run in

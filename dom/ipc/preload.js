@@ -74,14 +74,9 @@ const BrowserElementIsPreloaded = true;
   Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci["nsIAppStartup"]);
   Cc["@mozilla.org/uriloader;1"].getService(Ci["nsIURILoader"]);
   Cc["@mozilla.org/cspcontext;1"].createInstance(Ci["nsIContentSecurityPolicy"]);
+  Cc["@mozilla.org/settingsManager;1"].createInstance(Ci["nsISupports"]);
 
   /* Applications Specific Helper */
-  try {
-    // May throw if we don't have the settings permission
-    navigator.mozSettings;
-  } catch(e) {
-  }
-
   try {
     if (Services.prefs.getBoolPref("dom.sysmsg.enabled")) {
       Cc["@mozilla.org/system-message-manager;1"].getService(Ci["nsIDOMNavigatorSystemMessages"]);

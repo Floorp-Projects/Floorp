@@ -140,8 +140,8 @@ private:
   Input subjectAltName;
   Input criticalNetscapeCertificateType;
 
-  Result RememberExtension(Reader& extnID, const Input& extnValue,
-                           bool critical, /*out*/ bool& understood);
+  Result RememberExtension(Reader& extnID, Input extnValue, bool critical,
+                           /*out*/ bool& understood);
 
   BackCert(const BackCert&) = delete;
   void operator=(const BackCert&) = delete;

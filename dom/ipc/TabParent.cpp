@@ -273,7 +273,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mChromeFlags(aChromeFlags)
   , mInitedByParent(false)
   , mTabId(aTabId)
-  , mSkipLoad(false)
+  , mCreatingWindow(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -454,17 +454,21 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 struct MOZ_STACK_CLASS TabParent::AutoUseNewTab MOZ_FINAL
 {
 public:
-  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew)
-   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew)
+  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew, nsCString* aURLToLoad)
+   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew), mURLToLoad(aURLToLoad)
   {
     MOZ_ASSERT(!TabParent::sNextTabParent);
+    MOZ_ASSERT(!aNewTab->mCreatingWindow);
+
     TabParent::sNextTabParent = aNewTab;
-    aNewTab->mSkipLoad = true;
+    aNewTab->mCreatingWindow = true;
+    aNewTab->mDelayedURL.Truncate();
   }
 
   ~AutoUseNewTab()
   {
-    mNewTab->mSkipLoad = false;
+    mNewTab->mCreatingWindow = false;
+    *mURLToLoad = mNewTab->mDelayedURL;
 
     if (TabParent::sNextTabParent) {
       MOZ_ASSERT(TabParent::sNextTabParent == mNewTab);
@@ -476,6 +480,7 @@ public:
 private:
   TabParent* mNewTab;
   bool* mWindowIsNew;
+  nsCString* mURLToLoad;
 };
 
 bool
@@ -489,7 +494,8 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
                             const nsString& aFeatures,
                             const nsString& aBaseURI,
                             bool* aWindowIsNew,
-                            InfallibleTArray<FrameScriptInfo>* aFrameScripts)
+                            InfallibleTArray<FrameScriptInfo>* aFrameScripts,
+                            nsCString* aURLToLoad)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -530,7 +536,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
     params->SetReferrer(aBaseURI);
     params->SetIsPrivate(isPrivate);
 
-    AutoUseNewTab aunt(newTab, aWindowIsNew);
+    AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
     mBrowserDOMWindow->OpenURIInFrame(nullptr, params,
@@ -564,7 +570,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
 
   nsCOMPtr<nsIDOMWindow> window;
 
-  AutoUseNewTab aunt(newTab, aWindowIsNew);
+  AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
   rv = pwwatch->OpenWindow2(parent, finalURIString.get(),
                             NS_ConvertUTF16toUTF8(aName).get(),
@@ -601,7 +607,7 @@ bool
 TabParent::SendLoadRemoteScript(const nsString& aURL,
                                 const bool& aRunInGlobalScope)
 {
-  if (mSkipLoad) {
+  if (mCreatingWindow) {
     mDelayedFrameScripts.AppendElement(FrameScriptInfo(aURL, aRunInGlobalScope));
     return true;
   }
@@ -615,17 +621,19 @@ TabParent::LoadURL(nsIURI* aURI)
 {
     MOZ_ASSERT(aURI);
 
-    if (mSkipLoad) {
-        // Don't send the message if the child wants to load its own URL.
-        return;
-    }
-
     if (mIsDestroyed) {
         return;
     }
 
     nsCString spec;
     aURI->GetSpec(spec);
+
+    if (mCreatingWindow) {
+        // Don't send the message if the child wants to load its own URL.
+        MOZ_ASSERT(mDelayedURL.IsEmpty());
+        mDelayedURL = spec;
+        return;
+    }
 
     if (!mShown) {
         NS_WARNING(nsPrintfCString("TabParent::LoadURL(%s) called before "
