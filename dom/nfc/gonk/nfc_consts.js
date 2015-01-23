@@ -46,5 +46,8 @@ this.TAG_EVENT_LOST  = 0x04;
 this.PEER_EVENT_FOUND = 0x05;
 this.RF_EVENT_STATE_CHANGE = 0x06;
 
+// This value should sync with |SYSTEM_APP_ID| in nsINfcContentHelper.idl
+this.SYSTEM_APP_ID = -1;
+
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);

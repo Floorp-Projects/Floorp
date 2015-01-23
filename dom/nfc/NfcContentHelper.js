@@ -134,7 +134,7 @@ NfcContentHelper.prototype = {
                        .getService(Ci.nsIXULRuntime)
                        .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
       if (inParent) {
-        this._tabId = -1;
+        this._tabId = Ci.nsINfcBrowserAPI.SYSTEM_APP_ID;
       } else {
         throw Components.Exception("Can't get tab id in child process",
                                    Cr.NS_ERROR_UNEXPECTED);
