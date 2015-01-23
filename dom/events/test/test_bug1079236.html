@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079236
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079236</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1079236 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  var c = document.getElementById("content");
+  var sr = c.createShadowRoot();
+  sr.innerHTML = "<input type='file'" + ">";
+  var file = sr.firstChild;
+  is(file.type, "file");
+  file.offsetLeft; // Flush layout because dispatching mouse events.
+  document.body.onmousemove = function(e) {
+    is(e.target, c, "Event target should be the element in non-Shadow DOM");
+    if (e.originalTarget == file) {
+      is(e.originalTarget, file,
+         "type='file' implementation doesn't seem to have native anonymous content");
+    } else {
+      var wrapped = SpecialPowers.wrap(e.originalTarget);
+      isnot(wrapped, file, "Shouldn't have the same event.target and event.originalTarget");
+    }
+
+    ok(!("composedTarget" in e), "Events shouldn't have composedTarget in non-chrome context!");
+    e = SpecialPowers.wrap(e);
+    var composedTarget = SpecialPowers.unwrap(e.composedTarget);
+    ok(composedTarget, file, "composedTarget should be the file object.");
+
+    SimpleTest.finish();
+  }
+
+  var r = file.getBoundingClientRect();
+  synthesizeMouse(file, r.width / 6, r.height / 2, { type: "mousemove"} );
+  document.body.onmousemove = null;
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1079236">Mozilla Bug 1079236</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
