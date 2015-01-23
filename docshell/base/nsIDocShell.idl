@@ -624,7 +624,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * native code to be able to put a docshell in prerendering.
    */
   [noscript] void SetIsPrerendered(in boolean prerendered);
-  readonly attribute boolean isPrerendered;
+  [infallible] readonly attribute boolean isPrerendered;
 
   /**
    * The ID of the docshell in the session history.
