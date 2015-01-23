@@ -92,8 +92,10 @@ public:
     return mMediaStreamController;
   }
 
+  // Even it is a live stream, as long as it provides valid timestamps,
+  // we tell state machine it's not a live stream.
   virtual bool IsRealTime() MOZ_OVERRIDE {
-    return mRealTime;
+    return !mHasTimestamp;
   }
 
   // Called by RtspOmxReader, dispatch a runnable to notify mDecoder.
@@ -154,7 +156,7 @@ public:
   virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { *aIsReliable = false; return 0; }
 
   virtual int64_t GetLength() MOZ_OVERRIDE {
-    if (mRealTime) {
+    if (mIsLiveStream) {
       return -1;
     }
     return 0;
@@ -247,8 +249,10 @@ private:
   // A flag that indicates the |RtspMediaResource::OnConnected| has already been
   // called.
   bool mIsConnected;
-  // live stream
-  bool mRealTime;
+  // Whether it's a live stream.
+  bool mIsLiveStream;
+  // Whether it provides timestamps.
+  bool mHasTimestamp;
   // Indicate the rtsp controller is suspended or not. Main thread only.
   bool mIsSuspend;
 };
