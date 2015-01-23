@@ -395,10 +395,10 @@ FlameGraph.prototype = {
     ctx.strokeStyle = this.overviewTimelineStrokes;
     ctx.beginPath();
 
-    for (let x = 0; x < canvasWidth + scaledOffset; x += tickInterval) {
-      let lineLeft = x - scaledOffset;
+    for (let x = -scaledOffset % tickInterval; x < canvasWidth; x += tickInterval) {
+      let lineLeft = x;
       let textLeft = lineLeft + textPaddingLeft;
-      let time = Math.round(x / dataScale / this._pixelRatio);
+      let time = Math.round((x / dataScale + dataOffset) / this._pixelRatio);
       let label = time + " " + this.timelineTickUnits;
       ctx.fillText(label, textLeft, textPaddingTop);
       ctx.moveTo(lineLeft, 0);
