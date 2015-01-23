@@ -5713,7 +5713,7 @@ class MMathFunction
         return true;
     }
 
-    MDefinition *foldsTo(TempAllocator &alloc);
+    MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
 
     void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 
