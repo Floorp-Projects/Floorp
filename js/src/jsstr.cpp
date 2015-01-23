@@ -182,7 +182,7 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     ScopedJSFreePtr<Latin1Char> newChars;
-    uint32_t newLength;
+    uint32_t newLength = 0;  // initialize to silence GCC warning
     if (str->hasLatin1Chars()) {
         AutoCheckCannotGC nogc;
         newChars = Escape(cx, str->latin1Chars(nogc), str->length(), &newLength);

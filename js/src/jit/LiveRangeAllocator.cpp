@@ -47,7 +47,7 @@ Requirement::toString() const
     char *cursor = buf;
     char *end = cursor + sizeof(buf);
 
-    int n;
+    int n = -1;  // initialize to silence GCC warning
     switch (kind()) {
       case NONE:
         return "none";

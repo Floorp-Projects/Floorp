@@ -7533,6 +7533,8 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
     Value expandoVal;
     if (kind == ICStub::GetProp_CallDOMProxyNative) {
         expandoVal = expandoSlot;
+        expandoAndGeneration = nullptr;  // initialize to silence GCC warning
+        generation = 0;  // initialize to silence GCC warning
     } else {
         MOZ_ASSERT(kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
         MOZ_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
