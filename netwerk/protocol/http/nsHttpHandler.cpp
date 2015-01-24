@@ -695,7 +695,9 @@ nsHttpHandler::InitUserAgentComponents()
     );
 #endif
 
-#if defined(ANDROID) || defined(MOZ_B2G)
+   // Add the `Mobile` or `Tablet` token when running on device or in the
+   // b2g desktop simulator.
+#if defined(ANDROID) || defined(FXOS_SIMULATOR)
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
     MOZ_ASSERT(infoService, "Could not find a system info service");
 
