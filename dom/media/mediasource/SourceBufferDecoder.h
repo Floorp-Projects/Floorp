@@ -121,6 +121,26 @@ public:
   // cached data. Returns -1 if no such value is computable.
   int64_t ConvertToByteOffset(double aTime);
 
+  // All durations are in usecs.
+
+  // We can't at this stage, accurately remove coded frames.
+  // Trim is a work around that hides data located after a given time by
+  // preventing playback beyond the trim point.
+  // No data is actually removed.
+  // aDuration is were data will be trimmed from.
+  void Trim(int64_t aDuration);
+  bool WasTrimmed()
+  {
+    return mTrimmedOffset >= 0;
+  }
+
+  // returns the real duration of the resource, including trimmed data.
+  void SetRealMediaDuration(int64_t aDuration);
+  int64_t GetRealMediaDuration()
+  {
+    return mRealMediaDuration;
+  }
+
 private:
   virtual ~SourceBufferDecoder();
 
@@ -131,8 +151,14 @@ private:
 
   AbstractMediaDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;
+  // in microseconds
   int64_t mTimestampOffset;
+  // mMediaDuration contains the apparent buffer duration, excluding trimmed data.
   int64_t mMediaDuration;
+  // mRealMediaDuration contains the real buffer duration, including trimmed data.
+  int64_t mRealMediaDuration;
+  // in seconds
+  double mTrimmedOffset;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
