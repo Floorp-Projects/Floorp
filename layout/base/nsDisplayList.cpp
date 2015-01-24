@@ -1236,8 +1236,29 @@ nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot()
 void
 nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
 {
-  if (!IsForPainting() || IsInSubdocument() || IsInTransform()) {
+  if (!IsForPainting() || IsInSubdocument()) {
     return;
+  }
+
+  Matrix4x4 referenceFrameToRootReferenceFrame;
+
+  // The const_cast is for nsLayoutUtils::GetTransformToAncestor.
+  nsIFrame* referenceFrame = const_cast<nsIFrame*>(FindReferenceFrameFor(aFrame));
+
+  if (IsInTransform()) {
+    // Only support 2d rectilinear transforms. Transform support is needed for
+    // the horizontal flip transform that's applied to the urlbar textbox in
+    // RTL mode - it should be able to exclude itself from the draggable region.
+    referenceFrameToRootReferenceFrame =
+      nsLayoutUtils::GetTransformToAncestor(referenceFrame, mReferenceFrame);
+    Matrix referenceFrameToRootReferenceFrame2d;
+    if (!referenceFrameToRootReferenceFrame.Is2D(&referenceFrameToRootReferenceFrame2d) ||
+        !referenceFrameToRootReferenceFrame2d.IsRectilinear()) {
+      return;
+    }
+  } else {
+    MOZ_ASSERT(referenceFrame == mReferenceFrame,
+               "referenceFrameToRootReferenceFrame needs to be adjusted");
   }
 
   // We do some basic visibility checking on the frame's border box here.
@@ -1260,11 +1281,19 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
     borderBox = clip->ApplyNonRoundedIntersection(borderBox);
   }
   if (!borderBox.IsEmpty()) {
-    const nsStyleUserInterface* styleUI = aFrame->StyleUserInterface();
-    if (styleUI->mWindowDragging == NS_STYLE_WINDOW_DRAGGING_DRAG) {
-      mWindowDraggingRegion.OrWith(borderBox);
-    } else {
-      mWindowDraggingRegion.SubOut(borderBox);
+    LayoutDeviceRect devPixelBorderBox =
+      LayoutDevicePixel::FromAppUnits(borderBox, aFrame->PresContext()->AppUnitsPerDevPixel());
+    LayoutDeviceRect transformedDevPixelBorderBox =
+      TransformTo<LayoutDevicePixel>(referenceFrameToRootReferenceFrame, devPixelBorderBox);
+    transformedDevPixelBorderBox.Round();
+    LayoutDeviceIntRect transformedDevPixelBorderBoxInt;
+    if (transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {
+      const nsStyleUserInterface* styleUI = aFrame->StyleUserInterface();
+      if (styleUI->mWindowDragging == NS_STYLE_WINDOW_DRAGGING_DRAG) {
+        mWindowDraggingRegion.OrWith(LayoutDevicePixel::ToUntyped(transformedDevPixelBorderBoxInt));
+      } else {
+        mWindowDraggingRegion.SubOut(LayoutDevicePixel::ToUntyped(transformedDevPixelBorderBoxInt));
+      }
     }
   }
 }

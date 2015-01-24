@@ -66,6 +66,7 @@
             }
 
             mediaSourceDemuxedTest(function(test, mediaElement, mediaSource, dataA, dataB) {
+                test.expectEvent(mediaElement, "loadedmetadata");
                 appendData(test, mediaSource, dataA, dataB, function()
                 {
                     assertBufferedEquals(mediaSource.activeSourceBuffers[0], expectationsA[subType], "mediaSource.activeSourceBuffers[0]");
@@ -116,13 +117,14 @@
                         test.done();
                     });
                 });
-            }, "Muxed tracks with different lengths");
+            }, "Muxed content with different lengths");
 
             mediaSourceDemuxedTest(function(test, mediaElement, mediaSource, dataA, dataB) {
                 var dataBSize = {
                     webm: 318,
                     mp4: 835,
                 };
+                test.expectEvent(mediaElement, "loadedmetadata");
                 appendData(test, mediaSource, dataA, dataB.subarray(0, dataBSize[subType]), function()
                 {
                     assertBufferedEquals(mediaSource.activeSourceBuffers[0], expectationsA[subType], "mediaSource.activeSourceBuffers[0]");
@@ -148,6 +150,7 @@
                 MediaSourceUtil.fetchManifestAndData(test, subType + "/test-av-384k-44100Hz-1ch-320x240-30fps-10kfr-manifest.json", function(type, data)
                 {
                     var sourceBuffer = mediaSource.addSourceBuffer(type);
+                    test.expectEvent(mediaElement, "loadedmetadata");
                     test.expectEvent(sourceBuffer, "update");
                     test.expectEvent(sourceBuffer, "updateend");
                     sourceBuffer.appendBuffer(data.subarray(0, 4052));
@@ -167,6 +170,50 @@
                 });
             }, "Muxed content empty buffered ranges.");
 
+            mediasource_test(function(test, mediaElement, mediaSource)
+            {
+                mediaElement.pause();
+                test.failOnEvent(mediaElement, "error");
+                test.endOnEvent(mediaElement, "ended");
+
+                var sourceBuffer = mediaSource.addSourceBuffer(MediaSourceUtil.AUDIO_ONLY_TYPE);
+
+                assertBufferedEquals(mediaSource.sourceBuffers[0], "{ }", "mediaSource.sourceBuffers[0]");
+                assertBufferedEquals(mediaElement, "{ }", "mediaElement.buffered");
+                test.done();
+
+            }, "Get buffered range when sourcebuffer is empty.");
+
+            mediasource_testafterdataloaded(function(test, mediaElement, mediaSource, segmentInfo, sourceBuffer, mediaData)
+            {
+                var initSegment = MediaSourceUtil.extractSegmentData(mediaData, segmentInfo.init);
+
+                test.expectEvent(mediaElement, "loadedmetadata");
+                test.expectEvent(sourceBuffer, "updateend", "initSegment append ended.");
+                sourceBuffer.appendBuffer(initSegment);
+                test.waitForExpectedEvents(function()
+                {
+                    assertBufferedEquals(mediaSource.sourceBuffers[0], "{ }", "mediaSource.sourceBuffers[0]");
+                    assertBufferedEquals(mediaSource.activeSourceBuffers[0], "{ }", "mediaSource.activeSourceBuffers[0]");
+                    assertBufferedEquals(mediaElement, "{ }", "mediaElement.buffered");
+                    test.done();
+                });
+
+            }, "Get buffered range when only init segment is appended.");
+
+            mediasource_testafterdataloaded(function(test, mediaElement, mediaSource, segmentInfo, sourceBuffer, mediaData)
+            {
+                test.expectEvent(mediaSource.sourceBuffers, "removesourcebuffer", "SourceBuffer removed.");
+                mediaSource.removeSourceBuffer(sourceBuffer);
+
+                test.waitForExpectedEvents(function()
+                {
+                    assert_throws("InvalidStateError",
+                        function() { sourceBuffer.buffered; },
+                        "get sourceBuffer.buffered throws an exception for InvalidStateError.");
+                    test.done();
+                });
+            }, "Get buffered range after removing sourcebuffer.");
         </script>
     </body>
 </html>

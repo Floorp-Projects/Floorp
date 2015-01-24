@@ -2076,10 +2076,6 @@ CodeGenerator::visitStackArgT(LStackArgT *lir)
         masm.storeValue(ValueTypeFromMIRType(argType), ToRegister(arg), dest);
     else
         masm.storeValue(*(arg->toConstant()), dest);
-
-    uint32_t slot = StackOffsetToSlot(stack_offset);
-    MOZ_ASSERT(slot - 1u < graph.totalSlotCount());
-    masm.propagateOOM(pushedArgumentSlots_.append(slot));
 }
 
 void
@@ -2092,10 +2088,6 @@ CodeGenerator::visitStackArgV(LStackArgV *lir)
     int32_t stack_offset = StackOffsetOfPassedArg(argslot);
 
     masm.storeValue(val, Address(StackPointer, stack_offset));
-
-    uint32_t slot = StackOffsetToSlot(stack_offset);
-    MOZ_ASSERT(slot - 1u < graph.totalSlotCount());
-    masm.propagateOOM(pushedArgumentSlots_.append(slot));
 }
 
 void
@@ -2664,8 +2656,6 @@ CodeGenerator::visitCallNative(LCallNative *call)
     // Move the StackPointer back to its original location, unwinding the native exit frame.
     masm.adjustStack(NativeExitFrameLayout::Size() - unusedStack);
     MOZ_ASSERT(masm.framePushed() == initialStack);
-
-    dropArguments(call->numStackArgs() + 1);
 }
 
 static void
@@ -2795,8 +2785,6 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     // Move the StackPointer back to its original location, unwinding the native exit frame.
     masm.adjustStack(IonDOMMethodExitFrameLayout::Size() - unusedStack);
     MOZ_ASSERT(masm.framePushed() == initialStack);
-
-    dropArguments(call->numStackArgs() + 1);
 }
 
 typedef bool (*GetIntrinsicValueFn)(JSContext *cx, HandlePropertyName, MutableHandleValue);
@@ -2913,8 +2901,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
         masm.bind(&notPrimitive);
     }
-
-    dropArguments(call->numStackArgs() + 1);
 }
 
 void
@@ -2981,8 +2967,6 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
         masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
         masm.bind(&notPrimitive);
     }
-
-    dropArguments(call->numStackArgs() + 1);
 }
 
 void
@@ -3819,11 +3803,6 @@ CodeGenerator::generateBody()
             if (counts)
                 blockCounts->visitInstruction(*iter);
 
-            if (iter->safepoint() && pushedArgumentSlots_.length()) {
-                if (!markArgumentSlots(iter->safepoint()))
-                    return false;
-            }
-
 #ifdef CHECK_OSIPOINT_REGISTERS
             if (iter->safepoint())
                 resetOsiPointRegs(iter->safepoint());
@@ -3852,7 +3831,6 @@ CodeGenerator::generateBody()
 #endif
     }
 
-    MOZ_ASSERT(pushedArgumentSlots_.empty());
     return true;
 }
 
@@ -7131,6 +7109,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     if (warmUpCount > script->getWarmUpCount())
         script->incWarmUpCounter(warmUpCount - script->getWarmUpCount());
 
+    uint32_t argumentSlots = (gen->info().nargs() + 1) * sizeof(Value);
     uint32_t scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
@@ -7142,7 +7121,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     IonScript *ionScript =
       IonScript::New(cx, recompileInfo,
-                     graph.totalSlotCount(), scriptFrameSize,
+                     graph.totalSlotCount(), argumentSlots, scriptFrameSize,
                      snapshots_.listSize(), snapshots_.RVATableSize(),
                      recovers_.size(), bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),

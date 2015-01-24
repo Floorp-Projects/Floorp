@@ -102,7 +102,8 @@ var gSimpleTraversalRoles =
    Roles.LISTITEM,
    Roles.GRID_CELL,
    Roles.COLUMNHEADER,
-   Roles.ROWHEADER];
+   Roles.ROWHEADER,
+   Roles.STATUSBAR];
 
 var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   // An object is simple, if it either has a single child lineage,
@@ -151,6 +152,7 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   case Roles.HEADING:
   case Roles.COLUMNHEADER:
   case Roles.ROWHEADER:
+  case Roles.STATUSBAR:
     if ((aAccessible.childCount > 0 || aAccessible.name) &&
         (isSingleLineage(aAccessible) || isFlatSubtree(aAccessible))) {
       return Filters.MATCH | Filters.IGNORE_SUBTREE;

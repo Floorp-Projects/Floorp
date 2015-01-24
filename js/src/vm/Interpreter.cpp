@@ -3725,8 +3725,16 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
     if (!shape || pobj != parent)
         return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
 
-    /* Step 5e. */
-    MOZ_ASSERT(parent->isNative());
+    /*
+     * Step 5e.
+     *
+     * A DebugScopeObject is okay here, and sometimes necessary. If
+     * Debugger.Frame.prototype.eval defines a function with the same name as an
+     * extant variable in the frame, the DebugScopeObject takes care of storing
+     * the function in the stack frame (for non-aliased variables) or on the
+     * scope object (for aliased).
+     */
+    MOZ_ASSERT(parent->isNative() || parent->is<DebugScopeObject>());
     if (parent->is<GlobalObject>()) {
         if (shape->configurable())
             return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);

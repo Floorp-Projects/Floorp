@@ -43,8 +43,9 @@ function testURLFail() {
   var promises = [];
   failFiles.forEach(function(entry) {
     var p = fetch(entry[0]).then(function(res) {
-      ok(res.type === "error", "Response should be an error for " + entry[0]);
-      is(res.status, 0, "Response status should be 0 for " + entry[0]);
+      ok(false, "Response should be an error for " + entry[0]);
+    }, function(e) {
+      ok(e instanceof TypeError, "Response should be an error for " + entry[0]);
     });
     promises.push(p);
   });
@@ -108,21 +109,20 @@ function testResponses() {
       resolve(p);
     }),
 
-    // FIXME(nsm): Enable once Bug 1107777 and Bug 1072144 have been fixed.
-    //new Promise((resolve, reject) => {
-    //  var req = new Request(path + 'responseIdentical.sjs', {
-    //                          method: 'POST',
-    //                          body: '{',
-    //                        });
-    //  var p = fetch(req).then((res) => {
-    //    is(res.status, 200, "wrong status");
-    //    return res.json().then(
-    //      (v) => ok(false, "expected json parse failure"),
-    //      (e) => ok(true, "expected json parse failure")
-    //    );
-    //  });
-    //  resolve(p);
-    //}),
+    new Promise((resolve, reject) => {
+      var req = new Request(path + 'responseIdentical.sjs', {
+                              method: 'POST',
+                              body: '{',
+                            });
+      var p = fetch(req).then((res) => {
+        is(res.status, 200, "wrong status");
+        return res.json().then(
+          (v) => ok(false, "expected json parse failure"),
+          (e) => ok(true, "expected json parse failure")
+        );
+      });
+      resolve(p);
+    }),
   ];
 
   return Promise.all(fetches);

@@ -16,5 +16,5 @@ test(function() {
   assert_equals(parentEl.firstElementChild, null)
   assert_equals(parentEl.lastElementChild, null)
 })
-]]></h:script>	
+]]></h:script>
 </svg>

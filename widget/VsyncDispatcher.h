@@ -46,7 +46,13 @@ public:
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
   void Shutdown();
 
+  // This can be used to enable or disable thread assertions.
+  // This is useful for gtests because usually things run
+  // in only one thread in that environment
+  static void SetThreadAssertionsEnabled(bool aEnable);
+
 private:
+  void AssertOnCompositorThread();
   virtual ~CompositorVsyncDispatcher();
   void ObserveVsync(bool aEnable);
 

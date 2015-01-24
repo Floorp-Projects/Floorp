@@ -316,30 +316,6 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
   // FIXME(nsm): Bug 1119026: The channel's skip service worker flag should be
   // set based on the Request's flag.
 
-  // From here on we create a channel and set its properties with the
-  // information from the InternalRequest. This is an implementation detail.
-  MOZ_ASSERT(mLoadGroup);
-  nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannel(getter_AddRefs(chan),
-                     uri,
-                     mPrincipal,
-                     nsILoadInfo::SEC_NORMAL,
-                     mRequest->GetContext(),
-                     mLoadGroup,
-                     nullptr, /* aCallbacks */
-                     nsIRequest::LOAD_NORMAL,
-                     ios);
-  mLoadGroup = nullptr;
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
-    return rv;
-  }
-
-  // Insert ourselves into the notification callbacks chain so we can handle
-  // cross-origin redirects.
-  chan->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
-  chan->SetNotificationCallbacks(this);
-
   // Step 3.1 "If the CORS preflight flag is set and one of these conditions is
   // true..." is handled by the CORS proxy.
   //
@@ -359,6 +335,36 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
       (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin && !aCORSFlag)) {
     useCredentials = true;
   }
+
+  // This is effectivetly the opposite of the use credentials flag in "HTTP
+  // network or cache fetch" in the spec and decides whether to transmit
+  // cookies and other identifying information. LOAD_ANONYMOUS also prevents
+  // new cookies sent by the server from being stored.
+  const nsLoadFlags credentialsFlag = useCredentials ? 0 : nsIRequest::LOAD_ANONYMOUS;
+
+  // From here on we create a channel and set its properties with the
+  // information from the InternalRequest. This is an implementation detail.
+  MOZ_ASSERT(mLoadGroup);
+  nsCOMPtr<nsIChannel> chan;
+  rv = NS_NewChannel(getter_AddRefs(chan),
+                     uri,
+                     mPrincipal,
+                     nsILoadInfo::SEC_NORMAL,
+                     mRequest->GetContext(),
+                     mLoadGroup,
+                     nullptr, /* aCallbacks */
+                     nsIRequest::LOAD_NORMAL | credentialsFlag,
+                     ios);
+  mLoadGroup = nullptr;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailWithNetworkError();
+    return rv;
+  }
+
+  // Insert ourselves into the notification callbacks chain so we can handle
+  // cross-origin redirects.
+  chan->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
+  chan->SetNotificationCallbacks(this);
 
   // FIXME(nsm): Bug 1120715.
   // Step 3.4 "If request's cache mode is default and request's header list

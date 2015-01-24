@@ -1,0 +1,22 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test worker::unregister</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+  onmessage = function(e) { parent.postMessage(e.data, "*"); }
+  navigator.serviceWorker.controller.postMessage("GO");
+
+</script>
+</pre>
+</body>
+</html>
+
