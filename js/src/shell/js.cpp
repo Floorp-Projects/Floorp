@@ -2900,7 +2900,7 @@ Sleep_fn(JSContext *cx, unsigned argc, Value *vp)
     PR_Lock(gWatchdogLock);
     int64_t to_wakeup = PRMJ_Now() + t_ticks;
     for (;;) {
-        PR_WaitCondVar(gSleepWakeup, t_ticks);
+        PR_WaitCondVar(gSleepWakeup, PR_MillisecondsToInterval(t_ticks / 1000));
         if (gServiceInterrupt)
             break;
         int64_t now = PRMJ_Now();
@@ -2909,6 +2909,7 @@ Sleep_fn(JSContext *cx, unsigned argc, Value *vp)
         t_ticks = to_wakeup - now;
     }
     PR_Unlock(gWatchdogLock);
+    args.rval().setUndefined();
     return !gServiceInterrupt;
 }
 
