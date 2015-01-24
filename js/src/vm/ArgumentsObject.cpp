@@ -325,9 +325,11 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
         return true;
     Handle<NormalArgumentsObject*> argsobj = obj.as<NormalArgumentsObject>();
 
-    unsigned attrs;
-    if (!NativeGetPropertyAttributes(cx, argsobj, id, &attrs))
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, argsobj, id, &desc))
         return false;
+    MOZ_ASSERT(desc.object());
+    unsigned attrs = desc.attributes();
     MOZ_ASSERT(!(attrs & JSPROP_READONLY));
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
@@ -444,9 +446,11 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
         return true;
     Handle<StrictArgumentsObject*> argsobj = obj.as<StrictArgumentsObject>();
 
-    unsigned attrs;
-    if (!NativeGetPropertyAttributes(cx, argsobj, id, &attrs))
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, argsobj, id, &desc))
         return false;
+    MOZ_ASSERT(desc.object());
+    unsigned attrs = desc.attributes();
     MOZ_ASSERT(!(attrs & JSPROP_READONLY));
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 

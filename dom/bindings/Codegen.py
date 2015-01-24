@@ -405,7 +405,6 @@ class CGDOMJSClass(CGThing):
                       nullptr, /* setProperty */
                       nullptr, /* setElement */
                       nullptr, /* getOwnPropertyDescriptor */
-                      nullptr, /* getGenericAttributes */
                       nullptr, /* setGenericAttributes */
                       nullptr, /* deleteGeneric */
                       nullptr, /* watch */
