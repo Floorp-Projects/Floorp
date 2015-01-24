@@ -40,6 +40,8 @@ SourceBufferDecoder::SourceBufferDecoder(MediaResource* aResource,
   , mReader(nullptr)
   , mTimestampOffset(aTimestampOffset)
   , mMediaDuration(-1)
+  , mRealMediaDuration(0)
+  , mTrimmedOffset(-1)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(SourceBufferDecoder);
@@ -191,6 +193,18 @@ SourceBufferDecoder::SetMediaDuration(int64_t aDuration)
 }
 
 void
+SourceBufferDecoder::SetRealMediaDuration(int64_t aDuration)
+{
+  mRealMediaDuration = aDuration;
+}
+
+void
+SourceBufferDecoder::Trim(int64_t aDuration)
+{
+  mTrimmedOffset = (double)aDuration / USECS_PER_S;
+}
+
+void
 SourceBufferDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::UpdateEstimatedMediaDuration UNIMPLEMENTED", this);
@@ -229,7 +243,17 @@ SourceBufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, in
 nsresult
 SourceBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
 {
-  return mReader->GetBuffered(aBuffered);
+  nsresult rv = mReader->GetBuffered(aBuffered);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!WasTrimmed()) {
+    return NS_OK;
+  }
+  nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
+  tr->Add(0, mTrimmedOffset);
+  aBuffered->Intersection(tr);
+  return NS_OK;
 }
 
 int64_t
@@ -244,12 +268,12 @@ SourceBufferDecoder::ConvertToByteOffset(double aTime)
   // purposes of eviction this should be adequate since we have the
   // byte threshold as well to ensure data actually gets evicted and
   // we ensure we don't evict before the current playable point.
-  if (mMediaDuration <= 0) {
+  if (mRealMediaDuration <= 0) {
     return -1;
   }
   int64_t length = GetResource()->GetLength();
   MOZ_ASSERT(length > 0);
-  int64_t offset = (aTime / (double(mMediaDuration) / USECS_PER_S)) * length;
+  int64_t offset = (aTime / (double(mRealMediaDuration) / USECS_PER_S)) * length;
   return offset;
 }
 
