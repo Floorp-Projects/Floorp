@@ -129,6 +129,10 @@ public:
 
   // Return true if the Ended method has been called
   bool IsEnded();
+  bool IsNearEnd(int64_t aTime /* microseconds */);
+
+  // Set the duration of the attached mediasource element.
+  void SetMediaSourceDuration(double aDuration /* seconds */);
 
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
@@ -159,7 +163,7 @@ private:
   void RequestVideoDataFailed(nsresult aResult);
   // Will reject the MediaPromise with END_OF_STREAM if mediasource has ended
   // or with WAIT_FOR_DATA otherwise.
-  void CheckForWaitOrEndOfStream(MediaData::Type aType);
+  void CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime /* microseconds */);
 
   // Return a reader from the set available in aTrackDecoders that has data
   // available in the range requested by aTarget.
@@ -210,6 +214,7 @@ private:
   bool mDropVideoBeforeThreshold;
 
   bool mEnded;
+  double mMediaSourceDuration;
 
   bool mHasEssentialTrackBuffers;
 

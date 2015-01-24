@@ -56,6 +56,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
+  , mMediaSourceDuration(0)
   , mHasEssentialTrackBuffers(false)
 #ifdef MOZ_FMP4
   , mSharedDecoderManager(new SharedDecoderManager())
@@ -133,7 +134,7 @@ MediaSourceReader::RequestAudioData()
       break;
     case READER_ERROR:
       if (mLastAudioTime) {
-        CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA);
+        CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA, mLastAudioTime);
         break;
       }
       // Fallback to using current reader
@@ -238,7 +239,7 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
     return;
   }
 
-  CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA);
+  CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA, mLastAudioTime);
 }
 
 
@@ -273,7 +274,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
       break;
     case READER_ERROR:
       if (mLastVideoTime) {
-        CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA);
+        CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA, mLastVideoTime);
         break;
       }
       // Fallback to using current reader.
@@ -355,14 +356,14 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
     return;
   }
 
-  CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA);
+  CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA, mLastVideoTime);
 }
 
 void
-MediaSourceReader::CheckForWaitOrEndOfStream(MediaData::Type aType)
+MediaSourceReader::CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime)
 {
   // If the entire MediaSource is done, generate an EndOfStream.
-  if (IsEnded()) {
+  if (IsNearEnd(aTime)) {
     if (aType == MediaData::AUDIO_DATA) {
       mAudioPromise.Reject(END_OF_STREAM, __func__);
     } else {
@@ -944,6 +945,20 @@ MediaSourceReader::IsEnded()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   return mEnded;
+}
+
+bool
+MediaSourceReader::IsNearEnd(int64_t aTime)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  return mEnded && aTime >= (mMediaSourceDuration * USECS_PER_S - EOS_FUZZ_US);
+}
+
+void
+MediaSourceReader::SetMediaSourceDuration(double aDuration)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mMediaSourceDuration = aDuration;
 }
 
 #ifdef MOZ_EME
