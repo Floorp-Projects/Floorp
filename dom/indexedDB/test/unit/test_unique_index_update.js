@@ -16,7 +16,7 @@ function testSteps()
 
   let db = event.target.result;
 
-  for each (let autoIncrement in [false, true]) {
+  for (let autoIncrement of [false, true]) {
     let objectStore =
       db.createObjectStore(autoIncrement, { keyPath: "id",
                                             autoIncrement: autoIncrement });
@@ -30,7 +30,7 @@ function testSteps()
   event = yield undefined;
   is(event.type, "success", "expect a success event");
 
-  for each (let autoIncrement in [false, true]) {
+  for (let autoIncrement of [false, true]) {
     objectStore = db.transaction(autoIncrement, "readwrite")
                     .objectStore(autoIncrement);
 

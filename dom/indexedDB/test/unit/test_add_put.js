@@ -16,11 +16,11 @@ function testSteps()
   let db = event.target.result;
   let trans = event.target.transaction;
 
-  for each (let autoincrement in [true, false]) {
-    for each (let keypath in [false, true, "missing", "invalid"]) {
-      for each (let method in ["put", "add"]) {
-        for each (let explicit in [true, false, undefined, "invalid"]) {
-          for each (let existing in [true, false]) {
+  for (let autoincrement of [true, false]) {
+    for (let keypath of [false, true, "missing", "invalid"]) {
+      for (let method of ["put", "add"]) {
+        for (let explicit of [true, false, undefined, "invalid"]) {
+          for (let existing of [true, false]) {
             let speccedNoKey = (keypath == false || keypath == "missing") &&
                                !explicit;
 
