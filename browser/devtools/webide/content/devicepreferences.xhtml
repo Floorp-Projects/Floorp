@@ -13,7 +13,7 @@
   <head>
     <meta charset="utf8"/>
     <link rel="stylesheet" href="chrome://webide/skin/deck.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://webide/skin/devicepreferences.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://webide/skin/config-view.css" type="text/css"/>
     <script type="application/javascript;version=1.8" src="chrome://webide/content/devicepreferences.js"></script>
   </head>
   <body>
@@ -21,27 +21,27 @@
       <div id="controls">
         <a id="close">&deck_close;</a>
       </div>
-      <h1>&devicepreferences_title;</h1>
+      <h1>&devicepreference_title;</h1>
       <div id="search">
-        <input type="text" id="search-bar" placeholder="&devicepreferences_search;"/>
+        <input type="text" id="search-bar" placeholder="&devicepreference_search;"/>
       </div>
     </header>
-    <table id="device-preferences">
-      <tr id="add-custom-preference">
+    <table id="device-fields">
+      <tr id="add-custom-field">
         <td>
           <select id="custom-value-type">
-            <option value="" selected="selected">&devicepreferences_typenone;</option>
-            <option value="boolean">&devicepreferences_typeboolean;</option>
-            <option value="number">&devicepreferences_typenumber;</option>
-            <option value="string">&devicepreferences_typestring;</option>
+            <option value="" selected="selected">&device_typenone;</option>
+            <option value="boolean">&device_typeboolean;</option>
+            <option value="number">&device_typenumber;</option>
+            <option value="string">&device_typestring;</option>
           </select>
-          <input type="text" id="custom-value-name" placeholder="&devicepreferences_newname;"/>
+          <input type="text" id="custom-value-name" placeholder="&devicepreference_newname;"/>
         </td>
         <td class="custom-input">
-          <input type="text" id="custom-value-text" placeholder="&devicepreferences_newtext;"/>
+          <input type="text" id="custom-value-text" placeholder="&devicepreference_newtext;"/>
         </td>
         <td>
-          <button id="custom-value" class="new-editable">&devicepreferences_addnew;</button>
+          <button id="custom-value" class="new-editable">&devicepreference_addnew;</button>
         </td>
       </tr>
     </table>

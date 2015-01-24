@@ -15,4 +15,4 @@ webide.jar:
   skin/runtimedetails.css      (runtimedetails.css)
   skin/permissionstable.css    (permissionstable.css)
   skin/monitor.css             (monitor.css)
-  skin/devicepreferences.css   (devicepreferences.css)
+  skin/config-view.css         (config-view.css)
