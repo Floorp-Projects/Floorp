@@ -108,7 +108,7 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
   Services.prefs.setCharPref(prefName, value);
 
   if (shell.hasStarted() == false) {
-    shell.start();
+    shell.bootstrap();
   }
 });
 

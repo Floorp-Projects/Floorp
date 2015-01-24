@@ -22,3 +22,5 @@ webide.jar:
     content/monitor.js                (monitor.js)
     content/devicepreferences.js      (devicepreferences.js)
     content/devicepreferences.xhtml   (devicepreferences.xhtml)
+    content/devicesettings.js         (devicesettings.js)
+    content/devicesettings.xhtml      (devicesettings.xhtml)

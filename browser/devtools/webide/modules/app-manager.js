@@ -18,6 +18,7 @@ const {ConnectionManager, Connection} = require("devtools/client/connection-mana
 const {AppActorFront} = require("devtools/app-actor-front");
 const {getDeviceFront} = require("devtools/server/actors/device");
 const {getPreferenceFront} = require("devtools/server/actors/preference");
+const {getSettingsFront} = require("devtools/server/actors/settings");
 const {setTimeout} = require("sdk/timers");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {RuntimeScanners, RuntimeTypes} = require("devtools/webide/runtimes");
@@ -413,6 +414,13 @@ let AppManager = exports.AppManager = {
       return null;
     }
     return getPreferenceFront(this.connection.client, this._listTabsResponse);
+  },
+
+  get settingsFront() {
+     if (!this._listTabsResponse) {
+      return null;
+    }
+    return getSettingsFront(this.connection.client, this._listTabsResponse);
   },
 
   disconnectRuntime: function() {

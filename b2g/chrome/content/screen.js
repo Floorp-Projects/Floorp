@@ -132,6 +132,9 @@ window.addEventListener('ContentStart', function() {
     GlobalSimulatorScreen.width = width;
     GlobalSimulatorScreen.height = height;
 
+    Services.prefs.setCharPref('layout.css.devPixelsPerPx',
+                               ratio == 1 ? -1 : ratio);
+
     // In order to do rescaling, we set the <browser> tag to the specified
     // width and height, and then use a CSS transform to scale it so that
     // it appears at the correct size on the host display.  We also set
@@ -175,8 +178,6 @@ window.addEventListener('ContentStart', function() {
       style.transform +=
         ' rotate(0.25turn) translate(-' + shift + 'px, -' + shift + 'px)';
     }
-
-    Services.prefs.setCharPref('layout.css.devPixelsPerPx', ratio);
   }
 
   // Resize on startup
