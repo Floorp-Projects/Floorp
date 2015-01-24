@@ -516,7 +516,7 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
 
       // Show a throbber and a "Saving…" label if serializing isn't immediate.
       setNamedTimeout("call-list-save", CALLS_LIST_SLOW_SAVE_DELAY, () => {
-        footer.setAttribute("saving", "");
+        footer.classList.add("devtools-throbber");
         save.setAttribute("disabled", "true");
         save.setAttribute("value", L10N.getStr("snapshotsList.savingLabel"));
       });
@@ -529,7 +529,7 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
             console.error("Could not save recorded animation frame snapshot file.");
           }
           clearNamedTimeout("call-list-save");
-          footer.removeAttribute("saving");
+          footer.classList.remove("devtools-throbber");
           save.removeAttribute("disabled");
           save.setAttribute("value", L10N.getStr("snapshotsList.saveLabel"));
         });

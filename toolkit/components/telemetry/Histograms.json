@@ -7155,6 +7155,14 @@
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
+  "PWMGR_BLOCKLIST_NUM_SITES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100,
+    "n_buckets" : 10,
+    "extended_statistics_ok": true,
+    "description": "The number of sites for which the user has explicitly rejected saving logins"
+  },
   "PWMGR_NUM_SAVED_PASSWORDS": {
     "expires_in_version": "never",
     "kind": "exponential",
