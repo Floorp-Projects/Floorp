@@ -16,6 +16,6 @@ interface InstallEvent : ExtendableEvent {
 
 // Should be in the spec soon to satisfy conventions about events.
 // https://github.com/slightlyoff/ServiceWorker/issues/216.
-dictionary InstallEventInit : ExtendableEventInit {
+dictionary InstallEventInit : EventInit {
   ServiceWorker? activeWorker = null;
 };
