@@ -21,9 +21,6 @@ namespace workers {
 
 class SharedWorker;
 
-bool
-ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
-
 class ServiceWorker MOZ_FINAL : public DOMEventTargetHelper
 {
   friend class RuntimeService;

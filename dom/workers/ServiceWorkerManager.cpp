@@ -1066,8 +1066,8 @@ private:
     EventInit init;
     init.mBubbles = false;
     init.mCancelable = true;
-    nsRefPtr<ExtendableEvent> event =
-      ExtendableEvent::Constructor(target, NS_LITERAL_STRING("activate"), init);
+    nsRefPtr<InstallPhaseEvent> event =
+      InstallPhaseEvent::Constructor(target, NS_LITERAL_STRING("activate"), init);
 
     event->SetTrusted(true);
 
