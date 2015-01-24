@@ -55,6 +55,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/profiler.js',
     'actors/root.js',
     'actors/script.js',
+    'actors/settings.js',
     'actors/storage.js',
     'actors/string.js',
     'actors/styleeditor.js',
