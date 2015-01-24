@@ -13,7 +13,9 @@
 #include "prlock.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIProtocolProxyCallback.h"
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 #include "FakeMediaStreams.h"
@@ -434,6 +436,22 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalEndOfLocalCandidates;
 
  private:
+  class ProtocolProxyQueryHandler : public nsIProtocolProxyCallback {
+   public:
+    explicit ProtocolProxyQueryHandler(PeerConnectionMedia *pcm) :
+      pcm_(pcm) {}
+
+    NS_IMETHODIMP OnProxyAvailable(nsICancelable *request,
+                                   nsIChannel *aChannel,
+                                   nsIProxyInfo *proxyinfo,
+                                   nsresult result) MOZ_OVERRIDE;
+    NS_DECL_ISUPPORTS
+
+   private:
+      RefPtr<PeerConnectionMedia> pcm_;
+      virtual ~ProtocolProxyQueryHandler() {}
+  };
+
   // Shutdown media transport. Must be called on STS thread.
   void ShutdownMediaTransport_s();
 
@@ -447,6 +465,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                               const std::string& aUfrag,
                               const std::string& aPassword,
                               const std::vector<std::string>& aCandidateList);
+  void GatherIfReady();
   void EnsureIceGathering_s();
   void StartIceChecks_s(bool aIsControlling,
                         bool aIsIceLite,
@@ -519,6 +538,18 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // The STS thread.
   nsCOMPtr<nsIEventTarget> mSTSThread;
+
+  // Used to track when transports are updated and are ready to start gathering
+  bool mTransportsUpdated;
+
+  // Used to cancel any ongoing proxy request.
+  nsCOMPtr<nsICancelable> mProxyRequest;
+
+  // Used to track the state of the request.
+  bool mProxyResolveCompleted;
+
+  // Used to store the result of the request.
+  UniquePtr<NrIceProxyServer> mProxyServer;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };

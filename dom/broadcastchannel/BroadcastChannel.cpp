@@ -66,6 +66,27 @@ GetOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin, ErrorResult& aRv)
     }
 
     aOrigin = tmp;
+    if (aOrigin.EqualsASCII("null")) {
+      nsCOMPtr<nsIURI> uri;
+      aRv = aPrincipal->GetURI(getter_AddRefs(uri));
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
+
+      if (NS_WARN_IF(!uri)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+
+      nsAutoCString spec;
+      aRv = uri->GetSpec(spec);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
+
+      aOrigin = NS_ConvertUTF8toUTF16(spec);
+    }
+
     return;
   }
 
@@ -438,6 +459,9 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     }
 
     GetOrigin(principal, origin, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
 
     aRv = PrincipalToPrincipalInfo(principal, &principalInfo);
     if (NS_WARN_IF(aRv.Failed())) {

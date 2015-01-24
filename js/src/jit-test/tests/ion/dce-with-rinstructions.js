@@ -1036,6 +1036,32 @@ function rtofloat32_object(i) {
     return i;
 }
 
+var uceFault_trunc_to_int32_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_number'));
+function rtrunc_to_int32_number(i) {
+    var x = (i + 0.12) | 0;
+    if (uceFault_trunc_to_int32_number(i) || uceFault_trunc_to_int32_number(i))
+        assertEq(x, (i + 0.12) | 0);
+    return i;
+}
+
+var uceFault_trunc_to_int32_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_object'));
+function rtrunc_to_int32_object(i) {
+    var t1 = i + 0.12;
+    var o1 = { valueOf: function() { return t1; } };
+    var x = o1 | 0;
+    t1 = 777.12;
+    if (uceFault_trunc_to_int32_object(i) || uceFault_trunc_to_int32_object(i))
+        assertEq(x, (i + 0.12) | 0);
+}
+
+var uceFault_trunc_to_int32_string = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_to_int32_string'));
+function rtrunc_to_int32_string(i) {
+    var x = (i + "0") | 0;
+    if (uceFault_trunc_to_int32_string(i) || uceFault_trunc_to_int32_string(i))
+        assertEq(x, (i + "0") | 0);
+    return i;
+}
+
 var uceFault_hypot_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number'));
 function rhypot_number(i) {
     var x = Math.hypot(i, i + 1);
@@ -1195,6 +1221,9 @@ for (i = 0; i < 100; i++) {
     rtodouble_number(i);
     rtofloat32_number(i);
     rtofloat32_object(i);
+    rtrunc_to_int32_number(i);
+    rtrunc_to_int32_object(i);
+    rtrunc_to_int32_string(i);
     rhypot_number(i);
     rhypot_object(i);
     rsin_number(i);

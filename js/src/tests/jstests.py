@@ -8,7 +8,7 @@ See the adjacent README.txt for more details.
 from __future__ import print_function
 
 import os, sys, textwrap
-from os.path import abspath, dirname, realpath
+from os.path import abspath, dirname, isfile, realpath
 from copy import copy
 from subprocess import list2cmdline, call
 
@@ -279,6 +279,9 @@ def load_tests(options, requested_paths, excluded_paths):
 
 def main():
     options, requested_paths, excluded_paths = parse_args()
+    if options.js_shell is not None and not isfile(options.js_shell):
+        print('Could not find shell at given path.')
+        return 1
     skip_list, test_list = load_tests(options, requested_paths, excluded_paths)
 
     if not test_list:

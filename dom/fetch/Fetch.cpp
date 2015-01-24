@@ -19,6 +19,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
@@ -266,9 +267,15 @@ MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
   NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver);
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
-  mResponse = new Response(go, aResponse);
-  mPromise->MaybeResolve(mResponse);
+  if (aResponse->Type() != ResponseType::Error) {
+    nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
+    mResponse = new Response(go, aResponse);
+    mPromise->MaybeResolve(mResponse);
+  } else {
+    ErrorResult result;
+    result.ThrowTypeError(MSG_FETCH_FAILED);
+    mPromise->MaybeReject(result);
+  }
 }
 
 MainThreadFetchResolver::~MainThreadFetchResolver()
@@ -296,11 +303,18 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
 
-    nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-    mResolver->mResponse = new Response(global, mInternalResponse);
-
     nsRefPtr<Promise> promise = mResolver->mFetchPromise.forget();
-    promise->MaybeResolve(mResolver->mResponse);
+
+    if (mInternalResponse->Type() != ResponseType::Error) {
+      nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
+      mResolver->mResponse = new Response(global, mInternalResponse);
+
+      promise->MaybeResolve(mResolver->mResponse);
+    } else {
+      ErrorResult result;
+      result.ThrowTypeError(MSG_FETCH_FAILED);
+      promise->MaybeReject(result);
+    }
 
     return true;
   }
@@ -322,7 +336,6 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
-    MOZ_ASSERT(mResolver->mResponse);
 
     mResolver->CleanUp(aCx);
     return true;
@@ -724,7 +737,7 @@ public:
                    nsISupports* aCtxt,
                    nsresult aStatus,
                    uint32_t aResultLength,
-                   const uint8_t* aResult)
+                   const uint8_t* aResult) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1066,9 +1079,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   // Finish successfully consuming body according to type.
   MOZ_ASSERT(aResult);
 
-  AutoJSAPI api;
-  api.Init(DerivedClass()->GetParentObject());
-  JSContext* cx = api.cx();
+  AutoJSAPI jsapi;
+  jsapi.Init(DerivedClass()->GetParentObject());
+  JSContext* cx = jsapi.cx();
 
   switch (mConsumeType) {
     case CONSUME_ARRAYBUFFER: {
@@ -1115,13 +1128,20 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         return;
       }
 
+      AutoForceSetExceptionOnContext forceExn(cx);
       JS::Rooted<JS::Value> json(cx);
       if (!JS_ParseJSON(cx, decoded.get(), decoded.Length(), &json)) {
-        JS::Rooted<JS::Value> exn(cx);
-        if (JS_GetPendingException(cx, &exn)) {
-          JS_ClearPendingException(cx);
-          localPromise->MaybeReject(cx, exn);
+        if (!JS_IsExceptionPending(cx)) {
+          localPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+          return;
         }
+
+        JS::Rooted<JS::Value> exn(cx);
+        DebugOnly<bool> gotException = JS_GetPendingException(cx, &exn);
+        MOZ_ASSERT(gotException);
+
+        JS_ClearPendingException(cx);
+        localPromise->MaybeReject(cx, exn);
         return;
       }
 

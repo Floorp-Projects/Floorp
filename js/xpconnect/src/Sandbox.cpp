@@ -454,7 +454,8 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
         if (!JS_SetPropertyById(cx, proto, id, vp))
             return false;
     } else {
-        if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj))
+        if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj,
+                                 MakeNonConfigurableIntoConfigurable))
             return false;
     }
 

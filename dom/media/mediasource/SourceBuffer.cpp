@@ -36,9 +36,36 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #define MSE_API(...)
 #endif
 
+// RangeRemoval must be synchronous if appendBuffer is also synchronous.
+// While waiting for bug 1118589 to land, ensure RangeRemoval is synchronous
+#define APPENDBUFFER_IS_SYNCHRONOUS
+
 namespace mozilla {
 
 namespace dom {
+
+class RangeRemovalRunnable : public nsRunnable {
+public:
+  RangeRemovalRunnable(SourceBuffer* aSourceBuffer,
+                     double aStart,
+                     double aEnd)
+  : mSourceBuffer(aSourceBuffer)
+  , mStart(aStart)
+  , mEnd(aEnd)
+  { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+
+    mSourceBuffer->DoRangeRemoval(mStart, mEnd);
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<SourceBuffer> mSourceBuffer;
+  double mStart;
+  double mEnd;
+};
 
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
@@ -165,16 +192,22 @@ SourceBuffer::Abort(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (mUpdating) {
-    // TODO: Abort segment parser loop, buffer append, and stream append loop algorithms.
-    AbortUpdating();
-  }
+  Abort();
   mTrackBuffer->ResetParserState();
   mAppendWindowStart = 0;
   mAppendWindowEnd = PositiveInfinity<double>();
 
   MSE_DEBUG("SourceBuffer(%p)::Abort() Discarding decoder", this);
   mTrackBuffer->DiscardDecoder();
+}
+
+void
+SourceBuffer::Abort()
+{
+  if (mUpdating) {
+    // TODO: Abort segment parser loop, buffer append, and stream append loop algorithms.
+    AbortUpdating();
+  }
 }
 
 void
@@ -206,13 +239,37 @@ void
 SourceBuffer::RangeRemoval(double aStart, double aEnd)
 {
   StartUpdating();
-  /// TODO: Run coded frame removal algorithm.
 
-  // Run the final step of the coded frame removal algorithm asynchronously
-  // to ensure the SourceBuffer's updating flag transition behaves as
-  // required by the spec.
+#if defined(APPENDBUFFER_IS_SYNCHRONOUS)
+  DoRangeRemoval(aStart, aEnd);
+
+  // Run the final step of the buffer append algorithm asynchronously to
+  // ensure the SourceBuffer's updating flag transition behaves as required
+  // by the spec.
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &SourceBuffer::StopUpdating);
   NS_DispatchToMainThread(event);
+#else
+  nsRefPtr<nsIRunnable> task = new RangeRemovalRunnable(this, aStart, aEnd);
+  NS_DispatchToMainThread(task);
+#endif
+}
+
+void
+SourceBuffer::DoRangeRemoval(double aStart, double aEnd)
+{
+  if (!mUpdating) {
+    // abort was called in between.
+    return;
+  }
+  if (mTrackBuffer && !IsInfinite(aStart)) {
+    int64_t start = aStart * USECS_PER_S;
+    int64_t end = IsInfinite(aEnd) ? INT64_MAX : (int64_t)(aEnd * USECS_PER_S);
+    mTrackBuffer->RangeRemoval(start, end);
+  }
+
+#if !defined(APPENDBUFFER_IS_SYNCHRONOUS)
+  StopUpdating();
+#endif
 }
 
 void
@@ -220,6 +277,7 @@ SourceBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Detach", this);
+  Abort();
   if (mTrackBuffer) {
     mTrackBuffer->Detach();
   }

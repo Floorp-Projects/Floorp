@@ -246,7 +246,7 @@ public:
   uint32_t SuspendRedraw(uint32_t max_wait_milliseconds);
   void UnsuspendRedraw(uint32_t suspend_handle_id);
   void UnsuspendRedrawAll();
-  void ForceRedraw(ErrorResult& rv);
+  void ForceRedraw();
   void PauseAnimations();
   void UnpauseAnimations();
   bool AnimationsPaused();

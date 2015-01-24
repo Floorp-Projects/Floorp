@@ -32,6 +32,7 @@ blog.lookout.com: did not receive HSTS header
 br.search.yahoo.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
+brainvation.de: did not receive HSTS header
 browserid.org: did not receive HSTS header
 business.facebook.com: did not receive HSTS header
 business.medbank.com.mt: did not receive HSTS header
@@ -86,10 +87,10 @@ domaris.de: did not receive HSTS header
 download.jitsi.org: did not receive HSTS header
 drive.google.com: did not receive HSTS header (error ignored - included regardless)
 dropcam.com: did not receive HSTS header
+dynaloop.net: did not receive HSTS header
 dzlibs.io: could not connect to host
 ed.gs: did not receive HSTS header
 edmodo.com: did not receive HSTS header
-elnutricionista.es: could not connect to host
 email.lookout.com: could not connect to host
 en-maktoob.search.yahoo.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -107,8 +108,8 @@ fixingdns.com: did not receive HSTS header
 fj.search.yahoo.com: did not receive HSTS header
 fonetiq.io: could not connect to host
 fr.search.yahoo.com: did not receive HSTS header
+friendlink.jp: did not receive HSTS header
 gamesdepartment.co.uk: did not receive HSTS header
-get.zenpayroll.com: did not receive HSTS header
 getlantern.org: did not receive HSTS header
 gl.search.yahoo.com: did not receive HSTS header
 glass.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -126,6 +127,7 @@ gr.search.yahoo.com: did not receive HSTS header
 grandmascookieblog.com: did not receive HSTS header
 greplin.com: could not connect to host
 groups.google.com: did not receive HSTS header (error ignored - included regardless)
+hachre.de: did not receive HSTS header
 hackerone-user-content.com: could not connect to host
 haste.ch: could not connect to host
 history.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -152,7 +154,6 @@ itriskltd.com: did not receive HSTS header
 jottit.com: could not connect to host
 keeleysam.com: did not receive HSTS header
 keymaster.lookout.com: did not receive HSTS header
-kingmanhall.org: could not connect to host
 kirkforcongress.com: did not receive HSTS header
 kirkforsenate.com: did not receive HSTS header
 kitsta.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
@@ -179,12 +180,14 @@ lv.search.yahoo.com: did not receive HSTS header
 m.facebook.com: did not receive HSTS header
 m.gparent.org: could not connect to host
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
+makeyourlaws.org: did not receive HSTS header
 maktoob.search.yahoo.com: did not receive HSTS header
 malaysia.search.yahoo.com: did not receive HSTS header
 man3s.jp: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 manage.zenpayroll.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 market.android.com: did not receive HSTS header (error ignored - included regardless)
 markusueberallassetmanagement.de: could not connect to host
+marshut.net: could not connect to host
 mbasic.facebook.com: did not receive HSTS header
 megashur.se: did not receive HSTS header
 megaxchange.com: did not receive HSTS header
@@ -194,7 +197,6 @@ mobilethreat.net: could not connect to host
 mobilethreatnetwork.net: could not connect to host
 mocloud.eu: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 movelaria.com.br: did not receive HSTS header
-mqas.net: could not connect to host
 mt.search.yahoo.com: did not receive HSTS header
 mtouch.facebook.com: did not receive HSTS header
 mu.search.yahoo.com: did not receive HSTS header
@@ -220,7 +222,7 @@ npw.net: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FA
 nutsandboltsmedia.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 nz.search.yahoo.com: did not receive HSTS header
 openshift.redhat.com: did not receive HSTS header
-otakurepublic.com: did not receive HSTS header
+otakurepublic.com: could not connect to host
 ottospora.nl: could not connect to host
 pa.search.yahoo.com: did not receive HSTS header
 passwordbox.com: did not receive HSTS header
@@ -256,6 +258,7 @@ roddis.net: did not receive HSTS header
 ru.search.yahoo.com: did not receive HSTS header
 rw.search.yahoo.com: did not receive HSTS header
 sah3.net: could not connect to host
+samuelkeeley.com: did not receive HSTS header
 saturngames.co.uk: could not connect to host
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 se.search.yahoo.com: did not receive HSTS header
@@ -269,7 +272,6 @@ seowarp.net: max-age too low: 1576800
 serverdensity.io: did not receive HSTS header
 seyahatsagliksigortalari.com: did not receive HSTS header
 sg.search.yahoo.com: did not receive HSTS header
-shohruh.uz: did not receive HSTS header
 shops.neonisi.com: could not connect to host
 siammedia.co: did not receive HSTS header
 silentcircle.org: could not connect to host
@@ -290,6 +292,7 @@ staticanime.net: did not receive HSTS header
 stocktrade.de: could not connect to host
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
+suzukikenichi.com: did not receive HSTS header
 sv.search.yahoo.com: did not receive HSTS header
 t.facebook.com: did not receive HSTS header
 tablet.facebook.com: did not receive HSTS header
@@ -317,9 +320,8 @@ upload.facebook.com: did not receive HSTS header
 uprotect.it: could not connect to host
 uy.search.yahoo.com: did not receive HSTS header
 uz.search.yahoo.com: did not receive HSTS header
-uzstyle.com: did not receive HSTS header
 ve.search.yahoo.com: did not receive HSTS header
-viennan.net: did not receive HSTS header
+viennan.net: could not connect to host
 vn.search.yahoo.com: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
@@ -339,7 +341,7 @@ www.greplin.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
 www.ledgerscope.net: did not receive HSTS header
 www.logentries.com: did not receive HSTS header
-www.moneybookers.com: could not connect to host
+www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
 www.paycheckrecords.com: max-age too low: 86400
 www.rme.li: did not receive HSTS header

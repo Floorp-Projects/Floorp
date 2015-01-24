@@ -59,7 +59,8 @@ IdpChannel.prototype = {
         aSandbox._frame.contentWindow.wrappedJSObject,
         "rtcwebIdentityPort",
         {
-          value: this.messagechannel.port2
+          value: this.messagechannel.port2,
+          configurable: true
         }
       );
     } catch (e) {
