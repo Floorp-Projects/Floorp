@@ -18,8 +18,12 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function* () {
+        Task.spawn(function*() {
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+          if (SpecialPowers.isMainProcess()) {
+            Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
+          }
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
@@ -28,9 +32,9 @@
 
           let win = yield openWebIDE();
 
-          let prefIframe = win.document.querySelector("#deck-panel-devicepreferences");
+          let settingIframe = win.document.querySelector("#deck-panel-devicesettings");
 
-          yield documentIsLoaded(prefIframe.contentWindow.document);
+          yield documentIsLoaded(settingIframe.contentWindow.document);
 
           win.AppManager.update("runtimelist");
 
@@ -38,24 +42,21 @@
 
           yield nextTick();
 
-          let prefs = win.document.querySelector("#cmd_showDevicePrefs");
+          let settings = win.document.querySelector("#cmd_showSettings");
 
-          ok(!prefs.hasAttribute("disabled"), "device prefs cmd enabled");
+          ok(!settings.hasAttribute("disabled"), "device settings cmd enabled");
 
           let deck = win.document.querySelector("#deck");
 
-          win.Cmds.showDevicePrefs();
-          is(deck.selectedPanel, prefIframe, "device preferences iframe selected");
+          win.Cmds.showSettings();
+          is(deck.selectedPanel, settingIframe, "device settings iframe selected");
 
-          yield prefIframe.contentWindow.getAllPrefs;
+          yield settingIframe.contentWindow.getAllSettings;
           yield nextTick();
 
-          setDocument(prefIframe);
+          setDocument(settingIframe);
 
           let fields = doc.querySelectorAll(".editable");
-          let preference = "accessibility.blockautorefresh";
-
-          fieldChange(fields, preference);
 
           addNewField();
 
@@ -67,11 +68,11 @@
 
           yield editFieldInteger();
 
-          yield resetExistingField("accessibility.accesskeycausesactivation");
+          yield resetNewField("new-string-field");
 
           addNewFieldBoolean();
 
-          searchFields(deck, "debugger");
+          searchFields(deck, "new-boolean-field2");
 
           DebuggerServer.destroy();
 

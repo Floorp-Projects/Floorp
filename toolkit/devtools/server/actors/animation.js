@@ -159,11 +159,11 @@ let AnimationPlayerActor = ActorClass({
    * @return {Object}
    */
   getCurrentState: method(function() {
-    return {
-      /**
-       * Return the player's current startTime value.
-       * Will be null whenever the animation is paused or waiting to start.
-       */
+    // Note that if you add a new property to the state object, make sure you
+    // add the corresponding property in the AnimationPlayerFront' initialState
+    // getter.
+    let newState = {
+      // startTime is null whenever the animation is paused or waiting to start.
       startTime: this.player.startTime,
       currentTime: this.player.currentTime,
       playState: this.player.playState,
@@ -171,16 +171,32 @@ let AnimationPlayerActor = ActorClass({
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
-      /**
-       * Is the animation currently running on the compositor. This is important for
-       * developers to know if their animation is hitting the fast path or not.
-       * Currently this will only be true for Firefox OS though (where we have
-       * compositor animations enabled).
-       * Returns false whenever the animation is paused as it is taken off the
-       * compositor then.
-       */
+      // isRunningOnCompositor is important for developers to know if their
+      // animation is hitting the fast path or not. Currently only true for
+      // Firefox OS (where we have compositor animations enabled).
+      // Returns false whenever the animation is paused as it is taken off the
+      // compositor then.
       isRunningOnCompositor: this.player.isRunningOnCompositor
     };
+
+    // If we've saved a state before, compare and only send what has changed.
+    // It's expected of the front to also save old states to re-construct the
+    // full state when an incomplete one is received.
+    // This is to minimize protocol traffic.
+    let sentState = {};
+    if (this.currentState) {
+      for (let key in newState) {
+        if (typeof this.currentState[key] === "undefined" ||
+            this.currentState[key] !== newState[key]) {
+          sentState[key] = newState[key];
+        }
+      }
+    } else {
+      sentState = newState;
+    }
+    this.currentState = newState;
+
+    return sentState;
   }, {
     request: {},
     response: {
@@ -323,20 +339,36 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       return;
     }
 
-    // Check if something has changed
-    let hasChanged = false;
-    for (let key in data) {
-      if (this.state[key] !== data[key]) {
-        hasChanged = true;
-        break;
-      }
+    // If the animationplayer is now finished, stop auto-refreshing.
+    if (data.playState === "finished") {
+      this.stopAutoRefresh();
     }
 
-    if (hasChanged) {
+    if (this.currentStateHasChanged) {
       this.state = data;
       this.emit(this.AUTO_REFRESH_EVENT, this.state);
     }
-  })
+  }),
+
+  /**
+   * getCurrentState interceptor re-constructs incomplete states since the actor
+   * only sends the values that have changed.
+   */
+  getCurrentState: protocol.custom(function() {
+    this.currentStateHasChanged = false;
+    return this._getCurrentState().then(data => {
+      for (let key in this.state) {
+        if (typeof data[key] === "undefined") {
+          data[key] = this.state[key];
+        } else if (data[key] !== this.state[key]) {
+          this.currentStateHasChanged = true;
+        }
+      }
+      return data;
+    });
+  }, {
+    impl: "_getCurrentState"
+  }),
 });
 
 /**
