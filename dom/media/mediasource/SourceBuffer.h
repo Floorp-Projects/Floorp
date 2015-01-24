@@ -79,6 +79,7 @@ public:
   void AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv);
 
   void Abort(ErrorResult& aRv);
+  void Abort();
 
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
   /** End WebIDL Methods. */
