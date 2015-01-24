@@ -129,6 +129,10 @@ public:
 
   // Return true if the Ended method has been called
   bool IsEnded();
+  bool IsNearEnd(int64_t aTime /* microseconds */);
+
+  // Set the duration of the attached mediasource element.
+  void SetMediaSourceDuration(double aDuration /* seconds */);
 
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
@@ -146,12 +150,20 @@ private:
   // Switch the current audio/video reader to the reader that
   // contains aTarget (or up to aError after target). Both
   // aTarget and aError are in microseconds.
-  bool SwitchAudioReader(int64_t aTarget, int64_t aError = 0);
-  bool SwitchVideoReader(int64_t aTarget, int64_t aError = 0);
+  enum SwitchReaderResult {
+    READER_ERROR = -1,
+    READER_EXISTING = 0,
+    READER_NEW = 1,
+  };
+  SwitchReaderResult SwitchAudioReader(int64_t aTarget, int64_t aError = 0);
+  SwitchReaderResult SwitchVideoReader(int64_t aTarget, int64_t aError = 0);
   void RequestAudioDataComplete(int64_t aTime);
   void RequestAudioDataFailed(nsresult aResult);
   void RequestVideoDataComplete(int64_t aTime);
   void RequestVideoDataFailed(nsresult aResult);
+  // Will reject the MediaPromise with END_OF_STREAM if mediasource has ended
+  // or with WAIT_FOR_DATA otherwise.
+  void CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime /* microseconds */);
 
   // Return a reader from the set available in aTrackDecoders that has data
   // available in the range requested by aTarget.
@@ -202,6 +214,7 @@ private:
   bool mDropVideoBeforeThreshold;
 
   bool mEnded;
+  double mMediaSourceDuration;
 
   bool mHasEssentialTrackBuffers;
 

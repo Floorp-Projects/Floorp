@@ -1125,6 +1125,33 @@ RToFloat32::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MTruncateToInt32::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_TruncateToInt32));
+    return true;
+}
+
+RTruncateToInt32::RTruncateToInt32(CompactBufferReader &reader)
+{ }
+
+bool
+RTruncateToInt32::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue value(cx, iter.read());
+    RootedValue result(cx);
+
+    double in;
+    if (!ToNumber(cx, value, &in))
+        return false;
+    int out = ToInt32(in);
+
+    result.setInt32(out);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

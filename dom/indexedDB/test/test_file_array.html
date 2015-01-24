@@ -47,7 +47,7 @@
 
     let objectStore = db.createObjectStore(objectStoreName, { });
 
-    for each (let data in objectStoreData) {
+    for (let data of objectStoreData) {
       objectStore.add(data.blobs, data.key);
     }
 
@@ -55,7 +55,7 @@
 
     is(event.type, "success", "Got correct event type");
 
-    for each (let data in objectStoreData) {
+    for (let data of objectStoreData) {
       objectStore = db.transaction([objectStoreName])
                       .objectStore(objectStoreName);
 

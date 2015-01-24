@@ -56,6 +56,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
+  , mMediaSourceDuration(0)
   , mHasEssentialTrackBuffers(false)
 #ifdef MOZ_FMP4
   , mSharedDecoderManager(new SharedDecoderManager())
@@ -123,13 +124,23 @@ MediaSourceReader::RequestAudioData()
     mAudioPromise.Reject(CANCELED, __func__);
     return p;
   }
-  if (SwitchAudioReader(mLastAudioTime)) {
-    mAudioReader->Seek(mLastAudioTime, 0)
-                ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::RequestAudioDataComplete,
-                       &MediaSourceReader::RequestAudioDataFailed);
-  } else {
-    RequestAudioDataComplete(0);
+  SwitchReaderResult ret = SwitchAudioReader(mLastAudioTime);
+  switch (ret) {
+    case READER_NEW:
+      mAudioReader->Seek(mLastAudioTime, 0)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::RequestAudioDataComplete,
+                         &MediaSourceReader::RequestAudioDataFailed);
+      break;
+    case READER_ERROR:
+      if (mLastAudioTime) {
+        CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA, mLastAudioTime);
+        break;
+      }
+      // Fallback to using current reader
+    default:
+      RequestAudioDataComplete(0);
+      break;
   }
   return p;
 }
@@ -220,7 +231,7 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
   // See if we can find a different reader that can pick up where we left off. We use the
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
-  if (SwitchAudioReader(mLastAudioTime, EOS_FUZZ_US)) {
+  if (SwitchAudioReader(mLastAudioTime, EOS_FUZZ_US) == READER_NEW) {
     mAudioReader->Seek(mLastAudioTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
                        &MediaSourceReader::RequestAudioDataComplete,
@@ -228,15 +239,7 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
     return;
   }
 
-  // If the entire MediaSource is done, generate an EndOfStream.
-  if (IsEnded()) {
-    mAudioPromise.Reject(END_OF_STREAM, __func__);
-    return;
-  }
-
-  // We don't have the data the caller wants. Tell that we're waiting for JS to
-  // give us more data.
-  mAudioPromise.Reject(WAITING_FOR_DATA, __func__);
+  CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA, mLastAudioTime);
 }
 
 
@@ -261,15 +264,25 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mVideoPromise.Reject(CANCELED, __func__);
     return p;
   }
-  if (SwitchVideoReader(mLastVideoTime)) {
-    mVideoReader->Seek(mLastVideoTime, 0)
-                ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::RequestVideoDataComplete,
-                       &MediaSourceReader::RequestVideoDataFailed);
-  } else {
-    mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
-                ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+  SwitchReaderResult ret = SwitchVideoReader(mLastVideoTime);
+  switch (ret) {
+    case READER_NEW:
+      mVideoReader->Seek(mLastVideoTime, 0)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::RequestVideoDataComplete,
+                         &MediaSourceReader::RequestVideoDataFailed);
+      break;
+    case READER_ERROR:
+      if (mLastVideoTime) {
+        CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA, mLastVideoTime);
+        break;
+      }
+      // Fallback to using current reader.
+    default:
+      mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+      break;
   }
 
   return p;
@@ -335,7 +348,7 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
   // See if we can find a different reader that can pick up where we left off. We use the
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
-  if (SwitchVideoReader(mLastVideoTime, EOS_FUZZ_US)) {
+  if (SwitchVideoReader(mLastVideoTime, EOS_FUZZ_US) == READER_NEW) {
     mVideoReader->Seek(mLastVideoTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
                        &MediaSourceReader::RequestVideoDataComplete,
@@ -343,15 +356,29 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
     return;
   }
 
+  CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA, mLastVideoTime);
+}
+
+void
+MediaSourceReader::CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime)
+{
   // If the entire MediaSource is done, generate an EndOfStream.
-  if (IsEnded()) {
-    mVideoPromise.Reject(END_OF_STREAM, __func__);
+  if (IsNearEnd(aTime)) {
+    if (aType == MediaData::AUDIO_DATA) {
+      mAudioPromise.Reject(END_OF_STREAM, __func__);
+    } else {
+      mVideoPromise.Reject(END_OF_STREAM, __func__);
+    }
     return;
   }
 
-  // We don't have the data the caller wants. Tell that we're waiting for JS to
-  // give us more data.
-  mVideoPromise.Reject(WAITING_FOR_DATA, __func__);
+  if (aType == MediaData::AUDIO_DATA) {
+    // We don't have the data the caller wants. Tell that we're waiting for JS to
+    // give us more data.
+    mAudioPromise.Reject(WAITING_FOR_DATA, __func__);
+  } else {
+    mVideoPromise.Reject(WAITING_FOR_DATA, __func__);
+  }
 }
 
 nsRefPtr<ShutdownPromise>
@@ -447,40 +474,40 @@ MediaSourceReader::HaveData(int64_t aTarget, MediaData::Type aType)
   return !!reader;
 }
 
-bool
+MediaSourceReader::SwitchReaderResult
 MediaSourceReader::SwitchAudioReader(int64_t aTarget, int64_t aError)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding an audio track after ReadMetadata.
   if (!mAudioTrack) {
-    return false;
+    return READER_ERROR;
   }
   nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aError, mAudioTrack->Decoders());
   if (newReader && newReader != mAudioReader) {
     mAudioReader->SetIdle();
     mAudioReader = newReader;
     MSE_DEBUGV("MediaSourceReader(%p)::SwitchAudioReader switched reader to %p", this, mAudioReader.get());
-    return true;
+    return READER_NEW;
   }
-  return false;
+  return newReader ? READER_EXISTING : READER_ERROR;
 }
 
-bool
+MediaSourceReader::SwitchReaderResult
 MediaSourceReader::SwitchVideoReader(int64_t aTarget, int64_t aError)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // XXX: Can't handle adding a video track after ReadMetadata.
   if (!mVideoTrack) {
-    return false;
+    return READER_ERROR;
   }
   nsRefPtr<MediaDecoderReader> newReader = SelectReader(aTarget, aError, mVideoTrack->Decoders());
   if (newReader && newReader != mVideoReader) {
     mVideoReader->SetIdle();
     mVideoReader = newReader;
     MSE_DEBUGV("MediaSourceReader(%p)::SwitchVideoReader switched reader to %p", this, mVideoReader.get());
-    return true;
+    return READER_NEW;
   }
-  return false;
+  return newReader ? READER_EXISTING : READER_ERROR;
 }
 
 bool
@@ -918,6 +945,20 @@ MediaSourceReader::IsEnded()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   return mEnded;
+}
+
+bool
+MediaSourceReader::IsNearEnd(int64_t aTime)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  return mEnded && aTime >= (mMediaSourceDuration * USECS_PER_S - EOS_FUZZ_US);
+}
+
+void
+MediaSourceReader::SetMediaSourceDuration(double aDuration)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mMediaSourceDuration = aDuration;
 }
 
 #ifdef MOZ_EME

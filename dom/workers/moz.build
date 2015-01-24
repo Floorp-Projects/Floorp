@@ -8,6 +8,7 @@
 EXPORTS.mozilla.dom += [
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
+    'ServiceWorkerEvents.h',
     'ServiceWorkerRegistration.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',

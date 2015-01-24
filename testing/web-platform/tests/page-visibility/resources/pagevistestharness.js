@@ -33,7 +33,7 @@ function pv_test(func, msg, doc)
         doc = document;
     }
 
-    // only run the feature check once, unless func == null, in which case, 
+    // only run the feature check once, unless func == null, in which case,
     // this call is intended as a feature check
     if (!feature_check)
     {
@@ -54,7 +54,7 @@ function pv_test(func, msg, doc)
             assert_true(visStateVal !== undefined && hiddenVal != null,
                         "document.visibilityState is defined and not null.");},
                         "document.visibilityState is defined and not null.");
-    
+
     }
 
     if (func)

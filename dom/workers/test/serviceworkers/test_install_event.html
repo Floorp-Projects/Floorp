@@ -16,23 +16,70 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("worker.js", { scope: "./" });
+    var p = navigator.serviceWorker.register("worker.js", { scope: "./install_event" });
     return p;
   }
 
   function nextRegister(reg) {
-    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./" });
-
-    return new Promise(function(resolve, reject) {
-      reg.onupdatefound = function(e) {
-        ok(true, "Received onupdatefound");
-        resolve();
-      };
+    ok(reg instanceof ServiceWorkerRegistration, "reg should be a ServiceWorkerRegistration");
+    var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./install_event" });
+    return p.then(function(swr) {
+      ok(reg.scope === swr.scope, "Scope for registrations should match.");
+      return new Promise(function(resolve, reject) {
+        swr.addEventListener('updatefound', function(e) {
+          ok(true, "Received onupdatefound");
+          resolve();
+        });
+      });
+    }, function(e) {
+      ok(false, "Unexpected Error in nextRegister! " + e);
     });
   }
 
+  function installError() {
+    // Silence worker errors so they don't cause the test to fail.
+    window.onerror = function() { }
+    return navigator.serviceWorker.register("install_event_error_worker.js", { scope: "./install_event" })
+      .then(function(swr) {
+        ok(swr.installing.state == "installing", "Installing worker's state should be 'installing'");
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            ok(e.target.state == "redundant", "Installation of worker with error should fail.");
+            resolve();
+          }
+        });
+      }).then(function() {
+        return navigator.serviceWorker.getRegistration("./install_event").then(function(swr) {
+          var newest = swr.waiting || swr.active;
+          ok(newest, "Waiting or active worker should still exist");
+          ok(newest.scriptURL.match(/install_event_worker.js$/), "Previous worker should remain the newest worker");
+        });
+      });
+  }
+
+  function activateError() {
+    // Silence worker errors so they don't cause the test to fail.
+    window.onerror = function() { }
+    return navigator.serviceWorker.register("activate_event_error_worker.js", { scope: "./activate_error" })
+      .then(function(swr) {
+        return new Promise(function(resolve, reject) {
+          ok(swr.installing.state == "installing", "activateError(): Installing worker's state should be 'installing'");
+          swr.installing.onstatechange = function(e) {
+            ok(swr.active, "transition to active successfully");
+            is(swr.active.state, "activating", "should be activating");
+            swr.active.onstatechange = function(e) {
+              is(e.target.state, "redundant", "Activation of worker with error in activate event handler should fail.");
+              resolve(swr);
+            }
+          }
+        });
+      }).then(function(swr) {
+        return swr.unregister();
+      });
+  }
+
   function unregister() {
-    return navigator.serviceWorker.getRegistration("./").then(function(reg) {
+    return navigator.serviceWorker.getRegistration("./install_event").then(function(reg) {
       return reg.unregister();
     });
   }
@@ -40,6 +87,8 @@
   function runTest() {
     simpleRegister()
       .then(nextRegister)
+      .then(installError)
+      .then(activateError)
       .then(unregister)
       .then(function() {
         SimpleTest.finish();

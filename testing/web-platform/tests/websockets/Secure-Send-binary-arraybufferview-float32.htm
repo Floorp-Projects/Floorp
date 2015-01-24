@@ -16,17 +16,17 @@
 
         var data = "";
         var datasize = 8;
-	var view;
+        var view;
         var wsocket = CreateWebSocket(false, false, false);
         var isOpenCalled = false;
 
         wsocket.addEventListener('open', testOpen.step_func(function (evt) {
             wsocket.binaryType = "arraybuffer";
             data = new ArrayBuffer(datasize);
-	    view = new Float32Array(data);
-	    for(var i = 0; i < 2; i++) {
-		view[i] = i;
-	    }
+            view = new Float32Array(data);
+            for(var i = 0; i < 2; i++) {
+                view[i] = i;
+            }
             wsocket.send(view);
             isOpenCalled = true;
             testOpen.done();
@@ -34,9 +34,9 @@
 
         wsocket.addEventListener('message', testMessage.step_func(function (evt) {
             var resultView = new Float32Array(evt.data);
-	    for(var i = 0; i < resultView.length; i++) {
-	    	assert_equals(resultView[i], view[i], "ArrayBufferView returned is the same");
-	    }          
+            for(var i = 0; i < resultView.length; i++) {
+                assert_equals(resultView[i], view[i], "ArrayBufferView returned is the same");
+            }
             wsocket.close();
             testMessage.done();
         }), true);
