@@ -44,7 +44,7 @@ function testClone() {
 
 function testUsedRequest() {
   // Passing a used request should fail.
-  var req = new Request("", { body: "This is foo" });
+  var req = new Request("", { method: 'post', body: "This is foo" });
   var p1 = req.text().then(function(v) {
     try {
       var req2 = new Request(req);
@@ -55,7 +55,7 @@ function testUsedRequest() {
   });
 
   // Passing a request should set the request as used.
-  var reqA = new Request("", { body: "This is foo" });
+  var reqA = new Request("", { method: 'post', body: "This is foo" });
   var reqB = new Request(reqA);
   is(reqA.bodyUsed, true, "Passing a Request to another Request should set the former as used");
   return p1;
@@ -133,6 +133,24 @@ function testMethod() {
       ok(true, "Method " + forbiddenNoCors[i] + " should be forbidden in no-cors mode");
     }
   }
+
+  // HEAD/GET requests cannot have a body.
+  try {
+    var r = new Request("", { method: "get", body: "hello" });
+    ok(false, "HEAD/GET request cannot have a body");
+  } catch(e) {
+    is(e.name, "TypeError", "HEAD/GET request cannot have a body");
+  }
+
+  try {
+    var r = new Request("", { method: "head", body: "hello" });
+    ok(false, "HEAD/GET request cannot have a body");
+  } catch(e) {
+    is(e.name, "TypeError", "HEAD/GET request cannot have a body");
+  }
+
+  // Non HEAD/GET should not throw.
+  var r = new Request("", { method: "patch", body: "hello" });
 }
 
 function testUrlFragment() {
@@ -141,7 +159,7 @@ function testUrlFragment() {
 }
 
 function testBodyUsed() {
-  var req = new Request("./bodyused", { body: "Sample body" });
+  var req = new Request("./bodyused", { method: 'post', body: "Sample body" });
   is(req.bodyUsed, false, "bodyUsed is initially false.");
   return req.text().then((v) => {
     is(v, "Sample body", "Body should match");
@@ -157,23 +175,23 @@ function testBodyUsed() {
 
 function testBodyCreation() {
   var text = "κόσμε";
-  var req1 = new Request("", { body: text });
+  var req1 = new Request("", { method: 'post', body: text });
   var p1 = req1.text().then(function(v) {
     ok(typeof v === "string", "Should resolve to string");
     is(text, v, "Extracted string should match");
   });
 
-  var req2 = new Request("", { body: new Uint8Array([72, 101, 108, 108, 111]) });
+  var req2 = new Request("", { method: 'post', body: new Uint8Array([72, 101, 108, 108, 111]) });
   var p2 = req2.text().then(function(v) {
     is("Hello", v, "Extracted string should match");
   });
 
-  var req2b = new Request("", { body: (new Uint8Array([72, 101, 108, 108, 111])).buffer });
+  var req2b = new Request("", { method: 'post', body: (new Uint8Array([72, 101, 108, 108, 111])).buffer });
   var p2b = req2b.text().then(function(v) {
     is("Hello", v, "Extracted string should match");
   });
 
-  var reqblob = new Request("", { body: new Blob([text]) });
+  var reqblob = new Request("", { method: 'post', body: new Blob([text]) });
   var pblob = reqblob.text().then(function(v) {
     is(v, text, "Extracted string should match");
   });
@@ -182,7 +200,7 @@ function testBodyCreation() {
   params.append("item", "Geckos");
   params.append("feature", "stickyfeet");
   params.append("quantity", "700");
-  var req3 = new Request("", { body: params });
+  var req3 = new Request("", { method: 'post', body: params });
   var p3 = req3.text().then(function(v) {
     var extracted = new URLSearchParams(v);
     is(extracted.get("item"), "Geckos", "Param should match");
@@ -195,7 +213,7 @@ function testBodyCreation() {
 
 function testBodyExtraction() {
   var text = "κόσμε";
-  var newReq = function() { return new Request("", { body: text }); }
+  var newReq = function() { return new Request("", { method: 'post', body: text }); }
   return newReq().text().then(function(v) {
     ok(typeof v === "string", "Should resolve to string");
     is(text, v, "Extracted string should match");
@@ -206,12 +224,11 @@ function testBodyExtraction() {
       is(fs.readAsText(v), text, "Decoded Blob should match original");
     });
   }).then(function() {
-    // FIXME(nsm): Enable once Bug 1107777 and Bug 1072144 have been fixed.
-    //return newReq().json().then(function(v) {
-    //  ok(false, "Invalid json should reject");
-    //}, function(e) {
-    //  ok(true, "Invalid json should reject");
-    //})
+    return newReq().json().then(function(v) {
+      ok(false, "Invalid json should reject");
+    }, function(e) {
+      ok(true, "Invalid json should reject");
+    })
   }).then(function() {
     return newReq().arrayBuffer().then(function(v) {
       ok(v instanceof ArrayBuffer, "Should resolve to ArrayBuffer");

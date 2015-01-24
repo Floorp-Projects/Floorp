@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <title>window.performance.navigation.type with a reloaded navigation</title>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/" />
-	<link rel="help" href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface"/>
+        <link rel="help" href="http://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface"/>
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
         <script src="resources/webperftestharness.js"></script>
@@ -31,15 +31,15 @@
                 return c;
             }
 
-            
+
             function onload_test()
             {
                 reload_frame = document.getElementById("frameContext");
                 reload_frame.onload = function() {
-                  /* Need to make sure we don't examine loadEventEnd
+                    /* Need to make sure we don't examine loadEventEnd
                      until after the load event has finished firing */
-		    setTimeout(do_test, 0);
-		}
+                    setTimeout(do_test, 0);
+                }
                 setTimeout("reload_the_frame();", 100);
             }
 
@@ -94,7 +94,7 @@
             window.performance.timing.* with a reloaded navigation.</p>
 
         <p>This page should be loaded with a green background frame below.  The frame will be automatically reloaded
-        and then verified that 
+        and then verified that
         <ul>
             <li>The window.performance.navigation.type = TYPE_RELOAD</li>
             <li>All of the widow.performance.timing.* values after reload are > all of the window.performance.timing.* values

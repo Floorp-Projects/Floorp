@@ -34,7 +34,7 @@
     let db = event.target.result;
     db.onerror = errorHandler;
 
-    for each (let info in objectStoreInfo) {
+    for (let info of objectStoreInfo) {
       let objectStore = db.createObjectStore(info.name, info.options);
       objectStore.add(fileData.file, fileData.key);
     }
@@ -44,7 +44,7 @@
     is(event.type, "success", "Got correct event type");
 
     let refResult;
-    for each (let info in objectStoreInfo) {
+    for (let info of objectStoreInfo) {
       let objectStore = db.transaction([info.name])
                           .objectStore(info.name);
 

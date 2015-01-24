@@ -477,6 +477,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "stateHasPopup"}, {"string": "combobox"}]],
           expectedBraille: [[{"string": "comboboxAbbr"}, "Never", "Intervals"],
             ["Intervals", "Never", {"string": "comboboxAbbr"}]]
+        }, {
+          accOrElmOrID: "statusbar-1",
+          expectedUtterance: [["Last sync:", "2 days ago"],
+                              ["Last sync:", "2 days ago"]],
+          expectedBraille: [["Last sync:", "2 days ago"],
+                            ["Last sync:", "2 days ago"]]
+        }, {
+          accOrElmOrID: "statusbar-2",
+          expectedUtterance: [["Last sync: 30min ago"],
+                              ["Last sync: 30min ago"]],
+          expectedBraille: [["Last sync: 30min ago"], ["Last sync: 30min ago"]]
         }];
 
         // Test all possible utterance order preference values.
@@ -632,6 +643,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         <option value="30">Every 30 min</option>
         <option value="null" selected>Never</option>
       </select>
+      <div id="statusbar-1" role="status">Last sync:<span>2 days ago</span></div>
+      <div aria-label="Last sync: 30min ago" id="statusbar-2" role="status"></div>
     </div>
   </body>
 </html>

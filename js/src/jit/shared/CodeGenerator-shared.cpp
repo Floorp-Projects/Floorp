@@ -52,7 +52,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     pushedArgs_(0),
 #endif
     lastOsiPointOffset_(0),
-    safepoints_(graph->totalSlotCount()),
+    safepoints_(graph->totalSlotCount(), (gen->info().nargs() + 1) * sizeof(Value)),
     nativeToBytecodeMap_(nullptr),
     nativeToBytecodeMapSize_(0),
     nativeToBytecodeTableOffset_(0),
@@ -269,7 +269,6 @@ ToStackIndex(LAllocation *a)
         MOZ_ASSERT(a->toStackSlot()->slot() >= 1);
         return a->toStackSlot()->slot();
     }
-    MOZ_ASSERT(-int32_t(sizeof(JitFrameLayout)) <= a->toArgument()->index());
     return -int32_t(sizeof(JitFrameLayout) + a->toArgument()->index());
 }
 
@@ -1204,22 +1203,6 @@ void
 CodeGeneratorShared::emitPreBarrier(Address address)
 {
     masm.patchableCallPreBarrier(address, MIRType_Value);
-}
-
-void
-CodeGeneratorShared::dropArguments(unsigned argc)
-{
-    pushedArgumentSlots_.shrinkBy(argc);
-}
-
-bool
-CodeGeneratorShared::markArgumentSlots(LSafepoint *safepoint)
-{
-    for (size_t i = 0; i < pushedArgumentSlots_.length(); i++) {
-        if (!safepoint->addValueSlot(pushedArgumentSlots_[i]))
-            return false;
-    }
-    return true;
 }
 
 Label *

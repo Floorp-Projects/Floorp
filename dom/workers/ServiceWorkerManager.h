@@ -18,10 +18,11 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
 #include "mozilla/dom/ServiceWorkerCommon.h"
+#include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
-#include "nsClassHashtable.h"
 
 class nsIScriptError;
 
@@ -33,54 +34,7 @@ class ServiceWorkerRegistration;
 namespace workers {
 
 class ServiceWorker;
-
-/*
- * Wherever the spec treats a worker instance and a description of said worker
- * as the same thing; i.e. "Resolve foo with
- * _GetNewestWorker(serviceWorkerRegistration)", we represent the description
- * by this class and spawn a ServiceWorker in the right global when required.
- */
-class ServiceWorkerInfo MOZ_FINAL
-{
-  nsCString mScriptSpec;
-  ServiceWorkerState mState;
-
-  ~ServiceWorkerInfo()
-  { }
-
-public:
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerInfo)
-
-  const nsCString&
-  GetScriptSpec() const
-  {
-    return mScriptSpec;
-  }
-
-  explicit ServiceWorkerInfo(const nsACString& aScriptSpec)
-    : mScriptSpec(aScriptSpec)
-    , mState(ServiceWorkerState::EndGuard_)
-  { }
-
-  void
-  UpdateState(ServiceWorkerState aState)
-  {
-#ifdef DEBUG
-    // Any state can directly transition to redundant, but everything else is
-    // ordered.
-    if (aState != ServiceWorkerState::Redundant) {
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::EndGuard_, aState == ServiceWorkerState::Installing);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installing, aState == ServiceWorkerState::Installed);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installed, aState == ServiceWorkerState::Activating);
-      MOZ_ASSERT_IF(mState == ServiceWorkerState::Activating, aState == ServiceWorkerState::Activated);
-    }
-    // Activated can only go to redundant.
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
-#endif
-    mState = aState;
-    // FIXME(nsm): Inform all relevant ServiceWorker instances.
-  }
-};
+class ServiceWorkerInfo;
 
 class ServiceWorkerJobQueue;
 
@@ -117,8 +71,9 @@ class ServiceWorkerJobQueue MOZ_FINAL
 public:
   ~ServiceWorkerJobQueue()
   {
-    // FIXME(nsm): Clean up jobs.
-    MOZ_ASSERT(mJobs.IsEmpty());
+    if (!mJobs.IsEmpty()) {
+      NS_WARNING("Pending/running jobs still around on shutdown!");
+    }
   }
 
   void
@@ -131,6 +86,14 @@ public:
     if (wasEmpty) {
       aJob->Start();
     }
+  }
+
+  // Only used by HandleError, keep it that way!
+  ServiceWorkerJob*
+  Peek()
+  {
+    MOZ_ASSERT(!mJobs.IsEmpty());
+    return mJobs[0];
   }
 
 private:
@@ -225,6 +188,70 @@ public:
 
   void
   FinishActivate(bool aSuccess);
+
+  void
+  QueueStateChangeEvent(ServiceWorkerInfo* aInfo,
+                        ServiceWorkerState aState) const;
+};
+
+/*
+ * Wherever the spec treats a worker instance and a description of said worker
+ * as the same thing; i.e. "Resolve foo with
+ * _GetNewestWorker(serviceWorkerRegistration)", we represent the description
+ * by this class and spawn a ServiceWorker in the right global when required.
+ */
+class ServiceWorkerInfo MOZ_FINAL
+{
+private:
+  const ServiceWorkerRegistrationInfo* mRegistration;
+  nsCString mScriptSpec;
+  ServiceWorkerState mState;
+
+  ~ServiceWorkerInfo()
+  { }
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerInfo)
+
+  const nsCString&
+  ScriptSpec() const
+  {
+    return mScriptSpec;
+  }
+
+  explicit ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
+                             const nsACString& aScriptSpec)
+    : mRegistration(aReg)
+    , mScriptSpec(aScriptSpec)
+    , mState(ServiceWorkerState::EndGuard_)
+  {
+    MOZ_ASSERT(mRegistration);
+  }
+
+  ServiceWorkerState
+  State() const
+  {
+    return mState;
+  }
+
+  void
+  UpdateState(ServiceWorkerState aState)
+  {
+#ifdef DEBUG
+    // Any state can directly transition to redundant, but everything else is
+    // ordered.
+    if (aState != ServiceWorkerState::Redundant) {
+      MOZ_ASSERT_IF(mState == ServiceWorkerState::EndGuard_, aState == ServiceWorkerState::Installing);
+      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installing, aState == ServiceWorkerState::Installed);
+      MOZ_ASSERT_IF(mState == ServiceWorkerState::Installed, aState == ServiceWorkerState::Activating);
+      MOZ_ASSERT_IF(mState == ServiceWorkerState::Activating, aState == ServiceWorkerState::Activated);
+    }
+    // Activated can only go to redundant.
+    MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
+#endif
+    mState = aState;
+    mRegistration->QueueStateChangeEvent(this, mState);
+  }
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
@@ -293,6 +320,8 @@ public:
 
     nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
 
+    nsDataHashtable<nsCStringHashKey, bool> mSetOfScopesBeingUpdated;
+
     ServiceWorkerDomainInfo()
     { }
 
@@ -342,11 +371,12 @@ public:
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
-
-  void
+  // Returns true if the error was handled, false if normal worker error
+  // handling should continue.
+  bool
   HandleError(JSContext* aCx,
-              const nsACString& aScope,
-              const nsAString& aWorkerURL,
+              const nsCString& aScope,
+              const nsString& aWorkerURL,
               nsString aMessage,
               nsString aFilename,
               nsString aLine,

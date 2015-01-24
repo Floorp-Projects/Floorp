@@ -218,6 +218,15 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aInit.mBody.WasPassed()) {
+    // HEAD and GET are not allowed to have a body.
+    nsAutoCString method;
+    request->GetMethod(method);
+    // method is guaranteed to be uppercase due to step 14.2 above.
+    if (method.EqualsLiteral("HEAD") || method.EqualsLiteral("GET")) {
+      aRv.ThrowTypeError(MSG_NO_BODY_ALLOWED_FOR_GET_AND_HEAD);
+      return nullptr;
+    }
+
     const OwningArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
     nsCOMPtr<nsIInputStream> stream;
     nsCString contentType;

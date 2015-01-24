@@ -14,7 +14,9 @@
 namespace js {
 namespace jit {
 
+struct SafepointSlotEntry;
 struct SafepointNunboxEntry;
+
 class LAllocation;
 class LSafepoint;
 
@@ -24,9 +26,10 @@ class SafepointWriter
 {
     CompactBufferWriter stream_;
     BitSet frameSlots_;
+    BitSet argumentSlots_;
 
   public:
-    explicit SafepointWriter(uint32_t slotCount);
+    explicit SafepointWriter(uint32_t slotCount, uint32_t argumentCount);
     bool init(TempAllocator &alloc);
 
   private:
@@ -61,7 +64,9 @@ class SafepointReader
 {
     CompactBufferReader stream_;
     uint32_t frameSlots_;
+    uint32_t argumentSlots_;
     uint32_t currentSlotChunk_;
+    bool currentSlotsAreStack_;
     uint32_t nextSlotChunkNumber_;
     uint32_t osiCallPointOffset_;
     GeneralRegisterSet gcSpills_;
@@ -77,7 +82,7 @@ class SafepointReader
     void advanceFromGcSlots();
     void advanceFromValueSlots();
     void advanceFromNunboxSlots();
-    bool getSlotFromBitmap(uint32_t *slot);
+    bool getSlotFromBitmap(SafepointSlotEntry *entry);
 
   public:
     SafepointReader(IonScript *script, const SafepointIndex *si);
@@ -105,17 +110,17 @@ class SafepointReader
     uint32_t osiReturnPointOffset() const;
 
     // Returns true if a slot was read, false if there are no more slots.
-    bool getGcSlot(uint32_t *slot);
+    bool getGcSlot(SafepointSlotEntry *entry);
 
     // Returns true if a slot was read, false if there are no more value slots.
-    bool getValueSlot(uint32_t *slot);
+    bool getValueSlot(SafepointSlotEntry *entry);
 
     // Returns true if a nunbox slot was read, false if there are no more
     // nunbox slots.
     bool getNunboxSlot(LAllocation *type, LAllocation *payload);
 
     // Returns true if a slot was read, false if there are no more slots.
-    bool getSlotsOrElementsSlot(uint32_t *slot);
+    bool getSlotsOrElementsSlot(SafepointSlotEntry *entry);
 };
 
 } // namespace jit

@@ -11,28 +11,18 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
-#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 
 using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 
-bool
-ServiceWorkerEventsVisible(JSContext* aCx, JSObject* aObj)
-{
-  ServiceWorkerGlobalScope* scope = nullptr;
-  nsresult rv = UnwrapObject<prototypes::id::ServiceWorkerGlobalScope_workers,
-                             mozilla::dom::ServiceWorkerGlobalScopeBinding_workers::NativeType>(aObj, scope);
-  return NS_SUCCEEDED(rv) && scope;
-}
-
-InstallPhaseEvent::InstallPhaseEvent(EventTarget* aOwner)
+ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
 {
 }
 
 void
-InstallPhaseEvent::WaitUntil(Promise& aPromise)
+ExtendableEvent::WaitUntil(Promise& aPromise)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -42,26 +32,26 @@ InstallPhaseEvent::WaitUntil(Promise& aPromise)
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(InstallPhaseEvent, Event)
-NS_IMPL_RELEASE_INHERITED(InstallPhaseEvent, Event)
+NS_IMPL_ADDREF_INHERITED(ExtendableEvent, Event)
+NS_IMPL_RELEASE_INHERITED(ExtendableEvent, Event)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(InstallPhaseEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ExtendableEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InstallPhaseEvent, Event, mPromise)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromise)
 
 InstallEvent::InstallEvent(EventTarget* aOwner)
-  : InstallPhaseEvent(aOwner)
+  : ExtendableEvent(aOwner)
   , mActivateImmediately(false)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(InstallEvent, InstallPhaseEvent)
-NS_IMPL_RELEASE_INHERITED(InstallEvent, InstallPhaseEvent)
+NS_IMPL_ADDREF_INHERITED(InstallEvent, ExtendableEvent)
+NS_IMPL_RELEASE_INHERITED(InstallEvent, ExtendableEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(InstallEvent)
-NS_INTERFACE_MAP_END_INHERITING(InstallPhaseEvent)
+NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InstallEvent, InstallPhaseEvent, mActiveWorker)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InstallEvent, ExtendableEvent, mActiveWorker)
 
 END_WORKERS_NAMESPACE
