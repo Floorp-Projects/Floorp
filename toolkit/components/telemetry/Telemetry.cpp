@@ -777,7 +777,7 @@ KeyedHistogram::GetJSKeys(JSContext* cx, JS::CallArgs& args)
 bool
 KeyedHistogram::ReflectKeyedHistogram(KeyedHistogramEntry* entry, JSContext* cx, JS::Handle<JSObject*> obj)
 {
-  JS::RootedObject histogramSnapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject histogramSnapshot(cx, JS_NewPlainObject(cx));
   if (!histogramSnapshot) {
     return false;
   }
@@ -1241,7 +1241,7 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
-  JS::Rooted<JSObject*> snapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> snapshot(cx, JS_NewPlainObject(cx));
   if (!snapshot)
     return false;
 
@@ -1384,7 +1384,7 @@ JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
-    JS::RootedObject snapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
     if (!snapshot) {
       JS_ReportError(cx, "Failed to create object");
       return false;
@@ -1412,7 +1412,7 @@ JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  JS::RootedObject snapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
   if (!snapshot) {
     return false;
   }
@@ -1841,7 +1841,7 @@ bool
 TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mainThread,
                           bool privateSQL)
 {
-  JS::Rooted<JSObject*> statsObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> statsObj(cx, JS_NewPlainObject(cx));
   if (!statsObj)
     return false;
 
@@ -2116,7 +2116,7 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  JS::Rooted<JSObject*> root_obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj)
     return NS_ERROR_FAILURE;
   ret.setObject(*root_obj);
@@ -2155,7 +2155,7 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value>
       continue;
     }
 
-    hobj = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+    hobj = JS_NewPlainObject(cx);
     if (!hobj) {
       return NS_ERROR_FAILURE;
     }
@@ -2217,7 +2217,7 @@ TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
     return true;
   }
 
-  JS::Rooted<JSObject*> snapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> snapshot(cx, JS_NewPlainObject(cx));
   if (!snapshot) {
     // Just consider this to be skippable.
     return true;
@@ -2242,7 +2242,7 @@ TelemetryImpl::AddonReflector(AddonEntryType *entry,
                               JSContext *cx, JS::Handle<JSObject*> obj)
 {
   const nsACString &addonId = entry->GetKey();
-  JS::Rooted<JSObject*> subobj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> subobj(cx, JS_NewPlainObject(cx));
   if (!subobj) {
     return false;
   }
@@ -2259,7 +2259,7 @@ TelemetryImpl::AddonReflector(AddonEntryType *entry,
 NS_IMETHODIMP
 TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
@@ -2277,7 +2277,7 @@ TelemetryImpl::KeyedHistogramsReflector(const nsACString& key, nsAutoPtr<KeyedHi
 {
   KeyedHistogramReflectArgs* args = static_cast<KeyedHistogramReflectArgs*>(arg);
   JSContext *cx = args->jsContext;
-  JS::RootedObject snapshot(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
   if (!snapshot) {
     return PL_DHASH_STOP;
   }
@@ -2297,7 +2297,7 @@ TelemetryImpl::KeyedHistogramsReflector(const nsACString& key, nsAutoPtr<KeyedHi
 NS_IMETHODIMP
 TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
@@ -2316,7 +2316,7 @@ TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::V
 bool
 TelemetryImpl::GetSQLStats(JSContext *cx, JS::MutableHandle<JS::Value> ret, bool includePrivateSql)
 {
-  JS::Rooted<JSObject*> root_obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj)
     return false;
   ret.setObject(*root_obj);
@@ -2428,9 +2428,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
       if (!JS_SetElement(cx, keyValueArray, 0, indexValue)) {
         return NS_ERROR_FAILURE;
       }
-      JS::Rooted<JSObject*> jsAnnotation(cx, JS_NewObject(cx, nullptr,
-                                                          JS::NullPtr(),
-                                                          JS::NullPtr()));
+      JS::Rooted<JSObject*> jsAnnotation(cx, JS_NewPlainObject(cx));
       if (!jsAnnotation) {
         return NS_ERROR_FAILURE;
       }
@@ -2464,7 +2462,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 
 static JSObject *
 CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
-  JS::Rooted<JSObject*> ret(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> ret(cx, JS_NewPlainObject(cx));
   if (!ret) {
     return nullptr;
   }
@@ -2653,7 +2651,7 @@ CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
 {
   /* Create JS representation of TimeHistogram,
      in the format of Chromium-style histograms. */
-  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject ret(cx, JS_NewPlainObject(cx));
   if (!ret) {
     return nullptr;
   }
@@ -2720,8 +2718,7 @@ CreateJSHangStack(JSContext* cx, const Telemetry::HangStack& stack)
 static JSObject*
 CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 {
-  JS::RootedObject ret(cx,
-    JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject ret(cx, JS_NewPlainObject(cx));
   if (!ret) {
     return nullptr;
   }
@@ -2749,7 +2746,7 @@ CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 static JSObject*
 CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
 {
-  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::RootedObject ret(cx, JS_NewPlainObject(cx));
   if (!ret) {
     return nullptr;
   }
@@ -3264,8 +3261,7 @@ NS_IMETHODIMP
 TelemetryImpl::GetFileIOReports(JSContext *cx, JS::MutableHandleValue ret)
 {
   if (sTelemetryIOObserver) {
-    JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(),
-                                               JS::NullPtr()));
+    JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
     if (!obj) {
       return NS_ERROR_FAILURE;
     }
