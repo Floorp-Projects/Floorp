@@ -165,16 +165,22 @@ SourceBuffer::Abort(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (mUpdating) {
-    // TODO: Abort segment parser loop, buffer append, and stream append loop algorithms.
-    AbortUpdating();
-  }
+  Abort();
   mTrackBuffer->ResetParserState();
   mAppendWindowStart = 0;
   mAppendWindowEnd = PositiveInfinity<double>();
 
   MSE_DEBUG("SourceBuffer(%p)::Abort() Discarding decoder", this);
   mTrackBuffer->DiscardDecoder();
+}
+
+void
+SourceBuffer::Abort()
+{
+  if (mUpdating) {
+    // TODO: Abort segment parser loop, buffer append, and stream append loop algorithms.
+    AbortUpdating();
+  }
 }
 
 void
@@ -220,6 +226,7 @@ SourceBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Detach", this);
+  Abort();
   if (mTrackBuffer) {
     mTrackBuffer->Detach();
   }
