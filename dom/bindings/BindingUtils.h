@@ -3142,20 +3142,9 @@ AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
 bool
 CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
-// This function is called by the bindings layer for methods/getters/setters
-// that are not safe to be called in prerendering mode.  It checks to make sure
-// that the |this| object is not running in a global that is in prerendering
-// mode.  Otherwise, it aborts execution of timers and event handlers, and
-// returns false which gets converted to an uncatchable exception by the
-// bindings layer.
+//Returns true if page is being prerendered.
 bool
-EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj);
-
-// Handles the violation of a blacklisted action in prerendering mode by
-// aborting the scripts, and preventing timers and event handlers from running
-// in the window in the future.
-void
-HandlePrerenderingViolation(nsPIDOMWindow* aWindow);
+CheckSafetyInPrerendering(JSContext* aCx, JSObject* aObj);
 
 bool
 CallerSubsumes(JSObject* aObject);
