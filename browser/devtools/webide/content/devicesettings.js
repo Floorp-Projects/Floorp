@@ -63,19 +63,19 @@ function SearchField(event) {
   configView.search(event);
 }
 
-let getAllPrefs; // Used by tests
+let getAllSettings; // Used by tests
 function BuildUI() {
   configView.resetTable();
 
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED &&
-      AppManager.preferenceFront) {
-    configView.front = AppManager.preferenceFront;
-    configView.kind = "Pref";
-    configView.includeTypeName = true;
+      AppManager.settingsFront) {
+    configView.front = AppManager.settingsFront;
+    configView.kind = "Setting";
+    configView.includeTypeName = false;
 
-    getAllPrefs = AppManager.preferenceFront.getAllPrefs();
-    getAllPrefs.then(json => {
+    getAllSettings = AppManager.settingsFront.getAllSettings()
+    getAllSettings.then(json => {
       let deviceItems = Object.keys(json);
       deviceItems.sort();
       configView.keys = deviceItems;
