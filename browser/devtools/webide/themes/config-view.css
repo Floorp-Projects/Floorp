@@ -14,7 +14,7 @@ html, body {
   display: none;
 }
 
-#device-preferences {
+#device-fields {
   font-family: sans-serif;
   padding-left: 6px;
   width: 100%;
@@ -37,31 +37,34 @@ header {
   padding: 10px 20px;
 }
 
-#device-preferences td {
+#device-fields td {
   background-color: #f1f1f1;
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #fff;
-  width: 33.3%;
 }
 
-#device-preferences td.preference-name {
+#device-fields td:first-child {
+  min-width: 400px;
+}
+
+#device-fields td.preference-name, #device-fields td.setting-name {
   width: 50%;
   min-width: 400px;
   word-break: break-all;
 }
 
-#device-preferences button {
+#device-fields button {
   display: inline-block;
   font-family: sans-serif;
   font-size: 0.7rem;
   white-space: nowrap;
 }
 
-#device-preferences tr.hide, #device-preferences button.hide {
+#device-fields tr.hide, #device-fields button.hide {
   display: none;
 }
 
-#device-preferences .custom-input {
+#device-fields .custom-input {
   width: 300px;
 }
 
