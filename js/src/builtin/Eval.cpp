@@ -511,7 +511,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScri
         Debugger::onNewScript(cx, script, global);
     }
 
-    RootedObject scope(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject scope(cx, JS_NewPlainObject(cx));
     if (!scope)
         return false;
 
