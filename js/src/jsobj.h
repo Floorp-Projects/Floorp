@@ -950,13 +950,6 @@ extern bool
 HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
 
 /*
- * Deprecated. An easier-to-use version of LookupProperty that returns only the
- * property attributes.
- */
-inline bool
-GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
-
-/*
  * Deprecated. Search the prototype chain for `obj[id]` and redefine it to have
  * the given property attributes.
  */

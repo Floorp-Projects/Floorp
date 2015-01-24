@@ -1327,9 +1327,6 @@ NativeGetExistingProperty(JSContext *cx, HandleObject obj, HandleNativeObject po
                           HandleShape shape, MutableHandle<Value> vp);
 
 extern bool
-NativeGetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attrsp);
-
-extern bool
 NativeSetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attrsp);
 
 
@@ -1402,14 +1399,6 @@ js::SetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t 
     if (obj->getOps()->setElement)
         return JSObject::nonNativeSetElement(cx, obj, receiver, index, vp, strict);
     return NativeSetElement(cx, obj.as<NativeObject>(), receiver, index, vp, strict);
-}
-
-inline bool
-js::GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    if (GenericAttributesOp op = obj->getOps()->getGenericAttributes)
-        return op(cx, obj, id, attrsp);
-    return NativeGetPropertyAttributes(cx, obj.as<NativeObject>(), id, attrsp);
 }
 
 #endif /* vm_NativeObject_h */

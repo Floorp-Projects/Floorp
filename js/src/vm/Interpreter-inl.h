@@ -349,9 +349,9 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
          * Extension: ordinarily we'd be done here -- but for |const|.  If we
          * see a redeclaration that's |const|, we consider it a conflict.
          */
-        unsigned oldAttrs;
         RootedId id(cx, NameToId(dn));
-        if (!GetPropertyAttributes(cx, varobj, id, &oldAttrs))
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, obj2, id, &desc))
             return false;
 
         JSAutoByteString bytes;
@@ -359,9 +359,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
             JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                                          js_GetErrorMessage,
                                                          nullptr, JSMSG_REDECLARED_VAR,
-                                                         (oldAttrs & JSPROP_READONLY)
-                                                         ? "const"
-                                                         : "var",
+                                                         desc.isReadonly() ? "const" : "var",
                                                          bytes.ptr()));
         }
         return false;
