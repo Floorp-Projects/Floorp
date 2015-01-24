@@ -305,7 +305,7 @@ SVGSVGElement::UnsuspendRedrawAll()
 }
 
 void
-SVGSVGElement::ForceRedraw(ErrorResult& rv)
+SVGSVGElement::ForceRedraw()
 {
   // no-op
 }
