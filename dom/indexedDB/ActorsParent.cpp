@@ -87,13 +87,6 @@
 #include "snappy/snappy.h"
 #include "TransactionThreadPool.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
-
-using namespace mozilla::dom::quota;
-using namespace mozilla::ipc;
-
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
@@ -101,6 +94,17 @@ using namespace mozilla::ipc;
 #else
 #define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
+
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#define IDB_MOBILE
+#endif
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+using namespace mozilla::dom::quota;
+using namespace mozilla::ipc;
 
 namespace {
 
@@ -144,6 +148,34 @@ const int32_t kSQLiteSchemaVersion =
 
 const int32_t kStorageProgressGranularity = 1000;
 
+// Changing the value here will override the page size of new databases only.
+// A journal mode change and VACUUM are needed to change existing databases, so
+// the best way to do that is to use the schema version upgrade mechanism.
+const uint32_t kSQLitePageSizeOverride =
+#ifdef IDB_MOBILE
+  2048;
+#else
+  4096;
+#endif
+
+static_assert(kSQLitePageSizeOverride == /* mozStorage default */ 0 ||
+              (kSQLitePageSizeOverride % 2 == 0 &&
+               kSQLitePageSizeOverride >= 512  &&
+               kSQLitePageSizeOverride <= 65536),
+              "Must be 0 (disabled) or a power of 2 between 512 and 65536!");
+
+// Set to -1 to use SQLite's default, 0 to disable, or some positive number to
+// enforce a custom limit.
+const int32_t kMaxWALPages = 5000; // 20MB on desktop, 10MB on mobile.
+
+// Set to some multiple of the page size to grow the database in larger chunks.
+const uint32_t kSQLiteGrowthIncrement = kSQLitePageSizeOverride * 2;
+
+static_assert(kSQLiteGrowthIncrement >= 0 &&
+              kSQLiteGrowthIncrement % kSQLitePageSizeOverride == 0 &&
+              kSQLiteGrowthIncrement < uint32_t(INT32_MAX),
+              "Must be 0 (disabled) or a positive multiple of the page size!");
+
 const char kSavepointClause[] = "SAVEPOINT sp;";
 
 const uint32_t kFileCopyBufferSize = 32768;
@@ -151,6 +183,9 @@ const uint32_t kFileCopyBufferSize = 32768;
 const char kJournalDirectoryName[] = "journals";
 
 const char kFileManagerDirectoryNameSuffix[] = ".files";
+const char kSQLiteJournalSuffix[] = ".sqlite-journal";
+const char kSQLiteSHMSuffix[] = ".sqlite-shm";
+const char kSQLiteWALSuffix[] = ".sqlite-wal";
 
 const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
@@ -177,6 +212,16 @@ const int32_t kDEBUGThreadPriority = nsISupportsPriority::PRIORITY_NORMAL;
 const uint32_t kDEBUGThreadSleepMS = 0;
 
 #endif
+
+template <size_t N>
+MOZ_CONSTEXPR size_t
+LiteralStringLength(const char (&aArr)[N])
+{
+  static_assert(N, "Zero-length string literal?!");
+
+  // Don't include the null terminator.
+  return ArrayLength<const char, N>(aArr) - 1;
+}
 
 /*******************************************************************************
  * Metadata classes
@@ -2063,7 +2108,7 @@ UpgradeSchemaFrom12_0To13_0(mozIStorageConnection* aConnection,
 
   nsresult rv;
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#ifdef IDB_MOBILE
   int32_t defaultPageSize;
   rv = aConnection->GetDefaultPageSize(&defaultPageSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2181,54 +2226,236 @@ GetDatabaseFileURL(nsIFile* aDatabaseFile,
 nsresult
 SetDefaultPragmas(mozIStorageConnection* aConnection)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConnection);
 
-  static const char query[] =
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-    // Switch the journaling mode to TRUNCATE to avoid changing the directory
-    // structure at the conclusion of every transaction for devices with slower
-    // file systems.
-    "PRAGMA journal_mode = TRUNCATE; "
-#endif
+  static const char kBuiltInPragmas[] =
     // We use foreign keys in lots of places.
-    "PRAGMA foreign_keys = ON; "
+    "PRAGMA foreign_keys = ON;"
+
     // The "INSERT OR REPLACE" statement doesn't fire the update trigger,
     // instead it fires only the insert trigger. This confuses the update
     // refcount function. This behavior changes with enabled recursive triggers,
     // so the statement fires the delete trigger first and then the insert
     // trigger.
     "PRAGMA recursive_triggers = ON;"
-    // We don't need SQLite's table locks because we manage transaction ordering
-    // ourselves and we know we will never allow a write transaction to modify
-    // an object store that a read transaction is in the process of using.
-    "PRAGMA read_uncommitted = TRUE;"
-    // No more PRAGMAs.
-    ;
 
-  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(query));
+    // We aggressively truncate the database file when idle so don't bother
+    // overwriting the WAL with 0 during active periods.
+    "PRAGMA secure_delete = OFF;"
+  ;
+
+  nsresult rv =
+    aConnection->ExecuteSimpleSQL(
+      nsDependentCString(kBuiltInPragmas,
+                         LiteralStringLength(kBuiltInPragmas)));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  nsAutoCString pragmaStmt;
+  pragmaStmt.AssignLiteral("PRAGMA synchronous = ");
+
   if (IndexedDatabaseManager::FullSynchronous()) {
-    rv = aConnection->ExecuteSimpleSQL(
-                             NS_LITERAL_CSTRING("PRAGMA synchronous = FULL;"));
+    pragmaStmt.AppendLiteral("FULL");
+  } else {
+    pragmaStmt.AppendLiteral("NORMAL");
+  }
+  pragmaStmt.Append(';');
+
+  rv = aConnection->ExecuteSimpleSQL(pragmaStmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+#ifndef IDB_MOBILE
+  if (kSQLiteGrowthIncrement) {
+    rv = aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement,
+                                         EmptyCString());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
+#endif // IDB_MOBILE
 
   return NS_OK;
 }
 
 nsresult
-CreateDatabaseConnection(nsIFile* aDBFile,
-                         nsIFile* aFMDirectory,
-                         const nsAString& aName,
-                         PersistenceType aPersistenceType,
-                         const nsACString& aGroup,
-                         const nsACString& aOrigin,
-                         mozIStorageConnection** aConnection)
+SetJournalMode(mozIStorageConnection* aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConnection);
+
+  // Try enabling WAL mode. This can fail in various circumstances so we have to
+  // check the results here.
+  NS_NAMED_LITERAL_CSTRING(journalModeQueryStart, "PRAGMA journal_mode = ");
+  NS_NAMED_LITERAL_CSTRING(journalModeWAL, "wal");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv =
+    aConnection->CreateStatement(journalModeQueryStart + journalModeWAL,
+                                 getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  nsCString journalMode;
+  rv = stmt->GetUTF8String(0, journalMode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (journalMode.Equals(journalModeWAL)) {
+    // WAL mode successfully enabled. Maybe set limits on its size here.
+    if (kMaxWALPages >= 0) {
+      nsAutoCString pageCount;
+      pageCount.AppendInt(kMaxWALPages);
+
+      rv = aConnection->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("PRAGMA wal_autocheckpoint = ") + pageCount);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  } else {
+    NS_WARNING("Failed to set WAL mode, falling back to normal journal mode.");
+#ifdef IDB_MOBILE
+    rv = aConnection->ExecuteSimpleSQL(journalModeQueryStart +
+                                       NS_LITERAL_CSTRING("truncate"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+#endif
+  }
+
+  return NS_OK;
+}
+
+template <class FileOrURLType>
+struct StorageOpenTraits;
+
+template <>
+struct StorageOpenTraits<nsIFileURL*>
+{
+  static nsresult
+  Open(mozIStorageService* aStorageService,
+       nsIFileURL* aFileURL,
+       mozIStorageConnection** aConnection)
+  {
+    return aStorageService->OpenDatabaseWithFileURL(aFileURL, aConnection);
+  }
+
+#ifdef DEBUG
+  static void
+  GetPath(nsIFileURL* aFileURL, nsCString& aPath)
+  {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFileURL->GetFileName(aPath)));
+  }
+#endif
+};
+
+template <>
+struct StorageOpenTraits<nsIFile*>
+{
+  static nsresult
+  Open(mozIStorageService* aStorageService,
+       nsIFile* aFile,
+       mozIStorageConnection** aConnection)
+  {
+    return aStorageService->OpenUnsharedDatabase(aFile, aConnection);
+  }
+
+#ifdef DEBUG
+  static void
+  GetPath(nsIFile* aFile, nsCString& aPath)
+  {
+    nsString path;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetPath(path)));
+
+    aPath.AssignWithConversion(path);
+  }
+#endif
+};
+
+template <template <class> class SmartPtr, class FileOrURLType>
+struct StorageOpenTraits<SmartPtr<FileOrURLType>>
+  : public StorageOpenTraits<FileOrURLType*>
+{ };
+
+template <class FileOrURLType>
+nsresult
+OpenDatabaseAndHandleBusy(mozIStorageService* aStorageService,
+                          FileOrURLType aFileOrURL,
+                          mozIStorageConnection** aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aStorageService);
+  MOZ_ASSERT(aFileOrURL);
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  nsresult rv =
+    StorageOpenTraits<FileOrURLType>::Open(aStorageService,
+                                           aFileOrURL,
+                                           getter_AddRefs(connection));
+
+  if (rv == NS_ERROR_STORAGE_BUSY) {
+#ifdef DEBUG
+    {
+      nsCString path;
+      StorageOpenTraits<FileOrURLType>::GetPath(aFileOrURL, path);
+
+      nsPrintfCString message("Received NS_ERROR_STORAGE_BUSY when attempting "
+                              "to open database '%s', retrying for up to 10 "
+                              "seconds",
+                              path.get());
+      NS_WARNING(message.get());
+    }
+#endif
+
+    // Another thread must be checkpointing the WAL. Wait up to 10 seconds for
+    // that to complete.
+    TimeStamp start = TimeStamp::NowLoRes();
+
+    while (true) {
+      PR_Sleep(PR_MillisecondsToInterval(100));
+
+      rv = StorageOpenTraits<FileOrURLType>::Open(aStorageService,
+                                                  aFileOrURL,
+                                                  getter_AddRefs(connection));
+      if (rv != NS_ERROR_STORAGE_BUSY ||
+          TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
+        break;
+      }
+    }
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  connection.forget(aConnection);
+  return NS_OK;
+}
+
+nsresult
+CreateStorageConnection(nsIFile* aDBFile,
+                        nsIFile* aFMDirectory,
+                        const nsAString& aName,
+                        PersistenceType aPersistenceType,
+                        const nsACString& aGroup,
+                        const nsACString& aOrigin,
+                        mozIStorageConnection** aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDBFile);
@@ -2236,7 +2463,7 @@ CreateDatabaseConnection(nsIFile* aDBFile,
   MOZ_ASSERT(aConnection);
 
   PROFILER_LABEL("IndexedDB",
-                 "CreateDatabaseConnection",
+                 "CreateStorageConnection",
                  js::ProfileEntry::Category::STORAGE);
 
   nsresult rv;
@@ -2268,7 +2495,7 @@ CreateDatabaseConnection(nsIFile* aDBFile,
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
+  rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // If we're just opening the database during origin initialization, then
     // we don't want to erase any files. The failure here will fail origin
@@ -2305,8 +2532,9 @@ CreateDatabaseConnection(nsIFile* aDBFile,
       }
     }
 
-    rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
+    rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, getter_AddRefs(connection));
   }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2339,11 +2567,13 @@ CreateDatabaseConnection(nsIFile* aDBFile,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  bool vacuumNeeded = false;
+  bool journalModeSet = false;
 
   if (schemaVersion != kSQLiteSchemaVersion) {
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
     if (!schemaVersion) {
+      // Brand new file.
+
+#ifdef IDB_MOBILE
       // Have to do this before opening a transaction.
       rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         // Turn on auto_vacuum mode to reclaim disk space on mobile devices.
@@ -2357,8 +2587,17 @@ CreateDatabaseConnection(nsIFile* aDBFile,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    }
 #endif
+
+      rv = SetJournalMode(connection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      journalModeSet = true;
+    }
+
+    bool vacuumNeeded = false;
 
     mozStorageTransaction transaction(connection, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -2452,10 +2691,17 @@ CreateDatabaseConnection(nsIFile* aDBFile,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    if (vacuumNeeded) {
+      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
   }
 
-  if (vacuumNeeded) {
-    rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+  if (!journalModeSet) {
+    rv = SetJournalMode(connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2483,11 +2729,11 @@ GetFileForPath(const nsAString& aPath)
 }
 
 nsresult
-GetDatabaseConnection(const nsAString& aDatabaseFilePath,
-                      PersistenceType aPersistenceType,
-                      const nsACString& aGroup,
-                      const nsACString& aOrigin,
-                      mozIStorageConnection** aConnection)
+GetStorageConnection(const nsAString& aDatabaseFilePath,
+                     PersistenceType aPersistenceType,
+                     const nsACString& aGroup,
+                     const nsACString& aOrigin,
+                     mozIStorageConnection** aConnection)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -2496,7 +2742,7 @@ GetDatabaseConnection(const nsAString& aDatabaseFilePath,
   MOZ_ASSERT(aConnection);
 
   PROFILER_LABEL("IndexedDB",
-                 "GetDatabaseConnection",
+                 "GetStorageConnection",
                  js::ProfileEntry::Category::STORAGE);
 
   nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
@@ -2530,12 +2776,17 @@ GetDatabaseConnection(const nsAString& aDatabaseFilePath,
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(connection));
+  rv = OpenDatabaseAndHandleBusy(ss, dbFileUrl, getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = SetDefaultPragmas(connection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SetJournalMode(connection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4280,6 +4531,11 @@ private:
 
   void
   RunOnOwningThread();
+
+  nsresult
+  DeleteFile(nsIFile* aDirectory,
+             const nsAString& aFilename,
+             QuotaManager* aQuotaManager);
 
   NS_DECL_NSIRUNNABLE
 };
@@ -6690,22 +6946,26 @@ TransactionBase::EnsureConnection()
                  "TransactionBase::EnsureConnection",
                  js::ProfileEntry::Category::STORAGE);
 
+  const bool readOnly = mMode == IDBTransaction::READ_ONLY;
+
   if (!mConnection) {
     nsCOMPtr<mozIStorageConnection> connection;
     nsresult rv =
-      GetDatabaseConnection(mDatabase->FilePath(), mDatabase->Type(),
-                            mDatabase->Group(), mDatabase->Origin(),
-                            getter_AddRefs(connection));
+      GetStorageConnection(mDatabase->FilePath(),
+                           mDatabase->Type(),
+                           mDatabase->Group(),
+                           mDatabase->Origin(),
+                           getter_AddRefs(connection));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     nsRefPtr<UpdateRefcountFunction> function;
-    nsCString beginTransaction;
 
-    if (mMode == IDBTransaction::READ_ONLY) {
-      beginTransaction.AssignLiteral("BEGIN TRANSACTION;");
-    } else {
+    nsAutoCString beginTransaction;
+    beginTransaction.AssignLiteral("BEGIN");
+
+    if (!readOnly) {
       function = new UpdateRefcountFunction(mDatabase->GetFileManager());
 
       rv = connection->CreateFunction(NS_LITERAL_CSTRING("update_refcount"), 2,
@@ -6714,16 +6974,10 @@ TransactionBase::EnsureConnection()
         return rv;
       }
 
-      beginTransaction.AssignLiteral("BEGIN IMMEDIATE TRANSACTION;");
+      beginTransaction.AppendLiteral(" IMMEDIATE");
     }
 
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = connection->CreateStatement(beginTransaction, getter_AddRefs(stmt));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = stmt->Execute();
+    rv = connection->ExecuteSimpleSQL(beginTransaction);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9078,13 +9332,13 @@ FileManager::InitDirectory(nsIFile* aDirectory,
 
     if (hasElements) {
       nsCOMPtr<mozIStorageConnection> connection;
-      rv = CreateDatabaseConnection(aDatabaseFile,
-                                    aDirectory,
-                                    NullString(),
-                                    aPersistenceType,
-                                    aGroup,
-                                    aOrigin,
-                                    getter_AddRefs(connection));
+      rv = CreateStorageConnection(aDatabaseFile,
+                                   aDirectory,
+                                   NullString(),
+                                   aPersistenceType,
+                                   aGroup,
+                                   aOrigin,
+                                   getter_AddRefs(connection));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9288,6 +9542,7 @@ struct FileManagerInitInfo
 {
   nsCOMPtr<nsIFile> mDirectory;
   nsCOMPtr<nsIFile> mDatabaseFile;
+  nsCOMPtr<nsIFile> mDatabaseWALFile;
 };
 
 nsresult
@@ -9320,7 +9575,17 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     return rv;
   }
 
-  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+  const NS_ConvertASCIItoUTF16 filesSuffix(
+    kFileManagerDirectoryNameSuffix,
+    LiteralStringLength(kFileManagerDirectoryNameSuffix));
+
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+    kSQLiteJournalSuffix,
+    LiteralStringLength(kSQLiteJournalSuffix));
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+  const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
+                                         LiteralStringLength(kSQLiteWALSuffix));
 
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
@@ -9341,7 +9606,6 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       return rv;
     }
 
-
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9356,12 +9620,24 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       continue;
     }
 
-    // Skip SQLite and Desktop Service Store (.DS_Store) files.
-    // Desktop Service Store file is only used on Mac OS X, but the profile
-    // can be shared across different operating systems, so we check it on
-    // all platforms.
-    if (StringEndsWith(leafName, NS_LITERAL_STRING(".sqlite-journal")) ||
-        leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+    // Skip Desktop Service Store (.DS_Store) files. These files are only used
+    // on Mac OS X, but the profile can be shared across different operating
+    // systems, so we check it on all platforms.
+    if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+      continue;
+    }
+
+    // Skip SQLite temporary files. These files take up space on disk but will
+    // be deleted as soon as the database is opened, so we don't count them
+    // towards quota.
+    if (StringEndsWith(leafName, journalSuffix) ||
+        StringEndsWith(leafName, shmSuffix)) {
+      continue;
+    }
+
+    // The SQLite WAL file does count towards quota, but it is handled below
+    // once we find the actual database file.
+    if (StringEndsWith(leafName, walSuffix)) {
       continue;
     }
 
@@ -9371,22 +9647,36 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       continue;
     }
 
-    nsString fmDirectoryBaseName = dbBaseFilename + filesSuffix;
-
     nsCOMPtr<nsIFile> fmDirectory;
     rv = directory->Clone(getter_AddRefs(fmDirectory));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
+    nsString fmDirectoryBaseName = dbBaseFilename + filesSuffix;
+
     rv = fmDirectory->Append(fmDirectoryBaseName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
+    nsCOMPtr<nsIFile> walFile;
+    if (aUsageInfo) {
+      rv = directory->Clone(getter_AddRefs(walFile));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = walFile->Append(dbBaseFilename + walSuffix);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
     FileManagerInitInfo* initInfo = initInfos.AppendElement();
     initInfo->mDirectory.swap(fmDirectory);
     initInfo->mDatabaseFile.swap(file);
+    initInfo->mDatabaseWALFile.swap(walFile);
 
     validSubdirs.PutEntry(fmDirectoryBaseName);
   }
@@ -9471,6 +9761,7 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     FileManagerInitInfo& initInfo = initInfos[i];
     MOZ_ASSERT(initInfo.mDirectory);
     MOZ_ASSERT(initInfo.mDatabaseFile);
+    MOZ_ASSERT_IF(aUsageInfo, initInfo.mDatabaseWALFile);
 
     rv = FileManager::InitDirectory(initInfo.mDirectory,
                                     initInfo.mDatabaseFile,
@@ -9492,6 +9783,15 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
 
       aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
 
+      rv = initInfo.mDatabaseWALFile->GetFileSize(&fileSize);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(fileSize >= 0);
+        aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+      } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
+                            rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
+        return rv;
+      }
+
       uint64_t usage;
       rv = FileManager::GetUsage(initInfo.mDirectory, &usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9503,20 +9803,31 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   }
 
   // We have to do this after file manager initialization.
-  for (uint32_t count = unknownFiles.Length(), i = 0; i < count; i++) {
-    nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
+  if (!unknownFiles.IsEmpty()) {
+#ifdef DEBUG
+    for (uint32_t count = unknownFiles.Length(), i = 0; i < count; i++) {
+      nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
-    // Some temporary SQLite files could disappear during file manager
-    // initialization, so we have to check if the unknown file still exists.
-    bool exists;
-    rv = unknownFile->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+      nsString leafName;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(unknownFile->GetLeafName(leafName)));
 
-    if (exists) {
-      return NS_ERROR_UNEXPECTED;
+      MOZ_ASSERT(!StringEndsWith(leafName, journalSuffix));
+      MOZ_ASSERT(!StringEndsWith(leafName, shmSuffix));
+      MOZ_ASSERT(!StringEndsWith(leafName, walSuffix));
+
+      nsString path;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(unknownFile->GetPath(path)));
+      MOZ_ASSERT(!path.IsEmpty());
+
+      nsPrintfCString warning("Refusing to open databases for \"%s\" because "
+                              "an unexpected file exists in the storage "
+                              "area: \"%s\"",
+                              PromiseFlatCString(aOrigin).get(),
+                              NS_ConvertUTF16toUTF8(path).get());
+      NS_WARNING(warning.get());
     }
+#endif
+    return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;
@@ -9705,6 +10016,9 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     return NS_OK;
   }
 
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
          hasMore &&
@@ -9717,6 +10031,16 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
 
     nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
     MOZ_ASSERT(file);
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (StringEndsWith(leafName, shmSuffix)) {
+      continue;
+    }
 
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
@@ -10854,7 +11178,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     return rv;
   }
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#ifdef IDB_MOBILE
   if (persistenceType == PERSISTENCE_TYPE_PERSISTENT &&
       !QuotaManager::IsOriginWhitelistedForPersistentStorage(origin) &&
       !isApp) {
@@ -11351,13 +11675,13 @@ OpenDatabaseOp::DoDatabaseWork()
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateDatabaseConnection(dbFile,
-                                fmDirectory,
-                                databaseName,
-                                persistenceType,
-                                mGroup,
-                                mOrigin,
-                                getter_AddRefs(connection));
+  rv = CreateStorageConnection(dbFile,
+                               fmDirectory,
+                               databaseName,
+                               persistenceType,
+                               mGroup,
+                               mOrigin,
+                               getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -12420,7 +12744,7 @@ DeleteDatabaseOp::LoadPreviousVersion(nsIFile* aDatabaseFile)
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenDatabase(aDatabaseFile, getter_AddRefs(connection));
+  rv = OpenDatabaseAndHandleBusy(ss, aDatabaseFile, getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -12739,6 +13063,74 @@ VersionChangeOp::RunOnMainThread()
   return NS_OK;
 }
 
+
+nsresult
+DeleteDatabaseOp::
+VersionChangeOp::DeleteFile(nsIFile* aDirectory,
+                            const nsAString& aFilename,
+                            QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(!aFilename.IsEmpty());
+  MOZ_ASSERT_IF(aQuotaManager, mDeleteDatabaseOp->mEnforcingQuota);
+
+  MOZ_ASSERT(mDeleteDatabaseOp->mState == State_DatabaseWorkVersionChange);
+
+  PROFILER_LABEL("IndexedDB",
+                 "DeleteDatabaseOp::VersionChangeOp::DeleteFile",
+                 js::ProfileEntry::Category::STORAGE);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->Append(aFilename);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int64_t fileSize;
+
+  if (aQuotaManager) {
+    rv = file->GetFileSize(&fileSize);
+    if (rv == NS_ERROR_FILE_NOT_FOUND ||
+        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      return NS_OK;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(fileSize >= 0);
+  }
+
+  rv = file->Remove(false);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aQuotaManager && fileSize > 0) {
+    const PersistenceType& persistenceType =
+      mDeleteDatabaseOp->mCommonParams.metadata().persistenceType();
+
+    aQuotaManager->DecreaseUsageForOrigin(persistenceType,
+                                          mDeleteDatabaseOp->mGroup,
+                                          mDeleteDatabaseOp->mOrigin,
+                                          fileSize);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 DeleteDatabaseOp::
 VersionChangeOp::RunOnIOThread()
@@ -12756,6 +13148,16 @@ VersionChangeOp::RunOnIOThread()
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  const PersistenceType& persistenceType =
+    mDeleteDatabaseOp->mCommonParams.metadata().persistenceType();
+
+  QuotaManager* quotaManager =
+    mDeleteDatabaseOp->mEnforcingQuota ?
+    QuotaManager::Get() :
+    nullptr;
+
+  MOZ_ASSERT_IF(mDeleteDatabaseOp->mEnforcingQuota, quotaManager);
+
   nsCOMPtr<nsIFile> directory =
     GetFileForPath(mDeleteDatabaseOp->mDatabaseDirectoryPath);
   if (NS_WARN_IF(!directory)) {
@@ -12763,77 +13165,47 @@ VersionChangeOp::RunOnIOThread()
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = directory->Clone(getter_AddRefs(dbFile));
+  // The database file counts towards quota.
+  nsAutoString filename =
+    mDeleteDatabaseOp->mDatabaseFilenameBase + NS_LITERAL_STRING(".sqlite");
+
+  nsresult rv = DeleteFile(directory, filename, quotaManager);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = dbFile->Append(mDeleteDatabaseOp->mDatabaseFilenameBase +
-                      NS_LITERAL_STRING(".sqlite"));
+  // .sqlite-journal files don't count towards quota.
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+    kSQLiteJournalSuffix,
+    LiteralStringLength(kSQLiteJournalSuffix));
+
+  filename = mDeleteDatabaseOp->mDatabaseFilenameBase + journalSuffix;
+
+  rv = DeleteFile(directory, filename, /* doesn't count */ nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool exists;
-  rv = dbFile->Exists(&exists);
+  // .sqlite-shm files don't count towards quota.
+  const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
+                                         LiteralStringLength(kSQLiteSHMSuffix));
+
+  filename = mDeleteDatabaseOp->mDatabaseFilenameBase + shmSuffix;
+
+  rv = DeleteFile(directory, filename, /* doesn't count */ nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  const nsString& databaseName =
-    mDeleteDatabaseOp->mCommonParams.metadata().name();
-  PersistenceType persistenceType =
-    mDeleteDatabaseOp->mCommonParams.metadata().persistenceType();
+  // .sqlite-wal files do count towards quota.
+  const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
+                                         LiteralStringLength(kSQLiteWALSuffix));
 
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  filename = mDeleteDatabaseOp->mDatabaseFilenameBase + walSuffix;
 
-  if (exists) {
-    int64_t fileSize;
-
-    if (mDeleteDatabaseOp->mEnforcingQuota) {
-      rv = dbFile->GetFileSize(&fileSize);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    rv = dbFile->Remove(false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (mDeleteDatabaseOp->mEnforcingQuota) {
-      quotaManager->DecreaseUsageForOrigin(persistenceType,
-                                           mDeleteDatabaseOp->mGroup,
-                                           mDeleteDatabaseOp->mOrigin,
-                                           fileSize);
-    }
-  }
-
-  nsCOMPtr<nsIFile> dbJournalFile;
-  rv = directory->Clone(getter_AddRefs(dbJournalFile));
+  rv = DeleteFile(directory, filename, quotaManager);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  rv = dbJournalFile->Append(mDeleteDatabaseOp->mDatabaseFilenameBase +
-                             NS_LITERAL_STRING(".sqlite-journal"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = dbJournalFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    rv = dbJournalFile->Remove(false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   }
 
   nsCOMPtr<nsIFile> fmDirectory;
@@ -12842,7 +13214,10 @@ VersionChangeOp::RunOnIOThread()
     return rv;
   }
 
-  const NS_ConvertASCIItoUTF16 filesSuffix(kFileManagerDirectoryNameSuffix);
+  // The files directory counts towards quota.
+  const NS_ConvertASCIItoUTF16 filesSuffix(
+    kFileManagerDirectoryNameSuffix,
+    LiteralStringLength(kFileManagerDirectoryNameSuffix));
 
   rv = fmDirectory->Append(mDeleteDatabaseOp->mDatabaseFilenameBase +
                            filesSuffix);
@@ -12850,6 +13225,7 @@ VersionChangeOp::RunOnIOThread()
     return rv;
   }
 
+  bool exists;
   rv = fmDirectory->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -12878,19 +13254,34 @@ VersionChangeOp::RunOnIOThread()
 
     rv = fmDirectory->Remove(true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      // We may have deleted some files, check if we can and update quota
+      // information before returning the error.
+      if (mDeleteDatabaseOp->mEnforcingQuota) {
+        uint64_t newUsage;
+        if (NS_SUCCEEDED(FileManager::GetUsage(fmDirectory, &newUsage))) {
+          MOZ_ASSERT(newUsage <= usage);
+          usage = usage - newUsage;
+        }
+      }
     }
 
-    if (mDeleteDatabaseOp->mEnforcingQuota) {
+    if (mDeleteDatabaseOp->mEnforcingQuota && usage) {
       quotaManager->DecreaseUsageForOrigin(persistenceType,
                                            mDeleteDatabaseOp->mGroup,
                                            mDeleteDatabaseOp->mOrigin,
                                            usage);
     }
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   MOZ_ASSERT(mgr);
+
+  const nsString& databaseName =
+    mDeleteDatabaseOp->mCommonParams.metadata().name();
 
   mgr->InvalidateFileManager(persistenceType,
                              mDeleteDatabaseOp->mOrigin,
@@ -17222,3 +17613,7 @@ DEBUGThreadSlower::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
 } // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
+
+#undef IDB_MOBILE
+#undef ASSERT_UNLESS_FUZZING
+#undef DISABLE_ASSERTS_FOR_FUZZING
