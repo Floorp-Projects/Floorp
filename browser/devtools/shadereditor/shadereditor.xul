@@ -35,7 +35,7 @@
              value="&shaderEditorUI.reloadNotice2;"/>
     </hbox>
     <hbox id="waiting-notice"
-          class="notice-container"
+          class="notice-container devtools-throbber"
           align="center"
           pack="center"
           flex="1"

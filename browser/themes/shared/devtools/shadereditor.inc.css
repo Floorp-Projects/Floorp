@@ -18,15 +18,6 @@
   font-size: 110%;
 }
 
-#waiting-notice::before {
-  display: inline-block;
-  content: "";
-  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
-  width: 16px;
-  height: 16px;
-  -moz-margin-end: 6px;
-}
-
 /* Shaders pane */
 
 #shaders-pane {
