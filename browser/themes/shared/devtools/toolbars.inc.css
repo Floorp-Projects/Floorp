@@ -937,3 +937,25 @@
   border-color: var(--theme-splitter-color); /* Needed for responsive container at low width. */
 }
 
+/* Throbbers */
+.devtools-throbber::before {
+  content: "";
+  display: inline-block;
+  vertical-align: bottom;
+  -moz-margin-end: 0.5em;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: 1.1s linear throbber-spin infinite;
+}
+
+@keyframes throbber-spin {
+  from {
+    transform: none;
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

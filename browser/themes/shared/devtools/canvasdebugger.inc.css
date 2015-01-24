@@ -119,14 +119,8 @@
   pointer-events: none;
 }
 
-.snapshot-item-footer[saving]::before {
-  display: inline-block;
-  content: "";
-  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
-  width: 16px;
-  height: 16px;
+.snapshot-item-footer.devtools-throbber::before {
   margin-top: -2px;
-  -moz-margin-end: 4px;
 }
 
 #snapshots-list .selected label {
