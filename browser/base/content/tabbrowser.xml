@@ -525,7 +525,7 @@
 
           if (aCallGlobalListeners != false &&
               aBrowser == this.mCurrentBrowser) {
-            this.mProgressListeners.forEach(function (p) {
+            for (let p of this.mProgressListeners) {
               if (aMethod in p) {
                 try {
                   if (!p[aMethod].apply(p, aArguments))
@@ -535,13 +535,13 @@
                   Components.utils.reportError(e);
                 }
               }
-            });
+            }
           }
 
           if (aCallTabsListeners != false) {
             aArguments.unshift(aBrowser);
 
-            this.mTabsProgressListeners.forEach(function (p) {
+            for (let p of this.mTabsProgressListeners) {
               if (aMethod in p) {
                 try {
                   if (!p[aMethod].apply(p, aArguments))
@@ -551,7 +551,7 @@
                   Components.utils.reportError(e);
                 }
               }
-            });
+            }
           }
 
           return rv;
@@ -2136,11 +2136,11 @@
             browser.setAttribute("type", "content-targetable");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
-            Array.forEach(this.tabs, function (tab) {
+            for (let tab of this.tabs) {
               if ("owner" in tab && tab.owner == aTab)
                 // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
-            });
+            }
 
             aTab._endRemoveArgs = [closeWindow, newTab];
             return true;
@@ -2544,12 +2544,12 @@
         <parameter name="aTabs"/>
         <body>
         <![CDATA[
-          Array.forEach(this.tabs, function(tab) {
+          for (let tab of this.tabs) {
             if (aTabs.indexOf(tab) == -1)
               this.hideTab(tab);
             else
               this.showTab(tab);
-          }, this);
+          }
 
           this.tabContainer._handleTabSelect(false);
         ]]>
@@ -3649,8 +3649,8 @@
         if (tabs._lastTabClosedByMouse)
           tabs._expandSpacerBy(this._scrollButtonDown.clientWidth);
 
-        tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
-                                              tabs.tabbrowser);
+        for (let tab of tabs.tabbrowser._removingTabs)
+          tabs.tabbrowser.removeTab(tab);
 
         tabs._positionPinnedTabs();
       ]]></handler>
