@@ -9,8 +9,8 @@
 
 BEGIN_TEST(testGCExactRooting)
 {
-    JS::RootedObject rootCx(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-    JS::RootedObject rootRt(cx->runtime(), JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject rootCx(cx, JS_NewPlainObject(cx));
+    JS::RootedObject rootRt(cx->runtime(), JS_NewPlainObject(cx));
 
     JS_GC(cx->runtime());
 

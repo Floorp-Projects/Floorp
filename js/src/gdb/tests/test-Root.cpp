@@ -38,7 +38,7 @@ FRAGMENT(Root, HeapSlot) {
 }
 
 FRAGMENT(Root, barriers) {
-  JSObject *obj = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+  JSObject *obj = JS_NewPlainObject(cx);
   js::PreBarriered<JSObject *> prebarriered(obj);
   js::HeapPtr<JSObject *> heapptr(obj);
   js::RelocatablePtr<JSObject *> relocatable(obj);

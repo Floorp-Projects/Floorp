@@ -51,7 +51,7 @@ static bool
 GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject info(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject info(cx, JS_NewPlainObject(cx));
     if (!info)
         return false;
 
@@ -1425,7 +1425,7 @@ static bool
 GetJitCompilerOptions(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject info(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject info(cx, JS_NewPlainObject(cx));
     if (!info)
         return false;
 

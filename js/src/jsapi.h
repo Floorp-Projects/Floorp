@@ -2793,6 +2793,10 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *clasp, JS::Handle<JSObject*> proto,
                            JS::Handle<JSObject*> parent);
 
+// Creates a new plain object, like `new Object()`, with Object.prototype as [[Prototype]].
+extern JS_PUBLIC_API(JSObject *)
+JS_NewPlainObject(JSContext *cx);
+
 /*
  * Freeze obj, and all objects it refers to, recursively. This will not recurse
  * through non-extensible objects, on the assumption that those are already

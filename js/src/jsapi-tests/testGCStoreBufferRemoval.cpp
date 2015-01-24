@@ -116,6 +116,6 @@ BEGIN_TEST(testGCStoreBufferRemoval)
 
 JSObject *NurseryObject()
 {
-    return JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+    return JS_NewPlainObject(cx);
 }
 END_TEST(testGCStoreBufferRemoval)

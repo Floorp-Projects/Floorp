@@ -49,7 +49,7 @@ BEGIN_TEST(testWeakMap_basicOperations)
 
 JSObject *newKey()
 {
-    return JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+    return JS_NewPlainObject(cx);
 }
 
 bool
@@ -185,7 +185,7 @@ JSObject *newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
     JS::RootedObject object(cx);
     {
         JSAutoCompartment ac(cx, destZone);
-        object = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+        object = JS_NewPlainObject(cx);
         if (!object)
             return nullptr;
     }
