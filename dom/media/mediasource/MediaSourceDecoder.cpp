@@ -240,6 +240,9 @@ MediaSourceDecoder::DoSetMediaSourceDuration(double aDuration)
     mDecoderStateMachine->SetDuration(INT64_MAX);
     mMediaSourceDuration = PositiveInfinity<double>();
   }
+  if (mReader) {
+    mReader->SetMediaSourceDuration(mMediaSourceDuration);
+  }
 }
 
 void
