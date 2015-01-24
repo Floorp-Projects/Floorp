@@ -567,7 +567,7 @@ with_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                               MutableHandle<JSPropertyDescriptor> desc)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return GetOwnPropertyDescriptor(cx, obj, id, desc);
+    return GetOwnPropertyDescriptor(cx, actual, id, desc);
 }
 
 static bool
