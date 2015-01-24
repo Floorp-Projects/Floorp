@@ -270,6 +270,7 @@ template <class> struct TypeToDataType { /* Unexpected return type for a VMFunct
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<NativeObject *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<PlainObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<InlineTypedObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<DeclEnvObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<ArrayObject *> { static const DataType result = Type_Object; };
@@ -657,7 +658,6 @@ template<bool Equal>
 bool StringsEqual(JSContext *cx, HandleString left, HandleString right, bool *res);
 
 JSObject *NewInitObject(JSContext *cx, HandlePlainObject templateObject);
-JSObject *NewInitObjectWithClassPrototype(JSContext *cx, HandlePlainObject templateObject);
 
 bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext *cx, HandleArrayObject obj, HandleValue v, uint32_t *length);

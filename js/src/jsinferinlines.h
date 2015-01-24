@@ -309,6 +309,7 @@ inline const Class *
 GetClassForProtoKey(JSProtoKey key)
 {
     switch (key) {
+      case JSProto_Null:
       case JSProto_Object:
         return &PlainObject::class_;
       case JSProto_Array:
@@ -369,7 +370,7 @@ inline TypeObject *
 GetTypeNewObject(JSContext *cx, JSProtoKey key)
 {
     RootedObject proto(cx);
-    if (!GetBuiltinPrototype(cx, key, &proto))
+    if (key != JSProto_Null && !GetBuiltinPrototype(cx, key, &proto))
         return nullptr;
     return cx->getNewType(GetClassForProtoKey(key), TaggedProto(proto.get()));
 }

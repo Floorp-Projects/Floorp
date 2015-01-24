@@ -1422,7 +1422,8 @@ js::NewObjectWithTypeCommon(JSContext *cx, HandleTypeObject type, JSObject *pare
     NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (parent == type->proto().toObject()->getParent() &&
+    if (type->proto().isObject() &&
+        parent == type->proto().toObject()->getParent() &&
         newKind == GenericObject &&
         type->clasp()->isNative() &&
         !cx->compartment()->hasObjectMetadataCallback())
