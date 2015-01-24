@@ -92,6 +92,13 @@ public:
   // TODO: Refactor to a cleaner interface between TrackBuffer and MediaSourceReader.
   const nsTArray<nsRefPtr<SourceBufferDecoder>>& Decoders();
 
+  // Runs MSE range removal algorithm.
+  // http://w3c.github.io/media-source/#sourcebuffer-coded-frame-removal
+  // Implementation is only partial, we can only trim a buffer.
+  // Returns true if data was evicted.
+  // Times are in microseconds.
+  bool RangeRemoval(int64_t aStart, int64_t aEnd);
+
 #ifdef MOZ_EME
   nsresult SetCDMProxy(CDMProxy* aProxy);
 #endif
@@ -113,7 +120,8 @@ private:
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
-  bool AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength);
+  bool AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength,
+                                   uint32_t aDuration /* microseconds */);
 
   // Queue execution of InitializeDecoder on mTaskQueue.
   bool QueueInitializeDecoder(SourceBufferDecoder* aDecoder);
