@@ -981,8 +981,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
 
       // The parameter for the listener function.
-      JS::Rooted<JSObject*> param(cx,
-        JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+      JS::Rooted<JSObject*> param(cx, JS_NewPlainObject(cx));
       NS_ENSURE_TRUE(param, NS_ERROR_OUT_OF_MEMORY);
 
       JS::Rooted<JS::Value> targetv(cx);
@@ -998,7 +997,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
 
       if (!cpows) {
-        cpows = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
+        cpows = JS_NewPlainObject(cx);
         if (!cpows) {
           return NS_ERROR_UNEXPECTED;
         }

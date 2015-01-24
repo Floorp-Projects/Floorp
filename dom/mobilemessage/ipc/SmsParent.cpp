@@ -33,8 +33,7 @@ static JSObject*
 MmsAttachmentDataToJSObject(JSContext* aContext,
                             const MmsAttachmentData& aAttachment)
 {
-  JS::Rooted<JSObject*> obj(aContext, JS_NewObject(aContext, nullptr, JS::NullPtr(),
-                                                   JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(aContext, JS_NewPlainObject(aContext));
   NS_ENSURE_TRUE(obj, nullptr);
 
   JS::Rooted<JSString*> idStr(aContext, JS_NewUCStringCopyN(aContext,
@@ -83,7 +82,7 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
                                    const SendMmsMessageRequest& aRequest,
                                    JS::Value* aParam)
 {
-  JS::Rooted<JSObject*> paramsObj(aCx, JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> paramsObj(aCx, JS_NewPlainObject(aCx));
   NS_ENSURE_TRUE(paramsObj, false);
 
   // smil

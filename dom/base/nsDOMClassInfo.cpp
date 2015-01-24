@@ -2434,11 +2434,12 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
   }
 
   // Create a fake Components object.
-  JS::Rooted<JSObject*> components(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
+  AssertSameCompartment(cx, global);
+  JS::Rooted<JSObject*> components(cx, JS_NewPlainObject(cx));
   NS_ENSURE_TRUE(components, NS_ERROR_OUT_OF_MEMORY);
 
   // Create a fake interfaces object.
-  JS::Rooted<JSObject*> interfaces(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
+  JS::Rooted<JSObject*> interfaces(cx, JS_NewPlainObject(cx));
   NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
   bool ok =
     JS_DefineProperty(cx, components, "interfaces", interfaces,
