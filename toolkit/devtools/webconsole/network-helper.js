@@ -500,6 +500,7 @@ let NetworkHelper = {
    *          - state: The security of the connection used to fetch this
    *                   request. Has one of following string values:
    *                    * "insecure": the connection was not secure (only http)
+   *                    * "weak": the connection has minor security issues
    *                    * "broken": secure connection failed (e.g. expired cert)
    *                    * "secure": the connection was properly secured.
    *          If state == broken:
@@ -511,6 +512,9 @@ let NetworkHelper = {
    *                    See parseCertificateInfo for the contents.
    *            - hsts: true if host uses Strict Transport Security, false otherwise
    *            - hpkp: true if host uses Public Key Pinning, false otherwise
+   *          If state == weak: Same as state == secure and
+   *            - weaknessReasons: list of reasons that cause the request to be
+   *                               considered weak. See getReasonsForWeakness.
    */
   parseSecurityInfo: function NH_parseSecurityInfo(securityInfo, httpActivity) {
     const info = {
@@ -551,7 +555,7 @@ let NetworkHelper = {
      *   => .securityState has STATE_IS_BROKEN flag
      *   => .errorCode is NOT an NSS error code
      *   => .errorMessage is not available
-     *      => state === "insecure"
+     *      => state === "weak"
      */
 
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -561,10 +565,26 @@ let NetworkHelper = {
     const NSSErrorsService = Cc['@mozilla.org/nss_errors_service;1']
                                .getService(Ci.nsINSSErrorsService);
     const SSLStatus = securityInfo.SSLStatus;
+    if (!NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
+      const state = securityInfo.securityState;
 
-    if (securityInfo.securityState & wpl.STATE_IS_SECURE) {
-      // The connection is secure.
-      info.state = "secure";
+      if (state & wpl.STATE_IS_SECURE) {
+        // The connection is secure.
+        info.state = "secure";
+      } else if (state & wpl.STATE_IS_BROKEN) {
+        // The connection is not secure, there was no error but there's some
+        // minor security issues.
+        info.state = "weak";
+        info.weaknessReasons = this.getReasonsForWeakness(state);
+      } else if (state & wpl.STATE_IS_INSECURE) {
+        // This was most likely an https request that was aborted before
+        // validation. Return info as info.state = insecure.
+        return info;
+      } else {
+        DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
+          "Security state " + state + " has no known STATE_IS_* flags.");
+        return info;
+      }
 
       // Cipher suite.
       info.cipherSuite = SSLStatus.cipherName;
@@ -598,14 +618,10 @@ let NetworkHelper = {
         info.hpkp = false;
       }
 
-    } else if (NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
+    } else {
       // The connection failed.
       info.state = "broken";
       info.errorMessage = securityInfo.errorMessage;
-    } else {
-      // Connection has securityInfo, it is not secure and there's no problems
-      // to report. Mark the request as insecure.
-      return info;
     }
 
     return info;
@@ -682,6 +698,46 @@ let NetworkHelper = {
           "protocolVersion " + version + " is unknown.");
         return "Unknown";
     }
+  },
+
+  /**
+   * Takes the securityState bitfield and returns reasons for weak connection
+   * as an array of strings.
+   *
+   * @param Number state
+   *        nsITransportSecurityInfo.securityState.
+   *
+   * @return Array[String]
+   *         List of weakness reasons. A subset of { cipher, sslv3 } where
+   *         * cipher: The cipher suite is consireded to be weak (RC4).
+   *         * sslv3: The protocol, SSLv3, is weak.
+   */
+  getReasonsForWeakness: function NH_getReasonsForWeakness(state) {
+    const wpl = Ci.nsIWebProgressListener;
+
+    // If there's non-fatal security issues the request has STATE_IS_BROKEN
+    // flag set. See http://hg.mozilla.org/mozilla-central/file/44344099d119
+    // /security/manager/ssl/src/nsNSSCallbacks.cpp#l1233
+    let reasons = [];
+
+    if (state & wpl.STATE_IS_BROKEN) {
+      let isSSLV3 = state & wpl.STATE_USES_SSL_3;
+      let isCipher = state & wpl.STATE_USES_WEAK_CRYPTO;
+      if (isSSLV3) {
+        reasons.push("sslv3");
+      }
+
+      if (isCipher) {
+        reasons.push("cipher");
+      }
+
+      if (!isCipher && !isSSLV3) {
+        DevToolsUtils.reportException("NetworkHelper.getReasonsForWeakness",
+          "STATE_IS_BROKEN without a known reason. Full state was: " + state);
+      }
+    }
+
+    return reasons;
   },
 };
 
