@@ -152,6 +152,18 @@ private:
 
     void onTrackEndOfStream(size_t trackIndex);
 
+    bool isLiveStream();
+
+    // This flag is set if we have just disconnected
+    // in order to pretend pausing a live stream.
+    bool mDisconnectedToPauseLiveStream;
+
+    // While performing a play operation, if the current state of RTSP connection
+    // is disconnected, we will start over establishing connection to the server.
+    // In this case (mPlayOnConnected = true), we have to perform play again when
+    // onConnected, to ensure we complete the play operation.
+    bool mPlayOnConnected;
+
     nsMainThreadPtrHandle<nsIStreamingProtocolListener> mListener;
     int mPrintCount;
 

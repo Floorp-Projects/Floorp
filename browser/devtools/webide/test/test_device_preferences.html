@@ -8,6 +8,7 @@
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
     <script type="application/javascript;version=1.8" src="head.js"></script>
+    <script type="application/javascript;version=1.8" src="device_front_shared.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   </head>
 
@@ -49,190 +50,34 @@
           yield prefIframe.contentWindow.getAllPrefs;
           yield nextTick();
 
-          let doc = prefIframe.contentWindow.document;
+          setDocument(prefIframe);
+
           let fields = doc.querySelectorAll(".editable");
           let preference = "accessibility.blockautorefresh";
-          let found = false;
 
-          // Trigger existing field change
-          for (let field of fields) {
-            if (field.id == preference) {
-              let button = doc.getElementById("btn-" + preference);
-              found = true;
-              ok(button.classList.contains("hide"), "Default field detected");
-              field.value = "custom";
-              field.click();
-              ok(!button.classList.contains("hide"), "Custom field detected");
-              break;
-            }
-          }
-          ok(found, "Found accessibility preference line");
+          fieldChange(fields, preference);
 
-          // Add new preferences
-          found = false;
-          let customName = doc.querySelector("#custom-value-name");
-          let customValue = doc.querySelector("#custom-value-text");
-          let customValueType = doc.querySelector("#custom-value-type");
-          let customBtn = doc.querySelector("#custom-value");
-          let change = doc.createEvent("HTMLEvents");
-          change.initEvent("change", false, true);
+          addNewField();
 
-          // Add a new custom string preference
-          customValueType.value = "string";
-          customValueType.dispatchEvent(change);
-          customName.value = "new-string-pref!";
-          customValue.value = "test";
-          customBtn.click();
-          let newPref = doc.querySelector("#new-string-pref");
-          if (newPref) {
-            found = true;
-            is(newPref.type, "text", "Custom type is a string");
-            is(newPref.value, "test", "Custom string new value is correct");
-          }
-          ok(found, "Found new string preference line");
-          is(customName.value, "", "Custom string name reset");
-          is(customValue.value, "", "Custom string value reset");
+          addNewFieldWithEnter();
 
-          // Add a new custom value with the <enter> key
-          found = false;
-          customName.value = "new-string-pref-two";
-          customValue.value = "test";
-          let newField = doc.querySelector("#add-custom-preference");
-          let enter = doc.createEvent("KeyboardEvent");
-          enter.initKeyEvent(
-            "keyup", true, true, null, false, false, false, false, 13, 0);
-          newField.dispatchEvent(enter);
-          newPref = doc.querySelector("#new-string-pref-two");
-          if (newPref) {
-            found = true;
-            is(newPref.type, "text", "Custom type is a string");
-            is(newPref.value, "test", "Custom string new value is correct");
-          }
-          ok(found, "Found new string preference line");
-          is(customName.value, "", "Custom string name reset");
-          is(customValue.value, "", "Custom string value reset");
+          editExistingField();
 
-          // Edit existing custom string preference
-          newPref.value = "test2";
-          newPref.click();
-          is(newPref.value, "test2", "Custom string existing value is correct");
+          addNewFieldInteger();
 
-          // Add a new custom integer preference with a valid integer
-          customValueType.value = "number";
-          customValueType.dispatchEvent(change);
-          customName.value = "new-integer-pref";
-          customValue.value = 1;
-          found = false;
+          yield editFieldInteger();
 
-          customBtn.click();
-          newPref = doc.querySelector("#new-integer-pref");
-          if (newPref) {
-            found = true;
-            is(newPref.type, "number", "Custom type is a number");
-            is(newPref.value, 1, "Custom integer value is correct");
-          }
-          ok(found, "Found new integer preference line");
-          is(customName.value, "", "Custom integer name reset");
-          is(customValue.value, 0, "Custom integer value reset");
+          yield resetExistingField("accessibility.accesskeycausesactivation");
 
-          // Edit existing custom integer preference
-          newPref.value = 3;
-          newPref.click();
-          is(newPref.value, 3, "Custom integer existing value is correct");
+          addNewFieldBoolean();
 
-          // Reset a custom preference
-          let resetBtn = doc.querySelector("#btn-new-integer-pref");
-          resetBtn.click();
-
-          try {
-            yield prefIframe.contentWindow.defaultPref;
-          } catch(err) {
-            let prefRow = doc.querySelector("#row-new-integer-pref");
-            if (!prefRow) {
-              found = false;
-            }
-            ok(!found, "Custom preference removed");
-          }
-
-          // Reset an existing preference
-          let existingPref = doc.getElementById("accessibility.accesskeycausesactivation");
-          existingPref.click();
-          is(existingPref.checked, false, "Existing boolean value is correct");
-          resetBtn = doc.getElementById("btn-accessibility.accesskeycausesactivation");
-          resetBtn.click();
-
-          yield prefIframe.contentWindow.defaultPref;
-
-          ok(resetBtn.classList.contains("hide"), true, "Reset button hidden");
-          is(existingPref.checked, true, "Existing preference reset");
-
-          // Add a new custom boolean preference
-          customValueType.value = "boolean";
-          customValueType.dispatchEvent(change);
-          customName.value = "new-boolean-pref";
-          customValue.checked = true;
-          found = false;
-          customBtn.click();
-          newPref = doc.querySelector("#new-boolean-pref");
-          if (newPref) {
-            found = true;
-            is(newPref.type, "checkbox", "Custom type is a checkbox");
-            is(newPref.checked, true, "Custom boolean value is correctly true");
-          }
-          ok(found, "Found new boolean preference line");
-
-          // Mouse event trigger
-          var mouseClick = new MouseEvent("click", {
-            canBubble: true,
-            cancelable: true,
-            view: doc.parent,
-          });
-
-          found = false;
-          customValueType.value = "boolean";
-          customValueType.dispatchEvent(change);
-          customName.value = "new-boolean-pref2";
-          customValue.dispatchEvent(mouseClick);
-          customBtn.dispatchEvent(mouseClick);
-          newPref = doc.querySelector("#new-boolean-pref2");
-          if (newPref) {
-            found = true;
-            is(newPref.checked, true, "Custom boolean value is correctly false");
-          }
-          ok(found, "Found new second boolean preference line");
-
-          is(customName.value, "", "Custom boolean name reset");
-          is(customValue.checked, false, "Custom boolean value reset");
-
-          // Edit existing custom boolean preference
-          newPref.click();
-          is(newPref.checked, false, "Custom boolean existing value is correct");
-
-          // Search for a non-existent field
-          let searchField = doc.querySelector("#search-bar");
-          searchField.value = "![o_O]!";
-          searchField.click();
-
-          let preferencesTotal = doc.querySelectorAll("tr.edit-row").length;
-          let hiddenPreferences = doc.querySelectorAll("tr.hide");
-          is(hiddenPreferences.length, preferencesTotal, "Search keyword not found");
-
-          // Search for existing fields
-          searchField.value = "debugger";
-          searchField.click();
-          hiddenPreferences = doc.querySelectorAll("tr.hide");
-          isnot(hiddenPreferences.length, preferencesTotal, "Search keyword found");
-
-          doc.querySelector("#close").click();
-
-          ok(!deck.selectedPanel, "No panel selected");
+          searchFields(deck, "debugger");
 
           DebuggerServer.destroy();
 
           yield closeWebIDE(win);
 
           SimpleTest.finish();
-
         }).then(null, e => {
           ok(false, "Exception: " + e);
           SimpleTest.finish();
