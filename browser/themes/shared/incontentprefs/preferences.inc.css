@@ -25,6 +25,14 @@ treecol {
 
 /* Category List */
 
+#categories {
+  max-height: 100vh;
+}
+
+#categories > scrollbox {
+  overflow-x: hidden !important;
+}
+
 .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.png");
 }
