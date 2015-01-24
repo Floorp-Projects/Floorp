@@ -39,6 +39,10 @@ class Nursery;
 class ObjectElements;
 struct StackShape;
 
+namespace gc {
+class RelocationOverlay;
+}
+
 inline JSObject *
 CastAsObject(PropertyOp op)
 {
@@ -117,6 +121,7 @@ class JSObject : public js::gc::Cell
     friend class js::GCMarker;
     friend class js::NewObjectCache;
     friend class js::Nursery;
+    friend class js::gc::RelocationOverlay;
     friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
     friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
                                           bool *succeeded);
