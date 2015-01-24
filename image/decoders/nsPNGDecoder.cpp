@@ -551,22 +551,25 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    int sample_max = (1 << bit_depth);
     png_color_16p trans_values;
     png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values);
     // libpng doesn't reject a tRNS chunk with out-of-range samples
     // so we check it here to avoid setting up a useless opacity
-    // channel or producing unexpected transparent pixels when using
-    // libpng-1.2.19 through 1.2.26 (bug #428045)
-    if ((color_type == PNG_COLOR_TYPE_GRAY &&
-         (int)trans_values->gray > sample_max) ||
-         (color_type == PNG_COLOR_TYPE_RGB &&
-         ((int)trans_values->red > sample_max ||
-         (int)trans_values->green > sample_max ||
-         (int)trans_values->blue > sample_max))) {
-      // clear the tRNS valid flag and release tRNS memory
-      png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
-    } else {
+    // channel or producing unexpected transparent pixels (bug #428045)
+    if (bit_depth < 16) {
+      png_uint_16 sample_max = (1 << bit_depth) - 1;
+      if ((color_type == PNG_COLOR_TYPE_GRAY &&
+           trans_values->gray > sample_max) ||
+           (color_type == PNG_COLOR_TYPE_RGB &&
+           (trans_values->red > sample_max ||
+           trans_values->green > sample_max ||
+           trans_values->blue > sample_max))) {
+        // clear the tRNS valid flag and release tRNS memory
+        png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
+        num_trans = 0;
+      }
+    }
+    if (num_trans != 0) {
       png_set_expand(png_ptr);
     }
   }
