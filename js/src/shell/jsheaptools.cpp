@@ -531,7 +531,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
 JSObject *
 ReferenceFinder::findReferences(HandleObject target)
 {
-    result = JS_NewObject(context, nullptr, JS::NullPtr(), JS::NullPtr());
+    result = JS_NewPlainObject(context);
     if (!result)
         return nullptr;
     if (!visit(target, nullptr))

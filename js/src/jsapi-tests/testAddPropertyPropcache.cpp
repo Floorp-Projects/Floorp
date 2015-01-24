@@ -30,7 +30,7 @@ BEGIN_TEST(testAddPropertyHook)
      */
     static const int ExpectedCount = 100;
 
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
     JS::RootedValue proto(cx, OBJECT_TO_JSVAL(obj));
     JS_InitClass(cx, global, obj, &AddPropertyClass, nullptr, 0, nullptr, nullptr, nullptr,

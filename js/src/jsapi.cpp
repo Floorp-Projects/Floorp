@@ -2085,6 +2085,16 @@ JS_NewObjectWithGivenProto(JSContext *cx, const JSClass *jsclasp, HandleObject p
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_NewPlainObject(JSContext *cx)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return NewBuiltinClassInstance<PlainObject>(cx);
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_NewObjectForConstructor(JSContext *cx, const JSClass *clasp, const CallArgs& args)
 {
     AssertHeapIsIdle(cx);

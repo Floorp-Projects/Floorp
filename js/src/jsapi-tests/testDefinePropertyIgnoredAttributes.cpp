@@ -41,7 +41,7 @@ CheckDescriptor(JS::Handle<JSPropertyDescriptor> desc, bool enumerable,
 
 BEGIN_TEST(testDefinePropertyIgnoredAttributes)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     JS::Rooted<JSPropertyDescriptor> desc(cx);
     JS::RootedValue defineValue(cx);
 

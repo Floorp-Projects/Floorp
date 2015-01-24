@@ -4708,7 +4708,7 @@ static const JSFunctionSpecWithHelp console_functions[] = {
 bool
 DefineConsole(JSContext *cx, HandleObject global)
 {
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject obj(cx, JS_NewPlainObject(cx));
     return obj &&
            JS_DefineFunctionsWithHelp(cx, obj, console_functions) &&
            JS_DefineProperty(cx, global, "console", obj, 0);

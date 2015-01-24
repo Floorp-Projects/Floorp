@@ -70,7 +70,7 @@ TestHeapPostBarriers(T initialObj)
 
 JSObject *NurseryObject()
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj)
         return nullptr;
     JS_DefineProperty(cx, obj, "x", 42, 0);
