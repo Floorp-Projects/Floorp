@@ -6,10 +6,61 @@
 
 #include "QuotaObject.h"
 
+#include "mozilla/TypeTraits.h"
 #include "QuotaManager.h"
 #include "Utilities.h"
 
+#ifdef DEBUG
+#include "nsComponentManagerUtils.h"
+#include "nsIFile.h"
+#include "nsXPCOMCID.h"
+#endif
+
 USING_QUOTA_NAMESPACE
+
+namespace {
+
+template <typename T, typename U>
+void
+AssertPositiveIntegers(T aOne, U aTwo)
+{
+  static_assert(mozilla::IsIntegral<T>::value, "Not an integer!");
+  static_assert(mozilla::IsIntegral<U>::value, "Not an integer!");
+  MOZ_ASSERT(aOne >= 0);
+  MOZ_ASSERT(aTwo >= 0);
+}
+
+template <typename T, typename U>
+void
+AssertNoOverflow(T aOne, U aTwo)
+{
+  AssertPositiveIntegers(aOne, aTwo);
+  AssertNoOverflow(uint64_t(aOne), uint64_t(aTwo));
+}
+
+template <>
+void
+AssertNoOverflow<uint64_t, uint64_t>(uint64_t aOne, uint64_t aTwo)
+{
+  MOZ_ASSERT(UINT64_MAX - aOne >= aTwo);
+}
+
+template <typename T, typename U>
+void
+AssertNoUnderflow(T aOne, U aTwo)
+{
+  AssertPositiveIntegers(aOne, aTwo);
+  AssertNoUnderflow(uint64_t(aOne), uint64_t(aTwo));
+}
+
+template <>
+void
+AssertNoUnderflow<uint64_t, uint64_t>(uint64_t aOne, uint64_t aTwo)
+{
+  MOZ_ASSERT(aOne >= aTwo);
+}
+
+} // anonymous namespace
 
 void
 QuotaObject::AddRef()
@@ -64,31 +115,65 @@ QuotaObject::Release()
 void
 QuotaObject::UpdateSize(int64_t aSize)
 {
+  MOZ_ASSERT(aSize >= 0);
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    MOZ_ASSERT(file);
+
+    MOZ_ASSERT(NS_SUCCEEDED(file->InitWithPath(mPath)));
+
+    bool exists;
+    MOZ_ASSERT(NS_SUCCEEDED(file->Exists(&exists)));
+
+    if (exists) {
+      int64_t fileSize;
+      MOZ_ASSERT(NS_SUCCEEDED(file->GetFileSize(&fileSize)));
+
+      MOZ_ASSERT(aSize == fileSize);
+    } else {
+      MOZ_ASSERT(!aSize);
+    }
+  }
+#endif
+
   QuotaManager* quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
   MutexAutoLock lock(quotaManager->mQuotaMutex);
 
-  if (!mOriginInfo) {
+  if (!mOriginInfo || mSize == aSize) {
     return;
   }
 
+  AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, mSize);
+  quotaManager->mTemporaryStorageUsage -= mSize;
+
   GroupInfo* groupInfo = mOriginInfo->mGroupInfo;
 
-  quotaManager->mTemporaryStorageUsage -= mSize;
+  AssertNoUnderflow(groupInfo->mUsage, mSize);
   groupInfo->mUsage -= mSize;
+
+  AssertNoUnderflow(mOriginInfo->mUsage, mSize);
   mOriginInfo->mUsage -= mSize;
 
   mSize = aSize;
 
+  AssertNoOverflow(mOriginInfo->mUsage, mSize);
   mOriginInfo->mUsage += mSize;
+
+  AssertNoOverflow(groupInfo->mUsage, mSize);
   groupInfo->mUsage += mSize;
+
+  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, mSize);
   quotaManager->mTemporaryStorageUsage += mSize;
 }
 
 bool
 QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 {
+  AssertNoOverflow(aOffset, aCount);
   int64_t end = aOffset + aCount;
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -106,26 +191,32 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
     groupInfo->mGroupInfoPair->LockedGetGroupInfo(
       ComplementaryPersistenceType(groupInfo->mPersistenceType));
 
+  AssertNoUnderflow(end, mSize);
   uint64_t delta = end - mSize;
 
+  AssertNoOverflow(mOriginInfo->mUsage, delta);
   uint64_t newUsage = mOriginInfo->mUsage + delta;
 
   // Temporary storage has no limit for origin usage (there's a group and the
   // global limit though).
 
+  AssertNoOverflow(groupInfo->mUsage, delta);
   uint64_t newGroupUsage = groupInfo->mUsage + delta;
 
   uint64_t groupUsage = groupInfo->mUsage;
   if (complementaryGroupInfo) {
+    AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
     groupUsage += complementaryGroupInfo->mUsage;
   }
 
   // Temporary storage has a hard limit for group usage (20 % of the global
   // limit).
+  AssertNoOverflow(groupUsage, delta);
   if (groupUsage + delta > quotaManager->GetGroupLimit()) {
     return false;
   }
 
+  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, delta);
   uint64_t newTemporaryStorageUsage = quotaManager->mTemporaryStorageUsage +
                                       delta;
 
@@ -181,17 +272,22 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
     // We unlocked and relocked several times so we need to recompute all the
     // essential variables and recheck the group limit.
 
+    AssertNoUnderflow(end, mSize);
     delta = end - mSize;
 
+    AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
 
+    AssertNoOverflow(groupInfo->mUsage, delta);
     newGroupUsage = groupInfo->mUsage + delta;
 
     groupUsage = groupInfo->mUsage;
     if (complementaryGroupInfo) {
+      AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
       groupUsage += complementaryGroupInfo->mUsage;
     }
 
+    AssertNoOverflow(groupUsage, delta);
     if (groupUsage + delta > quotaManager->GetGroupLimit()) {
       // Unfortunately some other thread increased the group usage in the
       // meantime and we are not below the group limit anymore.
@@ -204,6 +300,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
       return false;
     }
 
+    AssertNoOverflow(quotaManager->mTemporaryStorageUsage, delta);
     newTemporaryStorageUsage = quotaManager->mTemporaryStorageUsage + delta;
 
     NS_ASSERTION(newTemporaryStorageUsage <=
@@ -211,14 +308,13 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
     // Ok, we successfully freed enough space and the operation can continue
     // without throwing the quota error.
-
     mOriginInfo->mUsage = newUsage;
     groupInfo->mUsage = newGroupUsage;
     quotaManager->mTemporaryStorageUsage = newTemporaryStorageUsage;;
 
     // Some other thread could increase the size in the meantime, but no more
     // than this one.
-    NS_ASSERTION(mSize < end, "This shouldn't happen!");
+    MOZ_ASSERT(mSize < end);
     mSize = end;
 
     // Finally, release IO thread only objects and allow next synchronized
@@ -244,13 +340,16 @@ OriginInfo::LockedDecreaseUsage(int64_t aSize)
 {
   AssertCurrentThreadOwnsQuotaMutex();
 
+  AssertNoUnderflow(mUsage, aSize);
   mUsage -= aSize;
 
+  AssertNoUnderflow(mGroupInfo->mUsage, aSize);
   mGroupInfo->mUsage -= aSize;
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
+  AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, aSize);
   quotaManager->mTemporaryStorageUsage -= aSize;
 }
 
@@ -294,11 +393,13 @@ GroupInfo::LockedAddOriginInfo(OriginInfo* aOriginInfo)
                "Replacing an existing entry!");
   mOriginInfos.AppendElement(aOriginInfo);
 
+  AssertNoOverflow(mUsage, aOriginInfo->mUsage);
   mUsage += aOriginInfo->mUsage;
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
+  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, aOriginInfo->mUsage);
   quotaManager->mTemporaryStorageUsage += aOriginInfo->mUsage;
 }
 
@@ -309,14 +410,14 @@ GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin)
 
   for (uint32_t index = 0; index < mOriginInfos.Length(); index++) {
     if (mOriginInfos[index]->mOrigin == aOrigin) {
-      MOZ_ASSERT(mUsage >= mOriginInfos[index]->mUsage);
+      AssertNoUnderflow(mUsage, mOriginInfos[index]->mUsage);
       mUsage -= mOriginInfos[index]->mUsage;
 
       QuotaManager* quotaManager = QuotaManager::Get();
       MOZ_ASSERT(quotaManager);
 
-      MOZ_ASSERT(quotaManager->mTemporaryStorageUsage >=
-                 mOriginInfos[index]->mUsage);
+      AssertNoUnderflow(quotaManager->mTemporaryStorageUsage,
+                        mOriginInfos[index]->mUsage);
       quotaManager->mTemporaryStorageUsage -= mOriginInfos[index]->mUsage;
 
       mOriginInfos.RemoveElementAt(index);
@@ -337,10 +438,10 @@ GroupInfo::LockedRemoveOriginInfos()
   for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
     OriginInfo* originInfo = mOriginInfos[index - 1];
 
-    MOZ_ASSERT(mUsage >= originInfo->mUsage);
+    AssertNoUnderflow(mUsage, originInfo->mUsage);
     mUsage -= originInfo->mUsage;
 
-    MOZ_ASSERT(quotaManager->mTemporaryStorageUsage >= originInfo->mUsage);
+    AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, originInfo->mUsage);
     quotaManager->mTemporaryStorageUsage -= originInfo->mUsage;
 
     mOriginInfos.RemoveElementAt(index - 1);
