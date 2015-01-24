@@ -84,8 +84,7 @@ BroadcastSystemMessage(const nsAString& aType,
                                            aData.get_nsString().Length());
     value = STRING_TO_JSVAL(jsData);
   } else if (aData.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
-    JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(),
-                                               JS::NullPtr()));
+    JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
     if (!obj) {
       BT_WARNING("Failed to new JSObject for system message!");
       return false;
@@ -115,8 +114,7 @@ BroadcastSystemMessage(const nsAString& aType,
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
       "Shouldn't get here when an exception is pending!");
 
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(),
-                                             JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     BT_WARNING("Failed to new JSObject for system message!");
     return false;
