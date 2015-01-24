@@ -24,7 +24,7 @@
     const testFile = getRandomFile("random.bin", 100000);
 
     let databases = [];
-    for each (let info in databaseInfo) {
+    for (let info of databaseInfo) {
       let request = indexedDB.open(info.name, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;

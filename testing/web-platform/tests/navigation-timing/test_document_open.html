@@ -34,7 +34,7 @@ function testTimingWithDocumentOpen() {
     done();
     return;
   }
-  
+
   var timing = subcontentWindow.performance.timing;
   for (i in timingAttributes) {
     originalTiming[timingAttributes[i]] = timing[timingAttributes[i]];

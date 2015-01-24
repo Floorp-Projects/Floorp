@@ -16,5 +16,5 @@ test(function() {
   assert_equals(fec.previousElementSibling, null)
   assert_equals(fec.nextElementSibling, null)
 })
-]]></h:script>	
+]]></h:script>
 </svg>

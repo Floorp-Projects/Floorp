@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
     'NSSErrorsService.cpp',
     'nsSSLSocketProvider.cpp',
     'nsSSLStatus.cpp',
-    'nsStreamCipher.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
     'PSMRunnable.cpp',

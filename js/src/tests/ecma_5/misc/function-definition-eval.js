@@ -14,6 +14,7 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 var outer, desc;
+var isInShell = !("Window" in this);
 
 ///////////////////////////////////////////////////
 // Function definitions over accessor properties //
@@ -69,71 +70,73 @@ assertEq(desc.enumerable, true);
 assertEq(desc.configurable, true);
 
 
-// non-configurable properties produce a TypeError
+// non-configurable properties produce a TypeError.  We only test this in shell,
+// since defining non-configurable properties on Window instances throws.
+if (isInShell) {
+    getCalled = false, setCalled = false;
+    Object.defineProperty(this, "acc3",
+			  {
+                              get: function() { getCalled = true; throw "FAIL get 3"; },
+                              set: function(v) { setCalled = true; throw "FAIL set 3 " + v; },
+                              configurable: false,
+                              enumerable: true
+			  });
 
-getCalled = false, setCalled = false;
-Object.defineProperty(this, "acc3",
-                      {
-                        get: function() { getCalled = true; throw "FAIL get 3"; },
-                        set: function(v) { setCalled = true; throw "FAIL set 3 " + v; },
-                        configurable: false,
-                        enumerable: true
-                      });
-
-outer = undefined;
-try
-{
-  eval("function acc3() { throw 'FAIL redefined 3'; }; outer = acc3");
-  throw new Error("should have thrown trying to redefine global function " +
-                  "over a non-configurable, enumerable accessor");
-}
-catch (e)
-{
-  assertEq(e instanceof TypeError, true,
-           "global function definition, when that function would overwrite " +
-           "a non-configurable, enumerable accessor, must throw a TypeError " +
-           "per ES5+errata: " + e);
-  desc = Object.getOwnPropertyDescriptor(this, "acc3");
-  assertEq(typeof desc.get, "function");
-  assertEq(typeof desc.set, "function");
-  assertEq(desc.enumerable, true);
-  assertEq(desc.configurable, false);
-  assertEq(outer, undefined);
-  assertEq(getCalled, false);
-  assertEq(setCalled, false);
-}
+    outer = undefined;
+    try
+    {
+	eval("function acc3() { throw 'FAIL redefined 3'; }; outer = acc3");
+	throw new Error("should have thrown trying to redefine global function " +
+			"over a non-configurable, enumerable accessor");
+    }
+    catch (e)
+    {
+	assertEq(e instanceof TypeError, true,
+		 "global function definition, when that function would overwrite " +
+		 "a non-configurable, enumerable accessor, must throw a TypeError " +
+		 "per ES5+errata: " + e);
+	desc = Object.getOwnPropertyDescriptor(this, "acc3");
+	assertEq(typeof desc.get, "function");
+	assertEq(typeof desc.set, "function");
+	assertEq(desc.enumerable, true);
+	assertEq(desc.configurable, false);
+	assertEq(outer, undefined);
+	assertEq(getCalled, false);
+	assertEq(setCalled, false);
+    }
 
 
-getCalled = false, setCalled = false;
-Object.defineProperty(this, "acc4",
-                      {
-                        get: function() { getCalled = true; throw "FAIL get 4"; },
-                        set: function(v) { setCalled = true; throw "FAIL set 4 " + v; },
-                        configurable: false,
-                        enumerable: false
-                      });
+    getCalled = false, setCalled = false;
+    Object.defineProperty(this, "acc4",
+			  {
+                              get: function() { getCalled = true; throw "FAIL get 4"; },
+                              set: function(v) { setCalled = true; throw "FAIL set 4 " + v; },
+                              configurable: false,
+                              enumerable: false
+			  });
 
-outer = undefined;
-try
-{
-  eval("function acc4() { throw 'FAIL redefined 4'; }; outer = acc4");
-  throw new Error("should have thrown trying to redefine global function " +
-                  "over a non-configurable, non-enumerable accessor");
-}
-catch (e)
-{
-  assertEq(e instanceof TypeError, true,
-           "global function definition, when that function would overwrite " +
-           "a non-configurable, non-enumerable accessor, must throw a " +
-           "TypeError per ES5+errata: " + e);
-  desc = Object.getOwnPropertyDescriptor(this, "acc4");
-  assertEq(typeof desc.get, "function");
-  assertEq(typeof desc.set, "function");
-  assertEq(desc.enumerable, false);
-  assertEq(desc.configurable, false);
-  assertEq(outer, undefined);
-  assertEq(getCalled, false);
-  assertEq(setCalled, false);
+    outer = undefined;
+    try
+    {
+	eval("function acc4() { throw 'FAIL redefined 4'; }; outer = acc4");
+	throw new Error("should have thrown trying to redefine global function " +
+			"over a non-configurable, non-enumerable accessor");
+    }
+    catch (e)
+    {
+	assertEq(e instanceof TypeError, true,
+		 "global function definition, when that function would overwrite " +
+		 "a non-configurable, non-enumerable accessor, must throw a " +
+		 "TypeError per ES5+errata: " + e);
+	desc = Object.getOwnPropertyDescriptor(this, "acc4");
+	assertEq(typeof desc.get, "function");
+	assertEq(typeof desc.set, "function");
+	assertEq(desc.enumerable, false);
+	assertEq(desc.configurable, false);
+	assertEq(outer, undefined);
+	assertEq(getCalled, false);
+	assertEq(setCalled, false);
+    }
 }
 
 
@@ -220,119 +223,121 @@ assertEq(desc.enumerable, true);
 assertEq(desc.configurable, true);
 
 
-// non-configurable data properties are trickier
+// non-configurable data properties are trickier.  Again, we test these only in shell.
 
-Object.defineProperty(this, "data5",
-                      {
-                        configurable: false,
-                        enumerable: true,
-                        writable: true,
-                        value: "data5"
-                      });
+if (isInShell) {
+    Object.defineProperty(this, "data5",
+			  {
+                              configurable: false,
+                              enumerable: true,
+                              writable: true,
+                              value: "data5"
+			  });
 
-outer = undefined;
-eval("function data5() { return 'data5 function'; } outer = data5;");
-assertEq(typeof data5, "function");
-assertEq(data5, outer);
-desc = Object.getOwnPropertyDescriptor(this, "data5");
-assertEq(desc.configurable, false);
-assertEq(desc.enumerable, true);
-assertEq(desc.writable, true);
-assertEq(desc.value, data5);
-
-
-Object.defineProperty(this, "data6",
-                      {
-                        configurable: false,
-                        enumerable: true,
-                        writable: false,
-                        value: "data6"
-                      });
-
-outer = undefined;
-try
-{
-  eval("function data6() { return 'data6 function'; } outer = data6;");
-  throw new Error("should have thrown trying to redefine global function " +
-                  "over a non-configurable, enumerable, non-writable accessor");
-}
-catch (e)
-{
-  assertEq(e instanceof TypeError, true,
-           "global function definition, when that function would overwrite " +
-           "a non-configurable, enumerable, non-writable data property, must " +
-           "throw a TypeError per ES5+errata: " + e);
-  assertEq(data6, "data6");
-  assertEq(outer, undefined);
-  desc = Object.getOwnPropertyDescriptor(this, "data6");
-  assertEq(desc.configurable, false);
-  assertEq(desc.enumerable, true);
-  assertEq(desc.writable, false);
-  assertEq(desc.value, "data6");
-}
+    outer = undefined;
+    eval("function data5() { return 'data5 function'; } outer = data5;");
+    assertEq(typeof data5, "function");
+    assertEq(data5, outer);
+    desc = Object.getOwnPropertyDescriptor(this, "data5");
+    assertEq(desc.configurable, false);
+    assertEq(desc.enumerable, true);
+    assertEq(desc.writable, true);
+    assertEq(desc.value, data5);
 
 
-Object.defineProperty(this, "data7",
-                      {
-                        configurable: false,
-                        enumerable: false,
-                        writable: true,
-                        value: "data7"
-                      });
+    Object.defineProperty(this, "data6",
+			  {
+                              configurable: false,
+                              enumerable: true,
+                              writable: false,
+                              value: "data6"
+			  });
 
-outer = undefined;
-try
-{
-  eval("function data7() { return 'data7 function'; } outer = data7;");
-  throw new Error("should have thrown trying to redefine global function " +
-                  "over a non-configurable, non-enumerable, writable data" +
-                  "property");
-}
-catch (e)
-{
-  assertEq(e instanceof TypeError, true,
-           "global function definition, when that function would overwrite " +
-           "a non-configurable, non-enumerable, writable data property, must " +
-           "throw a TypeError per ES5+errata: " + e);
-  assertEq(data7, "data7");
-  assertEq(outer, undefined);
-  desc = Object.getOwnPropertyDescriptor(this, "data7");
-  assertEq(desc.configurable, false);
-  assertEq(desc.enumerable, false);
-  assertEq(desc.writable, true);
-  assertEq(desc.value, "data7");
-}
+    outer = undefined;
+    try
+    {
+	eval("function data6() { return 'data6 function'; } outer = data6;");
+	throw new Error("should have thrown trying to redefine global function " +
+			"over a non-configurable, enumerable, non-writable accessor");
+    }
+    catch (e)
+    {
+	assertEq(e instanceof TypeError, true,
+		 "global function definition, when that function would overwrite " +
+		 "a non-configurable, enumerable, non-writable data property, must " +
+		 "throw a TypeError per ES5+errata: " + e);
+	assertEq(data6, "data6");
+	assertEq(outer, undefined);
+	desc = Object.getOwnPropertyDescriptor(this, "data6");
+	assertEq(desc.configurable, false);
+	assertEq(desc.enumerable, true);
+	assertEq(desc.writable, false);
+	assertEq(desc.value, "data6");
+    }
 
 
-Object.defineProperty(this, "data8",
-                      {
-                        configurable: false,
-                        enumerable: false,
-                        writable: false,
-                        value: "data8"
-                      });
+    Object.defineProperty(this, "data7",
+			  {
+                              configurable: false,
+                              enumerable: false,
+                              writable: true,
+                              value: "data7"
+			  });
 
-outer = undefined;
-try
-{
-  eval("function data8() { return 'data8 function'; } outer = data8;");
-  throw new Error("should have thrown trying to redefine global function " +
-                  "over a non-configurable, non-enumerable, non-writable data" +
-                  "property");
-}
-catch (e)
-{
-  assertEq(e instanceof TypeError, true,
-           "global function definition, when that function would overwrite " +
-           "a non-configurable, non-enumerable, non-writable data property, " +
-           "must throw a TypeError per ES5+errata: " + e);
-  assertEq(data8, "data8");
-  assertEq(outer, undefined);
-  desc = Object.getOwnPropertyDescriptor(this, "data8");
-  assertEq(desc.configurable, false);
-  assertEq(desc.enumerable, false);
-  assertEq(desc.writable, false);
-  assertEq(desc.value, "data8");
+    outer = undefined;
+    try
+    {
+	eval("function data7() { return 'data7 function'; } outer = data7;");
+	throw new Error("should have thrown trying to redefine global function " +
+			"over a non-configurable, non-enumerable, writable data" +
+			"property");
+    }
+    catch (e)
+    {
+	assertEq(e instanceof TypeError, true,
+		 "global function definition, when that function would overwrite " +
+		 "a non-configurable, non-enumerable, writable data property, must " +
+		 "throw a TypeError per ES5+errata: " + e);
+	assertEq(data7, "data7");
+	assertEq(outer, undefined);
+	desc = Object.getOwnPropertyDescriptor(this, "data7");
+	assertEq(desc.configurable, false);
+	assertEq(desc.enumerable, false);
+	assertEq(desc.writable, true);
+	assertEq(desc.value, "data7");
+    }
+
+
+    Object.defineProperty(this, "data8",
+			  {
+                              configurable: false,
+                              enumerable: false,
+                              writable: false,
+                              value: "data8"
+			  });
+
+    outer = undefined;
+    try
+    {
+	eval("function data8() { return 'data8 function'; } outer = data8;");
+	throw new Error("should have thrown trying to redefine global function " +
+			"over a non-configurable, non-enumerable, non-writable data" +
+			"property");
+    }
+    catch (e)
+    {
+	assertEq(e instanceof TypeError, true,
+		 "global function definition, when that function would overwrite " +
+		 "a non-configurable, non-enumerable, non-writable data property, " +
+		 "must throw a TypeError per ES5+errata: " + e);
+	assertEq(data8, "data8");
+	assertEq(outer, undefined);
+	desc = Object.getOwnPropertyDescriptor(this, "data8");
+	assertEq(desc.configurable, false);
+	assertEq(desc.enumerable, false);
+	assertEq(desc.writable, false);
+	assertEq(desc.value, "data8");
+    }
 }
 
 /******************************************************************************/

@@ -1015,6 +1015,14 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
         masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &checkOk);
         masm.loadPtr(AbsoluteAddress((void*)&cx->mainThread().jitActivation), scratchReg);
         masm.loadPtr(Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()), scratchReg);
+
+        // It may be the case that we entered the baseline frame with
+        // profiling turned off on, then in a call within a loop (i.e. a
+        // callee frame), turn on profiling, then return to this frame,
+        // and then OSR with profiling turned on.  In this case, allow for
+        // lastProfilingFrame to be null.
+        masm.branchPtr(Assembler::Equal, scratchReg, Imm32(0), &checkOk);
+
         masm.branchPtr(Assembler::Equal, scratchReg, BaselineStackReg, &checkOk);
         masm.assumeUnreachable("Baseline OSR lastProfilingFrame mismatch.");
         masm.bind(&checkOk);
