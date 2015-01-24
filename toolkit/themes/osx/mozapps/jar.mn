@@ -32,7 +32,7 @@ toolkit.jar:
   skin/classic/mozapps/extensions/rating-won.png                  (extensions/rating-won.png)
   skin/classic/mozapps/extensions/rating-not-won.png              (extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                      (extensions/cancel.png)
-  skin/classic/mozapps/extensions/utilities.png                   (extensions/utilities.png)
+  skin/classic/mozapps/extensions/utilities.svg                   (../../shared/extensions/utilities.svg)
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
   skin/classic/mozapps/extensions/navigation.png                  (extensions/navigation.png)
