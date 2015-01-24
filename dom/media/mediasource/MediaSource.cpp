@@ -486,7 +486,8 @@ MediaSource::DurationChange(double aOldDuration, double aNewDuration)
   MSE_DEBUG("MediaSource(%p)::DurationChange(aOldDuration=%f, aNewDuration=%f)", this, aOldDuration, aNewDuration);
 
   if (aNewDuration < aOldDuration) {
-    mSourceBuffers->RangeRemoval(aNewDuration, aOldDuration);
+    // Remove all buffered data from aNewDuration.
+    mSourceBuffers->RangeRemoval(aNewDuration, PositiveInfinity<double>());
   }
   // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
 }

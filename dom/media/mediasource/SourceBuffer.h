@@ -110,7 +110,9 @@ public:
   double GetBufferedEnd();
 
   // Runs the range removal algorithm as defined by the MSE spec.
+  // RangeRemoval will queue a call to DoRangeRemoval.
   void RangeRemoval(double aStart, double aEnd);
+  void DoRangeRemoval(double aStart, double aEnd);
 
 #if defined(DEBUG)
   void Dump(const char* aPath);
