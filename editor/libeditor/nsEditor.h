@@ -90,7 +90,7 @@ struct IMEState;
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's
 // spellCheckAfterEditorChange is defined to take it as a long.
-MOZ_BEGIN_ENUM_CLASS(EditAction, int32_t)
+enum class EditAction : int32_t {
   ignore = -1,
   none = 0,
   undo,
@@ -128,7 +128,7 @@ MOZ_BEGIN_ENUM_CLASS(EditAction, int32_t)
   removeAbsolutePosition = 3016,
   decreaseZIndex      = 3017,
   increaseZIndex      = 3018
-MOZ_END_ENUM_CLASS(EditAction)
+};
 
 inline bool operator!(const EditAction& aOp)
 {

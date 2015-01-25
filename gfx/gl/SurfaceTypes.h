@@ -67,7 +67,7 @@ struct SurfaceCaps MOZ_FINAL
     }
 };
 
-MOZ_BEGIN_ENUM_CLASS(SharedSurfaceType, uint8_t)
+enum class SharedSurfaceType : uint8_t {
     Unknown = 0,
 
     Basic,
@@ -80,16 +80,16 @@ MOZ_BEGIN_ENUM_CLASS(SharedSurfaceType, uint8_t)
     IOSurface,
 
     Max
-MOZ_END_ENUM_CLASS(SharedSurfaceType)
+};
 
-MOZ_BEGIN_ENUM_CLASS(AttachmentType, uint8_t)
+enum class AttachmentType : uint8_t {
     Screen = 0,
 
     GLTexture,
     GLRenderbuffer,
 
     Max
-MOZ_END_ENUM_CLASS(AttachmentType)
+};
 
 } /* namespace gfx */
 } /* namespace mozilla */

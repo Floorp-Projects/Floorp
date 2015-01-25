@@ -15,11 +15,11 @@
 namespace mozilla {
 namespace image {
 
-MOZ_BEGIN_ENUM_CLASS(ByteOrder, uint8_t)
+enum class ByteOrder : uint8_t {
   Unknown,
   LittleEndian,
   BigEndian
-MOZ_END_ENUM_CLASS(ByteOrder)
+};
 
 struct EXIFData
 {
