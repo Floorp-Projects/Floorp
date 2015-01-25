@@ -16,8 +16,7 @@ namespace mozilla {
 
 /**
  * EnumeratedArray is a fixed-size array container for use when an
- * array is indexed by a specific enum class, as currently implemented
- * by MOZ_BEGIN_ENUM_CLASS.
+ * array is indexed by a specific enum class.
  *
  * This provides type safety by guarding at compile time against accidentally
  * indexing such arrays with unrelated values. This also removes the need
@@ -40,7 +39,7 @@ namespace mozilla {
  *
  */
 template<typename IndexType,
-         MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
+         IndexType SizeAsEnumValue,
          typename ValueType>
 class EnumeratedArray
 {

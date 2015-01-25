@@ -11,7 +11,7 @@
 #include "nsCycleCollectionTraversalCallback.h"
 
 template<typename IndexType,
-         MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
+         IndexType SizeAsEnumValue,
          typename ValueType>
 inline void
 ImplCycleCollectionUnlink(mozilla::EnumeratedArray<IndexType,
@@ -24,7 +24,7 @@ ImplCycleCollectionUnlink(mozilla::EnumeratedArray<IndexType,
 }
 
 template<typename IndexType,
-         MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(IndexType) SizeAsEnumValue,
+         IndexType SizeAsEnumValue,
          typename ValueType>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
