@@ -322,7 +322,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
     Maybe<AutoIdVector> ids;
     const AutoIdVector *props;
     if (scx->replacer && !scx->replacer->isCallable()) {
-        MOZ_ASSERT(JS_IsArrayObject(cx, scx->replacer));
+        MOZ_ASSERT(IsArray(scx->replacer, cx));
         props = &scx->propertyList;
     } else {
         MOZ_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
@@ -507,7 +507,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 
     scx->depth++;
     bool ok;
-    if (ObjectClassIs(obj, ESClass_Array, cx))
+    if (IsArray(obj, cx))
         ok = JA(cx, obj, scx);
     else
         ok = JO(cx, obj, scx);
@@ -529,7 +529,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
     if (replacer) {
         if (replacer->isCallable()) {
             /* Step 4a(i): use replacer to transform values.  */
-        } else if (ObjectClassIs(replacer, ESClass_Array, cx)) {
+        } else if (IsArray(replacer, cx)) {
             /*
              * Step 4b: The spec algorithm is unhelpfully vague about the exact
              * steps taken when the replacer is an array, regarding the exact
@@ -560,7 +560,8 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
 
             /* Step 4b(ii). */
             uint32_t len;
-            JS_ALWAYS_TRUE(GetLengthProperty(cx, replacer, &len));
+            if (!GetLengthProperty(cx, replacer, &len))
+                return false;
             if (replacer->is<ArrayObject>() && !replacer->isIndexed())
                 len = Min(len, replacer->as<ArrayObject>().getDenseInitializedLength());
 
@@ -693,7 +694,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
     if (val.isObject()) {
         RootedObject obj(cx, &val.toObject());
 
-        if (ObjectClassIs(obj, ESClass_Array, cx)) {
+        if (IsArray(obj, cx)) {
             /* Step 2a(ii). */
             uint32_t length;
             if (!GetLengthProperty(cx, obj, &length))
