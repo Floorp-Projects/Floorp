@@ -35,3 +35,5 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
 HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
+== 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height-ref.html
+== 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height-ref.html
