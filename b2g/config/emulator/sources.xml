@@ -25,7 +25,7 @@
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="d5d3f93914558b6f168447b805cd799c8233e300"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="6fa7a4936414ceb4055fd27f7a30e76790f834fb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6a9a432357983df3bfe64c3f10b43c05f771fc03"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e28c4e9ad88b28390120dfd8ada967233f28a98f"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="dd924f92906085b831bf1cbbc7484d3c043d613c"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
