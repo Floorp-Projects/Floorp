@@ -60,7 +60,7 @@ StringBundle.prototype = {
     let stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].
                        getService(Ci.nsIStringBundleService).
                        createBundle(this.url, this._appLocale);
-    this.__defineGetter__("_stringBundle", function() stringBundle);
+    this.__defineGetter__("_stringBundle", () => stringBundle);
     return this._stringBundle;
   },
 
