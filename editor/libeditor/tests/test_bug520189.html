@@ -119,175 +119,175 @@ var tests = [
     isIFrame: true,
     payload: dataPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("a").contentDocument.documentElement
+    rootElement() { return document.getElementById("a").contentDocument.documentElement; },
   },
   {
     id: "b",
     isIFrame: true,
     payload: jsPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("b").contentDocument.documentElement
+    rootElement() { return document.getElementById("b").contentDocument.documentElement; },
   },
   {
     id: "c",
     isIFrame: true,
     payload: httpPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("c").contentDocument.documentElement
+    rootElement() { return document.getElementById("c").contentDocument.documentElement; },
   },
   {
     id: "g",
     isIFrame: true,
     payload: scriptPayload,
-    rootElement: function() document.getElementById("g").contentDocument.documentElement,
+    rootElement() { return document.getElementById("g").contentDocument.documentElement; },
     iframeCount: 0
   },
   {
     id: "h",
     isIFrame: true,
     payload: scriptExternalPayload,
-    rootElement: function() document.getElementById("h").contentDocument.documentElement,
+    rootElement() { return document.getElementById("h").contentDocument.documentElement; },
     iframeCount: 0
   },
   {
     id: "d",
     payload: dataPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("d")
+    rootElement() { return document.getElementById("d"); },
   },
   {
     id: "e",
     payload: jsPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("e")
+    rootElement() { return document.getElementById("e"); },
   },
   {
     id: "f",
     payload: httpPayload,
     iframeCount: 0,
-    rootElement: function() document.getElementById("f")
+    rootElement() { return document.getElementById("f"); },
   },
   {
     id: "i",
     payload: scriptPayload,
-    rootElement: function() document.getElementById("i"),
+    rootElement() { return document.getElementById("i"); },
     iframeCount: 0
   },
   {
     id: "j",
     payload: scriptExternalPayload,
-    rootElement: function() document.getElementById("j"),
+    rootElement() { return document.getElementById("j"); },
     iframeCount: 0
   },
   {
     id: "k",
     isIFrame: true,
     payload: validStyle1Payload,
-    rootElement: function() document.getElementById("k").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+    rootElement() { return document.getElementById("k").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
   },
   {
     id: "l",
     payload: validStyle1Payload,
-    rootElement: function() document.getElementById("l"),
-    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+    rootElement() { return document.getElementById("l"); },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
   },
   {
     id: "m",
     isIFrame: true,
     payload: validStyle2Payload,
-    rootElement: function() document.getElementById("m").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+    rootElement() { return document.getElementById("m").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
   },
   {
     id: "n",
     payload: validStyle2Payload,
-    rootElement: function() document.getElementById("n"),
-    checkResult: function(html) isnot(html.indexOf("style"), -1, "Should have retained style")
+    rootElement() { return document.getElementById("n"); },
+    checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
   },
   {
     id: "o",
     isIFrame: true,
     payload: invalidStyle1Payload,
-    rootElement: function() document.getElementById("o").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+    rootElement() { return document.getElementById("o").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
   },
   {
     id: "p",
     payload: invalidStyle1Payload,
-    rootElement: function() document.getElementById("p"),
-    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+    rootElement() { return document.getElementById("p"); },
+    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
   },
   {
     id: "q",
     isIFrame: true,
     payload: invalidStyle2Payload,
-    rootElement: function() document.getElementById("q").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+    rootElement() { return document.getElementById("q").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
   },
   {
     id: "r",
     payload: invalidStyle2Payload,
-    rootElement: function() document.getElementById("r"),
-    checkResult: function(html) is(html.indexOf("binding"), -1, "Should not have retained the binding style")
+    rootElement() { return document.getElementById("r"); },
+    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
   },
   {
     id: "s",
     isIFrame: true,
     payload: invalidStyle1Payload,
-    rootElement: function() document.getElementById("s").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+    rootElement() { return document.getElementById("s").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
   },
   {
     id: "t",
     payload: invalidStyle1Payload,
-    rootElement: function() document.getElementById("t"),
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+    rootElement() { return document.getElementById("t"); },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
   },
   {
     id: "u",
     isIFrame: true,
     payload: invalidStyle2Payload,
-    rootElement: function() document.getElementById("u").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+    rootElement() { return document.getElementById("u").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
   },
   {
     id: "v",
     payload: invalidStyle2Payload,
-    rootElement: function() document.getElementById("v"),
-    checkResult: function(html) is(html.indexOf("xxx"), -1, "Should not have retained the import style")
+    rootElement() { return document.getElementById("v"); },
+    checkResult(html) { is(html.indexOf("xxx"), -1, "Should not have retained the import style"); },
   },
   {
     id: "w",
     isIFrame: true,
     payload: validStyle3Payload,
-    rootElement: function() document.getElementById("w").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style")
+    rootElement() { return document.getElementById("w").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style"); },
   },
   {
     id: "x",
     payload: validStyle3Payload,
-    rootElement: function() document.getElementById("x"),
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style")
+    rootElement() { return document.getElementById("x"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the font-face style"); },
   },
   {
     id: "y",
     isIFrame: true,
     payload: invalidStyle5Payload,
-    rootElement: function() document.getElementById("y").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+    rootElement() { return document.getElementById("y").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style"); },
   },
   {
     id: "z",
     payload: invalidStyle5Payload,
-    rootElement: function() document.getElementById("z"),
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style")
+    rootElement() { return document.getElementById("z"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style"); },
   },
   {
     id: "aa",
     isIFrame: true,
     payload: nestedStylePayload,
-    rootElement: function() document.getElementById("aa").contentDocument.documentElement,
+    rootElement() { return document.getElementById("aa").contentDocument.documentElement; },
     checkResult: function(html, text) {
       is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
       isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
@@ -297,7 +297,7 @@ var tests = [
   {
     id: "bb",
     payload: nestedStylePayload,
-    rootElement: function() document.getElementById("bb"),
+    rootElement() { return document.getElementById("bb"); },
     checkResult: function(html, text) {
       is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
       isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
@@ -308,73 +308,73 @@ var tests = [
     id: "cc",
     isIFrame: true,
     payload: validStyle4Payload,
-    rootElement: function() document.getElementById("cc").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style")
+    rootElement() { return document.getElementById("cc").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style"); },
   },
   {
     id: "dd",
     payload: validStyle4Payload,
-    rootElement: function() document.getElementById("dd"),
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style")
+    rootElement() { return document.getElementById("dd"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should have retained the namespace style"); },
   },
   {
     id: "ee",
     isIFrame: true,
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("ee").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+    rootElement() { return document.getElementById("ee").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style"); },
   },
   {
     id: "ff",
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("ff"),
-    checkResult: function(html) isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style")
+    rootElement() { return document.getElementById("ff"); },
+    checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the namespace style"); },
   },
   {
     id: "gg",
     isIFrame: true,
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("gg").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("gg").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "hh",
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("hh"),
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("hh"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "ii",
     isIFrame: true,
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("ii").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("ii").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "jj",
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("jj"),
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("jj"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "kk",
     isIFrame: true,
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("kk").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("kk").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "ll",
     payload: invalidStyle6Payload,
-    rootElement: function() document.getElementById("ll"),
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image")
+    rootElement() { return document.getElementById("ll"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the src attribute for the image"); },
   },
   {
     id: "mm",
     isIFrame: true,
     indirectPaste: true,
     payload: invalidStyle7Payload,
-    rootElement: function() document.getElementById("mm").contentDocument.documentElement,
+    rootElement() { return document.getElementById("mm").contentDocument.documentElement; },
     checkResult: function(html) {
       is(html.indexOf("xxx"), -1, "Should not have retained the title text");
       isnot(html.indexOf("foo"), -1, "Should have retained the body text");
@@ -384,7 +384,7 @@ var tests = [
     id: "nn",
     indirectPaste: true,
     payload: invalidStyle7Payload,
-    rootElement: function() document.getElementById("nn"),
+    rootElement() { return document.getElementById("nn"); },
     checkResult: function(html) {
       is(html.indexOf("xxx"), -1, "Should not have retained the title text");
       isnot(html.indexOf("foo"), -1, "Should have retained the body text");
@@ -394,143 +394,143 @@ var tests = [
     id: "oo",
     isIFrame: true,
     payload: validDataFooPayload,
-    rootElement: function() document.getElementById("oo").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute")
+    rootElement() { return document.getElementById("oo").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute"); },
   },
   {
     id: "pp",
     payload: validDataFooPayload,
-    rootElement: function() document.getElementById("pp"),
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute")
+    rootElement() { return document.getElementById("pp"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the data-bar attribute"); },
   },
   {
     id: "qq",
     isIFrame: true,
     payload: validDataFoo2Payload,
-    rootElement: function() document.getElementById("qq").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute")
+    rootElement() { return document.getElementById("qq").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute"); },
   },
   {
     id: "rr",
     payload: validDataFoo2Payload,
-    rootElement: function() document.getElementById("rr"),
-    checkResult: function(html) isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute")
+    rootElement() { return document.getElementById("rr"); },
+    checkResult(html) { isnot(html.indexOf("bar"), -1, "Should have retained the _bar attribute"); },
   },
   {
     id: "ss",
     isIFrame: true,
     payload: invalidStyle8Payload,
-    rootElement: function() document.getElementById("ss").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule")
+    rootElement() { return document.getElementById("ss").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule"); },
   },
   {
     id: "tt",
     payload: invalidStyle8Payload,
-    rootElement: function() document.getElementById("tt"),
-    checkResult: function(html) is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule")
+    rootElement() { return document.getElementById("tt"); },
+    checkResult(html) { is(html.indexOf("@-moz-document"), -1, "Should not have retained the @-moz-document rule"); },
   },
   {
     id: "uu",
     isIFrame: true,
     payload: invalidStyle9Payload,
-    rootElement: function() document.getElementById("uu").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule")
+    rootElement() { return document.getElementById("uu").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule"); },
   },
   {
     id: "vv",
     payload: invalidStyle9Payload,
-    rootElement: function() document.getElementById("vv"),
-    checkResult: function(html) is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule")
+    rootElement() { return document.getElementById("vv"); },
+    checkResult(html) { is(html.indexOf("@-moz-keyframes"), -1, "Should not have retained the @-moz-keyframes rule"); },
   },
   {
     id: "sss",
     payload: svgPayload,
-    rootElement: function() document.getElementById("sss"),
-    checkResult: function(html) isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title")
+    rootElement() { return document.getElementById("sss"); },
+    checkResult(html) { isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title"); },
   },
   {
     id: "ssss",
     isIFrame: true,
     payload: svgPayload,
-    rootElement: function() document.getElementById("ssss").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title")
+    rootElement() { return document.getElementById("ssss").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("svgtitle"), -1, "Should have retained SVG title"); },
   },
   {
     id: "ttt",
     payload: svg2Payload,
-    rootElement: function() document.getElementById("ttt"),
-    checkResult: function(html) is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element")
+    rootElement() { return document.getElementById("ttt"); },
+    checkResult(html) { is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element"); },
   },
   {
     id: "tttt",
     isIFrame: true,
     payload: svg2Payload,
-    rootElement: function() document.getElementById("tttt").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element")
+    rootElement() { return document.getElementById("tttt").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("bogussvg"), -1, "Should have dropped bogussvg element"); },
   },
   {
     id: "uuu",
     payload: mathPayload,
-    rootElement: function() document.getElementById("uuu"),
-    checkResult: function(html) is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element")
+    rootElement() { return document.getElementById("uuu"); },
+    checkResult(html) { is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element"); },
   },
   {
     id: "uuuu",
     isIFrame: true,
     payload: mathPayload,
-    rootElement: function() document.getElementById("uuuu").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element")
+    rootElement() { return document.getElementById("uuuu").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("bogusmath"), -1, "Should have dropped bogusmath element"); },
   },
   {
     id: "vvv",
     payload: math2Payload,
-    rootElement: function() document.getElementById("vvv"),
-    checkResult: function(html) is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element")
+    rootElement() { return document.getElementById("vvv"); },
+    checkResult(html) { is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element"); },
   },
   {
     id: "vvvv",
     isIFrame: true,
     payload: math2Payload,
-    rootElement: function() document.getElementById("vvvv").contentDocument.documentElement,
-    checkResult: function(html) is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element")
+    rootElement() { return document.getElementById("vvvv").contentDocument.documentElement; },
+    checkResult(html) { is(html.indexOf("yyy.css"), -1, "Should have dropped MathML style element"); },
   },
   {
     id: "www",
     payload: math3Payload,
-    rootElement: function() document.getElementById("www"),
-    checkResult: function(html) isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element")
+    rootElement() { return document.getElementById("www"); },
+    checkResult(html) { isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element"); },
   },
   {
     id: "wwww",
     isIFrame: true,
     payload: math3Payload,
-    rootElement: function() document.getElementById("wwww").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element")
+    rootElement() { return document.getElementById("wwww").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("<mi"), -1, "Should not have dropped MathML mi element"); },
   },
   {
     id: "xxx",
     payload: videoPayload,
-    rootElement: function() document.getElementById("xxx"),
-    checkResult: function(html) isnot(html.indexOf("controls="), -1, "Should have added the controls attribute")
+    rootElement() { return document.getElementById("xxx"); },
+    checkResult(html) { isnot(html.indexOf("controls="), -1, "Should have added the controls attribute"); },
   },
   {
     id: "xxxx",
     isIFrame: true,
     payload: videoPayload,
-    rootElement: function() document.getElementById("xxxx").contentDocument.documentElement,
-    checkResult: function(html) isnot(html.indexOf("controls="), -1, "Should have added the controls attribute")
+    rootElement() { return document.getElementById("xxxx").contentDocument.documentElement; },
+    checkResult(html) { isnot(html.indexOf("controls="), -1, "Should have added the controls attribute"); },
   },
   {
     id: "yyy",
     payload: microdataPayload,
-    rootElement: function() document.getElementById("yyy"),
+    rootElement() { return document.getElementById("yyy"); },
     checkResult: function(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); }
   },
   {
     id: "yyyy",
     isIFrame: true,
     payload: microdataPayload,
-    rootElement: function() document.getElementById("yyyy").contentDocument.documentElement,
+    rootElement() { return document.getElementById("yyyy").contentDocument.documentElement; },
     checkResult: function(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); }
   }
 ];
