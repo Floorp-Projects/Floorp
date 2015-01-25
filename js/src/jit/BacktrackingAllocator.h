@@ -236,7 +236,7 @@ class BacktrackingAllocator
     size_t computePriority(const VirtualRegisterGroup *group);
     size_t computeSpillWeight(const VirtualRegisterGroup *group);
 
-    bool chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict);
+    bool chooseIntervalSplit(LiveInterval *interval, bool fixed, LiveInterval *conflict);
 
     bool splitAt(LiveInterval *interval,
                  const SplitPositionVector &splitPositions);
@@ -245,6 +245,10 @@ class BacktrackingAllocator
     bool trySplitBeforeFirstRegisterUse(LiveInterval *interval, LiveInterval *conflict, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);
     bool splitAcrossCalls(LiveInterval *interval);
+
+    bool compilingAsmJS() {
+        return mir->info().compilingAsmJS();
+    }
 };
 
 } // namespace jit
