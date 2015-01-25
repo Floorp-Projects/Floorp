@@ -189,6 +189,19 @@ public:
     mImageIsTransient = aIsTransient;
   }
 
+  /**
+   * Set whether the image is locked for the lifetime of this decoder. We lock
+   * the image during our initial decode to ensure that we don't evict any
+   * surfaces before we realize that the image is animated.
+   */
+  void SetImageIsLocked()
+  {
+    MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
+    mImageIsLocked = true;
+  }
+
+  bool ImageIsLocked() const { return mImageIsLocked; }
+
   size_t BytesDecoded() const { return mBytesDecoded; }
 
   // The amount of time we've spent inside Write() so far for this decoder.
@@ -445,6 +458,7 @@ protected:
   bool mDataError;
   bool mDecodeAborted;
   bool mImageIsTransient;
+  bool mImageIsLocked;
 
 private:
   uint32_t mFrameCount; // Number of frames, including anything in-progress
