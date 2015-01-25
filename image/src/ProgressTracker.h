@@ -88,10 +88,6 @@ public:
     return image.forget();
   }
 
-  // Returns whether we are in the process of loading; that is, whether we have
-  // not received OnStopRequest from Necko.
-  bool IsLoading() const;
-
   // Get the current image status (as in imgIRequest).
   uint32_t GetImageStatus() const;
 

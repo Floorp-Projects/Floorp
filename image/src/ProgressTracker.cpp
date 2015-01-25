@@ -99,15 +99,6 @@ ProgressTracker::ResetImage()
   mImage = nullptr;
 }
 
-bool
-ProgressTracker::IsLoading() const
-{
-  // Checking for whether OnStopRequest has fired allows us to say we're
-  // loading before OnStartRequest gets called, letting the request properly
-  // get removed from the cache in certain cases.
-  return !(mProgress & FLAG_LOAD_COMPLETE);
-}
-
 uint32_t
 ProgressTracker::GetImageStatus() const
 {
