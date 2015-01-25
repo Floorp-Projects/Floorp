@@ -10,7 +10,6 @@
 #include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/PodOperations.h"
 
 #include "nsTArray.h"

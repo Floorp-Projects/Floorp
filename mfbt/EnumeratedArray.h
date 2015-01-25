@@ -10,7 +10,6 @@
 #define mozilla_EnumeratedArray_h
 
 #include "mozilla/Array.h"
-#include "mozilla/TypedEnum.h"
 
 namespace mozilla {
 

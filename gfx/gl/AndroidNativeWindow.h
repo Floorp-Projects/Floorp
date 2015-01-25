@@ -12,7 +12,6 @@
 #include "GLDefs.h"
 
 #include "nsISupports.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/gfx/2D.h"
 
 

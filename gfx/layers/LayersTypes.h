@@ -10,7 +10,6 @@
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"
 
-#include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
 #ifdef MOZ_WIDGET_GONK

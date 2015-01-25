@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLCanvasElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypedEnum.h"
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
