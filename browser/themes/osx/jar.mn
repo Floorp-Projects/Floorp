@@ -8,7 +8,7 @@ browser.jar:
   skin/classic/browser/aboutNetError.css                    (../shared/aboutNetError.css)
   skin/classic/browser/aboutNetError_info.svg               (../shared/aboutNetError_info.svg)
   skin/classic/browser/aboutNetError_alert.svg              (../shared/aboutNetError_alert.svg)
-* skin/classic/browser/aboutSessionRestore.css              (aboutSessionRestore.css)
+* skin/classic/browser/aboutSessionRestore.css              (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutWelcomeBack.css                 (../shared/aboutWelcomeBack.css)
   skin/classic/browser/aboutCertError.css
@@ -20,7 +20,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif
-  skin/classic/browser/aboutTabCrashed.css
+  skin/classic/browser/aboutTabCrashed.css                  (../shared/aboutTabCrashed.css)
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
 * skin/classic/browser/browser.css                          (browser.css)
@@ -135,6 +135,9 @@ browser.jar:
   skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-popup-blocked@2x.png
+  skin/classic/browser/session-restore.svg            (../shared/incontent-icons/session-restore.svg)
+  skin/classic/browser/tab-crashed.svg                (../shared/incontent-icons/tab-crashed.svg)
+  skin/classic/browser/welcome-back.svg               (../shared/incontent-icons/welcome-back.svg)
   skin/classic/browser/reader-mode-16.png             (../shared/reader/reader-mode-16.png)
   skin/classic/browser/reader-mode-16@2x.png          (../shared/reader/reader-mode-16@2x.png)
   skin/classic/browser/webRTC-shareDevice-16.png

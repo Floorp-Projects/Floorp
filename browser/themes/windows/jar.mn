@@ -8,7 +8,7 @@ browser.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/browser/sanitizeDialog.css
-*       skin/classic/browser/aboutSessionRestore.css
+*       skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
         skin/classic/browser/aboutSessionRestore-window-icon.png     (preferences/application.png)
         skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
         skin/classic/browser/aboutCertError.css
@@ -23,7 +23,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/aboutSyncTabs.css
 #endif
-        skin/classic/browser/aboutTabCrashed.css
+        skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
         skin/classic/browser/actionicon-tab.png
 *       skin/classic/browser/browser.css
 *       skin/classic/browser/devedition.css
@@ -104,6 +104,9 @@ browser.jar:
         skin/classic/browser/urlbar-arrow.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
+        skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
+        skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
+        skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
         skin/classic/browser/reader-mode-16.png                      (../shared/reader/reader-mode-16.png)
         skin/classic/browser/notification-pluginNormal.png           (../shared/plugins/notification-pluginNormal.png)
         skin/classic/browser/notification-pluginAlert.png            (../shared/plugins/notification-pluginAlert.png)
@@ -463,7 +466,7 @@ browser.jar:
 browser.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
-*       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
+*       skin/classic/aero/browser/aboutSessionRestore.css             (../shared/aboutSessionRestore.css)
         skin/classic/aero/browser/aboutSessionRestore-window-icon.png (aboutSessionRestore-window-icon-aero.png)
         skin/classic/aero/browser/aboutCertError.css
         skin/classic/aero/browser/aboutCertError_sectionCollapsed.png
@@ -477,7 +480,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
-        skin/classic/aero/browser/aboutTabCrashed.css
+        skin/classic/aero/browser/aboutTabCrashed.css                (../shared/aboutTabCrashed.css)
         skin/classic/aero/browser/aboutWelcomeBack.css               (../shared/aboutWelcomeBack.css)
         skin/classic/aero/browser/actionicon-tab.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
@@ -564,6 +567,9 @@ browser.jar:
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
         skin/classic/aero/browser/urlbar-history-dropmarker.png
+        skin/classic/aero/browser/session-restore.svg               (../shared/incontent-icons/session-restore.svg)
+        skin/classic/aero/browser/tab-crashed.svg                   (../shared/incontent-icons/tab-crashed.svg)
+        skin/classic/aero/browser/welcome-back.svg                  (../shared/incontent-icons/welcome-back.svg)
         skin/classic/aero/browser/reader-mode-16.png                (../shared/reader/reader-mode-16.png)
         skin/classic/aero/browser/notification-pluginNormal.png     (../shared/plugins/notification-pluginNormal.png)
         skin/classic/aero/browser/notification-pluginAlert.png      (../shared/plugins/notification-pluginAlert.png)

@@ -6,7 +6,7 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
   skin/classic/browser/sanitizeDialog.css
-* skin/classic/browser/aboutSessionRestore.css
+* skin/classic/browser/aboutSessionRestore.css                  (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutWelcomeBack.css                     (../shared/aboutWelcomeBack.css)
   skin/classic/browser/aboutCertError.css
@@ -21,7 +21,7 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif
-  skin/classic/browser/aboutTabCrashed.css
+  skin/classic/browser/aboutTabCrashed.css                      (../shared/aboutTabCrashed.css)
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css
 * skin/classic/browser/devedition.css
@@ -85,6 +85,9 @@ browser.jar:
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/session-restore.svg                  (../shared/incontent-icons/session-restore.svg)
+  skin/classic/browser/tab-crashed.svg                      (../shared/incontent-icons/tab-crashed.svg)
+  skin/classic/browser/welcome-back.svg                     (../shared/incontent-icons/welcome-back.svg)
   skin/classic/browser/reader-mode-16.png             (../shared/reader/reader-mode-16.png)
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-64.png
