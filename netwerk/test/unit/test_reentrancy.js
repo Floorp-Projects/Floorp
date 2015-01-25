@@ -42,11 +42,11 @@ var listener = {
       case 1:
         request.suspend();
         syncXHR();
-        do_execute_soon(function() request.resume());
+        do_execute_soon(function() { request.resume(); });
         break;
       case 2:
-        do_execute_soon(function() request.suspend());
-        do_execute_soon(function() request.resume());
+        do_execute_soon(function() { request.suspend(); });
+        do_execute_soon(function() { request.resume(); });
         syncXHR();
         break;
     }

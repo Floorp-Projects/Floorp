@@ -34,7 +34,7 @@ function run_test()
 function succeeded(ch, cx, status, data)
 {
   do_check_true(Components.isSuccessCode(status));
-  do_check_eq(data.map(function(v) String.fromCharCode(v)).join(""), "1234");
+  do_check_eq(data.map(v => String.fromCharCode(v)).join(""), "1234");
 }
 
 function check_1234(ch, cx)
