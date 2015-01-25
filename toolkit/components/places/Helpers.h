@@ -39,8 +39,8 @@ protected:
  * methods this class assumes silent or notreached.
  */
 #define NS_DECL_ASYNCSTATEMENTCALLBACK \
-  NS_IMETHOD HandleResult(mozIStorageResultSet *); \
-  NS_IMETHOD HandleCompletion(uint16_t);
+  NS_IMETHOD HandleResult(mozIStorageResultSet *) MOZ_OVERRIDE; \
+  NS_IMETHOD HandleCompletion(uint16_t) MOZ_OVERRIDE;
 
 /**
  * Utils to bind a specified URI (or URL) to a statement or binding params, at

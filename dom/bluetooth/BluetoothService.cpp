@@ -722,8 +722,7 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
 
   AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(),
-                                             JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   NS_ENSURE_TRUE_VOID(obj);
 
   if (!SetJsObject(cx, aData.value(), obj)) {

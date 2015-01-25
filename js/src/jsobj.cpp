@@ -1077,13 +1077,17 @@ js::SetIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level)
         JS_ALWAYS_TRUE(NativeObject::setLastProperty(cx, nobj, last));
     } else {
         RootedId id(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
 
-            unsigned attrs;
-            if (!GetPropertyAttributes(cx, obj, id, &attrs))
+            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
                 return false;
 
+            if (!desc.object())
+                continue;
+
+            unsigned attrs = desc.attributes();
             unsigned new_attrs = GetSealedOrFrozenAttributes(attrs, level);
 
             // If we already have the attributes we need, skip the setAttributes call.
@@ -1147,19 +1151,21 @@ js::TestIntegrityLevel(JSContext *cx, HandleObject obj, IntegrityLevel level, bo
     // Steps 9-11. The spec does not permit stopping as soon as we find out the
     // answer is false, so we are cheating a little here (bug 1120512).
     RootedId id(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     for (size_t i = 0, len = props.length(); i < len; i++) {
         id = props[i];
 
-        unsigned attrs;
-        if (!GetPropertyAttributes(cx, obj, id, &attrs))
+        if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
             return false;
+
+        if (!desc.object())
+            continue;
 
         // If the property is configurable, this object is neither sealed nor
         // frozen. If the property is a writable data property, this object is
         // not frozen.
-        if (!(attrs & JSPROP_PERMANENT) ||
-            (level == IntegrityLevel::Frozen &&
-             !(attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER))))
+        if (!desc.isPermanent() ||
+            (level == IntegrityLevel::Frozen && desc.isDataDescriptor() && desc.isWritable()))
         {
             *result = false;
             return true;
@@ -1422,7 +1428,8 @@ js::NewObjectWithTypeCommon(JSContext *cx, HandleTypeObject type, JSObject *pare
     NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (parent == type->proto().toObject()->getParent() &&
+    if (type->proto().isObject() &&
+        parent == type->proto().toObject()->getParent() &&
         newKind == GenericObject &&
         type->clasp()->isNative() &&
         !cx->compartment()->hasObjectMetadataCallback())

@@ -2793,17 +2793,21 @@ class MNewObject
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
+  public:
+    enum Mode { ObjectLiteral, ObjectCreate };
+
+  private:
     gc::InitialHeap initialHeap_;
-    bool templateObjectIsClassPrototype_;
+    Mode mode_;
 
     MNewObject(types::CompilerConstraintList *constraints, MConstant *templateConst,
-               gc::InitialHeap initialHeap, bool templateObjectIsClassPrototype)
+               gc::InitialHeap initialHeap, Mode mode)
       : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap),
-        templateObjectIsClassPrototype_(templateObjectIsClassPrototype)
+        mode_(mode)
     {
         PlainObject *obj = templateObject();
-        MOZ_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
+        MOZ_ASSERT_IF(mode != ObjectLiteral, !shouldUseVM());
         setResultType(MIRType_Object);
         if (!obj->hasSingletonType())
             setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
@@ -2821,18 +2825,17 @@ class MNewObject
 
     static MNewObject *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                            MConstant *templateConst, gc::InitialHeap initialHeap,
-                           bool templateObjectIsClassPrototype)
+                           Mode mode)
     {
-        return new(alloc) MNewObject(constraints, templateConst, initialHeap,
-                                     templateObjectIsClassPrototype);
+        return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode);
     }
 
     // Returns true if the code generator should call through to the
     // VM rather than the fast path.
     bool shouldUseVM() const;
 
-    bool templateObjectIsClassPrototype() const {
-        return templateObjectIsClassPrototype_;
+    Mode mode() const {
+        return mode_;
     }
 
     PlainObject *templateObject() const {
@@ -5710,7 +5713,7 @@ class MMathFunction
         return true;
     }
 
-    MDefinition *foldsTo(TempAllocator &alloc);
+    MDefinition *foldsTo(TempAllocator &alloc) MOZ_OVERRIDE;
 
     void printOpcode(FILE *fp) const MOZ_OVERRIDE;
 

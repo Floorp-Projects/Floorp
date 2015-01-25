@@ -1743,7 +1743,7 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx,
     return;
   }
 
-  JS::Rooted<JSObject*> tags(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+  JS::Rooted<JSObject*> tags(cx, JS_NewPlainObject(cx));
   if (!tags) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

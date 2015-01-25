@@ -545,6 +545,15 @@ NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
     return NewObjectWithGivenProto<T>(cx, TaggedProto(proto), parent, newKind);
 }
 
+template <typename T>
+inline T *
+NewObjectWithGivenProto(ExclusiveContext *cx, JSObject *proto, JSObject *parent,
+                        gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewObjectWithGivenProto(cx, &T::class_, TaggedProto(proto), parent, newKind);
+    return obj ? &obj->as<T>() : nullptr;
+}
+
 inline bool
 FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject proto)
 {

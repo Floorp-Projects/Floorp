@@ -622,6 +622,42 @@ obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+PlainObject *
+js::ObjectCreateImpl(JSContext *cx, HandleObject proto, NewObjectKind newKind, HandleTypeObject type)
+{
+    // Give the new object a small number of fixed slots, like we do for empty
+    // object literals ({}).
+    gc::AllocKind allocKind = GuessObjectGCKind(0);
+
+    if (!proto) {
+        // Object.create(null) is common, optimize it by using an allocation
+        // site specific TypeObject. Because GetTypeCallerInitObject is pretty
+        // slow, the caller can pass in the type if it's known and we use that
+        // instead.
+        RootedTypeObject ntype(cx, type);
+        if (!ntype) {
+            ntype = GetTypeCallerInitObject(cx, JSProto_Null);
+            if (!ntype)
+                return nullptr;
+        }
+
+        MOZ_ASSERT(!ntype->proto().toObjectOrNull());
+
+        return NewObjectWithType<PlainObject>(cx, ntype, cx->global(), allocKind,
+                                              newKind);
+    }
+
+    return NewObjectWithGivenProto<PlainObject>(cx, proto, cx->global(), allocKind, newKind);
+}
+
+PlainObject *
+js::ObjectCreateWithTemplate(JSContext *cx, HandlePlainObject templateObj)
+{
+    RootedObject proto(cx, templateObj->getProto());
+    RootedTypeObject type(cx, templateObj->type());
+    return ObjectCreateImpl(cx, proto, GenericObject, type);
+}
+
 /* ES5 15.2.3.5: Object.create(O [, Properties]) */
 bool
 js::obj_create(JSContext *cx, unsigned argc, Value *vp)
@@ -633,8 +669,8 @@ js::obj_create(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedValue v(cx, args[0]);
-    if (!v.isObjectOrNull()) {
+    if (!args[0].isObjectOrNull()) {
+        RootedValue v(cx, args[0]);
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
         if (!bytes)
             return false;
@@ -644,13 +680,8 @@ js::obj_create(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject proto(cx, v.toObjectOrNull());
-
-    /*
-     * Use the callee's global as the parent of the new object to avoid dynamic
-     * scoping (i.e., using the caller's global).
-     */
-    RootedObject obj(cx, NewObjectWithGivenProto<PlainObject>(cx, proto, &args.callee().global()));
+    RootedObject proto(cx, args[0].toObjectOrNull());
+    RootedPlainObject obj(cx, ObjectCreateImpl(cx, proto));
     if (!obj)
         return false;
 

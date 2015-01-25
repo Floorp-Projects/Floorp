@@ -2129,24 +2129,6 @@ js::NativeSetElement(JSContext *cx, HandleNativeObject obj, HandleObject receive
 }
 
 bool
-js::NativeGetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attrsp)
-{
-    RootedObject nobj(cx);
-    RootedShape shape(cx);
-    if (!NativeLookupProperty<CanGC>(cx, obj, id, &nobj, &shape))
-        return false;
-    if (!shape) {
-        *attrsp = 0;
-        return true;
-    }
-    if (!nobj->isNative())
-        return GetPropertyAttributes(cx, nobj, id, attrsp);
-
-    *attrsp = GetShapeAttributes(nobj, shape);
-    return true;
-}
-
-bool
 js::NativeSetPropertyAttributes(JSContext *cx, HandleNativeObject obj, HandleId id,
                                 unsigned *attrsp)
 {

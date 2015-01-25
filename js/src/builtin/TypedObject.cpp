@@ -2063,49 +2063,6 @@ TypedObject::obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, Handl
     return true;
 }
 
-bool
-TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
-                                     HandleId id, unsigned *attrsp)
-{
-    uint32_t index;
-    Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
-    switch (typedObj->typeDescr().kind()) {
-      case type::Scalar:
-      case type::Reference:
-        break;
-
-      case type::Simd:
-        break;
-
-      case type::Array:
-        if (js_IdIsIndex(id, &index)) {
-            *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-            return true;
-        }
-        if (JSID_IS_ATOM(id, cx->names().length)) {
-            *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
-            return true;
-        }
-        break;
-
-      case type::Struct:
-        size_t index;
-        if (typedObj->typeDescr().as<StructTypeDescr>().fieldIndex(id, &index)) {
-            *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-            return true;
-        }
-        break;
-    }
-
-    RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        *attrsp = 0;
-        return true;
-    }
-
-    return GetPropertyAttributes(cx, proto, id, attrsp);
-}
-
 static bool
 IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
 {
@@ -2426,7 +2383,6 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
             TypedObject::obj_setProperty,                \
             TypedObject::obj_setElement,                 \
             TypedObject::obj_getOwnPropertyDescriptor,   \
-            TypedObject::obj_getGenericAttributes,       \
             TypedObject::obj_setGenericAttributes,       \
             TypedObject::obj_deleteGeneric,              \
             nullptr, nullptr, /* watch/unwatch */        \
