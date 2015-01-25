@@ -127,18 +127,18 @@ class Downscaler
 public:
   explicit Downscaler(const nsIntSize&)
   {
-    MOZ_RELEASE_ASSERT("Skia is not enabled");
+    MOZ_RELEASE_ASSERT(false, "Skia is not enabled");
   }
 
   const nsIntSize& OriginalSize() const { return nsIntSize(); }
   const nsIntSize& TargetSize() const { return nsIntSize(); }
-  uint8_t* Buffer() { return nullptr; }
 
   nsresult BeginFrame(const nsIntSize&, uint8_t*, bool)
   {
     return NS_ERROR_FAILURE;
   }
 
+  uint8_t* RowBuffer() { return nullptr; }
   void CommitRow() { }
   bool HasInvalidation() const { return false; }
   nsIntRect TakeInvalidRect() { return nsIntRect(); }
