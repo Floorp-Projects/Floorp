@@ -344,6 +344,15 @@ this.UITour = {
   onPageEvent: function(aMessage, aEvent) {
     let browser = aMessage.target;
     let window = browser.ownerDocument.defaultView;
+
+    // Does the window have tabs? We need to make sure since windowless browsers do
+    // not have tabs.
+    if (!window.gBrowser) {
+      // When using windowless browsers we don't have a valid |window|. If that's the case,
+      // use the most recent window as a target for UITour functions (see Bug 1111022).
+      window = Services.wm.getMostRecentWindow("navigator:browser");
+    }
+
     let tab = window.gBrowser.getTabForBrowser(browser);
     let messageManager = browser.messageManager;
 
