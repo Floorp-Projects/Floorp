@@ -147,11 +147,11 @@ unpackFromFloat16(uint16_t v)
     return f32Value;
 }
 
-MOZ_BEGIN_ENUM_CLASS(WebGLTexelPremultiplicationOp, int)
+enum class WebGLTexelPremultiplicationOp : int {
     None,
     Premultiply,
     Unpremultiply
-MOZ_END_ENUM_CLASS(WebGLTexelPremultiplicationOp)
+};
 
 namespace WebGLTexelConversions {
 

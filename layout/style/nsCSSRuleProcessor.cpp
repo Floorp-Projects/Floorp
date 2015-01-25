@@ -1407,7 +1407,7 @@ struct NodeMatchContext {
  * Additional information about a selector (without combinators) that is
  * being matched.
  */
-MOZ_BEGIN_ENUM_CLASS(SelectorMatchesFlags, uint8_t)
+enum class SelectorMatchesFlags : uint8_t {
   NONE = 0,
 
   // The selector's flags are unknown.  This happens when you don't know
@@ -1424,7 +1424,7 @@ MOZ_BEGIN_ENUM_CLASS(SelectorMatchesFlags, uint8_t)
   // The selector is part of an argument to a functional pseudo-class or
   // pseudo-element.
   IS_PSEUDO_CLASS_ARGUMENT = 1 << 2
-MOZ_END_ENUM_CLASS(SelectorMatchesFlags)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SelectorMatchesFlags)
 
 static bool ValueIncludes(const nsSubstring& aValueList,

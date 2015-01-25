@@ -19,7 +19,7 @@ namespace mozilla {
 // Feel free to add more justifications to PixelCastJustification, along with
 // a comment that explains under what circumstances it is appropriate to use.
 
-MOZ_BEGIN_ENUM_CLASS(PixelCastJustification, uint8_t)
+enum class PixelCastJustification : uint8_t {
   // For the root layer, Screen Pixel = Parent Layer Pixel.
   ScreenIsParentLayerForRoot,
   // For the root composition size we want to view it as layer pixels in any layer
@@ -31,7 +31,7 @@ MOZ_BEGIN_ENUM_CLASS(PixelCastJustification, uint8_t)
   // systems is not available (for example, because the object that stores it
   // is being destroyed), so fall back to the identity.
   TransformNotAvailable
-MOZ_END_ENUM_CLASS(PixelCastJustification)
+};
 
 template <class TargetUnits, class SourceUnits>
 gfx::SizeTyped<TargetUnits> ViewAs(const gfx::SizeTyped<SourceUnits>& aSize, PixelCastJustification) {

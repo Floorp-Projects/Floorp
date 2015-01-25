@@ -55,29 +55,29 @@ RequireLiteralType(const T&)
   RequireLiteralType<T>();
 }
 
-MOZ_BEGIN_ENUM_CLASS(AutoEnum)
+enum class AutoEnum {
   A,
   B = -3,
   C
-MOZ_END_ENUM_CLASS(AutoEnum)
+};
 
-MOZ_BEGIN_ENUM_CLASS(CharEnum, char)
+enum class CharEnum : char {
   A,
   B = 3,
   C
-MOZ_END_ENUM_CLASS(CharEnum)
+};
 
-MOZ_BEGIN_ENUM_CLASS(AutoEnumBitField)
+enum class AutoEnumBitField {
   A = 0x10,
   B = 0x20,
   C
-MOZ_END_ENUM_CLASS(AutoEnumBitField)
+};
 
-MOZ_BEGIN_ENUM_CLASS(CharEnumBitField, char)
+enum class CharEnumBitField : char {
   A = 0x10,
   B,
   C = 0x40
-MOZ_END_ENUM_CLASS(CharEnumBitField)
+};
 
 struct Nested
 {
@@ -112,11 +112,11 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Nested::AutoEnumBitField)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Nested::CharEnumBitField)
 
 #define MAKE_STANDARD_BITFIELD_FOR_TYPE(IntType)                   \
-  MOZ_BEGIN_ENUM_CLASS(BitFieldFor_##IntType, IntType)             \
+  enum class BitFieldFor_##IntType : IntType {                     \
     A = 1,                                                         \
     B = 2,                                                         \
     C = 4,                                                         \
-  MOZ_END_ENUM_CLASS(BitFieldFor_##IntType)                        \
+  };                                                               \
   MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(BitFieldFor_##IntType)
 
 MAKE_STANDARD_BITFIELD_FOR_TYPE(int8_t)
@@ -443,52 +443,52 @@ void TestNoConversionsBetweenUnrelatedTypes()
 #endif
 }
 
-MOZ_BEGIN_ENUM_CLASS(Int8EnumWithHighBits, int8_t)
+enum class Int8EnumWithHighBits : int8_t {
   A = 0x20,
   B = 0x40
-MOZ_END_ENUM_CLASS(Int8EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Int8EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Uint8EnumWithHighBits, uint8_t)
+enum class Uint8EnumWithHighBits : uint8_t {
   A = 0x40,
   B = 0x80
-MOZ_END_ENUM_CLASS(Uint8EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Uint8EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Int16EnumWithHighBits, int16_t)
+enum class Int16EnumWithHighBits : int16_t {
   A = 0x2000,
   B = 0x4000
-MOZ_END_ENUM_CLASS(Int16EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Int16EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Uint16EnumWithHighBits, uint16_t)
+enum class Uint16EnumWithHighBits : uint16_t {
   A = 0x4000,
   B = 0x8000
-MOZ_END_ENUM_CLASS(Uint16EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Uint16EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Int32EnumWithHighBits, int32_t)
+enum class Int32EnumWithHighBits : int32_t {
   A = 0x20000000,
   B = 0x40000000
-MOZ_END_ENUM_CLASS(Int32EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Int32EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Uint32EnumWithHighBits, uint32_t)
+enum class Uint32EnumWithHighBits : uint32_t {
   A = 0x40000000u,
   B = 0x80000000u
-MOZ_END_ENUM_CLASS(Uint32EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Uint32EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Int64EnumWithHighBits, int64_t)
+enum class Int64EnumWithHighBits : int64_t {
   A = 0x2000000000000000ll,
   B = 0x4000000000000000ll
-MOZ_END_ENUM_CLASS(Int64EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Int64EnumWithHighBits)
 
-MOZ_BEGIN_ENUM_CLASS(Uint64EnumWithHighBits, uint64_t)
+enum class Uint64EnumWithHighBits : uint64_t {
   A = 0x4000000000000000ull,
   B = 0x8000000000000000ull
-MOZ_END_ENUM_CLASS(Uint64EnumWithHighBits)
+};
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Uint64EnumWithHighBits)
 
 // Checks that we don't accidentally truncate high bits by coercing to the wrong

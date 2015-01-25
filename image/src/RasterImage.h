@@ -133,11 +133,11 @@ class Decoder;
 class FrameAnimator;
 class SourceBuffer;
 
-MOZ_BEGIN_ENUM_CLASS(DecodeStrategy, uint8_t)
+enum class DecodeStrategy : uint8_t {
   ASYNC,
   SYNC_FOR_SMALL_IMAGES,
   SYNC_IF_POSSIBLE
-MOZ_END_ENUM_CLASS(DecodeStrategy)
+};
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties

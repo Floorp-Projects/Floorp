@@ -27,11 +27,11 @@ namespace mozilla {
  *
  * Example:
  *
- *   MOZ_BEGIN_ENUM_CLASS(AnimalSpecies)
+ *   enum class AnimalSpecies {
  *     Cow,
  *     Sheep,
  *     Count
- *   MOZ_END_ENUM_CLASS(AnimalSpecies)
+ *   };
  *
  *   EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int> headCount;
  *
