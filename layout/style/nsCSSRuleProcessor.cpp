@@ -53,7 +53,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
 using namespace mozilla;

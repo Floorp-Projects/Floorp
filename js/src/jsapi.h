@@ -13,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/TypedEnum.h"
 
 #include <stdarg.h>
 #include <stddef.h>

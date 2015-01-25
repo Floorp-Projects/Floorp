@@ -6,8 +6,6 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
-#include "mozilla/TypedEnum.h"
-
 // Most WebIDL typedefs are identical to their OpenGL counterparts.
 #include "GLTypes.h"
 

@@ -7,7 +7,6 @@
 #define MOZILLA_IMAGELIB_EXIF_H
 
 #include <stdint.h>
-#include "mozilla/TypedEnum.h"
 #include "nsDebug.h"
 
 #include "Orientation.h"

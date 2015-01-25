@@ -6,7 +6,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
 #include <stdint.h>
@@ -81,29 +80,29 @@ enum class CharEnumBitField : char {
 
 struct Nested
 {
-  MOZ_BEGIN_NESTED_ENUM_CLASS(AutoEnum)
+  enum class AutoEnum {
     A,
     B,
     C = -1
-  MOZ_END_NESTED_ENUM_CLASS(AutoEnum)
+  };
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(CharEnum, char)
+  enum class CharEnum : char {
     A = 4,
     B,
     C = 1
-  MOZ_END_NESTED_ENUM_CLASS(CharEnum)
+  };
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(AutoEnumBitField)
+  enum class AutoEnumBitField {
     A,
     B = 0x20,
     C
-  MOZ_END_NESTED_ENUM_CLASS(AutoEnumBitField)
+  };
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(CharEnumBitField, char)
+  enum class CharEnumBitField : char {
     A = 1,
     B = 1,
     C = 1
-  MOZ_END_NESTED_ENUM_CLASS(CharEnumBitField)
+  };
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AutoEnumBitField)
@@ -154,7 +153,7 @@ TestNonConvertibilityForOneType()
 {
   using mozilla::IsConvertible;
 
-#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS) && defined(MOZ_HAVE_EXPLICIT_CONVERSION)
+#if defined(MOZ_HAVE_EXPLICIT_CONVERSION)
   static_assert(!IsConvertible<T, bool>::value, "should not be convertible");
   static_assert(!IsConvertible<T, int>::value, "should not be convertible");
   static_assert(!IsConvertible<T, uint64_t>::value, "should not be convertible");

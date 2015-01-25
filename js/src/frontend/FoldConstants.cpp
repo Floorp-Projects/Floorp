@@ -7,7 +7,6 @@
 #include "frontend/FoldConstants.h"
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypedEnum.h"
 
 #include "jslibmath.h"
 

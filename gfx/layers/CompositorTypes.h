@@ -13,7 +13,6 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/EnumSet.h"
 
-#include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
