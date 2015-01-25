@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
         // <html><body><p>designModeDocument</p></body></html>
         url: "data:text/html;charset=utf-8,<html><body><p>designModeDocument</p></body></html>",
         name: 'designModeNavigate',
-        onload: function(doc) doc.designMode = "on",
+        onload(doc) { doc.designMode = "on"; },
         expectedBodyBeforeEdit: '<p>designModeDocument</p>',
         expectedBodyAfterEdit:  '<p>EDITED designModeDocument</p>',
         expectedBodyAfterSecondEdit: '<p>EDITED TWICE designModeDocument</p>',
