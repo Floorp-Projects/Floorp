@@ -73,7 +73,7 @@ class ProfileEntry
     };
 
     // Keep these in sync with browser/devtools/profiler/utils/global.js
-    MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
+    enum class Category : uint32_t {
         OTHER    = 0x10,
         CSS      = 0x20,
         JS       = 0x40,
@@ -86,7 +86,7 @@ class ProfileEntry
 
         FIRST    = OTHER,
         LAST     = EVENTS
-    MOZ_END_NESTED_ENUM_CLASS(Category)
+    };
 
     // All of these methods are marked with the 'volatile' keyword because SPS's
     // representation of the stack is stored such that all ProfileEntry

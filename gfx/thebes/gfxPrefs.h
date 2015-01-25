@@ -78,14 +78,14 @@ private:
 
 private:
   // Enums for the update policy.
-  MOZ_BEGIN_NESTED_ENUM_CLASS(UpdatePolicy)
+  enum class UpdatePolicy {
     Skip, // Set the value to default, skip any Preferences calls
     Once, // Evaluate the preference once, unchanged during the session
     Live  // Evaluate the preference and set callback so it stays current/live
-  MOZ_END_NESTED_ENUM_CLASS(UpdatePolicy)
+  };
 
   // Since we cannot use const char*, use a function that returns it.
-  template <MOZ_ENUM_CLASS_ENUM_TYPE(UpdatePolicy) Update, class T, T Default(void), const char* Pref(void)>
+  template <UpdatePolicy Update, class T, T Default(void), const char* Pref(void)>
   class PrefTemplate
   {
   public:
