@@ -84,7 +84,6 @@ typedef HANDLE (WINAPI *CreateFileWPtr)(LPCWSTR fname, DWORD access,
                                         DWORD creation, DWORD flags,
                                         HANDLE ftemplate);
 static CreateFileWPtr sCreateFileWStub = nullptr;
-static WCHAR* sReplacementConfigFile;
 
 // Used with fix for flash fullscreen window loosing focus.
 static bool gDelayFlashFocusReplyUntilEval = false;
@@ -1909,10 +1908,6 @@ PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError*
 #else
 #  error Please implement me for your platform
 #endif
-
-#ifdef XP_WIN
-    CleanupProtectedModeHook();
-#endif
 }
 
 #if defined(XP_WIN)
@@ -1946,7 +1941,8 @@ CreateFileHookFn(LPCWSTR fname, DWORD access, DWORD share,
         HANDLE replacement =
             sCreateFileWStub(tempFile, GENERIC_READ | GENERIC_WRITE, share,
                              security, TRUNCATE_EXISTING,
-                             FILE_ATTRIBUTE_TEMPORARY,
+                             FILE_ATTRIBUTE_TEMPORARY |
+                               FILE_FLAG_DELETE_ON_CLOSE,
                              NULL);
         if (replacement == INVALID_HANDLE_VALUE) {
             break;
@@ -1976,7 +1972,6 @@ CreateFileHookFn(LPCWSTR fname, DWORD access, DWORD share,
         WriteFile(replacement, static_cast<const void*>(kSettingString),
                   sizeof(kSettingString) - 1, &wbytes, NULL);
         SetFilePointer(replacement, 0, NULL, FILE_BEGIN);
-        sReplacementConfigFile = _wcsdup(tempFile);
         return replacement;
     }
     return sCreateFileWStub(fname, access, share, security, creation, flags,
@@ -1990,16 +1985,6 @@ PluginModuleChild::HookProtectedMode()
     sKernel32Intercept.AddHook("CreateFileW",
                                reinterpret_cast<intptr_t>(CreateFileHookFn),
                                (void**) &sCreateFileWStub);
-}
-
-void
-PluginModuleChild::CleanupProtectedModeHook()
-{
-    if (sReplacementConfigFile) {
-        DeleteFile(sReplacementConfigFile);
-        free(sReplacementConfigFile);
-        sReplacementConfigFile = nullptr;
-    }
 }
 
 BOOL WINAPI
