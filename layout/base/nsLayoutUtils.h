@@ -163,10 +163,10 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(RepaintMode, uint8_t)
+  enum class RepaintMode : uint8_t {
     Repaint,
     DoNotRepaint
-  MOZ_END_NESTED_ENUM_CLASS(RepaintMode)
+  };
 
   /**
    * Set the display port margins for a content element to be used with a
@@ -2576,8 +2576,6 @@ private:
 
   static bool IsAPZTestLoggingEnabled();
 };
-
-MOZ_FINISH_NESTED_ENUM_CLASS(nsLayoutUtils::RepaintMode)
 
 template<typename PointType, typename RectType, typename CoordType>
 /* static */ bool
