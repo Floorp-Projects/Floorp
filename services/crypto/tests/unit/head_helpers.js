@@ -70,4 +70,6 @@ addResourceAlias();
  * @usage _("Hello World") -> prints "Hello World"
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
-let _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
+let _ = function(some, debug, text, to) {
+  print(Array.slice(arguments).join(" "));
+};

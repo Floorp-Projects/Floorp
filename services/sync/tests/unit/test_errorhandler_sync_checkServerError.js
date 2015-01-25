@@ -146,7 +146,9 @@ add_identity_test(this, function test_overQuota() {
   let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 400,
-                      toString: function() "14"};
+                      toString() {
+                        return "14";
+                      }};
 
   try {
     do_check_eq(Status.sync, SYNC_SUCCEEDED);
