@@ -287,8 +287,7 @@ this.ContentControl.prototype = {
       elem.dispatchEvent(evt);
     } else {
       let evt = this.document.createEvent('KeyboardEvent');
-      let keycode = aStepUp ? content.KeyEvent.DOM_VK_DOWN :
-        content.KeyEvent.DOM_VK_UP;
+      let keycode = aStepUp ? evt.DOM_VK_DOWN : evt.DOM_VK_UP;
       evt.initKeyEvent(
         "keypress", false, true, null, false, false, false, false, keycode, 0);
       elem.dispatchEvent(evt);
