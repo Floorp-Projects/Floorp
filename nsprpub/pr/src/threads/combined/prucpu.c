@@ -124,7 +124,7 @@ static _PRCPUQueue *_PR_CreateCPUQueue(void)
     _MD_NEW_LOCK( &cpuQueue->sleepQLock );
     _MD_NEW_LOCK( &cpuQueue->miscQLock );
 
-    for (index = 0; index < PR_PRIORITY_LAST + 1; index++)
+    for (index = 0; index < PR_ARRAY_SIZE(cpuQueue->runQ); index++)
         PR_INIT_CLIST( &(cpuQueue->runQ[index]) );
     PR_INIT_CLIST( &(cpuQueue->sleepQ) );
     PR_INIT_CLIST( &(cpuQueue->pauseQ) );

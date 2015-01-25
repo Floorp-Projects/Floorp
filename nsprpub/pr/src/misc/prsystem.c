@@ -24,7 +24,7 @@
 
 /* BSD-derived systems use sysctl() to get the number of processors */
 #if defined(BSDI) || defined(FREEBSD) || defined(NETBSD) \
-    || defined(OPENBSD) || defined(DARWIN)
+    || defined(OPENBSD) || defined(DRAGONFLY) || defined(DARWIN)
 #define _PR_HAVE_SYSCTL
 #include <sys/param.h>
 #include <sys/sysctl.h>
@@ -275,15 +275,24 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
     if (pageSize >= 0 && pageCount >= 0)
         bytes = (PRUint64) pageSize * pageCount;
 
-#elif defined(NETBSD) || defined(OPENBSD)
+#elif defined(NETBSD) || defined(OPENBSD) \
+    || defined(FREEBSD) || defined(DRAGONFLY)
 
     int mib[2];
     int rc;
+#ifdef HW_PHYSMEM64
     uint64_t memSize;
+#else
+    unsigned long memSize;
+#endif
     size_t len = sizeof(memSize);
 
     mib[0] = CTL_HW;
+#ifdef HW_PHYSMEM64
     mib[1] = HW_PHYSMEM64;
+#else
+    mib[1] = HW_PHYSMEM;
+#endif
     rc = sysctl(mib, 2, &memSize, &len, NULL, 0);
     if (-1 != rc)  {
         bytes = memSize;
