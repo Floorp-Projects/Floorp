@@ -1360,6 +1360,15 @@ RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
   decoder->SetSendPartialInvalidations(!mHasBeenDecoded);
   decoder->SetImageIsTransient(mTransient);
   decoder->SetDecodeFlags(DecodeFlags(aFlags));
+
+  if (!mHasBeenDecoded && aSize) {
+    // Lock the image while we're decoding, so that it doesn't get evicted from
+    // the SurfaceCache before we have a chance to realize that it's animated.
+    // The corresponding unlock happens in FinalizeDecoder.
+    LockImage();
+    decoder->SetImageIsLocked();
+  }
+
   if (aSize) {
     // We already have the size; tell the decoder so it can preallocate a
     // frame.  By default, we create an ARGB frame with no offset. If decoders
@@ -1539,11 +1548,6 @@ RasterImage::Decode(DecodeStrategy aStrategy,
     NotifyProgress(decoder->TakeProgress(),
                    decoder->TakeInvalidRect(),
                    decoder->GetDecodeFlags());
-
-    // Lock the image while we're decoding, so that it doesn't get evicted from
-    // the SurfaceCache before we have a chance to realize that it's animated.
-    // The corresponding unlock happens in FinalizeDecoder.
-    LockImage();
   }
 
   if (mHasSourceData) {
@@ -2040,8 +2044,8 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     }
   }
 
-  if (!wasSize) {
-    // Unlock the image, balancing the LockImage call we made in Decode().
+  if (aDecoder->ImageIsLocked()) {
+    // Unlock the image, balancing the LockImage call we made in CreateDecoder.
     UnlockImage();
   }
 
