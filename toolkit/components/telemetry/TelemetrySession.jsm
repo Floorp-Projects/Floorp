@@ -965,7 +965,7 @@ let Impl = {
     }
 
     AsyncShutdown.sendTelemetry.addBlocker(
-      "Telemetry: shutting down",
+      "TelemetrySession: shutting down",
       function condition(){
         this.uninstall();
         if (Telemetry.canSend) {

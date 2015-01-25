@@ -28,6 +28,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'TelemetryEnvironment.jsm',
     'TelemetryFile.jsm',
     'TelemetryLog.jsm',
     'TelemetryStopwatch.jsm',

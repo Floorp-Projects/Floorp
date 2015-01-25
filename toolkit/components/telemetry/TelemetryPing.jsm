@@ -46,6 +46,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
                                   "resource://gre/modules/ThirdPartyCookieProbe.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+                                  "resource://gre/modules/TelemetryEnvironment.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -346,6 +348,8 @@ let Impl = {
     let delayedTask = new DeferredTask(function* () {
       this._initialized = true;
 
+      yield TelemetryEnvironment.init();
+
       yield TelemetryFile.loadSavedPings();
       // If we have any TelemetryPings lying around, we'll be aggressive
       // and try to send them all off ASAP.
@@ -375,8 +379,15 @@ let Impl = {
 
     }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
+    AsyncShutdown.sendTelemetry.addBlocker("TelemetryPing: shutting down",
+                                           () => this.shutdown());
+
     delayedTask.arm();
     return deferred.promise;
+  },
+
+  shutdown: function() {
+    return TelemetryEnvironment.shutdown();
   },
 
   /**
