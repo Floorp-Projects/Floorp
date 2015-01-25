@@ -142,7 +142,7 @@ this.Async = {
       else
         cb(ret);
     }
-    callback.wait = function() Async.waitForSyncCallback(cb);
+    callback.wait = () => Async.waitForSyncCallback(cb);
     return callback;
   },
 

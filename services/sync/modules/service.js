@@ -1589,7 +1589,9 @@ Sync11Service.prototype = {
 
       // Only wipe the engines provided.
       if (engines) {
-        engines.forEach(function(e) this.clientsEngine.sendCommand("wipeEngine", [e]), this);
+        engines.forEach(function(e) {
+            this.clientsEngine.sendCommand("wipeEngine", [e]);
+          }, this);
       }
       // Tell the remote machines to wipe themselves.
       else {
