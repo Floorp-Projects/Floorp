@@ -535,9 +535,7 @@ BacktrackingAllocator::processInterval(LiveInterval *interval)
         // be constructed so that any minimal interval is allocatable.
         MOZ_ASSERT(!minimalInterval(interval));
 
-        if (canAllocate && fixed)
-            return splitAcrossCalls(interval);
-        return chooseIntervalSplit(interval, conflict);
+        return chooseIntervalSplit(interval, canAllocate && fixed, conflict);
     }
 }
 
@@ -1521,11 +1519,62 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveInterval *interval, bool *succe
 
     JitSpew(JitSpew_RegAlloc, "  split across hot range %s", hotRange->toString());
 
-    SplitPositionVector splitPositions;
-    if (!splitPositions.append(hotRange->from) || !splitPositions.append(hotRange->to))
+    // Tweak the splitting method when compiling asm.js code to look at actual
+    // uses within the hot/cold code. This heuristic is in place as the below
+    // mechanism regresses several asm.js tests. Hopefully this will be fixed
+    // soon and this special case removed. See bug 948838.
+    if (compilingAsmJS()) {
+        SplitPositionVector splitPositions;
+        if (!splitPositions.append(hotRange->from) || !splitPositions.append(hotRange->to))
+            return false;
+        *success = true;
+        return splitAt(interval, splitPositions);
+    }
+
+    LiveInterval *hotInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
+    LiveInterval *preInterval = nullptr, *postInterval = nullptr;
+
+    // Accumulate the ranges of hot and cold code in the interval. Note that
+    // we are only comparing with the single hot range found, so the cold code
+    // may contain separate hot ranges.
+    Vector<LiveInterval::Range, 1, SystemAllocPolicy> hotList, coldList;
+    for (size_t i = 0; i < interval->numRanges(); i++) {
+        LiveInterval::Range hot, coldPre, coldPost;
+        interval->getRange(i)->intersect(hotRange, &coldPre, &hot, &coldPost);
+
+        if (!hot.empty() && !hotInterval->addRange(hot.from, hot.to))
+            return false;
+
+        if (!coldPre.empty()) {
+            if (!preInterval)
+                preInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
+            if (!preInterval->addRange(coldPre.from, coldPre.to))
+                return false;
+        }
+
+        if (!coldPost.empty()) {
+            if (!postInterval)
+                postInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
+            if (!postInterval->addRange(coldPost.from, coldPost.to))
+                return false;
+        }
+    }
+
+    MOZ_ASSERT(preInterval || postInterval);
+    MOZ_ASSERT(hotInterval->numRanges());
+
+    LiveIntervalVector newIntervals;
+    if (!newIntervals.append(hotInterval))
         return false;
+    if (preInterval && !newIntervals.append(preInterval))
+        return false;
+    if (postInterval && !newIntervals.append(postInterval))
+        return false;
+
+    distributeUses(interval, newIntervals);
+
     *success = true;
-    return splitAt(interval, splitPositions);
+    return split(interval, newIntervals) && requeueIntervals(newIntervals);
 }
 
 bool
@@ -1875,7 +1924,7 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
 }
 
 bool
-BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict)
+BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, bool fixed, LiveInterval *conflict)
 {
     bool success = false;
 
@@ -1883,6 +1932,9 @@ BacktrackingAllocator::chooseIntervalSplit(LiveInterval *interval, LiveInterval 
         return false;
     if (success)
         return true;
+
+    if (fixed)
+        return splitAcrossCalls(interval);
 
     if (!trySplitBeforeFirstRegisterUse(interval, conflict, &success))
         return false;
