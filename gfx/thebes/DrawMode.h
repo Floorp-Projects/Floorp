@@ -6,8 +6,6 @@
 #ifndef DrawMode_h
 #define DrawMode_h
 
-#include "mozilla/TypedEnum.h"
-
 // Options for how the text should be drawn
 enum class DrawMode : int {
   // GLYPH_FILL and GLYPH_STROKE draw into the current context

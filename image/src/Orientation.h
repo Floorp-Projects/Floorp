@@ -7,7 +7,6 @@
 #define MOZILLA_IMAGELIB_ORIENTATION_H_
 
 #include <stdint.h>
-#include "mozilla/TypedEnum.h"
 
 namespace mozilla {
 namespace image {

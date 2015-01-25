@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include "mozilla/Assertions.h"
 #include "mozilla/Constants.h"   // for M_PI
-#include "mozilla/TypedEnum.h"
 
 // First time gfxPrefs::GetSingleton() needs to be called on the main thread,
 // before any of the methods accessing the values are used, but after

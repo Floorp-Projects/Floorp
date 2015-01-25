@@ -7,7 +7,6 @@
 #define GLCONTEXT_TYPES_H_
 
 #include "GLTypes.h"
-#include "mozilla/TypedEnum.h"
 
 namespace mozilla {
 namespace gl {

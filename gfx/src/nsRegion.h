@@ -18,7 +18,6 @@
 #include "nsMargin.h"                   // for nsIntMargin
 #include "nsStringGlue.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
-#include "mozilla/TypedEnum.h"          // for the VisitEdges typed enum
 #include "mozilla/Move.h"               // for mozilla::Move
 
 class nsIntRegion;

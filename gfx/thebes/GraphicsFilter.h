@@ -6,8 +6,6 @@
 #ifndef GraphicsFilter_h
 #define GraphicsFilter_h
 
-#include "mozilla/TypedEnum.h"
-
 enum class GraphicsFilter : int {
   FILTER_FAST,
   FILTER_GOOD,

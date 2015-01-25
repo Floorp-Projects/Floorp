@@ -30,7 +30,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
 #ifdef DEBUG

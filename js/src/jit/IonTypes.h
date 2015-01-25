@@ -8,7 +8,6 @@
 #define jit_IonTypes_h
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/TypedEnum.h"
 
 #include "jstypes.h"
 

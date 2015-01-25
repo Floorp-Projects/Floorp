@@ -6,7 +6,6 @@
 #ifndef SURFACE_TYPES_H_
 #define SURFACE_TYPES_H_
 
-#include "mozilla/TypedEnum.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Attributes.h"
 #include <stdint.h>

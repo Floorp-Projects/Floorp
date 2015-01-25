@@ -28,7 +28,6 @@
 #include "nsFrameList.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
-#include "mozilla/TypedEnum.h"
 #include "nsDirection.h"
 #include "WritingModes.h"
 #include <algorithm>
