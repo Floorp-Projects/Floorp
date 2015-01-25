@@ -302,7 +302,6 @@ private:
 
 #if defined(OS_WIN)
     void HookProtectedMode();
-    void CleanupProtectedModeHook();
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
