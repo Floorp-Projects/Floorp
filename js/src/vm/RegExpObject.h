@@ -489,6 +489,7 @@ RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 {
     if (obj->is<RegExpObject>())
         return obj->as<RegExpObject>().getShared(cx, g);
+    MOZ_ASSERT(Proxy::objectClassIs(obj, ESClass_RegExp, cx));
     return Proxy::regexp_toShared(cx, obj, g);
 }
 
