@@ -6282,6 +6282,9 @@ class CGCallGenerator(CGThing):
                 self.cgRoot.prepend(CGWrapper(result, post=";\n"))
                 if resultOutParam is None:
                     call = CGWrapper(call, pre=resultVar + " = ")
+        elif result is not None:
+            assert resultOutParam is None
+            call = CGWrapper(call, pre=resultVar + " = ")
 
         call = CGWrapper(call, post=";\n")
         self.cgRoot.append(call)
