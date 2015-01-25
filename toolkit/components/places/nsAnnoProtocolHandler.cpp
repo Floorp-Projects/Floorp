@@ -91,7 +91,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   //// mozIStorageStatementCallback
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet)
+  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) MOZ_OVERRIDE
   {
     // We will only get one row back in total, so we do not need to loop.
     nsCOMPtr<mozIStorageRow> row;
@@ -142,7 +142,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     if (!mReturnDefaultIcon)
       return mOutputStream->Close();
@@ -168,12 +168,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
   //// nsIRequestObserver
 
-  NS_IMETHOD OnStartRequest(nsIRequest *, nsISupports *)
+  NS_IMETHOD OnStartRequest(nsIRequest *, nsISupports *) MOZ_OVERRIDE
   {
     return NS_OK;
   }
 
-  NS_IMETHOD OnStopRequest(nsIRequest *, nsISupports *, nsresult aStatusCode)
+  NS_IMETHOD OnStopRequest(nsIRequest *, nsISupports *, nsresult aStatusCode) MOZ_OVERRIDE
   {
     // We always need to close our output stream, regardless of the status code.
     (void)mOutputStream->Close();

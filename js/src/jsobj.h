@@ -39,6 +39,10 @@ class Nursery;
 class ObjectElements;
 struct StackShape;
 
+namespace gc {
+class RelocationOverlay;
+}
+
 inline JSObject *
 CastAsObject(PropertyOp op)
 {
@@ -117,6 +121,7 @@ class JSObject : public js::gc::Cell
     friend class js::GCMarker;
     friend class js::NewObjectCache;
     friend class js::Nursery;
+    friend class js::gc::RelocationOverlay;
     friend bool js::PreventExtensions(JSContext *cx, JS::HandleObject obj, bool *succeeded);
     friend bool js::SetImmutablePrototype(js::ExclusiveContext *cx, JS::HandleObject obj,
                                           bool *succeeded);
@@ -943,13 +948,6 @@ LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
 /* Set *result to tell whether obj has an own property with the given id. */
 extern bool
 HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *result);
-
-/*
- * Deprecated. An easier-to-use version of LookupProperty that returns only the
- * property attributes.
- */
-inline bool
-GetPropertyAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 
 /*
  * Deprecated. Search the prototype chain for `obj[id]` and redefine it to have

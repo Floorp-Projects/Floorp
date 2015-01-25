@@ -54,7 +54,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
   RootedValue value(cx);
   const char* property = "foo";
   for (size_t i = 0; i < ElementCount; ++i) {
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject obj(cx, JS_NewPlainObject(cx));
     ASSERT_FALSE(JS::ObjectIsTenured(obj));
     value = Int32Value(i);
     ASSERT_TRUE(JS_SetProperty(cx, obj, property, value));

@@ -935,7 +935,7 @@ InitCTypeClass(JSContext* cx, HandleObject parent)
 static JSObject*
 InitABIClass(JSContext* cx, JSObject* parent)
 {
-  RootedObject obj(cx, JS_NewObject(cx, nullptr, NullPtr(), NullPtr()));
+  RootedObject obj(cx, JS_NewPlainObject(cx));
 
   if (!obj)
     return nullptr;
@@ -4773,7 +4773,7 @@ AddFieldToArray(JSContext* cx,
 {
   RootedObject typeObj(cx, typeObj_);
   Rooted<JSFlatString*> name(cx, name_);
-  RootedObject fieldObj(cx, JS_NewObject(cx, nullptr, NullPtr(), NullPtr()));
+  RootedObject fieldObj(cx, JS_NewPlainObject(cx));
   if (!fieldObj)
     return false;
 
@@ -5619,7 +5619,7 @@ CreateFunctionInfo(JSContext* cx,
   for (uint32_t i = 0; i < args.length(); ++i) {
     bool isEllipsis;
     if (!IsEllipsis(cx, args[i], &isEllipsis))
-      return nullptr;
+      return false;
     if (isEllipsis) {
       fninfo->mIsVariadic = true;
       if (i < 1) {

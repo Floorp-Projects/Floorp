@@ -18,6 +18,12 @@ const kPostPath = "/post";
 const kPostUrl = kBaseUrl + kPostPath;
 const kPostDataSent = [["foo", "bar"], ["complex", "!*()@"]];
 const kPostDataReceived = "foo=bar&complex=%21%2A%28%29%40";
+const kPostMimeTypeReceived = "application/x-www-form-urlencoded; charset=utf-8";
+
+const kJsonPostPath = "/json_post";
+const kJsonPostUrl = kBaseUrl + kJsonPostPath;
+const kJsonPostData = JSON.stringify(kPostDataSent);
+const kJsonPostMimeType = "application/json; charset=UTF-8";
 
 const kPutPath = "/put";
 const kPutUrl = kBaseUrl + kPutPath;
@@ -33,7 +39,7 @@ function successResult(aRequest, aResponse) {
   aResponse.write("Success!");
 }
 
-function getDataChecker(aExpectedMethod, aExpectedData) {
+function getDataChecker(aExpectedMethod, aExpectedData, aExpectedMimeType = null) {
   return function(aRequest, aResponse) {
     let body = new BinaryInputStream(aRequest.bodyInputStream);
     let bytes = [];
@@ -42,6 +48,12 @@ function getDataChecker(aExpectedMethod, aExpectedData) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
 
     do_check_eq(aRequest.method, aExpectedMethod);
+
+    // Checking if the Content-Type is as expected.
+    if (aExpectedMimeType) {
+      let contentType = aRequest.getHeader("Content-Type");
+      do_check_eq(contentType, aExpectedMimeType);
+    }
 
     var data = String.fromCharCode.apply(null, bytes);
 
@@ -154,15 +166,85 @@ add_test(function test_OptionalParameters() {
   run_next_test();
 });
 
+/**
+ * Makes sure that httpRequest API allows setting a custom Content-Type header
+ * for POST requests when data is a string.
+ */
+add_test(function test_CustomContentTypeOnPost() {
+  do_test_pending();
+
+  // Preparing the request parameters.
+  let options = {
+    onLoad: function(aResponse) {
+      do_check_eq(aResponse, "Success!");
+      do_test_finished();
+      run_next_test();
+    },
+    onError: function(e) {
+      do_check_true(false);
+      do_test_finished();
+      run_next_test();
+    },
+    postData: kJsonPostData,
+    // Setting a custom Content-Type header.
+    headers: [['Content-Type', "application/json"]]
+  }
+
+  // Firing the request.
+  httpRequest(kJsonPostUrl, options);
+});
+
+/**
+ * Ensures that the httpRequest API provides a way to override the response
+ * MIME type.
+ */
+add_test(function test_OverrideMimeType() {
+  do_test_pending();
+
+  // Preparing the request parameters.
+  const kMimeType = 'text/xml; charset=UTF-8';
+  let options = {
+    onLoad: function(aResponse, xhr) {
+      do_check_eq(aResponse, "Success!");
+
+      // Set the expected MIME-type.
+      let reportedMimeType = xhr.getResponseHeader("Content-Type");
+      do_check_neq(reportedMimeType, kMimeType);
+
+      // responseXML should not be not null if overriding mime type succeeded.
+      do_check_true(xhr.responseXML != null);
+
+      do_test_finished();
+      run_next_test();
+    },
+    onError: function(e) {
+      do_check_true(false);
+      do_test_finished();
+      run_next_test();
+    }
+  };
+
+  // Firing the request.
+  let xhr = httpRequest(kGetUrl, options);
+
+  // Override the response MIME type.
+  xhr.overrideMimeType(kMimeType);
+});
+
 function run_test() {
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
   server.registerPathHandler(kSuccessPath, successResult);
   server.registerPathHandler(kPostPath,
-                             getDataChecker("POST", kPostDataReceived));
+                             getDataChecker("POST", kPostDataReceived,
+                                            kPostMimeTypeReceived));
   server.registerPathHandler(kPutPath,
                              getDataChecker("PUT", kPutDataReceived));
   server.registerPathHandler(kGetPath, getDataChecker("GET", ""));
+  server.registerPathHandler(kJsonPostPath,
+                             getDataChecker("POST", kJsonPostData,
+                                            kJsonPostMimeType));
+
   server.start(kDefaultServerPort);
 
   run_next_test();

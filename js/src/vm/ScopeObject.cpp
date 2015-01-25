@@ -567,14 +567,7 @@ with_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                               MutableHandle<JSPropertyDescriptor> desc)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return GetOwnPropertyDescriptor(cx, obj, id, desc);
-}
-
-static bool
-with_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return GetPropertyAttributes(cx, actual, id, attrsp);
+    return GetOwnPropertyDescriptor(cx, actual, id, desc);
 }
 
 static bool
@@ -636,7 +629,6 @@ const Class DynamicWithObject::class_ = {
         with_SetProperty,
         with_SetElement,
         with_GetOwnPropertyDescriptor,
-        with_GetGenericAttributes,
         with_SetGenericAttributes,
         with_DeleteGeneric,
         nullptr, nullptr,    /* watch/unwatch */
@@ -1082,13 +1074,6 @@ uninitialized_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId
 }
 
 static bool
-uninitialized_GetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
-{
-    ReportUninitializedLexicalId(cx, id);
-    return false;
-}
-
-static bool
 uninitialized_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     ReportUninitializedLexicalId(cx, id);
@@ -1134,7 +1119,6 @@ const Class UninitializedLexicalObject::class_ = {
         uninitialized_SetProperty,
         uninitialized_SetElement,
         uninitialized_GetOwnPropertyDescriptor,
-        uninitialized_GetGenericAttributes,
         uninitialized_SetGenericAttributes,
         uninitialized_DeleteGeneric,
         nullptr, nullptr,    /* watch/unwatch */

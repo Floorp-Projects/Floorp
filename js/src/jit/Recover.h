@@ -613,7 +613,7 @@ class RTruncateToInt32 MOZ_FINAL : public RInstruction
 class RNewObject MOZ_FINAL : public RInstruction
 {
   private:
-    bool templateObjectIsClassPrototype_;
+    MNewObject::Mode mode_;
 
   public:
     RINSTRUCTION_HEADER_(NewObject)

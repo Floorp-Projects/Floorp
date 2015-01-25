@@ -52,13 +52,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHODIMP
-  GetInterfaces(uint32_t *_count, nsIID ***_array)
+  GetInterfaces(uint32_t *_count, nsIID ***_array) MOZ_OVERRIDE
   {
     return NS_CI_INTERFACE_GETTER_NAME(AsyncStatement)(_count, _array);
   }
 
   NS_IMETHODIMP
-  GetHelperForLanguage(uint32_t aLanguage, nsISupports **_helper)
+  GetHelperForLanguage(uint32_t aLanguage, nsISupports **_helper) MOZ_OVERRIDE
   {
     if (aLanguage == nsIProgrammingLanguage::JAVASCRIPT) {
       static AsyncStatementJSHelper sJSHelper;
@@ -71,42 +71,42 @@ public:
   }
 
   NS_IMETHODIMP
-  GetContractID(char **_contractID)
+  GetContractID(char **_contractID) MOZ_OVERRIDE
   {
     *_contractID = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetClassDescription(char **_desc)
+  GetClassDescription(char **_desc) MOZ_OVERRIDE
   {
     *_desc = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetClassID(nsCID **_id)
+  GetClassID(nsCID **_id) MOZ_OVERRIDE
   {
     *_id = nullptr;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetImplementationLanguage(uint32_t *_language)
+  GetImplementationLanguage(uint32_t *_language) MOZ_OVERRIDE
   {
     *_language = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetFlags(uint32_t *_flags)
+  GetFlags(uint32_t *_flags) MOZ_OVERRIDE
   {
     *_flags = 0;
     return NS_OK;
   }
 
   NS_IMETHODIMP
-  GetClassIDNoAlloc(nsCID *_cid)
+  GetClassIDNoAlloc(nsCID *_cid) MOZ_OVERRIDE
   {
     return NS_ERROR_NOT_AVAILABLE;
   }
