@@ -147,7 +147,8 @@ ClippedImage::ShouldClip()
       // If the clipping region is the same size as the underlying image we
       // don't have to do anything.
       mShouldClip.emplace(!mClip.IsEqualInterior(nsIntRect(0, 0, width, height)));
-    } else if (progressTracker && progressTracker->IsLoading()) {
+    } else if (progressTracker &&
+               !(progressTracker->GetProgress() & FLAG_LOAD_COMPLETE)) {
       // The image just hasn't finished loading yet. We don't yet know whether
       // clipping with be needed or not for now. Just return without memoizing
       // anything.
