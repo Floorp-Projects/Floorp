@@ -184,9 +184,12 @@ private:
    * |mRecursionLevel| is only used in debug builds, but is present in opt
    * builds to avoid binary compatibility problems when mixing DEBUG and
    * non-DEBUG components.  (Actually, even if it were removed,
-   * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
+   * sizeof(PLDHashTable) wouldn't change, due to struct padding.) Make it
+   * protected to suppress -Wunused-private-field warnings in opt builds.
    */
+protected:
   mutable uint16_t    mRecursionLevel;/* used to detect unsafe re-entry */
+private:
   uint32_t            mEntrySize;     /* number of bytes in an entry */
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
