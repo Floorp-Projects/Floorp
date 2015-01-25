@@ -316,10 +316,10 @@ void NS_MergeReflowStatusInto(nsReflowStatus* aPrimary,
 /**
  * DidReflow status values.
  */
-MOZ_BEGIN_ENUM_CLASS(nsDidReflowStatus, uint32_t)
+enum class nsDidReflowStatus : uint32_t {
   NOT_FINISHED,
   FINISHED
-MOZ_END_ENUM_CLASS(nsDidReflowStatus)
+};
 
 /**
  * When there is no scrollable overflow rect, the visual overflow rect

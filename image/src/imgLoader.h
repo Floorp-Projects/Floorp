@@ -206,10 +206,10 @@ private:
   uint32_t mSize;
 };
 
-MOZ_BEGIN_ENUM_CLASS(AcceptedMimeTypes, uint8_t)
+enum class AcceptedMimeTypes : uint8_t {
   IMAGES,
   IMAGES_AND_DOCUMENTS,
-MOZ_END_ENUM_CLASS(AcceptedMimeTypes)
+};
 
 class imgLoader MOZ_FINAL : public imgILoader,
                             public nsIContentSniffer,

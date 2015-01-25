@@ -74,14 +74,14 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 // End-of-array marker for mask arguments to ParseBitmaskValues
 #define MASK_END_VALUE  (-1)
 
-MOZ_BEGIN_ENUM_CLASS(CSSParseResult, int32_t)
+enum class CSSParseResult : int32_t {
   // Parsed something successfully:
   Ok,
   // Did not find what we were looking for, but did not consume any token:
   NotFound,
   // Unexpected token or token value, too late for UngetToken() to be enough:
   Error
-MOZ_END_ENUM_CLASS(CSSParseResult)
+};
 
 namespace {
 

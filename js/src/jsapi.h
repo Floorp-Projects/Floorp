@@ -4480,11 +4480,11 @@ JS_PUBLIC_API(JSString *)
 GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
-MOZ_BEGIN_ENUM_CLASS(SymbolCode, uint32_t)
+enum class SymbolCode : uint32_t {
     iterator,                       // well-known Symbol.iterator
     InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
     UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
-MOZ_END_ENUM_CLASS(SymbolCode)
+};
 
 /* For use in loops that iterate over the well-known symbols. */
 const size_t WellKnownSymbolLimit = 1;
