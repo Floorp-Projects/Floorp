@@ -31,8 +31,8 @@ var listener = {
     // works correctly
     request.suspend();
     request.suspend();
-    do_timeout(RESUME_DELAY, function() request.resume());
-    do_timeout(RESUME_DELAY + 1000, function() request.resume());
+    do_timeout(RESUME_DELAY, function() { request.resume(); });
+    do_timeout(RESUME_DELAY + 1000, function() { request.resume(); });
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {

@@ -30,7 +30,7 @@ var gUpdatedOverrides;
 var gOverrideForHostCache = new Map;
 var gInitialized = false;
 var gOverrideFunctions = [
-  function (aHttpChannel) UserAgentOverrides.getOverrideForURI(aHttpChannel.URI)
+  function (aHttpChannel) { return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI); }
 ];
 var gBuiltUAs = new Map;
 
@@ -57,7 +57,7 @@ this.UserAgentOverrides = {
         for (let domain in overrides) {
           overrides[domain] = getUserAgentFromOverride(overrides[domain]);
         }
-        overrides.get = function(key) this[key];
+        overrides.get = function(key) { return this[key]; };
       }
       gUpdatedOverrides = overrides;
     });
