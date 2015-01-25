@@ -1,11 +1,16 @@
-String.prototype.has = function(s) this.indexOf(s) != -1;
+String.prototype.has = function(s) { return this.indexOf(s) != -1; }
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const dts = Cc["@mozilla.org/intl/scriptabledateformat;1"]
         .getService(Ci.nsIScriptableDateFormat);
-function dt(locale) dts.FormatDateTime(locale, dts.dateFormatLong,
-  dts.timeFormatSeconds, 2008, 6, 30, 13, 56, 34);
+
+function dt(locale) {
+  return dts.FormatDateTime(locale, dts.dateFormatLong,
+                            dts.timeFormatSeconds, 2008, 6, 30, 13, 56, 34);
+}
+
 var all_passed = true;
 const tests = 
 [
