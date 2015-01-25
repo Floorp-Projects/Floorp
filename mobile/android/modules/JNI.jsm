@@ -797,7 +797,7 @@ var PREFIX = 'js#';
 // this regex matches one component of a type signature:
 // any number of array modifiers, followed by either a
 // primitive type character or L<classname>;
-var sigRegex = function() /\[*([VZBCSIJFD]|L([^.\/;]+(\/[^.\/;]+)*);)/g;
+var sigRegex = () => /\[*([VZBCSIJFD]|L([^.\/;]+(\/[^.\/;]+)*);)/g;
 var ensureSig = function(classname_or_signature) {
     // convert a classname into a signature,
     // leaving unchanged signatures.  We assume that
@@ -1070,7 +1070,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
   });
   (props.static_methods || []).forEach(function(mtd) {
     var jmtd = jenvpp().GetStaticMethodID(jenv, jcls, mtd.name, mtd.sig);
-    var argctypes = mtd.sig.match(sigRegex()).map(function(s) sig2ctype(s));
+    var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
     var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
     var ty = sig2type(returnSig), nm = returnSig;
     var call = "CallStatic"+ty+"Method";
@@ -1090,7 +1090,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
   (props.constructors || []).forEach(function(mtd) {
     mtd.name = "<init>";
     var jmtd = jenvpp().GetMethodID(jenv, jcls, mtd.name, mtd.sig);
-    var argctypes = mtd.sig.match(sigRegex()).map(function(s) sig2ctype(s));
+    var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
     var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
 
     r['new'] = overloadFunc('new');
@@ -1121,7 +1121,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
   });
   (props.methods || []).forEach(function(mtd) {
     var jmtd = jenvpp().GetMethodID(jenv, jcls, mtd.name, mtd.sig);
-    var argctypes = mtd.sig.match(sigRegex()).map(function(s) sig2ctype(s));
+    var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
     var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
     var ty = sig2type(returnSig), nm = returnSig;
     var call = "Call"+ty+"Method";
