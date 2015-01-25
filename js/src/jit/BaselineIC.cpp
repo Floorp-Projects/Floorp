@@ -8909,6 +8909,14 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
+    if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
+        RootedObject proto(cx, args[0].toObjectOrNull());
+        res.set(ObjectCreateImpl(cx, proto, TenuredObject));
+        if (!res)
+            return false;
+        return true;
+    }
+
     return true;
 }
 

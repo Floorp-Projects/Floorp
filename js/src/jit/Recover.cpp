@@ -1156,13 +1156,14 @@ MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_NewObject));
-    writer.writeByte(templateObjectIsClassPrototype_);
+    MOZ_ASSERT(Mode(uint8_t(mode_)) == mode_);
+    writer.writeByte(uint8_t(mode_));
     return true;
 }
 
 RNewObject::RNewObject(CompactBufferReader &reader)
 {
-    templateObjectIsClassPrototype_ = reader.readByte();
+    mode_ = MNewObject::Mode(reader.readByte());
 }
 
 bool
@@ -1173,10 +1174,12 @@ RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
     JSObject *resultObject = nullptr;
 
     // See CodeGenerator::visitNewObjectVMCall
-    if (templateObjectIsClassPrototype_)
-        resultObject = NewInitObjectWithClassPrototype(cx, templateObject);
-    else
+    if (mode_ == MNewObject::ObjectLiteral) {
         resultObject = NewInitObject(cx, templateObject);
+    } else {
+        MOZ_ASSERT(mode_ == MNewObject::ObjectCreate);
+        resultObject = ObjectCreateWithTemplate(cx, templateObject);
+    }
 
     if (!resultObject)
         return false;

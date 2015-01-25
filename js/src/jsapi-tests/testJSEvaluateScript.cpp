@@ -6,7 +6,7 @@
 
 BEGIN_TEST(testJSEvaluateScript)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), global));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
 
     CHECK(JS::RuntimeOptionsRef(cx).varObjFix());

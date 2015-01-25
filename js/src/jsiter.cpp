@@ -1166,28 +1166,23 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                     if (!GetPrototype(cx, obj, &proto))
                         return false;
                     if (proto) {
-                        RootedObject obj2(cx);
-                        RootedShape prop(cx);
                         RootedId id(cx);
                         RootedValue idv(cx, StringValue(*idp));
                         if (!ValueToId<CanGC>(cx, idv, &id))
                             return false;
-                        if (!LookupProperty(cx, proto, id, &obj2, &prop))
-                            return false;
-                        if (prop) {
-                            unsigned attrs;
-                            if (obj2->isNative())
-                                attrs = GetShapeAttributes(obj2, prop);
-                            else if (!GetPropertyAttributes(cx, obj2, id, &attrs))
-                                return false;
 
-                            if (attrs & JSPROP_ENUMERATE)
+                        Rooted<PropertyDescriptor> desc(cx);
+                        if (!JS_GetPropertyDescriptorById(cx, proto, id, &desc))
+                            return false;
+
+                        if (desc.object()) {
+                            if (desc.isEnumerable())
                                 continue;
                         }
                     }
 
                     /*
-                     * If lookupProperty or getAttributes above removed a property from
+                     * If JS_GetPropertyDescriptorById above removed a property from
                      * ni, start over.
                      */
                     if (props_end != ni->props_end || props_cursor != ni->props_cursor)

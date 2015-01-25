@@ -125,7 +125,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aData)
+                     const char16_t* aData) MOZ_OVERRIDE
   {
     mTopicReceived = true;
     nsCOMPtr<nsIObserverService> observerService =
@@ -394,7 +394,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aData)
+                     const char16_t* aData) MOZ_OVERRIDE
   {
     nsCOMPtr<nsIObserverService> os =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);

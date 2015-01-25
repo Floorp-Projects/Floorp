@@ -518,7 +518,7 @@ public:
 
   // Note: the return value matters here.  We call into this method, it's not
   // just xpcom boilerplate.
-  NS_IMETHOD Complete(nsresult aResult, nsISupports* aStatement)
+  NS_IMETHOD Complete(nsresult aResult, nsISupports* aStatement) MOZ_OVERRIDE
   {
     NS_ENSURE_SUCCESS(aResult, aResult);
     nsCOMPtr<mozIStorageAsyncStatement> stmt = do_QueryInterface(aStatement);
@@ -531,7 +531,7 @@ public:
     return stmt->ExecuteAsync(this, getter_AddRefs(handle));
   }
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResults)
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResults) MOZ_OVERRIDE
   {
     // If this method is called, we've gotten results, which means we have a
     // visit.
@@ -539,14 +539,14 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(mozIStorageError* aError)
+  NS_IMETHOD HandleError(mozIStorageError* aError) MOZ_OVERRIDE
   {
     // mIsVisited is already set to false, and that's the assumption we will
     // make if an error occurred.
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason)
+  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
   {
     if (aReason != mozIStorageStatementCallback::REASON_FINISHED) {
       return NS_OK;
@@ -1474,13 +1474,13 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo)
+  NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo) MOZ_OVERRIDE
   {
     // Just don't add the annotations in case the visit isn't added.
     return NS_OK;
   }
 
-  NS_IMETHOD HandleResult(mozIPlaceInfo *aPlaceInfo)
+  NS_IMETHOD HandleResult(mozIPlaceInfo *aPlaceInfo) MOZ_OVERRIDE
   {
     // Exit silently if the download destination is not a local file.
     nsCOMPtr<nsIFileURL> destinationFileURL = do_QueryInterface(mDestination);
@@ -1542,7 +1542,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion()
+  NS_IMETHOD HandleCompletion() MOZ_OVERRIDE
   {
     return NS_OK;
   }
@@ -2033,7 +2033,7 @@ public:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) {
+  NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) MOZ_OVERRIDE {
     if (NS_FAILED(aStatus))
       return NS_OK;
     mReadOnlyDBConn = do_QueryInterface(aConnection);

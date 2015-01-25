@@ -4038,9 +4038,9 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
 typedef JSObject *(*NewInitObjectFn)(JSContext *, HandlePlainObject);
 static const VMFunction NewInitObjectInfo = FunctionInfo<NewInitObjectFn>(NewInitObject);
 
-typedef JSObject *(*NewInitObjectWithClassPrototypeFn)(JSContext *, HandlePlainObject);
-static const VMFunction NewInitObjectWithClassPrototypeInfo =
-    FunctionInfo<NewInitObjectWithClassPrototypeFn>(NewInitObjectWithClassPrototype);
+typedef PlainObject *(*ObjectCreateWithTemplateFn)(JSContext *, HandlePlainObject);
+static const VMFunction ObjectCreateWithTemplateInfo =
+    FunctionInfo<ObjectCreateWithTemplateFn>(ObjectCreateWithTemplate);
 
 void
 CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
@@ -4056,10 +4056,12 @@ CodeGenerator::visitNewObjectVMCall(LNewObject *lir)
     // that derives its class from its prototype instead of being
     // JSObject::class_'d) from self-hosted code, we need a different init
     // function.
-    if (lir->mir()->templateObjectIsClassPrototype())
-        callVM(NewInitObjectWithClassPrototypeInfo, lir);
-    else
+    if (lir->mir()->mode() == MNewObject::ObjectLiteral) {
         callVM(NewInitObjectInfo, lir);
+    } else {
+        MOZ_ASSERT(lir->mir()->mode() == MNewObject::ObjectCreate);
+        callVM(ObjectCreateWithTemplateInfo, lir);
+    }
 
     if (ReturnReg != objReg)
         masm.movePtr(ReturnReg, objReg);

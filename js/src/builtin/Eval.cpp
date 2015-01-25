@@ -311,6 +311,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         if (evalType == DIRECT_EVAL)
             enclosing = callerScript->innermostStaticScope(pc);
         Rooted<StaticEvalObject *> staticScope(cx, StaticEvalObject::create(cx, enclosing));
+        if (!staticScope)
+            return false;
 
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
@@ -511,7 +513,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext *cx, HandleObject global, HandleScri
         Debugger::onNewScript(cx, script, global);
     }
 
-    RootedObject scope(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    RootedObject scope(cx, JS_NewPlainObject(cx));
     if (!scope)
         return false;
 

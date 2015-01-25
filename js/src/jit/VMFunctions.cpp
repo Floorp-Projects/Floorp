@@ -301,27 +301,6 @@ NewInitObject(JSContext *cx, HandlePlainObject templateObject)
     return obj;
 }
 
-JSObject *
-NewInitObjectWithClassPrototype(JSContext *cx, HandlePlainObject templateObject)
-{
-    MOZ_ASSERT(!templateObject->hasSingletonType());
-    MOZ_ASSERT(!templateObject->hasLazyType());
-
-    NewObjectKind newKind = templateObject->type()->shouldPreTenure()
-                            ? TenuredObject
-                            : GenericObject;
-    PlainObject *obj = NewObjectWithGivenProto<PlainObject>(cx,
-                                                            templateObject->getProto(),
-                                                            cx->global(),
-                                                            newKind);
-    if (!obj)
-        return nullptr;
-
-    obj->setType(templateObject->type());
-
-    return obj;
-}
-
 bool
 ArraySpliceDense(JSContext *cx, HandleObject obj, uint32_t start, uint32_t deleteCount)
 {

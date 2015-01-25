@@ -45,8 +45,7 @@ END_TEST(testForOfIterator_bug515273_part1)
 
 BEGIN_TEST(testForOfIterator_bug515273_part2)
 {
-    JS::RootedObject obj(cx,
-			 JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
     JS::RootedValue v(cx, JS::ObjectValue(*obj));
 

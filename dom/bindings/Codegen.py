@@ -405,7 +405,6 @@ class CGDOMJSClass(CGThing):
                       nullptr, /* setProperty */
                       nullptr, /* setElement */
                       nullptr, /* getOwnPropertyDescriptor */
-                      nullptr, /* getGenericAttributes */
                       nullptr, /* setGenericAttributes */
                       nullptr, /* deleteGeneric */
                       nullptr, /* watch */
@@ -5702,7 +5701,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
             nsTArray<nsString> keys;
             ${result}.GetKeys(keys);
-            JS::Rooted<JSObject*> returnObj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+            JS::Rooted<JSObject*> returnObj(cx, JS_NewPlainObject(cx));
             if (!returnObj) {
               $*{exceptionCode}
             }
@@ -7542,7 +7541,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
 
     def definition_body(self):
         ret = dedent("""
-            JS::Rooted<JSObject*> result(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+            JS::Rooted<JSObject*> result(cx, JS_NewPlainObject(cx));
             if (!result) {
               return false;
             }
@@ -11516,7 +11515,7 @@ class CGDictionary(CGThing):
         else:
             body += fill(
                 """
-                JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+                JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
                 if (!obj) {
                   return false;
                 }

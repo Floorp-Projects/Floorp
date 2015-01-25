@@ -6120,7 +6120,7 @@ IonBuilder::jsop_newobject()
                                       templateObject->hasSingletonType()
                                       ? gc::TenuredHeap
                                       : templateObject->type()->initialHeap(constraints()),
-                                      /* templateObjectIsClassPrototype = */ false);
+                                      MNewObject::ObjectLiteral);
 
     current->add(ins);
     current->push(ins);
