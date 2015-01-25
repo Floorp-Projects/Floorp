@@ -52,7 +52,7 @@ dnl ========================================================
 MOZJPEG=62
 MOZPNG=10616
 NSPR_VERSION=4
-NSPR_MINVER=4.10.3
+NSPR_MINVER=4.10.8
 NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla

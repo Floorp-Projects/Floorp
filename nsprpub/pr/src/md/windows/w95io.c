@@ -955,9 +955,10 @@ _PR_MD_LOCKFILE(PROsfd f)
 		0l, 0l,
 		0x0l, 0xffffffffl ); 
 	if ( rv == 0 ) {
-        DWORD rc = GetLastError();
+        DWORD err = GetLastError();
+        _PR_MD_MAP_DEFAULT_ERROR(err);
         PR_LOG( _pr_io_lm, PR_LOG_ERROR,
-            ("_PR_MD_LOCKFILE() failed. Error: %d", rc ));
+            ("_PR_MD_LOCKFILE() failed. Error: %d", err ));
         rc = PR_FAILURE;
     }
 
