@@ -8840,7 +8840,7 @@ TryAttachFunCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, 
 
 static bool
 GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
-                           Native native, const CallArgs &args, MutableHandleNativeObject res)
+                           Native native, const CallArgs &args, MutableHandleObject res)
 {
     // Check for natives to which template objects can be attached. This is
     // done to provide templates to Ion for inlining these natives later on.
@@ -9151,7 +9151,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             return true;
         }
 
-        RootedNativeObject templateObject(cx);
+        RootedObject templateObject(cx);
         if (MOZ_LIKELY(!isSpread)) {
             CallArgs args = CallArgsFromVp(argc, vp);
             if (!GetTemplateObjectForNative(cx, script, pc, fun->native(), args, &templateObject))
@@ -11741,7 +11741,7 @@ ICCall_AnyScripted::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorS
 }
 
 ICCall_Native::ICCall_Native(JitCode *stubCode, ICStub *firstMonitorStub,
-                             HandleFunction callee, HandleNativeObject templateObject,
+                             HandleFunction callee, HandleObject templateObject,
                              uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
     callee_(callee),
@@ -11762,7 +11762,7 @@ ICCall_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub
                      ICCall_Native &other)
 {
     RootedFunction callee(cx, other.callee_);
-    RootedNativeObject templateObject(cx, other.templateObject_);
+    RootedObject templateObject(cx, other.templateObject_);
     return New(space, other.jitCode(), firstMonitorStub, callee, templateObject,
                other.pcOffset_);
 }
