@@ -2147,6 +2147,7 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
  */
 static bool sLayersSupportsD3D9 = false;
 static bool sLayersSupportsD3D11 = false;
+static bool sLayersSupportsDXVA = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
@@ -2184,6 +2185,11 @@ InitLayersAccelerationPrefs()
             sLayersSupportsD3D11 = true;
           }
         }
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DXVA, &status))) {
+          if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
+            sLayersSupportsDXVA = true;
+          }
+        }
       }
     }
 #endif
@@ -2208,6 +2214,15 @@ gfxPlatform::CanUseDirect3D11()
   // safe to init the prefs etc. from here.
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return sLayersSupportsD3D11;
+}
+
+bool
+gfxPlatform::CanUseDXVA()
+{
+  // this function is called from the compositor thread, so it is not
+  // safe to init the prefs etc. from here.
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sLayersSupportsDXVA;
 }
 
 bool
