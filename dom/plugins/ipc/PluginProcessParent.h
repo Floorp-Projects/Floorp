@@ -30,8 +30,13 @@ public:
     /**
      * Synchronously launch the plugin process. If the process fails to launch
      * after timeoutMs, this method will return false.
+     *
+     * @param timeoutMs Timeout in milliseconds for the synchronous launch.
+     * @param aEnableSandbox Enables a process sandbox if one is available for
+     * this platform/build. Will assert if true passed and one is not available.
      */
-    bool Launch(int32_t timeoutMs);
+    bool Launch(int32_t timeoutMs,
+                bool aEnableSandbox = false);
 
     void Delete();
 
