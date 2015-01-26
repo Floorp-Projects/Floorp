@@ -80,6 +80,7 @@
 #include "nsICancelable.h"
 #include "gfxPrefs.h"
 #include "nsILoginManagerPrompter.h"
+#include "nsPIWindowRoot.h"
 #include <algorithm>
 
 using namespace mozilla::dom;
@@ -321,7 +322,27 @@ TabParent::RemoveTabParentFromTable(uint64_t aLayersId)
 void
 TabParent::SetOwnerElement(Element* aElement)
 {
+  // If we held previous content then unregister for its events.
+  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
+    nsCOMPtr<nsPIDOMWindow> window = mFrameElement->OwnerDoc()->GetWindow();
+    nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
+    if (eventTarget) {
+      eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
+                                       this, false);
+    }
+  }
+
+  // Update to the new content, and register to listen for events from it.
   mFrameElement = aElement;
+  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
+    nsCOMPtr<nsPIDOMWindow> window = mFrameElement->OwnerDoc()->GetWindow();
+    nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
+    if (eventTarget) {
+      eventTarget->AddEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
+                                    this, false, false);
+    }
+  }
+
   TryCacheDPIAndScale();
 }
 
@@ -356,6 +377,8 @@ TabParent::Destroy()
   if (mIsDestroyed) {
     return;
   }
+
+  SetOwnerElement(nullptr);
 
   // If this fails, it's most likely due to a content-process crash,
   // and auto-cleanup will kick in.  Otherwise, the child side will
@@ -898,8 +921,9 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
     mRect = rect;
     mDimensions = size;
     mOrientation = orientation;
+    mChromeDisp = aChromeDisp;
 
-    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, aChromeDisp);
+    unused << SendUpdateDimensions(mRect, mDimensions, mOrientation, mChromeDisp);
   }
 }
 
@@ -2652,6 +2676,27 @@ TabParent::DeallocPPluginWidgetParent(mozilla::plugins::PPluginWidgetParent* aAc
 {
   delete aActor;
   return true;
+}
+
+nsresult
+TabParent::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+
+  if (eventType.EqualsLiteral("MozUpdateWindowPos")) {
+    // This event is sent when the widget moved.  Therefore we only update
+    // the position.
+    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+    if (!frameLoader) {
+      return NS_OK;
+    }
+    nsIntRect windowDims;
+    NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
+    UpdateDimensions(windowDims, mDimensions, mChromeDisp);
+    return NS_OK;
+  }
+  return NS_OK;
 }
 
 class FakeChannel MOZ_FINAL : public nsIChannel,
