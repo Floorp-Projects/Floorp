@@ -23,6 +23,8 @@ loader.lazyRequireGetter(this, "discovery",
   "devtools/toolkit/discovery/discovery");
 loader.lazyRequireGetter(this, "cert",
   "devtools/toolkit/security/cert");
+loader.lazyRequireGetter(this, "Authenticators",
+  "devtools/toolkit/security/auth", true);
 loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 
@@ -275,6 +277,15 @@ SocketListener.prototype = {
   encryption: false,
 
   /**
+   * Controls the |Authenticator| used, which hooks various socket steps to
+   * implement an authentication policy.  It is expected that different use
+   * cases may override pieces of the |Authenticator|.  See auth.js.
+   *
+   * Here we set the default |Authenticator|, which is |Prompt|.
+   */
+  authenticator: new (Authenticators.get().Server)(),
+
+  /**
    * Validate that all options have been set to a supported configuration.
    */
   _validateOptions: function() {
@@ -284,6 +295,7 @@ SocketListener.prototype = {
     if (this.discoverable && !Number(this.portOrPath)) {
       throw new Error("Discovery only supported for TCP sockets.");
     }
+    this.authenticator.validateOptions(this);
   },
 
   /**
@@ -317,17 +329,27 @@ SocketListener.prototype = {
       self._socket.asyncListen(self);
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
     }).then(() => {
-      if (this.discoverable && this.port) {
-        discovery.addService("devtools", {
-          port: this.port,
-          encryption: this.encryption
-        });
-      }
+      this._advertise();
     }).catch(e => {
       dumpn("Could not start debugging listener on '" + this.portOrPath +
             "': " + e);
       this.close();
     });
+  },
+
+  _advertise: function() {
+    if (!this.discoverable || !this.port) {
+      return;
+    }
+
+    let advertisement = {
+      port: this.port,
+      encryption: this.encryption,
+    };
+
+    this.authenticator.augmentAdvertisement(this, advertisement);
+
+    discovery.addService("devtools", advertisement);
   },
 
   _createSocketInstance: function() {
