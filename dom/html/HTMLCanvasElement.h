@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLCanvasElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypedEnum.h"
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -36,11 +35,11 @@ class FileCallback;
 class HTMLCanvasPrintState;
 class PrintCallback;
 
-MOZ_BEGIN_ENUM_CLASS(CanvasContextType, uint8_t)
+enum class CanvasContextType : uint8_t {
   Canvas2D,
   WebGL1,
   WebGL2
-MOZ_END_ENUM_CLASS(CanvasContextType)
+};
 
 class HTMLCanvasElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLCanvasElement

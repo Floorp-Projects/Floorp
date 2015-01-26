@@ -31,7 +31,6 @@
 
 #include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypedEnum.h"
 
 #include <algorithm>
 

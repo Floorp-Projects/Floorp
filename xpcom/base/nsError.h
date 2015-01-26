@@ -8,7 +8,6 @@
 #define nsError_h__
 
 #include "mozilla/Likely.h"
-#include "mozilla/TypedEnum.h"
 
 #include <stdint.h>
 
@@ -122,7 +121,7 @@
  * either can be converted to the other, so it's ambiguous.  So we have to fall
  * back to a regular enum.
  */
-#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
+#if defined(__cplusplus)
   typedef enum class tag_nsresult : uint32_t
   {
     #undef ERROR
@@ -136,14 +135,6 @@
    * #define's for compatibility with old code.
    */
   #include "ErrorListCxxDefines.h"
-#elif defined(__cplusplus)
-  typedef enum tag_nsresult : uint32_t
-  {
-    #undef ERROR
-    #define ERROR(key, val) key = val
-    #include "ErrorList.h"
-    #undef ERROR
-  } nsresult;
 #else
   /*
    * C doesn't have any way to fix the type underlying an enum, and enum
