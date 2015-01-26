@@ -12,15 +12,13 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
-#include "mozilla/Atomics.h"
-#include "gtest/gtest.h"
 
-class Task MOZ_FINAL : public nsIRunnable
+class Task : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit Task(int i) : mIndex(i) {}
+  Task(int i) : mIndex(i) {}
 
   NS_IMETHOD Run()
   {
@@ -28,33 +26,37 @@ public:
     int r = (int) ((float) rand() * 200 / RAND_MAX);
     PR_Sleep(PR_MillisecondsToInterval(r));
     printf("###(%d) exiting from thread: %p\n", mIndex, (void *) PR_GetCurrentThread());
-    ++sCount;
     return NS_OK;
   }
 
-  static mozilla::Atomic<int> sCount;
-
 private:
-  ~Task() {}
-
   int mIndex;
 };
 NS_IMPL_ISUPPORTS(Task, nsIRunnable)
 
-mozilla::Atomic<int> Task::sCount;
-
-TEST(ThreadPool, Main)
+static nsresult
+RunTests()
 {
   nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
-  EXPECT_TRUE(pool);
+  NS_ENSURE_STATE(pool);
 
   for (int i = 0; i < 100; ++i) {
     nsCOMPtr<nsIRunnable> task = new Task(i);
-    EXPECT_TRUE(task);
+    NS_ENSURE_TRUE(task, NS_ERROR_OUT_OF_MEMORY);
 
     pool->Dispatch(task, NS_DISPATCH_NORMAL);
   }
 
   pool->Shutdown();
-  EXPECT_EQ(Task::sCount, 100);
+  return NS_OK;
+}
+
+int
+main(int argc, char **argv)
+{
+  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr)))
+    return -1;
+  RunTests();
+  NS_ShutdownXPCOM(nullptr);
+  return 0;
 }
