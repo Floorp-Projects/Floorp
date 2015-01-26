@@ -7,7 +7,6 @@
 #define mozilla_EventStateManager_h_
 
 #include "mozilla/EventForwards.h"
-#include "mozilla/TypedEnum.h"
 
 #include "nsIObserver.h"
 #include "nsWeakReference.h"

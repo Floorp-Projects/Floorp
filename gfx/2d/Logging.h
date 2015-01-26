@@ -21,7 +21,6 @@
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
-#include "mozilla/TypedEnum.h"
 
 #ifdef WIN32
 // This file gets included from nsGlobalWindow.cpp, which doesn't like
@@ -225,11 +224,11 @@ public:
   NoLog &operator <<(const T &aLogText) { return *this; }
 };
 
-MOZ_BEGIN_ENUM_CLASS(LogOptions, int)
+enum class LogOptions : int {
   NoNewline = 0x01,
   AutoPrefix = 0x02,
   AssertOnCall = 0x04
-MOZ_END_ENUM_CLASS(LogOptions)
+};
 
 template<typename T>
 struct Hexa {

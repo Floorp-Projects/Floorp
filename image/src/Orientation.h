@@ -7,22 +7,21 @@
 #define MOZILLA_IMAGELIB_ORIENTATION_H_
 
 #include <stdint.h>
-#include "mozilla/TypedEnum.h"
 
 namespace mozilla {
 namespace image {
 
-MOZ_BEGIN_ENUM_CLASS(Angle, uint8_t)
+enum class Angle : uint8_t {
   D0,
   D90,
   D180,
   D270
-MOZ_END_ENUM_CLASS(Angle)
+};
 
-MOZ_BEGIN_ENUM_CLASS(Flip, uint8_t)
+enum class Flip : uint8_t {
   Unflipped,
   Horizontal
-MOZ_END_ENUM_CLASS(Flip)
+};
 
 /**
  * A struct that describes an image's orientation as a rotation optionally

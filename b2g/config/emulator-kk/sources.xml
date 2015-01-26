@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e06971db7acf7a35c32eb74d675a4e12e288e6be">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0f662dffef27599443cfcd790c2b39190a2b35c8"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="793773bb2944b42a85dd160049e605cbd880c4da"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e28c4e9ad88b28390120dfd8ada967233f28a98f"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="05baa465f008e92cdf4db74d62f1e3885e3ee73d"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="f92a936f2aa97526d4593386754bdbf02db07a12"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="6e47ff2790f5656b5b074407829ceecf3e6188c4"/>
@@ -77,7 +77,6 @@
   <project name="platform/external/mdnsresponder" path="external/mdnsresponder" revision="dcea77d81cd32b7874b1e26a6474e34917326472"/>
   <project name="platform/external/mksh" path="external/mksh" revision="221fb0e62a39d4cedd6469a048cadb28fbf01a96"/>
   <project name="platform/external/netcat" path="external/netcat" revision="0c2bf20f00ca9d74080a75eda76d0a5550702eaa"/>
-  <project name="platform/external/netperf" path="external/netperf" revision="cee2483ea94dd04a1c7cbd0c3b387ef34119c82b"/>
   <project name="platform/external/openssl" path="external/openssl" revision="aa09f63881e72abb398d301c8c19c56583790c84"/>
   <project name="platform/external/protobuf" path="external/protobuf" revision="fa764bcb74c08acb4143facd9849722570c2f72b"/>
   <project name="platform/external/safe-iop" path="external/safe-iop" revision="f9e8d80a28c31202759760ead2444d2170830b3c"/>

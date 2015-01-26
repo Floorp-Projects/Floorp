@@ -12,19 +12,18 @@
 #include "GLDefs.h"
 
 #include "nsISupports.h"
-#include "mozilla/TypedEnum.h"
 #include "mozilla/gfx/2D.h"
 
 
 namespace mozilla {
 namespace gl {
 
-MOZ_BEGIN_ENUM_CLASS(AndroidWindowFormat)
+enum class AndroidWindowFormat {
   Unknown = -1,
   RGBA_8888 = 1,
   RGBX_8888 = 1 << 1,
   RGB_565 = 1 << 2
-MOZ_END_ENUM_CLASS(AndroidWindowFormat)
+};
 
 /**
  * This class is a wrapper around Android's SurfaceTexture class.

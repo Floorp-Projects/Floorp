@@ -6,11 +6,9 @@
 #ifndef GFX_IMAGETYPES_H
 #define GFX_IMAGETYPES_H
 
-#include "mozilla/TypedEnum.h"
-
 namespace mozilla {
 
-MOZ_BEGIN_ENUM_CLASS(ImageFormat)
+enum class ImageFormat {
   /**
    * The PLANAR_YCBCR format creates a PlanarYCbCrImage. All backends should
    * support this format, because the Ogg video decoder depends on it.
@@ -84,15 +82,15 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
    * The opaque handle would be a platform specific identifier.
    */
   OVERLAY_IMAGE
-MOZ_END_ENUM_CLASS(ImageFormat)
+};
 
-MOZ_BEGIN_ENUM_CLASS(StereoMode)
+enum class StereoMode {
   MONO,
   LEFT_RIGHT,
   RIGHT_LEFT,
   BOTTOM_TOP,
   TOP_BOTTOM
-MOZ_END_ENUM_CLASS(StereoMode)
+};
 
 } // namespace
 
