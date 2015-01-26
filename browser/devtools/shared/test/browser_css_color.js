@@ -2,41 +2,32 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
-
-let origColorUnit;
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const TEST_URI = "data:text/html;charset=utf-8,browser_css_color.js";
 let {colorUtils} = devtools.require("devtools/css-color");
+let origColorUnit;
 
-function test() {
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(init, content);
-  }, true);
-
-  content.location = "data:text/html;charset=utf-8,browser_css_color.js";
-}
-
-function init() {
+add_task(function*() {
+  yield promiseTab("about:blank");
+  let [host, win, doc] = yield createHost("bottom", TEST_URI);
   origColorUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
-  createDocument();
-}
 
-function createDocument()
-{
-  let doc = content.document;
+  info("Creating a test canvas element to test colors");
+  let canvas = createTestCanvas(doc);
+  info("Starting the test");
+  testColorUtils(canvas);
 
+  host.destroy();
+  gBrowser.removeCurrentTab();
+});
+
+function createTestCanvas(doc) {
   let canvas = doc.createElement("canvas");
   canvas.width = canvas.height = 10;
   doc.body.appendChild(canvas);
-
-  testColorUtils();
+  return canvas;
 }
 
-function testColorUtils() {
+function testColorUtils(canvas) {
   let data = getTestData();
 
   for (let {authored, name, hex, hsl, rgb} of data) {
@@ -50,11 +41,11 @@ function testColorUtils() {
     is(color.rgb, rgb, "color.rgb === rgb");
 
     testToString(color, name, hex, hsl, rgb);
-    testColorMatch(name, hex, hsl, rgb, color.rgba);
+    testColorMatch(name, hex, hsl, rgb, color.rgba, canvas);
   }
+
   testProcessCSSString();
   testSetAlpha();
-  finishUp();
 }
 
 function testToString(color, name, hex, hsl, rgb) {
@@ -69,17 +60,14 @@ function testToString(color, name, hex, hsl, rgb) {
 
   switchColorUnit(colorUtils.CssColor.COLORUNIT.rgb);
   is(color.toString(), rgb, "toString() with rgb type");
-
 }
 
 function switchColorUnit(unit) {
   Services.prefs.setCharPref(COLOR_UNIT_PREF, unit);
 }
 
-function testColorMatch(name, hex, hsl, rgb, rgba) {
+function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   let target;
-
-  let canvas = content.document.querySelector("canvas");
   let ctx = canvas.getContext("2d");
 
   let clearCanvas = function() {
@@ -160,12 +148,6 @@ function testSetAlpha() {
   }
 
   is(colorUtils.setAlpha("#fff"), "rgba(255, 255, 255, 1)", "sets alpha to 1 if invalid.");
-}
-
-function finishUp() {
-  Services = colorUtils = Loader = null;
-  gBrowser.removeCurrentTab();
-  finish();
 }
 
 function getTestData() {
