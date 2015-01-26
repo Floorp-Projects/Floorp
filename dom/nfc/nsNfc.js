@@ -456,9 +456,6 @@ MozNFCImpl.prototype = {
       return false;
     }
 
-    this.eventService.addSystemEventListener(this._window, "visibilitychange",
-      this, /* useCapture */false);
-
     let tagImpl = new MozNFCTagImpl(this._window, sessionToken, tagInfo, ndefInfo);
     let tag = this._window.MozNFCTag._create(this._window, tagImpl);
 
@@ -510,12 +507,6 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    // Remove system event listener only when tag and peer are both lost.
-    if (!this.nfcPeer) {
-      this.eventService.removeSystemEventListener(this._window, "visibilitychange",
-        this, /* useCapture */false);
-    }
-
     this.nfcTag.notifyLost();
     this.nfcTag = null;
 
@@ -551,9 +542,6 @@ MozNFCImpl.prototype = {
     if (!this.checkPermissions(perm)) {
       return false;
     }
-
-    this.eventService.addSystemEventListener(this._window, "visibilitychange",
-      this, /* useCapture */false);
 
     let peerImpl = new MozNFCPeerImpl(this._window, sessionToken);
     this.nfcPeer = this._window.MozNFCPeer._create(this._window, peerImpl);
@@ -604,34 +592,12 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    // Remove system event listener only when tag and peer are both lost.
-    if (!this.nfcTag) {
-      this.eventService.removeSystemEventListener(this._window, "visibilitychange",
-        this, /* useCapture */false);
-    }
-
     this.nfcPeer.notifyLost();
     this.nfcPeer = null;
 
     debug("fire onpeerlost");
     let event = new this._window.Event("peerlost");
     this.__DOM_IMPL__.dispatchEvent(event);
-  },
-
-  handleEvent: function handleEvent (event) {
-    if (!this._window.document.hidden) {
-      return;
-    }
-
-    if (this.nfcTag) {
-      debug("handleEvent notifyTagLost");
-      this.notifyTagLost(this.nfcTag.session);
-    }
-
-    if (this.nfcPeer) {
-      debug("handleEvent notifyPeerLost");
-      this.notifyPeerLost(this.nfcPeer.session);
-    }
   },
 
   notifyRFStateChange: function notifyRFStateChange(rfState) {
@@ -661,8 +627,7 @@ MozNFCImpl.prototype = {
   contractID: "@mozilla.org/nfc/manager;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsINfcEventListener,
-                                         Ci.nsIDOMEventListener]),
+                                         Ci.nsINfcEventListener]),
 };
 
 function NFCSendFileWrapper() {
