@@ -4612,7 +4612,9 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
         objectCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
             TypeObjectKey *object = oldArray[i];
-            if (object && !IsAboutToBeFinalized(&object)) {
+            if (!object)
+                continue;
+            if (!IsAboutToBeFinalized(&object)) {
                 TypeObjectKey **pentry =
                     HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                         (zone->types.typeLifoAlloc, objectSet, objectCount, object);
@@ -4625,16 +4627,28 @@ ConstraintTypeSet::sweep(Zone *zone, AutoClearTypeInferenceStateOnOOM &oom)
                     objectCount = 0;
                     break;
                 }
+            } else if (object->isTypeObject() && object->asTypeObject()->unknownProperties()) {
+                // Object sets containing objects with unknown properties might
+                // not be complete. Mark the type set as unknown, which it will
+                // be treated as during Ion compilation.
+                flags |= TYPE_FLAG_ANYOBJECT;
+                clearObjects();
+                objectCount = 0;
+                break;
             }
         }
         setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
         TypeObjectKey *object = (TypeObjectKey *) objectSet;
-        if (IsAboutToBeFinalized(&object)) {
+        if (!IsAboutToBeFinalized(&object)) {
+            objectSet = reinterpret_cast<TypeObjectKey **>(object);
+        } else {
+            // As above, mark type sets containing objects with unknown
+            // properties as unknown.
+            if (object->isTypeObject() && object->asTypeObject()->unknownProperties())
+                flags |= TYPE_FLAG_ANYOBJECT;
             objectSet = nullptr;
             setBaseObjectCount(0);
-        } else {
-            objectSet = reinterpret_cast<TypeObjectKey **>(object);
         }
     }
 
