@@ -6,6 +6,7 @@
 
 "use strict";
 
+let { Ci } = require("chrome");
 let Services = require("Services");
 loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
@@ -97,6 +98,16 @@ Prompt.Server.prototype = {
    * @throws if validation requirements are not met
    */
   validateOptions() {},
+
+  /**
+   * Augment options on the listening socket about to be opened.
+   *
+   * @param listener SocketListener
+   *        The socket listener about to be opened.
+   * @param socket nsIServerSocket
+   *        The socket that is about to start listening.
+   */
+  augmentSocketOptions() {},
 
   /**
    * Augment the service discovery advertisement with any additional data needed
@@ -213,6 +224,19 @@ OOBCert.Server.prototype = {
   },
 
   /**
+   * Augment options on the listening socket about to be opened.
+   *
+   * @param listener SocketListener
+   *        The socket listener about to be opened.
+   * @param socket nsIServerSocket
+   *        The socket that is about to start listening.
+   */
+  augmentSocketOptions(listener, socket) {
+    let requestCert = Ci.nsITLSServerSocket.REQUIRE_ALWAYS;
+    socket.setRequestClientCertificate(requestCert);
+  },
+
+  /**
    * Augment the service discovery advertisement with any additional data needed
    * to support this authentication mode.
    *
@@ -226,9 +250,7 @@ OOBCert.Server.prototype = {
     // Step A.4
     // Server announces itself via service discovery
     // Announcement contains hash(ServerCert) as additional data
-    advertisement.cert = {
-      sha256: listener._socket.serverCert.sha256Fingerprint
-    };
+    advertisement.cert = listener.cert;
   },
 
   /**
