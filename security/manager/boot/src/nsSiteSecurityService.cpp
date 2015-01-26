@@ -279,12 +279,14 @@ nsSiteSecurityService::GetHost(nsIURI* aURI, nsACString& aResult)
 
   nsAutoCString host;
   nsresult rv = innerURI->GetAsciiHost(host);
-
-  if (NS_FAILED(rv) || host.IsEmpty()) {
-    return NS_ERROR_UNEXPECTED;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   aResult.Assign(PublicKeyPinningService::CanonicalizeHostname(host.get()));
+  if (aResult.IsEmpty()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 }
