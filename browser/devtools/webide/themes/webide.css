@@ -295,8 +295,10 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 /* Toolbox */
 
 #notificationbox[toolboxfullscreen] > .devtools-horizontal-splitter,
-#notificationbox[toolboxfullscreen] > #deck {
-  display: none;
+#notificationbox[toolboxfullscreen] > #deck,
+#notificationbox[toolboxfullscreen] > #deck > iframe {
+  min-height: 0;
+  max-height: 0;
 }
 
 #notificationbox[toolboxfullscreen] > #toolbox {
