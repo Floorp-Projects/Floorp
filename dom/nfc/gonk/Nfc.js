@@ -262,10 +262,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
                                     sessionToken: sessionToken });
     },
 
-    onRFStateChange: function onRFStateChange(rfState) {
+    onRFStateChanged: function onRFStateChanged(rfState) {
       for (let id in this.eventListeners) {
         this.notifyDOMEvent(this.eventListeners[id],
-                            { event: NFC.RF_EVENT_STATE_CHANGE,
+                            { event: NFC.RF_EVENT_STATE_CHANGED,
                               rfState: rfState });
       }
     },
@@ -539,7 +539,7 @@ Nfc.prototype = {
 
         if (!message.errorMsg) {
           this.rfState = message.rfState;
-          gMessageManager.onRFStateChange(this.rfState);
+          gMessageManager.onRFStateChanged(this.rfState);
         }
         break;
       case "ReadNDEFResponse": // Fall through.
