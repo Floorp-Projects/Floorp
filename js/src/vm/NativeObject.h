@@ -373,6 +373,8 @@ class NativeObject : public JSObject
 
         static_assert(MAX_FIXED_SLOTS <= Shape::FIXED_SLOTS_MAX,
                       "verify numFixedSlots() bitfield is big enough");
+        static_assert(sizeof(NativeObject) + MAX_FIXED_SLOTS * sizeof(Value) == JSObject::MAX_BYTE_SIZE,
+                      "inconsistent maximum object size");
     }
 
   public:
@@ -409,6 +411,11 @@ class NativeObject : public JSObject
     // object, and only when the object will not require dynamic slots to cover
     // the new properties.
     void setLastPropertyShrinkFixedSlots(Shape *shape);
+
+    // As for setLastProperty(), but changes the class associated with the
+    // object to a non-native one. This leaves the object with a type and shape
+    // that are (temporarily) inconsistent.
+    void setLastPropertyMakeNonNative(Shape *shape);
 
   protected:
 #ifdef DEBUG
