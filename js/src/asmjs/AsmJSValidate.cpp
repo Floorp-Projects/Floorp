@@ -2759,26 +2759,28 @@ class FunctionCompiler
         curBlock_->setSlot(info().localSlot(local.slot), def);
     }
 
-    MDefinition *loadHeap(Scalar::Type vt, MDefinition *ptr, NeedsBoundsCheck chk)
+    MDefinition *loadHeap(Scalar::Type accessType, MDefinition *ptr, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
             return nullptr;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        Label *outOfBoundsLabel = Scalar::isSimdType(vt) ? &m().onOutOfBoundsLabel() : nullptr;
-        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck, outOfBoundsLabel);
+        Label *outOfBoundsLabel = Scalar::isSimdType(accessType) ? &m().onOutOfBoundsLabel() : nullptr;
+        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), accessType, ptr, needsBoundsCheck,
+                                                   outOfBoundsLabel);
         curBlock_->add(load);
         return load;
     }
 
-    void storeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
+    void storeHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
             return;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        Label *outOfBoundsLabel = Scalar::isSimdType(vt) ? &m().onOutOfBoundsLabel() : nullptr;
-        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck, outOfBoundsLabel);
+        Label *outOfBoundsLabel = Scalar::isSimdType(accessType) ? &m().onOutOfBoundsLabel() : nullptr;
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), accessType, ptr, v, needsBoundsCheck,
+                                                      outOfBoundsLabel);
         curBlock_->add(store);
     }
 
@@ -2790,32 +2792,32 @@ class FunctionCompiler
         curBlock_->add(ins);
     }
 
-    MDefinition *atomicLoadHeap(Scalar::Type vt, MDefinition *ptr, NeedsBoundsCheck chk)
+    MDefinition *atomicLoadHeap(Scalar::Type accessType, MDefinition *ptr, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
             return nullptr;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck,
+        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), accessType, ptr, needsBoundsCheck,
                                                    /* outOfBoundsLabel = */ nullptr,
                                                    MembarBeforeLoad, MembarAfterLoad);
         curBlock_->add(load);
         return load;
     }
 
-    void atomicStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
+    void atomicStoreHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
             return;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck,
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), accessType, ptr, v, needsBoundsCheck,
                                                       /* outOfBoundsLabel = */ nullptr,
                                                       MembarBeforeStore, MembarAfterStore);
         curBlock_->add(store);
     }
 
-    MDefinition *atomicCompareExchangeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *oldv,
+    MDefinition *atomicCompareExchangeHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *oldv,
                                            MDefinition *newv, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
@@ -2823,12 +2825,12 @@ class FunctionCompiler
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK;
         MAsmJSCompareExchangeHeap *cas =
-            MAsmJSCompareExchangeHeap::New(alloc(), vt, ptr, oldv, newv, needsBoundsCheck);
+            MAsmJSCompareExchangeHeap::New(alloc(), accessType, ptr, oldv, newv, needsBoundsCheck);
         curBlock_->add(cas);
         return cas;
     }
 
-    MDefinition *atomicBinopHeap(js::jit::AtomicOp op, Scalar::Type vt, MDefinition *ptr,
+    MDefinition *atomicBinopHeap(js::jit::AtomicOp op, Scalar::Type accessType, MDefinition *ptr,
                                  MDefinition *v, NeedsBoundsCheck chk)
     {
         if (inDeadCode())
@@ -2836,7 +2838,7 @@ class FunctionCompiler
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK;
         MAsmJSAtomicBinopHeap *binop =
-            MAsmJSAtomicBinopHeap::New(alloc(), op, vt, ptr, v, needsBoundsCheck);
+            MAsmJSAtomicBinopHeap::New(alloc(), op, accessType, ptr, v, needsBoundsCheck);
         curBlock_->add(binop);
         return binop;
     }

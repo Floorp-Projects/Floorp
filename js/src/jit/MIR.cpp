@@ -3794,7 +3794,7 @@ MAsmJSLoadHeap::mightAlias(const MDefinition *def) const
 {
     if (def->isAsmJSStoreHeap()) {
         const MAsmJSStoreHeap *store = def->toAsmJSStoreHeap();
-        if (store->viewType() != viewType())
+        if (store->accessType() != accessType())
             return true;
         if (!ptr()->isConstant() || !store->ptr()->isConstant())
             return true;
@@ -3810,7 +3810,7 @@ MAsmJSLoadHeap::congruentTo(const MDefinition *ins) const
     if (!ins->isAsmJSLoadHeap())
         return false;
     const MAsmJSLoadHeap *load = ins->toAsmJSLoadHeap();
-    return load->viewType() == viewType() && congruentIfOperandsEqual(load);
+    return load->accessType() == accessType() && congruentIfOperandsEqual(load);
 }
 
 bool
@@ -4066,7 +4066,7 @@ MLoadTypedArrayElementStatic::congruentTo(const MDefinition *ins) const
         return false;
     if (needsBoundsCheck() != other->needsBoundsCheck())
         return false;
-    if (viewType() != other->viewType())
+    if (accessType() != other->accessType())
         return false;
     if (base() != other->base())
         return false;

@@ -8755,7 +8755,7 @@ class MLoadTypedArrayElementStatic
       : MUnaryInstruction(ptr), someTypedArray_(someTypedArray), offset_(offset),
         needsBoundsCheck_(needsBoundsCheck), fallible_(true)
     {
-        int type = viewType();
+        int type = accessType();
         if (type == Scalar::Float32)
             setResultType(MIRType_Float32);
         else if (type == Scalar::Float64)
@@ -8783,7 +8783,7 @@ class MLoadTypedArrayElementStatic
                                                        needsBoundsCheck);
     }
 
-    Scalar::Type viewType() const {
+    Scalar::Type accessType() const {
         return AnyTypedArrayType(someTypedArray_);
     }
     void *base() const;
@@ -8810,7 +8810,7 @@ class MLoadTypedArrayElementStatic
 
     void computeRange(TempAllocator &alloc) MOZ_OVERRIDE;
     bool needTruncation(TruncateKind kind) MOZ_OVERRIDE;
-    bool canProduceFloat32() const MOZ_OVERRIDE { return viewType() == Scalar::Float32; }
+    bool canProduceFloat32() const MOZ_OVERRIDE { return accessType() == Scalar::Float32; }
     void collectRangeInfoPreTrunc() MOZ_OVERRIDE;
 };
 
@@ -8997,12 +8997,12 @@ class MStoreTypedArrayElementStatic :
                                                         offset, needsBoundsCheck);
     }
 
-    Scalar::Type viewType() const {
+    Scalar::Type accessType() const {
         return AnyTypedArrayType(someTypedArray_);
     }
     bool isFloatArray() const {
-        return viewType() == Scalar::Float32 ||
-               viewType() == Scalar::Float64;
+        return accessType() == Scalar::Float32 ||
+               accessType() == Scalar::Float64;
     }
 
     void *base() const;
@@ -9020,7 +9020,7 @@ class MStoreTypedArrayElementStatic :
     TruncateKind operandTruncateKind(size_t index) const MOZ_OVERRIDE;
 
     bool canConsumeFloat32(MUse *use) const MOZ_OVERRIDE {
-        return use == getUseFor(1) && viewType() == Scalar::Float32;
+        return use == getUseFor(1) && accessType() == Scalar::Float32;
     }
     void collectRangeInfoPreTrunc() MOZ_OVERRIDE;
 };
@@ -12147,16 +12147,16 @@ class MAsmJSNeg
 
 class MAsmJSHeapAccess
 {
-    Scalar::Type viewType_;
+    Scalar::Type accessType_;
     bool needsBoundsCheck_;
     Label *outOfBoundsLabel_;
 
   public:
-    MAsmJSHeapAccess(Scalar::Type vt, bool needsBoundsCheck, Label *outOfBoundsLabel = nullptr)
-      : viewType_(vt), needsBoundsCheck_(needsBoundsCheck), outOfBoundsLabel_(outOfBoundsLabel)
+    MAsmJSHeapAccess(Scalar::Type accessType, bool needsBoundsCheck, Label *outOfBoundsLabel = nullptr)
+      : accessType_(accessType), needsBoundsCheck_(needsBoundsCheck), outOfBoundsLabel_(outOfBoundsLabel)
     {}
 
-    Scalar::Type viewType() const { return viewType_; }
+    Scalar::Type accessType() const { return accessType_; }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     Label *outOfBoundsLabel() const { return outOfBoundsLabel_; }
@@ -12170,10 +12170,10 @@ class MAsmJSLoadHeap
     MemoryBarrierBits barrierBefore_;
     MemoryBarrierBits barrierAfter_;
 
-    MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr, bool needsBoundsCheck,
+    MAsmJSLoadHeap(Scalar::Type accessType, MDefinition *ptr, bool needsBoundsCheck,
                    Label *outOfBoundsLabel, MemoryBarrierBits before, MemoryBarrierBits after)
       : MUnaryInstruction(ptr),
-        MAsmJSHeapAccess(vt, needsBoundsCheck, outOfBoundsLabel),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12182,7 +12182,7 @@ class MAsmJSLoadHeap
         else
             setMovable();
 
-        switch (vt) {
+        switch (accessType) {
           case Scalar::Int8:
           case Scalar::Uint8:
           case Scalar::Int16:
@@ -12212,13 +12212,14 @@ class MAsmJSLoadHeap
   public:
     INSTRUCTION_HEADER(AsmJSLoadHeap)
 
-    static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type vt,
+    static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                MDefinition *ptr, bool needsBoundsCheck,
                                Label *outOfBoundsLabel = nullptr,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSLoadHeap(vt, ptr, needsBoundsCheck, outOfBoundsLabel, barrierBefore, barrierAfter);
+        return new(alloc) MAsmJSLoadHeap(accessType, ptr, needsBoundsCheck, outOfBoundsLabel,
+                                         barrierBefore, barrierAfter);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
@@ -12240,10 +12241,10 @@ class MAsmJSStoreHeap
     MemoryBarrierBits barrierBefore_;
     MemoryBarrierBits barrierAfter_;
 
-    MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
+    MAsmJSStoreHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
                     Label *outOfBoundsLabel, MemoryBarrierBits before, MemoryBarrierBits after)
       : MBinaryInstruction(ptr, v),
-        MAsmJSHeapAccess(vt, needsBoundsCheck, outOfBoundsLabel),
+        MAsmJSHeapAccess(accessType, needsBoundsCheck, outOfBoundsLabel),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12254,13 +12255,13 @@ class MAsmJSStoreHeap
   public:
     INSTRUCTION_HEADER(AsmJSStoreHeap)
 
-    static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type vt,
+    static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                 MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
                                 Label *outOfBoundsLabel = nullptr,
                                 MemoryBarrierBits barrierBefore = MembarNobits,
                                 MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSStoreHeap(vt, ptr, v, needsBoundsCheck, outOfBoundsLabel,
+        return new(alloc) MAsmJSStoreHeap(accessType, ptr, v, needsBoundsCheck, outOfBoundsLabel,
                                           barrierBefore, barrierAfter);
     }
 
@@ -12279,10 +12280,10 @@ class MAsmJSCompareExchangeHeap
     public MAsmJSHeapAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSCompareExchangeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *oldv, MDefinition *newv,
-                              bool needsBoundsCheck)
+    MAsmJSCompareExchangeHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *oldv,
+                              MDefinition *newv, bool needsBoundsCheck)
         : MTernaryInstruction(ptr, oldv, newv),
-          MAsmJSHeapAccess(vt, needsBoundsCheck)
+          MAsmJSHeapAccess(accessType, needsBoundsCheck)
     {
         setGuard();             // Not removable
         setResultType(MIRType_Int32);
@@ -12291,11 +12292,11 @@ class MAsmJSCompareExchangeHeap
   public:
     INSTRUCTION_HEADER(AsmJSCompareExchangeHeap)
 
-    static MAsmJSCompareExchangeHeap *New(TempAllocator &alloc, Scalar::Type vt,
+    static MAsmJSCompareExchangeHeap *New(TempAllocator &alloc, Scalar::Type accessType,
                                           MDefinition *ptr, MDefinition *oldv,
                                           MDefinition *newv, bool needsBoundsCheck)
     {
-        return new(alloc) MAsmJSCompareExchangeHeap(vt, ptr, oldv, newv, needsBoundsCheck);
+        return new(alloc) MAsmJSCompareExchangeHeap(accessType, ptr, oldv, newv, needsBoundsCheck);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
@@ -12314,10 +12315,10 @@ class MAsmJSAtomicBinopHeap
 {
     AtomicOp op_;
 
-    MAsmJSAtomicBinopHeap(AtomicOp op, Scalar::Type vt, MDefinition *ptr, MDefinition *v,
+    MAsmJSAtomicBinopHeap(AtomicOp op, Scalar::Type accessType, MDefinition *ptr, MDefinition *v,
                           bool needsBoundsCheck)
         : MBinaryInstruction(ptr, v),
-          MAsmJSHeapAccess(vt, needsBoundsCheck),
+          MAsmJSHeapAccess(accessType, needsBoundsCheck),
           op_(op)
     {
         setGuard();         // Not removable
@@ -12327,10 +12328,10 @@ class MAsmJSAtomicBinopHeap
   public:
     INSTRUCTION_HEADER(AsmJSAtomicBinopHeap)
 
-    static MAsmJSAtomicBinopHeap *New(TempAllocator &alloc, AtomicOp op, Scalar::Type vt,
+    static MAsmJSAtomicBinopHeap *New(TempAllocator &alloc, AtomicOp op, Scalar::Type accessType,
                                       MDefinition *ptr, MDefinition *v, bool needsBoundsCheck)
     {
-        return new(alloc) MAsmJSAtomicBinopHeap(op, vt, ptr, v, needsBoundsCheck);
+        return new(alloc) MAsmJSAtomicBinopHeap(op, accessType, ptr, v, needsBoundsCheck);
     }
 
     AtomicOp operation() const { return op_; }
