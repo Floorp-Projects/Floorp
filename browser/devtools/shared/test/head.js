@@ -5,6 +5,8 @@
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let TargetFactory = devtools.TargetFactory;
+const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
+const {Hosts} = devtools.require("devtools/framework/toolbox-hosts");
 
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
