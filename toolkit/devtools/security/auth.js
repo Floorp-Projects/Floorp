@@ -15,6 +15,8 @@ loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
 loader.lazyRequireGetter(this, "cert",
   "devtools/toolkit/security/cert");
+DevToolsUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
 
 /**
  * A simple enum-like object with keys mirrored to values.
@@ -469,7 +471,7 @@ OOBCert.Server.prototype = {
    * @return An AuthenticationResult value.
    *         A promise that will be resolved to the above is also allowed.
    */
-  authenticate({ client, server, transport }) {
+  authenticate: Task.async(function*({ client, server, transport }) {
     // Step B.3 / C.3
     // TLS connection established, authentication begins
     // TODO: Bug 1032128: Consult a list of persisted, approved clients
@@ -483,12 +485,56 @@ OOBCert.Server.prototype = {
     // Step B.5
     // User is shown a Allow / Deny / Always Allow prompt on the Server
     // with Client name and hash(ClientCert)
-    return this.allowConnection({
+    let result = yield this.allowConnection({
       authentication: this.mode,
       client,
       server
     });
-  },
+
+    switch (result) {
+      case AuthenticationResult.ALLOW_PERSIST:
+        // TODO: Bug 1032128: Persist the client
+      case AuthenticationResult.ALLOW:
+        break; // Further processing
+      default:
+        return result; // Abort for any negative results
+    }
+
+    // Examine additional data for authentication
+    let oob = yield this.receiveOOB();
+    if (!oob) {
+      dumpn("Invalid OOB data received");
+      return AuthenticationResult.DENY;
+    }
+
+    let { sha256, k } = oob;
+    // The OOB auth prompt should have transferred:
+    // hash(ClientCert) + K(random 128-bit number)
+    // from the client.
+    if (!sha256 || !k) {
+      dumpn("Invalid OOB data received");
+      return AuthenticationResult.DENY;
+    }
+
+    // Step B.10
+    // Server verifies that Client's cert matches hash(ClientCert) from
+    // out-of-band channel
+    if (client.cert.sha256 != sha256) {
+      dumpn("Client cert hash doesn't match OOB data");
+      return AuthenticationResult.DENY;
+    }
+
+    // Step B.11
+    // Server sends K to Client over TLS connection
+    transport.send({ authResult: result, k });
+
+    // Client may decide to abort if K does not match.
+    // Server's portion of authentication is now complete.
+
+    // Step B.13
+    // Debugging begins
+    return result;
+  }),
 
   /**
    * Prompt the user to accept or decline the incoming connection. The default
@@ -520,6 +566,17 @@ OOBCert.Server.prototype = {
    *         A promise that will be resolved to the above is also allowed.
    */
   allowConnection: prompt.Server.defaultAllowConnection,
+
+  /**
+   * The user must transfer some data through some out of band mechanism from
+   * the client to the server to authenticate the devices.
+   *
+   * @return An object containing:
+   *         * sha256: hash(ClientCert)
+   *         * k     : K(random 128-bit number)
+   *         A promise that will be resolved to the above is also allowed.
+   */
+  receiveOOB: null, // TODO: Added later in patch series
 
 };
 
