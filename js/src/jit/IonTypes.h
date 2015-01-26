@@ -100,6 +100,10 @@ enum BailoutKind
     Bailout_NonStringInput,
     Bailout_NonSymbolInput,
 
+    // SIMD Unbox expects a given type, bails out if it doesn't match.
+    Bailout_NonSimdInt32x4Input,
+    Bailout_NonSimdFloat32x4Input,
+
     // For the initial snapshot when entering a function.
     Bailout_InitialState,
 
@@ -193,6 +197,10 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonStringInput";
       case Bailout_NonSymbolInput:
         return "Bailout_NonSymbolInput";
+      case Bailout_NonSimdInt32x4Input:
+        return "Bailout_NonSimdInt32x4Input";
+      case Bailout_NonSimdFloat32x4Input:
+        return "Bailout_NonSimdFloat32x4Input";
       case Bailout_InitialState:
         return "Bailout_InitialState";
       case Bailout_Debugger:
