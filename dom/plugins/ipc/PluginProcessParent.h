@@ -50,8 +50,11 @@ public:
      *
      * @param aLaunchCompleteTask Task that is executed on the main
      * thread once the asynchonous launch has completed.
+     * @param aEnableSandbox Enables a process sandbox if one is available for
+     * this platform/build. Will assert if true passed and one is not available.
      */
-    bool Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask = UniquePtr<LaunchCompleteTask>());
+    bool Launch(UniquePtr<LaunchCompleteTask> aLaunchCompleteTask = UniquePtr<LaunchCompleteTask>(),
+                bool aEnableSandbox = false);
 
     void Delete();
 
