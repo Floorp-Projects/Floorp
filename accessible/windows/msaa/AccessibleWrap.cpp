@@ -1141,7 +1141,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::ePlatforms)) {
-    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
+    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %p\n\n",
            eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
            childID, hWnd);
   }
