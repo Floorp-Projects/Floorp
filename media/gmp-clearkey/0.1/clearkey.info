@@ -1,4 +1,4 @@
 Name: clearkey
 Description: ClearKey decrypt-only GMP plugin
 Version: 0.1
-APIs: eme-decrypt-v3[org.w3.clearkey]
+APIs: eme-decrypt-v4[org.w3.clearkey]
