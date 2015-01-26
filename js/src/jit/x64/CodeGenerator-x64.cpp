@@ -258,7 +258,7 @@ void
 CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
     MAsmJSLoadHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+    Scalar::Type vt = mir->accessType();
     const LAllocation *ptr = ins->ptr();
     const LDefinition *out = ins->output();
     Operand srcAddr(HeapReg);
@@ -314,7 +314,7 @@ void
 CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 {
     MAsmJSStoreHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+    Scalar::Type vt = mir->accessType();
     const LAllocation *ptr = ins->ptr();
     Operand dstAddr(HeapReg);
 
@@ -384,7 +384,7 @@ void
 CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
 {
     MAsmJSCompareExchangeHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+    Scalar::Type vt = mir->accessType();
     const LAllocation *ptr = ins->ptr();
 
     MOZ_ASSERT(ptr->isRegister());
@@ -414,14 +414,14 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);
-    masm.append(AsmJSHeapAccess(after, after, mir->viewType(), maybeCmpOffset));
+    masm.append(AsmJSHeapAccess(after, after, mir->accessType(), maybeCmpOffset));
 }
 
 void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
 {
     MAsmJSAtomicBinopHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+    Scalar::Type vt = mir->accessType();
     const LAllocation *ptr = ins->ptr();
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
     const LAllocation* value = ins->value();
@@ -460,7 +460,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);
-    masm.append(AsmJSHeapAccess(after, after, mir->viewType(), maybeCmpOffset));
+    masm.append(AsmJSHeapAccess(after, after, mir->accessType(), maybeCmpOffset));
 }
 
 void
