@@ -39,8 +39,18 @@ PluginProcessParent::~PluginProcessParent()
 }
 
 bool
-PluginProcessParent::Launch(int32_t timeoutMs)
+PluginProcessParent::Launch(int32_t timeoutMs,
+                            bool aEnableSandbox)
 {
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    mEnableNPAPISandbox = aEnableSandbox;
+#else
+    if (aEnableSandbox) {
+        MOZ_ASSERT(false,
+                   "Can't enable an NPAPI process sandbox for platform/build.");
+    }
+#endif
+
     ProcessArchitecture currentArchitecture = base::GetCurrentProcessArchitecture();
     uint32_t containerArchitectures = GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
 
