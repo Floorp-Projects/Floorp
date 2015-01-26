@@ -1201,7 +1201,7 @@ pref("browser.tabs.remote.desktopbehavior", true);
 // To get a different setting for a particular plugin replace "default", with
 // the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
 pref("dom.ipc.plugins.sandbox.default", false);
-pref("dom.ipc.plugins.sandbox.flash", false);
+pref("dom.ipc.plugins.sandbox.flash", true);
 #endif
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
