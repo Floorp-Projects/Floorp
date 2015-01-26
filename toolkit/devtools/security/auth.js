@@ -576,7 +576,7 @@ OOBCert.Server.prototype = {
    *         * k     : K(random 128-bit number)
    *         A promise that will be resolved to the above is also allowed.
    */
-  receiveOOB: null, // TODO: Added later in patch series
+  receiveOOB: prompt.Server.defaultReceiveOOB,
 
 };
 
