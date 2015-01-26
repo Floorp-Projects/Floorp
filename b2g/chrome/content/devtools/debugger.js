@@ -185,7 +185,7 @@ let WiFiRemoteDebugger = {
 
     try {
       debug("Starting WiFi debugger");
-      let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
       let authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = RemoteDebugger.prompt;
       this._listener = DebuggerServer.createListener();
