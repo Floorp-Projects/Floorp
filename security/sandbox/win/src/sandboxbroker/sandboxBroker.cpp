@@ -128,7 +128,7 @@ SandboxBroker::SetSecurityLevelForPluginProcess()
   bool ret = (sandbox::SBOX_ALL_OK == result);
 
   result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_RESTRICTED_SAME_ACCESS);
+                                  sandbox::USER_NON_ADMIN);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_MEDIUM);
