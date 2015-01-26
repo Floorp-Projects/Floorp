@@ -31,8 +31,8 @@ function SimulatorProcess(options) {
   this.options = options;
 
   EventEmitter.decorate(this);
-  this.on("stdout", data => { console.log(data.trim()) });
-  this.on("stderr", data => { console.error(data.trim()) });
+  this.on("stdout", (e, data) => { console.log(data.trim()) });
+  this.on("stderr", (e, data) => { console.error(data.trim()) });
 }
 
 SimulatorProcess.prototype = {
@@ -108,7 +108,7 @@ SimulatorProcess.prototype = {
   kill: function() {
     let deferred = promise.defer();
     if (this.process) {
-      this.once("exit", (exitCode) => {
+      this.once("exit", (e, exitCode) => {
         this.shuttingDown = false;
         deferred.resolve(exitCode);
       });
