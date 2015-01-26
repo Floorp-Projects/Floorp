@@ -4233,6 +4233,74 @@ CodeGenerator::visitSimdBox(LSimdBox *lir)
     }
 }
 
+void
+CodeGenerator::visitSimdUnbox(LSimdUnbox *lir)
+{
+    Register object = ToRegister(lir->input());
+    FloatRegister simd = ToFloatRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+    Label bail;
+
+    // obj->type()
+    masm.loadPtr(Address(object, JSObject::offsetOfType()), temp);
+
+    // Guard that the object has the same representation as the one produced for
+    // SIMD value-type.
+    Address clasp(temp, types::TypeObject::offsetOfClasp());
+    static_assert(!SimdTypeDescr::Opaque, "SIMD objects are transparent");
+    masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&InlineTransparentTypedObject::class_),
+                   &bail);
+
+    // obj->type()->typeDescr()
+    // The previous class pointer comparison implies that the addendumKind is
+    // Addendum_TypeDescr.
+    masm.loadPtr(Address(temp, types::TypeObject::offsetOfAddendum()), temp);
+
+    // Check for the /Kind/ reserved slot of the TypeDescr.  This is an Int32
+    // Value which is equivalent to the object class check.
+    static_assert(JS_DESCR_SLOT_KIND < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
+    Address typeDescrKind(temp, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_KIND));
+    masm.assertTestInt32(Assembler::Equal, typeDescrKind,
+      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_KIND).isInt32())");
+    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrKind), Imm32(js::type::Simd), &bail);
+
+    // Convert the SIMD MIRType to a SimdTypeDescr::Type.
+    js::SimdTypeDescr::Type type;
+    switch (lir->mir()->type()) {
+      case MIRType_Int32x4:
+        type = js::SimdTypeDescr::TYPE_INT32;
+        break;
+      case MIRType_Float32x4:
+        type = js::SimdTypeDescr::TYPE_FLOAT32;
+        break;
+      default:
+        MOZ_CRASH("Unexpected SIMD Type.");
+    }
+
+    // Check if the SimdTypeDescr /Type/ match the specialization of this
+    // MSimdUnbox instruction.
+    static_assert(JS_DESCR_SLOT_TYPE < NativeObject::MAX_FIXED_SLOTS, "Load from fixed slots");
+    Address typeDescrType(temp, NativeObject::getFixedSlotOffset(JS_DESCR_SLOT_TYPE));
+    masm.assertTestInt32(Assembler::Equal, typeDescrType,
+      "MOZ_ASSERT(obj->type()->typeDescr()->getReservedSlot(JS_DESCR_SLOT_TYPE).isInt32())");
+    masm.branch32(Assembler::NotEqual, masm.ToPayload(typeDescrType), Imm32(type), &bail);
+
+    // Load the value from the data of the InlineTypedObject.
+    Address objectData(object, InlineTypedObject::offsetOfDataStart());
+    switch (lir->mir()->type()) {
+      case MIRType_Int32x4:
+        masm.loadUnalignedInt32x4(objectData, simd);
+        break;
+      case MIRType_Float32x4:
+        masm.loadUnalignedFloat32x4(objectData, simd);
+        break;
+      default:
+        MOZ_CRASH("The impossible happened!");
+    }
+
+    bailoutFrom(&bail, lir->snapshot());
+}
+
 typedef js::DeclEnvObject *(*NewDeclEnvObjectFn)(JSContext *, HandleFunction, gc::InitialHeap);
 static const VMFunction NewDeclEnvObjectInfo =
     FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject);

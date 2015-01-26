@@ -266,6 +266,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitRecompileCheck(MRecompileCheck *ins);
     void visitMemoryBarrier(MMemoryBarrier *ins);
     void visitSimdBox(MSimdBox *ins);
+    void visitSimdUnbox(MSimdUnbox *ins);
     void visitSimdExtractElement(MSimdExtractElement *ins);
     void visitSimdInsertElement(MSimdInsertElement *ins);
     void visitSimdSignMask(MSimdSignMask *ins);

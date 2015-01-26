@@ -156,6 +156,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitOutOfLineNewObject(OutOfLineNewObject *ool);
     void visitNewTypedObject(LNewTypedObject *lir);
     void visitSimdBox(LSimdBox *lir);
+    void visitSimdUnbox(LSimdUnbox *lir);
     void visitNewDeclEnvObject(LNewDeclEnvObject *lir);
     void visitNewCallObject(LNewCallObject *lir);
     void visitNewSingletonCallObject(LNewSingletonCallObject *lir);

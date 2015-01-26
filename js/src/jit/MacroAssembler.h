@@ -976,6 +976,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void link(JitCode *code);
 
     void assumeUnreachable(const char *output);
+
+    template<typename T>
+    void assertTestInt32(Condition cond, const T &value, const char *output);
+
     void printf(const char *output);
     void printf(const char *output, Register value);
 
