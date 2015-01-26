@@ -1600,7 +1600,7 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, nsDependentCString& aOut)
     return NS_ERROR_ILLEGAL_VALUE; // end of PDU
   }
 
-  const char* end = static_cast<char*>(memchr(str, '\0', aPDU.GetSize()));
+  const char* end = static_cast<char*>(memchr(str, '\0', aPDU.GetSize() + 1));
   if (NS_WARN_IF(!end)) {
     return NS_ERROR_ILLEGAL_VALUE; // no string terminator
   }
