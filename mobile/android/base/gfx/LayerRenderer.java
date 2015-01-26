@@ -600,6 +600,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
         public void maybeRequestZoomedViewRender(RenderContext context){
             // Concurrently update of mZoomedViewListeners should not be an issue here
+            // because the following line is just a short-circuit
             if (mZoomedViewListeners.size() == 0) {
                 return;
             }
