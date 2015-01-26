@@ -27,7 +27,6 @@
 namespace js {
 
 class TypeDescr;
-class UnboxedLayout;
 
 class TaggedProto
 {
@@ -407,26 +406,23 @@ enum : uint32_t {
     /* Whether objects with this type might have copy on write elements. */
     OBJECT_FLAG_COPY_ON_WRITE         = 0x01000000,
 
-    /* Whether this type has had its 'new' script cleared in the past. */
-    OBJECT_FLAG_NEW_SCRIPT_CLEARED    = 0x02000000,
-
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all other flags in DYNAMIC_MASK will also be set.
      */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x04000000,
+    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x02000000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x07ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x03ff0000,
 
     // Mask/shift for the kind of addendum attached to this type object.
-    OBJECT_FLAG_ADDENDUM_MASK         = 0x38000000,
-    OBJECT_FLAG_ADDENDUM_SHIFT        = 27,
+    OBJECT_FLAG_ADDENDUM_MASK         = 0x0c000000,
+    OBJECT_FLAG_ADDENDUM_SHIFT        = 26,
 
     // Mask/shift for this type object's generation. If out of sync with the
     // TypeZone's generation, this TypeObject hasn't been swept yet.
-    OBJECT_FLAG_GENERATION_MASK       = 0x40000000,
-    OBJECT_FLAG_GENERATION_SHIFT      = 30,
+    OBJECT_FLAG_GENERATION_MASK       = 0x10000000,
+    OBJECT_FLAG_GENERATION_SHIFT      = 28,
 };
 typedef uint32_t TypeObjectFlags;
 
@@ -639,6 +635,7 @@ class HeapTypeSet : public ConstraintTypeSet
   public:
     /* Mark this type set as representing a non-data property. */
     inline void setNonDataProperty(ExclusiveContext *cx);
+    inline void setNonDataPropertyIgnoringConstraints(); // Variant for use during GC.
 
     /* Mark this type set as representing a non-writable property. */
     inline void setNonWritableProperty(ExclusiveContext *cx);
@@ -797,38 +794,6 @@ struct Property
     static jsid getKey(Property *p) { return p->id; }
 };
 
-// For types where only a small number of objects have been allocated, this
-// structure keeps track of all objects with the type in existence. Once
-// COUNT objects have been allocated, this structure is cleared and the objects
-// are analyzed, to perform the new script properties analyses or determine if
-// an unboxed representation can be used.
-class PreliminaryObjectArray
-{
-  public:
-    static const uint32_t COUNT = 20;
-
-  private:
-    // All objects with the type which have been allocated. The pointers in
-    // this array are weak.
-    JSObject *objects[COUNT];
-
-  public:
-    PreliminaryObjectArray() {
-        mozilla::PodZero(this);
-    }
-
-    void registerNewObject(JSObject *res);
-    void unregisterNewObject(JSObject *res);
-
-    JSObject *get(size_t i) const {
-        MOZ_ASSERT(i < COUNT);
-        return objects[i];
-    }
-
-    bool full() const;
-    void sweep();
-};
-
 // New script properties analyses overview.
 //
 // When constructing objects using 'new' on a script, we attempt to determine
@@ -886,18 +851,21 @@ class TypeNewScript
     // Scripted function which this information was computed for.
     // If instances of the associated type object are created without calling
     // 'new' on this function, the new script information is cleared.
-    HeapPtrFunction function_;
+    HeapPtrFunction fun;
 
-    // Any preliminary objects with the type. The analyses are not performed
-    // until this array is cleared.
-    PreliminaryObjectArray *preliminaryObjects;
+    // If fewer than PRELIMINARY_OBJECT_COUNT instances of the type are
+    // created, this array holds pointers to each of those objects. When the
+    // threshold has been reached, the definite and acquired properties
+    // analyses are performed and this array is cleared. The pointers in this
+    // array are weak.
+    static const uint32_t PRELIMINARY_OBJECT_COUNT = 20;
+    PlainObject **preliminaryObjects;
 
     // After the new script properties analyses have been performed, a template
     // object to use for newly constructed objects. The shape of this object
     // reflects all definite properties the object will have, and the
-    // allocation kind to use. This is null if the new objects have an unboxed
-    // layout, in which case the UnboxedLayout provides the initial structure
-    // of the object.
+    // allocation kind to use. Note that this is actually a PlainObject, but is
+    // JSObject here to avoid cyclic include dependencies.
     HeapPtrPlainObject templateObject_;
 
     // Order in which definite properties become initialized. We need this in
@@ -924,7 +892,7 @@ class TypeNewScript
   public:
     TypeNewScript() { mozilla::PodZero(this); }
     ~TypeNewScript() {
-        js_delete(preliminaryObjects);
+        js_free(preliminaryObjects);
         js_free(initializerList);
     }
 
@@ -938,6 +906,7 @@ class TypeNewScript
             MOZ_ASSERT(!initializedType());
             return false;
         }
+        MOZ_ASSERT(templateObject());
         return true;
     }
 
@@ -953,18 +922,15 @@ class TypeNewScript
         return initializedType_;
     }
 
-    JSFunction *function() const {
-        return function_;
-    }
-
     void trace(JSTracer *trc);
     void sweep();
+    void fixupAfterMovingGC();
 
     void registerNewObject(PlainObject *res);
     void unregisterNewObject(PlainObject *res);
     bool maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, bool force = false);
 
-    bool rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type);
+    void rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type);
 
     static void make(JSContext *cx, TypeObject *type, JSFunction *fun);
 
@@ -1015,6 +981,7 @@ struct TypeObject : public gc::TenuredCell
     }
 
     void setClasp(const Class *clasp) {
+        MOZ_ASSERT(singleton());
         clasp_ = clasp;
     }
 
@@ -1062,11 +1029,6 @@ struct TypeObject : public gc::TenuredCell
         // function, the addendum stores a TypeNewScript.
         Addendum_NewScript,
 
-        // When objects with this type have an unboxed representation, the
-        // addendum stores an UnboxedLayout (which might have a TypeNewScript
-        // as well, if the type is also constructed using 'new').
-        Addendum_UnboxedLayout,
-
         // When used by typed objects, the addendum stores a TypeDescr.
         Addendum_TypeDescr
     };
@@ -1075,7 +1037,7 @@ struct TypeObject : public gc::TenuredCell
     // format is indicated by the object's addendum kind.
     void *addendum_;
 
-    void setAddendum(AddendumKind kind, void *addendum, bool writeBarrier = true);
+    void setAddendum(AddendumKind kind, void *addendum);
 
     AddendumKind addendumKind() const {
         return (AddendumKind)
@@ -1083,19 +1045,10 @@ struct TypeObject : public gc::TenuredCell
     }
 
     TypeNewScript *newScriptDontCheckGeneration() const {
-        if (addendumKind() == Addendum_NewScript)
-            return reinterpret_cast<TypeNewScript *>(addendum_);
-        return nullptr;
+        return addendumKind() == Addendum_NewScript
+               ? reinterpret_cast<TypeNewScript *>(addendum_)
+               : nullptr;
     }
-
-    UnboxedLayout *maybeUnboxedLayoutDontCheckGeneration() const {
-        if (addendumKind() == Addendum_UnboxedLayout)
-            return reinterpret_cast<UnboxedLayout *>(addendum_);
-        return nullptr;
-    }
-
-    TypeNewScript *anyNewScript();
-    void detachNewScript(bool writeBarrier);
 
   public:
 
@@ -1121,20 +1074,6 @@ struct TypeObject : public gc::TenuredCell
 
     void setNewScript(TypeNewScript *newScript) {
         setAddendum(Addendum_NewScript, newScript);
-    }
-
-    UnboxedLayout *maybeUnboxedLayout() {
-        maybeSweep(nullptr);
-        return maybeUnboxedLayoutDontCheckGeneration();
-    }
-
-    UnboxedLayout &unboxedLayout() {
-        MOZ_ASSERT(addendumKind() == Addendum_UnboxedLayout);
-        return *maybeUnboxedLayout();
-    }
-
-    void setUnboxedLayout(UnboxedLayout *layout) {
-        setAddendum(Addendum_UnboxedLayout, layout);
     }
 
     TypeDescr *maybeTypeDescr() {
@@ -1176,8 +1115,8 @@ struct TypeObject : public gc::TenuredCell
      * values that can be read out of that property in actual JS objects.
      * In native objects, property types account for plain data properties
      * (those with a slot and no getter or setter hook) and dense elements.
-     * In typed objects and unboxed objects, property types account for object
-     * and value properties and elements in the object.
+     * In typed objects, property types account for object and value properties
+     * and elements in the object.
      *
      * For accesses on these properties, the correspondence is as follows:
      *
@@ -1200,10 +1139,9 @@ struct TypeObject : public gc::TenuredCell
      * 2. Array lengths are special cased by the compiler and VM and are not
      *    reflected in property types.
      *
-     * 3. In typed objects (but not unboxed objects), the initial values of
-     *    properties (null pointers and undefined values) are not reflected in
-     *    the property types. These values are always possible when reading the
-     *    property.
+     * 3. In typed objects, the initial values of properties (null pointers and
+     *    undefined values) are not reflected in the property types. These
+     *    values are always possible when reading the property.
      *
      * We establish these by using write barriers on calls to setProperty and
      * defineProperty which are on native properties, and on any jitcode which
@@ -1301,10 +1239,11 @@ struct TypeObject : public gc::TenuredCell
         flags_ |= generation << OBJECT_FLAG_GENERATION_SHIFT;
     }
 
+    void fixupAfterMovingGC();
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     inline void finalize(FreeOp *fop);
-    void fixupAfterMovingGC() {}
 
     static inline ThingRootKind rootKind() { return THING_ROOT_TYPE_OBJECT; }
 
