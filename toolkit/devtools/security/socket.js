@@ -378,20 +378,7 @@ SocketListener.prototype = {
 
   onSocketAccepted:
   DevToolsUtils.makeInfallible(function(socket, socketTransport) {
-    if (this.encryption) {
-      new SecurityObserver(socketTransport);
-    }
-    if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") &&
-        !this.allowConnection()) {
-      return;
-    }
-    dumpn("New debugging connection on " +
-          socketTransport.host + ":" + socketTransport.port);
-
-    let input = socketTransport.openInputStream(0, 0, 0);
-    let output = socketTransport.openOutputStream(0, 0, 0);
-    let transport = new DebuggerTransport(input, output);
-    DebuggerServer._onConnection(transport);
+    new ServerSocketConnection(this, socketTransport);
   }, "SocketListener.onSocketAccepted"),
 
   onStopListening: function(socket, status) {
@@ -405,25 +392,105 @@ loader.lazyGetter(this, "HANDSHAKE_TIMEOUT", () => {
   return Services.prefs.getIntPref("devtools.remote.tls-handshake-timeout");
 });
 
-function SecurityObserver(socketTransport) {
-  this.socketTransport = socketTransport;
-  let connectionInfo = socketTransport.securityInfo
-                       .QueryInterface(Ci.nsITLSServerConnectionInfo);
-  connectionInfo.setSecurityObserver(this);
-  this._handshakeTimeout = setTimeout(this._onHandshakeTimeout.bind(this),
-                                      HANDSHAKE_TIMEOUT);
+/**
+ * A |ServerSocketConnection| is created by a |SocketListener| for each accepted
+ * incoming socket.  This is a short-lived object used to implement
+ * authentication and verify encryption prior to handing off the connection to
+ * the |DebuggerServer|.
+ */
+function ServerSocketConnection(listener, socketTransport) {
+  this._listener = listener;
+  this._socketTransport = socketTransport;
+  this._handle();
 }
 
-SecurityObserver.prototype = {
+ServerSocketConnection.prototype = {
+
+  get host() {
+    return this._socketTransport.host;
+  },
+
+  get port() {
+    return this._socketTransport.port;
+  },
+
+  get address() {
+    return this.host + ":" + this.port;
+  },
+
+  /**
+   * This is the main authentication workflow.  If any pieces reject a promise,
+   * the connection is denied.  If the entire process resolves successfully,
+   * the connection is finally handed off to the |DebuggerServer|.
+   */
+  _handle() {
+    dumpn("Debugging connection starting authentication on " + this.address);
+    let self = this;
+    Task.spawn(function*() {
+      self._listenForTLSHandshake();
+      self._createTransport();
+      yield self._awaitTLSHandshake();
+      yield self._authenticate();
+    }).then(() => this.allow()).catch(e => this.deny(e));
+  },
+
+  /**
+   * We need to open the streams early on, as that is required in the case of
+   * TLS sockets to keep the handshake moving.
+   */
+  _createTransport() {
+    let input = this._socketTransport.openInputStream(0, 0, 0);
+    let output = this._socketTransport.openOutputStream(0, 0, 0);
+    this._transport = new DebuggerTransport(input, output);
+    // Start up the transport to observe the streams in case they are closed
+    // early.  This allows us to clean up our state as well.
+    this._transport.hooks = {
+      onClosed: reason => {
+        this.deny(reason);
+      }
+    };
+    this._transport.ready();
+  },
+
+  /**
+   * Set the socket's security observer, which receives an event via the
+   * |onHandshakeDone| callback when the TLS handshake completes.
+   */
+  _setSecurityObserver(observer) {
+    let connectionInfo = this._socketTransport.securityInfo
+                         .QueryInterface(Ci.nsITLSServerConnectionInfo);
+    connectionInfo.setSecurityObserver(observer);
+  },
+
+  /**
+   * When encryption is used, we wait for the client to complete the TLS
+   * handshake before proceeding.  The handshake details are validated in
+   * |onHandshakeDone|.
+   */
+  _listenForTLSHandshake() {
+    this._handshakeDeferred = promise.defer();
+    if (!this._listener.encryption) {
+      this._handshakeDeferred.resolve();
+      return;
+    }
+    this._setSecurityObserver(this);
+    this._handshakeTimeout = setTimeout(this._onHandshakeTimeout.bind(this),
+                                        HANDSHAKE_TIMEOUT);
+  },
+
+  _awaitTLSHandshake() {
+    return this._handshakeDeferred.promise;
+  },
 
   _onHandshakeTimeout() {
-    dumpv("Client failed to complete handshake");
-    this.destroy(Cr.NS_ERROR_NET_TIMEOUT);
+    dumpv("Client failed to complete TLS handshake");
+    this._handshakeDeferred.reject(Cr.NS_ERROR_NET_TIMEOUT);
   },
 
   // nsITLSServerSecurityObserver implementation
   onHandshakeDone(socket, clientStatus) {
     clearTimeout(this._handshakeTimeout);
+    this._setSecurityObserver(null);
     dumpv("TLS version:    " + clientStatus.tlsVersionUsed.toString(16));
     dumpv("TLS cipher:     " + clientStatus.cipherName);
     dumpv("TLS key length: " + clientStatus.keyLength);
@@ -432,25 +499,54 @@ SecurityObserver.prototype = {
      * TODO: These rules should be really be set on the TLS socket directly, but
      * this would need more platform work to expose it via XPCOM.
      *
-     * Server *will* send hello packet when any rules below are not met, but the
-     * socket then closes after that.
-     *
      * Enforcing cipher suites here would be a bad idea, as we want TLS
      * cipher negotiation to work correctly.  The server already allows only
      * Gecko's normal set of cipher suites.
      */
     if (clientStatus.tlsVersionUsed != Ci.nsITLSClientStatus.TLS_VERSION_1_2) {
-      this.destroy(Cr.NS_ERROR_CONNECTION_REFUSED);
+      this._handshakeDeferred.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+      return;
     }
+
+    this._handshakeDeferred.resolve();
   },
 
-  destroy(result) {
+  _authenticate() {
+    if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") &&
+        !this._listener.allowConnection()) {
+      return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+    }
+    return promise.resolve();
+  },
+
+  deny(result) {
+    let errorName = result;
+    for (let name in Cr) {
+      if (Cr[name] === result) {
+        errorName = name;
+        break;
+      }
+    }
+    dumpn("Debugging connection denied on " + this.address +
+          " (" + errorName + ")");
+    this._transport.hooks = null;
+    this._transport.close(result);
+    this._socketTransport.close(result);
+    this.destroy();
+  },
+
+  allow() {
+    dumpn("Debugging connection allowed on " + this.address);
+    DebuggerServer._onConnection(this._transport);
+    this.destroy();
+  },
+
+  destroy() {
     clearTimeout(this._handshakeTimeout);
-    let connectionInfo = this.socketTransport.securityInfo
-                         .QueryInterface(Ci.nsITLSServerConnectionInfo);
-    connectionInfo.setSecurityObserver(null);
-    this.socketTransport.close(result);
-    this.socketTransport = null;
+    this._setSecurityObserver(null);
+    this._listener = null;
+    this._socketTransport = null;
+    this._transport = null;
   }
 
 };
