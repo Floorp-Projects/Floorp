@@ -453,7 +453,7 @@ AsmJSModule::setAutoFlushICacheRange()
 static void
 AsmJSReportOverRecursed()
 {
-    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
     js_ReportOverRecursed(cx);
 }
 
@@ -461,14 +461,14 @@ static void
 OnDetached()
 {
     // See hasDetachedHeap comment in LinkAsmJS.
-    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
 }
 
 static bool
 AsmJSHandleExecutionInterrupt()
 {
-    AsmJSActivation *act = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *act = JSRuntime::innermostAsmJSActivation();
     act->module().setInterrupted(true);
     bool ret = CheckForInterrupt(act->cx());
     act->module().setInterrupted(false);
@@ -478,7 +478,7 @@ AsmJSHandleExecutionInterrupt()
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
-    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
 
     int32_t i32;
     if (!ToInt32(cx, val, &i32))
@@ -491,7 +491,7 @@ CoerceInPlace_ToInt32(MutableHandleValue val)
 static int32_t
 CoerceInPlace_ToNumber(MutableHandleValue val)
 {
-    JSContext *cx = PerThreadData::innermostAsmJSActivation()->cx();
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
 
     double dbl;
     if (!ToNumber(cx, val, &dbl))
@@ -570,7 +570,7 @@ InvokeFromAsmJS(AsmJSActivation *activation, int32_t exitIndex, int32_t argc, Va
 static int32_t
 InvokeFromAsmJS_Ignore(int32_t exitIndex, int32_t argc, Value *argv)
 {
-    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *activation = JSRuntime::innermostAsmJSActivation();
     JSContext *cx = activation->cx();
 
     RootedValue rval(cx);
@@ -582,7 +582,7 @@ InvokeFromAsmJS_Ignore(int32_t exitIndex, int32_t argc, Value *argv)
 static int32_t
 InvokeFromAsmJS_ToInt32(int32_t exitIndex, int32_t argc, Value *argv)
 {
-    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *activation = JSRuntime::innermostAsmJSActivation();
     JSContext *cx = activation->cx();
 
     RootedValue rval(cx);
@@ -602,7 +602,7 @@ InvokeFromAsmJS_ToInt32(int32_t exitIndex, int32_t argc, Value *argv)
 static int32_t
 InvokeFromAsmJS_ToNumber(int32_t exitIndex, int32_t argc, Value *argv)
 {
-    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *activation = JSRuntime::innermostAsmJSActivation();
     JSContext *cx = activation->cx();
 
     RootedValue rval(cx);

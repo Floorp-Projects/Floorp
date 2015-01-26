@@ -152,7 +152,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     // Check if we have space on the stack.
     Label stack_ok;
-    void *stack_limit = runtime->mainThread.addressOfJitStackLimit();
+    void *stack_limit = runtime->addressOfJitStackLimit();
     masm.branchPtr(Assembler::Below, AbsoluteAddress(stack_limit), StackPointer, &stack_ok);
 
     // Exit with an exception. There is not enough space on the stack
@@ -262,7 +262,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     }
 
     // Initialize backtrack stack pointer.
-    masm.loadPtr(AbsoluteAddress(runtime->mainThread.regexpStack.addressOfBase()), backtrack_stack_pointer);
+    masm.loadPtr(AbsoluteAddress(runtime->regexpStack.addressOfBase()), backtrack_stack_pointer);
     masm.storePtr(backtrack_stack_pointer, Address(StackPointer, offsetof(FrameData, backtrackStackBase)));
 
     masm.jump(&start_label_);
@@ -422,7 +422,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
         Address backtrackStackBaseAddress(temp2, offsetof(FrameData, backtrackStackBase));
         masm.subPtr(backtrackStackBaseAddress, backtrack_stack_pointer);
 
-        masm.loadPtr(AbsoluteAddress(runtime->mainThread.regexpStack.addressOfBase()), temp1);
+        masm.loadPtr(AbsoluteAddress(runtime->regexpStack.addressOfBase()), temp1);
         masm.storePtr(temp1, backtrackStackBaseAddress);
         masm.addPtr(temp1, backtrack_stack_pointer);
 
@@ -1050,7 +1050,7 @@ NativeRegExpMacroAssembler::CheckBacktrackStackLimit()
 {
     JitSpew(SPEW_PREFIX "CheckBacktrackStackLimit");
 
-    const void *limitAddr = runtime->mainThread.regexpStack.addressOfLimit();
+    const void *limitAddr = runtime->regexpStack.addressOfLimit();
 
     Label no_stack_overflow;
     masm.branchPtr(Assembler::AboveOrEqual, AbsoluteAddress(limitAddr),
