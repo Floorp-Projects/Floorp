@@ -1356,6 +1356,20 @@ MacroAssembler::assumeUnreachable(const char *output)
     breakpoint();
 }
 
+template<typename T>
+void
+MacroAssembler::assertTestInt32(Condition cond, const T &value, const char *output)
+{
+#ifdef DEBUG
+    Label ok;
+    branchTestInt32(cond, value, &ok);
+    assumeUnreachable(output);
+    bind(&ok);
+#endif
+}
+
+template void MacroAssembler::assertTestInt32(Condition, const Address &, const char *);
+
 static void
 Printf0_(const char *output) {
     // Use stderr instead of stdout because this is only used for debug
