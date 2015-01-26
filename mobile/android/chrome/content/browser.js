@@ -4445,8 +4445,7 @@ Tab.prototype = {
       ExternalApps.updatePageActionUri(fixedURI);
     }
 
-    let webNav = BrowserApp.selectedTab.window
-        .QueryInterface(Ci.nsIInterfaceRequestor)
+    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIWebNavigation);
 
     let message = {
