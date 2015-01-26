@@ -315,9 +315,13 @@ DataStoreDB::DatabaseOpened()
     return rv;
   }
 
-  nsRefPtr<IDBTransaction> txn = mDatabase->Transaction(mObjectStores,
-                                                        mTransactionMode,
-                                                        error);
+  StringOrStringSequence objectStores;
+  objectStores.RawSetAsStringSequence().AppendElements(mObjectStores);
+
+  nsRefPtr<IDBTransaction> txn;
+  error = mDatabase->Transaction(objectStores,
+                                 mTransactionMode,
+                                 getter_AddRefs(txn));
   if (NS_WARN_IF(error.Failed())) {
     return error.ErrorCode();
   }

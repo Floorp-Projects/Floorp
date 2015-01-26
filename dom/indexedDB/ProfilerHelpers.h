@@ -125,6 +125,9 @@ public:
       case IDBTransaction::READ_WRITE:
         AppendLiteral("\"readwrite\"");
         break;
+      case IDBTransaction::READ_WRITE_FLUSH:
+        AppendLiteral("\"readwriteflush\"");
+        break;
       case IDBTransaction::VERSION_CHANGE:
         AppendLiteral("\"versionchange\"");
         break;
