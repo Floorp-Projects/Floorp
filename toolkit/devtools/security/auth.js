@@ -6,11 +6,13 @@
 
 "use strict";
 
-let { Ci } = require("chrome");
+let { Ci, Cc } = require("chrome");
 let Services = require("Services");
 let promise = require("promise");
 loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
+loader.lazyRequireGetter(this, "cert",
+  "devtools/toolkit/security/cert");
 
 /**
  * A simple enum-like object with keys mirrored to values.
@@ -243,21 +245,98 @@ OOBCert.Client.prototype = {
    *        The port number of the debugger server.
    * @param encryption boolean (optional)
    *        Whether the server requires encryption.  Defaults to false.
+   * @param cert object (optional)
+   *        The server's cert details.
    * @param transport DebuggerTransport
    *        A transport that can be used to communicate with the server.
    * @return A promise can be used if there is async behavior.
    */
-  authenticate({ transport }) {
+  authenticate({ host, port, cert, transport }) {
     let deferred = promise.defer();
+    let oobData;
+
+    let activeSendDialog;
+    let closeDialog = () => {
+      // Close any prompts the client may have been showing from previous
+      // authentication steps
+      if (activeSendDialog && activeSendDialog.close) {
+        activeSendDialog.close();
+        activeSendDialog = null;
+      }
+    };
+
     transport.hooks = {
-      onPacket(packet) {
+      onPacket: Task.async(function*(packet) {
+        closeDialog();
         let { authResult } = packet;
-        // TODO: Examine the result
+        switch (authResult) {
+          case AuthenticationResult.PENDING:
+            // Step B.8
+            // Client creates hash(ClientCert) + K(random 128-bit number)
+            oobData = yield this._createOOB();
+            activeSendDialog = this.sendOOB({
+              host,
+              port,
+              cert,
+              authResult,
+              oob: oobData
+            });
+            break;
+          default:
+            transport.close(new Error("Invalid auth result: " + authResult));
+            return;
+        }
+      }.bind(this)),
+      onClosed(reason) {
+        closeDialog();
+        // Transport died before auth completed
+        transport.hooks = null;
+        deferred.reject(reason);
       }
     };
     transport.ready();
     return deferred.promise;
   },
+
+  /**
+   * Create the package of data that needs to be transferred across the OOB
+   * channel.
+   */
+  _createOOB: Task.async(function*() {
+    let clientCert = yield cert.local.getOrCreate();
+    return {
+      sha256: clientCert.sha256Fingerprint,
+      k: this._createRandom()
+    };
+  }),
+
+  _createRandom() {
+    const length = 16; // 16 bytes / 128 bits
+    let rng = Cc["@mozilla.org/security/random-generator;1"]
+              .createInstance(Ci.nsIRandomGenerator);
+    let bytes = rng.generateRandomBytes(length);
+    return [for (byte of bytes) byte.toString(16)].join("");
+  },
+
+  /**
+   * Send data across the OOB channel to the server to authenticate the devices.
+   *
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param cert object (optional)
+   *        The server's cert details.
+   * @param authResult AuthenticationResult
+   *        Authentication result sent from the server.
+   * @param oob object (optional)
+   *        The token data to be transferred during OOB_CERT step 8:
+   *        * sha256: hash(ClientCert)
+   *        * k     : K(random 128-bit number)
+   * @return object containing:
+   *         * close: Function to hide the notification
+   */
+  sendOOB: prompt.Client.defaultSendOOB,
 
 };
 

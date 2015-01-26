@@ -6,7 +6,7 @@
 
 "use strict";
 
-let { Ci, Cc, CC, Cr } = require("chrome");
+let { Ci, Cc, CC, Cr, Cu } = require("chrome");
 
 // Ensure PSM is initialized to support TLS sockets
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
@@ -66,11 +66,13 @@ let DebuggerSocket = {};
  * @param authenticator Authenticator (optional)
  *        |Authenticator| instance matching the mode in use by the server.
  *        Defaults to a PROMPT instance if not supplied.
+ * @param cert object (optional)
+ *        The server's cert details.  Used with OOB_CERT authentication.
  * @return promise
  *         Resolved to a DebuggerTransport instance.
  */
 DebuggerSocket.connect = Task.async(function*(settings) {
-  let { host, port, encryption, authenticator } = settings;
+  let { host, port, encryption, authenticator, cert } = settings;
   let transport = yield _getTransport(settings);
 
   // Default to PROMPT |Authenticator| instance if not supplied
@@ -80,6 +82,7 @@ DebuggerSocket.connect = Task.async(function*(settings) {
     host,
     port,
     encryption,
+    cert,
     transport
   });
   return transport;
