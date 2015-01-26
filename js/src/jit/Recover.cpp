@@ -6,6 +6,7 @@
 
 #include "jit/Recover.h"
 
+#include "jsapi.h"
 #include "jscntxt.h"
 #include "jsmath.h"
 #include "jsobj.h"
@@ -1142,12 +1143,11 @@ RTruncateToInt32::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue value(cx, iter.read());
     RootedValue result(cx);
 
-    double in;
-    if (!ToNumber(cx, value, &in))
+    int32_t trunc;
+    if (!JS::ToInt32(cx, value, &trunc))
         return false;
-    int out = ToInt32(in);
 
-    result.setInt32(out);
+    result.setInt32(trunc);
     iter.storeInstructionResult(result);
     return true;
 }
