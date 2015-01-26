@@ -75,7 +75,7 @@ class StackSlotAllocator
     StackSlotAllocator() : height_(0)
     { }
 
-    void freeSlot(LDefinition::Type type, uint32_t index) {
+    static uint32_t width(LDefinition::Type type) {
         switch (type) {
 #if JS_BITS_PER_WORD == 32
           case LDefinition::GENERAL:
@@ -83,7 +83,7 @@ class StackSlotAllocator
           case LDefinition::SLOTS:
 #endif
           case LDefinition::INT32:
-          case LDefinition::FLOAT32:   return freeSlot(index);
+          case LDefinition::FLOAT32:   return 4;
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:
           case LDefinition::OBJECT:
@@ -96,39 +96,29 @@ class StackSlotAllocator
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:
 #endif
-          case LDefinition::DOUBLE:    return freeDoubleSlot(index);
+          case LDefinition::DOUBLE:    return 8;
           case LDefinition::FLOAT32X4:
-          case LDefinition::INT32X4:   return freeQuadSlot(index);
+          case LDefinition::INT32X4:   return 16;
         }
         MOZ_CRASH("Unknown slot type");
     }
 
-    uint32_t allocateSlot(LDefinition::Type type) {
-        switch (type) {
-#if JS_BITS_PER_WORD == 32
-          case LDefinition::GENERAL:
-          case LDefinition::OBJECT:
-          case LDefinition::SLOTS:
-#endif
-          case LDefinition::INT32:
-          case LDefinition::FLOAT32:   return allocateSlot();
-#if JS_BITS_PER_WORD == 64
-          case LDefinition::GENERAL:
-          case LDefinition::OBJECT:
-          case LDefinition::SLOTS:
-#endif
-#ifdef JS_PUNBOX64
-          case LDefinition::BOX:
-#endif
-#ifdef JS_NUNBOX32
-          case LDefinition::TYPE:
-          case LDefinition::PAYLOAD:
-#endif
-          case LDefinition::DOUBLE:    return allocateDoubleSlot();
-          case LDefinition::FLOAT32X4:
-          case LDefinition::INT32X4:   return allocateQuadSlot();
+    void freeSlot(LDefinition::Type type, uint32_t index) {
+        switch (width(type)) {
+          case 4:  return freeSlot(index);
+          case 8:  return freeDoubleSlot(index);
+          case 16: return freeQuadSlot(index);
         }
-        MOZ_CRASH("Unknown slot type");
+        MOZ_CRASH("Unknown slot width");
+    }
+
+    uint32_t allocateSlot(LDefinition::Type type) {
+        switch (width(type)) {
+          case 4:  return allocateSlot();
+          case 8:  return allocateDoubleSlot();
+          case 16: return allocateQuadSlot();
+        }
+        MOZ_CRASH("Unknown slot width");
     }
 
     uint32_t stackHeight() const {
