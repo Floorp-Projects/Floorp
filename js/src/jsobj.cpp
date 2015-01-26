@@ -901,9 +901,6 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
         return DefinePropertyOnArray(cx, arr, id, desc, throwError, rval);
     }
 
-    if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
-        return false;
-
     if (obj->getOps()->lookupGeneric) {
         if (obj->is<ProxyObject>()) {
             Rooted<PropertyDescriptor> pd(cx);
@@ -965,9 +962,6 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
         }
         return true;
     }
-
-    if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
-        return false;
 
     if (obj->getOps()->lookupGeneric) {
         if (obj->is<ProxyObject>()) {
@@ -1497,13 +1491,10 @@ js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
     return NewObjectWithClassProto(cx, newclasp, proto, parent, kind);
 }
 
-static inline JSObject *
+static inline PlainObject *
 CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
                               NewObjectKind newKind)
 {
-    if (type->maybeUnboxedLayout() && newKind != SingletonObject)
-        return UnboxedPlainObject::create(cx, type, newKind);
-
     if (types::TypeNewScript *newScript = type->newScript()) {
         if (newScript->analyzed()) {
             // The definite properties analysis has been performed for this
@@ -1549,14 +1540,14 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
     return NewObjectWithType<PlainObject>(cx, type, parent, allocKind, newKind);
 }
 
-JSObject *
+PlainObject *
 js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject *proto,
                                    NewObjectKind newKind /* = GenericObject */)
 {
-    RootedObject res(cx);
+    RootedPlainObject res(cx);
 
     if (proto) {
-        RootedTypeObject type(cx, cx->getNewType(nullptr, TaggedProto(proto),
+        RootedTypeObject type(cx, cx->getNewType(&PlainObject::class_, TaggedProto(proto),
                                                  &callee->as<JSFunction>()));
         if (!type)
             return nullptr;
@@ -1568,7 +1559,7 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
             if (regenerate) {
                 // The script was analyzed successfully and may have changed
                 // the new type table, so refetch the type.
-                type = cx->getNewType(nullptr, TaggedProto(proto),
+                type = cx->getNewType(&PlainObject::class_, TaggedProto(proto),
                                       &callee->as<JSFunction>());
                 MOZ_ASSERT(type && type->newScript());
             }
@@ -1590,7 +1581,7 @@ js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject 
     return res;
 }
 
-JSObject *
+PlainObject *
 js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newKind)
 {
     RootedValue protov(cx);
@@ -1601,10 +1592,10 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
         proto = &protov.toObject();
     else
         proto = nullptr;
-    JSObject *obj = CreateThisForFunctionWithProto(cx, callee, proto, newKind);
+    PlainObject *obj = CreateThisForFunctionWithProto(cx, callee, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
-        RootedPlainObject nobj(cx, &obj->as<PlainObject>());
+        RootedPlainObject nobj(cx, obj);
 
         /* Reshape the singleton before passing it as the 'this' value. */
         NativeObject::clear(cx, nobj);

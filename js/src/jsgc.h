@@ -192,22 +192,6 @@ GetGCObjectFixedSlotsKind(size_t numFixedSlots)
     return slotsToThingKind[numFixedSlots];
 }
 
-// Get the best kind to use when allocating an object that needs a specific
-// number of bytes.
-static inline AllocKind
-GetGCObjectKindForBytes(size_t nbytes)
-{
-    MOZ_ASSERT(nbytes <= JSObject::MAX_BYTE_SIZE);
-
-    if (nbytes <= sizeof(NativeObject))
-        return FINALIZE_OBJECT0;
-    nbytes -= sizeof(NativeObject);
-
-    size_t dataSlots = AlignBytes(nbytes, sizeof(Value)) / sizeof(Value);
-    MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
-    return GetGCObjectKind(dataSlots);
-}
-
 static inline AllocKind
 GetBackgroundAllocKind(AllocKind kind)
 {

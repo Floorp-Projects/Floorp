@@ -1078,6 +1078,7 @@ NativeObject::rollbackProperties(ExclusiveContext *cx, HandleNativeObject obj, u
             uint32_t slot = obj->lastProperty()->slot();
             if (slot < slotSpan)
                 break;
+            MOZ_ASSERT(obj->getSlot(slot).isUndefined());
         }
         if (!obj->removeProperty(cx, obj->lastProperty()->propid()))
             return false;
