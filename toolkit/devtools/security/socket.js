@@ -149,7 +149,7 @@ let _getTransport = Task.async(function*(settings) {
 let _attemptTransport = Task.async(function*({ host, port, encryption }) {
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
-  let { s, input, output } = _attemptConnect({ host, port, encryption });
+  let { s, input, output } = yield _attemptConnect({ host, port, encryption });
 
   // Check if the input stream is alive.  If encryption is enabled, we need to
   // watch out for cert errors by testing the input stream.
@@ -182,7 +182,7 @@ let _attemptTransport = Task.async(function*({ host, port, encryption }) {
  * @return output nsIAsyncOutputStream
  *         The socket's output stream.
  */
-function _attemptConnect({ host, port, encryption }) {
+let _attemptConnect = Task.async(function*({ host, port, encryption }) {
   let s;
   if (encryption) {
     s = socketTransportService.createTransport(["ssl"], 1, host, port, null);
@@ -194,21 +194,63 @@ function _attemptConnect({ host, port, encryption }) {
   // initializing, the connection is stuck in connecting state for 18.20 hours!
   s.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 2);
 
+  // If encrypting, load the client cert now, so we can deliver it at just the
+  // right time.
+  let clientCert;
+  if (encryption) {
+    clientCert = yield cert.local.getOrCreate();
+  }
+
+  let deferred = promise.defer();
+  let input;
+  let output;
+  // Delay opening the input stream until the transport has fully connected.
+  // The goal is to avoid showing the user a client cert UI prompt when
+  // encryption is used.  This prompt is shown when the client opens the input
+  // stream and does not know which client cert to present to the server.  To
+  // specify a client cert programmatically, we need to access the transport's
+  // nsISSLSocketControl interface, which is not accessible until the transport
+  // has connected.
+  s.setEventSink({
+    onTransportStatus(transport, status) {
+      if (status != Ci.nsISocketTransport.STATUS_CONNECTING_TO) {
+        return;
+      }
+      if (encryption) {
+        let sslSocketControl =
+          transport.securityInfo.QueryInterface(Ci.nsISSLSocketControl);
+        sslSocketControl.clientCert = clientCert;
+      }
+      try {
+        input = s.openInputStream(0, 0, 0);
+      } catch(e) {
+        deferred.reject(e);
+      }
+      deferred.resolve({ s, input, output });
+    }
+  }, Services.tm.currentThread);
+
   // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
   // where the nsISocketTransport gets shutdown in between its instantiation and
   // the call to this method.
-  let input;
-  let output;
   try {
-    input = s.openInputStream(0, 0, 0);
     output = s.openOutputStream(0, 0, 0);
   } catch(e) {
-    DevToolsUtils.reportException("_attemptConnect", e);
-    throw e;
+    deferred.reject(e);
   }
 
-  return { s, input, output };
-}
+  deferred.promise.catch(e => {
+    if (input) {
+      input.close();
+    }
+    if (output) {
+      output.close();
+    }
+    DevToolsUtils.reportException("_attemptConnect", e);
+  });
+
+  return deferred.promise;
+});
 
 /**
  * Check if the input stream is alive.  For an encrypted connection, it may not
@@ -550,6 +592,9 @@ ServerSocketConnection.prototype = {
    * |onHandshakeDone| callback when the TLS handshake completes.
    */
   _setSecurityObserver(observer) {
+    if (!this._socketTransport || !this._socketTransport.securityInfo) {
+      return;
+    }
     let connectionInfo = this._socketTransport.securityInfo
                          .QueryInterface(Ci.nsITLSServerConnectionInfo);
     connectionInfo.setSecurityObserver(observer);
