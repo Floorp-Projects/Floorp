@@ -31,7 +31,7 @@ interface nsITagNDEFInfo : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(b8a6a096-812f-4911-9407-bcae207dce97)]
+[scriptable, uuid(151b4024-0443-434f-99ca-47ec247508ce)]
 interface nsINfcEventListener : nsISupports
 {
   /**
@@ -84,6 +84,14 @@ interface nsINfcEventListener : nsISupports
    *        RF state received from parent process
    */
   void notifyRFStateChanged(in DOMString rfState);
+
+  /**
+   * Callback function used to notify focus changed.
+   *
+   * @param focus
+   *        focus value receveid from parent process.
+   */
+  void notifyFocusChanged(in boolean focus);
 };
 
 [scriptable, uuid(6c913015-9658-46a9-88d9-6ecfda2bd020)]
