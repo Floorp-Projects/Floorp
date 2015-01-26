@@ -2276,6 +2276,7 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     NS_ENSURE_SUCCESS(res, res);
   } else {
     if (HasAudio()) {
+      mAudioRequestStatus = RequestStatus::Pending;
       ReentrantMonitorAutoExit unlock(mDecoder->GetReentrantMonitor());
       mReader->RequestAudioData()->Then(DecodeTaskQueue(), __func__, this,
                                         &MediaDecoderStateMachine::OnAudioDecoded,
@@ -2283,6 +2284,7 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     }
     if (HasVideo()) {
       mVideoDecodeStartTime = TimeStamp::Now();
+      mVideoRequestStatus = RequestStatus::Pending;
       ReentrantMonitorAutoExit unlock(mDecoder->GetReentrantMonitor());
       mReader->RequestVideoData(false, 0)
              ->Then(DecodeTaskQueue(), __func__, this,
