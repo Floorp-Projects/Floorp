@@ -89,7 +89,6 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mGoAwayReason(NO_HTTP_ERROR)
   , mGoAwayID(0)
   , mOutgoingGoAwayID(0)
-  , mMaxConcurrent(kDefaultMaxConcurrent)
   , mConcurrent(0)
   , mServerPushedResources(0)
   , mServerInitialStreamWindow(kDefaultRwin)
@@ -119,7 +118,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   mDecompressor.SetCompressor(&mCompressor);
 
   mPushAllowance = gHttpHandler->SpdyPushAllowance();
-
+  mMaxConcurrent = gHttpHandler->DefaultSpdyConcurrent();
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   SendHello();
 
