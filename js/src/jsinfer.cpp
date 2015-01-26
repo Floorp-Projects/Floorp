@@ -2285,6 +2285,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
         allocationSiteTable = cx->new_<AllocationSiteTable>();
         if (!allocationSiteTable || !allocationSiteTable->init()) {
             js_delete(allocationSiteTable);
+            allocationSiteTable = nullptr;
             return nullptr;
         }
     }
