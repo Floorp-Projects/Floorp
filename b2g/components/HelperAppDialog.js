@@ -33,6 +33,14 @@ HelperAppLauncherDialog.prototype = {
     aLauncher.saveToDisk(null, false);
   },
 
+  promptForSaveToFile: function(aLauncher,
+                                aContext,
+                                aDefaultFile,
+                                aSuggestedFileExt,
+                                aForcePrompt) {
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
+  },
+
   promptForSaveToFileAsync: function(aLauncher,
                                      aContext,
                                      aDefaultFile,
