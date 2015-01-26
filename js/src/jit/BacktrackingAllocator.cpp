@@ -312,6 +312,31 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
 bool
 BacktrackingAllocator::groupAndQueueRegisters()
 {
+    // If there is an OSR block, group parameters in that block with the
+    // corresponding parameters in the initial block.
+    if (MBasicBlock *osr = graph.mir().osrBlock()) {
+        size_t originalVreg = 1;
+        for (LInstructionIterator iter = osr->lir()->begin(); iter != osr->lir()->end(); iter++) {
+            if (iter->isParameter()) {
+                for (size_t i = 0; i < iter->numDefs(); i++) {
+                    DebugOnly<bool> found = false;
+                    uint32_t paramVreg = iter->getDef(i)->virtualRegister();
+                    for (; originalVreg < paramVreg; originalVreg++) {
+                        if (*vregs[originalVreg].def()->output() == *iter->getDef(i)->output()) {
+                            MOZ_ASSERT(vregs[originalVreg].ins()->isParameter());
+                            if (!tryGroupRegisters(originalVreg, paramVreg))
+                                return false;
+                            MOZ_ASSERT(vregs[originalVreg].group() == vregs[paramVreg].group());
+                            found = true;
+                            break;
+                        }
+                    }
+                    MOZ_ASSERT(found);
+                }
+            }
+        }
+    }
+
     // Try to group registers with their reused inputs.
     // Virtual register number 0 is unused.
     MOZ_ASSERT(vregs[0u].numIntervals() == 0);
@@ -354,8 +379,6 @@ BacktrackingAllocator::groupAndQueueRegisters()
         if (!reg.numIntervals())
             continue;
 
-        // Disable this for now; see bugs 906858, 931487, and 932465.
-#if 0
         // Eagerly set the canonical spill slot for registers which are fixed
         // for that slot, and reuse it for other registers in the group.
         LDefinition *def = reg.def();
@@ -364,7 +387,6 @@ BacktrackingAllocator::groupAndQueueRegisters()
             if (reg.group() && reg.group()->spill.isUse())
                 reg.group()->spill = *def->output();
         }
-#endif
 
         // Place all intervals for this register on the allocation queue.
         // During initial queueing use single queue items for groups of
