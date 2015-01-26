@@ -99,9 +99,9 @@ SPSProfiler::enable(bool enabled)
     /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
      * stack.
      */
-    if (rt->mainThread.jitActivation) {
-        void *lastProfilingFrame = GetTopProfilingJitFrame(rt->mainThread.jitTop);
-        rt->mainThread.jitActivation->setLastProfilingFrame(lastProfilingFrame);
+    if (rt->jitActivation) {
+        void *lastProfilingFrame = GetTopProfilingJitFrame(rt->jitTop);
+        rt->jitActivation->setLastProfilingFrame(lastProfilingFrame);
     }
 }
 
