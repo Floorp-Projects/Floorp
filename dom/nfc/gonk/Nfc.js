@@ -101,7 +101,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     eventListeners: {},
 
-    focusApp: null,
+    focusApp: NFC.SYSTEM_APP_ID,
 
     init: function init(nfc) {
       this.nfc = nfc;
@@ -177,11 +177,21 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     },
 
     setFocusApp: function setFocusApp(id, isFocus) {
+      // if calling setNFCFocus(true) on the same browser-element, ignore.
+      if (isFocus && (id == this.focusApp)) {
+        return;
+      }
+
+      if (this.focusApp != NFC.SYSTEM_APP_ID) {
+        this.onFocusChanged(this.focusApp, false);
+      }
+
       if (isFocus) {
         // Now we only support one focus app.
         this.focusApp = id;
+        this.onFocusChanged(this.focusApp, true);
       } else if (this.focusApp == id){
-        // Set focusApp to null means currently there is no foreground app.
+        // Set focusApp to SystemApp means currently there is no foreground app.
         this.focusApp = NFC.SYSTEM_APP_ID;
       }
     },
@@ -268,6 +278,16 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
                             { event: NFC.RF_EVENT_STATE_CHANGED,
                               rfState: rfState });
       }
+    },
+
+    onFocusChanged: function onFocusChanged(focusApp, focus) {
+      let target = this.eventListeners[focusApp];
+      if (!target) {
+        return;
+      }
+
+      this.notifyDOMEvent(target, { event: NFC.FOCUS_CHANGED,
+                                    focus: focus });
     },
 
     /**

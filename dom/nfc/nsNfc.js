@@ -604,6 +604,22 @@ MozNFCImpl.prototype = {
     this._rfState = rfState;
   },
 
+  notifyFocusChanged: function notifyFocusChanged(focus) {
+    if (focus) {
+      return;
+    }
+
+    if (this.nfcTag) {
+      debug("losing focus, call taglost.");
+      this.notifyTagLost(this.nfcTag.session);
+    }
+
+    if (this.nfcPeer) {
+      debug("losing focus, call peerlost.");
+      this.notifyPeerLost(this.nfcPeer.session);
+    }
+  },
+
   checkPermissions: function checkPermissions(perms) {
     let principal = this._window.document.nodePrincipal;
     for (let perm of perms) {
