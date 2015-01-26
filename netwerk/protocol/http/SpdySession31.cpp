@@ -63,7 +63,6 @@ SpdySession31::SpdySession31(nsISocketTransport *aSocketTransport)
   , mCleanShutdown(false)
   , mDataPending(false)
   , mGoAwayID(0)
-  , mMaxConcurrent(kDefaultMaxConcurrent)
   , mConcurrent(0)
   , mServerPushedResources(0)
   , mServerInitialStreamWindow(kDefaultRwin)
@@ -89,7 +88,7 @@ SpdySession31::SpdySession31(nsISocketTransport *aSocketTransport)
   zlibInit();
 
   mPushAllowance = gHttpHandler->SpdyPushAllowance();
-
+  mMaxConcurrent = gHttpHandler->DefaultSpdyConcurrent();
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   GenerateSettings();
 

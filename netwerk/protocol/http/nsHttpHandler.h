@@ -105,6 +105,7 @@ public:
     uint32_t       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
     uint32_t       SpdySendBufferSize()      { return mSpdySendBufferSize; }
     uint32_t       SpdyPushAllowance()       { return mSpdyPushAllowance; }
+    uint32_t       DefaultSpdyConcurrent()   { return mDefaultSpdyConcurrent; }
     PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
     PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
     bool           AllowPush()   { return mAllowPush; }
@@ -487,6 +488,7 @@ private:
     uint32_t       mSpdySendingChunkSize;
     uint32_t       mSpdySendBufferSize;
     uint32_t       mSpdyPushAllowance;
+    uint32_t       mDefaultSpdyConcurrent;
     PRIntervalTime mSpdyPingThreshold;
     PRIntervalTime mSpdyPingTimeout;
 
