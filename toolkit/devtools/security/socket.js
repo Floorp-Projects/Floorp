@@ -72,12 +72,12 @@ let DebuggerSocket = {};
  *         Resolved to a DebuggerTransport instance.
  */
 DebuggerSocket.connect = Task.async(function*(settings) {
+  // Default to PROMPT |Authenticator| instance if not supplied
+  if (!settings.authenticator) {
+    settings.authenticator = new (Authenticators.get().Client)();
+  }
   let { host, port, encryption, authenticator, cert } = settings;
   let transport = yield _getTransport(settings);
-
-  // Default to PROMPT |Authenticator| instance if not supplied
-  authenticator = authenticator || new (Authenticators.get().Client)();
-
   yield authenticator.authenticate({
     host,
     port,
@@ -98,6 +98,11 @@ DebuggerSocket.connect = Task.async(function*(settings) {
  *        The port number of the debugger server.
  * @param encryption boolean (optional)
  *        Whether the server requires encryption.  Defaults to false.
+ * @param authenticator Authenticator
+ *        |Authenticator| instance matching the mode in use by the server.
+ *        Defaults to a PROMPT instance if not supplied.
+ * @param cert object (optional)
+ *        The server's cert details.  Used with OOB_CERT authentication.
  * @return transport DebuggerTransport
  *         A possible DevTools transport (if connection succeeded and streams
  *         are actually alive and working)
@@ -141,6 +146,11 @@ let _getTransport = Task.async(function*(settings) {
  *        The port number of the debugger server.
  * @param encryption boolean (optional)
  *        Whether the server requires encryption.  Defaults to false.
+ * @param authenticator Authenticator
+ *        |Authenticator| instance matching the mode in use by the server.
+ *        Defaults to a PROMPT instance if not supplied.
+ * @param cert object (optional)
+ *        The server's cert details.  Used with OOB_CERT authentication.
  * @return transport DebuggerTransport
  *         A possible DevTools transport (if connection succeeded and streams
  *         are actually alive and working)
@@ -149,15 +159,26 @@ let _getTransport = Task.async(function*(settings) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-let _attemptTransport = Task.async(function*({ host, port, encryption }) {
+let _attemptTransport = Task.async(function*(settings) {
+  let { authenticator } = settings;
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
-  let { s, input, output } = yield _attemptConnect({ host, port, encryption });
+  let { s, input, output } = yield _attemptConnect(settings);
 
   // Check if the input stream is alive.  If encryption is enabled, we need to
   // watch out for cert errors by testing the input stream.
   let { alive, certError } = yield _isInputAlive(input);
   dumpv("Server cert accepted? " + !certError);
+
+  // The |Authenticator| examines the connection as well and may determine it
+  // should be dropped.
+  alive = alive && authenticator.validateConnection({
+    host: settings.host,
+    port: settings.port,
+    encryption: settings.encryption,
+    cert: settings.cert,
+    socket: s
+  });
 
   let transport;
   if (alive) {
