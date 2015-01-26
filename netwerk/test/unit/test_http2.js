@@ -15,6 +15,7 @@ function generateContent(size) {
 var posts = [];
 posts.push(generateContent(10));
 posts.push(generateContent(250000));
+posts.push(generateContent(128000));
 
 // pre-calculated md5sums (in hex) of the above posts
 var md5s = ['f1b708bba17f1ce948dc979f4d7092bc',
@@ -277,11 +278,20 @@ var Http2ConcurrentListener = function() {};
 Http2ConcurrentListener.prototype = new Http2CheckListener();
 Http2ConcurrentListener.prototype.count = 0;
 Http2ConcurrentListener.prototype.target = 0;
+Http2ConcurrentListener.prototype.reset = 0;
+Http2ConcurrentListener.prototype.recvdHdr = 0;
 
 Http2ConcurrentListener.prototype.onStopRequest = function(request, ctx, status) {
   this.count++;
   do_check_true(this.isHttp2Connection);
+  if (this.recvdHdr > 0) {
+    do_check_eq(request.getResponseHeader("X-Recvd"), this.recvdHdr);
+  }
+
   if (this.count == this.target) {
+    if (this.reset > 0) {
+      prefs.setIntPref("network.http.spdy.default-concurrent", this.reset);
+    }
     run_next_test();
     do_test_finished();
   }
@@ -290,9 +300,32 @@ Http2ConcurrentListener.prototype.onStopRequest = function(request, ctx, status)
 function test_http2_concurrent() {
   var concurrent_listener = new Http2ConcurrentListener();
   concurrent_listener.target = 201;
+  concurrent_listener.reset = prefs.getIntPref("network.http.spdy.default-concurrent");
+  prefs.setIntPref("network.http.spdy.default-concurrent", 100);
+
   for (var i = 0; i < concurrent_listener.target; i++) {
     concurrent_channels[i] = makeChan("https://localhost:" + serverPort + "/750ms");
     concurrent_channels[i].loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    concurrent_channels[i].asyncOpen(concurrent_listener, null);
+  }
+}
+
+function test_http2_concurrent_post() {
+  var concurrent_listener = new Http2ConcurrentListener();
+  concurrent_listener.target = 8;
+  concurrent_listener.recvdHdr = posts[2].length;
+  concurrent_listener.reset = prefs.getIntPref("network.http.spdy.default-concurrent");
+  prefs.setIntPref("network.http.spdy.default-concurrent", 3);
+
+  for (var i = 0; i < concurrent_listener.target; i++) {
+    concurrent_channels[i] = makeChan("https://localhost:" + serverPort + "/750msPost");
+    concurrent_channels[i].loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    var stream = Cc["@mozilla.org/io/string-input-stream;1"]
+               .createInstance(Ci.nsIStringInputStream);
+    stream.data = posts[2];
+    var uchan = concurrent_channels[i].QueryInterface(Ci.nsIUploadChannel);
+    uchan.setUploadStream(stream, "text/plain", stream.available());
+    concurrent_channels[i].requestMethod = "POST";
     concurrent_channels[i].asyncOpen(concurrent_listener, null);
   }
 }
@@ -625,6 +658,7 @@ function test_complete() {
 var tests = [ test_http2_post_big
             , test_http2_basic
             , test_http2_concurrent
+            , test_http2_concurrent_post
             , test_http2_basic_unblocked_dep
             , test_http2_nospdy
             , test_http2_push1
