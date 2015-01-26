@@ -12,6 +12,8 @@ namespace mp4_demuxer {
 
 BufferStream::BufferStream()
   : mStartOffset(0)
+  , mLogicalLength(0)
+  , mStartIndex(0)
 {
 }
 
@@ -19,12 +21,33 @@ BufferStream::BufferStream()
 BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,
                      size_t* aBytesRead)
 {
-  if (aOffset < mStartOffset || aOffset > mStartOffset + mData.Length()) {
+  if (aOffset < (mStartOffset + mStartIndex) ||
+      mData.IsEmpty() ||
+      aOffset > mStartOffset + mData.LastElement()->Length()) {
     return false;
   }
   *aBytesRead =
     std::min(aLength, size_t(mStartOffset + mData.Length() - aOffset));
   memcpy(aData, &mData[aOffset - mStartOffset], *aBytesRead);
+
+  aOffset -= mStartOffset;
+  size_t index = mStartIndex;
+  *aBytesRead = 0;
+
+  uint8_t* dest = (uint8_t*)aData;
+
+  for (uint32_t i = 0; i < mData.Length() && aLength; i++) {
+    ResourceItem* item = mData[i];
+    if (aOffset >= index && aOffset < item->Length()) {
+      size_t count = std::min(item->Length() - aOffset, (uint64_t)aLength);
+      *aBytesRead += count;
+      memcpy(dest, &item->mData[aOffset], count);
+      dest += count;
+      aLength -= count;
+    }
+    aOffset -= item->Length();
+    index = 0;
+  }
   return true;
 }
 
@@ -38,28 +61,36 @@ BufferStream::CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
 /*virtual*/ bool
 BufferStream::Length(int64_t* aLength)
 {
-  *aLength = mStartOffset + mData.Length();
+  *aLength = mLogicalLength;
   return true;
 }
 
 /* virtual */ void
 BufferStream::DiscardBefore(int64_t aOffset)
 {
-  if (aOffset > mStartOffset) {
-    mData.RemoveElementsAt(0, aOffset - mStartOffset);
-    mStartOffset = aOffset;
+  while (!mData.IsEmpty() &&
+         mStartOffset + mData[0]->mData.Length() <= aOffset) {
+    mStartOffset += mData[0]->mData.Length();
+    mData.RemoveElementAt(0);
   }
+  mStartIndex = aOffset - mStartOffset;
 }
 
 void
 BufferStream::AppendBytes(const uint8_t* aData, size_t aLength)
 {
-  mData.AppendElements(aData, aLength);
+  mData.AppendElement(new ResourceItem(aData, aLength));
+}
+
+void
+BufferStream::AppendData(ResourceItem* aItem)
+{
+  mData.AppendElement(aItem);
 }
 
 MediaByteRange
 BufferStream::GetByteRange()
 {
-  return MediaByteRange(mStartOffset, mStartOffset + mData.Length());
+  return MediaByteRange(mStartOffset + mStartIndex, mLogicalLength);
 }
 }
