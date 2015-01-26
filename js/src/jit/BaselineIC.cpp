@@ -14,6 +14,7 @@
 #include "jstypes.h"
 
 #include "builtin/Eval.h"
+#include "builtin/SIMD.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineHelpers.h"
 #include "jit/BaselineJIT.h"
@@ -8912,6 +8913,14 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
         RootedObject proto(cx, args[0].toObjectOrNull());
         res.set(ObjectCreateImpl(cx, proto, TenuredObject));
+        if (!res)
+            return false;
+        return true;
+    }
+
+    if (native == js::simd_int32x4_add) {
+        Rooted<TypeDescr *> descr(cx, &Int32x4::GetTypeDescr(*cx->global()));
+        res.set(TypedObject::createZeroed(cx, descr, 0, gc::TenuredHeap));
         if (!res)
             return false;
         return true;
