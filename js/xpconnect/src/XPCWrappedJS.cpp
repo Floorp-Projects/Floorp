@@ -8,10 +8,10 @@
 
 #include "xpcprivate.h"
 #include "jsprf.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
-#include "JavaScriptParent.h"
 
 using namespace mozilla;
 
