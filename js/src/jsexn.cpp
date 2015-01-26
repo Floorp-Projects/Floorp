@@ -663,7 +663,7 @@ ErrorReport::~ErrorReport()
     js_free(ownedMessage);
     if (ownedReport.messageArgs) {
         /*
-         * ExpandErrorArguments owns its messageArgs only if it had to
+         * ExpandErrorArgumentsVA owns its messageArgs only if it had to
          * inflate the arguments (from regular |char*|s), which is always in
          * our case.
          */
@@ -869,9 +869,9 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
         ownedReport.isMuted = iter.mutedErrors();
     }
 
-    if (!ExpandErrorArguments(cx, GetErrorMessage, nullptr,
-                              JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
-                              &ownedReport, ArgumentsAreASCII, ap)) {
+    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr,
+                                JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
+                                &ownedReport, ArgumentsAreASCII, ap)) {
         return false;
     }
 

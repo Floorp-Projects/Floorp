@@ -641,8 +641,8 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
 
     err.argumentsType = (flags & JSREPORT_UC) ? ArgumentsAreUnicode : ArgumentsAreASCII;
 
-    if (!ExpandErrorArguments(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
-                              &err.report, err.argumentsType, args))
+    if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
+                                &err.report, err.argumentsType, args))
     {
         return false;
     }
