@@ -12,13 +12,15 @@ var prev;
 var ctx;
 
 // Current test state.
-var garbagePerFrame = undefined;
-var garbageTotal = undefined;
 var activeTest = undefined;
 var testDuration = undefined; // ms
 var testState = 'idle';  // One of 'idle' or 'running'.
 var testStart = undefined; // ms
 var testQueue = [];
+
+// Global defaults
+var globalDefaultGarbageTotal = "8M";
+var globalDefaultGarbagePerFrame = "8K";
 
 function xpos(index)
 {
@@ -87,7 +89,7 @@ function drawGraph()
 
     ctx.fillStyle = 'rgb(255,0,0)';
     if (worst)
-        ctx.fillText(''+worst+'ms', xpos(worstpos) - 10, ypos(worst) - 14);
+        ctx.fillText(''+worst.toFixed(2)+'ms', xpos(worstpos) - 10, ypos(worst) - 14);
 
     ctx.beginPath();
     var where = sampleIndex % numSamples;
@@ -124,7 +126,10 @@ function handler(timestamp)
     if (testState === 'running' && (timestamp - testStart) > testDuration)
         end_test(timestamp);
 
-    activeTest.makeGarbage(garbagePerFrame);
+    if (testState == 'running')
+        document.getElementById("test-progress").textContent = ((testDuration - (timestamp - testStart))/1000).toFixed(1) + " sec";
+
+    activeTest.makeGarbage(activeTest.garbagePerFrame);
 
     var elt = document.getElementById('data');
     var delay = timestamp - prev;
@@ -187,8 +192,7 @@ function onload()
     }
 
     // Load the initial test.
-    activeTest = tests.get('noAllocation');
-    activeTest.load(garbageTotal);
+    change_active_test('noAllocation');
 
     // Polyfill rAF.
     var requestAnimationFrame =
@@ -225,19 +229,25 @@ function start_test_cycle(tests_to_run)
     testStart = performance.now();
     gHistogram.clear();
 
-    change_active_test(testQueue.pop());
-    console.log(`Running test: ${activeTest.name}`);
+    start_test(testQueue.shift());
     reset_draw_state();
+}
+
+function start_test(testName)
+{
+    change_active_test(testName);
+    console.log(`Running test: ${testName}`);
+    document.getElementById("test-selection").value = testName;
 }
 
 function end_test(timestamp)
 {
+    document.getElementById("test-progress").textContent = "(not running)";
     report_test_result(activeTest, gHistogram);
     gHistogram.clear();
     console.log(`Ending test ${activeTest.name}`);
     if (testQueue.length) {
-        change_active_test(testQueue.pop());
-        console.log(`Running test: ${activeTest.name}`);
+        start_test(testQueue.shift());
         testStart = timestamp;
     } else {
         testState = 'idle';
@@ -252,7 +262,8 @@ function report_test_result(test, histogram)
     var resultElem = document.createElement("div");
     var score = compute_test_score(histogram);
     var sparks = compute_test_spark_histogram(histogram);
-    resultElem.innerHTML = `${score} ms/s : ${sparks} : ${test.name} - ${test.description}`;
+    var params = `(${format_units(test.garbagePerFrame)},${format_units(test.garbageTotal)})`;
+    resultElem.innerHTML = `${score.toFixed(3)} ms/s : ${sparks} : ${test.name}${params} - ${test.description}`;
     resultList.appendChild(resultElem);
 }
 
@@ -311,14 +322,24 @@ function compute_test_spark_histogram(histogram)
 function reload_active_test()
 {
     activeTest.unload();
-    activeTest.load(garbageTotal);
+    activeTest.load(activeTest.garbageTotal);
 }
 
 function change_active_test(new_test_name)
 {
-    activeTest.unload();
+    if (activeTest)
+        activeTest.unload();
     activeTest = tests.get(new_test_name);
-    activeTest.load(garbageTotal);
+
+    if (!activeTest.garbagePerFrame)
+        activeTest.garbagePerFrame = activeTest.defaultGarbagePerFrame || globalDefaultGarbagePerFrame;
+    if (!activeTest.garbageTotal)
+        activeTest.garbageTotal = activeTest.defaultGarbageTotal || globalDefaultGarbageTotal;
+
+    document.getElementById("garbage-per-frame").value = format_units(activeTest.garbagePerFrame);
+    document.getElementById("garbage-total").value = format_units(activeTest.garbageTotal);
+
+    activeTest.load(activeTest.garbageTotal);
 }
 
 function duration_changed()
@@ -328,7 +349,7 @@ function duration_changed()
     console.log(`Updated test duration to: ${testDuration / 1000} seconds`);
 }
 
-function testchanged()
+function test_changed()
 {
     var select = document.getElementById("test-selection");
     console.log(`Switching to test: ${select.value}`);
@@ -354,15 +375,29 @@ function parse_units(v)
     return NaN;
 }
 
+function format_units(n)
+{
+    n = String(n);
+    if (n.length > 9 && n.substr(-9) == "000000000")
+        return n.substr(0, n.length - 9) + "G";
+    else if (n.length > 9 && n.substr(-6) == "000000")
+        return n.substr(0, n.length - 6) + "M";
+    else if (n.length > 3 && n.substr(-3) == "000")
+        return n.substr(0, n.length - 3) + "K";
+    else
+        return String(n);
+}
+
 function garbage_total_changed()
 {
     var value = parse_units(document.getElementById('garbage-total').value);
     if (isNaN(value))
         return;
-    garbageTotal = value;
-    console.log(`Updated garbage-total to ${garbageTotal} items`);
-    if (activeTest)
+    if (activeTest) {
+        activeTest.garbageTotal = value;
+        console.log(`Updated garbage-total to ${activeTest.garbageTotal} items`);
         reload_active_test();
+    }
     gHistogram.clear();
     reset_draw_state();
 }
@@ -372,6 +407,8 @@ function garbage_per_frame_changed()
     var value = parse_units(document.getElementById('garbage-per-frame').value);
     if (isNaN(value))
         return;
-    garbagePerFrame = value;
-    console.log(`Updated garbage-per-frame to ${garbagePerFrame} items`);
+    if (activeTest) {
+        activeTest.garbagePerFrame = value;
+        console.log(`Updated garbage-per-frame to ${activeTest.garbagePerFrame} items`);
+    }
 }
