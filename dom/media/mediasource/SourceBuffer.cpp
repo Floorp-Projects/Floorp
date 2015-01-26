@@ -7,6 +7,7 @@
 #include "SourceBuffer.h"
 
 #include "AsyncEventRunner.h"
+#include "MediaData.h"
 #include "MediaSourceUtils.h"
 #include "TrackBuffer.h"
 #include "mozilla/ErrorResult.h"
@@ -44,27 +45,24 @@ namespace dom {
 class AppendDataRunnable : public nsRunnable {
 public:
   AppendDataRunnable(SourceBuffer* aSourceBuffer,
-                     const uint8_t* aData,
-                     uint32_t aLength,
+                     LargeDataBuffer* aData,
                      double aTimestampOffset)
   : mSourceBuffer(aSourceBuffer)
+  , mData(aData)
   , mTimestampOffset(aTimestampOffset)
   {
-    mData.AppendElements(aData, aLength);
   }
 
   NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
 
-    mSourceBuffer->AppendData(mData.Elements(),
-                              mData.Length(),
-                              mTimestampOffset);
+    mSourceBuffer->AppendData(mData, mTimestampOffset);
 
     return NS_OK;
   }
 
 private:
   nsRefPtr<SourceBuffer> mSourceBuffer;
-  nsTArray<uint8_t> mData;
+  nsRefPtr<LargeDataBuffer> mData;
   double mTimestampOffset;
 };
 
@@ -410,7 +408,9 @@ void
 SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
   MSE_DEBUG("SourceBuffer(%p)::AppendData(aLength=%u)", this, aLength);
-  if (!PrepareAppend(aRv)) {
+
+  nsRefPtr<LargeDataBuffer> data = PrepareAppend(aData, aLength, aRv);
+  if (!data) {
     return;
   }
   StartUpdating();
@@ -418,12 +418,12 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   MOZ_ASSERT(mAppendMode == SourceBufferAppendMode::Segments,
              "We don't handle timestampOffset for sequence mode yet");
   nsRefPtr<nsIRunnable> task =
-    new AppendDataRunnable(this, aData, aLength, mTimestampOffset);
+    new AppendDataRunnable(this, data, mTimestampOffset);
   NS_DispatchToMainThread(task);
 }
 
 void
-SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, double aTimestampOffset)
+SourceBuffer::AppendData(LargeDataBuffer* aData, double aTimestampOffset)
 {
   if (!mUpdating) {
     // The buffer append algorithm has been interrupted by abort().
@@ -437,8 +437,8 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, double aTimesta
 
   MOZ_ASSERT(mMediaSource);
 
-  if (aLength) {
-    if (!mTrackBuffer->AppendData(aData, aLength, aTimestampOffset * USECS_PER_S)) {
+  if (aData->Length()) {
+    if (!mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)) {
       AppendError(true);
       return;
     }
@@ -476,12 +476,12 @@ SourceBuffer::AppendError(bool aDecoderError)
   }
 }
 
-bool
-SourceBuffer::PrepareAppend(ErrorResult& aRv)
+already_AddRefed<LargeDataBuffer>
+SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
+    return nullptr;
   }
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
@@ -496,9 +496,13 @@ SourceBuffer::PrepareAppend(ErrorResult& aRv)
   // TODO: Drive evictions off memory pressure notifications.
   // TODO: Consider a global eviction threshold  rather than per TrackBuffer.
   double newBufferStartTime = 0.0;
+  // Attempt to evict the amount of data we are about to add by lowering the
+  // threshold.
+  uint32_t toEvict =
+    (mEvictionThreshold > aLength) ? mEvictionThreshold - aLength : aLength;
   bool evicted =
     mTrackBuffer->EvictData(mMediaSource->GetDecoder()->GetCurrentTime(),
-                            mEvictionThreshold, &newBufferStartTime);
+                            toEvict, &newBufferStartTime);
   if (evicted) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData Evict; current buffered start=%f",
               this, GetBufferedStart());
@@ -508,8 +512,13 @@ SourceBuffer::PrepareAppend(ErrorResult& aRv)
     mMediaSource->NotifyEvicted(0.0, newBufferStartTime);
   }
 
+  nsRefPtr<LargeDataBuffer> data = new LargeDataBuffer();
+  if (!data->AppendElements(aData, aLength)) {
+    aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+    return nullptr;
+  }
   // TODO: Test buffer full flag.
-  return true;
+  return data.forget();
 }
 
 double

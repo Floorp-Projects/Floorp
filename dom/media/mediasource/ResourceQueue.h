@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include "nsDeque.h"
-#include "nsTArray.h"
+#include "MediaData.h"
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -36,8 +36,9 @@ namespace mozilla {
 // timepoint.
 
 struct ResourceItem {
-  ResourceItem(const uint8_t* aData, uint32_t aSize) {
-    mData.AppendElements(aData, aSize);
+  explicit ResourceItem(LargeDataBuffer* aData)
+  : mData(aData)
+  {
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -45,12 +46,12 @@ struct ResourceItem {
     size_t size = aMallocSizeOf(this);
 
     // size excluding this
-    size += mData.SizeOfExcludingThis(aMallocSizeOf);
+    size += mData->SizeOfExcludingThis(aMallocSizeOf);
 
     return size;
   }
 
-  nsTArray<uint8_t> mData;
+  nsRefPtr<LargeDataBuffer> mData;
 };
 
 class ResourceQueueDeallocator : public nsDequeFunctor {
@@ -87,9 +88,9 @@ public:
     uint32_t end = std::min(GetAtOffset(aOffset + aCount, nullptr) + 1, uint32_t(GetSize()));
     for (uint32_t i = start; i < end; ++i) {
       ResourceItem* item = ResourceAt(i);
-      uint32_t bytes = std::min(aCount, uint32_t(item->mData.Length() - offset));
+      uint32_t bytes = std::min(aCount, uint32_t(item->mData->Length() - offset));
       if (bytes != 0) {
-        memcpy(aDest, &item->mData[offset], bytes);
+        memcpy(aDest, &(*item->mData)[offset], bytes);
         offset = 0;
         aCount -= bytes;
         aDest += bytes;
@@ -97,9 +98,9 @@ public:
     }
   }
 
-  void AppendItem(const uint8_t* aData, uint32_t aLength) {
-    mLogicalLength += aLength;
-    Push(new ResourceItem(aData, aLength));
+  void AppendItem(LargeDataBuffer* aData) {
+    mLogicalLength += aData->Length();
+    Push(new ResourceItem(aData));
   }
 
   // Tries to evict at least aSizeToEvict from the queue up until
@@ -115,12 +116,12 @@ public:
     uint32_t evicted = 0;
     while (ResourceItem* item = ResourceAt(0)) {
       SBR_DEBUG("ResourceQueue(%p)::EvictBefore item=%p length=%d offset=%llu",
-                this, item, item->mData.Length(), mOffset);
-      if (item->mData.Length() + mOffset >= aOffset) {
+                this, item, item->mData->Length(), mOffset);
+      if (item->mData->Length() + mOffset >= aOffset) {
         break;
       }
-      mOffset += item->mData.Length();
-      evicted += item->mData.Length();
+      mOffset += item->mData->Length();
+      evicted += item->mData->Length();
       delete PopFront();
     }
     return evicted;
@@ -131,9 +132,9 @@ public:
     uint32_t evicted = 0;
     while (ResourceItem* item = ResourceAt(0)) {
       SBR_DEBUG("ResourceQueue(%p)::EvictAll item=%p length=%d offset=%llu",
-                this, item, item->mData.Length(), mOffset);
-      mOffset += item->mData.Length();
-      evicted += item->mData.Length();
+                this, item, item->mData->Length(), mOffset);
+      mOffset += item->mData->Length();
+      evicted += item->mData->Length();
       delete PopFront();
     }
     return evicted;
@@ -163,7 +164,7 @@ public:
       if (!fp) {
         return;
       }
-      fwrite(item->mData.Elements(), item->mData.Length(), 1, fp);
+      fwrite(item->mData->Elements(), item->mData->Length(), 1, fp);
       fclose(fp);
     }
   }
@@ -186,13 +187,13 @@ private:
       ResourceItem* item = ResourceAt(i);
       // If the item contains the start of the offset we want to
       // break out of the loop.
-      if (item->mData.Length() + offset > aOffset) {
+      if (item->mData->Length() + offset > aOffset) {
         if (aResourceOffset) {
           *aResourceOffset = aOffset - offset;
         }
         return i;
       }
-      offset += item->mData.Length();
+      offset += item->mData->Length();
     }
     return GetSize();
   }
