@@ -4690,12 +4690,16 @@ nsHttpChannel::Suspend()
 
     ++mSuspendCount;
 
-    if (mTransactionPump)
-        return mTransactionPump->Suspend();
-    if (mCachePump)
-        return mCachePump->Suspend();
+    nsresult rvTransaction = NS_OK;
+    if (mTransactionPump) {
+        rvTransaction = mTransactionPump->Suspend();
+    }
+    nsresult rvCache = NS_OK;
+    if (mCachePump) {
+        rvCache = mCachePump->Suspend();
+    }
 
-    return NS_OK;
+    return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
 NS_IMETHODIMP
@@ -4711,12 +4715,17 @@ nsHttpChannel::Resume()
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (mTransactionPump)
-        return mTransactionPump->Resume();
-    if (mCachePump)
-        return mCachePump->Resume();
+    nsresult rvTransaction = NS_OK;
+    if (mTransactionPump) {
+        rvTransaction = mTransactionPump->Resume();
+    }
 
-    return NS_OK;
+    nsresult rvCache = NS_OK;
+    if (mCachePump) {
+        rvCache = mCachePump->Resume();
+    }
+
+    return NS_FAILED(rvTransaction) ? rvTransaction : rvCache;
 }
 
 //-----------------------------------------------------------------------------
