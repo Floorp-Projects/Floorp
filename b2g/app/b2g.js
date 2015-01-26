@@ -1092,3 +1092,7 @@ pref("dom.mozSettings.allowForceReadOnly", false);
 
 // RequestSync API is enabled by default on B2G.
 pref("dom.requestSync.enabled", true);
+
+// Enable hardware vsync compositor
+pref("gfx.vsync.hw-vsync.enabled", true);
+pref("gfx.vsync.compositor", true);
