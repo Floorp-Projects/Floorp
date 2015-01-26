@@ -1193,6 +1193,14 @@ pref("dom.ipc.plugins.enabled", true);
 pref("browser.tabs.remote.autostart", false);
 pref("browser.tabs.remote.desktopbehavior", true);
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+// Controls whether the Windows NPAPI plugin process is sandboxed by default.
+// To get a different setting for a particular plugin replace "default", with
+// the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
+pref("dom.ipc.plugins.sandbox.default", false);
+pref("dom.ipc.plugins.sandbox.flash", false);
+#endif
+
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
 // This controls whether the content process on Windows is sandboxed.
 // You also need to be using remote tabs, see above.

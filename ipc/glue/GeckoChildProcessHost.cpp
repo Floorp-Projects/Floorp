@@ -95,6 +95,9 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mProcessState(CREATING_CHANNEL),
     mDelegate(nullptr),
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+    mEnableNPAPISandbox(false),
+#endif
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
     mEnableContentSandbox(false),
     mWarnOnlyContentSandbox(false),
@@ -801,7 +804,8 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #endif // MOZ_CONTENT_SANDBOX
       break;
     case GeckoProcessType_Plugin:
-      if (!PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
+      if (mEnableNPAPISandbox &&
+          !PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
         mSandboxBroker.SetSecurityLevelForPluginProcess();
         cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
         shouldSandboxCurrentProcess = true;
