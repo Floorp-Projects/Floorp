@@ -774,16 +774,6 @@ public class LocalBrowserDB implements BrowserDB {
         return c;
     }
 
-    @Override
-    public Cursor getReadingList(ContentResolver cr) {
-        return cr.query(mReadingListUriWithProfile,
-                        ReadingListItems.DEFAULT_PROJECTION,
-                        null,
-                        null,
-                        null);
-    }
-
-
     // Returns true if any desktop bookmarks exist, which will be true if the user
     // has set up sync at one point, or done a profile migration from XUL fennec.
     private boolean desktopBookmarksExist(ContentResolver cr) {
@@ -984,6 +974,25 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
+    public Cursor getReadingList(ContentResolver cr) {
+        return cr.query(mReadingListUriWithProfile,
+                        ReadingListItems.DEFAULT_PROJECTION,
+                        null,
+                        null,
+                        null);
+    }
+
+    @Override
+    public Cursor getReadingListUnfetched(ContentResolver cr) {
+        return cr.query(mReadingListUriWithProfile,
+                        new String[] { ReadingListItems._ID, ReadingListItems.URL },
+                        ReadingListItems.CONTENT_STATUS + " = " + ReadingListItems.STATUS_UNFETCHED,
+                        null,
+                        null);
+
+    }
+
+    @Override
     public void addReadingListItem(ContentResolver cr, ContentValues values) {
         // Check that required fields are present.
         for (String field: ReadingListItems.REQUIRED_FIELDS) {
@@ -1007,6 +1016,20 @@ public class LocalBrowserDB implements BrowserDB {
                                       new String[] { values.getAsString(ReadingListItems.URL) });
 
         debug("Updated " + updated + " rows to new modified time.");
+    }
+
+    @Override
+    public void updateReadingListItem(ContentResolver cr, ContentValues values) {
+        if (!values.containsKey(ReadingListItems._ID)) {
+            throw new IllegalArgumentException("Cannot update reading list item without an ID");
+        }
+
+        final int updated = cr.update(mReadingListUriWithProfile,
+                                      values,
+                                      ReadingListItems._ID + " = ? ",
+                                      new String[] { values.getAsString(ReadingListItems._ID) });
+
+        debug("Updated " + updated + " reading list rows.");
     }
 
     @Override
