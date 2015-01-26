@@ -263,14 +263,15 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
             double d;
             if (!ToNumber(cx, vp, &d))
                 return false;
-            vp.set(NumberValue(d));
+            vp.setNumber(d);
         } else if (ObjectClassIs(obj, ESClass_String, cx)) {
             JSString *str = ToStringSlow<CanGC>(cx, vp);
             if (!str)
                 return false;
-            vp.set(StringValue(str));
+            vp.setString(str);
         } else if (ObjectClassIs(obj, ESClass_Boolean, cx)) {
-            vp.setBoolean(BooleanGetPrimitiveValue(obj));
+            if (!Unbox(cx, obj, vp))
+                return false;
         }
     }
 
@@ -892,16 +893,10 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    /*
-     * JSON requires that Boolean.prototype.valueOf be created and stashed in a
-     * reserved slot on the global object; see js::BooleanGetPrimitiveValueSlow
-     * called from PreprocessValue above.
-     */
-    if (!GlobalObject::getOrCreateBooleanPrototype(cx, global))
+    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!proto)
         return nullptr;
-
-    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
-    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, proto, global, SingletonObject));
+    RootedObject JSON(cx, NewObjectWithGivenProto(cx, &JSONClass, proto, global, SingletonObject));
     if (!JSON)
         return nullptr;
 
