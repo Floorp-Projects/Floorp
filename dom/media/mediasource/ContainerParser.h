@@ -7,29 +7,31 @@
 #ifndef MOZILLA_CONTAINERPARSER_H_
 #define MOZILLA_CONTAINERPARSER_H_
 
-#include "nsTArray.h"
+#include "nsRefPtr.h"
 
 namespace mozilla {
 
+class LargeDataBuffer;
+
 class ContainerParser {
 public:
-  ContainerParser() : mHasInitData(false) {}
+  ContainerParser();
   virtual ~ContainerParser() {}
 
   // Return true if aData starts with an initialization segment.
   // The base implementation exists only for debug logging and is expected
   // to be called first from the overriding implementation.
-  virtual bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength);
+  virtual bool IsInitSegmentPresent(LargeDataBuffer* aData);
 
   // Return true if aData starts with a media segment.
   // The base implementation exists only for debug logging and is expected
   // to be called first from the overriding implementation.
-  virtual bool IsMediaSegmentPresent(const uint8_t* aData, uint32_t aLength);
+  virtual bool IsMediaSegmentPresent(LargeDataBuffer* aData);
 
   // Parse aData to extract the start and end frame times from the media
   // segment.  aData may not start on a parser sync boundary.  Return true
   // if aStart and aEnd have been updated.
-  virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
+  virtual bool ParseStartAndEndTimestamps(LargeDataBuffer* aData,
                                           int64_t& aStart, int64_t& aEnd);
 
   // Compare aLhs and rHs, considering any error that may exist in the
@@ -39,7 +41,7 @@ public:
 
   virtual int64_t GetRoundingError();
 
-  const nsTArray<uint8_t>& InitData();
+  LargeDataBuffer* InitData();
 
   bool HasInitData()
   {
@@ -49,7 +51,7 @@ public:
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
 
 protected:
-  nsTArray<uint8_t> mInitData;
+  nsRefPtr<LargeDataBuffer> mInitData;
   bool mHasInitData;
 };
 
