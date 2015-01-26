@@ -14,11 +14,10 @@ const CATEGORIES = [
   { color: "#70bf53", label: "Baz" }
 ];
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
-  finish();
 });
 
 function* performTest() {

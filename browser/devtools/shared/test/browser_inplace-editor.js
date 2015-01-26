@@ -9,7 +9,7 @@ let {editableField, getInplaceEditorForSpan: inplaceEditor} = devtools.require("
 
 // Test the inplace-editor behavior.
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("data:text/html;charset=utf-8,inline editor tests");
 
   yield testReturnCommit();
@@ -17,7 +17,6 @@ let test = Task.async(function*() {
   yield testAdvanceCharCommit();
 
   gBrowser.removeCurrentTab();
-  finish();
 });
 
 function testReturnCommit() {
