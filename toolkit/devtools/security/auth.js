@@ -6,6 +6,10 @@
 
 "use strict";
 
+let Services = require("Services");
+loader.lazyRequireGetter(this, "prompt",
+  "devtools/toolkit/security/prompt");
+
 /**
  * An |Authenticator| implements an authentication mechanism via various hooks
  * in the client and server debugger socket connection path (see socket.js).
@@ -62,6 +66,42 @@ Prompt.Server.prototype = {
   augmentAdvertisement(listener, advertisement) {
     advertisement.authentication = Prompt.mode;
   },
+
+  /**
+   * Determine whether a connection the server should be allowed or not based on
+   * this authenticator's policies.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  authenticate() {
+    return !Services.prefs.getBoolPref("devtools.debugger.prompt-connection") ||
+           this.allowConnection();
+  },
+
+  /**
+   * Prompt the user to accept or decline the incoming connection. The default
+   * implementation is used unless this is overridden on a particular
+   * authenticator instance.
+   *
+   * In PROMPT mode, the |allowConnection| method is provided:
+   * {
+   *   authentication: "PROMPT",
+   *   client: {
+   *     host,
+   *     port
+   *   },
+   *   server: {
+   *     host,
+   *     port
+   *   }
+   * }
+   *
+   * It is expected that the implementation of |allowConnection| will show a
+   * prompt to the user so that they can allow or deny the connection.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  allowConnection: prompt.Server.defaultAllowConnection,
 
 };
 
@@ -130,6 +170,47 @@ OOBCert.Server.prototype = {
       sha256: listener._socket.serverCert.sha256Fingerprint
     };
   },
+
+  /**
+   * Determine whether a connection the server should be allowed or not based on
+   * this authenticator's policies.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  authenticate() {
+    return this.allowConnection();
+  },
+
+  /**
+   * Prompt the user to accept or decline the incoming connection. The default
+   * implementation is used unless this is overridden on a particular
+   * authenticator instance.
+   *
+   * In OOB_CERT mode, the |allowConnection| method is provided:
+   * {
+   *   authentication: "OOB_CERT",
+   *   client: {
+   *     host,
+   *     port,
+   *     cert: {
+   *       sha256
+   *     },
+   *   },
+   *   server: {
+   *     host,
+   *     port,
+   *     cert: {
+   *       sha256
+   *     }
+   *   }
+   * }
+   *
+   * It is expected that the implementation of |allowConnection| will show a
+   * prompt to the user so that they can allow or deny the connection.
+   *
+   * @return true if the connection should be permitted, false otherwise
+   */
+  allowConnection: prompt.Server.defaultAllowConnection,
 
 };
 
