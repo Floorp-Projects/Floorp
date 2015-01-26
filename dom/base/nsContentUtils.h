@@ -1635,7 +1635,7 @@ public:
 
   // Returns NS_OK for same origin, error (NS_ERROR_DOM_BAD_URI) if not.
   static nsresult CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel);
-  static nsIInterfaceRequestor* GetSameOriginChecker();
+  static nsIInterfaceRequestor* SameOriginChecker();
 
   /**
    * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in

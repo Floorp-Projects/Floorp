@@ -161,6 +161,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // X86/X64-common interface.
     /////////////////////////////////////////////////////////////////
+    Address ToPayload(Address value) {
+        return value;
+    }
+
     void storeValue(ValueOperand val, Operand dest) {
         movq(val.valueReg(), dest);
     }

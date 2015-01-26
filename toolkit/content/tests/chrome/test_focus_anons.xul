@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Tests for focus on elements with anonymous focusable children"
-        onload="setTimeout(runTests, 0);"
+        onload="SimpleTest.waitForFocus(runTests);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      

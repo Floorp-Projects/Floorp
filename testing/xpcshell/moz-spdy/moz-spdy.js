@@ -90,17 +90,6 @@ function executeRunLater(arg) {
 }
 
 function handleRequest(req, res) {
-  try {
-    realHandleRequest(req, res);
-  } catch (e) {
-    console.log("spdy server suffered unhandled exception. will restart " + e);
-    var p = webServer.address().port;
-    webServer.close();
-    webServer = spdy.createServer(options, handleRequest).listen(p, "0.0.0.0", 200, listenok);
-  }
-}
-
-function realHandleRequest(req, res) {
   var u = url.parse(req.url);
   var content = getHttpContent(u.pathname);
 
@@ -110,8 +99,6 @@ function realHandleRequest(req, res) {
   } else {
     res.setHeader('X-Connection-Spdy', 'no');
   }
-
-console.log(u.pathname);
 
   if (u.pathname === '/750ms') {
     var rl = new runlater();
