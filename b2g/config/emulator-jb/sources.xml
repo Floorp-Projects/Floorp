@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0f662dffef27599443cfcd790c2b39190a2b35c8"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="49c250a3cc1d6edbcfb16ec119e6e641f49a4179"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e28c4e9ad88b28390120dfd8ada967233f28a98f"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="05baa465f008e92cdf4db74d62f1e3885e3ee73d"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -78,7 +78,6 @@
   <project name="platform/external/mdnsresponder" path="external/mdnsresponder" revision="15dd90d06fce6f13243a2c24248a64b3381f7e25"/>
   <project name="platform/external/mksh" path="external/mksh" revision="1b182dd7e82bdd41dd2791831b68252d86a61c82"/>
   <project name="platform/external/netcat" path="external/netcat" revision="7fddee20c8f2b792a85ed5cd663c241af7db282b"/>
-  <project name="platform/external/netperf" path="external/netperf" revision="8665619efddab9dea468beaa6569829c76aa7c13"/>
   <project name="platform/external/openssl" path="external/openssl" revision="2d1bb4b8633349cca0bd3319149629cc39c73b97"/>
   <project name="platform/external/ping" path="external/ping" revision="ea46d4544bd58b406cac525b4036264da2a81404"/>
   <project name="platform/external/ping6" path="external/ping6" revision="501b3d22cd27e732f7c2e66ac2ca9d7e668e690a"/>
