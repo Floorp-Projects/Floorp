@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'TestStorageStream.cpp',
     'TestStrings.cpp',
     'TestSynchronization.cpp',
+    'TestTimeStamp.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
