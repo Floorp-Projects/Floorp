@@ -8,17 +8,14 @@ let FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 8; // px
 let FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY = "sans-serif";
 let {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 let {FlameGraph} = Cu.import("resource:///modules/devtools/FlameGraph.jsm", {});
-let {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
-let {Hosts} = devtools.require("devtools/framework/toolbox-hosts");
 
 let L10N = new ViewHelpers.L10N();
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
-  finish();
 });
 
 function* performTest() {

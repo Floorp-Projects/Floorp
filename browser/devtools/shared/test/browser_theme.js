@@ -4,23 +4,13 @@
 
 // Tests that theme utilities work
 
-let { Cu } = devtools.require("chrome");
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let { getColor, getTheme, setTheme } = devtools.require("devtools/shared/theme");
+let {getColor, getTheme, setTheme} = devtools.require("devtools/shared/theme");
 
 function test() {
-  waitForExplicitFinish();
   testGetTheme();
   testSetTheme();
   testGetColor();
   testColorExistence();
-  endTests();
-}
-
-function endTests() {
-  gDevTools = Services = null;
-  finish();
 }
 
 function testGetTheme () {

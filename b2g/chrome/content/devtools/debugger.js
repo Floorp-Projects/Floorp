@@ -41,7 +41,10 @@ let RemoteDebugger = {
       Services.tm.currentThread.processNextEvent(true);
     }
 
-    return this._promptAnswer;
+    if (this._promptAnswer) {
+      return DebuggerServer.AuthenticationResult.ALLOW;
+    }
+    return DebuggerServer.AuthenticationResult.DENY;
   },
 
   _listen: function() {
@@ -141,9 +144,12 @@ let USBRemoteDebugger = {
 
     try {
       debug("Starting USB debugger on " + portOrPath);
+      let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      let authenticator = new AuthenticatorType.Server();
+      authenticator.allowConnection = RemoteDebugger.prompt;
       this._listener = DebuggerServer.createListener();
       this._listener.portOrPath = portOrPath;
-      this._listener.allowConnection = RemoteDebugger.prompt;
+      this._listener.authenticator = authenticator;
       this._listener.open();
       // Temporary event, until bug 942756 lands and offers a way to know
       // when the server is up and running.
@@ -179,9 +185,12 @@ let WiFiRemoteDebugger = {
 
     try {
       debug("Starting WiFi debugger");
+      let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
+      let authenticator = new AuthenticatorType.Server();
+      authenticator.allowConnection = RemoteDebugger.prompt;
       this._listener = DebuggerServer.createListener();
       this._listener.portOrPath = -1 /* any available port */;
-      this._listener.allowConnection = RemoteDebugger.prompt;
+      this._listener.authenticator = authenticator;
       this._listener.discoverable = true;
       this._listener.encryption = true;
       this._listener.open();

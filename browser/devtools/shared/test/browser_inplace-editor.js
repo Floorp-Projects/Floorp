@@ -9,18 +9,19 @@ let {editableField, getInplaceEditorForSpan: inplaceEditor} = devtools.require("
 
 // Test the inplace-editor behavior.
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("data:text/html;charset=utf-8,inline editor tests");
+  let [host, win, doc] = yield createHost();
 
-  yield testReturnCommit();
-  yield testBlurCommit();
-  yield testAdvanceCharCommit();
+  yield testReturnCommit(doc);
+  yield testBlurCommit(doc);
+  yield testAdvanceCharCommit(doc);
 
+  host.destroy();
   gBrowser.removeCurrentTab();
-  finish();
 });
 
-function testReturnCommit() {
+function testReturnCommit(doc) {
   info("Testing that pressing return commits the new value");
   let def = promise.defer();
 
@@ -32,12 +33,12 @@ function testReturnCommit() {
       EventUtils.sendKey("return");
     },
     done: onDone("Test Value", true, def)
-  });
+  }, doc);
 
   return def.promise;
 }
 
-function testBlurCommit() {
+function testBlurCommit(doc) {
   info("Testing that bluring the field commits the new value");
   let def = promise.defer();
 
@@ -48,12 +49,12 @@ function testBlurCommit() {
       editor.input.blur();
     },
     done: onDone("Test Value", true, def)
-  });
+  }, doc);
 
   return def.promise;
 }
 
-function testAdvanceCharCommit() {
+function testAdvanceCharCommit(doc) {
   info("Testing that configured advanceChars commit the new value");
   let def = promise.defer();
 
@@ -66,12 +67,12 @@ function testAdvanceCharCommit() {
       }
     },
     done: onDone("Test", true, def)
-  });
+  }, doc);
 
   return def.promise;
 }
 
-function testEscapeCancel() {
+function testEscapeCancel(doc) {
   info("Testing that escape cancels the new value");
   let def = promise.defer();
 
@@ -82,7 +83,7 @@ function testEscapeCancel() {
       EventUtils.sendKey("escape");
     },
     done: onDone("initial text", false, def)
-  });
+  }, doc);
 
   return def.promise;
 }
@@ -96,9 +97,9 @@ function onDone(value, isCommit, def) {
   }
 }
 
-function createInplaceEditorAndClick(options) {
-  clearBody();
-  let span = options.element = createSpan();
+function createInplaceEditorAndClick(options, doc) {
+  clearBody(doc);
+  let span = options.element = createSpan(doc);
 
   info("Creating an inplace-editor field");
   editableField(options);
@@ -107,16 +108,16 @@ function createInplaceEditorAndClick(options) {
   span.click();
 }
 
-function clearBody() {
+function clearBody(doc) {
   info("Clearing the page body");
-  content.document.body.innerHTML = "";
+  doc.body.innerHTML = "";
 }
 
-function createSpan() {
+function createSpan(doc) {
   info("Creating a new span element");
-  let span = content.document.createElement("span");
+  let span = doc.createElement("span");
   span.setAttribute("tabindex", "0");
   span.textContent = "Edit Me!";
-  content.document.body.appendChild(span);
+  doc.body.appendChild(span);
   return span;
 }
