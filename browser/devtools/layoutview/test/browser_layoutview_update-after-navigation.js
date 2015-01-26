@@ -45,7 +45,7 @@ function*(inspector, view) {
 
   info("Checking that the layout-view shows the right value");
   let sizeElt = view.doc.querySelector(".size > span");
-  is(sizeElt.textContent, "100x100");
+  is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for layout-view changes and modifying the size");
   let onUpdated = waitForUpdate(inspector);
@@ -54,7 +54,7 @@ function*(inspector, view) {
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
-  is(sizeElt.textContent, "200x100");
+  is(sizeElt.textContent, "200" + "\u00D7" + "100");
 });
 
 addTest("Go back to the first page",
