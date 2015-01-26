@@ -1615,7 +1615,7 @@ IonBuilder::inlineObjectCreate(CallInfo &callInfo)
     if (callInfo.argc() != 1 || callInfo.constructing())
         return InliningStatus_NotInlined;
 
-    NativeObject *templateObject = inspector->getTemplateObjectForNative(pc, obj_create);
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, obj_create);
     if (!templateObject)
         return InliningStatus_NotInlined;
 
