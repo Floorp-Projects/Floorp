@@ -118,6 +118,35 @@ protected:
   static BluetoothA2dpNotificationHandler* sNotificationHandler;
 };
 
+class BluetoothDaemonA2dpInterface MOZ_FINAL
+  : public BluetoothA2dpInterface
+{
+  class CleanupResultHandler;
+  class InitResultHandler;
+
+public:
+  BluetoothDaemonA2dpInterface(BluetoothDaemonA2dpModule* aModule);
+  ~BluetoothDaemonA2dpInterface();
+
+  void Init(
+    BluetoothA2dpNotificationHandler* aNotificationHandler,
+    BluetoothA2dpResultHandler* aRes);
+  void Cleanup(BluetoothA2dpResultHandler* aRes);
+
+  /* Connect / Disconnect */
+
+  void Connect(const nsAString& aBdAddr,
+               BluetoothA2dpResultHandler* aRes);
+  void Disconnect(const nsAString& aBdAddr,
+                  BluetoothA2dpResultHandler* aRes);
+
+private:
+  void DispatchError(BluetoothA2dpResultHandler* aRes,
+                     BluetoothStatus aStatus);
+
+  BluetoothDaemonA2dpModule* mModule;
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif

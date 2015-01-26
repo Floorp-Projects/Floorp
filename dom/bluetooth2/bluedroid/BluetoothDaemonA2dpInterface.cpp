@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonA2dpInterface.h"
+#include "BluetoothDaemonSetupInterface.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -280,6 +281,149 @@ BluetoothDaemonA2dpModule::HandleNtf(
   }
 
   (this->*(HandleNtf[index]))(aHeader, aPDU);
+}
+
+//
+// A2DP interface
+//
+
+BluetoothDaemonA2dpInterface::BluetoothDaemonA2dpInterface(
+  BluetoothDaemonA2dpModule* aModule)
+  : mModule(aModule)
+{ }
+
+BluetoothDaemonA2dpInterface::~BluetoothDaemonA2dpInterface()
+{ }
+
+class BluetoothDaemonA2dpInterface::InitResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  InitResultHandler(BluetoothA2dpResultHandler* aRes)
+    : mRes(aRes)
+  {
+    MOZ_ASSERT(mRes);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->OnError(aStatus);
+  }
+
+  void RegisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->Init();
+  }
+
+private:
+  nsRefPtr<BluetoothA2dpResultHandler> mRes;
+};
+
+void
+BluetoothDaemonA2dpInterface::Init(
+  BluetoothA2dpNotificationHandler* aNotificationHandler,
+  BluetoothA2dpResultHandler* aRes)
+{
+  // Set notification handler _before_ registering the module. It could
+  // happen that we receive notifications, before the result handler runs.
+  mModule->SetNotificationHandler(aNotificationHandler);
+
+  InitResultHandler* res;
+
+  if (aRes) {
+    res = new InitResultHandler(aRes);
+  } else {
+    // We don't need a result handler if the caller is not interested.
+    res = nullptr;
+  }
+
+  nsresult rv = mModule->RegisterModule(BluetoothDaemonA2dpModule::SERVICE_ID,
+                                        0x00, res);
+  if (NS_FAILED(rv) && aRes) {
+    DispatchError(aRes, STATUS_FAIL);
+  }
+}
+
+class BluetoothDaemonA2dpInterface::CleanupResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  CleanupResultHandler(BluetoothDaemonA2dpModule* aModule,
+                       BluetoothA2dpResultHandler* aRes)
+    : mModule(aModule)
+    , mRes(aRes)
+  {
+    MOZ_ASSERT(mModule);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mRes) {
+      mRes->OnError(aStatus);
+    }
+  }
+
+  void UnregisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Clear notification handler _after_ module has been
+    // unregistered. While unregistering the module, we might
+    // still receive notifications.
+    mModule->SetNotificationHandler(nullptr);
+
+    if (mRes) {
+      mRes->Cleanup();
+    }
+  }
+
+private:
+  BluetoothDaemonA2dpModule* mModule;
+  nsRefPtr<BluetoothA2dpResultHandler> mRes;
+};
+
+void
+BluetoothDaemonA2dpInterface::Cleanup(
+  BluetoothA2dpResultHandler* aRes)
+{
+  mModule->UnregisterModule(BluetoothDaemonA2dpModule::SERVICE_ID,
+                            new CleanupResultHandler(mModule, aRes));
+}
+
+/* Connect / Disconnect */
+
+void
+BluetoothDaemonA2dpInterface::Connect(
+  const nsAString& aBdAddr, BluetoothA2dpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ConnectCmd(aBdAddr, aRes);
+}
+
+void
+BluetoothDaemonA2dpInterface::Disconnect(
+  const nsAString& aBdAddr, BluetoothA2dpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->DisconnectCmd(aBdAddr, aRes);
+}
+
+void
+BluetoothDaemonA2dpInterface::DispatchError(
+  BluetoothA2dpResultHandler* aRes, BluetoothStatus aStatus)
+{
+  BluetoothResultRunnable1<BluetoothA2dpResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
+    aRes, &BluetoothA2dpResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
 }
 
 END_BLUETOOTH_NAMESPACE
