@@ -23,15 +23,9 @@ interface IDBDatabase : EventTarget {
     [Throws]
     void           deleteObjectStore (DOMString name);
 
-    // This should be:
-    // IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames, optional IDBTransactionMode mode = "readonly");
-    // but unions are not currently supported.
-
     [Throws]
-    IDBTransaction transaction (DOMString storeName, optional IDBTransactionMode mode = "readonly");
-
-    [Throws]
-    IDBTransaction transaction (sequence<DOMString> storeNames, optional IDBTransactionMode mode = "readonly");
+    IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
+                                optional IDBTransactionMode mode = "readonly");
 
     void           close ();
 
