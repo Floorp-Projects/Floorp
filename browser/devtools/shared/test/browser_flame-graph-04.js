@@ -14,11 +14,10 @@ let {Hosts} = devtools.require("devtools/framework/toolbox-hosts");
 
 let L10N = new ViewHelpers.L10N();
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
-  finish();
 });
 
 function* performTest() {
