@@ -70,26 +70,18 @@ public:
     return MediaCodecDataDecoder::Input(aSample);
   }
 
-  EGLImage CopySurface() {
-    if (!EnsureGLContext()) {
-      return nullptr;
-    }
+  bool WantCopy() {
+    // Allocating a texture is incredibly slow on PowerVR
+    return mGLContext->Vendor() != GLVendor::Imagination;
+  }
 
-    nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
-    layers::SurfaceTextureImage::Data data;
-    data.mSurfTex = mSurfaceTexture.get();
-    data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
-    data.mOriginPos = gl::OriginPos::BottomLeft;
-
-    layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
-    stImg->SetData(data);
-
+  EGLImage CopySurface(layers::Image* img) {
     mGLContext->MakeCurrent();
 
-    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(), data.mSize);
+    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(), img->GetSize());
 
     GLBlitHelper helper(mGLContext);
-    if (!helper.BlitImageToTexture(img, data.mSize, tex, LOCAL_GL_TEXTURE_2D)) {
+    if (!helper.BlitImageToTexture(img, img->GetSize(), tex, LOCAL_GL_TEXTURE_2D)) {
       mGLContext->fDeleteTextures(1, &tex);
       return nullptr;
     }
@@ -109,39 +101,53 @@ public:
   }
 
   virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat, Microseconds aDuration) MOZ_OVERRIDE {
-    VideoInfo videoInfo;
-    videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
-
-    EGLImage eglImage = CopySurface();
-    if (!eglImage) {
+    if (!EnsureGLContext()) {
       return NS_ERROR_FAILURE;
     }
 
-    EGLSync eglSync = nullptr;
-    if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
-        mGLContext->IsExtensionSupported(GLContext::OES_EGL_sync))
-    {
-      MOZ_ASSERT(mGLContext->IsCurrent());
-      eglSync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
-                                        LOCAL_EGL_SYNC_FENCE,
-                                        nullptr);
-      if (eglSync) {
-          mGLContext->fFlush();
-      }
-    } else {
-      NS_WARNING("No EGL fence support detected, rendering artifacts may occur!");
-    }
+    VideoInfo videoInfo;
+    videoInfo.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
 
-    nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::EGLIMAGE);
-    layers::EGLImageImage::Data data;
-    data.mImage = eglImage;
-    data.mSync = eglSync;
-    data.mOwns = true;
+    nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
+    layers::SurfaceTextureImage::Data data;
+    data.mSurfTex = mSurfaceTexture.get();
     data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
     data.mOriginPos = gl::OriginPos::BottomLeft;
 
-    layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
-    typedImg->SetData(data);
+    layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
+    stImg->SetData(data);
+
+    if (WantCopy()) {
+      EGLImage eglImage = CopySurface(img);
+      if (!eglImage) {
+        return NS_ERROR_FAILURE;
+      }
+
+      EGLSync eglSync = nullptr;
+      if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
+          mGLContext->IsExtensionSupported(GLContext::OES_EGL_sync))
+      {
+        MOZ_ASSERT(mGLContext->IsCurrent());
+        eglSync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
+                                          LOCAL_EGL_SYNC_FENCE,
+                                          nullptr);
+        MOZ_ASSERT(eglSync);
+        mGLContext->fFlush();
+      } else {
+        NS_WARNING("No EGL fence support detected, rendering artifacts may occur!");
+      }
+
+      img = mImageContainer->CreateImage(ImageFormat::EGLIMAGE);
+      layers::EGLImageImage::Data data;
+      data.mImage = eglImage;
+      data.mSync = eglSync;
+      data.mOwns = true;
+      data.mSize = gfx::IntSize(mConfig.display_width, mConfig.display_height);
+      data.mOriginPos = gl::OriginPos::BottomLeft;
+
+      layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
+      typedImg->SetData(data);
+    }
 
     nsresult rv;
     int32_t flags;
