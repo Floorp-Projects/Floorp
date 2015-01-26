@@ -7531,6 +7531,7 @@ var Distribution = {
   _file: null,
 
   init: function dc_init() {
+    Services.obs.addObserver(this, "Distribution:Changed", false);
     Services.obs.addObserver(this, "Distribution:Set", false);
     Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
     Services.obs.addObserver(this, "Campaign:Set", false);
@@ -7544,6 +7545,15 @@ var Distribution = {
 
   observe: function dc_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "Distribution:Changed":
+        // Re-init the search service.
+        try {
+          Services.search._asyncReInit();
+        } catch (e) {
+          console.log("Unable to reinit search service.");
+        }
+        // Fall through.
+
       case "Distribution:Set":
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
