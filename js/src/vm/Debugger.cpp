@@ -1085,7 +1085,7 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok,
 }
 
 static bool
-GetStatusProperty(JSContext *cx, HandleObject obj, PropertyName *name, JSTrapStatus status,
+GetStatusProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSTrapStatus status,
                   JSTrapStatus *statusOut, MutableHandleValue vp, int *hits)
 {
     bool found;
