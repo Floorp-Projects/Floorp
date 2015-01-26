@@ -1287,10 +1287,12 @@ void
 GCRuntime::finish()
 {
     /*
-     * Wait until the background finalization stops and the helper thread
-     * shuts down before we forcefully release any remaining GC memory.
+     * Wait until the background finalization and allocation stops and the
+     * helper thread shuts down before we forcefully release any remaining GC
+     * memory.
      */
     helperState.finish();
+    allocTask.cancel(GCParallelTask::CancelAndWait);
 
 #ifdef JS_GC_ZEAL
     /* Free memory associated with GC verification. */
@@ -2957,10 +2959,11 @@ GCRuntime::refillFreeListFromMainThread(JSContext *cx, AllocKind thingKind)
             return thing;
 
         // Even if allocateFromArena failed due to OOM, a background
-        // finalization task may be running (freeing more memory); wait for it
-        // to finish, then try to allocate again in case it freed up the memory
-        // we need.
-        rt->gc.waitBackgroundSweepEnd();
+        // finalization or allocation task may be running freeing more memory
+        // or adding more available memory to our free pool; wait for them to
+        // finish, then try to allocate again in case they made more memory
+        // available.
+        rt->gc.waitBackgroundSweepOrAllocEnd();
 
         thing = arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
         if (MOZ_LIKELY(thing))
