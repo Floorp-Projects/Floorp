@@ -1930,14 +1930,13 @@ nsDocumentViewer::SetBounds(const nsIntRect& aBounds)
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
   mBounds = aBounds;
-  if (mWindow) {
-    if (!mAttachedToParent) {
-      // Don't have the widget repaint. Layout will generate repaint requests
-      // during reflow.
-      mWindow->Resize(aBounds.x, aBounds.y,
-                      aBounds.width, aBounds.height,
-                      false);
-    }
+
+  if (mWindow && !mAttachedToParent) {
+    // Resize the widget, but don't trigger repaint. Layout will generate
+    // repaint requests during reflow.
+    mWindow->Resize(aBounds.x, aBounds.y,
+                    aBounds.width, aBounds.height,
+                    false);
   } else if (mPresContext && mViewManager) {
     int32_t p2a = mPresContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(mBounds.width, p2a),

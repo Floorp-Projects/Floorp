@@ -518,19 +518,16 @@ function testRTL_moveFocusHandleDown() {
       "RTL Initial selection anchorPt.x should be greater than (right of) focusPt.x"),
 
     selectionExists(changedSelection, "RTL Changed selection existed at points"),
-    todo(false, "testRTL_moveFocusHandleDown: " +
-    // pointEquals(changedSelection.anchorPt, initialSelection.anchorPt,
-       "RTL Changed selection focus handle moving down " +
-       "should not change anchor handle position."),
-    todo(false, "testRTL_moveFocusHandleDown: " +
-    // greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
-       "RTL Changed selection focusPt.y " +
-       "should be greater than (below) changed anchorPt.y"),
+    pointEquals(changedSelection.anchorPt, initialSelection.anchorPt,
+      "RTL Changed selection focus handle moving down " +
+      "should not change anchor handle position."),
+    greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
+      "RTL Changed selection focusPt.y " +
+      "should be greater than (below) changed anchorPt.y"),
 
-    todo(false, "testRTL_moveFocusHandleDown: " +
-    // greaterThan(changedSelection.focusPt.y, initialSelection.focusPt.y,
-       "RTL Changed selection focusPt.y " +
-       "should be greater than (below) Initial selection focusPt.y"),
+    greaterThan(changedSelection.focusPt.y, initialSelection.focusPt.y,
+      "RTL Changed selection focusPt.y " +
+      "should be greater than (below) Initial selection focusPt.y"),
   ]);
 }
 
@@ -585,24 +582,20 @@ function testRTL_moveFocusHandleUp() {
       "RTL Initial selection anchorPt.x should be greater than (right of) focusPt.x"),
 
     selectionExists(changedSelection, "RTL Changed selection existed at points"),
-    todo(false, "testRTL_moveFocusHandleUp: " +
-    // pointEquals(changedSelection.focusPt, initialSelection.anchorPt,
-       "RTL Reversed Changed selection focus handle moving up " +
-       "becomes new anchor handle, " +
-       "new focus handle is initial anchor handle."),
-    todo(false, "testRTL_moveFocusHandleUp: " +
-    // greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
-       "RTL Reversed Changed selection focusPt.y " +
-       "should be greater than (below) changed anchorPt.y"),
+    pointEquals(changedSelection.focusPt, initialSelection.anchorPt,
+      "RTL Reversed Changed selection focus handle moving up " +
+      "becomes new anchor handle, " +
+      "new focus handle is initial anchor handle."),
+    greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
+      "RTL Reversed Changed selection focusPt.y " +
+      "should be greater than (below) changed anchorPt.y"),
 
-    todo(false, "testRTL_moveFocusHandleUp: " +
-    // is(changedSelection.focusPt.y, initialSelection.focusPt.y,
-       "RTL Reversed Changed selection focusPt.y " +
-       "should be equal to Initial selection focusPt.y"),
-    todo(false, "testRTL_moveFocusHandleUp: " +
-    // lessThan(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
-       "RTL Reversed Changed selection anchorPt.y " +
-       "should be less than (above) Initial selection anchorPt.y"),
+    is(changedSelection.focusPt.y, initialSelection.focusPt.y,
+      "RTL Reversed Changed selection focusPt.y " +
+      "should be equal to Initial selection focusPt.y"),
+    lessThan(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
+      "RTL Reversed Changed selection anchorPt.y " +
+      "should be less than (above) Initial selection anchorPt.y"),
   ]);
 }
 
@@ -657,19 +650,16 @@ function testRTL_moveAnchorHandleUp() {
       "RTL Initial selection anchorPt.x should be greater than (right of) focusPt.x"),
 
     selectionExists(changedSelection, "RTL Changed selection existed at points"),
-    todo(false, "testRTL_moveAnchorHandleUp: " +
-    // pointEquals(changedSelection.focusPt, initialSelection.focusPt,
-       "RTL Changed selection anchor handle moving up " +
-       "should not change focus handle position."),
-    todo(false, "testRTL_moveAnchorHandleUp: " +
-    // greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
-       "RTL Changed selection focusPt.y " +
-       "should be greater than (below) changed anchorPt.y"),
+    pointEquals(changedSelection.focusPt, initialSelection.focusPt,
+      "RTL Changed selection anchor handle moving up " +
+      "should not change focus handle position."),
+    greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
+      "RTL Changed selection focusPt.y " +
+      "should be greater than (below) changed anchorPt.y"),
 
-    todo(false, "testRTL_moveAnchorHandleUp: " +
-    // lessThan(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
-       "RTL Changed selection anchorPt.y " +
-       "should be less than (above) Initial selection anchorPt.y"),
+    lessThan(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
+      "RTL Changed selection anchorPt.y " +
+      "should be less than (above) Initial selection anchorPt.y"),
   ]);
 }
 
@@ -724,24 +714,20 @@ function testRTL_moveAnchorHandleDown() {
       "RTL Initial selection anchorPt.x should be greater than (right of) focusPt.x"),
 
     selectionExists(changedSelection, "RTL Changed selection existed at points"),
-    todo(false, "testRTL_moveAnchorHandleDown: " +
-    // pointEquals(changedSelection.anchorPt, initialSelection.focusPt,
-       "RTL Reversed Changed selection anchor handle moving down " +
-       "becomes new focus handle, " +
-       "new anchor handle is initial focus handle."),
-    todo(false, "testRTL_moveAnchorHandleDown: " +
-    // greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
-       "RTL Reversed Changed selection focusPt.y " +
-       "should be greater than (below) changed anchorPt.y"),
+    pointEquals(changedSelection.anchorPt, initialSelection.focusPt,
+      "RTL Reversed Changed selection anchor handle moving down " +
+      "becomes new focus handle, " +
+      "new anchor handle is initial focus handle."),
+    greaterThan(changedSelection.focusPt.y, changedSelection.anchorPt.y,
+      "RTL Reversed Changed selection focusPt.y " +
+      "should be greater than (below) changed anchorPt.y"),
 
-    todo(false, "testRTL_moveAnchorHandleDown: " +
-    // is(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
-       "RTL Reversed Changed selection anchorPt.y " +
-       "should be equal to Initial selection anchorPt.y"),
-    todo(false, "testRTL_moveAnchorHandleDown: " +
-    // greaterThan(changedSelection.focusPt.y, initialSelection.focusPt.y,
-       "RTL Reversed Changed selection focusPt.y " +
-       "should be greater than (below) Initial selection focusPt.y"),
+    is(changedSelection.anchorPt.y, initialSelection.anchorPt.y,
+      "RTL Reversed Changed selection anchorPt.y " +
+      "should be equal to Initial selection anchorPt.y"),
+    greaterThan(changedSelection.focusPt.y, initialSelection.focusPt.y,
+      "RTL Reversed Changed selection focusPt.y " +
+      "should be greater than (below) Initial selection focusPt.y"),
   ]);
 }
 
@@ -810,10 +796,15 @@ function greaterThan(n1, n2, msg) {
   });
 }
 
+// Use fuzzy logic to compare screen coords.
+function truncPoint(point) {
+  return new Point(Math.trunc(point.x), Math.trunc(point.y));
+}
+
 function pointEquals(p1, p2, msg) {
   return Messaging.sendRequestForResult({
     type: "Robocop:testTextareaSelections",
-    result: p1.equals(p2),
+    result: truncPoint(p1).equals(truncPoint(p2)),
     msg: msg + " : " + p1.toString() + " == " + p2.toString()
   });
 }
@@ -821,7 +812,7 @@ function pointEquals(p1, p2, msg) {
 function pointNotEquals(p1, p2, msg) {
   return Messaging.sendRequestForResult({
     type: "Robocop:testTextareaSelections",
-    result: !p1.equals(p2),
+    result: !truncPoint(p1).equals(truncPoint(p2)),
     msg: msg + " : " + p1.toString() + " == " + p2.toString()
   });
 }
@@ -829,7 +820,7 @@ function pointNotEquals(p1, p2, msg) {
 function selectionExists(selection, msg) {
   return Messaging.sendRequestForResult({
     type: "Robocop:testTextareaSelections",
-    result: !selection.anchorPt.equals(selection.focusPt),
+    result: !truncPoint(selection.anchorPt).equals(truncPoint(selection.focusPt)),
     msg: msg + " : anchor:" + selection.anchorPt.toString() +
       " focus:" + selection.focusPt.toString()
   });

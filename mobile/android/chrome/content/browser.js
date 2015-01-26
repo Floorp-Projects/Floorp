@@ -298,8 +298,8 @@ XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   return ContentAreaUtils;
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "Rect",
-                                  "resource://gre/modules/Geometry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Point", "resource://gre/modules/Geometry.jsm");
 
 function resolveGeckoURI(aURI) {
   if (!aURI)

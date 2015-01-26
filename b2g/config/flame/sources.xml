@@ -17,10 +17,10 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0f662dffef27599443cfcd790c2b39190a2b35c8"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="793773bb2944b42a85dd160049e605cbd880c4da"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="2262d4a77d4f46ab230fd747bb91e9b77bad36cb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e28c4e9ad88b28390120dfd8ada967233f28a98f"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="05baa465f008e92cdf4db74d62f1e3885e3ee73d"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -76,7 +76,6 @@
   <project name="platform/external/mdnsresponder" path="external/mdnsresponder" revision="c46f53f5e072f23051c4eedef730386f7634dc11"/>
   <project name="platform/external/mksh" path="external/mksh" revision="f8c396c4d446a038358106a301b329607a04633d"/>
   <project name="platform/external/netcat" path="external/netcat" revision="444644cfa9a2f3002863caa168fb2d6b34dfd1e8"/>
-  <project name="platform/external/netperf" path="external/netperf" revision="58ecd3b7c76263900e38921360e334a416aec362"/>
   <project name="platform/external/openssl" path="external/openssl" revision="4d2199ecb112f77bd1897047a75277c1d43d1aa9"/>
   <project name="platform/external/ping" path="external/ping" revision="84b590fe10fda51eca755bc65a8eb00bd29ce702"/>
   <project name="platform/external/ping6" path="external/ping6" revision="360f71adc9c5fcf6dafb1d4258d4a6c1e5022dd2"/>
