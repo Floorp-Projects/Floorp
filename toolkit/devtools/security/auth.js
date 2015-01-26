@@ -41,6 +41,28 @@ Prompt.Server.prototype = {
 
   mode: Prompt.mode,
 
+  /**
+   * Verify that listener settings are appropriate for this authentication mode.
+   *
+   * @param listener SocketListener
+   *        The socket listener about to be opened.
+   * @throws if validation requirements are not met
+   */
+  validateOptions() {},
+
+  /**
+   * Augment the service discovery advertisement with any additional data needed
+   * to support this authentication mode.
+   *
+   * @param listener SocketListener
+   *        The socket listener that was just opened.
+   * @param advertisement object
+   *        The advertisement being built.
+   */
+  augmentAdvertisement(listener, advertisement) {
+    advertisement.authentication = Prompt.mode;
+  },
+
 };
 
 /**
@@ -76,6 +98,38 @@ OOBCert.Server = function() {};
 OOBCert.Server.prototype = {
 
   mode: OOBCert.mode,
+
+  /**
+   * Verify that listener settings are appropriate for this authentication mode.
+   *
+   * @param listener SocketListener
+   *        The socket listener about to be opened.
+   * @throws if validation requirements are not met
+   */
+  validateOptions(listener) {
+    if (!listener.encryption) {
+      throw new Error(OOBCert.mode + " authentication requires encryption.");
+    }
+  },
+
+  /**
+   * Augment the service discovery advertisement with any additional data needed
+   * to support this authentication mode.
+   *
+   * @param listener SocketListener
+   *        The socket listener that was just opened.
+   * @param advertisement object
+   *        The advertisement being built.
+   */
+  augmentAdvertisement(listener, advertisement) {
+    advertisement.authentication = OOBCert.mode;
+    // Step A.4
+    // Server announces itself via service discovery
+    // Announcement contains hash(ServerCert) as additional data
+    advertisement.cert = {
+      sha256: listener._socket.serverCert.sha256Fingerprint
+    };
+  },
 
 };
 
