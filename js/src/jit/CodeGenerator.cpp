@@ -3358,27 +3358,19 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
     masm.checkStackAlignment();
 
-    // If the function is known to be uncompilable, only emit the call to InvokeFunction.
+    // If the function is native, only emit the call to InvokeFunction.
     ExecutionMode executionMode = gen->info().executionMode();
-    if (apply->hasSingleTarget()) {
-        JSFunction *target = apply->getSingleTarget();
-        if (target->isNative()) {
-            if (!emitCallInvokeFunction(apply, copyreg))
-                return false;
-            emitPopArguments(apply, copyreg);
-            return true;
-        }
+    if (apply->hasSingleTarget() && apply->getSingleTarget()->isNative()) {
+        if (!emitCallInvokeFunction(apply, copyreg))
+            return false;
+        emitPopArguments(apply, copyreg);
+        return true;
     }
 
     Label end, invoke;
 
-    // Guard that calleereg is an interpreted function with a JSScript:
-    if (!apply->hasSingleTarget()) {
-        masm.branchIfFunctionHasNoScript(calleereg, &invoke);
-    } else {
-        // Native single targets are handled by LCallNative.
-        MOZ_ASSERT(!apply->getSingleTarget()->isNative());
-    }
+    // Guard that calleereg is an interpreted function with a JSScript.
+    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
