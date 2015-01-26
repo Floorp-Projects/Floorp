@@ -83,6 +83,9 @@ DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = devtools.require("devtools/toolkit/security/socket");
   return DebuggerSocket;
 });
+DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
+  return devtools.require("devtools/toolkit/security/auth");
+});
 
 /**
  * TODO: Get rid of this API in favor of EventTarget (bug 1042642)
@@ -372,11 +375,17 @@ DebuggerClient.Argument.prototype.getArgument = function (aParams) {
   return aParams[this.position];
 };
 
-// Expose this to save callers the trouble of importing DebuggerSocket
+// Expose these to save callers the trouble of importing DebuggerSocket
 DebuggerClient.socketConnect = function(options) {
   // Defined here instead of just copying the function to allow lazy-load
   return DebuggerSocket.connect(options);
 };
+DevToolsUtils.defineLazyGetter(DebuggerClient, "Authenticators", () => {
+  return Authentication.Authenticators;
+});
+DevToolsUtils.defineLazyGetter(DebuggerClient, "AuthenticationResult", () => {
+  return Authentication.AuthenticationResult;
+});
 
 DebuggerClient.prototype = {
   /**
