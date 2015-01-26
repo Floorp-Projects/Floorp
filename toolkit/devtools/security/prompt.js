@@ -10,6 +10,8 @@ let Services = require("Services");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 loader.lazyRequireGetter(this, "DebuggerSocket",
   "devtools/toolkit/security/socket", true);
+loader.lazyRequireGetter(this, "AuthenticationResult",
+  "devtools/toolkit/security/auth", true);
 
 DevToolsUtils.defineLazyGetter(this, "bundle", () => {
   const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
@@ -24,7 +26,8 @@ let Server = exports.Server = {};
  * choose to override.  This can be overridden via |allowConnection| on the
  * socket's authenticator instance.
  *
- * @return true if the connection should be permitted, false otherwise
+ * @return An AuthenticationResult value.
+ *         A promise that will be resolved to the above is also allowed.
  */
 Server.defaultAllowConnection = ({ client, server }) => {
   let title = bundle.GetStringFromName("remoteIncomingPromptTitle");
@@ -48,12 +51,10 @@ Server.defaultAllowConnection = ({ client, server }) => {
   let result = prompt.confirmEx(null, title, msg, flags, null, null,
                                 disableButton, null, { value: false });
   if (result === 0) {
-    return true;
+    return AuthenticationResult.ALLOW;
   }
   if (result === 2) {
-    // TODO: Will reimplement later in patch series
-    // DebuggerServer.closeAllListeners();
-    Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+    return AuthenticationResult.DISABLE_ALL;
   }
-  return false;
+  return AuthenticationResult.DENY;
 };

@@ -439,7 +439,9 @@ function _initDebugging(port) {
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
-  authenticator.allowConnection = () => true;
+  authenticator.allowConnection = () => {
+    return DebuggerServer.AuthenticationResult.ALLOW;
+  };
 
   let listener = DebuggerServer.createListener();
   listener.portOrPath = port;

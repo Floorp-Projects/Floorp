@@ -11,6 +11,50 @@ loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
 
 /**
+ * A simple enum-like object with keys mirrored to values.
+ * This makes comparison to a specfic value simpler without having to repeat and
+ * mis-type the value.
+ */
+function createEnum(obj) {
+  for (let key in obj) {
+    obj[key] = key;
+  }
+  return obj;
+}
+
+/**
+ * |allowConnection| implementations can return various values as their |result|
+ * field to indicate what action to take.  By specifying these, we can
+ * centralize the common actions available, while still allowing embedders to
+ * present their UI in whatever way they choose.
+ */
+let AuthenticationResult = exports.AuthenticationResult = createEnum({
+
+  /**
+   * Close all listening sockets, and disable them from opening again.
+   */
+  DISABLE_ALL: null,
+
+  /**
+   * Deny the current connection.
+   */
+  DENY: null,
+
+  /**
+   * Allow the current connection.
+   */
+  ALLOW: null,
+
+  /**
+   * Allow the current connection, and persist this choice for future
+   * connections from the same client.  This requires a trustable mechanism to
+   * identify the client in the future, such as the cert used during OOB_CERT.
+   */
+  ALLOW_PERSIST: null
+
+});
+
+/**
  * An |Authenticator| implements an authentication mechanism via various hooks
  * in the client and server debugger socket connection path (see socket.js).
  *
@@ -83,11 +127,12 @@ Prompt.Server.prototype = {
    *            port
    *          }
    *        }
-   * @return true if the connection should be permitted, false otherwise
+   * @return An AuthenticationResult value.
+   *         A promise that will be resolved to the above is also allowed.
    */
   authenticate(session) {
     if (!Services.prefs.getBoolPref("devtools.debugger.prompt-connection")) {
-      return true;
+      return AuthenticationResult.ALLOW;
     }
     session.authentication = this.mode;
     return this.allowConnection(session);
@@ -113,7 +158,8 @@ Prompt.Server.prototype = {
    *            port
    *          }
    *        }
-   * @return true if the connection should be permitted, false otherwise
+   * @return An AuthenticationResult value.
+   *         A promise that will be resolved to the above is also allowed.
    */
   allowConnection: prompt.Server.defaultAllowConnection,
 
@@ -207,7 +253,8 @@ OOBCert.Server.prototype = {
    *            }
    *          }
    *        }
-   * @return true if the connection should be permitted, false otherwise
+   * @return An AuthenticationResult value.
+   *         A promise that will be resolved to the above is also allowed.
    */
   authenticate(session) {
     session.authentication = this.mode;
@@ -240,7 +287,8 @@ OOBCert.Server.prototype = {
    *            }
    *          }
    *        }
-   * @return true if the connection should be permitted, false otherwise
+   * @return An AuthenticationResult value.
+   *         A promise that will be resolved to the above is also allowed.
    */
   allowConnection: prompt.Server.defaultAllowConnection,
 

@@ -30,7 +30,9 @@ add_task(function*() {
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
-  authenticator.allowConnection = () => true;
+  authenticator.allowConnection = () => {
+    return DebuggerServer.AuthenticationResult.ALLOW;
+  };
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
@@ -75,7 +77,9 @@ add_task(function*() {
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
-  authenticator.allowConnection = () => true;
+  authenticator.allowConnection = () => {
+    return DebuggerServer.AuthenticationResult.ALLOW;
+  };
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
