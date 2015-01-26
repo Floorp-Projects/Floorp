@@ -1192,6 +1192,10 @@ toolbarpaletteitem[place="palette"][hidden] {
   max-width: 10em;
 }
 
+#main-window[customizing=true] #PanelUI-update-status {
+  display: none;
+}
+
 /* UI Tour */
 
 @keyframes uitour-wobble {

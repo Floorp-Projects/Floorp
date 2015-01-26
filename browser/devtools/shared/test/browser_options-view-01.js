@@ -3,8 +3,8 @@
 
 // Tests that options-view OptionsView responds to events correctly.
 
-let { OptionsView } = devtools.require("devtools/shared/options-view");
-let { Services } = devtools.require("resource://gre/modules/Services.jsm");
+const {OptionsView} = devtools.require("devtools/shared/options-view");
+const {Services} = devtools.require("resource://gre/modules/Services.jsm");
 
 const BRANCH = "devtools.debugger.";
 const BLACK_BOX_PREF = "auto-black-box";
@@ -13,24 +13,32 @@ const PRETTY_PRINT_PREF = "auto-pretty-print";
 let originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
 let originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
 
-let test = Task.async(function*() {
+add_task(function*() {
+  info("Setting a couple of preferences");
   Services.prefs.setBoolPref(BRANCH + BLACK_BOX_PREF, false);
   Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, true);
-  let tab = yield promiseTab(OPTIONS_VIEW_URL);
 
-  yield testOptionsView(tab);
+  info("Opening a test tab and a toolbox host to create the options view in");
+  yield promiseTab("about:blank");
+  let [host, win, doc] = yield createHost("bottom", OPTIONS_VIEW_URL);
+
+  yield testOptionsView(win);
+
+  info("Closing the host and current tab");
+  host.destroy();
   gBrowser.removeCurrentTab();
-  cleanup();
-  finish();
+
+  info("Resetting the preferences");
+  Services.prefs.setBoolPref(BRANCH + BLACK_BOX_PREF, originalBlackBox);
+  Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, originalPrettyPrint);
 });
 
-function* testOptionsView(tab) {
+function* testOptionsView(win) {
   let events = [];
-  let options = createOptionsView(tab);
+  let options = createOptionsView(win);
   yield options.initialize();
 
-  let window = tab._contentWindow;
-  let $ = window.document.querySelector.bind(window.document);
+  let $ = win.document.querySelector.bind(win.document);
 
   options.on("pref-changed", (_, pref) => events.push(pref));
 
@@ -57,11 +65,11 @@ function* testOptionsView(tab) {
   is(events[1], "auto-black-box", "correct pref passed in 'pref-changed' event (auto-black-box)");
 
   // Test buttons update when clicked and preferences are updated
-  yield click(options, window, ppEl);
+  yield click(options, win, ppEl);
   is(ppEl.getAttribute("checked"), "true", "menuitems update when clicked");
   is(Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF), true, "preference updated via click");
 
-  yield click(options, window, bbEl);
+  yield click(options, win, bbEl);
   is(bbEl.getAttribute("checked"), "", "menuitems update when clicked");
   is(Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF), false, "preference updated via click");
 
@@ -73,25 +81,14 @@ function* testOptionsView(tab) {
   yield options.destroy();
 }
 
-function wait(window) {
-  return new Promise(function (resolve, reject) {
-  window.setTimeout(() => resolve, 60000);
-  });
-}
-function createOptionsView (tab) {
+function createOptionsView(win) {
   return new OptionsView({
     branchName: BRANCH,
-    window: tab._contentWindow,
-    menupopup: tab._contentWindow.document.querySelector("#options-menupopup")
+    menupopup: win.document.querySelector("#options-menupopup")
   });
 }
 
-function cleanup () {
-  Services.prefs.setBoolPref(BRANCH + BLACK_BOX_PREF, originalBlackBox);
-  Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, originalPrettyPrint);
-}
-
-function* click (view, win, menuitem) {
+function* click(view, win, menuitem) {
   let opened = view.once("options-shown");
   let closed = view.once("options-hidden");
 
@@ -101,7 +98,4 @@ function* click (view, win, menuitem) {
 
   EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
   yield closed;
-}
-
-function* openMenu (view, win) {
 }

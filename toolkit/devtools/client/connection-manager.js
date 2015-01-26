@@ -53,6 +53,11 @@ DevToolsUtils.defineLazyModuleGetter(this, "Task",
  *  . store                 Reference to a local data store (see below)
  *  . keepConnecting        Should the connection keep trying to connect?
  *  . encryption            Should the connection be encrypted?
+ *  . authentication        What authentication scheme should be used?
+ *  . authenticator         The |Authenticator| instance used.  Overriding
+ *                          properties of this instance may be useful to
+ *                          customize authentication UX for a specific use case.
+ *  . advertisement         The server's advertisement if found by discovery
  *  . status                Connection status:
  *                            Connection.Status.CONNECTED
  *                            Connection.Status.DISCONNECTED
@@ -179,9 +184,60 @@ Connection.prototype = {
     this.emit(Connection.Events.PORT_CHANGED);
   },
 
+  get authentication() {
+    return this._authentication;
+  },
+
+  set authentication(value) {
+    this._authentication = value;
+    // Create an |Authenticator| of this type
+    if (!value) {
+      this.authenticator = null;
+      return;
+    }
+    let AuthenticatorType = DebuggerClient.Authenticators.get(value);
+    this.authenticator = new AuthenticatorType.Client();
+  },
+
+  get advertisement() {
+    return this._advertisement;
+  },
+
+  set advertisement(advertisement) {
+    // The full advertisement may contain more info than just the standard keys
+    // below, so keep a copy for use during connection later.
+    this._advertisement = advertisement;
+    if (advertisement) {
+      ["host", "port", "encryption", "authentication"].forEach(key => {
+        this[key] = advertisement[key];
+      });
+    }
+  },
+
+  /**
+   * Settings to be passed to |socketConnect| at connection time.
+   */
+  get socketSettings() {
+    let settings = {};
+    if (this.advertisement) {
+      // Use the advertisement as starting point if it exists, as it may contain
+      // extra data, like the server's cert.
+      Object.assign(settings, this.advertisement);
+    }
+    Object.assign(settings, {
+      host: this.host,
+      port: this.port,
+      encryption: this.encryption,
+      authenticator: this.authenticator
+    });
+    return settings;
+  },
+
   resetOptions() {
     this.keepConnecting = false;
     this.encryption = false;
+    this.authentication = null;
+    this.advertisement = null;
   },
 
   disconnect: function(force) {
@@ -238,11 +294,8 @@ Connection.prototype = {
     if (!this.host) {
       return DebuggerServer.connectPipe();
     }
-    let transport = yield DebuggerClient.socketConnect({
-      host: this.host,
-      port: this.port,
-      encryption: this.encryption
-    });
+    let settings = this.socketSettings;
+    let transport = yield DebuggerClient.socketConnect(settings);
     return transport;
   }),
 

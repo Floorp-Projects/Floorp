@@ -59,9 +59,11 @@
         <treechildren id="engineChildren" flex="1"
                       ondragstart="onDragEngineStart(event);"/>
         <treecols>
-          <treecol id="engineShown" type="checkbox" style="min-width: 26px;" editable="true"/>
-          <treecol id="engineName" flex="4" label="&engineNameColumn.label;"/>
-          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"/>
+          <treecol id="engineShown" type="checkbox" style="min-width: 26px;" editable="true"
+                   sortable="false"/>
+          <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
+          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
+                   sortable="false"/>
         </treecols>
       </tree>
 
