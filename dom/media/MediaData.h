@@ -12,6 +12,8 @@
 #include "AudioSampleFormat.h"
 #include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
+#include "nsRefPtr.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -270,6 +272,15 @@ public:
 
 protected:
   ~VideoData();
+};
+
+  // LargeDataBuffer is a ref counted fallible TArray.
+  // It is designed to share potentially big byte arrays.
+class LargeDataBuffer : public FallibleTArray<uint8_t> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LargeDataBuffer);
+
+private:
+  ~LargeDataBuffer() {}
 };
 
 } // namespace mozilla

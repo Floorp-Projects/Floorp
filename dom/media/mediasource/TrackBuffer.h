@@ -21,6 +21,7 @@ namespace mozilla {
 
 class ContainerParser;
 class MediaSourceDecoder;
+class LargeDataBuffer;
 
 namespace dom {
 
@@ -39,7 +40,7 @@ public:
   // Append data to the current decoder.  Also responsible for calling
   // NotifyDataArrived on the decoder to keep buffered range computation up
   // to date.  Returns false if the append failed.
-  bool AppendData(const uint8_t* aData, uint32_t aLength, int64_t aTimestampOffset /* microseconds */);
+  bool AppendData(LargeDataBuffer* aData, int64_t aTimestampOffset /* microseconds */);
 
   // Evicts data held in the current decoders SourceBufferResource from the
   // start of the buffer through to aPlaybackTime. aThreshold is used to
@@ -120,7 +121,7 @@ private:
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
-  bool AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength,
+  bool AppendDataToCurrentResource(LargeDataBuffer* aData,
                                    uint32_t aDuration /* microseconds */);
 
   // Queue execution of InitializeDecoder on mTaskQueue.
