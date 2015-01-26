@@ -25,8 +25,6 @@ loader.lazyRequireGetter(this, "cert",
   "devtools/toolkit/security/cert");
 loader.lazyRequireGetter(this, "Authenticators",
   "devtools/toolkit/security/auth", true);
-loader.lazyRequireGetter(this, "prompt",
-  "devtools/toolkit/security/prompt");
 loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 
@@ -225,15 +223,6 @@ SocketListener.prototype = {
    * port. Otherwise, the path to the unix socket domain file to listen on.
    */
   portOrPath: null,
-
-  /**
-   * Prompt the user to accept or decline the incoming connection. The default
-   * implementation is used unless this is overridden on a particular socket
-   * listener instance.
-   *
-   * @return true if the connection should be permitted, false otherwise
-   */
-  allowConnection: prompt.Server.defaultAllowConnection,
 
   /**
    * Controls whether this listener is announced via the service discovery
@@ -512,8 +501,7 @@ ServerSocketConnection.prototype = {
   },
 
   _authenticate() {
-    if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") &&
-        !this._listener.allowConnection()) {
+    if (!this._listener.authenticator.authenticate()) {
       return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
     }
     return promise.resolve();
