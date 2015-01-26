@@ -89,9 +89,9 @@ public:
 
   static TemporaryRef<SyncObject> CreateSyncObject(SyncHandle aHandle);
 
-  MOZ_BEGIN_NESTED_ENUM_CLASS(SyncType)
+  enum class SyncType {
     D3D11,
-  MOZ_END_NESTED_ENUM_CLASS(SyncType)
+  };
 
   virtual SyncType GetSyncType() = 0;
   virtual void FinalizeFrame() = 0;

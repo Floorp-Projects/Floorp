@@ -82,11 +82,11 @@ private:
   WebAudioDecodeJob::ErrorCode mErrorCode;
 };
 
-MOZ_BEGIN_ENUM_CLASS(PhaseEnum, int)
+enum class PhaseEnum : int {
   Decode,
   AllocateBuffer,
   Done
-MOZ_END_ENUM_CLASS(PhaseEnum)
+};
 
 class MediaDecodeTask : public nsRunnable
 {
