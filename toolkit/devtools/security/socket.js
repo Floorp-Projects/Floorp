@@ -561,7 +561,8 @@ ServerSocketConnection.prototype = {
   _authenticate: Task.async(function*() {
     let result = yield this._listener.authenticator.authenticate({
       client: this.client,
-      server: this.server
+      server: this.server,
+      transport: this._transport
     });
     switch (result) {
       case AuthenticationResult.DISABLE_ALL:
