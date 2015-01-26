@@ -46,7 +46,6 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
     private int xLastPosition;
     private int yLastPosition;
     private boolean shouldSetVisibleOnUpdate;
-    private PointF convertedPosition;
     private PointF returnValue;
 
     private boolean stopUpdateView;
@@ -82,7 +81,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
                 } else {
                     layerView.dispatchTouchEvent(actionDownEvent);
                     actionDownEvent.recycle();
-                    convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
+                    PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
                     MotionEvent e = MotionEvent.obtain(event.getDownTime(), event.getEventTime(),
                             MotionEvent.ACTION_UP, convertedPosition.x, convertedPosition.y,
                             event.getMetaState());
@@ -95,7 +94,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
                 touchState = -1;
                 originRawX = event.getRawX();
                 originRawY = event.getRawY();
-                convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
+                PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());
                 actionDownEvent = MotionEvent.obtain(event.getDownTime(), event.getEventTime(),
                         MotionEvent.ACTION_DOWN, convertedPosition.x, convertedPosition.y,
                         event.getMetaState());
@@ -133,7 +132,6 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
 
     public ZoomedView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        convertedPosition = new PointF();
         returnValue = new PointF();
         requestRenderRunnable = new Runnable() {
             @Override
@@ -266,7 +264,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         }
 
         setLayoutParams(newLayoutParams);
-        convertedPosition = getUnzoomedPositionFromPointInZoomedView(0, 0);
+        PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(0, 0);
         xLastPosition = Math.round(convertedPosition.x);
         yLastPosition = Math.round(convertedPosition.y);
         requestZoomedViewRender();
@@ -368,7 +366,7 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
             return;
         }
         ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
-        convertedPosition = getZoomedViewTopLeftPositionFromTouchPosition((leftFromGecko * metrics.zoomFactor),
+        PointF convertedPosition = getZoomedViewTopLeftPositionFromTouchPosition((leftFromGecko * metrics.zoomFactor),
                 (topFromGecko * metrics.zoomFactor));
         moveZoomedView(metrics, convertedPosition.x, convertedPosition.y);
     }
