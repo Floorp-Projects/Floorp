@@ -137,7 +137,7 @@ function oneTimeObserve(name, callback) {
   Services.obs.addObserver(func, name, false);
 }
 
-function* createHost(type = "bottom", src = "data:text/html;charset=utf-8,") {
+let createHost = Task.async(function*(type = "bottom", src = "data:text/html;charset=utf-8,") {
   let host = new Hosts[type](gBrowser.selectedTab);
   let iframe = yield host.create();
 
@@ -148,7 +148,7 @@ function* createHost(type = "bottom", src = "data:text/html;charset=utf-8,") {
   });
 
   return [host, iframe.contentWindow, iframe.contentDocument];
-}
+});
 
 /**
  * Load the Telemetry utils, then stub Telemetry.prototype.log in order to
