@@ -6,6 +6,7 @@
 
 "use strict";
 
+let { Ci } = require("chrome");
 let Services = require("Services");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 loader.lazyRequireGetter(this, "DebuggerSocket",
@@ -18,7 +19,86 @@ DevToolsUtils.defineLazyGetter(this, "bundle", () => {
   return Services.strings.createBundle(DBG_STRINGS_URI);
 });
 
+let Client = exports.Client = {};
 let Server = exports.Server = {};
+
+/**
+ * During OOB_CERT authentication, a notification dialog like this is used to
+ * to display a token which the user must transfer through some mechanism to the
+ * server to authenticate the devices.
+ *
+ * This implementation presents the token as text for the user to transfer
+ * manually.  For a mobile device, you should override this implementation with
+ * something more convenient, such as displaying a QR code.
+ *
+ * @param host string
+ *        The host name or IP address of the debugger server.
+ * @param port number
+ *        The port number of the debugger server.
+ * @param cert object (optional)
+ *        The server's cert details.
+ * @param authResult AuthenticationResult
+ *        Authentication result sent from the server.
+ * @param oob object (optional)
+ *        The token data to be transferred during OOB_CERT step 8:
+ *        * sha256: hash(ClientCert)
+ *        * k     : K(random 128-bit number)
+ * @return object containing:
+ *         * close: Function to hide the notification
+ */
+Client.defaultSendOOB = ({ authResult, oob }) => {
+  // Only show in the PENDING state
+  if (authResult != AuthenticationResult.PENDING) {
+    throw new Error("Expected PENDING result, got " + authResult);
+  }
+  let title = bundle.GetStringFromName("clientSendOOBTitle");
+  let header = bundle.GetStringFromName("clientSendOOBHeader");
+  let hashMsg = bundle.formatStringFromName("clientSendOOBHash",
+                                            [oob.sha256], 1);
+  let token = oob.sha256.replace(/:/g, "").toLowerCase() + oob.k;
+  let tokenMsg = bundle.formatStringFromName("clientSendOOBToken",
+                                             [token], 1);
+  let msg =`${header}\n\n${hashMsg}\n${tokenMsg}`;
+  let prompt = Services.prompt;
+  let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_CANCEL;
+
+  // Listen for the window our prompt opens, so we can close it programatically
+  let promptWindow;
+  let windowListener = {
+    onOpenWindow(xulWindow) {
+      let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
+      win.addEventListener("load", function listener() {
+        win.removeEventListener("load", listener, false);
+        if (win.document.documentElement.getAttribute("id") != "commonDialog") {
+          return;
+        }
+        // Found the window
+        promptWindow = win;
+        Services.wm.removeListener(windowListener);
+      }, false);
+    },
+    onCloseWindow() {},
+    onWindowTitleChange() {}
+  };
+  Services.wm.addListener(windowListener);
+
+  // nsIPrompt is typically a blocking API, so |executeSoon| to get around this
+  DevToolsUtils.executeSoon(() => {
+    prompt.confirmEx(null, title, msg, flags, null, null, null, null,
+                     { value: false });
+  });
+
+  return {
+    close() {
+      if (!promptWindow) {
+        return;
+      }
+      promptWindow.document.documentElement.acceptDialog();
+      promptWindow = null;
+    }
+  };
+};
 
 /**
  * Prompt the user to accept or decline the incoming connection. This is the
