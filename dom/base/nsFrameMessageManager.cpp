@@ -37,9 +37,8 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "JavaScriptChild.h"
-#include "JavaScriptParent.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include <algorithm>
@@ -927,7 +926,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
                                       bool aIsSync,
                                       const StructuredCloneData* aCloneData,
-                                      CpowHolder* aCpows,
+                                      mozilla::jsipc::CpowHolder* aCpows,
                                       nsIPrincipal* aPrincipal,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {

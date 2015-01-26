@@ -76,3 +76,20 @@ JavaScriptParent::CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx)
     }
     return actor.forget();
 }
+
+PJavaScriptParent *
+mozilla::jsipc::NewJavaScriptParent(JSRuntime *rt)
+{
+    JavaScriptParent *parent = new JavaScriptParent(rt);
+    if (!parent->init()) {
+        delete parent;
+        return nullptr;
+    }
+    return parent;
+}
+
+void
+mozilla::jsipc::ReleaseJavaScriptParent(PJavaScriptParent *parent)
+{
+    static_cast<JavaScriptParent *>(parent)->decref();
+}
