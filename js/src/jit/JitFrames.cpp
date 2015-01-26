@@ -3026,12 +3026,30 @@ InvalidationBailoutStack::checkInvariants() const
 }
 
 void
-AssertValidJitStack(JSContext *cx)
+AssertJitStackInvariants(JSContext *cx)
 {
     for (JitActivationIterator activations(cx->runtime()); !activations.done(); ++activations) {
         JitFrameIterator frames(activations);
-        for (; !frames.done(); ++frames)
-            continue;
+        for (; !frames.done(); ++frames) {
+
+            if (frames.prevType() == JitFrame_Rectifier) {
+                size_t calleeFp = reinterpret_cast<size_t>(frames.fp());
+                size_t callerFp = reinterpret_cast<size_t>(frames.prevFp());
+                MOZ_ASSERT(callerFp >= calleeFp);
+                size_t frameSize = callerFp - calleeFp;
+
+                MOZ_RELEASE_ASSERT(frameSize % JitStackAlignment == 0,
+                  "The rectifier frame should keep the alignment");
+
+                size_t expectedFrameSize = 0
+                    + sizeof(Value) * (frames.callee()->nargs() + 1 /* |this| argument */ )
+                    + sizeof(JitFrameLayout);
+                MOZ_RELEASE_ASSERT(frameSize >= expectedFrameSize,
+                  "The frame is large enough to hold all arguments");
+                MOZ_RELEASE_ASSERT(expectedFrameSize + JitStackAlignment > frameSize,
+                  "The frame size is optimal");
+            }
+        }
 
         MOZ_RELEASE_ASSERT(frames.type() == JitFrame_Entry,
           "The first frame of a Jit activation should be an entry frame");
