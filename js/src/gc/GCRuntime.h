@@ -752,6 +752,7 @@ class GCRuntime
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void *data);
 
     void setMaxMallocBytes(size_t value);
+    int32_t getMallocBytes() const { return mallocBytesUntilGC; }
     void resetMallocBytes();
     bool isTooMuchMalloc() const { return mallocBytesUntilGC <= 0; }
     void updateMallocCounter(JS::Zone *zone, size_t nbytes);
@@ -780,6 +781,12 @@ class GCRuntime
 
     uint64_t gcNumber() { return number; }
     void incGcNumber() { ++number; }
+
+    uint64_t minorGCCount() { return minorGCNumber; }
+    void incMinorGcNumber() { ++minorGCNumber; }
+
+    uint64_t majorGCCount() { return majorGCNumber; }
+    void incMajorGcNumber() { ++majorGCNumber; }
 
     bool isIncrementalGc() { return isIncremental; }
     bool isFullGc() { return isFull; }
@@ -1061,6 +1068,9 @@ class GCRuntime
 
     /* Perform full GC if rt->keepAtoms() becomes false. */
     bool fullGCForAtomsRequested_;
+
+    /* Incremented at the start of every minor GC. */
+    uint64_t minorGCNumber;
 
     /* Incremented at the start of every major GC. */
     uint64_t majorGCNumber;
