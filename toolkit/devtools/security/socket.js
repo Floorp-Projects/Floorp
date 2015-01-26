@@ -167,7 +167,18 @@ let _attemptTransport = Task.async(function*(settings) {
 
   // Check if the input stream is alive.  If encryption is enabled, we need to
   // watch out for cert errors by testing the input stream.
-  let { alive, certError } = yield _isInputAlive(input);
+  let alive, certError;
+  try {
+    let results = yield _isInputAlive(input);
+    alive = results.alive;
+    certError = results.certError;
+  } catch(e) {
+    // For other unexpected errors, like NS_ERROR_CONNECTION_REFUSED, we reach
+    // this block.
+    input.close();
+    output.close();
+    throw e;
+  }
   dumpv("Server cert accepted? " + !certError);
 
   // The |Authenticator| examines the connection as well and may determine it
