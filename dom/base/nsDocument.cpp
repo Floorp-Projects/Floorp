@@ -1338,7 +1338,6 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
   nsIDocument* doc = aRequestingNode->OwnerDoc();
 
   nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
-  NS_ENSURE_TRUE(req, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
