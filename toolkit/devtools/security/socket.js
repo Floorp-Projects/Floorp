@@ -25,6 +25,8 @@ loader.lazyRequireGetter(this, "cert",
   "devtools/toolkit/security/cert");
 loader.lazyRequireGetter(this, "Authenticators",
   "devtools/toolkit/security/auth", true);
+loader.lazyRequireGetter(this, "AuthenticationResult",
+  "devtools/toolkit/security/auth", true);
 loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 
@@ -528,16 +530,24 @@ ServerSocketConnection.prototype = {
     this._handshakeDeferred.resolve();
   },
 
-  _authenticate() {
-    let result = this._listener.authenticator.authenticate({
+  _authenticate: Task.async(function*() {
+    let result = yield this._listener.authenticator.authenticate({
       client: this.client,
       server: this.server
     });
-    if (result) {
-      return promise.resolve();
+    switch (result) {
+      case AuthenticationResult.DISABLE_ALL:
+        DebuggerServer.closeAllListeners();
+        Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+      case AuthenticationResult.DENY:
+        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+      case AuthenticationResult.ALLOW:
+        return promise.resolve();
+      default:
+        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
     }
-    return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
-  },
+  }),
 
   deny(result) {
     let errorName = result;

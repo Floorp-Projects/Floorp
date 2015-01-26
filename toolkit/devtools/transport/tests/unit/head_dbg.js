@@ -263,7 +263,9 @@ let socket_transport = Task.async(function*() {
   if (!DebuggerServer.listeningSockets) {
     let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
     let authenticator = new AuthenticatorType.Server();
-    authenticator.allowConnection = () => true;
+    authenticator.allowConnection = () => {
+      return DebuggerServer.AuthenticationResult.ALLOW;
+    };
     let listener = DebuggerServer.createListener();
     listener.portOrPath = -1 /* any available port */;
     listener.authenticator = authenticator;
