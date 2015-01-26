@@ -525,11 +525,8 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
 {
   // If we can't find the point in a child, we will return the fallback answer:
   // we return |this| if the point is within it, otherwise nullptr.
-  nsIntRect rect = Bounds();
-  if (rect.IsEmpty())
-   return nullptr;
-
   Accessible* fallbackAnswer = nullptr;
+  nsIntRect rect = Bounds();
   if (aX >= rect.x && aX < rect.x + rect.width &&
       aY >= rect.y && aY < rect.y + rect.height)
     fallbackAnswer = this;

@@ -8,6 +8,7 @@
 #define mozilla_dom_ServiceWorkerRegistration_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 
 class nsPIDOMWindow;

@@ -68,6 +68,8 @@ if (!MAC) {
       hitTest("imgmap", theLetterA, theLetterA);
       hitTest("container", "imgmap", theLetterA);
 
+      // hit testing for element contained by zero-width element
+      hitTest("container2", "container2_input", "container2_input");
       SimpleTest.finish();
     }
 
@@ -106,5 +108,8 @@ if (!MAC) {
     <img id="imgmap" width="447" height="15" usemap="#atoz_map" src="../letters.gif"/>
   </div>
 
+  <div id="container2" style="width: 0px">
+    <input id="container2_input">
+  </div>
 </body>
 </html>

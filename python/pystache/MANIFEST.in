@@ -1,0 +1,13 @@
+include README.md
+include HISTORY.md
+include LICENSE
+include TODO.md
+include setup_description.rst
+include tox.ini
+include test_pystache.py
+# You cannot use package_data, for example, to include data files in a
+# source distribution when using Distribute.
+recursive-include pystache/tests *.mustache *.txt
+# We deliberately exclude the gh/ directory because it contains copies
+# of resources needed only for the web page hosted on GitHub (via the
+# gh-pages branch).

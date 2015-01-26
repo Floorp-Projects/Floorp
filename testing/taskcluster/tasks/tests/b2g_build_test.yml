@@ -1,0 +1,39 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] Gaia Build Test'
+    description: Gaia Build Test test run
+
+  scopes:
+    - 'docker-worker:cache:sources-gaia'
+
+  payload:
+    cache:
+      sources-gaia: '/home/worker/gaia'
+
+    command:
+      - entrypoint # entrypoint ensures we are running in xvfb
+      - ./bin/pull_gaia.sh &&
+      - >
+        python ./mozharness/scripts/gaia_build_integration.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/gaia_integration_config.py
+        --config-file ./mozharness_configs/gaia_integration_override.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/packages/xre.linux-x86_64.zip
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      symbol: 'Gb'
+      productName: b2g

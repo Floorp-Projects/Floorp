@@ -317,6 +317,19 @@ class SimdScalarPolicy MOZ_FINAL : public TypePolicy
     }
 };
 
+// SIMD value-type policy, use the returned type of the instruction to determine
+// how to unbox its operand.
+template <unsigned Op>
+class SimdSameAsReturnedTypePolicy MOZ_FINAL : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+    virtual bool adjustInputs(TempAllocator &alloc, MInstruction *ins) MOZ_OVERRIDE {
+        return staticAdjustInputs(alloc, ins);
+    }
+};
+
 template <unsigned Op>
 class BoxPolicy MOZ_FINAL : public TypePolicy
 {

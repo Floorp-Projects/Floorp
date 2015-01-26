@@ -481,6 +481,11 @@ void DisableExtraThreads();
  */
 class PerThreadData : public PerThreadDataFriendFields
 {
+#ifdef DEBUG
+    // Grant access to runtime_.
+    friend void js::AssertCurrentThreadCanLock(RuntimeLock which);
+#endif
+
     /*
      * Backpointer to the full shared JSRuntime* with which this
      * thread is associated.  This is private because accessing the
@@ -507,112 +512,14 @@ class PerThreadData : public PerThreadDataFriendFields
     js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
 #endif
 
-    /*
-     * If Baseline or Ion code is on the stack, and has called into C++, this
-     * will be aligned to an exit frame.
-     */
-    uint8_t             *jitTop;
-
-    /*
-     * The current JSContext when entering JIT code. This field may only be used
-     * from JIT code and C++ directly called by JIT code (otherwise it may refer
-     * to the wrong JSContext).
-     */
-    JSContext           *jitJSContext;
-
-     /*
-     * Points to the most recent JitActivation pushed on the thread.
-     * See JitActivation constructor in vm/Stack.cpp
-     */
-    js::jit::JitActivation *jitActivation;
-
-    /* See comment for JSRuntime::interrupt_. */
-  private:
-    mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit_;
-    void resetJitStackLimit();
-    friend struct ::JSRuntime;
-  public:
-    void initJitStackLimit();
-
-    uintptr_t jitStackLimit() const { return jitStackLimit_; }
-
-    // For read-only JIT use:
-    void *addressOfJitStackLimit() { return &jitStackLimit_; }
-    static size_t offsetOfJitStackLimit() { return offsetof(PerThreadData, jitStackLimit_); }
-
-    // Information about the heap allocated backtrack stack used by RegExp JIT code.
-    irregexp::RegExpStack regexpStack;
-
 #ifdef JS_TRACE_LOGGING
     TraceLoggerThread   *traceLogger;
 #endif
 
-  private:
-    friend class js::Activation;
-    friend class js::ActivationIterator;
-    friend class js::jit::JitActivation;
-    friend class js::AsmJSActivation;
-    friend class js::jit::CompileRuntime;
-#ifdef DEBUG
-    friend void js::AssertCurrentThreadCanLock(RuntimeLock which);
-#endif
-
-    /*
-     * Points to the most recent activation running on the thread.
-     * See Activation comment in vm/Stack.h.
-     */
-    js::Activation *activation_;
-
-    /*
-     * Points to the most recent profiling activation running on the
-     * thread.
-     */
-    js::Activation * volatile profilingActivation_;
-
-    /* See AsmJSActivation comment. */
-    js::AsmJSActivation * volatile asmJSActivationStack_;
-
     /* Pointer to the current AutoFlushICache. */
     js::jit::AutoFlushICache *autoFlushICache_;
 
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-    js::jit::Simulator *simulator_;
-    uintptr_t simulatorStackLimit_;
-#endif
-
   public:
-    js::Activation *const *addressOfActivation() const {
-        return &activation_;
-    }
-    static unsigned offsetOfAsmJSActivationStackReadOnly() {
-        return offsetof(PerThreadData, asmJSActivationStack_);
-    }
-    static unsigned offsetOfActivation() {
-        return offsetof(PerThreadData, activation_);
-    }
-
-    js::Activation *profilingActivation() const {
-        return profilingActivation_;
-    }
-    void *addressOfProfilingActivation() {
-        return (void*) &profilingActivation_;
-    }
-    static unsigned offsetOfProfilingActivation() {
-        return offsetof(PerThreadData, profilingActivation_);
-    }
-
-    js::AsmJSActivation *asmJSActivationStack() const {
-        return asmJSActivationStack_;
-    }
-    static js::AsmJSActivation *innermostAsmJSActivation() {
-        PerThreadData *ptd = TlsPerThreadData.get();
-        return ptd ? ptd->asmJSActivationStack_ : nullptr;
-    }
-
-    js::Activation *activation() const {
-        return activation_;
-    }
-
     /* State used by jsdtoa.cpp. */
     DtoaState           *dtoaState;
 
@@ -659,21 +566,10 @@ class PerThreadData : public PerThreadDataFriendFields
         {
             MOZ_ASSERT(!pt->runtime_);
             pt->runtime_ = rt;
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-            // The simulator has a pointer to its SimulatorRuntime, but helper threads
-            // don't have a simulator as they don't run JIT code so this pointer need not
-            // be updated. All the paths that the helper threads use access the
-            // SimulatorRuntime via the PerThreadData.
-            MOZ_ASSERT(!pt->simulator_);
-#endif
         }
 
         ~AutoEnterRuntime() {
             pt->runtime_ = nullptr;
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-            // Check that helper threads have not run JIT code and/or added a simulator.
-            MOZ_ASSERT(!pt->simulator_);
-#endif
         }
     };
 
@@ -684,7 +580,6 @@ class PerThreadData : public PerThreadDataFriendFields
     js::jit::Simulator *simulator() const;
     void setSimulator(js::jit::Simulator *sim);
     js::jit::SimulatorRuntime *simulatorRuntime() const;
-    uintptr_t *addressOfSimulatorStackLimit();
 #endif
 };
 
@@ -706,6 +601,97 @@ struct JSRuntime : public JS::shadow::Runtime,
      * PerThreadDataFriendFields::getMainThread.
      */
     js::PerThreadData mainThread;
+
+    /*
+     * If Baseline or Ion code is on the stack, and has called into C++, this
+     * will be aligned to an exit frame.
+     */
+    uint8_t             *jitTop;
+
+    /*
+     * The current JSContext when entering JIT code. This field may only be used
+     * from JIT code and C++ directly called by JIT code (otherwise it may refer
+     * to the wrong JSContext).
+     */
+    JSContext           *jitJSContext;
+
+     /*
+     * Points to the most recent JitActivation pushed on the thread.
+     * See JitActivation constructor in vm/Stack.cpp
+     */
+    js::jit::JitActivation *jitActivation;
+
+    /* See comment for JSRuntime::interrupt_. */
+  private:
+    mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit_;
+    void resetJitStackLimit();
+
+  public:
+    void initJitStackLimit();
+
+    uintptr_t jitStackLimit() const { return jitStackLimit_; }
+
+    // For read-only JIT use:
+    void *addressOfJitStackLimit() { return &jitStackLimit_; }
+    static size_t offsetOfJitStackLimit() { return offsetof(JSRuntime, jitStackLimit_); }
+
+    // Information about the heap allocated backtrack stack used by RegExp JIT code.
+    js::irregexp::RegExpStack regexpStack;
+
+  private:
+    friend class js::Activation;
+    friend class js::ActivationIterator;
+    friend class js::jit::JitActivation;
+    friend class js::AsmJSActivation;
+    friend class js::jit::CompileRuntime;
+#ifdef DEBUG
+    friend void js::AssertCurrentThreadCanLock(js::RuntimeLock which);
+#endif
+
+    /*
+     * Points to the most recent activation running on the thread.
+     * See Activation comment in vm/Stack.h.
+     */
+    js::Activation *activation_;
+
+    /*
+     * Points to the most recent profiling activation running on the
+     * thread.
+     */
+    js::Activation * volatile profilingActivation_;
+
+    /* See AsmJSActivation comment. */
+    js::AsmJSActivation * volatile asmJSActivationStack_;
+
+  public:
+    js::Activation *const *addressOfActivation() const {
+        return &activation_;
+    }
+    static unsigned offsetOfActivation() {
+        return offsetof(JSRuntime, activation_);
+    }
+
+    js::Activation *profilingActivation() const {
+        return profilingActivation_;
+    }
+    void *addressOfProfilingActivation() {
+        return (void*) &profilingActivation_;
+    }
+    static unsigned offsetOfProfilingActivation() {
+        return offsetof(JSRuntime, profilingActivation_);
+    }
+
+    js::AsmJSActivation *asmJSActivationStack() const {
+        return asmJSActivationStack_;
+    }
+    static js::AsmJSActivation *innermostAsmJSActivation() {
+        js::PerThreadData *ptd = js::TlsPerThreadData.get();
+        return ptd ? ptd->runtimeFromMainThread()->asmJSActivationStack_ : nullptr;
+    }
+
+    js::Activation *activation() const {
+        return activation_;
+    }
 
     /*
      * If non-null, another runtime guaranteed to outlive this one and whose
@@ -988,6 +974,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+    js::jit::Simulator *simulator_;
+    uintptr_t simulatorStackLimit_;
     js::jit::SimulatorRuntime *simulatorRuntime_;
 #endif
 
@@ -997,6 +985,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+    js::jit::Simulator *simulator() const;
+    void setSimulator(js::jit::Simulator *sim);
+    uintptr_t *addressOfSimulatorStackLimit();
     js::jit::SimulatorRuntime *simulatorRuntime() const;
     void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
 #endif
@@ -1438,7 +1429,7 @@ namespace js {
 static inline JSContext *
 GetJSContextFromJitCode()
 {
-    JSContext *cx = TlsPerThreadData.get()->jitJSContext;
+    JSContext *cx = js::TlsPerThreadData.get()->runtimeFromMainThread()->jitJSContext;
     MOZ_ASSERT(cx);
     return cx;
 }

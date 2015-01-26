@@ -33,21 +33,6 @@ StackBaseShape::StackBaseShape(ExclusiveContext *cx, const Class *clasp,
     compartment(cx->compartment_)
 {}
 
-inline bool
-Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj,
-           MutableHandleValue vp)
-{
-    MOZ_ASSERT(!hasDefaultGetter());
-
-    if (hasGetterValue()) {
-        Value fval = getterValue();
-        return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
-    }
-
-    RootedId id(cx, propid());
-    return CallJSPropertyOp(cx, getterOp(), receiver, id, vp);
-}
-
 inline Shape *
 Shape::search(ExclusiveContext *cx, jsid id)
 {

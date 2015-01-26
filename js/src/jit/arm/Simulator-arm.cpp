@@ -4226,7 +4226,7 @@ Simulator::execute()
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
                 // AsmJS signal handler ran and we have to adjust the pc.
-                PerThreadData::innermostAsmJSActivation()->setResumePC((void *)get_pc());
+                JSRuntime::innermostAsmJSActivation()->setResumePC((void *)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;
             }
@@ -4418,28 +4418,40 @@ Simulator::Current()
 } // namespace js
 
 js::jit::Simulator *
-js::PerThreadData::simulator() const
+JSRuntime::simulator() const
 {
     return simulator_;
+}
+
+js::jit::Simulator *
+js::PerThreadData::simulator() const
+{
+    return runtime_->simulator();
+}
+
+void
+JSRuntime::setSimulator(js::jit::Simulator *sim)
+{
+    simulator_ = sim;
+    simulatorStackLimit_ = sim->stackLimit();
 }
 
 void
 js::PerThreadData::setSimulator(js::jit::Simulator *sim)
 {
-    simulator_ = sim;
-    simulatorStackLimit_ = sim->stackLimit();
+    runtime_->setSimulator(sim);
+}
+
+uintptr_t *
+JSRuntime::addressOfSimulatorStackLimit()
+{
+    return &simulatorStackLimit_;
 }
 
 js::jit::SimulatorRuntime *
 js::PerThreadData::simulatorRuntime() const
 {
     return runtime_->simulatorRuntime();
-}
-
-uintptr_t *
-js::PerThreadData::addressOfSimulatorStackLimit()
-{
-    return &simulatorStackLimit_;
 }
 
 js::jit::SimulatorRuntime *

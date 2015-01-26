@@ -1,0 +1,34 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] Mulet Mochitests {{chunk}}'
+    description: Mulet Mochi test run {{chunk}}
+
+  payload:
+    command:
+      - entrypoint # entrypoint ensures we are running in xvfb
+      - >
+        python ./mozharness/scripts/desktop_unittest.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/unittests/linux_unittest.py
+        --config-file ./mozharness_configs/linux_mulet_config.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --mochitest-suite plain-chunked
+        --total-chunk={{total_chunks}}
+        --this-chunk={{chunk}}
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      group_symbol: M
+      group_name: Mulet mochitests
+      symbol: {{chunk}}
+
