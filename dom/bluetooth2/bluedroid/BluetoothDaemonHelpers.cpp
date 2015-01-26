@@ -98,6 +98,37 @@ Convert(uint8_t aIn, int& aOut)
 }
 
 nsresult
+Convert(uint8_t aIn, BluetoothA2dpAudioState& aOut)
+{
+  static const BluetoothA2dpAudioState sAudioState[] = {
+    CONVERT(0x00, A2DP_AUDIO_STATE_REMOTE_SUSPEND),
+    CONVERT(0x01, A2DP_AUDIO_STATE_STOPPED),
+    CONVERT(0x02, A2DP_AUDIO_STATE_STARTED)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAudioState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAudioState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothA2dpConnectionState& aOut)
+{
+  static const BluetoothA2dpConnectionState sConnectionState[] = {
+    CONVERT(0x00, A2DP_CONNECTION_STATE_DISCONNECTED),
+    CONVERT(0x01, A2DP_CONNECTION_STATE_CONNECTING),
+    CONVERT(0x02, A2DP_CONNECTION_STATE_CONNECTED),
+    CONVERT(0x03, A2DP_CONNECTION_STATE_DISCONNECTING)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sConnectionState))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sConnectionState[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(uint8_t aIn, BluetoothAclState& aOut)
 {
   static const BluetoothAclState sAclState[] = {
@@ -916,6 +947,20 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, char& aOut)
 {
   return UnpackPDU(aPDU, UnpackConversion<uint8_t, char>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothA2dpAudioState& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothA2dpAudioState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothA2dpConnectionState& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothA2dpConnectionState>(aOut));
 }
 
 nsresult

@@ -5,29 +5,26 @@ let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 let {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 let {OutputParser} = devtools.require("devtools/output-parser");
 
-let parser;
-let doc;
+add_task(function*() {
+  yield promiseTab("about:blank");
+  yield performTest();
+  gBrowser.removeCurrentTab();
+});
 
-function test() {
-  waitForExplicitFinish();
+function* performTest() {
+  let [host, win, doc] = yield createHost("bottom", "data:text/html," +
+    "<h1>browser_outputParser.js</h1><div></div>");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(init, content);
-    doc = content.document;
-  }, true);
+  let parser = new OutputParser();
+  testParseCssProperty(doc, parser);
+  testParseCssVar(doc, parser);
+  testParseHTMLAttribute(doc, parser);
+  testParseNonCssHTMLAttribute(doc, parser);
 
-  content.location = "data:text/html,<h1>browser_outputParser.js</h1>" +
-                     "<div></div>";
+  host.destroy();
 }
 
-function init() {
-  parser = new OutputParser();
-  testParseCssProperty();
-}
-
-function testParseCssProperty() {
+function testParseCssProperty(doc, parser) {
   let frag = parser.parseCssProperty("border", "1px solid red", {
     colorSwatchClass: "test-colorswatch"
   });
@@ -53,11 +50,9 @@ function testParseCssProperty() {
      "Gradient CSS property correctly parsed");
 
   target.innerHTML = "";
-
-  testParseCssVar();
 }
 
-function testParseCssVar() {
+function testParseCssVar(doc, parser) {
   let frag = parser.parseCssProperty("color", "var(--some-kind-of-green)", {
     colorSwatchClass: "test-colorswatch"
   });
@@ -69,11 +64,9 @@ function testParseCssVar() {
   is(target.innerHTML, "var(--some-kind-of-green)", "CSS property correctly parsed");
 
   target.innerHTML = "";
-
-  testParseHTMLAttribute();
 }
 
-function testParseHTMLAttribute() {
+function testParseHTMLAttribute(doc, parser) {
   let attrib = "color:red; font-size: 12px; background-image: " +
                "url(chrome://branding/content/about-logo.png)";
   let frag = parser.parseHTMLAttribute(attrib, {
@@ -92,10 +85,9 @@ function testParseHTMLAttribute() {
 
   is(target.innerHTML, expected, "HTML Attribute correctly parsed");
   target.innerHTML = "";
-  testParseNonCssHTMLAttribute();
 }
 
-function testParseNonCssHTMLAttribute() {
+function testParseNonCssHTMLAttribute(doc, parser) {
   let attrib = "someclass background someotherclass red";
   let frag = parser.parseHTMLAttribute(attrib);
 
@@ -107,12 +99,4 @@ function testParseNonCssHTMLAttribute() {
 
   is(target.innerHTML, expected, "Non-CSS HTML Attribute correctly parsed");
   target.innerHTML = "";
-  finishUp();
-}
-
-
-function finishUp() {
-  Services = Loader = OutputParser = parser = doc = null;
-  gBrowser.removeCurrentTab();
-  finish();
 }

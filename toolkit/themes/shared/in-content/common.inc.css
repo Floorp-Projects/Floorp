@@ -641,7 +641,7 @@ xul|treecolpicker {
   padding: 5px 10px;
 }
 
-xul|treecol:not([hideheader="true"]):hover,
+xul|treecol:not([hideheader="true"]):not([sortable="false"]):hover,
 xul|treecolpicker:hover {
   background-color: #dadada;
   color: #333;

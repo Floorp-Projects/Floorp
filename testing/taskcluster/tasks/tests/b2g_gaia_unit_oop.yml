@@ -1,0 +1,40 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] Gaia Unit Test OOP'
+    description: Gaia Unit Test OOP
+
+  scopes:
+    - 'docker-worker:cache:sources-gaia'
+
+  payload:
+    cache:
+      sources-gaia: '/home/worker/gaia'
+
+    command:
+      - entrypoint
+      - ./bin/pull_gaia.sh &&
+      - >
+        python ./mozharness/scripts/gaia_unit.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/gaia_unit_production_config.py
+        --config-file ./mozharness_configs/gaia_integration_override.py
+        --browser-arg -oop
+        --download-symbols ondemand
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/packages/xre.linux-x86_64.zip
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      symbol: 'Gu-oop'
+      productName: b2g

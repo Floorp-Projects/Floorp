@@ -45,9 +45,10 @@
             seltype="single">
         <treechildren id="engineChildren" flex="1"/>
         <treecols>
-          <treecol id="engineShown" type="checkbox" editable="true"/>
-          <treecol id="engineName" flex="4" label="&engineNameColumn.label;"/>
-          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"/>
+          <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
+          <treecol id="engineName" flex="4" label="&engineNameColumn.label;" sortable="false"/>
+          <treecol id="engineKeyword" flex="1" label="&engineKeywordColumn.label;" editable="true"
+                   sortable="false"/>
         </treecols>
       </tree>
 
