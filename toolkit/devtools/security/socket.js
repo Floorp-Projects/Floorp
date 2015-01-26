@@ -25,6 +25,8 @@ loader.lazyRequireGetter(this, "cert",
   "devtools/toolkit/security/cert");
 loader.lazyRequireGetter(this, "Authenticators",
   "devtools/toolkit/security/auth", true);
+loader.lazyRequireGetter(this, "prompt",
+  "devtools/toolkit/security/prompt");
 loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 
@@ -49,8 +51,6 @@ DevToolsUtils.defineLazyGetter(this, "nssErrorsService", () => {
 
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
-
-const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 let DebuggerSocket = {};
 
@@ -214,36 +214,6 @@ function _storeCertOverride(s, host, port) {
  */
 function SocketListener() {}
 
-/**
- * Prompt the user to accept or decline the incoming connection. This is the
- * default implementation that products embedding the debugger server may
- * choose to override.  A separate security handler can be specified for each
- * socket via |allowConnection| on a socket listener instance.
- *
- * @return true if the connection should be permitted, false otherwise
- */
-SocketListener.defaultAllowConnection = () => {
-  let bundle = Services.strings.createBundle(DBG_STRINGS_URI);
-  let title = bundle.GetStringFromName("remoteIncomingPromptTitle");
-  let msg = bundle.GetStringFromName("remoteIncomingPromptMessage");
-  let disableButton = bundle.GetStringFromName("remoteIncomingPromptDisable");
-  let prompt = Services.prompt;
-  let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
-              prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL +
-              prompt.BUTTON_POS_2 * prompt.BUTTON_TITLE_IS_STRING +
-              prompt.BUTTON_POS_1_DEFAULT;
-  let result = prompt.confirmEx(null, title, msg, flags, null, null,
-                                disableButton, null, { value: false });
-  if (result === 0) {
-    return true;
-  }
-  if (result === 2) {
-    DebuggerServer.closeAllListeners();
-    Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
-  }
-  return false;
-};
-
 SocketListener.prototype = {
 
   /* Socket Options */
@@ -263,7 +233,7 @@ SocketListener.prototype = {
    *
    * @return true if the connection should be permitted, false otherwise
    */
-  allowConnection: SocketListener.defaultAllowConnection,
+  allowConnection: prompt.Server.defaultAllowConnection,
 
   /**
    * Controls whether this listener is announced via the service discovery
