@@ -106,7 +106,7 @@
                        .getInterface(Components.interfaces.nsIWebProgress);
     progress.addProgressListener(progressListener,
                                  Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-                                 browser.loadURI("chrome://mochitests/content/chrome/dom/bindings/test/" + aFileName);
+    browser.loadURI("chrome://mochitests/content/chrome/dom/bindings/test/" + aFileName);
   }
 
 ]]>
