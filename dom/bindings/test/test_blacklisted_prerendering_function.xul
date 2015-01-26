@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="runTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function Listener(aBrowser, aPrerendered, aCallback) {
+    this.init(aBrowser, aPrerendered, aCallback);
+  }
+
+  Listener.prototype = {
+    init: function(aBrowser, aPrerendered, aCallback) {
+      this.mBrowser = aBrowser;
+      this.mPrerendered = aPrerendered;
+      this.mCallback = aCallback;
+    },
+    QueryInterface: function(aIID) {
+      if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+          aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+          aIID.equals(Components.interfaces.nsISupports))
+        return this;
+      throw Components.results.NS_NOINTERFACE;
+    },
+    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
+      if ((aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) &&
+          (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT)) {
+        var doc = this.mBrowser.contentDocument;
+        var stage = doc.getElementById("stage");
+        if (this.mPrerendered) {
+          is(stage.textContent, "before", "The blacklisted call should properly be intercepted in prerendering mode");
+        } else {
+          // In normal mode, we may or may not have run the timeout and/or the interval.
+          switch (stage.textContent) {
+          case "after":
+          case "in timeout":
+          case "in interval":
+            ok(true, "The blacklisted call should work fine in normal mode");
+            break;
+          default:
+            ok(false, "The blacklisted call should work fine in normal mode");
+            break;
+          }
+        }
+        progress.removeProgressListener(progressListener);
+
+        // Set three timeouts to see if the interval triggered
+        var self = this;
+        function checkInterval() {
+          var expected = self.mPrerendered ? "before" : "in interval";
+          var desc = self.mPrerendered ? "No timer should be running" : "Timers should run as normal";
+          is(stage.textContent, expected, desc);
+          // Now, dispatch a key event to the window and see if the keydown handler runs
+          synthesizeKey("a", {}, self.mBrowser.contentWindow);
+          expected = self.mPrerendered ? "before" : "keydown";
+          desc = self.mPrerendered ? "No event handler should be running" : "Event handlers should run as normal";
+          is(stage.textContent, expected, desc);
+          self.mCallback();
+        }
+        setTimeout(function() {
+          setTimeout(function() {
+            setTimeout(function() {
+              checkInterval();
+            }, 0);
+          }, 0);
+        }, 0);
+      }
+    },
+    onProgressChange : function(aWebProgress, aRequest,
+                                aCurSelfProgress, aMaxSelfProgress,
+                                aCurTotalProgress, aMaxTotalProgress) {},
+    onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags) {},
+    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {},
+    onSecurityChange : function(aWebProgress, aRequest, aState) {},
+    mBrowser: null,
+    mPrerendered: false,
+    mCallback: null
+  };
+
+  var progress, progressListener;
+
+  function runTest() {
+    testStep(false, "file_focuser.html", function() {
+      testStep(true, "file_focuser.html", function() {
+        testStep(false, "file_fullScreenPropertyAccessor.html", function() {
+          testStep(true, "file_fullScreenPropertyAccessor.html", function() {
+            SimpleTest.finish();
+          });
+        });
+      });
+    });
+  }
+
+  function testStep(aPrerendered, aFileName, aCallback) {
+    var browser = document.getElementById(aPrerendered ? "prerendered" : "normal");;
+    progressListener = new Listener(browser, aPrerendered, aCallback);
+    var docShell = browser.docShell;
+    progress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIWebProgress);
+    progress.addProgressListener(progressListener,
+                                 Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+    browser.loadURI("chrome://mochitests/content/chrome/dom/bindings/test/" + aFileName);
+  }
+
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069719">Mozilla Bug 1069719</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+</body>
+<browser prerendered="true" id="prerendered"/>
+<browser id="normal"/>
+</window>

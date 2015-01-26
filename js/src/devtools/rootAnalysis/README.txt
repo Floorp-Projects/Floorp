@@ -1,39 +1,49 @@
+# Spidermonkey JSAPI rooting analysis
+
 This directory contains scripts and a makefile for running Brian Hackett's
 static GC rooting analysis on a JS source directory.
 
-To use it:
+To use it on SpiderMonkey:
 
-1. Download and compile sixgill. Make sure the gcc plugin is enabled. (The
-   configure output will tell you.)
+1.  Be on Fedora/CentOS/RedHat Linux x86_64.
 
-  - [sfink] I needed a couple of patches to get it work on Fedora 16/17/18.
-    Ask me if you need them.
+    (Specifically, the prebuilt GCC **won't work on Ubuntu**
+    without the `CFLAGS` and `CXXFLAGS` settings from
+    http://trac.wildfiregames.com/wiki/StaticRootingAnalysis .)
 
-2. Compile an optimized JS shell that includes the patch at
-   <http://people.mozilla.org/~sfink/data/bug-835552-cwd-snarf>. This does not
-   need to be in the same source tree as you are running these scripts from.
-   Remember the full path to the resulting JS binary; we'll call it $JS_SHELL
-   below.
+2.  Have the Gecko build prerequisites installed.
 
-3. |make clean| in the objdir of the JS source tree that you're going to be
-   analyzing. (These analysis scripts will default to the tree they are within,
-   but you can point them at another tree.)
+3.  In this directory, run these commands.
 
-4. in $objdir/js/src/devtools/analysis, |make JS=$JS_SHELL
-   SIXGILL=.../path/to/sixgill...|. You may need one or more of the following
-   additional settings in addition to the |JS| already given:
+        mkdir builddir
+        cd builddir
+        ../run-analysis.sh
 
-   - JSOBJDIR: if you are analyzing a different source tree, set this to the
-     objdir of the tree you want to analyze.
+`run-analysis.sh` is kind of like `configure` and `make` combined:
+the build directory can be wherever you want
+and you can name it whatever you want.
+(You could just run it right here in the source tree, and it would work,
+but don't do that -- it spits out files all over the place and
+then you'd have to clean up your source tree later.)
 
-   - ANALYSIS_SCRIPT_DIR: by default, the *.js files within the directory
-     containing this README will be used, but you can point to a different
-     directory full. At the time of this writing, there are some changes not in
-     bhackett's git repo that are necessary, and you'll also need the
-     gen-hazards.sh shell script.
+Output goes to `hazards.txt` in the builddir.
 
-   - JOBS: set this to the number of parallel jobs you'd like to run the final
-     analysis pass with. This defaults to 6, somewhat randomly, which gave me a
-     large speedup even on a machine with only 2 cores.
+To use this analysis on any other codebase,
+make a copy of `run-analysis.sh` and adapt it for your code.
 
-The results will be in rootingHazards.txt
+
+## Overview of what is going on here
+
+So what does `run-analysis.sh` actually do?
+
+1.  **It insecurely downloads software over HTTP.** Yeah.
+    See `run-analysis.sh` for details.
+
+2.  It runs `run_complete`, a Perl script, which builds the target
+    codebase with a custom hacked GCC, generating a few database files
+    containing (among other data) the full call graph.
+
+3.  Then it runs `analyze.py`, a Python script, which runs all the scripts
+    which actually perform the analysis -- the tricky parts.
+    (Those scripts are written in JS.)
+
