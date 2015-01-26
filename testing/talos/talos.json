@@ -5,7 +5,7 @@
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "ebc4327b8cb8"
+        "talos_revision": "bfd694ae4242"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -39,7 +39,8 @@
             "tests": ["tpaint"]
         },
         "other-snow-e10s": {
-            "tests": ["tpaint"]
+            "tests": ["tpaint"],
+            "talos_options": ["--e10s"]
         },
         "other_nol64": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
@@ -80,7 +81,8 @@
             "tests": ["glterrain"]
         },
         "g1-snow-e10s": {
-            "tests": ["glterrain"]
+            "tests": ["glterrain"],
+            "talos_options": ["--e10s"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
@@ -93,7 +95,8 @@
             "tests": ["tsvgx", "tscrollx"]
         },
         "svgr-snow-e10s": {
-            "tests": ["tsvgx", "tscrollx"]
+            "tests": ["tsvgx", "tscrollx"],
+            "talos_options": ["--e10s"]
         },
         "tp5o": {
             "tests": ["tp5o"],
