@@ -7,7 +7,6 @@
 #define MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
 
 #include "mozilla/HashFunctions.h"  // for HashGeneric
-#include "mozilla/TypedEnum.h"
 
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"

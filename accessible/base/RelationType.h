@@ -7,8 +7,6 @@
 #ifndef mozilla_a11y_relationtype_h_
 #define mozilla_a11y_relationtype_h_
 
-#include "mozilla/TypedEnum.h"
-
 namespace mozilla {
 namespace a11y {
 

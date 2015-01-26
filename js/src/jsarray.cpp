@@ -2676,7 +2676,8 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         HandleValue v = HandleValue::fromMarkedLocation(&p[i]);
         if (v.isObject()) {
             RootedObject obj(cx, &v.toObject());
-            if (ObjectClassIs(obj, ESClass_Array, cx)) {
+            // This should be IsConcatSpreadable
+            if (IsArray(obj, cx)) {
                 uint32_t alength;
                 if (!GetLengthProperty(cx, obj, &alength))
                     return false;
@@ -3039,7 +3040,11 @@ static bool
 array_isArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool isArray = args.length() > 0 && IsObjectWithClass(args[0], ESClass_Array, cx);
+    bool isArray = false;
+    if (args.get(0).isObject()) {
+        RootedObject obj(cx, &args[0].toObject());
+        isArray = IsArray(obj, cx);
+    }
     args.rval().setBoolean(isArray);
     return true;
 }

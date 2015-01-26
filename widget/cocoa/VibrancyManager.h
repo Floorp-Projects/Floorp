@@ -8,7 +8,6 @@
 #define VibrancyManager_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypedEnum.h"
 #include "nsClassHashtable.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
@@ -22,11 +21,11 @@ class nsIntRegion;
 
 namespace mozilla {
 
-MOZ_BEGIN_ENUM_CLASS(VibrancyType)
+enum class VibrancyType {
   LIGHT,
   DARK,
   TOOLTIP
-MOZ_END_ENUM_CLASS(VibrancyType)
+};
 
 /**
  * VibrancyManager takes care of updating the vibrant regions of a window.

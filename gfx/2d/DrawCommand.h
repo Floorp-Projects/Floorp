@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace gfx {
 
-MOZ_BEGIN_ENUM_CLASS(CommandType, int8_t)
+enum class CommandType : int8_t {
   DRAWSURFACE = 0,
   DRAWFILTER,
   DRAWSURFACEWITHSHADOW,
@@ -32,7 +32,7 @@ MOZ_BEGIN_ENUM_CLASS(CommandType, int8_t)
   PUSHCLIPRECT,
   POPCLIP,
   SETTRANSFORM
-MOZ_END_ENUM_CLASS(CommandType)
+};
 
 class DrawingCommand
 {
