@@ -363,9 +363,9 @@ NfcContentHelper.prototype = {
           case NFC.TAG_EVENT_LOST:
             this.eventListener.notifyTagLost(result.sessionToken);
             break;
-          case NFC.RF_EVENT_STATE_CHANGE:
+          case NFC.RF_EVENT_STATE_CHANGED:
             this._rfState = result.rfState;
-            this.eventListener.notifyRFStateChange(this._rfState);
+            this.eventListener.notifyRFStateChanged(this._rfState);
             break;
         }
         break;
