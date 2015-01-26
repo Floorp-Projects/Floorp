@@ -8,6 +8,7 @@
 
 let { Ci } = require("chrome");
 let Services = require("Services");
+let promise = require("promise");
 loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
 
@@ -87,6 +88,24 @@ Prompt.Client = function() {};
 Prompt.Client.prototype = {
 
   mode: Prompt.mode,
+
+  /**
+   * Work with the server to complete any additional steps required by this
+   * authenticator's policies.
+   *
+   * Debugging commences after this hook completes successfully.
+   *
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param encryption boolean (optional)
+   *        Whether the server requires encryption.  Defaults to false.
+   * @param transport DebuggerTransport
+   *        A transport that can be used to communicate with the server.
+   * @return A promise can be used if there is async behavior.
+   */
+  authenticate() {},
 
 };
 
@@ -211,6 +230,34 @@ OOBCert.Client = function() {};
 OOBCert.Client.prototype = {
 
   mode: OOBCert.mode,
+
+  /**
+   * Work with the server to complete any additional steps required by this
+   * authenticator's policies.
+   *
+   * Debugging commences after this hook completes successfully.
+   *
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param encryption boolean (optional)
+   *        Whether the server requires encryption.  Defaults to false.
+   * @param transport DebuggerTransport
+   *        A transport that can be used to communicate with the server.
+   * @return A promise can be used if there is async behavior.
+   */
+  authenticate({ transport }) {
+    let deferred = promise.defer();
+    transport.hooks = {
+      onPacket(packet) {
+        let { authResult } = packet;
+        // TODO: Examine the result
+      }
+    };
+    transport.ready();
+    return deferred.promise;
+  },
 
 };
 
