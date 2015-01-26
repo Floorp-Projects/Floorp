@@ -1711,6 +1711,11 @@ pref("dom.debug.propagate_gesture_events_through_content", false);
 // The request URL of the GeoLocation backend.
 pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 
+// On Mac, the default geo provider is corelocation.
+#ifdef XP_MACOSX
+pref("geo.provider.use_corelocation", true);
+#endif
+
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s
 pref("network.disable.ipc.security", true);
