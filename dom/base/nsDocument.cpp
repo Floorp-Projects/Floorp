@@ -1337,7 +1337,7 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
 
   nsIDocument* doc = aRequestingNode->OwnerDoc();
 
-  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
+  nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::SameOriginChecker();
 
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;

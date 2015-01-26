@@ -1100,7 +1100,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = nsContentUtils::GetSameOriginChecker();
+  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = nsContentUtils::SameOriginChecker();
 
   channel->SetNotificationCallbacks(sameOriginChecker);
 
