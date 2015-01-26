@@ -22,10 +22,15 @@ function run_test()
 function* test_socket_conn()
 {
   do_check_eq(DebuggerServer.listeningSockets, 0);
+  let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  let authenticator = new AuthenticatorType.Server();
+  authenticator.allowConnection = () => {
+    return DebuggerServer.AuthenticationResult.ALLOW;
+  };
   let listener = DebuggerServer.createListener();
   do_check_true(listener);
   listener.portOrPath = -1 /* any available port */;
-  listener.allowConnection = () => true;
+  listener.authenticator = authenticator;
   listener.open();
   do_check_eq(DebuggerServer.listeningSockets, 1);
   gPort = DebuggerServer._listeners[0].port;
@@ -33,7 +38,7 @@ function* test_socket_conn()
   // Open a second, separate listener
   gExtraListener = DebuggerServer.createListener();
   gExtraListener.portOrPath = -1;
-  gExtraListener.allowConnection = () => true;
+  gExtraListener.authenticator = authenticator;
   gExtraListener.open();
   do_check_eq(DebuggerServer.listeningSockets, 2);
 

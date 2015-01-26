@@ -1,0 +1,24 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_base.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:build-nexus-4-user'
+  metadata:
+    name: '[TC] B2G Nexus 4 User'
+
+  payload:
+    cache:
+      build-nexus-4-user: /home/worker/object-folder
+    env:
+      TARGET: 'nexus-4'
+      DEBUG: 0
+  extra:
+    treeherder:
+      symbol: B
+      groupSymbol: Nexus4
+      groupName: Nexus4 Device Image
+      machine:
+        platform: b2g-device-image
+    locations:
+      img: 'private/build/nexus-4.zip'
+

@@ -1,25 +1,39 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_HEAD_JS = "stk_helper.js";
+MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "head.js";
 
-function testRefresh(command, expect) {
-  log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, iccManager.STK_CMD_REFRESH, expect.name);
-  is(command.commandQualifier, expect.commandQualifier, expect.name);
-
-  runNextTest();
-}
-
-let tests = [
+const TEST_DATA = [
   {command: "d0108103010101820281829205013f002fe2",
-   func: testRefresh,
-   expect: {name: "refresh_cmd_1",
-            commandQualifier: 0x01}},
+   expect: {commandQualifier: 0x01}},
   {command: "d009810301010482028182",
-   func: testRefresh,
-   expect: {name: "refresh_cmd_2",
-            commandQualifier: 0x04}}
+   expect: {commandQualifier: 0x04}}
 ];
 
-runNextTest();
+function testRefresh(aCommand, aExpect) {
+  is(aCommand.typeOfCommand, MozIccManager.STK_CMD_REFRESH, "typeOfCommand");
+  is(aCommand.commandQualifier, aExpect.commandQualifier, "commandQualifier");
+}
+
+// Start tests
+startTestCommon(function() {
+  let icc = getMozIcc();
+  let promise = Promise.resolve();
+  for (let i = 0; i < TEST_DATA.length; i++) {
+    let data = TEST_DATA[i];
+    promise = promise.then(() => {
+      log("refresh_cmd: " + data.command);
+
+      let promises = [];
+      // Wait onstkcommand event.
+      promises.push(waitForTargetEvent(icc, "stkcommand")
+        .then((aEvent) => testRefresh(aEvent.command, data.expect)));
+      // Send emulator command to generate stk unsolicited event.
+      promises.push(sendEmulatorStkPdu(data.command));
+
+      return Promise.all(promises);
+    });
+  }
+  return promise;
+});

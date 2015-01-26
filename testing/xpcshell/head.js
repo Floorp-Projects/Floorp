@@ -437,9 +437,15 @@ function _initDebugging(port) {
   do_print("*******************************************************************");
   do_print("")
 
+  let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+  let authenticator = new AuthenticatorType.Server();
+  authenticator.allowConnection = () => {
+    return DebuggerServer.AuthenticationResult.ALLOW;
+  };
+
   let listener = DebuggerServer.createListener();
   listener.portOrPath = port;
-  listener.allowConnection = () => true;
+  listener.authenticator = authenticator;
   listener.open();
 
   // spin an event loop until the debugger connects.

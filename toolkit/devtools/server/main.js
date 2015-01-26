@@ -24,6 +24,9 @@ DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = require("devtools/toolkit/security/socket");
   return DebuggerSocket;
 });
+DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
+  return require("devtools/toolkit/security/auth");
+});
 
 // On B2G, `this` != Global scope, so `Ci` won't be binded on `this`
 // (i.e. this.Ci is undefined) Then later, when using loadSubScript,
@@ -1101,6 +1104,14 @@ var DebuggerServer = {
     }
   }
 };
+
+// Expose these to save callers the trouble of importing DebuggerSocket
+DevToolsUtils.defineLazyGetter(DebuggerServer, "Authenticators", () => {
+  return Authentication.Authenticators;
+});
+DevToolsUtils.defineLazyGetter(DebuggerServer, "AuthenticationResult", () => {
+  return Authentication.AuthenticationResult;
+});
 
 EventEmitter.decorate(DebuggerServer);
 

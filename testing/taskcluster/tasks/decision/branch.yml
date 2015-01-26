@@ -1,0 +1,90 @@
+---
+metadata:
+  name: 'Task graph used to build {{project}} specific jobs'
+  description: |
+    {{project}} push for {{owner}} with comment: {{comment}}.
+  owner: "{{owner}}"
+  source: "{{source}}"
+
+scopes:
+  - "docker-worker:image:quay.io/mozilla/decision:*"
+  - "queue:define-task:aws-provisioner/gecko-decision"
+  - "queue:create-task:aws-provisioner/gecko-decision"
+  - "docker-worker:cache:tc-vcs-public-sources"
+  - "docker-worker:cache:build-emulator-jb-opt"
+  - "docker-worker:cache:build-mulet-linux-objects"
+  - "docker-worker:cache:build-emulator-ics-opt"
+  - "queue:define-task:aws-provisioner/b2gtest"
+  - "queue:create-task:aws-provisioner/b2gtest"
+  - "docker-worker:image:quay.io/mozilla/builder:*"
+  - "docker-worker:cache:tooltool-cache"
+  - "queue:define-task:aws-provisioner/b2gbuild"
+  - "queue:create-task:aws-provisioner/b2gbuild"
+  - "docker-worker:cache:build-emulator-kk-debug"
+  - "docker-worker:cache:build-b2g-desktop-objects"
+  - "docker-worker:cache:build-emulator-kk-opt"
+  - "docker-worker:cache:build-emulator-jb-debug"
+  - "docker-worker:cache:tc-vcs"
+  - "docker-worker:cache:sources-gecko"
+  - "docker-worker:cache:sources-gaia"
+  - "docker-worker:cache:build-emulator-ics-debug"
+tasks:
+  - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
+    task:
+      created: '{{now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
+      metadata:
+        source: {{source}}
+        owner: {{owner}}
+        name: Initial decision task for {{project}} specific graphs
+        description: |
+          This is the single most important task as it decides how all other tasks
+          get built.
+
+      workerType: "gecko-decision"
+      provisionerId: "aws-provisioner"
+
+      scopes:
+        - "docker-worker:cache:tc-vcs-public-sources"
+        - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
+
+      payload:
+        env:
+          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+          GECKO_HEAD_REPOSITORY: '{{url}}'
+          GECKO_HEAD_REF: '{{revision}}'
+          GECKO_HEAD_REV: '{{revision}}'
+
+        cache:
+          # The taskcluster-vcs tooling stores the large clone caches in this
+          # directory and will reuse them for new requests this saves about 20s~ and
+          # is the most generic cache possible.
+          tc-vcs-public-sources: '/home/worker/.tc-vcs/'
+
+        # Note: This task is built server side without the context or tooling that
+        # exist in tree so we must hard code the version
+        image: 'quay.io/mozilla/decision:0.0.3'
+
+        # Virtually no network or other potentially risky operations happen as part
+        # of the task timeout aside from the initial clone. We intentionally have
+        # set this to a lower value _all_ decision tasks should use a root
+        # repository which is cached.
+        maxRunTime: 1800
+
+        command:
+          - /bin/bash
+          - -cx
+          - >
+            source $(which entrypoint) &&
+            ./mach taskcluster-graph
+            --message='{{comment}}'
+            --project='{{project}}'
+            --owner='{{owner}}'
+            --extend-graph > /home/worker/graph.json
+        graphs:
+          - /home/worker/graph.json
+
+      extra:
+        treeherder:
+          symbol: D
+

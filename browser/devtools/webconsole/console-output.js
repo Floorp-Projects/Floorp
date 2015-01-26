@@ -3102,82 +3102,82 @@ Widgets.ObjectRenderers.add({
     // the message is destroyed.
     this.message.widgets.add(this);
 
-    this.linkToInspector();
+    this.linkToInspector().then(null, Cu.reportError);
   },
 
   /**
    * If the DOMNode being rendered can be highlit in the page, this function
    * will attach mouseover/out event listeners to do so, and the inspector icon
    * to open the node in the inspector.
-   * @return a promise (always the same) that resolves when the node has been
-   * linked to the inspector, or rejects if it wasn't (either if no toolbox
-   * could be found to access the inspector, or if the node isn't present in the
-   * inspector, i.e. if the node is in a DocumentFragment or not part of the
-   * tree, or not of type Ci.nsIDOMNode.ELEMENT_NODE).
+   * @return a promise that resolves when the node has been linked to the
+   * inspector, or rejects if it wasn't (either if no toolbox could be found to
+   * access the inspector, or if the node isn't present in the inspector, i.e.
+   * if the node is in a DocumentFragment or not part of the tree, or not of
+   * type Ci.nsIDOMNode.ELEMENT_NODE).
    */
-  linkToInspector: function()
+  linkToInspector: Task.async(function*()
   {
     if (this._linkedToInspector) {
-      return this._linkedToInspector;
+      return;
     }
 
-    this._linkedToInspector = Task.spawn(function*() {
-      // Checking the node type
-      if (this.objectActor.preview.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
-        throw null;
-      }
+    // Checking the node type
+    if (this.objectActor.preview.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+      throw new Error("The object cannot be linked to the inspector as it " +
+        "isn't an element node");
+    }
 
-      // Checking the presence of a toolbox
-      let target = this.message.output.toolboxTarget;
-      this.toolbox = gDevTools.getToolbox(target);
-      if (!this.toolbox) {
-        throw null;
-      }
+    // Checking the presence of a toolbox
+    let target = this.message.output.toolboxTarget;
+    this.toolbox = gDevTools.getToolbox(target);
+    if (!this.toolbox) {
+      throw new Error("The object cannot be linked to the inspector without a " +
+        "toolbox");
+    }
 
-      // Checking that the inspector supports the node
-      yield this.toolbox.initInspector();
-      this._nodeFront = yield this.toolbox.walker.getNodeActorFromObjectActor(this.objectActor.actor);
-      if (!this._nodeFront) {
-        throw null;
-      }
+    // Checking that the inspector supports the node
+    yield this.toolbox.initInspector();
+    this._nodeFront = yield this.toolbox.walker.getNodeActorFromObjectActor(this.objectActor.actor);
+    if (!this._nodeFront) {
+      throw new Error("The object cannot be linked to the inspector, the " +
+        "corresponding nodeFront could not be found");
+    }
 
-      // At this stage, the message may have been cleared already
-      if (!this.document) {
-        throw null;
-      }
+    // At this stage, the message may have been cleared already
+    if (!this.document) {
+      throw new Error("The object cannot be linked to the inspector, the " +
+        "message was got cleared away");
+    }
 
-      this.highlightDomNode = this.highlightDomNode.bind(this);
-      this.element.addEventListener("mouseover", this.highlightDomNode, false);
-      this.unhighlightDomNode = this.unhighlightDomNode.bind(this);
-      this.element.addEventListener("mouseout", this.unhighlightDomNode, false);
+    this.highlightDomNode = this.highlightDomNode.bind(this);
+    this.element.addEventListener("mouseover", this.highlightDomNode, false);
+    this.unhighlightDomNode = this.unhighlightDomNode.bind(this);
+    this.element.addEventListener("mouseout", this.unhighlightDomNode, false);
 
-      this._openInspectorNode = this._anchor("", {
-        className: "open-inspector",
-        onClick: this.openNodeInInspector.bind(this)
-      });
-      this._openInspectorNode.title = l10n.getStr("openNodeInInspector");
-    }.bind(this));
+    this._openInspectorNode = this._anchor("", {
+      className: "open-inspector",
+      onClick: this.openNodeInInspector.bind(this)
+    });
+    this._openInspectorNode.title = l10n.getStr("openNodeInInspector");
 
-    return this._linkedToInspector;
-  },
+    this._linkedToInspector = true;
+  }),
 
   /**
    * Highlight the DOMNode corresponding to the ObjectActor in the page.
    * @return a promise that resolves when the node has been highlighted, or
    * rejects if the node cannot be highlighted (detached from the DOM)
    */
-  highlightDomNode: function()
+  highlightDomNode: Task.async(function*()
   {
-    return Task.spawn(function*() {
-      yield this.linkToInspector();
-      let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
-      if (isAttached) {
-        yield this.toolbox.highlighterUtils.highlightNodeFront(this._nodeFront);
-      } else {
-        throw null;
-      }
-    }.bind(this));
-  },
+    yield this.linkToInspector();
+    let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
+    if (isAttached) {
+      yield this.toolbox.highlighterUtils.highlightNodeFront(this._nodeFront);
+    } else {
+      throw null;
+    }
+  }),
 
   /**
    * Unhighlight a previously highlit node
@@ -3188,7 +3188,7 @@ Widgets.ObjectRenderers.add({
   {
     return this.linkToInspector().then(() => {
       return this.toolbox.highlighterUtils.unhighlight();
-    });
+    }).then(null, Cu.reportError);
   },
 
   /**
@@ -3198,22 +3198,20 @@ Widgets.ObjectRenderers.add({
    * (detached from the DOM). Note that in any case, the inspector panel will
    * be switched to.
    */
-  openNodeInInspector: function()
+  openNodeInInspector: Task.async(function*()
   {
-    return Task.spawn(function*() {
-      yield this.linkToInspector();
-      yield this.toolbox.selectTool("inspector");
+    yield this.linkToInspector();
+    yield this.toolbox.selectTool("inspector");
 
-      let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
-      if (isAttached) {
-        let onReady = this.toolbox.inspector.once("inspector-updated");
-        yield this.toolbox.selection.setNodeFront(this._nodeFront, "console");
-        yield onReady;
-      } else {
-        throw null;
-      }
-    }.bind(this));
-  },
+    let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
+    if (isAttached) {
+      let onReady = this.toolbox.inspector.once("inspector-updated");
+      yield this.toolbox.selection.setNodeFront(this._nodeFront, "console");
+      yield onReady;
+    } else {
+      throw null;
+    }
+  }),
 
   destroy: function()
   {

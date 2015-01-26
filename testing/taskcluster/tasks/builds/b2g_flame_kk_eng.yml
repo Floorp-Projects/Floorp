@@ -1,0 +1,24 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_base.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:build-flame-kk-eng'
+  metadata:
+    name: '[TC] B2G Flame KK Eng'
+
+  extra:
+    treeherder:
+      symbol: Be
+      groupSymbol: Flame-KK
+      groupName: Flame KitKat Device Image
+      machine:
+        platform: b2g-device-image
+
+  payload:
+    cache:
+      build-flame-kk-eng: /home/worker/object-folder
+    env:
+      TARGET: 'flame-kk'
+      DEBUG: 0
+      VARIANT: eng
+

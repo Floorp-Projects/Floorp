@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_base.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:build-dolphin-user'
+  metadata:
+    name: B2G Dolphin User
+  payload:
+    cache:
+      build-hamachi-user: /home/worker/object-folder
+    env:
+      TARGET: 'dolphin'
+      DEBUG: 0
+  extra:
+    locations:
+      img: 'private/build/dolphin.zip'
+

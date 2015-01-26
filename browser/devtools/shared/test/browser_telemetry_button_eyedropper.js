@@ -1,63 +1,38 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
+const TEST_URI = "data:text/html;charset=utf-8," +
+  "<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
 
-let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {}).Promise;
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+let {EyedropperManager} = require("devtools/eyedropper/eyedropper");
 
-let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-let Telemetry = require("devtools/shared/telemetry");
-
-let { EyedropperManager } = require("devtools/eyedropper/eyedropper");
-
-
-function init() {
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function(histogramId, value) {
-    if (!this.telemetryInfo) {
-      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
-      return;
-    }
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
-
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
-
-  testButton("command-button-eyedropper");
-}
-
-function testButton(id) {
-  info("Testing " + id);
+add_task(function*() {
+  yield promiseTab(TEST_URI);
+  let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
+  info("inspector opened");
 
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    info("inspector opened");
+  info("testing the eyedropper button");
+  testButton(toolbox, Telemetry);
 
-    let button = toolbox.doc.querySelector("#" + id);
-    ok(button, "Captain, we have the button");
+  stopRecordingTelemetryLogs(Telemetry);
+  yield gDevTools.closeToolbox(target);
+  gBrowser.removeCurrentTab();
+});
 
-    // open the eyedropper
-    button.click();
+function testButton(toolbox, Telemetry) {
+  let button = toolbox.doc.querySelector("#command-button-eyedropper");
+  ok(button, "Captain, we have the eyedropper button");
 
-    checkResults("_EYEDROPPER_");
-  }).then(null, console.error);
+  info("clicking the button to open the eyedropper");
+  button.click();
+
+  checkResults("_EYEDROPPER_", Telemetry);
 }
 
-function clickButton(node, clicks) {
-  for (let i = 0; i < clicks; i++) {
-    info("Clicking button " + node.id);
-    node.click();
-  }
-}
-
-function checkResults(histIdFocus) {
+function checkResults(histIdFocus, Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;
 
   for (let [histId, value] of Iterator(result)) {
@@ -73,38 +48,10 @@ function checkResults(histIdFocus) {
       ok(value.length === 1 && value[0] === true,
          "Per user value " + histId + " has a single value of true");
     } else if (histId.endsWith("OPENED_BOOLEAN")) {
-      ok(value.length == 1, histId + " has one entry");
+      is(value.length, 1, histId + " has one entry");
 
-      let okay = value.every(function(element) {
-        return element === true;
-      });
-
+      let okay = value.every(element => element === true);
       ok(okay, "All " + histId + " entries are === true");
     }
   }
-
-  finishUp();
-}
-
-function finishUp() {
-  gBrowser.removeCurrentTab();
-
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype.telemetryInfo;
-
-  TargetFactory = Services = promise = require = null;
-
-  finish();
-}
-
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    waitForFocus(init, content);
-  }, true);
-
-  content.location = TEST_URI;
 }

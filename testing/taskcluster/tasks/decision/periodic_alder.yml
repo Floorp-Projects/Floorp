@@ -1,0 +1,43 @@
+taskId: '{{ "decision task" | as-slugid }}'
+task:
+  created: '{{now}}'
+  deadline: '{{ "1 day" | from-now }}'
+  metadata:
+    source: '{{source}}'
+    owner: '{{owner}}'
+    name: 'Taskcluster decision task for {{project}}'
+    description: |
+      Decision task for testing purposes for alder.
+
+  workerType: gecko-decision
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:tc-vcs-public-sources'
+
+  payload:
+    cache:
+      # The taskcluster-vcs tooling stores the large clone caches in this
+      # directory and will reuse them for new requests this saves about 20s~ and
+      # is the most generic cache possible.
+      tc-vcs-public-sources: '/home/worker/.tc-vcs/'
+
+    # Note: This task is built server side without the context or tooling that
+    # exist in tree so we must hard code the version
+    image: 'quay.io/mozilla/decision:0.0.3'
+
+    # Virtually no network or other potentially risky operations happen as part
+    # of the task timeout aside from the initial clone. We intentionally have
+    # set this to a lower value _all_ decision tasks should use a root
+    # repository which is cached.
+    maxRunTime: 1800
+
+    command:
+      - /bin/bash
+      - -c
+      - echo "test: {{comment}} ({{revision}}) for {{owner}}"
+    graphs:
+      - /home/worker/graph.json
+  extra:
+    treeherder:
+      symbol: D

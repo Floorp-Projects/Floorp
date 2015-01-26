@@ -1,0 +1,36 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] Reftest Sanity OOP'
+    description: Reftest Sanity OOP test run {{chunk}}
+
+  payload:
+    command:
+      - entrypoint
+      - >
+        python ./mozharness/scripts/b2g_desktop_unittest.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/desktop_automation_config.py
+        --config-file ./mozharness_configs/remove_executables.py
+        --download-symbols ondemand
+        --test-suite reftest
+        --test-manifest tests/layout/reftests/reftest-sanity/reftest.list
+        --browser-arg -oop
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --this-chunk {{chunk}}
+        --total-chunk {{total_chunks}}
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Reftest Sanity OOP
+      groupSymbol: tc-Rs-oop
+      symbol: 'Rs-oop'
+      productName: b2g
