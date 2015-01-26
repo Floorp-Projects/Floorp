@@ -406,11 +406,7 @@ class BaseShape : public gc::TenuredCell
         QUALIFIED_VAROBJ    = 0x2000,
         UNQUALIFIED_VAROBJ  = 0x4000,
 
-        // For a function used as an interpreted constructor, whether a 'new'
-        // type had constructor information cleared.
-        NEW_SCRIPT_CLEARED  = 0x8000,
-
-        OBJECT_FLAG_MASK    = 0xfff8
+        OBJECT_FLAG_MASK    = 0x7ff8
     };
 
   private:
