@@ -435,10 +435,6 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
 
   // Create a channel
   nsCOMPtr<nsIInterfaceRequestor> req = nsContentUtils::GetSameOriginChecker();
-  if (!req) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
 
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
