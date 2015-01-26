@@ -172,6 +172,11 @@ protected:
   SandboxBroker mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
   bool mEnableSandboxLogging;
+
+  // XXX: Bug 1124167: We should get rid of the process specific logic for
+  // sandboxing in this class at some point. Unfortunately it will take a bit
+  // of reorganizing so I don't think this patch is the right time.
+  bool mEnableNPAPISandbox;
 #if defined(MOZ_CONTENT_SANDBOX)
   bool mMoreStrictContentSandbox;
 #endif
