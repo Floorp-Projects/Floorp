@@ -3330,7 +3330,8 @@ TypeObject::clearNewScript(ExclusiveContext *cx)
         newScript->rollbackPartiallyInitializedObjects(cx->asJSContext(), this);
     } else {
         // Threads with an ExclusiveContext are not allowed to run scripts.
-        MOZ_ASSERT(!cx->perThreadData->activation());
+        MOZ_ASSERT(!cx->perThreadData->runtimeIfOnOwnerThread() ||
+                   !cx->perThreadData->runtimeIfOnOwnerThread()->activation());
     }
 
     js_delete(newScript);

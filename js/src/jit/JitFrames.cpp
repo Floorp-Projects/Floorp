@@ -98,12 +98,12 @@ JitFrameIterator::JitFrameIterator()
 }
 
 JitFrameIterator::JitFrameIterator(JSContext *cx)
-  : current_(cx->perThreadData->jitTop),
+  : current_(cx->runtime()->jitTop),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
     cachedSafepointIndex_(nullptr),
-    activation_(cx->perThreadData->activation()->asJit())
+    activation_(cx->runtime()->activation()->asJit())
 {
     if (activation_->bailoutData()) {
         current_ = activation_->bailoutData()->fp();
@@ -390,7 +390,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
         // Debugger has observed this frame (e.g., for onPop).
         bool shouldBail = Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
         if (!shouldBail) {
-            JitActivation *act = cx->mainThread().activation()->asJit();
+            JitActivation *act = cx->runtime()->activation()->asJit();
             RematerializedFrame *rematFrame =
                 act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
             shouldBail = rematFrame && rematFrame->isDebuggee();
@@ -693,10 +693,10 @@ struct AutoResetLastProfilerFrameOnReturnFromException
         if (!cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
             return;
 
-        MOZ_ASSERT(cx->mainThread().jitActivation == cx->mainThread().profilingActivation());
+        MOZ_ASSERT(cx->runtime()->jitActivation == cx->runtime()->profilingActivation());
 
         void *lastProfilingFrame = getLastProfilingFrame();
-        cx->mainThread().jitActivation->setLastProfilingFrame(lastProfilingFrame);
+        cx->runtime()->jitActivation->setLastProfilingFrame(lastProfilingFrame);
     }
 
     void *getLastProfilingFrame() {
@@ -740,7 +740,7 @@ HandleException(ResumeFromException *rfe)
     if (cx->runtime()->jitRuntime()->hasIonReturnOverride())
         cx->runtime()->jitRuntime()->takeIonReturnOverride();
 
-    JitActivation *activation = cx->mainThread().activation()->asJit();
+    JitActivation *activation = cx->runtime()->activation()->asJit();
 
     // The Debugger onExceptionUnwind hook (reachable via
     // HandleExceptionBaseline below) may cause on-stack recompilation of
@@ -863,7 +863,7 @@ HandleException(ResumeFromException *rfe)
             // not crash when accessing an IonScript that's destroyed by the
             // ionScript->decref call.
             EnsureExitFrame(current);
-            cx->mainThread().jitTop = (uint8_t *)current;
+            cx->runtime()->jitTop = (uint8_t *)current;
         }
 
         if (overrecursed) {
@@ -2737,16 +2737,16 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
 {
     // If no profilingActivation is live, initialize directly to
     // end-of-iteration state.
-    if (!rt->mainThread.profilingActivation()) {
+    if (!rt->profilingActivation()) {
         type_ = JitFrame_Entry;
         fp_ = nullptr;
         returnAddressToFp_ = nullptr;
         return;
     }
 
-    MOZ_ASSERT(rt->mainThread.profilingActivation()->isJit());
+    MOZ_ASSERT(rt->profilingActivation()->isJit());
 
-    JitActivation *act = rt->mainThread.profilingActivation()->asJit();
+    JitActivation *act = rt->profilingActivation()->asJit();
 
     // If the top JitActivation has a null lastProfilingFrame, assume that
     // it's a trivially empty activation, and initialize directly

@@ -448,7 +448,7 @@ JSContext::currentScript(jsbytecode **ppc,
     if (ppc)
         *ppc = nullptr;
 
-    js::Activation *act = mainThread().activation();
+    js::Activation *act = runtime()->activation();
     while (act && (act->cx() != this || (act->isJit() && !act->asJit()->isActive())))
         act = act->prev();
 
