@@ -138,3 +138,35 @@ Server.defaultAllowConnection = ({ client, server }) => {
   }
   return AuthenticationResult.DENY;
 };
+
+/**
+ * During OOB_CERT authentication, the user must transfer some data through some
+ * out of band mechanism from the client to the server to authenticate the
+ * devices.
+ *
+ * This implementation prompts the user for a token as constructed by
+ * |Client.defaultSendOOB| that the user needs to transfer manually.  For a
+ * mobile device, you should override this implementation with something more
+ * convenient, such as reading a QR code.
+ *
+ * @return An object containing:
+ *         * sha256: hash(ClientCert)
+ *         * k     : K(random 128-bit number)
+ *         A promise that will be resolved to the above is also allowed.
+ */
+Server.defaultReceiveOOB = () => {
+  let title = bundle.GetStringFromName("serverReceiveOOBTitle");
+  let msg = bundle.GetStringFromName("serverReceiveOOBBody");
+  let input = { value: null };
+  let prompt = Services.prompt;
+  let result = prompt.prompt(null, title, msg, input, null, { value: false });
+  if (!result) {
+    return null;
+  }
+  // Re-create original object from token
+  input = input.value.trim();
+  let sha256 = input.substring(0, 64);
+  sha256 = sha256.replace(/\w{2}/g, "$&:").slice(0, -1).toUpperCase();
+  let k = input.substring(64);
+  return { sha256, k };
+};
