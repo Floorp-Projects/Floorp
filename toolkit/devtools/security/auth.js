@@ -42,6 +42,11 @@ let AuthenticationResult = exports.AuthenticationResult = createEnum({
   DENY: null,
 
   /**
+   * Additional data needs to be exchanged before a result can be determined.
+   */
+  PENDING: null,
+
+  /**
    * Allow the current connection.
    */
   ALLOW: null,
@@ -136,17 +141,21 @@ Prompt.Server.prototype = {
    *          server: {
    *            host,
    *            port
-   *          }
+   *          },
+   *          transport
    *        }
    * @return An AuthenticationResult value.
    *         A promise that will be resolved to the above is also allowed.
    */
-  authenticate(session) {
+  authenticate({ client, server }) {
     if (!Services.prefs.getBoolPref("devtools.debugger.prompt-connection")) {
       return AuthenticationResult.ALLOW;
     }
-    session.authentication = this.mode;
-    return this.allowConnection(session);
+    return this.allowConnection({
+      authentication: this.mode,
+      client,
+      server
+    });
   },
 
   /**
@@ -273,14 +282,31 @@ OOBCert.Server.prototype = {
    *            cert: {
    *              sha256
    *            }
-   *          }
+   *          },
+   *          transport
    *        }
    * @return An AuthenticationResult value.
    *         A promise that will be resolved to the above is also allowed.
    */
-  authenticate(session) {
-    session.authentication = this.mode;
-    return this.allowConnection(session);
+  authenticate({ client, server, transport }) {
+    // Step B.3 / C.3
+    // TLS connection established, authentication begins
+    // TODO: Bug 1032128: Consult a list of persisted, approved clients
+    // Step B.4
+    // Server sees that ClientCert is from a unknown client
+    // Tell client they are unknown and should display OOB client UX
+    transport.send({
+      authResult: AuthenticationResult.PENDING
+    });
+
+    // Step B.5
+    // User is shown a Allow / Deny / Always Allow prompt on the Server
+    // with Client name and hash(ClientCert)
+    return this.allowConnection({
+      authentication: this.mode,
+      client,
+      server
+    });
   },
 
   /**
