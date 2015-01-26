@@ -1654,7 +1654,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // (which must be a baseline frame), and set it as the last profiling
     // frame.
     if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
-        cx->mainThread().jitActivation->setLastProfilingFrame(iter.prevFp());
+        cx->runtime()->jitActivation->setLastProfilingFrame(iter.prevFp());
 
     uint32_t frameno = 0;
     while (frameno < numFrames) {
@@ -1707,7 +1707,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     // values into the baseline frame. We need to do this even when debug mode
     // is off, as we should respect the mutations made while debug mode was
     // on.
-    JitActivation *act = cx->mainThread().activation()->asJit();
+    JitActivation *act = cx->runtime()->activation()->asJit();
     if (act->hasRematerializedFrame(outerFp)) {
         JitFrameIterator iter(cx);
         size_t inlineDepth = numFrames;
@@ -1754,6 +1754,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
       case Bailout_NonObjectInput:
       case Bailout_NonStringInput:
       case Bailout_NonSymbolInput:
+      case Bailout_NonSimdInt32x4Input:
+      case Bailout_NonSimdFloat32x4Input:
       case Bailout_InitialState:
       case Bailout_Debugger:
         // Do nothing.

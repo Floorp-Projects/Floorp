@@ -1047,7 +1047,7 @@ JSContext::saveFrameChain()
     if (!savedFrameChains_.append(SavedFrameChain(compartment(), enterCompartmentDepth_)))
         return false;
 
-    if (Activation *act = mainThread().activation())
+    if (Activation *act = runtime()->activation())
         act->saveFrameChain();
 
     setCompartment(nullptr);
@@ -1065,7 +1065,7 @@ JSContext::restoreFrameChain()
     setCompartment(sfc.compartment);
     enterCompartmentDepth_ = sfc.enterCompartmentCount;
 
-    if (Activation *act = mainThread().activation())
+    if (Activation *act = runtime()->activation())
         act->restoreFrameChain();
 }
 
@@ -1190,7 +1190,7 @@ void *
 ExclusiveContext::stackLimitAddressForJitCode(StackKind kind)
 {
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-    return runtime_->mainThread.addressOfSimulatorStackLimit();
+    return runtime_->addressOfSimulatorStackLimit();
 #endif
     return stackLimitAddress(kind);
 }

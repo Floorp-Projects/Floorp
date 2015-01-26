@@ -370,6 +370,9 @@ JitCode *
 JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
+    // Caller:
+    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- esp
+    // '-- #esi ---'
 
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
@@ -380,6 +383,22 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     masm.mov(eax, ecx);
     masm.andl(Imm32(CalleeTokenMask), ecx);
     masm.movzwl(Operand(ecx, JSFunction::offsetOfNargs()), ecx);
+
+    // The frame pointer and its padding are pushed on the stack.
+    // Including |this|, there are (|nformals| + 1) arguments to push to the
+    // stack.  Then we push a JitFrameLayout.  We compute the padding expressed
+    // in the number of extra |undefined| values to push on the stack.
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
+    static_assert((sizeof(Value) + 2 * sizeof(void *)) % JitStackAlignment == 0,
+      "No need to consider |this| and the frame pointer and its padding for aligning the stack");
+    static_assert(JitStackAlignment % sizeof(Value) == 0,
+      "Ensure that we can pad the stack by pushing extra UndefinedValue");
+
+    const uint32_t alignment = JitStackAlignment / sizeof(Value);
+    MOZ_ASSERT(IsPowerOfTwo(alignment));
+    masm.addl(Imm32(alignment - 1 /* for padding */), ecx);
+    masm.andl(Imm32(~(alignment - 1)), ecx);
     masm.subl(esi, ecx);
 
     // Copy the number of actual arguments.
@@ -393,6 +412,17 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     // BaselineJIT.cpp/InitFromBailout.  Check for the |#if defined(JS_CODEGEN_X86)| portions.
     masm.push(FramePointer);
     masm.movl(esp, FramePointer); // Save %esp.
+    masm.push(FramePointer /* padding */);
+
+    // Caller:
+    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    // '-- #esi ---'
+    //
+    // Rectifier frame:
+    // [ebp'] <- ebp [padding] <- esp [undef] [undef] [arg2] [arg1] [this]
+    //                                '--- #ecx ----' '-- #esi ---'
+    //
+    // [[argc] [callee] [descr] [raddr]]
 
     // Push undefined.
     {

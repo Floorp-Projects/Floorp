@@ -1,0 +1,50 @@
+taskId: 1
+task:
+  metadata:
+    source: http://todo.com/soon
+    owner: user@domain.com
+    name: B2G Emulator
+    description: B2G Emulator
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:build-emulator-objects'
+    - 'docker-worker:image:quay.io/mozilla/phone-builder:0.0.1'
+
+  payload:
+    cache:
+      build-emulator-objects: '/home/worker/object-folder-flame-kk-1'
+
+    env:
+      TARGET: 'flame-kk'
+      B2G_DEBUG: '1'
+      # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
+      REVISION: 'tip'
+      GECKO_HEAD_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_BASE_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+
+    image: 'quay.io/mozilla/phone-builder:0.0.1'
+    maxRunTime: 14400
+
+    command:
+      - build-phone.sh
+
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+
+  extra:
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/emulator.tar.gz'
+      tests: 'public/build/b2g-tests.zip'
+      symbols: 'public/build/b2g-crashreporter-symbols.zip'
+      sources: 'public/build/sources.xml'
+
+    treeherder:
+      symbol: B

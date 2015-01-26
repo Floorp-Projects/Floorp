@@ -949,7 +949,7 @@ class XPCShellTests(object):
                         # We pipe stdin to node because the spdy server will exit when its
                         # stdin reaches EOF
                         process = Popen([nodeBin, serverJs], stdin=PIPE, stdout=PIPE,
-                                stderr=STDOUT, env=self.env, cwd=os.getcwd())
+                                stderr=PIPE, env=self.env, cwd=os.getcwd())
                         self.nodeProc[name] = process
 
                         # Check to make sure the server starts properly by waiting for it to
@@ -979,7 +979,19 @@ class XPCShellTests(object):
         """
         for name, proc in self.nodeProc.iteritems():
             self.log.info('Node %s server shutting down ...' % name)
-            proc.terminate()
+            if proc.poll() is not None:
+                self.log.info('Node server %s already dead %s' % (name, proc.poll()))
+            else:
+                proc.terminate()
+            def dumpOutput(fd, label):
+                firstTime = True
+                for msg in fd:
+                    if firstTime:
+                        firstTime = False;
+                        self.log.info('Process %s' % label)
+                    self.log.info(msg)
+            dumpOutput(proc.stdout, "stdout")
+            dumpOutput(proc.stderr, "stderr")
 
     def buildXpcsRunArgs(self):
         """

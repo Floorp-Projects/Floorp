@@ -99,6 +99,12 @@ nsresult
 Convert(uint8_t aIn, int& aOut);
 
 nsresult
+Convert(uint8_t aIn, BluetoothA2dpAudioState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothA2dpConnectionState& aOut);
+
+nsresult
 Convert(uint8_t aIn, BluetoothAclState& aOut);
 
 nsresult
@@ -530,6 +536,12 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, bool& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, char& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothA2dpAudioState& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothA2dpConnectionState& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAclState& aOut);

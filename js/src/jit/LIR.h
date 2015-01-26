@@ -67,7 +67,6 @@ class LAllocation : public TempObject
   protected:
     static const uintptr_t DATA_BITS = (sizeof(uint32_t) * 8) - KIND_BITS;
     static const uintptr_t DATA_SHIFT = KIND_SHIFT + KIND_BITS;
-    static const uintptr_t DATA_MASK = (1 << DATA_BITS) - 1;
 
   public:
     enum Kind {
@@ -79,6 +78,8 @@ class LAllocation : public TempObject
         STACK_SLOT,     // Stack slot.
         ARGUMENT_SLOT   // Argument slot.
     };
+
+    static const uintptr_t DATA_MASK = (1 << DATA_BITS) - 1;
 
   protected:
     uint32_t data() const {

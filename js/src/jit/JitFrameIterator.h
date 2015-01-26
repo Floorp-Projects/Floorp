@@ -89,8 +89,9 @@ class BaselineFrame;
 class JitActivation;
 
 // Iterate over the JIT stack to assert that all invariants are respected.
-//  - Check that all entry frames are aligned on StackAlignment.
-void AssertValidJitStack(JSContext *cx);
+//  - Check that all entry frames are aligned on JitStackAlignment.
+//  - Check that all rectifier frames keep the JitStackAlignment.
+void AssertJitStackInvariants(JSContext *cx);
 
 class JitFrameIterator
 {

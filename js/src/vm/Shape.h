@@ -917,7 +917,6 @@ class Shape : public gc::TenuredCell
                setter() == rawSetter;
     }
 
-    bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, MutableHandleValue vp);
     bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp);
 
     BaseShape *base() const { return base_.get(); }

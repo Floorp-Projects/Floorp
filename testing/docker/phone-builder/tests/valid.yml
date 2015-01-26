@@ -1,0 +1,52 @@
+taskId: 1
+task:
+  metadata:
+    source: http://todo.com/soon
+    owner: user@domain.com
+    name: B2G flame-kk opt
+    description: B2G flame-kk opt
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:build-phone-objects'
+    - 'docker-worker:image:{{#docker_image}}phone-builder{{/docker_image}}'
+
+  payload:
+    cache:
+      build-phone-objects: '/home/worker/object-folder-flame-kk-1'
+
+    env:
+      TARGET: 'flame-kk'
+      B2G_DEBUG: '1'
+      # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
+      REVISION: 'tip'
+      GECKO_HEAD_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_BASE_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+
+    image: '{{#docker_image}}phone-builder{{/docker_image}}'
+    maxRunTime: 14400
+
+    command:
+      - build-phone.sh
+
+    artifacts:
+      'private/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'private/build/b2g-android-arm.tar.gz'
+      img: 'private/build/flame-kk.zip'
+      tests: 'private/build/gaia.zip'
+      symbols: 'private/build/b2g-crashreporter-symbols.zip'
+      sources: 'private/build/sources.xml'
+
+    treeherder:
+      symbol: B
