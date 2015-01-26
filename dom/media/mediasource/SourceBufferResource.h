@@ -46,6 +46,8 @@ class SourceBuffer;
 
 class SourceBufferResource MOZ_FINAL : public MediaResource
 {
+  // When used in combination with a SourceBufferDecoder, data management is to
+  // be handled by owning SourceBufferDecoder.
 public:
   explicit SourceBufferResource(const nsACString& aType);
   virtual nsresult Close() MOZ_OVERRIDE;
@@ -111,7 +113,8 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  // Used by SourceBuffer.
+  // Used by SourceBuffer, and only to be called by SourceBufferDecoder owner if
+  // present.
   void AppendData(LargeDataBuffer* aData);
   void Ended();
   // Remove data from resource if it holds more than the threshold
