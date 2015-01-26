@@ -115,7 +115,7 @@ function test() {
 
     instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
 
-    let customPresetIndex = getPresetIndex("456x123 (Testing preset)");
+    let customPresetIndex = getPresetIndex("456" + "\u00D7" + "123 (Testing preset)");
     info(customPresetIndex);
     ok(customPresetIndex >= 0, "is the previously added preset (idx = " + customPresetIndex + ") in the list of items");
 
