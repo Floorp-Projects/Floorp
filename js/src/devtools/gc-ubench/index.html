@@ -25,25 +25,29 @@
 </div>
 
 <div>
-    Duration: <input type="text" id="test-duration" size=3 value="8" oninput="duration_changed()"></input>s
+    Duration: <input type="text" id="test-duration" size="3" value="8" onchange="duration_changed()"></input>s
     <input type="button" id="test-one" value="Run Test" onclick="run_one_test()"></input>
     <input type="button" id="test-all" value="Run All Tests" onclick="run_all_tests()"></input>
 </div>
 
 <div>
-    Currently running test:
-    <select id="test-selection" required onchange="testchanged()"></select>
+    Currently running test load:
+    <select id="test-selection" required onchange="test_changed()"></select>
 </div>
 
 <div>
-    Garbage items per frame:
-    <input type="text" id="garbage-per-frame" size=5 value="8K"
-           oninput="garbage_per_frame_changed()"></input>
+    &nbsp;&nbsp;&nbsp;&nbsp;Time remaining: <span id="test-progress">(not running)</span>
+</div
+
+<div>
+    &nbsp;&nbsp;&nbsp;&nbsp;Garbage items per frame:
+    <input type="text" id="garbage-per-frame" size="5" value="8K"
+           onchange="garbage_per_frame_changed()"></input>
 </div>
 <div>
-    Garbage heap size in items:
-    <input type="text" id="garbage-total" size=5 value="8M"
-           oninput="garbage_total_changed()"></input>
+    &nbsp;&nbsp;&nbsp;&nbsp;Garbage heap size in items:
+    <input type="text" id="garbage-total" size="5" value="8M"
+           onchange="garbage_total_changed()"></input>
 </div>
 
 <div id="results-Area">
