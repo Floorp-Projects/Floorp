@@ -72,7 +72,8 @@ enum GMPSessionMessageType {
   kGMPLicenseRequest = 0,
   kGMPLicenseRenewal = 1,
   kGMPLicenseRelease = 2,
-  kGMPMessageInvalid = 3 // Must always be last.
+  kGMPIndividualizationRequest = 3,
+  kGMPMessageInvalid = 4 // Must always be last.
 };
 
 // Time in milliseconds, as offset from epoch, 1 Jan 1970.
@@ -219,7 +220,7 @@ enum GMPSessionType {
   kGMPSessionInvalid = 2 // Must always be last.
 };
 
-#define GMP_API_DECRYPTOR "eme-decrypt-v3"
+#define GMP_API_DECRYPTOR "eme-decrypt-v4"
 
 // API exposed by plugin library to manage decryption sessions.
 // When the Host requests this by calling GMPGetAPIFunc().
