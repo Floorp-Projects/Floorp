@@ -21,8 +21,8 @@ let Server = exports.Server = {};
 /**
  * Prompt the user to accept or decline the incoming connection. This is the
  * default implementation that products embedding the debugger server may
- * choose to override.  A separate security handler can be specified for each
- * socket via |allowConnection| on a socket listener instance.
+ * choose to override.  This can be overridden via |allowConnection| on the
+ * socket's authenticator instance.
  *
  * @return true if the connection should be permitted, false otherwise
  */

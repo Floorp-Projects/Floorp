@@ -7358,9 +7358,12 @@ var RemoteDebugger = {
       let pathOrPort = this._getPath();
       if (!pathOrPort)
         pathOrPort = this._getPort();
+      let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      let authenticator = new AuthenticatorType.Server();
+      authenticator.allowConnection = this._showConnectionPrompt.bind(this);
       let listener = DebuggerServer.createListener();
       listener.portOrPath = pathOrPort;
-      listener.allowConnection = this._showConnectionPrompt.bind(this);
+      listener.authenticator = authenticator;
       listener.open();
       dump("Remote debugger listening at path " + pathOrPort);
     } catch(e) {
