@@ -3312,7 +3312,7 @@ Simulator::execute()
     // Get the PC to simulate. Cannot use the accessor here as we need the
     // raw PC value and not the one used as input to arithmetic instructions.
     int program_counter = get_pc();
-    AsmJSActivation *activation = TlsPerThreadData.get()->asmJSActivationStack();
+    AsmJSActivation *activation = TlsPerThreadData.get()->runtimeFromMainThread()->asmJSActivationStack();
 
     while (program_counter != end_sim_pc) {
         if (enableStopSimAt && (icount_ == Simulator::StopSimAt)) {
@@ -3470,28 +3470,40 @@ Simulator::popAddress()
 } // namespace js
 
 js::jit::Simulator *
-js::PerThreadData::simulator() const
+JSRuntime::simulator() const
 {
     return simulator_;
+}
+
+js::jit::Simulator *
+js::PerThreadData::simulator() const
+{
+    return runtime_->simulator();
+}
+
+void
+JSRuntime::setSimulator(js::jit::Simulator *sim)
+{
+    simulator_ = sim;
+    simulatorStackLimit_ = sim->stackLimit();
 }
 
 void
 js::PerThreadData::setSimulator(js::jit::Simulator *sim)
 {
-    simulator_ = sim;
-    simulatorStackLimit_ = sim->stackLimit();
+    runtime_->setSimulator(sim);
+}
+
+uintptr_t *
+JSRuntime::addressOfSimulatorStackLimit()
+{
+    return &simulatorStackLimit_;
 }
 
 js::jit::SimulatorRuntime *
 js::PerThreadData::simulatorRuntime() const
 {
     return runtime_->simulatorRuntime();
-}
-
-uintptr_t *
-js::PerThreadData::addressOfSimulatorStackLimit()
-{
-    return &simulatorStackLimit_;
 }
 
 js::jit::SimulatorRuntime *

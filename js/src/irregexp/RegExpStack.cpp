@@ -36,7 +36,7 @@ using namespace js;
 using namespace js::irregexp;
 
 RegExpStackScope::RegExpStackScope(JSRuntime *rt)
-  : regexp_stack(&rt->mainThread.regexpStack)
+  : regexp_stack(&rt->regexpStack)
 {}
 
 RegExpStackScope::~RegExpStackScope()
@@ -47,7 +47,7 @@ RegExpStackScope::~RegExpStackScope()
 int
 irregexp::GrowBacktrackStack(JSRuntime *rt)
 {
-    return rt->mainThread.regexpStack.grow();
+    return rt->regexpStack.grow();
 }
 
 RegExpStack::RegExpStack()

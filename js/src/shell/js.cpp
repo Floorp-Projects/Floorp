@@ -4209,7 +4209,7 @@ EnableSingleStepProfiling(JSContext *cx, unsigned argc, Value *vp)
 #if defined(JS_ARM_SIMULATOR)
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    jit::Simulator *sim = cx->runtime()->mainThread.simulator();
+    jit::Simulator *sim = cx->runtime()->simulator();
     sim->enable_single_stepping(SingleStepCallback, cx->runtime());
 
     args.rval().setUndefined();
@@ -4226,7 +4226,7 @@ DisableSingleStepProfiling(JSContext *cx, unsigned argc, Value *vp)
 #if defined(JS_ARM_SIMULATOR)
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    jit::Simulator *sim = cx->runtime()->mainThread.simulator();
+    jit::Simulator *sim = cx->runtime()->simulator();
     sim->disable_single_stepping();
 
     AutoValueVector elems(cx);

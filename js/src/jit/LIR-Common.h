@@ -157,6 +157,26 @@ class LSimdBox : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LSimdUnbox : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(SimdUnbox)
+
+    LSimdUnbox(const LAllocation &obj, const LDefinition &temp)
+    {
+        setOperand(0, obj);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MSimdUnbox *mir() const {
+        return mir_->toSimdUnbox();
+    }
+};
+
 // Constructs a SIMD value with 4 equal components (e.g. int32x4, float32x4).
 class LSimdSplatX4 : public LInstructionHelper<1, 1, 0>
 {

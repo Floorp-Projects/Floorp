@@ -1084,6 +1084,42 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment> &ac, bool ok,
     return newCompletionValue(cx, status, value, vp);
 }
 
+static bool
+GetStatusProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSTrapStatus status,
+                  JSTrapStatus *statusOut, MutableHandleValue vp, int *hits)
+{
+    bool found;
+    if (!HasProperty(cx, obj, name, &found))
+        return false;
+    if (found) {
+        ++*hits;
+        *statusOut = status;
+        if (!GetProperty(cx, obj, obj, name, vp))
+            return false;
+    }
+    return true;
+}
+
+static bool
+ParseResumptionValueAsObject(JSContext *cx, HandleValue rv, JSTrapStatus *statusp,
+                             MutableHandleValue vp)
+{
+    int hits = 0;
+    if (rv.isObject()) {
+        RootedObject obj(cx, &rv.toObject());
+        if (!GetStatusProperty(cx, obj, cx->names().return_, JSTRAP_RETURN, statusp, vp, &hits))
+            return false;
+        if (!GetStatusProperty(cx, obj, cx->names().throw_, JSTRAP_THROW, statusp, vp, &hits))
+            return false;
+    }
+
+    if (hits != 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
+        return false;
+    }
+    return true;
+}
+
 JSTrapStatus
 Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value &rv, MutableHandleValue vp,
                                bool callHook)
@@ -1100,34 +1136,15 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
         return JSTRAP_ERROR;
     }
 
-    /* Check that rv is {return: val} or {throw: val}. */
     JSContext *cx = ac->context()->asJSContext();
-    Rooted<JSObject*> obj(cx);
-    RootedShape shape(cx);
-    RootedId returnId(cx, NameToId(cx->names().return_));
-    RootedId throwId(cx, NameToId(cx->names().throw_));
-    bool okResumption = rv.isObject();
-    if (okResumption) {
-        obj = &rv.toObject();
-        okResumption = obj->is<PlainObject>();
-    }
-    if (okResumption) {
-        shape = obj->lastProperty();
-        okResumption = shape->previous() &&
-             !shape->previous()->previous() &&
-             (shape->propid() == returnId || shape->propid() == throwId) &&
-             shape->isDataDescriptor();
-    }
-    if (!okResumption) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_RESUMPTION);
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    RootedValue v(cx);
+    RootedValue rvRoot(cx, rv);
+    if (!ParseResumptionValueAsObject(cx, rvRoot, &status, &v) ||
+        !unwrapDebuggeeValue(cx, &v))
+    {
         return handleUncaughtException(ac, vp, callHook);
     }
-
-    HandleNativeObject nobj = obj.as<NativeObject>();
-
-    RootedValue v(cx, vp.get());
-    if (!NativeGetExistingProperty(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
-        return handleUncaughtException(ac, &v, callHook);
 
     ac.reset();
     if (!cx->compartment()->wrap(cx, &v)) {
@@ -1136,7 +1153,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
     }
     vp.set(v);
 
-    return shape->propid() == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
+    return status;
 }
 
 static bool

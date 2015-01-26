@@ -377,7 +377,7 @@ class Simulator
 
 #define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)             \
     JS_BEGIN_MACRO                                                              \
-        if (cx->mainThread().simulator()->overRecursedWithExtra(extra)) {       \
+        if (cx->runtime()->simulator()->overRecursedWithExtra(extra)) {         \
             js_ReportOverRecursed(cx);                                          \
             onerror;                                                            \
         }                                                                       \

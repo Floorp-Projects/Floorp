@@ -19,10 +19,38 @@
 using namespace js;
 using namespace js::jit;
 
+// Encodings:
+//   [ptr] A fixed-size pointer.
+//   [vwu] A variable-width unsigned integer.
+//   [vws] A variable-width signed integer.
+//    [u8] An 8-bit unsigned integer.
+//   [u8'] An 8-bit unsigned integer which is potentially extended with packed
+//         data.
+//   [u8"] Packed data which is stored and packed in the previous [u8'].
+//  [vwu*] A list of variable-width unsigned integers.
+//   [pld] Payload of Recover Value Allocation:
+//         PAYLOAD_NONE:
+//           There is no payload.
+//
+//         PAYLOAD_INDEX:
+//           [vwu] Index, such as the constant pool index.
+//
+//         PAYLOAD_STACK_OFFSET:
+//           [vws] Stack offset based on the base of the Ion frame.
+//
+//         PAYLOAD_GPR:
+//            [u8] Code of the general register.
+//
+//         PAYLOAD_FPU:
+//            [u8] Code of the FPU register.
+//
+//         PAYLOAD_PACKED_TAG:
+//           [u8"] Bits 5-7: JSValueType is encoded on the low bits of the Mode
+//                           of the RValueAllocation.
+//
 // Snapshot header:
 //
-//   [vwu] bits ((n+1)-31]: frame count
-//         bit n+1: resume after
+//   [vwu] bits ((n+1)-31]: recover instruction offset
 //         bits [0,n): bailout kind (n = SNAPSHOT_BAILOUTKIND_BITS)
 //
 // Snapshot body, repeated "frame count" times, from oldest frame to newest frame.
@@ -91,35 +119,6 @@ using namespace js::jit;
 //         TYPED_STACK [PACKED_TAG, STACK_OFFSET]:
 //           Value with statically known type, which payload is stored at an
 //           offset on the stack.
-//
-// Encodings:
-//   [ptr] A fixed-size pointer.
-//   [vwu] A variable-width unsigned integer.
-//   [vws] A variable-width signed integer.
-//    [u8] An 8-bit unsigned integer.
-//   [u8'] An 8-bit unsigned integer which is potentially extended with packed
-//         data.
-//   [u8"] Packed data which is stored and packed in the previous [u8'].
-//  [vwu*] A list of variable-width unsigned integers.
-//   [pld] Payload of Recover Value Allocation:
-//         PAYLOAD_NONE:
-//           There is no payload.
-//
-//         PAYLOAD_INDEX:
-//           [vwu] Index, such as the constant pool index.
-//
-//         PAYLOAD_STACK_OFFSET:
-//           [vws] Stack offset based on the base of the Ion frame.
-//
-//         PAYLOAD_GPR:
-//            [u8] Code of the general register.
-//
-//         PAYLOAD_FPU:
-//            [u8] Code of the FPU register.
-//
-//         PAYLOAD_PACKED_TAG:
-//           [u8"] Bits 5-7: JSValueType is encoded on the low bits of the Mode
-//                           of the RValueAllocation.
 //
 
 const RValueAllocation::Layout &
@@ -498,7 +497,7 @@ SnapshotReader::SnapshotReader(const uint8_t *snapshots, uint32_t offset,
 
 // Details of snapshot header packing.
 static const uint32_t SNAPSHOT_BAILOUTKIND_SHIFT = 0;
-static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 5;
+static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 6;
 static const uint32_t SNAPSHOT_BAILOUTKIND_MASK = COMPUTE_MASK_(SNAPSHOT_BAILOUTKIND);
 
 static const uint32_t SNAPSHOT_ROFFSET_SHIFT = COMPUTE_SHIFT_AFTER_(SNAPSHOT_BAILOUTKIND);

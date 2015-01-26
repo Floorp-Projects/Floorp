@@ -448,7 +448,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
+    AsmJSActivation *activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
@@ -647,7 +647,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
+    AsmJSActivation *activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
@@ -861,7 +861,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
+    AsmJSActivation *activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
@@ -947,12 +947,12 @@ RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
 {
     RedirectIonBackedgesToInterruptCheck(rt);
 
-    if (AsmJSActivation *activation = rt->mainThread.asmJSActivationStack()) {
+    if (AsmJSActivation *activation = rt->asmJSActivationStack()) {
         const AsmJSModule &module = activation->module();
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-        if (module.containsFunctionPC((void*)rt->mainThread.simulator()->get_pc()))
-            rt->mainThread.simulator()->set_resume_pc(int32_t(module.interruptExit()));
+        if (module.containsFunctionPC((void*)rt->simulator()->get_pc()))
+            rt->simulator()->set_resume_pc(int32_t(module.interruptExit()));
 #endif
 
         uint8_t **ppc = ContextToPC(context);

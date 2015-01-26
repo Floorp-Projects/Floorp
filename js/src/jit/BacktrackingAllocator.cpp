@@ -101,6 +101,7 @@ BacktrackingAllocator::go()
         dumpRegisterGroups();
 
     JitSpew(JitSpew_RegAlloc, "Beginning main allocation loop");
+
     // Allocate, spill and split register intervals until finished.
     while (!allocationQueue.empty()) {
         if (mir->shouldCancel("Backtracking Allocation"))
@@ -112,10 +113,22 @@ BacktrackingAllocator::go()
     }
     JitSpew(JitSpew_RegAlloc, "Main allocation loop complete");
 
+    if (!pickStackSlots())
+        return false;
+
     if (JitSpewEnabled(JitSpew_RegAlloc))
         dumpAllocations();
 
-    return resolveControlFlow() && reifyAllocations() && populateSafepoints();
+    if (!resolveControlFlow())
+        return false;
+
+    if (!reifyAllocations())
+        return false;
+
+    if (!populateSafepoints())
+        return false;
+
+    return true;
 }
 
 static bool
@@ -383,6 +396,7 @@ BacktrackingAllocator::groupAndQueueRegisters()
         // for that slot, and reuse it for other registers in the group.
         LDefinition *def = reg.def();
         if (def->policy() == LDefinition::FIXED && !def->output()->isRegister()) {
+            MOZ_ASSERT(!def->output()->isStackSlot());
             reg.setCanonicalSpill(*def->output());
             if (reg.group() && reg.group()->spill.isUse())
                 reg.group()->spill = *def->output();
@@ -930,10 +944,11 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         }
     }
 
-    uint32_t stackSlot = stackSlotAllocator.allocateSlot(reg->type());
-    MOZ_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
+    uint32_t virtualSlot = numVirtualStackSlots++;
 
-    LStackSlot alloc(stackSlot);
+    // Count virtual stack slots down from the maximum representable value, so
+    // that virtual slots are more obviously distinguished from real slots.
+    LStackSlot alloc(LAllocation::DATA_MASK - virtualSlot);
     interval->setAllocation(alloc);
 
     JitSpew(JitSpew_RegAlloc, "    Allocating spill location %s", alloc.toString());
@@ -943,6 +958,179 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         if (reg->group())
             reg->group()->spill = alloc;
     }
+}
+
+bool
+BacktrackingAllocator::pickStackSlots()
+{
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
+        BacktrackingVirtualRegister *reg = &vregs[i];
+
+        if (mir->shouldCancel("Backtracking Pick Stack Slots"))
+            return false;
+
+        for (size_t j = 0; j < reg->numIntervals(); j++) {
+            LiveInterval *interval = reg->getInterval(j);
+            if (!pickStackSlot(interval))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+BacktrackingAllocator::pickStackSlot(LiveInterval *interval)
+{
+    LAllocation alloc = *interval->getAllocation();
+    MOZ_ASSERT(!alloc.isUse());
+
+    if (!isVirtualStackSlot(alloc))
+        return true;
+
+    BacktrackingVirtualRegister &reg = vregs[interval->vreg()];
+
+    // Get a list of all the intervals which will share this stack slot.
+    LiveIntervalVector commonIntervals;
+
+    if (!commonIntervals.append(interval))
+        return false;
+
+    if (reg.canonicalSpill() && alloc == *reg.canonicalSpill()) {
+        // Look for other intervals in the vreg using this spill slot.
+        for (size_t i = 0; i < reg.numIntervals(); i++) {
+            LiveInterval *ninterval = reg.getInterval(i);
+            if (ninterval != interval && *ninterval->getAllocation() == alloc) {
+                if (!commonIntervals.append(ninterval))
+                    return false;
+            }
+        }
+
+        // Look for intervals in other registers with the same group using this
+        // spill slot.
+        if (reg.group() && alloc == reg.group()->spill) {
+            for (size_t i = 0; i < reg.group()->registers.length(); i++) {
+                uint32_t nvreg = reg.group()->registers[i];
+                if (nvreg == interval->vreg())
+                    continue;
+                BacktrackingVirtualRegister &nreg = vregs[nvreg];
+                for (size_t j = 0; j < nreg.numIntervals(); j++) {
+                    LiveInterval *ninterval = nreg.getInterval(j);
+                    if (*ninterval->getAllocation() == alloc) {
+                        if (!commonIntervals.append(ninterval))
+                            return false;
+                    }
+                }
+            }
+        }
+    } else {
+        MOZ_ASSERT_IF(reg.group(), alloc != reg.group()->spill);
+    }
+
+    if (!reuseOrAllocateStackSlot(commonIntervals, reg.type(), &alloc))
+        return false;
+
+    MOZ_ASSERT(!isVirtualStackSlot(alloc));
+
+    // Set the physical stack slot for each of the intervals found earlier.
+    for (size_t i = 0; i < commonIntervals.length(); i++)
+        commonIntervals[i]->setAllocation(alloc);
+
+    return true;
+}
+
+bool
+BacktrackingAllocator::reuseOrAllocateStackSlot(const LiveIntervalVector &intervals, LDefinition::Type type,
+                                                LAllocation *palloc)
+{
+    SpillSlotList *slotList;
+    switch (StackSlotAllocator::width(type)) {
+      case 4:  slotList = &normalSlots; break;
+      case 8:  slotList = &doubleSlots; break;
+      case 16: slotList = &quadSlots;   break;
+      default:
+        MOZ_CRASH("Bad width");
+    }
+
+    // Maximum number of existing spill slots we will look at before giving up
+    // and allocating a new slot.
+    static const size_t MAX_SEARCH_COUNT = 10;
+
+    if (!slotList->empty()) {
+        size_t searches = 0;
+        SpillSlot *stop = nullptr;
+        while (true) {
+            SpillSlot *spill = *slotList->begin();
+            if (!stop) {
+                stop = spill;
+            } else if (stop == spill) {
+                // We looked through every slot in the list.
+                break;
+            }
+
+            bool success = true;
+            for (size_t i = 0; i < intervals.length() && success; i++) {
+                LiveInterval *interval = intervals[i];
+                for (size_t j = 0; j < interval->numRanges(); j++) {
+                    AllocatedRange range(interval, interval->getRange(j)), existing;
+                    if (spill->allocated.contains(range, &existing)) {
+                        success = false;
+                        break;
+                    }
+                }
+            }
+            if (success) {
+                // We can reuse this physical stack slot for the new intervals.
+                // Update the allocated ranges for the slot.
+                if (!insertAllRanges(spill->allocated, intervals))
+                    return false;
+                *palloc = spill->alloc;
+                return true;
+            }
+
+            // On a miss, move the spill to the end of the list. This will cause us
+            // to make fewer attempts to allocate from slots with a large and
+            // highly contended range.
+            slotList->popFront();
+            slotList->pushBack(spill);
+
+            if (++searches == MAX_SEARCH_COUNT)
+                break;
+        }
+    }
+
+    // We need a new physical stack slot.
+    uint32_t stackSlot = stackSlotAllocator.allocateSlot(type);
+
+    // Make sure the virtual and physical stack slots don't start overlapping.
+    if (isVirtualStackSlot(LStackSlot(stackSlot)))
+        return false;
+
+    SpillSlot *spill = new(alloc()) SpillSlot(stackSlot, alloc().lifoAlloc());
+    if (!spill)
+        return false;
+
+    if (!insertAllRanges(spill->allocated, intervals))
+        return false;
+
+    *palloc = spill->alloc;
+
+    slotList->pushFront(spill);
+    return true;
+}
+
+bool
+BacktrackingAllocator::insertAllRanges(AllocatedRangeSet &set, const LiveIntervalVector &intervals)
+{
+    for (size_t i = 0; i < intervals.length(); i++) {
+        LiveInterval *interval = intervals[i];
+        for (size_t j = 0; j < interval->numRanges(); j++) {
+            AllocatedRange range(interval, interval->getRange(j));
+            if (!set.insert(range))
+                return false;
+        }
+    }
+    return true;
 }
 
 // Add moves to resolve conflicting assignments between a block and its

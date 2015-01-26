@@ -1922,7 +1922,7 @@ class MSimdBinaryComp
 
 class MSimdBinaryArith
   : public MBinaryInstruction,
-    public NoTypePolicy::Data
+    public MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >::Data
 {
   public:
     enum Operation {
@@ -1958,8 +1958,6 @@ class MSimdBinaryArith
     {
         MOZ_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub || op == Mul);
         MOZ_ASSERT(IsSimdType(type));
-        MOZ_ASSERT(left->type() == right->type());
-        MOZ_ASSERT(left->type() == type);
         setResultType(type);
         setMovable();
         if (op == Add || op == Mul || op == Min || op == Max)
@@ -1968,10 +1966,18 @@ class MSimdBinaryArith
 
   public:
     INSTRUCTION_HEADER(SimdBinaryArith)
+    static MSimdBinaryArith *New(TempAllocator &alloc, MDefinition *left, MDefinition *right,
+                                 Operation op, MIRType t)
+    {
+        return new(alloc) MSimdBinaryArith(left, right, op, t);
+    }
+
     static MSimdBinaryArith *NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right,
                                       Operation op, MIRType t)
     {
-        return new(alloc) MSimdBinaryArith(left, right, op, t);
+        MOZ_ASSERT(left->type() == right->type());
+        MOZ_ASSERT(left->type() == t);
+        return New(alloc, left, right, op, t);
     }
 
     AliasSet getAliasSet() const MOZ_OVERRIDE {
@@ -2977,6 +2983,33 @@ class MSimdBox
         }
 
         return false;
+    }
+
+    AliasSet getAliasSet() const MOZ_OVERRIDE {
+        return AliasSet::None();
+    }
+};
+
+class MSimdUnbox
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+  protected:
+    MSimdUnbox(MDefinition *op, MIRType type)
+      : MUnaryInstruction(op)
+    {
+        MOZ_ASSERT(IsSimdType(type));
+        setMovable();
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdUnbox)
+    ALLOW_CLONE(MSimdUnbox)
+
+    static MSimdUnbox *New(TempAllocator &alloc, MDefinition *op, MIRType type)
+    {
+        return new(alloc) MSimdUnbox(op, type);
     }
 
     AliasSet getAliasSet() const MOZ_OVERRIDE {
