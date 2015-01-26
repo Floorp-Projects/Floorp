@@ -4713,7 +4713,23 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // still test false at this point and no state change will happen) or we're
   // doing the initial document load and don't want to fire the event for this
   // change.
+  dom::VisibilityState oldState = mVisibilityState;
   mVisibilityState = GetVisibilityState();
+  // When the visibility is changed, notify it to observers.
+  // Some observers need the notification, for example HTMLMediaElement uses
+  // it to update internal media resource allocation.
+  // When video is loaded via VideoDocument, HTMLMediaElement and MediaDecoder
+  // creation are already done before nsDocument::SetScriptGlobalObject() call.
+  // MediaDecoder decides whether starting decoding is decided based on
+  // document's visibility. When the MediaDecoder is created,
+  // nsDocument::SetScriptGlobalObject() is not yet called and document is
+  // hidden state. Therefore the MediaDecoder decides that decoding is
+  // not yet necessary. But soon after nsDocument::SetScriptGlobalObject()
+  // call, the document becomes not hidden. At the time, MediaDecoder needs
+  // to know it and needs to start updating decoding.
+  if (oldState != mVisibilityState) {
+    EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  }
 
   // The global in the template contents owner document should be the same.
   if (mTemplateContentsOwner && mTemplateContentsOwner != this) {

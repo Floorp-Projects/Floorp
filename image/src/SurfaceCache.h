@@ -117,16 +117,16 @@ VectorSurfaceKey(const gfx::IntSize& aSize,
   return SurfaceKey(aSize, aSVGContext, aAnimationTime, 0);
 }
 
-MOZ_BEGIN_ENUM_CLASS(Lifetime, uint8_t)
+enum class Lifetime : uint8_t {
   Transient,
   Persistent
-MOZ_END_ENUM_CLASS(Lifetime)
+};
 
-MOZ_BEGIN_ENUM_CLASS(InsertOutcome, uint8_t)
+enum class InsertOutcome : uint8_t {
   SUCCESS,                 // Success (but see Insert documentation).
   FAILURE,                 // Couldn't insert (e.g., for capacity reasons).
   FAILURE_ALREADY_PRESENT  // A surface with the same key is already present.
-MOZ_END_ENUM_CLASS(InsertOutcome)
+};
 
 /**
  * SurfaceCache is an imagelib-global service that allows caching of temporary

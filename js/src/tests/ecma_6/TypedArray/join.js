@@ -36,14 +36,13 @@ for (var constructor of constructors) {
     }
 
     // Throws if `this` isn't a TypedArray.
-    var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./];
+    var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
+                            new Proxy(new constructor(), {})];
     invalidReceivers.forEach(invalidReceiver => {
         assertThrowsInstanceOf(() => {
             constructor.prototype.join.call(invalidReceiver);
         }, TypeError, "Assert that join fails if this value is not a TypedArray");
     });
-    // FIXME: Should throw exception if `this` is a proxy, see bug 1115361.
-    constructor.prototype.join.call(new Proxy(new constructor(), {}));
 
     // Test that the length getter is never called.
     assertEq(Object.defineProperty(new constructor([1, 2, 3]), "length", {

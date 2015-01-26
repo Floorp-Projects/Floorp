@@ -17,10 +17,10 @@
 namespace mozilla {
 namespace gfx {
 
-MOZ_BEGIN_ENUM_CLASS(VRHMDType, uint16_t)
+enum class VRHMDType : uint16_t {
   Oculus,
   NumHMDTypes
-MOZ_END_ENUM_CLASS(VRHMDType)
+};
 
 struct VRFieldOfView {
   static VRFieldOfView FromCSSPerspectiveInfo(double aPerspectiveDistance,

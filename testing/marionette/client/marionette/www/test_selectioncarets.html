@@ -9,15 +9,22 @@
     <title>Bug 1019441: Marionette tests for selection carets</title>
   </head>
   <body>
+  <style>
+    *
+    {
+      -moz-user-select:none;
+    }
+  </style>
     <div><input id="input" value="ABC DEF GHI"></div>
     <br />
     <div><textarea id="textarea" rows="4" cols="8">ABC DEF GHI JKL MNO PQR</textarea></div>
     <br />
     <div><textarea dir="rtl" id="textarea_rtl" rows="8" cols="8">موزيلا فيرفكس موزيلا فيرفكس</textarea></div>
     <br />
-    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto;" contenteditable="true" id="contenteditable">ABC DEF GHI</div>
+    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto; -moz-user-select:text" contenteditable="true" id="contenteditable">ABC DEF GHI</div>
     <br />
-    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto;" id="content">ABC DEF GHI</div>
+    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto; -moz-user-select:text" id="content">ABC DEF GHI</div>
     <br />
+    <div style="width: 10em; height: 8em; overflow: auto; -moz-user-select:text" id="contenteditable2" contenteditable="true">First Line<br></br>Second Line<br></br>Third Line</div>
   </body>
 </html>
