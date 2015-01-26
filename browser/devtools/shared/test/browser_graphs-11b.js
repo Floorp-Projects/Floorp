@@ -4,9 +4,7 @@
 // Tests that bar graph's legend items handle mouseover/mouseout.
 
 let {BarGraphWidget} = Cu.import("resource:///modules/devtools/Graphs.jsm", {});
-let {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
-let {Hosts} = devtools.require("devtools/framework/toolbox-hosts");
 
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },
@@ -14,11 +12,10 @@ const CATEGORIES = [
   { color: "#70bf53", label: "Baz" }
 ];
 
-let test = Task.async(function*() {
+add_task(function*() {
   yield promiseTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
-  finish();
 });
 
 function* performTest() {

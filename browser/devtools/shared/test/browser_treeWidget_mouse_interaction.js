@@ -9,36 +9,25 @@ const TEST_URI = "data:text/html;charset=utf-8,<head><link rel='stylesheet' " +
   "rel='stylesheet' type='text/css' href='chrome://browser/skin/devtools/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = devtools.require("devtools/shared/widgets/TreeWidget");
-let {Task} = devtools.require("resource://gre/modules/Task.jsm");
-let {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
+const {Promise} = devtools.require("resource://gre/modules/Promise.jsm");
 
-let doc, tree;
+add_task(function*() {
+  yield promiseTab("about:blank");
+  let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
-function test() {
-  waitForExplicitFinish();
-  addTab(TEST_URI, () => {
-    doc = content.document;
-    tree = new TreeWidget(doc.querySelector("div"), {
-      defaultType: "store"
-    });
-    startTests();
+  let tree = new TreeWidget(doc.querySelector("div"), {
+    defaultType: "store"
   });
-}
 
-function endTests() {
+  populateTree(tree, doc);
+  yield testMouseInteraction(tree);
+
   tree.destroy();
-  doc = tree = null;
+  host.destroy();
   gBrowser.removeCurrentTab();
-  finish();
-}
-
-let startTests = Task.async(function*() {
-  populateTree();
-  yield testMouseInteraction();
-  endTests();
 });
 
-function populateTree() {
+function populateTree(tree, doc) {
   tree.add([{
     id: "level1",
     label: "Level 1"
@@ -87,13 +76,14 @@ function populateTree() {
 
 // Sends a click event on the passed DOM node in an async manner
 function click(node) {
-  executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, content));
+  let win = node.ownerDocument.defaultView;
+  executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {}, win));
 }
 
 /**
  * Tests if clicking the tree items does the expected behavior
  */
-let testMouseInteraction = Task.async(function*() {
+function* testMouseInteraction(tree) {
   info("Testing mouse interaction with the tree");
   let event;
   let pass = (e, d, a) => event.resolve([e, d, a]);
@@ -144,4 +134,4 @@ let testMouseInteraction = Task.async(function*() {
   click(node2);
   yield event.promise;
   ok(!node2.hasAttribute("expanded"), "New node collapsed after click again");
-});
+}
