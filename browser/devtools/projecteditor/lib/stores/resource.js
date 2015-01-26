@@ -127,13 +127,12 @@ var Resource = Class({
   },
 
   /**
-   * Checks a resource has child with specific name.
+   * Checks if current object has child with specific name.
    *
-   * @param Resource resource
    * @param string name
    */
-  hasChild: function(resource, name) {
-    for (let child of resource.children) {
+  hasChild: function(name) {
+    for (let child of this.children) {
       if (child.basename === name) {
         return true;
       }
