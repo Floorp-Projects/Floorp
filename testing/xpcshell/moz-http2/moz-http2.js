@@ -283,6 +283,29 @@ function handleRequest(req, res) {
     return;
   }
 
+  else if (u.pathname === "/750msPost") {
+    if (req.method != "POST") {
+      res.writeHead(405);
+      res.end('Unexpected method: ' + req.method);
+      return;
+    }
+
+    var accum = 0;
+    req.on('data', function receivePostData(chunk) {
+      accum += chunk.length;
+    });
+    req.on('end', function finishPost() {
+      res.setHeader('X-Recvd', accum);
+      var rl = new runlater();
+      rl.req = req;
+      rl.resp = res;
+      setTimeout(executeRunLater, 750, rl);
+      return;
+    });
+
+    return;
+  }
+
   else if (u.pathname === "/h11required_stream") {
     if (req.httpVersionMajor === 2) {
       h11required_conn = req.stream.connection;
