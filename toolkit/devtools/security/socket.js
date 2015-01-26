@@ -688,6 +688,7 @@ ServerSocketConnection.prototype = {
       case AuthenticationResult.DENY:
         return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
       case AuthenticationResult.ALLOW:
+      case AuthenticationResult.ALLOW_PERSIST:
         return promise.resolve();
       default:
         return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
