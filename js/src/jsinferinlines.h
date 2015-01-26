@@ -22,7 +22,6 @@
 #include "vm/SharedTypedArrayObject.h"
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/UnboxedObject.h"
 
 #include "jscntxtinlines.h"
 
@@ -1083,12 +1082,18 @@ HeapTypeSet::newPropertyState(ExclusiveContext *cxArg)
 }
 
 inline void
+HeapTypeSet::setNonDataPropertyIgnoringConstraints()
+{
+    flags |= TYPE_FLAG_NON_DATA_PROPERTY;
+}
+
+inline void
 HeapTypeSet::setNonDataProperty(ExclusiveContext *cx)
 {
     if (flags & TYPE_FLAG_NON_DATA_PROPERTY)
         return;
 
-    flags |= TYPE_FLAG_NON_DATA_PROPERTY;
+    setNonDataPropertyIgnoringConstraints();
     newPropertyState(cx);
 }
 
@@ -1195,7 +1200,6 @@ inline void
 TypeObject::finalize(FreeOp *fop)
 {
     fop->delete_(newScriptDontCheckGeneration());
-    fop->delete_(maybeUnboxedLayoutDontCheckGeneration());
 }
 
 inline uint32_t
@@ -1290,10 +1294,10 @@ TypeObject::getProperty(unsigned i)
 inline void
 TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 {
-    if (!newScript->function()->runtimeFromAnyThread()->needsIncrementalBarrier())
+    if (!newScript->fun->runtimeFromAnyThread()->needsIncrementalBarrier())
         return;
 
-    JS::Zone *zone = newScript->function()->zoneFromAnyThread();
+    JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsIncrementalBarrier())
         newScript->trace(zone->barrierTracer());
 }

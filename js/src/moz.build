@@ -271,7 +271,6 @@ UNIFIED_SOURCES += [
     'vm/Symbol.cpp',
     'vm/TypedArrayObject.cpp',
     'vm/UbiNode.cpp',
-    'vm/UnboxedObject.cpp',
     'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/WeakMapPtr.cpp',
