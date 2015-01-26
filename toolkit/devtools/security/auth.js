@@ -9,6 +9,8 @@
 let { Ci, Cc } = require("chrome");
 let Services = require("Services");
 let promise = require("promise");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+let { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "prompt",
   "devtools/toolkit/security/prompt");
 loader.lazyRequireGetter(this, "cert",
@@ -90,6 +92,27 @@ Prompt.Client = function() {};
 Prompt.Client.prototype = {
 
   mode: Prompt.mode,
+
+  /**
+   * When client has just made a new socket connection, validate the connection
+   * to ensure it meets the authenticator's policies.
+   *
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param encryption boolean (optional)
+   *        Whether the server requires encryption.  Defaults to false.
+   * @param cert object (optional)
+   *        The server's cert details.
+   * @param s nsISocketTransport
+   *        Underlying socket transport, in case more details are needed.
+   * @return boolean
+   *         Whether the connection is valid.
+   */
+  validateConnection() {
+    return true;
+  },
 
   /**
    * Work with the server to complete any additional steps required by this
@@ -232,6 +255,38 @@ OOBCert.Client = function() {};
 OOBCert.Client.prototype = {
 
   mode: OOBCert.mode,
+
+  /**
+   * When client has just made a new socket connection, validate the connection
+   * to ensure it meets the authenticator's policies.
+   *
+   * @param host string
+   *        The host name or IP address of the debugger server.
+   * @param port number
+   *        The port number of the debugger server.
+   * @param encryption boolean (optional)
+   *        Whether the server requires encryption.  Defaults to false.
+   * @param cert object (optional)
+   *        The server's cert details.
+   * @param socket nsISocketTransport
+   *        Underlying socket transport, in case more details are needed.
+   * @return boolean
+   *         Whether the connection is valid.
+   */
+  validateConnection({ cert, socket }) {
+    // Step B.7
+    // Client verifies that Server's cert matches hash(ServerCert) from the
+    // advertisement
+    dumpv("Validate server cert hash");
+    let serverCert = socket.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                           .SSLStatus.serverCert;
+    let advertisedCert = cert;
+    if (serverCert.sha256Fingerprint != advertisedCert.sha256) {
+      dumpn("Server cert hash doesn't match advertisement");
+      return false;
+    }
+    return true;
+  },
 
   /**
    * Work with the server to complete any additional steps required by this
