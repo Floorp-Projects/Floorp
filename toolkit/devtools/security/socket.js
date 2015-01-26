@@ -63,11 +63,49 @@ let DebuggerSocket = {};
  *        The port number of the debugger server.
  * @param encryption boolean (optional)
  *        Whether the server requires encryption.  Defaults to false.
+ * @param authenticator Authenticator (optional)
+ *        |Authenticator| instance matching the mode in use by the server.
+ *        Defaults to a PROMPT instance if not supplied.
  * @return promise
  *         Resolved to a DebuggerTransport instance.
  */
-DebuggerSocket.connect = Task.async(function*({ host, port, encryption }) {
-  let attempt = yield _attemptTransport({ host, port, encryption });
+DebuggerSocket.connect = Task.async(function*(settings) {
+  let { host, port, encryption, authenticator } = settings;
+  let transport = yield _getTransport(settings);
+
+  // Default to PROMPT |Authenticator| instance if not supplied
+  authenticator = authenticator || new (Authenticators.get().Client)();
+
+  yield authenticator.authenticate({
+    host,
+    port,
+    encryption,
+    transport
+  });
+  return transport;
+});
+
+/**
+ * Try very hard to create a DevTools transport, potentially making several
+ * connect attempts in the process.
+ *
+ * @param host string
+ *        The host name or IP address of the debugger server.
+ * @param port number
+ *        The port number of the debugger server.
+ * @param encryption boolean (optional)
+ *        Whether the server requires encryption.  Defaults to false.
+ * @return transport DebuggerTransport
+ *         A possible DevTools transport (if connection succeeded and streams
+ *         are actually alive and working)
+ * @return certError boolean
+ *         Flag noting if cert trouble caused the streams to fail
+ * @return s nsISocketTransport
+ *         Underlying socket transport, in case more details are needed.
+ */
+let _getTransport = Task.async(function*(settings) {
+  let { host, port, encryption } = settings;
+  let attempt = yield _attemptTransport(settings);
   if (attempt.transport) {
     return attempt.transport; // Success
   }
@@ -80,7 +118,7 @@ DebuggerSocket.connect = Task.async(function*({ host, port, encryption }) {
     throw new Error("Connection failed");
   }
 
-  attempt = yield _attemptTransport({ host, port, encryption });
+  attempt = yield _attemptTransport(settings);
   if (attempt.transport) {
     return attempt.transport; // Success
   }
@@ -89,8 +127,17 @@ DebuggerSocket.connect = Task.async(function*({ host, port, encryption }) {
 });
 
 /**
- * Try to connect and create a DevTools transport.
+ * Make a single attempt to connect and create a DevTools transport.  This could
+ * fail if the remote host is unreachable, for example.  If there is security
+ * error due to the use of self-signed certs, you should make another attempt
+ * after storing a cert override.
  *
+ * @param host string
+ *        The host name or IP address of the debugger server.
+ * @param port number
+ *        The port number of the debugger server.
+ * @param encryption boolean (optional)
+ *        Whether the server requires encryption.  Defaults to false.
  * @return transport DebuggerTransport
  *         A possible DevTools transport (if connection succeeded and streams
  *         are actually alive and working)
@@ -99,7 +146,7 @@ DebuggerSocket.connect = Task.async(function*({ host, port, encryption }) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-let _attemptTransport = Task.async(function*({ host, port, encryption }){
+let _attemptTransport = Task.async(function*({ host, port, encryption }) {
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
   let { s, input, output } = _attemptConnect({ host, port, encryption });
