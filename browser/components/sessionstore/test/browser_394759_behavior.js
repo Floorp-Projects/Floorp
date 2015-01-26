@@ -39,11 +39,24 @@ function test() {
     let url = "http://example.com/?window=" + windowsToOpen.length;
 
     provideWindow(function onTestURLLoaded(win) {
-      win.close();
-      // Give it time to close
-      executeSoon(function() {
-        openWindowRec(windowsToOpen, expectedResults, recCallback);
-      });
+      let tabReady = () => {
+        promiseWindowClosed(win).then(() => {
+          openWindowRec(windowsToOpen, expectedResults, recCallback);
+        });
+      };
+
+      if (win.gMultiProcessBrowser) {
+        // For e10s windows, the initial browser starts out non-remote and then
+        // gets transitioned to remote once a document is requested. The
+        // history of a browser when transitioned from one remote state to
+        // another gets restored to the new browser. We need to wait for this
+        // restoration to occur when we load our test URL, otherwise closed
+        // window serialization does not work.
+        let tab = win.gBrowser.selectedTab;
+        promiseTabRestored(tab).then(tabReady);
+      } else {
+        tabReady();
+      }
     }, url, settings);
   }
 
