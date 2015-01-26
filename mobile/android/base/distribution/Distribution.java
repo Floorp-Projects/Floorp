@@ -36,12 +36,14 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.FileUtils;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -104,9 +106,29 @@ public class Distribution {
     // Corresponds to the high value in Histograms.json.
     private static final long MAX_DOWNLOAD_TIME_MSEC = 40000;    // 40 seconds.
 
-    // Wait just a little while for the system to send a referrer intent after install.
-    private static final long DELAY_WAIT_FOR_REFERRER_MSEC = 400;
+    // If this is true, ready callbacks that arrive after our state is initially determined
+    // will be queued for delayed running.
+    // This should only be the case on first run, when we're in STATE_NONE.
+    // Implicitly accessed from any non-UI threads via Distribution.doInit, but in practice only one
+    // will actually perform initialization, and "non-UI thread" really means "background thread".
+    private volatile boolean shouldDelayLateCallbacks = false;
 
+    /**
+     * These tasks can be queued to run when a distribution is available.
+     *
+     * If <code>distributionFound</code> is called, it will be the only call.
+     * If <code>distributionNotFound</code> is called, it might be followed by
+     * a call to <code>distributionArrivedLate</code>.
+     *
+     * When <code>distributionNotFound</code> is called,
+     * {@link org.mozilla.gecko.distribution.Distribution#exists()} will return
+     * false. In the other two callbacks, it will return true.
+     */
+    public interface ReadyCallback {
+        void distributionNotFound();
+        void distributionFound(Distribution distribution);
+        void distributionArrivedLate(Distribution distribution);
+    }
 
     /**
      * Used as a drop-off point for ReferrerReceiver. Checked when we process
@@ -123,10 +145,14 @@ public class Distribution {
     private final String packagePath;
     private final String prefsBranch;
 
-    private volatile int state = STATE_UNKNOWN;
+    volatile int state = STATE_UNKNOWN;
     private File distributionDir;
 
-    private final Queue<Runnable> onDistributionReady = new ConcurrentLinkedQueue<Runnable>();
+    private final Queue<ReadyCallback> onDistributionReady = new ConcurrentLinkedQueue<>();
+
+    // Callbacks in this queue have been invoked once as distributionNotFound.
+    // If they're invoked again, it'll be with distributionArrivedLate.
+    private final Queue<ReadyCallback> onLateReady = new ConcurrentLinkedQueue<>();
 
     /**
      * This is a little bit of a bad singleton, because in principle a Distribution
@@ -246,9 +272,51 @@ public class Distribution {
      *
      * @param ref a parsed referrer value from the store-supplied intent.
      */
-    public static void onReceivedReferrer(ReferrerDescriptor ref) {
+    public static void onReceivedReferrer(final Context context, final ReferrerDescriptor ref) {
         // Track the referrer object for distribution handling.
         referrer = ref;
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final Distribution distribution = Distribution.getInstance(context);
+
+                // This will bail if we aren't delayed, or we already have a distribution.
+                distribution.processDelayedReferrer(ref);
+            }
+        });
+    }
+
+    /**
+     * Handle a referrer intent that arrives after first use of the distribution.
+     */
+    private void processDelayedReferrer(final ReferrerDescriptor ref) {
+        ThreadUtils.assertOnBackgroundThread();
+        if (state != STATE_NONE) {
+            return;
+        }
+
+        Log.i(LOGTAG, "Processing delayed referrer.");
+
+        if (!checkIntentDistribution(ref)) {
+            // Oh well. No sense keeping these tasks around.
+            this.onLateReady.clear();
+            return;
+        }
+
+        // Persist our new state.
+        this.state = STATE_SET;
+        getSharedPreferences().edit().putInt(getKeyName(), this.state).apply();
+
+        // Just in case this isn't empty but doInit has finished.
+        runReadyQueue();
+
+        // Now process any tasks that already ran while we were in STATE_NONE
+        // to tell them of our good news.
+        runLateReadyQueue();
+
+        // Make sure that changes to search defaults are applied immediately.
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Changed", ""));
     }
 
     /**
@@ -344,15 +412,11 @@ public class Distribution {
 
         // Bail if we've already tried to initialize the distribution, and
         // there wasn't one.
-        final SharedPreferences settings;
-        if (prefsBranch == null) {
-            settings = GeckoSharedPrefs.forApp(context);
-        } else {
-            settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
-        }
+        final SharedPreferences settings = getSharedPreferences();
 
-        String keyName = context.getPackageName() + ".distribution_state";
+        final String keyName = getKeyName();
         this.state = settings.getInt(keyName, STATE_UNKNOWN);
+
         if (this.state == STATE_NONE) {
             runReadyQueue();
             return false;
@@ -368,10 +432,14 @@ public class Distribution {
 
         // We try the install intent, then the APK, then the system directory.
         final boolean distributionSet =
-                checkIntentDistribution() ||
+                checkIntentDistribution(referrer) ||
                 checkAPKDistribution() ||
                 checkSystemDistribution();
 
+        // If this is our first run -- and thus we weren't already in STATE_NONE or STATE_SET above --
+        // and we didn't find a distribution already, then we should hold on to callbacks in case we
+        // get a late distribution.
+        this.shouldDelayLateCallbacks = !distributionSet;
         this.state = distributionSet ? STATE_SET : STATE_NONE;
         settings.edit().putInt(keyName, this.state).apply();
 
@@ -385,18 +453,9 @@ public class Distribution {
      *
      * @return true if a referrer-supplied distribution was selected.
      */
-    private boolean checkIntentDistribution() {
+    private boolean checkIntentDistribution(final ReferrerDescriptor referrer) {
         if (referrer == null) {
-            // Wait a predetermined time and try again.
-            // Just block the thread, because it's the simplest solution.
-            try {
-                Thread.sleep(DELAY_WAIT_FOR_REFERRER_MSEC);
-            } catch (InterruptedException e) {
-                // Good enough.
-            }
-            if (referrer == null) {
-                return false;
-            }
+            return false;
         }
 
         URI uri = getReferredDistribution(referrer);
@@ -408,9 +467,21 @@ public class Distribution {
         Log.v(LOGTAG, "Downloading referred distribution: " + uri);
 
         try {
-            HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
+            final HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
 
-            connection.setRequestProperty(HTTP.USER_AGENT, GeckoAppShell.getGeckoInterface().getDefaultUAString());
+            // If the Search Activity starts, and we handle the referrer intent, this'll return
+            // null. Recover gracefully in this case.
+            final GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
+            final String ua;
+            if (geckoInterface == null) {
+                // Fall back to GeckoApp's default implementation.
+                ua = HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
+                                                AppConstants.USER_AGENT_FENNEC_MOBILE;
+            } else {
+                ua = geckoInterface.getDefaultUAString();
+            }
+
+            connection.setRequestProperty(HTTP.USER_AGENT, ua);
             connection.setRequestProperty("Accept", EXPECTED_CONTENT_TYPE);
 
             try {
@@ -533,18 +604,6 @@ public class Distribution {
         }
 
         Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_FETCH_EXCEPTION);
-    }
-
-    /**
-     * Execute tasks that wanted to run when we were done loading
-     * the distribution. These tasks are expected to call {@link #exists()}
-     * to find out whether there's a distribution or not.
-     */
-    private void runReadyQueue() {
-        Runnable task;
-        while ((task = onDistributionReady.poll()) != null) {
-            ThreadUtils.postToBackgroundThread(task);
-        }
     }
 
     /**
@@ -759,19 +818,75 @@ public class Distribution {
     }
 
     /**
-     * The provided <code>Runnable</code> will be queued for execution after
+     * The provided <code>ReadyCallback</code> will be queued for execution after
      * the distribution is ready, or queued for immediate execution if the
      * distribution has already been processed.
      *
-     * Each <code>Runnable</code> will be executed on the background thread.
+     * Each <code>ReadyCallback</code> will be executed on the background thread.
      */
-    public void addOnDistributionReadyCallback(Runnable runnable) {
+    public void addOnDistributionReadyCallback(final ReadyCallback callback) {
         if (state == STATE_UNKNOWN) {
-            this.onDistributionReady.add(runnable);
+            // Queue for later.
+            onDistributionReady.add(callback);
         } else {
-            // If we're already initialized, just queue up the runnable.
-            ThreadUtils.postToBackgroundThread(runnable);
+            invokeCallbackDelayed(callback);
         }
+    }
+
+    /**
+     * Run our delayed queue, after a delayed distribution arrives.
+     */
+    private void runLateReadyQueue() {
+        ReadyCallback task;
+        while ((task = onLateReady.poll()) != null) {
+            invokeLateCallbackDelayed(task);
+        }
+    }
+
+    /**
+     * Execute tasks that wanted to run when we were done loading
+     * the distribution.
+     */
+    private void runReadyQueue() {
+        ReadyCallback task;
+        while ((task = onDistributionReady.poll()) != null) {
+            invokeCallbackDelayed(task);
+        }
+    }
+
+    private void invokeLateCallbackDelayed(final ReadyCallback callback) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                // Sanity.
+                if (state != STATE_SET) {
+                    Log.w(LOGTAG, "Refusing to invoke late distro callback in state " + state);
+                    return;
+                }
+                callback.distributionArrivedLate(Distribution.this);
+            }
+        });
+    }
+
+    private void invokeCallbackDelayed(final ReadyCallback callback) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (state) {
+                    case STATE_SET:
+                        callback.distributionFound(Distribution.this);
+                        break;
+                    case STATE_NONE:
+                        callback.distributionNotFound();
+                        if (shouldDelayLateCallbacks) {
+                            onLateReady.add(callback);
+                        }
+                        break;
+                    default:
+                        throw new IllegalStateException("Expected STATE_NONE or STATE_SET, got " + state);
+                }
+            }
+        });
     }
 
     /**
@@ -780,5 +895,19 @@ public class Distribution {
      */
     public boolean exists() {
         return state == STATE_SET;
+    }
+
+    private String getKeyName() {
+        return context.getPackageName() + ".distribution_state";
+    }
+
+    private SharedPreferences getSharedPreferences() {
+        final SharedPreferences settings;
+        if (prefsBranch == null) {
+            settings = GeckoSharedPrefs.forApp(context);
+        } else {
+            settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
+        }
+        return settings;
     }
 }

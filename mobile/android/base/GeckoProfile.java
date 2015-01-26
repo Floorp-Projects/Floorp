@@ -17,6 +17,7 @@ import java.util.Hashtable;
 
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.RobocopTarget;
@@ -716,9 +717,14 @@ public final class GeckoProfile {
 
         // Add everything when we're done loading the distribution.
         final Distribution distribution = Distribution.getInstance(context);
-        distribution.addOnDistributionReadyCallback(new Runnable() {
+        distribution.addOnDistributionReadyCallback(new Distribution.ReadyCallback() {
             @Override
-            public void run() {
+            public void distributionNotFound() {
+                this.distributionFound(null);
+            }
+
+            @Override
+            public void distributionFound(Distribution distribution) {
                 Log.d(LOGTAG, "Running post-distribution task: bookmarks.");
 
                 final ContentResolver cr = context.getContentResolver();
@@ -738,8 +744,27 @@ public final class GeckoProfile {
                     // bookmarks as there are favicons, we can also guarantee that
                     // the favicon IDs won't overlap.
                     final LocalBrowserDB db = new LocalBrowserDB(getName());
-                    final int offset = db.addDistributionBookmarks(cr, distribution, 0);
+                    final int offset = distribution == null ? 0 : db.addDistributionBookmarks(cr, distribution, 0);
                     db.addDefaultBookmarks(context, cr, offset);
+                }
+            }
+
+            @Override
+            public void distributionArrivedLate(Distribution distribution) {
+                Log.d(LOGTAG, "Running late distribution task: bookmarks.");
+                // Recover as best we can.
+                synchronized (GeckoProfile.this) {
+                    // Skip initialization if the profile directory has been removed.
+                    if (!profileDir.exists()) {
+                        return;
+                    }
+
+                    final LocalBrowserDB db = new LocalBrowserDB(getName());
+                    // We assume we've been called very soon after startup, and so our offset
+                    // into "Mobile Bookmarks" is the number of bookmarks in the DB.
+                    final ContentResolver cr = context.getContentResolver();
+                    final int offset = db.getCount(cr, "bookmarks");
+                    db.addDistributionBookmarks(cr, distribution, offset);
                 }
             }
         });
