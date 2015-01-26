@@ -192,7 +192,7 @@ GonkMediaDataDecoder::ProcessOutput()
 
   MOZ_ASSERT_IF(mSignaledEOS, !mManager->HasQueuedSample());
 
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
+  if (rv == NS_ERROR_NOT_AVAILABLE && !mSignaledEOS) {
     mCallback->InputExhausted();
     return;
   }
