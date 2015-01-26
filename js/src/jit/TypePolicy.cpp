@@ -717,6 +717,29 @@ template bool ObjectPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruc
 template bool ObjectPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
+template <unsigned Op>
+bool
+SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType type = ins->type();
+    MOZ_ASSERT(IsSimdType(type));
+
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == type)
+        return true;
+
+    MSimdUnbox *replace = MSimdUnbox::New(alloc, in, type);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool
+SimdSameAsReturnedTypePolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+template bool
+SimdSameAsReturnedTypePolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+
 bool
 CallPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
