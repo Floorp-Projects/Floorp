@@ -1248,7 +1248,7 @@
           }
           Services.search.addEngine(target.getAttribute("uri"),
                                     Ci.nsISearchEngine.DATA_XML,
-                                    target.getAttribute("src"), false,
+                                    target.getAttribute("image"), false,
                                     installCallback);
         }
       ]]></handler>
