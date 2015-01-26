@@ -49,7 +49,7 @@ public class ReferrerReceiver extends BroadcastReceiver {
 
         // Track the referrer object for distribution handling.
         if (TextUtils.equals(referrer.campaign, DISTRIBUTION_UTM_CAMPAIGN)) {
-            Distribution.onReceivedReferrer(referrer);
+            Distribution.onReceivedReferrer(context, referrer);
         } else {
             Log.d(LOGTAG, "Not downloading distribution: non-matching campaign.");
         }

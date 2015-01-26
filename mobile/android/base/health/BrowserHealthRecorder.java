@@ -531,17 +531,50 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         // Because the distribution lookup can take some time, do it at the end of
         // our background startup work, along with the Gecko snapshot fetch.
         final Distribution distribution = Distribution.getInstance(context);
-        distribution.addOnDistributionReadyCallback(new Runnable() {
+        distribution.addOnDistributionReadyCallback(new Distribution.ReadyCallback() {
+            private void requestGeckoFields() {
+                Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
+                dispatcher.registerGeckoThreadListener(BrowserHealthRecorder.this, EVENT_SNAPSHOT);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
+            }
+
             @Override
-            public void run() {
+            public void distributionNotFound() {
+                requestGeckoFields();
+            }
+
+            @Override
+            public void distributionFound(Distribution distribution) {
                 Log.d(LOG_TAG, "Running post-distribution task: health recorder.");
                 final DistributionDescriptor desc = distribution.getDescriptor();
                 if (desc != null && desc.valid) {
                     profileCache.setDistributionString(desc.id, desc.version);
                 }
-                Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
-                dispatcher.registerGeckoThreadListener(BrowserHealthRecorder.this, EVENT_SNAPSHOT);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
+                requestGeckoFields();
+            }
+
+            @Override
+            public void distributionArrivedLate(Distribution distribution) {
+                profileCache.beginInitialization();
+
+                final DistributionDescriptor desc = distribution.getDescriptor();
+                if (desc != null && desc.valid) {
+                    profileCache.setDistributionString(desc.id, desc.version);
+                }
+
+                // Now rebuild.
+                try {
+                    profileCache.completeInitialization();
+
+                    if (state == State.INITIALIZING) {
+                        initializeStorage();
+                    } else {
+                        onEnvironmentChanged();
+                    }
+                } catch (Exception e) {
+                    // Well, we tried.
+                    Log.e(LOG_TAG, "Couldn't complete profile cache init.", e);
+                }
             }
         });
     }
