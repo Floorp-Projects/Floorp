@@ -26,9 +26,19 @@ let Server = exports.Server = {};
  *
  * @return true if the connection should be permitted, false otherwise
  */
-Server.defaultAllowConnection = () => {
+Server.defaultAllowConnection = ({ client, server }) => {
   let title = bundle.GetStringFromName("remoteIncomingPromptTitle");
-  let msg = bundle.GetStringFromName("remoteIncomingPromptMessage");
+  let header = bundle.GetStringFromName("remoteIncomingPromptHeader");
+  let clientEndpoint = `${client.host}:${client.port}`;
+  let clientMsg =
+    bundle.formatStringFromName("remoteIncomingPromptClientEndpoint",
+                                [clientEndpoint], 1);
+  let serverEndpoint = `${server.host}:${server.port}`;
+  let serverMsg =
+    bundle.formatStringFromName("remoteIncomingPromptServerEndpoint",
+                                [serverEndpoint], 1);
+  let footer = bundle.GetStringFromName("remoteIncomingPromptFooter");
+  let msg =`${header}\n\n${clientMsg}\n${serverMsg}\n\n${footer}`;
   let disableButton = bundle.GetStringFromName("remoteIncomingPromptDisable");
   let prompt = Services.prompt;
   let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +
