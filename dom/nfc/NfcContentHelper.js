@@ -367,6 +367,9 @@ NfcContentHelper.prototype = {
             this._rfState = result.rfState;
             this.eventListener.notifyRFStateChanged(this._rfState);
             break;
+          case NFC.FOCUS_CHANGED:
+            this.eventListener.notifyFocusChanged(result.focus);
+            break;
         }
         break;
     }
