@@ -389,7 +389,6 @@ assertExpr("({['__proto__']:q, __proto__() {}, __proto__: null })",
                     { type: "Property", key: ident("__proto__"), method: true },
                     { type: "PrototypeMutation", value: lit(null) }]));
 
-
 // Bug 571617: eliminate constant-folding
 assertExpr("2 + 3", binExpr("+", lit(2), lit(3)));
 
@@ -435,6 +434,25 @@ assertExpr("b = { set [meth](a) { } }", aExpr("=", ident("b"),
               objExpr([{ key: computedName(ident("meth")), value: funExpr(null, [ident("a")],
                 blockStmt([])), method: false, kind: "set"}])));
 
+// Bug 1073809 - Getter/setter syntax with generators
+assertExpr("({*get() { }})", objExpr([{ type: "Property", key: ident("get"), method: true,
+                                        value: genFunExpr(ident("get"), [], blockStmt([]))}]));
+assertExpr("({*set() { }})", objExpr([{ type: "Property", key: ident("set"), method: true,
+                                        value: genFunExpr(ident("set"), [], blockStmt([]))}]));
+assertError("({*get foo() { }})", SyntaxError);
+assertError("({*set foo() { }})", SyntaxError);
+
+assertError("({ *get 1() {} })", SyntaxError);
+assertError("({ *get \"\"() {} })", SyntaxError);
+assertError("({ *get foo() {} })", SyntaxError);
+assertError("({ *get []() {} })", SyntaxError);
+assertError("({ *get [1]() {} })", SyntaxError);
+
+assertError("({ *set 1() {} })", SyntaxError);
+assertError("({ *set \"\"() {} })", SyntaxError);
+assertError("({ *set foo() {} })", SyntaxError);
+assertError("({ *set []() {} })", SyntaxError);
+assertError("({ *set [1]() {} })", SyntaxError);
 // statements
 
 assertStmt("throw 42", throwStmt(lit(42)));

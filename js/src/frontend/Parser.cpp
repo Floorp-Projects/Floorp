@@ -7948,18 +7948,13 @@ Parser<ParseHandler>::objectLiteral()
 
           case TOK_NAME: {
             atom = tokenStream.currentName();
-            if (atom == context->names().get) {
-                if (isGenerator) {
-                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
-                    return null();
-                }
-                op = JSOP_INITPROP_GETTER;
-            } else if (atom == context->names().set) {
-                if (isGenerator) {
-                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
-                    return null();
-                }
-                op = JSOP_INITPROP_SETTER;
+            // Do not look for accessor syntax on generators
+            if (!isGenerator &&
+                (atom == context->names().get ||
+                 atom == context->names().set))
+            {
+                op = atom == context->names().get ? JSOP_INITPROP_GETTER
+                                                  : JSOP_INITPROP_SETTER;
             } else {
                 propname = handler.newIdentifier(atom, pos());
                 if (!propname)
