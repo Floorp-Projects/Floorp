@@ -16,6 +16,8 @@ const TETHERING_SETTING_END_IP = "192.168.1.30";
 const TETHERING_SETTING_DNS1 = "8.8.8.8";
 const TETHERING_SETTING_DNS2 = "8.8.4.4";
 
+const TETHERING_NETWORK_ADDR = "192.168.1.0/24";
+
 /**
  * Wifi tethering setting.
  */
@@ -24,6 +26,7 @@ const TETHERING_SETTING_SECURITY = "open";
 const TETHERING_SETTING_KEY = "1234567890";
 
 const SETTINGS_RIL_DATA_ENABLED = 'ril.data.enabled';
+const SETTINGS_KEY_DATA_APN_SETTINGS = "ril.data.apnSettings";
 
 // Emulate Promise.jsm semantics.
 Promise.defer = function() { return new Deferred(); }
@@ -202,6 +205,20 @@ let gTestSuite = (function() {
   }
 
   /**
+   * Convenient MozSettings getter for SETTINGS_KEY_DATA_APN_SETTINGS.
+   */
+  function getDataApnSettings(aAllowError) {
+    return getSettings(SETTINGS_KEY_DATA_APN_SETTINGS, aAllowError);
+  }
+
+  /**
+   * Convenient MozSettings setter for SETTINGS_KEY_DATA_APN_SETTINGS.
+   */
+  function setDataApnSettings(aApnSettings, aAllowError) {
+    return setSettings1(SETTINGS_KEY_DATA_APN_SETTINGS, aApnSettings, aAllowError);
+  }
+
+  /**
    * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
    *
    * Fulfill params: A DOMEvent.
@@ -297,6 +314,9 @@ let gTestSuite = (function() {
    * We also verify iptables output as netd's NatController will execute
    *   $ iptables -t nat -A POSTROUTING -o rmnet0 -j MASQUERADE
    *
+   * For tethering through dun, we use 'ip rule' to find the secondary routing
+   * table and look for default route on that table.
+   *
    * Resolve when the verification is successful and reject otherwise.
    *
    * Fulfill params: (none)
@@ -304,9 +324,10 @@ let gTestSuite = (function() {
    *
    * @return A deferred promise.
    */
-  function verifyTetheringRouting(aEnabled) {
+  function verifyTetheringRouting(aEnabled, aIsDun) {
     let netcfgResult = {};
     let ipRouteResult = {};
+    let ipSecondaryRouteResult = {};
 
     // Execute 'netcfg' and parse to |netcfgResult|, each key of which is the
     // interface name and value is { ip(string) }.
@@ -418,8 +439,76 @@ let gTestSuite = (function() {
         });
     }
 
+    // Execute 'ip rule show', there must be one rule for tethering network
+    // address to lookup for a secondary routing table, return that table id.
+    function verifyIpRule() {
+      if (!aIsDun) {
+        return;
+      }
+
+      return runEmulatorShellSafe(['ip', 'rule', 'show'])
+        .then(function (aLines) {
+          // Sample output:
+          //
+          // 0: from all lookup local
+          // 32765: from 192.168.1.0/24 lookup 60
+          // 32766: from all lookup main
+          // 32767: from all lookup default
+          //
+          let tableId = (function findTableId() {
+            for (let i = 0; i < aLines.length; i++) {
+              let tokens = aLines[i].split(/\s+/);
+              if (-1 != tokens.indexOf(TETHERING_NETWORK_ADDR)) {
+                let lookupIndex = tokens.indexOf('lookup');
+                if (lookupIndex < 0 || lookupIndex + 1 >= tokens.length) {
+                  return;
+                }
+                return tokens[lookupIndex + 1];
+              }
+            }
+            return;
+          })();
+
+          if ((aEnabled && !tableId) || (!aEnabled && tableId)) {
+            throw 'Secondary table' + (tableId ? '' : ' not') + ' found while tethering is ' +
+                  (aEnabled ? 'enabled' : 'disabled');
+          }
+
+          return tableId;
+        });
+    }
+
+    // Given the table id, use 'ip rule show table <table id>' to find the
+    // default route on that secondary routing table.
+    function execAndParseSecondaryTable(aTableId) {
+      if (!aIsDun || !aEnabled) {
+        return;
+      }
+
+      return runEmulatorShellSafe(['ip', 'route', 'show', 'table', aTableId])
+        .then(function (aLines) {
+          // We only look for default route in secondary table.
+          aLines.forEach(function (aLine) {
+            let tokens = aLine.split(/\s+/);
+            if (tokens.length < 2) {
+              return;
+            }
+            if ('default' === tokens[0]) {
+              let ifnameIndex = tokens.indexOf('dev');
+              if (ifnameIndex < 0 || ifnameIndex + 1 >= tokens.length) {
+                return;
+              }
+              let ifname = tokens[ifnameIndex + 1];
+              ipSecondaryRouteResult[ifname] = { default: true };
+              return;
+            }
+          });
+        });
+    }
+
     function verifyDefaultRouteAndIp(aExpectedWifiTetheringIp) {
       log(JSON.stringify(ipRouteResult));
+      log(JSON.stringify(ipSecondaryRouteResult));
       log(JSON.stringify(netcfgResult));
 
       if (aEnabled) {
@@ -429,10 +518,19 @@ let gTestSuite = (function() {
         isOrThrow(ipRouteResult['wlan0'].src, netcfgResult['wlan0'].ip, 'wlan0.ip');
         isOrThrow(ipRouteResult['wlan0'].src, aExpectedWifiTetheringIp, 'expected ip');
         isOrThrow(ipRouteResult['wlan0'].default, false, 'wlan0.default');
+
+        if (aIsDun) {
+          isOrThrow(ipRouteResult['rmnet1'].src, netcfgResult['rmnet1'].ip, 'rmnet1.ip');
+          isOrThrow(ipRouteResult['rmnet1'].default, false, 'rmnet1.default');
+          // Dun's network default route is set on secondary routing table.
+          isOrThrow(ipSecondaryRouteResult['rmnet1'].default, true, 'secondary rmnet1.default');
+        }
       }
     }
 
     return verifyIptables()
+      .then(verifyIpRule)
+      .then(tableId => execAndParseSecondaryTable(tableId))
       .then(exeAndParseNetcfg)
       .then(exeAndParseIpRoute)
       .then(() => verifyDefaultRouteAndIp(TETHERING_SETTING_IP));
@@ -450,10 +548,12 @@ let gTestSuite = (function() {
    *
    * @param aEnabled
    *        Boolean that indicates to enable or disable wifi tethering.
+   * @param aIsDun
+   *        Boolean that indicates whether dun is required.
    *
    * @return A deferred promise.
    */
-  function setWifiTetheringEnabled(aEnabled) {
+  function setWifiTetheringEnabled(aEnabled, aIsDun) {
     let RETRY_INTERVAL_MS = 1000;
     let retryCnt = 20;
 
@@ -472,7 +572,7 @@ let gTestSuite = (function() {
 
     return tetheringManager.setTetheringEnabled(aEnabled, TYPE_WIFI, config)
       .then(function waitForRoutingVerified() {
-        return verifyTetheringRouting(aEnabled)
+        return verifyTetheringRouting(aEnabled, aIsDun)
           .then(null, function onreject(aReason) {
 
             log('verifyTetheringRouting rejected due to ' + aReason +
@@ -602,6 +702,9 @@ let gTestSuite = (function() {
   //---------------------------------------------------
   suite.ensureWifiEnabled = ensureWifiEnabled;
   suite.setWifiTetheringEnabled = setWifiTetheringEnabled;
+  suite.getDataApnSettings = getDataApnSettings;
+  suite.setDataApnSettings = setDataApnSettings;
+
 
   /**
    * The common test routine for wifi tethering.

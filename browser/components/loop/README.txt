@@ -12,30 +12,6 @@ The standalone client exists in standalone/ but shares items
 (from content/shared/) with the desktop implementation. See the README.md
 file in the standalone/ directory for how to run the server locally.
 
-
-Hacking
-=======
-Please be sure to execute
-
-  browser/components/loop/run-all-loop-tests.sh
-
-from the top level before requesting review on a patch.
-
-
-Functional Tests
-================
-These are currently a work in progress, but it's already possible to run a test
-if you have a [loop-server](https://github.com/mozilla-services/loop-server)
-install that is properly configured.  From the top-level gecko directory,
-execute:
-
-  export LOOP_SERVER=/Users/larry/src/loop-server
-  ./mach marionette-test browser/components/loop/test/functional/manifest.ini
-
-Once the automation is complete, we'll include this in run-all-loop-tests.sh
-as well.
-
-
 Working with React JSX files
 ============================
 
@@ -54,3 +30,48 @@ browser/components/loop, eg.:
 build-jsx can also be do a one-time compile pass instead of watching if
 the --watch argument is omitted.  Be sure to commit any transpiled files
 at the same time as changes to their sources.
+
+
+Hacking
+=======
+Please be sure to execute
+
+  browser/components/loop/run-all-loop-tests.sh
+
+from the top level before requesting review on a patch.
+
+
+Front-End Unit Tests
+====================
+The unit tests for Loop reside in three directories:
+
+- test/desktop-local
+- test/shared
+- test/standalone
+
+You can run these as part of the run-all-loop-tests.sh command above, or you can run these individually in Firefox. To run them individually, start the standalone client (see standalone/README.md) and load:
+
+  http://localhost:3000/test/
+
+
+Functional Tests
+================
+These are currently a work in progress, but it's already possible to run a test
+if you have a [loop-server](https://github.com/mozilla-services/loop-server)
+install that is properly configured.  From the top-level gecko directory,
+execute:
+
+  export LOOP_SERVER=/Users/larry/src/loop-server
+  ./mach marionette-test browser/components/loop/test/functional/manifest.ini
+
+Once the automation is complete, we'll include this in run-all-loop-tests.sh
+as well.
+
+
+UI-Showcase
+===========
+This is a tool giving the layouts for all the frontend views of Loop, allowing debugging and testing of css layouts and local component behavior.
+
+To access it, start the standalone client (see standalone/README.md) and load:
+
+  http://localhost:3000/ui/

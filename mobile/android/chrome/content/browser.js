@@ -7302,7 +7302,8 @@ var RemoteDebugger = {
    * Prompt the user to accept or decline the incoming connection.
    * This is passed to DebuggerService.init as a callback.
    *
-   * @return true if the connection should be permitted, false otherwise
+   * @return An AuthenticationResult value.
+   *         A promise that will be resolved to the above is also allowed.
    */
   _showConnectionPrompt: function rd_showConnectionPrompt() {
     let title = Strings.browser.GetStringFromName("remoteIncomingPromptTitle");
@@ -7334,12 +7335,11 @@ var RemoteDebugger = {
       thread.processNextEvent(true);
 
     if (result === 0)
-      return true;
+      return DebuggerServer.AuthenticationResult.ALLOW;
     if (result === 2) {
-      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
-      this._stop();
+      return DebuggerServer.AuthenticationResult.DISABLE_ALL;
     }
-    return false;
+    return DebuggerServer.AuthenticationResult.DENY;
   },
 
   _restart: function rd_restart() {
@@ -7358,9 +7358,12 @@ var RemoteDebugger = {
       let pathOrPort = this._getPath();
       if (!pathOrPort)
         pathOrPort = this._getPort();
+      let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
+      let authenticator = new AuthenticatorType.Server();
+      authenticator.allowConnection = this._showConnectionPrompt.bind(this);
       let listener = DebuggerServer.createListener();
       listener.portOrPath = pathOrPort;
-      listener.allowConnection = this._showConnectionPrompt.bind(this);
+      listener.authenticator = authenticator;
       listener.open();
       dump("Remote debugger listening at path " + pathOrPort);
     } catch(e) {
@@ -7531,6 +7534,7 @@ var Distribution = {
   _file: null,
 
   init: function dc_init() {
+    Services.obs.addObserver(this, "Distribution:Changed", false);
     Services.obs.addObserver(this, "Distribution:Set", false);
     Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
     Services.obs.addObserver(this, "Campaign:Set", false);
@@ -7544,6 +7548,15 @@ var Distribution = {
 
   observe: function dc_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "Distribution:Changed":
+        // Re-init the search service.
+        try {
+          Services.search._asyncReInit();
+        } catch (e) {
+          console.log("Unable to reinit search service.");
+        }
+        // Fall through.
+
       case "Distribution:Set":
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);

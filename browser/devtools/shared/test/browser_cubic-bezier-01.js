@@ -9,11 +9,12 @@
 const TEST_URI = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
 const {CubicBezierWidget} = devtools.require("devtools/shared/widgets/CubicBezierWidget");
 
-let test = Task.async(function*() {
-  yield promiseTab(TEST_URI);
+add_task(function*() {
+  yield promiseTab("about:blank");
+  let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   info("Checking that the markup is created in the parent");
-  let container = content.document.querySelector("#container");
+  let container = doc.querySelector("#container");
   let w = new CubicBezierWidget(container);
 
   ok(container.querySelector(".coordinate-plane"),
@@ -31,6 +32,6 @@ let test = Task.async(function*() {
   w.destroy();
   is(container.children.length, 0, "All nodes have been removed");
 
+  host.destroy();
   gBrowser.removeCurrentTab();
-  finish();
 });

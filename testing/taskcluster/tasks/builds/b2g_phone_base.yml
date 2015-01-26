@@ -1,0 +1,27 @@
+$inherits:
+  from: 'tasks/phone_build.yml'
+task:
+  metadata:
+    description: |
+      Android phones + b2g environment used in full stack testing.
+  payload:
+    env:
+      REPO_TRACE: 1
+      VARIANT: user
+
+    # Emulators can take a very long time to build!
+    maxRunTime: 14400
+
+    command:
+      - build-phone.sh
+
+  extra:
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'private/build/b2g-android-arm.tar.gz'
+      tests: 'private/build/gaia.zip'
+      symbols: 'private/build/b2g-crashreporter-symbols.zip'
+      sources: 'private/build/sources.xml'
+

@@ -1,111 +1,97 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker");
-
-const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_button_scratchpad.js</p>";
+const TEST_URI = "data:text/html;charset=utf-8," +
+  "<p>browser_telemetry_button_scratchpad.js</p>";
 
 // Because we need to gather stats for the period of time that a tool has been
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {}).Promise;
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-
-let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-let Telemetry = require("devtools/shared/telemetry");
-
-let numScratchpads = 0;
-
-function init() {
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function(histogramId, value) {
-    if (!this.telemetryInfo) {
-      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
-      return;
-    }
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
-
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
-
-  Services.ww.registerNotification(windowObserver);
-  testButton("command-button-scratchpad");
-}
-
-function testButton(id) {
-  info("Testing " + id);
+add_task(function*() {
+  yield promiseTab(TEST_URI);
+  let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
+  info("inspector opened");
 
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    info("inspector opened");
+  let onAllWindowsOpened = trackScratchpadWindows();
 
-    let button = toolbox.doc.querySelector("#" + id);
-    ok(button, "Captain, we have the button");
+  info("testing the scratchpad button");
+  yield testButton(toolbox, Telemetry);
+  yield onAllWindowsOpened;
 
-    delayedClicks(button, 4).then(null, console.error);
-  }).then(null, console.error);
+  checkResults("_SCRATCHPAD_", Telemetry);
+
+  stopRecordingTelemetryLogs(Telemetry);
+  yield gDevTools.closeToolbox(target);
+  gBrowser.removeCurrentTab();
+});
+
+function trackScratchpadWindows() {
+  info("register the window observer to track when scratchpad windows open");
+
+  let numScratchpads = 0;
+
+  return new Promise(resolve => {
+    Services.ww.registerNotification(function observer(subject, topic) {
+      if (topic == "domwindowopened") {
+        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        win.addEventListener("load", function onLoad() {
+          win.removeEventListener("load", onLoad, false);
+
+          if (win.Scratchpad) {
+            win.Scratchpad.addObserver({
+              onReady: function() {
+                win.Scratchpad.removeObserver(this);
+                numScratchpads++;
+                win.close();
+
+                info("another scratchpad was opened and closed, count is now " + numScratchpads);
+
+                if (numScratchpads === 4) {
+                  Services.ww.unregisterNotification(observer);
+                  info("4 scratchpads have been opened and closed, checking results");
+                  resolve();
+                }
+              },
+            });
+          }
+        }, false);
+      }
+    });
+  });
 }
 
-function windowObserver(aSubject, aTopic, aData) {
-  if (aTopic == "domwindowopened") {
-    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+function* testButton(toolbox, Telemetry) {
+  info("Testing command-button-scratchpad");
+  let button = toolbox.doc.querySelector("#command-button-scratchpad");
+  ok(button, "Captain, we have the button");
 
-      if (win.Scratchpad) {
-        win.Scratchpad.addObserver({
-          onReady: function() {
-            win.Scratchpad.removeObserver(this);
-            numScratchpads++;
-            win.close();
-
-            info("another scratchpad was opened and closed, count is now " + numScratchpads);
-
-            if (numScratchpads === 4) {
-              Services.ww.unregisterNotification(windowObserver);
-              info("4 scratchpads have been opened and closed, checking results");
-              checkResults("_SCRATCHPAD_");
-            }
-          },
-        });
-      }
-    }, false);
-  }
+  yield delayedClicks(button, 4);
 }
 
 function delayedClicks(node, clicks) {
-  let deferred = promise.defer();
-  let clicked = 0;
+  return new Promise(resolve => {
+    let clicked = 0;
 
-  // See TOOL_DELAY for why we need setTimeout here
-  setTimeout(function delayedClick() {
-    info("Clicking button " + node.id);
-    node.click();
-    clicked++;
+    // See TOOL_DELAY for why we need setTimeout here
+    setTimeout(function delayedClick() {
+      info("Clicking button " + node.id);
+      node.click();
+      clicked++;
 
-    if (clicked >= clicks) {
-      deferred.resolve(node);
-    } else {
-      setTimeout(delayedClick, TOOL_DELAY);
-    }
-  }, TOOL_DELAY);
-
-  return deferred.promise;
+      if (clicked >= clicks) {
+        resolve(node);
+      } else {
+        setTimeout(delayedClick, TOOL_DELAY);
+      }
+    }, TOOL_DELAY);
+  });
 }
 
-function checkResults(histIdFocus) {
+function checkResults(histIdFocus, Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;
 
   for (let [histId, value] of Iterator(result)) {
@@ -138,29 +124,4 @@ function checkResults(histIdFocus) {
       ok(okay, "All " + histId + " entries have time > 0");
     }
   }
-
-  finishUp();
-}
-
-function finishUp() {
-  gBrowser.removeCurrentTab();
-
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype.telemetryInfo;
-
-  TargetFactory = Services = promise = require = numScratchpads = null;
-
-  finish();
-}
-
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    waitForFocus(init, content);
-  }, true);
-
-  content.location = TEST_URI;
 }
