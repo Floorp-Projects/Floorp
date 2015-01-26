@@ -51,7 +51,7 @@ var NewFile = Class({
         // XXX: sanitize bad file names.
 
         // If the name is already taken, just add/increment a number.
-        if (this.hasChild(parent, name)) {
+        if (parent.hasChild(name)) {
           let matches = name.match(/([^\d.]*)(\d*)([^.]*)(.*)/);
           template = matches[1] + "{1}" + matches[3] + matches[4];
           name = this.suggestName(parent, template, parseInt(matches[2]) || 2);
@@ -71,19 +71,10 @@ var NewFile = Class({
     do {
       name = template.replace("\{1\}", i === 1 ? "" : i);
       i++;
-    } while (this.hasChild(parent, name));
+    } while (parent.hasChild(name));
 
     return name;
-  },
-
-  hasChild: function(resource, name) {
-    for (let child of resource.children) {
-      if (child.basename === name) {
-        return true;
-      }
-    }
-    return false;
   }
-})
+});
 exports.NewFile = NewFile;
 registerPlugin(NewFile);

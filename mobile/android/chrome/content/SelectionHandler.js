@@ -40,7 +40,11 @@ var SelectionHandler = {
   // stored here are relative to the _contentWindow window.
   _cache: null,
   _activeType: 0, // TYPE_NONE
+
   _draggingHandles: false, // True while user drags text selection handles
+  _dragStartAnchorOffset: null, // Editables need initial pos during HandleMove events
+  _dragStartFocusOffset: null, // Editables need initial pos during HandleMove events
+
   _ignoreCompositionChanges: false, // Persist caret during IME composition updates
   _prevHandlePositions: [], // Avoid issuing duplicate "TextSelection:Position" messages
   _deferCloseTimer: null, // Used to defer _closeSelection() actions during programmatic changes
@@ -152,11 +156,12 @@ var SelectionHandler = {
         }
         break;
       }
+
       case "TextSelection:Move": {
         let data = JSON.parse(aData);
         if (this._activeType == this.TYPE_SELECTION) {
           this._startDraggingHandles();
-          this._moveSelection(data.handleType == this.HANDLE_TYPE_ANCHOR, data.x, data.y);
+          this._moveSelection(data.handleType, new Point(data.x, data.y));
 
         } else if (this._activeType == this.TYPE_CURSOR) {
           this._startDraggingHandles();
@@ -170,30 +175,16 @@ var SelectionHandler = {
         }
         break;
       }
+
       case "TextSelection:Position": {
         if (this._activeType == this.TYPE_SELECTION) {
           this._startDraggingHandles();
-
-          // Check to see if the handles should be reversed.
-          let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_ANCHOR;
-          try {
-            let selectionReversed = this._updateCacheForSelection(isStartHandle);
-            if (selectionReversed) {
-              // Reverse the anchor and focus to correspond to the new start and end handles.
-              let selection = this._getSelection();
-              let anchorNode = selection.anchorNode;
-              let anchorOffset = selection.anchorOffset;
-              selection.collapse(selection.focusNode, selection.focusOffset);
-              selection.extend(anchorNode, anchorOffset);
-            }
-          } catch (e) {
-            // User finished handle positioning with one end off the screen
-            this._closeSelection();
-            break;
-          }
-
+          this._ensureSelectionDirection();
           this._stopDraggingHandles();
+
+          this._updateCacheForSelection();
           this._positionHandles();
+
           // Changes to handle position can affect selection context and actionbar display
           this._updateMenu();
 
@@ -225,6 +216,9 @@ var SelectionHandler = {
   _startDraggingHandles: function sh_startDraggingHandles() {
     if (!this._draggingHandles) {
       this._draggingHandles = true;
+      let selection = this._getSelection();
+      this._dragStartAnchorOffset = selection.anchorOffset;
+      this._dragStartFocusOffset = selection.focusOffset;
       Messaging.sendRequest({ type: "TextSelection:DraggingHandle", dragging: true });
     }
   },
@@ -234,6 +228,8 @@ var SelectionHandler = {
   _stopDraggingHandles: function sh_stopDraggingHandles() {
     if (this._draggingHandles) {
       this._draggingHandles = false;
+      this._dragStartAnchorOffset = null;
+      this._dragStartFocusOffset = null;
       Messaging.sendRequest({ type: "TextSelection:DraggingHandle", dragging: false });
     }
   },
@@ -862,35 +858,21 @@ var SelectionHandler = {
   },
 
   /*
-   * Helper function for moving the selection inside an editable element.
-   *
-   * @param aAnchorX the stationary handle's x-coordinate in client coordinates
-   * @param aX the moved handle's x-coordinate in client coordinates
-   * @param aCaretPos the current position of the caret
+   * Moves the selection as the user drags a handle.
+   * @param handleType: Specifies either the anchor or the focus handle.
+   * @param handlePt: selection point in client coordinates.
    */
-  _moveSelectionInEditable: function sh_moveSelectionInEditable(aAnchorX, aX, aCaretPos) {
-    let anchorOffset = aX < aAnchorX ? this._targetElement.selectionEnd
-                                     : this._targetElement.selectionStart;
-    let newOffset = aCaretPos.offset;
-    let [start, end] = anchorOffset <= newOffset ?
-                       [anchorOffset, newOffset] :
-                       [newOffset, anchorOffset];
-    this._targetElement.setSelectionRange(start, end);
-  },
+  _moveSelection: function sh_moveSelection(handleType, handlePt) {
+    let isAnchorHandle = (handleType == this.HANDLE_TYPE_ANCHOR);
 
-  /*
-   * Moves the selection as the user drags a selection handle.
-   *
-   * @param aIsStartHandle whether the user is moving the start handle (as opposed to the end handle)
-   * @param aX, aY selection point in client coordinates
-   */
-  _moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    // XXX We should be smarter about the coordinates we pass to caretPositionFromPoint, especially
-    // in editable targets. We should factor out the logic that's currently in _moveCaret.
+    // Determine new caret position from handlePt, exit if user
+    // moved it offscreen.
     let viewOffset = this._getViewOffset();
-    let caretPos = this._contentWindow.document.caretPositionFromPoint(aX - viewOffset.x, aY - viewOffset.y);
+    let ptX = handlePt.x - viewOffset.x;
+    let ptY = handlePt.y - viewOffset.y;
+    let cwd = this._contentWindow.document;
+    let caretPos = cwd.caretPositionFromPoint(ptX, ptY);
     if (!caretPos) {
-      // User moves handle offscreen while positioning
       return;
     }
 
@@ -900,36 +882,36 @@ var SelectionHandler = {
       return;
     }
 
-    // Update the cache as the handle is dragged (keep the cache in client coordinates).
-    if (aIsStartHandle) {
-      this._cache.anchorPt.x = aX;
-      this._cache.anchorPt.y = aY;
-    } else {
-      this._cache.focusPt.x = aX;
-      this._cache.focusPt.y = aY;
+    // Update the Selection for editable elements. Selection Change
+    // logic is the same, regardless of RTL/LTR. Selection direction is
+    // maintained always forward (startOffset <= endOffset).
+    if (targetIsEditable) {
+      let start = this._dragStartAnchorOffset;
+      let end = this._dragStartFocusOffset;
+      if (isAnchorHandle) {
+        start = caretPos.offset;
+      } else {
+        end = caretPos.offset;
+      }
+      if (start > end) {
+        [start, end] = [end, start];
+      }
+      this._targetElement.setSelectionRange(start, end);
+      return;
     }
 
+    // Update the Selection for non-editable elements. Selection Change
+    // logic is the same, regardless of RTL/LTR. Selection direction internally
+    // can finish reversed by user drag. ie: Forward is (a,o ---> f,o),
+    // and reversed is (a,o <--- f,o).
     let selection = this._getSelection();
-
-    // The handles work the same on both LTR and RTL pages, but the anchor/focus nodes
-    // are reversed, so we need to reverse the logic to extend the selection.
-    if ((aIsStartHandle && !this._isRTL) || (!aIsStartHandle && this._isRTL)) {
-      if (targetIsEditable) {
-        let anchorX = this._isRTL ? this._cache.anchorPt.x : this._cache.focusPt.x;
-        this._moveSelectionInEditable(anchorX, aX, caretPos);
-      } else {
-        let focusNode = selection.focusNode;
-        let focusOffset = selection.focusOffset;
-        selection.collapse(caretPos.offsetNode, caretPos.offset);
-        selection.extend(focusNode, focusOffset);
-      }
+    if (isAnchorHandle) {
+      let focusNode = selection.focusNode;
+      let focusOffset = selection.focusOffset;
+      selection.collapse(caretPos.offsetNode, caretPos.offset);
+      selection.extend(focusNode, focusOffset);
     } else {
-      if (targetIsEditable) {
-        let anchorX = this._isRTL ? this._cache.focusPt.x : this._cache.anchorPt.x;
-        this._moveSelectionInEditable(anchorX, aX, caretPos);
-      } else {
-        selection.extend(caretPos.offsetNode, caretPos.offset);
-      }
+      selection.extend(caretPos.offsetNode, caretPos.offset);
     }
   },
 
@@ -1149,29 +1131,56 @@ var SelectionHandler = {
     return offset;
   },
 
-  // Returns true if the selection has been reversed. Takes optional aIsStartHandle
-  // param to decide whether the selection has been reversed.
-  _updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
+  /*
+   * The direction of the Selection is ensured for editables while the user drags
+   * the handles (per "TextSelection:Move" event). For non-editables, we just let
+   * the user change direction, but fix it up at the end of handle movement (final
+   * "TextSelection:Position" event).
+   */
+  _ensureSelectionDirection: function() {
+    // Never needed at this time.
+    if (this._targetElement instanceof Ci.nsIDOMNSEditableElement) {
+      return;
+    }
+
+    // Nothing needed if not reversed.
+    let qcEventResult = this._domWinUtils.sendQueryContentEvent(
+      this._domWinUtils.QUERY_SELECTED_TEXT, 0, 0, 0, 0);
+    if (!qcEventResult.reversed) {
+      return;
+    }
+
+    // Reverse the Selection.
+    let selection = this._getSelection();
+    let newFocusNode = selection.anchorNode;
+    let newFocusOffset = selection.anchorOffset;
+
+    selection.collapse(selection.focusNode, selection.focusOffset);
+    selection.extend(newFocusNode, newFocusOffset);
+  },
+
+  /*
+   * Updates the TYPE_SELECTION cache, with the handle anchor/focus point values
+   * of the current selection. Passed to Java for UI positioning only.
+   */
+  _updateCacheForSelection: function() {
     let rects = this._getSelection().getRangeAt(0).getClientRects();
-    if (!rects[0]) {
+    if (rects.length == 0) {
       // nsISelection object exists, but there's nothing actually selected
       throw "Failed to update cache for invalid selection";
     }
 
-    let start = { x: this._isRTL ? rects[0].right : rects[0].left, y: rects[0].bottom };
-    let end = { x: this._isRTL ? rects[rects.length - 1].left : rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
-
-    let selectionReversed = false;
-    if (this._cache.anchorPt) {
-      // If the end moved past the old end, but we're dragging the start handle, then that handle should become the end handle (and vice versa)
-      selectionReversed = (aIsStartHandle && (end.y > this._cache.focusPt.y || (end.y == this._cache.focusPt.y && end.x > this._cache.focusPt.x))) ||
-                          (!aIsStartHandle && (start.y < this._cache.anchorPt.y || (start.y == this._cache.anchorPt.y && start.x < this._cache.anchorPt.x)));
+    let anchorIdx = 0;
+    let focusIdx = rects.length - 1;
+    if (this._isRTL) {
+      // Right-to-Left (ie: Hebrew) anchorPt is on right, focusPt is on left.
+      this._cache.anchorPt = new Point(rects[anchorIdx].right, rects[anchorIdx].bottom);
+      this._cache.focusPt = new Point(rects[focusIdx].left, rects[focusIdx].bottom);
+    } else {
+      // Left-to-Right (ie: English) anchorPt is on left, focusPt is on right.
+      this._cache.anchorPt = new Point(rects[anchorIdx].left, rects[anchorIdx].bottom);
+      this._cache.focusPt = new Point(rects[focusIdx].right, rects[focusIdx].bottom);
     }
-
-    this._cache.anchorPt = start;
-    this._cache.focusPt = end;
-
-    return selectionReversed;
   },
 
   _getHandlePositions: function sh_getHandlePositions(scroll) {
