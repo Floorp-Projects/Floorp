@@ -1889,7 +1889,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     return nullptr;
   }
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
+  if (entry->mJSObj) {
     // Found a live NPObject wrapper. It may not be in the same compartment
     // as cx, so we need to wrap it before returning it.
     JS::Rooted<JSObject*> obj(cx, entry->mJSObj);
@@ -2046,7 +2046,7 @@ LookupNPP(NPObject *npobj)
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
     (PL_DHashTableAdd(&sNPObjWrappers, npobj));
 
-  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+  if (!entry) {
     return nullptr;
   }
 
