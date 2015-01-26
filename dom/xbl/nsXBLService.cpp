@@ -1101,7 +1101,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = nsContentUtils::GetSameOriginChecker();
-  NS_ENSURE_TRUE(sameOriginChecker, NS_ERROR_OUT_OF_MEMORY);
 
   channel->SetNotificationCallbacks(sameOriginChecker);
 

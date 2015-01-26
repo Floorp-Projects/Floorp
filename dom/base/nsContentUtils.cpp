@@ -5652,7 +5652,7 @@ nsContentUtils::GetSameOriginChecker()
 {
   if (!sSameOriginChecker) {
     sSameOriginChecker = new SameOriginChecker();
-    NS_IF_ADDREF(sSameOriginChecker);
+    NS_ADDREF(sSameOriginChecker);
   }
   return sSameOriginChecker;
 }
