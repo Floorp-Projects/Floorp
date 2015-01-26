@@ -5381,10 +5381,6 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!templateObject->hasTenuredProto() || templateObject->getProto() != proto)
         return nullptr;
 
-    types::TypeObjectKey *templateObjectType = types::TypeObjectKey::get(templateObject->type());
-    if (templateObjectType->hasFlags(constraints(), types::OBJECT_FLAG_NEW_SCRIPT_CLEARED))
-        return nullptr;
-
     types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(target->nonLazyScript());
     if (!thisTypes || !thisTypes->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
