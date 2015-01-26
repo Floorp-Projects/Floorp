@@ -345,6 +345,16 @@ SocketListener.prototype = {
     DebuggerServer._removeListener(this);
   },
 
+  get host() {
+    if (!this._socket) {
+      return null;
+    }
+    if (Services.prefs.getBoolPref("devtools.debugger.force-local")) {
+      return "127.0.0.1";
+    }
+    return "0.0.0.0";
+  },
+
   /**
    * Gets whether this listener uses a port number vs. a path.
    */
@@ -395,6 +405,10 @@ function ServerSocketConnection(listener, socketTransport) {
 
 ServerSocketConnection.prototype = {
 
+  get authentication() {
+    return this._listener.authenticator.mode;
+  },
+
   get host() {
     return this._socketTransport.host;
   },
@@ -405,6 +419,20 @@ ServerSocketConnection.prototype = {
 
   get address() {
     return this.host + ":" + this.port;
+  },
+
+  get client() {
+    return {
+      host: this.host,
+      port: this.port
+    };
+  },
+
+  get server() {
+    return {
+      host: this._listener.host,
+      port: this._listener.port
+    };
   },
 
   /**
@@ -501,10 +529,14 @@ ServerSocketConnection.prototype = {
   },
 
   _authenticate() {
-    if (!this._listener.authenticator.authenticate()) {
-      return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+    let result = this._listener.authenticator.authenticate({
+      client: this.client,
+      server: this.server
+    });
+    if (result) {
+      return promise.resolve();
     }
-    return promise.resolve();
+    return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
   },
 
   deny(result) {
