@@ -600,7 +600,7 @@ MozNFCImpl.prototype = {
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
-  notifyRFStateChange: function notifyRFStateChange(rfState) {
+  notifyRFStateChanged: function notifyRFStateChanged(rfState) {
     this._rfState = rfState;
   },
 
