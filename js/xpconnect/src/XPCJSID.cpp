@@ -9,7 +9,7 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
-#include "JavaScriptParent.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/StaticPtr.h"
 
 using namespace mozilla::dom;

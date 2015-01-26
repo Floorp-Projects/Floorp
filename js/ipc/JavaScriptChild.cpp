@@ -64,3 +64,20 @@ JavaScriptChild::scopeForTargetObjects()
     // scope so that they can benefit from XrayWrappers in the child.
     return xpc::PrivilegedJunkScope();
 }
+
+PJavaScriptChild *
+mozilla::jsipc::NewJavaScriptChild(JSRuntime *rt)
+{
+    JavaScriptChild *child = new JavaScriptChild(rt);
+    if (!child->init()) {
+        delete child;
+        return nullptr;
+    }
+    return child;
+}
+
+void
+mozilla::jsipc::ReleaseJavaScriptChild(PJavaScriptChild *child)
+{
+    static_cast<JavaScriptChild *>(child)->decref();
+}
