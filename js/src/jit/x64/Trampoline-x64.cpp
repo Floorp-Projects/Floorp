@@ -380,17 +380,46 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     // Do not erase the frame pointer in this function.
 
     MacroAssembler masm(cx);
+    // Caller:
+    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp
+    // '--- #r8 ---'
 
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
     MOZ_ASSERT(ArgumentsRectifierReg == r8);
 
-    // Load the number of |undefined|s to push into %rcx.
+    // Add |this|, in the counter of known arguments.
+    masm.addl(Imm32(1), r8);
+
+    // Load |nformals| into %rcx.
     masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfCalleeToken()), rax);
     masm.mov(rax, rcx);
     masm.andq(Imm32(uint32_t(CalleeTokenMask)), rcx);
     masm.movzwl(Operand(rcx, JSFunction::offsetOfNargs()), rcx);
+
+    // Including |this|, there are (|nformals| + 1) arguments to push to the
+    // stack.  Then we push a JitFrameLayout.  We compute the padding expressed
+    // in the number of extra |undefined| values to push on the stack.
+    static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
+      "No need to consider the JitFrameLayout for aligning the stack");
+    static_assert(JitStackAlignment % sizeof(Value) == 0,
+      "Ensure that we can pad the stack by pushing extra UndefinedValue");
+
+    const uint32_t alignment = JitStackAlignment / sizeof(Value);
+    MOZ_ASSERT(IsPowerOfTwo(alignment));
+    masm.addl(Imm32(alignment - 1 /* for padding */ + 1 /* for |this| */), rcx);
+    masm.andl(Imm32(~(alignment - 1)), rcx);
+
+    // Load the number of |undefined|s to push into %rcx.
     masm.subq(r8, rcx);
+
+    // Caller:
+    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp <- r9
+    // '------ #r8 -------'
+    //
+    // Rectifier frame:
+    // [undef] [undef] [undef] [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    // '------- #rcx --------' '------ #r8 -------'
 
     // Copy the number of actual arguments
     masm.loadPtr(Address(rsp, RectifierFrameLayout::offsetOfNumActualArgs()), rdx);
@@ -399,7 +428,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
 
     masm.movq(rsp, r9); // Save %rsp.
 
-    // Push undefined.
+    // Push undefined. (including the padding)
     {
         Label undefLoopTop;
         masm.bind(&undefLoopTop);
@@ -410,11 +439,14 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     }
 
     // Get the topmost argument.
-    BaseIndex b = BaseIndex(r9, r8, TimesEight, sizeof(RectifierFrameLayout));
+    static_assert(sizeof(Value) == 8, "TimesEight is used to skip arguments");
+
+    // | - sizeof(Value)| is used to put rcx such that we can read the last
+    // argument, and not the value which is after.
+    BaseIndex b = BaseIndex(r9, r8, TimesEight, sizeof(RectifierFrameLayout) - sizeof(Value));
     masm.lea(Operand(b), rcx);
 
-    // Push arguments, |nargs| + 1 times (to include |this|).
-    masm.addl(Imm32(1), r8);
+    // Copy & Push arguments, |nargs| + 1 times (to include |this|).
     {
         Label copyLoopTop;
 
@@ -424,6 +456,14 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
         masm.subl(Imm32(1), r8);
         masm.j(Assembler::NonZero, &copyLoopTop);
     }
+
+    // Caller:
+    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- r9
+    //
+    //
+    // Rectifier frame:
+    // [undef] [undef] [undef] [arg2] [arg1] [this] <- rsp [[argc] [callee] [descr] [raddr]]
+    //
 
     // Construct descriptor.
     masm.subq(rsp, r9);

@@ -454,7 +454,7 @@ struct PerThreadDataFriendFields
     }
 
     /* Limit pointer for checking native stack consumption. */
-    uintptr_t nativeStackLimit[StackKindCount];
+    uintptr_t nativeStackLimit[js::StackKindCount];
 
     static const size_t RuntimeMainThreadOffset = offsetof(RuntimeDummy, mainThread);
 

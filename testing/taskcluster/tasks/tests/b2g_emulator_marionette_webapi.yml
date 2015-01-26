@@ -1,0 +1,31 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] Marionette WebAPI Tests'
+    description: Marionette WebAPI test run
+
+  payload:
+    command:
+      - entrypoint
+      - >
+        python ./mozharness/scripts/marionette.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/marionette/automation_emulator_config.py
+        --config-file ./mozharness_configs/remove_executables.py
+        --download-symbols ondemand
+        --test-manifest webapi-tests.ini
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Marionette WebAPI Tests
+      symbol: Mnw
+      productName: b2g

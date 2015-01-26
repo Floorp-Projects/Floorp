@@ -1,0 +1,33 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  metadata:
+    name: '[TC] B2G Mochitests {{chunk}}'
+    description: B2G Desktop Mochi test run {{chunk}}
+
+  payload:
+    command:
+      - entrypoint # entrypoint ensures we are running in xvfb
+      - >
+        python ./mozharness/scripts/b2g_desktop_unittest.py
+        --no-read-buildbot-config
+        --config-file /home/worker/b2g-desktop-config.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --test-suite mochitest
+        --total-chunk={{total_chunks}}
+        --this-chunk={{chunk}}
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Mochitest
+      groupSymbol: tc-M
+      symbol: {{chunk}}
+

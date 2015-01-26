@@ -12,3 +12,10 @@ What should not go here:
 
 Historical information can be found at
 https://bugzilla.mozilla.org/show_bug.cgi?id=775243
+
+## pyyaml | pystache
+
+Used in taskcluster related mach commands to update download from github
+and remove .git and tests.
+
+Then run tests in taskcluster/tests/

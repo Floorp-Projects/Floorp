@@ -717,6 +717,29 @@ template bool ObjectPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruc
 template bool ObjectPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
+template <unsigned Op>
+bool
+SimdSameAsReturnedTypePolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MIRType type = ins->type();
+    MOZ_ASSERT(IsSimdType(type));
+
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == type)
+        return true;
+
+    MSimdUnbox *replace = MSimdUnbox::New(alloc, in, type);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool
+SimdSameAsReturnedTypePolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+template bool
+SimdSameAsReturnedTypePolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+
 bool
 CallPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
@@ -1042,6 +1065,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(MixPolicy<ObjectPolicy<0>, StringPolicy<1> >)                     \
     _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<2> >)            \
     _(MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >)            \
+    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >) \
     _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
     _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
     _(NoFloatPolicy<0>)                                                 \

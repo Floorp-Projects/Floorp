@@ -1353,11 +1353,11 @@ js::testingFunc_assertFloat32(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-TestingFunc_assertValidJitStack(JSContext *cx, unsigned argc, jsval *vp)
+TestingFunc_assertJitStackInvariants(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    jit::AssertValidJitStack(cx);
+    jit::AssertJitStackInvariants(cx);
     args.rval().setUndefined();
     return true;
 }
@@ -2499,8 +2499,8 @@ gc::ZealModeHelpText),
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
 
-    JS_FN_HELP("assertValidJitStack", TestingFunc_assertValidJitStack, 0, 0,
-"assertValidJitStack()",
+    JS_FN_HELP("assertJitStackInvariants", TestingFunc_assertJitStackInvariants, 0, 0,
+"assertJitStackInvariants()",
 "  Iterates the Jit stack and check that stack invariants hold."),
 
     JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
