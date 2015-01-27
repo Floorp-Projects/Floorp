@@ -3211,11 +3211,17 @@ TelemetryImpl::RecordChromeHang(uint32_t aDuration,
   if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
 
+  UniquePtr<HangAnnotations> annotations;
+  // We only pass aAnnotations if it is not empty.
+  if (aAnnotations && !aAnnotations->IsEmpty()) {
+    annotations = Move(aAnnotations);
+  }
+
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
   sTelemetry->mHangReports.AddHang(aStack, aDuration,
                                    aSystemUptime, aFirefoxUptime,
-                                   Move(aAnnotations));
+                                   Move(annotations));
 }
 #endif
 
