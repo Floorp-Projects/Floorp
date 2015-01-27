@@ -106,6 +106,7 @@ namespace system {
 #define USB_FUNC_NONE   "none"
 #define USB_FUNC_RNDIS  "rndis"
 #define USB_FUNC_UMS    "mass_storage"
+#define USB_FUNC_DEFAULT    "default"
 
 class AutoMounter;
 
@@ -552,6 +553,9 @@ SetUsbFunction(const char* aUsbFunc)
     // We're enabling UMS. For this we make the assumption that the persisted
     // property has mass_storage enabled.
     property_get(PERSIST_SYS_USB_CONFIG, newSysUsbConfig, "");
+  } else if (strcmp(aUsbFunc, USB_FUNC_DEFAULT) == 0) {
+    // Set the property as PERSIST_SYS_USB_CONFIG
+    property_get(PERSIST_SYS_USB_CONFIG, newSysUsbConfig, "");
   } else {
     printf_stderr("AutoMounter::SetUsbFunction Unrecognized aUsbFunc '%s'\n", aUsbFunc);
     MOZ_ASSERT(0);
@@ -626,6 +630,7 @@ AutoMounter::StartMtpServer()
 
   sMozMtpServer = new MozMtpServer();
   if (!sMozMtpServer->Init()) {
+    sMozMtpServer = nullptr;
     return false;
   }
 
@@ -786,9 +791,15 @@ AutoMounter::UpdateState()
           if (StartMtpServer()) {
             SetState(STATE_MTP_STARTED);
           } else {
-            // Unable to start MTP. Go back to UMS.
-            SetUsbFunction(USB_FUNC_UMS);
-            SetState(STATE_UMS_CONFIGURING);
+            if (umsAvail) {
+              // Unable to start MTP. Go back to UMS.
+              LOG("UpdateState: StartMtpServer failed, switch to UMS");
+              SetUsbFunction(USB_FUNC_UMS);
+              SetState(STATE_UMS_CONFIGURING);
+            } else {
+              LOG("UpdateState: StartMtpServer failed, keep idle state");
+              SetUsbFunction(USB_FUNC_DEFAULT);
+            }
           }
         } else {
           // We need to configure USB to use mtp. Wait for it to be configured
@@ -849,6 +860,10 @@ AutoMounter::UpdateState()
         SetState(STATE_UMS_CONFIGURING);
         break;
       }
+
+      // if ums/rndis is not available and mtp is disable,
+      // restore the usb function as PERSIST_SYS_USB_CONFIG.
+      SetUsbFunction(USB_FUNC_DEFAULT);
       SetState(STATE_IDLE);
       break;
 
