@@ -82,7 +82,6 @@ if CONFIG['MOZ_MEMORY']:
 #CPP_UNIT_TESTS += [
 #    'TestThreads',
 #    'TestXPIDLString',
-#    'TestUTF',
 #]
 
 # FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
