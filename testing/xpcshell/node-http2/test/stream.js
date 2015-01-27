@@ -112,7 +112,6 @@ var example_frames = [
 var invalid_incoming_frames = {
   IDLE: [
     { type: 'DATA', flags: {}, data: new Buffer(5) },
-    { type: 'PRIORITY', flags: {}, priority: 1 },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'RST_STREAM', flags: {}, error: 'CANCEL' }
@@ -125,7 +124,6 @@ var invalid_incoming_frames = {
   ],
   RESERVED_REMOTE: [
     { type: 'DATA', flags: {}, data: new Buffer(5) },
-    { type: 'PRIORITY', flags: {}, priority: 1 },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
   ],
@@ -143,13 +141,11 @@ var invalid_incoming_frames = {
 var invalid_outgoing_frames = {
   IDLE: [
     { type: 'DATA', flags: {}, data: new Buffer(5) },
-    { type: 'PRIORITY', flags: {}, priority: 1 },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} }
   ],
   RESERVED_LOCAL: [
     { type: 'DATA', flags: {}, data: new Buffer(5) },
-    { type: 'PRIORITY', flags: {}, priority: 1 },
     { type: 'PUSH_PROMISE', flags: {}, headers: {} },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} }
   ],
@@ -169,7 +165,6 @@ var invalid_outgoing_frames = {
   HALF_CLOSED_REMOTE: [
   ],
   CLOSED: [
-    { type: 'PRIORITY', flags: {}, priority: 1 },
     { type: 'WINDOW_UPDATE', flags: {}, settings: {} },
     { type: 'HEADERS', flags: {}, headers: {}, priority: undefined },
     { type: 'DATA', flags: {}, data: new Buffer(5) },
@@ -188,7 +183,7 @@ describe('stream.js', function() {
             stream.state = state;
             stream.once('connectionError', function() { connectionErrorHappened = true; });
             stream._transition(false, invalid_frame);
-            expect(connectionErrorHappened)
+            expect(connectionErrorHappened);
           });
         });
 
@@ -197,7 +192,7 @@ describe('stream.js', function() {
         stream.headers({});
         stream.end();
         stream.upstream.write({ type: 'HEADERS', headers:{}, flags: { END_STREAM: true }, count_change: util.noop });
-        example_frames.forEach(function(invalid_frame) {
+        example_frames.slice(1).forEach(function(invalid_frame) {
           invalid_frame.count_change = util.noop;
           expect(stream._transition.bind(stream, false, invalid_frame)).to.throw('Uncaught, unspecified "error" event.');
         });
