@@ -693,57 +693,50 @@ pref("dom.ipc.processPriorityManager.backgroundLRUPoolLevels", 5);
 // Kernel parameters for process priorities.  These affect how processes are
 // killed on low-memory and their relative CPU priorities.
 //
+// Note: The maximum nice value on Linux is 19, but the max value you should
+// use here is 18.  NSPR adds 1 to some threads' nice values, to mark
+// low-priority threads.  If the process priority manager were to renice a
+// process (and all its threads) to 19, all threads would have the same
+// niceness.  Then when we reniced the process to (say) 10, all threads would
+// /still/ have the same niceness; we'd effectively have erased NSPR's thread
+// priorities.
+
 // The kernel can only accept 6 (OomScoreAdjust, KillUnderKB) pairs. But it is
 // okay, kernel will still kill processes with larger OomScoreAdjust first even
 // its OomScoreAdjust don't have a corresponding KillUnderKB.
 
 pref("hal.processPriorityManager.gonk.MASTER.OomScoreAdjust", 0);
 pref("hal.processPriorityManager.gonk.MASTER.KillUnderKB", 4096);
-pref("hal.processPriorityManager.gonk.MASTER.cgroup", "");
+pref("hal.processPriorityManager.gonk.MASTER.Nice", 0);
 
 pref("hal.processPriorityManager.gonk.PREALLOC.OomScoreAdjust", 67);
-pref("hal.processPriorityManager.gonk.PREALLOC.cgroup", "apps/bg_non_interactive");
+pref("hal.processPriorityManager.gonk.PREALLOC.Nice", 18);
 
 pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.OomScoreAdjust", 67);
 pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.KillUnderKB", 5120);
-pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.cgroup", "apps/critical");
+pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.Nice", 0);
 
 pref("hal.processPriorityManager.gonk.FOREGROUND.OomScoreAdjust", 134);
 pref("hal.processPriorityManager.gonk.FOREGROUND.KillUnderKB", 6144);
-pref("hal.processPriorityManager.gonk.FOREGROUND.cgroup", "apps");
+pref("hal.processPriorityManager.gonk.FOREGROUND.Nice", 1);
 
 pref("hal.processPriorityManager.gonk.FOREGROUND_KEYBOARD.OomScoreAdjust", 200);
-pref("hal.processPriorityManager.gonk.FOREGROUND_KEYBOARD.cgroup", "apps");
+pref("hal.processPriorityManager.gonk.FOREGROUND_KEYBOARD.Nice", 1);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 400);
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.KillUnderKB", 7168);
-pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.cgroup", "apps/bg_perceivable");
+pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.Nice", 7);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.OomScoreAdjust", 534);
 pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.KillUnderKB", 8192);
-pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.cgroup", "apps/bg_non_interactive");
+pref("hal.processPriorityManager.gonk.BACKGROUND_HOMESCREEN.Nice", 18);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND.OomScoreAdjust", 667);
 pref("hal.processPriorityManager.gonk.BACKGROUND.KillUnderKB", 20480);
-pref("hal.processPriorityManager.gonk.BACKGROUND.cgroup", "apps/bg_non_interactive");
+pref("hal.processPriorityManager.gonk.BACKGROUND.Nice", 18);
 
-// Control group definitions (i.e., CPU priority groups) for B2G processes.
-
-// Foreground apps
-pref("hal.processPriorityManager.gonk.cgroups.apps.cpu_shares", 1024);
-pref("hal.processPriorityManager.gonk.cgroups.apps.cpu_notify_on_migrate", 1);
-
-// Foreground apps with high priority, 16x more CPU than foreground ones
-pref("hal.processPriorityManager.gonk.cgroups.apps/critical.cpu_shares", 16384);
-pref("hal.processPriorityManager.gonk.cgroups.apps/critical.cpu_notify_on_migrate", 1);
-
-// Background perceivable apps, ~10x less CPU than foreground ones
-pref("hal.processPriorityManager.gonk.cgroups.apps/bg_perceivable.cpu_shares", 103);
-pref("hal.processPriorityManager.gonk.cgroups.apps/bg_perceivable.cpu_notify_on_migrate", 0);
-
-// Background apps, ~20x less CPU than foreground ones and ~2x less than perceivable ones
-pref("hal.processPriorityManager.gonk.cgroups.apps/bg_non_interactive.cpu_shares", 52);
-pref("hal.processPriorityManager.gonk.cgroups.apps/bg_non_interactive.cpu_notify_on_migrate", 0);
+// Processes get this niceness when they have low CPU priority.
+pref("hal.processPriorityManager.gonk.LowCPUNice", 18);
 
 // By default the compositor thread on gonk runs without real-time priority.  RT
 // priority can be enabled by setting this pref to a value between 1 and 99.
