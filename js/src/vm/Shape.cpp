@@ -640,7 +640,12 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
 
     /* Construct the new shape, without updating type information. */
     RootedId id(cx);
-    RootedShape newShape(cx, res->lastProperty());
+    RootedShape newShape(cx, EmptyShape::getInitialShape(cx, res->getClass(),
+                                                         res->getTaggedProto(),
+                                                         res->getMetadata(),
+                                                         res->getParent(),
+                                                         res->numFixedSlots(),
+                                                         shape->getObjectFlags()));
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
         MOZ_ASSERT(!res->contains(cx, id));
