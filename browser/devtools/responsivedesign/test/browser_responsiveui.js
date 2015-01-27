@@ -210,7 +210,7 @@ function test() {
     initialWidth = content.innerWidth;
     initialHeight = content.innerHeight;
     index = instance.menulist.selectedIndex;
-    let expectedValue = initialWidth + "x" + initialHeight;
+    let expectedValue = initialWidth + "\u00D7" + initialHeight;
     let expectedLabel = instance.menulist.firstChild.firstChild.getAttribute("label");
 
     userInput = "I'm wrong";

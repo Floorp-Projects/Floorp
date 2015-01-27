@@ -9,8 +9,8 @@
 
 // Expected values:
 let res1 = [
-      {selector: "#element-size",              value: "160x160"},
-      {selector: ".size > span",               value: "100x100"},
+      {selector: "#element-size",              value: "160" + "\u00D7" + "160"},
+      {selector: ".size > span",               value: "100" + "\u00D7" + "100"},
       {selector: ".margin.top > span",         value: 30},
       {selector: ".margin.left > span",        value: "auto"},
       {selector: ".margin.bottom > span",      value: 30},
@@ -26,8 +26,8 @@ let res1 = [
 ];
 
 let res2 = [
-      {selector: "#element-size",              value: "190x210"},
-      {selector: ".size > span",               value: "100x150"},
+      {selector: "#element-size",              value: "190" + "\u00D7" + "210"},
+      {selector: ".size > span",               value: "100" + "\u00D7" + "150"},
       {selector: ".margin.top > span",         value: 30},
       {selector: ".margin.left > span",        value: "auto"},
       {selector: ".margin.bottom > span",      value: 30},
