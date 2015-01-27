@@ -11,6 +11,7 @@
  */
 
 interface SVGStopElement : SVGElement {
+  [Constant]
   readonly attribute SVGAnimatedNumber offset;
 };
 

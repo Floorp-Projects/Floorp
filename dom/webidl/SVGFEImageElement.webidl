@@ -11,6 +11,7 @@
  */
 
 interface SVGFEImageElement : SVGElement {
+  [Constant]
   readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
 };
 
