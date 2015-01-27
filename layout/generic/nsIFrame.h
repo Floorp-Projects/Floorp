@@ -2450,13 +2450,10 @@ public:
    *  @param aOutOffset [out] 0 indicates that we arrived at the beginning of the output frame;
    *                          -1 indicates that we arrived at its end.
    *  @param aOutJumpedLine [out] whether this frame and the returned frame are on different lines
-   *  @param aOutMovedOverNonSelectableText [out] whether we jumped over a non-selectable
-   *                                              frame during the search
    */
   nsresult GetFrameFromDirection(nsDirection aDirection, bool aVisual,
-                                 bool aJumpLines, bool aScrollViewStop,
-                                 nsIFrame** aOutFrame, int32_t* aOutOffset,
-                                 bool* aOutJumpedLine, bool* aOutMovedOverNonSelectableText);
+                                 bool aJumpLines, bool aScrollViewStop, 
+                                 nsIFrame** aOutFrame, int32_t* aOutOffset, bool* aOutJumpedLine);
 
   /**
    *  called to see if the children of the frame are visible from indexstart to index end.
