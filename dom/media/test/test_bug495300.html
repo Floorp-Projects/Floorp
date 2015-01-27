@@ -28,7 +28,14 @@ function mediaEnded(event) {
     ok(Math.abs(event.target.currentTime - event.target._expectedDuration) < 0.1,
        "currentTime equals duration: " + filename(event.target.currentSrc));
 
+  event.target.removeEventListener("ended", mediaEnded, false);
   manager.finished(event.target.token);
+  removeNodeAndSource(event.target);
+}
+
+function mediaLoadedmetadata(event) {
+  event.target.currentTime = event.target.duration;
+  event.target.removeEventListener("loadedmetadata", mediaLoadedmetadata, false);
 }
 
 function startTest(test, token) {
@@ -40,9 +47,7 @@ function startTest(test, token) {
   if (test.duration) {
     v1._expectedDuration = test.duration;
   }
-  v1.addEventListener("loadedmetadata", function (event) {
-    event.target.currentTime = event.target.duration;
-  }, false);
+  v1.addEventListener("loadedmetadata", mediaLoadedmetadata, false);
   v1.addEventListener("ended", mediaEnded, false);
   v1.load();
 
