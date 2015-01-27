@@ -244,15 +244,6 @@ ParseNodeAllocator::allocNode()
     return p;
 }
 
-/* used only by static create methods of subclasses */
-
-ParseNode *
-ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, FullParseHandler *handler)
-{
-    const Token &tok = handler->currentToken();
-    return handler->new_<ParseNode>(kind, JSOP_NOP, arity, tok.pos);
-}
-
 ParseNode *
 ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
                   FullParseHandler *handler)
@@ -360,31 +351,35 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
         break;
 
       case PN_TERNARY:
-        NULLCHECK(pn->pn_kid1 = cloneParseTree(opn->pn_kid1));
-        NULLCHECK(pn->pn_kid2 = cloneParseTree(opn->pn_kid2));
-        NULLCHECK(pn->pn_kid3 = cloneParseTree(opn->pn_kid3));
+        if (opn->pn_kid1)
+            NULLCHECK(pn->pn_kid1 = cloneParseTree(opn->pn_kid1));
+        if (opn->pn_kid2)
+            NULLCHECK(pn->pn_kid2 = cloneParseTree(opn->pn_kid2));
+        if (opn->pn_kid3)
+            NULLCHECK(pn->pn_kid3 = cloneParseTree(opn->pn_kid3));
         break;
 
       case PN_BINARY:
-        NULLCHECK(pn->pn_left = cloneParseTree(opn->pn_left));
-        if (opn->pn_right != opn->pn_left)
-            NULLCHECK(pn->pn_right = cloneParseTree(opn->pn_right));
-        else
-            pn->pn_right = pn->pn_left;
-        pn->pn_iflags = opn->pn_iflags;
-        break;
-
       case PN_BINARY_OBJ:
-        NULLCHECK(pn->pn_left = cloneParseTree(opn->pn_left));
-        if (opn->pn_right != opn->pn_left)
-            NULLCHECK(pn->pn_right = cloneParseTree(opn->pn_right));
-        else
-            pn->pn_right = pn->pn_left;
-        pn->pn_binary_obj = opn->pn_binary_obj;
+        if (opn->pn_left)
+            NULLCHECK(pn->pn_left = cloneParseTree(opn->pn_left));
+        if (opn->pn_right) {
+            if (opn->pn_right != opn->pn_left)
+                NULLCHECK(pn->pn_right = cloneParseTree(opn->pn_right));
+            else
+                pn->pn_right = pn->pn_left;
+        }
+        if (opn->isArity(PN_BINARY)) {
+            pn->pn_iflags = opn->pn_iflags;
+        } else {
+            MOZ_ASSERT(opn->isArity(PN_BINARY_OBJ));
+            pn->pn_binary_obj = opn->pn_binary_obj;
+        }
         break;
 
       case PN_UNARY:
-        NULLCHECK(pn->pn_kid = cloneParseTree(opn->pn_kid));
+        if (opn->pn_kid)
+            NULLCHECK(pn->pn_kid = cloneParseTree(opn->pn_kid));
         break;
 
       case PN_NAME:

@@ -11,6 +11,7 @@
 #include "nsISeekableStream.h"
 #include "nsISupports.h"
 #include "prlog.h"
+#include "MediaData.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetSourceBufferResourceLog()
@@ -200,11 +201,12 @@ SourceBufferResource::EvictAll()
 }
 
 void
-SourceBufferResource::AppendData(const uint8_t* aData, uint32_t aLength)
+SourceBufferResource::AppendData(LargeDataBuffer* aData)
 {
-  SBR_DEBUG("SourceBufferResource(%p)::AppendData(aData=%p, aLength=%u)", this, aData, aLength);
+  SBR_DEBUG("SourceBufferResource(%p)::AppendData(aData=%p, aLength=%u)", this,
+            aData->Elements(), aData->Length());
   ReentrantMonitorAutoEnter mon(mMonitor);
-  mInputBuffer.AppendItem(aData, aLength);
+  mInputBuffer.AppendItem(aData);
   mEnded = false;
   mon.NotifyAll();
 }
