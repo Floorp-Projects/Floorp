@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/engines.js");
@@ -13,13 +12,16 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 Service.engineManager.clear();
 
+add_test(function test_setup() {
+  PlacesTestUtils.clearHistory().then(run_next_test);
+});
+
 add_test(function test_processIncoming_mobile_history_batched() {
   _("SyncEngine._processIncoming works on history engine.");
 
   let FAKE_DOWNLOAD_LIMIT = 100;
 
   Svc.Prefs.set("client.type", "mobile");
-  PlacesUtils.history.removeAllPages();
   Service.engineManager.register(HistoryEngine);
 
   // A collection that logs each GET
@@ -130,10 +132,11 @@ add_test(function test_processIncoming_mobile_history_batched() {
     }
 
   } finally {
-    PlacesUtils.history.removeAllPages();
-    server.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    PlacesTestUtils.clearHistory().then(() => {
+      server.stop(do_test_finished);
+      Svc.Prefs.resetBranch("");
+      Service.recordManager.clearCache();
+    });
   }
 });
 

@@ -208,7 +208,7 @@ function test() {
                 .getAttribute("value"), "base64",
                 "The image encoding info isn't correct.");
               is(tabpanel.querySelector("#response-content-image-dimensions-value")
-                .getAttribute("value"), "16 x 16",
+                .getAttribute("value"), "16" + " \u00D7 " + "16",
                 "The image dimensions info isn't correct.");
 
               deferred.resolve();

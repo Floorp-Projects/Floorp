@@ -62,7 +62,7 @@ function ensureThrows(func) {
     try {
       func.apply(this, arguments);
     } catch (ex) {
-      PlacesUtils.history.removeAllPages();
+      PlacesTestUtils.clearHistory();
       do_throw(ex);
     }
   };
@@ -300,6 +300,5 @@ add_test(function test_remove() {
 
 add_test(function cleanup() {
   _("Clean up.");
-  PlacesUtils.history.removeAllPages();
-  run_next_test();
+  PlacesTestUtils.clearHistory().then(run_next_test);
 });

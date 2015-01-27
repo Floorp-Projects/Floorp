@@ -203,7 +203,6 @@ loop.shared.mixins = (function() {
         publishVideo: options.publishVideo,
         style: {
           audioLevelDisplayMode: "off",
-          bugDisplayMode: "off",
           buttonDisplayMode: "off",
           nameDisplayMode: "off",
           videoDisabledDisplayMode: "off"
