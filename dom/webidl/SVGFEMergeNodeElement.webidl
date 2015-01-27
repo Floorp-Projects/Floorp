@@ -11,5 +11,6 @@
  */
 
 interface SVGFEMergeNodeElement : SVGElement {
+  [Constant]
   readonly attribute SVGAnimatedString in1;
 };
