@@ -705,6 +705,7 @@ this.NetworkStatsService = {
     }
 
     let stats = { appId:          0,
+                  isInBrowser:    false,
                   serviceType:    "",
                   networkId:      this._networks[aNetId].network.id,
                   networkType:    this._networks[aNetId].network.type,
@@ -730,8 +731,8 @@ this.NetworkStatsService = {
   /*
    * Function responsible for receiving stats which are not from netd.
    */
-  saveStats: function saveStats(aAppId, aServiceType, aNetwork, aTimeStamp,
-                                aRxBytes, aTxBytes, aIsAccumulative,
+  saveStats: function saveStats(aAppId, aIsInBrowser, aServiceType, aNetwork,
+                                aTimeStamp, aRxBytes, aTxBytes, aIsAccumulative,
                                 aCallback) {
     let netId = this.convertNetworkInterface(aNetwork);
     if (!netId) {
@@ -753,6 +754,7 @@ this.NetworkStatsService = {
     }
 
     let stats = { appId:          aAppId,
+                  isInBrowser:    aIsInBrowser,
                   serviceType:    aServiceType,
                   networkId:      this._networks[netId].network.id,
                   networkType:    this._networks[netId].network.type,
@@ -772,9 +774,10 @@ this.NetworkStatsService = {
    *
    */
   writeCache: function writeCache(aStats, aCallback) {
-    debug("saveStats: " + aStats.appId + " " + aStats.serviceType + " " +
-          aStats.networkId + " " + aStats.networkType + " " + aStats.date + " "
-          + aStats.date + " " + aStats.rxBytes + " " + aStats.txBytes);
+    debug("saveStats: " + aStats.appId + " " + aStats.isInBrowser + " " +
+          aStats.serviceType + " " + aStats.networkId + " " +
+          aStats.networkType + " " + aStats.date + " " +
+          aStats.rxBytes + " " + aStats.txBytes);
 
     // Generate an unique key from |appId|, |serviceType| and |netId|,
     // which is used to retrieve data in |cachedStats|.
