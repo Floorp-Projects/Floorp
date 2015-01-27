@@ -207,8 +207,13 @@ TrackBuffer::AppendDataToCurrentResource(LargeDataBuffer* aData, uint32_t aDurat
     return false;
   }
 
+  SourceBufferResource* resource = mCurrentDecoder->GetResource();
+  int64_t appendOffset = resource->GetLength();
+  resource->AppendData(aData);
   mCurrentDecoder->SetRealMediaDuration(mCurrentDecoder->GetRealMediaDuration() + aDuration);
-  mCurrentDecoder->AppendData(aData);
+  // XXX: For future reference: NDA call must run on the main thread.
+  mCurrentDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData->Elements()),
+                                     aData->Length(), appendOffset);
   mParentDecoder->NotifyBytesDownloaded();
   mParentDecoder->NotifyTimeRangesChanged();
 
@@ -255,7 +260,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
 
   int64_t totalSize = 0;
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    totalSize += mDecoders[i]->GetSize();
+    totalSize += mDecoders[i]->GetResource()->GetSize();
   }
 
   int64_t toEvict = totalSize - aThreshold;
@@ -292,8 +297,8 @@ TrackBuffer::EvictData(double aPlaybackTime,
       MSE_DEBUG("TrackBuffer(%p)::EvictData evicting all before start "
                 "bufferedStart=%f bufferedEnd=%f aPlaybackTime=%f size=%lld",
                 this, buffered->GetStartTime(), buffered->GetEndTime(),
-                aPlaybackTime, decoders[i]->GetSize());
-      toEvict -= decoders[i]->EvictAll();
+                aPlaybackTime, decoders[i]->GetResource()->GetSize());
+      toEvict -= decoders[i]->GetResource()->EvictAll();
     } else {
       // To ensure we don't evict data past the current playback position
       // we apply a threshold of a few seconds back and evict data up to
@@ -304,9 +309,9 @@ TrackBuffer::EvictData(double aPlaybackTime,
         MSE_DEBUG("TrackBuffer(%p)::EvictData evicting some bufferedEnd=%f"
                   "aPlaybackTime=%f time=%f, playbackOffset=%lld size=%lld",
                   this, buffered->GetEndTime(), aPlaybackTime, time,
-                  playbackOffset, decoders[i]->GetSize());
+                  playbackOffset, decoders[i]->GetResource()->GetSize());
         if (playbackOffset > 0) {
-          toEvict -= decoders[i]->EvictData(playbackOffset,
+          toEvict -= decoders[i]->GetResource()->EvictData(playbackOffset,
                                                            toEvict);
         }
       }
@@ -319,14 +324,14 @@ TrackBuffer::EvictData(double aPlaybackTime,
     decoders[i]->GetBuffered(buffered);
     MSE_DEBUG("TrackBuffer(%p):EvictData maybe remove empty decoders=%d "
               "size=%lld start=%f end=%f",
-              this, i, decoders[i]->GetSize(),
+              this, i, decoders[i]->GetResource()->GetSize(),
               buffered->GetStartTime(), buffered->GetEndTime());
     if (decoders[i] == mCurrentDecoder
         || mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
       continue;
     }
 
-    if (decoders[i]->GetSize() == 0 ||
+    if (decoders[i]->GetResource()->GetSize() == 0 ||
         buffered->GetStartTime() < 0.0 ||
         buffered->GetEndTime() < 0.0) {
       MSE_DEBUG("TrackBuffer(%p):EvictData remove empty decoders=%d", this, i);
@@ -353,7 +358,7 @@ TrackBuffer::EvictBefore(double aTime)
     int64_t endOffset = mInitializedDecoders[i]->ConvertToByteOffset(aTime);
     if (endOffset > 0) {
       MSE_DEBUG("TrackBuffer(%p)::EvictBefore decoder=%u offset=%lld", this, i, endOffset);
-      mInitializedDecoders[i]->EvictBefore(endOffset);
+      mInitializedDecoders[i]->GetResource()->EvictBefore(endOffset);
     }
   }
 }
@@ -540,7 +545,7 @@ TrackBuffer::DiscardDecoder()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mCurrentDecoder) {
-    mCurrentDecoder->Ended();
+    mCurrentDecoder->GetResource()->Ended();
   }
   mCurrentDecoder = nullptr;
 }
@@ -550,7 +555,7 @@ TrackBuffer::EndCurrentDecoder()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   if (mCurrentDecoder) {
-    mCurrentDecoder->Ended();
+    mCurrentDecoder->GetResource()->Ended();
   }
 }
 
@@ -746,8 +751,8 @@ TrackBuffer::RangeRemoval(int64_t aStart, int64_t aEnd)
     decoders[i]->Trim(aStart);
     if (aStart <= buffered->GetStartTime()) {
       // We've completely emptied it, can clear the data.
-      int64_t size = decoders[i]->GetSize();
-      decoders[i]->EvictData(size, size);
+      int64_t size = decoders[i]->GetResource()->GetSize();
+      decoders[i]->GetResource()->EvictData(size, size);
       if (decoders[i] == mCurrentDecoder ||
           mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
         continue;
