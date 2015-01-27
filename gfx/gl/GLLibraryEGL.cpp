@@ -35,7 +35,8 @@ static const char *sEGLExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
-    "EGL_ANDROID_native_fence_sync"
+    "EGL_ANDROID_native_fence_sync",
+    nullptr
 };
 
 #if defined(ANDROID)
@@ -420,23 +421,15 @@ GLLibraryEGL::EnsureInitialized()
 void
 GLLibraryEGL::InitExtensions()
 {
-    const char* rawExts = (const char*)fQueryString(mEGLDisplay,
-                                                    LOCAL_EGL_EXTENSIONS);
-    if (rawExts) {
-        nsDependentCString exts(rawExts);
-        SplitByChar(exts, ' ', &mDriverExtensionList);
-    } else {
+    const char *extensions = (const char*)fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+
+    if (!extensions) {
         NS_WARNING("Failed to load EGL extension list!");
+        return;
     }
 
-    const bool shouldDumpExts = GLContext::ShouldDumpExts();
-    if (shouldDumpExts) {
-        printf_stderr("%i EGL driver extensions:\n",
-                      (uint32_t)mDriverExtensionList.size());
-    }
-
-    MarkBitfieldByStrings(mDriverExtensionList, shouldDumpExts,
-                          sEGLExtensionNames, mAvailableExtensions);
+    GLContext::InitializeExtensionsBitSet(mAvailableExtensions, extensions,
+                                          sEGLExtensionNames);
 }
 
 void
