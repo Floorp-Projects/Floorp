@@ -677,6 +677,8 @@ function checkMetadata(msg, e, test) {
     ok(Math.abs(e.duration - test.duration) < 0.1,
        msg + " duration (" + e.duration + ") should be around " + test.duration);
   }
+  is(!!test.keys, SpecialPowers.do_lookupGetter(e, "isEncrypted").apply(e),
+     msg + " isEncrypted should be true if we have decryption keys");
 }
 
 // Returns the first test from candidates array which we can play with the
