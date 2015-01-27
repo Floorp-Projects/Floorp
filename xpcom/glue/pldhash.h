@@ -77,28 +77,11 @@ struct PLDHashTableOps;
  * 1 values. The stored keyHash value is table size invariant, and it is
  * maintained automatically -- users should never set it, and its only uses
  * should be via the entry macros below.
- *
- * However, use PL_DHASH_ENTRY_IS_BUSY for faster liveness testing of entries
- * returned by PL_DHashTableLookup and PL_DHashTableAdd, as these functions
- * never return a non-live, busy (i.e., removed) entry pointer to its caller.
- * See below for more details on these functions.
  */
 struct PLDHashEntryHdr
 {
   PLDHashNumber keyHash;  /* every entry must begin like this */
 };
-
-MOZ_ALWAYS_INLINE bool
-PL_DHASH_ENTRY_IS_FREE(PLDHashEntryHdr* aEntry)
-{
-  return aEntry->keyHash == 0;
-}
-
-MOZ_ALWAYS_INLINE bool
-PL_DHASH_ENTRY_IS_BUSY(PLDHashEntryHdr* aEntry)
-{
-  return !PL_DHASH_ENTRY_IS_FREE(aEntry);
-}
 
 /*
  * These are the codes returned by PLDHashEnumerator functions, which control
@@ -199,7 +182,7 @@ private:
     uint32_t        mSteps;         /* hash chain links traversed */
     uint32_t        mHits;          /* searches that found key */
     uint32_t        mMisses;        /* searches that didn't find key */
-    uint32_t        mLookups;       /* number of Lookup() calls */
+    uint32_t        mSearches;      /* number of Search() calls */
     uint32_t        mAddMisses;     /* adds that miss, and do work */
     uint32_t        mAddOverRemoved;/* adds that recycled a removed entry */
     uint32_t        mAddHits;       /* adds that hit an existing entry */
@@ -258,7 +241,6 @@ public:
 
   void Finish();
 
-  PLDHashEntryHdr* Lookup(const void* aKey);
   PLDHashEntryHdr* Search(const void* aKey);
   PLDHashEntryHdr* Add(const void* aKey);
   void Remove(const void* aKey);
@@ -481,23 +463,12 @@ MOZ_WARN_UNUSED_RESULT bool PL_DHashTableInit(
 void PL_DHashTableFinish(PLDHashTable* aTable);
 
 /*
- * To lookup a key in table, call:
- *
- *  entry = PL_DHashTableLookup(table, key);
- *
- * If PL_DHASH_ENTRY_IS_BUSY(entry) is true, key was found and it identifies
- * entry.  If PL_DHASH_ENTRY_IS_FREE(entry) is true, key was not found.
- */
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey);
-
-/*
- * To lookup a key in table, call:
+ * To search for a key in |table|, call:
  *
  *  entry = PL_DHashTableSearch(table, key);
  *
- * If |entry| is non-null, key was found and it identifies entry.  If |entry|
- * is null, key was not found.
+ * If |entry| is non-null, |key| was found.  If |entry| is null, key was not
+ * found.
  */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
@@ -507,13 +478,13 @@ PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
  *
  *  entry = PL_DHashTableAdd(table, key);
  *
- * If entry is null upon return, then either the table is severely overloaded,
- * and memory can't be allocated for entry storage. Or if
- * aTable->mOps->initEntry is non-null, the aTable->mOps->initEntry op may have
+ * If entry is null upon return, then either (a) the table is severely
+ * overloaded and memory can't be allocated for entry storage, or (b)
+ * aTable->mOps->initEntry is non-null and aTable->mOps->initEntry op has
  * returned false.
  *
- * Otherwise, aEntry->keyHash has been set so that PL_DHASH_ENTRY_IS_BUSY(entry)
- * is true, and it is up to the caller to initialize the key and value parts
+ * Otherwise, aEntry->keyHash has been set so that PL_DHASH_ENTRY_IS_FREE(entry)
+ * is false, and it is up to the caller to initialize the key and value parts
  * of the entry sub-type, if they have not been set already (i.e. if entry was
  * not already in the table, and if the optional initEntry hook was not used).
  */
@@ -533,7 +504,7 @@ void PL_DHASH_FASTCALL
 PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
 
 /*
- * Remove an entry already accessed via LOOKUP or ADD.
+ * Remove an entry already accessed via PL_DHashTableSearch or PL_DHashTableAdd.
  *
  * NB: this is a "raw" or low-level routine, intended to be used only where
  * the inefficiency of a full PL_DHashTableRemove (which rehashes in order
