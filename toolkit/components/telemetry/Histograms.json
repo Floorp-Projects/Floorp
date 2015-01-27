@@ -6622,7 +6622,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521) in full handshake"
+    "description": "ECDHE KEA (TLS_ECDHE_*) curve (23=P-256, 24=P-384, 25=P-521) in full handshake"
   },
   "SSL_AUTH_ALGORITHM_FULL": {
     "expires_in_version": "never",
@@ -6646,7 +6646,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (23=P-256, 24=P-384, 25=P-521)"
   },
   "SSL_SYMMETRIC_CIPHER_FULL": {
     "expires_in_version": "never",
@@ -7154,6 +7154,105 @@
     "high": "1024",
     "n_buckets": 16,
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
+  },
+  "FX_SANITIZE_TOTAL": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Total time it takes to sanitize (ms)"
+  },
+  "FX_SANITIZE_CACHE": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize the cache (ms)"
+  },
+  "FX_SANITIZE_COOKIES": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize cookies (ms)"
+  },
+  "FX_SANITIZE_OFFLINEAPPS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize stored offline app data (ms)"
+  },
+  "FX_SANITIZE_HISTORY": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize history (ms)"
+  },
+  "FX_SANITIZE_FORMDATA": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize stored form data (ms)"
+  },
+  "FX_SANITIZE_DOWNLOADS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize recent downloads (ms)"
+  },
+  "FX_SANITIZE_PASSWORDS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize saved passwords (ms)"
+  },
+  "FX_SANITIZE_SESSIONS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize saved sessions (ms)"
+  },
+  "FX_SANITIZE_SITESETTINGS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize site-specific settings (ms)"
+  },
+  "FX_SANITIZE_OPENWINDOWS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Sanitize: Time it takes to sanitize the open windows list (ms)"
   },
   "PWMGR_BLOCKLIST_NUM_SITES": {
     "expires_in_version": "never",

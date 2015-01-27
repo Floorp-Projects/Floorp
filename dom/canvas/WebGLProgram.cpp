@@ -212,6 +212,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* aProg)
     : prog(aProg)
+    , fragDataMap(nullptr)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,6 +416,29 @@ WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const
     gl->MakeCurrent();
 
     return gl->fGetAttribLocation(mGLName, mappedName.BeginReading());
+}
+
+GLint
+WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
+{
+    if (!ValidateGLSLVariableName(userName_wide, mContext, "getFragDataLocation"))
+        return -1;
+
+    if (!IsLinked()) {
+        mContext->ErrorInvalidOperation("getFragDataLocation: `program` must be linked.");
+        return -1;
+    }
+
+    const NS_LossyConvertUTF16toASCII userName(userName_wide);
+
+    nsCString mappedName;
+    if (!LinkInfo()->FindFragData(userName, &mappedName))
+        return -1;
+
+    gl::GLContext* gl = mContext->GL();
+    gl->MakeCurrent();
+
+    return gl->fGetFragDataLocation(mGLName, mappedName.BeginReading());
 }
 
 void

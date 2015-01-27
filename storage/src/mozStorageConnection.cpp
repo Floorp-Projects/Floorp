@@ -647,13 +647,17 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
   if (!gStorageLog)
     gStorageLog = ::PR_NewLogModule("mozStorage");
 
-  ::sqlite3_trace(mDBConn, tracefunc, this);
+  // SQLite tracing can slow down queries (especially long queries)
+  // significantly. Don't trace unless the user is actively monitoring SQLite.
+  if (PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
+    ::sqlite3_trace(mDBConn, tracefunc, this);
 
-  nsAutoCString leafName(":memory");
-  if (aDatabaseFile)
-    (void)aDatabaseFile->GetNativeLeafName(leafName);
-  PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
-                                      leafName.get(), this));
+    nsAutoCString leafName(":memory");
+    if (aDatabaseFile)
+      (void)aDatabaseFile->GetNativeLeafName(leafName);
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
+                                        leafName.get(), this));
+  }
 #endif
 
   int64_t pageSize = Service::getDefaultPageSize();

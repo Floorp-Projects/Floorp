@@ -362,7 +362,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     {
       MonitorAutoUnlock unlock(mDemuxerMonitor);
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mIsEncrypted = mDemuxer->Crypto().valid;
+      mInfo.mIsEncrypted = mIsEncrypted = mDemuxer->Crypto().valid;
     }
 
     // Remember that we've initialized the demuxer, so that if we're decoding
