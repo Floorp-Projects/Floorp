@@ -169,7 +169,7 @@ public:
   explicit CrashStatsLogForwarder(const char* aKey);
   virtual void Log(const std::string& aString) MOZ_OVERRIDE;
 
-  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() MOZ_OVERRIDE;
+  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy();
 
   void SetCircularBufferSize(uint32_t aCapacity);
 
