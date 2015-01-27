@@ -9,7 +9,8 @@
 
 typedef (File or USVString) FormDataEntryValue;
 
-[Constructor(optional HTMLFormElement form)]
+[Constructor(optional HTMLFormElement form),
+ Exposed=(Window,Worker)]
 interface FormData {
   void append(USVString name, Blob value, optional USVString filename);
   void append(USVString name, USVString value);
