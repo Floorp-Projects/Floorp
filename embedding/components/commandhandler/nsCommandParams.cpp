@@ -208,7 +208,7 @@ nsCommandParams::SetISupportsValue(const char* aName, nsISupports* value)
 NS_IMETHODIMP
 nsCommandParams::RemoveValue(const char* aName)
 {
-  // PL_DHASH_REMOVE doesn't tell us if the entry was really removed, so we
+  // PL_DHashTableRemove doesn't tell us if the entry was really removed, so we
   // return NS_OK unconditionally.
   (void)PL_DHashTableRemove(&mValuesHash, (void *)aName);
   return NS_OK;

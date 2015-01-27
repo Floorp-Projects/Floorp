@@ -154,7 +154,8 @@ private:
     HRESULT hr;
     if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
       // We have a directory so we should open the directory itself.
-      ITEMIDLIST* dir = ILCreateFromPathW(mResolvedPath.get());
+      ITEMIDLIST* dir =
+        static_cast<ITEMIDLIST*>(ILCreateFromPathW(mResolvedPath.get()));
       if (!dir) {
         return NS_ERROR_FAILURE;
       }
@@ -177,13 +178,15 @@ private:
       PathRemoveFileSpecW(parentDirectoryPath);
 
       // We have a file so we should open the parent directory.
-      ITEMIDLIST* dir = ILCreateFromPathW(parentDirectoryPath);
+      ITEMIDLIST* dir =
+        static_cast<ITEMIDLIST*>(ILCreateFromPathW(parentDirectoryPath));
       if (!dir) {
         return NS_ERROR_FAILURE;
       }
 
       // Set the item in the directory to select to the file we want to reveal.
-      ITEMIDLIST* item = ILCreateFromPathW(mResolvedPath.get());
+      ITEMIDLIST* item =
+        static_cast<ITEMIDLIST*>(ILCreateFromPathW(mResolvedPath.get()));
       if (!item) {
         CoTaskMemFree(dir);
         return NS_ERROR_FAILURE;

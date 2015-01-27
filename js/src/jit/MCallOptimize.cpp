@@ -2574,7 +2574,7 @@ IonBuilder::inlineConstructSimdObject(CallInfo &callInfo, SimdTypeDescr *descr)
         return InliningStatus_NotInlined;
 
     // Generic constructor of SIMD valuesX4.
-    MIRType simdType;
+    MIRType simdType = MIRType(-1);  // initialize to silence GCC warning
     switch (descr->type()) {
       case SimdTypeDescr::TYPE_INT32:
         simdType = MIRType_Int32x4;

@@ -1919,13 +1919,13 @@ class ModuleChars
 
   public:
     static uint32_t beginOffset(AsmJSParser &parser) {
-      return parser.pc->maybeFunction->pn_pos.begin;
+        return parser.pc->maybeFunction->pn_pos.begin;
     }
 
     static uint32_t endOffset(AsmJSParser &parser) {
-      TokenPos pos;
-      MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos));
-      return pos.end;
+        TokenPos pos(0, 0);  // initialize to silence GCC warning
+        MOZ_ALWAYS_TRUE(parser.tokenStream.peekTokenPos(&pos));
+        return pos.end;
     }
 };
 

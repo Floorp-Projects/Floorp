@@ -189,7 +189,7 @@ public:
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
     TestShellParent* GetTestShellSingleton();
-    jsipc::JavaScriptShared* GetCPOWManager() MOZ_OVERRIDE;
+    jsipc::CPOWManager* GetCPOWManager() MOZ_OVERRIDE;
 
     static TabId
     AllocateTabId(const TabId& aOpenerTabId,

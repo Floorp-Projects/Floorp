@@ -80,6 +80,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "nsIAppsService.h"
 #include "GeckoProfiler.h"
@@ -88,7 +89,6 @@
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/SVGIFrameElement.h"
 #include "nsSandboxFlags.h"
-#include "JavaScriptParent.h"
 #include "mozilla/layers/CompositorChild.h"
 
 #include "mozilla/dom/StructuredCloneUtils.h"
