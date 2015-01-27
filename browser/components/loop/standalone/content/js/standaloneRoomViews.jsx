@@ -249,7 +249,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
         publishVideo: true,
         style: {
           audioLevelDisplayMode: "off",
-          bugDisplayMode: "off",
           buttonDisplayMode: "off",
           nameDisplayMode: "off",
           videoDisabledDisplayMode: "off"
