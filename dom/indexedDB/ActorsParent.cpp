@@ -12273,12 +12273,12 @@ OpenDatabaseOp::AssertMetadataConsistency(const FullDatabaseMetadata* aMetadata)
   MOZ_ASSERT(thisDB->mDatabaseId == otherDB->mDatabaseId);
   MOZ_ASSERT(thisDB->mFilePath == otherDB->mFilePath);
 
-  // The newer database metadata (db2) reflects the latest objectStore and index
-  // ids that have committed to disk. The in-memory metadata (db1) keeps track
-  // of objectStores and indexes that were created and then removed as well, so
-  // the next ids for db1 may be higher than for db2.
-  MOZ_ASSERT(thisDB->mNextObjectStoreId >= otherDB->mNextObjectStoreId);
-  MOZ_ASSERT(thisDB->mNextIndexId >= otherDB->mNextIndexId);
+  // |thisDB| reflects the latest objectStore and index ids that have committed
+  // to disk. The in-memory metadata |otherDB| keeps track of objectStores and
+  // indexes that were created and then removed as well, so the next ids for
+  // |otherDB| may be higher than for |thisDB|.
+  MOZ_ASSERT(thisDB->mNextObjectStoreId <= otherDB->mNextObjectStoreId);
+  MOZ_ASSERT(thisDB->mNextIndexId <= otherDB->mNextIndexId);
 
   MOZ_ASSERT(thisDB->mObjectStores.Count() == otherDB->mObjectStores.Count());
 

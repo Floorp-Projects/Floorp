@@ -191,6 +191,27 @@
 #  define MOZ_NORETURN          /* no support */
 #endif
 
+/**
+ * MOZ_COLD tells the compiler that a function is "cold", meaning infrequently
+ * executed. This may lead it to optimize for size more aggressively than speed,
+ * or to allocate the body of the function in a distant part of the text segment
+ * to help keep it from taking up unnecessary icache when it isn't in use.
+ *
+ * Place this attribute at the very beginning of a function definition. For
+ * example, write
+ *
+ *   MOZ_COLD int foo();
+ *
+ * or
+ *
+ *   MOZ_COLD int foo() { return 42; }
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_COLD __attribute__ ((cold))
+#else
+#  define MOZ_COLD
+#endif
+
 /*
  * MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS, specified at the end of a function
  * declaration, indicates that for the purposes of static analysis, this
