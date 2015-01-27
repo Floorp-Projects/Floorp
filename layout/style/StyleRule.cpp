@@ -1493,6 +1493,19 @@ StyleRule::List(FILE* out, int32_t aIndent) const
     mDeclaration->ToString(buffer);
     AppendUTF16toUTF8(buffer, str);
     str.Append('}');
+    CSSStyleSheet* sheet = GetStyleSheet();
+    if (sheet) {
+      nsIURI* uri = sheet->GetSheetURI();
+      if (uri) {
+        nsAutoCString uristr;
+        str.Append(" /* ");
+        uri->GetSpec(uristr);
+        str.Append(uristr);
+        str.Append(':');
+        str.AppendInt(mLineNumber);
+        str.Append(" */");
+      }
+    }
   }
   else {
     str.AppendLiteral("{ null declaration }");
