@@ -16,7 +16,7 @@ namespace gl {
 class GLContextGLX : public GLContext
 {
 public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX)
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, MOZ_OVERRIDE)
     static already_AddRefed<GLContextGLX>
     CreateGLContext(const SurfaceCaps& caps,
                     GLContextGLX* shareContext,
