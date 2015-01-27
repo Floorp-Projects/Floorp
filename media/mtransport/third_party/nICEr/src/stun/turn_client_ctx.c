@@ -94,6 +94,9 @@ static int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx,
                                       nr_transport_addr *addr);
 static void nr_turn_client_refresh_cb(NR_SOCKET s, int how, void *arg);
 static void nr_turn_client_permissions_cb(NR_SOCKET s, int how, void *cb);
+static int nr_turn_client_send_stun_request(nr_turn_client_ctx *ctx,
+                                            nr_stun_message *req,
+                                            int flags);
 
 
 /* nr_turn_stun_ctx functions */
@@ -370,6 +373,8 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
   if (ctx->label)
     r_log(NR_LOG_TURN, LOG_DEBUG, "TURN(%s): destroy", ctx->label);
 
+  nr_turn_client_deallocate(ctx);
+
   /* Cancel frees the rest of our data */
   RFREE(ctx->label);
   ctx->label = 0;
@@ -409,7 +414,7 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
 
   if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
       ctx->state == NR_TURN_CLIENT_STATE_FAILED)
-    return 0;
+    return(0);
 
   if (ctx->label)
     r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): cancelling", ctx->label);
@@ -428,6 +433,67 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
   ctx->state = NR_TURN_CLIENT_STATE_CANCELLED;
 
   return(0);
+}
+
+int nr_turn_client_send_stun_request(nr_turn_client_ctx *ctx,
+                                     nr_stun_message *req,
+                                     int flags)
+{
+  int r,_status;
+
+  if ((r=nr_stun_encode_message(req)))
+    ABORT(r);
+
+  if ((r=nr_socket_sendto(ctx->sock,
+                          req->buffer, req->length, flags,
+                          &ctx->turn_server_addr))) {
+    r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): Failed sending request",
+          ctx->label);
+    ABORT(r);
+  }
+
+  _status=0;
+abort:
+  return(_status);
+}
+
+int nr_turn_client_deallocate(nr_turn_client_ctx *ctx)
+{
+  int r,_status;
+  nr_stun_message *aloc = 0;
+  nr_stun_client_auth_params auth;
+  nr_stun_client_refresh_request_params refresh;
+
+  if (ctx->state != NR_TURN_CLIENT_STATE_ALLOCATED)
+    return(0);
+
+  r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): deallocating", ctx->label);
+
+  refresh.lifetime_secs = 0;
+
+  auth.username = ctx->username;
+  INIT_DATA(auth.password, ctx->password->data, ctx->password->len);
+
+  auth.realm = ctx->realm;
+  auth.nonce = ctx->nonce;
+
+  auth.authenticate = 1;
+
+  if ((r=nr_stun_build_refresh_request(&auth, &refresh, &aloc)))
+    ABORT(r);
+
+  // We are only sending a single request here because we are in the process of
+  // shutting everything down. Theoretically we should probably start a seperate
+  // STUN transaction which outlives the TURN context.
+  if ((r=nr_turn_client_send_stun_request(ctx, aloc, 0)))
+    ABORT(r);
+
+  ctx->state = NR_TURN_CLIENT_STATE_DEALLOCATING;
+
+  _status=0;
+abort:
+  nr_stun_message_destroy(&aloc);
+  return(_status);
 }
 
 static int nr_turn_client_failed(nr_turn_client_ctx *ctx)
@@ -733,16 +799,8 @@ int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
   if ((r=nr_stun_build_send_indication(&params, &ind)))
     ABORT(r);
 
-  if ((r=nr_stun_encode_message(ind)))
+  if ((r=nr_turn_client_send_stun_request(ctx, ind, flags)))
     ABORT(r);
-
-  if ((r=nr_socket_sendto(ctx->sock,
-                          ind->buffer, ind->length, flags,
-                          &ctx->turn_server_addr))) {
-    r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): Failed sending send indication",
-          ctx->label);
-    ABORT(r);
-  }
 
   _status=0;
 abort:
