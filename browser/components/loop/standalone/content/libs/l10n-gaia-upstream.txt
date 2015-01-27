@@ -1,0 +1,5 @@
+This file tracks the changes that have been made to l10n-gaia and
+need to be reapplied when the library is updated.
+
+Bug 1117863
+Bug 1097852

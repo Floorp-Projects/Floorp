@@ -120,7 +120,7 @@
           type="search"
           timeout="50"
           class="devtools-searchinput"
-          placeholder="&inspectorSearchHTML.label;"/>
+          placeholder="&inspectorSearchHTML.label2;"/>
       </toolbar>
       <vbox flex="1" id="markup-box">
       </vbox>
