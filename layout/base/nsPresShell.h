@@ -731,7 +731,7 @@ protected:
 
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
 
-  void ClearVisibleImagesList(uint32_t aNonvisibleAction);
+  void ClearVisibleImagesList(bool aRequestDiscard);
   static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
   static void MarkImagesInListVisible(const nsDisplayList& aList);
   void MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect);
