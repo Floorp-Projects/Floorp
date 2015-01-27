@@ -7,7 +7,7 @@ from Queue import Queue, Empty
 from datetime import datetime
 
 class Source:
-    def __init__(self, task_list, results, timeout, verbose = False):
+    def __init__(self, task_list, results, timeout, verbose=False):
         self.tasks = Queue()
         for task in task_list:
             self.tasks.put_nowait(task)
@@ -20,7 +20,9 @@ class Source:
         t0 = datetime.now()
 
         sink = Sink(self.results)
-        self.workers = [ Worker(_+1, self.tasks, sink, self.timeout, self.verbose) for _ in range(worker_count) ]
+        self.workers = [Worker(_ + 1, self.tasks, sink, self.timeout,
+                               self.verbose)
+                        for _ in range(worker_count)]
         if self.verbose:
             print('[P] Starting workers.')
         for w in self.workers:
@@ -65,12 +67,13 @@ class Worker(Thread):
 
         self.thread = None
         self.stop = False
+        self.t0 = 0
 
     def log(self, msg):
         if self.verbose:
             dd = datetime.now() - self.t0
             dt = dd.seconds + 1e-6 * dd.microseconds
-            print('[W%d %.3f] %s' % (self.id, dt, msg))
+            print('[W{:d} {:.3f}] {}'.format(self.id, dt, msg))
 
     def run(self):
         try:
@@ -79,7 +82,7 @@ class Worker(Thread):
                     break
                 self.log('Get next task.')
                 task = self.tasks.get(False)
-                self.log('Start task %s.'%str(task))
+                self.log('Start task {}.'.format(str(task)))
                 result = task.run(task.js_cmd_prefix, self.timeout)
                 self.log('Finished task.')
                 self.sink.push(result)
