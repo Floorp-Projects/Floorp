@@ -411,11 +411,6 @@ MediaSourceReader::ContinueShutdown()
   mVideoTrack = nullptr;
   mVideoReader = nullptr;
 
-  if (mSharedDecoderManager) {
-    mSharedDecoderManager->Shutdown();
-    mSharedDecoderManager = nullptr;
-  }
-
   MOZ_ASSERT(mAudioPromise.IsEmpty());
   MOZ_ASSERT(mVideoPromise.IsEmpty());
 
