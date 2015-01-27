@@ -39,6 +39,9 @@ this.WifiP2pWorkerObserver = function(aDomMsgResponder) {
   let _localDevice;
   let _peerList = {}; // List of P2pDevice.
   let _domManagers = [];
+  let _enabled = false;
+  let _groupOwner = null;
+  let _currentPeer = null;
 
   // Constructor of P2pDevice. It will be exposed to DOM.
   //
@@ -130,10 +133,12 @@ this.WifiP2pWorkerObserver = function(aDomMsgResponder) {
 
     onEnabled: function() {
       _peerList = [];
+      _enabled = true;
       fireEvent("p2pUp", {});
     },
 
     onDisbaled: function() {
+      _enabled = false;
       fireEvent("p2pDown", {});
     },
 
@@ -182,6 +187,9 @@ this.WifiP2pWorkerObserver = function(aDomMsgResponder) {
       peer.connectionStatus = CONNECTION_STATUS_CONNECTED;
       peer.isGroupOwner = (aPeer.address === aGroupOwner.address);
 
+      _groupOwner = go;
+      _currentPeer = peer;
+
       fireEvent('onconnected', { groupOwner: go, peer: peer });
     },
 
@@ -193,6 +201,10 @@ this.WifiP2pWorkerObserver = function(aDomMsgResponder) {
       }
 
       peer.connectionStatus = CONNECTION_STATUS_DISCONNECTED;
+
+      _groupOwner = null;
+      _currentPeer = null;
+
       fireEvent('ondisconnected', { peer: peer });
     },
 
@@ -227,7 +239,11 @@ this.WifiP2pWorkerObserver = function(aDomMsgResponder) {
       switch (aMessage.name) {
         case "WifiP2pManager:getState": // A new DOM manager is created.
           addDomManager(msg);
-          return { peerList: _peerList, }; // Synchronous call. Simply return it.
+          return { // Synchronous call. Simply return it.
+            enabled: _enabled,
+            groupOwner: _groupOwner,
+            currentPeer: _currentPeer
+          };
 
         case "WifiP2pManager:setScanEnabled":
           {
