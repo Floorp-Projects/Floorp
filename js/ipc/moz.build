@@ -26,6 +26,11 @@ FINAL_LIBRARY = 'xul'
 
 DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
+EXPORTS.mozilla.jsipc = [
+    'CpowHolder.h',
+    'CrossProcessObjectWrappers.h',
+]
+
 LOCAL_INCLUDES += [
     '/dom/base',
     '/js/ipc',

@@ -359,3 +359,68 @@ function promiseHistoryNotification(notification, conditionFn) {
     }, 2000);
   });
 }
+
+/**
+ * Makes the specified toolbar visible or invisible and returns a Promise object
+ * that is resolved when the toolbar has completed any animations associated
+ * with hiding or showing the toolbar.
+ *
+ * Note that this code assumes that changes to a toolbar's visibility trigger
+ * a transition on the max-height property of the toolbar element.
+ * Changes to this styling could cause the returned Promise object to be
+ * resolved too early or not at all.
+ *
+ * @param aToolbar
+ *        The toolbar to update.
+ * @param aVisible
+ *        True to make the toolbar visible, false to make it hidden.
+ *
+ * @return {Promise}
+ * @resolves Any animation associated with updating the toolbar's visibility has
+ *           finished.
+ * @rejects Never.
+ */
+function promiseSetToolbarVisibility(aToolbar, aVisible, aCallback) {
+  return new Promise((resolve, reject) => {
+    function listener(event) {
+      if (event.propertyName == "max-height") {
+        aToolbar.removeEventListener("transitionend", listener);
+        resolve();
+      }
+    }
+
+    let transitionProperties =
+      window.getComputedStyle(aToolbar).transitionProperty.split(", ");
+    if (isToolbarVisible(aToolbar) != aVisible &&
+        (transitionProperties.includes("max-height") ||
+         transitionProperties.includes("all"))) {
+      // Just because max-height is a transitionable property doesn't mean
+      // a transition will be triggered, but it's more likely.
+      aToolbar.addEventListener("transitionend", listener);
+      setToolbarVisibility(aToolbar, aVisible);
+      return;
+    }
+
+    // No animation to wait for
+    setToolbarVisibility(aToolbar, aVisible);
+    resolve();
+  });
+}
+
+/**
+ * Helper function to determine if the given toolbar is in the visible
+ * state according to its autohide/collapsed attribute.
+ *
+ * @aToolbar The toolbar to query.
+ *
+ * @returns True if the relevant attribute on |aToolbar| indicates it is
+ *          visible, false otherwise.
+ */
+function isToolbarVisible(aToolbar) {
+  let hidingAttribute = aToolbar.getAttribute("type") == "menubar"
+                        ? "autohide"
+                        : "collapsed";
+  let hidingValue = aToolbar.getAttribute(hidingAttribute).toLowerCase();
+  // Check for both collapsed="true" and collapsed="collapsed"
+  return hidingValue !== "true" && hidingValue !== hidingAttribute;
+}

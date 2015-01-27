@@ -7533,6 +7533,8 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
     Value expandoVal;
     if (kind == ICStub::GetProp_CallDOMProxyNative) {
         expandoVal = expandoSlot;
+        expandoAndGeneration = nullptr;  // initialize to silence GCC warning
+        generation = 0;  // initialize to silence GCC warning
     } else {
         MOZ_ASSERT(kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
         MOZ_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
@@ -9083,23 +9085,27 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         // as a constructor, for later use during Ion compilation.
         RootedPlainObject templateObject(cx);
         if (constructing) {
-            templateObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
-            if (!templateObject)
+            JSObject *thisObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
+            if (!thisObject)
                 return false;
 
-            // If we are calling a constructor for which the new script
-            // properties analysis has not been performed yet, don't attach a
-            // stub. After the analysis is performed, CreateThisForFunction may
-            // start returning objects with a different type, and the Ion
-            // compiler might get confused.
-            if (templateObject->type()->newScript() &&
-                !templateObject->type()->newScript()->analyzed())
-            {
-                // Clear the object just created from the preliminary objects
-                // on the TypeNewScript, as it will not be used or filled in by
-                // running code.
-                templateObject->type()->newScript()->unregisterNewObject(templateObject);
-                return true;
+            if (thisObject->is<PlainObject>()) {
+                templateObject = &thisObject->as<PlainObject>();
+
+                // If we are calling a constructor for which the new script
+                // properties analysis has not been performed yet, don't attach a
+                // stub. After the analysis is performed, CreateThisForFunction may
+                // start returning objects with a different type, and the Ion
+                // compiler might get confused.
+                if (templateObject->type()->newScript() &&
+                    !templateObject->type()->newScript()->analyzed())
+                {
+                    // Clear the object just created from the preliminary objects
+                    // on the TypeNewScript, as it will not be used or filled in by
+                    // running code.
+                    templateObject->type()->newScript()->unregisterNewObject(templateObject);
+                    return true;
+                }
             }
         }
 

@@ -131,7 +131,7 @@ extern "C" {
  * method is primarily for internal use in this header, and only secondarily
  * for use in implementing release-build assertions.
  */
-static MOZ_ALWAYS_INLINE void
+static MOZ_COLD MOZ_ALWAYS_INLINE void
 MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
   MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
@@ -148,7 +148,7 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
 #endif
 }
 
-static MOZ_ALWAYS_INLINE void
+static MOZ_COLD MOZ_ALWAYS_INLINE void
 MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
   MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {

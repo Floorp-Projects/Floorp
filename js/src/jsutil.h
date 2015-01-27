@@ -43,6 +43,9 @@ js_memcpy(void *dst_, const void *src_, size_t len)
 
 namespace js {
 
+MOZ_NORETURN MOZ_COLD void
+CrashAtUnhandlableOOM(const char *reason);
+
 template <class T>
 struct AlignmentTestStruct
 {

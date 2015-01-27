@@ -660,6 +660,20 @@ test("({ *[m]() { @");
 test("({ *[m]() {} @");
 test("({ *[m]() {}, @");
 
+test("({ * get @");
+test("({ * get ( @");
+test("({ * get () @");
+test("({ * get () { @");
+test("({ * get () {} @");
+test("({ * get () {}, @");
+
+test("({ * set @");
+test("({ * set ( @");
+test("({ * set () @");
+test("({ * set () { @");
+test("({ * set () {} @");
+test("({ * set () {}, @");
+
 // Regular expression literal
 
 test("/a/ @");

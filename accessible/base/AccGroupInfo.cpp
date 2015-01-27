@@ -64,10 +64,10 @@ AccGroupInfo::Update()
 
     // If the previous item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (sibling->mGroupInfo) {
-      mPosInSet += sibling->mGroupInfo->mPosInSet;
-      mParent = sibling->mGroupInfo->mParent;
-      mSetSize = sibling->mGroupInfo->mSetSize;
+    if (sibling->mBits.groupInfo) {
+      mPosInSet += sibling->mBits.groupInfo->mPosInSet;
+      mParent = sibling->mBits.groupInfo->mParent;
+      mSetSize = sibling->mBits.groupInfo->mSetSize;
       return;
     }
 
@@ -101,9 +101,9 @@ AccGroupInfo::Update()
 
     // If the next item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (sibling->mGroupInfo) {
-      mParent = sibling->mGroupInfo->mParent;
-      mSetSize = sibling->mGroupInfo->mSetSize;
+    if (sibling->mBits.groupInfo) {
+      mParent = sibling->mBits.groupInfo->mParent;
+      mSetSize = sibling->mBits.groupInfo->mSetSize;
       return;
     }
 

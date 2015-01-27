@@ -101,19 +101,15 @@ PL_DHASH_ENTRY_IS_BUSY(PLDHashEntryHdr* aEntry)
 }
 
 /*
- * To consolidate keyHash computation and table grow/shrink code, we use a
- * single entry point for lookup, add, and remove operations.  The operation
- * codes are declared here, along with codes returned by PLDHashEnumerator
- * functions, which control PL_DHashTableEnumerate's behavior.
+ * These are the codes returned by PLDHashEnumerator functions, which control
+ * PL_DHashTableEnumerate's behavior.
  */
-typedef enum PLDHashOperator
+enum PLDHashOperator
 {
-  PL_DHASH_LOOKUP = 0,        /* lookup entry */
-  PL_DHASH_ADD = 1,           /* add entry */
-  PL_DHASH_REMOVE = 2,        /* remove entry, or enumerator says remove */
   PL_DHASH_NEXT = 0,          /* enumerator says continue */
-  PL_DHASH_STOP = 1           /* enumerator says stop */
-} PLDHashOperator;
+  PL_DHASH_STOP = 1,          /* enumerator says stop */
+  PL_DHASH_REMOVE = 2         /* enumerator says remove */
+};
 
 /*
  * Enumerate entries in table using etor:
@@ -184,9 +180,12 @@ private:
    * |mRecursionLevel| is only used in debug builds, but is present in opt
    * builds to avoid binary compatibility problems when mixing DEBUG and
    * non-DEBUG components.  (Actually, even if it were removed,
-   * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
+   * sizeof(PLDHashTable) wouldn't change, due to struct padding.) Make it
+   * protected to suppress -Wunused-private-field warnings in opt builds.
    */
+protected:
   mutable uint16_t    mRecursionLevel;/* used to detect unsafe re-entry */
+private:
   uint32_t            mEntrySize;     /* number of bytes in an entry */
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
@@ -200,7 +199,7 @@ private:
     uint32_t        mSteps;         /* hash chain links traversed */
     uint32_t        mHits;          /* searches that found key */
     uint32_t        mMisses;        /* searches that didn't find key */
-    uint32_t        mLookups;       /* number of PL_DHASH_LOOKUPs */
+    uint32_t        mLookups;       /* number of Lookup() calls */
     uint32_t        mAddMisses;     /* adds that miss, and do work */
     uint32_t        mAddOverRemoved;/* adds that recycled a removed entry */
     uint32_t        mAddHits;       /* adds that hit an existing entry */
@@ -311,12 +310,12 @@ public:
   Iterator Iterate() const { return Iterator(this); }
 
 private:
+  PLDHashNumber GetKeyHash(const void* aKey);
+
   PLDHashEntryHdr* PL_DHASH_FASTCALL
-    SearchTable(const void* aKey, PLDHashNumber aKeyHash, PLDHashOperator aOp);
+    SearchTable(const void* aKey, PLDHashNumber aKeyHash, bool aIsAdd);
 
   PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
-
-  PLDHashEntryHdr* Operate(const void* aKey, PLDHashOperator aOp);
 
   bool ChangeTable(int aDeltaLog2);
 };
@@ -348,8 +347,8 @@ typedef void (*PLDHashMoveEntry)(PLDHashTable* aTable,
 
 /*
  * Clear the entry and drop any strong references it holds.  This callback is
- * invoked during a PL_DHASH_REMOVE operation (see below for operation codes),
- * but only if the given key is found in the table.
+ * invoked by PL_DHashTableRemove(), but only if the given key is found in the
+ * table.
  */
 typedef void (*PLDHashClearEntry)(PLDHashTable* aTable,
                                   PLDHashEntryHdr* aEntry);

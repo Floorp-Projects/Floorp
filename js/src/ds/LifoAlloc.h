@@ -148,9 +148,6 @@ class BumpChunk
 
 } // namespace detail
 
-MOZ_NORETURN void
-CrashAtUnhandlableOOM(const char *reason);
-
 // LIFO bump allocator: used for phase-oriented and fast LIFO allocations.
 //
 // Note: |latest| is not necessary "last". We leave BumpChunks latent in the

@@ -273,13 +273,13 @@ void HandleException(ResumeFromException *rfe);
 
 void EnsureExitFrame(CommonFrameLayout *frame);
 
-void MarkJitActivations(PerThreadData *ptd, JSTracer *trc);
+void MarkJitActivations(JSRuntime *rt, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
 
 JSCompartment *
 TopmostIonActivationCompartment(JSRuntime *rt);
 
-void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc);
+void UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc);
 
 static inline uint32_t
 MakeFrameDescriptor(uint32_t frameSize, FrameType type)
@@ -475,6 +475,18 @@ class IonOOLPropertyOpExitFrameLayout;
 class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
+enum ExitFrameTokenValues
+{
+    NativeExitFrameLayoutToken            = 0x0,
+    IonDOMExitFrameLayoutGetterToken      = 0x1,
+    IonDOMExitFrameLayoutSetterToken      = 0x2,
+    IonDOMMethodExitFrameLayoutToken      = 0x3,
+    IonOOLNativeExitFrameLayoutToken      = 0x4,
+    IonOOLPropertyOpExitFrameLayoutToken  = 0x5,
+    IonOOLProxyExitFrameLayoutToken       = 0x6,
+    ExitFrameLayoutBareToken              = 0xFF
+};
+
 // this is the frame layout when we are exiting ion code, and about to enter platform ABI code
 class ExitFrameLayout : public CommonFrameLayout
 {
@@ -485,7 +497,7 @@ class ExitFrameLayout : public CommonFrameLayout
   public:
     // Pushed for "bare" fake exit frames that have no GC things on stack to be
     // marked.
-    static JitCode *BareToken() { return (JitCode *)0xFF; }
+    static JitCode *BareToken() { return (JitCode *)ExitFrameLayoutBareToken; }
 
     static inline size_t Size() {
         return sizeof(ExitFrameLayout);
@@ -539,7 +551,7 @@ class NativeExitFrameLayout
     uint32_t hiCalleeResult_;
 
   public:
-    static JitCode *Token() { return (JitCode *)0x0; }
+    static JitCode *Token() { return (JitCode *)NativeExitFrameLayoutToken; }
 
     static inline size_t Size() {
         return sizeof(NativeExitFrameLayout);
@@ -577,7 +589,7 @@ class IonOOLNativeExitFrameLayout
     uint32_t hiThis_;
 
   public:
-    static JitCode *Token() { return (JitCode *)0x4; }
+    static JitCode *Token() { return (JitCode *)IonOOLNativeExitFrameLayoutToken; }
 
     static inline size_t Size(size_t argc) {
         // The frame accounts for the callee/result and |this|, so we only need args.
@@ -623,7 +635,7 @@ class IonOOLPropertyOpExitFrameLayout
     JitCode *stubCode_;
 
   public:
-    static JitCode *Token() { return (JitCode *)0x5; }
+    static JitCode *Token() { return (JitCode *)IonOOLPropertyOpExitFrameLayoutToken; }
 
     static inline size_t Size() {
         return sizeof(IonOOLPropertyOpExitFrameLayout);
@@ -675,7 +687,7 @@ class IonOOLProxyExitFrameLayout
     JitCode *stubCode_;
 
   public:
-    static JitCode *Token() { return (JitCode *)0x6; }
+    static JitCode *Token() { return (JitCode *)IonOOLProxyExitFrameLayoutToken; }
 
     static inline size_t Size() {
         return sizeof(IonOOLProxyExitFrameLayout);
@@ -715,8 +727,8 @@ class IonDOMExitFrameLayout
     uint32_t hiCalleeResult_;
 
   public:
-    static JitCode *GetterToken() { return (JitCode *)0x1; }
-    static JitCode *SetterToken() { return (JitCode *)0x2; }
+    static JitCode *GetterToken() { return (JitCode *)IonDOMExitFrameLayoutGetterToken; }
+    static JitCode *SetterToken() { return (JitCode *)IonDOMExitFrameLayoutSetterToken; }
 
     static inline size_t Size() {
         return sizeof(IonDOMExitFrameLayout);
@@ -755,7 +767,7 @@ class IonDOMMethodExitFrameLayout
     friend struct IonDOMMethodExitFrameLayoutTraits;
 
   public:
-    static JitCode *Token() { return (JitCode *)0x3; }
+    static JitCode *Token() { return (JitCode *)IonDOMMethodExitFrameLayoutToken; }
 
     static inline size_t Size() {
         return sizeof(IonDOMMethodExitFrameLayout);

@@ -24,10 +24,6 @@ try {
 Services.prefs.setIntPref("browser.startup.page", 0);
 Services.prefs.setIntPref("dom.storage.default_quota", 1);
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor).
-  getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).
-  rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
-  getInterface(Ci.nsIDOMWindow);
 var slaveLoadsPending = 1;
 var slaveOrigin = "";
 var slave = null;
@@ -157,23 +153,34 @@ function onMessageReceived(event, aWindow) {
   }
 }
 
-function testOnWindow(aIsPrivate, aCallback) {
-  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href != CONTENT_PAGE) {
-        win.gBrowser.loadURI(CONTENT_PAGE);
-        return;
-      }
-      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
-      win.gBrowser.selectedBrowser.focus();
-      SimpleTest.executeSoon(function() { aCallback(win); });
-    }, true);
-    win.gBrowser.loadURI(CONTENT_PAGE);
-  }, true);
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+    }
+
+    if (aWindow.content == null || aWindow.content.location.href != CONTENT_PAGE ) {
+      aWindow.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        aWindow.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+        SimpleTest.executeSoon(function() { aCallback(aWindow); });
+      }, true);
+
+      aWindow.gBrowser.loadURI(CONTENT_PAGE);
+    }
+  }, "browser-delayed-startup-finished", false);
 }
 
+function testOnWindow(aIsPrivate, callback) {
+  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
+
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  whenDelayedStartupFinished(win, function() { callback(win); });
+};
 </script>
 </head>
 <body onload="startTest();">

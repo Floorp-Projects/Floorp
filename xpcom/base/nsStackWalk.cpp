@@ -1135,7 +1135,7 @@ NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
     // fix_{linux,macosx}_stacks.py can easily post-process.
     snprintf(aBuffer, aBufferSize,
              "#%02u: %s[%s +0x%" PRIxPTR "]",
-             aFrameNumber, function, aLibrary, aLOffset);
+             aFrameNumber, function, aLibrary, static_cast<uintptr_t>(aLOffset));
   } else {
     // We have nothing useful to go on. (The format string is split because
     // '??)' is a trigraph and causes a warning, sigh.)
@@ -1144,4 +1144,3 @@ NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
              aFrameNumber);
   }
 }
-
