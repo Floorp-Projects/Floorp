@@ -420,6 +420,12 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
     // Proxies have finalizers and are not nursery allocated.
     MOZ_ASSERT(!IsProxy(obj));
 
+    // Unboxed plain objects are sized according to the data they store.
+    if (obj->is<UnboxedPlainObject>()) {
+        size_t nbytes = obj->as<UnboxedPlainObject>().layout().size();
+        return GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + nbytes);
+    }
+
     // Inlined typed objects are followed by their data, so make sure we copy
     // it all over to the new object.
     if (obj->is<InlineTypedObject>()) {
@@ -435,7 +441,7 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
     if (obj->is<OutlineTypedObject>())
         return FINALIZE_OBJECT0;
 
-    // The only non-native objects in existence are proxies and typed objects.
+    // All nursery allocatable non-native objects are handled above.
     MOZ_ASSERT(obj->isNative());
 
     AllocKind kind = GetGCObjectFixedSlotsKind(obj->as<NativeObject>().numFixedSlots());
