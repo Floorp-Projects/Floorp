@@ -407,6 +407,11 @@ public:
 
   double Duration() const;
 
+  bool IsEncrypted() const
+  {
+    return mIsEncrypted;
+  }
+
   bool Paused() const
   {
     return mPaused;
@@ -1293,6 +1298,9 @@ protected:
 
   // True if the media has a video track
   bool mHasVideo;
+
+  // True if the media has encryption information.
+  bool mIsEncrypted;
 
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
