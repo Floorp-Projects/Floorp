@@ -35,6 +35,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mDecodeDone(false)
   , mDataError(false)
   , mDecodeAborted(false)
+  , mShouldReportError(false)
   , mImageIsTransient(false)
   , mImageIsLocked(false)
   , mFrameCount(0)
@@ -146,6 +147,7 @@ Decoder::Decode()
         PostDataError();
       }
 
+      CompleteDecode();
       return finalStatus;
     }
 
@@ -154,6 +156,7 @@ Decoder::Decode()
     Write(mIterator->Data(), mIterator->Length());
   }
 
+  CompleteDecode();
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -241,10 +244,8 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
 }
 
 void
-Decoder::Finish()
+Decoder::CompleteDecode()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Implementation-specific finalization
   if (!HasError())
     FinishInternal();
@@ -255,10 +256,39 @@ Decoder::Finish()
 
   // If PostDecodeDone() has not been called, and this decoder wasn't aborted
   // early because of low-memory conditions or losing a race with another
-  // decoder, we need to send teardown notifications.
+  // decoder, we need to send teardown notifications (and report an error to the
+  // console later).
   if (!IsSizeDecode() && !mDecodeDone && !WasAborted()) {
+    mShouldReportError = true;
 
-    // Log data errors to the error console
+    // If we only have a data error, we're usable if we have at least one
+    // complete frame.
+    if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
+      // We're usable, so do exactly what we should have when the decoder
+      // completed.
+      if (mInFrame) {
+        PostFrameStop();
+      }
+      PostDecodeDone();
+    } else {
+      // We're not usable. Record some final progress indicating the error.
+      if (!IsSizeDecode()) {
+        mProgress |= FLAG_DECODE_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
+      }
+      mProgress |= FLAG_HAS_ERROR;
+    }
+  }
+}
+
+void
+Decoder::Finish()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ASSERT(HasError() || !mInFrame, "Finishing while we're still in a frame");
+
+  // If we detected an error in CompleteDecode(), log it to the error console.
+  if (mShouldReportError && !WasAborted()) {
     nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     nsCOMPtr<nsIScriptError> errorObject =
@@ -276,23 +306,6 @@ Decoder::Finish()
                        ))) {
         consoleService->LogMessage(errorObject);
       }
-    }
-
-    // If we only have a data error, we're usable if we have at least one
-    // complete frame.
-    if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
-      // We're usable, so do exactly what we should have when the decoder
-      // completed.
-      if (mInFrame) {
-        PostFrameStop();
-      }
-      PostDecodeDone();
-    } else {
-      // We're not usable. Record some final progress indicating the error.
-      if (!IsSizeDecode()) {
-        mProgress |= FLAG_DECODE_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
-      }
-      mProgress |= FLAG_HAS_ERROR;
     }
   }
 
@@ -321,8 +334,6 @@ Decoder::Finish()
 void
 Decoder::FinishSharedDecoder()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (!HasError()) {
     FinishInternal();
   }
