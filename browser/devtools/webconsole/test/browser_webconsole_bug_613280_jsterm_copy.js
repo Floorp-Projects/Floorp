@@ -69,7 +69,9 @@ function performTest(HUD, [result]) {
                getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-  let selectionText = HUD.iframeWindow.getSelection() + "";
+  // Remove new lines since getSelection() includes one between message and line
+  // number, but the clipboard doesn't (see bug 1119503)
+  let selectionText = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
   isnot(selectionText.indexOf("foobarBazBug613280"), -1,
         "selection text includes 'foobarBazBug613280'");
 
