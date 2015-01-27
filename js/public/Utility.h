@@ -53,7 +53,7 @@ namespace js {}
 #define JS_STATIC_ASSERT(cond)           static_assert(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 
-extern MOZ_NORETURN JS_PUBLIC_API(void)
+extern MOZ_NORETURN MOZ_COLD JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, int ln);
 
 /*

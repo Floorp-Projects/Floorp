@@ -367,6 +367,20 @@ NativeObject::setLastPropertyShrinkFixedSlots(Shape *shape)
     shape_ = shape;
 }
 
+void
+NativeObject::setLastPropertyMakeNonNative(Shape *shape)
+{
+    MOZ_ASSERT(!inDictionaryMode());
+    MOZ_ASSERT(!shape->getObjectClass()->isNative());
+    MOZ_ASSERT(shape->compartment() == compartment());
+    MOZ_ASSERT(shape->slotSpan() == 0);
+    MOZ_ASSERT(shape->numFixedSlots() == 0);
+    MOZ_ASSERT(!hasDynamicElements());
+    MOZ_ASSERT(!hasDynamicSlots());
+
+    shape_ = shape;
+}
+
 /* static */ bool
 NativeObject::setSlotSpan(ExclusiveContext *cx, HandleNativeObject obj, uint32_t span)
 {
@@ -2149,10 +2163,10 @@ js::NativeSetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiv
             // at all, but they do go through this function. So check for
             // unqualified assignment to a nonexistent global (a strict error).
             if (!qualified) {
-                RootedObject pobj(cx);
-                if (!LookupProperty(cx, proto, id, &pobj, &shape))
+                bool found;
+                if (!HasProperty(cx, proto, id, &found))
                     return false;
-                if (!shape)
+                if (!found)
                     return SetNonexistentProperty(cx, obj, receiver, id, qualified, vp, strict);
             }
 

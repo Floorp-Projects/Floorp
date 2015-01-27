@@ -19,34 +19,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403852
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
 
-var testFile = SpecialPowers.Services.dirsvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-testFile.append("prefs.js");
+var url = SimpleTest.getTestFileURL("bug403852_fileOpener.js");
+var script = SpecialPowers.loadChromeScript(url);
+script.addMessageListener("file.opened", onOpened);
+script.sendAsyncMessage("file.open");
 
-var fileList = document.getElementById('fileList');
-SpecialPowers.wrap(fileList).value = testFile.path;
+function onOpened(message) {
+  var fileList = document.getElementById('fileList');
+  SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
 
-// Make sure the file is accessible with indexed notation
-var domFile = fileList.files[0];
+  // Make sure the file is accessible with indexed notation
+  var domFile = fileList.files[0];
 
-is(domFile.name, "prefs.js", "fileName should be prefs.js");
+  is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
-ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
+  ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
 
-var d = new Date(testFile.lastModifiedTime);
-ok(d.getTime() == domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same.");
+  var d = new Date(message.mtime);
+  todo(d.getTime() == domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same (FIXME: bug 1121722)");
 
-var x = new Date();
+  var x = new Date();
 
-// In our implementation of File object, lastModifiedDate is unknown only for new objects.
-// Using canvas or input[type=file] elements, we 'often' have a valid lastModifiedDate values.
-// For canvas we use memory files and the lastModifiedDate is now().
-var f = new File([new Blob(['test'], {type: 'text/plain'})], "test-name");
+  // In our implementation of File object, lastModifiedDate is unknown only for new objects.
+  // Using canvas or input[type=file] elements, we 'often' have a valid lastModifiedDate values.
+  // For canvas we use memory files and the lastModifiedDate is now().
+  var f = new File([new Blob(['test'], {type: 'text/plain'})], "test-name");
 
-var y = f.lastModifiedDate;
-var z = new Date();
+  var y = f.lastModifiedDate;
+  var z = new Date();
 
-ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModifiedDate of file which does not have last modified date should be current time");
+  ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModifiedDate of file which does not have last modified date should be current time");
+  script.destroy();
+  SimpleTest.finish();
+}
 
 </script>
 </pre>

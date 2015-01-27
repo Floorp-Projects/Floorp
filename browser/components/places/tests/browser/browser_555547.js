@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function test() {
+add_task(function* test() {
   waitForExplicitFinish();
 
   let sidebarBox = document.getElementById("sidebar-box");
@@ -12,7 +12,7 @@ function test() {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
   if (wasCollapsed)
-    setToolbarVisibility(toolbar, true);
+    yield promiseSetToolbarVisibility(toolbar, true);
 
   let sidebar = document.getElementById("sidebar");
   sidebar.addEventListener("load", function() {
@@ -50,10 +50,10 @@ function test() {
 
       toggleSidebar();
       if (wasCollapsed)
-        setToolbarVisibility(toolbar, false);
+        yield promiseSetToolbarVisibility(toolbar, false);
 
       finish();
     });
   }, true);
   toggleSidebar("viewBookmarksSidebar", true);
-}
+});

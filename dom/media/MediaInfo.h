@@ -88,6 +88,8 @@ public:
 
 class MediaInfo {
 public:
+  MediaInfo() : mIsEncrypted(false) {}
+
   bool HasVideo() const
   {
     return mVideo.mHasVideo;
@@ -102,6 +104,8 @@ public:
   {
     return HasVideo() || HasAudio();
   }
+
+  bool mIsEncrypted;
 
   // TODO: Store VideoInfo and AudioIndo in arrays to support multi-tracks.
   VideoInfo mVideo;
