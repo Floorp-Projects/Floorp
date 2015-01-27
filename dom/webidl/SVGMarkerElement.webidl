@@ -22,12 +22,19 @@ interface SVGMarkerElement : SVGElement {
   const unsigned short SVG_MARKER_ORIENT_AUTO = 1;
   const unsigned short SVG_MARKER_ORIENT_ANGLE = 2;
 
+  [Constant]
   readonly attribute SVGAnimatedLength refX;
+  [Constant]
   readonly attribute SVGAnimatedLength refY;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration markerUnits;
+  [Constant]
   readonly attribute SVGAnimatedLength markerWidth;
+  [Constant]
   readonly attribute SVGAnimatedLength markerHeight;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration orientType;
+  [Constant]
   readonly attribute SVGAnimatedAngle orientAngle;
 
   void setOrientToAuto();

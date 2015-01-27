@@ -11,10 +11,15 @@
  */
 
 interface SVGRadialGradientElement : SVGGradientElement {
+  [Constant]
   readonly attribute SVGAnimatedLength cx;
+  [Constant]
   readonly attribute SVGAnimatedLength cy;
+  [Constant]
   readonly attribute SVGAnimatedLength r;
+  [Constant]
   readonly attribute SVGAnimatedLength fx;
+  [Constant]
   readonly attribute SVGAnimatedLength fy;
   // readonly attribute SVGAnimatedLength fr;
 };

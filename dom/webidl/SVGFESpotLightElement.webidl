@@ -11,12 +11,20 @@
  */
 
 interface SVGFESpotLightElement : SVGElement {
+  [Constant]
   readonly attribute SVGAnimatedNumber x;
+  [Constant]
   readonly attribute SVGAnimatedNumber y;
+  [Constant]
   readonly attribute SVGAnimatedNumber z;
+  [Constant]
   readonly attribute SVGAnimatedNumber pointsAtX;
+  [Constant]
   readonly attribute SVGAnimatedNumber pointsAtY;
+  [Constant]
   readonly attribute SVGAnimatedNumber pointsAtZ;
+  [Constant]
   readonly attribute SVGAnimatedNumber specularExponent;
+  [Constant]
   readonly attribute SVGAnimatedNumber limitingConeAngle;
 };
