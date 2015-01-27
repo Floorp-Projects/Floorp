@@ -960,10 +960,10 @@ ReadAllocation(const JitFrameIterator &frame, const LAllocation *a)
 #endif
 
 static void
-MarkThisAndExtraActualArguments(JSTracer *trc, const JitFrameIterator &frame)
+MarkExtraActualArguments(JSTracer *trc, const JitFrameIterator &frame)
 {
-    // Mark |this| and any extra actual arguments for an Ion frame. Marking of
-    // formal arguments is taken care of by the frame's safepoint/snapshot.
+    // Mark any extra actual arguments for an Ion frame. Marking of |this| and
+    // the formal arguments is taken care of by the frame's safepoint/snapshot.
 
     JitFrameLayout *layout = frame.jsFrame();
 
@@ -975,12 +975,8 @@ MarkThisAndExtraActualArguments(JSTracer *trc, const JitFrameIterator &frame)
     size_t nargs = frame.numActualArgs();
     size_t nformals = CalleeTokenToFunction(layout->calleeToken())->nargs();
 
-    Value *argv = layout->argv();
-
-    // Trace |this|.
-    gc::MarkValueRoot(trc, argv, "ion-thisv");
-
     // Trace actual arguments. Note + 1 for thisv.
+    Value *argv = layout->argv();
     for (size_t i = nformals + 1; i < nargs + 1; i++)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
 }
@@ -1015,7 +1011,7 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
         ionScript = frame.ionScriptFromCalleeToken();
     }
 
-    MarkThisAndExtraActualArguments(trc, frame);
+    MarkExtraActualArguments(trc, frame);
 
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
 
@@ -1074,7 +1070,7 @@ MarkBailoutFrame(JSTracer *trc, const JitFrameIterator &frame)
 
     // We have to mark the list of actual arguments, as only formal arguments
     // are represented in the Snapshot.
-    MarkThisAndExtraActualArguments(trc, frame);
+    MarkExtraActualArguments(trc, frame);
 
     // Under a bailout, do not have a Safepoint to only iterate over GC-things.
     // Thus we use a SnapshotIterator to trace all the locations which would be
