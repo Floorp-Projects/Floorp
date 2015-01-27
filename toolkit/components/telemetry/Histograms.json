@@ -6622,7 +6622,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521) in full handshake"
+    "description": "ECDHE KEA (TLS_ECDHE_*) curve (23=P-256, 24=P-384, 25=P-521) in full handshake"
   },
   "SSL_AUTH_ALGORITHM_FULL": {
     "expires_in_version": "never",
@@ -6646,7 +6646,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (23=P-256, 24=P-384, 25=P-521)"
   },
   "SSL_SYMMETRIC_CIPHER_FULL": {
     "expires_in_version": "never",
