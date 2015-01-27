@@ -484,11 +484,15 @@ LinearScanAllocator::isSpilledAt(LiveInterval *interval, CodePosition pos)
 bool
 LinearScanAllocator::populateSafepoints()
 {
-    // Populate all safepoints with argument slots. These are never changed
+    // Populate all safepoints with this/argument slots. These are never changed
     // by the allocator and are not necessarily populated by the code below.
     size_t nargs = graph.getBlock(0)->mir()->info().nargs();
     for (size_t i = 0; i < graph.numSafepoints(); i++) {
         LSafepoint *safepoint = graph.getSafepoint(i)->safepoint();
+
+        if (!safepoint->addValueSlot(/* stack = */ false, THIS_FRAME_ARGSLOT * sizeof(Value)))
+            return false;
+
         for (size_t j = 0; j < nargs; j++) {
             if (!safepoint->addValueSlot(/* stack = */ false, (j + 1) * sizeof(Value)))
                 return false;
