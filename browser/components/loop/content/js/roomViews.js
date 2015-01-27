@@ -218,7 +218,6 @@ loop.roomViews = (function(mozL10n) {
         publishVideo: !this.state.videoMuted,
         style: {
           audioLevelDisplayMode: "off",
-          bugDisplayMode: "off",
           buttonDisplayMode: "off",
           nameDisplayMode: "off",
           videoDisabledDisplayMode: "off"

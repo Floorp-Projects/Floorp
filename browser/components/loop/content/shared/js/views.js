@@ -158,7 +158,6 @@ loop.shared.views = (function(_, OT, l10n) {
       height: "100%",
       style: {
         audioLevelDisplayMode: "off",
-        bugDisplayMode: "off",
         buttonDisplayMode: "off",
         nameDisplayMode: "off",
         videoDisabledDisplayMode: "off"
