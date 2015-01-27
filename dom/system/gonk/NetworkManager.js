@@ -398,6 +398,10 @@ NetworkManager.prototype = {
         } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
           gNetworkService.removeDefaultRoute(network);
         }
+        // Clear http proxy on active network.
+        if (this.active && network.type == this.active.type) {
+          gNetworkService.clearNetworkProxy();
+        }
 
         // Abort ongoing captive portal detection on the wifi interface
         CaptivePortalDetectionHelper
