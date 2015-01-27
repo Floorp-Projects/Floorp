@@ -35,6 +35,7 @@ CK_Log(const char* aFmt, ...)
   va_end(ap);
 
   printf("\n");
+  fflush(stdout);
 }
 
 static void
