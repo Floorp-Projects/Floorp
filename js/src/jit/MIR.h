@@ -5537,11 +5537,12 @@ class MHypot
         return true;
     }
 
-    bool canClone() const {
+    bool canClone() const MOZ_OVERRIDE {
         return true;
     }
 
-    MInstruction *clone(TempAllocator &alloc, const MDefinitionVector &inputs) const {
+    MInstruction *clone(TempAllocator &alloc,
+                        const MDefinitionVector &inputs) const MOZ_OVERRIDE {
        return MHypot::New(alloc, inputs);
     }
 };
