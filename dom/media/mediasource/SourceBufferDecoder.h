@@ -14,14 +14,12 @@
 #ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
 #endif
-#include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 
 class MediaResource;
 class MediaDecoderReader;
-class LargeDataBuffer;
 
 namespace dom {
 
@@ -32,6 +30,8 @@ class TimeRanges;
 class SourceBufferDecoder MOZ_FINAL : public AbstractMediaDecoder
 {
 public:
+  // This class holds a weak pointer to MediaResource.  It's the responsibility
+  // of the caller to manage the memory of the MediaResource object.
   SourceBufferDecoder(MediaResource* aResource, AbstractMediaDecoder* aParentDecoder,
                       int64_t aTimestampOffset /* microseconds */);
 
@@ -70,23 +70,6 @@ public:
   // Warning: this mirrors GetBuffered in MediaDecoder, but this class's base is
   // AbstractMediaDecoder, which does not supply this interface.
   nsresult GetBuffered(dom::TimeRanges* aBuffered);
-
-  // This mirrors SourceBufferResource data management, while holding the lock
-  // to manage mCacheBuffered.
-  void AppendData(LargeDataBuffer* aData);
-  void Ended()
-  {
-    GetResource()->Ended();
-  }
-  uint32_t EvictData(uint64_t aPlaybackOffset, uint32_t aThreshold);
-  // Remove data from resource before the given offset.
-  void EvictBefore(uint64_t aOffset);
-  // Remove all data from the resource
-  uint32_t EvictAll();
-  int64_t GetSize()
-  {
-    return GetResource()->GetSize();
-  }
 
   void SetReader(MediaDecoderReader* aReader)
   {
@@ -160,8 +143,6 @@ public:
 
 private:
   virtual ~SourceBufferDecoder();
-  void BuildTimeRangesFromCache(dom::TimeRanges* aBuffered);
-  void BuildCacheFromTimeRanges(dom::TimeRanges* aBuffered);
 
   // Our TrackBuffer's task queue, this is only non-null during initialization.
   RefPtr<MediaTaskQueue> mTaskQueue;
@@ -178,23 +159,6 @@ private:
   int64_t mRealMediaDuration;
   // in seconds
   double mTrimmedOffset;
-
-  Monitor mCacheMonitor;
-  // We use our own version of TimeRanges.
-  // dom::TimeRanges is normalized, and keep it so. We don't need to normalize
-  // our cache.
-  // dom::TimeRanges is also marked as not thread-safe and will error when
-  // accessed from a different thread that the one that created it.
-  struct TimeRange
-  {
-    TimeRange(double aStart, double aEnd)
-      : mStart(aStart),
-        mEnd(aEnd) {}
-    double mStart;
-    double mEnd;
-  };
-  nsAutoTArray<TimeRange,4> mCacheBufferedRanges;
-  bool mCacheBufferedRangeStale;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
