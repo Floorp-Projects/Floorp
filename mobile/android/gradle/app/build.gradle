@@ -30,6 +30,11 @@ android {
         }
     }
 
+    defaultConfig {
+        testApplicationId 'org.mozilla.roboexample.test'
+        testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
+    }
+
     sourceSets {
         androidTest {
             java {
