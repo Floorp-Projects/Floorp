@@ -1351,8 +1351,7 @@ private:
   ProcessPriority mPriority;
   int32_t mOomScoreAdj;
   int32_t mKillUnderKB;
-  int mCpuCGroupProcsFd;
-  int mMemCGroupProcsFd;
+  int mCGroupProcsFd;
   nsCString mGroup;
 
   /**
@@ -1369,7 +1368,7 @@ private:
   /**
    * Get the full path of the cgroup.procs file associated with the group.
    */
-  nsCString CpuCGroupProcsFilename()
+  nsCString CGroupProcsFilename()
   {
     nsCString cgroupName = mGroup;
 
@@ -1385,59 +1384,11 @@ private:
            NS_LITERAL_CSTRING("cgroup.procs");
   }
 
-  nsCString MemCGroupProcsFilename()
+  int OpenCGroupProcs()
   {
-    nsCString cgroupName = mGroup;
-
-    /* If mGroup is empty, our cgroup.procs file is the root procs file,
-     * located at /sys/fs/cgroup/memory/cgroup.procs.  Otherwise our procs
-     * file is /sys/fs/cgroup/memory/NAME/cgroup.procs. */
-
-    if (!mGroup.IsEmpty()) {
-      cgroupName.AppendLiteral("/");
-    }
-
-    return NS_LITERAL_CSTRING("/sys/fs/cgroup/memory/") + cgroupName +
-           NS_LITERAL_CSTRING("cgroup.procs");
-  }
-
-  int OpenCpuCGroupProcs()
-  {
-    return open(CpuCGroupProcsFilename().get(), O_WRONLY);
-  }
-
-  int OpenMemCGroupProcs()
-  {
-    return open(MemCGroupProcsFilename().get(), O_WRONLY);
+    return open(CGroupProcsFilename().get(), O_WRONLY);
   }
 };
-
-/**
- * Creates a directory and parents (essentially mkdir -p, but
- * this only create the directories within the cgroup name).
- */
-static bool MakeCGroupDir(const nsACString& aRootDir,
-                          const nsACString& aGroupName)
-{
-  NS_NAMED_LITERAL_CSTRING(kSlash, "/");
-
-  // Create directories contained within aGroupName
-  nsCString cgroupIter = aGroupName + kSlash;
-
-  int32_t offset = 0;
-  while ((offset = cgroupIter.FindChar('/', offset)) != -1) {
-    nsAutoCString path = aRootDir + Substring(cgroupIter, 0, offset);
-    int rv = mkdir(path.get(), 0744);
-
-    if (rv == -1 && errno != EEXIST) {
-      HAL_LOG("Could not create the %s control group.", path.get());
-      return false;
-    }
-
-    offset++;
-  }
-  return true;
-}
 
 /**
  * Try to create the cgroup for the given PriorityClass, if it doesn't already
@@ -1450,7 +1401,7 @@ static bool MakeCGroupDir(const nsACString& aRootDir,
  * exists.  Otherwise, return false.
  */
 static bool
-EnsureCpuCGroupExists(const nsACString& aGroup)
+EnsureCGroupExists(const nsACString &aGroup)
 {
   NS_NAMED_LITERAL_CSTRING(kDevCpuCtl, "/dev/cpuctl/");
   NS_NAMED_LITERAL_CSTRING(kSlash, "/");
@@ -1470,8 +1421,20 @@ EnsureCpuCGroupExists(const nsACString& aGroup)
     + NS_LITERAL_CSTRING("cpu_notify_on_migrate"));
   int cpuNotifyOnMigrate = Preferences::GetInt(cpuNotifyOnMigratePref.get());
 
-  if (!MakeCGroupDir(kDevCpuCtl, aGroup)) {
-    return false;
+  // Create mCGroup and its parent directories, as necessary.
+  nsCString cgroupIter = aGroup + kSlash;
+
+  int32_t offset = 0;
+  while ((offset = cgroupIter.FindChar('/', offset)) != -1) {
+    nsAutoCString path = kDevCpuCtl + Substring(cgroupIter, 0, offset);
+    int rv = mkdir(path.get(), 0744);
+
+    if (rv == -1 && errno != EEXIST) {
+      HAL_LOG("Could not create the %s control group.", path.get());
+      return false;
+    }
+
+    offset++;
   }
 
   nsAutoCString pathPrefix(kDevCpuCtl + aGroup + kSlash);
@@ -1494,46 +1457,11 @@ EnsureCpuCGroupExists(const nsACString& aGroup)
   return true;
 }
 
-static bool
-EnsureMemCGroupExists(const nsACString& aGroup)
-{
-  NS_NAMED_LITERAL_CSTRING(kMemCtl, "/sys/fs/cgroup/memory/");
-  NS_NAMED_LITERAL_CSTRING(kSlash, "/");
-
-  nsAutoCString prefPrefix("hal.processPriorityManager.gonk.cgroups.");
-
-  /* If cgroup is not empty, append the cgroup name and a dot to obtain the
-   * group specific preferences. */
-  if (!aGroup.IsEmpty()) {
-    prefPrefix += aGroup + NS_LITERAL_CSTRING(".");
-  }
-
-  nsAutoCString memSwappinessPref(prefPrefix +
-                                  NS_LITERAL_CSTRING("memory_swappiness"));
-  int memSwappiness = Preferences::GetInt(memSwappinessPref.get());
-
-  if (!MakeCGroupDir(kMemCtl, aGroup)) {
-    return false;
-  }
-
-  nsAutoCString pathPrefix(kMemCtl + aGroup + kSlash);
-  nsAutoCString memSwappinessPath(pathPrefix +
-                                  NS_LITERAL_CSTRING("memory.swappiness"));
-  if (!WriteToFile(memSwappinessPath.get(),
-                   nsPrintfCString("%d", memSwappiness).get())) {
-    HAL_LOG("Could not set the memory.swappiness for group %s",
-            memSwappinessPath.get());
-    return false;
-  }
-  return true;
-}
-
 PriorityClass::PriorityClass(ProcessPriority aPriority)
   : mPriority(aPriority)
   , mOomScoreAdj(0)
   , mKillUnderKB(0)
-  , mCpuCGroupProcsFd(-1)
-  , mMemCGroupProcsFd(-1)
+  , mCGroupProcsFd(-1)
 {
   DebugOnly<nsresult> rv;
 
@@ -1547,18 +1475,14 @@ PriorityClass::PriorityClass(ProcessPriority aPriority)
   rv = Preferences::GetCString(PriorityPrefName("cgroup").get(), &mGroup);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Missing control group preference");
 
-  if (EnsureCpuCGroupExists(mGroup)) {
-    mCpuCGroupProcsFd = OpenCpuCGroupProcs();
-  }
-  if (EnsureMemCGroupExists(mGroup)) {
-    mMemCGroupProcsFd = OpenMemCGroupProcs();
+  if (EnsureCGroupExists(mGroup)) {
+    mCGroupProcsFd = OpenCGroupProcs();
   }
 }
 
 PriorityClass::~PriorityClass()
 {
-  MOZ_TEMP_FAILURE_RETRY(close(mCpuCGroupProcsFd));
-  MOZ_TEMP_FAILURE_RETRY(close(mMemCGroupProcsFd));
+  close(mCGroupProcsFd);
 }
 
 PriorityClass::PriorityClass(const PriorityClass& aOther)
@@ -1567,8 +1491,7 @@ PriorityClass::PriorityClass(const PriorityClass& aOther)
   , mKillUnderKB(aOther.mKillUnderKB)
   , mGroup(aOther.mGroup)
 {
-  mCpuCGroupProcsFd = OpenCpuCGroupProcs();
-  mMemCGroupProcsFd = OpenMemCGroupProcs();
+  mCGroupProcsFd = OpenCGroupProcs();
 }
 
 PriorityClass& PriorityClass::operator=(const PriorityClass& aOther)
@@ -1577,29 +1500,20 @@ PriorityClass& PriorityClass::operator=(const PriorityClass& aOther)
   mOomScoreAdj = aOther.mOomScoreAdj;
   mKillUnderKB = aOther.mKillUnderKB;
   mGroup = aOther.mGroup;
-  mCpuCGroupProcsFd = OpenCpuCGroupProcs();
-  mMemCGroupProcsFd = OpenMemCGroupProcs();
+  mCGroupProcsFd = OpenCGroupProcs();
   return *this;
 }
 
 void PriorityClass::AddProcess(int aPid)
 {
-  if (mCpuCGroupProcsFd >= 0) {
-    nsPrintfCString str("%d", aPid);
-
-    if (write(mCpuCGroupProcsFd, str.get(), str.Length()) < 0) {
-      HAL_ERR("Couldn't add PID %d to the %s cpu control group",
-              aPid, mGroup.get());
-    }
+  if (mCGroupProcsFd < 0) {
+    return;
   }
 
-  if (mMemCGroupProcsFd >= 0) {
-    nsPrintfCString str("%d", aPid);
+  nsPrintfCString str("%d", aPid);
 
-    if (write(mMemCGroupProcsFd, str.get(), str.Length()) < 0) {
-      HAL_ERR("Couldn't add PID %d to the %s memory control group",
-              aPid, mGroup.get());
-    }
+  if (write(mCGroupProcsFd, str.get(), strlen(str.get())) < 0) {
+    HAL_ERR("Couldn't add PID %d to the %s control group", aPid, mGroup.get());
   }
 }
 
