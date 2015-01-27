@@ -360,7 +360,8 @@ def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
         fullpath = os.path.join(location, filename)
 
         # If any tests are requested by name, skip tests that do not match.
-        if requested_paths and not any(req in filename for req in requested_paths):
+        if requested_paths \
+           and not any(req in filename for req in requested_paths):
             continue
 
         # Skip excluded tests.
