@@ -592,8 +592,13 @@ ErrorHandler.prototype = {
     fapp.level = Log.Level[Svc.Prefs.get("log.appender.file.level")];
     root.addAppender(fapp);
 
-    // Arrange for the FxA logs to also go to our file.
-    Log.repository.getLogger("FirefoxAccounts").addAppender(fapp);
+    // Arrange for the FxA, Hawk and TokenServer logs to also go to our appenders.
+    for (let extra of ["FirefoxAccounts", "Hawk", "Common.TokenServerClient"]) {
+      let log = Log.repository.getLogger(extra);
+      for (let appender of [fapp, dapp, capp]) {
+        log.addAppender(appender);
+      }
+    }
   },
 
   observe: function observe(subject, topic, data) {
