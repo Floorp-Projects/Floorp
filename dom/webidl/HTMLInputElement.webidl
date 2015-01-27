@@ -154,6 +154,9 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   void mozSetFileNameArray(sequence<DOMString> fileNames);
 
+  [ChromeOnly]
+  void mozSetFileArray(sequence<File> files);
+
   // Number controls (<input type=number>) have an anonymous text control
   // (<input type=text>) in the anonymous shadow tree that they contain. On
   // such an anonymous text control this property provides access to the
