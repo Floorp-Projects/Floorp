@@ -405,9 +405,9 @@ MarkInterpreterActivation(JSTracer *trc, InterpreterActivation *act)
 }
 
 void
-js::MarkInterpreterActivations(PerThreadData *ptd, JSTracer *trc)
+js::MarkInterpreterActivations(JSRuntime *rt, JSTracer *trc)
 {
-    for (ActivationIterator iter(ptd); !iter.done(); ++iter) {
+    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
         Activation *act = iter.activation();
         if (act->isInterpreter())
             MarkInterpreterActivation(trc, act->asInterpreter());
@@ -589,7 +589,7 @@ FrameIter::Data::Data(JSContext *cx, SavedOption savedOption,
     principals_(principals),
     pc_(nullptr),
     interpFrames_(nullptr),
-    activations_(cx->perThreadData),
+    activations_(cx->runtime()),
     jitFrames_(),
     ionInlineFrameNo_(0),
     asmJSFrames_()
@@ -1040,7 +1040,7 @@ FrameIter::updatePcQuadratic()
 
             // ActivationIterator::jitTop_ may be invalid, so create a new
             // activation iterator.
-            data_.activations_ = ActivationIterator(data_.cx_->perThreadData);
+            data_.activations_ = ActivationIterator(data_.cx_->runtime());
             while (data_.activations_.activation() != activation)
                 ++data_.activations_;
 
@@ -1692,11 +1692,6 @@ ActivationIterator::ActivationIterator(JSRuntime *rt)
     activation_(rt->activation_)
 {
     settle();
-}
-
-ActivationIterator::ActivationIterator(PerThreadData *perThreadData)
-  : ActivationIterator(perThreadData->runtimeFromMainThread())
-{
 }
 
 ActivationIterator &

@@ -1442,9 +1442,9 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 }
 
 void
-MarkJitActivations(PerThreadData *ptd, JSTracer *trc)
+MarkJitActivations(JSRuntime *rt, JSTracer *trc)
 {
-    for (JitActivationIterator activations(ptd); !activations.done(); ++activations)
+    for (JitActivationIterator activations(rt); !activations.done(); ++activations)
         MarkJitActivation(trc, activations);
 }
 
@@ -1460,10 +1460,10 @@ TopmostIonActivationCompartment(JSRuntime *rt)
     return nullptr;
 }
 
-void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
+void UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc)
 {
     MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting());
-    for (JitActivationIterator activations(ptd); !activations.done(); ++activations) {
+    for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 UpdateIonJSFrameForMinorGC(trc, frames);
