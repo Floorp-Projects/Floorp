@@ -19,6 +19,7 @@
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsFormData.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 
@@ -2189,6 +2190,44 @@ XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
     WorkerStructuredCloneCallbacks(false);
 
   nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
+
+  JSAutoStructuredCloneBuffer buffer;
+  if (!buffer.write(cx, value, callbacks, &clonedObjects)) {
+    aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    return;
+  }
+
+  SendInternal(EmptyString(), Move(buffer), clonedObjects, aRv);
+}
+
+void
+XMLHttpRequest::Send(nsFormData& aBody, ErrorResult& aRv)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  JSContext* cx = mWorkerPrivate->GetJSContext();
+
+  if (mCanceled) {
+    aRv.ThrowUncatchableException();
+    return;
+  }
+
+  if (!mProxy) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  JS::Rooted<JS::Value> value(cx);
+  if (!GetOrCreateDOMReflector(cx, &aBody, &value)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  const JSStructuredCloneCallbacks* callbacks =
+    mWorkerPrivate->IsChromeWorker() ?
+    ChromeWorkerStructuredCloneCallbacks(false) :
+    WorkerStructuredCloneCallbacks(false);
+
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
 
   JSAutoStructuredCloneBuffer buffer;
   if (!buffer.write(cx, value, callbacks, &clonedObjects)) {

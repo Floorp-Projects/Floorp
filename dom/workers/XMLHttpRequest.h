@@ -173,6 +173,9 @@ public:
   Send(File& aBody, ErrorResult& aRv);
 
   void
+  Send(nsFormData& aBody, ErrorResult& aRv);
+
+  void
   Send(const ArrayBuffer& aBody, ErrorResult& aRv);
 
   void
