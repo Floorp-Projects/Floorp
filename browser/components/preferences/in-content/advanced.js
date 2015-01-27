@@ -29,6 +29,12 @@ var gAdvancedPane = {
         advancedPrefs.selectedIndex = preference.value;
 
 #ifdef MOZ_UPDATER
+    let onUnload = function () {
+      window.removeEventListener("unload", onUnload, false);
+      Services.prefs.removeObserver("app.update.", this);
+    }.bind(this);
+    window.addEventListener("unload", onUnload, false);
+    Services.prefs.addObserver("app.update.", this, false);
     this.updateReadPrefs();
 #endif
     this.updateOfflineApps();
@@ -841,5 +847,15 @@ var gAdvancedPane = {
     openDialog("chrome://pippki/content/device_manager.xul",
                "mozilla:devicemanager",
                "modal=yes", null);
-  }
+  },
+
+#ifdef MOZ_UPDATER
+  observe: function (aSubject, aTopic, aData) {
+    switch(aTopic) {
+      case "nsPref:changed":
+        this.updateReadPrefs();
+        break;
+    }
+  },
+#endif
 };
