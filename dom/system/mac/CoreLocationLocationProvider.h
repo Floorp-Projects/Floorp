@@ -32,9 +32,26 @@ public:
   CoreLocationLocationProvider();
   void NotifyError(uint16_t aErrorCode);
   void Update(nsIDOMGeoPosition* aSomewhere);
+  void CreateMLSFallbackProvider();
+  void CancelMLSFallbackProvider();
+
 private:
   virtual ~CoreLocationLocationProvider() {};
 
   CoreLocationObjects* mCLObjects;
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
+  nsCOMPtr<nsIGeolocationProvider> mMLSFallbackProvider;
+
+  class MLSUpdate : public nsIGeolocationUpdate
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIGEOLOCATIONUPDATE
+
+    explicit MLSUpdate(CoreLocationLocationProvider& parentProvider);
+
+  private:
+    CoreLocationLocationProvider& mParentLocationProvider;
+    virtual ~MLSUpdate() {}
+  };
 };
