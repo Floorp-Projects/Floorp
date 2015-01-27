@@ -284,10 +284,6 @@ user_pref("browser.search.countryCode", "US");
 
 user_pref("media.eme.enabled", true);
 
-#if defined(XP_WIN)
-user_pref("media.decoder.heuristic.dormant.timeout", 0);
-#endif
-
 // Don't prompt about e10s
 user_pref("browser.displayedE10SPrompt.1", 5);
 // Don't use auto-enabled e10s
