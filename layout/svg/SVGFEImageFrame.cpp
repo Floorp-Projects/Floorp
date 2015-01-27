@@ -82,7 +82,7 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
-    imageLoader->DecrementVisibleCount(/* aRequestDiscard = */ false);
+    imageLoader->DecrementVisibleCount();
   }
 
   SVGFEImageFrameBase::DestroyFrom(aDestructRoot);
