@@ -114,7 +114,7 @@ TEST(UTF, Hash16)
   for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
     bool err;
-    EXPECT_EQ(HashUTF8AsUTF16(str8.get(), str8.Length(), &err), 0);
+    EXPECT_EQ(HashUTF8AsUTF16(str8.get(), str8.Length(), &err), 0u);
     EXPECT_FALSE(err);
   }
 #endif
