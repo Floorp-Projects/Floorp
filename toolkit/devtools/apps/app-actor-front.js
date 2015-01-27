@@ -187,17 +187,24 @@ function uploadPackageBulk(client, webappsActor, packageFile, progressCallback) 
     });
 
     request.on("bulk-send-ready", ({copyFrom}) => {
-      NetUtil.asyncFetch(packageFile, function(inputStream) {
-        let copying = copyFrom(inputStream);
-        copying.on("progress", (e, progress) => {
-          progressCallback(progress);
-        });
-        copying.then(() => {
-          console.log("Bulk upload done");
-          inputStream.close();
-          deferred.resolve(actor);
-        });
-      });
+      NetUtil.asyncFetch2(
+        packageFile,
+        function(inputStream) {
+          let copying = copyFrom(inputStream);
+          copying.on("progress", (e, progress) => {
+            progressCallback(progress);
+          });
+          copying.then(() => {
+            console.log("Bulk upload done");
+            inputStream.close();
+            deferred.resolve(actor);
+          });
+        },
+        null,      // aLoadingNode
+        Services.scriptSecurityManager.getSystemPrincipal(),
+        null,      // aTriggeringPrincipal
+        Ci.nsILoadInfo.SEC_NORMAL,
+        Ci.nsIContentPolicy.TYPE_OTHER);
     });
   }
 
