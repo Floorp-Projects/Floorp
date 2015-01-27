@@ -6,7 +6,7 @@ import pipes
 
 # subprocess.list2cmdline does not properly escape for sh-like shells
 def escape_cmdline(args):
-    return ' '.join([ pipes.quote(a) for a in args ])
+    return ' '.join([pipes.quote(a) for a in args])
 
 class TestOutput:
     """Output from a test run."""
@@ -76,7 +76,8 @@ class TestResult:
                 msg = line[len(' PASSED! '):]
                 results.append((cls.PASS, msg))
             else:
-                m = re.match('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ((?:-|\\d)+) ---', line)
+                m = re.match('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE'
+                             ' ((?:-|\\d)+) ---', line)
                 if m:
                     expected_rcs.append(int(m.group(1)))
 
@@ -118,7 +119,9 @@ class ResultsSink:
             self.counts['TIMEOUT'] += 1
         if isinstance(output, NullTestOutput):
             if self.options.tinderbox:
-                self.print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
+                self.print_tinderbox_result(
+                    'TEST-KNOWN-FAIL', output.test.path, time=output.dt,
+                    skip=True)
             self.counts['SKIP'] += 1
             self.n += 1
         else:
@@ -130,22 +133,26 @@ class ResultsSink:
             self.groups.setdefault(dev_label, []).append(result.test.path)
 
             if dev_label == 'REGRESSIONS':
-                show_output = self.options.show_output or not self.options.no_show_failed
+                show_output = self.options.show_output \
+                              or not self.options.no_show_failed
             elif dev_label == 'TIMEOUTS':
                 show_output = self.options.show_output
             else:
-                show_output = self.options.show_output and not self.options.failed_only
+                show_output = self.options.show_output \
+                              and not self.options.failed_only
 
             if dev_label in ('REGRESSIONS', 'TIMEOUTS'):
                 show_cmd = self.options.show_cmd
             else:
-                show_cmd = self.options.show_cmd and not self.options.failed_only
+                show_cmd = self.options.show_cmd \
+                           and not self.options.failed_only
 
             if show_output or show_cmd:
                 self.pb.beginline()
 
                 if show_output:
-                    print('## %s: rc = %d, run time = %f' % (output.test.path, output.rc, output.dt), file=self.fp)
+                    print('## {}: rc = {:d}, run time = {:f}'.format(
+                        output.test.path, output.rc, output.dt), file=self.fp)
 
                 if show_cmd:
                     print(escape_cmdline(output.cmd), file=self.fp)
@@ -166,19 +173,23 @@ class ResultsSink:
             if self.options.tinderbox:
                 if len(result.results) > 1:
                     for sub_ok, msg in result.results:
-                        label = self.LABELS[(sub_ok, result.test.expect, result.test.random)][0]
+                        tup = (sub_ok, result.test.expect, result.test.random)
+                        label = self.LABELS[tup][0]
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
-                        self.print_tinderbox_result(label, result.test.path, time=output.dt, message=msg)
-                self.print_tinderbox_result(self.LABELS[
-                    (result.result, result.test.expect, result.test.random)][0],
-                    result.test.path, time=output.dt)
+                        self.print_tinderbox_result(
+                            label, result.test.path, time=output.dt,
+                            message=msg)
+                tup = (result.result, result.test.expect, result.test.random)
+                self.print_tinderbox_result(
+                    self.LABELS[tup][0], result.test.path, time=output.dt)
                 return
 
             if dev_label:
                 def singular(label):
                     return "FIXED" if label == "FIXES" else label[:-1]
-                self.pb.message("%s - %s" % (singular(dev_label), output.test.path))
+                self.pb.message("{} - {}".format(singular(dev_label),
+                                                 output.test.path))
 
         self.pb.update(self.n, self.counts)
 
@@ -214,18 +225,18 @@ class ResultsSink:
 
             print(label)
             for path in paths:
-                print('    %s' % path)
+                print('    {}'.format(path))
 
         if self.options.failure_file:
-              failure_file = open(self.options.failure_file, 'w')
-              if not self.all_passed():
-                  if 'REGRESSIONS' in self.groups:
-                      for path in self.groups['REGRESSIONS']:
-                          print(path, file=failure_file)
-                  if 'TIMEOUTS' in self.groups:
-                      for path in self.groups['TIMEOUTS']:
-                          print(path, file=failure_file)
-              failure_file.close()
+            failure_file = open(self.options.failure_file, 'w')
+            if not self.all_passed():
+                if 'REGRESSIONS' in self.groups:
+                    for path in self.groups['REGRESSIONS']:
+                        print(path, file=failure_file)
+                if 'TIMEOUTS' in self.groups:
+                    for path in self.groups['TIMEOUTS']:
+                        print(path, file=failure_file)
+            failure_file.close()
 
         suffix = '' if completed else ' (partial run -- interrupted by user)'
         if self.all_passed():
@@ -236,7 +247,8 @@ class ResultsSink:
     def all_passed(self):
         return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
 
-    def print_tinderbox_result(self, label, path, message=None, skip=False, time=None):
+    def print_tinderbox_result(self, label, path, message=None, skip=False,
+                               time=None):
         result = label
         result += " | " + path
         result += " |" + self.options.shell_args

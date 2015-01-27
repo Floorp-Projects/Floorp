@@ -26,7 +26,8 @@ class Terminal(object):
             color = color[len('bright'):]
         color_code = Terminal.COLOR[color]
 
-        sys.stdout.write(cls.ESCAPE + color_code + cls.SEPARATOR + mod + cls.COLOR_CODE)
+        sys.stdout.write(cls.ESCAPE + color_code + cls.SEPARATOR + mod
+                         + cls.COLOR_CODE)
 
     @classmethod
     def reset_color(cls):
