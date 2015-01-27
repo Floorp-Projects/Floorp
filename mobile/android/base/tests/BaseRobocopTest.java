@@ -10,19 +10,25 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
+import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.PowerManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
+
+import com.jayway.android.robotium.solo.Solo;
 
 @SuppressWarnings("unchecked")
 public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<Activity> {
@@ -60,6 +66,15 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
 
     protected Map<String, String> mConfig;
     protected String mRootPath;
+
+    protected Solo mSolo;
+    protected Driver mDriver;
+    protected Actions mActions;
+
+    protected Activity mActivity;
+    protected String mProfile;
+
+    protected abstract Intent createActivityIntent();
 
     /**
      * The browser is started at the beginning of this test. A single test is a
@@ -109,6 +124,9 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         String configFile = FennecNativeDriver.getFile(mRootPath + "/robotium.config");
         mConfig = FennecNativeDriver.convertTextToTable(configFile);
         mLogFile = mConfig.get("logfile");
+        mProfile = mConfig.get("profile");
+        mBaseHostnameUrl = mConfig.get("host").replaceAll("(/$)", "");
+        mBaseIpUrl = mConfig.get("rawhost").replaceAll("(/$)", "");
 
         // Initialize the asserter.
         if (getTestType() == Type.TALOS) {
@@ -119,8 +137,15 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(getClass().getName());
 
-        mBaseHostnameUrl = mConfig.get("host").replaceAll("(/$)", "");
-        mBaseIpUrl = mConfig.get("rawhost").replaceAll("(/$)", "");
+        // Start the activity.
+        final Intent intent = createActivityIntent();
+        setActivityIntent(intent);
+        mActivity = getActivity();
+
+        // Set up Robotium.solo and Driver objects
+        mSolo = new Solo(getInstrumentation(), mActivity);
+        mDriver = new FennecNativeDriver(mActivity, mSolo, mRootPath);
+        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
     }
 
     /**
