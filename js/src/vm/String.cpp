@@ -485,8 +485,8 @@ js::ConcatStrings(ExclusiveContext *cx,
                         ? JSInlineString::lengthFits<Latin1Char>(wholeLength)
                         : JSInlineString::lengthFits<char16_t>(wholeLength);
     if (canUseInline && cx->isJSContext()) {
-        Latin1Char *latin1Buf;
-        char16_t *twoByteBuf;
+        Latin1Char *latin1Buf = nullptr;  // initialize to silence GCC warning
+        char16_t *twoByteBuf = nullptr;  // initialize to silence GCC warning
         JSInlineString *str = isLatin1
             ? AllocateInlineString<allowGC>(cx, wholeLength, &latin1Buf)
             : AllocateInlineString<allowGC>(cx, wholeLength, &twoByteBuf);

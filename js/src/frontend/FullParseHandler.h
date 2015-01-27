@@ -520,7 +520,10 @@ class FullParseHandler
                               ParseNode *catchName, ParseNode *catchGuard, ParseNode *catchBody);
 
     inline void setLastFunctionArgumentDefault(ParseNode *funcpn, ParseNode *pn);
-    inline ParseNode *newFunctionDefinition();
+
+    ParseNode *newFunctionDefinition() {
+        return new_<CodeNode>(pos());
+    }
     void setFunctionBody(ParseNode *pn, ParseNode *kid) {
         pn->pn_body = kid;
     }
@@ -532,8 +535,12 @@ class FullParseHandler
         pn->pn_body->append(argpn);
     }
 
-    inline ParseNode *newLexicalScope(ObjectBox *blockbox);
-    inline void setLexicalScopeBody(ParseNode *block, ParseNode *body);
+    ParseNode *newLexicalScope(ObjectBox *blockBox) {
+        return new_<LexicalScopeNode>(blockBox, pos());
+    }
+    void setLexicalScopeBody(ParseNode *block, ParseNode *body) {
+        block->pn_expr = body;
+    }
 
     bool isOperationWithoutParens(ParseNode *pn, ParseNodeKind kind) {
         return pn->isKind(kind) && !pn->isInParens();
@@ -564,18 +571,15 @@ class FullParseHandler
         return pn->pn_pos;
     }
 
-    ParseNode *newList(ParseNodeKind kind, ParseNode *kid = nullptr, JSOp op = JSOP_NOP) {
-        ParseNode *pn = ListNode::create(kind, this);
-        if (!pn)
-            return nullptr;
-        pn->setOp(op);
-        pn->makeEmpty();
-        if (kid) {
-            pn->pn_pos.begin = kid->pn_pos.begin;
-            pn->append(kid);
-        }
-        return pn;
+    ParseNode *newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        return new_<ListNode>(kind, op, pos());
     }
+
+    /* New list with one initial child node. kid must be non-null. */
+    ParseNode *newList(ParseNodeKind kind, ParseNode *kid, JSOp op = JSOP_NOP) {
+        return new_<ListNode>(kind, op, kid);
+    }
+
     void addList(ParseNode *pn, ParseNode *kid) {
         pn->append(kid);
     }
@@ -715,38 +719,6 @@ FullParseHandler::setLastFunctionArgumentDefault(ParseNode *funcpn, ParseNode *d
     ParseNode *arg = funcpn->pn_body->last();
     arg->pn_dflags |= PND_DEFAULT;
     arg->pn_expr = defaultValue;
-}
-
-inline ParseNode *
-FullParseHandler::newFunctionDefinition()
-{
-    ParseNode *pn = CodeNode::create(PNK_FUNCTION, this);
-    if (!pn)
-        return nullptr;
-    pn->pn_body = nullptr;
-    pn->pn_funbox = nullptr;
-    pn->pn_cookie.makeFree();
-    pn->pn_dflags = 0;
-    return pn;
-}
-
-inline ParseNode *
-FullParseHandler::newLexicalScope(ObjectBox *blockbox)
-{
-    ParseNode *pn = LexicalScopeNode::create(PNK_LEXICALSCOPE, this);
-    if (!pn)
-        return nullptr;
-
-    pn->pn_objbox = blockbox;
-    pn->pn_cookie.makeFree();
-    pn->pn_dflags = 0;
-    return pn;
-}
-
-inline void
-FullParseHandler::setLexicalScopeBody(ParseNode *block, ParseNode *kid)
-{
-    block->pn_expr = kid;
 }
 
 inline bool

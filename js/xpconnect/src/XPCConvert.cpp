@@ -21,11 +21,11 @@
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "jsprf.h"
-#include "JavaScriptParent.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/PrimitiveConversions.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 
 using namespace xpc;
 using namespace mozilla;

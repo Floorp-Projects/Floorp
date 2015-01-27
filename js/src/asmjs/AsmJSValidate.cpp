@@ -635,6 +635,7 @@ class RetType
     RetType() : which_(Which(-1)) {}
     MOZ_IMPLICIT RetType(Which w) : which_(w) {}
     MOZ_IMPLICIT RetType(AsmJSCoercion coercion) {
+        which_ = Which(-1);  // initialize to silence GCC warning
         switch (coercion) {
           case AsmJS_ToInt32: which_ = Signed; break;
           case AsmJS_ToNumber: which_ = Double; break;
@@ -3031,7 +3032,7 @@ class FunctionCompiler
         uint32_t line, column;
         m_.tokenStream().srcCoords.lineNumAndColumnIndex(call.node_->pn_pos.begin, &line, &column);
 
-        CallSiteDesc::Kind kind;
+        CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);  // initialize to silence GCC warning
         switch (callee.which()) {
           case MAsmJSCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
           case MAsmJSCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
@@ -7292,7 +7293,7 @@ CheckChangeHeap(ModuleCompiler &m, ParseNode *fn, bool *validated)
     if (ParseNode *elseStmt = TernaryKid3(stmtIter))
         return m.fail(elseStmt, "unexpected else statement");
 
-    uint32_t mask, min, max;
+    uint32_t mask, min = 0, max;  // initialize min to silence GCC warning
     if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min, &max))
         return false;
 
@@ -7416,7 +7417,7 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     // the backing LifoAlloc after parsing/compiling each function.
     AsmJSParser::Mark mark = m.parser().mark();
 
-    ParseNode *fn;
+    ParseNode *fn = nullptr;  // initialize to silence GCC warning
     if (!ParseFunction(m, &fn))
         return false;
 

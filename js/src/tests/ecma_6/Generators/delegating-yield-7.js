@@ -14,7 +14,7 @@ function results(results) {
 }
 
 function* yield_results(expected) {
-    return yield* Proxy(results(expected), {});
+    return yield* new Proxy(results(expected), {});
 }
 
 function collect_results(iter) {
