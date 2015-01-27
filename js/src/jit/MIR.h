@@ -4794,8 +4794,8 @@ class MTruncateToInt32
     }
 #endif
 
-    bool writeRecoverData(CompactBufferWriter &writer) const;
-    bool canRecoverOnBailout() const {
+    bool writeRecoverData(CompactBufferWriter &writer) const MOZ_OVERRIDE;
+    bool canRecoverOnBailout() const MOZ_OVERRIDE {
         return input()->type() < MIRType_Symbol;
     }
 
