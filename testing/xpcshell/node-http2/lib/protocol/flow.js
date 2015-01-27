@@ -19,7 +19,7 @@ exports.Flow = Flow;
 // * **setInitialWindow(size)**: the initial flow control window size can be changed *any time*
 //   ([as described in the standard][1]) using this method
 //
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-6.9.2
+// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-6.9.2
 
 // API for child classes
 // ---------------------
@@ -81,7 +81,9 @@ Flow.prototype._receive = function _receive(frame, callback) {
 // incoming frame is a WINDOW_UPDATE.
 // [1]: http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
 Flow.prototype._write = function _write(frame, encoding, callback) {
-  if (frame.flags.END_STREAM || (frame.type === 'RST_STREAM')) {
+  var sentToUs = (this._flowControlId === undefined) || (frame.stream === this._flowControlId);
+
+  if (sentToUs && (frame.flags.END_STREAM || (frame.type === 'RST_STREAM'))) {
     this._ended = true;
   }
 
@@ -99,8 +101,7 @@ Flow.prototype._write = function _write(frame, encoding, callback) {
     this._receive(frame, callback);
   }
 
-  if ((frame.type === 'WINDOW_UPDATE') &&
-      ((this._flowControlId === undefined) || (frame.stream === this._flowControlId))) {
+  if (sentToUs && (frame.type === 'WINDOW_UPDATE')) {
     this._updateWindow(frame);
   }
 };

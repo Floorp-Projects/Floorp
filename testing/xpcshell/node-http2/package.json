@@ -1,6 +1,6 @@
 {
   "name": "http2",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "An HTTP/2 client and server implementation",
   "main": "lib/index.js",
   "engines" : {
@@ -14,7 +14,7 @@
     "bunyan": "*"
   },
   "scripts": {
-    "test": "istanbul test _mocha -- --reporter spec --slow 200",
+    "test": "istanbul test _mocha -- --reporter spec --slow 500 --timeout 15000",
     "doc": "docco lib/* --output doc --layout parallel --css doc/docco.css"
   },
   "repository": {
@@ -36,7 +36,10 @@
     "Nick Hurley",
     "Mike Belshe",
     "Yoshihiro Iwanaga",
-    "vsemogutor"
+    "Igor Novikov",
+    "James Willcox",
+    "David Björklund",
+    "Patrick McManus"
   ],
   "license": "MIT",
   "readmeFilename": "README.md"
