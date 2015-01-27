@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetworkStatsService.jsm");
 
 const NETWORKSTATSSERVICEPROXY_CONTRACTID = "@mozilla.org/networkstatsServiceProxy;1";
-const NETWORKSTATSSERVICEPROXY_CID = Components.ID("705c01d6-8574-464c-8ec9-ac1522a45546");
+const NETWORKSTATSSERVICEPROXY_CID = Components.ID("98fd8f69-784e-4626-aa59-56d6436a3c24");
 const nsINetworkStatsServiceProxy = Ci.nsINetworkStatsServiceProxy;
 
 function NetworkStatsServiceProxy() {
@@ -29,7 +29,7 @@ NetworkStatsServiceProxy.prototype = {
    * Function called in the protocol layer (HTTP, FTP, WebSocket ...etc)
    * to pass the per-app stats to NetworkStatsService.
    */
-  saveAppStats: function saveAppStats(aAppId, aNetwork, aTimeStamp,
+  saveAppStats: function saveAppStats(aAppId, aIsInBrowser, aNetwork, aTimeStamp,
                                       aRxBytes, aTxBytes, aIsAccumulative,
                                       aCallback) {
     if (!aNetwork) {
@@ -40,22 +40,23 @@ NetworkStatsServiceProxy.prototype = {
     }
 
     if (DEBUG) {
-      debug("saveAppStats: " + aAppId + " " + aNetwork.type + " " + aTimeStamp +
-            " " + aRxBytes + " " + aTxBytes + " " + aIsAccumulative);
+      debug("saveAppStats: " + aAppId + " " + aIsInBrowser + " " +
+            aNetwork.type + " " + aTimeStamp + " " +
+            aRxBytes + " " + aTxBytes + " " + aIsAccumulative);
     }
 
     if (aCallback) {
       aCallback = aCallback.notify;
     }
 
-    NetworkStatsService.saveStats(aAppId, "", aNetwork, aTimeStamp,
-                                  aRxBytes, aTxBytes, aIsAccumulative,
-                                  aCallback);
+    NetworkStatsService.saveStats(aAppId, aIsInBrowser, "", aNetwork,
+                                  aTimeStamp, aRxBytes, aTxBytes,
+                                  aIsAccumulative, aCallback);
   },
 
   /*
    * Function called in the points of different system services
-   * to pass the per-serive stats to NetworkStatsService.
+   * to pass the per-service stats to NetworkStatsService.
    */
   saveServiceStats: function saveServiceStats(aServiceType, aNetwork,
                                               aTimeStamp, aRxBytes, aTxBytes,
@@ -77,7 +78,7 @@ NetworkStatsServiceProxy.prototype = {
       aCallback = aCallback.notify;
     }
 
-    NetworkStatsService.saveStats(0, aServiceType ,aNetwork, aTimeStamp,
+    NetworkStatsService.saveStats(0, false, aServiceType ,aNetwork, aTimeStamp,
                                   aRxBytes, aTxBytes, aIsAccumulative,
                                   aCallback);
   },

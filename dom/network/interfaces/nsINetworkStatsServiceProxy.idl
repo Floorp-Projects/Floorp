@@ -16,12 +16,13 @@ interface nsINetworkStatsServiceProxyCallback : nsISupports
   void notify(in boolean aResult, in jsval aMessage);
 };
 
-[scriptable, uuid(705c01d6-8574-464c-8ec9-ac1522a45546)]
+[scriptable, uuid(98fd8f69-784e-4626-aa59-56d6436a3c24)]
 interface nsINetworkStatsServiceProxy : nsISupports
 {
   /*
    * An interface used to record per-app traffic data.
    * @param aAppId app id
+   * @param aIsInBrowser true if the iframe element is mozbrowser
    * @param aNetworkInterface network
    * @param aTimeStamp time stamp
    * @param aRxBytes received data amount
@@ -30,6 +31,7 @@ interface nsINetworkStatsServiceProxy : nsISupports
    * @param aCallback an optional callback
    */
   void saveAppStats(in unsigned long aAppId,
+                    in boolean aIsInBrowser,
                     in nsINetworkInterface aNetwork,
                     in unsigned long long aTimeStamp,
                     in unsigned long long aRxBytes,
