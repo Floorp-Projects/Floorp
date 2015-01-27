@@ -1,15 +1,12 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        onload="setTimeout(doTest, 0)"
+        onload="setTimeout(function() { forceLoadPlugin('plugin'); }, 0)"
         class="reftest-wait">
-  <script>
-  function doTest() {
-    document.documentElement.removeAttribute("class");
-  }
+  <script src="forceloadplugin.js">
   </script>
   <menulist>
     <menupopup>
-      <html:embed type="application/x-test"></html:embed>
+      <html:embed type="application/x-test" id="plugin"></html:embed>
     </menupopup>
   </menulist>
 </window>

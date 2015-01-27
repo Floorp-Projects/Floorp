@@ -1,5 +1,13 @@
 <!DOCTYPE HTML>
-<embed type="application/x-test" drawmode="solid" color="#FFFF0000" style="width:400px; height:200px; display:block"></embed>
+<html class="reftest-wait">
+<head>
+<script src="forceloadplugin.js">
+</script>
+</head>
+<body onLoad="forceLoadPlugin('p')">
+<embed type="application/x-test" drawmode="solid" color="#FFFF0000" style="width:400px; height:200px; display:block" id="p"></embed>
 <div style="background:rgba(255,255,255,0.8); width:200px; position:relative; top:-200px; font-size:50px;">
 Hello
 </div>
+</body>
+</html>
