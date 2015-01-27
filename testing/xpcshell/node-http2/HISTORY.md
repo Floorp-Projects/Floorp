@@ -1,7 +1,20 @@
 Version history
 ===============
 
-### 3.0.0 (2014-08-XX) ###
+### 3.1.0 (2014-12-11) ###
+
+* Upgrade to the latest draft: [draft-ietf-httpbis-http2-16]
+ * This involves some state transition changes that are technically incompatible with draft-14. If you need to be assured to interop on -14, continue using 3.0.1
+
+[draft-ietf-httpbis-http2-16]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-16
+
+### 3.0.1 (2014-11-20) ###
+
+* Bugfix release.
+* Fixed #81 and #87
+* Fixed a bug in flow control (without GitHub issue)
+
+### 3.0.0 (2014-08-25) ###
 
 * Re-join node-http2 and node-http2-protocol into one repository
 * API Changes
