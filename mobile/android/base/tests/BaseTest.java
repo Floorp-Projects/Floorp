@@ -15,12 +15,9 @@ import java.util.HashSet;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.Element;
-import org.mozilla.gecko.FennecNativeActions;
-import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
@@ -72,12 +69,7 @@ abstract class BaseTest extends BaseRobocopTest {
 
     protected static final String URL_HTTP_PREFIX = "http://";
 
-    private Activity mActivity;
     private int mPreferenceRequestID = 0;
-    protected Solo mSolo;
-    protected Driver mDriver;
-    protected Actions mActions;
-    protected String mProfile;
     public Device mDevice;
     protected DatabaseHelper mDatabaseHelper;
     protected int mScreenMidWidth;
@@ -110,30 +102,6 @@ abstract class BaseTest extends BaseRobocopTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        // Create the intent to be used with all the important arguments.
-        Intent i = new Intent(Intent.ACTION_MAIN);
-        mProfile = mConfig.get("profile");
-
-        // Don't show the first run experience.
-        i.putExtra(BrowserApp.EXTRA_SKIP_STARTPANE, true);
-
-        i.putExtra("args", "-no-remote -profile " + mProfile);
-
-        String envString = mConfig.get("envvars");
-        if (envString != "") {
-            String[] envStrings = envString.split(",");
-            for (int iter = 0; iter < envStrings.length; iter++) {
-                i.putExtra("env" + iter, envStrings[iter]);
-            }
-        }
-
-        // Start the activity.
-        setActivityIntent(i);
-        mActivity = getActivity();
-        // Set up Robotium.solo and Driver objects
-        mSolo = new Solo(getInstrumentation(), mActivity);
-        mDriver = new FennecNativeDriver(mActivity, mSolo, mRootPath);
-        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
         mDevice = new Device();
         mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
 
@@ -188,6 +156,23 @@ abstract class BaseTest extends BaseRobocopTest {
             e.printStackTrace();
         }
         super.tearDown();
+    }
+
+    @Override
+    protected Intent createActivityIntent() {
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.putExtra("args", "-no-remote -profile " + mProfile);
+
+        final String envString = mConfig.get("envvars");
+        if (!TextUtils.isEmpty(envString)) {
+            final String[] envStrings = envString.split(",");
+
+            for (int iter = 0; iter < envStrings.length; iter++) {
+                intent.putExtra("env" + iter, envStrings[iter]);
+            }
+        }
+
+        return intent;
     }
 
     public void assertMatches(String value, String regex, String name) {
