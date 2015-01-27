@@ -36,7 +36,7 @@ namespace mozilla {
 // timepoint.
 
 struct ResourceItem {
-  ResourceItem(LargeDataBuffer* aData)
+  explicit ResourceItem(LargeDataBuffer* aData)
   : mData(aData)
   {
   }
