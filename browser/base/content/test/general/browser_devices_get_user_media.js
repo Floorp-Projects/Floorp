@@ -482,21 +482,14 @@ let gTests = [
     yield promiseNotificationShown(PopupNotifications.getNotification("webRTC-sharingDevices"));
 
     info("reloading the web page");
-    let deferred = Promise.defer();
-    let browser = gBrowser.selectedBrowser;
-    browser.addEventListener("load", function onload() {
-      browser.removeEventListener("load", onload, true);
-      deferred.resolve();
-    }, true);
-    content.location.reload();
-    yield deferred.promise;
+    yield promiseObserverCalled("recording-device-events",
+                                () => { content.location.reload(); });
 
     yield promiseNoPopupNotification("webRTC-sharingDevices");
-    if (gObservedTopics["recording-device-events"] == 2) {
+    if (gObservedTopics["recording-device-events"] == 1) {
       todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-      --gObservedTopics["recording-device-events"];
+      gObservedTopics["recording-device-events"] = 0;
     }
-    expectObserverCalled("recording-device-events");
     expectObserverCalled("recording-window-ended");
     expectNoObserverCalled();
     yield checkNotSharing();

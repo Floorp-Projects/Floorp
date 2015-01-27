@@ -6,12 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Note: any layout parameters setting the right edge of
-         this View should be matched in the url_bar_translating_edge.
-
-         Note 2: On devices where the editing mode cancel button is
-         wider than the tabs counter and nearby buttons, the url bar will
-         shrink, in which case the LayoutParams of this View are
-         changed dynamically. -->
+         this View should be matched in the url_bar_translating_edge. -->
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="8dp"
@@ -26,7 +21,7 @@
                android:scaleType="fitXY"/>
 
     <!-- A View that clips with url_bar_entry and translates
-         around it to animate shrinking or growing the url bar,
+         around it to animate growing the url bar,
          which occurs in the display/editing mode transitions. -->
     <ImageView android:id="@+id/url_bar_translating_edge"
                style="@style/UrlBar.Button"
