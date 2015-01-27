@@ -86,7 +86,7 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
         cert_name = 'evroot'
         key_filename = '../test_ev_certs/evroot.key'
         cert_filename = '../test_ev_certs/evroot.der'
-        CertUtils.import_cert_and_pkcs12(srcdir, key_filename,
+        CertUtils.import_cert_and_pkcs12(srcdir, cert_filename,
                                          '../test_ev_certs/evroot.p12',
                                          cert_name, ',,')
         return [cert_name, key_filename, cert_filename]
@@ -166,121 +166,41 @@ def generate_cert_chain(root_key_type, root_key_size, int_key_type, int_key_size
         ee_key_size,
         generate_ev)
 
-def generate_certs(key_type, inadequate_key_size, adequate_key_size, generate_ev):
+def generate_rsa_chains(inadequate_key_size, adequate_key_size, generate_ev):
     """
-    Generates the various certificates used by the key size tests.
+    Generates various RSA chains with different combinations of adequately and
+    inadequately sized certs.
 
     Arguments:
-      key_type -- the type of key generated: potential values: 'rsa',
-                  or any of the curves found by 'openssl ecparam -list_curves'
       inadequate_key_size -- a string defining the inadequate public key size
                              for the generated certs
       adequate_key_size -- a string defining the adequate public key size for
                            the generated certs
-      generate_ev -- whether an EV cert should be generated
+      generate_ev -- whether EV certs should be generated
     """
     # Generate chain with certs that have adequate sizes
-    if generate_ev and key_type == 'rsa':
-        # Reuse the existing RSA EV root
-        rootOK_nick = 'evroot'
-        caOK_key = '../test_ev_certs/evroot.key'
-        caOK_cert = '../test_ev_certs/evroot.der'
-        caOK_pkcs12_filename = '../test_ev_certs/evroot.p12'
-        CertUtils.import_cert_and_pkcs12(srcdir, caOK_cert, caOK_pkcs12_filename,
-                                         rootOK_nick, ',,')
-    else:
-        [rootOK_nick, caOK_key, caOK_cert] = generate_and_maybe_import_cert(
-            key_type,
-            'root',
-            '',
-            ca_ext_text,
-            '',
-            '',
-            adequate_key_size,
-            generate_ev)
-
-    [intOK_nick, intOK_key, intOK_cert] = generate_and_maybe_import_cert(
-        key_type,
-        'int',
-        rootOK_nick,
-        ca_ext_text,
-        caOK_key,
-        caOK_cert,
-        adequate_key_size,
-        generate_ev)
-
-    generate_and_maybe_import_cert(
-        key_type,
-        'ee',
-        intOK_nick,
-        ee_ext_text,
-        intOK_key,
-        intOK_cert,
-        adequate_key_size,
-        generate_ev)
+    generate_cert_chain('rsa', adequate_key_size,
+                        'rsa', adequate_key_size,
+                        'rsa', adequate_key_size,
+                        generate_ev)
 
     # Generate chain with a root cert that has an inadequate size
-    [rootNotOK_nick, rootNotOK_key, rootNotOK_cert] = generate_and_maybe_import_cert(
-        key_type,
-        'root',
-        '',
-        ca_ext_text,
-        '',
-        '',
-        inadequate_key_size,
-        generate_ev)
-
-    [int_nick, int_key, int_cert] = generate_and_maybe_import_cert(
-        key_type,
-        'int',
-        rootNotOK_nick,
-        ca_ext_text,
-        rootNotOK_key,
-        rootNotOK_cert,
-        adequate_key_size,
-        generate_ev)
-
-    generate_and_maybe_import_cert(
-        key_type,
-        'ee',
-        int_nick,
-        ee_ext_text,
-        int_key,
-        int_cert,
-        adequate_key_size,
-        generate_ev)
+    generate_cert_chain('rsa', inadequate_key_size,
+                        'rsa', adequate_key_size,
+                        'rsa', adequate_key_size,
+                        generate_ev)
 
     # Generate chain with an intermediate cert that has an inadequate size
-    [intNotOK_nick, intNotOK_key, intNotOK_cert] = generate_and_maybe_import_cert(
-        key_type,
-        'int',
-        rootOK_nick,
-        ca_ext_text,
-        caOK_key,
-        caOK_cert,
-        inadequate_key_size,
-        generate_ev)
-
-    generate_and_maybe_import_cert(
-        key_type,
-        'ee',
-        intNotOK_nick,
-        ee_ext_text,
-        intNotOK_key,
-        intNotOK_cert,
-        adequate_key_size,
-        generate_ev)
+    generate_cert_chain('rsa', adequate_key_size,
+                        'rsa', inadequate_key_size,
+                        'rsa', adequate_key_size,
+                        generate_ev)
 
     # Generate chain with an end entity cert that has an inadequate size
-    generate_and_maybe_import_cert(
-        key_type,
-        'ee',
-        intOK_nick,
-        ee_ext_text,
-        intOK_key,
-        intOK_cert,
-        inadequate_key_size,
-        generate_ev)
+    generate_cert_chain('rsa', adequate_key_size,
+                        'rsa', adequate_key_size,
+                        'rsa', inadequate_key_size,
+                        generate_ev)
 
 def generate_ecc_chains():
     generate_cert_chain('prime256v1', '256',
@@ -328,8 +248,8 @@ CertUtils.init_nss_db(srcdir)
 # TODO(bug 636807): SECKEY_PublicKeyStrengthInBits() rounds up the number of
 # bits to the next multiple of 8 - therefore the highest key size less than 1024
 # that can be tested is 1016, less than 2048 is 2040 and so on.
-generate_certs('rsa', '1016', '1024', False)
-generate_certs('rsa', '2040', '2048', True)
+generate_rsa_chains('1016', '1024', False)
+generate_rsa_chains('2040', '2048', True)
 generate_ecc_chains()
 generate_combination_chains()
 
