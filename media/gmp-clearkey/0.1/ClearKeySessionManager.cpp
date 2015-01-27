@@ -20,7 +20,7 @@ using namespace std;
 ClearKeySessionManager::ClearKeySessionManager()
   : mDecryptionManager(ClearKeyDecryptionManager::Get())
 {
-  CK_LOGD("ClearKeySessionManager ctor");
+  CK_LOGD("ClearKeySessionManager ctor %p", this);
   AddRef();
 
   if (GetPlatform()->createthread(&mThread) != GMPNoErr) {
@@ -31,7 +31,7 @@ ClearKeySessionManager::ClearKeySessionManager()
 
 ClearKeySessionManager::~ClearKeySessionManager()
 {
-  CK_LOGD("ClearKeySessionManager dtor");
+  CK_LOGD("ClearKeySessionManager dtor %p", this);
    MOZ_ASSERT(!mRefCount);
 }
 
@@ -372,7 +372,7 @@ ClearKeySessionManager::DoDecrypt(GMPBuffer* aBuffer,
 void
 ClearKeySessionManager::Shutdown()
 {
-  CK_LOGD("ClearKeySessionManager::Shutdown");
+  CK_LOGD("ClearKeySessionManager::Shutdown %p", this);
 
   for (auto it = mSessions.begin(); it != mSessions.end(); it++) {
     delete it->second;
@@ -383,7 +383,7 @@ ClearKeySessionManager::Shutdown()
 void
 ClearKeySessionManager::DecryptingComplete()
 {
-  CK_LOGD("ClearKeySessionManager::DecryptingComplete");
+  CK_LOGD("ClearKeySessionManager::DecryptingComplete %p", this);
 
   GMPThread* thread = mThread;
   thread->Join();
