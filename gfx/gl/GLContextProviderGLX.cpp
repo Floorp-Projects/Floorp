@@ -1213,7 +1213,7 @@ DONE_CREATING_PIXMAP:
 }
 
 already_AddRefed<GLContext>
-GLContextProviderGLX::CreateHeadless(bool)
+GLContextProviderGLX::CreateHeadless()
 {
     gfxIntSize dummySize = gfxIntSize(16, 16);
     nsRefPtr<GLContext> glContext = CreateOffscreenPixmapContext(dummySize);
@@ -1225,10 +1225,9 @@ GLContextProviderGLX::CreateHeadless(bool)
 
 already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps,
-                                      bool requireCompatProfile)
+                                      const SurfaceCaps& caps)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
+    nsRefPtr<GLContext> glContext = CreateHeadless();
     if (!glContext)
         return nullptr;
 
