@@ -24,30 +24,28 @@ const RECENT_EVENT_THRESHOLD = 15 * 60 * 1000000;
  *        The time of the visit.  Defaults to now if not provided.
  */
 function VisitInfo(aTransitionType,
-                   aVisitTime)
-{
+                   aVisitTime) {
   this.transitionType =
     aTransitionType === undefined ? TRANSITION_LINK : aTransitionType;
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
 function promiseUpdatePlaces(aPlaces) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces(aPlaces, {
-    _errors: [],
-    _results: [],
-    handleError: function handleError(aResultCode, aPlace) {
-      this._errors.push({ resultCode: aResultCode, info: aPlace});
-    },
-    handleResult: function handleResult(aPlace) {
-      this._results.push(aPlace);
-    },
-    handleCompletion: function handleCompletion() {
-      deferred.resolve({ errors: this._errors, results: this._results });
-    }
+  return new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces(aPlaces, {
+      _errors: [],
+      _results: [],
+      handleError(aResultCode, aPlace) {
+        this._errors.push({ resultCode: aResultCode, info: aPlace});
+      },
+      handleResult(aPlace) {
+        this._results.push(aPlace);
+      },
+      handleCompletion() {
+        resolve({ errors: this._errors, results: this._results });
+      }
+    });
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -63,18 +61,14 @@ function promiseUpdatePlaces(aPlaces) {
  */
 function TitleChangedObserver(aURI,
                               aExpectedTitle,
-                              aCallback)
-{
+                              aCallback) {
   this.uri = aURI;
   this.expectedTitle = aExpectedTitle;
   this.callback = aCallback;
 }
 TitleChangedObserver.prototype = {
   __proto__: NavHistoryObserver.prototype,
-  onTitleChanged: function(aURI,
-                           aTitle,
-                           aGUID)
-  {
+  onTitleChanged(aURI, aTitle, aGUID) {
     do_log_info("onTitleChanged(" + aURI.spec + ", " + aTitle + ", " + aGUID + ")");
     if (!this.uri.equals(aURI)) {
       return;
@@ -148,14 +142,12 @@ function do_check_title_for_uri(aURI,
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-function test_interface_exists()
-{
+add_task(function* test_interface_exists() {
   let history = Cc["@mozilla.org/browser/history;1"].getService(Ci.nsISupports);
   do_check_true(history instanceof Ci.mozIAsyncHistory);
-}
+});
 
-function test_invalid_uri_throws()
-{
+add_task(function* test_invalid_uri_throws() {
   // First, test passing in nothing.
   let place = {
     visits: [
@@ -188,10 +180,9 @@ function test_invalid_uri_throws()
       do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
     }
   }
-}
+});
 
-function test_invalid_places_throws()
-{
+add_task(function* test_invalid_places_throws() {
   // First, test passing in nothing.
   try {
     PlacesUtils.asyncHistory.updatePlaces();
@@ -219,10 +210,9 @@ function test_invalid_places_throws()
       do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
     }
   }
-}
+});
 
-function test_invalid_guid_throws()
-{
+add_task(function* test_invalid_guid_throws() {
   // First check invalid length guid.
   let place = {
     guid: "BAD_GUID",
@@ -249,10 +239,9 @@ function test_invalid_guid_throws()
   catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
-}
+});
 
-function test_no_visits_throws()
-{
+add_task(function* test_no_visits_throws() {
   const TEST_URI =
     NetUtil.newURI(TEST_DOMAIN + "test_no_id_or_guid_no_visits_throws");
   const TEST_GUID = "_RANDOMGUID_";
@@ -290,10 +279,9 @@ function test_no_visits_throws()
       }
     }
   }
-}
+});
 
-function test_add_visit_no_date_throws()
-{
+add_task(function* test_add_visit_no_date_throws() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_add_visit_no_date_throws"),
     visits: [
@@ -308,10 +296,9 @@ function test_add_visit_no_date_throws()
   catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
-}
+});
 
-function test_add_visit_no_transitionType_throws()
-{
+add_task(function* test_add_visit_no_transitionType_throws() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_add_visit_no_transitionType_throws"),
     visits: [
@@ -326,10 +313,9 @@ function test_add_visit_no_transitionType_throws()
   catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
-}
+});
 
-function test_add_visit_invalid_transitionType_throws()
-{
+add_task(function* test_add_visit_invalid_transitionType_throws() {
   // First, test something that has a transition type lower than the first one.
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN +
@@ -355,10 +341,9 @@ function test_add_visit_invalid_transitionType_throws()
   catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
-}
+});
 
-function test_non_addable_uri_errors()
-{
+add_task(function* test_non_addable_uri_errors() {
   // Array of protocols that nsINavHistoryService::canAddURI returns false for.
   const URLS = [
     "about:config",
@@ -404,10 +389,9 @@ function test_non_addable_uri_errors()
     do_check_false(yield promiseIsURIVisited(place.info.uri));
   }
   yield promiseAsyncUpdates();
-}
+});
 
-function test_duplicate_guid_errors()
-{
+add_task(function* test_duplicate_guid_errors() {
   // This test ensures that trying to add a visit, with a guid already found in
   // another visit, fails.
   let place = {
@@ -443,10 +427,9 @@ function test_duplicate_guid_errors()
   do_check_false(yield promiseIsURIVisited(badPlaceInfo.info.uri));
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_invalid_referrerURI_ignored()
-{
+add_task(function* test_invalid_referrerURI_ignored() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN +
                         "test_invalid_referrerURI_ignored"),
@@ -480,10 +463,9 @@ function test_invalid_referrerURI_ignored()
   stmt.finalize();
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_nonnsIURI_referrerURI_ignored()
-{
+add_task(function* test_nonnsIURI_referrerURI_ignored() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN +
                         "test_nonnsIURI_referrerURI_ignored"),
@@ -513,10 +495,9 @@ function test_nonnsIURI_referrerURI_ignored()
   stmt.finalize();
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_old_referrer_ignored()
-{
+add_task(function* test_old_referrer_ignored() {
   // This tests that a referrer for a visit which is not recent (specifically,
   // older than 15 minutes as per RECENT_EVENT_THRESHOLD) is not saved by
   // updatePlaces.
@@ -573,10 +554,9 @@ function test_old_referrer_ignored()
   stmt.finalize();
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_place_id_ignored()
-{
+add_task(function* test_place_id_ignored() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_place_id_ignored_first"),
     visits: [
@@ -614,10 +594,9 @@ function test_place_id_ignored()
   do_check_true(yield promiseIsURIVisited(badPlace.uri));
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_handleCompletion_called_when_complete()
-{
+add_task(function* test_handleCompletion_called_when_complete() {
   // We test a normal visit, and embeded visit, and a uri that would fail
   // the canAddURI test to make sure that the notification happens after *all*
   // of them have had a callback.
@@ -656,10 +635,9 @@ function test_handleCompletion_called_when_complete()
   do_check_eq(callbackCountSuccess, EXPECTED_COUNT_SUCCESS);
   do_check_eq(callbackCountFailure, EXPECTED_COUNT_FAILURE);
   yield promiseAsyncUpdates();
-}
+});
 
-function test_add_visit()
-{
+add_task(function* test_add_visit() {
   const VISIT_TIME = Date.now() * 1000;
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_add_visit"),
@@ -720,10 +698,9 @@ function test_add_visit()
       yield promiseAsyncUpdates();
     }
   }
-}
+});
 
-function test_properties_saved()
-{
+add_task(function* test_properties_saved() {
   // Check each transition type to make sure it is saved properly.
   let places = [];
   for (let transitionType = TRANSITION_LINK;
@@ -804,10 +781,9 @@ function test_properties_saved()
       yield promiseAsyncUpdates();
     }
   }
-}
+});
 
-function test_guid_saved()
-{
+add_task(function* test_guid_saved() {
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_guid_saved"),
     guid: "__TESTGUID__",
@@ -828,10 +804,9 @@ function test_guid_saved()
   do_check_eq(placeInfo.guid, place.guid);
   do_check_guid_for_uri(uri, place.guid);
   yield promiseAsyncUpdates();
-}
+});
 
-function test_referrer_saved()
-{
+add_task(function* test_referrer_saved() {
   let places = [
     { uri: NetUtil.newURI(TEST_DOMAIN + "test_referrer_saved/referrer"),
       visits: [
@@ -881,10 +856,9 @@ function test_referrer_saved()
       yield promiseAsyncUpdates();
     }
   }
-}
+});
 
-function test_guid_change_saved()
-{
+add_task(function* test_guid_change_saved() {
   // First, add a visit for it.
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_guid_change_saved"),
@@ -908,10 +882,9 @@ function test_guid_change_saved()
   do_check_guid_for_uri(place.uri, place.guid);
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_title_change_saved()
-{
+add_task(function* test_title_change_saved() {
   // First, add a visit for it.
   let place = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_title_change_saved"),
@@ -955,10 +928,9 @@ function test_title_change_saved()
   do_check_title_for_uri(place.uri, place.title);
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_no_title_does_not_clear_title()
-{
+add_task(function* test_no_title_does_not_clear_title() {
   const TITLE = "test title";
   // First, add a visit for it.
   let place = {
@@ -984,10 +956,9 @@ function test_no_title_does_not_clear_title()
   do_check_title_for_uri(place.uri, TITLE);
 
   yield promiseAsyncUpdates();
-}
+});
 
-function test_title_change_notifies()
-{
+add_task(function* test_title_change_notifies() {
   // There are three cases to test.  The first case is to make sure we do not
   // get notified if we do not specify a title.
   let place = {
@@ -1015,36 +986,35 @@ function test_title_change_notifies()
   place.uri = NetUtil.newURI(place.uri.spec + "/new-visit-with-title");
   place.title = "title 1";
   function promiseTitleChangedObserver(aPlace) {
-    let deferred = Promise.defer();
-    let callbackCount = 0;
-    let observer = new TitleChangedObserver(aPlace.uri, aPlace.title, function() {
-      switch (++callbackCount) {
-        case 1:
-          // The third case to test is to make sure we get a notification when
-          // we change an existing place.
-          observer.expectedTitle = place.title = "title 2";
-          place.visits = [new VisitInfo()];
-          PlacesUtils.asyncHistory.updatePlaces(place);
-          break;
-        case 2:
-          PlacesUtils.history.removeObserver(silentObserver);
-          PlacesUtils.history.removeObserver(observer);
-          deferred.resolve();
-          break;
-      };
-    });
+    return new Promise((resolve, reject) => {
+      let callbackCount = 0;
+      let observer = new TitleChangedObserver(aPlace.uri, aPlace.title, function() {
+        switch (++callbackCount) {
+          case 1:
+            // The third case to test is to make sure we get a notification when
+            // we change an existing place.
+            observer.expectedTitle = place.title = "title 2";
+            place.visits = [new VisitInfo()];
+            PlacesUtils.asyncHistory.updatePlaces(place);
+            break;
+          case 2:
+            PlacesUtils.history.removeObserver(silentObserver);
+            PlacesUtils.history.removeObserver(observer);
+            resolve();
+            break;
+        };
+      });
 
-    PlacesUtils.history.addObserver(observer, false);
-    PlacesUtils.asyncHistory.updatePlaces(aPlace);
-    return deferred.promise;
+      PlacesUtils.history.addObserver(observer, false);
+      PlacesUtils.asyncHistory.updatePlaces(aPlace);
+    });
   }
 
   yield promiseTitleChangedObserver(place);
   yield promiseAsyncUpdates();
-}
+});
 
-function test_visit_notifies()
-{
+add_task(function* test_visit_notifies() {
   // There are two observers we need to see for each visit.  One is an
   // nsINavHistoryObserver and the other is the uri-visit-saved observer topic.
   let place = {
@@ -1057,44 +1027,43 @@ function test_visit_notifies()
   do_check_false(yield promiseIsURIVisited(place.uri));
 
   function promiseVisitObserver(aPlace) {
-    let deferred = Promise.defer();
-    let callbackCount = 0;
-    let finisher = function() {
-      if (++callbackCount == 2) {
-        deferred.resolve();
+    return new Promise((resolve, reject) => {
+      let callbackCount = 0;
+      let finisher = function() {
+        if (++callbackCount == 2) {
+          resolve();
+        }
       }
-    }
-    let visitObserver = new VisitObserver(place.uri, place.guid,
-                                          function(aVisitDate,
-                                                   aTransitionType) {
-      let visit = place.visits[0];
-      do_check_eq(visit.visitDate, aVisitDate);
-      do_check_eq(visit.transitionType, aTransitionType);
+      let visitObserver = new VisitObserver(place.uri, place.guid,
+                                            function(aVisitDate,
+                                                     aTransitionType) {
+        let visit = place.visits[0];
+        do_check_eq(visit.visitDate, aVisitDate);
+        do_check_eq(visit.transitionType, aTransitionType);
 
-      PlacesUtils.history.removeObserver(visitObserver);
-      finisher();
+        PlacesUtils.history.removeObserver(visitObserver);
+        finisher();
+      });
+      PlacesUtils.history.addObserver(visitObserver, false);
+      let observer = function(aSubject, aTopic, aData) {
+        do_log_info("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
+        do_check_true(aSubject instanceof Ci.nsIURI);
+        do_check_true(aSubject.equals(place.uri));
+
+        Services.obs.removeObserver(observer, URI_VISIT_SAVED);
+        finisher();
+      };
+      Services.obs.addObserver(observer, URI_VISIT_SAVED, false);
+      PlacesUtils.asyncHistory.updatePlaces(place);
     });
-    PlacesUtils.history.addObserver(visitObserver, false);
-    let observer = function(aSubject, aTopic, aData) {
-      do_log_info("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
-      do_check_true(aSubject instanceof Ci.nsIURI);
-      do_check_true(aSubject.equals(place.uri));
-
-      Services.obs.removeObserver(observer, URI_VISIT_SAVED);
-      finisher();
-    };
-    Services.obs.addObserver(observer, URI_VISIT_SAVED, false);
-    PlacesUtils.asyncHistory.updatePlaces(place);
-    return deferred.promise;
   }
 
   yield promiseVisitObserver(place);
   yield promiseAsyncUpdates();
-}
+});
 
 // test with empty mozIVisitInfoCallback object
-function test_callbacks_not_supplied()
-{
+add_task(function* test_callbacks_not_supplied() {
   const URLS = [
     "imap://cyrus.andrew.cmu.edu/archive.imap",  // bad URI
     "http://mozilla.org/" // valid URI
@@ -1121,40 +1090,36 @@ function test_callbacks_not_supplied()
 
   PlacesUtils.asyncHistory.updatePlaces(places, {});
   yield promiseAsyncUpdates();
-}
+});
 
-////////////////////////////////////////////////////////////////////////////////
-//// Test Runner
+// Test that we don't wrongly overwrite typed and hidden when adding new visits.
+add_task(function* test_typed_hidden_not_overwritten() {
+  yield PlacesTestUtils.clearHistory();
+  let places = [
+    { uri: NetUtil.newURI("http://mozilla.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_TYPED),
+        new VisitInfo(TRANSITION_LINK)
+      ]
+    },
+    { uri: NetUtil.newURI("http://mozilla.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_FRAMED_LINK)
+      ]
+    },
+  ];
+  yield promiseUpdatePlaces(places);
 
-[
-  test_interface_exists,
-  test_invalid_uri_throws,
-  test_invalid_places_throws,
-  test_invalid_guid_throws,
-  test_no_visits_throws,
-  test_add_visit_no_date_throws,
-  test_add_visit_no_transitionType_throws,
-  test_add_visit_invalid_transitionType_throws,
-  // Note: all asynchronous tests (every test below this point) should wait for
-  // async updates before calling run_next_test.
-  test_non_addable_uri_errors,
-  test_duplicate_guid_errors,
-  test_invalid_referrerURI_ignored,
-  test_nonnsIURI_referrerURI_ignored,
-  test_old_referrer_ignored,
-  test_place_id_ignored,
-  test_handleCompletion_called_when_complete,
-  test_add_visit,
-  test_properties_saved,
-  test_guid_saved,
-  test_referrer_saved,
-  test_guid_change_saved,
-  test_title_change_saved,
-  test_no_title_does_not_clear_title,
-  test_title_change_notifies,
-  test_visit_notifies,
-  test_callbacks_not_supplied,
-].forEach(add_task);
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.execute("SELECT hidden, typed FROM moz_places WHERE url = :url",
+                              { url: "http://mozilla.org/" });
+  Assert.equal(rows[0].getResultByName("typed"), 1,
+               "The page should be marked as typed");
+  Assert.equal(rows[0].getResultByName("hidden"), 0,
+               "The page should be marked as not hidden");
+});
 
 function run_test()
 {
