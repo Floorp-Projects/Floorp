@@ -355,25 +355,11 @@ PeerConnectionTest.prototype.closePC = function() {
  * Close the open data channels, followed by the underlying peer connection
  */
 PeerConnectionTest.prototype.close = function() {
-
-  // TODO: Bug 1118398 - We should try to close data channels first here.
-  // return timerGuard(
-  //var allChannels = this.pcLocal ? this.pcLocal.dataChannels :
-  //    this.pcRemote.dataChannels;
-  //Promise.all(allChannels.map((channel, i) => this.closeDataChannels(i))),
-  //  60000, "failed to close data channels")
-  // .then(() => this.closePC());
-
-  var expectOnClose = channel =>
-      (channel.onclose = () => info(channel + " closed"));
-  if (this.pcLocal) {
-    this.pcLocal.dataChannels.forEach(expectOnClose);
-  }
-  if (this.pcRemote) {
-    this.pcRemote.dataChannels.forEach(expectOnClose);
-  }
-
-  return this.closePC();
+  var allChannels = (this.pcLocal ? this.pcLocal : this.pcRemote).dataChannels;
+  return timerGuard(
+    Promise.all(allChannels.map((channel, i) => this.closeDataChannels(i))),
+    60000, "failed to close data channels")
+    .then(() => this.closePC());
 };
 
 /**
