@@ -2329,6 +2329,16 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
 }
 
 void
+HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
+{
+  nsTArray<nsRefPtr<File>> files;
+  for (uint32_t i = 0; i < aFiles.Length(); ++i) {
+    files.AppendElement(aFiles[i]);
+  }
+  SetFiles(files, true);
+}
+
+void
 HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames)
 {
   nsTArray<nsRefPtr<File>> files;
