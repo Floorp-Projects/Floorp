@@ -984,6 +984,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = GetAudioReader()->GetMediaInfo();
     MOZ_ASSERT(info.HasAudio());
     mInfo.mAudio = info.mAudio;
+    mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
     MSE_DEBUG("audio reader=%p duration=%lld",
               mAudioSourceDecoder.get(),
               mAudioSourceDecoder->GetReader()->GetDecoder()->GetMediaDuration());
@@ -996,6 +997,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = GetVideoReader()->GetMediaInfo();
     MOZ_ASSERT(info.HasVideo());
     mInfo.mVideo = info.mVideo;
+    mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
     MSE_DEBUG("video reader=%p duration=%lld",
               GetVideoReader(),
               GetVideoReader()->GetDecoder()->GetMediaDuration());
