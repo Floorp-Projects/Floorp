@@ -2237,24 +2237,16 @@ void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultF
   // picker is up would cause Cancel() to be called, and the dialog would be
   // released, which would release this object too, which would crash.
   // See Bug 249143
-  nsIFile* fileToUse;
   nsRefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
   nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
-  rv = mDialog->PromptForSaveToFile(this,
-                                    GetDialogParent(),
-                                    aDefaultFile.get(),
-                                    aFileExtension.get(),
-                                    mForceSave, &fileToUse);
 
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    // we need to use the async version -> nsIHelperAppLauncherDialog.promptForSaveToFileAsync.
-    rv = mDialog->PromptForSaveToFileAsync(this, 
-                                           GetDialogParent(),
-                                           aDefaultFile.get(),
-                                           aFileExtension.get(),
-                                           mForceSave);
-  } else {
-    SaveDestinationAvailable(rv == NS_OK ? fileToUse : nullptr);
+  rv = mDialog->PromptForSaveToFileAsync(this,
+                                         GetDialogParent(),
+                                         aDefaultFile.get(),
+                                         aFileExtension.get(),
+                                         mForceSave);
+  if (NS_FAILED(rv)) {
+    Cancel(NS_BINDING_ABORTED);
   }
 }
 
