@@ -874,20 +874,27 @@ const COMPOSITION_ATTR_CONVERTED_CLAUSE =
 const COMPOSITION_ATTR_SELECTED_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE;
 
+var TIPMap = new WeakMap();
+
 function _getTIP(aWindow, aCallback)
 {
   if (!aWindow) {
     aWindow = window;
   }
-  if (!aWindow._EU_TIP) {
-    aWindow._EU_TIP =
+  var tip;
+  if (TIPMap.has(aWindow)) {
+    tip = TIPMap.get(aWindow);
+  } else {
+    tip =
       _EU_Cc["@mozilla.org/text-input-processor;1"].
         createInstance(_EU_Ci.nsITextInputProcessor);
+    TIPMap.set(aWindow, tip);
   }
-  if (!aWindow._EU_TIP.initForTests(aWindow, aCallback)) {
-    aWindow._EU_TIP = null;
+  if (!tip.initForTests(aWindow, aCallback)) {
+    tip = null;
+    TIPMap.delete(aWindow);
   }
-  return aWindow._EU_TIP;
+  return tip;
 }
 
 /**
