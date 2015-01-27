@@ -512,7 +512,9 @@ this.BrowserIDManager.prototype = {
     return true;
   },
 
-  // Refresh the sync token for our user.
+  // Refresh the sync token for our user. Returns a promise that resolves
+  // with a token (which may be null in one sad edge-case), or rejects with an
+  // error.
   _fetchTokenForUser: function() {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
     if (tokenServerURI.endsWith("/")) { // trailing slashes cause problems...
@@ -527,8 +529,7 @@ this.BrowserIDManager.prototype = {
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
     if (!this._canFetchKeys()) {
-      log.info("_fetchTokenForUser has no keys to use.");
-      return null;
+      return Promise.resolve(null);
     }
 
     log.info("Fetching assertion and token from: " + tokenServerURI);
@@ -594,7 +595,7 @@ this.BrowserIDManager.prototype = {
         if (err.response && err.response.status === 401) {
           err = new AuthenticationError(err);
         // A hawkclient error.
-        } else if (err.code === 401) {
+        } else if (err.code && err.code === 401) {
           err = new AuthenticationError(err);
         }
 
@@ -629,6 +630,9 @@ this.BrowserIDManager.prototype = {
       this._log.debug("_ensureValidToken already has one");
       return Promise.resolve();
     }
+    // reset this._token as a safety net to reduce the possibility of us
+    // repeatedly attempting to use an invalid token if _fetchTokenForUser throws.
+    this._token = null;
     return this._fetchTokenForUser().then(
       token => {
         this._token = token;
@@ -708,6 +712,17 @@ BrowserIDClusterManager.prototype = {
 
   _findCluster: function() {
     let endPointFromIdentityToken = function() {
+      // The only reason (in theory ;) that we can end up with a null token
+      // is when this.identity._canFetchKeys() returned false.  In turn, this
+      // should only happen if the master-password is locked or the credentials
+      // storage is screwed, and in those cases we shouldn't have started
+      // syncing so shouldn't get here anyway.
+      // But better safe than sorry! To keep things clearer, throw an explicit
+      // exception - the message will appear in the logs and the error will be
+      // treated as transient.
+      if (!this.identity._token) {
+        throw new Error("Can't get a cluster URL as we can't fetch keys.");
+      }
       let endpoint = this.identity._token.endpoint;
       // For Sync 1.5 storage endpoints, we use the base endpoint verbatim.
       // However, it should end in "/" because we will extend it with
