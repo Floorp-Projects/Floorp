@@ -56,6 +56,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredClone.h"
+#include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
@@ -71,6 +72,7 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsDOMJSUtils.h"
+#include "nsFormData.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
@@ -391,15 +393,13 @@ EnsureBlobForBackgroundManager(FileImpl* aBlobImpl,
   return blobImpl.forget();
 }
 
-void
-ReadBlobOrFile(JSContext* aCx,
-               JSStructuredCloneReader* aReader,
-               bool aIsMainThread,
-               JS::MutableHandle<JSObject*> aBlobOrFile)
+already_AddRefed<File>
+ReadBlobOrFileNoWrap(JSContext* aCx,
+                     JSStructuredCloneReader* aReader,
+                     bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aReader);
-  MOZ_ASSERT(!aBlobOrFile);
 
   nsRefPtr<FileImpl> blobImpl;
   {
@@ -433,7 +433,75 @@ ReadBlobOrFile(JSContext* aCx,
   }
 
   nsRefPtr<File> blob = new File(parent, blobImpl);
+  return blob.forget();
+}
+
+void
+ReadBlobOrFile(JSContext* aCx,
+               JSStructuredCloneReader* aReader,
+               bool aIsMainThread,
+               JS::MutableHandle<JSObject*> aBlobOrFile)
+{
+  nsRefPtr<File> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
   aBlobOrFile.set(blob->WrapObject(aCx));
+}
+
+// See WriteFormData for serialization format.
+void
+ReadFormData(JSContext* aCx,
+             JSStructuredCloneReader* aReader,
+             bool aIsMainThread,
+             uint32_t aCount,
+             JS::MutableHandle<JSObject*> aFormData)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aReader);
+  MOZ_ASSERT(!aFormData);
+
+  nsCOMPtr<nsISupports> parent;
+  if (aIsMainThread) {
+    AssertIsOnMainThread();
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
+      nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(aCx));
+    parent = do_QueryInterface(scriptGlobal);
+  } else {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+
+    WorkerGlobalScope* globalScope = workerPrivate->GlobalScope();
+    MOZ_ASSERT(globalScope);
+
+    parent = do_QueryObject(globalScope);
+  }
+
+  nsRefPtr<nsFormData> formData = new nsFormData(parent);
+  MOZ_ASSERT(formData);
+
+  Optional<nsAString> thirdArg;
+
+  uint32_t isFile;
+  uint32_t dummy;
+  for (uint32_t i = 0; i < aCount; ++i) {
+    MOZ_ALWAYS_TRUE(JS_ReadUint32Pair(aReader, &isFile, &dummy));
+
+    nsAutoString name;
+    MOZ_ALWAYS_TRUE(ReadString(aReader, name));
+
+    if (isFile) {
+      // Read out the tag since the blob reader isn't expecting it.
+      MOZ_ALWAYS_TRUE(JS_ReadUint32Pair(aReader, &dummy, &dummy));
+      nsRefPtr<File> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
+      MOZ_ASSERT(blob);
+      formData->Append(name, *blob, thirdArg);
+    } else {
+      nsAutoString value;
+      MOZ_ALWAYS_TRUE(ReadString(aReader, value));
+      formData->Append(name, value);
+    }
+  }
+
+  aFormData.set(formData->WrapObject(aCx));
 }
 
 bool
@@ -462,6 +530,72 @@ WriteBlobOrFile(JSContext* aCx,
   return true;
 }
 
+// A FormData is serialized as:
+//  - A pair of ints (tag identifying it as a FormData, number of elements in
+//  the FormData)
+//  - for each (key, value) pair:
+//    - pair of ints (is value a file?, 0). If not a file, value is a string.
+//    - string name
+//    - if value is a file:
+//      - write the file/blob
+//    - else:
+//      - string value
+bool
+WriteFormData(JSContext* aCx,
+              JSStructuredCloneWriter* aWriter,
+              nsFormData* aFormData,
+              nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aWriter);
+  MOZ_ASSERT(aFormData);
+
+  if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_FORMDATA, aFormData->Length()))) {
+    return false;
+  }
+
+  class MOZ_STACK_CLASS Closure {
+    JSContext* mCx;
+    JSStructuredCloneWriter* mWriter;
+    nsTArray<nsCOMPtr<nsISupports>>& mClones;
+
+  public:
+    Closure(JSContext* aCx, JSStructuredCloneWriter* aWriter,
+            nsTArray<nsCOMPtr<nsISupports>>& aClones)
+      : mCx(aCx), mWriter(aWriter), mClones(aClones)
+    { }
+
+    static bool
+    Write(const nsString& aName, bool isFile, const nsString& aValue,
+          File* aFile, void* aClosure)
+    {
+      Closure* closure = static_cast<Closure*>(aClosure);
+      if (!JS_WriteUint32Pair(closure->mWriter, /* a file? */ (uint32_t) isFile, 0)) {
+        return false;
+      }
+
+      if (!WriteString(closure->mWriter, aName)) {
+        return false;
+      }
+
+      if (isFile) {
+        if (!WriteBlobOrFile(closure->mCx, closure->mWriter, aFile->Impl(), closure->mClones)) {
+          return false;
+        }
+      } else {
+        if (!WriteString(closure->mWriter, aValue)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  };
+
+  Closure closure(aCx, aWriter, aClonedObjects);
+  return aFormData->ForEach(Closure::Write, &closure);
+}
+
 struct WorkerStructuredCloneCallbacks
 {
   static JSObject*
@@ -483,6 +617,13 @@ struct WorkerStructuredCloneCallbacks
     else if (aTag == SCTAG_DOM_IMAGEDATA) {
       MOZ_ASSERT(!aData);
       return ReadStructuredCloneImageData(aCx, aReader);
+    }
+    // See if the object is a FormData.
+    else if (aTag == DOMWORKER_SCTAG_FORMDATA) {
+      JS::Rooted<JSObject*> formData(aCx);
+      // aData is the entry count.
+      ReadFormData(aCx, aReader, /* aIsMainThread */ false,  aData, &formData);
+      return formData;
     }
 
     Error(aCx, 0);
@@ -517,6 +658,16 @@ struct WorkerStructuredCloneCallbacks
       ImageData* imageData = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
         return WriteStructuredCloneImageData(aCx, aWriter, imageData);
+      }
+    }
+
+    // See if this is a FormData object.
+    {
+      nsFormData* formData = nullptr;
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, aObj, formData))) {
+        if (WriteFormData(aCx, aWriter, formData, *clonedObjects)) {
+          return true;
+        }
       }
     }
 
@@ -556,6 +707,13 @@ struct MainThreadWorkerStructuredCloneCallbacks
       ReadBlobOrFile(aCx, aReader, /* aIsMainThread */ true, &blobOrFile);
 
       return blobOrFile;
+    }
+    // See if the object is a FormData.
+    else if (aTag == DOMWORKER_SCTAG_FORMDATA) {
+      JS::Rooted<JSObject*> formData(aCx);
+      // aData is the entry count.
+      ReadFormData(aCx, aReader, /* aIsMainThread */ true,  aData, &formData);
+      return formData;
     }
 
     JS_ClearPendingException(aCx);
@@ -3158,7 +3316,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     transferable.setObject(*array);
   }
 
-  nsTArray<nsCOMPtr<nsISupports> > clonedObjects;
+  nsTArray<nsCOMPtr<nsISupports>> clonedObjects;
 
   JSAutoStructuredCloneBuffer buffer;
   if (!buffer.write(aCx, aMessage, transferable, callbacks, &clonedObjects)) {

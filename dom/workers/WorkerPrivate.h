@@ -1293,6 +1293,7 @@ GetCurrentThreadJSContext();
 enum WorkerStructuredDataType
 {
   DOMWORKER_SCTAG_BLOB = SCTAG_DOM_MAX,
+  DOMWORKER_SCTAG_FORMDATA = SCTAG_DOM_MAX + 1,
 
   DOMWORKER_SCTAG_END
 };
