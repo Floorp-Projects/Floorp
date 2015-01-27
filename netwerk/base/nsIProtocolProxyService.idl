@@ -18,7 +18,7 @@ interface nsIURI;
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
  */
-[scriptable, uuid(ab363090-c331-489f-aabb-7fe4481795b8)]
+[scriptable, uuid(deec8e08-a246-443c-90b6-f655632d1abf)]
 interface nsIProtocolProxyService : nsISupports
 {
     /** Flag 1 << 0 is unused **/
@@ -68,8 +68,11 @@ interface nsIProtocolProxyService : nsISupports
      * a proxy to be used for the given channel.  Otherwise, this method returns
      * null indicating that a direct connection should be used.
      *
-     * @param aChannel
-     *        The channel for which a proxy is to be found.
+     * @param aChannelOrURI
+     *        The channel for which a proxy is to be found, or, if no channel is
+     *        available, a URI indicating the same. This method will return
+     *        NS_ERROR_NOINTERFACE if this argument isn't either an nsIURI or an
+     *        nsIChannel.
      * @param aFlags
      *        A bit-wise combination of the RESOLVE_ flags defined above.  Pass
      *        0 to specify the default behavior.  Any additional bits that do
@@ -95,7 +98,7 @@ interface nsIProtocolProxyService : nsISupports
      *
      * @see nsIProxiedProtocolHandler::newProxiedChannel 
      */
-    nsICancelable asyncResolve(in nsIChannel aChannel, in unsigned long aFlags,
+    nsICancelable asyncResolve(in nsISupports aChannelOrURI, in unsigned long aFlags,
                                in nsIProtocolProxyCallback aCallback);
 
     /**
