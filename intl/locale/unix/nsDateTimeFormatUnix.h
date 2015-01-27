@@ -24,28 +24,28 @@ public:
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
                         const time_t  timetTime, 
-                        nsAString& stringOut); 
+                        nsAString& stringOut) MOZ_OVERRIDE;
 
   // performs a locale sensitive date formatting operation on the struct tm parameter
   NS_IMETHOD FormatTMTime(nsILocale* locale, 
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
                         const struct tm*  tmTime, 
-                        nsAString& stringOut); 
+                        nsAString& stringOut) MOZ_OVERRIDE;
 
   // performs a locale sensitive date formatting operation on the PRTime parameter
   NS_IMETHOD FormatPRTime(nsILocale* locale, 
                           const nsDateFormatSelector  dateFormatSelector, 
                           const nsTimeFormatSelector timeFormatSelector, 
                           const PRTime  prTime, 
-                          nsAString& stringOut);
+                          nsAString& stringOut) MOZ_OVERRIDE;
 
   // performs a locale sensitive date formatting operation on the PRExplodedTime parameter
   NS_IMETHOD FormatPRExplodedTime(nsILocale* locale, 
                                   const nsDateFormatSelector  dateFormatSelector, 
                                   const nsTimeFormatSelector timeFormatSelector, 
                                   const PRExplodedTime*  explodedTime, 
-                                  nsAString& stringOut); 
+                                  nsAString& stringOut) MOZ_OVERRIDE;
 
 
   nsDateTimeFormatUnix() {mLocale.Truncate();mAppLocale.Truncate();}
