@@ -118,11 +118,15 @@ this.UITour = {
     ["help",        {query: "#PanelUI-help"}],
     ["home",        {query: "#home-button"}],
     ["forget", {
+      allowAdd: true,
       query: "#panic-button",
       widgetName: "panic-button",
-      allowAdd: true,
     }],
-    ["loop",        {query: "#loop-button"}],
+    ["loop",        {
+      allowAdd: true,
+      query: "#loop-button",
+      widgetName: "loop-button",
+    }],
     ["loop-newRoom", {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
