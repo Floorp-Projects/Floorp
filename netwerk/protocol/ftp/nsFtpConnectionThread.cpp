@@ -1873,7 +1873,7 @@ nsFtpState::Init(nsFtpChannel *channel)
         do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
 
     if (pps && !mChannel->ProxyInfo()) {
-        pps->AsyncResolve(mChannel, 0, this,
+        pps->AsyncResolve(static_cast<nsIChannel*>(mChannel), 0, this,
                           getter_AddRefs(mProxyRequest));
     }
 
