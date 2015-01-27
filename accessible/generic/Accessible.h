@@ -39,6 +39,7 @@ class HTMLLIAccessible;
 class HyperTextAccessible;
 class ImageAccessible;
 class KeyBinding;
+class ProxyAccessible;
 class Relation;
 class RootAccessible;
 class TableAccessible;
@@ -607,6 +608,8 @@ public:
 
   bool IsMenuPopup() const { return mType == eMenuPopupType; }
 
+  bool IsProxy() const { return mType == eProxyType; }
+
   bool IsProgress() const { return mType == eProgressType; }
 
   bool IsRoot() const { return mType == eRootType; }
@@ -1103,7 +1106,11 @@ protected:
   int32_t mIndexOfEmbeddedChild;
   friend class EmbeddedObjCollector;
 
-  nsAutoPtr<AccGroupInfo> mGroupInfo;
+  union
+  {
+    AccGroupInfo* groupInfo;
+    ProxyAccessible* proxy;
+  } mBits;
   friend class AccGroupInfo;
 
   /**

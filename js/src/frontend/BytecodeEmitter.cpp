@@ -3101,6 +3101,7 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
         if (bce->script->bindingIsAliased(bi)) {
             ScopeCoordinate sc;
             sc.setHops(0);
+            sc.setSlot(0);  // initialize to silence GCC warning
             JS_ALWAYS_TRUE(LookupAliasedNameSlot(bce, bce->script, cx->names().arguments, &sc));
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, DontCheckLexical, bce))
                 return false;

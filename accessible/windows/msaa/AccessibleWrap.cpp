@@ -80,7 +80,13 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
   *ppv = nullptr;
 
-  if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
+  if (IID_IUnknown == iid)
+    *ppv = static_cast<IAccessible*>(this);
+
+  if (!*ppv && IsProxy())
+    return E_NOINTERFACE;
+
+  if (IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
   else if (IID_IEnumVARIANT == iid) {
     // Don't support this interface for leaf elements.
@@ -1135,7 +1141,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::ePlatforms)) {
-    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
+    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %p\n\n",
            eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
            childID, hWnd);
   }

@@ -216,7 +216,10 @@ class SyntaxParseHandler
         return tokenStream.currentToken().pos;
     }
 
-    Node newList(ParseNodeKind kind, Node kid = NodeGeneric, JSOp op = JSOP_NOP) {
+    Node newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        return NodeGeneric;
+    }
+    Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
     void addList(Node pn, Node kid) {}

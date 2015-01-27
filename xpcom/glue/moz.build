@@ -112,3 +112,5 @@ LOCAL_INCLUDES += [
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
+
+FAIL_ON_WARNINGS = True

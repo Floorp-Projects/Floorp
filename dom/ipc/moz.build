@@ -130,7 +130,6 @@ LOCAL_INCLUDES += [
     '/extensions/cookie',
     '/extensions/spellcheck/src',
     '/hal/sandbox',
-    '/js/ipc',
     '/layout/base',
     '/netwerk/base',
     '/toolkit/xre',

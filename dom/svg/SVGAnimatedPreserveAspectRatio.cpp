@@ -277,9 +277,8 @@ SVGAnimatedPreserveAspectRatio::SetAnimValue(uint64_t aPackedValue,
   aSVGElement->DidAnimatePreserveAspectRatio();
 }
 
-nsresult
+already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
 SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
-  DOMSVGAnimatedPreserveAspectRatio **aResult,
   nsSVGElement *aSVGElement)
 {
   nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =
@@ -288,8 +287,7 @@ SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
     domAnimatedPAspectRatio = new DOMSVGAnimatedPreserveAspectRatio(this, aSVGElement);
     sSVGAnimatedPAspectRatioTearoffTable.AddTearoff(this, domAnimatedPAspectRatio);
   }
-  domAnimatedPAspectRatio.forget(aResult);
-  return NS_OK;
+  return domAnimatedPAspectRatio.forget();
 }
 
 DOMSVGAnimatedPreserveAspectRatio::~DOMSVGAnimatedPreserveAspectRatio()

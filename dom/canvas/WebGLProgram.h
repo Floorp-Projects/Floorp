@@ -38,6 +38,7 @@ struct LinkedProgramInfo MOZ_FINAL
     // user-facing `GLActiveInfo::name`s, without any final "[0]".
     std::map<nsCString, const WebGLActiveInfo*> attribMap;
     std::map<nsCString, const WebGLActiveInfo*> uniformMap;
+    std::map<nsCString, const nsCString>* fragDataMap;
 
     // Needed for draw call validation.
     std::set<GLuint> activeAttribLocs;
@@ -64,6 +65,17 @@ struct LinkedProgramInfo MOZ_FINAL
 
         *out_activeInfo = itr->second;
         return true;
+    }
+
+    bool FindFragData(const nsCString& baseUserName,
+                      nsCString* const out_baseMappedName) const
+    {
+        if (!fragDataMap) {
+            *out_baseMappedName = baseUserName;
+            return true;
+        }
+
+        MOZ_CRASH("Not implemented.");
     }
 
     bool HasActiveAttrib(GLuint loc) const {
@@ -100,6 +112,7 @@ public:
     already_AddRefed<WebGLActiveInfo> GetActiveUniform(GLuint index) const;
     void GetAttachedShaders(nsTArray<nsRefPtr<WebGLShader>>* const out) const;
     GLint GetAttribLocation(const nsAString& name) const;
+    GLint GetFragDataLocation(const nsAString& name) const;
     void GetProgramInfoLog(nsAString* const out) const;
     JS::Value GetProgramParameter(GLenum pname) const;
     already_AddRefed<WebGLUniformLocation> GetUniformLocation(const nsAString& name) const;

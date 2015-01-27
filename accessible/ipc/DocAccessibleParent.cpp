@@ -158,7 +158,7 @@ void
 DocAccessibleParent::Destroy()
 {
   MOZ_ASSERT(mChildDocs.IsEmpty(),
-      "why wheren't the child docs destroyed already?");
+      "why weren't the child docs destroyed already?");
   MOZ_ASSERT(!mShutdown);
   mShutdown = true;
 

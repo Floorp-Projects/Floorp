@@ -56,6 +56,12 @@ function startTest(test, token)
 
   v.addEventListener("playing", function () { gotPlaying = true; });
 
+  v.addEventListener("loadedmetadata", function() {
+    ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
+       TimeStamp(token) + " isEncrypted should be true");
+    is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
+  });
+
   v.addEventListener("ended", function(ev) {
     ok(true, TimeStamp(token) + " got ended event");
 

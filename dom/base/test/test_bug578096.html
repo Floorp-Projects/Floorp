@@ -22,8 +22,8 @@ SimpleTest.waitForExplicitFinish();
 var url = SimpleTest.getTestFileURL("bug578096LoadChromeScript.js");
 var script = SpecialPowers.loadChromeScript(url);
 
-script.addMessageListener("file.path", function (message) {
-  SpecialPowers.wrap(document.getElementById('file')).value = message;
+script.addMessageListener("file.created", function (message) {
+  SpecialPowers.wrap(document.getElementById('file')).mozSetFileArray([message]);
 
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(event) {

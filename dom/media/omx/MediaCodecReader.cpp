@@ -758,12 +758,20 @@ nsresult
 MediaCodecReader::ResetDecode()
 {
   if (CheckAudioResources()) {
-    mAudioTrack.mTaskQueue->AwaitIdle();
+    mAudioTrack.mTaskQueue->Flush();
+    MonitorAutoLock al(mAudioTrack.mTrackMonitor);
+    if (!mAudioTrack.mAudioPromise.IsEmpty()) {
+      mAudioTrack.mAudioPromise.Reject(CANCELED, __func__);
+    }
     FlushCodecData(mAudioTrack);
     mAudioTrack.mDiscontinuity = true;
   }
   if (CheckVideoResources()) {
-    mVideoTrack.mTaskQueue->AwaitIdle();
+    mVideoTrack.mTaskQueue->Flush();
+    MonitorAutoLock al(mVideoTrack.mTrackMonitor);
+    if (!mVideoTrack.mVideoPromise.IsEmpty()) {
+      mVideoTrack.mVideoPromise.Reject(CANCELED, __func__);
+    }
     FlushCodecData(mVideoTrack);
     mVideoTrack.mDiscontinuity = true;
   }
