@@ -3057,17 +3057,19 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
 
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     nsIFrame* frame = pfd->mFrame;
+    nsPoint origin = frame->GetPosition();
 
     // Adjust the origin of the frame
     if (pfd->mRelativePos) {
-      WritingMode frameWM = frame->GetWritingMode();
-      LogicalPoint origin = frame->GetLogicalPosition(mContainerWidth);
+      //XXX temporary until ApplyRelativePositioning can handle logical offsets
+      nsMargin physicalOffsets =
+        pfd->mOffsets.GetPhysicalMargin(pfd->mFrame->GetWritingMode());
       // right and bottom are handled by
       // nsHTMLReflowState::ComputeRelativeOffsets
-      nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
-                                                  pfd->mOffsets, &origin,
-                                                  mContainerWidth);
-      frame->SetPosition(frameWM, origin, mContainerWidth);
+      nsHTMLReflowState::ApplyRelativePositioning(pfd->mFrame,
+                                                  physicalOffsets,
+                                                  &origin);
+      frame->SetPosition(origin);
     }
 
     // We must position the view correctly before positioning its
@@ -3121,7 +3123,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
                                                  r.VisualOverflow(),
                                                  NS_FRAME_NO_MOVE_VIEW);
 
-    overflowAreas.UnionWith(r + frame->GetPosition());
+    overflowAreas.UnionWith(r + origin);
   }
 
   // If we just computed a spans combined area, we need to update its
