@@ -195,6 +195,22 @@ nsUnknownContentTypeDialog.prototype = {
                    bundle.GetStringFromName("badPermissions"));
   },
 
+  // promptForSaveToFile:  Display file picker dialog and return selected file.
+  //                       This is called by the External Helper App Service
+  //                       after the ucth dialog calls |saveToDisk| with a null
+  //                       target filename (no target, therefore user must pick).
+  //
+  //                       Alternatively, if the user has selected to have all
+  //                       files download to a specific location, return that
+  //                       location and don't ask via the dialog.
+  //
+  // Note - this function is called without a dialog, so it cannot access any part
+  // of the dialog XUL as other functions on this object do.
+
+  promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
+    throw new Components.Exception("Async version must be used", Components.results.NS_ERROR_NOT_AVAILABLE);
+  },
+
   promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
     var result = null;
 

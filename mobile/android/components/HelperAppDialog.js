@@ -236,6 +236,11 @@ HelperAppLauncherDialog.prototype = {
       Services.prefs.clearUserPref(this._getPrefName(mime));
   },
 
+  promptForSaveToFile: function () {
+    throw new Components.Exception("Async version must be used",
+                                   Cr.NS_ERROR_NOT_AVAILABLE);
+  },
+
   promptForSaveToFileAsync: function (aLauncher, aContext, aDefaultFile,
                                       aSuggestedFileExt, aForcePrompt) {
     Task.spawn(function* () {
