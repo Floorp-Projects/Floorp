@@ -5,6 +5,7 @@ let { DebuggerServer } =
   Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 function run_test() {
   initTestDebuggerServer();
@@ -40,11 +41,18 @@ let test_bulk_transfer_transport = Task.async(function*(transportFactory) {
 
   // Sending from client to server
   function write_data({copyFrom}) {
-    NetUtil.asyncFetch(getTestTempFile("bulk-input"), function(input, status) {
-      copyFrom(input).then(() => {
-        input.close();
-      });
-    });
+    NetUtil.asyncFetch2(
+      getTestTempFile("bulk-input"),
+      function(input, status) {
+        copyFrom(input).then(() => {
+          input.close();
+        });
+      },
+      null,      // aLoadingNode
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null,      // aTriggeringPrincipal
+      Ci.nsILoadInfo.SEC_NORMAL,
+      Ci.nsIContentPolicy.TYPE_OTHER);
   }
 
   // Receiving on server from client
@@ -119,13 +127,20 @@ function verify() {
 
   // Ensure output file contents actually match
   let compareDeferred = promise.defer();
-  NetUtil.asyncFetch(getTestTempFile("bulk-output"), input => {
-    let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
-    // Avoid do_check_eq here so we don't log the contents
-    do_check_true(outputData === reallyLong);
-    input.close();
-    compareDeferred.resolve();
-  });
+  NetUtil.asyncFetch2(
+    getTestTempFile("bulk-output"),
+    input => {
+      let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
+      // Avoid do_check_eq here so we don't log the contents
+      do_check_true(outputData === reallyLong);
+      input.close();
+      compareDeferred.resolve();
+    },
+    null,      // aLoadingNode
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    null,      // aTriggeringPrincipal
+    Ci.nsILoadInfo.SEC_NORMAL,
+    Ci.nsIContentPolicy.TYPE_OTHER);
 
   return compareDeferred.promise.then(cleanup_files);
 }
