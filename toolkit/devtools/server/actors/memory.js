@@ -136,7 +136,7 @@ let MemoryActor = protocol.ActorClass({
     if (this.state == "attached") {
       if (isTopLevel && this.dbg.memory.trackingAllocationSites) {
         this._clearDebuggees();
-        nthis._frameCache.initFrames();
+        this._frameCache.initFrames();
       }
       this.dbg.addDebuggees();
     }
