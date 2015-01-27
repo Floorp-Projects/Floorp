@@ -28,6 +28,7 @@ EXTRA_JS_MODULES += [
     'offlineAppCache.jsm',
     'PanelFrame.jsm',
     'RemotePrompt.jsm',
+    'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',
