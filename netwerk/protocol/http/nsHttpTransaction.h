@@ -391,6 +391,7 @@ private:
     uint64_t                           mCountRecv;
     uint64_t                           mCountSent;
     uint32_t                           mAppId;
+    bool                               mIsInBrowser;
 #ifdef MOZ_WIDGET_GONK
     nsMainThreadPtrHandle<nsINetworkInterface> mActiveNetwork;
 #endif
