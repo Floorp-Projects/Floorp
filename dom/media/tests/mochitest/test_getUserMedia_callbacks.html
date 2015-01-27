@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=781534
+-->
+<head>
+  <meta charset="utf-8">
+  <title>navigator.mozGetUserMedia Callback Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<a target="_blank">navigator.mozGetUserMedia Callback Test</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <audio id="testAudio"></audio>
+</div>
+<pre id="test">
+<script type="application/javascript">
+  /**
+   * Check that the old fashioned callback-based function works.
+   */
+  runTest(function () {
+    var testAudio = document.getElementById('testAudio');
+    var constraints = {audio: true};
+
+    SimpleTest.waitForExplicitFinish();
+    navigator.mozGetUserMedia(constraints, aStream => {
+      checkMediaStreamTracks(constraints, aStream);
+
+      var playback = new LocalMediaStreamPlayback(testAudio, aStream);
+      return playback.playMedia(false)
+        .then(() => SimpleTest.finish(), generateErrorCallback());
+    }, generateErrorCallback());
+  });
+
+</script>
+</pre>
+</body>
+</html>
