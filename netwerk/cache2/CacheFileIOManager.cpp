@@ -706,6 +706,10 @@ public:
     } else {
       rv = CacheFileIOManager::gInstance->WriteInternal(
           mHandle, mOffset, mBuf, mCount, mValidate);
+      if (NS_FAILED(rv) && !mCallback) {
+        // No listener is going to handle the error, doom the file
+        CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
+      }
     }
     MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-background");
 
