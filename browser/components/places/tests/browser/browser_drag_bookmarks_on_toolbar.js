@@ -138,16 +138,6 @@ function getExpectedDataForPlacesNode(aNode) {
   return [wrappedNode];
 }
 
-function afterToolbarTransition(callback) {
-  function listener(event) {
-    if (event.propertyName == "max-height") {
-      toolbar.removeEventListener("transitionend", listener);
-      callback();
-    }
-  }
-  toolbar.addEventListener("transitionend", listener);
-}
-
 var gTests = [
 
 //------------------------------------------------------------------------------
@@ -245,8 +235,7 @@ function nextTest() {
   else {
     // Collapse the personal toolbar if needed.
     if (wasCollapsed) {
-      setToolbarVisibility(toolbar, false);
-      afterToolbarTransition(finish);
+      promiseSetToolbarVisibility(toolbar, false).then(finish);
     } else {
       finish();
     }
@@ -261,8 +250,7 @@ function test() {
 
   // Uncollapse the personal toolbar if needed.
   if (wasCollapsed) {
-    setToolbarVisibility(toolbar, true);
-    afterToolbarTransition(nextTest);
+    promiseSetToolbarVisibility(toolbar, true).then(nextTest);
   } else {
     nextTest();
   }
