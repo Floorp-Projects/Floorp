@@ -881,6 +881,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = mAudioReader->GetMediaInfo();
     MOZ_ASSERT(info.HasAudio());
     mInfo.mAudio = info.mAudio;
+    mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
     maxDuration = std::max(maxDuration, mAudioReader->GetDecoder()->GetMediaDuration());
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata audio reader=%p maxDuration=%lld",
               this, mAudioReader.get(), maxDuration);
@@ -893,6 +894,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = mVideoReader->GetMediaInfo();
     MOZ_ASSERT(info.HasVideo());
     mInfo.mVideo = info.mVideo;
+    mInfo.mIsEncrypted = mInfo.mIsEncrypted || info.mIsEncrypted;
     maxDuration = std::max(maxDuration, mVideoReader->GetDecoder()->GetMediaDuration());
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata video reader=%p maxDuration=%lld",
               this, mVideoReader.get(), maxDuration);
