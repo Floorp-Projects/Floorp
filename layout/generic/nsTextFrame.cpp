@@ -8,8 +8,10 @@
 #include "nsTextFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
@@ -4742,29 +4744,20 @@ nsTextFrame::GetSelectionDetails()
 }
 
 static void
-PaintSelectionBackground(gfxContext* aCtx,
+PaintSelectionBackground(DrawTarget& aDrawTarget,
                          nscolor aColor,
                          const LayoutDeviceRect& aDirtyRect,
                          const LayoutDeviceRect& aRect,
                          nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
-
-  if (aCallbacks) {
-    aCallbacks->NotifyBeforeSelectionBackground(aColor);
-  }
-
   Rect rect = aRect.Intersect(aDirtyRect).ToUnknownRect();
-  // For now, we need to put this in pixel coordinates
-  aCtx->NewPath();
-  // pixel-snap
-  aCtx->Rectangle(ThebesRect(rect), true);
+  MaybeSnapToDevicePixels(rect, aDrawTarget);
 
   if (aCallbacks) {
-    aCallbacks->NotifySelectionBackgroundPathEmitted();
+    aCallbacks->NotifySelectionBackgroundNeedsFill(rect, aColor, aDrawTarget);
   } else {
-    aCtx->SetColor(gfxRGBA(aColor));
-    aCtx->Fill();
+    ColorPattern color(ToDeviceColor(aColor));
+    aDrawTarget.FillRect(rect, color);
   }
 }
 
@@ -5697,7 +5690,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
           bgRect = gfxRect(aFramePt.x + offs, aFramePt.y,
                            advance, GetSize().height);
         }
-        PaintSelectionBackground(aCtx, background, dirtyRect,
+        PaintSelectionBackground(*aCtx->GetDrawTarget(), background, dirtyRect,
                                  AppUnitGfxRectToDevRect(bgRect, appUnitsPerDevPixel),
                                  aCallbacks);
       }
