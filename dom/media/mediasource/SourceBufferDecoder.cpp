@@ -43,8 +43,6 @@ SourceBufferDecoder::SourceBufferDecoder(MediaResource* aResource,
   , mMediaDuration(-1)
   , mRealMediaDuration(0)
   , mTrimmedOffset(-1)
-  , mCacheMonitor("SourceBufferDecoder")
-  , mCacheBufferedRangeStale(true)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(SourceBufferDecoder);
@@ -204,47 +202,7 @@ SourceBufferDecoder::SetRealMediaDuration(int64_t aDuration)
 void
 SourceBufferDecoder::Trim(int64_t aDuration)
 {
-  MonitorAutoLock mon(mCacheMonitor);
   mTrimmedOffset = (double)aDuration / USECS_PER_S;
-  mCacheBufferedRangeStale = true;
-}
-
-void SourceBufferDecoder::AppendData(LargeDataBuffer* aData)
-{
-  MonitorAutoLock mon(mCacheMonitor);
-  mCacheBufferedRangeStale = true;
-  int64_t appendOffset = GetResource()->GetLength();
-  GetResource()->AppendData(aData);
-  {
-    MonitorAutoUnlock mon(mCacheMonitor);
-    NotifyDataArrived(reinterpret_cast<const char*>(aData->Elements()),
-                      aData->Length(), appendOffset);
-  }
-}
-
-uint32_t
-SourceBufferDecoder::EvictData(uint64_t aPlaybackOffset, uint32_t aThreshold)
-{
-  MonitorAutoLock mon(mCacheMonitor);
-  mCacheBufferedRangeStale = true;
-  return GetResource()->EvictData(aPlaybackOffset, aThreshold);
-}
-
-// Remove data from resource before the given offset.
-void
-SourceBufferDecoder::EvictBefore(uint64_t aOffset)
-{
-  MonitorAutoLock mon(mCacheMonitor);
-  mCacheBufferedRangeStale = true;
-  GetResource()->EvictBefore(aOffset);
-}
-
-// Remove all data from the attached resource
-uint32_t SourceBufferDecoder::EvictAll()
-{
-  MonitorAutoLock mon(mCacheMonitor);
-  mCacheBufferedRangeStale = true;
-  return GetResource()->EvictAll();
 }
 
 void
@@ -283,49 +241,19 @@ SourceBufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, in
   mParentDecoder->NotifyDataArrived(nullptr, 0, 0);
 }
 
-void
-SourceBufferDecoder::BuildTimeRangesFromCache(dom::TimeRanges* aBuffered)
-{
-  for (size_t i = 0; i < mCacheBufferedRanges.Length(); i++) {
-    aBuffered->Add(mCacheBufferedRanges[i].mStart, mCacheBufferedRanges[i].mEnd);
-  }
-}
-
-void
-SourceBufferDecoder::BuildCacheFromTimeRanges(dom::TimeRanges* aBuffered)
-{
-  mCacheBufferedRanges.Clear();
-  for (uint32_t i = 0; i < aBuffered->Length(); i++) {
-    double start;
-    aBuffered->Start(i, &start);
-    double end;
-    aBuffered->End(i, &end);
-    mCacheBufferedRanges.AppendElement(TimeRange(start, end));
-  }
-  mCacheBufferedRangeStale = false;
-}
-
 nsresult
 SourceBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
 {
-  MonitorAutoLock mon(mCacheMonitor);
-
-  if (!mCacheBufferedRangeStale) {
-    BuildTimeRangesFromCache(aBuffered);
-    return NS_OK;
-  }
   nsresult rv = mReader->GetBuffered(aBuffered);
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (!WasTrimmed()) {
-    BuildCacheFromTimeRanges(aBuffered);
     return NS_OK;
   }
   nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   tr->Add(0, mTrimmedOffset);
   aBuffered->Intersection(tr);
-  BuildCacheFromTimeRanges(aBuffered);
   return NS_OK;
 }
 
