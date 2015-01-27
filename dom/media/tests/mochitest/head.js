@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 var Cr = SpecialPowers.Cr;
@@ -101,18 +103,14 @@ function createMediaElement(type, label) {
  *
  * @param {Dictionary} constraints
  *        The constraints for this mozGetUserMedia callback
- * @param {Function} onSuccess
- *        The success callback if the stream is successfully retrieved
- * @param {Function} onError
- *        The error callback if the stream fails to be retrieved
  */
-function getUserMedia(constraints, onSuccess, onError) {
+function getUserMedia(constraints) {
   if (!("fake" in constraints) && FAKE_ENABLED) {
     constraints["fake"] = FAKE_ENABLED;
   }
 
   info("Call getUserMedia for " + JSON.stringify(constraints));
-  navigator.mozGetUserMedia(constraints, onSuccess, onError);
+  return navigator.mediaDevices.getUserMedia(constraints);
 }
 
 
@@ -198,28 +196,46 @@ function checkMediaStreamTracks(constraints, mediaStream) {
     mediaStream.getVideoTracks());
 }
 
-/**
- * Utility methods
- */
+/*** Utility methods */
+
+/** The dreadful setTimeout, use sparingly */
+function wait(time) {
+  return new Promise(r => setTimeout(r, time));
+}
+
+/** The even more dreadful setInterval, use even more sparingly */
+function waitUntil(func, time) {
+  return new Promise(resolve => {
+    var interval = setInterval(() => {
+      if (func())  {
+        clearInterval(interval);
+        resolve();
+      }
+    }, time || 200);
+  });
+}
+
 
 /**
  * Returns the contents of a blob as text
  *
  * @param {Blob} blob
           The blob to retrieve the contents from
- * @param {Function} onSuccess
-          Callback with the blobs content as parameter
  */
-function getBlobContent(blob, onSuccess) {
-  var reader = new FileReader();
+function getBlobContent(blob) {
+  return new Promise(resolve => {
+    var reader = new FileReader();
 
-  // Listen for 'onloadend' which will always be called after a success or failure
-  reader.onloadend = function (event) {
-    onSuccess(event.target.result);
-  };
+    // Listen for 'onloadend' which will always be called after a success or failure
+    reader.onloadend = function (event) {
+      resolve(event.target.result);
+    };
 
-  reader.readAsText(blob);
+    reader.readAsText(blob);
+  });
 }
+
+/*** Test control flow methods */
 
 /**
  * Generates a callback function fired only under unexpected circumstances
@@ -238,7 +254,7 @@ function generateErrorCallback(message) {
    * @param {object} aObj
    *        The object fired back from the callback
    */
-  return function (aObj) {
+  return aObj => {
     if (aObj) {
       if (aObj.name && aObj.message) {
         ok(false, "Unexpected callback for '" + aObj.name +
@@ -252,9 +268,14 @@ function generateErrorCallback(message) {
       ok(false, "Unexpected callback with message = '" + message +
          "' at: " + JSON.stringify(stack));
     }
-    SimpleTest.finish();
+    throw new Error("Unexpected callback");
   }
 }
+
+var unexpectedEventArrived;
+var unexpectedEventArrivedPromise = new Promise((x, reject) => {
+  unexpectedEventArrived = reject;
+});
 
 /**
  * Generates a callback function fired only for unexpected events happening.
@@ -264,16 +285,247 @@ function generateErrorCallback(message) {
  * @param {String} eventName
           Name of the unexpected event
  */
-function unexpectedEventAndFinish(message, eventName) {
+function unexpectedEvent(message, eventName) {
   var stack = new Error().stack.split("\n");
   stack.shift(); // Don't include this instantiation frame
 
-  return function () {
-    ok(false, "Unexpected event '" + eventName + "' fired with message = '" +
-       message + "' at: " + JSON.stringify(stack));
-    SimpleTest.finish();
+  return e => {
+    var details = "Unexpected event '" + eventName + "' fired with message = '" +
+        message + "' at: " + JSON.stringify(stack);
+    ok(false, details);
+    unexpectedEventArrived(new Error(details));
   }
 }
+
+/**
+ * Implements the event guard pattern used throughout.  Each of the 'onxxx'
+ * attributes on the wrappers can be set with a custom handler.  Prior to the
+ * handler being set, if the event fires, it causes the test execution to halt.
+ * Once but that handler is used exactly once, and subsequent events will also
+ * cause test execution to halt.
+ *
+ * @param {object} wrapper
+ *        The wrapper on which the psuedo-handler is installed
+ * @param {object} obj
+ *        The real source of events
+ * @param {string} event
+ *        The name of the event
+ * @param {function} redirect
+ *        (Optional) a function that determines what is passed to the event
+ *        handler. By default, the handler is passed the wrapper (as opposed to
+ *        the normal cases where they receive an event object).  This redirect
+ *        function is passed the event.
+ */
+function guardEvent(wrapper, obj, event, redirect) {
+  redirect = redirect || (e => wrapper);
+  var onx = 'on' + event;
+  var unexpected = unexpectedEvent(wrapper, event);
+  wrapper[onx] = unexpected;
+  obj[onx] = e => {
+    info(wrapper + ': "on' + event + '" event fired');
+    wrapper[onx](redirect(e));
+    wrapper[onx] = unexpected;
+  };
+}
+
+
+/**
+ * This class executes a series of functions in a continuous sequence.
+ * Promise-bearing functions are executed after the previous promise completes.
+ *
+ * @constructor
+ * @param {object} framework
+ *        A back reference to the framework which makes use of the class. It is
+ *        passed to each command callback.
+ * @param {function[]} commandList
+ *        Commands to set during initialization
+ */
+function CommandChain(framework, commandList) {
+  this._framework = framework;
+  this.commands = commandList || [ ];
+}
+
+CommandChain.prototype = {
+  /**
+   * Start the command chain.  This returns a promise that always resolves
+   * cleanly (this catches errors and fails the test case).
+   */
+  execute: function () {
+    return this.commands.reduce((prev, next, i) => {
+      if (typeof next !== 'function' || !next.name) {
+        throw new Error('registered non-function' + next);
+      }
+
+      return prev.then(() => {
+        info('Run step ' + (i + 1) + ': ' + next.name);
+        return Promise.race([
+          next(this._framework),
+          unexpectedEventArrivedPromise
+        ]);
+      });
+    }, Promise.resolve())
+      .catch(e =>
+             ok(false, 'Error in test execution: ' + e +
+                ((typeof e.stack === 'string') ?
+                 (' ' + e.stack.split('\n').join(' ... ')) : '')));
+  },
+
+  /**
+   * Add new commands to the end of the chain
+   *
+   * @param {function[]} commands
+   *        List of command functions
+   */
+  append: function(commands) {
+    this.commands = this.commands.concat(commands);
+  },
+
+  /**
+   * Returns the index of the specified command in the chain.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @returns {number} Index of the command
+   */
+  indexOf: function (id) {
+    if (typeof id === 'string') {
+      return this.commands.findIndex(f => f.name === id);
+    }
+    return this.commands.indexOf(id);
+  },
+
+  /**
+   * Inserts the new commands after the specified command.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @param {function[]} commands
+   *        List of commands
+   */
+  insertAfter: function (id, commands) {
+    this._insertHelper(id, commands, 1);
+  },
+
+  /**
+   * Inserts the new commands before the specified command.
+   *
+   * @param {string} id
+   *        Command function or name
+   * @param {function[]} commands
+   *        List of commands
+   */
+  insertBefore: function (id, commands) {
+    this._insertHelper(id, commands);
+  },
+
+  _insertHelper: function(id, commands, delta) {
+    delta = delta || 0;
+    var index = this.indexOf(id);
+
+    if (index >= 0) {
+      this.commands = [].concat(
+        this.commands.slice(0, index + delta),
+        commands,
+        this.commands.slice(index + delta));
+    }
+  },
+
+  /**
+   * Removes the specified command
+   *
+   * @param {function|string} id
+   *         Command function or name
+   * @returns {function[]} Removed commands
+   */
+  remove: function (id) {
+    var index = this.indexOf(id);
+    if (index >= 0) {
+      return this.commands.splice(index, 1);
+    }
+    return [];
+  },
+
+  /**
+   * Removes all commands after the specified one.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @returns {function[]} Removed commands
+   */
+  removeAfter: function (id) {
+    var index = this.indexOf(id);
+    if (index >= 0) {
+      return this.commands.splice(index + 1);
+    }
+    return [];
+  },
+
+  /**
+   * Removes all commands before the specified one.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @returns {function[]} Removed commands
+   */
+  removeBefore: function (id) {
+    var index = this.indexOf(id);
+    if (index >= 0) {
+      return this.commands.splice(0, index);
+    }
+    return [];
+  },
+
+  /**
+   * Replaces a single command.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @param {function[]} commands
+   *        List of commands
+   * @returns {function[]} Removed commands
+   */
+  replace: function (id, commands) {
+    this.insertBefore(id, commands);
+    return this.remove(id);
+  },
+
+  /**
+   * Replaces all commands after the specified one.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @returns {object[]} Removed commands
+   */
+  replaceAfter: function (id, commands) {
+    var oldCommands = this.removeAfter(id);
+    this.append(commands);
+    return oldCommands;
+  },
+
+  /**
+   * Replaces all commands before the specified one.
+   *
+   * @param {function|string} id
+   *        Command function or name
+   * @returns {object[]} Removed commands
+   */
+  replaceBefore: function (id, commands) {
+    var oldCommands = this.removeBefore(id);
+    this.insertBefore(id, commands);
+    return oldCommands;
+  },
+
+  /**
+   * Remove all commands whose name match the specified regex.
+   *
+   * @param {regex} id_match
+   *        Regular expression to match command names.
+   */
+  filterOut: function (id_match) {
+    this.commands = this.commands.filter(c => !id_match.test(c.name));
+  }
+};
+
 
 function IsMacOSX10_6orOlder() {
     var is106orOlder = false;
@@ -289,4 +541,3 @@ function IsMacOSX10_6orOlder() {
     }
     return is106orOlder;
 }
-
