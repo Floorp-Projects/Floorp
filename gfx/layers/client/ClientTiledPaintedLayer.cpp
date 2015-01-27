@@ -418,20 +418,36 @@ ClientTiledPaintedLayer::RenderLayer()
       ToClientLayer(GetMaskLayer())->RenderLayer();
     }
 
-    // In some cases we can take a fast path and just be done with it.
-    if (UseFastPath()) {
-      TILING_LOG("TILING %p: Taking fast-path\n", this);
-      mValidRegion = neededRegion;
-      mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion, callback, data);
-      ClientManager()->Hold(this);
-      mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
-      return;
-    }
-
     // For more complex cases we need to calculate a bunch of metrics before we
     // can do the paint.
     BeginPaint();
     if (mPaintData.mPaintFinished) {
+      return;
+    }
+
+    // In some cases we can take a fast path and just be done with it.
+    if (UseFastPath()) {
+      TILING_LOG("TILING %p: Taking fast-path\n", this);
+      mValidRegion = neededRegion;
+
+      // Make sure that tiles that fall outside of the visible region or outside of the
+      // critical displayport are discarded on the first update. Also make sure that we
+      // only draw stuff inside the critical displayport on the first update.
+      if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
+        mValidRegion.And(mValidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
+        invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
+      }
+
+      if (invalidRegion.IsEmpty()) {
+        EndPaint();
+        return;
+      }
+
+      mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
+      mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion, callback, data);
+      ClientManager()->Hold(this);
+      mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
+      EndPaint();
       return;
     }
 
