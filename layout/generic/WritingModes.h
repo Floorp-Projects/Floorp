@@ -562,16 +562,10 @@ public:
                            aContainerWidth);
   }
 
-  bool operator==(const LogicalPoint& aOther) const
+  bool operator==(LogicalPoint aOther) const
   {
     CHECK_WRITING_MODE(aOther.GetWritingMode());
     return mPoint == aOther.mPoint;
-  }
-
-  bool operator!=(const LogicalPoint& aOther) const
-  {
-    CHECK_WRITING_MODE(aOther.GetWritingMode());
-    return mPoint != aOther.mPoint;
   }
 
   LogicalPoint operator+(const LogicalPoint& aOther) const
@@ -1125,7 +1119,7 @@ public:
             mMargin.right == 0 && mMargin.bottom == 0);
   }
 
-  LogicalMargin operator+(const LogicalMargin& aMargin) const {
+  LogicalMargin operator+(const LogicalMargin& aMargin) {
     CHECK_WRITING_MODE(aMargin.GetWritingMode());
     return LogicalMargin(GetWritingMode(),
                          BStart() + aMargin.BStart(),
@@ -1134,7 +1128,7 @@ public:
                          IStart() + aMargin.IStart());
   }
 
-  LogicalMargin operator-(const LogicalMargin& aMargin) const {
+  LogicalMargin operator-(const LogicalMargin& aMargin) {
     CHECK_WRITING_MODE(aMargin.GetWritingMode());
     return LogicalMargin(GetWritingMode(),
                          BStart() - aMargin.BStart(),
@@ -1555,6 +1549,19 @@ public:
       return nsRect(aWritingMode.IsBidiLTR() ?
                       IStart() : aContainerWidth - IEnd(),
                     BStart(), ISize(), BSize());
+    }
+  }
+
+  nsPoint GetPhysicalPosition(WritingMode aWritingMode,
+                              nscoord aContainerWidth) const
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    if (aWritingMode.IsVertical()) {
+      return nsPoint(aWritingMode.IsVerticalLR() ? BStart() : aContainerWidth - BEnd(),
+                     IStart());
+    } else {
+      return nsPoint(aWritingMode.IsBidiLTR() ? IStart() : aContainerWidth - IEnd(),
+                     BStart());
     }
   }
 

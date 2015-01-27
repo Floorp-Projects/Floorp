@@ -913,27 +913,35 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Calculate the actual origin of the float frame's border rect
   // relative to the parent block; the margin must be added in
   // to get the border rect
-  LogicalPoint origin(wm, floatMargin.IStart(wm) + floatPos.I(wm),
-                      floatMargin.BStart(wm) + floatPos.B(wm));
+
+  //XXX temporary! ApplyRelativePositioning still uses physical margin and point
+  LogicalSize size = aFloat->GetLogicalSize(wm);
+  LogicalMargin margin = aFloat->GetLogicalUsedMargin(wm);
+  size.ISize(wm) += margin.IStartEnd(wm);
+  size.BSize(wm) += margin.BStartEnd(wm);
+  nsPoint physicalPos =
+    LogicalRect(wm, floatPos, size).GetPhysicalPosition(wm, mContainerWidth);
+  nsPoint origin(floatMargin.Left(wm) + physicalPos.x,
+                 floatMargin.Top(wm) + physicalPos.y);
 
   // If float is relatively positioned, factor that in as well
-  nsHTMLReflowState::ApplyRelativePositioning(aFloat, wm, floatOffsets,
-                                              &origin, mContainerWidth);
+  nsHTMLReflowState::ApplyRelativePositioning(aFloat,
+                                             floatOffsets.GetPhysicalMargin(wm),
+                                              &origin);
 
   // Position the float and make sure and views are properly
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the float after flowing it.
-  bool moved = aFloat->GetLogicalPosition(wm, mContainerWidth) != origin;
+  bool moved = aFloat->GetPosition() != origin;
   if (moved) {
-    aFloat->SetPosition(wm, origin, mContainerWidth);
+    aFloat->SetPosition(origin);
     nsContainerFrame::PositionFrameView(aFloat);
     nsContainerFrame::PositionChildViews(aFloat);
   }
 
   // Update the float combined area state
   // XXX Floats should really just get invalidated here if necessary
-  mFloatOverflowAreas.UnionWith(aFloat->GetOverflowAreas() +
-                                aFloat->GetPosition());
+  mFloatOverflowAreas.UnionWith(aFloat->GetOverflowAreas() + origin);
 
   // Place the float in the float manager
   // calculate region
