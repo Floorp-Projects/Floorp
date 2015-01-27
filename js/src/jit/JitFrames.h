@@ -273,13 +273,13 @@ void HandleException(ResumeFromException *rfe);
 
 void EnsureExitFrame(CommonFrameLayout *frame);
 
-void MarkJitActivations(PerThreadData *ptd, JSTracer *trc);
+void MarkJitActivations(JSRuntime *rt, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
 
 JSCompartment *
 TopmostIonActivationCompartment(JSRuntime *rt);
 
-void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc);
+void UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc);
 
 static inline uint32_t
 MakeFrameDescriptor(uint32_t frameSize, FrameType type)

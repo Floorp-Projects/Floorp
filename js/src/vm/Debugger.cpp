@@ -5419,7 +5419,7 @@ UpdateFrameIterPc(FrameIter &iter)
         jit::JitFrameLayout *jsFrame = (jit::JitFrameLayout *)frame->top();
         jit::JitActivation *activation = iter.activation()->asJit();
 
-        ActivationIterator activationIter(activation->cx()->perThreadData);
+        ActivationIterator activationIter(activation->cx()->runtime());
         while (activationIter.activation() != activation)
             ++activationIter;
 
