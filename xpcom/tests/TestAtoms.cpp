@@ -11,85 +11,98 @@
 #include "nsIServiceManager.h"
 #include "nsStaticAtom.h"
 
-#include "gtest/gtest.h"
-
 using namespace mozilla;
 
 namespace TestAtoms {
 
-TEST(Atoms, Basic)
+bool
+test_basic()
 {
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentString str16(ValidStrings[i].m16);
     nsDependentCString str8(ValidStrings[i].m8);
 
     nsCOMPtr<nsIAtom> atom = do_GetAtom(str16);
-
-    EXPECT_TRUE(atom->Equals(str16));
-    EXPECT_TRUE(atom->EqualsUTF8(str8));
+    
+    if (!atom->Equals(str16) || !atom->EqualsUTF8(str8))
+      return false;
 
     nsString tmp16;
     nsCString tmp8;
     atom->ToString(tmp16);
     atom->ToUTF8String(tmp8);
-    EXPECT_TRUE(str16.Equals(tmp16));
-    EXPECT_TRUE(str8.Equals(tmp8));
+    if (!str16.Equals(tmp16) || !str8.Equals(tmp8))
+      return false;
 
-    EXPECT_TRUE(nsDependentString(atom->GetUTF16String()).Equals(str16));
+    if (!nsDependentString(atom->GetUTF16String()).Equals(str16))
+      return false;
 
-    EXPECT_TRUE(nsAtomString(atom).Equals(str16));
-    EXPECT_TRUE(nsDependentAtomString(atom).Equals(str16));
-    EXPECT_TRUE(nsAtomCString(atom).Equals(str8));
+    if (!nsAtomString(atom).Equals(str16) ||
+        !nsDependentAtomString(atom).Equals(str16) ||
+        !nsAtomCString(atom).Equals(str8))
+      return false;
   }
+  
+  return true;
 }
 
-TEST(Atoms, 16vs8)
+bool
+test_16vs8()
 {
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsCOMPtr<nsIAtom> atom16 = do_GetAtom(ValidStrings[i].m16);
     nsCOMPtr<nsIAtom> atom8 = do_GetAtom(ValidStrings[i].m8);
-    EXPECT_EQ(atom16, atom8);
+    if (atom16 != atom8)
+      return false;
   }
+  
+  return true;
 }
 
-TEST(Atoms, BufferSharing)
+bool
+test_buffersharing()
 {
   nsString unique;
   unique.AssignLiteral("this is a unique string !@#$");
-
+  
   nsCOMPtr<nsIAtom> atom = do_GetAtom(unique);
-
-  EXPECT_EQ(unique.get(), atom->GetUTF16String());
+  
+  return unique.get() == atom->GetUTF16String();
 }
 
-TEST(Atoms, NUll)
+bool
+test_null()
 {
   nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));
   nsDependentString strCut(str.get());
 
-  EXPECT_FALSE(str.Equals(strCut));
-
+  if (str.Equals(strCut))
+    return false;
+  
   nsCOMPtr<nsIAtom> atomCut = do_GetAtom(strCut);
   nsCOMPtr<nsIAtom> atom = do_GetAtom(str);
-
-  EXPECT_EQ(atom->GetLength(), str.Length());
-  EXPECT_TRUE(atom->Equals(str));
-  EXPECT_TRUE(atom->EqualsUTF8(NS_ConvertUTF16toUTF8(str)));
-  EXPECT_NE(atom, atomCut);
-  EXPECT_TRUE(atomCut->Equals(strCut));
+  
+  return atom->GetLength() == str.Length() &&
+         atom->Equals(str) &&
+         atom->EqualsUTF8(NS_ConvertUTF16toUTF8(str)) &&
+         atom != atomCut &&
+         atomCut->Equals(strCut);
 }
 
-TEST(Atoms, Invalid)
+bool
+test_invalid()
 {
   for (unsigned int i = 0; i < ArrayLength(Invalid16Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
     {
       nsCOMPtr<nsIAtom> atom16 = do_GetAtom(Invalid16Strings[i].m16);
-      EXPECT_TRUE(atom16->Equals(nsDependentString(Invalid16Strings[i].m16)));
+      if (!atom16->Equals(nsDependentString(Invalid16Strings[i].m16)))
+        return false;
     }
-
-    EXPECT_EQ(count, NS_GetNumberOfAtoms());
+    
+    if (count != NS_GetNumberOfAtoms())
+      return false;
   }
 
   for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
@@ -98,11 +111,13 @@ TEST(Atoms, Invalid)
     {
       nsCOMPtr<nsIAtom> atom8 = do_GetAtom(Invalid8Strings[i].m8);
       nsCOMPtr<nsIAtom> atom16 = do_GetAtom(Invalid8Strings[i].m16);
-      EXPECT_EQ(atom16, atom8);
-      EXPECT_TRUE(atom16->Equals(nsDependentString(Invalid8Strings[i].m16)));
+      if (atom16 != atom8 ||
+          !atom16->Equals(nsDependentString(Invalid8Strings[i].m16)))
+        return false;
     }
-
-    EXPECT_EQ(count, NS_GetNumberOfAtoms());
+    
+    if (count != NS_GetNumberOfAtoms())
+      return false;
   }
 
 // Don't run this test in debug builds as that intentionally asserts.
@@ -113,10 +128,13 @@ TEST(Atoms, Invalid)
     nsrefcnt count = NS_GetNumberOfAtoms();
 
     nsCOMPtr<nsIAtom> atom8 = do_GetAtom(Malformed8Strings[i]);
-    EXPECT_EQ(atom8, emptyAtom);
-    EXPECT_EQ(count, NS_GetNumberOfAtoms());
+    if (atom8 != emptyAtom ||
+        count != NS_GetNumberOfAtoms())
+      return false;
   }
 #endif
+
+  return true;
 }
 
 #define FIRST_ATOM_STR "first static atom. Hello!"
@@ -149,62 +167,112 @@ isStaticAtom(nsIAtom* atom)
          (atom->Release() == 1);
 }
 
-TEST(Atoms, Table)
+bool
+test_atomtable()
 {
   nsrefcnt count = NS_GetNumberOfAtoms();
-
+  
   nsCOMPtr<nsIAtom> thirdNonPerm = do_GetAtom(THIRD_ATOM_STR);
+  
+  if (isStaticAtom(thirdNonPerm))
+    return false;
 
-  EXPECT_FALSE(isStaticAtom(thirdNonPerm));
-
-  EXPECT_TRUE(thirdNonPerm);
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
+  if (!thirdNonPerm || NS_GetNumberOfAtoms() != count + 1)
+    return false;
 
   NS_RegisterStaticAtoms(sAtoms_info);
 
-  EXPECT_TRUE(sAtom1);
-  EXPECT_TRUE(sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom1));
-  EXPECT_TRUE(sAtom2);
-  EXPECT_TRUE(sAtom2->Equals(NS_LITERAL_STRING(SECOND_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom2));
-  EXPECT_TRUE(sAtom3);
-  EXPECT_TRUE(sAtom3->Equals(NS_LITERAL_STRING(THIRD_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom3));
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 3);
-  EXPECT_EQ(thirdNonPerm, sAtom3);
+  return sAtom1 &&
+         sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)) &&
+         isStaticAtom(sAtom1) &&
+         sAtom2 &&
+         sAtom2->Equals(NS_LITERAL_STRING(SECOND_ATOM_STR)) &&
+         isStaticAtom(sAtom2) &&
+         sAtom3 &&
+         sAtom3->Equals(NS_LITERAL_STRING(THIRD_ATOM_STR)) &&
+         isStaticAtom(sAtom3) &&
+         NS_GetNumberOfAtoms() == count + 3 &&
+         thirdNonPerm == sAtom3;
 }
 
 #define FIRST_PERM_ATOM_STR "first permanent atom. Hello!"
 #define SECOND_PERM_ATOM_STR "second permanent atom. @World!"
 
-TEST(Atoms, Permanent)
+bool
+test_permanent()
 {
   nsrefcnt count = NS_GetNumberOfAtoms();
 
   {
     nsCOMPtr<nsIAtom> first = do_GetAtom(FIRST_PERM_ATOM_STR);
-    EXPECT_TRUE(first->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_FALSE(isStaticAtom(first));
-
+    if (!first->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)) ||
+        isStaticAtom(first))
+      return false;
+  
     nsCOMPtr<nsIAtom> first_p =
       NS_NewPermanentAtom(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR));
-    EXPECT_TRUE(first_p->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(first_p));
-    EXPECT_EQ(first, first_p);
-
+    if (!first_p->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)) ||
+        !isStaticAtom(first_p) ||
+        first != first_p)
+      return false;
+  
     nsCOMPtr<nsIAtom> second_p =
       NS_NewPermanentAtom(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR));
-    EXPECT_TRUE(second_p->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second_p));
-
+    if (!second_p->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)) ||
+        !isStaticAtom(second_p))
+      return false;
+  
     nsCOMPtr<nsIAtom> second = do_GetAtom(SECOND_PERM_ATOM_STR);
-    EXPECT_TRUE(second->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second));
-    EXPECT_EQ(second, second_p);
+    if (!second->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)) ||
+        !isStaticAtom(second) ||
+        second != second_p)
+      return false;
   }
 
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 2);
+  return NS_GetNumberOfAtoms() == count + 2;
 }
 
+typedef bool (*TestFunc)();
+
+static const struct Test
+  {
+    const char* name;
+    TestFunc    func;
+  }
+tests[] =
+  {
+    { "test_basic", test_basic },
+    { "test_16vs8", test_16vs8 },
+    { "test_buffersharing", test_buffersharing },
+    { "test_null", test_null },
+    { "test_invalid", test_invalid },
+// FIXME: Bug 577500 TestAtoms fails when run in dist/bin due to
+// static atom table already being closed. TestStaticAtoms has similar
+// failure.
+#if 0
+    { "test_atomtable", test_atomtable },
+    { "test_permanent", test_permanent },
+#endif
+    { nullptr, nullptr }
+  };
+
 }
+
+using namespace TestAtoms;
+
+int main()
+  {
+    {
+      nsCOMPtr<nsIServiceManager> servMan;
+      NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
+  
+      for (const Test* t = tests; t->name != nullptr; ++t)
+        {
+          printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE <--");
+        }
+    }
+
+    NS_ShutdownXPCOM(nullptr);
+
+    return 0;
+  }
