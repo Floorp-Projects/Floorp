@@ -142,7 +142,7 @@ private:
   }
 
   Result VerifySignedData(const SignedDataWithSignature& signedData,
-                          Input subjectPublicKeyInfo) MOZ_OVERRIDE
+                          Input subjectPublicKeyInfo)
   {
     return TestVerifySignedData(signedData, subjectPublicKeyInfo);
   }

@@ -41,26 +41,26 @@ public:
   explicit GStreamerReader(AbstractMediaDecoder* aDecoder);
   virtual ~GStreamerReader();
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
-  virtual bool DecodeAudioData() MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
+  virtual nsresult ResetDecode();
+  virtual bool DecodeAudioData();
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                int64_t aTimeThreshold);
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags);
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
 
   virtual void NotifyDataArrived(const char *aBuffer,
                                  uint32_t aLength,
                                  int64_t aOffset) MOZ_OVERRIDE;
 
-  virtual bool HasAudio() MOZ_OVERRIDE {
+  virtual bool HasAudio() {
     return mInfo.HasAudio();
   }
 
-  virtual bool HasVideo() MOZ_OVERRIDE {
+  virtual bool HasVideo() {
     return mInfo.HasVideo();
   }
 
