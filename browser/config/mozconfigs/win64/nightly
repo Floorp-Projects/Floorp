@@ -8,6 +8,6 @@ ac_add_options --enable-profiling
 # Nightlies only since this has a cost in performance
 ac_add_options --enable-js-diagnostics
 
-. $topsrcdir/build/win64/mozconfig.vs2013
+. "$topsrcdir/build/mozconfig.cache"
 
 . "$topsrcdir/build/mozconfig.common.override"
