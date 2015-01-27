@@ -1464,7 +1464,10 @@ protected:
         const bool mNeedsChange;
 
         static bool NeedsChange(WebGLContext& webgl) {
-            return webgl.mNeedsFakeNoAlpha &&
+            // We should only be doing this if we're about to draw to the backbuffer, but
+            // the backbuffer needs to have this fake-no-alpha workaround.
+            return !webgl.mBoundFramebuffer &&
+                   webgl.mNeedsFakeNoAlpha &&
                    webgl.mColorWriteMask[3] != false;
         }
 
