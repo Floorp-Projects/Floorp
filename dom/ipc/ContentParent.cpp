@@ -2700,19 +2700,6 @@ ContentParent::RecvDataStoreGetStores(
 }
 
 bool
-ContentParent::RecvGetVolumes(InfallibleTArray<VolumeInfo>* aResult)
-{
-#ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
-    vs->GetVolumesForIPC(aResult);
-    return true;
-#else
-    NS_WARNING("ContentParent::RecvGetVolumes shouldn't be called when MOZ_WIDGET_GONK is not defined");
-    return false;
-#endif
-}
-
-bool
 ContentParent::RecvNuwaReady()
 {
 #ifdef MOZ_NUWA_PROCESS
