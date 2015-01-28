@@ -89,7 +89,7 @@ var values = [
   [ 'f\noo@bar.com', true ],
   [ 'f\roo@bar.com', true ],
   [ 'f\r\noo@bar.com', true ],
-  [ 'fü@foo.com', true ],
+  [ 'fü@foo.com', false ],
   // Some checks for the domain part.
   [ 'foo@bar', true ],
   [ 'foo@b', true ],
@@ -110,7 +110,7 @@ var values = [
   [ 'foo@fü.com', true ],
   [ 'foo@fu.cüm', true ],
   // Long strings with UTF-8.
-  [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', true ],
+  [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', false ],
   [ 'this-is-email-should-be-longer-than-sixty-four-characters-föö@mözillä.tld', true, true ],
   // Long labels.
   [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss', true ],

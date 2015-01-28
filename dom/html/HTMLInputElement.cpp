@@ -6621,26 +6621,32 @@ HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const
 }
 
 /**
- * Splits the string on the first "@" character and punycode encodes the second
- * part (the domain labels) before rejoining the two parts with an "@" and
- * returning the result via the aEncodedEmail out-param. Returns false if there
- * is no "@" caracter, if the "@" character is at the start or end, or if the
- * conversion to punycode fails.
+ * Takes aEmail and attempts to convert everything after the first "@"
+ * character (if anything) to punycode before returning the complete result via
+ * the aEncodedEmail out-param. The aIndexOfAt out-param is set to the index of
+ * the "@" character.
  *
- * This function exists because ConvertUTF8toACE() treats 'username@domain' as
- * a single label, but we want to encode the domain parts only.
+ * If no "@" is found in aEmail, aEncodedEmail is simply set to aEmail and
+ * the aIndexOfAt out-param is set to kNotFound.
+ *
+ * Returns true in all cases unless an attempt to punycode encode fails. If
+ * false is returned, aEncodedEmail has not been set.
+ *
+ * This function exists because ConvertUTF8toACE() splits on ".", meaning that
+ * for 'user.name@sld.tld' it would treat "name@sld" as a label. We want to
+ * encode the domain part only.
  */
 static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
                                        nsAutoCString& aEncodedEmail,
                                        uint32_t* aIndexOfAt)
 {
   nsAutoCString value = NS_ConvertUTF16toUTF8(aEmail);
-  uint32_t length = value.Length();
+  *aIndexOfAt = (uint32_t)value.FindChar('@');
 
-  uint32_t atPos = (uint32_t)value.FindChar('@');
-  // Email addresses must contain a '@', but can't begin or end with it.
-  if (atPos == (uint32_t)kNotFound || atPos == 0 || atPos == length - 1) {
-    return false;
+  if (*aIndexOfAt == (uint32_t)kNotFound ||
+      *aIndexOfAt == value.Length() - 1) {
+    aEncodedEmail = value;
+    return true;
   }
 
   nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
@@ -6649,18 +6655,19 @@ static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
     return false;
   }
 
-  const nsDependentCSubstring domain = Substring(value, atPos + 1);
+  uint32_t indexOfDomain = *aIndexOfAt + 1;
+
+  const nsDependentCSubstring domain = Substring(value, indexOfDomain);
   bool ace;
   if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
     nsAutoCString domainACE;
     if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
       return false;
     }
-    value.Replace(atPos + 1, domain.Length(), domainACE);
+    value.Replace(indexOfDomain, domain.Length(), domainACE);
   }
 
   aEncodedEmail = value;
-  *aIndexOfAt = atPos;
   return true;
 }
 
@@ -7110,8 +7117,10 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
 
   uint32_t atPos;
   nsAutoCString value;
-  // This call also checks whether aValue contains a correctly-placed '@' sign.
-  if (!PunycodeEncodeEmailAddress(aValue, value, &atPos)) {
+  if (!PunycodeEncodeEmailAddress(aValue, value, &atPos) ||
+      atPos == (uint32_t)kNotFound || atPos == 0 || atPos == value.Length() - 1) {
+    // Could not encode, or "@" was not found, or it was at the start or end
+    // of the input - in all cases, not a valid email address.
     return false;
   }
 
