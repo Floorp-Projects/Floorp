@@ -34,9 +34,10 @@ public:
   NS_IMETHOD_(void)
     OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) MOZ_OVERRIDE;
 
-private:
-  ~TextInputProcessor();
+protected:
+  virtual ~TextInputProcessor();
 
+private:
   nsresult InitInternal(nsIDOMWindow* aWindow,
                         nsITextInputProcessorCallback* aCallback,
                         bool aForTests,

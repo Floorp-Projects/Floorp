@@ -250,6 +250,37 @@ function runInitMethodTests()
   }
 }
 
+function runReleaseTests()
+{
+  var description = "runReleaseTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed");
+
+  input.value = "";
+  input.focus();
+
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  is(input.value, "foo",
+     description + "the input should have composition string");
+
+  // Release the TIP
+  TIP = null;
+  // Needs to run GC forcibly for testing this.
+  SpecialPowers.gc();
+
+  is(input.value, "",
+     description + "the input should be empty because the composition should be canceled");
+
+  TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed #2");
+}
+
 function runCompositionTests()
 {
   var description = "runCompositionTests(): ";
@@ -988,6 +1019,7 @@ function runTests()
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
 
   runInitMethodTests();
+  runReleaseTests();
   runCompositionTests();
   runErrorTests();
   runCommitCompositionTests();
