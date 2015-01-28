@@ -275,6 +275,9 @@ protected:
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
 
+  // This should *ONLY* be used in GetCookie/SetCookie.
+  already_AddRefed<nsIChannel> CreateDummyChannelForCookies(nsIURI* aCodebaseURI);
+
   /**
    * Like IsEditingOn(), but will flush as needed first.
    */

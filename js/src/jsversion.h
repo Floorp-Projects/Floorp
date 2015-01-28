@@ -41,7 +41,4 @@
  */
 #define JS_OLD_GETTER_SETTER_METHODS    1
 
-/* Support for ES6 Symbols. */
-#define JS_HAS_SYMBOLS 1
-
 #endif /* jsversion_h */

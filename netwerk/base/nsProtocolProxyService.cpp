@@ -1271,10 +1271,27 @@ nsProtocolProxyService::AsyncResolve2(nsIChannel *channel, uint32_t flags,
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::AsyncResolve(nsIChannel *channel, uint32_t flags,
+nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
                                      nsIProtocolProxyCallback *callback,
                                      nsICancelable **result)
 {
+
+    nsresult rv;
+    // Check if we got a channel:
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(channelOrURI);
+    if (!channel) {
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(channelOrURI);
+        if (!uri) {
+            return NS_ERROR_NO_INTERFACE;
+        }
+
+        // make a temporary channel from the URI
+        nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
+        if (NS_FAILED(rv)) return rv;
+        rv = ios->NewChannelFromURI(uri, getter_AddRefs(channel));
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return AsyncResolveInternal(channel, flags, callback, result, false);
 }
 

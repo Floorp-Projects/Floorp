@@ -8,6 +8,7 @@
 
 #include "jit/JitFrames.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Debugger.h"
 
 #include "jsscriptinlines.h"
 #include "jit/JitFrames-inl.h"
@@ -95,6 +96,7 @@ RematerializedFrame::FreeInVector(Vector<RematerializedFrame *> &frames)
 {
     for (size_t i = 0; i < frames.length(); i++) {
         RematerializedFrame *f = frames[i];
+        Debugger::assertNotInFrameMaps(f);
         f->RematerializedFrame::~RematerializedFrame();
         js_free(f);
     }

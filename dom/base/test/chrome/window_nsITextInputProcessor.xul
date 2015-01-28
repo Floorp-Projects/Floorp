@@ -1,0 +1,1038 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Testing nsITextInputProcessor behavior"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onunload="onunload();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+<input id="input" type="text"/><br/>
+<iframe id="iframe" width="300" height="150"
+        src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
+var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+
+SimpleTest.waitForFocus(runTests, window);
+
+function ok(aCondition, aMessage)
+{
+  SimpleTest.ok(aCondition, aMessage);
+}
+
+function is(aLeft, aRight, aMessage)
+{
+  SimpleTest.is(aLeft, aRight, aMessage);
+}
+
+function isnot(aLeft, aRight, aMessage)
+{
+  SimpleTest.isnot(aLeft, aRight, aMessage);
+}
+
+function todo_is(aLeft, aRight, aMessage)
+{
+  SimpleTest.todo_is(aLeft, aRight, aMessage);
+}
+
+function finish()
+{
+  window.close();
+}
+
+function onunload()
+{
+  SimpleTest.finish();
+}
+
+var iframe = document.getElementById("iframe");
+var childWindow = iframe.contentWindow;
+var textareaInFrame;
+var input = document.getElementById("input");
+var otherWindow = window.opener;
+var otherDocument = otherWindow.document;
+var inputInChildWindow = otherDocument.getElementById("input");
+
+function createTIP()
+{
+  return Components.classes["@mozilla.org/text-input-processor;1"].
+           createInstance(Components.interfaces.nsITextInputProcessor);
+}
+
+function runInitMethodTests()
+{
+  var description = "runInitMethodTest: ";
+  input.value = "";
+  input.focus();
+
+  var simpleCallback = function (aTIP, aNotification)
+  {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+    }
+    return true;
+  };
+
+  var TIP1 = createTIP();
+  var TIP2 = createTIP();
+  isnot(TIP1, TIP2,
+        description + "TIP instances should be different");
+
+  // init() and initForTests() can take ownership if there is no composition.
+  ok(TIP1.init(window, simpleCallback),
+     description + "TIP1.init(window) should succeed because there is no composition");
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests(window) should succeed because there is no composition");
+  ok(TIP2.init(window, simpleCallback),
+     description + "TIP2.init(window) should succeed because there is no composition");
+  ok(TIP2.initForTests(window),
+     description + "TIP2.initForTests(window) should succeed because there is no composition");
+
+  // Start composition with TIP1, then, other TIPs cannot take ownership during a composition.
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests() should succeed because there is no composition");
+  var composingStr = "foo";
+  TIP1.setPendingCompositionString(composingStr);
+  TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+  ok(TIP1.flushPendingComposition(),
+     description + "TIP1.flushPendingComposition() should return true becuase it should be valid composition");
+  is(input.value, composingStr,
+     description + "The input element should have composing string");
+
+  // Composing nsITextInputProcessor instance shouldn't allow initialize it again.
+  try {
+    TIP1.init(window, simpleCallback);
+    ok(false,
+       "TIP1.init(window) should cause throwing an exception because it's composing with different purpose");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+       description + "TIP1.init(window) should cause throwing an exception including NS_ERROR_ALREADY_INITIALIZED because it's composing for tests");
+  }
+  try {
+    TIP1.initForTests(otherWindow);
+    ok(false,
+       "TIP1.initForTests(otherWindow) should cause throwing an exception because it's composing on different window");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+       description + "TIP1.init(otherWindow) should cause throwing an exception including NS_ERROR_ALREADY_INITIALIZED because it's composing on this window");
+  }
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests(window) should succeed because TextEventDispatcher was initialized with same purpose");
+  ok(TIP1.initForTests(childWindow),
+     description + "TIP1.initForTests(childWindow) should succeed because TextEventDispatcher was initialized with same purpose and is shared by window and childWindow");
+  ok(!TIP2.init(window, simpleCallback),
+     description + "TIP2.init(window) should not succeed because there is composition synthesized by TIP1");
+  ok(!TIP2.initForTests(window),
+     description + "TIP2.initForTests(window) should not succeed because there is composition synthesized by TIP1");
+  ok(!TIP2.init(childWindow, simpleCallback),
+     description + "TIP2.init(childWindow) should not succeed because there is composition synthesized by TIP1");
+  ok(!TIP2.initForTests(childWindow),
+     description + "TIP2.initForTests(childWindow) should not succeed because there is composition synthesized by TIP1");
+  ok(TIP2.init(otherWindow, simpleCallback),
+     description + "TIP2.init(otherWindow) should succeed because there is composition synthesized by TIP1 but it's in other window");
+  ok(TIP2.initForTests(otherWindow),
+     description + "TIP2.initForTests(otherWindow) should succeed because there is composition synthesized by TIP1 but it's in other window");
+
+  // Let's confirm that the composing string is NOT committed by above tests.
+  ok(TIP1.commitComposition(),
+     description + "TIP1.commitString() should succeed because there should be composing string");
+  is(input.value, composingStr,
+     description + "TIP1.commitString() without specifying commit string should be committed with the last composing string");
+
+  ok(TIP1.init(window, simpleCallback),
+     description + "TIP1.init() should succeed because there is no composition #2");
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests() should succeed because there is no composition #2");
+  ok(TIP2.initForTests(window),
+     description + "TIP2.initForTests() should succeed because the composition was already committed #2");
+
+  // Let's check if startComposition() throws an exception after ownership is strolen.
+  input.value = "";
+  try {
+    TIP1.startComposition();
+    ok(false,
+       description + "TIP1.startComposition() should cause throwing an exception because TIP2 took the ownership");
+    TIP1.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+       description + "TIP1.startComposition() should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not have commit string");
+  }
+
+  // Let's check if flushPendingComposition() throws an exception after ownership is stolen.
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests() should succeed because there is no composition");
+  ok(TIP2.initForTests(window),
+     description + "TIP2.initForTests() should succeed because there is no composition");
+  input.value = "";
+  try {
+    TIP1.setPendingCompositionString(composingStr);
+    TIP1.appendClauseToPendingComposition(composingStr.length, TIP1.ATTR_RAW_CLAUSE);
+    TIP1.flushPendingComposition()
+    ok(false,
+       description + "TIP1.flushPendingComposition() should cause throwing an exception because TIP2 took the ownership");
+    TIP1.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+       description + "TIP1.flushPendingComposition() should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not have commit string");
+  }
+
+  // Let's check if commitComposition("bar") throws an exception after ownership is stolen.
+  ok(TIP1.initForTests(window),
+     description + "TIP1.initForTests() should succeed because there is no composition");
+  ok(TIP2.initForTests(window),
+     description + "TIP2.initForTests() should succeed because there is no composition");
+  input.value = "";
+  try {
+    TIP1.commitComposition("bar");
+    ok(false,
+       description + "TIP1.commitComposition(\"bar\") should cause throwing an exception because TIP2 took the ownership");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+       description + "TIP1.commitComposition(\"bar\") should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
+  } finally {
+    is(input.value, "",
+       description + "The input element should not have commit string");
+  }
+
+  // aCallback of nsITextInputProcessor.init() must not be omitted.
+  try {
+    TIP1.init(window);
+    ok(false,
+       description + "TIP1.init(window) should be failed since aCallback is omitted");
+  } catch (e) {
+    ok(e.message.contains("Not enough arguments"),
+       description + "TIP1.init(window) should cause throwing an exception including \"Not enough arguments\" since aCallback is omitted");
+  }
+
+  // aCallback of nsITextInputProcessor.init() must not be undefined.
+  try {
+    TIP1.init(window, undefined);
+    ok(false,
+       description + "TIP1.init(window, undefined) should be failed since aCallback is undefined");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "TIP1.init(window, undefined) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE since aCallback is undefined");
+  }
+
+  // aCallback of nsITextInputProcessor.init() must not be null.
+  try {
+    TIP1.init(window, null);
+    ok(false,
+       description + "TIP1.init(window, null) should be failed since aCallback is null");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "TIP1.init(window, null) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE since aCallback is null");
+  }
+}
+
+function runReleaseTests()
+{
+  var description = "runReleaseTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed");
+
+  input.value = "";
+  input.focus();
+
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  is(input.value, "foo",
+     description + "the input should have composition string");
+
+  // Release the TIP
+  TIP = null;
+  // Needs to run GC forcibly for testing this.
+  SpecialPowers.gc();
+
+  is(input.value, "",
+     description + "the input should be empty because the composition should be canceled");
+
+  TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed #2");
+}
+
+function runCompositionTests()
+{
+  var description = "runCompositionTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed");
+
+  var events;
+
+  function reset()
+  {
+    events = [];
+  }
+
+  function handler(aEvent)
+  {
+    events.push({ "type": aEvent.type, "data": aEvent.data });
+  }
+
+  window.addEventListener("compositionstart", handler, false);
+  window.addEventListener("compositionupdate", handler, false);
+  window.addEventListener("compositionend", handler, false);
+
+  input.value = "";
+  input.focus();
+
+  // nsITextInputProcessor.startComposition()
+  reset();
+  TIP.startComposition();
+  is(events.length, 1,
+     description + "startComposition() should cause only compositionstart");
+  is(events[0].type, "compositionstart",
+     description + "startComposition() should cause only compositionstart");
+  is(input.value, "",
+     description + "startComposition() shouldn't modify the focused editor");
+
+  // Setting composition string "foo" as a raw clause
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 1,
+     description + "flushPendingComposition() after startComposition() should cause compositionupdate");
+  is(events[0].type, "compositionupdate",
+     description + "flushPendingComposition() after startComposition() should cause compositionupdate");
+  is(events[0].data, "foo",
+     description + "compositionupdate caused by flushPendingComposition() should have new composition string in its data");
+  is(input.value, "foo",
+     description + "modifying composition string should cause modifying the focused editor");
+
+  // Changing the raw clause to a selected clause
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_SELECTED_CLAUSE);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 0,
+     description + "flushPendingComposition() changing only clause information shouldn't cause compositionupdate");
+  is(input.value, "foo",
+     description + "modifying composition clause shouldn't cause modifying the focused editor");
+
+  // Separating the selected clause to two clauses
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(2, TIP.ATTR_SELECTED_CLAUSE);
+  TIP.appendClauseToPendingComposition(1, TIP.ATTR_CONVERTED_CLAUSE);
+  TIP.setCaretInPendingComposition(2);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 0,
+     description + "flushPendingComposition() separating a clause information shouldn't cause compositionupdate");
+  is(input.value, "foo",
+     description + "separating composition clause shouldn't cause modifying the focused editor");
+
+  // Modifying the composition string
+  TIP.setPendingCompositionString("FOo");
+  TIP.appendClauseToPendingComposition(2, TIP.ATTR_SELECTED_CLAUSE);
+  TIP.appendClauseToPendingComposition(1, TIP.ATTR_CONVERTED_CLAUSE);
+  TIP.setCaretInPendingComposition(2);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 1,
+     description + "flushPendingComposition() causing modifying composition string should cause compositionupdate");
+  is(events[0].type, "compositionupdate",
+     description + "flushPendingComposition() causing modifying composition string should cause compositionupdate");
+  is(events[0].data, "FOo",
+     description + "compositionupdate caused by flushPendingComposition() should have new composition string in its data");
+  is(input.value, "FOo",
+     description + "modifying composition clause shouldn't cause modifying the focused editor");
+
+  // Committing the composition string
+  reset();
+  TIP.commitComposition();
+  is(events.length, 1,
+     description + "commitComposition() should cause compositionend but shoudn't cause compositionupdate");
+  is(events[0].type, "compositionend",
+     description + "commitComposition() should cause compositionend");
+  is(events[0].data, "FOo",
+     description + "compositionend caused by commitComposition() should have the committed string in its data");
+  is(input.value, "FOo",
+     description + "commitComposition() shouldn't cause modifying the focused editor");
+
+  // Starting new composition without a call of startComposition()
+  TIP.setPendingCompositionString("bar");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 2,
+     description + "flushPendingComposition() without a call of startComposition() should cause both compositionstart and compositionupdate");
+  is(events[0].type, "compositionstart",
+     description + "flushPendingComposition() without a call of startComposition() should cause compositionstart");
+  is(events[1].type, "compositionupdate",
+     description + "flushPendingComposition() without a call of startComposition() should cause compositionupdate after compositionstart");
+  is(events[1].data, "bar",
+     description + "compositionupdate caused by flushPendingComposition() without a call of startComposition() should have the composition string in its data");
+  is(input.value, "FOobar",
+     description + "new composition string should cause appending composition string to the focused editor");
+
+  // Canceling the composition
+  reset();
+  TIP.cancelComposition();
+  is(events.length, 2,
+     description + "cancelComposition() should cause both compositionupdate and compositionend");
+  is(events[0].type, "compositionupdate",
+     description + "cancelComposition() should cause compositionupdate");
+  is(events[0].data, "",
+     description + "compositionupdate caused by cancelComposition() should have empty string in its data");
+  is(events[1].type, "compositionend",
+     description + "cancelComposition() should cause compositionend after compositionupdate");
+  is(events[1].data, "",
+     description + "compositionend caused by cancelComposition() should have empty string in its data");
+  is(input.value, "FOo",
+     description + "canceled composition string should be removed from the focused editor");
+
+  // Starting composition explicitly and canceling it
+  reset();
+  TIP.startComposition();
+  TIP.cancelComposition();
+  is(events.length, 2,
+     description + "canceling composition immediately after startComposition() should cause compositionstart and compositionend");
+  is(events[0].type, "compositionstart",
+     description + "canceling composition immediately after startComposition() should cause compositionstart first");
+  is(events[1].type, "compositionend",
+     description + "canceling composition immediately after startComposition() should cause compositionend after compositionstart");
+  is(events[1].data, "",
+     description + "compositionend caused by canceling composition should have empty string in its data");
+  is(input.value, "FOo",
+     description + "canceling composition shouldn't modify the focused editor");
+
+  // Create composition for next test.
+  TIP.setPendingCompositionString("bar");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.flushPendingComposition();
+  is(input.value, "FOobar",
+     description + "The focused editor should have new composition string \"bar\"");
+
+  // Allow to set empty composition string
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 1,
+     description + "making composition string empty should cause only compositionupdate");
+  is(events[0].type, "compositionupdate",
+     description + "making composition string empty should cause compositionupdate");
+  is(events[0].data, "",
+     description + "compositionupdate caused by making composition string empty should have empty string in its data");
+
+  // Allow to insert new composition string without compositionend/compositionstart
+  TIP.setPendingCompositionString("buzz");
+  TIP.appendClauseToPendingComposition(4, TIP.ATTR_RAW_CLAUSE);
+
+  reset();
+  TIP.flushPendingComposition();
+  is(events.length, 1,
+     description + "modifying composition string from empty string should cause only compositionupdate");
+  is(events[0].type, "compositionupdate",
+     description + "modifying composition string from empty string should cause compositionupdate");
+  is(events[0].data, "buzz",
+     description + "compositionupdate caused by modifying composition string from empty string should have new composition string in its data");
+  is(input.value, "FOobuzz",
+     description + "new composition string should be appended to the focused editor");
+
+  // Committing with different string
+  reset();
+  TIP.commitComposition("bar");
+  is(events.length, 2,
+     description + "committing with different string should cause compositionupdate and compositionend");
+  is(events[0].type, "compositionupdate",
+     description + "committing with different string should cause compositionupdate first");
+  is(events[0].data, "bar",
+     description + "compositionupdate caused by committing with different string should have the committing string in its data");
+  is(events[1].type, "compositionend",
+     description + "committing with different string should cause compositionend after compositionupdate");
+  is(events[1].data, "bar",
+     description + "compositionend caused by committing with different string should have the committing string in its data");
+  is(input.value, "FOobar",
+     description + "new committed string should be appended to the focused editor");
+
+  // Appending new composition string
+  TIP.setPendingCompositionString("buzz");
+  TIP.appendClauseToPendingComposition(4, TIP.ATTR_RAW_CLAUSE);
+  TIP.flushPendingComposition();
+  is(input.value, "FOobarbuzz",
+     description + "new composition string should be appended to the focused editor");
+
+  // Committing with same string
+  reset();
+  TIP.commitComposition("buzz");
+  is(events.length, 1,
+     description + "committing with same string should cause only compositionend");
+  is(events[0].type, "compositionend",
+     description + "committing with same string should cause compositionend");
+  is(events[0].data, "buzz",
+     description + "compositionend caused by committing with same string should have the committing string in its data");
+  is(input.value, "FOobarbuzz",
+     description + "new committed string should be appended to the focused editor");
+
+  // Inserting commit string directly
+  reset();
+  TIP.commitComposition("boo!");
+  is(events.length, 3,
+     description + "committing text directly should cause compositionstart, compositionupdate and compositionend");
+  is(events[0].type, "compositionstart",
+     description + "committing text directly should cause compositionstart first");
+  is(events[1].type, "compositionupdate",
+     description + "committing text directly should cause compositionupdate after compositionstart");
+  is(events[1].data, "boo!",
+     description + "compositionupdate caused by committing text directly should have the committing text in its data");
+  is(events[2].type, "compositionend",
+     description + "committing text directly should cause compositionend after compositionupdate");
+  is(events[2].data, "boo!",
+     description + "compositionend caused by committing text directly should have the committing text in its data");
+  is(input.value, "FOobarbuzzboo!",
+     description + "committing text directly should append the committing text to the focused editor");
+
+  window.removeEventListener("compositionstart", handler, false);
+  window.removeEventListener("compositionupdate", handler, false);
+  window.removeEventListener("compositionend", handler, false);
+}
+
+function runErrorTests()
+{
+  var description = "runErrorTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed");
+
+  input.value = "";
+  input.focus();
+
+  // startComposition() should throw an exception if there is already a composition
+  TIP.startComposition();
+  try {
+    TIP.startComposition();
+    ok(false,
+       description + "startComposition() should fail if it was already called");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_FAILURE"),
+       description + "startComposition() should cause NS_ERROR_FAILURE if there is already composition");
+  } finally {
+    TIP.cancelComposition();
+  }
+
+  // cancelComposition() should throw an exception if there is no composition
+  try {
+    TIP.cancelComposition();
+    ok(false,
+       description + "cancelComposition() should fail if there is no composition");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_FAILURE"),
+       description + "cancelComposition() should cause NS_ERROR_FAILURE if there is no composition");
+  }
+
+  // commitComposition() without commit string should throw an exception if there is no composition
+  try {
+    TIP.commitComposition();
+    ok(false,
+       description + "commitComposition() should fail if there is no composition");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_FAILURE"),
+       description + "commitComposition() should cause NS_ERROR_FAILURE if there is no composition");
+  }
+
+  // commitComposition("") should throw an exception if there is no composition
+  try {
+    TIP.commitComposition("");
+    ok(false,
+       description + "commitComposition(\"\") should fail if there is no composition");
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_FAILURE"),
+       description + "commitComposition(\"\") should cause NS_ERROR_FAILURE if there is no composition");
+  }
+
+  // Pending composition string should allow to flush without clause information (for compatibility)
+  try {
+    TIP.setPendingCompositionString("foo");
+    TIP.flushPendingComposition();
+    ok(true,
+       description + "flushPendingComposition() should succeed even if appendClauseToPendingComposition() has never been called");
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(false,
+       description + "flushPendingComposition() shouldn't cause an exception even if appendClauseToPendingComposition() has never been called");
+  }
+
+  // Pending composition string must be filled by clause information
+  try {
+    TIP.setPendingCompositionString("foo");
+    TIP.appendClauseToPendingComposition(2, TIP.ATTR_RAW_CLAUSE);
+    TIP.flushPendingComposition();
+    ok(false,
+       description + "flushPendingComposition() should fail if appendClauseToPendingComposition() doesn't fill all composition string");
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if appendClauseToPendingComposition() doesn't fill all composition string");
+  }
+
+  // Pending composition string must not be shorter than appended clause length
+  try {
+    TIP.setPendingCompositionString("foo");
+    TIP.appendClauseToPendingComposition(4, TIP.ATTR_RAW_CLAUSE);
+    TIP.flushPendingComposition();
+    ok(false,
+       description + "flushPendingComposition() should fail if appendClauseToPendingComposition() appends longer clause information");
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if appendClauseToPendingComposition() appends longer clause information");
+  }
+
+  // Pending composition must not have clause information with empty string
+  try {
+    TIP.appendClauseToPendingComposition(1, TIP.ATTR_RAW_CLAUSE);
+    TIP.flushPendingComposition();
+    ok(false,
+       description + "flushPendingComposition() should fail if there is a clause with empty string");
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if there is a clause with empty string");
+  }
+
+  // Appending a clause whose length is 0 should cause an exception
+  try {
+    TIP.appendClauseToPendingComposition(0, TIP.ATTR_RAW_CLAUSE);
+    ok(false,
+       description + "appendClauseToPendingComposition() should fail if the length is 0");
+    TIP.flushPendingComposition();
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "appendClauseToPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if the length is 0");
+  }
+
+  // Appending a clause whose attribute is invalid should cause an exception
+  try {
+    TIP.setPendingCompositionString("foo");
+    TIP.appendClauseToPendingComposition(3, 0);
+    ok(false,
+       description + "appendClauseToPendingComposition() should fail if the attribute is invalid");
+    TIP.flushPendingComposition();
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "appendClauseToPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if the attribute is invalid");
+  }
+
+  // Setting caret position outside of composition string should cause an exception
+  try {
+    TIP.setPendingCompositionString("foo");
+    TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+    TIP.setCaretInPendingComposition(4);
+    TIP.flushPendingComposition();
+    ok(false,
+       description + "flushPendingComposition() should fail if caret position is out of composition string");
+    TIP.cancelComposition();
+  } catch (e) {
+    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+       description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if caret position is out of composition string");
+  }
+}
+
+function runCommitCompositionTests()
+{
+  var description = "runCommitCompositionTests(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(window),
+     description + "TIP.initForTests() should succeed");
+
+  input.focus();
+
+  // commitComposition() should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  TIP.commitComposition();
+  is(input.value, "foo",
+     description + "commitComposition() should commit the composition with the last data");
+
+  // commitComposition("") should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  TIP.commitComposition("");
+  is(input.value, "",
+     description + "commitComposition(\"\") should commit the composition with empty string");
+
+  // commitComposition(null) should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  TIP.commitComposition(null);
+  is(input.value, "",
+     description + "commitComposition(null) should commit the composition with empty string");
+
+  // commitComposition(undefined) should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  TIP.commitComposition(undefined);
+  todo_is(input.value, "foo",
+          description + "commitComposition(undefined) should commit the composition with the last data");
+
+  function doCommit(aText)
+  {
+    TIP.commitComposition(aText);
+  }
+
+  // doCommit() should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommit();
+  todo_is(input.value, "foo",
+          description + "doCommit() should commit the composition with the last data");
+
+  // doCommit("") should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommit("");
+  is(input.value, "",
+     description + "doCommit(\"\") should commit the composition with empty string");
+
+  // doCommit(null) should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommit(null);
+  is(input.value, "",
+     description + "doCommit(null) should commit the composition with empty string");
+
+  // doCommit(undefined) should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommit(undefined);
+  todo_is(input.value, "foo",
+          description + "doCommit(undefined) should commit the composition with the last data");
+
+  function doCommitWithNullCheck(aText)
+  {
+    TIP.commitComposition(aText ? aText : "");
+  }
+
+  // doCommitWithNullCheck() should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommitWithNullCheck();
+  is(input.value, "",
+     description + "doCommitWithNullCheck() should commit the composition with empty string");
+
+  // doCommitWithNullCheck("") should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommitWithNullCheck("");
+  is(input.value, "",
+     description + "doCommitWithNullCheck(\"\") should commit the composition with empty string");
+
+  // doCommitWithNullCheck(null) should commit the composition with empty string.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommitWithNullCheck(null);
+  is(input.value, "",
+     description + "doCommitWithNullCheck(null) should commit the composition with empty string");
+
+  // doCommitWithNullCheck(undefined) should commit the composition with the last data.
+  input.value = "";
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  doCommitWithNullCheck(undefined);
+  is(input.value, "",
+     description + "doCommitWithNullCheck(undefined) should commit the composition with empty string");
+}
+
+function runUnloadTests1(aNextTest)
+{
+  var description = "runUnloadTests1(): ";
+
+  var TIP1 = createTIP();
+  ok(TIP1.initForTests(childWindow),
+     description + "TIP1.initForTests() should succeed");
+
+  var oldSrc = iframe.src;
+  var parentWindow = window;
+
+  iframe.addEventListener("load", function (aEvent) {
+    ok(true, description + "dummy page is loaded");
+    iframe.removeEventListener("load", arguments.callee, true);
+    childWindow = iframe.contentWindow;
+    textareaInFrame = null;
+    iframe.addEventListener("load", function () {
+      ok(true, description + "old iframe is restored");
+      // And also restore the iframe information with restored contents.
+      iframe.removeEventListener("DOMContentLoaded", arguments.callee, true);
+      childWindow = iframe.contentWindow;
+      textareaInFrame = iframe.contentDocument.getElementById("textarea");
+      setTimeout(aNextTest, 0);
+    }, true);
+
+    // The composition should be committed internally.  So, another TIP should
+    // be able to steal the rights to using TextEventDispatcher.
+    var TIP2 = createTIP();
+    ok(TIP2.initForTests(parentWindow),
+       description + "TIP2.initForTests() should succeed");
+
+    input.focus();
+    input.value = "";
+
+    TIP2.setPendingCompositionString("foo");
+    TIP2.appendClauseToPendingComposition(3, TIP2.ATTR_RAW_CLAUSE);
+    TIP2.setCaretInPendingComposition(3);
+    TIP2.flushPendingComposition();
+    is(input.value, "foo",
+       description + "the input in the parent document should have composition string");
+
+    TIP2.cancelComposition();
+
+    // Restore the old iframe content.
+    iframe.src = oldSrc;
+  }, true);
+
+  // Start composition in the iframe.
+  textareaInFrame.value = "";
+  textareaInFrame.focus();
+
+  TIP1.setPendingCompositionString("foo");
+  TIP1.appendClauseToPendingComposition(3, TIP1.ATTR_RAW_CLAUSE);
+  TIP1.setCaretInPendingComposition(3);
+  TIP1.flushPendingComposition();
+  is(textareaInFrame.value, "foo",
+     description + "the textarea in the iframe should have composition string");
+
+  // Load different web page on the frame.
+  iframe.src = "data:text/html,<body>dummy page</body>";
+}
+
+function runUnloadTests2(aNextTest)
+{
+  var description = "runUnloadTests2(): ";
+
+  var TIP = createTIP();
+  ok(TIP.initForTests(childWindow),
+     description + "TIP.initForTests() should succeed");
+
+  var oldSrc = iframe.src;
+  var parentWindow = window;
+
+  iframe.addEventListener("load", function (aEvent) {
+    ok(true, description + "dummy page is loaded");
+    iframe.removeEventListener("load", arguments.callee, true);
+    childWindow = iframe.contentWindow;
+    textareaInFrame = null;
+    iframe.addEventListener("load", function () {
+      ok(true, description + "old iframe is restored");
+      // And also restore the iframe information with restored contents.
+      iframe.removeEventListener("load", arguments.callee, true);
+      childWindow = iframe.contentWindow;
+      textareaInFrame = iframe.contentDocument.getElementById("textarea");
+      setTimeout(aNextTest, 0);
+    }, true);
+
+    input.focus();
+    input.value = "";
+
+    // TIP should be still available in the same top level widget.
+    TIP.setPendingCompositionString("bar");
+    TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+    TIP.setCaretInPendingComposition(3);
+    TIP.flushPendingComposition();
+    is(input.value, "bar",
+       description + "the input in the parent document should have composition string");
+
+    TIP.cancelComposition();
+
+    // Restore the old iframe content.
+    iframe.src = oldSrc;
+  }, true);
+
+  // Start composition in the iframe.
+  textareaInFrame.value = "";
+  textareaInFrame.focus();
+
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.setCaretInPendingComposition(3);
+  TIP.flushPendingComposition();
+  is(textareaInFrame.value, "foo",
+     description + "the textarea in the iframe should have composition string");
+
+  // Load different web page on the frame.
+  iframe.src = "data:text/html,<body>dummy page</body>";
+}
+
+function runCallbackTests(aForTests)
+{
+  var description = "runCallbackTests(aForTests=" + aForTests + "): ";
+
+  input.value = "";
+  input.focus();
+  input.blur();
+
+  var TIP = createTIP();
+  var notifications = [];
+  function callback(aTIP, aNotification)
+  {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+    }
+    if (aTIP == TIP) {
+      notifications.push(aNotification);
+    }
+    return true;
+  }
+
+  function dumpUnexpectedNotifications(aExpectedCount)
+  {
+    if (notifications.length <= aExpectedCount) {
+      return;
+    }
+    for (var i = aExpectedCount; i < notifications.length; i++) {
+      ok(false,
+         description + "Unexpected notification: " + notifications[i].type);
+    }
+  }
+
+  if (aForTests) {
+    TIP.initForTests(window, callback);
+  } else {
+    TIP.init(window, callback);
+  }
+
+  notifications = [];
+  input.focus();
+  is(notifications.length, 1,
+     description + "input.focus() should cause a notification");
+  is(notifications[0].type, "notify-focus",
+     description + "input.focus() should cause \"notify-focus\"");
+  dumpUnexpectedNotifications(1);
+
+  notifications = [];
+  input.blur();
+  is(notifications.length, 1,
+     description + "input.blur() should cause a notification");
+  is(notifications[0].type, "notify-blur",
+     description + "input.blur() should cause \"notify-focus\"");
+  dumpUnexpectedNotifications(1);
+
+  input.focus();
+  TIP.setPendingCompositionString("foo");
+  TIP.appendClauseToPendingComposition(3, TIP.ATTR_RAW_CLAUSE);
+  TIP.flushPendingComposition();
+  notifications = [];
+  synthesizeMouseAtCenter(input, {});
+  is(notifications.length, 1,
+     description + "synthesizeMouseAtCenter(input, {}) during composition should cause a notification");
+  is(notifications[0].type, "request-to-commit",
+     description + "synthesizeMouseAtCenter(input, {}) during composition should cause \"request-to-commit\"");
+  dumpUnexpectedNotifications(1);
+
+  notifications = [];
+  var TIP2 = createTIP();
+  if (aForTests) {
+    TIP2.initForTests(window, callback);
+  } else {
+    TIP2.init(window, callback);
+  }
+  is(notifications.length, 1,
+     description + "Initializing another TIP should cause a notification");
+  is(notifications[0].type, "notify-detached",
+     description + "Initializing another TIP should cause \"notify-detached\"");
+  dumpUnexpectedNotifications(1);
+}
+
+function runTests()
+{
+  textareaInFrame = iframe.contentDocument.getElementById("textarea");
+
+  runInitMethodTests();
+  runReleaseTests();
+  runCompositionTests();
+  runErrorTests();
+  runCommitCompositionTests();
+  runCallbackTests(false);
+  runCallbackTests(true);
+  runUnloadTests1(function () {
+    runUnloadTests2(function () {
+      finish();
+    });
+  });
+}
+
+]]>
+</script>
+
+</window>
