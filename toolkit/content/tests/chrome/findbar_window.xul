@@ -259,7 +259,7 @@
           { "string": searchStr,
             "clauses":
             [
-              { "length": searchStr.length, "attr": COMPOSITION_ATTR_RAWINPUT }
+              { "length": searchStr.length, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
             ]
           },
           "caret": { "start": searchStr.length, "length": 0 }

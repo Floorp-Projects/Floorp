@@ -865,12 +865,14 @@ function _getDOMWindowUtils(aWindow)
                                getInterface(_EU_Ci.nsIDOMWindowUtils);
 }
 
-// Must be synchronized with nsITextInputProcessor.
-// TODO: Rename constants with new names defined in nsITextInputProcessor.
-const COMPOSITION_ATTR_RAWINPUT              = 0x02;
-const COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
-const COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
-const COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
+const COMPOSITION_ATTR_RAW_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE;
+const COMPOSITION_ATTR_SELECTED_RAW_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_RAW_CLAUSE;
+const COMPOSITION_ATTR_CONVERTED_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_CONVERTED_CLAUSE;
+const COMPOSITION_ATTR_SELECTED_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE;
 
 function _getTIP(aWindow)
 {
