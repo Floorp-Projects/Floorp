@@ -67,6 +67,7 @@ loop.panel = (function(_, mozL10n) {
             <li className={cx({selected: isSelected})}
                 key={i}
                 data-tab-name={tabName}
+                title={mozL10n.get(tabName + "_tab_button_tooltip")}
                 onClick={this.handleSelectTab} />
           );
         }
