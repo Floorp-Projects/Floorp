@@ -121,6 +121,7 @@ EXPORTS.mozilla += [
     'MiscEvents.h',
     'MouseEvents.h',
     'TextEventDispatcher.h',
+    'TextEventDispatcherListener.h',
     'TextEvents.h',
     'TextRange.h',
     'TouchEvents.h',

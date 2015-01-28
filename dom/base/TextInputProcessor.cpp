@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextInputProcessor.h"
 #include "nsIDocShell.h"
@@ -10,14 +11,17 @@
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 
+using namespace mozilla::widget;
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(TextInputProcessor,
-                  nsITextInputProcessor)
+                  nsITextInputProcessor,
+                  TextEventDispatcherListener,
+                  nsISupportsWeakReference)
 
 TextInputProcessor::TextInputProcessor()
   : mDispatcher(nullptr)
-  , mIsInitialized(false)
   , mForTests(false)
 {
 }
@@ -50,8 +54,6 @@ TextInputProcessor::InitInternal(nsIDOMWindow* aWindow,
                                  bool& aSucceeded)
 {
   aSucceeded = false;
-  bool wasInitialized = mIsInitialized;
-  mIsInitialized = false;
   if (NS_WARN_IF(!aWindow)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -82,51 +84,63 @@ TextInputProcessor::InitInternal(nsIDOMWindow* aWindow,
   // If the instance was initialized and is being initialized for same
   // dispatcher and same purpose, we don't need to initialize the dispatcher
   // again.
-  if (wasInitialized && dispatcher == mDispatcher && aForTests == mForTests) {
-    mIsInitialized = true;
+  if (mDispatcher && dispatcher == mDispatcher && aForTests == mForTests) {
     aSucceeded = true;
     return NS_OK;
   }
 
-  if (aForTests) {
-    rv = dispatcher->InitForTests();
-  } else {
-    rv = dispatcher->Init();
+  // If this instance is composing, don't allow to initialize again.
+  if (mDispatcher && mDispatcher->IsComposing()) {
+    return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  // Another IME framework is using it now.
-  if (rv == NS_ERROR_ALREADY_INITIALIZED) {
-    return NS_OK;  // Don't throw exception.
+  // And also if another instance is composing with the new dispatcher, it'll
+  // fail to steal its ownership.  Then, we should not throw an exception,
+  // just return false.
+  if (dispatcher->IsComposing()) {
+    return NS_OK;
+  }
+
+  // This instance has finished preparing to link to the dispatcher.  Therefore,
+  // let's forget the old dispatcher and purpose.
+  UnlinkFromTextEventDispatcher();
+
+  if (aForTests) {
+    rv = dispatcher->InitForTests(this);
+  } else {
+    rv = dispatcher->Init(this);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  mIsInitialized = true;
-  mForTests = aForTests;
   mDispatcher = dispatcher;
+  mForTests = aForTests;
   aSucceeded = true;
   return NS_OK;
 }
 
-nsresult
-TextInputProcessor::IsValidStateForComposition() const
+void
+TextInputProcessor::UnlinkFromTextEventDispatcher()
 {
-  if (NS_WARN_IF(!mIsInitialized)) {
+  mDispatcher = nullptr;
+  mForTests = false;
+}
+
+nsresult
+TextInputProcessor::IsValidStateForComposition()
+{
+  if (NS_WARN_IF(!mDispatcher)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (!mDispatcher) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = mDispatcher->GetState();
-  if (rv != NS_ERROR_NOT_INITIALIZED) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  return mForTests ? mDispatcher->InitForTests() : mDispatcher->Init();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -223,19 +237,31 @@ TextInputProcessor::CommitComposition(const nsAString& aCommitString,
 {
   MOZ_RELEASE_ASSERT(aSucceeded, "aSucceeded must not be nullptr");
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  const nsAString* commitString =
+    aOptionalArgc >= 1 ? &aCommitString : nullptr;
+  return CommitCompositionInternal(commitString, aSucceeded);
+}
+
+nsresult
+TextInputProcessor::CommitCompositionInternal(const nsAString* aCommitString,
+                                              bool* aSucceeded)
+{
+  if (aSucceeded) {
+    *aSucceeded = false;
+  }
   nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   nsresult rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  const nsAString* commitString =
-    aOptionalArgc >= 1 ? &aCommitString : nullptr;
   nsEventStatus status = nsEventStatus_eIgnore;
-  rv = mDispatcher->CommitComposition(status, commitString);
+  rv = mDispatcher->CommitComposition(status, aCommitString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  *aSucceeded = status != nsEventStatus_eConsumeNoDefault;
+  if (aSucceeded) {
+    *aSucceeded = status != nsEventStatus_eConsumeNoDefault;
+  }
   return rv;
 }
 
@@ -243,6 +269,12 @@ NS_IMETHODIMP
 TextInputProcessor::CancelComposition()
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  return CancelCompositionInternal();
+}
+
+nsresult
+TextInputProcessor::CancelCompositionInternal()
+{
   nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   nsresult rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -250,6 +282,46 @@ TextInputProcessor::CancelComposition()
   }
   nsEventStatus status = nsEventStatus_eIgnore;
   return mDispatcher->CommitComposition(status, &EmptyString());
+}
+
+NS_IMETHODIMP
+TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                              const IMENotification& aNotification)
+{
+  // If This is called while this is being initialized, ignore the call.
+  if (!mDispatcher) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  MOZ_ASSERT(aTextEventDispatcher == mDispatcher,
+             "Wrong TextEventDispatcher notifies this");
+  switch (aNotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION: {
+      NS_ASSERTION(aTextEventDispatcher->IsComposing(),
+                   "Why is this requested without composition?");
+      CommitCompositionInternal();
+      return NS_OK;
+    }
+    case REQUEST_TO_CANCEL_COMPOSITION: {
+      NS_ASSERTION(aTextEventDispatcher->IsComposing(),
+                   "Why is this requested without composition?");
+      CancelCompositionInternal();
+      return NS_OK;
+    }
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+NS_IMETHODIMP_(void)
+TextInputProcessor::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
+{
+  // If This is called while this is being initialized, ignore the call.
+  if (!mDispatcher) {
+    return;
+  }
+  MOZ_ASSERT(aTextEventDispatcher == mDispatcher,
+             "Wrong TextEventDispatcher notifies this");
+  UnlinkFromTextEventDispatcher();
 }
 
 } // namespace mozilla
