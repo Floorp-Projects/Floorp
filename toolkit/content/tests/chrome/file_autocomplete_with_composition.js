@@ -92,7 +92,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -107,7 +107,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -132,7 +132,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -147,7 +147,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -171,7 +171,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "l",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -186,7 +186,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "ll",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -228,7 +228,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -243,7 +243,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -290,7 +290,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -305,7 +305,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -352,7 +352,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -367,7 +367,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -417,7 +417,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -432,7 +432,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -479,7 +479,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -494,7 +494,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
