@@ -75,6 +75,28 @@ TextEventDispatcher::InitEvent(WidgetCompositionEvent& aEvent) const
   aEvent.mFlags.mIsSynthesizedForTests = mForTests;
 }
 
+nsresult
+TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
+{
+  aStatus = nsEventStatus_eIgnore;
+
+  nsresult rv = GetState();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIWidget> widget(mWidget);
+  WidgetCompositionEvent compositionStartEvent(true, NS_COMPOSITION_START,
+                                               widget);
+  InitEvent(compositionStartEvent);
+  rv = widget->DispatchEvent(&compositionStartEvent, aStatus);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 /******************************************************************************
  * TextEventDispatcher::PendingComposition
  *****************************************************************************/
