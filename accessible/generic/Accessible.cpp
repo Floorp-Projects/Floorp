@@ -110,24 +110,6 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mIndexOfEmbeddedChild(-1), mRoleMapEntry(nullptr)
 {
   mBits.groupInfo = nullptr;
-#ifdef NS_DEBUG_X
-   {
-     nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
-     printf(">>> %p Created Acc - DOM: %p  PS: %p",
-            (void*)static_cast<nsIAccessible*>(this), (void*)aNode,
-            (void*)shell.get());
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (content) {
-      printf(" Con: %s@%p",
-             NS_ConvertUTF16toUTF8(content->NodeInfo()->QualifiedName()).get(),
-             (void *)content.get());
-      nsAutoString buf;
-      Name(buf);
-      printf(" Name:[%s]", NS_ConvertUTF16toUTF8(buf).get());
-     }
-     printf("\n");
-   }
-#endif
 }
 
 Accessible::~Accessible()
