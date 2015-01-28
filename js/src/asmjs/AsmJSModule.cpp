@@ -273,7 +273,7 @@ AsmJSModule::lookupHeapAccess(void *pc) const
 
 bool
 AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembler &masm,
-                    const Label &interruptLabel)
+                    const Label &interruptLabel, const Label &outOfBoundsLabel)
 {
     MOZ_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
 
@@ -315,6 +315,7 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
     // Copy over metadata, making sure to update all offsets on ARM.
 
     staticLinkData_.interruptExitOffset = masm.actualOffset(interruptLabel.offset());
+    staticLinkData_.outOfBoundsExitOffset = masm.actualOffset(outOfBoundsLabel.offset());
 
     // Heap-access metadata used for link-time patching and fault-handling.
     heapAccesses_ = masm.extractAsmJSHeapAccesses();
@@ -463,6 +464,13 @@ OnDetached()
     // See hasDetachedHeap comment in LinkAsmJS.
     JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+}
+
+static void
+OnOutOfBounds()
+{
+    JSContext *cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
 }
 
 static bool
@@ -659,6 +667,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
       case AsmJSImm_OnDetached:
         return RedirectCall(FuncCast(OnDetached), Args_General0);
+      case AsmJSImm_OnOutOfBounds:
+        return RedirectCall(FuncCast(OnOutOfBounds), Args_General0);
       case AsmJSImm_HandleExecutionInterrupt:
         return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
       case AsmJSImm_InvokeFromAsmJS_Ignore:
@@ -730,6 +740,7 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     // Process staticLinkData_
 
     interruptExit_ = code_ + staticLinkData_.interruptExitOffset;
+    outOfBoundsExit_ = code_ + staticLinkData_.outOfBoundsExitOffset;
 
     for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
         RelativeLink link = staticLinkData_.relativeLinks[i];
