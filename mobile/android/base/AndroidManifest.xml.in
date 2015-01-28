@@ -428,6 +428,8 @@
 
         <provider android:name="org.mozilla.gecko.db.ReadingListProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.readinglist"
+                  android:exported="false"
+                  android:label="@string/reading_list_title"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
         <provider android:name="org.mozilla.gecko.db.SearchHistoryProvider"
