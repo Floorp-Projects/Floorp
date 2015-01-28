@@ -166,8 +166,7 @@ private:
     nsresult SetString(const nsAString& aString);
     nsresult AppendClause(uint32_t aLength, uint32_t aAttribute);
     nsresult SetCaret(uint32_t aOffset, uint32_t aLength);
-    nsresult Flush(const TextEventDispatcher* aDispatcher,
-                   nsEventStatus& aStatus);
+    nsresult Flush(TextEventDispatcher* aDispatcher, nsEventStatus& aStatus);
     void Clear();
 
   private:
@@ -189,6 +188,22 @@ private:
    * the event.
    */
   void InitEvent(WidgetCompositionEvent& aEvent) const;
+
+  /**
+   * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't
+   * been started it yet.
+   *
+   * @param aStatus         If it succeeded to start composition normally, this
+   *                        returns nsEventStatus_eIgnore.  Otherwise, e.g.,
+   *                        the composition is canceled during dispatching
+   *                        compositionstart event, this returns
+   *                        nsEventStatus_eConsumeNoDefault.  In this case,
+   *                        the caller shouldn't keep doing its job.
+   * @return                Only when something unexpected occurs, this returns
+   *                        an error.  Otherwise, returns NS_OK even if aStatus
+   *                        is nsEventStatus_eConsumeNoDefault.
+   */
+  nsresult StartCompositionAutomaticallyIfNecessary(nsEventStatus& aStatus);
 };
 
 } // namespace widget
