@@ -278,6 +278,10 @@ AllocationIntegrityState::checkSafepointAllocation(LInstruction *ins,
         MOZ_ASSERT(safepoint->liveRegs().has(reg));
     }
 
+    // The |this| argument slot is implicitly included in all safepoints.
+    if (alloc.isArgument() && alloc.toArgument()->index() < THIS_FRAME_ARGSLOT + sizeof(Value))
+        return true;
+
     LDefinition::Type type = virtualRegisters[vreg]
                              ? virtualRegisters[vreg]->type()
                              : LDefinition::GENERAL;
