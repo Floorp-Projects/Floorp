@@ -40,6 +40,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TouchEvents.h"
 
 #include "nsViewManager.h"
@@ -2200,10 +2201,14 @@ nsDOMWindowUtils::CreateCompositionStringSynthesizer(
 
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
-
-  NS_ADDREF(*aResult = new CompositionStringSynthesizer(window));
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsRefPtr<TextEventDispatcher> dispatcher(widget->GetTextEventDispatcher());
+  // XXX Ignore the result of InitForTest() for now.
+  dispatcher->InitForTests();
+  NS_ADDREF(*aResult = new CompositionStringSynthesizer(dispatcher));
   return NS_OK;
 }
 
