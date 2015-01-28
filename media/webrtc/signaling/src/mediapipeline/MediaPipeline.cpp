@@ -1009,7 +1009,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
     // Send a black image.
     nsAutoArrayPtr<uint8_t> pixelData;
-    static const fallible_t fallible = fallible_t();
     pixelData = new (fallible) uint8_t[length];
     if (pixelData) {
       // YCrCb black = 0x10 0x80 0x80

@@ -53,7 +53,6 @@ TextEncoder::Encode(JSContext* aCx,
   }
   // Need a fallible allocator because the caller may be a content
   // and the content can specify the length of the string.
-  static const fallible_t fallible = fallible_t();
   nsAutoArrayPtr<char> buf(new (fallible) char[maxLen + 1]);
   if (!buf) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

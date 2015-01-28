@@ -11,12 +11,11 @@
 #include "nsCRTGlue.h"
 #include "nsRefPtr.h"
 #include "nsTArray.h"
-#include "mozilla/fallible.h"
 #include "gtest/gtest.h"
 
 namespace TestStrings {
 
-using mozilla::fallible_t;
+using mozilla::fallible;
 
 void test_assign_helper(const nsACString& in, nsACString &_retval)
 {
@@ -851,75 +850,75 @@ TEST(Strings, huge_capacity)
   // Ignore the result if the address space is less than 64-bit because
   // some of the allocations above will exhaust the address space.
   if (sizeof(void*) >= 8) {
-    EXPECT_TRUE(a.SetCapacity(1, fallible_t()));
-    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    EXPECT_TRUE(a.SetCapacity(0, fallible_t()));  // free the allocated memory
+    EXPECT_TRUE(a.SetCapacity(1, fallible));
+    EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_TRUE(a.SetCapacity(0, fallible));  // free the allocated memory
 
-    EXPECT_TRUE(b.SetCapacity(1, fallible_t()));
-    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
-    EXPECT_TRUE(b.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(b.SetCapacity(1, fallible));
+    EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
+    EXPECT_TRUE(b.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(c.SetCapacity(1, fallible_t()));
-    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    EXPECT_TRUE(c.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(c.SetCapacity(1, fallible));
+    EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_TRUE(c.SetCapacity(0, fallible));
 
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible_t()));
-    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    EXPECT_TRUE(d.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
+    EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_TRUE(d.SetCapacity(0, fallible));
 
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
-    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    EXPECT_TRUE(e.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible));
+    EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(e.SetCapacity(0, fallible));
 
-    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    EXPECT_TRUE(f.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_TRUE(f.SetCapacity(0, fallible));
 
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible_t()));
-    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible_t()));
-    EXPECT_TRUE(g.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible));
+    EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible));
+    EXPECT_TRUE(g.SetCapacity(0, fallible));
 
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible_t()));
-    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible_t()));
-    EXPECT_TRUE(h.SetCapacity(0, fallible_t()));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible));
+    EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible));
+    EXPECT_TRUE(h.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(i.SetCapacity(1, fallible_t()));
-    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
-    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    EXPECT_TRUE(i.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(i.SetCapacity(1, fallible));
+    EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
+    EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(i.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible_t()));
-    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    EXPECT_TRUE(j.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
+    EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(j.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible_t()));
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible_t()));
-    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible_t()));
-    EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible_t()));
-    EXPECT_TRUE(k.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible));
+    EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible));
+    EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
+    EXPECT_TRUE(k.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible_t()));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible_t()));
-    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible_t()));
-    EXPECT_TRUE(l.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible));
+    EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible));
+    EXPECT_TRUE(l.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible_t()));
-    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible_t()));
-    EXPECT_TRUE(m.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible));
+    EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible));
+    EXPECT_TRUE(m.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible_t()));
-    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible_t()));
-    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible));
+    EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible));
+    EXPECT_TRUE(n.SetCapacity(0, fallible));
 
-    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
-    EXPECT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible_t()));
-    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
-    EXPECT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible_t()));
-    EXPECT_TRUE(n.SetCapacity(0, fallible_t()));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
-    EXPECT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible_t()));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
-    EXPECT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible_t()));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible_t()));
+    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    EXPECT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible));
+    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    EXPECT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible));
+    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible));
+    EXPECT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible));
+    EXPECT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible));
+    EXPECT_TRUE(n1.SetCapacity(0, fallible));
   }
 }
 

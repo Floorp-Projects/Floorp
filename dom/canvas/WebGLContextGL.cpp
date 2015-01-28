@@ -48,7 +48,6 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
-#include "mozilla/fallible.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2086,7 +2085,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
 
         // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
-        UniquePtr<GLubyte> subrect_data(new ((fallible_t())) GLubyte[subrect_byteLength]);
+        UniquePtr<GLubyte> subrect_data(new (fallible) GLubyte[subrect_byteLength]);
         if (!subrect_data)
             return ErrorOutOfMemory("readPixels: subrect_data");
 
@@ -3203,7 +3202,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level,
         else
         {
             size_t convertedDataSize = height * dstStride;
-            convertedData = new ((fallible_t())) uint8_t[convertedDataSize];
+            convertedData = new (fallible) uint8_t[convertedDataSize];
             if (!convertedData) {
                 ErrorOutOfMemory("texImage2D: Ran out of memory when allocating"
                                  " a buffer for doing format conversion.");
@@ -3404,7 +3403,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
 
     if (!noConversion) {
         size_t convertedDataSize = height * dstStride;
-        convertedData = new ((fallible_t())) uint8_t[convertedDataSize];
+        convertedData = new (fallible) uint8_t[convertedDataSize];
         if (!convertedData) {
             ErrorOutOfMemory("texImage2D: Ran out of memory when allocating"
                              " a buffer for doing format conversion.");

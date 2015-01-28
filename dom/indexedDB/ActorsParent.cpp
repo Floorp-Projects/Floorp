@@ -146,8 +146,6 @@ const int32_t kStorageProgressGranularity = 1000;
 
 const char kSavepointClause[] = "SAVEPOINT sp;";
 
-const fallible_t fallible = fallible_t();
-
 const uint32_t kFileCopyBufferSize = 32768;
 
 const char kJournalDirectoryName[] = "journals";

@@ -2773,7 +2773,6 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, uint32_t argc, JS::Value *argv,
   // copy the array - we don't know its lifetime, and ours is tied to xpcom
   // refcounting.
   if (argc) {
-    static const fallible_t fallible = fallible_t();
     mArgv = new (fallible) JS::Heap<JS::Value>[argc];
     if (!mArgv) {
       *prv = NS_ERROR_OUT_OF_MEMORY;
