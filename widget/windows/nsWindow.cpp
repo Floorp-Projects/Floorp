@@ -6541,6 +6541,10 @@ nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                               bool aIntersectWithExisting)
 {
+  if (IsWindowClipRegionEqual(aRects)) {
+    return NS_OK;
+  }
+
   nsBaseWidget::SetWindowClipRegion(aRects, aIntersectWithExisting);
 
   HRGN dest = CreateHRGNFromArray(aRects);
