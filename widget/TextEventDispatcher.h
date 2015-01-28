@@ -17,6 +17,8 @@ class nsIWidget;
 namespace mozilla {
 namespace widget {
 
+struct IMENotification;
+
 /**
  * TextEventDispatcher is a helper class for dispatching widget events defined
  * in TextEvents.h.  Currently, this is a helper for dispatching
@@ -62,6 +64,12 @@ public:
    *                                        composition.
    */
   nsresult GetState() const;
+
+  /**
+   * IsComposing() returns true after calling StartComposition() and before
+   * calling CommitComposition().
+   */
+  bool IsComposing() const { return mIsComposing; }
 
   /**
    * StartComposition() starts composition explicitly.
@@ -135,6 +143,11 @@ public:
     return mPendingComposition.Flush(this, aStatus);
   }
 
+  /**
+   * @see nsIWidget::NotifyIME()
+   */
+  nsresult NotifyIME(const IMENotification& aIMENotification);
+
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
   // And when mWidget is released, this is cleared by OnDestroyWidget().
@@ -168,6 +181,8 @@ private:
 
   bool mInitialized;
   bool mForTests;
+  // See IsComposing().
+  bool mIsComposing;
 
   /**
    * InitEvent() initializes aEvent.  This must be called before dispatching

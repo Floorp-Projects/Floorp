@@ -163,7 +163,6 @@ public:
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                   bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
 
-  NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction) MOZ_OVERRIDE;
   NS_IMETHOD_(InputContext) GetInputContext() MOZ_OVERRIDE;
@@ -203,6 +202,9 @@ public:
 protected:
   bool mEnabled;
   bool mVisible;
+
+  virtual nsresult NotifyIMEInternal(
+                     const IMENotification& aIMENotification) MOZ_OVERRIDE;
 
 private:
   nsresult Paint();

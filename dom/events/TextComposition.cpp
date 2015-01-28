@@ -340,35 +340,14 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       mIsRequestingCancel = false;
       mIsRequestingCommit = true;
     }
-    if (!mIsSynthesizedForTests) {
-      // FYI: CompositionEvents caused by a call of NotifyIME() may be
-      //      discarded by PresShell if it's not safe to dispatch the event.
-      nsresult rv =
-        aWidget->NotifyIME(IMENotification(aDiscard ?
-                                             REQUEST_TO_CANCEL_COMPOSITION :
-                                             REQUEST_TO_COMMIT_COMPOSITION));
-      if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-        return rv;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      // Emulates to commit or cancel the composition
-      // FYI: These events may be discarded by PresShell if it's not safe to
-      //      dispatch the event.
-      nsCOMPtr<nsIWidget> widget(aWidget);
-      nsAutoString commitData(aDiscard ? EmptyString() : lastData);
-      bool isChanging = commitData != mLastData;
-      uint32_t message =
-        isChanging ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
-      WidgetCompositionEvent commitEvent(true, message, widget);
-      if (commitEvent.message == NS_COMPOSITION_COMMIT) {
-        commitEvent.mData = commitData;
-      }
-      commitEvent.mFlags.mIsSynthesizedForTests = true;
-      nsEventStatus status = nsEventStatus_eIgnore;
-      widget->DispatchEvent(&commitEvent, status);
+    // FYI: CompositionEvents caused by a call of NotifyIME() may be
+    //      discarded by PresShell if it's not safe to dispatch the event.
+    nsresult rv =
+      aWidget->NotifyIME(IMENotification(aDiscard ?
+                                           REQUEST_TO_CANCEL_COMPOSITION :
+                                           REQUEST_TO_COMMIT_COMPOSITION));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
