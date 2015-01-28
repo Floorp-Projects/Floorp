@@ -80,17 +80,6 @@ protected:
   nsPresContext* GetPresContext();
   nsIDocument* GetDocument();
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();
-  /**
-   * GetTextEventDispatcher() retrieves a TextEventDispatcher
-   * belonging to the widget (result of GetWidget()) and initializes it.
-   *
-   * @param [out] aDispatcher       The TextEventDispatcher belonging to
-   *                                the widget which has already been
-   *                                initialized and addrefed.
-   * @return   The result of TextEventDispatcher::InitForTest().
-   */
-  nsresult GetTextEventDispatcher(
-             TextEventDispatcher** aDispatcher);
 
   nsView* GetViewToDispatchEvent(nsPresContext* presContext, nsIPresShell** presShell);
 
