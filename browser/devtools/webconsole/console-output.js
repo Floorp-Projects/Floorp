@@ -896,16 +896,13 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
     let body = this.document.createElementNS(XHTML_NS, "span");
     body.className = "message-body-wrapper message-body devtools-monospace";
 
-    let bodyInner = this.document.createElementNS(XHTML_NS, "span");
-    body.appendChild(bodyInner);
-
-    let anchor, container = bodyInner;
+    let anchor, container = body;
     if (this._link || this._linkCallback) {
       container = anchor = this.document.createElementNS(XHTML_NS, "a");
       anchor.href = this._link || "#";
       anchor.draggable = false;
       this._addLinkCallback(anchor, this._linkCallback);
-      bodyInner.appendChild(anchor);
+      body.appendChild(anchor);
     }
 
     if (typeof this._message == "function") {
