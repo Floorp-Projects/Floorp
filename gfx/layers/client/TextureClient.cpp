@@ -908,6 +908,7 @@ SharedSurfaceTextureClient::SharedSurfaceTextureClient(ISurfaceAllocator* aAlloc
   , mSurf(surf)
   , mGL(mSurf->mGL)
 {
+  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 }
 
 SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
