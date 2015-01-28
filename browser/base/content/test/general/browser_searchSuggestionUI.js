@@ -192,8 +192,6 @@ add_task(function* composition() {
 
   let state = yield msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
-  state = yield msg("updateComposition", { data: "x" });
-  checkState(state, "", [], -1);
   state = yield msg("changeComposition", { data: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
