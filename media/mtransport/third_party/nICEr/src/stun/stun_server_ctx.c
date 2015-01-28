@@ -109,6 +109,7 @@ static int nr_stun_server_client_create(nr_stun_server_ctx *ctx, char *client_la
     if(r=r_data_copy(&clnt->password,pass))
       ABORT(r);
 
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s)/CLIENT(%s): Adding client for %s",ctx->label, client_label, user);
     clnt->stun_server_cb=cb;
     clnt->cb_arg=cb_arg;
 

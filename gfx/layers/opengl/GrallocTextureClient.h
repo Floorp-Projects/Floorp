@@ -58,7 +58,7 @@ public:
 
   virtual void SetRemoveFromCompositableTracker(AsyncTransactionTracker* aTracker) MOZ_OVERRIDE;
 
-  virtual void WaitForBufferOwnership() MOZ_OVERRIDE;
+  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) MOZ_OVERRIDE;
 
   void InitWith(MaybeMagicGrallocBufferHandle aDesc, gfx::IntSize aSize);
 

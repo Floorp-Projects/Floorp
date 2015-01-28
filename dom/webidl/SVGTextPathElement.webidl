@@ -22,8 +22,11 @@ interface SVGTextPathElement : SVGTextContentElement {
   const unsigned short TEXTPATH_SPACINGTYPE_AUTO = 1;
   const unsigned short TEXTPATH_SPACINGTYPE_EXACT = 2;
 
+  [Constant]
   readonly attribute SVGAnimatedLength startOffset;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration method;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration spacing;
 };
 

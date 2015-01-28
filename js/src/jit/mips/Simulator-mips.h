@@ -297,6 +297,7 @@ class Simulator {
 
     // Handle arguments and return value for runtime FP functions.
     void getFpArgs(double *x, double *y, int32_t *z);
+    void getFpFromStack(int32_t *stack, double *x);
 
     void setCallResultDouble(double result);
     void setCallResultFloat(float result);
