@@ -946,14 +946,26 @@ IdlInterface.prototype.has_constants = function()
 };
 //@}
 
+IdlInterface.prototype.is_global = function()
+//@{
+{
+    return this.extAttrs.some(function(attribute) {
+        return attribute.name === "Global" ||
+               attribute.name === "PrimaryGlobal";
+    });
+};
+//@}
+
 IdlInterface.prototype.test_self = function()
 //@{
 {
     test(function()
     {
-        // This function tests WebIDL as of 2012-11-28.
+        // This function tests WebIDL as of 2015-01-13.
+        // TODO: Consider [Exposed].
 
-        // "For every interface that:
+        // "For every interface that is exposed in a given ECMAScript global
+        // environment and:
         // * is a callback interface that has constants declared on it, or
         // * is a non-callback interface that is not declared with the
         //   [NoInterfaceObject] extended attribute,
@@ -991,28 +1003,53 @@ IdlInterface.prototype.test_self = function()
         // "If an object is defined to be a function object, then it has
         // characteristics as follows:"
 
-        // "* Its [[Prototype]] internal property is the Function prototype
-        //    object."
-        assert_equals(Object.getPrototypeOf(self[this.name]), Function.prototype,
-                      "prototype of self's property " + format_value(this.name) + " is not Function.prototype");
+        // Its [[Prototype]] internal property is otherwise specified (see
+        // below).
 
         // "* Its [[Get]] internal property is set as described in ECMA-262
-        //    section 15.3.5.4."
+        //    section 9.1.8."
         // Not much to test for this.
 
         // "* Its [[Construct]] internal property is set as described in
-        //    ECMA-262 section 13.2.2."
+        //    ECMA-262 section 19.2.2.3."
         // Tested below if no constructor is defined.  TODO: test constructors
         // if defined.
 
-        // "* Its [[HasInstance]] internal property is set as described in
-        //    ECMA-262 section 15.3.5.3, unless otherwise specified."
+        // "* Its @@hasInstance property is set as described in ECMA-262
+        //    section 19.2.3.8, unless otherwise specified."
         // TODO
 
-        // "* Its [[NativeBrand]] internal property is “Function”."
-        // String() returns something implementation-dependent, because it calls
-        // Function#toString.
+        // ES6 (rev 30) 19.1.3.6:
+        // "Else, if O has a [[Call]] internal method, then let builtinTag be
+        // "Function"."
         assert_class_string(self[this.name], "Function", "class string of " + this.name);
+
+        // "The [[Prototype]] internal property of an interface object for a
+        // non-callback interface is determined as follows:"
+        var prototype = Object.getPrototypeOf(self[this.name]);
+        if (this.base) {
+            // "* If the interface inherits from some other interface, the
+            //    value of [[Prototype]] is the interface object for that other
+            //    interface."
+            var has_interface_object =
+                !this.array
+                     .members[this.base]
+                     .has_extended_attribute("NoInterfaceObject");
+            if (has_interface_object) {
+                assert_own_property(self, this.base,
+                                    'should inherit from ' + this.base +
+                                    ', but self has no such property');
+                assert_equals(prototype, self[this.base],
+                              'prototype of ' + this.name + ' is not ' +
+                              this.base);
+            }
+        } else {
+            // "If the interface doesn't inherit from any other interface, the
+            // value of [[Prototype]] is %FunctionPrototype% ([ECMA-262],
+            // section 6.1.7.4)."
+            assert_equals(prototype, Function.prototype,
+                          "prototype of self's property " + format_value(this.name) + " is not Function.prototype");
+        }
 
         if (!this.has_extended_attribute("Constructor")) {
             // "The internal [[Call]] method of the interface object behaves as
@@ -1264,9 +1301,15 @@ IdlInterface.prototype.test_member_attribute = function(member)
             assert_own_property(self[this.name], member.name,
                 "The interface object must have a property " +
                 format_value(member.name));
-        }
-        else
-        {
+        } else if (this.is_global()) {
+            assert_own_property(self, member.name,
+                "The global object must have a property " +
+                format_value(member.name));
+            assert_false(member.name in self[this.name].prototype,
+                "The prototype object must not have a property " +
+                format_value(member.name));
+            do_interface_attribute_asserts(self, member);
+        } else {
             assert_true(member.name in self[this.name].prototype,
                 "The prototype object must have a property " +
                 format_value(member.name));
@@ -1310,20 +1353,22 @@ IdlInterface.prototype.test_member_operation = function(member)
         // and with an argument count of 0 (for the ECMAScript language
         // binding) has no entries."
         //
-        var prototypeOrInterfaceObject;
+        var memberHolderObject;
         if (member["static"]) {
             assert_own_property(self[this.name], member.name,
                     "interface prototype object missing static operation");
-            prototypeOrInterfaceObject = self[this.name];
-        }
-        else
-        {
+            memberHolderObject = self[this.name];
+        } else if (this.is_global()) {
+            assert_own_property(self, member.name,
+                    "global object missing non-static operation");
+            memberHolderObject = self;
+        } else {
             assert_own_property(self[this.name].prototype, member.name,
                     "interface prototype object missing non-static operation");
-            prototypeOrInterfaceObject = self[this.name].prototype;
+            memberHolderObject = self[this.name].prototype;
         }
 
-        var desc = Object.getOwnPropertyDescriptor(prototypeOrInterfaceObject, member.name);
+        var desc = Object.getOwnPropertyDescriptor(memberHolderObject, member.name);
         // "The property has attributes { [[Writable]]: true,
         // [[Enumerable]]: true, [[Configurable]]: true }."
         assert_false("get" in desc, "property has getter");
@@ -1333,7 +1378,7 @@ IdlInterface.prototype.test_member_operation = function(member)
         assert_true(desc.configurable, "property is not configurable");
         // "The value of the property is a Function object whose
         // behavior is as follows . . ."
-        assert_equals(typeof prototypeOrInterfaceObject[member.name], "function",
+        assert_equals(typeof memberHolderObject[member.name], "function",
                       "property must be a function");
         // "The value of the Function object’s “length” property is
         // a Number determined as follows:
@@ -1342,7 +1387,7 @@ IdlInterface.prototype.test_member_operation = function(member)
         // entries in S."
         //
         // TODO: Doesn't handle overloading or variadic arguments.
-        assert_equals(prototypeOrInterfaceObject[member.name].length,
+        assert_equals(memberHolderObject[member.name].length,
             member.arguments.filter(function(arg) {
                 return !arg.optional;
             }).length,
@@ -1678,14 +1723,19 @@ IdlInterface.prototype.has_stringifier = function()
 function do_interface_attribute_asserts(obj, member)
 //@{
 {
-    // "For each attribute defined on the interface, there must exist a
-    // corresponding property. If the attribute was declared with the
-    // [Unforgeable] extended attribute, then the property exists on every
-    // object that implements the interface.  Otherwise, it exists on the
-    // interface’s interface prototype object."
-    //
-    // This is called by test_self() with the prototype as obj, and by
-    // test_interface_of() with the object as obj.
+    // This function tests WebIDL as of 2015-01-27.
+    // TODO: Consider [Exposed].
+
+    // This is called by test_member_attribute() with the prototype as obj if
+    // it is not a global, and the global otherwise, and by test_interface_of()
+    // with the object as obj.
+
+    // "For each exposed attribute of the interface, whether it was declared on
+    // the interface itself or one of its consequential interfaces, there MUST
+    // exist a corresponding property. The characteristics of this property are
+    // as follows:"
+
+    // "The name of the property is the identifier of the attribute."
     assert_own_property(obj, member.name);
 
     // "The property has attributes { [[Get]]: G, [[Set]]: S, [[Enumerable]]:
@@ -1707,50 +1757,70 @@ function do_interface_attribute_asserts(obj, member)
         assert_true(desc.configurable, "property must be configurable");
     }
 
+
     // "The attribute getter is a Function object whose behavior when invoked
-    // is as follows:
-    // "...
+    // is as follows:"
+    assert_equals(typeof desc.get, "function", "getter must be Function");
+
+    // "If the attribute is a regular attribute, then:"
+    if (!member["static"]) {
+        // "If O is not a platform object that implements I, then:
+        // "If the attribute was specified with the [LenientThis] extended
+        // attribute, then return undefined.
+        // "Otherwise, throw a TypeError."
+        if (!member.has_extended_attribute("LenientThis")) {
+            assert_throws(new TypeError(), function() {
+                desc.get.call({});
+            }.bind(this), "calling getter on wrong object type must throw TypeError");
+        } else {
+            assert_equals(desc.get.call({}), undefined,
+                          "calling getter on wrong object type must return undefined");
+        }
+    }
+
     // "The value of the Function object’s “length” property is the Number
     // value 0."
-    assert_equals(typeof desc.get, "function", "getter must be Function");
     assert_equals(desc.get.length, 0, "getter length must be 0");
-    if (!member.has_extended_attribute("LenientThis")) {
-        assert_throws(new TypeError(), function() {
-            desc.get.call({});
-        }.bind(this), "calling getter on wrong object type must throw TypeError");
-    } else {
-        assert_equals(desc.get.call({}), undefined,
-                      "calling getter on wrong object type must return undefined");
-    }
+
 
     // TODO: Test calling setter on the interface prototype (should throw
     // TypeError in most cases).
-    //
-    // "The attribute setter is undefined if the attribute is declared readonly
-    // and has neither a [PutForwards] nor a [Replaceable] extended attribute
-    // declared on it.  Otherwise, it is a Function object whose behavior when
-    // invoked is as follows:
-    // "...
-    // "The value of the Function object’s “length” property is the Number
-    // value 1."
     if (member.readonly
     && !member.has_extended_attribute("PutForwards")
     && !member.has_extended_attribute("Replaceable"))
     {
+        // "The attribute setter is undefined if the attribute is declared
+        // readonly and has neither a [PutForwards] nor a [Replaceable]
+        // extended attribute declared on it."
         assert_equals(desc.set, undefined, "setter must be undefined for readonly attributes");
     }
     else
     {
+        // "Otherwise, it is a Function object whose behavior when
+        // invoked is as follows:"
         assert_equals(typeof desc.set, "function", "setter must be function for PutForwards, Replaceable, or non-readonly attributes");
-        assert_equals(desc.set.length, 1, "setter length must be 1");
-        if (!member.has_extended_attribute("LenientThis")) {
-            assert_throws(new TypeError(), function() {
-                desc.set.call({});
-            }.bind(this), "calling setter on wrong object type must throw TypeError");
-        } else {
-            assert_equals(desc.set.call({}), undefined,
-                          "calling setter on wrong object type must return undefined");
+
+        // "If the attribute is a regular attribute, then:"
+        if (!member["static"]) {
+            // "If /validThis/ is false and the attribute was not specified
+            // with the [LenientThis] extended attribute, then throw a
+            // TypeError."
+            // "If the attribute is declared with a [Replaceable] extended
+            // attribute, then: ..."
+            // "If validThis is false, then return."
+            if (!member.has_extended_attribute("LenientThis")) {
+                assert_throws(new TypeError(), function() {
+                    desc.set.call({});
+                }.bind(this), "calling setter on wrong object type must throw TypeError");
+            } else {
+                assert_equals(desc.set.call({}), undefined,
+                              "calling setter on wrong object type must return undefined");
+            }
         }
+
+        // "The value of the Function object’s “length” property is the Number
+        // value 1."
+        assert_equals(desc.set.length, 1, "setter length must be 1");
     }
 }
 //@}
