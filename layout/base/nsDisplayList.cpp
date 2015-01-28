@@ -697,7 +697,6 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
                                           const nsRect& aViewport,
-                                          bool aForceNullScrollId,
                                           bool aIsRoot,
                                           const ContainerLayerParameters& aContainerParameters)
 {
@@ -711,9 +710,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
   nsIContent* content = aScrollFrame ? aScrollFrame->GetContent() : nullptr;
   if (content) {
-    if (!aForceNullScrollId) {
-      scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
-    }
+    scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
     nsRect dp;
     if (nsLayoutUtils::GetDisplayPort(content, &dp)) {
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
@@ -1623,7 +1620,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       nsDisplayScrollLayer::ComputeFrameMetrics(frame, rootScrollFrame,
                          aBuilder->FindReferenceFrameFor(frame),
                          root, FrameMetrics::NULL_SCROLL_ID, viewport,
-                         !isRoot, isRoot, containerParameters));
+                         isRoot, containerParameters));
   }
 
   // NS_WARNING is debug-only, so don't even bother checking the conditions in
@@ -4088,7 +4085,7 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   return MakeUnique<FrameMetrics>(
     nsDisplayScrollLayer::ComputeFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
                        aLayer, mScrollParentId, viewport,
-                       false, isRootContentDocument, params));
+                       isRootContentDocument, params));
 }
 
 static bool
@@ -4422,7 +4419,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(Layer* aLayer,
 
   return UniquePtr<FrameMetrics>(new FrameMetrics(
     ComputeFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), aLayer,
-                        mScrollParentId, viewport, false, false, params)));
+                        mScrollParentId, viewport, false, params)));
 }
 
 bool

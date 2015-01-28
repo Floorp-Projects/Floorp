@@ -3179,7 +3179,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
   *aOutput->AppendElement() =
       nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
         aContainerReferenceFrame, aLayer, mScrollParentID,
-        scrollport, false, isRoot, aParameters);
+        scrollport, isRoot, aParameters);
 }
 
 bool
