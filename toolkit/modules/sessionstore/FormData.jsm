@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["FormData"];
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPathGenerator.jsm");
 
 /**
@@ -262,17 +261,10 @@ let FormDataInternal = {
     }
 
     if ("innerHTML" in data) {
-      // We know that the URL matches data.url right now, but the user
-      // may navigate away before the setTimeout handler runs. We do
-      // a simple comparison against savedURL to check for that.
-      let savedURL = doc.documentURI;
-
-      setTimeout(() => {
-        if (doc.body && doc.designMode == "on" && doc.documentURI == savedURL) {
-          doc.body.innerHTML = data.innerHTML;
-          this.fireEvent(doc.body, "input");
-        }
-      });
+      if (doc.body && doc.designMode == "on") {
+        doc.body.innerHTML = data.innerHTML;
+        this.fireEvent(doc.body, "input");
+      }
     }
   },
 
