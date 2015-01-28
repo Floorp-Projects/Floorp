@@ -20,140 +20,46 @@ NS_IMPL_ISUPPORTS(CompositionStringSynthesizer,
                   nsICompositionStringSynthesizer)
 
 CompositionStringSynthesizer::CompositionStringSynthesizer(
-                                nsPIDOMWindow* aWindow)
+                                TextEventDispatcher* aDispatcher)
+  : mDispatcher(aDispatcher)
 {
-  mWindow = do_GetWeakReference(aWindow);
-  mClauses = new TextRangeArray();
-  ClearInternal();
 }
 
 CompositionStringSynthesizer::~CompositionStringSynthesizer()
 {
 }
 
-void
-CompositionStringSynthesizer::ClearInternal()
-{
-  mString.Truncate();
-  mClauses->Clear();
-  mCaret.mRangeType = 0;
-}
-
-nsIWidget*
-CompositionStringSynthesizer::GetWidget()
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  if (!window) {
-    return nullptr;
-  }
-  nsIDocShell *docShell = window->GetDocShell();
-  if (!docShell) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
-  nsIFrame* frame = presShell->GetRootFrame();
-  if (!frame) {
-    return nullptr;
-  }
-  return frame->GetView()->GetNearestWidget(nullptr);
-}
-
 NS_IMETHODIMP
 CompositionStringSynthesizer::SetString(const nsAString& aString)
 {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  NS_ENSURE_TRUE(widget && !widget->Destroyed(), NS_ERROR_NOT_AVAILABLE);
-
-  mString = aString;
-  return NS_OK;
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  return mDispatcher->SetPendingCompositionString(aString);
 }
 
 NS_IMETHODIMP
 CompositionStringSynthesizer::AppendClause(uint32_t aLength,
                                            uint32_t aAttribute)
 {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  NS_ENSURE_TRUE(widget && !widget->Destroyed(), NS_ERROR_NOT_AVAILABLE);
-
-  switch (aAttribute) {
-    case ATTR_RAWINPUT:
-    case ATTR_SELECTEDRAWTEXT:
-    case ATTR_CONVERTEDTEXT:
-    case ATTR_SELECTEDCONVERTEDTEXT: {
-      TextRange textRange;
-      textRange.mStartOffset =
-        mClauses->IsEmpty() ? 0 : mClauses->LastElement().mEndOffset;
-      textRange.mEndOffset = textRange.mStartOffset + aLength;
-      textRange.mRangeType = aAttribute;
-      mClauses->AppendElement(textRange);
-      return NS_OK;
-    }
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  return mDispatcher->AppendClauseToPendingComposition(aLength, aAttribute);
 }
 
 NS_IMETHODIMP
 CompositionStringSynthesizer::SetCaret(uint32_t aOffset, uint32_t aLength)
 {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  NS_ENSURE_TRUE(widget && !widget->Destroyed(), NS_ERROR_NOT_AVAILABLE);
-
-  mCaret.mStartOffset = aOffset;
-  mCaret.mEndOffset = mCaret.mStartOffset + aLength;
-  mCaret.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  return NS_OK;
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  return mDispatcher->SetCaretInPendingComposition(aOffset, aLength);
 }
 
 NS_IMETHODIMP
 CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
 {
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   NS_ENSURE_ARG_POINTER(aDefaultPrevented);
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  NS_ENSURE_TRUE(widget && !widget->Destroyed(), NS_ERROR_NOT_AVAILABLE);
-
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if (!mClauses->IsEmpty() &&
-      mClauses->LastElement().mEndOffset != mString.Length()) {
-    NS_WARNING("Sum of length of the all clauses must be same as the string "
-               "length");
-    ClearInternal();
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  if (mCaret.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
-    if (mCaret.mEndOffset > mString.Length()) {
-      NS_WARNING("Caret position is out of the composition string");
-      ClearInternal();
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-    mClauses->AppendElement(mCaret);
-  }
-
-  WidgetCompositionEvent compChangeEvent(true, NS_COMPOSITION_CHANGE, widget);
-  compChangeEvent.time = PR_IntervalNow();
-  compChangeEvent.mData = mString;
-  if (!mClauses->IsEmpty()) {
-    compChangeEvent.mRanges = mClauses;
-  }
-
-  // XXX How should we set false for this on b2g?
-  compChangeEvent.mFlags.mIsSynthesizedForTests = true;
-
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsresult rv = widget->DispatchEvent(&compChangeEvent, status);
+  nsresult rv = mDispatcher->FlushPendingComposition(status);
   *aDefaultPrevented = (status == nsEventStatus_eConsumeNoDefault);
-
-  ClearInternal();
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return rv;
 }
 
 } // namespace dom

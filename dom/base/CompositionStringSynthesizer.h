@@ -7,13 +7,8 @@
 #define mozilla_dom_compositionstringsynthesizer_h__
 
 #include "nsICompositionStringSynthesizer.h"
-#include "nsString.h"
-#include "nsWeakReference.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/TextRange.h"
 
-class nsIWidget;
-class nsPIDOMWindow;
+#include "mozilla/TextEventDispatcher.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,8 +16,10 @@ namespace dom {
 class CompositionStringSynthesizer MOZ_FINAL :
   public nsICompositionStringSynthesizer
 {
+  typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
+
 public:
-  explicit CompositionStringSynthesizer(nsPIDOMWindow* aWindow);
+  explicit CompositionStringSynthesizer(TextEventDispatcher* aDispatcher);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOMPOSITIONSTRINGSYNTHESIZER
@@ -30,13 +27,7 @@ public:
 private:
   ~CompositionStringSynthesizer();
 
-  nsWeakPtr mWindow; // refers an instance of nsPIDOMWindow
-  nsString mString;
-  nsRefPtr<TextRangeArray> mClauses;
-  TextRange mCaret;
-
-  nsIWidget* GetWidget();
-  void ClearInternal();
+  nsRefPtr<TextEventDispatcher> mDispatcher;
 };
 
 } // namespace dom
