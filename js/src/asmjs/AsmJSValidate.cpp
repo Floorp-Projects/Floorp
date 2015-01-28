@@ -2765,9 +2765,23 @@ class FunctionCompiler
             return nullptr;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        Label *outOfBoundsLabel = Scalar::isSimdType(accessType) ? &m().onOutOfBoundsLabel() : nullptr;
+        MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD loads should use loadSimdHeap");
+        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), accessType, ptr, needsBoundsCheck);
+        curBlock_->add(load);
+        return load;
+    }
+
+    MDefinition *loadSimdHeap(Scalar::Type accessType, MDefinition *ptr, NeedsBoundsCheck chk,
+                              unsigned numElems)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
+        MOZ_ASSERT(Scalar::isSimdType(accessType), "loadSimdHeap can only load from a SIMD view");
+        Label *outOfBoundsLabel = &m().onOutOfBoundsLabel();
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), accessType, ptr, needsBoundsCheck,
-                                                   outOfBoundsLabel);
+                                                   outOfBoundsLabel, numElems);
         curBlock_->add(load);
         return load;
     }
@@ -2778,9 +2792,22 @@ class FunctionCompiler
             return;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        Label *outOfBoundsLabel = Scalar::isSimdType(accessType) ? &m().onOutOfBoundsLabel() : nullptr;
+        MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD stores should use loadSimdHeap");
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), accessType, ptr, v, needsBoundsCheck);
+        curBlock_->add(store);
+    }
+
+    void storeSimdHeap(Scalar::Type accessType, MDefinition *ptr, MDefinition *v,
+                       NeedsBoundsCheck chk, unsigned numElems)
+    {
+        if (inDeadCode())
+            return;
+
+        bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
+        MOZ_ASSERT(Scalar::isSimdType(accessType), "storeSimdHeap can only load from a SIMD view");
+        Label *outOfBoundsLabel = &m().onOutOfBoundsLabel();
         MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), accessType, ptr, v, needsBoundsCheck,
-                                                      outOfBoundsLabel);
+                                                      outOfBoundsLabel, numElems);
         curBlock_->add(store);
     }
 
@@ -2800,6 +2827,7 @@ class FunctionCompiler
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), accessType, ptr, needsBoundsCheck,
                                                    /* outOfBoundsLabel = */ nullptr,
+                                                   /* numElems */ 0,
                                                    MembarBeforeLoad, MembarAfterLoad);
         curBlock_->add(load);
         return load;
@@ -2813,6 +2841,7 @@ class FunctionCompiler
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
         MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), accessType, ptr, v, needsBoundsCheck,
                                                       /* outOfBoundsLabel = */ nullptr,
+                                                      /* numElems = */ 0,
                                                       MembarBeforeStore, MembarAfterStore);
         curBlock_->add(store);
     }
@@ -5591,7 +5620,7 @@ CheckSimdShuffle(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDe
 
 static bool
 CheckSimdLoadStoreArgs(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType,
-                       Scalar::Type *viewType, MDefinition **index,
+                       unsigned numElems, Scalar::Type *viewType, MDefinition **index,
                        NeedsBoundsCheck *needsBoundsCheck)
 {
     ParseNode *view = CallArgList(call);
@@ -5644,7 +5673,8 @@ CheckSimdLoadStoreArgs(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opTyp
 }
 
 static bool
-CheckSimdLoad(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefinition **def, Type *type)
+CheckSimdLoad(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType,
+              unsigned numElems, MDefinition **def, Type *type)
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 2)
@@ -5653,16 +5683,17 @@ CheckSimdLoad(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefin
     Scalar::Type viewType;
     MDefinition *index;
     NeedsBoundsCheck needsBoundsCheck;
-    if (!CheckSimdLoadStoreArgs(f, call, opType, &viewType, &index, &needsBoundsCheck))
+    if (!CheckSimdLoadStoreArgs(f, call, opType, numElems, &viewType, &index, &needsBoundsCheck))
         return false;
 
-    *def = f.loadHeap(viewType, index, needsBoundsCheck);
+    *def = f.loadSimdHeap(viewType, index, needsBoundsCheck, numElems);
     *type = opType;
     return true;
 }
 
 static bool
-CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefinition **def, Type *type)
+CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType,
+               unsigned numElems, MDefinition **def, Type *type)
 {
     unsigned numArgs = CallArgListLength(call);
     if (numArgs != 3)
@@ -5671,7 +5702,7 @@ CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefi
     Scalar::Type viewType;
     MDefinition *index;
     NeedsBoundsCheck needsBoundsCheck;
-    if (!CheckSimdLoadStoreArgs(f, call, opType, &viewType, &index, &needsBoundsCheck))
+    if (!CheckSimdLoadStoreArgs(f, call, opType, numElems, &viewType, &index, &needsBoundsCheck))
         return false;
 
     Type retType = opType;
@@ -5683,7 +5714,7 @@ CheckSimdStore(FunctionCompiler &f, ParseNode *call, AsmJSSimdType opType, MDefi
     if (!(vecType <= retType))
         return f.failf(vecExpr, "%s is not a subtype of %s", vecType.toChars(), retType.toChars());
 
-    f.storeHeap(viewType, index, vec, needsBoundsCheck);
+    f.storeSimdHeap(viewType, index, vec, needsBoundsCheck, numElems);
     *def = vec;
     *type = vecType;
     return true;
@@ -5791,9 +5822,9 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdShuffle(f, call, opType, def, type);
 
       case AsmJSSimdOperation_load:
-        return CheckSimdLoad(f, call, opType, def, type);
+        return CheckSimdLoad(f, call, opType, 4, def, type);
       case AsmJSSimdOperation_store:
-        return CheckSimdStore(f, call, opType, def, type);
+        return CheckSimdStore(f, call, opType, 4, def, type);
 
       case AsmJSSimdOperation_bitselect:
         return CheckSimdSelect(f, call, opType, /*isElementWise */ false, def, type);
