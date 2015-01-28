@@ -12,7 +12,7 @@ from setuptools import setup, find_packages
 here = os.path.split(__file__)[0]
 
 PACKAGE_NAME = 'wptrunner'
-PACKAGE_VERSION = '1.8'
+PACKAGE_VERSION = '1.10'
 
 # Dependencies
 with open(os.path.join(here, "requirements.txt")) as f:

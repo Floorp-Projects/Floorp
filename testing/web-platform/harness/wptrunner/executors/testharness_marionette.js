@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 window.wrappedJSObject.timeout_multiplier = %(timeout_multiplier)d;
+window.wrappedJSObject.explicit_timeout = %(explicit_timeout)d;
 
 window.wrappedJSObject.done = function(tests, status) {
   clearTimeout(timer);

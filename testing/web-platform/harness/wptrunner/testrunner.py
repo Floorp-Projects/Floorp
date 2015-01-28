@@ -162,7 +162,8 @@ class TestRunnerManager(threading.Thread):
     init_lock = threading.Lock()
 
     def __init__(self, suite_name, test_queue, test_source_cls, browser_cls, browser_kwargs,
-                 executor_cls, executor_kwargs, stop_flag, pause_on_unexpected=False):
+                 executor_cls, executor_kwargs, stop_flag, pause_on_unexpected=False,
+                 debug_args=None):
         """Thread that owns a single TestRunner process and any processes required
         by the TestRunner (e.g. the Firefox binary).
 
@@ -199,6 +200,7 @@ class TestRunnerManager(threading.Thread):
         self.child_stop_flag = multiprocessing.Event()
 
         self.pause_on_unexpected = pause_on_unexpected
+        self.debug_args = debug_args
 
         self.manager_number = next_manager_number()
 
@@ -322,22 +324,25 @@ class TestRunnerManager(threading.Thread):
                 self.child_stop_flag.set()
 
         with self.init_lock:
-	    # Guard against problems initialising the browser or the browser
-	    # remote control method
-            self.init_timer = threading.Timer(self.browser.init_timeout, init_failed)
+            # Guard against problems initialising the browser or the browser
+            # remote control method
+            if self.debug_args is None:
+                self.init_timer = threading.Timer(self.browser.init_timeout, init_failed)
             test_queue = self.test_source.get_queue()
             if test_queue is None:
                 self.logger.info("No more tests")
                 return Stop
 
             try:
-                self.init_timer.start()
+                if self.init_timer is not None:
+                    self.init_timer.start()
                 self.browser.start()
                 self.browser_pid = self.browser.pid()
                 self.start_test_runner(test_queue)
             except:
                 self.logger.warning("Failure during init %s" % traceback.format_exc())
-                self.init_timer.cancel()
+                if self.init_timer is not None:
+                    self.init_timer.cancel()
                 self.logger.error(traceback.format_exc())
                 succeeded = False
             else:
@@ -348,19 +353,21 @@ class TestRunnerManager(threading.Thread):
             self.init_failed()
 
     def init_succeeded(self):
-	"""Callback when we have started the browser, started the remote
-	control connection, and we are ready to start testing."""
+        """Callback when we have started the browser, started the remote
+        control connection, and we are ready to start testing."""
         self.logger.debug("Init succeeded")
-        self.init_timer.cancel()
+        if self.init_timer is not None:
+            self.init_timer.cancel()
         self.init_fail_count = 0
         self.start_next_test()
 
     def init_failed(self):
-	"""Callback when starting the browser or the remote control connect
-	fails."""
+        """Callback when starting the browser or the remote control connect
+        fails."""
         self.init_fail_count += 1
         self.logger.warning("Init failed %i" % self.init_fail_count)
-        self.init_timer.cancel()
+        if self.init_timer is not None:
+            self.init_timer.cancel()
         if self.init_fail_count < self.max_init_fails:
             self.restart_runner()
         else:
@@ -564,7 +571,8 @@ class TestQueue(object):
 class ManagerGroup(object):
     def __init__(self, suite_name, size, test_source_cls, test_source_kwargs,
                  browser_cls, browser_kwargs,
-                 executor_cls, executor_kwargs, pause_on_unexpected=False):
+                 executor_cls, executor_kwargs, pause_on_unexpected=False,
+                 debug_args=None):
         """Main thread object that owns all the TestManager threads."""
         self.suite_name = suite_name
         self.size = size
@@ -574,11 +582,13 @@ class ManagerGroup(object):
         self.browser_kwargs = browser_kwargs
         self.executor_cls = executor_cls
         self.executor_kwargs = executor_kwargs
+        self.pause_on_unexpected = pause_on_unexpected
+        self.debug_args = debug_args
+
         self.pool = set()
         # Event that is polled by threads so that they can gracefully exit in the face
         # of sigint
         self.stop_flag = threading.Event()
-        self.pause_on_unexpected = pause_on_unexpected
         self.logger = structuredlog.StructuredLogger(suite_name)
         self.test_queue = None
 
@@ -609,7 +619,8 @@ class ManagerGroup(object):
                                             self.executor_cls,
                                             self.executor_kwargs,
                                             self.stop_flag,
-                                            self.pause_on_unexpected)
+                                            self.pause_on_unexpected,
+                                            self.debug_args)
                 manager.start()
                 self.pool.add(manager)
             self.wait()
