@@ -374,9 +374,6 @@ public:
   virtual void Pause();
   // Adjust the speed of the playback, optionally with pitch correction,
   virtual void SetVolume(double aVolume);
-  // Sets whether audio is being captured. If it is, we won't play any
-  // of our audio.
-  virtual void SetAudioCaptured(bool aCaptured);
 
   virtual void NotifyWaitingForResourcesStatusChanged() MOZ_OVERRIDE;
 
@@ -857,9 +854,6 @@ public:
   // The decoder monitor must be held.
   bool IsLogicallyPlaying();
 
-  // Re-create a decoded stream if audio being captured
-  void RecreateDecodedStreamIfNecessary(int64_t aStartTimeUSecs);
-
 #ifdef MOZ_EME
   // This takes the decoder monitor.
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
@@ -1067,9 +1061,6 @@ protected:
   // Set when the metadata is loaded. Accessed on the main thread
   // only.
   int64_t mDuration;
-
-  // True when playback should start with audio captured (not playing).
-  bool mInitialAudioCaptured;
 
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
