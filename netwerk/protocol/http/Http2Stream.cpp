@@ -184,11 +184,10 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
 
     // If the sending flow control window is open (!mBlockedOnRwin) then
     // continue sending the request
-    if (!mBlockedOnRwin && mUpstreamState != GENERATING_HEADERS &&
+    if (!mBlockedOnRwin && mOpenGenerated &&
         !mTxInlineFrameUsed && NS_SUCCEEDED(rv) && (!*countRead)) {
       MOZ_ASSERT(!mQueued);
       MOZ_ASSERT(mRequestHeadersDone);
-      MOZ_ASSERT(mOpenGenerated);
       LOG3(("Http2Stream::ReadSegments %p 0x%X: Sending request data complete, "
             "mUpstreamState=%x\n",this, mStreamID, mUpstreamState));
       if (mSentFin) {
@@ -1234,7 +1233,7 @@ Http2Stream::OnReadSegment(const char *buf,
     if (mRequestHeadersDone && !mOpenGenerated) {
       if (!mSession->TryToActivate(this)) {
         LOG3(("Http2Stream::OnReadSegment %p cannot activate now. queued.\n", this));
-        return NS_OK;
+        return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
       }
       if (NS_FAILED(rv = GenerateOpen())) {
         return rv;
