@@ -261,5 +261,5 @@ addMessageListener("ss-test:run", function({data, objects}) {
 
 addEventListener("load", function(event) {
   let subframe = event.target != content.document;
-  sendAsyncMessage("ss-test:loadEvent", {subframe: subframe});
+  sendAsyncMessage("ss-test:loadEvent", {subframe: subframe, url: event.target.documentURI});
 }, true);
