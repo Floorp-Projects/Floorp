@@ -154,10 +154,6 @@ function startTests()
 
     // IME events
     clear();
-    // start composition
-    synthesizeComposition({ type: "compositionstart" });
-    checkCompositionEvents(true, false, false, false, "compositionstart");
-    clear();
     // input first character
     synthesizeCompositionChange(
       { "composition":
@@ -169,7 +165,7 @@ function startTests()
         },
         "caret": { "start": 1, "length": 0 }
       });
-    checkCompositionEvents(false, false, true, true, "composing");
+    checkCompositionEvents(true, false, true, true, "starting to compose");
     var queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null");
     if (!queryText) {

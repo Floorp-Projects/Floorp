@@ -190,9 +190,6 @@ function runUndoRedoTest()
   textarea.value = "";
   textarea.focus();
 
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input raw characters
   synthesizeCompositionChange(
     { "composition":
@@ -232,9 +229,6 @@ function runUndoRedoTest()
   // commit
   synthesizeComposition({ type: "compositioncommitasis" });
 
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input raw characters
   synthesizeCompositionChange(
     { "composition":
@@ -249,9 +243,6 @@ function runUndoRedoTest()
 
   // cancel the composition
   synthesizeComposition({ type: "compositioncommit", data: "" });
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
   synthesizeCompositionChange(
@@ -335,9 +326,6 @@ function runUndoRedoTest()
   synthesizeKey(" ", {});
   synthesizeKey("a", {});
   synthesizeKey(" ", {});
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input raw characters
   synthesizeCompositionChange(
@@ -588,7 +576,6 @@ function runCompositionCommitAsIsTest()
 
   // compositioncommitasis with composing string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -612,7 +599,6 @@ function runCompositionCommitAsIsTest()
 
   // compositioncommitasis with committed string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -647,7 +633,6 @@ function runCompositionCommitAsIsTest()
 
   // compositioncommitasis with committed string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -708,7 +693,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with different composing string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -732,7 +716,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with different committed string when there is already committed string
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -767,7 +750,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with empty composition string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -802,7 +784,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with non-empty composition string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -824,9 +805,8 @@ function runCompositionCommitTest()
   is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #4");
   is(textarea.value, "", "runCompositionCommitTest: textarea should be empty #4");
 
-  // compositioncommit immediately after compositionstart
+  // compositioncommit immediately without compositionstart
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
 
   clearResult();
   synthesizeComposition({ type: "compositioncommit", data: "\u3042" });
@@ -839,7 +819,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with same composition string.
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -863,7 +842,6 @@ function runCompositionCommitTest()
 
   // compositioncommit with same composition string when there is committed string
   textarea.value = "";
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -915,9 +893,6 @@ function runCompositionTest()
     return false;
   }
   caretRects[0] = caretRect;
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
   synthesizeCompositionChange(
@@ -1288,10 +1263,7 @@ function runCompositionTest()
   checkRect(textRect3, textRect1, "runCompositionTest: textRect #1-13-1");
   checkRect(textRect4, textRect2, "runCompositionTest: textRect #1-13-2");
 
-  // restart composition
-  synthesizeComposition({ type: "compositionstart" });
-
-  // input characters
+  // restart composition and input characters
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3057",
@@ -1378,8 +1350,6 @@ function runCompositionTest()
   }
 
   // start composition with selection
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u304A",
@@ -1445,8 +1415,6 @@ function runCompositionTest()
   // bug 271815, some Chinese IMEs for Linux make empty composition string
   // and compty clause information when it lists up Chinese characters on
   // its candidate window.
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "",
@@ -1489,8 +1457,6 @@ function runCompositionTest()
   }
 
   // testing the canceling case
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "",
@@ -1518,8 +1484,6 @@ function runCompositionTest()
 
   // testing whether the empty composition string deletes selected string.
   synthesizeKey("VK_LEFT", { shiftKey: true });
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -1554,8 +1518,6 @@ function runCompositionTest()
 
   // bug 23558, ancient Japanese IMEs on Window may send empty text event
   // twice at canceling composition.
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u6700",
@@ -1727,7 +1689,6 @@ function runCompositionEventTest()
   // test for normal case
   initResults();
 
-  synthesizeComposition({ type: "compositionstart" });
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3089",
@@ -1862,8 +1823,6 @@ function runCompositionEventTest()
   initResults();
   synthesizeKey("VK_LEFT", { shiftKey: true });
 
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3089",
@@ -1930,8 +1889,6 @@ function runCompositionEventTest()
 
   initResults();
   synthesizeKey("A", { accelKey: true }); // Select All
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -2001,8 +1958,6 @@ function runCompositionEventTest()
 
   initResults();
   synthesizeKey("A", { accelKey: true }); // Select All
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -2376,8 +2331,6 @@ function runForceCommitTest()
   textarea.value = "";
 
   events = [];
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2429,8 +2382,6 @@ function runForceCommitTest()
   textarea.value = "";
   input.value = "";
 
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2474,8 +2425,6 @@ function runForceCommitTest()
   textarea.focus();
   textarea.value = "";
 
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2515,8 +2464,6 @@ function runForceCommitTest()
   textarea.focus();
   textarea.value = "";
   input.value = "";
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -2562,8 +2509,6 @@ function runForceCommitTest()
   textarea.value = "";
   textareaInFrame.value = "";
 
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2607,8 +2552,6 @@ function runForceCommitTest()
   textarea.focus();
   textarea.value = "";
   textareaInFrame.value = "";
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -2655,8 +2598,6 @@ function runForceCommitTest()
   iframe2.contentDocument.body.innerHTML = "Text in the Body";
   var iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
 
-  synthesizeComposition({ type: "compositionstart" });
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2701,8 +2642,6 @@ function runForceCommitTest()
   iframe2.contentDocument.body.innerHTML = "Text in the Body";
   iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
 
-  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
-
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u306E",
@@ -2744,8 +2683,6 @@ function runForceCommitTest()
   iframe2.contentWindow.focus();
   iframe2.contentDocument.body.innerHTML = "Text in the Body";
   iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
-
-  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
 
   synthesizeCompositionChange(
     { "composition":
@@ -2793,8 +2730,6 @@ function runForceCommitTest()
   iframe2BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
   iframe3.contentDocument.body.innerHTML = "Text in the Body";
   iframe3BodyInnerHTML = iframe2.contentDocument.body.innerHTML;
-
-  synthesizeComposition({ type: "compositionstart" }, iframe2.contentWindow);
 
   synthesizeCompositionChange(
     { "composition":
@@ -2906,8 +2841,7 @@ function runIsComposingTest()
   synthesizeKey("VK_LEFT", {});
 
   synthesizeKey("a", { type: "keydown" });
-  synthesizeComposition({ type: "compositionstart" });
-  description = "events after dispatching compositionstart";
+  description = "events after dispatching compositionchange";
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3042",
@@ -2958,8 +2892,6 @@ function runRemoveContentTest(aCallback)
 
   textarea.focus();
   textarea.value = "";
-
-  synthesizeComposition({ type: "compositionstart" });
 
   synthesizeCompositionChange(
     { "composition":
@@ -3055,9 +2987,6 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
                      "height": r.bottom - r.top };
   checkRectContainsRect(editorRect, parentRect, aTestName +
                         ": the editor rect coordinates are wrong");
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
   synthesizeCompositionChange(
@@ -3196,9 +3125,6 @@ function runMaxLengthTest()
   input.focus();
 
   var kDesc ="runMaxLengthTest";
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input first character
   synthesizeCompositionChange(
@@ -3396,9 +3322,6 @@ function runMaxLengthTest()
     return;
   }
 
-  // restart composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input characters
   synthesizeCompositionChange(
     { "composition":
@@ -3458,9 +3381,6 @@ function runMaxLengthTest()
   input.value = "X";
   input.selectionStart = input.selectionEnd = 0;
 
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input characters
   synthesizeCompositionChange(
     { "composition":
@@ -3487,9 +3407,6 @@ function runMaxLengthTest()
       !checkSelection(0, "", kDesc, "#4-2")) {
     return;
   }
-
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
 
   // input characters
   synthesizeCompositionChange(

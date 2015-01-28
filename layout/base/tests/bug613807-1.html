@@ -46,9 +46,6 @@
 
     var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
-    // start composition
-    synthesizeComposition({ type: "compositionstart" });
-
     // input raw characters
     synthesizeCompositionChange(
       { composition:

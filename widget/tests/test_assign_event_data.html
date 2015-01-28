@@ -175,7 +175,6 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeKey("a", { type: "keydown" });
-      synthesizeComposition({ type: "compositionstart" });
       synthesizeCompositionChange({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -198,7 +197,6 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositionstart" });
       synthesizeCompositionChange({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -269,7 +267,6 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositionstart" });
       synthesizeComposition({ type: "compositioncommit", data: "\u306D" });
     },
     canRun: function () {
@@ -282,7 +279,6 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositionstart" });
       synthesizeComposition({ type: "compositioncommit", data: "\u30E9\u30FC\u30E1\u30F3" });
     },
     canRun: function () {
@@ -308,7 +304,6 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      synthesizeComposition({ type: "compositionstart" });
       synthesizeCompositionChange({ "composition":
         { "string": "\u30E9\u30FC\u30E1\u30F3",
           "clauses":
