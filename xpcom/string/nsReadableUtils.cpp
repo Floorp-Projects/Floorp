@@ -46,7 +46,7 @@ CopyASCIItoUTF16(const char* aSource, nsAString& aDest)
 void
 CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
 {
-  if (!CopyUTF16toUTF8(aSource, aDest, mozilla::fallible_t())) {
+  if (!CopyUTF16toUTF8(aSource, aDest, mozilla::fallible)) {
     // Note that this may wildly underestimate the allocation that failed, as
     // we report the length of aSource as UTF-16 instead of UTF-8.
     aDest.AllocFailed(aDest.Length() + aSource.Length());
@@ -55,10 +55,10 @@ CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
 
 bool
 CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
-                const mozilla::fallible_t&)
+                const mozilla::fallible_t& aFallible)
 {
   aDest.Truncate();
-  if (!AppendUTF16toUTF8(aSource, aDest, mozilla::fallible_t())) {
+  if (!AppendUTF16toUTF8(aSource, aDest, aFallible)) {
     return false;
   }
   return true;
@@ -108,18 +108,18 @@ LossyAppendUTF16toASCII(const nsAString& aSource, nsACString& aDest)
 void
 AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
 {
-  if (!AppendASCIItoUTF16(aSource, aDest, mozilla::fallible_t())) {
+  if (!AppendASCIItoUTF16(aSource, aDest, mozilla::fallible)) {
     aDest.AllocFailed(aDest.Length() + aSource.Length());
   }
 }
 
 bool
 AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
-                   const mozilla::fallible_t&)
+                   const mozilla::fallible_t& aFallible)
 {
   uint32_t old_dest_length = aDest.Length();
   if (!aDest.SetLength(old_dest_length + aSource.Length(),
-                       mozilla::fallible_t())) {
+                       aFallible)) {
     return false;
   }
 
@@ -157,7 +157,7 @@ AppendASCIItoUTF16(const char* aSource, nsAString& aDest)
 void
 AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
 {
-  if (!AppendUTF16toUTF8(aSource, aDest, mozilla::fallible_t())) {
+  if (!AppendUTF16toUTF8(aSource, aDest, mozilla::fallible)) {
     // Note that this may wildly underestimate the allocation that failed, as
     // we report the length of aSource as UTF-16 instead of UTF-8.
     aDest.AllocFailed(aDest.Length() + aSource.Length());
@@ -166,7 +166,7 @@ AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
 
 bool
 AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
-                  const mozilla::fallible_t&)
+                  const mozilla::fallible_t& aFallible)
 {
   nsAString::const_iterator source_start, source_end;
   CalculateUTF8Size calculator;
@@ -179,7 +179,7 @@ AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
     uint32_t old_dest_length = aDest.Length();
 
     // Grow the buffer if we need to.
-    if (!aDest.SetLength(old_dest_length + count, mozilla::fallible_t())) {
+    if (!aDest.SetLength(old_dest_length + count, aFallible)) {
       return false;
     }
 
@@ -200,14 +200,14 @@ AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
 void
 AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest)
 {
-  if (!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible_t())) {
+  if (!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible)) {
     aDest.AllocFailed(aDest.Length() + aSource.Length());
   }
 }
 
 bool
 AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest,
-                  const mozilla::fallible_t&)
+                  const mozilla::fallible_t& aFallible)
 {
   nsACString::const_iterator source_start, source_end;
   CalculateUTF8Length calculator;
@@ -221,7 +221,7 @@ AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest,
     uint32_t old_dest_length = aDest.Length();
 
     // Grow the buffer if we need to.
-    if (!aDest.SetLength(old_dest_length + count, mozilla::fallible_t())) {
+    if (!aDest.SetLength(old_dest_length + count, aFallible)) {
       return false;
     }
 

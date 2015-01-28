@@ -1793,7 +1793,7 @@ TelemetryImpl::NewKeyedHistogram(const nsACString &name, const nsACString &expir
 
   KeyedHistogram* keyed = new KeyedHistogram(name, expiration, histogramType,
                                              min, max, bucketCount);
-  if (MOZ_UNLIKELY(!mKeyedHistograms.Put(name, keyed, fallible_t()))) {
+  if (MOZ_UNLIKELY(!mKeyedHistograms.Put(name, keyed, fallible))) {
     delete keyed;
     return NS_ERROR_OUT_OF_MEMORY;
   }

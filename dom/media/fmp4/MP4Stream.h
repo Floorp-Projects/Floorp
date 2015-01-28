@@ -11,7 +11,6 @@
 
 #include "MediaResource.h"
 
-#include "mozilla/fallible.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 
@@ -77,7 +76,7 @@ private:
 
     bool Init()
     {
-      mBuffer = new ((fallible_t())) char[mCount];
+      mBuffer = new (fallible) char[mCount];
       return !!mBuffer;
     }
 

@@ -464,7 +464,7 @@ StructuredCloneReadString(JSStructuredCloneReader* aReader,
   }
   length = NativeEndian::swapFromLittleEndian(length);
 
-  if (!aString.SetLength(length, fallible_t())) {
+  if (!aString.SetLength(length, fallible)) {
     NS_WARNING("Out of memory?");
     return false;
   }

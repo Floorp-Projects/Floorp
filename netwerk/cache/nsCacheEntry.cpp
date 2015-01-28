@@ -405,7 +405,7 @@ nsCacheEntryHashTable::Init()
     nsresult rv = NS_OK;
     initialized = PL_DHashTableInit(&table, &ops,
                                     sizeof(nsCacheEntryHashTableEntry),
-                                    fallible_t(), 256);
+                                    fallible, 256);
 
     if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
 

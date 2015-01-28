@@ -26,7 +26,7 @@ nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver)
 
   mObserver = aObserver;
 
-  if (!mRawData.SetCapacity(SNIFFING_BUFFER_SIZE, fallible_t()))
+  if (!mRawData.SetCapacity(SNIFFING_BUFFER_SIZE, fallible))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
@@ -214,7 +214,7 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *,
   self->mDecoder->GetMaxLength(aSegment, srcLen, &dstLen);
 
   uint32_t capacity = haveRead + dstLen;
-  if (!self->mBuffer.SetCapacity(capacity, fallible_t())) {
+  if (!self->mBuffer.SetCapacity(capacity, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

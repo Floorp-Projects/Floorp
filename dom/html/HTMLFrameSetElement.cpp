@@ -232,7 +232,6 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
     commaX = spec.FindChar(sComma, commaX + 1);
   }
 
-  static const fallible_t fallible = fallible_t();
   nsFramesetSpec* specs = new (fallible) nsFramesetSpec[count];
   if (!specs) {
     *aSpecs = nullptr;

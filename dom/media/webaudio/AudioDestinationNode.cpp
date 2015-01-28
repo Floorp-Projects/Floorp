@@ -62,9 +62,8 @@ public:
       // channels or size, but it's OK since we'll deal with the failure
       // gracefully.
       if (mInputChannels.SetLength(mNumberOfChannels)) {
-        static const fallible_t fallible = fallible_t();
         for (uint32_t i = 0; i < mNumberOfChannels; ++i) {
-          mInputChannels[i] = new(fallible) float[mLength];
+          mInputChannels[i] = new (fallible) float[mLength];
           if (!mInputChannels[i]) {
             mInputChannels.Clear();
             break;
