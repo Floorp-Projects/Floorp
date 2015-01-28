@@ -58,7 +58,8 @@ const NFC_IPC_MSG_ENTRIES = [
   { permission: null,
     messages: ["NFC:AddEventListener",
                "NFC:QueryInfo",
-               "NFC:CallDefaultFoundHandler"] },
+               "NFC:CallDefaultFoundHandler",
+               "NFC:CallDefaultLostHandler"] },
 
   { permission: "nfc",
     messages: ["NFC:ReadNDEF",
@@ -245,6 +246,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       gSystemMessenger.broadcastMessage("nfc-manager-tech-discovered", sysMsg);
     },
 
+    callDefaultLostHandler: function callDefaultLostHandler(message) {
+      // message.isP2P is not used.
+      gSystemMessenger.broadcastMessage("nfc-manager-tech-lost", message.sessionToken);
+    },
+
     onTagFound: function onTagFound(message) {
       let target = this.eventListeners[this.focusApp] ||
                    this.eventListeners[NFC.SYSTEM_APP_ID];
@@ -347,6 +353,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           return null;
         case "NFC:CallDefaultFoundHandler":
           this.callDefaultFoundHandler(message.data);
+          return null;
+        case "NFC:CallDefaultLostHandler":
+          this.callDefaultLostHandler(message.data);
           return null;
         default:
           return this.nfc.receiveMessage(message);
@@ -546,10 +555,6 @@ Nfc.prototype = {
         }
 
         SessionHelper.unregisterSession(message.sessionId);
-        // Do not expose the actual session to the content
-        delete message.sessionId;
-
-        gSystemMessenger.broadcastMessage("nfc-manager-tech-lost", message);
         break;
      case "HCIEventTransactionNotification":
         this.notifyHCIEventTransaction(message);
