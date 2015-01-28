@@ -5,8 +5,7 @@
 
 load(libdir + "asserts.js");
 
-const JS_HAS_SYMBOLS = typeof Symbol === "function";
-const std_iterator = JS_HAS_SYMBOLS ? Symbol.iterator : '@@iterator';
+const std_iterator = Symbol.iterator;
 
 if (typeof assertIteratorResult === 'undefined') {
     var assertIteratorResult = function assertIteratorResult(result, value, done) {

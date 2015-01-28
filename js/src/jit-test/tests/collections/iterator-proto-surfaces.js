@@ -7,7 +7,7 @@ function test(constructor) {
     var proto = Object.getPrototypeOf(constructor()[std_iterator]());
     var names = Object.getOwnPropertyNames(proto);
     names.sort();
-    assertDeepEq(names, JS_HAS_SYMBOLS ? ['next'] : ['@@iterator', 'next']);
+    assertDeepEq(names, ['next']);
     assertEq(proto.hasOwnProperty(std_iterator), true);
 
     var desc = Object.getOwnPropertyDescriptor(proto, 'next');
