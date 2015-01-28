@@ -1715,10 +1715,7 @@ nsresult
 AndroidBridge::CaptureZoomedView (nsIDOMWindow *window, nsIntRect zoomedViewRect, Object::Param buffer,
                                   float zoomFactor) {
   nsresult rv;
-  struct timeval        timeEnd;
-  struct timeval        timeEndAfter;
   struct timeval        timeStart;
-  struct timeval        res;
   gettimeofday (&timeStart, NULL);
 
   if (!buffer)

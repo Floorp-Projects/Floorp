@@ -416,7 +416,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         }
         NS_ASSERTION(points.Length() == 2, "ZoomedView event does not have enough coordinates");
         nsIntRect r(points[0].x, points[0].y, points[1].x, points[1].y);
-        nsresult rv = AndroidBridge::Bridge()->CaptureZoomedView(domWindow, r, mBuffer, scaleFactor);
+        AndroidBridge::Bridge()->CaptureZoomedView(domWindow, r, mBuffer, scaleFactor);
         break;
     }
 
