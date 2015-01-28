@@ -38,8 +38,11 @@ public:
                       nsIInterfaceRequestor *callbacks,
                       uint32_t caps);
 
+  bool Claim();
+
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return true; }
+  NullHttpTransaction *QueryNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return this; }
   bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {return true; }
   PRIntervalTime ResponseTimeout() MOZ_OVERRIDE MOZ_FINAL
   {
@@ -62,6 +65,7 @@ private:
   uint32_t mCapsToClear;
   nsHttpRequestHead *mRequestHead;
   bool mIsDone;
+  bool mClaimed;
 
 protected:
   nsRefPtr<nsAHttpConnection> mConnection;

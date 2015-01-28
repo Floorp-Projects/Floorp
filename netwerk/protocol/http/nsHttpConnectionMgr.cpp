@@ -1500,6 +1500,18 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
         }
     }
 
+    uint32_t activeLength = ent->mActiveConns.Length();
+    for (uint32_t i = 0; i < activeLength; i++) {
+        nsAHttpTransaction *activeTrans = ent->mActiveConns[i]->Transaction();
+        NullHttpTransaction *nullTrans = activeTrans ? activeTrans->QueryNullTransaction() : nullptr;
+        if (nullTrans && nullTrans->Claim()) {
+            LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s] "
+                 "Claiming a null transaction for later use\n",
+                 ent->mConnInfo->HashKey().get()));
+            return NS_OK;
+        }
+    }
+
     // If this host is trying to negotiate a SPDY session right now,
     // don't create any new connections until the result of the
     // negotiation is known.
