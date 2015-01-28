@@ -605,4 +605,11 @@
       <children includes="menupopup"/>
     </content>
   </binding>
+
+  <binding id="menulist-popuponly" display="xul:menu"
+           extends="chrome://global/content/bindings/menulist.xml#menulist">
+    <content>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
 </bindings>

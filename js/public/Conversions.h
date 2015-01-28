@@ -15,7 +15,225 @@
 
 #include <math.h>
 
+#include "jspubtd.h"
+
+#include "js/RootingAPI.h"
+#include "js/Value.h"
+
+struct JSContext;
+
+namespace js {
+
+/* DO NOT CALL THIS. Use JS::ToBoolean. */
+extern JS_PUBLIC_API(bool)
+ToBooleanSlow(JS::HandleValue v);
+
+/* DO NOT CALL THIS.  Use JS::ToNumber. */
+extern JS_PUBLIC_API(bool)
+ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
+
+/* DO NOT CALL THIS. Use JS::ToInt32. */
+extern JS_PUBLIC_API(bool)
+ToInt32Slow(JSContext *cx, JS::HandleValue v, int32_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToUint32. */
+extern JS_PUBLIC_API(bool)
+ToUint32Slow(JSContext *cx, JS::HandleValue v, uint32_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToUint16. */
+extern JS_PUBLIC_API(bool)
+ToUint16Slow(JSContext *cx, JS::HandleValue v, uint16_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToInt64. */
+extern JS_PUBLIC_API(bool)
+ToInt64Slow(JSContext *cx, JS::HandleValue v, int64_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToUint64. */
+extern JS_PUBLIC_API(bool)
+ToUint64Slow(JSContext *cx, JS::HandleValue v, uint64_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToString. */
+extern JS_PUBLIC_API(JSString*)
+ToStringSlow(JSContext *cx, JS::HandleValue v);
+
+/* DO NOT CALL THIS. Use JS::ToObject. */
+extern JS_PUBLIC_API(JSObject*)
+ToObjectSlow(JSContext *cx, JS::HandleValue v, bool reportScanStack);
+
+} // namespace js
+
 namespace JS {
+
+namespace detail {
+
+#ifdef JS_DEBUG
+/*
+ * Assert that we're not doing GC on cx, that we're in a request as
+ * needed, and that the compartments for cx and v are correct.
+ * Also check that GC would be safe at this point.
+ */
+extern JS_PUBLIC_API(void)
+AssertArgumentsAreSane(JSContext *cx, HandleValue v);
+#else
+inline void AssertArgumentsAreSane(JSContext *cx, HandleValue v)
+{}
+#endif /* JS_DEBUG */
+
+} // namespace detail
+
+/*
+ * ES6 draft 20141224, 7.1.1, second algorithm.
+ *
+ * Most users shouldn't call this -- use JS::ToBoolean, ToNumber, or ToString
+ * instead.  This will typically only be called from custom convert hooks that
+ * wish to fall back to the ES6 default conversion behavior shared by most
+ * objects in JS, codified as OrdinaryToPrimitive.
+ */
+extern JS_PUBLIC_API(bool)
+OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp);
+
+/* ES6 draft 20141224, 7.1.2. */
+MOZ_ALWAYS_INLINE bool
+ToBoolean(HandleValue v)
+{
+    if (v.isBoolean())
+        return v.toBoolean();
+    if (v.isInt32())
+        return v.toInt32() != 0;
+    if (v.isNullOrUndefined())
+        return false;
+    if (v.isDouble()) {
+        double d = v.toDouble();
+        return !mozilla::IsNaN(d) && d != 0;
+    }
+    if (v.isSymbol())
+        return true;
+
+    /* The slow path handles strings and objects. */
+    return js::ToBooleanSlow(v);
+}
+
+/* ES6 draft 20141224, 7.1.3. */
+MOZ_ALWAYS_INLINE bool
+ToNumber(JSContext *cx, HandleValue v, double *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isNumber()) {
+        *out = v.toNumber();
+        return true;
+    }
+    return js::ToNumberSlow(cx, v, out);
+}
+
+/* ES6 draft 20141224, ToInteger (specialized for doubles). */
+inline double
+ToInteger(double d)
+{
+    if (d == 0)
+        return d;
+
+    if (!mozilla::IsFinite(d)) {
+        if (mozilla::IsNaN(d))
+            return 0;
+        return d;
+    }
+
+    return d < 0 ? ceil(d) : floor(d);
+}
+
+/* ES6 draft 20141224, 7.1.5. */
+MOZ_ALWAYS_INLINE bool
+ToInt32(JSContext *cx, JS::HandleValue v, int32_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = v.toInt32();
+        return true;
+    }
+    return js::ToInt32Slow(cx, v, out);
+}
+
+/* ES6 draft 20141224, 7.1.6. */
+MOZ_ALWAYS_INLINE bool
+ToUint32(JSContext *cx, HandleValue v, uint32_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = uint32_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint32Slow(cx, v, out);
+}
+
+/* ES6 draft 20141224, 7.1.8. */
+MOZ_ALWAYS_INLINE bool
+ToUint16(JSContext *cx, HandleValue v, uint16_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = uint16_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint16Slow(cx, v, out);
+}
+
+/*
+ * Non-standard, with behavior similar to that of ToInt32, except in its
+ * producing an int64_t.
+ */
+MOZ_ALWAYS_INLINE bool
+ToInt64(JSContext *cx, HandleValue v, int64_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = int64_t(v.toInt32());
+        return true;
+    }
+    return js::ToInt64Slow(cx, v, out);
+}
+
+/*
+ * Non-standard, with behavior similar to that of ToUint32, except in its
+ * producing a uint64_t.
+ */
+MOZ_ALWAYS_INLINE bool
+ToUint64(JSContext *cx, HandleValue v, uint64_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = uint64_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint64Slow(cx, v, out);
+}
+
+/* ES6 draft 20141224, 7.1.12. */
+MOZ_ALWAYS_INLINE JSString*
+ToString(JSContext *cx, HandleValue v)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isString())
+        return v.toString();
+    return js::ToStringSlow(cx, v);
+}
+
+/* ES6 draft 20141224, 7.1.13. */
+inline JSObject *
+ToObject(JSContext *cx, HandleValue v)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isObject())
+        return &v.toObject();
+    return js::ToObjectSlow(cx, v, false);
+}
 
 namespace detail {
 
@@ -276,22 +494,6 @@ inline uint64_t
 ToUint64(double d)
 {
     return detail::ToUintWidth<uint64_t>(d);
-}
-
-/* ES5 9.4 ToInteger (specialized for doubles). */
-inline double
-ToInteger(double d)
-{
-    if (d == 0)
-        return d;
-
-    if (!mozilla::IsFinite(d)) {
-        if (mozilla::IsNaN(d))
-            return 0;
-        return d;
-    }
-
-    return d < 0 ? ceil(d) : floor(d);
 }
 
 } // namespace JS

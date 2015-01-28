@@ -912,14 +912,19 @@ public:
     mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    VisitData* lastPlace = nullptr;
+    VisitData* lastFetchedPlace = nullptr;
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
       VisitData& referrer = mReferrers.ElementAt(i);
 
+      // Fetching from the database can overwrite this information, so save it
+      // apart.
+      bool typed = place.typed;
+      bool hidden = place.hidden;
+
       // We can avoid a database lookup if it's the same place as the last
       // visit we added.
-      bool known = lastPlace && lastPlace->IsSamePlaceAs(place);
+      bool known = lastFetchedPlace && lastFetchedPlace->IsSamePlaceAs(place);
       if (!known) {
         nsresult rv = mHistory->FetchPageInfo(place, &known);
         if (NS_FAILED(rv)) {
@@ -930,6 +935,17 @@ public:
           }
           return NS_OK;
         }
+        lastFetchedPlace = &mPlaces.ElementAt(i);
+      }
+
+      // If any transition is typed, ensure the page is marked as typed.
+      if (typed != lastFetchedPlace->typed) {
+        place.typed = true;
+      }
+
+      // If any transition is visible, ensure the page is marked as visible.
+      if (hidden != lastFetchedPlace->hidden) {
+        place.hidden = false;
       }
 
       FetchReferrerInfo(referrer, place);
@@ -953,8 +969,6 @@ public:
         rv = NS_DispatchToMainThread(event);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      lastPlace = &mPlaces.ElementAt(i);
     }
 
     nsresult rv = transaction.Commit();
@@ -2291,24 +2305,15 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
                             (_place.title.IsEmpty() && title.IsVoid()));
   }
 
-  if (_place.hidden) {
-    // If this transition was hidden, it is possible that others were not.
-    // Any one visible transition makes this location visible. If database
-    // has location as visible, reflect that in our data structure.
-    int32_t hidden;
-    rv = stmt->GetInt32(3, &hidden);
-    NS_ENSURE_SUCCESS(rv, rv);
-    _place.hidden = !!hidden;
-  }
+  int32_t hidden;
+  rv = stmt->GetInt32(3, &hidden);
+  NS_ENSURE_SUCCESS(rv, rv);
+  _place.hidden = !!hidden;
 
-  if (!_place.typed) {
-    // If this transition wasn't typed, others might have been. If database
-    // has location as typed, reflect that in our data structure.
-    int32_t typed;
-    rv = stmt->GetInt32(4, &typed);
-    NS_ENSURE_SUCCESS(rv, rv);
-    _place.typed = !!typed;
-  }
+  int32_t typed;
+  rv = stmt->GetInt32(4, &typed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  _place.typed = !!typed;
 
   rv = stmt->GetInt32(5, &_place.frecency);
   NS_ENSURE_SUCCESS(rv, rv);

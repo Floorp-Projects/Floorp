@@ -1263,7 +1263,7 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     }
 
     let rect = this.currentQuads.border.bounds;
-    let dim = Math.ceil(rect.width) + " x " + Math.ceil(rect.height);
+    let dim = Math.ceil(rect.width) + " \u00D7 " + Math.ceil(rect.height);
 
     let elementId = this.ID_CLASS_PREFIX + "nodeinfobar-";
     this.markup.setTextContentForElement(elementId + "tagname", tagName);

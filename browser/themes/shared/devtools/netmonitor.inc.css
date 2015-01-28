@@ -178,6 +178,11 @@
   list-style-image: url(chrome://browser/skin/identity-icons-https.png);
 }
 
+.security-state-weak {
+  cursor: pointer;
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display.png);
+}
+
 .security-state-broken {
   cursor: pointer;
   list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
@@ -576,6 +581,21 @@ label.requests-menu-status-code {
 
 #security-error-message {
   white-space: pre-wrap;
+}
+
+.security-warning-icon {
+  background-image: url(alerticon-warning.png);
+  background-size: 13px 12px;
+  -moz-margin-start: 5px;
+  vertical-align: top;
+  width: 13px;
+  height: 12px;
+}
+
+@media (min-resolution: 2dppx) {
+  .security-warning-icon {
+    background-image: url(alerticon-warning@2x.png);
+  }
 }
 
 /* Custom request form */
