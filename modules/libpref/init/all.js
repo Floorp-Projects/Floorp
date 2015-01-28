@@ -4541,3 +4541,10 @@ pref("reader.font_type", "sans-serif");
 // Whether or not the user has interacted with the reader mode toolbar.
 // This is used to show a first-launch tip in reader mode.
 pref("reader.has_used_toolbar", false);
+
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+// Whether to allow, on a Linux system that doesn't support the necessary sandboxing
+// features, loading Gecko Media Plugins unsandboxed.  However, EME CDMs will not be
+// loaded without sandboxing even if this pref is changed.
+pref("media.gmp.insecure.allow", false);
+#endif
