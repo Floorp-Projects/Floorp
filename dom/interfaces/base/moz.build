@@ -36,6 +36,7 @@ XPIDL_SOURCES += [
     'nsITabChild.idl',
     'nsITabParent.idl',
     'nsITextInputProcessor.idl',
+    'nsITextInputProcessorCallback.idl',
 ]
 
 XPIDL_MODULE = 'dom_base'
