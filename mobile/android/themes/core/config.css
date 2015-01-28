@@ -74,7 +74,7 @@ body {
 
 #new-pref-toggle-button {
     background-position: center center;
-    background-image: url("chrome://browser/skin/images/reader-plus-icon-xhdpi.png");
+    background-image: url("chrome://browser/skin/images/config-plus.png");
     background-size: 48px 48px;
     height: 48px;
     width: 48px;
