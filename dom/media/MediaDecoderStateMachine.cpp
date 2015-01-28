@@ -2941,8 +2941,7 @@ MediaDecoderStateMachine::FlushDecoding()
     // and shutdown on B2G will fail as there are outstanding video frames
     // alive.
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    DecodeTaskQueue()->Dispatch(task);
-    DecodeTaskQueue()->AwaitIdle();
+    DecodeTaskQueue()->FlushAndDispatch(task);
   }
 
   // We must reset playback so that all references to frames queued
