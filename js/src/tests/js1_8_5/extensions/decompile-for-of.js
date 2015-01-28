@@ -9,8 +9,7 @@ function check(code) {
         s = exc.message;
     }
 
-    var ITERATOR = JS_HAS_SYMBOLS ? "Symbol.iterator" : "'@@iterator'";
-    assertEq(s, `x[${ITERATOR}] is not a function`);
+    assertEq(s, `x[Symbol.iterator] is not a function`);
 }
 
 x = {};

@@ -65,8 +65,6 @@ function TestGeneratorObjectPrototype() {
                GeneratorObjectPrototype);
 
     var expected_property_names = ["next", "return", "throw", "constructor"];
-    if (!JS_HAS_SYMBOLS)
-        expected_property_names.push(std_iterator);
     var found_property_names =
         Object.getOwnPropertyNames(GeneratorObjectPrototype);
 

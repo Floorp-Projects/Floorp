@@ -145,8 +145,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   var version = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).version;
   var isNightlyBuild = version.endsWith("a1");
   var isReleaseBuild = !version.contains("a");
-  const jsHasSymbols = typeof Symbol === "function";
-  const kIteratorSymbol = jsHasSymbols ? Symbol.iterator : "@@iterator";
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
@@ -169,7 +167,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
-      "findIndex", "copyWithin", "fill", kIteratorSymbol, "entries", "keys", "constructor"];
+      "findIndex", "copyWithin", "fill", Symbol.iterator, "entries", "keys", "constructor"];
   if (isNightlyBuild) {
     gPrototypeProperties['Array'].push('includes');
   }
@@ -177,7 +175,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
   }
   gPrototypeProperties['TypedArray'] =
-    ["length", "buffer", "byteLength", "byteOffset", kIteratorSymbol, "subarray",
+    ["length", "buffer", "byteLength", "byteOffset", Symbol.iterator, "subarray",
      "set", "copyWithin", "find", "findIndex", "forEach","indexOf", "lastIndexOf", "reverse",
      "join", "every", "some", "reduce", "reduceRight", "entries", "keys", "values"];
   if (isNightlyBuild) {
@@ -275,12 +273,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        gPrototypeProperties[classname].filter(id => typeof id === "string").toSource(),
        "A property on the " + classname +
        " prototype has changed! You need a security audit from an XPConnect peer");
-    if (jsHasSymbols) {
-      is(Object.getOwnPropertySymbols(localProto).map(uneval).sort().toSource(),
-         gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
-         "A symbol-keyed property on the " + classname +
-         " prototype has been changed! You need a security audit from an XPConnect peer");
-    }
+    is(Object.getOwnPropertySymbols(localProto).map(uneval).sort().toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+       "A symbol-keyed property on the " + classname +
+       " prototype has been changed! You need a security audit from an XPConnect peer");
 
     let protoProps = filterOut(desiredProtoProps, propsToSkip);
     let protoCallables = protoProps.filter(name => propertyIsGetter(localProto, name, classname) ||
@@ -294,11 +290,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     testProtoCallables(protoCallables, xray, xrayProto, localProto);
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
        protoProps.toSource(), "getOwnPropertyNames works");
-    if (jsHasSymbols) {
-      is(Object.getOwnPropertySymbols(xrayProto).map(uneval).sort().toSource(),
-         gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
-         protoProps.toSource(), "getOwnPropertySymbols works");
-    }
+    is(Object.getOwnPropertySymbols(xrayProto).map(uneval).sort().toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+       protoProps.toSource(), "getOwnPropertySymbols works");
 
     is(xrayProto.constructor, iwin[classname], "constructor property works");
 
@@ -330,11 +324,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     // Construct an object full of tricky things.
     let symbolProps = '';
-    if (jsHasSymbols) {
-      uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
-      symbolProps = `, [uniqueSymbol]: 43,
-                     [Symbol.for("registrySymbolProp")]: 44`;
-    }
+    uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
+    symbolProps = `, [uniqueSymbol]: 43,
+                   [Symbol.for("registrySymbolProp")]: 44`;
     var trickyObject =
       iwin.eval(`(function() {
                  var o = new Object({
@@ -366,11 +358,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip);
 
     let symbolProps = '';
-    if (jsHasSymbols) {
-      uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
-      symbolProps = `trickyArray[uniqueSymbol] = 43;
-                     trickyArray[Symbol.for("registrySymbolProp")] = 44;`;
-    }
+    uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');
+    symbolProps = `trickyArray[uniqueSymbol] = 43;
+                   trickyArray[Symbol.for("registrySymbolProp")] = 44;`;
     var trickyArray =
       iwin.eval(`var trickyArray = [];
                  trickyArray.primitiveProp = 42;
@@ -423,21 +413,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       expectedNames.push('length');
     is(Object.getOwnPropertyNames(trickyObject).sort().toSource(),
        expectedNames.sort().toSource(), "getOwnPropertyNames should be filtered correctly");
-    if (jsHasSymbols) {
-      var expectedSymbols = [Symbol.for("registrySymbolProp"), uniqueSymbol];
-      is(Object.getOwnPropertySymbols(trickyObject).map(uneval).sort().toSource(),
-         expectedSymbols.map(uneval).sort().toSource(),
-         "getOwnPropertySymbols should be filtered correctly");
-    }
+    var expectedSymbols = [Symbol.for("registrySymbolProp"), uniqueSymbol];
+    is(Object.getOwnPropertySymbols(trickyObject).map(uneval).sort().toSource(),
+       expectedSymbols.map(uneval).sort().toSource(),
+       "getOwnPropertySymbols should be filtered correctly");
 
     // Test that cloning uses the Xray view.
     var cloned = Cu.cloneInto(trickyObject, this);
     is(Object.getOwnPropertyNames(cloned).sort().toSource(),
        expectedNames.sort().toSource(), "structured clone should use the Xray view");
-    if (jsHasSymbols) {
-      is(Object.getOwnPropertySymbols(cloned).map(uneval).sort().toSource(),
-         "[]", "structured cloning doesn't clone symbol-keyed properties yet");
-    }
+    is(Object.getOwnPropertySymbols(cloned).map(uneval).sort().toSource(),
+       "[]", "structured cloning doesn't clone symbol-keyed properties yet");
 
     // Test iteration and in-place modification. Beware of 'expando', which is the property
     // we placed on the xray proto.
