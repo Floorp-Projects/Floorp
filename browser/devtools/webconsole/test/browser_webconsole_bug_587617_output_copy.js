@@ -57,9 +57,7 @@ function consoleOpened(aHud) {
     controller = top.document.commandDispatcher.getControllerForCommand("cmd_copy");
     is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-    // Remove new lines since getSelection() includes one between message and line
-    // number, but the clipboard doesn't (see bug 1119503)
-    let selection = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
+    let selection = HUD.iframeWindow.getSelection() + "";
     isnot(selection.indexOf("bug587617"), -1,
           "selection text includes 'bug587617'");
 
@@ -82,9 +80,7 @@ function testContextMenuCopy() {
   let copyItem = contextMenu.querySelector("*[command='cmd_copy']");
   ok(copyItem, "the context menu on the output node has a \"Copy\" item");
 
-  // Remove new lines since getSelection() includes one between message and line
-  // number, but the clipboard doesn't (see bug 1119503)
-  let selection = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
+  let selection = HUD.iframeWindow.getSelection() + "";
 
   copyItem.doCommand();
 

@@ -118,216 +118,88 @@
 
 /* Modal dialog styles */
 
+.OT_dialog-centering {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+
+.OT_dialog-centering-child {
+  display: table-cell;
+  vertical-align: middle;
+}
+
 .OT_dialog {
-  border: none;
-  border-radius: 0;
-  top: 50%;
-  left: 50%;
-  position: absolute;
-  position: fixed;
-  padding: 0;
+  position: relative;
+
+  box-sizing: border-box;
+  max-width: 576px;
+  margin-right: auto;
+  margin-left: auto;
+  padding: 36px;
+  text-align: center; /* centers all the inline content */
+
   background-color: #363636;
   color: #fff;
-  z-index: 9999;
   box-shadow: 2px 4px 6px #999;
   font-family: 'Didact Gothic', sans-serif;
-}
-
-.OT_dialog-blackout {
-  position: absolute;
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: #363636;
-}
-
-.OT_dialog-blackout .OT_dialog {
-  box-shadow: 0 0 0 transparent;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .OT_dialog * {
-  font-family: 'Didact Gothic', sans-serif;
-}
-
-.OT_dialog-plugin-prompt {
-  margin-left: -350px;
-  margin-top: -127px;
-  width: 650px;
-  height: 254px;
-}
-
-.OT_dialog-plugin-reinstall {
-  margin-left: -271px;
-  margin-top: -107px;
-  width: 542px;
-  height: 214px;
-}
-
-.OT_dialog-plugin-upgrading {
-  margin-left: -267px;
-  margin-top: -94px;
-  width: 514px;
-  height: 188px;
-}
-
-.OT_dialog-plugin-upgraded {
-  margin-left: -300px;
-  margin-top: -100px;
-  width: 600px;
-  height: 200px;
-}
-
-.OT_dialog-allow-deny-chrome-first {
-  margin-left: -227px;
-  margin-top: -122px;
-  width: 453px;
-  height: 244px;
-}
-
-.OT_dialog-allow-deny-chrome-pre-denied {
-  margin-left: -263px;
-  margin-top: -135px;
-  width: 526px;
-  height: 270px;
-}
-
-.OT_dialog-allow-deny-chrome-now-denied {
-  margin-left: -120px;
-  margin-top: -85px;
-  width: 256px;
-  height: 170px;
-}
-
-.OT_dialog-allow-deny-firefox-denied {
-  margin-left: -160px;
-  margin-top: -105px;
-  width: 320px;
-  height: 190px;
-}
-
-.OT_dialog-allow-deny-firefox-maybe-denied {
-  margin-left: -281px;
-  margin-top: -126px;
-  width: 562px;
-  height: 252px;
-}
-
-.OT_dialog-allow-highlight-chrome {
-  display: inline-block;
-  margin-top: 20px;
-  width: 227px;
-  height: 94px;
-  background-image: url(../images/rtc/access-prompt-chrome.png);
+  font-family: inherit;
+  box-sizing: inherit;
 }
 
 .OT_closeButton {
   color: #999999;
   cursor: pointer;
   font-size: 32px;
-  line-height: 30px;
+  line-height: 36px;
   position: absolute;
-  right: 15px;
+  right: 18px;
   top: 0;
 }
 
 .OT_dialog-messages {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-  right: 32px;
   text-align: center;
-}
-
-.OT_dialog-allow-deny-firefox-maybe-denied .OT_dialog-messages {
-  top: 45px;
 }
 
 
 .OT_dialog-messages-main {
+  margin-bottom: 36px;
+  line-height: 36px;
+
   font-weight: 300;
-  font-size: 18pt;
-  line-height: 24px;
+  font-size: 24px;
 }
 
 .OT_dialog-messages-minor {
-  font-weight: 300;
-  margin-top: 12px;
+  margin-bottom: 18px;
+
   font-size: 13px;
   line-height: 18px;
   color: #A4A4A4;
 }
 
-.OT_dialog-allow-deny-firefox-maybe-denied .OT_dialog-messages-minor {
-  margin-top: 4px;
-}
-
 .OT_dialog-messages-minor strong {
-  font-weight: 300;
   color: #ffffff;
 }
 
-.OT_dialog-hidden {
-  display: none;
-}
-
-.OT_dialog-single-button {
-  position: absolute;
-  bottom: 41px;
-  left: 50%;
-  margin-left: -97px;
-  height: 47px;
-  width: 193px;
-}
-
-
-.OT_dialog-single-button-wide {
-    bottom: 35px;
-    height: 140px;
-    left: 5px;
-    position: absolute;
-    right: 0;
-}
-  .OT_dialog-single-button-with-title {
-      margin: 0 auto;
-      padding-left: 30px;
-      padding-right: 30px;
-      width: 270px;
-  }
-
-
-.OT_dialog-button-pair {
-  position: absolute;
-  bottom: 45px;
-  left: 5px;
-  right: 0;
-  height: 94px;
-}
-
-.OT_dialog-button-with-title {
-  padding-left: 30px;
-  padding-right: 30px;
-  width: 260px;
-  float: left;
-}
-
-.OT_dialog-button-pair-seperator {
-  border-right: 1px solid #555555;
-  height: 112px;
-  width: 1px;
-  float: left;
+.OT_dialog-actions-card {
+  display: inline-block;
 }
 
 .OT_dialog-button-title {
+  margin-bottom: 18px;
+  line-height: 18px;
+
   font-weight: 300;
   text-align: center;
-  margin-bottom: 15px;
   font-size: 14px;
-  line-height: 150%;
   color: #999999;
 }
-
 .OT_dialog-button-title label {
   color: #999999;
 }
@@ -345,13 +217,13 @@
 }
 
 .OT_dialog-button {
-  font-weight: 100;
-  display: block;
-  line-height: 50px;
-  height: 47px;
+  display: inline-block;
+
+  margin-bottom: 18px;
+  padding: 0 1em;
+
   background-color: #1CA3DC;
   text-align: center;
-  font-size: 16pt;
   cursor: pointer;
 }
 
@@ -364,138 +236,67 @@
   opacity: 0.5;
 }
 
-.OT_dialog-button.OT_dialog-button-large {
-  line-height: 60px;
-  height: 58px;
+.OT_dialog-button-large {
+  line-height: 36px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+
+  font-weight: 100;
+  font-size: 24px;
 }
 
-.OT_dialog-button.OT_dialog-button-small {
+.OT_dialog-button-small {
+  line-height: 18px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+
   background-color: #444444;
   color: #999999;
-  font-size: 12pt;
-  height: 40px;
-  line-height: 40px;
-  margin: 20px auto 0 auto;
-  width: 86px;
+  font-size: 16px;
 }
 
 .OT_dialog-progress-bar {
+  display: inline-block; /* prevents margin collapse */
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 41px;
+
   border: 1px solid #4E4E4E;
   height: 8px;
 }
 
 .OT_dialog-progress-bar-fill {
+  height: 100%;
+
   background-color: #29A4DA;
-  height: 10px;
-  margin-top: -1px;
-  margin-left: -1px;
-  margin-right: -1px;
 }
 
 .OT_dialog-plugin-upgrading .OT_dialog-plugin-upgrade-percentage {
-  font-size: 36pt;
+  line-height: 54px;
+
+  font-size: 48px;
   font-weight: 100;
 }
 
-.OT_dialog-plugin-upgrading .OT_dialog-progress-bar {
-  margin-top: 25px;
-  margin-bottom: 25px;
-}
-
-.OT_dialog-3steps {
-  margin-top: 24px;
-}
-
-.OT_dialog-allow-deny-firefox-maybe-denied .OT_dialog-3steps {
-  margin-top: 21px;
-}
-
-.OT_dialog-3steps-step {
-  float: left;
-  -moz-box-sizing: border-box;
-       box-sizing: border-box;
-  width: 33%;
-  height: 140px;
-  padding: 0 10px;
-  color: #A4A4A4;
-}
-
-.OT_dialog-3steps-seperator {
-  float: left;
-  -moz-box-sizing: border-box;
-       box-sizing: border-box;
-  margin-top: 10px;
-  width: 1px;
-  height: 68px;
-  background-color: #555555;
-}
-
-.OT_dialog-allow-deny-chrome-pre-denied .OT_dialog-3steps-seperator {
-  margin-top: 16px;
-}
-
-.OT_dialog-3steps-step-num {
-  font-size: 20px;
-  background-color: #2AA3D8;
-  border-radius: 20px;
-  line-height: 33px;
-  height: 33px;
-  width: 33px;
-  margin: 0 auto 17px;
-}
-
-.OT_dialog-allow-deny-chrome-pre-denied .OT_dialog-3steps-step-num {
-  margin-bottom: 10px;
-}
-
-.OT_dialog-allow-camera-icon {
-  background-color: #000;
-  width: 113px;
-  height: 48px;
-  margin: 10px auto 0;
-  background-image: url(../images/rtc/access-predenied-chrome.png);
-}
-
-/* Publisher Deny Helpers */
-
-.OT_publisher-denied-firefox {
-  background-color: #fff;
-}
-
-.OT_publisher-denied-firefox p {
-  width: 232px;
-  height: 103px;
-  top: 50%;
-  left: 50%;
-  display: block;
-  position: absolute;
-  margin-top: -52px;
-  margin-left: -116px;
-  background-image: url(../images/rtc/access-denied-firefox.png);
-  background-position: 50% 0;
-  background-repeat: no-repeat;
-}
-
-.OT_publisher-denied-firefox span {
-  display: block;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  margin: 0 auto;
-  width: 232px;
-  height: 31px;
-  background-image: url(../images/rtc/access-denied-copy-firefox.png);
-  text-indent: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-}
+/* Helpers */
 
 .OT_centered {
-	position: fixed;
-	left: 50%;
-	top: 50%;
-	margin: 0;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+}
+
+.OT_dialog-hidden {
+  display: none;
+}
+
+.OT_dialog-button-block {
+  display: block;
+}
+
+.OT_dialog-no-natural-margin {
+  margin-bottom: 0;
 }
 
 /* Publisher and Subscriber styles */
@@ -803,21 +604,14 @@
 
 .OT_publisher .OT_name,
 .OT_subscriber .OT_name {
-    left: 24px;
+    left: 10px;
     right: 37px;
     height: 34px;
-}
-
-.OT_publisher .OT_name-no-bug,
-.OT_subscriber .OT_name-no-bug {
-    left: 10px;
     padding-left: 0;
 }
 
 .OT_publisher .OT_mute,
-.OT_subscriber .OT_mute,
-.OT_publisher .OT_opentok,
-.OT_subscriber .OT_opentok {
+.OT_subscriber .OT_mute {
     border: none;
     cursor: pointer;
     display: block;
@@ -826,21 +620,6 @@
     text-indent: -9999em;
     background-color: transparent;
     background-repeat: no-repeat;
-}
-
-.OT_publisher .OT_opentok,
-.OT_subscriber .OT_opentok {
-    background: url(../images/rtc/buttons.png) 0 -32px no-repeat;
-    cursor: default;
-    height: 18px;
-    left: 8px;
-    line-height: 18px;
-    top: 8px;
-    width: 16px;
-}
-
-.OT_micro .OT_opentok {
-    display: none !important;
 }
 
 .OT_publisher .OT_mute,
@@ -882,21 +661,6 @@
     background-image: url(../images/rtc/speaker-off.png);
     background-position: 7px 7px;
 }
-
-/* Disabling this for now - see https://jira.tokbox.com/browse/OPENTOK-8870
-.OT_publisher .OT_opentok:hover:after,
-.OT_subscriber .OT_opentok:hover:after {
-    content: 'tokbox';
-    color: #fff;
-    font-weight: bold;
-    font-size: 14px;
-    letter-spacing: -1px;
-    top: 20px;
-    opacity: 0.5;
-    position: absolute;
-    text-indent: 0;
-    top: 0;
-}*/
 
 /**
  * Styles for display modes
@@ -974,23 +738,6 @@
     bottom: 0;
     opacity: 1;
 }
-
-.OT_publisher .OT_opentok.OT_mode-off,
-.OT_publisher .OT_opentok.OT_mode-auto,
-.OT_subscriber .OT_opentok.OT_mode-off,
-.OT_subscriber .OT_opentok.OT_mode-auto  {
-    top: -17px;
-}
-
-.OT_publisher .OT_opentok.OT_mode-on,
-.OT_publisher .OT_opentok.OT_mode-auto.OT_mode-on-hold,
-.OT_publisher:hover .OT_opentok.OT_mode-auto,
-.OT_subscriber .OT_opentok.OT_mode-on,
-.OT_subscriber .OT_opentok.OT_mode-auto.OT_mode-on-hold,
-.OT_subscriber:hover .OT_opentok.OT_mode-auto {
-    top: 8px;
-}
-
 
 /* Contains the video element, used to fix video letter-boxing */
 .OT_video-container {
@@ -1095,7 +842,7 @@
     background-image: radial-gradient(circle, rgba(151,206,0,1) 0%, rgba(151,206,0,0) 100%);
 }
 
-.OT_audio-level-meter {
+.OT_audio-level-meter.OT_mode-off {
     display: none;
 }
 
