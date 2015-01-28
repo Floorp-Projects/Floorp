@@ -863,6 +863,7 @@ SharedSurfaceTextureClient::SharedSurfaceTextureClient(TextureFlags aFlags,
   , mSurf(surf)
   , mGL(mSurf->mGL)
 {
+  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 }
 
 SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
