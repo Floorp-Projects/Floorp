@@ -1,46 +1,41 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Battery Status API Test Suite</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <meta name="flags" content="interact">
-  </head>
-  <body>
-    <h1>Description</h1>
-    <p>
-      This test validates that all of the navigator.battery attributes exist and are set to correct values, when the battery is full.
-    </p>
-    <h2>Preconditions</h2>
-    <ol>
-      <li>
-        The device is plugged in to the charger before this test is run.
-      </li>
-      <li>
-        The battery is full.
-      </li>
-    </ol>
-    <div id="log"></div>
-    <script>
-    (function() {
+<meta charset="utf-8">
+<title>Battery Status Test: BatteryManager - full</title>
+<link rel="author" title="Intel" href="http://www.intel.com">
+<link rel="help" href="http://www.w3.org/TR/battery-status/">
+<meta name="flags" content="interact">
+<meta name="assert" content="All of the navigator.battery attributes exist and are set to their correct values when battery is full">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+  <h2>Preconditions</h2>
+  <ol>
+    <li>
+      The device is plugged in to the charger before this test is run.
+    </li>
+    <li>
+      The battery is full.
+    </li>
+  </ol>
+</body>
+<script>
 
-      test(function() {
-        assert_true(navigator.battery.charging);
-      }, 'The charging attribute must be set to true if the battery is full (the "otherwise" condition).');
+async_test(function (t) {
+  navigator.getBattery().then(function (battery) {
+      t.step(function () {
+        assert_true(battery.charging, 'The BatteryManager.charging must be set to true');
+        assert_equals(battery.chargingTime, 0, 'The BatteryManager.chargingTime');
+        assert_equals(battery.dischargingTime, Infinity, 'The BatteryManager.dischargingTime');
+        assert_equals(battery.level, 1.0, 'The BatteryManager.level');
+      });
+      t.done();
+    }, function (error) {
+      t.step(function () {
+        assert_unreached(error.message);
+      });
+      t.done();
+    }
+  )
+}, document.title);
 
-      test(function() {
-        assert_true(navigator.battery.chargingTime === 0);
-      }, 'The chargingTime attribute must be set to 0.');
-
-      test(function() {
-        assert_true(navigator.battery.dischargingTime === Infinity);
-      }, 'The dischargingTime attribute must be set to the value positive Infinity (the "otherwise" condition).');
-
-      test(function() {
-        assert_true(navigator.battery.level === 1.0);
-      }, 'The level attribute must be set to the value 1.0.');
-
-    })();
-    </script>
-  </body>
-</html>
+</script>

@@ -464,6 +464,12 @@ policies and contribution forms [3].
                 }));
     }
 
+    function promise_rejects(test, expected, promise) {
+        return promise.then(test.unreached_func("Should have rejected.")).catch(function(e) {
+            assert_throws(expected, function() { throw e });
+        });
+    }
+
     function setup(func_or_properties, maybe_properties)
     {
         var func = null;
@@ -511,6 +517,7 @@ policies and contribution forms [3].
     expose(test, 'test');
     expose(async_test, 'async_test');
     expose(promise_test, 'promise_test');
+    expose(promise_rejects, 'promise_rejects');
     expose(generate_tests, 'generate_tests');
     expose(setup, 'setup');
     expose(done, 'done');
@@ -1021,12 +1028,15 @@ policies and contribution forms [3].
                 InvalidNodeTypeError: 24,
                 DataCloneError: 25,
 
+                EncodingError: 0,
+                NotReadableError: 0,
                 UnknownError: 0,
                 ConstraintError: 0,
                 DataError: 0,
                 TransactionInactiveError: 0,
                 ReadOnlyError: 0,
-                VersionError: 0
+                VersionError: 0,
+                OperationError: 0,
             };
 
             if (!(name in name_code_map)) {
@@ -1036,7 +1046,10 @@ policies and contribution forms [3].
             var required_props = { code: name_code_map[name] };
 
             if (required_props.code === 0 ||
-               ("name" in e && e.name !== e.name.toUpperCase() && e.name !== "DOMException")) {
+               (typeof e == "object" &&
+                "name" in e &&
+                e.name !== e.name.toUpperCase() &&
+                e.name !== "DOMException")) {
                 // New style exception: also test the name property.
                 required_props.name = name;
             }
@@ -1178,8 +1191,8 @@ policies and contribution forms [3].
             if (this.phase >= this.phases.HAS_RESULT) {
                 return;
             }
-            var message = (typeof e === "object" && e !== null) ? e.message : e;
-            if (typeof e.stack != "undefined" && typeof e.message == "string") {
+            var message = String((typeof e === "object" && e !== null) ? e.message : e);
+            if (typeof e.stack != "undefined") {
                 //Try to make it more informative for some exceptions, at least
                 //in Gecko and WebKit.  This results in a stack dump instead of
                 //just errors like "Cannot read property 'parentNode' of null"
