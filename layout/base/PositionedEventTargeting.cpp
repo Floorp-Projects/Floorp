@@ -75,6 +75,7 @@ struct EventRadiusPrefs
   bool mRegistered;
   bool mTouchOnly;
   bool mRepositionEventCoords;
+  bool mTouchClusterDetection;
 };
 
 static EventRadiusPrefs sMouseEventRadiusPrefs;
@@ -121,6 +122,9 @@ GetPrefsFor(EventClassID aEventClassID)
 
     nsPrintfCString repositionPref("ui.%s.radius.reposition", prefBranch);
     Preferences::AddBoolVarCache(&prefs->mRepositionEventCoords, repositionPref.get(), false);
+
+    nsPrintfCString touchClusterPref("ui.zoomedview.enabled", prefBranch);
+    Preferences::AddBoolVarCache(&prefs->mTouchClusterDetection, touchClusterPref.get(), false);
   }
 
   return prefs;
@@ -316,7 +320,8 @@ SubtractFromExposedRegion(nsRegion* aExposedRegion, const nsRegion& aRegion)
 static nsIFrame*
 GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
            const nsRect& aTargetRect, const EventRadiusPrefs* aPrefs,
-           nsIFrame* aRestrictToDescendants, nsTArray<nsIFrame*>& aCandidates)
+           nsIFrame* aRestrictToDescendants, nsTArray<nsIFrame*>& aCandidates,
+           int32_t* aElementsInCluster)
 {
   nsIFrame* bestTarget = nullptr;
   // Lower is better; distance is in appunits
@@ -357,6 +362,8 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
       PET_LOG("  candidate %p was not descendant of restrictroot %p\n", f, aRestrictToDescendants);
       continue;
     }
+
+    (*aElementsInCluster)++;
 
     // distance is in appunits
     float distance = ComputeDistanceFromRegion(aPointRelativeToRootFrame, region);
@@ -424,10 +431,18 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
     return target;
   }
 
+  int32_t elementsInCluster = 0;
+
   nsIFrame* closestClickable =
     GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
-               restrictToDescendants, candidates);
+               restrictToDescendants, candidates, &elementsInCluster);
   if (closestClickable) {
+    if (prefs->mTouchClusterDetection && elementsInCluster > 1) {
+      if (aEvent->mClass == eMouseEventClass) {
+        WidgetMouseEventBase* mouseEventBase = aEvent->AsMouseEventBase();
+        mouseEventBase->hitCluster = true;
+      }
+    }
     target = closestClickable;
   }
   PET_LOG("Final target is %p\n", target);

@@ -285,7 +285,7 @@ HealthReporterState.prototype = Object.freeze({
       yield this.save();
       prefs.reset(["lastSubmitID", "lastPingTime"]);
     } else {
-      this._log.warn("No prefs data found.");
+      this._log.debug("No prefs data found.");
     }
   },
 });
