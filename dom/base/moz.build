@@ -202,7 +202,6 @@ UNIFIED_SOURCES += [
     'BarProps.cpp',
     'ChildIterator.cpp',
     'Comment.cpp',
-    'CompositionStringSynthesizer.cpp',
     'Console.cpp',
     'Crypto.cpp',
     'DirectionalityUtils.cpp',

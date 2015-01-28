@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsQueryContentEventResult.h"
-#include "CompositionStringSynthesizer.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsFocusManager.h"
@@ -2132,109 +2131,6 @@ InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
     aEvent.refPoint = *aPt;
   }
   aEvent.time = PR_IntervalNow();
-}
-
-nsresult
-nsDOMWindowUtils::GetTextEventDispatcher(TextEventDispatcher** aDispatcher)
-{
-  if (!aDispatcher) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aDispatcher = nullptr;
-
-  nsCOMPtr<nsIWidget> widget(GetWidget());
-  if (NS_WARN_IF(!widget)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  TextEventDispatcher* dispatcher = widget->GetTextEventDispatcher();
-  nsresult rv = dispatcher->GetState();
-  if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(*aDispatcher = dispatcher);
-    return NS_OK;
-  }
-  if (rv == NS_ERROR_NOT_INITIALIZED) {
-    rv = dispatcher->InitForTests();
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  NS_ADDREF(*aDispatcher = dispatcher);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
-                                       const nsAString& aData,
-                                       const nsAString& aLocale)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  // get the widget to send the event to
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aType.EqualsLiteral("compositionend")) {
-    // Now we don't support manually dispatching composition end with this
-    // API.  A compositionend is dispatched when this is called with
-    // compositioncommitasis or compositioncommit automatically.  For backward
-    // compatibility, this shouldn't return error in this case.
-    NS_WARNING("Don't call nsIDOMWindowUtils.sendCompositionEvent() for "
-               "compositionend.  Instead, use it with compositioncommitasis or "
-               "compositioncommit.  Then, compositionend will be automatically "
-               "dispatched.");
-    return NS_OK;
-  } else if (aType.EqualsLiteral("compositionupdate")) {
-    // Now we don't support manually dispatching composition update with this
-    // API.  A compositionupdate is dispatched when a DOM text event modifies
-    // composition string automatically.  For backward compatibility, this
-    // shouldn't return error in this case.
-    NS_WARNING("Don't call nsIDOMWindowUtils.sendCompositionEvent() for "
-               "compositionupdate since it's ignored and the event is "
-               "fired automatically when it's necessary");
-    return NS_OK;
-  }
-
-  nsRefPtr<TextEventDispatcher> dispatcher;
-  nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  nsEventStatus status = nsEventStatus_eIgnore;
-  if (aType.EqualsLiteral("compositionstart")) {
-    return dispatcher->StartComposition(status);
-  }
-  if (aType.EqualsLiteral("compositioncommitasis")) {
-    return dispatcher->CommitComposition(status);
-  }
-  if (aType.EqualsLiteral("compositioncommit")) {
-    return dispatcher->CommitComposition(status, &aData);
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::CreateCompositionStringSynthesizer(
-                    nsICompositionStringSynthesizer** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (NS_WARN_IF(!widget)) {
-    return NS_ERROR_FAILURE;
-  }
-  nsRefPtr<TextEventDispatcher> dispatcher;
-  nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  NS_ADDREF(*aResult = new CompositionStringSynthesizer(dispatcher));
-  return NS_OK;
 }
 
 NS_IMETHODIMP
