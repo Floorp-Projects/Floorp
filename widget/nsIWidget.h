@@ -53,6 +53,9 @@ class PLayerTransactionChild;
 namespace gfx {
 class DrawTarget;
 }
+namespace widget {
+class TextEventDispatcher;
+}
 }
 
 /**
@@ -104,8 +107,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x13239ca, 0xaf3f, 0x4f27, \
-  { 0xaf, 0x83, 0x47, 0xa9, 0x82, 0x3d, 0x99, 0xee } };
+{ 0x029a269f, 0x8b1a, 0x466b, \
+  { 0x89, 0x61, 0xc9, 0xcd, 0x23, 0x4e, 0x21, 0x27 } };
 
 /*
  * Window shadow styles
@@ -727,6 +730,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
     typedef mozilla::widget::SizeConstraints SizeConstraints;
+    typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
     typedef mozilla::CompositorVsyncDispatcher CompositorVsyncDispatcher;
 
     // Used in UpdateThemeGeometries.
@@ -2199,6 +2203,12 @@ public:
      * determine how widget coordinates will be rounded.
      */
     virtual int32_t RoundsWidgetCoordinatesTo() { return 1; }
+
+    /**
+     * GetTextEventDispatcher() returns TextEventDispatcher belonging to the
+     * widget.  Note that this never returns nullptr.
+     */
+    NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() = 0;
 
 protected:
     /**

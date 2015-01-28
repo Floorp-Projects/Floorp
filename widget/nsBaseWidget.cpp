@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/TextEventDispatcher.h"
 
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -1139,6 +1140,12 @@ void nsBaseWidget::OnDestroy()
 {
   // release references to device context and app shell
   NS_IF_RELEASE(mContext);
+
+  if (mTextEventDispatcher) {
+    mTextEventDispatcher->OnDestroyWidget();
+    // Don't release it until this widget actually released because after this
+    // is called, TextEventDispatcher() may create it again.
+  }
 }
 
 NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
@@ -1576,6 +1583,15 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
       win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
     }
   }
+}
+
+NS_IMETHODIMP_(nsIWidget::TextEventDispatcher*)
+nsBaseWidget::GetTextEventDispatcher()
+{
+  if (!mTextEventDispatcher) {
+    mTextEventDispatcher = new TextEventDispatcher(this);
+  }
+  return mTextEventDispatcher;
 }
 
 #ifdef ACCESSIBILITY
