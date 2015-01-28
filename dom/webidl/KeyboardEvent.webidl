@@ -21,8 +21,6 @@ interface KeyboardEvent : UIEvent
   const unsigned long DOM_KEY_LOCATION_LEFT     = 0x01;
   const unsigned long DOM_KEY_LOCATION_RIGHT    = 0x02;
   const unsigned long DOM_KEY_LOCATION_NUMPAD   = 0x03;
-  const unsigned long DOM_KEY_LOCATION_MOBILE   = 0x04;
-  const unsigned long DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
   readonly attribute unsigned long location;
   readonly attribute boolean       repeat;
