@@ -667,20 +667,27 @@ function fetch(aURL, aOptions={ loadFromCache: true, window: null,
     case "chrome":
     case "resource":
       try {
-        NetUtil.asyncFetch(url, function onFetch(aStream, aStatus, aRequest) {
-          if (!components.isSuccessCode(aStatus)) {
-            deferred.reject(new Error("Request failed with status code = "
-                                      + aStatus
-                                      + " after NetUtil.asyncFetch for url = "
-                                      + url));
-            return;
-          }
+        NetUtil.asyncFetch2(
+          url,
+          function onFetch(aStream, aStatus, aRequest) {
+            if (!components.isSuccessCode(aStatus)) {
+              deferred.reject(new Error("Request failed with status code = "
+                                        + aStatus
+                                        + " after NetUtil.asyncFetch2 for url = "
+                                        + url));
+              return;
+            }
 
-          let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-          contentType = aRequest.contentType;
-          deferred.resolve(source);
-          aStream.close();
-        });
+            let source = NetUtil.readInputStreamToString(aStream, aStream.available());
+            contentType = aRequest.contentType;
+            deferred.resolve(source);
+            aStream.close();
+          },
+          null,      // aLoadingNode
+          Services.scriptSecurityManager.getSystemPrincipal(),
+          null,      // aTriggeringPrincipal
+          Ci.nsILoadInfo.SEC_NORMAL,
+          Ci.nsIContentPolicy.TYPE_STYLESHEET);
       } catch (ex) {
         deferred.reject(ex);
       }
@@ -689,12 +696,26 @@ function fetch(aURL, aOptions={ loadFromCache: true, window: null,
     default:
       let channel;
       try {
-        channel = Services.io.newChannel(url, null, null);
+        channel = Services.io.newChannel2(url,
+                                          null,
+                                          null,
+                                          null,      // aLoadingNode
+                                          Services.scriptSecurityManager.getSystemPrincipal(),
+                                          null,      // aTriggeringPrincipal
+                                          Ci.nsILoadInfo.SEC_NORMAL,
+                                          Ci.nsIContentPolicy.TYPE_STYLESHEET);
       } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
         // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
         // newChannel won't be able to handle it.
         url = "file:///" + url;
-        channel = Services.io.newChannel(url, null, null);
+        channel = Services.io.newChannel2(url,
+                                          null,
+                                          null,
+                                          null,      // aLoadingNode
+                                          Services.scriptSecurityManager.getSystemPrincipal(),
+                                          null,      // aTriggeringPrincipal
+                                          Ci.nsILoadInfo.SEC_NORMAL,
+                                          Ci.nsIContentPolicy.TYPE_STYLESHEET);
       }
       let chunks = [];
       let streamListener = {

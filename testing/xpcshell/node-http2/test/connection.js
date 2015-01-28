@@ -131,7 +131,7 @@ describe('connection.js', function() {
         client_stream.on('data', function(data) {
           expect(data).to.deep.equal(response_data);
           done();
-        })
+        });
       });
     });
     describe('server push', function() {
