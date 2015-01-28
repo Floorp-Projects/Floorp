@@ -54,14 +54,9 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     args.setThis(ObjectValue(*iterableObj));
 
     RootedValue callee(cx);
-#ifdef JS_HAS_SYMBOLS
     RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
     if (!GetProperty(cx, iterableObj, iterableObj, iteratorId, &callee))
         return false;
-#else
-    if (!GetProperty(cx, iterableObj, iterableObj, cx->names().std_iterator, &callee))
-        return false;
-#endif
 
     // If obj[@@iterator] is undefined and we were asked to allow non-iterables,
     // bail out now without setting iterator.  This will make valueIsIterable(),
