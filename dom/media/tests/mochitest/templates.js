@@ -78,7 +78,7 @@ function waitForIceConnected(test, pc) {
 
   return pc.waitForIceConnected()
     .then(() => {
-      info(pc + ": ICE connection state log: " + test.pcLocal.iceConnectionLog);
+      info(pc + ": ICE connection state log: " + pc.iceConnectionLog);
       ok(pc.isIceConnected(), pc + ": ICE switched to 'connected' state");
     });
 }
@@ -131,15 +131,9 @@ function checkTrackStats(pc, audio, outbound) {
   });
 }
 
-function checkAllTrackStats(pc) {
-  var checks = [];
-  for (var i = 0; i < 4; ++i) {
-    // check all combinations
-    checks.push(checkTrackStats(pc, (i & 1) === 1, (i & 2) === 2));
-  }
-  return Promise.all(checks);
-}
-
+// checks all stats combinations inbound/outbound, audio/video
+var checkAllTrackStats = pc =>
+    Promise.all([0, 1, 2, 3].map(i => checkTrackStats(pc, i & 1, i & 2)));
 
 var commandsPeerConnection = [
   function PC_SETUP_SIGNALING_CLIENT(test) {
@@ -354,7 +348,7 @@ var commandsPeerConnection = [
       return Promise.resolve();
     }
 
-    test.getSignalingMessage("answer").then(message => {
+    return test.getSignalingMessage("answer").then(message => {
       ok("answer" in message, "Got an answer message");
       test._remote_answer = new mozRTCSessionDescription(message.answer);
       test._answer_constraints = message.answer_constraints;
@@ -440,7 +434,7 @@ var commandsPeerConnection = [
       test.pcLocal.checkStatsIceConnections(stats,
                                             test._offer_constraints,
                                             test._offer_options,
-                                            test.originalAnswer);
+                                            test._remote_answer);
     });
   },
 
@@ -464,6 +458,6 @@ var commandsPeerConnection = [
     return checkAllTrackStats(test.pcLocal);
   },
   function PC_REMOTE_CHECK_STATS(test) {
-    return checkAllTrackStats(test.pcLocal);
+    return checkAllTrackStats(test.pcRemote);
   }
 ];
