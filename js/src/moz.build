@@ -201,7 +201,6 @@ UNIFIED_SOURCES += [
     'jsbool.cpp',
     'jscntxt.cpp',
     'jscompartment.cpp',
-    'jscrashreport.cpp',
     'jsdate.cpp',
     'jsdtoa.cpp',
     'jsexn.cpp',
