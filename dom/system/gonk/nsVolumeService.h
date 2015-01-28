@@ -48,6 +48,7 @@ public:
   void UpdateVolume(nsIVolume* aVolume, bool aNotifyObservers = true);
   void UpdateVolumeIOThread(const Volume* aVolume);
 
+  void RecvVolumesFromParent(const nsTArray<dom::VolumeInfo>& aVolumes);
   void GetVolumesForIPC(nsTArray<dom::VolumeInfo>* aResult);
 
 private:
