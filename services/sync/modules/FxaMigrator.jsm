@@ -210,27 +210,39 @@ Migrator.prototype = {
 
     // Must be ready to perform the actual migration.
     this.log.info("Performing final sync migration steps");
-    // Do the actual migration.
+    // Do the actual migration.  We setup one observer for when the new identity
+    // is about to be initialized so we can reset some key preferences - but
+    // there's no promise associated with this.
+    let observeStartOverIdentity;
+    Services.obs.addObserver(observeStartOverIdentity = () => {
+      this.log.info("observed that startOver is about to re-initialize the identity");
+      Services.obs.removeObserver(observeStartOverIdentity, "weave:service:start-over:init-identity");
+      // We've now reset all sync prefs - set the engine related prefs back to
+      // what they were.
+      for (let [prefName, prefType, prefVal] of enginePrefs) {
+        this.log.debug("Restoring pref ${prefName} (type=${prefType}) to ${prefVal}",
+                       {prefName, prefType, prefVal});
+        switch (prefType) {
+          case Services.prefs.PREF_BOOL:
+            Services.prefs.setBoolPref(prefName, prefVal);
+            break;
+          case Services.prefs.PREF_STRING:
+            Services.prefs.setCharPref(prefName, prefVal);
+            break;
+          default:
+            // _getEngineEnabledPrefs doesn't return any other type...
+            Cu.reportError("unknown engine pref type for " + prefName + ": " + prefType);
+        }
+      }
+    }, "weave:service:start-over:init-identity", false);
+
+    // And another observer for the startOver being fully complete - the only
+    // reason for this is so we can wait until everything is fully reset.
     let startOverComplete = new Promise((resolve, reject) => {
       let observe;
       Services.obs.addObserver(observe = () => {
         this.log.info("observed that startOver is complete");
         Services.obs.removeObserver(observe, "weave:service:start-over:finish");
-        // We've now reset all sync prefs - set the engine related prefs back to
-        // what they were.
-        for (let [prefName, prefType, prefVal] of enginePrefs) {
-          switch (prefType) {
-            case Services.prefs.PREF_BOOL:
-              Services.prefs.setBoolPref(prefName, prefVal);
-              break;
-            case Services.prefs.PREF_STRING:
-              Services.prefs.setCharPref(prefName, prefVal);
-              break;
-            default:
-              // _getEngineEnabledPrefs doesn't return any other type...
-              Cu.reportError("unknown engine pref type for " + prefName + ": " + prefType);
-          }
-        }
         resolve();
       }, "weave:service:start-over:finish", false);
     });
@@ -240,6 +252,8 @@ Migrator.prototype = {
     yield startOverComplete;
     // observer fired, now kick things off with the FxA user.
     this.log.info("scheduling initial FxA sync.");
+    // Note we technically don't need to unblockSync as by now all sync prefs
+    // have been reset - but it doesn't hurt.
     this._unblockSync();
     Weave.Service.scheduler.scheduleNextSync(0);
 
