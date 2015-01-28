@@ -1207,15 +1207,26 @@ function replaceSurroundingText(element, text, offset, length) {
 
 let CompositionManager =  {
   _isStarted: false,
+  _textInputProcessor: null,
   _clauseAttrMap: {
     'raw-input':
-      Ci.nsICompositionStringSynthesizer.ATTR_RAWINPUT,
+      Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
     'selected-raw-text':
-      Ci.nsICompositionStringSynthesizer.ATTR_SELECTEDRAWTEXT,
+      Ci.nsITextInputProcessor.ATTR_SELECTED_RAW_CLAUSE,
     'converted-text':
-      Ci.nsICompositionStringSynthesizer.ATTR_CONVERTEDTEXT,
+      Ci.nsITextInputProcessor.ATTR_CONVERTED_CLAUSE,
     'selected-converted-text':
-      Ci.nsICompositionStringSynthesizer.ATTR_SELECTEDCONVERTEDTEXT
+      Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE
+  },
+
+  _prepareTextInputProcessor: function cm_prepareTextInputProcessor(aWindow)
+  {
+    if (!this._textInputProcessor) {
+      this._textInputProcessor =
+        Cc["@mozilla.org/text-input-processor;1"].
+          createInstance(Ci.nsITextInputProcessor);
+    }
+    return this._textInputProcessor.init(aWindow);
   },
 
   setComposition: function cm_setComposition(element, text, cursor, clauses) {
@@ -1242,7 +1253,7 @@ let CompositionManager =  {
           remainingLength -= clauseLength;
           clauseLens.push(clauseLength);
           clauseAttrs.push(this._clauseAttrMap[clauses[i].selectionType] ||
-                           Ci.nsICompositionStringSynthesizer.ATTR_RAWINPUT);
+                           Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE);
         }
       }
       // If the total clauses length is less than that of the composition
@@ -1252,32 +1263,33 @@ let CompositionManager =  {
       }
     } else {
       clauseLens.push(len);
-      clauseAttrs.push(Ci.nsICompositionStringSynthesizer.ATTR_RAWINPUT);
+      clauseAttrs.push(Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE);
     }
 
-    // Start composition if need to.
-    if (!this._isStarted) {
-      this._isStarted = true;
-      domWindowUtils.sendCompositionEvent('compositionstart', '', '');
+    let win = element.ownerDocument.defaultView;
+    if (!this._prepareTextInputProcessor(win)) {
+      return;
     }
-
     // Update the composing text.
-    let compositionString = domWindowUtils.createCompositionStringSynthesizer();
-    compositionString.setString(text);
+    this._textInputProcessor.setPendingCompositionString(text);
     for (var i = 0; i < clauseLens.length; i++) {
-      compositionString.appendClause(clauseLens[i], clauseAttrs[i]);
+      if (!clauseLens[i]) {
+        continue;
+      }
+      this._textInputProcessor.appendClauseToPendingComposition(clauseLens[i],
+                                                                clauseAttrs[i]);
     }
     if (cursor >= 0) {
-      compositionString.setCaret(cursor, 0);
+      this._textInputProcessor.setCaretInPendingComposition(cursor);
     }
-    compositionString.dispatchEvent();
+    this._isStarted = this._textInputProcessor.flushPendingComposition();
   },
 
   endComposition: function cm_endComposition(text) {
     if (!this._isStarted) {
       return;
     }
-    domWindowUtils.sendCompositionEvent('compositioncommit', text, '');
+    this._textInputProcessor.commitComposition(text ? text : "");
     this._isStarted = false;
   },
 
