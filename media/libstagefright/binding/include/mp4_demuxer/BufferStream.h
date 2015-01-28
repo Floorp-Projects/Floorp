@@ -7,7 +7,6 @@
 
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "nsTArray.h"
-#include "ResourceQueue.h"
 
 namespace mp4_demuxer {
 
@@ -19,23 +18,21 @@ public:
    */
   BufferStream();
 
-  bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
-              size_t* aBytesRead);
-  bool CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
-                    size_t* aBytesRead);
-  bool Length(int64_t* aLength);
+  virtual bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
+                      size_t* aBytesRead) MOZ_OVERRIDE;
+  virtual bool CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
+                            size_t* aBytesRead) MOZ_OVERRIDE;
+  virtual bool Length(int64_t* aLength) MOZ_OVERRIDE;
 
-  void DiscardBefore(int64_t aOffset);
+  virtual void DiscardBefore(int64_t aOffset) MOZ_OVERRIDE;
 
   void AppendBytes(const uint8_t* aData, size_t aLength);
-  void AppendData(mozilla::ResourceItem* aItem);
 
   mozilla::MediaByteRange GetByteRange();
 
+private:
   int64_t mStartOffset;
-  int64_t mLogicalLength;
-  int64_t mStartIndex;
-  nsTArray<nsRefPtr<mozilla::ResourceItem>> mData;
+  nsTArray<uint8_t> mData;
 };
 }
 

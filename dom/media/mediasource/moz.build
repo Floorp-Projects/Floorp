@@ -9,7 +9,6 @@ EXPORTS += [
     'AsyncEventRunner.h',
     'MediaSourceDecoder.h',
     'MediaSourceReader.h',
-    'ResourceQueue.h',
 ]
 
 EXPORTS.mozilla.dom += [
