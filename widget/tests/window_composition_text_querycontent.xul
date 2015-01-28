@@ -82,6 +82,7 @@ var iframe3 = document.getElementById("iframe3");
 var input = document.getElementById("input");
 var textareaInFrame;
 
+const nsITextInputProcessorCallback = Components.interfaces.nsITextInputProcessorCallback;
 const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
 const nsIEditorIMESupport = Components.interfaces.nsIEditorIMESupport;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
@@ -2778,6 +2779,106 @@ function runForceCommitTest()
   window.removeEventListener("text", eventHandler, true);
 }
 
+function runAsyncForceCommitTest(aNextTest)
+{
+  var events;
+  function eventHandler(aEvent)
+  {
+    events.push(aEvent);
+  };
+
+  // If IME commits composition for a request, TextComposition commits
+  // composition automatically because most web apps must expect that active
+  // composition should be committed synchronously.  Therefore, in this case,
+  // a click during composition should cause committing composition
+  // synchronously and delayed commit shouldn't cause composition events.
+  var commitRequested = false;
+  function callback(aTIP, aNotification)
+  {
+    ok(true, aNotification.type);
+    if (aNotification.type != "request-to-commit") {
+      return true;
+    }
+    commitRequested = true;
+    setTimeout(function () {
+      events = [];
+      aTIP.commitComposition();
+
+      is(events.length, 0,
+         "runAsyncForceCommitTest: composition events shouldn't been fired by asynchronous call of nsITextInputProcessor.commitComposition()");
+
+      window.removeEventListener("compositionstart", eventHandler, true);
+      window.removeEventListener("compositionupdate", eventHandler, true);
+      window.removeEventListener("compositionend", eventHandler, true);
+      window.removeEventListener("input", eventHandler, true);
+      window.removeEventListener("text", eventHandler, true);
+
+      SimpleTest.executeSoon(aNextTest);
+    }, 1);
+    return true;
+  };
+
+  window.addEventListener("compositionstart", eventHandler, true);
+  window.addEventListener("compositionupdate", eventHandler, true);
+  window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("input", eventHandler, true);
+  window.addEventListener("text", eventHandler, true);
+
+  // Make the composition in textarea commit by click in the textarea
+  textarea.focus();
+  textarea.value = "";
+
+  events = [];
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u306E",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    }, window, callback);
+
+  is(events.length, 4,
+     "runAsyncForceCommitTest: wrong event count #1");
+  is(events[0].type, "compositionstart",
+     "runAsyncForceCommitTest: the 1st event must be compositionstart #1");
+  is(events[1].type, "compositionupdate",
+     "runAsyncForceCommitTest: the 2nd event must be compositionupdate #1");
+  is(events[2].type, "text",
+     "runAsyncForceCommitTest: the 3rd event must be text #1");
+  is(events[3].type, "input",
+     "runAsyncForceCommitTest: the 4th event must be input #1");
+
+  events = [];
+  commitRequested = false;
+  synthesizeMouseAtCenter(textarea, {});
+
+  ok(commitRequested,
+     "runAsyncForceCommitTest: \"request-to-commit\" should've been notified");
+  is(events.length, 3,
+     "runAsyncForceCommitTest: wrong event count #2");
+  is(events[0].type, "text",
+     "runAsyncForceCommitTest: the 1st event must be text #2");
+  is(events[1].type, "compositionend",
+     "runAsyncForceCommitTest: the 2nd event must be compositionend #2");
+  is(events[2].type, "input",
+     "runAsyncForceCommitTest: the 3rd event must be input #2");
+  is(events[1].data, "\u306E",
+     "runAsyncForceCommitTest: compositionend has wrong data #2");
+  is(events[0].target, textarea,
+     "runAsyncForceCommitTest: The 1st event was fired on wrong event target #2");
+  is(events[1].target, textarea,
+     "runAsyncForceCommitTest: The 2nd event was fired on wrong event target #2");
+  is(events[2].target, textarea,
+     "runAsyncForceCommitTest: The 3rd event was fired on wrong event target #2");
+  ok(!getEditorIMESupport(textarea).isComposing,
+     "runAsyncForceCommitTest: the textarea still has composition #2");
+  is(textarea.value, "\u306E",
+     "runAsyncForceCommitTest: the textarea doesn't have the committed text #2");
+}
+
 function runBug811755Test()
 {
   iframe2.contentDocument.body.innerHTML = "<div>content<br/></div>";
@@ -3449,10 +3550,12 @@ function runTest()
   runForceCommitTest();
   runBug811755Test();
   runIsComposingTest();
-  runRemoveContentTest(function () {
-    runFrameTest();
-    runPanelTest();
-    runMaxLengthTest();
+  runAsyncForceCommitTest(function () {
+    runRemoveContentTest(function () {
+      runFrameTest();
+      runPanelTest();
+      runMaxLengthTest();
+    });
   });
 }
 
