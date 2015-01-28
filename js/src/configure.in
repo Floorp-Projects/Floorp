@@ -3253,11 +3253,11 @@ if test -n "$JS_ION_PERF"; then
 fi
 
 dnl ========================================================
-dnl JS opt-mode assertions and minidump instrumentation
+dnl JS opt-mode assertions and heap poisoning
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(js-diagnostics,
 [  --enable-js-diagnostics
-                          Enable JS diagnostic assertions and breakpad data],
+                          Enable JS diagnostic assertions heap poisoning],
     JS_CRASH_DIAGNOSTICS=1,
     JS_CRASH_DIAGNOSTICS= )
 if test -n "$JS_CRASH_DIAGNOSTICS"; then
