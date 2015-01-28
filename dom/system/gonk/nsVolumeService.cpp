@@ -280,7 +280,7 @@ nsVolumeService::GetVolumesForIPC(nsTArray<VolumeInfo>* aResult)
 }
 
 void
-nsVolumeService::GetVolumesFromParent()
+nsVolumeService::RecvVolumesFromParent(const nsTArray<VolumeInfo>& aVolumes)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // We are the parent. Therefore our volumes are already correct.
@@ -290,12 +290,8 @@ nsVolumeService::GetVolumesFromParent()
     // We've already done this, no need to do it again.
     return;
   }
-  mGotVolumesFromParent = true;
-
-  nsTArray<VolumeInfo> result;
-  ContentChild::GetSingleton()->SendGetVolumes(&result);
-  for (uint32_t i = 0; i < result.Length(); i++) {
-    const VolumeInfo& volInfo(result[i]);
+  for (uint32_t i = 0; i < aVolumes.Length(); i++) {
+    const VolumeInfo& volInfo(aVolumes[i]);
     nsRefPtr<nsVolume> vol = new nsVolume(volInfo.name(),
                                           volInfo.mountPoint(),
                                           volInfo.volState(),
@@ -309,6 +305,25 @@ nsVolumeService::GetVolumesFromParent()
                                           volInfo.isHotSwappable());
     UpdateVolume(vol, false);
   }
+}
+
+void
+nsVolumeService::GetVolumesFromParent()
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // We are the parent. Therefore our volumes are already correct.
+    return;
+  }
+  if (mGotVolumesFromParent) {
+    // We've already done this, no need to do it again.
+    return;
+  }
+
+  nsTArray<VolumeInfo> result;
+  ContentChild::GetSingleton()->SendGetVolumes(&result);
+  RecvVolumesFromParent(result);
+
+  mGotVolumesFromParent = true;
 }
 
 NS_IMETHODIMP

@@ -471,6 +471,8 @@ child:
 
     ScreenSizeChanged(gfxIntSize size);
 
+    Volumes(VolumeInfo[] volumes);
+
     FlushMemory(nsString reason);
 
     GarbageCollect();
