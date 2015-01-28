@@ -6621,15 +6621,14 @@ HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const
 }
 
 /**
- * Splits the string on the first "@" character and punycode encodes the first
- * and second parts separately before rejoining them with an "@" and returning
- * the result via the aEncodedEmail out-param. Returns false if there is no
- * "@" caracter, if the "@" character is at the start or end, or if the
+ * Splits the string on the first "@" character and punycode encodes the second
+ * part (the domain labels) before rejoining the two parts with an "@" and
+ * returning the result via the aEncodedEmail out-param. Returns false if there
+ * is no "@" caracter, if the "@" character is at the start or end, or if the
  * conversion to punycode fails.
  *
  * This function exists because ConvertUTF8toACE() treats 'username@domain' as
- * a single label, but we need to encode the username and domain parts
- * separately.
+ * a single label, but we want to encode the domain parts only.
  */
 static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
                                        nsAutoCString& aEncodedEmail,
@@ -6650,19 +6649,8 @@ static bool PunycodeEncodeEmailAddress(const nsAString& aEmail,
     return false;
   }
 
-  const nsDependentCSubstring username = Substring(value, 0, atPos);
-  bool ace;
-  if (NS_SUCCEEDED(idnSrv->IsACE(username, &ace)) && !ace) {
-    nsAutoCString usernameACE;
-    // TODO: Bug 901347: Usernames longer than 63 chars are not converted by
-    // ConvertUTF8toACE(). For now, continue on even if the conversion fails.
-    if (NS_SUCCEEDED(idnSrv->ConvertUTF8toACE(username, usernameACE))) {
-      value.Replace(0, atPos, usernameACE);
-      atPos = usernameACE.Length();
-    }
-  }
-
   const nsDependentCSubstring domain = Substring(value, atPos + 1);
+  bool ace;
   if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
     nsAutoCString domainACE;
     if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
