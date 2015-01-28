@@ -330,7 +330,6 @@ public:
     void SetMenuBar(nsMenuBarX* aMenuBar);
     nsMenuBarX *GetMenuBar();
 
-    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
     NS_IMETHOD_(void) SetInputContext(
                         const InputContext& aContext,
                         const InputContextAction& aAction) MOZ_OVERRIDE;
@@ -380,6 +379,9 @@ protected:
     nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
     return widget.forget();
   }
+
+  virtual nsresult NotifyIMEInternal(
+                     const IMENotification& aIMENotification) MOZ_OVERRIDE;
 
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   BaseWindow*          mWindow;         // our cocoa window [STRONG]

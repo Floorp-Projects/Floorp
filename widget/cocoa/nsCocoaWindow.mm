@@ -2111,8 +2111,8 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
-NS_IMETHODIMP
-nsCocoaWindow::NotifyIME(const IMENotification& aIMENotification)
+nsresult
+nsCocoaWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS:

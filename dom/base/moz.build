@@ -138,6 +138,7 @@ if CONFIG['MOZ_WEBRTC']:
 EXPORTS.mozilla += [
     'CORSMode.h',
     'FeedWriterEnabled.h',
+    'TextInputProcessor.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -201,7 +202,6 @@ UNIFIED_SOURCES += [
     'BarProps.cpp',
     'ChildIterator.cpp',
     'Comment.cpp',
-    'CompositionStringSynthesizer.cpp',
     'Console.cpp',
     'Crypto.cpp',
     'DirectionalityUtils.cpp',
@@ -262,7 +262,6 @@ UNIFIED_SOURCES += [
     'nsFocusManager.cpp',
     'nsFormData.cpp',
     'nsFrameLoader.cpp',
-    'nsFrameMessageManager.cpp',
     'nsGenConImageContent.cpp',
     'nsGenericDOMDataNode.cpp',
     'nsGkAtoms.cpp',
@@ -323,6 +322,7 @@ UNIFIED_SOURCES += [
     'StyleSheetList.cpp',
     'SubtleCrypto.cpp',
     'Text.cpp',
+    'TextInputProcessor.cpp',
     'ThirdPartyUtil.cpp',
     'TreeWalker.cpp',
     'URL.cpp',
@@ -344,6 +344,8 @@ SOURCES += [
     'nsContentUtils.cpp',
     # this file doesn't like windows.h
     'nsDOMWindowUtils.cpp',
+    # Conflicts with windows.h's definition of SendMessage.
+    'nsFrameMessageManager.cpp',
     # This file has a #error "Never include windows.h in this file!"
     'nsGlobalWindow.cpp',
     # Conflicts with windows.h's definition of LoadImage.

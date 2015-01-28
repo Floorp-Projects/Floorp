@@ -24,10 +24,10 @@ try {             // line0 + 1
 }
 
 // other iterable objects
-assertEq(eval(...["a + b"][std_iterator]()), 11);
+assertEq(eval(...["a + b"][Symbol.iterator]()), 11);
 assertEq(eval(...Set(["a + b"])), 11);
 let itr = {};
-itr[std_iterator] = function() {
+itr[Symbol.iterator] = function() {
     return {
         i: 0,
         next: function() {

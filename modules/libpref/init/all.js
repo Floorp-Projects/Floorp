@@ -3784,6 +3784,9 @@ pref("image.high_quality_downscaling.min_factor", 1000);
 // interpreted as number of decoded bytes.
 pref("image.high_quality_upscaling.max_size", 20971520);
 
+// Should we optimize away the surfaces of single-color images?
+pref("image.single-color-optimization.enabled", true);
+
 //
 // Image memory management prefs
 //

@@ -103,7 +103,7 @@ function test_change1() {
 
   var proxy_arr = new Proxy(arr, {
     get: function(target, name) {
-      if (name == std_iterator) {
+      if (name == Symbol.iterator) {
         modified = true;
         WeakMap.prototype.set = function() {
           called = true;

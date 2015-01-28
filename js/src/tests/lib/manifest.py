@@ -31,13 +31,14 @@ class XULInfo:
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
-        return ('var xulRuntime = { OS: "%s", XPCOMABI: "%s", shell: true };' +
-                'var isDebugBuild=%s; var Android=%s; var browserIsRemote=%s') % (
-            self.os,
-            self.abi,
-            str(self.isdebug).lower(),
-            str(self.os == "Android").lower(),
-            str(self.browserIsRemote).lower())
+        return ('var xulRuntime = {{ OS: "{}", XPCOMABI: "{}", shell: true }};'
+                'var isDebugBuild={}; var Android={}; '
+                'var browserIsRemote={}'.format(
+                    self.os,
+                    self.abi,
+                    str(self.isdebug).lower(),
+                    str(self.os == "Android").lower(),
+                    str(self.browserIsRemote).lower()))
 
     @classmethod
     def create(cls, jsdir):
@@ -57,13 +58,13 @@ class XULInfo:
                 break
 
         if path == None:
-            print ("Can't find config/autoconf.mk on a directory containing the JS shell"
-                   " (searched from %s)") % jsdir
+            print("Can't find config/autoconf.mk on a directory containing"
+                  " the JS shell (searched from {})".format(jsdir))
             sys.exit(1)
 
         # Read the values.
         val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG)\s*=\s*(.*)')
-        kw = { 'isdebug': False }
+        kw = {'isdebug': False}
         for line in open(path):
             m = val_re.match(line)
             if m:
@@ -88,7 +89,11 @@ class XULInfoTester:
         """Test a XUL predicate condition against this local info."""
         ans = self.cache.get(cond, None)
         if ans is None:
-            cmd = [ self.js_bin, '-e', self.js_prolog, '-e', 'print(!!(%s))'%cond ]
+            cmd = [
+                self.js_bin,
+                '-e', self.js_prolog,
+                '-e', 'print(!!({}))'.format(cond)
+            ]
             p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             out, err = p.communicate()
             if out in ('true\n', 'true\r\n'):
@@ -96,9 +101,9 @@ class XULInfoTester:
             elif out in ('false\n', 'false\r\n'):
                 ans = False
             else:
-                raise Exception(("Failed to test XUL condition %r;"
-                                 + " output was %r, stderr was %r")
-                                 % (cond, out, err))
+                raise Exception("Failed to test XUL condition {!r};"
+                                " output was {!r}, stderr was {!r}".format(
+                                    cond, out, err))
             self.cache[cond] = ans
         return ans
 
@@ -148,7 +153,8 @@ def _parse_one(testcase, xul_tester):
                 testcase.expect = testcase.enable = False
             pos += 1
         else:
-            print('warning: invalid manifest line element "%s"'%parts[pos])
+            print('warning: invalid manifest line element "{}"'.format(
+                parts[pos]))
             pos += 1
 
 def _build_manifest_script_entry(script_name, test):
@@ -208,8 +214,8 @@ def _emit_manifest_at(location, relative, test_list, depth):
 
     # If we have tests, we have to set the url-prefix so reftest can find them.
     if numTestFiles > 0:
-        manifest = (["url-prefix %sjsreftest.html?test=%s/" % ('../' * depth, relative)]
-                    + manifest)
+        manifest = ["url-prefix {}jsreftest.html?test={}/".format(
+            '../' * depth, relative)] + manifest
 
     fp = open(filename, 'w')
     try:
@@ -279,7 +285,8 @@ def _parse_external_manifest(filename, relpath):
                 continue
             matches = manifest_re.match(line)
             if not matches:
-                print('warning: unrecognized line in jstests.list: {0}'.format(line))
+                print('warning: unrecognized line in jstests.list:'
+                      ' {0}'.format(line))
                 continue
 
             path = os.path.normpath(os.path.join(relpath, matches.group(3)))
@@ -291,9 +298,11 @@ def _parse_external_manifest(filename, relpath):
                 assert(path.endswith('jstests.list'))
                 path = path[:-len('jstests.list')]
 
-            entries.append({'path': path, 'terms': matches.group(1), 'comment': comment.strip()})
+            entries.append({'path': path, 'terms': matches.group(1),
+                            'comment': comment.strip()})
 
-    # if one directory name is a prefix of another, we want the shorter one first
+    # if one directory name is a prefix of another, we want the shorter one
+    # first
     entries.sort(key=lambda x: x["path"])
     return entries
 
@@ -314,7 +323,7 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             testcase.comment = entry["comment"]
             _parse_one(testcase, xul_tester)
 
-def load(location, requested_paths, excluded_paths, xul_tester, reldir = ''):
+def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
     """
     Locates all tests by walking the filesystem starting at |location|.
     Uses xul_tester to evaluate any test conditions in the test header.
@@ -351,7 +360,8 @@ def load(location, requested_paths, excluded_paths, xul_tester, reldir = ''):
         fullpath = os.path.join(location, filename)
 
         # If any tests are requested by name, skip tests that do not match.
-        if requested_paths and not any(req in filename for req in requested_paths):
+        if requested_paths \
+           and not any(req in filename for req in requested_paths):
             continue
 
         # Skip excluded tests.
@@ -364,7 +374,8 @@ def load(location, requested_paths, excluded_paths, xul_tester, reldir = ''):
             continue
 
         testcase = TestCase(os.path.join(reldir, filename))
-        _apply_external_manifests(filename, testcase, externalManifestEntries, xul_tester)
+        _apply_external_manifests(filename, testcase, externalManifestEntries,
+                                  xul_tester)
         _parse_test_header(fullpath, testcase, xul_tester)
         tests.append(testcase)
     return tests

@@ -132,7 +132,6 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
@@ -227,6 +226,9 @@ protected:
     bool mIMESelectionChanged;
 
     InputContext mInputContext;
+
+    virtual nsresult NotifyIMEInternal(
+                         const IMENotification& aIMENotification) MOZ_OVERRIDE;
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);
