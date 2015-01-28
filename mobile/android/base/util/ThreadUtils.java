@@ -96,6 +96,14 @@ public final class ThreadUtils {
         sUiHandler.post(runnable);
     }
 
+    public static void postDelayedToUiThread(Runnable runnable, long timeout) {
+        sUiHandler.postDelayed(runnable, timeout);
+    }
+
+    public static void removeCallbacksFromUiThread(Runnable runnable) {
+        sUiHandler.removeCallbacks(runnable);
+    }
+
     public static Thread getBackgroundThread() {
         return sBackgroundThread;
     }

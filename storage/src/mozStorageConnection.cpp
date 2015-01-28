@@ -51,6 +51,19 @@
 PRLogModuleInfo* gStorageLog = nullptr;
 #endif
 
+// Checks that the protected code is running on the main-thread only if the
+// connection was also opened on it.
+#ifdef DEBUG
+#define CHECK_MAINTHREAD_ABUSE() \
+  do { \
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread(); \
+    NS_WARN_IF_FALSE(threadOpenedOn == mainThread || !NS_IsMainThread(), \
+               "Using Storage synchronous API on main-thread, but the connection was opened on another thread."); \
+  } while(0)
+#else
+#define CHECK_MAINTHREAD_ABUSE() do { /* Nothing */ } while(0)
+#endif
+
 namespace mozilla {
 namespace storage {
 
@@ -1422,6 +1435,7 @@ Connection::CreateAsyncStatement(const nsACString &aSQLStatement,
 NS_IMETHODIMP
 Connection::ExecuteSimpleSQL(const nsACString &aSQLStatement)
 {
+  CHECK_MAINTHREAD_ABUSE();
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
   int srv = executeSql(mDBConn, PromiseFlatCString(aSQLStatement).get());

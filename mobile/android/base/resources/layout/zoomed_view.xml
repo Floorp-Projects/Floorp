@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<org.mozilla.gecko.ZoomedView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/zoomed_view_container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentTop="true"
+    android:background="@android:color/white"
+    android:visibility="gone" >
+
+
+    <ImageView
+        android:id="@+id/zoomed_image_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#000000"
+        android:padding="1dip" />
+
+    <ImageView
+        android:id="@+id/dialog_close"
+        android:background="@drawable/close"
+        android:layout_height="20dp"
+        android:layout_width="20dp"
+        android:layout_gravity ="top|right" />
+
+</org.mozilla.gecko.ZoomedView>

@@ -393,6 +393,33 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::ZOOMEDVIEW: {
+        if (!mBrowserApp)
+            break;
+        int32_t tabId = curEvent->MetaState();
+        const nsTArray<nsIntPoint>& points = curEvent->Points();
+        float scaleFactor = (float) curEvent->X();
+        nsRefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
+        const auto& mBuffer = jni::Object::Ref::From(javaBuffer->GetObject());
+
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIBrowserTab> tab;
+        mBrowserApp->GetBrowserTab(tabId, getter_AddRefs(tab));
+        if (!tab) {
+            NS_ERROR("Can't find tab!");
+            break;
+        }
+        tab->GetWindow(getter_AddRefs(domWindow));
+        if (!domWindow) {
+            NS_ERROR("Can't find dom window!");
+            break;
+        }
+        NS_ASSERTION(points.Length() == 2, "ZoomedView event does not have enough coordinates");
+        nsIntRect r(points[0].x, points[0].y, points[1].x, points[1].y);
+        AndroidBridge::Bridge()->CaptureZoomedView(domWindow, r, mBuffer, scaleFactor);
+        break;
+    }
+
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
         if (curEvent->Characters().Length() == 0)
