@@ -114,7 +114,6 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
   hitEventLoop(function () {
     is(aElement.scrollTop, 0,
        aElementDescription + "'s scrollTop isn't 0");
-    synthesizeComposition({ type: "compositionstart" });
     var str = "Web \u958b\u767a\u8005\u306e\u7686\u3055\u3093\u306f\u3001" +
               "Firefox \u306b\u5b9f\u88c5\u3055\u308c\u3066\u3044\u308b HTML5" +
               " \u3084 CSS \u306e\u65b0\u6a5f\u80fd\u3092\u6d3b\u7528\u3059" +

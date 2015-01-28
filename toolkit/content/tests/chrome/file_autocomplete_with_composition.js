@@ -87,7 +87,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
@@ -128,7 +127,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("z", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
@@ -168,7 +166,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("l", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "l",
@@ -226,7 +223,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
         synthesizeKey("VK_LEFT", { shiftKey: true }, aWindow);
         synthesizeKey("VK_LEFT", { shiftKey: true }, aWindow);
         synthesizeKey("z", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
@@ -289,7 +285,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
@@ -352,7 +347,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
@@ -418,7 +412,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("z", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
@@ -481,7 +474,6 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: true,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",

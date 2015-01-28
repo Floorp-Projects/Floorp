@@ -1236,9 +1236,6 @@ function runEditorFlagChangeTests()
     editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;
 
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input characters
   synthesizeCompositionChange(
     { "composition":
