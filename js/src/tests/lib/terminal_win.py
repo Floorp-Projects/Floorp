@@ -15,27 +15,27 @@ SHORT = c_short
 WORD = c_ushort
 
 class COORD(Structure):
-  """struct in wincon.h."""
-  _fields_ = [
-    ("X", SHORT),
-    ("Y", SHORT)]
+    """struct in wincon.h."""
+    _fields_ = [
+        ("X", SHORT),
+        ("Y", SHORT)]
 
 class SMALL_RECT(Structure):
-  """struct in wincon.h."""
-  _fields_ = [
-    ("Left", SHORT),
-    ("Top", SHORT),
-    ("Right", SHORT),
-    ("Bottom", SHORT)]
+    """struct in wincon.h."""
+    _fields_ = [
+        ("Left", SHORT),
+        ("Top", SHORT),
+        ("Right", SHORT),
+        ("Bottom", SHORT)]
 
 class CONSOLE_SCREEN_BUFFER_INFO(Structure):
-  """struct in wincon.h."""
-  _fields_ = [
-    ("dwSize", COORD),
-    ("dwCursorPosition", COORD),
-    ("wAttributes", WORD),
-    ("srWindow", SMALL_RECT),
-    ("dwMaximumWindowSize", COORD)]
+    """struct in wincon.h."""
+    _fields_ = [
+        ("dwSize", COORD),
+        ("dwCursorPosition", COORD),
+        ("wAttributes", WORD),
+        ("srWindow", SMALL_RECT),
+        ("dwMaximumWindowSize", COORD)]
 
 # winbase.h
 STD_INPUT_HANDLE = -10
@@ -68,9 +68,9 @@ SetConsoleTextAttribute = windll.kernel32.SetConsoleTextAttribute
 GetConsoleScreenBufferInfo = windll.kernel32.GetConsoleScreenBufferInfo
 
 def get_text_attr():
-  csbi = CONSOLE_SCREEN_BUFFER_INFO()
-  GetConsoleScreenBufferInfo(stdout_handle, byref(csbi))
-  return csbi.wAttributes
+    csbi = CONSOLE_SCREEN_BUFFER_INFO()
+    GetConsoleScreenBufferInfo(stdout_handle, byref(csbi))
+    return csbi.wAttributes
 
 DEFAULT_COLORS = get_text_attr()
 

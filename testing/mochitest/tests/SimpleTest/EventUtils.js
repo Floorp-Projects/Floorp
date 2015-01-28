@@ -29,6 +29,11 @@ window.__defineGetter__('_EU_Ci', function() {
   return c.value && !c.writable ? Components.interfaces : SpecialPowers.Ci;
 });
 
+window.__defineGetter__('_EU_Cc', function() {
+  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+  return c.value && !c.writable ? Components.classes : SpecialPowers.Cc;
+});
+
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -860,11 +865,37 @@ function _getDOMWindowUtils(aWindow)
                                getInterface(_EU_Ci.nsIDOMWindowUtils);
 }
 
-// Must be synchronized with nsICompositionStringSynthesizer.
-const COMPOSITION_ATTR_RAWINPUT              = 0x02;
-const COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
-const COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
-const COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
+const COMPOSITION_ATTR_RAW_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE;
+const COMPOSITION_ATTR_SELECTED_RAW_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_RAW_CLAUSE;
+const COMPOSITION_ATTR_CONVERTED_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_CONVERTED_CLAUSE;
+const COMPOSITION_ATTR_SELECTED_CLAUSE =
+  _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE;
+
+var TIPMap = new WeakMap();
+
+function _getTIP(aWindow, aCallback)
+{
+  if (!aWindow) {
+    aWindow = window;
+  }
+  var tip;
+  if (TIPMap.has(aWindow)) {
+    tip = TIPMap.get(aWindow);
+  } else {
+    tip =
+      _EU_Cc["@mozilla.org/text-input-processor;1"].
+        createInstance(_EU_Ci.nsITextInputProcessor);
+    TIPMap.set(aWindow, tip);
+  }
+  if (!tip.initForTests(aWindow, aCallback)) {
+    tip = null;
+    TIPMap.delete(aWindow);
+  }
+  return tip;
+}
 
 /**
  * Synthesize a composition event.
@@ -879,16 +910,25 @@ const COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
  *                             ignored if the event type is "compositionstart"
  *                             or "compositioncommitasis".
  * @param aWindow              Optional (If null, current |window| will be used)
+ * @param aCallback            Optional (If non-null, use the callback for
+ *                             receiving notifications to IME)
  */
-function synthesizeComposition(aEvent, aWindow)
+function synthesizeComposition(aEvent, aWindow, aCallback)
 {
-  var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return;
+  var TIP = _getTIP(aWindow, aCallback);
+  if (!TIP) {
+    return false;
   }
-
-  utils.sendCompositionEvent(aEvent.type, aEvent.data ? aEvent.data : "",
-                             aEvent.locale ? aEvent.locale : "");
+  switch (aEvent.type) {
+    case "compositionstart":
+      return TIP.startComposition();
+    case "compositioncommitasis":
+      return TIP.commitComposition();
+    case "compositioncommit":
+      return TIP.commitComposition(aEvent.data);
+    default:
+      return false;
+  }
 }
 /**
  * Synthesize a compositionchange event which causes a DOM text event and
@@ -930,11 +970,13 @@ function synthesizeComposition(aEvent, aWindow)
  *                 caret, therefore, you should always set 0 now.
  *
  * @param aWindow  Optional (If null, current |window| will be used)
+ * @param aCallback     Optional (If non-null, use the callback for receiving
+ *                      notifications to IME)
  */
-function synthesizeCompositionChange(aEvent, aWindow)
+function synthesizeCompositionChange(aEvent, aWindow, aCallback)
 {
-  var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
+  var TIP = _getTIP(aWindow, aCallback);
+  if (!TIP) {
     return;
   }
 
@@ -943,17 +985,17 @@ function synthesizeCompositionChange(aEvent, aWindow)
     return;
   }
 
-  var compositionString = utils.createCompositionStringSynthesizer();
-  compositionString.setString(aEvent.composition.string);
+  TIP.setPendingCompositionString(aEvent.composition.string);
   if (aEvent.composition.clauses[0].length) {
     for (var i = 0; i < aEvent.composition.clauses.length; i++) {
       switch (aEvent.composition.clauses[i].attr) {
-        case compositionString.ATTR_RAWINPUT:
-        case compositionString.ATTR_SELECTEDRAWTEXT:
-        case compositionString.ATTR_CONVERTEDTEXT:
-        case compositionString.ATTR_SELECTEDCONVERTEDTEXT:
-          compositionString.appendClause(aEvent.composition.clauses[i].length,
-                                         aEvent.composition.clauses[i].attr);
+        case TIP.ATTR_RAW_CLAUSE:
+        case TIP.ATTR_SELECTED_RAW_CLAUSE:
+        case TIP.ATTR_CONVERTED_CLAUSE:
+        case TIP.ATTR_SELECTED_CLAUSE:
+          TIP.appendClauseToPendingComposition(
+                aEvent.composition.clauses[i].length,
+                aEvent.composition.clauses[i].attr);
           break;
         case 0:
           // Ignore dummy clause for the argument.
@@ -966,10 +1008,10 @@ function synthesizeCompositionChange(aEvent, aWindow)
   }
 
   if (aEvent.caret) {
-    compositionString.setCaret(aEvent.caret.start, aEvent.caret.length);
+    TIP.setCaretInPendingComposition(aEvent.caret.start);
   }
 
-  compositionString.dispatchEvent();
+  TIP.flushPendingComposition();
 }
 
 // Must be synchronized with nsIDOMWindowUtils.

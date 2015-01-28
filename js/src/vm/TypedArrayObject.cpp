@@ -707,14 +707,9 @@ FinishTypedArrayInit(JSContext *cx, HandleObject ctor, HandleObject proto)
     if (!DefineProperty(cx, proto, cx->names().values, funValue, nullptr, nullptr, 0))
         return false;
 
-#ifdef JS_HAS_SYMBOLS
     RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
     if (!DefineProperty(cx, proto, iteratorId, funValue, nullptr, nullptr, 0))
         return false;
-#else
-    if (!DefineProperty(cx, proto, cx->names().std_iterator, funValue, nullptr, nullptr, 0))
-        return false;
-#endif
 
     return true;
 }
@@ -810,6 +805,7 @@ TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("fill", "TypedArrayFill", 3, 0),
     JS_SELF_HOSTED_FN("find", "TypedArrayFind", 2, 0),
     JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 2, 0),
+    JS_SELF_HOSTED_FN("forEach", "TypedArrayForEach", 2, 0),
     JS_SELF_HOSTED_FN("indexOf", "TypedArrayIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("join", "TypedArrayJoin", 1, 0),
     JS_SELF_HOSTED_FN("lastIndexOf", "TypedArrayLastIndexOf", 2, 0),

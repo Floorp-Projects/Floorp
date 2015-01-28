@@ -5537,11 +5537,12 @@ class MHypot
         return true;
     }
 
-    bool canClone() const {
+    bool canClone() const MOZ_OVERRIDE {
         return true;
     }
 
-    MInstruction *clone(TempAllocator &alloc, const MDefinitionVector &inputs) const {
+    MInstruction *clone(TempAllocator &alloc,
+                        const MDefinitionVector &inputs) const MOZ_OVERRIDE {
        return MHypot::New(alloc, inputs);
     }
 };
@@ -9382,13 +9383,13 @@ class MGetPropertyPolymorphic
 // one of the shapes observed by the baseline IC, else bails out.
 class MSetPropertyPolymorphic
   : public MBinaryInstruction,
-    public SingleObjectPolicy::Data
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1> >::Data
 {
     struct Entry {
         // The shape to guard against.
         Shape *objShape;
 
-        // The property to laod.
+        // The property to load.
         Shape *shape;
     };
 

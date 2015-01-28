@@ -112,6 +112,7 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
                                        bool aScrollViewStop,
                                        bool aIsKeyboardSelect,
                                        bool aVisual,
+                                       bool aExtend,
                                        EWordMovementType aWordMovementType)
   : mAmount(aAmount)
   , mDirection(aDirection)
@@ -122,6 +123,7 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
   , mScrollViewStop(aScrollViewStop)
   , mIsKeyboardSelect(aIsKeyboardSelect)
   , mVisual(aVisual)
+  , mExtend(aExtend)
   , mResultContent()
   , mResultFrame(nullptr)
   , mContentOffset(0)
@@ -852,7 +854,8 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredPos,
-                         true, mLimiter != nullptr, true, visualMovement);
+                         true, mLimiter != nullptr, true, visualMovement,
+                         aContinueSelection);
 
   nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
@@ -1139,10 +1142,11 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
 
   nsIFrame *newFrame;
   int32_t offset;
-  bool jumpedLine;
+  bool jumpedLine, movedOverNonSelectableText;
   nsresult rv = currentFrame->GetFrameFromDirection(direction, false,
                                                     aJumpLines, true,
-                                                    &newFrame, &offset, &jumpedLine);
+                                                    &newFrame, &offset, &jumpedLine,
+                                                    &movedOverNonSelectableText);
   if (NS_FAILED(rv))
     newFrame = nullptr;
 
@@ -1444,7 +1448,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
       // first move one character forward.
       nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
                                  nsPoint(0, 0), false, mLimiter != nullptr,
-                                 false, false);
+                                 false, false, false);
       if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
         frame = charPos.mResultFrame;
         offset = charPos.mContentOffset;
@@ -1452,7 +1456,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
     }
 
     nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0),
-                           false, mLimiter != nullptr, false, false);
+                           false, mLimiter != nullptr, false, false, false);
 
     if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
       offsets.content = pos.mResultContent;

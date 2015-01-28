@@ -17,42 +17,10 @@ function certFromFile(filename) {
   return certdb.constructX509(der, der.length);
 }
 
-function load_cert(cert_name, trust_string) {
-  let cert_filename = cert_name + ".der";
-  addCertFromFile(certdb, "test_keysize/" + cert_filename, trust_string);
-  return certFromFile(cert_filename);
-}
-
-function check_cert_err_generic(cert, expected_error, usage) {
-  do_print("cert cn=" + cert.commonName);
-  do_print("cert issuer cn=" + cert.issuerCommonName);
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage,
-                                   NO_FLAGS, verifiedChain, hasEVPolicy);
-  equal(error, expected_error);
-}
-
-function check_cert_err(cert, expected_error) {
-  check_cert_err_generic(cert, expected_error, certificateUsageSSLServer)
-}
-
-function check_ok(cert) {
-  return check_cert_err(cert, 0);
-}
-
-function check_ok_ca(cert) {
-  return check_cert_err_generic(cert, 0, certificateUsageSSLCA);
-}
-
-function check_fail(cert) {
-  return check_cert_err(cert, MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
-}
-
-function check_fail_ca(cert) {
-  return check_cert_err_generic(cert,
-                                MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
-                                certificateUsageSSLCA);
+function loadCert(certName, trustString) {
+  let certFilename = certName + ".der";
+  addCertFromFile(certdb, "test_keysize/" + certFilename, trustString);
+  return certFromFile(certFilename);
 }
 
 /**
@@ -77,9 +45,9 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
   let intFullName = intName + "-" + rootName;
   let eeFullName = eeName + "-" + intName + "-" + rootName;
 
-  load_cert(rootName, "CTu,CTu,CTu");
-  load_cert(intFullName, ",,");
-  let eeCert = certFromFile(eeFullName + ".der")
+  loadCert(rootName, "CTu,CTu,CTu");
+  loadCert(intFullName, ",,");
+  let eeCert = certFromFile(eeFullName + ".der");
 
   do_print("cert cn=" + eeCert.commonName);
   do_print("cert o=" + eeCert.organization);
@@ -89,37 +57,36 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
                         certificateUsageSSLServer);
 }
 
-function checkForKeyType(keyType, inadequateKeySize, adequateKeySize) {
-  let rootOKName = "root_" + keyType + "_" + adequateKeySize;
-  let rootNotOKName = "root_" + keyType + "_" + inadequateKeySize;
-  let intOKName = "int_" + keyType + "_" + adequateKeySize;
-  let intNotOKName = "int_" + keyType + "_" + inadequateKeySize;
-  let eeOKName = "ee_" + keyType + "_" + adequateKeySize;
-  let eeNotOKName = "ee_" + keyType + "_" + inadequateKeySize;
-
+/**
+ * Tests various RSA chains.
+ *
+ * @param {Number} inadequateKeySize
+ * @param {Number} adequateKeySize
+ */
+function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // Chain with certs that have adequate sizes for DV
-  let intFullName = intOKName + "-" + rootOKName;
-  let eeFullName = eeOKName + "-" + intOKName + "-" + rootOKName;
-  check_ok_ca(load_cert(rootOKName, "CTu,CTu,CTu"));
-  check_ok_ca(load_cert(intFullName, ",,"));
-  check_ok(certFromFile(eeFullName + ".der"));
+  checkChain("rsa", adequateKeySize,
+             "rsa", adequateKeySize,
+             "rsa", adequateKeySize,
+             0);
 
   // Chain with a root cert that has an inadequate size for DV
-  intFullName = intOKName + "-" + rootNotOKName;
-  eeFullName = eeOKName + "-" + intOKName + "-" + rootNotOKName;
-  check_fail_ca(load_cert(rootNotOKName, "CTu,CTu,CTu"));
-  check_fail_ca(load_cert(intFullName, ",,"));
-  check_fail(certFromFile(eeFullName + ".der"));
+  checkChain("rsa", inadequateKeySize,
+             "rsa", adequateKeySize,
+             "rsa", adequateKeySize,
+             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 
   // Chain with an intermediate cert that has an inadequate size for DV
-  intFullName = intNotOKName + "-" + rootOKName;
-  eeFullName = eeOKName + "-" + intNotOKName + "-" + rootOKName;
-  check_fail_ca(load_cert(intFullName, ",,"));
-  check_fail(certFromFile(eeFullName + ".der"));
+  checkChain("rsa", adequateKeySize,
+             "rsa", inadequateKeySize,
+             "rsa", adequateKeySize,
+             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 
   // Chain with an end entity cert that has an inadequate size for DV
-  eeFullName = eeNotOKName + "-" + intOKName + "-" + rootOKName;
-  check_fail(certFromFile(eeFullName + ".der"));
+  checkChain("rsa", adequateKeySize,
+             "rsa", adequateKeySize,
+             "rsa", inadequateKeySize,
+             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 }
 
 function checkECCChains() {
@@ -165,7 +132,7 @@ function checkCombinationChains() {
 }
 
 function run_test() {
-  checkForKeyType("rsa", 1016, 1024);
+  checkRSAChains(1016, 1024);
   checkECCChains();
   checkCombinationChains();
 

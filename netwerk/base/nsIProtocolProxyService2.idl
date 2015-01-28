@@ -19,10 +19,11 @@ interface nsIProtocolProxyService2 : nsIProtocolProxyService
   void reloadPAC();
 
     /**
-     * This method is identical to asyncResolve() except it may execute the
-     * callback function immediately (i.e from the stack of asyncResolve2()) if
-     * it is immediately ready to run. The nsICancelable return value will be
-     * null in that case.
+     * This method is identical to asyncResolve() except:
+     *  - it only accepts an nsIChannel, not an nsIURI;
+     *  - it may execute the callback function immediately (i.e from the stack
+     *    of asyncResolve2()) if it is immediately ready to run.
+     *    The nsICancelable return value will be null in that case.
      */
   nsICancelable asyncResolve2(in nsIChannel aChannel, in unsigned long aFlags,
                               in nsIProtocolProxyCallback aCallback);

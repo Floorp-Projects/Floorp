@@ -3,7 +3,7 @@
 load(libdir + "iteration.js");
 
 var m = Map();
-var it = m[std_iterator]();
+var it = m[Symbol.iterator]();
 assertIteratorDone(it, undefined);  // close the iterator
 m.clear();
 m.set("a", 1);
