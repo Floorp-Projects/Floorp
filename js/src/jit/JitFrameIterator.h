@@ -279,7 +279,8 @@ class JitProfilingFrameIterator
     inline JitFrameLayout *framePtr();
     inline JSScript *frameScript();
     bool tryInitWithPC(void *pc);
-    bool tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt);
+    bool tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt,
+                          bool forLastCallSite);
 
   public:
     JitProfilingFrameIterator(JSRuntime *rt,
