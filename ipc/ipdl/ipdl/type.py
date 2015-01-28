@@ -218,6 +218,12 @@ class IPDLType(Type):
             lesser.priorityRange[1] > greater.priorityRange[1]):
             return False
 
+        # Protocols that use intr semantics are not allowed to use
+        # message priorities.
+        if (greater.isInterrupt() and
+            lesser.priorityRange != (NORMAL_PRIORITY, NORMAL_PRIORITY)):
+            return False
+
         if lesser.isAsync():
             return True
         elif lesser.isSync() and not greater.isAsync():

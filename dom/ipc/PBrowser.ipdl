@@ -85,7 +85,7 @@ struct FrameScriptInfo
     bool runInGlobalScope;
 };
 
-prio(normal upto urgent) intr protocol PBrowser
+prio(normal upto urgent) sync protocol PBrowser
 {
     manager PContent or PContentBridge;
 
