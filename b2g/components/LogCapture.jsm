@@ -4,15 +4,23 @@
 /* jshint moz: true */
 /* global Uint8Array, Components, dump */
 
-'use strict';
+"use strict";
 
-this.EXPORTED_SYMBOLS = ['LogCapture'];
+const Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+
+this.EXPORTED_SYMBOLS = ["LogCapture"];
 
 const SYSTEM_PROPERTY_KEY_MAX = 32;
 const SYSTEM_PROPERTY_VALUE_MAX = 92;
 
 function debug(msg) {
-  dump('LogCapture.jsm: ' + msg + '\n');
+  dump("LogCapture.jsm: " + msg + "\n");
 }
 
 let LogCapture = {
@@ -24,11 +32,11 @@ let LogCapture = {
 
   load: function() {
     // load in everything on first use
-    Components.utils.import('resource://gre/modules/ctypes.jsm', this);
+    Cu.import("resource://gre/modules/ctypes.jsm", this);
 
-    this.libc = this.ctypes.open(this.ctypes.libraryName('c'));
+    this.libc = this.ctypes.open(this.ctypes.libraryName("c"));
 
-    this.read = this.libc.declare('read',
+    this.read = this.libc.declare("read",
       this.ctypes.default_abi,
       this.ctypes.int,       // bytes read (out)
       this.ctypes.int,       // file descriptor (in)
@@ -36,17 +44,22 @@ let LogCapture = {
       this.ctypes.size_t     // size_t size of buffer (in)
     );
 
-    this.open = this.libc.declare('open',
+    this.open = this.libc.declare("open",
       this.ctypes.default_abi,
       this.ctypes.int,      // file descriptor (returned)
       this.ctypes.char.ptr, // path
       this.ctypes.int       // flags
     );
 
-    this.close = this.libc.declare('close',
+    this.close = this.libc.declare("close",
       this.ctypes.default_abi,
       this.ctypes.int, // error code (returned)
       this.ctypes.int  // file descriptor
+    );
+
+    this.getpid = this.libc.declare("getpid",
+      this.ctypes.default_abi,
+      this.ctypes.int  // PID
     );
 
     this.property_find_nth =
@@ -153,6 +166,26 @@ let LogCapture = {
     }
 
     return propertyDict;
+  },
+
+  /**
+   * Dumping about:memory to a file in /data/local/tmp/, returning a Promise.
+   * Will be resolved with the dumped file name.
+   */
+  readAboutMemory: function() {
+    this.ensureLoaded();
+    let deferred = Promise.defer();
+
+    // Perform the dump
+    let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
+                    .getService(Ci.nsIMemoryInfoDumper);
+
+    let file = "/data/local/tmp/logshake-about_memory-" + this.getpid() + ".json.gz";
+    dumper.dumpMemoryReportsToNamedFile(file, function() {
+      deferred.resolve(file);
+    }, null, false);
+
+    return deferred.promise;
   }
 };
 

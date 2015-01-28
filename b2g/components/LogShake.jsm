@@ -21,32 +21,32 @@
 /* global Services, Components, dump, LogCapture, LogParser,
    OS, Promise, volumeService, XPCOMUtils, SystemAppProxy */
 
-'use strict';
+"use strict";
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, 'LogCapture', 'resource://gre/modules/LogCapture.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'LogParser', 'resource://gre/modules/LogParser.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'OS', 'resource://gre/modules/osfile.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Promise', 'resource://gre/modules/Promise.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Services', 'resource://gre/modules/Services.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'SystemAppProxy', 'resource://gre/modules/SystemAppProxy.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, "LogCapture", "resource://gre/modules/LogCapture.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LogParser", "resource://gre/modules/LogParser.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy", "resource://gre/modules/SystemAppProxy.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, 'powerManagerService',
-                                   '@mozilla.org/power/powermanagerservice;1',
-                                   'nsIPowerManagerService');
+XPCOMUtils.defineLazyServiceGetter(this, "powerManagerService",
+                                   "@mozilla.org/power/powermanagerservice;1",
+                                   "nsIPowerManagerService");
 
-XPCOMUtils.defineLazyServiceGetter(this, 'volumeService',
-                                   '@mozilla.org/telephony/volume-service;1',
-                                   'nsIVolumeService');
+XPCOMUtils.defineLazyServiceGetter(this, "volumeService",
+                                   "@mozilla.org/telephony/volume-service;1",
+                                   "nsIVolumeService");
 
-this.EXPORTED_SYMBOLS = ['LogShake'];
+this.EXPORTED_SYMBOLS = ["LogShake"];
 
 function debug(msg) {
-  dump('LogShake.jsm: '+msg+'\n');
+  dump("LogShake.jsm: "+msg+"\n");
 }
 
 /**
@@ -54,11 +54,11 @@ function debug(msg) {
  * shake
  */
 const EXCITEMENT_THRESHOLD = 500;
-const DEVICE_MOTION_EVENT = 'devicemotion';
-const SCREEN_CHANGE_EVENT = 'screenchange';
-const CAPTURE_LOGS_START_EVENT = 'capture-logs-start';
-const CAPTURE_LOGS_ERROR_EVENT = 'capture-logs-error';
-const CAPTURE_LOGS_SUCCESS_EVENT = 'capture-logs-success';
+const DEVICE_MOTION_EVENT = "devicemotion";
+const SCREEN_CHANGE_EVENT = "screenchange";
+const CAPTURE_LOGS_START_EVENT = "capture-logs-start";
+const CAPTURE_LOGS_ERROR_EVENT = "capture-logs-error";
+const CAPTURE_LOGS_SUCCESS_EVENT = "capture-logs-success";
 
 let LogShake = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
@@ -79,17 +79,18 @@ let LogShake = {
    * Map of files which have log-type information to their parsers
    */
   LOGS_WITH_PARSERS: {
-    '/dev/log/main': LogParser.prettyPrintLogArray,
-    '/dev/log/system': LogParser.prettyPrintLogArray,
-    '/dev/log/radio': LogParser.prettyPrintLogArray,
-    '/dev/log/events': LogParser.prettyPrintLogArray,
-    '/proc/cmdline': LogParser.prettyPrintArray,
-    '/proc/kmsg': LogParser.prettyPrintArray,
-    '/proc/meminfo': LogParser.prettyPrintArray,
-    '/proc/uptime': LogParser.prettyPrintArray,
-    '/proc/version': LogParser.prettyPrintArray,
-    '/proc/vmallocinfo': LogParser.prettyPrintArray,
-    '/proc/vmstat': LogParser.prettyPrintArray
+    "/dev/log/main": LogParser.prettyPrintLogArray,
+    "/dev/log/system": LogParser.prettyPrintLogArray,
+    "/dev/log/radio": LogParser.prettyPrintLogArray,
+    "/dev/log/events": LogParser.prettyPrintLogArray,
+    "/proc/cmdline": LogParser.prettyPrintArray,
+    "/proc/kmsg": LogParser.prettyPrintArray,
+    "/proc/meminfo": LogParser.prettyPrintArray,
+    "/proc/uptime": LogParser.prettyPrintArray,
+    "/proc/version": LogParser.prettyPrintArray,
+    "/proc/vmallocinfo": LogParser.prettyPrintArray,
+    "/proc/vmstat": LogParser.prettyPrintArray,
+    "/system/b2g/application.ini": LogParser.prettyPrintArray
   },
 
   /**
@@ -109,7 +110,7 @@ let LogShake = {
 
     SystemAppProxy.addEventListener(SCREEN_CHANGE_EVENT, this, false);
 
-    Services.obs.addObserver(this, 'xpcom-shutdown', false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   /**
@@ -134,7 +135,7 @@ let LogShake = {
    * Handle an observation from Services.obs
    */
   observe: function(subject, topic) {
-    if (topic === 'xpcom-shutdown') {
+    if (topic === "xpcom-shutdown") {
       this.uninit();
     }
   },
@@ -152,8 +153,8 @@ let LogShake = {
   },
 
   /**
-   * Handle a motion event, keeping track of 'excitement', the magnitude
-   * of the device's acceleration.
+   * Handle a motion event, keeping track of "excitement", the magnitude
+   * of the device"s acceleration.
    */
   handleDeviceMotionEvent: function(event) {
     // There is a lag between disabling the event listener and event arrival
@@ -217,11 +218,33 @@ let LogShake = {
       Cu.reportError("Unable to get device properties: " + ex);
     }
 
+    // Let Gecko perfom the dump to a file, and just collect it
+    try {
+      LogCapture.readAboutMemory().then(aboutMemory => {
+        let file = OS.Path.basename(aboutMemory);
+        let logArray;
+        try {
+          logArray = LogCapture.readLogFile(aboutMemory);
+          if (!logArray) {
+            debug("LogCapture.readLogFile() returned nothing about:memory ");
+          }
+          // We need to remove the dumped file, now that we have it in memory
+          OS.File.remove(aboutMemory);
+        } catch (ex) {
+          Cu.reportError("Unable to handle about:memory dump: " + ex);
+        }
+        logArrays[file] = LogParser.prettyPrintArray(logArray);
+      });
+    } catch (ex) {
+      Cu.reportError("Unable to get about:memory dump: " + ex);
+    }
+
     for (let loc in this.LOGS_WITH_PARSERS) {
       let logArray;
       try {
         logArray = LogCapture.readLogFile(loc);
         if (!logArray) {
+          debug("LogCapture.readLogFile() returned nothing for: " + loc);
           continue;
         }
       } catch (ex) {
@@ -245,32 +268,40 @@ let LogShake = {
   uninit: function() {
     this.stopDeviceMotionListener();
     SystemAppProxy.removeEventListener(SCREEN_CHANGE_EVENT, this, false);
-    Services.obs.removeObserver(this, 'xpcom-shutdown');
+    Services.obs.removeObserver(this, "xpcom-shutdown");
   }
 };
 
 function getLogFilename(logLocation) {
   // sanitize the log location
-  let logName = logLocation.replace(/\//g, '-');
-  if (logName[0] === '-') {
+  let logName = logLocation.replace(/\//g, "-");
+  if (logName[0] === "-") {
     logName = logName.substring(1);
   }
-  return logName + '.log';
+
+  // If no extension is provided, default to forcing .log
+  let extension = ".log";
+  let logLocationExt = logLocation.split(".");
+  if (logLocationExt.length > 1) {
+    // otherwise, just append nothing
+    extension = "";
+  }
+
+  return logName + extension;
 }
 
 function getSdcardPrefix() {
-  return volumeService.getVolumeByName('sdcard').mountPoint;
+  return volumeService.getVolumeByName("sdcard").mountPoint;
 }
 
 function getLogDirectoryRoot() {
-  return 'logs';
+  return "logs";
 }
 
 function getLogDirectory() {
   let d = new Date();
   d = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
-  let timestamp = d.toISOString().slice(0, -5).replace(/[:T]/g, '-');
-  // return directory name of format 'logs/timestamp/'
+  let timestamp = d.toISOString().slice(0, -5).replace(/[:T]/g, "-");
   return timestamp;
 }
 
@@ -281,7 +312,7 @@ function saveLogs(logArrays) {
   if (!logArrays || Object.keys(logArrays).length === 0) {
     return Promise.resolve({
       logFilenames: [],
-      logPrefix: ''
+      logPrefix: ""
     });
   }
 
@@ -296,19 +327,24 @@ function saveLogs(logArrays) {
     return Promise.reject(e);
   }
 
-  debug('making a directory all the way from '+sdcardPrefix+' to '+(sdcardPrefix + '/' + dirNameRoot + '/' + dirName));
+  debug("making a directory all the way from " + sdcardPrefix + " to " + (sdcardPrefix + "/" + dirNameRoot + "/" + dirName) );
   let logsRoot = OS.Path.join(sdcardPrefix, dirNameRoot);
   return OS.File.makeDir(logsRoot, {from: sdcardPrefix}).then(
     function() {
+      debug("First OS.File.makeDir done");
       let logsDir = OS.Path.join(logsRoot, dirName);
+      debug("Creating " + logsDir);
       return OS.File.makeDir(logsDir, {ignoreExisting: false}).then(
         function() {
+          debug("Created: " + logsDir);
           // Now the directory is guaranteed to exist, save the logs
           let logFilenames = [];
           let saveRequests = [];
 
+          debug("Will now traverse logArrays: " + logArrays.length);
+
           for (let logLocation in logArrays) {
-            debug('requesting save of ' + logLocation);
+            debug("requesting save of " + logLocation);
             let logArray = logArrays[logLocation];
             // The filename represents the relative path within the SD card, not the
             // absolute path because Gaia will refer to it using the DeviceStorage
@@ -321,13 +357,22 @@ function saveLogs(logArrays) {
 
           return Promise.all(saveRequests).then(
             function() {
-              debug('returning logfilenames: '+logFilenames.toSource());
+              debug("returning logfilenames: "+logFilenames.toSource());
               return {
                 logFilenames: logFilenames,
                 logPrefix: OS.Path.join(dirNameRoot, dirName)
               };
+            }, function(err) {
+              debug("Error at some save request: " + err);
+              return Promise.reject(err);
             });
+        }, function(err) {
+          debug("Error at OS.File.makeDir for " + logsDir + ": " + err);
+          return Promise.reject(err);
         });
+    }, function(err) {
+      debug("Error at first OS.File.makeDir: " + err);
+      return Promise.reject(err);
     });
 }
 

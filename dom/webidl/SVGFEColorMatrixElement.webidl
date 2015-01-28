@@ -19,8 +19,11 @@ interface SVGFEColorMatrixElement : SVGElement {
   const unsigned short SVG_FECOLORMATRIX_TYPE_HUEROTATE = 3;
   const unsigned short SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA = 4;
 
+  [Constant]
   readonly attribute SVGAnimatedString in1;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration type;
+  [Constant]
   readonly attribute SVGAnimatedNumberList values;
 };
 

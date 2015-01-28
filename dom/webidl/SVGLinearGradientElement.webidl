@@ -11,8 +11,12 @@
  */
 
 interface SVGLinearGradientElement : SVGGradientElement {
+  [Constant]
   readonly attribute SVGAnimatedLength x1;
+  [Constant]
   readonly attribute SVGAnimatedLength y1;
+  [Constant]
   readonly attribute SVGAnimatedLength x2;
+  [Constant]
   readonly attribute SVGAnimatedLength y2;
 };
