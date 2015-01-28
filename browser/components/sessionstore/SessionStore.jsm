@@ -615,7 +615,7 @@ let SessionStoreInternal = {
     let tab = win.gBrowser.getTabForBrowser(browser);
 
     // Ensure we receive only specific messages from <xul:browser>s that
-    // have no tab assigned, e.g. the ones that preload aobut:newtab pages.
+    // have no tab assigned, e.g. the ones that preload about:newtab pages.
     if (!tab && !FMM_NOTAB_MESSAGES.has(aMessage.name)) {
       throw new Error(`received unexpected message '${aMessage.name}' ` +
                       `from a browser that has no tab`);
@@ -688,10 +688,7 @@ let SessionStoreInternal = {
             Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
           }
 
-          let tab = browser.__SS_restore_tab;
-
           delete browser.__SS_restore_data;
-          delete browser.__SS_restore_tab;
           delete browser.__SS_data;
 
           SessionStoreInternal._resetLocalTabRestoringState(tab);
@@ -702,7 +699,7 @@ let SessionStoreInternal = {
         break;
       case "SessionStore:reloadPendingTab":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          if (tab && browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+          if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
             this.restoreTabContent(tab);
           }
         }
@@ -2728,8 +2725,6 @@ let SessionStoreInternal = {
     } else {
       browser.__SS_restore_data = {};
     }
-
-    browser.__SS_restore_tab = aTab;
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
       {loadArguments: aLoadArguments});
