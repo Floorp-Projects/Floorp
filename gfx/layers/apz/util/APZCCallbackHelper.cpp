@@ -111,8 +111,9 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const CSSPoint& aPoint, bool& aSuccess
  * requested in |aMetrics|.
  * The scroll offset in |aMetrics| is updated to reflect the actual scroll
  * position.
- * The displayport stored in |aMetrics| is updated to reflect any difference
- * between the requested and actual scroll positions.
+ * The displayport stored in |aMetrics| and the callback-transform stored on
+ * the content are updated to reflect any difference between the requested
+ * and actual scroll positions.
  */
 static void
 ScrollFrame(nsIContent* aContent,
@@ -121,7 +122,8 @@ ScrollFrame(nsIContent* aContent,
   // Scroll the window to the desired spot
   nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
   bool scrollUpdated = false;
-  CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
+  CSSPoint apzScrollOffset = aMetrics.GetScrollOffset();
+  CSSPoint actualScrollOffset = ScrollFrameTo(sf, apzScrollOffset, scrollUpdated);
 
   if (scrollUpdated) {
     // Correct the display port due to the difference between mScrollOffset and the
@@ -138,6 +140,16 @@ ScrollFrame(nsIContent* aContent,
   }
 
   aMetrics.SetScrollOffset(actualScrollOffset);
+
+  // APZ transforms inputs assuming we applied the exact scroll offset it
+  // requested (|apzScrollOffset|). Since we may not have, record the difference
+  // between what APZ asked for and what we actually applied, and apply it to
+  // input events to compensate.
+  if (aContent) {
+    CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
+    aContent->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),
+                          nsINode::DeleteProperty<CSSPoint>);
+  }
 }
 
 static void
@@ -298,18 +310,6 @@ APZCCallbackHelper::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollI
     } else {
         r1->Run();
     }
-}
-
-void
-APZCCallbackHelper::UpdateCallbackTransform(const FrameMetrics& aApzcMetrics, const FrameMetrics& aActualMetrics)
-{
-    nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aApzcMetrics.GetScrollId());
-    if (!content) {
-        return;
-    }
-    CSSPoint scrollDelta = aApzcMetrics.GetScrollOffset() - aActualMetrics.GetScrollOffset();
-    content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),
-                         nsINode::DeleteProperty<CSSPoint>);
 }
 
 CSSPoint
