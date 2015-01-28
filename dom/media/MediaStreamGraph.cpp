@@ -2477,12 +2477,9 @@ void
 SourceMediaStream::EndTrack(TrackID aID)
 {
   MutexAutoLock lock(mMutex);
-  // ::EndAllTrackAndFinished() can end these before the sources call this
-  if (!mFinished) {
-    TrackData *track = FindDataForTrack(aID);
-    if (track) {
-      track->mCommands |= TRACK_END;
-    }
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    track->mCommands |= TRACK_END;
   }
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
