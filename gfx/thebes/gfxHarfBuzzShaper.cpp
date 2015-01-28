@@ -53,6 +53,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
       mUseFontGlyphWidths(false),
       mInitialized(false),
       mVerticalInitialized(false),
+      mLoadedLocaGlyf(false),
       mLocaLongOffsets(false)
 {
 }
@@ -346,54 +347,13 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
     }
 
     if (mVmtxTable) {
-        if (mLocaTable && mGlyfTable) {
-            // TrueType outlines: use glyph bbox + top sidebearing
-            uint32_t offset; // offset of glyph record in the 'glyf' table
-            uint32_t len;
-            const char* data = hb_blob_get_data(mLocaTable, &len);
-            if (mLocaLongOffsets) {
-                if ((aGlyph + 1) * sizeof(AutoSwap_PRUint32) > len) {
-                    *aY = 0;
-                    return;
-                }
-                const AutoSwap_PRUint32* offsets =
-                    reinterpret_cast<const AutoSwap_PRUint32*>(data);
-                offset = offsets[aGlyph];
-                if (offset == offsets[aGlyph + 1]) {
-                    // empty glyph
-                    *aY = 0;
-                    return;
-                }
-            } else {
-                if ((aGlyph + 1) * sizeof(AutoSwap_PRUint16) > len) {
-                    *aY = 0;
-                    return;
-                }
-                const AutoSwap_PRUint16* offsets =
-                    reinterpret_cast<const AutoSwap_PRUint16*>(data);
-                offset = uint16_t(offsets[aGlyph]);
-                if (offset == uint16_t(offsets[aGlyph + 1])) {
-                    // empty glyph
-                    *aY = 0;
-                    return;
-                }
-                offset *= 2;
-            }
-
-            struct Glyf { // we only need the bounding-box at the beginning
-                          // of the glyph record, not the actual outline data
-                AutoSwap_PRInt16 numberOfContours;
-                AutoSwap_PRInt16 xMin;
-                AutoSwap_PRInt16 yMin;
-                AutoSwap_PRInt16 xMax;
-                AutoSwap_PRInt16 yMax;
-            };
-            data = hb_blob_get_data(mGlyfTable, &len);
-            if (offset + sizeof(Glyf) > len) {
+        bool emptyGlyf;
+        const Glyf *glyf = FindGlyf(aGlyph, &emptyGlyf);
+        if (glyf) {
+            if (emptyGlyf) {
                 *aY = 0;
                 return;
             }
-            const Glyf* glyf = reinterpret_cast<const Glyf*>(data + offset);
 
             if (aGlyph >= uint32_t(mNumLongVMetrics)) {
                 aGlyph = mNumLongVMetrics - 1;
@@ -406,7 +366,8 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                                  int16_t(glyf->yMax)));
             return;
         } else {
-            // XXX TODO: CFF outlines - need to get glyph extents.
+            // XXX TODO: not a truetype font; need to get glyph extents
+            // via some other API?
             // For now, fall through to default code below.
         }
     }
@@ -429,6 +390,112 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
 
     NS_NOTREACHED("we shouldn't be here!");
     *aY = -FloatToFixed(GetFont()->GetAdjustedSize() / 2);
+}
+
+static hb_bool_t
+HBGetGlyphExtents(hb_font_t *font, void *font_data,
+                  hb_codepoint_t glyph,
+                  hb_glyph_extents_t *extents,
+                  void *user_data)
+{
+    const gfxHarfBuzzShaper::FontCallbackData *fcd =
+        static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
+    return fcd->mShaper->GetGlyphExtents(glyph, extents);
+}
+
+// Find the data for glyph ID |aGlyph| in the 'glyf' table, if present.
+// Returns null if not found, otherwise pointer to the beginning of the
+// glyph's data. Sets aEmptyGlyf true if there is no actual data;
+// otherwise, it's guaranteed that we can read at least the bounding box.
+const gfxHarfBuzzShaper::Glyf*
+gfxHarfBuzzShaper::FindGlyf(hb_codepoint_t aGlyph, bool *aEmptyGlyf) const
+{
+    if (!mLoadedLocaGlyf) {
+        mLoadedLocaGlyf = true; // only try this once; if it fails, this
+                                // isn't a truetype font
+        gfxFontEntry *entry = mFont->GetFontEntry();
+        uint32_t len;
+        gfxFontEntry::AutoTable headTable(entry,
+                                          TRUETYPE_TAG('h','e','a','d'));
+        const HeadTable* head =
+            reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable,
+                                                                &len));
+        if (len < sizeof(HeadTable)) {
+            return nullptr;
+        }
+        mLocaLongOffsets = int16_t(head->indexToLocFormat) > 0;
+        mLocaTable = entry->GetFontTable(TRUETYPE_TAG('l','o','c','a'));
+        mGlyfTable = entry->GetFontTable(TRUETYPE_TAG('g','l','y','f'));
+    }
+
+    if (!mLocaTable || !mGlyfTable) {
+        // it's not a truetype font
+        return nullptr;
+    }
+
+    uint32_t offset; // offset of glyph record in the 'glyf' table
+    uint32_t len;
+    const char* data = hb_blob_get_data(mLocaTable, &len);
+    if (mLocaLongOffsets) {
+        if ((aGlyph + 1) * sizeof(AutoSwap_PRUint32) > len) {
+            return nullptr;
+        }
+        const AutoSwap_PRUint32* offsets =
+            reinterpret_cast<const AutoSwap_PRUint32*>(data);
+        offset = offsets[aGlyph];
+        *aEmptyGlyf = (offset == uint16_t(offsets[aGlyph + 1]));
+    } else {
+        if ((aGlyph + 1) * sizeof(AutoSwap_PRUint16) > len) {
+            return nullptr;
+        }
+        const AutoSwap_PRUint16* offsets =
+            reinterpret_cast<const AutoSwap_PRUint16*>(data);
+        offset = uint16_t(offsets[aGlyph]);
+        *aEmptyGlyf = (offset == uint16_t(offsets[aGlyph + 1]));
+        offset *= 2;
+    }
+
+    data = hb_blob_get_data(mGlyfTable, &len);
+    if (offset + sizeof(Glyf) > len) {
+        return nullptr;
+    }
+
+    return reinterpret_cast<const Glyf*>(data + offset);
+}
+
+hb_bool_t
+gfxHarfBuzzShaper::GetGlyphExtents(hb_codepoint_t aGlyph,
+                                   hb_glyph_extents_t *aExtents) const
+{
+    bool emptyGlyf;
+    const Glyf *glyf = FindGlyf(aGlyph, &emptyGlyf);
+    if (!glyf) {
+        // TODO: for non-truetype fonts, get extents some other way?
+        return false;
+    }
+
+    if (emptyGlyf) {
+        aExtents->x_bearing = 0;
+        aExtents->y_bearing = 0;
+        aExtents->width = 0;
+        aExtents->height = 0;
+        return true;
+    }
+
+    double f = mFont->FUnitsToDevUnitsFactor();
+    aExtents->x_bearing = FloatToFixed(int16_t(glyf->xMin) * f);
+    aExtents->width =
+        FloatToFixed((int16_t(glyf->xMax) - int16_t(glyf->xMin)) * f);
+
+    // Our y-coordinates are positive-downwards, whereas harfbuzz assumes
+    // positive-upwards; hence the apparently-reversed subtractions here.
+    aExtents->y_bearing =
+        FloatToFixed(int16_t(glyf->yMax) * f -
+                     mFont->GetHorizontalMetrics().emAscent);
+    aExtents->height =
+        FloatToFixed((int16_t(glyf->yMin) - int16_t(glyf->yMax)) * f);
+
+    return true;
 }
 
 static hb_bool_t
@@ -1066,6 +1133,9 @@ gfxHarfBuzzShaper::Initialize()
         hb_font_funcs_set_glyph_v_origin_func(sHBFontFuncs,
                                               HBGetGlyphVOrigin,
                                               nullptr, nullptr);
+        hb_font_funcs_set_glyph_extents_func(sHBFontFuncs,
+                                             HBGetGlyphExtents,
+                                             nullptr, nullptr);
         hb_font_funcs_set_glyph_contour_point_func(sHBFontFuncs,
                                                    HBGetContourPoint,
                                                    nullptr, nullptr);
@@ -1224,20 +1294,6 @@ gfxHarfBuzzShaper::InitializeVertical()
                 hb_blob_destroy(mVORGTable);
                 mVORGTable = nullptr;
             }
-        }
-    } else if (mVmtxTable) {
-        // Otherwise, try to load loca and glyf tables so that we can read
-        // bounding boxes (needed to support vertical glyph origin).
-        uint32_t len;
-        gfxFontEntry::AutoTable headTable(entry,
-                                          TRUETYPE_TAG('h','e','a','d'));
-        const HeadTable* head =
-            reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable,
-                                                                &len));
-        if (len >= sizeof(HeadTable)) {
-            mLocaLongOffsets = int16_t(head->indexToLocFormat) > 0;
-            mLocaTable = entry->GetFontTable(TRUETYPE_TAG('l','o','c','a'));
-            mGlyfTable = entry->GetFontTable(TRUETYPE_TAG('g','l','y','f'));
         }
     }
 
