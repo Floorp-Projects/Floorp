@@ -7,6 +7,8 @@
 #ifndef frontend_SyntaxParseHandler_h
 #define frontend_SyntaxParseHandler_h
 
+#include "mozilla/Attributes.h"
+
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 
@@ -39,12 +41,61 @@ class SyntaxParseHandler
         NodeGeneric,
         NodeName,
         NodeGetProp,
-        NodeString,
         NodeStringExprStatement,
-        NodeLValue
+        NodeLValue,
+
+        // In rare cases a parenthesized |node| doesn't have the same semantics
+        // as |node|.  Each such node has a special Node value, and we use a
+        // different Node value to represent the parenthesized form.  See also
+        // isUnparenthesized*(Node), newExprStatement(Node, uint32_t),
+        // parenthesize(Node), and meaningMightChangeIfParenthesized(Node).
+
+        // The directive prologue at the start of a FunctionBody or ScriptBody
+        // is the longest sequence (possibly empty) of string literal
+        // expression statements at the start of a function.  Thus we need this
+        // to treat |"use strict";| as a possible Use Strict Directive and
+        // |("use strict");| as a useless statement.
+        NodeUnparenthesizedString,
+
+        // Legacy generator expressions of the form |(expr for (...))| and
+        // array comprehensions of the form |[expr for (...)]|) don't permit
+        // |expr| to be a comma expression.  Thus we need this to treat
+        // |(a(), b for (x in []))| as a syntax error and
+        // |((a(), b) for (x in []))| as a generator that calls |a| and then
+        // yields |b| each time it's resumed.
+        NodeUnparenthesizedCommaExpr,
+
+        // Yield expressions currently (but not in ES6 -- a SpiderMonkey bug to
+        // fix) must generally be parenthesized.  (See the uses of
+        // isUnparenthesizedYieldExpression in Parser.cpp for the rare
+        // exceptions.)  Thus we need this to treat |yield 1, 2;| as a syntax
+        // error and |(yield 1), 2;| as a comma expression that will yield 1,
+        // then evaluate to 2.
+        NodeUnparenthesizedYieldExpr,
+
+        // Assignment expressions in condition contexts could be typos for
+        // equality checks.  (Think |if (x = y)| versus |if (x == y)|.)  Thus
+        // we need this to treat |if (x = y)| as a possible typo and
+        // |if ((x = y))| as a deliberate assignment within a condition.
+        //
+        // (Technically this isn't needed, as these are *only* extraWarnings
+        // warnings, and parsing with that option disables syntax parsing.  But
+        // it seems best to be consistent, and perhaps the syntax parser will
+        // eventually enforce extraWarnings and will require this then.)
+        NodeUnparenthesizedAssignment
     };
     typedef Definition::Kind DefinitionNode;
 
+  private:
+    static bool meaningMightChangeIfParenthesized(Node node) {
+        return node == NodeUnparenthesizedString ||
+               node == NodeUnparenthesizedCommaExpr ||
+               node == NodeUnparenthesizedYieldExpr ||
+               node == NodeUnparenthesizedAssignment;
+    }
+
+
+  public:
     SyntaxParseHandler(ExclusiveContext *cx, LifoAlloc &alloc,
                        TokenStream &tokenStream, bool foldConstants,
                        Parser<SyntaxParseHandler> *syntaxParser, LazyScript *lazyOuterFunction)
@@ -69,14 +120,14 @@ class SyntaxParseHandler
         return Definition::PLACEHOLDER;
     }
 
-    Node newIdentifier(JSAtom *atom, const TokenPos &pos) { return NodeString; }
+    Node newIdentifier(JSAtom *atom, const TokenPos &pos) { return NodeName; }
     Node newNumber(double value, DecimalPoint decimalPoint, const TokenPos &pos) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
 
     Node newStringLiteral(JSAtom *atom, const TokenPos &pos) {
         lastAtom = atom;
         lastStringPos = pos;
-        return NodeString;
+        return NodeUnparenthesizedString;
     }
 
     Node newTemplateStringLiteral(JSAtom *atom, const TokenPos &pos) {
@@ -135,7 +186,7 @@ class SyntaxParseHandler
     bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
     bool addPropertyDefinition(Node literal, Node name, Node expr, bool isShorthand = false) { return true; }
     bool addMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
-    Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
+    Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeUnparenthesizedYieldExpr; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
 
     // Statements
@@ -146,7 +197,7 @@ class SyntaxParseHandler
     Node newEmptyStatement(const TokenPos &pos) { return NodeGeneric; }
 
     Node newExprStatement(Node expr, uint32_t end) {
-        return expr == NodeString ? NodeStringExprStatement : NodeGeneric;
+        return expr == NodeUnparenthesizedString ? NodeStringExprStatement : NodeGeneric;
     }
 
     Node newIfStatement(uint32_t begin, Node cond, Node then, Node else_) { return NodeGeneric; }
@@ -195,13 +246,6 @@ class SyntaxParseHandler
     Node newLexicalScope(ObjectBox *blockbox) { return NodeGeneric; }
     void setLexicalScopeBody(Node block, Node body) {}
 
-    bool isOperationWithoutParens(Node pn, ParseNodeKind kind) {
-        // It is OK to return false here, callers should only use this method
-        // for reporting strict option warnings and parsing code which the
-        // syntax parser does not handle.
-        return false;
-    }
-
     bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
 
     void setBeginPosition(Node pn, Node oth) {}
@@ -222,19 +266,48 @@ class SyntaxParseHandler
     Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
-    void addList(Node pn, Node kid) {}
-    bool isUnparenthesizedYield(Node pn) { return false; }
+
+    Node newCommaExpressionList(Node kid) {
+        return NodeUnparenthesizedCommaExpr;
+    }
+
+    void addList(Node list, Node kid) {
+        MOZ_ASSERT(list == NodeGeneric || list == NodeUnparenthesizedCommaExpr);
+    }
+
+    Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs,
+                       ParseContext<SyntaxParseHandler> *pc, JSOp op)
+    {
+        if (kind == PNK_ASSIGN)
+            return NodeUnparenthesizedAssignment;
+        return newBinaryOrAppend(kind, lhs, rhs, pc, op);
+    }
+
+    bool isUnparenthesizedYieldExpression(Node node) {
+        return node == NodeUnparenthesizedYieldExpr;
+    }
+
+    bool isUnparenthesizedCommaExpression(Node node) {
+        return node == NodeUnparenthesizedCommaExpr;
+    }
+
+    bool isUnparenthesizedAssignment(Node node) {
+        return node == NodeUnparenthesizedAssignment;
+    }
 
     void setOp(Node pn, JSOp op) {}
     void setBlockId(Node pn, unsigned blockid) {}
     void setFlag(Node pn, unsigned flag) {}
     void setListFlag(Node pn, unsigned flag) {}
-    Node setInParens(Node pn) {
-        // String literals enclosed by parentheses are ignored during
-        // strict mode parsing.
-        return (pn == NodeString) ? NodeGeneric : pn;
+    MOZ_WARN_UNUSED_RESULT Node parenthesize(Node node) {
+        if (meaningMightChangeIfParenthesized(node))
+            return NodeGeneric;
+
+        // In all other cases, the parenthesized form of |node| is equivalent
+        // to the unparenthesized form: return |node| unchanged.
+        return node;
     }
-    Node setLikelyIIFE(Node pn) {
+    MOZ_WARN_UNUSED_RESULT Node setLikelyIIFE(Node pn) {
         return pn; // Remain in syntax-parse mode.
     }
     void setPrologue(Node pn) {}

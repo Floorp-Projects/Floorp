@@ -34,7 +34,9 @@ interface SVGPathSeg {
   const unsigned short PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS = 18;
   const unsigned short PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL = 19;
 
+  [Pure]
   readonly attribute unsigned short pathSegType;
+  [Pure]
   readonly attribute DOMString pathSegTypeAsLetter;
 };
 

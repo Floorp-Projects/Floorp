@@ -506,6 +506,9 @@
                                  class="plain tabpanel-summary-value devtools-monospace"
                                  crop="end"
                                  flex="1"/>
+                          <image class="security-warning-icon"
+                                 id="security-warning-sslv3"
+                                 tooltiptext="&netmonitorUI.security.warning.sslv3;" />
                         </hbox>
                         <hbox id="security-ciphersuite"
                               class="tabpanel-summary-container"
@@ -516,6 +519,9 @@
                                  class="plain tabpanel-summary-value devtools-monospace"
                                  crop="end"
                                  flex="1"/>
+                          <image class="security-warning-icon"
+                                 id="security-warning-cipher"
+                                 tooltiptext="&netmonitorUI.security.warning.cipher;" />
                         </hbox>
                       </vbox>
                     </vbox>

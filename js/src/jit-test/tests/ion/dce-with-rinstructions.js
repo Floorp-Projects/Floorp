@@ -1062,16 +1062,32 @@ function rtrunc_to_int32_string(i) {
     return i;
 }
 
-var uceFault_hypot_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number'));
-function rhypot_number(i) {
+var uceFault_hypot_number_2args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_2args'));
+function rhypot_number_2args(i) {
     var x = Math.hypot(i, i + 1);
-    if (uceFault_hypot_number(i) || uceFault_hypot_number(i))
+    if (uceFault_hypot_number_2args(i) || uceFault_hypot_number_2args(i))
         assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1)));
     return i;
 }
 
-var uceFault_hypot_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object'));
-function rhypot_object(i) {
+var uceFault_hypot_number_3args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_3args'));
+function rhypot_number_3args(i) {
+    var x = Math.hypot(i, i + 1, i + 2);
+    if (uceFault_hypot_number_3args(i) || uceFault_hypot_number_3args(i))
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1) + (i + 2) * (i + 2)));
+    return i;
+}
+
+var uceFault_hypot_number_4args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number_4args'));
+function rhypot_number_4args(i) {
+    var x = Math.hypot(i, i + 1, i + 2, i + 3);
+    if (uceFault_hypot_number_4args(i) || uceFault_hypot_number_4args(i))
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1) + (i + 2) * (i + 2) + (i + 3) * (i + 3)));
+    return i;
+}
+
+var uceFault_hypot_object_2args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_2args'));
+function rhypot_object_2args(i) {
     var t0 = i;
     var t1 = i + 1;
     var o0 = { valueOf: function () { return t0; } };
@@ -1079,8 +1095,45 @@ function rhypot_object(i) {
     var x = Math.hypot(o0, o1);
     t0 = 1000;
     t1 = 2000;
-    if (uceFault_hypot_object(i) || uceFault_hypot_object(i) )
+    if (uceFault_hypot_object_2args(i) || uceFault_hypot_object_2args(i) )
         assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1)));
+    return i;
+}
+
+var uceFault_hypot_object_3args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_3args'));
+function rhypot_object_3args(i) {
+    var t0 = i;
+    var t1 = i + 1;
+    var t2 = i + 2;
+    var o0 = { valueOf: function () { return t0; } };
+    var o1 = { valueOf: function () { return t1; } };
+    var o2 = { valueOf: function () { return t2; } };
+    var x = Math.hypot(o0, o1, o2);
+    t0 = 1000;
+    t1 = 2000;
+    t2 = 3000;
+    if (uceFault_hypot_object_3args(i) || uceFault_hypot_object_3args(i) )
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1) + (i + 2) * (i + 2)));
+    return i;
+}
+
+var uceFault_hypot_object_4args = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object_4args'));
+function rhypot_object_4args(i) {
+    var t0 = i;
+    var t1 = i + 1;
+    var t2 = i + 2;
+    var t3 = i + 3;
+    var o0 = { valueOf: function () { return t0; } };
+    var o1 = { valueOf: function () { return t1; } };
+    var o2 = { valueOf: function () { return t2; } };
+    var o3 = { valueOf: function () { return t3; } };
+    var x = Math.hypot(o0, o1, o2, o3);
+    t0 = 1000;
+    t1 = 2000;
+    t2 = 3000;
+    t3 = 4000;
+    if (uceFault_hypot_object_4args(i) || uceFault_hypot_object_4args(i) )
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1) + (i + 2) * (i + 2) + (i + 3) * (i + 3)));
     return i;
 }
 
@@ -1224,8 +1277,12 @@ for (i = 0; i < 100; i++) {
     rtrunc_to_int32_number(i);
     rtrunc_to_int32_object(i);
     rtrunc_to_int32_string(i);
-    rhypot_number(i);
-    rhypot_object(i);
+    rhypot_number_2args(i);
+    rhypot_number_3args(i);
+    rhypot_number_4args(i);
+    rhypot_object_2args(i);
+    rhypot_object_3args(i);
+    rhypot_object_4args(i);
     rsin_number(i);
     rsin_object(i);
     rlog_number(i);

@@ -94,7 +94,7 @@ public:
 
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  RefPtr<MacIOSurfaceTextureSourceOGL> mTextureSource;
+  RefPtr<GLTextureSource> mTextureSource;
   RefPtr<MacIOSurface> mSurface;
 };
 

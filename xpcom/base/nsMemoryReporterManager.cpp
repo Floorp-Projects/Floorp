@@ -555,7 +555,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize)
+                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
   {
     int64_t amount;
     nsresult rv = VsizeMaxContiguousDistinguishedAmount(&amount);
@@ -578,7 +578,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize)
+                           nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
   {
     int64_t amount;
     nsresult rv = PrivateDistinguishedAmount(&amount);
@@ -922,7 +922,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize)
+                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
   {
     dmd::Sizes sizes;
     dmd::SizeOf(&sizes);

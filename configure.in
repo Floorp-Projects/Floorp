@@ -4106,23 +4106,6 @@ elif test "$EARLY_BETA_OR_EARLIER"; then
 fi
 AC_SUBST(EARLY_BETA_OR_EARLIER)
 
-# Allow the application to provide a subconfigure script
-if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
-  do_output_subdirs() {
-    if test -n "$_subconfigure_subdirs"; then
-      AC_MSG_ERROR([Cannot specify more than one sub-sub-configure])
-     fi
-    _subconfigure_subdir="$1"
-    _subconfigure_config_args="$ac_configure_args"
-  }
-  tmpscript=`$PYTHON -c 'import os, tempfile; print tempfile.mktemp(prefix="subscript.").replace(os.sep, "/")'` || exit 1
-  m4 "${srcdir}/build/autoconf/subconfigure.m4" \
-     "${srcdir}/build/autoconf/altoptions.m4" \
-     "${srcdir}/${MOZ_BUILD_APP}/configure.in" > $tmpscript
-  . $tmpscript
-  rm -f $tmpscript
-fi
-
 # Allow someone to change MOZ_APP_NAME and MOZ_APP_BASENAME in mozconfig
 MOZ_ARG_WITH_STRING(app-name,
 [--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
@@ -5964,7 +5947,6 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
       fi
     else
       AC_MSG_RESULT([Couldn't find an acceptable DirectX SDK for ANGLE, needed for d3dcompiler_43.])
-      AC_MSG_RESULT([  Either ignore, install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
     fi
   fi
 
@@ -5990,7 +5972,6 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
   if test -z "$CROSS_COMPILE"; then
     if test -z "MOZ_FOUND_A_D3D_COMPILER"; then
       AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL.])
-      AC_MSG_ERROR([  Either install Windows SDK 8.0+, install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
     fi
 
     if test -n "$MOZ_REQUIRE_ALL_D3DCS" -a -z "$MOZ_FOUND_BOTH_D3D_COMPILERS"; then
@@ -7256,6 +7237,25 @@ AC_SUBST(MOZ_CRT)
 export MOZ_CRT
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(WIN32_CRT_LIBS)
+
+# Allow the application to provide a subconfigure script.
+# This should be after 'export MOZ_NO_DEBUG_RTL=1' since
+# ldap/c-sdk/configure refers to the enviroment value.
+if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
+  do_output_subdirs() {
+    if test -n "$_subconfigure_subdirs"; then
+      AC_MSG_ERROR([Cannot specify more than one sub-sub-configure])
+     fi
+    _subconfigure_subdir="$1"
+    _subconfigure_config_args="$ac_configure_args"
+  }
+  tmpscript=`$PYTHON -c 'import os, tempfile; print tempfile.mktemp(prefix="subscript.").replace(os.sep, "/")'` || exit 1
+  m4 "${srcdir}/build/autoconf/subconfigure.m4" \
+     "${srcdir}/build/autoconf/altoptions.m4" \
+     "${srcdir}/${MOZ_BUILD_APP}/configure.in" > $tmpscript
+  . $tmpscript
+  rm -f $tmpscript
+fi
 
 dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.

@@ -874,10 +874,12 @@ MHypot::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Hypot));
+    writer.writeUnsigned(uint32_t(numOperands()));
     return true;
 }
 
 RHypot::RHypot(CompactBufferReader &reader)
+    : numOperands_(reader.readUnsigned())
 { }
 
 bool
@@ -885,12 +887,11 @@ RHypot::recover(JSContext *cx, SnapshotIterator &iter) const
 {
     JS::AutoValueVector vec(cx);
 
-    // currently, only 2 args can be saved in MIR
-    if (!vec.reserve(2))
+    if (!vec.reserve(numOperands_))
         return false;
 
-    vec.infallibleAppend(iter.read());
-    vec.infallibleAppend(iter.read());
+    for (uint32_t i = 0 ; i < numOperands_ ; ++i)
+       vec.infallibleAppend(iter.read());
 
     RootedValue result(cx);
 

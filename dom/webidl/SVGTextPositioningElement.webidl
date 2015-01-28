@@ -11,10 +11,15 @@
  */
 
 interface SVGTextPositioningElement : SVGTextContentElement {
+  [Constant]
   readonly attribute SVGAnimatedLengthList x;
+  [Constant]
   readonly attribute SVGAnimatedLengthList y;
+  [Constant]
   readonly attribute SVGAnimatedLengthList dx;
+  [Constant]
   readonly attribute SVGAnimatedLengthList dy;
+  [Constant]
   readonly attribute SVGAnimatedNumberList rotate;
 };
 

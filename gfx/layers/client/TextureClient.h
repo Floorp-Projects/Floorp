@@ -459,7 +459,7 @@ public:
   /**
    * This function waits until the buffer is no longer being used.
    */
-  virtual void WaitForBufferOwnership() {}
+  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) {}
 
   /**
    * Track how much of this texture is wasted.
