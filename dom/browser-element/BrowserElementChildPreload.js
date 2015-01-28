@@ -172,12 +172,6 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
-    addEventListener('touchcarettap',
-                     this._touchCaretTapHandler.bind(this),
-                     /* useCapture = */ true,
-                     /* wantsUntrusted = */ false);
-
-
     // This listens to unload events from our message manager, but /not/ from
     // the |content| window.  That's because the window's unload event doesn't
     // bubble, and we're not using a capturing listener.  If we'd used
@@ -575,11 +569,6 @@ BrowserElementChild.prototype = {
     }
 
     sendAsyncMsg('metachange', meta);
-  },
-
-  _touchCaretTapHandler: function(e) {
-    e.stopPropagation();
-    sendAsyncMsg('touchcarettap');
   },
 
   _ScrollViewChangeHandler: function(e) {
