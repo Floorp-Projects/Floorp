@@ -17,17 +17,21 @@ class GradientStopsD2D : public GradientStops
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsD2D)
-  GradientStopsD2D(ID2D1GradientStopCollection *aStopCollection)
+  GradientStopsD2D(ID2D1GradientStopCollection *aStopCollection, ID3D11Device *aDevice)
     : mStopCollection(aStopCollection)
+    , mDevice(aDevice)
   {}
 
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
+
+  virtual bool IsValid() const MOZ_FINAL{ return mDevice == Factory::GetDirect3D11Device(); }
 
 private:
   friend class DrawTargetD2D;
   friend class DrawTargetD2D1;
 
   mutable RefPtr<ID2D1GradientStopCollection> mStopCollection;
+  RefPtr<ID3D11Device> mDevice;
 };
 
 }
