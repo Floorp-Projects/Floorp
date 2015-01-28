@@ -11,7 +11,7 @@ var k3 = {};
 var done = false;
 
 var iterable = {};
-iterable[std_iterator] = function*() {
+iterable[Symbol.iterator] = function*() {
   yield [k1, v1];
   yield [k2, v2];
   done = true;

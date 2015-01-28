@@ -6,7 +6,7 @@ var m = {1: 'peek'};
 var a = [0, , 2, 3];
 a.__proto__ = m;
 var log = [];
-Object.prototype[std_iterator] = Array.prototype[std_iterator];
+Object.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 for (var x of a)
     log.push(x);
 assertEq(log[1], 'peek');

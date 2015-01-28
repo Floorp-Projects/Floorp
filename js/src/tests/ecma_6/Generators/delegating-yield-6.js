@@ -28,7 +28,7 @@ function Iter(val, count) {
     }
 
     this.next = next;
-    this[std_iterator] = iterator;
+    this[Symbol.iterator] = iterator;
 }
 
 function* delegate(iter) { return yield* iter; }

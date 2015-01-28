@@ -16,7 +16,7 @@ testMethod("delete");
 testMethod("clear");
 
 assertThrowsInstanceOf(function() { var ws = new WeakSet(); ws.add(1); }, TypeError);
-assertThrowsInstanceOf(function() { new WeakSet({[std_iterator]: 2}) }, TypeError);
-assertEq(typeof [][std_iterator], "function");
+assertThrowsInstanceOf(function() { new WeakSet({[Symbol.iterator]: 2}) }, TypeError);
+assertEq(typeof [][Symbol.iterator], "function");
 
 assertThrowsInstanceOf(function() { WeakSet(); }, TypeError);

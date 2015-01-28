@@ -2,7 +2,7 @@
 
 load(libdir + "iteration.js");
 
-Object.prototype[std_iterator] = Array.prototype[std_iterator];
+Object.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 
 var s;
 function f() {
