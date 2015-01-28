@@ -881,9 +881,9 @@ function _getTIP(aWindow)
     aWindow._EU_TIP =
       _EU_Cc["@mozilla.org/text-input-processor;1"].
         createInstance(_EU_Ci.nsITextInputProcessor);
-    if (!aWindow._EU_TIP.initForTests(aWindow)) {
-      aWindow._EU_TIP = null;
-    }
+  }
+  if (!aWindow._EU_TIP.initForTests(aWindow)) {
+    aWindow._EU_TIP = null;
   }
   return aWindow._EU_TIP;
 }

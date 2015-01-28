@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextRange.h"
 
 class nsIWidget;
@@ -42,12 +43,20 @@ public:
 
   /**
    * Initializes the instance for IME or automated test.  Either IME or tests
-   * need to call one of them before starting composition every time.  If they
-   * return NS_ERROR_ALREADY_INITIALIZED, it means that another IME composes
-   * with the instance.  Then, the caller shouldn't start composition.
+   * need to call one of them before starting composition.  If they return
+   * NS_ERROR_ALREADY_INITIALIZED, it means that the listener already listens
+   * notifications from TextEventDispatcher for same purpose (for IME or tests).
+   * If this returns another error, the caller shouldn't keep starting
+   * composition.
+   *
+   * @param aListener       Specify the listener to listen notifications and
+   *                        requests.  This must not be null.
+   *                        NOTE: aListener is stored as weak reference in
+   *                              TextEventDispatcher.  See mListener
+   *                              definition below.
    */
-  nsresult Init();
-  nsresult InitForTests();
+  nsresult Init(TextEventDispatcherListener* aListener);
+  nsresult InitForTests(TextEventDispatcherListener* aListener);
 
   /**
    * OnDestroyWidget() is called when mWidget is being destroyed.
@@ -154,6 +163,12 @@ private:
   // Note that mWidget may be destroyed already (i.e., mWidget->Destroyed() may
   // return true).
   nsIWidget* mWidget;
+  // mListener is a weak reference to TextEventDispatcherListener.  That might
+  // be referred by JS.  Therefore, the listener might be difficult to release
+  // itself if this is a strong reference.  Additionally, it's difficult to
+  // check if a method to uninstall the listener is called by valid instance.
+  // So, using weak reference is the best way in this case.
+  nsWeakPtr mListener;
 
   // mPendingComposition stores new composition string temporarily.
   // These values will be used for dispatching NS_COMPOSITION_CHANGE event
@@ -178,10 +193,11 @@ private:
   };
   PendingComposition mPendingComposition;
 
-  bool mInitialized;
   bool mForTests;
   // See IsComposing().
   bool mIsComposing;
+
+  nsresult InitInternal(TextEventDispatcherListener* aListener, bool aForTests);
 
   /**
    * InitEvent() initializes aEvent.  This must be called before dispatching

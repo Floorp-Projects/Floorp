@@ -21,7 +21,6 @@ namespace widget {
 
 TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   : mWidget(aWidget)
-  , mInitialized(false)
   , mForTests(false)
   , mIsComposing(false)
 {
@@ -29,26 +28,39 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
 }
 
 nsresult
-TextEventDispatcher::Init()
+TextEventDispatcher::Init(TextEventDispatcherListener* aListener)
 {
-  if (mInitialized) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-  MOZ_ASSERT(!mIsComposing, "There should not be active composition");
-  mInitialized = true;
-  mForTests = false;
-  return NS_OK;
+  return InitInternal(aListener, false);
 }
 
 nsresult
-TextEventDispatcher::InitForTests()
+TextEventDispatcher::InitForTests(TextEventDispatcherListener* aListener)
 {
-  if (mInitialized) {
-    return NS_ERROR_ALREADY_INITIALIZED;
+  return InitInternal(aListener, true);
+}
+
+nsresult
+TextEventDispatcher::InitInternal(TextEventDispatcherListener* aListener,
+                                  bool aForTests)
+{
+  if (NS_WARN_IF(!aListener)) {
+    return NS_ERROR_INVALID_ARG;
   }
-  MOZ_ASSERT(!mIsComposing, "There should not be active composition");
-  mInitialized = true;
-  mForTests = true;
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  if (listener) {
+    if (listener == aListener && mForTests == aForTests) {
+      return NS_OK;
+    }
+    // If this has composition, any other listener can steal ownership.
+    if (IsComposing()) {
+      return NS_ERROR_ALREADY_INITIALIZED;
+    }
+  }
+  mListener = do_GetWeakReference(aListener);
+  mForTests = aForTests;
+  if (listener && listener != aListener) {
+    listener->OnRemovedFrom(this);
+  }
   return NS_OK;
 }
 
@@ -57,12 +69,18 @@ TextEventDispatcher::OnDestroyWidget()
 {
   mWidget = nullptr;
   mPendingComposition.Clear();
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  mListener = nullptr;
+  if (listener) {
+    listener->OnRemovedFrom(this);
+  }
 }
 
 nsresult
 TextEventDispatcher::GetState() const
 {
-  if (!mInitialized) {
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  if (!listener) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   if (!mWidget || mWidget->Destroyed()) {
@@ -170,7 +188,6 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
 
   // End current composition and make this free for other IMEs.
   mIsComposing = false;
-  mInitialized = false;
 
   uint32_t message = aCommitString ? NS_COMPOSITION_COMMIT :
                                      NS_COMPOSITION_COMMIT_AS_IS;
@@ -190,22 +207,18 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
 nsresult
 TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
 {
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION: {
-      NS_ASSERTION(mIsComposing, "Why is this requested without composition?");
-      nsEventStatus status = nsEventStatus_eIgnore;
-      CommitComposition(status);
-      return NS_OK;
-    }
-    case REQUEST_TO_CANCEL_COMPOSITION: {
-      NS_ASSERTION(mIsComposing, "Why is this requested without composition?");
-      nsEventStatus status = nsEventStatus_eIgnore;
-      CommitComposition(status, &EmptyString());
-      return NS_OK;
-    }
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  if (!listener) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
+  nsresult rv = listener->NotifyIME(this, aIMENotification);
+  // If the listener isn't available, it means that it cannot handle the
+  // notification or request for now.  In this case, we should return
+  // NS_ERROR_NOT_IMPLEMENTED because it's not implemented at such moment.
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return rv;
 }
 
 /******************************************************************************
