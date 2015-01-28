@@ -493,18 +493,24 @@ MozNFCImpl.prototype = {
   },
 
   notifyTagLost: function notifyTagLost(sessionToken) {
+    if (!this.handleTagLost(sessionToken)) {
+      this._nfcContentHelper.callDefaultLostHandler(sessionToken, false);
+    }
+  },
+
+  handleTagLost: function handleTagLost(sessionToken) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
-      return;
+      return false;
     }
 
     if (!this.checkPermissions(["nfc"])) {
-      return;
+      return false;
     }
 
     if (!this.nfcTag) {
       debug("No NFCTag object existing.");
-      return;
+      return false;
     }
 
     this.nfcTag.notifyLost();
@@ -513,6 +519,8 @@ MozNFCImpl.prototype = {
     debug("fire ontaglost " + sessionToken);
     let event = new this._window.Event("taglost");
     this.__DOM_IMPL__.dispatchEvent(event);
+
+    return true;
   },
 
   notifyPeerFound: function notifyPeerFound(sessionToken, isPeerReady) {
@@ -578,18 +586,24 @@ MozNFCImpl.prototype = {
   },
 
   notifyPeerLost: function notifyPeerLost(sessionToken) {
+    if (!this.handlePeerLost(sessionToken)) {
+      this._nfcContentHelper.callDefaultLostHandler(sessionToken, true);
+    }
+  },
+
+  handlePeerLost: function handlePeerLost(sessionToken) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
-      return;
+      return false;
     }
 
     if (!this.checkPermissions(["nfc", "nfc-share"])) {
-      return;
+      return false;
     }
 
     if (!this.nfcPeer) {
       debug("No NFCPeer object existing.");
-      return;
+      return false;
     }
 
     this.nfcPeer.notifyLost();
@@ -598,6 +612,8 @@ MozNFCImpl.prototype = {
     debug("fire onpeerlost");
     let event = new this._window.Event("peerlost");
     this.__DOM_IMPL__.dispatchEvent(event);
+
+    return true;
   },
 
   notifyRFStateChanged: function notifyRFStateChanged(rfState) {

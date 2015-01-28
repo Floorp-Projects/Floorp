@@ -292,6 +292,12 @@ NfcContentHelper.prototype = {
                            records: encodedRecords});
   },
 
+  callDefaultLostHandler: function callDefaultLostHandler(sessionToken, isP2P) {
+    cpmm.sendAsyncMessage("NFC:CallDefaultLostHandler",
+                          {sessionToken: sessionToken,
+                           isP2P: isP2P});
+  },
+
   // nsIObserver
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {

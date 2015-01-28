@@ -119,7 +119,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(b35f4bf5-e1b8-45f4-b5d3-2ae9b6d5871e)]
+[scriptable, uuid(39e1b25b-5063-449e-b9e8-5514cdca9c3a)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -301,4 +301,17 @@ interface nsINfcContentHelper : nsISupports
   void callDefaultFoundHandler(in DOMString sessionToken,
                                in boolean isP2P,
                                in nsIVariant records);
+
+  /**
+   * Notify parent process to call the default taglost or peerlost event
+   * handler.
+   *
+   * @param sessionToken
+   *        Session token of this event.
+   * @param isP2P
+   *        Is this a P2P Session.
+   */
+  void callDefaultLostHandler(in DOMString sessionToken,
+                              in boolean isP2P);
+
 };
