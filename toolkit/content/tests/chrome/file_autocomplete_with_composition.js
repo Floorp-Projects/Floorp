@@ -87,13 +87,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -108,7 +107,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -128,13 +127,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("z", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -149,7 +147,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -168,13 +166,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("l", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "l",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -189,7 +186,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "ll",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -226,13 +223,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
         synthesizeKey("VK_LEFT", { shiftKey: true }, aWindow);
         synthesizeKey("VK_LEFT", { shiftKey: true }, aWindow);
         synthesizeKey("z", { type: "keydown" }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -247,7 +243,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -289,13 +285,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -310,7 +305,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -352,13 +347,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -373,7 +367,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -418,13 +412,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: false,
       execute: function (aWindow) {
         synthesizeKey("z", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -439,7 +432,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }
@@ -481,13 +474,12 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       completeDefaultIndex: true,
       execute: function (aWindow) {
         synthesizeKey("m", { type: "keydown", shiftKey: true }, aWindow);
-        synthesizeComposition({ type: "compositionstart" }, aWindow);
         synthesizeCompositionChange(
           { "composition":
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 1, "length": 0 }
@@ -502,7 +494,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
               ]
             },
             "caret": { "start": 2, "length": 0 }

@@ -9,8 +9,7 @@ function check(code) {
         s = exc.message;
     }
 
-    var ITERATOR = JS_HAS_SYMBOLS ? "Symbol.iterator" : "'@@iterator'";
-    assertEq(s, `x[${ITERATOR}] is not a function`);
+    assertEq(s, `x[Symbol.iterator] is not a function`);
 }
 
 x = {};
@@ -18,10 +17,10 @@ check("for (var v of x) throw fit;");
 check("[...x]");
 check("Math.hypot(...x)");
 
-x[std_iterator] = "potato";
+x[Symbol.iterator] = "potato";
 check("for (var v of x) throw fit;");
 
-x[std_iterator] = {};
+x[Symbol.iterator] = {};
 check("for (var v of x) throw fit;");
 
 if (typeof reportCompare === "function")

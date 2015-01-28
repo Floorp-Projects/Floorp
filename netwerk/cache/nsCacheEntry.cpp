@@ -425,17 +425,12 @@ nsCacheEntryHashTable::Shutdown()
 nsCacheEntry *
 nsCacheEntryHashTable::GetEntry( const nsCString * key)
 {
-    PLDHashEntryHdr *hashEntry;
-    nsCacheEntry    *result = nullptr;
-
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!initialized)  return nullptr;
-    
-    hashEntry = PL_DHashTableLookup(&table, key);
-    if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-        result = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
-    }
-    return result;
+
+    PLDHashEntryHdr *hashEntry = PL_DHashTableSearch(&table, key);
+    return hashEntry ? ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry
+                     : nullptr;
 }
 
 

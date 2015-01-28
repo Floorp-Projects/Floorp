@@ -1429,15 +1429,22 @@ js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
 
             attrs = ApplyOrDefaultAttributes(attrs, shape);
 
-            /* Keep everything from the shape that isn't the things we're changing */
-            unsigned attrMask = ~(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
-            shape = NativeObject::changeProperty(cx, obj, shape, attrs, attrMask,
-                                                 shape->getter(), shape->setter());
-            if (!shape)
-                return false;
-            if (shape->hasSlot())
-                updateValue = obj->getSlot(shape->slot());
-            shouldDefine = false;
+            if (shape->isAccessorDescriptor() && !(attrs & JSPROP_IGNORE_READONLY)) {
+                // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]] 
+                // is present, change the existing accessor property to a data 
+                // property.
+                updateValue = UndefinedValue();
+            } else {
+                // We are at most changing some attributes, and cannot convert
+                // from data descriptor to accessor, or vice versa. Take
+                // everything from the shape that we aren't changing.
+                uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+                attrs = (shape->attributes() & ~propMask) | (attrs & propMask);
+                getter = shape->getter();
+                setter = shape->setter();
+                if (shape->hasSlot())
+                    updateValue = obj->getSlot(shape->slot());
+            }
         }
     }
 
@@ -1454,7 +1461,7 @@ js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
         // relevant, just clear it.
         attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
         return DefinePropertyOrElement(cx, obj, id, getter, setter,
-                                       attrs, value, false, false);
+                                       attrs, updateValue, false, false);
     }
 
     MOZ_ASSERT(shape);

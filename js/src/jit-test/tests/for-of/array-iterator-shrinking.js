@@ -4,7 +4,7 @@ load(libdir + "asserts.js");
 load(libdir + "iteration.js");
 
 var arr = [0, 1, 2];
-var it = arr[std_iterator]();
+var it = arr[Symbol.iterator]();
 var ki = arr.keys();
 var ei = arr.entries();
 

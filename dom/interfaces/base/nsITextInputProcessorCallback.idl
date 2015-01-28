@@ -1,0 +1,102 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsITextInputProcessor;
+
+/**
+ * nsITextInputProcessorNotification stores the type of notification to IME and
+ * its detail.  See each explanation of attribute for the detail.
+ */
+
+[scriptable, builtinclass, uuid(c0ce1add-82bb-45ab-b99a-42cfba7fd5d7)]
+interface nsITextInputProcessorNotification : nsISupports
+{
+  /**
+   * type attribute represents what's notified or requested.  Value must be
+   * one of following values:
+   *
+   * "request-to-commit"  (required to be handled)
+   *   This is requested when Gecko believes that active composition should be
+   *   committed.  nsITextInputProcessorCallback::onNotify() has to handle this
+   *   notification.
+   *
+   * "request-to-cancel" (required to be handled)
+   *   This is requested when Gecko believes that active composition should be
+   *   canceled.  I.e., composition should be committed with empty string.
+   *   nsITextInputProcessorCallback::onNotify() has to handle this
+   *   notification.
+   *
+   * "notify-detached" (optional)
+   *   This is notified when the callback is detached from
+   *   nsITextInputProcessor.
+   *
+   * "notify-focus" (optional)
+   *   This is notified when an editable editor gets focus and Gecko starts
+   *   to observe changes in the content. E.g., selection changes.
+   *   IME shouldn't change DOM tree, focus nor something when this is notified.
+   *
+   * "notify-blur" (optional)
+   *   This is notified when an editable editor loses focus and Gecko stops
+   *   observing the changes in the content.
+   */
+  readonly attribute ACString type;
+};
+
+/**
+ * nsITextInputProcessorCallback is a callback interface for JS to implement
+ * IME.  IME implemented by JS can implement onNotify() function and must send
+ * it to nsITextInputProcessor at initializing.  Then, onNotify() will be
+ * called with nsITextInputProcessorNotification instance.
+ * The reason why onNotify() uses string simply is that if we will support
+ * other notifications such as text changes and selection changes, we need to
+ * notify IME of some other information.  Then, only changing
+ * nsITextInputProcessorNotification interface is better for compatibility.
+ */
+
+[scriptable, function, uuid(23d5f242-adb5-46f1-8766-90d1bf0383df)]
+interface nsITextInputProcessorCallback : nsISupports
+{
+  /**
+   * When Gecko notifies IME of something or requests something to IME,
+   * this is called.
+   *
+   * @param aTextInputProcessor Reference to the nsITextInputProcessor service
+   *                            which is the original receiver of the request
+   *                            or notification.
+   * @param aNotification       Stores type of notifications and additional
+   *                            information.
+   * @return                    Return true if it succeeded or does nothing.
+   *                            Otherwise, return false.
+   *
+   * Example #1 The simplest implementation of nsITextInputProcessorCallback is:
+   *
+   *   function simpleCallback(aTIP, aNotification)
+   *   {
+   *     try {
+   *       switch (aNotification.type) {
+   *         case "request-to-commit":
+   *           aTIP.commitComposition();
+   *           break;
+   *         case "request-to-cancel":
+   *           aTIP.cancelComposition();
+   *           break;
+   *       }
+   *     } catch (e) {
+   *       return false;
+   *     }
+   *     return true;
+   *   }
+   *
+   *   var TIP = Components.classes["@mozilla.org/text-input-processor;1"].
+   *               createInstance(Components.interfaces.nsITextInputProcessor);
+   *   if (!TIP.init(window, simpleCallback)) {
+   *     return;
+   *   }
+   */
+  boolean onNotify(in nsITextInputProcessor aTextInputProcessor,
+                   in nsITextInputProcessorNotification aNotification);
+};

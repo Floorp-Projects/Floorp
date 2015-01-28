@@ -33,13 +33,6 @@ const MAX_ORDINAL = 99;
 const bundle = Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
 
 /**
- * The method name to use for ES6 iteration. If symbols are enabled in this
- * build, use Symbol.iterator; otherwise "@@iterator".
- */
-const JS_HAS_SYMBOLS = typeof Symbol === "function";
-const ITERATOR_SYMBOL = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
-
-/**
  * DevTools is a class that represents a set of developer tools, it holds a
  * set of tools and keeps track of open toolboxes in the browser.
  */
@@ -500,7 +493,7 @@ DevTools.prototype = {
   /**
    * Iterator that yields each of the toolboxes.
    */
-  *[ITERATOR_SYMBOL]() {
+  *[Symbol.iterator]() {
     for (let toolbox of this._toolboxes) {
       yield toolbox;
     }

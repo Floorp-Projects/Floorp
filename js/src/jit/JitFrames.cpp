@@ -389,10 +389,10 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
         // debuggee of a Debugger with a live onExceptionUnwind hook, or if a
         // Debugger has observed this frame (e.g., for onPop).
         bool shouldBail = Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
+        RematerializedFrame *rematFrame = nullptr;
         if (!shouldBail) {
             JitActivation *act = cx->runtime()->activation()->asJit();
-            RematerializedFrame *rematFrame =
-                act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
+            rematFrame = act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
             shouldBail = rematFrame && rematFrame->isDebuggee();
         }
 
@@ -414,7 +414,19 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
             uint32_t retval = ExceptionHandlerBailout(cx, frame, rfe, propagateInfo, overrecursed);
             if (retval == BAILOUT_RETURN_OK)
                 return;
+
+            // If bailout failed (e.g., due to overrecursion), clean up any
+            // Debugger.Frame instances here. Normally this should happen
+            // inside the debug epilogue, but due to bailout failure, we
+            // cannot honor any Debugger hooks.
+            if (rematFrame)
+                Debugger::handleUnrecoverableIonBailoutError(cx, rematFrame);
         }
+
+#ifdef DEBUG
+        if (rematFrame)
+            Debugger::assertNotInFrameMaps(rematFrame);
+#endif
     }
 
     if (!script->hasTrynotes())
@@ -960,23 +972,24 @@ ReadAllocation(const JitFrameIterator &frame, const LAllocation *a)
 #endif
 
 static void
-MarkExtraActualArguments(JSTracer *trc, const JitFrameIterator &frame)
+MarkThisAndExtraActualArguments(JSTracer *trc, const JitFrameIterator &frame)
 {
-    // Mark any extra actual arguments for an Ion frame. Marking of |this| and
-    // the formal arguments is taken care of by the frame's safepoint/snapshot.
+    // Mark |this| and any extra actual arguments for an Ion frame. Marking of
+    // formal arguments is taken care of by the frame's safepoint/snapshot.
 
     JitFrameLayout *layout = frame.jsFrame();
 
-    if (!CalleeTokenIsFunction(layout->calleeToken())) {
-        MOZ_ASSERT(frame.numActualArgs() == 0);
-        return;
-    }
-
     size_t nargs = frame.numActualArgs();
-    size_t nformals = CalleeTokenToFunction(layout->calleeToken())->nargs();
+    size_t nformals = 0;
+    if (CalleeTokenIsFunction(layout->calleeToken()))
+        nformals = CalleeTokenToFunction(layout->calleeToken())->nargs();
 
-    // Trace actual arguments. Note + 1 for thisv.
     Value *argv = layout->argv();
+
+    // Trace |this|.
+    gc::MarkValueRoot(trc, argv, "ion-thisv");
+
+    // Trace actual arguments beyond the formals. Note + 1 for thisv.
     for (size_t i = nformals + 1; i < nargs + 1; i++)
         gc::MarkValueRoot(trc, &argv[i], "ion-argv");
 }
@@ -1011,7 +1024,7 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
         ionScript = frame.ionScriptFromCalleeToken();
     }
 
-    MarkExtraActualArguments(trc, frame);
+    MarkThisAndExtraActualArguments(trc, frame);
 
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
 
@@ -1070,7 +1083,7 @@ MarkBailoutFrame(JSTracer *trc, const JitFrameIterator &frame)
 
     // We have to mark the list of actual arguments, as only formal arguments
     // are represented in the Snapshot.
-    MarkExtraActualArguments(trc, frame);
+    MarkThisAndExtraActualArguments(trc, frame);
 
     // Under a bailout, do not have a Safepoint to only iterate over GC-things.
     // Thus we use a SnapshotIterator to trace all the locations which would be

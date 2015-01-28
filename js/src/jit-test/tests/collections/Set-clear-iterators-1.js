@@ -3,12 +3,12 @@
 load(libdir + "iteration.js");
 
 var s = Set();
-var it = s[std_iterator]();
+var it = s[Symbol.iterator]();
 s.clear();
 assertIteratorDone(it, undefined);
 
 s = Set(["a", "b", "c", "d"]);
-it = s[std_iterator]();
+it = s[Symbol.iterator]();
 assertIteratorNext(it, "a");
 s.clear();
 assertIteratorDone(it, undefined);

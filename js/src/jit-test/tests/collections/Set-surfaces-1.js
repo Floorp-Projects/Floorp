@@ -45,4 +45,4 @@ checkMethod("clear", 0);
 
 // Set.prototype.keys, .values, and .iterator are the same function object
 assertEq(Set.prototype.keys, Set.prototype.values);
-assertEq(Set.prototype[std_iterator], Set.prototype.values);
+assertEq(Set.prototype[Symbol.iterator], Set.prototype.values);

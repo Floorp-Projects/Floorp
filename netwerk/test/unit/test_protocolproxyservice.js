@@ -242,6 +242,63 @@ function filter_test0_5(pi)
   pps.unregisterChannelFilter(filter03);
   check_proxy(pi, "http", "www.mozilla.org", 7777, 0, 10, true);
   check_proxy(pi.failoverProxy, "direct", "", -1, 0, 0, false);
+  run_filter_test_uri();
+}
+
+function run_filter_test_uri() {
+  var cb = new resolveCallback();
+  cb.nextFunction = filter_test_uri0_1;
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  pps.asyncResolve(uri, 0, cb);
+}
+
+function filter_test_uri0_1(pi) {
+  do_check_eq(pi, null);
+
+  // Push a filter and verify the results
+
+  filter01 = new BasicFilter();
+  filter02 = new BasicFilter();
+  pps.registerFilter(filter01, 10);
+  pps.registerFilter(filter02, 20);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = filter_test_uri0_2;
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  pps.asyncResolve(uri, 0, cb);
+}
+
+function filter_test_uri0_2(pi)
+{
+  check_proxy(pi, "http", "localhost", 8080, 0, 10, true);
+  check_proxy(pi.failoverProxy, "direct", "", -1, 0, 0, false);
+
+  pps.unregisterFilter(filter02);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = filter_test_uri0_3;
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  pps.asyncResolve(uri, 0, cb);
+}
+
+function filter_test_uri0_3(pi)
+{
+  check_proxy(pi, "http", "localhost", 8080, 0, 10, true);
+  check_proxy(pi.failoverProxy, "direct", "", -1, 0, 0, false);
+
+  // Remove filter and verify that we return to the initial state
+
+  pps.unregisterFilter(filter01);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = filter_test_uri0_4;
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  pps.asyncResolve(uri, 0, cb);
+}
+
+function filter_test_uri0_4(pi)
+{
+  do_check_eq(pi, null);
   run_filter_test2();
 }
 
