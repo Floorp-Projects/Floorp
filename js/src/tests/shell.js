@@ -876,5 +876,3 @@ function OptLevel( i ) {
   cx.setOptimizationLevel(i);
 }
 /* end of Rhino functions */
-
-var std_iterator = Symbol.iterator;

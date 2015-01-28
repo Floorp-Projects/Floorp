@@ -31,7 +31,7 @@ var iterator_fn = Proxy.createFunction({}, function () {
 
 var obj = Proxy.create({
     get: function (receiver, name) {
-        assertEq(name, std_iterator);
+        assertEq(name, Symbol.iterator);
         s += "I";
         return iterator_fn;
     }

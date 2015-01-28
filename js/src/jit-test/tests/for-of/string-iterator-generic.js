@@ -5,7 +5,7 @@ load(libdir + "iteration.js");
 load(libdir + "string.js");
 
 function test(obj) {
-    var it = String.prototype[std_iterator].call(obj);
+    var it = String.prototype[Symbol.iterator].call(obj);
     var s = String(obj);
     for (var i = 0, length = s.length; i < length;) {
         var r = s[i++];

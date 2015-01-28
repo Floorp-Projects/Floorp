@@ -13,7 +13,7 @@ function Iter(val, count) {
         }
     }
 
-    this[std_iterator] = function() { return this; };
+    this[Symbol.iterator] = function() { return this; };
     this.next = next;
 }
 

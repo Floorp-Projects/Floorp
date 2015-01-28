@@ -4,7 +4,7 @@ load(libdir + "iteration.js");
 
 function iterable() {
   var iterable = {};
-  iterable[std_iterator] = () => ({next: () => void 0});
+  iterable[Symbol.iterator] = () => ({next: () => void 0});
   return iterable;
 }
 

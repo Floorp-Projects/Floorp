@@ -26,7 +26,7 @@ function TestDecreaseArrayLength() {
         return M2;
     }
 
-    var iter = ([])[std_iterator]();
+    var iter = ([])[Symbol.iterator]();
     var iterProto = Object.getPrototypeOf(iter);
     var OldNext = iterProto.next;
     var NewNext = function () {

@@ -18,11 +18,11 @@ assertEqArray([...[undefined]], [undefined]);
 // other iterable objects
 assertEqArray([...new Int32Array([1, 2, 3])], [1, 2, 3]);
 assertEqArray([..."abc"], ["a", "b", "c"]);
-assertEqArray([...[1, 2, 3][std_iterator]()], [1, 2, 3]);
+assertEqArray([...[1, 2, 3][Symbol.iterator]()], [1, 2, 3]);
 assertEqArray([...Set([1, 2, 3])], [1, 2, 3]);
 assertEqArray([...Map([["a", "A"], ["b", "B"], ["c", "C"]])].map(([k, v]) => k + v), ["aA", "bB", "cC"]);
 let itr = {};
-itr[std_iterator] = function () {
+itr[Symbol.iterator] = function () {
     return {
         i: 1,
         next: function() {
