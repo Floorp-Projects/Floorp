@@ -384,16 +384,21 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         return;
     }
 
-    OutOfLineLoadTypedArrayOutOfBounds *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
-    addOutOfLineCode(ool, mir);
-
+    OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     CodeOffsetLabel cmp = masm.cmp32WithPatch(ptrReg, Imm32(0));
-    masm.j(Assembler::AboveOrEqual, ool->entry());
+    if (mir->outOfBoundsLabel()) {
+        masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+    } else {
+        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
+        addOutOfLineCode(ool, mir);
+        masm.j(Assembler::AboveOrEqual, ool->entry());
+    }
 
     uint32_t before = masm.size();
     load(vt, srcAddr, out);
     uint32_t after = masm.size();
-    masm.bind(ool->rejoin());
+    if (ool)
+        masm.bind(ool->rejoin());
     memoryBarrier(ins->mir()->barrierAfter());
     masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), cmp.offset()));
 }
@@ -486,7 +491,11 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 
     CodeOffsetLabel cmp = masm.cmp32WithPatch(ptrReg, Imm32(0));
     Label rejoin;
-    masm.j(Assembler::AboveOrEqual, &rejoin);
+
+    if (mir->outOfBoundsLabel())
+        masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+    else
+        masm.j(Assembler::AboveOrEqual, &rejoin);
 
     uint32_t before = masm.size();
     store(vt, value, dstAddr);

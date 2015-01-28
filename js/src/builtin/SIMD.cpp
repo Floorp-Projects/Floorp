@@ -1049,6 +1049,7 @@ TypedArrayDataPtrFromArgs(JSContext *cx, const CallArgs &args, VElem **data)
     int32_t byteStart = index * typedArray->bytesPerElement();
     if (byteStart < 0 || (uint32_t(byteStart) + NumElem * sizeof(VElem)) > typedArray->byteLength())
     {
+        // Keep in sync with AsmJS OnOutOfBounds function.
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
         return false;
     }

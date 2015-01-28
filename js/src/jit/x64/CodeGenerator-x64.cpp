@@ -275,11 +275,14 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
-        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
-        addOutOfLineCode(ool, ins->mir());
-
         CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
-        masm.j(Assembler::AboveOrEqual, ool->entry());
+        if (mir->outOfBoundsLabel()) {
+            masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+        } else {
+            ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), vt);
+            addOutOfLineCode(ool, ins->mir());
+            masm.j(Assembler::AboveOrEqual, ool->entry());
+        }
         maybeCmpOffset = cmp.offset();
     }
 
@@ -328,7 +331,10 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         CodeOffsetLabel cmp = masm.cmp32WithPatch(ToRegister(ptr), Imm32(0));
-        masm.j(Assembler::AboveOrEqual, &rejoin);
+        if (mir->outOfBoundsLabel())
+            masm.j(Assembler::AboveOrEqual, mir->outOfBoundsLabel()); // Throws RangeError
+        else
+            masm.j(Assembler::AboveOrEqual, &rejoin);
         maybeCmpOffset = cmp.offset();
     }
 
