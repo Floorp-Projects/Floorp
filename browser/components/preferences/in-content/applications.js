@@ -1506,21 +1506,16 @@ var gApplicationsPane = {
     }
 
     // Create a menu item for selecting a local application.
-    let canOpenWithOtherApp = true;
 #ifdef XP_WIN
     // On Windows, selecting an application to open another application
     // would be meaningless so we special case executables.
-    let executableType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+    var executableType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
                                                   .getTypeFromExtension("exe");
-    canOpenWithOtherApp = handlerInfo.type != executableType;
+    if (handlerInfo.type != executableType)
 #endif
-    if (canOpenWithOtherApp)
     {
       let menuItem = document.createElement("menuitem");
-      menuItem.className = "choose-app-item";
-      menuItem.addEventListener("command", function(e) {
-        gApplicationsPane.chooseApp(e);
-      });
+      menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
       let label = this._prefsBundle.getString("useOtherApp");
       menuItem.setAttribute("label", label);
       menuItem.setAttribute("tooltiptext", label);
@@ -1532,10 +1527,7 @@ var gApplicationsPane = {
       let menuItem = document.createElement("menuseparator");
       menuPopup.appendChild(menuItem);
       menuItem = document.createElement("menuitem");
-      menuItem.className = "manage-app-item";
-      menuItem.addEventListener("command", function(e) {
-        gApplicationsPane.manageApp(e);
-      });
+      menuItem.setAttribute("oncommand", "gApplicationsPane.manageApp(event)");
       menuItem.setAttribute("label", this._prefsBundle.getString("manageApp"));
       menuPopup.appendChild(menuItem);
     }
@@ -1708,23 +1700,20 @@ var gApplicationsPane = {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
-    let onComplete = () => {
-      // Rebuild the actions menu so that we revert to the previous selection,
-      // or "Always ask" if the previous default application has been removed
-      this.rebuildActionsMenu();
-
-      // update the richlistitem too. Will be visible when selecting another row
-      typeItem.setAttribute("actionDescription",
-                            this._describePreferredAction(handlerInfo));
-      if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
-        typeItem.setAttribute("actionIcon",
-                              this._getIconURLForPreferredAction(handlerInfo));
-      }
-    };
-
     gSubDialog.open("chrome://browser/content/preferences/applicationManager.xul",
-                    "resizable=no", handlerInfo, onComplete);
+                    "resizable=no", handlerInfo);
 
+    // Rebuild the actions menu so that we revert to the previous selection,
+    // or "Always ask" if the previous default application has been removed
+    this.rebuildActionsMenu();
+
+    // update the richlistitem too. Will be visible when selecting another row
+    typeItem.setAttribute("actionDescription",
+                          this._describePreferredAction(handlerInfo));
+    if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
+      typeItem.setAttribute("actionIcon",
+                            this._getIconURLForPreferredAction(handlerInfo));
+    }
   },
 
   chooseApp: function(aEvent) {
@@ -1773,20 +1762,17 @@ var gApplicationsPane = {
     params.filename      = null;
     params.handlerApp    = null;
 
-    let onAppSelected = () => {
-      if (this.isValidHandlerApp(params.handlerApp)) {
-        handlerApp = params.handlerApp;
-
-        // Add the app to the type's list of possible handlers.
-        handlerInfo.addPossibleApplicationHandler(handlerApp);
-      }
-
-      chooseAppCallback(handlerApp);
-    };
-
     gSubDialog.open("chrome://global/content/appPicker.xul",
-                    null, params, onAppSelected);
+                    null, params);
 
+    if (this.isValidHandlerApp(params.handlerApp)) {
+      handlerApp = params.handlerApp;
+
+      // Add the app to the type's list of possible handlers.
+      handlerInfo.addPossibleApplicationHandler(handlerApp);
+    }
+
+    chooseAppCallback(handlerApp);
 #else
     let winTitle = this._prefsBundle.getString("fpTitleChooseApp");
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
