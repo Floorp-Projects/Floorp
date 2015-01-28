@@ -462,16 +462,16 @@ add_test(function test_read_number_with_length() {
   let numbers = [
     {
       number: "123456789",
-      epectedNumber: "123456789"
+      expectedNumber: "123456789"
     },
     {
       number: null,
-      epectedNumber: null
+      expectedNumber: null
     },
     // Invalid length of BCD number/SSC contents
     {
       number: "12345678901234567890123",
-      epectedNumber: ""
+      expectedNumber: ""
     },
   ];
 
@@ -494,7 +494,7 @@ add_test(function test_read_number_with_length() {
   }
 
   for (let i = 0; i < numbers.length; i++) {
-    do_test(numbers[i].number, numbers[i].epectedNumber);
+    do_test(numbers[i].number, numbers[i].expectedNumber);
   }
 
   run_next_test();
