@@ -126,8 +126,6 @@ nsVolumeService::Callback(const nsAString& aTopic, const nsAString& aState)
 
 NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString& aVolName, nsIVolume **aResult)
 {
-  GetVolumesFromParent();
-
   MonitorAutoLock autoLock(mArrayMonitor);
 
   nsRefPtr<nsVolume> vol = FindVolumeByName(aVolName);
@@ -142,8 +140,6 @@ NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString& aVolName, nsIVol
 NS_IMETHODIMP
 nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
 {
-  GetVolumesFromParent();
-
   NS_ConvertUTF16toUTF8 utf8Path(aPath);
   char realPathBuf[PATH_MAX];
 
@@ -194,8 +190,6 @@ nsVolumeService::GetVolumeByPath(const nsAString& aPath, nsIVolume **aResult)
 NS_IMETHODIMP
 nsVolumeService::CreateOrGetVolumeByPath(const nsAString& aPath, nsIVolume** aResult)
 {
-  GetVolumesFromParent();
-
   nsresult rv = GetVolumeByPath(aPath, aResult);
   if (rv == NS_OK) {
     return NS_OK;
@@ -220,8 +214,6 @@ nsVolumeService::CreateOrGetVolumeByPath(const nsAString& aPath, nsIVolume** aRe
 NS_IMETHODIMP
 nsVolumeService::GetVolumeNames(nsIArray** aVolNames)
 {
-  GetVolumesFromParent();
-
   NS_ENSURE_ARG_POINTER(aVolNames);
   MonitorAutoLock autoLock(mArrayMonitor);
 
@@ -305,25 +297,6 @@ nsVolumeService::RecvVolumesFromParent(const nsTArray<VolumeInfo>& aVolumes)
                                           volInfo.isHotSwappable());
     UpdateVolume(vol, false);
   }
-}
-
-void
-nsVolumeService::GetVolumesFromParent()
-{
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    // We are the parent. Therefore our volumes are already correct.
-    return;
-  }
-  if (mGotVolumesFromParent) {
-    // We've already done this, no need to do it again.
-    return;
-  }
-
-  nsTArray<VolumeInfo> result;
-  ContentChild::GetSingleton()->SendGetVolumes(&result);
-  RecvVolumesFromParent(result);
-
-  mGotVolumesFromParent = true;
 }
 
 NS_IMETHODIMP

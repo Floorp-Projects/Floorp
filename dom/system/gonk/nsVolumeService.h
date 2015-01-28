@@ -59,7 +59,6 @@ private:
   already_AddRefed<nsVolume> FindVolumeByMountLockName(const nsAString& aMountLockName);
   already_AddRefed<nsVolume> FindVolumeByName(const nsAString& aName);
   already_AddRefed<nsVolume> CreateOrFindVolumeByName(const nsAString& aName, bool aIsFake = false);
-  void GetVolumesFromParent();
 
   Monitor mArrayMonitor;
   nsVolume::Array mVolumeArray;

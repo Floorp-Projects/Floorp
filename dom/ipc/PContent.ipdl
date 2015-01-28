@@ -766,8 +766,6 @@ parent:
                                nsString aFilepath,
                                nsCString aReason);
 
-    sync GetVolumes() returns (VolumeInfo[] volumes);
-
     // Notify the parent that the child has finished handling a system message.
     async SystemMessageHandled();
 
