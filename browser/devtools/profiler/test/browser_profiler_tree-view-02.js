@@ -27,7 +27,7 @@ function test() {
   is(container.childNodes[0].className, "call-tree-item",
     "The root node in the tree has the correct class name.");
 
-  is($$dur(0).getAttribute("value"), "15",
+  is($$dur(0).getAttribute("value"), "15 ms",
     "The root's duration cell displays the correct value.");
   is($$perc(0).getAttribute("value"), "100%",
     "The root's percentage cell displays the correct value.");
@@ -53,7 +53,7 @@ function test() {
   is(container.childNodes[1].className, "call-tree-item",
     "The .A node in the tree has the correct class name.");
 
-  is($$dur(1).getAttribute("value"), "15",
+  is($$dur(1).getAttribute("value"), "15 ms",
     "The .A node's duration cell displays the correct value.");
   is($$perc(1).getAttribute("value"), "100%",
     "The .A node's percentage cell displays the correct value.");
@@ -82,7 +82,7 @@ function test() {
   is(container.childNodes[3].className, "call-tree-item",
     "The .E node in the tree has the correct class name.");
 
-  is($$dur(2).getAttribute("value"), "8",
+  is($$dur(2).getAttribute("value"), "8 ms",
     "The .A.B node's duration cell displays the correct value.");
   is($$perc(2).getAttribute("value"), "75%",
     "The .A.B node's percentage cell displays the correct value.");
@@ -101,7 +101,7 @@ function test() {
   is($$fun(".call-tree-category")[2].getAttribute("value"), "Styles",
     "The .A.B node's function cell displays the correct category.");
 
-  is($$dur(3).getAttribute("value"), "7",
+  is($$dur(3).getAttribute("value"), "7 ms",
     "The .A.E node's duration cell displays the correct value.");
   is($$perc(3).getAttribute("value"), "25%",
     "The .A.E node's percentage cell displays the correct value.");
