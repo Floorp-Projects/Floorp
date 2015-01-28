@@ -892,6 +892,61 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
     return DefinePropertyOnObject(cx, arr, id, desc, throwError, rval);
 }
 
+// ES6 draft rev31 9.4.5.3 [[DefineOwnProperty]]
+static bool
+DefinePropertyOnTypedArray(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
+                           bool throwError, bool *rval)
+{
+
+    MOZ_ASSERT(IsAnyTypedArray(obj));
+    // Steps 3.a-c.
+    uint64_t index;
+    if (IsTypedArrayIndex(id, &index)) {
+        // These are all substeps of 3.c.
+        // Steps i-vi.
+        // We (wrongly) ignore out of range defines with a value.
+        if (index >= AnyTypedArrayLength(obj)) {
+            *rval = true;
+            return true;
+        }
+
+        // Step vii.
+        if (desc.isAccessorDescriptor())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        // Step viii.
+        if (desc.hasConfigurable() && desc.configurable())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        // Step ix.
+        if (desc.hasEnumerable() && !desc.enumerable())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        // Step x.
+        if (desc.hasWritable() && !desc.writable())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        // Step xi.
+        if (desc.hasValue()) {
+            double d;
+            if (!ToNumber(cx, desc.value(), &d))
+                return false;
+
+            if (obj->is<TypedArrayObject>())
+                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            else
+                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
+        }
+
+        // Step xii.
+        *rval = true;
+        return true;
+    }
+
+    // Step 4.
+    return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, throwError, rval);
+}
+
 bool
 js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
                            bool throwError, bool *rval)
@@ -900,6 +955,9 @@ js::StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id, const P
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         return DefinePropertyOnArray(cx, arr, id, desc, throwError, rval);
     }
+
+    if (IsAnyTypedArray(obj))
+        return DefinePropertyOnTypedArray(cx, obj, id, desc, throwError, rval);
 
     if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
         return false;
@@ -961,6 +1019,15 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         for (size_t i = 0, len = ids.length(); i < len; i++) {
             if (!DefinePropertyOnArray(cx, arr, ids[i], descs[i], true, &dummy))
+                return false;
+        }
+        return true;
+    }
+
+    if (IsAnyTypedArray(obj)) {
+        bool dummy;
+        for (size_t i = 0, len = ids.length(); i < len; i++) {
+            if (!DefinePropertyOnTypedArray(cx, obj, ids[i], descs[i], true, &dummy))
                 return false;
         }
         return true;
