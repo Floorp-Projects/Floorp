@@ -275,27 +275,36 @@ let NetworkHelper = {
    */
   loadFromCache: function NH_loadFromCache(aUrl, aCharset, aCallback)
   {
-    let channel = NetUtil.newChannel(aUrl);
+    let channel = NetUtil.newChannel2(aUrl,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_OTHER);
 
     // Ensure that we only read from the cache and not the server.
     channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch(channel, (aInputStream, aStatusCode, aRequest) => {
-      if (!components.isSuccessCode(aStatusCode)) {
-        aCallback(null);
-        return;
-      }
+    NetUtil.asyncFetch2(
+      channel,
+      (aInputStream, aStatusCode, aRequest) => {
+        if (!components.isSuccessCode(aStatusCode)) {
+          aCallback(null);
+          return;
+        }
 
-      // Try to get the encoding from the channel. If there is none, then use
-      // the passed assumed aCharset.
-      let aChannel = aRequest.QueryInterface(Ci.nsIChannel);
-      let contentCharset = aChannel.contentCharset || aCharset;
+        // Try to get the encoding from the channel. If there is none, then use
+        // the passed assumed aCharset.
+        let aChannel = aRequest.QueryInterface(Ci.nsIChannel);
+        let contentCharset = aChannel.contentCharset || aCharset;
 
-      // Read the content of the stream using contentCharset as encoding.
-      aCallback(this.readAndConvertFromStream(aInputStream, contentCharset));
-    });
+        // Read the content of the stream using contentCharset as encoding.
+        aCallback(this.readAndConvertFromStream(aInputStream, contentCharset));
+      });
   },
 
   /**

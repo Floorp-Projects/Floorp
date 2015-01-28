@@ -40,7 +40,6 @@ jfieldID AndroidGeckoEvent::jDOMPrintableKeyValueField = 0;
 jfieldID AndroidGeckoEvent::jKeyCodeField = 0;
 jfieldID AndroidGeckoEvent::jScanCodeField = 0;
 jfieldID AndroidGeckoEvent::jMetaStateField = 0;
-jfieldID AndroidGeckoEvent::jDomKeyLocationField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
 jfieldID AndroidGeckoEvent::jBaseUnicodeCharField = 0;
@@ -71,9 +70,6 @@ jfieldID AndroidGeckoEvent::jGamepadButtonValueField = 0;
 jfieldID AndroidGeckoEvent::jGamepadValuesField = 0;
 jfieldID AndroidGeckoEvent::jPrefNamesField = 0;
 jfieldID AndroidGeckoEvent::jObjectField = 0;
-
-jclass AndroidGeckoEvent::jDomKeyLocationClass = 0;
-jfieldID AndroidGeckoEvent::jDomKeyLocationValueField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -150,7 +146,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jKeyCodeField = geckoEvent.getField("mKeyCode", "I");
     jScanCodeField = geckoEvent.getField("mScanCode", "I");
     jMetaStateField = geckoEvent.getField("mMetaState", "I");
-    jDomKeyLocationField = geckoEvent.getField("mDomKeyLocation", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
     jFlagsField = geckoEvent.getField("mFlags", "I");
     jUnicodeCharField = geckoEvent.getField("mUnicodeChar", "I");
     jBaseUnicodeCharField = geckoEvent.getField("mBaseUnicodeChar", "I");
@@ -182,11 +177,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jGamepadValuesField = geckoEvent.getField("mGamepadValues", "[F");
     jPrefNamesField = geckoEvent.getField("mPrefNames", "[Ljava/lang/String;");
     jObjectField = geckoEvent.getField("mObject", "Ljava/lang/Object;");
-
-    // Init GeckoEvent.DomKeyLocation enum
-    AutoJNIClass domKeyLocation(jEnv, "org/mozilla/gecko/GeckoEvent$DomKeyLocation");
-    jDomKeyLocationClass = domKeyLocation.getGlobalRef();
-    jDomKeyLocationValueField = domKeyLocation.getField("value", "I");
 }
 
 void
@@ -389,18 +379,6 @@ AndroidGeckoEvent::UnionRect(nsIntRect const& aRect)
     mRect = aRect.Union(mRect);
 }
 
-uint32_t
-AndroidGeckoEvent::ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj)
-{
-    jobject enumObject = jenv->GetObjectField(jGeckoEventObj,
-                                             jDomKeyLocationField);
-    MOZ_ASSERT(enumObject);
-    int enumValue = jenv->GetIntField(enumObject, jDomKeyLocationValueField);
-    MOZ_ASSERT(enumValue >= nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD &&
-               enumValue <= nsIDOMKeyEvent::DOM_KEY_LOCATION_JOYSTICK);
-    return static_cast<uint32_t>(enumValue);
-}
-
 void
 AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 {
@@ -424,7 +402,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case IME_KEY_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            mDomKeyLocation = ReadDomKeyLocation(jenv, jobj);
             mFlags = jenv->GetIntField(jobj, jFlagsField);
             mKeyCode = jenv->GetIntField(jobj, jKeyCodeField);
             mScanCode = jenv->GetIntField(jobj, jScanCodeField);

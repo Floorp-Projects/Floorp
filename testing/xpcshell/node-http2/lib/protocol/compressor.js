@@ -1123,10 +1123,10 @@ Compressor.prototype.compress = function compress(headers) {
     //   separate header fields, each with one or more cookie-pairs.
     if (name == 'cookie') {
       if (!(value instanceof Array)) {
-        value = [value]
+        value = [value];
       }
       value = Array.prototype.concat.apply([], value.map(function(cookie) {
-        return String(cookie).split(';').map(trim)
+        return String(cookie).split(';').map(trim);
       }));
     }
 
@@ -1256,7 +1256,7 @@ Decompressor.prototype.decompress = function decompress(block) {
   //   into a single octet string using the two octet delimiter of 0x3B, 0x20 (the ASCII
   //   string "; ").
   if (('cookie' in headers) && (headers['cookie'] instanceof Array)) {
-    headers['cookie'] = headers['cookie'].join('; ')
+    headers['cookie'] = headers['cookie'].join('; ');
   }
 
   return headers;
@@ -1340,5 +1340,5 @@ function cut(buffer, size) {
 }
 
 function trim(string) {
-  return string.trim()
+  return string.trim();
 }
