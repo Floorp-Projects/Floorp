@@ -8,6 +8,7 @@
 
 #include "mozilla/TextEventDispatcherListener.h"
 #include "nsITextInputProcessor.h"
+#include "nsITextInputProcessorCallback.h"
 
 namespace mozilla {
 
@@ -37,6 +38,7 @@ private:
   ~TextInputProcessor();
 
   nsresult InitInternal(nsIDOMWindow* aWindow,
+                        nsITextInputProcessorCallback* aCallback,
                         bool aForTests,
                         bool& aSucceeded);
   nsresult CommitCompositionInternal(const nsAString* aCommitString = nullptr,
@@ -46,6 +48,7 @@ private:
   void UnlinkFromTextEventDispatcher();
 
   TextEventDispatcher* mDispatcher; // [Weak]
+  nsCOMPtr<nsITextInputProcessorCallback> mCallback;
   bool mForTests;
 };
 
