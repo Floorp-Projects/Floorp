@@ -22,12 +22,12 @@ public abstract class TileLayer extends Layer {
     private IntSize mSize;
     private int[] mTextureIDs;
 
-    protected final CairoImage mImage;
+    protected final BufferedImage mImage;
 
     public enum PaintMode { NORMAL, REPEAT, STRETCH };
     private PaintMode mPaintMode;
 
-    public TileLayer(CairoImage image, PaintMode paintMode) {
+    public TileLayer(BufferedImage image, PaintMode paintMode) {
         super(image.getSize());
 
         mPaintMode = paintMode;
@@ -143,8 +143,8 @@ public abstract class TileLayer extends Layer {
             GLES20.glGenTextures(mTextureIDs.length, mTextureIDs, 0);
         }
 
-        int cairoFormat = mImage.getFormat();
-        CairoGLInfo glInfo = new CairoGLInfo(cairoFormat);
+        int imageFormat = mImage.getFormat();
+        BufferedImageGLInfo glInfo = new BufferedImageGLInfo(imageFormat);
 
         bindAndSetGLParameters();
 
