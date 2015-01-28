@@ -64,6 +64,11 @@ public:
   nsresult GetState() const;
 
   /**
+   * StartComposition() starts composition explicitly.
+   */
+  nsresult StartComposition(nsEventStatus& aStatus);
+
+  /**
    * SetPendingCompositionString() sets new composition string which will be
    * dispatched with NS_COMPOSITION_CHANGE event by calling Flush().
    *

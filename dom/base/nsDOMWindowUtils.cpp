@@ -2134,6 +2134,35 @@ InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
   aEvent.time = PR_IntervalNow();
 }
 
+nsresult
+nsDOMWindowUtils::GetTextEventDispatcher(TextEventDispatcher** aDispatcher)
+{
+  if (!aDispatcher) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aDispatcher = nullptr;
+
+  nsCOMPtr<nsIWidget> widget(GetWidget());
+  if (NS_WARN_IF(!widget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  TextEventDispatcher* dispatcher = widget->GetTextEventDispatcher();
+  nsresult rv = dispatcher->GetState();
+  if (NS_SUCCEEDED(rv)) {
+    NS_ADDREF(*aDispatcher = dispatcher);
+    return NS_OK;
+  }
+  if (rv == NS_ERROR_NOT_INITIALIZED) {
+    rv = dispatcher->InitForTests();
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  NS_ADDREF(*aDispatcher = dispatcher);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
                                        const nsAString& aData,
@@ -2149,7 +2178,13 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
 
   uint32_t msg;
   if (aType.EqualsLiteral("compositionstart")) {
-    msg = NS_COMPOSITION_START;
+    nsRefPtr<TextEventDispatcher> dispatcher;
+    nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    nsEventStatus status = nsEventStatus_eIgnore;
+    return dispatcher->StartComposition(status);
   } else if (aType.EqualsLiteral("compositionend")) {
     // Now we don't support manually dispatching composition end with this
     // API.  A compositionend is dispatched when this is called with
@@ -2205,11 +2240,9 @@ nsDOMWindowUtils::CreateCompositionStringSynthesizer(
   if (NS_WARN_IF(!widget)) {
     return NS_ERROR_FAILURE;
   }
-  nsRefPtr<TextEventDispatcher> dispatcher(widget->GetTextEventDispatcher());
-  nsresult rv = dispatcher->GetState();
-  if (rv == NS_ERROR_NOT_INITIALIZED) {
-    dispatcher->InitForTests();
-  } else if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsRefPtr<TextEventDispatcher> dispatcher;
+  nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   NS_ADDREF(*aResult = new CompositionStringSynthesizer(dispatcher));
