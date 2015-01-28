@@ -2048,7 +2048,7 @@ Scope.prototype = {
     let parentView = self.ownerView;
     let topView;
 
-    while (topView = parentView.ownerView) {
+    while ((topView = parentView.ownerView)) {
       parentView = topView;
     }
     return parentView;
