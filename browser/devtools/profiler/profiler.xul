@@ -112,7 +112,7 @@
           <label class="plain call-tree-header"
                  type="duration"
                  crop="end"
-                 value="&profilerUI.table.totalDuration;"/>
+                 value="&profilerUI.table.totalDuration2;"/>
           <label class="plain call-tree-header"
                  type="percentage"
                  crop="end"
@@ -120,7 +120,7 @@
           <label class="plain call-tree-header"
                  type="self-duration"
                  crop="end"
-                 value="&profilerUI.table.selfDuration;"/>
+                 value="&profilerUI.table.selfDuration2;"/>
           <label class="plain call-tree-header"
                  type="self-percentage"
                  crop="end"

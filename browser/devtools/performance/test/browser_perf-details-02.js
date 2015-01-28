@@ -7,25 +7,25 @@
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView } = panel.panelWin;
-  let { WaterfallView, CallTreeView, FlameGraphView } = panel.panelWin;
+  let { WaterfallView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is selected by default in the details view.");
 
-  let selected = DetailsView.whenViewSelected(CallTreeView);
+  let selected = DetailsView.whenViewSelected(JsCallTreeView);
   let notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  DetailsView.selectView("calltree");
+  DetailsView.selectView("js-calltree");
   yield Promise.all([selected, notified]);
 
-  ok(DetailsView.isViewSelected(CallTreeView),
+  ok(DetailsView.isViewSelected(JsCallTreeView),
     "The waterfall view is now selected in the details view.");
 
-  selected = DetailsView.whenViewSelected(FlameGraphView);
+  selected = DetailsView.whenViewSelected(JsFlameGraphView);
   notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  DetailsView.selectView("flamegraph");
+  DetailsView.selectView("js-flamegraph");
   yield Promise.all([selected, notified]);
 
-  ok(DetailsView.isViewSelected(FlameGraphView),
+  ok(DetailsView.isViewSelected(JsFlameGraphView),
     "The flamegraph view is now selected in the details view.");
 
   selected = DetailsView.whenViewSelected(WaterfallView);

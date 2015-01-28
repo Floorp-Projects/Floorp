@@ -59,6 +59,24 @@ exports.RecordingUtils.offsetMarkerTimes = function(markers, timeOffset) {
 }
 
 /**
+ * Offsets and scales all the timestamps in the provided array by the
+ * specified time and scale factor.
+ *
+ * @param array array
+ *        A list of timestamps received from the backend.
+ * @param number timeOffset
+ *        The amount of time to offset by (in milliseconds).
+ * @param number timeScale
+ *        The factor to scale by, after offsetting.
+ */
+exports.RecordingUtils.offsetAndScaleTimestamps = function(timestamps, timeOffset, timeScale) {
+  for (let i = 0, len = timestamps.length; i < len; i++) {
+    timestamps[i] -= timeOffset;
+    timestamps[i] /= timeScale;
+  }
+}
+
+/**
  * Converts allocation data from the memory actor to something that follows
  * the same structure as the samples data received from the profiler.
  *
