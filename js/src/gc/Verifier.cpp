@@ -219,7 +219,6 @@ gc::GCRuntime::startVerifyPreBarriers()
     /* Create the root node. */
     trc->curnode = MakeNode(trc, nullptr, JSGCTraceKind(0));
 
-    /* We want MarkRuntime to save the roots to gcSavedRoots. */
     incrementalState = MARK_ROOTS;
 
     /* Make all the roots be edges emanating from the root node. */

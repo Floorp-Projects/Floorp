@@ -11,27 +11,35 @@ this.EXPORTED_SYMBOLS = [
 let currentBrowser = null;
 
 this.SelectParentHelper = {
-  populate: function(popup, items, selectedIndex) {
+  populate: function(menulist, items, selectedIndex) {
     // Clear the current contents of the popup
-    popup.textContent = "";
-    populateChildren(popup, items, selectedIndex);
+    menulist.menupopup.textContent = "";
+    populateChildren(menulist.menupopup, items, selectedIndex);
+    // We expect the parent element of the popup to be a <xul:menulist> that
+    // has the popuponly attribute set to "true". This is necessary in order
+    // for a <xul:menupopup> to act like a proper <html:select> dropdown, as
+    // the <xul:menulist> does things like remember state and set the
+    // _moz-menuactive attribute on the selected <xul:menuitem>.
+    menulist.selectedIndex = selectedIndex;
   },
 
-  open: function(browser, popup, rect) {
+  open: function(browser, menulist, rect) {
+    menulist.hidden = false;
     currentBrowser = browser;
-    this._registerListeners(popup);
-    popup.hidden = false;
+    this._registerListeners(menulist.menupopup);
 
     let {x, y} = browser.mapScreenCoordinatesFromContent(rect.left, rect.top + rect.height);
-    popup.openPopupAtScreen(x, y);
+    menulist.menupopup.openPopupAtScreen(x, y);
+    menulist.selectedItem.scrollIntoView();
   },
 
-  hide: function(popup) {
-    popup.hidePopup();
+  hide: function(menulist) {
+    menulist.menupopup.hidePopup();
   },
 
   handleEvent: function(event) {
     let popup = event.currentTarget;
+    let menulist = popup.parentNode;
 
     switch (event.type) {
       case "command":
@@ -47,6 +55,7 @@ this.SelectParentHelper = {
         currentBrowser.messageManager.sendAsyncMessage("Forms:DismissedDropDown", {});
         currentBrowser = null;
         this._unregisterListeners(popup);
+        menulist.hidden = true;
         break;
     }
   },
@@ -69,11 +78,6 @@ function populateChildren(element, options, selectedIndex, startIndex = 0, isGro
   for (let option of options) {
     let item = element.ownerDocument.createElement("menuitem");
     item.setAttribute("label", option.textContent);
-    item.setAttribute("type", "radio");
-
-    if (index == selectedIndex) {
-      item.setAttribute("checked", "true");
-    }
 
     element.appendChild(item);
 

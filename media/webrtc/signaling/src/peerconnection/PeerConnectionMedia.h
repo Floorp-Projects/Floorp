@@ -466,6 +466,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                               const std::string& aPassword,
                               const std::vector<std::string>& aCandidateList);
   void GatherIfReady();
+  void FlushIceCtxOperationQueueIfReady();
+  void PerformOrEnqueueIceCtxOperation(const nsRefPtr<nsIRunnable>& runnable);
   void EnsureIceGathering_s();
   void StartIceChecks_s(bool aIsControlling,
                         bool aIsIceLite,
@@ -497,6 +499,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void EndOfLocalCandidates_m(const std::string& aDefaultAddr,
                               uint16_t aDefaultPort,
                               uint16_t aMLine);
+  bool IsIceCtxReady() const {
+    return mProxyResolveCompleted;
+  }
 
 
   // The parent PC
@@ -539,8 +544,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // The STS thread.
   nsCOMPtr<nsIEventTarget> mSTSThread;
 
-  // Used to track when transports are updated and are ready to start gathering
-  bool mTransportsUpdated;
+  // Used whenever we need to dispatch a runnable to STS to tweak something
+  // on our ICE ctx, but are not ready to do so at the moment (eg; we are
+  // waiting to get a callback with our http proxy config before we start
+  // gathering or start checking)
+  std::vector<nsRefPtr<nsIRunnable>> mQueuedIceCtxOperations;
 
   // Used to cancel any ongoing proxy request.
   nsCOMPtr<nsICancelable> mProxyRequest;

@@ -14,9 +14,13 @@ interface SVGViewSpec;
 
 interface SVGSVGElement : SVGGraphicsElement {
 
+  [Constant]
   readonly attribute SVGAnimatedLength x;
+  [Constant]
   readonly attribute SVGAnimatedLength y;
+  [Constant]
   readonly attribute SVGAnimatedLength width;
+  [Constant]
   readonly attribute SVGAnimatedLength height;
   // readonly attribute SVGRect viewport;
   [Constant]

@@ -3908,14 +3908,25 @@ void
 CodeGenerator::visitHypot(LHypot *lir)
 {
     Register temp = ToRegister(lir->temp());
-    FloatRegister x = ToFloatRegister(lir->x());
-    FloatRegister y = ToFloatRegister(lir->y());
+    uint32_t numArgs = lir->numArgs();
+    masm.setupUnalignedABICall(numArgs, temp);
 
-    masm.setupUnalignedABICall(2, temp);
-    masm.passABIArg(x, MoveOp::DOUBLE);
-    masm.passABIArg(y, MoveOp::DOUBLE);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaHypot), MoveOp::DOUBLE);
+    for (uint32_t i = 0 ; i < numArgs; ++i)
+        masm.passABIArg(ToFloatRegister(lir->getOperand(i)), MoveOp::DOUBLE);
 
+    switch(numArgs) {
+      case 2:
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaHypot), MoveOp::DOUBLE);
+        break;
+      case 3:
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, hypot3), MoveOp::DOUBLE);
+        break;
+      case 4:
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, hypot4), MoveOp::DOUBLE);
+        break;
+      default:
+        MOZ_CRASH("Unexpected number of arguments to hypot function.");
+    }
     MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
 }
 

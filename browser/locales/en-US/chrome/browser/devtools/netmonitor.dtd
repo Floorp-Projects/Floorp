@@ -202,6 +202,14 @@
   -  in a "receive" state. -->
 <!ENTITY netmonitorUI.timings.receive     "Receiving:">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.security.warning.protocol): A tooltip
+  -  for warning icon that indicates a connection uses insecure protocol. -->
+<!ENTITY netmonitorUI.security.warning.sslv3      "The protocol SSL 3.0 is deprecated and insecure.">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.security.warning.cipher): A tooltip
+  -  for warning icon that indicates a connection uses insecure cipher suite. -->
+<!ENTITY netmonitorUI.security.warning.cipher     "The cipher used for encryption is deprecated and insecure.">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.security.error): This is the label displayed
   -  in the security tab if a security error prevented the connection. -->
 <!ENTITY netmonitorUI.security.error      "An error occured:">

@@ -245,6 +245,12 @@ math_atanh(JSContext *cx, unsigned argc, js::Value *vp);
 extern double
 ecmaHypot(double x, double y);
 
+extern double
+hypot3(double x, double y, double z);
+
+extern double
+hypot4(double x, double y, double z, double w);
+
 extern bool
 math_hypot(JSContext *cx, unsigned argc, Value *vp);
 

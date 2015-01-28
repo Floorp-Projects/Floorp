@@ -16,10 +16,10 @@ const PAGE_CONTENT = [
 ].join("\n");
 
 const TEST_NODES = [
-  {selector: "img.local", size: "192 x 192"},
-  {selector: "img.data", size: "64 x 64"},
-  {selector: "img.remote", size: "22 x 23"},
-  {selector: ".canvas", size: "600 x 600"}
+  {selector: "img.local", size: "192" + " \u00D7 " + "192"},
+  {selector: "img.data", size: "64" + " \u00D7 " + "64"},
+  {selector: "img.remote", size: "22" + " \u00D7 " + "23"},
+  {selector: ".canvas", size: "600" + " \u00D7 " + "600"}
 ];
 
 add_task(function*() {

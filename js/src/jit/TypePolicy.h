@@ -93,6 +93,13 @@ class ArithPolicy MOZ_FINAL : public TypePolicy
     virtual bool adjustInputs(TempAllocator &alloc, MInstruction *def) MOZ_OVERRIDE;
 };
 
+class AllDoublePolicy MOZ_FINAL : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
+};
+
 class BitwisePolicy MOZ_FINAL : public TypePolicy
 {
   public:

@@ -1683,7 +1683,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onSecurityIconClick: function(e) {
     let state = this.selectedItem.attachment.securityState;
-    if (state === "broken" || state === "secure") {
+    if (state !== "insecure") {
       // Choose the security tab.
       NetMonitorView.NetworkDetails.widget.selectedIndex = 5;
     }
@@ -2605,7 +2605,7 @@ NetworkDetailsView.prototype = {
         // in width and height attributes like the rest of the folk. Hack around
         // this by getting the bounding client rect and subtracting the margins.
         let { width, height } = e.target.getBoundingClientRect();
-        let dimensions = (width - 2) + " x " + (height - 2);
+        let dimensions = (width - 2) + " \u00D7 " + (height - 2);
         $("#response-content-image-dimensions-value").setAttribute("value", dimensions);
       };
     }
@@ -2765,9 +2765,21 @@ NetworkDetailsView.prototype = {
     let errorbox = $("#security-error");
     let infobox = $("#security-information");
 
-    if (securityInfo.state === "secure") {
+    if (securityInfo.state === "secure" || securityInfo.state === "weak") {
       infobox.hidden = false;
       errorbox.hidden = true;
+
+      // Warning icons
+      let cipher = $("#security-warning-cipher");
+      let sslv3 = $("#security-warning-sslv3");
+
+      if (securityInfo.state === "weak") {
+        cipher.hidden = securityInfo.weaknessReasons.indexOf("cipher") === -1;
+        sslv3.hidden = securityInfo.weaknessReasons.indexOf("sslv3") === -1;
+      } else {
+        cipher.hidden = true;
+        sslv3.hidden = true;
+      }
 
       let enabledLabel = L10N.getStr("netmonitor.security.enabled");
       let disabledLabel = L10N.getStr("netmonitor.security.disabled");
