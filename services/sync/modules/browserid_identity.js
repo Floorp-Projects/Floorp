@@ -185,7 +185,7 @@ this.BrowserIDManager.prototype = {
     // Reset the world before we do anything async.
     this.whenReadyToAuthenticate = Promise.defer();
     this.whenReadyToAuthenticate.promise.then(null, (err) => {
-      this._log.error("Could not authenticate: " + err);
+      this._log.error("Could not authenticate", err);
     });
 
     // initializeWithCurrentIdentity() can be called after the
@@ -244,11 +244,11 @@ this.BrowserIDManager.prototype = {
         this._shouldHaveSyncKeyBundle = true; // but we probably don't have one...
         this.whenReadyToAuthenticate.reject(err);
         // report what failed...
-        this._log.error("Background fetch for key bundle failed: " + err);
+        this._log.error("Background fetch for key bundle failed", err);
       });
       // and we are done - the fetch continues on in the background...
     }).then(null, err => {
-      this._log.error("Processing logged in account: " + err);
+      this._log.error("Processing logged in account", err);
     });
   },
 
@@ -512,7 +512,9 @@ this.BrowserIDManager.prototype = {
     return true;
   },
 
-  // Refresh the sync token for our user.
+  // Refresh the sync token for our user. Returns a promise that resolves
+  // with a token (which may be null in one sad edge-case), or rejects with an
+  // error.
   _fetchTokenForUser: function() {
     let tokenServerURI = Svc.Prefs.get("tokenServerURI");
     if (tokenServerURI.endsWith("/")) { // trailing slashes cause problems...
@@ -527,11 +529,8 @@ this.BrowserIDManager.prototype = {
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
     if (!this._canFetchKeys()) {
-      log.info("_fetchTokenForUser has no keys to use.");
-      return null;
+      return Promise.resolve(null);
     }
-
-    log.info("Fetching assertion and token from: " + tokenServerURI);
 
     let maybeFetchKeys = () => {
       // This is called at login time and every time we need a new token - in
@@ -539,6 +538,7 @@ this.BrowserIDManager.prototype = {
       if (userData.kA && userData.kB) {
         return;
       }
+      log.info("Fetching new keys");
       return this._fxaService.getKeys().then(
         newUserData => {
           userData = newUserData;
@@ -565,7 +565,7 @@ this.BrowserIDManager.prototype = {
     }
 
     let getAssertion = () => {
-      log.debug("Getting an assertion");
+      log.info("Getting an assertion from", tokenServerURI);
       let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
       return fxa.getAssertion(audience);
     };
@@ -594,7 +594,7 @@ this.BrowserIDManager.prototype = {
         if (err.response && err.response.status === 401) {
           err = new AuthenticationError(err);
         // A hawkclient error.
-        } else if (err.code === 401) {
+        } else if (err.code && err.code === 401) {
           err = new AuthenticationError(err);
         }
 
@@ -602,13 +602,13 @@ this.BrowserIDManager.prototype = {
         // properly: auth error getting assertion, auth error getting token (invalid generation
         // and client-state error)
         if (err instanceof AuthenticationError) {
-          this._log.error("Authentication error in _fetchTokenForUser: " + err);
+          this._log.error("Authentication error in _fetchTokenForUser", err);
           // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
           this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
         } else {
-          this._log.error("Non-authentication error in _fetchTokenForUser: "
-                          + (err.message || err));
-          // for now assume it is just a transient network related problem.
+          this._log.error("Non-authentication error in _fetchTokenForUser", err);
+          // for now assume it is just a transient network related problem
+          // (although sadly, it might also be a regular unhandled exception)
           this._authFailureReason = LOGIN_FAILED_NETWORK_ERROR;
         }
         // this._authFailureReason being set to be non-null in the above if clause
@@ -629,6 +629,9 @@ this.BrowserIDManager.prototype = {
       this._log.debug("_ensureValidToken already has one");
       return Promise.resolve();
     }
+    // reset this._token as a safety net to reduce the possibility of us
+    // repeatedly attempting to use an invalid token if _fetchTokenForUser throws.
+    this._token = null;
     return this._fetchTokenForUser().then(
       token => {
         this._token = token;
@@ -657,7 +660,7 @@ this.BrowserIDManager.prototype = {
     try {
       cb.wait();
     } catch (ex) {
-      this._log.error("Failed to fetch a token for authentication: " + ex);
+      this._log.error("Failed to fetch a token for authentication", ex);
       return null;
     }
     if (!this._token) {
@@ -708,6 +711,17 @@ BrowserIDClusterManager.prototype = {
 
   _findCluster: function() {
     let endPointFromIdentityToken = function() {
+      // The only reason (in theory ;) that we can end up with a null token
+      // is when this.identity._canFetchKeys() returned false.  In turn, this
+      // should only happen if the master-password is locked or the credentials
+      // storage is screwed, and in those cases we shouldn't have started
+      // syncing so shouldn't get here anyway.
+      // But better safe than sorry! To keep things clearer, throw an explicit
+      // exception - the message will appear in the logs and the error will be
+      // treated as transient.
+      if (!this.identity._token) {
+        throw new Error("Can't get a cluster URL as we can't fetch keys.");
+      }
       let endpoint = this.identity._token.endpoint;
       // For Sync 1.5 storage endpoints, we use the base endpoint verbatim.
       // However, it should end in "/" because we will extend it with
@@ -742,6 +756,7 @@ BrowserIDClusterManager.prototype = {
       cb(null, clusterURL);
     }).then(
       null, err => {
+      log.info("Failed to fetch the cluster URL", err);
       // service.js's verifyLogin() method will attempt to fetch a cluster
       // URL when it sees a 401.  If it gets null, it treats it as a "real"
       // auth error and sets Status.login to LOGIN_FAILED_LOGIN_REJECTED, which

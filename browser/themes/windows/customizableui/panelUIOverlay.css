@@ -140,3 +140,95 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   }
 }
 %endif
+
+@media not all and (-moz-windows-default-theme) {
+  #edit-controls@inAnyPanel@ > #copy-button,
+  #zoom-controls@inAnyPanel@ > #zoom-reset-button,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+    border: 1px solid transparent;
+  }
+
+  panelview .toolbarbutton-1@buttonStateHover@,
+  toolbarbutton.subviewbutton@buttonStateHover@,
+  menu.subviewbutton@menuStateHover@,
+  menuitem.subviewbutton@menuStateHover@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+    border-color: ThreeDLightShadow !important;
+  }
+
+  panelview:not(#PanelUI-mainView) .toolbarbutton-1@buttonStateHover@,
+  toolbarbutton.subviewbutton@buttonStateHover@,
+  menu.subviewbutton@menuStateHover@,
+  menuitem.subviewbutton@menuStateHover@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateHover@ {
+    background-color: Highlight;
+    color: highlighttext;
+  }
+
+  panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
+  toolbarbutton.subviewbutton@buttonStateActive@,
+  menu.subviewbutton@menuStateActive@,
+  menuitem.subviewbutton@menuStateActive@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
+    background-color: Highlight;
+    border-color: ThreeDLightShadow;
+    color: highlighttext;
+    box-shadow: none;
+  }
+
+  panelview .toolbarbutton-1[disabled],
+  toolbarbutton.subviewbutton[disabled],
+  menu.subviewbutton[disabled],
+  menuitem.subviewbutton[disabled],
+  .widget-overflow-list .toolbarbutton-1[disabled],
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] {
+    text-shadow: none;
+  }
+
+  #PanelUI-fxa-status,
+  #PanelUI-help,
+  #PanelUI-customize {
+    border: 1px solid transparent;
+  }
+
+  #PanelUI-fxa-status:not([disabled]):hover,
+  #PanelUI-help:not([disabled]):hover,
+  #PanelUI-customize:hover,
+  #PanelUI-fxa-status:not([disabled]):hover:active,
+  #PanelUI-help:not([disabled]):hover:active,
+  #PanelUI-customize:hover:active {
+    border-color: ThreeDLightShadow;
+    box-shadow: none;
+  }
+
+  #BMB_bookmarksPopup .menu-text,
+  #BMB_bookmarksPopup menupopup {
+    color: -moz-FieldText;
+  }
+
+  #BMB_bookmarksPopup .subviewbutton[disabled=true] > .menu-text {
+    color: GrayText;
+  }
+
+  #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
+    box-shadow: none;
+    background: -moz-field;
+    border: 1px solid ThreeDShadow;
+  }
+
+  .subviewbutton.panel-subview-footer,
+  #BMB_bookmarksPopup .subviewbutton.panel-subview-footer {
+    color: ButtonText;
+  }
+
+  .subviewbutton@menuStateHover@,
+  menuitem.panel-subview-footer@menuStateHover@,
+  .subviewbutton.panel-subview-footer@buttonStateHover@,
+  .subviewbutton.panel-subview-footer@buttonStateActive@,
+  #BMB_bookmarksPopup .panel-subview-footer@menuStateHover@ > .menu-text {
+    background-color: Highlight;
+    color: highlighttext !important;
+  }
+}

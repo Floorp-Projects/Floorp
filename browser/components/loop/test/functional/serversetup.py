@@ -23,8 +23,8 @@ CONTENT_SERVER_ENV = os.environ.copy()
 CONTENT_SERVER_ENV.update({"PORT": str(CONTENT_SERVER_PORT),
                            "LOOP_SERVER_PORT": str(LOOP_SERVER_PORT)})
 
-WEB_APP_URL = "http://localhost:" + str(CONTENT_SERVER_PORT) + \
-              "/content/#call/{token}"
+ROOMS_WEB_APP_URL = "http://localhost:" + str(CONTENT_SERVER_PORT) + \
+  "/content/{token}"
 
 LOOP_SERVER_COMMAND = ["make", "runserver"]
 LOOP_SERVER_ENV = os.environ.copy()
@@ -33,7 +33,7 @@ LOOP_SERVER_ENV = os.environ.copy()
 LOOP_SERVER_ENV.update({"NODE_ENV": "dev",
                         "PORT": str(LOOP_SERVER_PORT),
                         "SERVER_ADDRESS": "localhost:" + str(LOOP_SERVER_PORT),
-                        "WEB_APP_URL": WEB_APP_URL})
+                        "ROOMS_WEB_APP_URL": ROOMS_WEB_APP_URL})
 
 
 class LoopTestServers:

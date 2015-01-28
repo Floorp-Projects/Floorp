@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsIFile.h"
+#include "nsIThreadInternal.h"
 
 class mozIStorageConnection;
 
@@ -208,6 +209,34 @@ public:
     uint32_t mFlushFailureCount;
   };
 
+  class ThreadObserver MOZ_FINAL : public nsIThreadObserver
+  {
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSITHREADOBSERVER
+
+    ThreadObserver()
+      : mHasPendingEvents(false)
+      , mMonitor("DOMStorageThreadMonitor")
+    {
+    }
+
+    bool HasPendingEvents() {
+      mMonitor.AssertCurrentThreadOwns();
+      return mHasPendingEvents;
+    }
+    void ClearPendingEvents() {
+      mMonitor.AssertCurrentThreadOwns();
+      mHasPendingEvents = false;
+    }
+    Monitor& GetMonitor() { return mMonitor; }
+
+  private:
+    virtual ~ThreadObserver() {}
+    bool mHasPendingEvents;
+    // The monitor we drive the thread with
+    Monitor mMonitor;
+  };
+
 public:
   DOMStorageDBThread();
   virtual ~DOMStorageDBThread() {}
@@ -250,10 +279,11 @@ private:
   nsCOMPtr<nsIFile> mDatabaseFile;
   PRThread* mThread;
 
-  // The monitor we drive the thread with
-  Monitor mMonitor;
+  // Used to observe runnables dispatched to our thread and to monitor it.
+  nsRefPtr<ThreadObserver> mThreadObserver;
 
-  // Flag to stop, protected by the monitor
+  // Flag to stop, protected by the monitor returned by
+  // mThreadObserver->GetMonitor().
   bool mStopIOThread;
 
   // Whether WAL is enabled
