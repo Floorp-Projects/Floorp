@@ -156,7 +156,14 @@ exports.items = [
           try {
             let io = Cc["@mozilla.org/network/io-service;1"]
                       .getService(Ci.nsIIOService);
-            let channel = io.newChannel(data, null, null);
+            let channel = io.newChannel2(data,
+                                         null,
+                                         null,
+                                         null,      // aLoadingNode
+                                         Services.scriptSecurityManager.getSystemPrincipal(),
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsIContentPolicy.TYPE_IMAGE);
             let input = channel.open();
             let imgTools = Cc["@mozilla.org/image/tools;1"]
                             .getService(Ci.imgITools);

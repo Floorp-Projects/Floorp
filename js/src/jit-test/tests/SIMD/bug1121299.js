@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("SIMD"))
+  quit();
+
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 30);
 
