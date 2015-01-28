@@ -69,6 +69,16 @@ public:
   nsresult StartComposition(nsEventStatus& aStatus);
 
   /**
+   * CommitComposition() commits composition.
+   *
+   * @param aCommitString   If this is null, commits with the last composition
+   *                        string.  Otherwise, commits the composition with
+   *                        this value.
+   */
+   nsresult CommitComposition(nsEventStatus& aStatus,
+                              const nsAString* aCommitString = nullptr);
+
+  /**
    * SetPendingCompositionString() sets new composition string which will be
    * dispatched with NS_COMPOSITION_CHANGE event by calling Flush().
    *

@@ -97,6 +97,33 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
   return NS_OK;
 }
 
+nsresult
+TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
+                                       const nsAString* aCommitString)
+{
+  aStatus = nsEventStatus_eIgnore;
+
+  nsresult rv = GetState();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIWidget> widget(mWidget);
+  uint32_t message = aCommitString ? NS_COMPOSITION_COMMIT :
+                                     NS_COMPOSITION_COMMIT_AS_IS;
+  WidgetCompositionEvent compositionCommitEvent(true, message, widget);
+  InitEvent(compositionCommitEvent);
+  if (message == NS_COMPOSITION_COMMIT) {
+    compositionCommitEvent.mData = *aCommitString;
+  }
+  rv = widget->DispatchEvent(&compositionCommitEvent, aStatus);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 /******************************************************************************
  * TextEventDispatcher::PendingComposition
  *****************************************************************************/

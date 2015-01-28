@@ -2176,16 +2176,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t msg;
-  if (aType.EqualsLiteral("compositionstart")) {
-    nsRefPtr<TextEventDispatcher> dispatcher;
-    nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    nsEventStatus status = nsEventStatus_eIgnore;
-    return dispatcher->StartComposition(status);
-  } else if (aType.EqualsLiteral("compositionend")) {
+  if (aType.EqualsLiteral("compositionend")) {
     // Now we don't support manually dispatching composition end with this
     // API.  A compositionend is dispatched when this is called with
     // compositioncommitasis or compositioncommit automatically.  For backward
@@ -2204,27 +2195,24 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
                "compositionupdate since it's ignored and the event is "
                "fired automatically when it's necessary");
     return NS_OK;
-  } else if (aType.EqualsLiteral("compositioncommitasis")) {
-    msg = NS_COMPOSITION_COMMIT_AS_IS;
-  } else if (aType.EqualsLiteral("compositioncommit")) {
-    msg = NS_COMPOSITION_COMMIT;
-  } else {
-    return NS_ERROR_FAILURE;
   }
 
-  WidgetCompositionEvent compositionEvent(true, msg, widget);
-  InitEvent(compositionEvent);
-  if (msg != NS_COMPOSITION_START && msg != NS_COMPOSITION_COMMIT_AS_IS) {
-    compositionEvent.mData = aData;
+  nsRefPtr<TextEventDispatcher> dispatcher;
+  nsresult rv = GetTextEventDispatcher(getter_AddRefs(dispatcher));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-
-  compositionEvent.mFlags.mIsSynthesizedForTests = true;
-
-  nsEventStatus status;
-  nsresult rv = widget->DispatchEvent(&compositionEvent, status);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  nsEventStatus status = nsEventStatus_eIgnore;
+  if (aType.EqualsLiteral("compositionstart")) {
+    return dispatcher->StartComposition(status);
+  }
+  if (aType.EqualsLiteral("compositioncommitasis")) {
+    return dispatcher->CommitComposition(status);
+  }
+  if (aType.EqualsLiteral("compositioncommit")) {
+    return dispatcher->CommitComposition(status, &aData);
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
