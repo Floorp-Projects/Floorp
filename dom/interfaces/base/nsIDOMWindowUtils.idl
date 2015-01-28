@@ -50,7 +50,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(04db2684-f9ed-4d70-827d-3d5b87825238)]
+[scriptable, uuid(5ed850de-2b57-4555-ac48-93292e852eab)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -556,8 +556,6 @@ interface nsIDOMWindowUtils : nsISupports {
   const unsigned long KEY_FLAG_LOCATION_LEFT     = 0x0020;
   const unsigned long KEY_FLAG_LOCATION_RIGHT    = 0x0040;
   const unsigned long KEY_FLAG_LOCATION_NUMPAD   = 0x0080;
-  const unsigned long KEY_FLAG_LOCATION_MOBILE   = 0x0100;
-  const unsigned long KEY_FLAG_LOCATION_JOYSTICK = 0x0200;
 
   boolean sendKeyEvent(in AString aType,
                        in long aKeyCode,

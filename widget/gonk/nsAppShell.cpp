@@ -308,7 +308,8 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
     }
     event.mCodeNameIndex = mDOMCodeNameIndex;
     event.modifiers = getDOMModifiers(mData.metaState);
-    event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
+    // XXX Compute the location from code value, later.
+    event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
     event.time = mData.timeMs;
     return nsWindow::DispatchInputEvent(event);
 }
