@@ -1,7 +1,13 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <video id="v1" src="../../test/vp9cake.webm" height="120" width="160" autoplay muted></video>
@@ -13,32 +19,36 @@
     visible: true
   });
 
-var metadataLoaded = new Promise(resolve => {
-  if (v1.readyState < v1.HAVE_METADATA) {
-    v1.onloadedmetadata = resolve;
-  } else {
-    resolve();
-  }
-});
-
-runNetworkTest(function() {
-  var test = new PeerConnectionTest();
-  test.setOfferOptions({ offerToReceiveVideo: false,
-                         offerToReceiveAudio: false });
-  test.chain.insertAfter("PC_LOCAL_GUM", [
-    function PC_LOCAL_CAPTUREVIDEO(test) {
-      return metadataLoaded
-        .then(() => {
-          var stream = v1.mozCaptureStreamUntilEnded();
-          is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
-          stream.getTracks().forEach(tr => test.pcLocal._pc.addTrack(tr, stream));
-          test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
-        });
+  var metadataLoaded = new Promise(resolve => {
+    if (v1.readyState < v1.HAVE_METADATA) {
+      v1.onloadedmetadata = e => resolve();
+      return;
     }
-  ]);
-  test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
-  test.run();
-});
+    resolve();
+  });
+
+  runNetworkTest(function() {
+    var test = new PeerConnectionTest();
+    test.setOfferOptions({ offerToReceiveVideo: false,
+                           offerToReceiveAudio: false });
+    test.chain.insertAfter("PC_LOCAL_GUM", [["PC_LOCAL_CAPTUREVIDEO", function (test) {
+      metadataLoaded
+      .then(function() {
+        var stream = v1.mozCaptureStreamUntilEnded();
+        is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
+        stream.getTracks().forEach(tr => test.pcLocal._pc.addTrack(tr, stream));
+        test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
+        test.next();
+      })
+      .catch(function(reason) {
+        ok(false, "unexpected failure: " + reason);
+        SimpleTest.finish();
+      });
+    }
+    ]]);
+    test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
+    test.run();
+  });
 </script>
 </pre>
 </body>

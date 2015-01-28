@@ -6,8 +6,14 @@
 
 <html>
 <head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="long.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -19,7 +25,7 @@
   });
 
   var test;
-  runNetworkTest(function (options) {
+  runTest(function (options) {
     options = options || {};
     options.commands = commandsPeerConnection.slice(0);
     options.commands.push(generateIntervalCommand(verifyConnectionStatus,
@@ -35,3 +41,4 @@
 </pre>
 </body>
 </html>
+
