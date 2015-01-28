@@ -131,10 +131,16 @@ let dataProviders = {
     let data = {
       name: Services.appinfo.name,
       version: Services.appinfo.version,
+      buildID: Services.appinfo.appBuildID,
       userAgent: Cc["@mozilla.org/network/protocol;1?name=http"].
                  getService(Ci.nsIHttpProtocolHandler).
                  userAgent,
     };
+
+#ifdef MOZ_UPDATER
+    data.updateChannel = Cu.import("resource://gre/modules/UpdateChannel.jsm", {}).UpdateChannel.get();
+#endif
+
     try {
       data.vendor = Services.prefs.getCharPref("app.support.vendor");
     }
