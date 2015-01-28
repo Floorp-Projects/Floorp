@@ -186,7 +186,7 @@ public:
   static PRIOMethods nsSSLIOLayerMethods;
   static PRIOMethods nsSSLPlaintextLayerMethods;
 
-  nsTHashtable<nsCStringHashKey>* mRenegoUnrestrictedSites;
+  nsTHashtable<nsCStringHashKey> mRenegoUnrestrictedSites;
   bool mTreatUnsafeNegotiationAsBroken;
   int32_t mWarnLevelMissingRFC5746;
 
@@ -209,9 +209,14 @@ private:
     }
   };
   nsDataHashtable<nsCStringHashKey, IntoleranceEntry> mTLSIntoleranceInfo;
+  // Sites that require insecure fallback to TLS 1.0, set by the pref
+  // security.tls.insecure_fallback_hosts, which is a comma-delimited
+  // list of domain names.
+  nsTHashtable<nsCStringHashKey> mInsecureFallbackSites;
 public:
   void rememberTolerantAtVersion(const nsACString& hostname, int16_t port,
                                  uint16_t tolerant);
+  bool fallbackLimitReached(const nsACString& hostname, uint16_t intolerant);
   bool rememberIntolerantAtVersion(const nsACString& hostname, int16_t port,
                                    uint16_t intolerant, uint16_t minVersion,
                                    PRErrorCode intoleranceReason);
@@ -225,10 +230,15 @@ public:
                                /*out*/ StrongCipherStatus& strongCipherStatus);
   PRErrorCode getIntoleranceReason(const nsACString& hostname, int16_t port);
 
-  void setRenegoUnrestrictedSites(const nsCString& str);
+  void setSiteList(nsTHashtable<nsCStringHashKey>& sites,
+                   const nsCString& str);
   bool isRenegoUnrestrictedSite(const nsCString& str);
   void clearStoredData();
   void loadVersionFallbackLimit();
+  void setInsecureFallbackSites(const nsCString& str)
+  {
+    setSiteList(mInsecureFallbackSites, str);
+  }
 
   bool mFalseStartRequireNPN;
   bool mFalseStartRequireForwardSecrecy;
