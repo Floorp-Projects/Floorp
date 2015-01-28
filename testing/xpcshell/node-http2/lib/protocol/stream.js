@@ -352,7 +352,7 @@ Stream.prototype._finishing = function _finishing() {
   }
 };
 
-// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-5.1)
+// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-16#section-5.1)
 // ----------------
 //
 //                           +--------+
@@ -464,7 +464,7 @@ Stream.prototype._transition = function transition(sending, frame) {
         this._setState('HALF_CLOSED_REMOTE');
       } else if (RST_STREAM) {
         this._setState('CLOSED');
-      } else if (receiving && PRIORITY) {
+      } else if (PRIORITY) {
         /* No state change */
       } else {
         connectionError = 'PROTOCOL_ERROR';
@@ -483,7 +483,7 @@ Stream.prototype._transition = function transition(sending, frame) {
         this._setState('CLOSED');
       } else if (receiving && HEADERS) {
         this._setState('HALF_CLOSED_LOCAL');
-      } else if (BLOCKED || (sending && PRIORITY)) {
+      } else if (BLOCKED || PRIORITY) {
         /* No state change */
       } else {
         connectionError = 'PROTOCOL_ERROR';
@@ -518,7 +518,7 @@ Stream.prototype._transition = function transition(sending, frame) {
     case 'HALF_CLOSED_LOCAL':
       if (RST_STREAM || (receiving && frame.flags.END_STREAM)) {
         this._setState('CLOSED');
-      } else if (BLOCKED || ALTSVC ||receiving || (sending && (PRIORITY || WINDOW_UPDATE))) {
+      } else if (BLOCKED || ALTSVC || receiving || PRIORITY || (sending && WINDOW_UPDATE)) {
         /* No state change */
       } else {
         connectionError = 'PROTOCOL_ERROR';
@@ -538,7 +538,7 @@ Stream.prototype._transition = function transition(sending, frame) {
     case 'HALF_CLOSED_REMOTE':
       if (RST_STREAM || (sending && frame.flags.END_STREAM)) {
         this._setState('CLOSED');
-      } else if (BLOCKED || ALTSVC ||sending || (receiving && (WINDOW_UPDATE || PRIORITY))) {
+      } else if (BLOCKED || ALTSVC || sending || PRIORITY || (receiving && WINDOW_UPDATE)) {
         /* No state change */
       } else {
         connectionError = 'PROTOCOL_ERROR';
@@ -566,9 +566,9 @@ Stream.prototype._transition = function transition(sending, frame) {
     //   causes a stream to become "reserved". If promised streams are not desired, a RST_STREAM
     //   can be used to close any of those streams.
     case 'CLOSED':
-      if ((sending && RST_STREAM) ||
+      if (PRIORITY || (sending && RST_STREAM) ||
           (receiving && this._closedByUs &&
-           (this._closedWithRst || WINDOW_UPDATE || PRIORITY || RST_STREAM || ALTSVC))) {
+           (this._closedWithRst || WINDOW_UPDATE || RST_STREAM || ALTSVC))) {
         /* No state change */
       } else {
         streamError = 'STREAM_CLOSED';
@@ -637,7 +637,7 @@ Stream.prototype._transition = function transition(sending, frame) {
         this.emit('connectionError', connectionError);
       } else {
         this.reset(streamError);
-        this.emit('error', streamError)
+        this.emit('error', streamError);
       }
     }
   }

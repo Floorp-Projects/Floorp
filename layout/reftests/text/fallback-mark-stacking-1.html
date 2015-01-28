@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  /* Note that this font has no OpenType layout tables: */
+  src: url(../fonts/sil/GenR102.ttf);
+}
+body {
+  font-family: test;
+}
+.test {
+  font-size: 100px;
+  line-height: 2;
+}
+</style>
+</head>
+<body>
+These examples should NOT look the same:
+<div class=test>x&#x302;&#x303; x&#x303;&#x302;</div>
+</body>
