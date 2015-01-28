@@ -135,6 +135,8 @@ private:
     nsAutoString mString;
     nsRefPtr<TextRangeArray> mClauses;
     TextRange mCaret;
+
+    void EnsureClauseArray();
   };
   PendingComposition mPendingComposition;
 
