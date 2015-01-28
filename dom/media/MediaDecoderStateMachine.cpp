@@ -1387,11 +1387,11 @@ void MediaDecoderStateMachine::SetVolume(double volume)
   }
 }
 
-void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
+void MediaDecoderStateMachine::SetAudioCaptured()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (!mAudioCaptured && aCaptured && !mStopAudioThread) {
+  AssertCurrentThreadInMonitor();
+  if (!mAudioCaptured && !mStopAudioThread) {
     // Make sure the state machine runs as soon as possible. That will
     // stop the audio sink.
     // If mStopAudioThread is true then we're already stopping the audio sink
@@ -1405,7 +1405,7 @@ void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
       ResyncAudioClock();
     }
   }
-  mAudioCaptured = aCaptured;
+  mAudioCaptured = true;
 }
 
 double MediaDecoderStateMachine::GetCurrentTime() const
@@ -1416,6 +1416,16 @@ double MediaDecoderStateMachine::GetCurrentTime() const
                "Should be on main, decode, or state machine thread.");
 
   return static_cast<double>(mCurrentFrameTime) / static_cast<double>(USECS_PER_S);
+}
+
+int64_t MediaDecoderStateMachine::GetCurrentTimeUs() const
+{
+  NS_ASSERTION(NS_IsMainThread() ||
+               OnStateMachineThread() ||
+               OnDecodeThread(),
+               "Should be on main, decode, or state machine thread.");
+
+  return mCurrentFrameTime;
 }
 
 bool MediaDecoderStateMachine::IsRealTime() const {
@@ -1782,7 +1792,9 @@ MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
 
   DECODER_LOG("Changed state to SEEKING (to %lld)", mSeekTarget.mTime);
   SetState(DECODER_STATE_SEEKING);
-  mDecoder->RecreateDecodedStreamIfNecessary(seekTime - mStartTime);
+  if (mAudioCaptured) {
+    mDecoder->RecreateDecodedStream(seekTime - mStartTime);
+  }
   ScheduleStateMachine();
 }
 
