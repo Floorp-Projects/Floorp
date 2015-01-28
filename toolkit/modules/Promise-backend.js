@@ -37,9 +37,6 @@ const STATUS_REJECTED = 2;
 const salt = Math.floor(Math.random() * 100);
 const N_INTERNALS = "{private:internals:" + salt + "}";
 
-const JS_HAS_SYMBOLS = typeof Symbol === "function";
-const ITERATOR_SYMBOL = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
-
 // We use DOM Promise for scheduling the walker loop.
 const DOMPromise = Promise;
 
@@ -517,7 +514,7 @@ Promise.reject = function (aReason)
  */
 Promise.all = function (aValues)
 {
-  if (aValues == null || typeof(aValues[ITERATOR_SYMBOL]) != "function") {
+  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.all() expects an iterable.");
   }
 
@@ -568,7 +565,7 @@ Promise.all = function (aValues)
  */
 Promise.race = function (aValues)
 {
-  if (aValues == null || typeof(aValues[ITERATOR_SYMBOL]) != "function") {
+  if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.race() expects an iterable.");
   }
 

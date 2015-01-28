@@ -1236,16 +1236,13 @@ function runEditorFlagChangeTests()
     editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;
 
-  // start composition
-  synthesizeComposition({ type: "compositionstart" });
-
   // input characters
   synthesizeCompositionChange(
     { "composition":
       { "string": "\u3078\u3093\u3057\u3093",
         "clauses":
         [
-          { "length": 4, "attr": COMPOSITION_ATTR_RAWINPUT }
+          { "length": 4, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
         ]
       },
       "caret": { "start": 4, "length": 0 }

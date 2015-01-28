@@ -9,7 +9,7 @@ For comparison, something apparently approximating a t-test is performed:
 "Faster" means that:
 
     t_baseline_goodrun = (t_baseline_avg - t_baseline_stddev)
-    t_current_badrun = (t_current_avg + t_current_stddev) 
+    t_current_badrun = (t_current_avg + t_current_stddev)
     t_current_badrun < t_baseline_goodrun
 
 Effectively, a bad run from the current data is better than a good run from the
@@ -72,7 +72,8 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
     """Return a list of milliseconds for the counted runs."""
     assert '"' not in filepath
     code = JS_CODE_TEMPLATE.substitute(filepath=filepath,
-            warmup_run_count=warmup_runs, real_run_count=counted_runs)
+                                       warmup_run_count=warmup_runs,
+                                       real_run_count=counted_runs)
     proc = subp.Popen([shellpath, '-e', code], stdout=subp.PIPE)
     stdout, _ = proc.communicate()
     milliseconds = [float(val) for val in stdout.split(',')]
@@ -81,7 +82,8 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
     if not stfu:
         print('Runs:', [int(ms) for ms in milliseconds])
         print('Mean:', mean)
-        print('Stddev: %.2f (%.2f%% of mean)' % (sigma, sigma / mean * 100))
+        print('Stddev: {:.2f} ({:.2f}% of mean)'.format(
+            sigma, sigma / mean * 100))
     return mean, sigma
 
 
@@ -91,34 +93,40 @@ def parsemark(filepaths, fbench, stfu=False):
     for filepath in filepaths:
         filename = os.path.split(filepath)[-1]
         if not stfu:
-            print('Parsemarking %s...' % filename)
+            print('Parsemarking {}...'.format(filename))
         bench_map[filename] = fbench(filepath)
     print('{')
     for i, (filename, (avg, stddev)) in enumerate(bench_map.iteritems()):
         assert '"' not in filename
-        fmt = '    %30s: {"average_ms": %6.2f, "stddev_ms": %6.2f}'
+        fmt = '    {:30s}: {{"average_ms": {:6.2f}, "stddev_ms": {:6.2f}}}'
         if i != len(bench_map) - 1:
             fmt += ','
-        filename_str = '"%s"' % filename
-        print(fmt % (filename_str, avg, stddev))
+        filename_str = '"{}"'.format(filename)
+        print(fmt.format(filename_str, avg, stddev))
     print('}')
     return dict((filename, dict(average_ms=avg, stddev_ms=stddev))
-            for filename, (avg, stddev) in bench_map.iteritems())
+                for filename, (avg, stddev) in bench_map.iteritems())
 
 
 def main():
     parser = optparse.OptionParser(usage=__doc__.strip())
     parser.add_option('-w', '--warmup-runs', metavar='COUNT', type=int,
-            default=5, help='used to minimize test instability [%default]')
+                      default=5,
+                      help='used to minimize test instability [%default]')
     parser.add_option('-c', '--counted-runs', metavar='COUNT', type=int,
-            default=50, help='timed data runs that count towards the average [%default]')
-    parser.add_option('-s', '--shell', metavar='PATH', help='explicit shell '
-            'location; when omitted, will look in likely places')
+                      default=50,
+                      help='timed data runs that count towards the average'
+                      ' [%default]')
+    parser.add_option('-s', '--shell', metavar='PATH',
+                      help='explicit shell location; when omitted, will look'
+                      ' in likely places')
     parser.add_option('-b', '--baseline', metavar='JSON_PATH',
-            dest='baseline_path', help='json file with baseline values to '
-            'compare against')
+                      dest='baseline_path',
+                      help='json file with baseline values to '
+                      'compare against')
     parser.add_option('-q', '--quiet', dest='stfu', action='store_true',
-            default=False, help='only print JSON to stdout [%default]')
+                      default=False,
+                      help='only print JSON to stdout [%default]')
     options, args = parser.parse_args()
     try:
         shellpath = args.pop(0)
@@ -142,10 +150,13 @@ def main():
             print('error: baseline file does not exist', file=sys.stderr)
             return -1
         if not compare_bench:
-            print('error: JSON support is missing, cannot compare benchmarks', file=sys.stderr)
+            print('error: JSON support is missing, cannot compare benchmarks',
+                  file=sys.stderr)
             return -1
     benchfile = lambda filepath: bench(shellpath, filepath,
-            options.warmup_runs, options.counted_runs, stfu=options.stfu)
+                                       options.warmup_runs,
+                                       options.counted_runs,
+                                       stfu=options.stfu)
     bench_map = parsemark(gen_filepaths(dirpath), benchfile, options.stfu)
     if options.baseline_path:
         compare_bench.compare_immediate(bench_map, options.baseline_path)

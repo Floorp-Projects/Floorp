@@ -673,6 +673,8 @@ protected:
     // Hardware vsync source. Only valid on parent process
     nsRefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
 
+    mozilla::RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
+
 private:
     /**
      * Start up Thebes.
@@ -688,7 +690,6 @@ private:
     virtual void GetPlatformCMSOutputProfile(void *&mem, size_t &size);
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
     nsTArray<uint32_t> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;

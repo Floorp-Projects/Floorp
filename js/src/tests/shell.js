@@ -876,6 +876,3 @@ function OptLevel( i ) {
   cx.setOptimizationLevel(i);
 }
 /* end of Rhino functions */
-
-var JS_HAS_SYMBOLS = typeof Symbol === "function";
-var std_iterator = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";

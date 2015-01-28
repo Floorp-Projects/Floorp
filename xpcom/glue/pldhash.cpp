@@ -318,6 +318,12 @@ PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
 #define ADDRESS_ENTRY(table, index) \
     ((PLDHashEntryHdr *)((table)->mEntryStore + (index) * (table)->mEntrySize))
 
+MOZ_ALWAYS_INLINE bool
+PL_DHASH_ENTRY_IS_FREE(PLDHashEntryHdr* aEntry)
+{
+  return aEntry->keyHash == 0;
+}
+
 MOZ_ALWAYS_INLINE void
 PLDHashTable::Finish()
 {
@@ -541,18 +547,18 @@ PLDHashTable::GetKeyHash(const void* aKey)
 }
 
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
-PLDHashTable::Lookup(const void* aKey)
+PLDHashTable::Search(const void* aKey)
 {
   INCREMENT_RECURSION_LEVEL(this);
 
-  METER(mStats.mLookups++);
+  METER(mStats.mSearches++);
 
   PLDHashNumber keyHash = GetKeyHash(aKey);
   PLDHashEntryHdr* entry = SearchTable(aKey, keyHash, /* isAdd = */ false);
 
   DECREMENT_RECURSION_LEVEL(this);
 
-  return entry;
+  return !PL_DHASH_ENTRY_IS_FREE(entry) ? entry : nullptr;
 }
 
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
@@ -655,9 +661,9 @@ PLDHashTable::Remove(const void* aKey)
 }
 
 PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableLookup(PLDHashTable* aTable, const void* aKey)
+PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey)
 {
-  return aTable->Lookup(aKey);
+  return aTable->Search(aKey);
 }
 
 PLDHashEntryHdr* PL_DHASH_FASTCALL
@@ -748,7 +754,7 @@ PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
    * if the table is underloaded according to the minimum alpha, and is not
    * minimal-size already.  Do this only if we removed above, so non-removing
    * enumerations can count on stable |mEntryStore| until the next
-   * non-lookup-Operate or removing-Enumerate.
+   * Add, Remove, or removing-Enumerate.
    */
   if (didRemove &&
       (mRemovedCount >= capacity >> 2 ||
@@ -1021,7 +1027,7 @@ PLDHashTable::DumpMeter(PLDHashEnumerator aDump, FILE* aFp)
   fprintf(aFp, "     mean hash chain length: %g\n", mean);
   fprintf(aFp, "         standard deviation: %g\n", sigma);
   fprintf(aFp, "  maximum hash chain length: %u\n", maxChainLen);
-  fprintf(aFp, "          number of lookups: %u\n", mStats.mLookups);
+  fprintf(aFp, "         number of searches: %u\n", mStats.mSearches);
   fprintf(aFp, " adds that made a new entry: %u\n", mStats.mAddMisses);
   fprintf(aFp, "adds that recycled removeds: %u\n", mStats.mAddOverRemoved);
   fprintf(aFp, "   adds that found an entry: %u\n", mStats.mAddHits);
@@ -1048,7 +1054,7 @@ PLDHashTable::DumpMeter(PLDHashEnumerator aDump, FILE* aFp)
       hash1 -= hash2;
       hash1 &= sizeMask;
       entry = ADDRESS_ENTRY(this, hash1);
-    } while (PL_DHASH_ENTRY_IS_BUSY(entry));
+    } while (!PL_DHASH_ENTRY_IS_FREE(entry));
   }
 }
 

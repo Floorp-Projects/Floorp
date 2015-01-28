@@ -2039,7 +2039,7 @@ nsHttpChannel::ResolveProxy()
         rv = pps2->AsyncResolve2(this, mProxyResolveFlags,
                                  this, getter_AddRefs(mProxyRequest));
     } else {
-        rv = pps->AsyncResolve(this, mProxyResolveFlags,
+        rv = pps->AsyncResolve(static_cast<nsIChannel*>(this), mProxyResolveFlags,
                                this, getter_AddRefs(mProxyRequest));
     }
 

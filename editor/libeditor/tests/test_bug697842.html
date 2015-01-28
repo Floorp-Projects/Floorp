@@ -36,8 +36,17 @@ function runTests()
     var composingString = "";
 
     function handler(aEvent) {
-      if (aEvent.type != "text") {
-        is(aEvent.data, composingString, "mismatch composition string");
+      switch (aEvent.type) {
+        case "compositionstart":
+          // Selected string at starting composition must be empty in this test.
+          is(aEvent.data, "", "mismatch selected string");
+          break;
+        case "compositionupdate":
+        case "compositionend":
+          is(aEvent.data, composingString, "mismatch composition string");
+          break;
+        default:
+          break;
       }
       aEvent.stopPropagation();
       aEvent.preventDefault();
@@ -48,9 +57,6 @@ function runTests()
     editor.addEventListener("compositionupdate", handler, true);
     editor.addEventListener("text", handler, true);
 
-    // start composition
-    synthesizeComposition({ type: "compositionstart" });
-
     // input first character
     composingString = "\u306B";
     synthesizeCompositionChange(
@@ -58,7 +64,7 @@ function runTests()
         { "string": composingString,
           "clauses":
           [
-            { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
           ]
         },
         "caret": { "start": 1, "length": 0 }
@@ -71,7 +77,7 @@ function runTests()
         { "string": composingString,
           "clauses":
           [
-            { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+            { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
           ]
         },
         "caret": { "start": 2, "length": 0 }
@@ -84,7 +90,7 @@ function runTests()
           "clauses":
           [
             { "length": 2,
-              "attr": COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+              "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
           ]
         },
         "caret": { "start": 2, "length": 0 }

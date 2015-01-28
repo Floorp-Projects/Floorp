@@ -1,0 +1,274 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsITextInputProcessorCallback;
+
+/**
+ * An nsITextInputProcessor instance is associated with a top level widget which
+ * handles native IME.  It's associated by calling init() or initForTests().
+ * While an instance has composition, nobody can steal the rights to make
+ * composition on the top level widget.  In other words, if another instance is
+ * composing on a top level widget, either init() or initForTests() returns
+ * false (i.e., not throws an exception).
+ *
+ * NOTE: See nsITextInputProcessorCallback.idl for examples of |callback| in
+ *       following examples,
+ *
+ * Example #1 JS-IME can start composition like this:
+ *
+ *   var TIP = Components.classes["@mozilla.org/text-input-processor;1"].
+ *               createInstance(Components.interfaces.nsITextInputProcessor);
+ *   if (!TIP.init(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   // Set new composition string first
+ *   TIP.setPendingCompositionString("some-words-are-inputted");
+ *   // Set clause information.
+ *   TIP.appendClauseToPendingComposition(23, TIP.ATTR_RAW_CLAUSE);
+ *   // Set caret position, this is optional.
+ *   TIP.setCaretInPendingComposition(23);
+ *   // Flush the pending composition
+ *   if (!TIP.flushPendingComposition()) {
+ *     // If it returns false, it fails to start composition.
+ *     return;
+ *   }
+ *
+ * Example #2 JS-IME can separate composition string to two or more clauses:
+ *
+ *   // First, set composition string again
+ *   TIP.setPendingCompositionString("some-words-are-inputted");
+ *   // Then, if "are" is selected to convert, there are 3 clauses:
+ *   TIP.appendClauseToPendingComposition(11, TIP.ATTR_CONVERTED_CLAUSE);
+ *   TIP.appendClauseToPendingComposition(3,  TIP.ATTR_SELECTED_CLAUSE);
+ *   TIP.appendClauseToPendingComposition(9,  TIP.ATTR_CONVERTED_CLAUSE);
+ *   // Show caret at the beginning of the selected clause
+ *   TIP.setCaretInPendingComposition(11);
+ *   // Flush the pending composition.  Note that if there is a composition,
+ *   // flushPendingComposition() won't return false.
+ *   TIP.flushPendingComposition();
+ *
+ * Example #3 JS-IME can commit composition with specific string with this:
+ *
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-directly-inputted");
+ *   TIP.appendClauseToPendingComposition(28, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition();
+ *   // This is useful when user selects a commit string from candidate list UI
+ *   // which is provided by JS-IME.
+ *   TIP.commitComposition("selected-words-from-candidate-list");
+ *
+ * Example #4 JS-IME can commit composition with the last composition string
+ *            without specifying commit string:
+ *
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-will-be-commited");
+ *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition();
+ *   // This is useful when user just type Enter key.
+ *   TIP.commitComposition();
+ *
+ * Example #5 JS-IME can cancel composition with this:
+ *
+ *   // First, there is a composition.
+ *   TIP.setPendingCompositionString("some-words-will-be-canceled");
+ *   TIP.appendClauseToPendingComposition(27, TIP.ATTR_RAW_CLAUSE);
+ *   TIP.flushPendingComposition();
+ *   // This is useful when user doesn't want to commit the composition.
+ *   // FYI: This is same as TIP.commitComposition("") for now.
+ *   TIP.cancelComposition();
+ *
+ * Example #6 JS-IME can insert text only with commitComposition():
+ *
+ *   if (!TIP.init(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   TIP.commitComposition("Some words");
+ *
+ * Example #7 JS-IME can start composition explicitly:
+ *
+ *   if (!TIP.init(window, callback)) {
+ *     return; // You failed to get the rights to make composition
+ *   }
+ *   // If JS-IME don't want to show composing string in the focused editor,
+ *   // JS-IME can dispatch only compositionstart event with this.
+ *   if (!TIP.startComposition()) {
+ *     // Failed to start composition.
+ *     return;
+ *   }
+ *   // And when user selects a result from UI of JS-IME, commit with it.
+ *   TIP.commitComposition("selected-words");
+ */
+
+[scriptable, builtinclass, uuid(8c20753c-8339-4e9c-86c5-ae30f1b456c3)]
+interface nsITextInputProcessor : nsISupports
+{
+  /**
+   * When you create an instance, you must call init() first except when you
+   * created the instance for automated tests.
+   *
+   * @param aWindow         A DOM window.  The instance will look for a top
+   *                        level widget from this.
+   * @param aCallback       Callback interface which handles requests to
+   *                        IME and notifications to IME.  This must not be
+   *                        null.
+   * @return                If somebody uses internal text input service for a
+   *                        composition, this returns false.  Otherwise, returns
+   *                        true.  I.e., only your TIP can create composition
+   *                        when this returns true.  If this returns false,
+   *                        your TIP should wait next chance.
+   */
+  boolean init(in nsIDOMWindow aWindow,
+               in nsITextInputProcessorCallback aCallback);
+
+  /**
+   * When you create an instance for automated test, you must call
+   * initForTest(), first.  See init() for more detail of this.
+   * Note that aCallback can be null.  If it's null, nsITextInputProcessor
+   * implementation will handle them automatically.
+   */
+  [optional_argc] boolean
+    initForTests(in nsIDOMWindow aWindow,
+                 [optional] in nsITextInputProcessorCallback aCallback);
+
+  /**
+   * startComposition() dispatches compositionstart event explicitly.
+   * IME does NOT need to call this typically since compositionstart event
+   * is automatically dispatched by sendPendingComposition() if
+   * compositionstart event hasn't been dispatched yet.  If this is called
+   * when compositionstart has already been dispatched, this throws an
+   * exception.
+   *
+   * @return                Returns true if composition starts normally.
+   *                        Otherwise, returns false because it might be
+   *                        canceled by the web application.
+   */
+  boolean startComposition();
+
+  /**
+   * Set new composition string.  Pending composition will be flushed by
+   * a call of flushPendingComposition().  However, if the new composition
+   * string isn't empty, you need to call appendClauseToPendingComposition() to
+   * fill all characters of aString with one or more clauses before flushing.
+   * Note that if you need to commit or cancel composition, use
+   * commitComposition() or cancelComposition().
+   */
+  void setPendingCompositionString(in DOMString aString);
+
+  // ATTR_RAW_CLAUSE means that the clause hasn't been selected nor converted
+  // yet.
+  const unsigned long ATTR_RAW_CLAUSE           = 0x02;
+  // ATTR_SELECTED_RAW_CLAUSE means that the clause hasn't been converted yet
+  // but is selected for converting to the other string.
+  const unsigned long ATTR_SELECTED_RAW_CLAUSE  = 0x03;
+  // ATTR_CONVERTED_CLAUSE means that the clause has already been converted but
+  // is not selected.  This does NOT mean that this clause isn't modifiable.
+  const unsigned long ATTR_CONVERTED_CLAUSE     = 0x04;
+  // ATTR_SELECTED_CLAUSE means that the clause has already been converted and
+  // is selected.  In other words, the clause is being converted.
+  const unsigned long ATTR_SELECTED_CLAUSE      = 0x05;
+
+  /**
+   * Append a clause to the pending composition.
+   *
+   * If you need to fill the pending composition string with a clause, you
+   * should call this once.  For example:
+   *   appendClauseToPendingComposition(compositionString.length,
+   *                                    ATTR_RAW_CLAUSE);
+   * is enough.  If you need to separate the pending composition string to
+   * multiple clauses, you need to call this multiple times. For example,
+   * if your pending composition string has three clauses and the second clause
+   * is being converted:
+   *  appendClauseToPendingComposition(firstClauseLength,
+   *                                   ATTR_CONVERTED_CLAUSE);
+   *  appendClauseToPendingComposition(secondClauseLength,
+   *                                   ATTR_SELECTED_CLAUSE);
+   *  appendClauseToPendingComposition(thirdClauseLength,
+   *                                   ATTR_CONVERTED_CLAUSE);
+   * Note that if sum of aLength mismatches length of the pending composition
+   * string, flushPendingComposition() will throw an exception.  I.e.,
+   * |firstClauseLength + secondClauseLength + thirdClauseLength| must be
+   * same as the length of pending composition string.
+   *
+   * TODO: Should be able to specify custom clause style.
+   *
+   * @param aLength         Length of the clause.
+   * @param aAttribute      One of ATTR_* constants.
+   */
+  void appendClauseToPendingComposition(in unsigned long aLength,
+                                        in unsigned long aAttribute);
+
+  /**
+   * Set caret offset in the pending composition string.  If you don't need to
+   * show a caret, you don't need to call this.
+   *
+   * @param aOffset         Caret offset in the pending composition string.
+   *                        This must be between 0 and length of the pending
+   *                        composition string.
+   */
+  void setCaretInPendingComposition(in unsigned long aOffset);
+
+  /**
+   * flushPendingComposition() must be called after
+   * setPendingCompositionString() and appendClauseToPendingComposition()
+   * (setCaretInPendingComposition() is optional) are called.
+   *
+   * Note that compositionstart will be automatically dispatched if this is
+   * called when there is no composition.
+   *
+   * Note that if sum of lengths of appended clauses are not same as composition
+   * string or caret offset is larger than the composition string length, this
+   * throws an exception.
+   *
+   * @return                Returns true if there is a composition already or
+   *                        starting composition automatically.
+   *                        Otherwise, i.e., if it cannot start composition
+   *                        automatically, e.g., canceled by web apps, returns
+   *                        false.
+   */
+  boolean flushPendingComposition();
+
+  /**
+   * commitComposition() will commit composition.
+   * If there is a composition which is started by the instance, this commits
+   * the composition.  Otherwise, throws an exception.
+   *
+   * Note that if you tries to commit composition without specifying commit
+   * string when there is no composition, this throws an exception.
+   *
+   * @param aCommitString   This is optional.  If this is not specified,
+   *                        composition will be committed with the last
+   *                        composing string.  Otherwise, committed with
+   *                        the specified string.
+   * @return                Returns true if there is a composition already or
+   *                        starting composition automatically.
+   *                        Otherwise, i.e., if it cannot start composition
+   *                        automatically, e.g., canceled by web apps, returns
+   *                        false.
+   */
+  [optional_argc]
+    boolean commitComposition([optional] in DOMString aCommitString);
+
+  /**
+   * cancelComposition() will cancel composition.  This is for now the same as
+   * calling commitComposition("").  However, in the future, this might work
+   * better.  If your IME needs to cancel composition, use this instead of
+   * commitComposition().
+   *
+   * Note that if you tries to cancel composition when there is no composition,
+   * this throws an exception.
+   */
+  void cancelComposition();
+};
+
+%{C++
+#define TEXT_INPUT_PROCESSOR_CID \
+  { 0xcaaab47f, 0x1e31, 0x478e, \
+    { 0x89, 0x19, 0x97, 0x09, 0x04, 0xe9, 0xcb, 0x72 } }
+#define TEXT_INPUT_PROCESSOR_CONTRACTID \
+  "@mozilla.org/text-input-processor;1"
+%}
