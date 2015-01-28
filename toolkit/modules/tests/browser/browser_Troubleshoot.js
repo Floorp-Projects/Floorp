@@ -88,11 +88,18 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "string",
         },
+        buildID: {
+          required: true,
+          type: "string",
+        },
         userAgent: {
           required: true,
           type: "string",
         },
         vendor: {
+          type: "string",
+        },
+        updateChannel: {
           type: "string",
         },
         supportURL: {
