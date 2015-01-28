@@ -1300,7 +1300,7 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
     return nullptr;
   }
 
-  return new GradientStopsD2D(stopCollection);
+  return new GradientStopsD2D(stopCollection, Factory::GetDirect3D11Device());
 }
 
 TemporaryRef<FilterNode>
