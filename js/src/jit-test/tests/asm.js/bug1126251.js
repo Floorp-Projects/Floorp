@@ -1,0 +1,32 @@
+load(libdir + "asm.js");
+
+var v = asmLink(asmCompile('global', `
+    "use asm";
+    var frd = global.Math.fround;
+    function e() {
+        var x = frd(.1e+71);
+        x = frd(x / x);
+        return +x;
+    }
+    return e;
+`), this)();
+
+assertEq(v, NaN);
+
+var v = asmLink(asmCompile('global', `
+    "use asm";
+    var frd = global.Math.fround;
+    var float32x4 = global.SIMD.float32x4;
+    var splat = float32x4.splat;
+    function e() {
+        var v = float32x4(0,0,0,0);
+        var x = frd(0.);
+        v = splat(.1e+71);
+        x = v.x;
+        x = frd(x / x);
+        return +x;
+    }
+    return e;
+`), this)();
+
+assertEq(v, NaN);
