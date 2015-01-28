@@ -106,6 +106,10 @@
     var p = navigator.serviceWorker.register("parse_error_worker.js", { scope: "parse_error/" });
     return p.then(function(wr) {
       ok(false, "Registration should fail with parse error");
+      return navigator.serviceWorker.getRegistration("parse_error/").then(function(swr) {
+        // See https://github.com/slightlyoff/ServiceWorker/issues/547
+        is(swr, undefined, "A failed registration for a scope with no prior controllers should clear itself");
+      });
     }, function(e) {
     info("NSM " + e.name);
       ok(e instanceof Error, "Registration should fail with parse error");

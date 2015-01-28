@@ -18,17 +18,29 @@ interface SVGFEConvolveMatrixElement : SVGElement {
   const unsigned short SVG_EDGEMODE_WRAP = 2;
   const unsigned short SVG_EDGEMODE_NONE = 3;
 
+  [Constant]
   readonly attribute SVGAnimatedString in1;
+  [Constant]
   readonly attribute SVGAnimatedInteger orderX;
+  [Constant]
   readonly attribute SVGAnimatedInteger orderY;
+  [Constant]
   readonly attribute SVGAnimatedNumberList kernelMatrix;
+  [Constant]
   readonly attribute SVGAnimatedNumber divisor;
+  [Constant]
   readonly attribute SVGAnimatedNumber bias;
+  [Constant]
   readonly attribute SVGAnimatedInteger targetX;
+  [Constant]
   readonly attribute SVGAnimatedInteger targetY;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration edgeMode;
+  [Constant]
   readonly attribute SVGAnimatedNumber kernelUnitLengthX;
+  [Constant]
   readonly attribute SVGAnimatedNumber kernelUnitLengthY;
+  [Constant]
   readonly attribute SVGAnimatedBoolean preserveAlpha;
 };
 

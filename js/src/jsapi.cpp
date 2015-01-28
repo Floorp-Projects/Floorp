@@ -452,18 +452,6 @@ JS_DoubleIsInt32(double d, int32_t *ip)
     return mozilla::NumberIsInt32(d, ip);
 }
 
-JS_PUBLIC_API(int32_t)
-JS_DoubleToInt32(double d)
-{
-    return ToInt32(d);
-}
-
-JS_PUBLIC_API(uint32_t)
-JS_DoubleToUint32(double d)
-{
-    return ToUint32(d);
-}
-
 JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, HandleValue value)
 {
@@ -5942,15 +5930,15 @@ AutoGCRooter::AutoGCRooter(ContextFriendFields *cx, ptrdiff_t tag)
     *stackTop = this;
 }
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 JS_PUBLIC_API(void)
-JS::AssertArgumentsAreSane(JSContext *cx, HandleValue value)
+JS::detail::AssertArgumentsAreSane(JSContext *cx, HandleValue value)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
 }
-#endif /* DEBUG */
+#endif /* JS_DEBUG */
 
 JS_PUBLIC_API(void *)
 JS_EncodeScript(JSContext *cx, HandleScript scriptArg, uint32_t *lengthp)

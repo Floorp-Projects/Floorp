@@ -693,9 +693,57 @@ abort:
   return(_status);
 }
 
-// NrSocketIpc Implementation
-NS_IMPL_ISUPPORTS(NrSocketIpc, nsIUDPSocketInternal)
+NS_IMPL_ISUPPORTS(NrSocketIpcProxy, nsIUDPSocketInternal)
 
+nsresult
+NrSocketIpcProxy::Init(const nsRefPtr<NrSocketIpc>& socket)
+{
+  nsresult rv;
+  sts_thread_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "Failed to get STS thread");
+    return rv;
+  }
+
+  socket_ = socket;
+  return NS_OK;
+}
+
+NrSocketIpcProxy::~NrSocketIpcProxy()
+{
+  // Send our ref to STS to be released
+  RUN_ON_THREAD(sts_thread_,
+                mozilla::WrapRelease(socket_.forget()),
+                NS_DISPATCH_NORMAL);
+}
+
+// IUDPSocketInternal interfaces
+// callback while error happened in UDP socket operation
+NS_IMETHODIMP NrSocketIpcProxy::CallListenerError(const nsACString &message,
+                                                  const nsACString &filename,
+                                                  uint32_t line_number) {
+  return socket_->CallListenerError(message, filename, line_number);
+}
+
+// callback while receiving UDP packet
+NS_IMETHODIMP NrSocketIpcProxy::CallListenerReceivedData(const nsACString &host,
+                                                         uint16_t port,
+                                                         const uint8_t *data,
+                                                         uint32_t data_length) {
+  return socket_->CallListenerReceivedData(host, port, data, data_length);
+}
+
+// callback while UDP socket is opened
+NS_IMETHODIMP NrSocketIpcProxy::CallListenerOpened() {
+  return socket_->CallListenerOpened();
+}
+
+// callback while UDP socket is closed
+NS_IMETHODIMP NrSocketIpcProxy::CallListenerClosed() {
+  return socket_->CallListenerClosed();
+}
+
+// NrSocketIpc Implementation
 NrSocketIpc::NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread)
     : err_(false),
       state_(NR_INIT),
@@ -1022,7 +1070,15 @@ void NrSocketIpc::create_m(const nsACString &host, const uint16_t port) {
   socket_child_ = new nsMainThreadPtrHolder<nsIUDPSocketChild>(socketChild);
   socket_child_->SetFilterName(nsCString("stun"));
 
-  if (NS_FAILED(socket_child_->Bind(this, host, port,
+  nsRefPtr<NrSocketIpcProxy> proxy(new NrSocketIpcProxy);
+  rv = proxy->Init(this);
+  if (NS_FAILED(rv)) {
+    err_ = true;
+    mon.NotifyAll();
+    return;
+  }
+
+  if (NS_FAILED(socket_child_->Bind(proxy, host, port,
                                     /* reuse = */ false,
                                     /* loopback = */ false))) {
     err_ = true;
@@ -1107,7 +1163,7 @@ static nr_socket_vtbl nr_socket_local_vtbl={
 };
 
 int nr_socket_local_create(nr_transport_addr *addr, nr_socket **sockp) {
-  NrSocketBase *sock = nullptr;
+  RefPtr<NrSocketBase> sock;
 
   // create IPC bridge for content process
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -1129,15 +1185,16 @@ int nr_socket_local_create(nr_transport_addr *addr, nr_socket **sockp) {
   if (r)
     ABORT(r);
 
-  // Add a reference so that we can delete it in destroy()
-  sock->AddRef();
-
   _status = 0;
 
-abort:
-  if (_status) {
-    delete sock;
+  {
+    // We will release this reference in destroy(), not exactly the normal
+    // ownership model, but it is what it is.
+    NrSocketBase* dummy = sock.forget().take();
+    (void)dummy;
   }
+
+abort:
   return _status;
 }
 

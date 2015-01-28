@@ -369,7 +369,7 @@ Other Measurements\n\
 \n\
 100.00 MB ── heap-allocated\n\
 \n\
-End of 5th\n\
+End of 5th \
 ";
 
   let amvExpectedText =
@@ -538,7 +538,7 @@ Other Measurements\n\
 \n\
 104,857,600 B ── heap-allocated\n\
 \n\
-End of 5th\n\
+End of 5th \
 ";
 
   function finish()

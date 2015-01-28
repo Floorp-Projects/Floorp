@@ -115,6 +115,7 @@ private:
   bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
 
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
+  bool IsElementBlock(mozilla::dom::Element* aElement);
 
 private:
   nsString         mCurrentLine;
@@ -169,7 +170,9 @@ private:
   // While handling a new tag, this variable should remind if any line break
   // is due because of a closing tag. Setting it to "TRUE" while closing the tags.
   // Hence opening tags are guaranteed to start with appropriate line breaks.
-  bool             mLineBreakDue; 
+  bool             mLineBreakDue;
+
+  bool             mPreformattedBlockBoundary;
 
   nsString         mURL;
   int32_t          mHeaderStrategy;    /* Header strategy (pref)

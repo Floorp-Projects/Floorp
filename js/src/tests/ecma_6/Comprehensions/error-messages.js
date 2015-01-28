@@ -31,62 +31,64 @@ const FOR_OF_PAREN         = error("(for (x of y, z) w)").message;
 
 const cases = [
 // Expressions involving yield without a value, not currently implemented.  Many
-// of these errors would need to be updated.
-//{ expr: "yield",        top: TOP_YIELD, fun: null,              gen: GENEXP_YIELD, desc: "simple yield" },
-//{ expr: "1, yield",     top: TOP_YIELD, fun: null,              gen: GENEXP_YIELD, desc: "simple yield at end of list" },
-//{ expr: "yield, 1",     top: TOP_YIELD, fun: YIELD_PAREN, gen: YIELD_PAREN,  desc: "simple yield in list" },
-//{ expr: "(yield)",      top: TOP_YIELD, fun: null,              gen: GENEXP_YIELD, desc: "simple yield, parenthesized" },
-//{ expr: "(1, yield)",   top: TOP_YIELD, fun: null,              gen: GENEXP_YIELD, desc: "simple yield at end of list, parenthesized" },
-//{ expr: "(yield, 1)",   top: TOP_YIELD, fun: YIELD_PAREN, gen: YIELD_PAREN,  desc: "simple yield in list, parenthesized" },
-//{ expr: "((((yield))))",   top: TOP_YIELD, fun: null, gen: GENEXP_YIELD, desc: "deeply nested yield" },
-//{ expr: "(for (x of []) yield)",           top: TOP_YIELD, fun: GENERIC,      gen: GENERIC,      desc: "simple yield in genexp" },
-//{ expr: "(for (x of []) yield, 1)",        top: TOP_YIELD, fun: YIELD_PAREN,  gen: YIELD_PAREN,  desc: "simple yield in list in genexp" },
-//{ expr: "(for (x of []) 1, yield)",        top: TOP_YIELD, fun: GENERIC,      gen: GENERIC,      desc: "simple yield at end of list in genexp" },
-//{ expr: "(for (x of []) (yield))",         top: TOP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, desc: "simple yield, parenthesized in genexp" },
-//{ expr: "(for (x of []) 1, (yield))",      top: TOP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, desc: "simple yield, parenthesized in list in genexp" },
-//{ expr: "(for (x of []) (1, yield))",      top: TOP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, desc: "simple yield at end of list, parenthesized in genexp" },
-//{ expr: "(for (x of []) 1, (2, yield))",   top: TOP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, desc: "simple yield at end of list, parenthesized in list in genexp" },
-//{ expr: "(for (x of []) (yield, 1))",      top: TOP_YIELD, fun: YIELD_PAREN,  gen: YIELD_PAREN,  desc: "simple yield in list, parenthesized in genexp" },
-//{ expr: "(for (x of []) 1, (yield, 2))",   top: TOP_YIELD, fun: YIELD_PAREN,  gen: YIELD_PAREN,  desc: "simple yield in list, parenthesized in list in genexp" },
+// of these errors would need to be updated.  (Note: line numbers below might be
+// mere placeholders, not actually the expected correct behavior -- check before
+// blindly uncommenting.)
+//{ expr: "yield",        top: [TOP_YIELD, 777], fun: null,              gen: [GENEXP_YIELD, 2], desc: "simple yield" },
+//{ expr: "1, yield",     top: [TOP_YIELD, 777], fun: null,              gen: [GENEXP_YIELD, 2], desc: "simple yield at end of list" },
+//{ expr: "yield, 1",     top: [TOP_YIELD, 777], fun: [YIELD_PAREN, 2], gen: [YIELD_PAREN, 2],  desc: "simple yield in list" },
+//{ expr: "(yield)",      top: [TOP_YIELD, 777], fun: null,              gen: [GENEXP_YIELD, 2], desc: "simple yield, parenthesized" },
+//{ expr: "(1, yield)",   top: [TOP_YIELD, 777], fun: null,              gen: [GENEXP_YIELD, 2], desc: "simple yield at end of list, parenthesized" },
+//{ expr: "(yield, 1)",   top: [TOP_YIELD, 777], fun: [YIELD_PAREN, 2], gen: [YIELD_PAREN, 2],  desc: "simple yield in list, parenthesized" },
+//{ expr: "((((yield))))",   top: [TOP_YIELD, 777], fun: null, gen: [GENEXP_YIELD, 2], desc: "deeply nested yield" },
+//{ expr: "(for (x of []) yield)",           top: [TOP_YIELD, 777], fun: [GENERIC, 777],      gen: [GENERIC, 777],      desc: "simple yield in genexp" },
+//{ expr: "(for (x of []) yield, 1)",        top: [TOP_YIELD, 777], fun: [YIELD_PAREN, 2],  gen: [YIELD_PAREN, 2],  desc: "simple yield in list in genexp" },
+//{ expr: "(for (x of []) 1, yield)",        top: [TOP_YIELD, 777], fun: [GENERIC, 777],      gen: [GENERIC, 777],      desc: "simple yield at end of list in genexp" },
+//{ expr: "(for (x of []) (yield))",         top: [TOP_YIELD, 777], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], desc: "simple yield, parenthesized in genexp" },
+//{ expr: "(for (x of []) 1, (yield))",      top: [TOP_YIELD, 777], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], desc: "simple yield, parenthesized in list in genexp" },
+//{ expr: "(for (x of []) (1, yield))",      top: [TOP_YIELD, 777], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], desc: "simple yield at end of list, parenthesized in genexp" },
+//{ expr: "(for (x of []) 1, (2, yield))",   top: [TOP_YIELD, 777], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], desc: "simple yield at end of list, parenthesized in list in genexp" },
+//{ expr: "(for (x of []) (yield, 1))",      top: [TOP_YIELD, 777], fun: [YIELD_PAREN, 2],  gen: [YIELD_PAREN, 2],  desc: "simple yield in list, parenthesized in genexp" },
+//{ expr: "(for (x of []) 1, (yield, 2))",   top: [TOP_YIELD, 777], fun: [YIELD_PAREN, 2],  gen: [YIELD_PAREN, 2],  desc: "simple yield in list, parenthesized in list in genexp" },
 //{ expr: "(for (x of []) (function*() { yield }))",           top: null, fun: null, gen: null, desc: "legal yield in nested function" },
 
   // yield expressions
-  { expr: "yield 1",      top: MISSING_SEMI, fun: MISSING_SEMI, gen: null, genexp: GENEXP_YIELD, desc: "yield w/ arg" },
-  { expr: "1, yield 2",   top: MISSING_SEMI, fun: MISSING_SEMI, gen: null, genexp: FOR_OF_PAREN, desc: "yield w/ arg at end of list" },
-  { expr: "yield 1, 2",   top: MISSING_SEMI, fun: MISSING_SEMI, gen: null, genexp: FOR_OF_PAREN, desc: "yield w/ arg in list" },
-  { expr: "(yield 1)",    top: MISSING_PAREN, fun: MISSING_PAREN, gen: null, genexp: GENEXP_YIELD, desc: "yield w/ arg, parenthesized" },
-  { expr: "(1, yield 2)", top: MISSING_PAREN, fun: MISSING_PAREN, gen: null, genexp: GENEXP_YIELD, desc: "yield w/ arg at end of list, parenthesized" },
-  { expr: "(yield 1, 2)", top: MISSING_PAREN, fun: MISSING_PAREN, gen: null, genexp: YIELD_PAREN, desc: "yield w/ arg in list, parenthesized" },
+  { expr: "yield 1",      top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg" },
+  { expr: "1, yield 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 1], desc: "yield w/ arg at end of list" },
+  { expr: "yield 1, 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: [YIELD_PAREN, 3], genexp: [FOR_OF_PAREN, 3], desc: "yield w/ arg in list" },
+  { expr: "(yield 1)",    top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized" },
+  { expr: "(1, yield 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized" },
+  { expr: "(yield 1, 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: [YIELD_PAREN, 3], genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized" },
 
   // deeply nested yield expressions
-  { expr: "((((yield 1))))", top: MISSING_PAREN, fun: MISSING_PAREN, gen: null, genexp: GENEXP_YIELD, desc: "deeply nested yield w/ arg" },
+  { expr: "((((yield 1))))", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield w/ arg" },
 
   // arguments
   { expr: "arguments",    top: null, fun: null, gen: null, genexp: null, desc: "arguments in list" },
-  { expr: "1, arguments", top: null, fun: null, gen: null, genexp: FOR_OF_PAREN, desc: "arguments in list" },
+  { expr: "1, arguments", top: null, fun: null, gen: null, genexp: [FOR_OF_PAREN, 1], desc: "arguments in list" },
 
   // yield in generator expressions
-  { expr: "(for (x of []) yield 1)",         top: GENEXP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "yield w/ arg in genexp" },
-  { expr: "(for (x of []) yield 1, 2)",      top: GENEXP_YIELD, fun: GENEXP_YIELD,  gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "yield w/ arg in list in genexp" },
-  { expr: "(for (x of []) 1, yield 2)",      top: PAREN_PAREN, fun: PAREN_PAREN,  gen: PAREN_PAREN, genexp: PAREN_PAREN, desc: "yield w/ arg at end of list in genexp" },
-  { expr: "(for (x of []) (yield 1))",       top: GENEXP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "yield w/ arg, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (yield 2))",    top: PAREN_PAREN, fun: PAREN_PAREN, gen: PAREN_PAREN, genexp: PAREN_PAREN, desc: "yield w/ arg, parenthesized in list in genexp" },
-  { expr: "(for (x of []) (1, yield 2))",    top: GENEXP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "yield w/ arg at end of list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (2, yield 3))", top: PAREN_PAREN, fun: PAREN_PAREN, gen: PAREN_PAREN, genexp: PAREN_PAREN, desc: "yield w/ arg at end of list, parenthesized in list in genexp" },
-  { expr: "(for (x of []) (yield 1, 2))",    top: YIELD_PAREN, fun: YIELD_PAREN, gen: YIELD_PAREN, genexp: YIELD_PAREN, desc: "yield w/ arg in list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (yield 2, 3))", top: PAREN_PAREN, fun: PAREN_PAREN, gen: PAREN_PAREN, genexp: PAREN_PAREN, desc: "yield w/ arg in list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) yield 1)",         top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg in genexp" },
+  { expr: "(for (x of []) yield 1, 2)",      top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2],  gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg in list in genexp" },
+  { expr: "(for (x of []) 1, yield 2)",      top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1],  gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg at end of list in genexp" },
+  { expr: "(for (x of []) (yield 1))",       top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized in genexp" },
+  { expr: "(for (x of []) 1, (yield 2))",    top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg, parenthesized in list in genexp" },
+  { expr: "(for (x of []) (1, yield 2))",    top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized in genexp" },
+  { expr: "(for (x of []) 1, (2, yield 3))", top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg at end of list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) (yield 1, 2))",    top: [YIELD_PAREN, 2], fun: [YIELD_PAREN, 2], gen: [YIELD_PAREN, 2], genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized in genexp" },
+  { expr: "(for (x of []) 1, (yield 2, 3))", top: [PAREN_PAREN, 1], fun: [PAREN_PAREN, 1], gen: [PAREN_PAREN, 1], genexp: [PAREN_PAREN, 1], desc: "yield w/ arg in list, parenthesized in list in genexp" },
 
   // deeply nested yield in generator expressions
-  { expr: "(for (x of []) (((1, yield 2))))",               top: GENEXP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "deeply nested yield in genexp" },
-  { expr: "(for (y of []) (for (x of []) ((1, yield 2))))", top: GENEXP_YIELD, fun: GENEXP_YIELD, gen: GENEXP_YIELD, genexp: GENEXP_YIELD, desc: "deeply nested yield in multiple genexps" },
+  { expr: "(for (x of []) (((1, yield 2))))",               top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield in genexp" },
+  { expr: "(for (y of []) (for (x of []) ((1, yield 2))))", top: [GENEXP_YIELD, 2], fun: [GENEXP_YIELD, 2], gen: [GENEXP_YIELD, 2], genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield in multiple genexps" },
 
   // arguments in generator expressions
   { expr: "(for (x of []) arguments)",         top: null, fun: null, gen: null, genexp: null, desc: "simple arguments in genexp" },
-  { expr: "(for (x of []) 1, arguments)",      top: BAD_GENERATOR_SYNTAX, fun: BAD_GENERATOR_SYNTAX, gen: BAD_GENERATOR_SYNTAX, genexp: BAD_GENERATOR_SYNTAX, desc: "arguments in list in genexp" },
+  { expr: "(for (x of []) 1, arguments)",      top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments in list in genexp" },
   { expr: "(for (x of []) (arguments))",       top: null, fun: null, gen: null, genexp: null, desc: "arguments, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (arguments))",    top: BAD_GENERATOR_SYNTAX, fun: BAD_GENERATOR_SYNTAX, gen: BAD_GENERATOR_SYNTAX, genexp: BAD_GENERATOR_SYNTAX, desc: "arguments, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (arguments))",    top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments, parenthesized in list in genexp" },
   { expr: "(for (x of []) (1, arguments))",    top: null, fun: null, gen: null, genexp: null, desc: "arguments in list, parenthesized in genexp" },
-  { expr: "(for (x of []) 1, (2, arguments))", top: BAD_GENERATOR_SYNTAX, fun: BAD_GENERATOR_SYNTAX, gen: BAD_GENERATOR_SYNTAX, genexp: BAD_GENERATOR_SYNTAX, desc: "arguments in list, parenthesized in list in genexp" },
+  { expr: "(for (x of []) 1, (2, arguments))", top: [BAD_GENERATOR_SYNTAX, 1], fun: [BAD_GENERATOR_SYNTAX, 1], gen: [BAD_GENERATOR_SYNTAX, 1], genexp: [BAD_GENERATOR_SYNTAX, 1], desc: "arguments in list, parenthesized in list in genexp" },
 
   // deeply nested arguments in generator expressions
   { expr: "(for (x of []) (((1, arguments))))",               top: null, fun: null, gen: null, genexp: null, desc: "deeply nested arguments in genexp" },
@@ -110,15 +112,14 @@ function splitKeyword(str) {
          replace(/arguments/, '\narguments\n');
 }
 
-function expectError1(err, ctx, msg) {
+function expectError1(err, ctx, msg, lineNumber) {
   reportCompare('object', typeof err,     'exn for: ' + msg);
   reportCompare(ctx,      err.message,    'exn message for: ' + msg);
-  if (ctx !== BAD_GENERATOR_SYNTAX && ctx != PAREN_PAREN && ctx != FOR_OF_PAREN)
-      reportCompare(2,    err.lineNumber, 'exn token for: ' + msg);
+  reportCompare(lineNumber,    err.lineNumber, 'exn token for: ' + msg);
 }
 
-function expectError(expr, wrapCtx, expect, msg) {
-  expectError1(error(wrapCtx(expr)), expect, msg);
+function expectError(expr, wrapCtx, [expect, lineNumber], msg) {
+  expectError1(error(wrapCtx(expr)), expect, msg, lineNumber);
 }
 
 function expectSuccess(err, msg) {

@@ -1378,6 +1378,50 @@ js::ecmaHypot(double x, double y)
     return hypot(x, y);
 }
 
+static inline
+void
+hypot_step(double &scale, double &sumsq, double x)
+{
+    double xabs = mozilla::Abs(x);
+    if (scale < xabs) {
+        sumsq = 1 + sumsq * (scale / xabs) * (scale / xabs);
+        scale = xabs;
+    } else if (scale != 0) {
+        sumsq += (xabs / scale) * (xabs / scale);
+    }
+}
+
+double
+js::hypot4(double x, double y, double z, double w)
+{
+    /* Check for infinity or NaNs so that we can return immediatelly.
+     * Does not need to be WIN_XP specific as ecmaHypot
+     */
+    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
+            mozilla::IsInfinite(z) || mozilla::IsInfinite(w))
+        return mozilla::PositiveInfinity<double>();
+
+    if (mozilla::IsNaN(x) || mozilla::IsNaN(y) || mozilla::IsNaN(z) ||
+            mozilla::IsNaN(w))
+        return GenericNaN();
+
+    double scale = 0;
+    double sumsq = 1;
+
+    hypot_step(scale, sumsq, x);
+    hypot_step(scale, sumsq, y);
+    hypot_step(scale, sumsq, z);
+    hypot_step(scale, sumsq, w);
+
+    return scale * sqrt(sumsq);
+}
+
+double
+js::hypot3(double x, double y, double z)
+{
+    return hypot4(x, y, z, 0.0);
+}
+
 bool
 js::math_hypot(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1418,14 +1462,7 @@ js::math_hypot_handle(JSContext *cx, HandleValueArray args, MutableHandleValue r
         if (isInfinite || isNaN)
             continue;
 
-        double xabs = mozilla::Abs(x);
-
-        if (scale < xabs) {
-            sumsq = 1 + sumsq * (scale / xabs) * (scale / xabs);
-            scale = xabs;
-        } else if (scale != 0) {
-            sumsq += (xabs / scale) * (xabs / scale);
-        }
+        hypot_step(scale, sumsq, x);
     }
 
     double result = isInfinite ? PositiveInfinity<double>() :

@@ -16,11 +16,17 @@ interface SVGMaskElement : SVGElement {
   const unsigned short SVG_MASKTYPE_LUMINANCE = 0;
   const unsigned short SVG_MASKTYPE_ALPHA = 1;
 
+  [Constant]
   readonly attribute SVGAnimatedEnumeration maskUnits;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration maskContentUnits;
+  [Constant]
   readonly attribute SVGAnimatedLength x;
+  [Constant]
   readonly attribute SVGAnimatedLength y;
+  [Constant]
   readonly attribute SVGAnimatedLength width;
+  [Constant]
   readonly attribute SVGAnimatedLength height;
 };
 
