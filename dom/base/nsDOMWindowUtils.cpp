@@ -2206,8 +2206,12 @@ nsDOMWindowUtils::CreateCompositionStringSynthesizer(
     return NS_ERROR_FAILURE;
   }
   nsRefPtr<TextEventDispatcher> dispatcher(widget->GetTextEventDispatcher());
-  // XXX Ignore the result of InitForTest() for now.
-  dispatcher->InitForTests();
+  nsresult rv = dispatcher->GetState();
+  if (rv == NS_ERROR_NOT_INITIALIZED) {
+    dispatcher->InitForTests();
+  } else if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   NS_ADDREF(*aResult = new CompositionStringSynthesizer(dispatcher));
   return NS_OK;
 }

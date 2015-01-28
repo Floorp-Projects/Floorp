@@ -53,6 +53,17 @@ public:
   void OnDestroyWidget();
 
   /**
+   * GetState() returns current state of this class.
+   *
+   * @return        NS_OK: Fine to compose text.
+   *                NS_ERROR_NOT_INITIALIZED: Init() or InitForTests() should
+   *                                          be called.
+   *                NS_ERROR_NOT_AVAILABLE: The widget isn't available for
+   *                                        composition.
+   */
+  nsresult GetState() const;
+
+  /**
    * SetPendingCompositionString() sets new composition string which will be
    * dispatched with NS_COMPOSITION_CHANGE event by calling Flush().
    *
@@ -142,6 +153,12 @@ private:
 
   bool mInitialized;
   bool mForTests;
+
+  /**
+   * InitEvent() initializes aEvent.  This must be called before dispatching
+   * the event.
+   */
+  void InitEvent(WidgetCompositionEvent& aEvent) const;
 };
 
 } // namespace widget

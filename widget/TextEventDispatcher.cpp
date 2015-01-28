@@ -56,6 +56,25 @@ TextEventDispatcher::OnDestroyWidget()
   mPendingComposition.Clear();
 }
 
+nsresult
+TextEventDispatcher::GetState() const
+{
+  if (!mInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!mWidget || mWidget->Destroyed()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return NS_OK;
+}
+
+void
+TextEventDispatcher::InitEvent(WidgetCompositionEvent& aEvent) const
+{
+  aEvent.time = PR_IntervalNow();
+  aEvent.mFlags.mIsSynthesizedForTests = mForTests;
+}
+
 /******************************************************************************
  * TextEventDispatcher::PendingComposition
  *****************************************************************************/
@@ -133,13 +152,9 @@ TextEventDispatcher::PendingComposition::Flush(
 {
   aStatus = nsEventStatus_eIgnore;
 
-  if (NS_WARN_IF(!aDispatcher->mInitialized)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
-  if (NS_WARN_IF(!widget || widget->Destroyed())) {
-    return NS_ERROR_NOT_AVAILABLE;
+  nsresult rv = aDispatcher->GetState();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (mClauses && !mClauses->IsEmpty() &&
@@ -159,8 +174,9 @@ TextEventDispatcher::PendingComposition::Flush(
     mClauses->AppendElement(mCaret);
   }
 
+  nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
   WidgetCompositionEvent compChangeEvent(true, NS_COMPOSITION_CHANGE, widget);
-  compChangeEvent.time = PR_IntervalNow();
+  aDispatcher->InitEvent(compChangeEvent);
   compChangeEvent.mData = mString;
   if (mClauses) {
     MOZ_ASSERT(!mClauses->IsEmpty(),
@@ -168,13 +184,11 @@ TextEventDispatcher::PendingComposition::Flush(
     compChangeEvent.mRanges = mClauses;
   }
 
-  compChangeEvent.mFlags.mIsSynthesizedForTests = aDispatcher->mForTests;
-
   // While this method dispatches a composition event, some other event handler
   // cause more clauses to be added.  So, we should clear pending composition
   // before dispatching the event.
   Clear();
-  nsresult rv = widget->DispatchEvent(&compChangeEvent, aStatus);
+  rv = widget->DispatchEvent(&compChangeEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
