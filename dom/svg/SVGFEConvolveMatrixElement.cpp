@@ -202,7 +202,6 @@ SVGFEConvolveMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstan
   if (orderX > NS_SVG_OFFSCREEN_MAX_DIMENSION ||
       orderY > NS_SVG_OFFSCREEN_MAX_DIMENSION)
     return failureDescription;
-  const fallible_t fallible = fallible_t();
   nsAutoArrayPtr<float> kernel(new (fallible) float[orderX * orderY]);
   if (!kernel)
     return failureDescription;

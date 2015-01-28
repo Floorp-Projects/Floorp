@@ -117,7 +117,7 @@ DOMStorage::SetItem(const nsAString& aKey, const nsAString& aData,
       : Telemetry::SESSIONDOMSTORAGE_VALUE_SIZE_BYTES, aData.Length());
 
   nsString data;
-  bool ok = data.Assign(aData, fallible_t());
+  bool ok = data.Assign(aData, fallible);
   if (!ok) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;

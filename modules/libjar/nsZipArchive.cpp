@@ -1157,7 +1157,7 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName
   uint32_t size = 0;
   if (item->Compression() == DEFLATED) {
     size = item->RealSize();
-    mAutoBuf = new ((fallible_t())) uint8_t[size];
+    mAutoBuf = new (fallible) uint8_t[size];
     if (!mAutoBuf) {
       return;
     }

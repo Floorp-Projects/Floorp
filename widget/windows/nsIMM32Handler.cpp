@@ -1689,7 +1689,7 @@ nsIMM32Handler::GetCompositionString(const nsIMEContext &aIMEContext,
   long lRtn = ::ImmGetCompositionStringW(aIMEContext.get(), aIndex, nullptr, 0);
   if (lRtn < 0 ||
       !aCompositionString.SetLength((lRtn / sizeof(WCHAR)) + 1,
-                                    mozilla::fallible_t())) {
+                                    mozilla::fallible)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: GetCompositionString, FAILED by OOM\n"));
     return; // Error or out of memory.
@@ -1756,7 +1756,7 @@ nsIMM32Handler::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
                                   nullptr, 0, nullptr, nullptr);
   NS_ENSURE_TRUE(len >= 0, false);
 
-  if (!aANSIStr.SetLength(len, mozilla::fallible_t())) {
+  if (!aANSIStr.SetLength(len, mozilla::fallible)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: ConvertToANSIString, FAILED by OOM\n"));
     return false;

@@ -470,7 +470,7 @@ ExtractFromUSVString(const nsString& aStr,
   }
 
   nsCString encoded;
-  if (!encoded.SetCapacity(destBufferLen, fallible_t())) {
+  if (!encoded.SetCapacity(destBufferLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -583,7 +583,7 @@ public:
       return rv;
     }
 
-    if (!mDecoded.SetCapacity(mDecoded.Length() + destBufferLen, fallible_t())) {
+    if (!mDecoded.SetCapacity(mDecoded.Length() + destBufferLen, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 

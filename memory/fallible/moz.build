@@ -1,0 +1,30 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla += [
+    'fallible.h',
+]
+
+Library('fallible')
+
+SOURCES += [
+    'fallible.cpp',
+]
+
+if CONFIG['_MSC_VER']:
+    # MSVC normally adds linker directives relative to the CRT in a .drectve
+    # section in .obj files. Then, when linking objects, it adds those
+    # directives as if they were given as command line arguments. This can
+    # lead to trying to include link CRTs because different objects are
+    # compiled with different CRT options (i.e. -MT vs. -MD), and failing.
+    # The only source in this directory doesn't expose anything that depends
+    # on a CRT, so it doesn't need to be bound to a specific one.
+    # Adding the -Zl option makes MSVC not store linker directives in the
+    # object. This allows to link fallible.obj to binaries independently of
+    # the CRT they use.
+    CXXFLAGS += [
+        '-Zl',
+    ]

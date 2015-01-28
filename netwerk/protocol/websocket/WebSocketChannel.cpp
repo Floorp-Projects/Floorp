@@ -1609,7 +1609,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
                utf8Data.Length()));
         } else {
           if (!utf8Data.Assign((const char *)payload, payloadLength,
-                               mozilla::fallible_t())) {
+                               mozilla::fallible)) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
         }
@@ -1719,7 +1719,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
                binaryData.Length()));
         } else {
           if (!binaryData.Assign((const char *)payload, payloadLength,
-                                 mozilla::fallible_t())) {
+                                 mozilla::fallible)) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
         }

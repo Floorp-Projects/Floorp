@@ -188,14 +188,14 @@ SnappyUncompressInputStream::ParseNextChunk(uint32_t* aBytesReadOut)
   // operation.  These allocations only happens once.  The buffers are reused
   // until the stream is closed.
   if (!mUncompressedBuffer) {
-    mUncompressedBuffer.reset(new ((fallible_t())) char[snappy::kBlockSize]);
+    mUncompressedBuffer.reset(new (fallible) char[snappy::kBlockSize]);
     if (NS_WARN_IF(!mUncompressedBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
   if (!mCompressedBuffer) {
-    mCompressedBuffer.reset(new ((fallible_t())) char[kCompressedBufferLength]);
+    mCompressedBuffer.reset(new (fallible) char[kCompressedBufferLength]);
     if (NS_WARN_IF(!mCompressedBuffer)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
