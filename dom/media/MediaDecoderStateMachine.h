@@ -155,7 +155,7 @@ public:
   // Set the audio volume. The decoder monitor must be obtained before
   // calling this.
   void SetVolume(double aVolume);
-  void SetAudioCaptured(bool aCapture);
+  void SetAudioCaptured();
 
   // Check if the decoder needs to become dormant state.
   bool IsDormantNeeded();
@@ -241,6 +241,7 @@ public:
   // Called from the main thread to get the current frame time. The decoder
   // monitor must be obtained before calling this.
   double GetCurrentTime() const;
+  int64_t GetCurrentTimeUs() const;
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
