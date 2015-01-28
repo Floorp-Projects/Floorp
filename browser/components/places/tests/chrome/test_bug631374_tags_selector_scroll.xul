@@ -43,115 +43,126 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      Components.utils.import("resource://gre/modules/NetUtil.jsm");
+      Task.spawn(function* () {
+        let bs = PlacesUtils.bookmarks;
 
-      let tags = ["a", "b", "c", "d", "e", "f", "g",
-                  "h", "i", "l", "m", "n", "o", "p"];
+        let tags = ["a", "b", "c", "d", "e", "f", "g",
+                    "h", "i", "l", "m", "n", "o", "p"];
 
-      // Add a bookmark and tag it.
-      let uri1 = NetUtil.newURI("http://www1.mozilla.org/");
-      let id1 = PlacesUtils.bookmarks.insertBookmark(
-        PlacesUtils.toolbarFolderId, uri1,
-        PlacesUtils.bookmarks.DEFAULT_INDEX, "mozilla"
-      );
-      PlacesUtils.tagging.tagURI(uri1, tags);
-
-      // Add a second bookmark so that tags won't disappear when unchecked.
-      let uri2 = NetUtil.newURI("http://www2.mozilla.org/");
-      let id2 = PlacesUtils.bookmarks.insertBookmark(
-        PlacesUtils.toolbarFolderId, uri2,
-        PlacesUtils.bookmarks.DEFAULT_INDEX, "mozilla"
-      );
-      PlacesUtils.tagging.tagURI(uri2, tags);
-
-      // Init panel.
-      ok(gEditItemOverlay, "gEditItemOverlay is in context");
-      gEditItemOverlay.initPanel(id1);
-      ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
-
-      // Wait for the tags selector to be open.
-      let tagsSelectorRow = document.getElementById("editBMPanel_tagsSelectorRow");
-      tagsSelectorRow.addEventListener("DOMAttrModified", function (event) {
-        tagsSelectorRow.removeEventListener("DOMAttrModified", arguments.callee, false);
-        SimpleTest.executeSoon(function () {
-          let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
-
-          // Go by two so there is some untouched tag in the middle.
-          for (let i = 8; i < tags.length; i += 2) {
-            tagsSelector.selectedIndex = i;
-            let listItem = tagsSelector.selectedItem;
-            SimpleTest.isnot(listItem, null, "Valid listItem found");
-
-            tagsSelector.ensureElementIsVisible(listItem);
-            let visibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
-
-            SimpleTest.ok(listItem.checked, "Item is checked " + i);
-            let selectedTag = listItem.label;
-
-            // Uncheck the tag.
-            listItem.checked = false;
-            SimpleTest.is(visibleIndex,
-                          tagsSelector.getIndexOfFirstVisibleRow(),
-                          "Scroll position did not change");
-
-            // The listbox is rebuilt, so we have to get the new element.
-            let newItem = tagsSelector.selectedItem;
-            SimpleTest.isnot(newItem, null, "Valid new listItem found");
-            SimpleTest.ok(!newItem.checked, "New listItem is unchecked " + i);
-            SimpleTest.is(newItem.label, selectedTag,
-                          "Correct tag is still selected");
-
-            // Check the tag.
-            newItem.checked = true;
-            SimpleTest.is(visibleIndex,
-                          tagsSelector.getIndexOfFirstVisibleRow(),
-                          "Scroll position did not change");
-          }
-
-          // Remove the second bookmark, then nuke some of the tags.
-          PlacesUtils.bookmarks.removeItem(id2);
-
-          // Doing this backwords tests more interesting paths.
-          for (let i = tags.length - 1; i >= 0 ; i -= 2) {
-            tagsSelector.selectedIndex = i;
-            let listItem = tagsSelector.selectedItem;
-            SimpleTest.isnot(listItem, null, "Valid listItem found");
-
-            tagsSelector.ensureElementIsVisible(listItem);
-            let firstVisibleTag = tags[tagsSelector.getIndexOfFirstVisibleRow()];
-
-            SimpleTest.ok(listItem.checked, "Item is checked " + i);
-            let selectedTag = listItem.label;
-
-            // Uncheck the tag.
-            listItem.checked = false;
-
-            // Ensure the first visible tag is still visible in the list.
-            let firstVisibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
-            let lastVisibleIndex = firstVisibleIndex + tagsSelector.getNumberOfVisibleRows() -1;
-            let expectedTagIndex = tags.indexOf(firstVisibleTag);
-            SimpleTest.ok(expectedTagIndex >= firstVisibleIndex &&
-                          expectedTagIndex <= lastVisibleIndex,
-                          "Scroll position is correct");
-
-            // The listbox is rebuilt, so we have to get the new element.
-            let newItem = tagsSelector.selectedItem;
-            SimpleTest.isnot(newItem, null, "Valid new listItem found");
-            SimpleTest.ok(newItem.checked, "New listItem is checked " + i);
-            SimpleTest.is(tagsSelector.selectedItem.label,
-                          tags[Math.min(i + 1, tags.length - 2)],
-                          "The next tag is now selected");
-          }
-
-          // Cleanup.
-          PlacesUtils.bookmarks.removeItem(id1);
-
-          SimpleTest.finish();
+        // Add a bookmark and tag it.
+        let uri1 = Services.io.newURI("http://www1.mozilla.org/", null, null);
+        let bm1 = yield bs.insert({
+          parentGuid: bs.toolbarGuid,
+          index: bs.DEFAULT_INDEX,
+          type: bs.TYPE_BOOKMARK,
+          title: "mozilla",
+          url: uri1.spec
         });
-      }, false);
+        PlacesUtils.tagging.tagURI(uri1, tags);
+
+        // Add a second bookmark so that tags won't disappear when unchecked.
+        let uri2 = Services.io.newURI("http://www2.mozilla.org/", null, null);
+        let bm2 = yield bs.insert({
+          parentGuid: bs.toolbarGuid,
+          index: bs.DEFAULT_INDEX,
+          type: bs.TYPE_BOOKMARK,
+          title: "mozilla",
+          url: uri2.spec
+        });
+        PlacesUtils.tagging.tagURI(uri2, tags);
+
+        // Init panel.
+        ok(gEditItemOverlay, "gEditItemOverlay is in context");
+        let id1 = yield PlacesUtils.promiseItemId(bm1.guid);
+        gEditItemOverlay.initPanel(id1);
+        ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
+
+        yield openTagSelector();
+        let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
+
+        // Go by two so there is some untouched tag in the middle.
+        for (let i = 8; i < tags.length; i += 2) {
+          tagsSelector.selectedIndex = i;
+          let listItem = tagsSelector.selectedItem;
+          isnot(listItem, null, "Valid listItem found");
+
+          tagsSelector.ensureElementIsVisible(listItem);
+          let visibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
+
+          ok(listItem.checked, "Item is checked " + i);
+          let selectedTag = listItem.label;
+
+          // Uncheck the tag.
+          listItem.checked = false;
+          is(visibleIndex, tagsSelector.getIndexOfFirstVisibleRow(),
+             "Scroll position did not change");
+
+          // The listbox is rebuilt, so we have to get the new element.
+          let newItem = tagsSelector.selectedItem;
+          isnot(newItem, null, "Valid new listItem found");
+          ok(!newItem.checked, "New listItem is unchecked " + i);
+          is(newItem.label, selectedTag, "Correct tag is still selected");
+
+          // Check the tag.
+          newItem.checked = true;
+          is(visibleIndex, tagsSelector.getIndexOfFirstVisibleRow(),
+             "Scroll position did not change");
+        }
+
+        // Remove the second bookmark, then nuke some of the tags.
+        yield bs.remove(bm2.guid);
+
+        // Doing this backwords tests more interesting paths.
+        for (let i = tags.length - 1; i >= 0 ; i -= 2) {
+          tagsSelector.selectedIndex = i;
+          let listItem = tagsSelector.selectedItem;
+          isnot(listItem, null, "Valid listItem found");
+
+          tagsSelector.ensureElementIsVisible(listItem);
+          let firstVisibleTag = tags[tagsSelector.getIndexOfFirstVisibleRow()];
+
+          ok(listItem.checked, "Item is checked " + i);
+          let selectedTag = listItem.label;
+
+          // Uncheck the tag.
+          listItem.checked = false;
+
+          // Ensure the first visible tag is still visible in the list.
+          let firstVisibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
+          let lastVisibleIndex = firstVisibleIndex + tagsSelector.getNumberOfVisibleRows() -1;
+          let expectedTagIndex = tags.indexOf(firstVisibleTag);
+          ok(expectedTagIndex >= firstVisibleIndex &&
+             expectedTagIndex <= lastVisibleIndex,
+             "Scroll position is correct");
+
+          // The listbox is rebuilt, so we have to get the new element.
+          let newItem = tagsSelector.selectedItem;
+          isnot(newItem, null, "Valid new listItem found");
+          ok(newItem.checked, "New listItem is checked " + i);
+          is(tagsSelector.selectedItem.label,
+             tags[Math.min(i + 1, tags.length - 2)],
+             "The next tag is now selected");
+        }
+
+        // Cleanup.
+        yield bs.remove(bm1.guid);
+      }).then(SimpleTest.finish).catch(alert);
+    }
+
+    function openTagSelector() {
+      // Wait for the tags selector to be open.
+      let promise = new Promise(resolve => {
+        let row = document.getElementById("editBMPanel_tagsSelectorRow");
+        row.addEventListener("DOMAttrModified", function onAttrModified() {
+          row.removeEventListener("DOMAttrModified", onAttrModified);
+          resolve();
+        });
+      });
 
       // Open the tags selector.
       document.getElementById("editBMPanel_tagsSelectorExpander").doCommand();
+
+      return promise;
     }
   ]]>
   </script>
