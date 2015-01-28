@@ -105,7 +105,8 @@ public class GeckoEvent {
         TELEMETRY_UI_EVENT(44),
         GAMEPAD_ADDREMOVE(45),
         GAMEPAD_DATA(46),
-        LONG_PRESS(47);
+        LONG_PRESS(47),
+        ZOOMEDVIEW(48);
 
         public final int value;
 
@@ -744,6 +745,17 @@ public class GeckoEvent {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.THUMBNAIL);
         event.mPoints = new Point[1];
         event.mPoints[0] = new Point(bufw, bufh);
+        event.mMetaState = tabId;
+        event.mBuffer = buffer;
+        return event;
+    }
+
+    public static GeckoEvent createZoomedViewEvent(int tabId, int x, int y, int bufw, int bufh, float scaleFactor, ByteBuffer buffer) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.ZOOMEDVIEW);
+        event.mPoints = new Point[2];
+        event.mPoints[0] = new Point(x, y);
+        event.mPoints[1] = new Point(bufw, bufh);
+        event.mX = (double) scaleFactor;
         event.mMetaState = tabId;
         event.mBuffer = buffer;
         return event;

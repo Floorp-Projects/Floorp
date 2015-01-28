@@ -138,10 +138,6 @@ HelperAppLauncherDialog.prototype = {
     messageContainer.appendChild(fragment);
   },
 
-  promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
-    throw new Components.Exception("Async version must be used", Cr.NS_ERROR_NOT_AVAILABLE);
-  },
-
   promptForSaveToFileAsync: function hald_promptForSaveToFileAsync(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
     let file = null;
     let prefs = Services.prefs;

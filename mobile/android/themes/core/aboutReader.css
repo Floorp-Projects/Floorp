@@ -509,14 +509,6 @@ body {
     background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-hdpi.png');
   }
 
-  .step-control > .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-icon-hdpi.png');
-  }
-
-  .step-control > .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-icon-hdpi.png');
-  }
-
   .toggle-button.on {
     background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
   }
@@ -537,14 +529,6 @@ body {
 @media screen and (min-resolution: 2dppx) {
   .dropdown-arrow {
     background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-xhdpi.png');
-  }
-
-  .step-control > .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-icon-xhdpi.png');
-  }
-
-  .step-control > .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-icon-xhdpi.png');
   }
 
   .toggle-button.on {

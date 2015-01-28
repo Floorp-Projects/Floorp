@@ -466,6 +466,12 @@ MouseEvent::GetMozPressure(float* aPressure)
   return NS_OK;
 }
 
+bool
+MouseEvent::HitCluster() const
+{
+  return mEvent->AsMouseEventBase()->hitCluster;
+}
+
 uint16_t
 MouseEvent::MozInputSource() const
 {
