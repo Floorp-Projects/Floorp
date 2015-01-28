@@ -9,7 +9,10 @@
 #include "base/message_loop.h"  // for MessageLoop
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
+#include "nsView.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -21,6 +24,35 @@ ChromeProcessController::ChromeProcessController(nsIWidget* aWidget)
 {
   // Otherwise we're initializing mUILoop incorrectly.
   MOZ_ASSERT(NS_IsMainThread());
+
+  mUILoop->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(this, &ChromeProcessController::InitializeRoot));
+}
+
+void
+ChromeProcessController::InitializeRoot()
+{
+  // Create a view-id and set a zero-margin displayport for the root element
+  // of the root document in the chrome process. This ensures that the scroll
+  // frame for this element gets an APZC, which in turn ensures that all content
+  // in the chrome processes is covered by an APZC.
+  // The displayport is zero-margin because this element is generally not
+  // actually scrollable (if it is, APZC will set proper margins when it's
+  // scrolled).
+  nsView* view = nsView::GetViewFor(mWidget);
+  MOZ_ASSERT(view);
+  nsIPresShell* presShell = view->GetPresShell();
+  MOZ_ASSERT(presShell);
+  MOZ_ASSERT(presShell->GetDocument());
+  nsIContent* content = presShell->GetDocument()->GetDocumentElement();
+  MOZ_ASSERT(content);
+  uint32_t presShellId;
+  FrameMetrics::ViewID viewId;
+  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
+    nsLayoutUtils::SetDisplayPortMargins(content, presShell, ScreenMargin(), 0,
+        nsLayoutUtils::RepaintMode::DoNotRepaint);
+  }
 }
 
 void
