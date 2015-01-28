@@ -635,18 +635,21 @@ nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
 }
 
 bool
+nsBaseWidget::IsWindowClipRegionEqual(const nsTArray<nsIntRect>& aRects)
+{
+  return mClipRects &&
+         mClipRectCount == aRects.Length() &&
+         memcmp(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount) == 0;
+}
+
+void
 nsBaseWidget::StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects)
 {
-  if (mClipRects && mClipRectCount == aRects.Length() &&
-      memcmp(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount) == 0)
-    return false;
-
   mClipRectCount = aRects.Length();
   mClipRects = new nsIntRect[mClipRectCount];
   if (mClipRects) {
     memcpy(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount);
   }
-  return true;
 }
 
 void
@@ -683,16 +686,8 @@ nsBaseWidget::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                   bool aIntersectWithExisting)
 {
   if (!aIntersectWithExisting) {
-    nsBaseWidget::StoreWindowClipRegion(aRects);
+    StoreWindowClipRegion(aRects);
   } else {
-    // In this case still early return if nothing changed.
-    if (mClipRects && mClipRectCount == aRects.Length() &&
-        memcmp(mClipRects,
-               aRects.Elements(),
-               sizeof(nsIntRect)*mClipRectCount) == 0) {
-      return NS_OK;
-    }
-
     // get current rects
     nsTArray<nsIntRect> currentRects;
     GetWindowClipRegion(&currentRects);
@@ -707,7 +702,7 @@ nsBaseWidget::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     nsTArray<nsIntRect> rects;
     ArrayFromRegion(intersection, rects);
     // store
-    nsBaseWidget::StoreWindowClipRegion(rects);
+    StoreWindowClipRegion(rects);
   }
   return NS_OK;
 }
