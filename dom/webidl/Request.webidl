@@ -24,6 +24,10 @@ interface Request {
   readonly attribute RequestCache cache;
 
   [NewObject] Request clone();
+
+  // Bug 1124638 - Allow chrome callers to set the context.
+  [ChromeOnly]
+  void setContext(RequestContext context);
 };
 Request implements Body;
 
