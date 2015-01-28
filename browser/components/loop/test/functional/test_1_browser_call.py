@@ -127,15 +127,14 @@ class Test1BrowserCall(MarionetteTestCase):
 
     # Assumes the standlone or the conversation window is selected first.
     def check_remote_video(self):
-        # TODO: This is disabled currently due to bug 1122486
-        # video_wrapper = self.wait_for_element_displayed(By.CSS_SELECTOR, ".media .OT_subscriber .OT_video-container", 20)
-        # video = self.wait_for_subelement_displayed(video_wrapper, By.TAG_NAME, "video")
+        video_wrapper = self.wait_for_element_displayed(
+            By.CSS_SELECTOR,
+            ".media .OT_subscriber .OT_video-container", 20)
+        video = self.wait_for_subelement_displayed(
+            video_wrapper, By.TAG_NAME, "video")
 
-        # self.wait_for_element_attribute_to_be_false(video, "paused")
-        # self.assertEqual(video.get_attribute("ended"), "false")
-
-        # Due to the above waits being disabled, we do a sleep.
-        sleep(15)
+        self.wait_for_element_attribute_to_be_false(video, "paused")
+        self.assertEqual(video.get_attribute("ended"), "false")
 
     def standalone_check_remote_video(self):
         self.switch_to_standalone()

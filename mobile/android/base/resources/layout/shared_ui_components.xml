@@ -26,6 +26,12 @@
 
     <include layout="@layout/text_selection_handles"/>
 
+    <ViewStub android:id="@+id/zoomed_view_stub"
+               android:inflatedId="@+id/zoomed_view"
+               android:layout="@layout/zoomed_view"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content" />
+
     <FrameLayout android:id="@+id/camera_layout"
                  android:layout_height="wrap_content"
                  android:layout_width="wrap_content"

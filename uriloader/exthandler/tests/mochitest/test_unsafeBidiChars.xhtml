@@ -84,9 +84,6 @@ function load() {
          "The filename should be correctly sanitized");
       gCallback();
     },
-    promptForSaveToFile: function(aLauncher, aWindowContext, aDefaultFileName, aSuggestedFileExtension, aForcePrompt) {
-      return null;
-    },
     QueryInterface: function(aIID) {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       if (aIID.equals(SpecialPowers.Ci.nsISupports) ||

@@ -370,7 +370,7 @@ this.FxAccountsClient.prototype = {
             this,
             "fxaBackoffTimer"
            );
-	}
+        }
         deferred.reject(error);
       }
     );
