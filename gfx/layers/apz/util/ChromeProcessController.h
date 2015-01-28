@@ -49,6 +49,8 @@ public:
 private:
   nsCOMPtr<nsIWidget> mWidget;
   MessageLoop* mUILoop;
+
+  void InitializeRoot();
 };
 
 } // namespace layers
