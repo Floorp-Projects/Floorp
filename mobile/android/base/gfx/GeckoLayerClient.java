@@ -86,7 +86,8 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      *    that because mViewportMetrics might get reassigned in between reading the different
      *    fields. */
     private volatile ImmutableViewportMetrics mViewportMetrics;
-    private LayerView.OnMetricsChangedListener mViewportChangeListener;
+    private LayerView.OnMetricsChangedListener mDynamicToolbarViewportChangeListener;
+    private LayerView.OnMetricsChangedListener mZoomedViewViewportChangeListener;
 
     private ZoomConstraints mZoomConstraints;
 
@@ -853,8 +854,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * You must hold the monitor while calling this.
      */
     private void viewportMetricsChanged(boolean notifyGecko) {
-        if (mViewportChangeListener != null) {
-            mViewportChangeListener.onMetricsChanged(mViewportMetrics);
+        if (mDynamicToolbarViewportChangeListener != null) {
+            mDynamicToolbarViewportChangeListener.onMetricsChanged(mViewportMetrics);
+        }
+        if (mZoomedViewViewportChangeListener != null) {
+            mZoomedViewViewportChangeListener.onMetricsChanged(mViewportMetrics);
         }
 
         mView.requestRender();
@@ -910,8 +914,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /** Implementation of PanZoomTarget */
     @Override
     public void panZoomStopped() {
-        if (mViewportChangeListener != null) {
-            mViewportChangeListener.onPanZoomStopped();
+        if (mDynamicToolbarViewportChangeListener != null) {
+        	mDynamicToolbarViewportChangeListener.onPanZoomStopped();
+        }
+        if (mZoomedViewViewportChangeListener != null) {
+        	mZoomedViewViewportChangeListener.onPanZoomStopped();
         }
     }
 
@@ -982,8 +989,12 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return layerPoint;
     }
 
-    void setOnMetricsChangedListener(LayerView.OnMetricsChangedListener listener) {
-        mViewportChangeListener = listener;
+    void setOnMetricsChangedDynamicToolbarViewportListener(LayerView.OnMetricsChangedListener listener) {
+        mDynamicToolbarViewportChangeListener = listener;
+    }
+
+    void setOnMetricsChangedZoomedViewportListener(LayerView.OnMetricsChangedListener listener) {
+    	mZoomedViewViewportChangeListener = listener;
     }
 
     public void addDrawListener(DrawListener listener) {
