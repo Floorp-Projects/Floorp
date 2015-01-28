@@ -1763,7 +1763,7 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
-== 846144-1.html 846144-1-ref.html
+fuzzy-if(OSX,1,364) == 846144-1.html 846144-1-ref.html
 == 847850-1.html 847850-1-ref.html
 == 848421-1.html 848421-1-ref.html
 random-if(B2G) == 849407-1.html 849407-1-ref.html
