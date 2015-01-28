@@ -188,7 +188,6 @@ destroying the MediaDecoder object.
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
-#include "nsITimer.h"
 #include "MediaResource.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/gfx/Rect.h"
@@ -367,8 +366,6 @@ public:
   //  (like hw video codec), did not decoding and stay dormant.
   // It is used to share scarece media resources in system.
   virtual void NotifyOwnerActivityChanged();
-
-  void UpdateDormantState(bool aDormantTimeout, bool aActivity);
 
   // Pause video playback.
   virtual void Pause();
@@ -1025,14 +1022,6 @@ protected:
   virtual ~MediaDecoder();
   void SetStateMachineParameters();
 
-  static void DormantTimerExpired(nsITimer *aTimer, void *aClosure);
-
-  // Start a timer for heuristic dormant.
-  void StartDormantTimer();
-
-  // Cancel a timer for heuristic dormant.
-  void CancelDormantTimer();
-
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
@@ -1230,18 +1219,6 @@ protected:
 
   // True if MediaDecoder is in dormant state.
   bool mIsDormant;
-
-  // True if heuristic dormant is supported.
-  const bool mIsHeuristicDormantSupported;
-
-  // Timeout ms of heuristic dormant timer.
-  const int mHeuristicDormantTimeout;
-
-  // True if MediaDecoder is in dormant by heuristic.
-  bool mIsHeuristicDormant;
-
-  // Timer to schedule updating dormant state.
-  nsCOMPtr<nsITimer> mDormantTimer;
 };
 
 } // namespace mozilla
