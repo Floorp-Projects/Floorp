@@ -341,7 +341,7 @@ union OptionalContentId
   void_t;
 };
 
-prio(normal upto urgent) intr protocol PContent
+prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
 
