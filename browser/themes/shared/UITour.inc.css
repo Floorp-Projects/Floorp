@@ -195,3 +195,110 @@
     background-image: -moz-image-rect(url("chrome://browser/skin/dots@2x.png"), 0, 14, 100%, 0);
   }
 }
+
+/* Notification overrides for Heartbeat UI */
+
+notification.heartbeat {
+  background-color: #F1F1F1;
+%ifdef XP_MACOSX
+  background-image: linear-gradient(-179deg, #FBFBFB 0%, #EBEBEB 100%);
+%endif
+  box-shadow: 0px 1px 0px 0px rgba(0,0,0,0.35);
+}
+
+@keyframes pulse-onshow {
+ 0% {
+   opacity: 0;
+   transform: scale(1.0);
+ }
+ 25% {
+   opacity: 1;
+   transform: scale(1.1);
+ }
+ 50% {
+   transform: scale(1.0);
+ }
+ 75% {
+   transform: scale(1.1);
+ }
+ 100% {
+   transform: scale(1.0);
+ }
+}
+
+@keyframes pulse-twice {
+ 0% {
+   transform: scale(1.1);
+ }
+ 50% {
+   transform: scale(0.8);
+ }
+ 100% {
+   transform: scale(1);
+ }
+}
+
+.messageText.heartbeat {
+  color: #333333;
+  font-weight: normal;
+  font-family: "Lucida Grande", Segoe, Ubuntu;
+  font-size: 14px;
+  line-height: 16px;
+  text-shadow: none;
+}
+
+.messageImage.heartbeat {
+  width: 36px;
+  height: 36px;
+  -moz-margin-end: 10px;
+}
+
+.messageImage.heartbeat.pulse-onshow {
+  animation-name: pulse-onshow;
+  animation-duration: 1.5s;
+  animation-iteration-count: 1;
+  animation-timing-function: cubic-bezier(.7,1.8,.9,1.1);
+}
+
+.messageImage.heartbeat.pulse-twice {
+  animation-name: pulse-twice;
+  animation-duration: 1s;
+  animation-iteration-count: 2;
+  animation-timing-function: linear;
+}
+
+/* Heartbeat UI Rating Star Classes */
+.heartbeat > #star-rating-container {
+  display: -moz-box;
+}
+
+.heartbeat > #star-rating-container > #star5 {
+  -moz-box-ordinal-group: 5;
+}
+
+.heartbeat > #star-rating-container > #star4 {
+  -moz-box-ordinal-group: 4;
+}
+
+.heartbeat > #star-rating-container > #star3 {
+  -moz-box-ordinal-group: 3;
+}
+
+.heartbeat > #star-rating-container > #star2 {
+  -moz-box-ordinal-group: 2;
+}
+
+.heartbeat > #star-rating-container > .star-x  {
+  background: url("chrome://browser/skin/heartbeat-star-off.svg");
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+}
+
+.heartbeat > #star-rating-container > .star-x:hover,
+.heartbeat > #star-rating-container > .star-x:hover ~ .star-x {
+  background: url("chrome://browser/skin/heartbeat-star-lit.svg");
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+}
