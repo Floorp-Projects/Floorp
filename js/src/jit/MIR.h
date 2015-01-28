@@ -12149,15 +12149,17 @@ class MAsmJSHeapAccess
 {
     Scalar::Type viewType_;
     bool needsBoundsCheck_;
+    Label *outOfBoundsLabel_;
 
   public:
-    MAsmJSHeapAccess(Scalar::Type vt, bool needsBoundsCheck)
-      : viewType_(vt), needsBoundsCheck_(needsBoundsCheck)
+    MAsmJSHeapAccess(Scalar::Type vt, bool needsBoundsCheck, Label *outOfBoundsLabel = nullptr)
+      : viewType_(vt), needsBoundsCheck_(needsBoundsCheck), outOfBoundsLabel_(outOfBoundsLabel)
     {}
 
     Scalar::Type viewType() const { return viewType_; }
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
+    Label *outOfBoundsLabel() const { return outOfBoundsLabel_; }
 };
 
 class MAsmJSLoadHeap
@@ -12169,9 +12171,9 @@ class MAsmJSLoadHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr, bool needsBoundsCheck,
-                   MemoryBarrierBits before, MemoryBarrierBits after)
+                   Label *outOfBoundsLabel, MemoryBarrierBits before, MemoryBarrierBits after)
       : MUnaryInstruction(ptr),
-        MAsmJSHeapAccess(vt, needsBoundsCheck),
+        MAsmJSHeapAccess(vt, needsBoundsCheck, outOfBoundsLabel),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12212,10 +12214,11 @@ class MAsmJSLoadHeap
 
     static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                MDefinition *ptr, bool needsBoundsCheck,
+                               Label *outOfBoundsLabel = nullptr,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSLoadHeap(vt, ptr, needsBoundsCheck, barrierBefore, barrierAfter);
+        return new(alloc) MAsmJSLoadHeap(vt, ptr, needsBoundsCheck, outOfBoundsLabel, barrierBefore, barrierAfter);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
@@ -12238,9 +12241,9 @@ class MAsmJSStoreHeap
     MemoryBarrierBits barrierAfter_;
 
     MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
-                    MemoryBarrierBits before, MemoryBarrierBits after)
+                    Label *outOfBoundsLabel, MemoryBarrierBits before, MemoryBarrierBits after)
       : MBinaryInstruction(ptr, v),
-        MAsmJSHeapAccess(vt, needsBoundsCheck),
+        MAsmJSHeapAccess(vt, needsBoundsCheck, outOfBoundsLabel),
         barrierBefore_(before),
         barrierAfter_(after)
     {
@@ -12253,10 +12256,11 @@ class MAsmJSStoreHeap
 
     static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                 MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
+                                Label *outOfBoundsLabel = nullptr,
                                 MemoryBarrierBits barrierBefore = MembarNobits,
                                 MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSStoreHeap(vt, ptr, v, needsBoundsCheck,
+        return new(alloc) MAsmJSStoreHeap(vt, ptr, v, needsBoundsCheck, outOfBoundsLabel,
                                           barrierBefore, barrierAfter);
     }
 

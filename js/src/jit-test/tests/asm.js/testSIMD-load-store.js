@@ -1,4 +1,6 @@
+// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
+load(libdir + "asserts.js");
 
 // Set to true to see more JS debugging spew
 const DEBUG = false;
@@ -138,12 +140,11 @@ assertEqX4(m.f32lcst(), slice(F32, CONSTANT_INDEX, 4));
 assertEqX4(m.f32lbndcheck(CONSTANT_BYTE_INDEX), slice(F32, CONSTANT_INDEX, 4));
 
 //      OOB
-var BatNaN = [NaN, NaN, NaN, NaN] // NaNNaNNaNNaN etc.
-assertEqX4(f32l(-1), BatNaN);
-assertEqX4(f32l(SIZE), BatNaN);
-assertEqX4(f32l(SIZE - 1), BatNaN);
-assertEqX4(f32l(SIZE - 2), BatNaN);
-assertEqX4(f32l(SIZE - 3), BatNaN);
+assertThrowsInstanceOf(() => f32l(-1), RangeError);
+assertThrowsInstanceOf(() => f32l(SIZE), RangeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 1), RangeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 2), RangeError);
+assertThrowsInstanceOf(() => f32l(SIZE - 3), RangeError);
 
 var code = `
     "use asm";
@@ -166,7 +167,7 @@ var code = `
 
     return g;
 `;
-assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), BatNaN);
+assertThrowsInstanceOf(() =>asmLink(asmCompile('glob', 'ffi', 'heap', code), this, {}, new ArrayBuffer(0x10000))(0), RangeError);
 
 // Float32x4.store
 function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
@@ -196,10 +197,10 @@ assertEqX4(vec, slice(F32, CONSTANT_INDEX, 4));
 
 //      OOB
 reset();
-f32s(SIZE - 3, vec);
-f32s(SIZE - 2, vec);
-f32s(SIZE - 1, vec);
-f32s(SIZE, vec);
+assertThrowsInstanceOf(() => f32s(SIZE - 3, vec), RangeError);
+assertThrowsInstanceOf(() => f32s(SIZE - 2, vec), RangeError);
+assertThrowsInstanceOf(() => f32s(SIZE - 1, vec), RangeError);
+assertThrowsInstanceOf(() => f32s(SIZE, vec), RangeError);
 for (var i = 0; i < SIZE; i++)
     assertEq(F32[i], i + 1);
 
@@ -221,11 +222,11 @@ assertEqX4(i32(SIZE - 4), slice(I32, SIZE - 4, 4));
 assertEqX4(m.i32lcst(), slice(I32, CONSTANT_INDEX, 4));
 
 //      OOB
-assertEqX4(i32(-1), [0,0,0,0]);
-assertEqX4(i32(SIZE), [0,0,0,0]);
-assertEqX4(i32(SIZE - 1), [0,0,0,0]);
-assertEqX4(i32(SIZE - 2), [0,0,0,0]);
-assertEqX4(i32(SIZE - 3), [0,0,0,0]);
+assertThrowsInstanceOf(() => i32(-1), RangeError);
+assertThrowsInstanceOf(() => i32(SIZE), RangeError);
+assertThrowsInstanceOf(() => i32(SIZE - 1), RangeError);
+assertThrowsInstanceOf(() => i32(SIZE - 2), RangeError);
+assertThrowsInstanceOf(() => i32(SIZE - 3), RangeError);
 
 // Int32x4.store
 function i32s(n, v) { return m.i32s((n|0) << 2 | 0, v); };
@@ -251,9 +252,10 @@ assertEqX4(vec2, slice(I32, CONSTANT_INDEX, 4));
 
 //      OOB
 reset();
-i32s(SIZE - 3, vec);
-i32s(SIZE - 2, vec);
-i32s(SIZE - 1, vec);
-i32s(SIZE - 0, vec);
+assertThrowsInstanceOf(() => i32s(SIZE - 3, vec), RangeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 2, vec), RangeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 1, vec), RangeError);
+assertThrowsInstanceOf(() => i32s(SIZE - 0, vec), RangeError);
 for (var i = 0; i < SIZE; i++)
     assertEq(I32[i], i + 1);
+

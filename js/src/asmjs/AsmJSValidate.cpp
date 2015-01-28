@@ -1296,6 +1296,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     NonAssertingLabel              asyncInterruptLabel_;
     NonAssertingLabel              syncInterruptLabel_;
     NonAssertingLabel              onDetachedLabel_;
+    NonAssertingLabel              onOutOfBoundsLabel_;
 
     UniquePtr<char[], JS::FreePolicy> errorString_;
     uint32_t                       errorOffset_;
@@ -1514,6 +1515,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &asyncInterruptLabel() { return asyncInterruptLabel_; }
     Label &syncInterruptLabel() { return syncInterruptLabel_; }
     Label &onDetachedLabel() { return onDetachedLabel_; }
+    Label &onOutOfBoundsLabel() { return onOutOfBoundsLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
     bool usesSignalHandlersForInterrupt() const { return module_->usesSignalHandlersForInterrupt(); }
@@ -1803,7 +1805,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         canValidateChangeHeap_ = false;
         return ret;
     }
-    bool hasChangeHeap() {
+    bool hasChangeHeap() const {
         return hasChangeHeap_;
     }
     bool finishGeneratingFunction(Func &func, CodeGenerator &codegen,
@@ -1960,7 +1962,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (masm_.oom())
             return false;
 
-        if (!module_->finish(cx_, tokenStream(), masm_, asyncInterruptLabel_))
+        if (!module_->finish(cx_, tokenStream(), masm_, asyncInterruptLabel_, onOutOfBoundsLabel_))
             return false;
 
         // Finally, convert all the function-pointer table elements into
@@ -2763,7 +2765,8 @@ class FunctionCompiler
             return nullptr;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck);
+        Label *outOfBoundsLabel = Scalar::isSimdType(vt) ? &m().onOutOfBoundsLabel() : nullptr;
+        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck, outOfBoundsLabel);
         curBlock_->add(load);
         return load;
     }
@@ -2774,7 +2777,8 @@ class FunctionCompiler
             return;
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
-        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck);
+        Label *outOfBoundsLabel = Scalar::isSimdType(vt) ? &m().onOutOfBoundsLabel() : nullptr;
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck, outOfBoundsLabel);
         curBlock_->add(store);
     }
 
@@ -2793,6 +2797,7 @@ class FunctionCompiler
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck,
+                                                   /* outOfBoundsLabel = */ nullptr,
                                                    MembarBeforeLoad, MembarAfterLoad);
         curBlock_->add(load);
         return load;
@@ -2805,6 +2810,7 @@ class FunctionCompiler
 
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
         MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck,
+                                                      /* outOfBoundsLabel = */ nullptr,
                                                       MembarBeforeStore, MembarAfterStore);
         curBlock_->add(store);
     }
@@ -8817,6 +8823,24 @@ GenerateOnDetachedLabelExit(ModuleCompiler &m, Label *throwLabel)
     return m.finishGeneratingInlineStub(&m.onDetachedLabel()) && !masm.oom();
 }
 
+static bool
+GenerateOnOutOfBoundsLabelExit(ModuleCompiler &m, Label *throwLabel)
+{
+    MacroAssembler &masm = m.masm();
+    masm.bind(&m.onOutOfBoundsLabel());
+
+    // sp can be anything at this point, so ensure it is aligned when calling
+    // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
+    masm.andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
+
+    // OnOutOfBounds always throws.
+    masm.assertStackAlignment(ABIStackAlignment);
+    masm.call(AsmJSImmPtr(AsmJSImm_OnOutOfBounds));
+    masm.jump(throwLabel);
+
+    return m.finishGeneratingInlineStub(&m.onOutOfBoundsLabel()) && !masm.oom();
+}
+
 static const RegisterSet AllRegsExceptSP =
     RegisterSet(GeneralRegisterSet(Registers::AllMask &
                                    ~(uint32_t(1) << Registers::StackPointer)),
@@ -9043,6 +9067,9 @@ GenerateStubs(ModuleCompiler &m)
         return false;
 
     if (m.onDetachedLabel().used() && !GenerateOnDetachedLabelExit(m, &throwLabel))
+        return false;
+
+    if (!GenerateOnOutOfBoundsLabelExit(m, &throwLabel))
         return false;
 
     if (!GenerateAsyncInterruptExit(m, &throwLabel))
