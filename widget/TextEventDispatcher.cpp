@@ -23,6 +23,7 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mInitialized(false)
   , mForTests(false)
+  , mIsComposing(false)
 {
   MOZ_RELEASE_ASSERT(mWidget, "aWidget must not be nullptr");
 }
@@ -33,6 +34,7 @@ TextEventDispatcher::Init()
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+  MOZ_ASSERT(!mIsComposing, "There should not be active composition");
   mInitialized = true;
   mForTests = false;
   return NS_OK;
@@ -44,6 +46,7 @@ TextEventDispatcher::InitForTests()
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+  MOZ_ASSERT(!mIsComposing, "There should not be active composition");
   mInitialized = true;
   mForTests = true;
   return NS_OK;
@@ -85,6 +88,11 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
     return rv;
   }
 
+  if (NS_WARN_IF(mIsComposing)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mIsComposing = true;
   nsCOMPtr<nsIWidget> widget(mWidget);
   WidgetCompositionEvent compositionStartEvent(true, NS_COMPOSITION_START,
                                                widget);
@@ -108,6 +116,10 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
     return rv;
   }
 
+  // End current composition and make this free for other IMEs.
+  mIsComposing = false;
+  mInitialized = false;
+
   nsCOMPtr<nsIWidget> widget(mWidget);
   uint32_t message = aCommitString ? NS_COMPOSITION_COMMIT :
                                      NS_COMPOSITION_COMMIT_AS_IS;
@@ -122,6 +134,27 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   }
 
   return NS_OK;
+}
+
+nsresult
+TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
+{
+  switch (aIMENotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION: {
+      NS_ASSERTION(mIsComposing, "Why is this requested without composition?");
+      nsEventStatus status = nsEventStatus_eIgnore;
+      CommitComposition(status);
+      return NS_OK;
+    }
+    case REQUEST_TO_CANCEL_COMPOSITION: {
+      NS_ASSERTION(mIsComposing, "Why is this requested without composition?");
+      nsEventStatus status = nsEventStatus_eIgnore;
+      CommitComposition(status, &EmptyString());
+      return NS_OK;
+    }
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
 }
 
 /******************************************************************************

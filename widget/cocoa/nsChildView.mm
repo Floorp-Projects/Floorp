@@ -1579,8 +1579,8 @@ bool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-NS_IMETHODIMP
-nsChildView::NotifyIME(const IMENotification& aIMENotification)
+nsresult
+nsChildView::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
