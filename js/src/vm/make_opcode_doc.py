@@ -24,8 +24,6 @@ def error(message):
 def get_xdr_version(dir):
     subtrahend_pat = re.compile('XDR_BYTECODE_VERSION_SUBTRAHEND\s*=\s*(\d+);', re.S)
     version_expr_pat = re.compile('XDR_BYTECODE_VERSION\s*=\s*uint32_t\(0xb973c0de\s*-\s*(.+?)\);', re.S)
-    # FIXME: Bug 1066322 - Enable ES6 symbols in all builds.
-    bug1066322_pat = re.compile('#ifdef\s+JS_HAS_SYMBOLS\s+\+\s*1*\s+#endif', re.S)
 
     with open('{dir}/js/src/vm/Xdr.h'.format(dir=dir), 'r') as f:
         data = f.read()
@@ -40,14 +38,7 @@ def get_xdr_version(dir):
     if not m:
         error('XDR_BYTECODE_VERSION is not recognized.')
 
-    version_expr = m.group(1)
-
-    bug1066322 = False
-    m = bug1066322_pat.search(version_expr)
-    if m:
-        bug1066322 = True
-
-    return (subtrahend, bug1066322)
+    return subtrahend
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")
 js_pat = re.compile(r"([^A-Za-z0-9]|^)(JS[A-Z0-9_\*]+)")
@@ -342,7 +333,7 @@ def print_opcode(opcode):
 def make_element_id(name):
     return name.replace(' ', '-')
 
-def print_doc(version, bug1066322, index):
+def print_doc(version, index):
     print("""<h2 id="Bytecode_Listing">Bytecode Listing</h2>
 
 <p>This document is automatically generated from
@@ -355,15 +346,6 @@ def print_doc(version, bug1066322, index):
 """.format(source_base=SOURCE_BASE,
            version=version,
            actual_version=0xb973c0de - version))
-
-    if bug1066322:
-        symbol_version = version + 1
-        print("""
-<p>Until {{{{bug(1066322)}}}} is fixed, JSOP_SYMBOL exists only in Nightly, and it uses different version.</p>
-<p>Bytecode version with JSOP_SYMBOL: <code>{version}</code>
-(<code>0x{actual_version:08x}</code>).</p>
-""".format(version=symbol_version,
-           actual_version=0xb973c0de - symbol_version))
 
     for (category_name, types) in index:
         print('<h3 id="{id}">{name}</h3>'.format(name=category_name,
@@ -384,6 +366,6 @@ if __name__ == '__main__':
               file=sys.stderr)
         sys.exit(1)
     dir = sys.argv[1]
-    (version, bug1066322) = get_xdr_version(dir)
+    version = get_xdr_version(dir)
     index = get_opcodes(dir)
-    print_doc(version, bug1066322, index)
+    print_doc(version, index)
