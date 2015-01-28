@@ -15,6 +15,43 @@ using namespace mozilla::widget;
 
 namespace mozilla {
 
+/******************************************************************************
+ * TextInputProcessorNotification
+ ******************************************************************************/
+
+class TextInputProcessorNotification MOZ_FINAL :
+        public nsITextInputProcessorNotification
+{
+public:
+  explicit TextInputProcessorNotification(const char* aType)
+    : mType(aType)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetType(nsACString& aType) MOZ_OVERRIDE MOZ_FINAL
+  {
+    aType = mType;
+    return NS_OK;
+  }
+
+protected:
+  ~TextInputProcessorNotification() { }
+
+private:
+  nsAutoCString mType;
+
+  TextInputProcessorNotification() { }
+};
+
+NS_IMPL_ISUPPORTS(TextInputProcessorNotification,
+                  nsITextInputProcessorNotification)
+
+/******************************************************************************
+ * TextInputProcessor
+ ******************************************************************************/
+
 NS_IMPL_ISUPPORTS(TextInputProcessor,
                   nsITextInputProcessor,
                   TextEventDispatcherListener,
@@ -32,24 +69,34 @@ TextInputProcessor::~TextInputProcessor()
 
 NS_IMETHODIMP
 TextInputProcessor::Init(nsIDOMWindow* aWindow,
+                         nsITextInputProcessorCallback* aCallback,
                          bool* aSucceeded)
 {
   MOZ_RELEASE_ASSERT(aSucceeded, "aSucceeded must not be nullptr");
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  return InitInternal(aWindow, false, *aSucceeded);
+  if (NS_WARN_IF(!aCallback)) {
+    *aSucceeded = false;
+    return NS_ERROR_INVALID_ARG;
+  }
+  return InitInternal(aWindow, aCallback, false, *aSucceeded);
 }
 
 NS_IMETHODIMP
 TextInputProcessor::InitForTests(nsIDOMWindow* aWindow,
+                                 nsITextInputProcessorCallback* aCallback,
+                                 uint8_t aOptionalArgc,
                                  bool* aSucceeded)
 {
   MOZ_RELEASE_ASSERT(aSucceeded, "aSucceeded must not be nullptr");
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  return InitInternal(aWindow, true, *aSucceeded);
+  nsITextInputProcessorCallback* callback =
+    aOptionalArgc >= 1 ? aCallback : nullptr;
+  return InitInternal(aWindow, callback, true, *aSucceeded);
 }
 
 nsresult
 TextInputProcessor::InitInternal(nsIDOMWindow* aWindow,
+                                 nsITextInputProcessorCallback* aCallback,
                                  bool aForTests,
                                  bool& aSucceeded)
 {
@@ -84,7 +131,8 @@ TextInputProcessor::InitInternal(nsIDOMWindow* aWindow,
   // If the instance was initialized and is being initialized for same
   // dispatcher and same purpose, we don't need to initialize the dispatcher
   // again.
-  if (mDispatcher && dispatcher == mDispatcher && aForTests == mForTests) {
+  if (mDispatcher && dispatcher == mDispatcher && aCallback == mCallback &&
+      aForTests == mForTests) {
     aSucceeded = true;
     return NS_OK;
   }
@@ -116,6 +164,7 @@ TextInputProcessor::InitInternal(nsIDOMWindow* aWindow,
   }
 
   mDispatcher = dispatcher;
+  mCallback = aCallback;
   mForTests = aForTests;
   aSucceeded = true;
   return NS_OK;
@@ -126,6 +175,15 @@ TextInputProcessor::UnlinkFromTextEventDispatcher()
 {
   mDispatcher = nullptr;
   mForTests = false;
+  if (mCallback) {
+    nsCOMPtr<nsITextInputProcessorCallback> callback(mCallback);
+    mCallback = nullptr;
+
+    nsRefPtr<TextInputProcessorNotification> notification =
+      new TextInputProcessorNotification("notify-detached");
+    bool result = false;
+    callback->OnNotify(this, notification, &result);
+  }
 }
 
 nsresult
@@ -294,6 +352,41 @@ TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
   }
   MOZ_ASSERT(aTextEventDispatcher == mDispatcher,
              "Wrong TextEventDispatcher notifies this");
+  NS_ASSERTION(mForTests || mCallback,
+               "mCallback can be null only when IME is initialized for tests");
+  if (mCallback) {
+    nsRefPtr<TextInputProcessorNotification> notification;
+    switch (aNotification.mMessage) {
+      case REQUEST_TO_COMMIT_COMPOSITION: {
+        NS_ASSERTION(aTextEventDispatcher->IsComposing(),
+                     "Why is this requested without composition?");
+        notification = new TextInputProcessorNotification("request-to-commit");
+        break;
+      }
+      case REQUEST_TO_CANCEL_COMPOSITION: {
+        NS_ASSERTION(aTextEventDispatcher->IsComposing(),
+                     "Why is this requested without composition?");
+        notification = new TextInputProcessorNotification("request-to-cancel");
+        break;
+      }
+      case NOTIFY_IME_OF_FOCUS:
+        notification = new TextInputProcessorNotification("notify-focus");
+        break;
+      case NOTIFY_IME_OF_BLUR:
+        notification = new TextInputProcessorNotification("notify-blur");
+        break;
+      default:
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    MOZ_RELEASE_ASSERT(notification);
+    bool result = false;
+    nsresult rv = mCallback->OnNotify(this, notification, &result);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return result ? NS_OK : NS_ERROR_FAILURE;
+  }
+
   switch (aNotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION: {
       NS_ASSERTION(aTextEventDispatcher->IsComposing(),

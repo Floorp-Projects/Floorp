@@ -1219,6 +1219,23 @@ let CompositionManager =  {
       Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE
   },
 
+  _callback: function cm_callback(aTIP, aNotification)
+  {
+    try {
+      switch (aNotification.type) {
+        case "request-to-commit":
+          aTIP.commitComposition();
+          break;
+        case "request-to-cancel":
+          aTIP.cancelComposition();
+          break;
+      }
+    } catch (e) {
+      return false;
+    }
+    return true;
+  },
+
   _prepareTextInputProcessor: function cm_prepareTextInputProcessor(aWindow)
   {
     if (!this._textInputProcessor) {
@@ -1226,7 +1243,7 @@ let CompositionManager =  {
         Cc["@mozilla.org/text-input-processor;1"].
           createInstance(Ci.nsITextInputProcessor);
     }
-    return this._textInputProcessor.init(aWindow);
+    return this._textInputProcessor.init(aWindow, this._callback);
   },
 
   setComposition: function cm_setComposition(element, text, cursor, clauses) {

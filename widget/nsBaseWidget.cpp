@@ -1599,8 +1599,19 @@ nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
       if (mTextEventDispatcher && mTextEventDispatcher->IsComposing()) {
         return mTextEventDispatcher->NotifyIME(aIMENotification);
       }
-      // Otherwise, call NotifyIMEInternal() for native IME handlers.
+      // Otherwise, it should be handled by native IME.
+      return NotifyIMEInternal(aIMENotification);
+    case NOTIFY_IME_OF_FOCUS:
+    case NOTIFY_IME_OF_BLUR:
+      // If the notification is a notification which is supported by
+      // nsITextInputProcessorCallback, we should notify the
+      // TextEventDispatcher, first.  After that, notify native IME too.
+      if (mTextEventDispatcher) {
+        mTextEventDispatcher->NotifyIME(aIMENotification);
+      }
+      return NotifyIMEInternal(aIMENotification);
     default:
+      // Otherwise, notify only native IME for now.
       return NotifyIMEInternal(aIMENotification);
   }
 }
