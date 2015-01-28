@@ -100,9 +100,7 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
 {
   MOZ_COUNT_DTOR(WMFVideoMFTManager);
   // Ensure DXVA/D3D9 related objects are released on the main thread.
-  if (mDXVA2Manager) {
-    DeleteOnMainThread(mDXVA2Manager);
-  }
+  DeleteOnMainThread(mDXVA2Manager);
 }
 
 const GUID&
@@ -142,8 +140,6 @@ public:
 bool
 WMFVideoMFTManager::InitializeDXVA()
 {
-  MOZ_ASSERT(!mDXVA2Manager);
-
   // If we use DXVA but aren't running with a D3D layer manager then the
   // readback of decoded video frames from GPU to CPU memory grinds painting
   // to a halt, and makes playback performance *worse*.
@@ -491,7 +487,6 @@ void
 WMFVideoMFTManager::Shutdown()
 {
   mDecoder = nullptr;
-  DeleteOnMainThread(mDXVA2Manager);
 }
 
 } // namespace mozilla
