@@ -15,7 +15,8 @@ def executor_kwargs(http_server_url, **kwargs):
         timeout_multiplier = 1
 
     executor_kwargs = {"http_server_url": http_server_url,
-                       "timeout_multiplier": timeout_multiplier}
+                       "timeout_multiplier": timeout_multiplier,
+                       "debug_args": kwargs["debug_args"]}
     return executor_kwargs
 
 
@@ -49,7 +50,8 @@ class TestExecutor(object):
 
     convert_result = None
 
-    def __init__(self, browser, http_server_url, timeout_multiplier=1):
+    def __init__(self, browser, http_server_url, timeout_multiplier=1,
+                 debug_args=None):
         """Abstract Base class for object that actually executes the tests in a
         specific browser. Typically there will be a different TestExecutor
         subclass for each test type and method of executing tests.
@@ -65,6 +67,7 @@ class TestExecutor(object):
         self.browser = browser
         self.http_server_url = http_server_url
         self.timeout_multiplier = timeout_multiplier
+        self.debug_args = debug_args
 
     @property
     def logger(self):

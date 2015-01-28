@@ -118,7 +118,7 @@ class ServoReftestExecutor(ProcessTestExecutor):
                 full_url = urlparse.urljoin(self.http_server_url, url)
 
                 with TempFilename(self.tempdir) as output_path:
-                    self.command = [self.binary, "--cpu", "--hard-fail", "-z", "--exit",
+                    self.command = [self.binary, "--cpu", "--hard-fail", "--exit",
                                     "--output=%s" % output_path, full_url]
 
                     timeout = test.timeout * self.timeout_multiplier
