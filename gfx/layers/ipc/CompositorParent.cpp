@@ -228,7 +228,6 @@ CompositorVsyncObserver::CompositorVsyncObserver(CompositorParent* aCompositorPa
 
 CompositorVsyncObserver::~CompositorVsyncObserver()
 {
-  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   MOZ_ASSERT(!mIsObservingVsync);
   // The CompositorVsyncDispatcher is cleaned up before this in the nsBaseWidget, which stops vsync listeners
   mCompositorParent = nullptr;
