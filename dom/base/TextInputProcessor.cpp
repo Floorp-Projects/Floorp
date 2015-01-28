@@ -65,6 +65,16 @@ TextInputProcessor::TextInputProcessor()
 
 TextInputProcessor::~TextInputProcessor()
 {
+  if (mDispatcher && mDispatcher->IsComposing()) {
+    // If this is composing and not canceling the composition, nobody can steal
+    // the rights of TextEventDispatcher from this instance.  Therefore, this
+    // needs to cancel the composition here.
+    if (NS_SUCCEEDED(IsValidStateForComposition())) {
+      nsRefPtr<TextEventDispatcher> kungFuDeathGrip(mDispatcher);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      mDispatcher->CommitComposition(status, &EmptyString());
+    }
+  }
 }
 
 NS_IMETHODIMP
