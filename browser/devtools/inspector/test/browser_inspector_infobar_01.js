@@ -20,7 +20,7 @@ add_task(function*() {
       tag: "DIV",
       id: "top",
       classes: ".class1.class2",
-      dims: "500 x 100"
+      dims: "500" + " \u00D7 " + "100"
     },
     {
       selector: "#vertical",
@@ -36,7 +36,7 @@ add_task(function*() {
       tag: "DIV",
       id: "bottom",
       classes: "",
-      dims: "500 x 100"
+      dims: "500" + " \u00D7 " + "100"
     },
     {
       selector: "body",

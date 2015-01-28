@@ -26,8 +26,6 @@ let gDataNotificationInfoBar = {
 
   init: function() {
     window.addEventListener("unload", function onUnload() {
-      window.removeEventListener("unload", onUnload, false);
-
       for (let o of this._OBSERVERS) {
         Services.obs.removeObserver(this, o);
       }
