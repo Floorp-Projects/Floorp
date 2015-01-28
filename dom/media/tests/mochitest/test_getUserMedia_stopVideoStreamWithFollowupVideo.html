@@ -1,33 +1,49 @@
-<!DOCTYPE HTML>
+﻿<!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822109
+-->
 <head>
-  <script src="mediaStreamPlayback.js"></script>
+  <meta charset="utf-8">
+  <title>mozGetUserMedia Stop Video Stream With Followup Video</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia Stop Video Stream With Followup Video</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <video id="testVideo"></video>
+</div>
 <pre id="test">
 <script type="application/javascript">
-  createHTML({ title: "getUserMedia Stop Video Stream With Followup Video", bug: "822109" });
   /**
-   * Run a test to verify that I can complete an video gum playback in a
-   * media element, stop the stream, and then complete another video gum
-   * playback in a media element.
+   * Run a test to verify that I can complete an audio gum playback in a media
+   * element, stop the stream, and then complete another audio gum playback
+   * in a media element.
    */
   runTest(function () {
-    getUserMedia({video: true})
-      .then(stream => {
-        var testVideo = createMediaElement('video', 'testVideo');
-        var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
+    getUserMedia({video: true}, function(firstStream) {
+      var testVideo = document.getElementById('testVideo');
+      var streamPlayback = new LocalMediaStreamPlayback(testVideo,
+        firstStream);
 
-        return streamPlayback.playMediaWithStreamStop(false)
-          .then(() => getUserMedia({video: true}))
-          .then(secondStream => {
-            streamPlayback.mediaStream = secondStream;
+      streamPlayback.playMediaWithStreamStop(false, function() {
+        getUserMedia({video: true}, function(secondStream) {
+          streamPlayback.mediaStream = secondStream;
 
-            return streamPlayback.playMedia(false)
-              .then(() => secondStream.stop());
-          });
-      })
-      .then(() => SimpleTest.finish(), generateErrorCallback());
+          streamPlayback.playMedia(false, function() {
+            secondStream.stop();
+            SimpleTest.finish();
+          }, generateErrorCallback());
+
+        }, generateErrorCallback());
+
+      }, generateErrorCallback());
+
+    }, generateErrorCallback());
   });
 
 </script>
