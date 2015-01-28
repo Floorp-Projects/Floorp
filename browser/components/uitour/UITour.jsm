@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ResetProfile",
@@ -387,6 +389,29 @@ this.UITour = {
         this.pageIDSourceBrowsers.set(browser, data.pageID);
         this.setTelemetryBucket(data.pageID);
 
+        break;
+      }
+
+      case "showHeartbeat": {
+        // Validate the input parameters.
+        if (typeof data.message !== "string" || data.message === "") {
+          log.error("showHeartbeat: Invalid message specified.");
+          break;
+        }
+
+        if (typeof data.thankyouMessage !== "string" || data.thankyouMessage === "") {
+          log.error("showHeartbeat: Invalid thank you message specified.");
+          break;
+        }
+
+        if (typeof data.flowId !== "string" || data.flowId === "") {
+          log.error("showHeartbeat: Invalid flowId specified.");
+          break;
+        }
+
+        // Finally show the Heartbeat UI.
+        this.showHeartbeat(window, messageManager, data.message, data.thankyouMessage, data.flowId,
+                           data.engagementURL);
         break;
       }
 
@@ -957,6 +982,137 @@ this.UITour = {
 
   resetTheme: function() {
     LightweightThemeManager.resetPreview();
+  },
+
+  /**
+   * Show the Heartbeat UI to request user feedback. This function reports back to the
+   * caller using |notify|. The notification event name reflects the current status the UI
+   * is in (either "Heartbeat:NotificationOffered", "Heartbeat:NotificationClosed" or
+   * "Heartbeat:Voted"). When a "Heartbeat:Voted" event is notified the data payload contains
+   * a |score| field which holds the rating picked by the user.
+   * Please note that input parameters are already validated by the caller.
+   *
+   * @param aChromeWindow
+   *        The chrome window that the heartbeat notification is displayed in.
+   * @param aMessageManager
+   *        The message manager to communicate with the API caller.
+   * @param aMessage
+   *        The message, or question, to display on the notification.
+   * @param aThankyouMessage
+   *        The thank you message to display after user votes.
+   * @param aFlowId
+   *        An identifier for this rating flow. Please note that this is only used to
+   *        identify the notification box.
+   * @param [aEngagementURL]
+   *        The engagement URL to open in a new tab once user has voted. If this is null
+   *        or invalid, no new tab is opened.
+   */
+  showHeartbeat: function(aChromeWindow, aMessageManager, aMessage, aThankyouMessage, aFlowId,
+                          aEngagementURL = null) {
+    let nb = aChromeWindow.document.getElementById("high-priority-global-notificationbox");
+
+    // Create the notification. Prefix its ID to decrease the chances of collisions.
+    let notice = nb.appendNotification(aMessage, "heartbeat-" + aFlowId,
+      "chrome://branding/content/icon64.png", nb.PRIORITY_INFO_HIGH, null, function() {
+        // Let the consumer know the notification bar was closed. This also happens
+        // after voting.
+        this.notify("Heartbeat:NotificationClosed", { flowId: aFlowId, timestamp: Date.now() });
+    }.bind(this));
+
+    // Get the elements we need to style.
+    let messageImage =
+      aChromeWindow.document.getAnonymousElementByAttribute(notice, "anonid", "messageImage");
+    let messageText =
+      aChromeWindow.document.getAnonymousElementByAttribute(notice, "anonid", "messageText");
+
+    // Create the fragment holding the rating UI.
+    let frag = aChromeWindow.document.createDocumentFragment();
+
+    // Build the Heartbeat star rating.
+    const numStars = 5;
+    let ratingContainer = aChromeWindow.document.createElement("hbox");
+    ratingContainer.id = "star-rating-container";
+
+    for (let i = 0; i < numStars; i++) {
+      // Create a star rating element.
+      let ratingElement = aChromeWindow.document.createElement("toolbarbutton");
+
+      // Style it.
+      let starIndex = numStars - i;
+      ratingElement.className = "plain star-x";
+      ratingElement.id = "star" + starIndex;
+      ratingElement.setAttribute("data-score", starIndex);
+
+      // Add the click handler.
+      ratingElement.addEventListener("click", function (evt) {
+        let rating = Number(evt.target.getAttribute("data-score"), 10);
+
+        // Let the consumer know user voted.
+        this.notify("Heartbeat:Voted", { flowId: aFlowId, score: rating, timestamp: Date.now() });
+
+        // Display the Heart and make it pulse twice.
+        notice.image = "chrome://browser/skin/heartbeat-icon.svg";
+        notice.label = aThankyouMessage;
+        messageImage.classList.remove("pulse-onshow");
+        messageImage.classList.add("pulse-twice");
+
+        // Remove all the children of the notice (rating container
+        // and the flex).
+        while (notice.firstChild) {
+          notice.removeChild(notice.firstChild);
+        }
+
+        // Make sure that we have a valid URL. If we haven't, do not open the engagement page.
+        let engagementURL = null;
+        try {
+          engagementURL = new URL(aEngagementURL);
+        } catch (error) {
+          log.error("showHeartbeat: Invalid URL specified.");
+        }
+
+        // Just open the engagement tab if we have a valid engagement URL.
+        if (engagementURL) {
+          // Append the score data to the engagement URL.
+          engagementURL.searchParams.append("type", "stars");
+          engagementURL.searchParams.append("score", rating);
+          engagementURL.searchParams.append("flowid", aFlowId);
+
+          // Open the engagement URL in a new tab.
+          aChromeWindow.gBrowser.selectedTab =
+            aChromeWindow.gBrowser.addTab(engagementURL.toString(), {
+              owner: aChromeWindow.gBrowser.selectedTab,
+              relatedToCurrent: true
+            });
+        }
+
+        // Remove the notification bar after 3 seconds.
+        aChromeWindow.setTimeout(() => {
+          nb.removeNotification(notice);
+        }, 3000);
+      }.bind(this));
+
+      // Add it to the container.
+      ratingContainer.appendChild(ratingElement);
+    }
+
+    frag.appendChild(ratingContainer);
+
+    // Make sure the stars are not pushed to the right by the spacer.
+    let rightSpacer = aChromeWindow.document.createElement("spacer");
+    rightSpacer.flex = 20;
+    frag.appendChild(rightSpacer);
+
+    let leftSpacer = messageText.nextSibling;
+    leftSpacer.flex = 0;
+
+    // Append the fragment and apply the styling.
+    notice.appendChild(frag);
+    notice.classList.add("heartbeat");
+    messageImage.classList.add("heartbeat", "pulse-onshow");
+    messageText.classList.add("heartbeat");
+
+    // Let the consumer know the notification was shown.
+    this.notify("Heartbeat:NotificationOffered", { flowId: aFlowId, timestamp: Date.now() });
   },
 
   /**
