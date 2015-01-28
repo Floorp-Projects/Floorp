@@ -1,7 +1,7 @@
 (function(g) {
   'use strict';
 
-  g.trapIdentityEvents = target => {
+  g.trapIdentityEvents = function(target) {
     var state = {};
     var identityEvents = ['idpassertionerror', 'idpvalidationerror',
                           'identityresult', 'peeridentity'];
