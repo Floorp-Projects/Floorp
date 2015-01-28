@@ -62,7 +62,6 @@ TextEventDispatcher::OnDestroyWidget()
 
 TextEventDispatcher::PendingComposition::PendingComposition()
 {
-  mClauses = new TextRangeArray();
   Clear();
 }
 
@@ -70,8 +69,17 @@ void
 TextEventDispatcher::PendingComposition::Clear()
 {
   mString.Truncate();
-  mClauses->Clear();
+  mClauses = nullptr;
   mCaret.mRangeType = 0;
+}
+
+void
+TextEventDispatcher::PendingComposition::EnsureClauseArray()
+{
+  if (mClauses) {
+    return;
+  }
+  mClauses = new TextRangeArray();
 }
 
 nsresult
@@ -94,6 +102,7 @@ TextEventDispatcher::PendingComposition::AppendClause(uint32_t aLength,
     case NS_TEXTRANGE_SELECTEDRAWTEXT:
     case NS_TEXTRANGE_CONVERTEDTEXT:
     case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT: {
+      EnsureClauseArray();
       TextRange textRange;
       textRange.mStartOffset =
         mClauses->IsEmpty() ? 0 : mClauses->LastElement().mEndOffset;
@@ -133,7 +142,7 @@ TextEventDispatcher::PendingComposition::Flush(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!mClauses->IsEmpty() &&
+  if (mClauses && !mClauses->IsEmpty() &&
       mClauses->LastElement().mEndOffset != mString.Length()) {
     NS_WARNING("Sum of length of the all clauses must be same as the string "
                "length");
@@ -146,20 +155,26 @@ TextEventDispatcher::PendingComposition::Flush(
       Clear();
       return NS_ERROR_ILLEGAL_VALUE;
     }
+    EnsureClauseArray();
     mClauses->AppendElement(mCaret);
   }
 
   WidgetCompositionEvent compChangeEvent(true, NS_COMPOSITION_CHANGE, widget);
   compChangeEvent.time = PR_IntervalNow();
   compChangeEvent.mData = mString;
-  if (!mClauses->IsEmpty()) {
+  if (mClauses) {
+    MOZ_ASSERT(!mClauses->IsEmpty(),
+               "mClauses must be non-empty array when it's not nullptr");
     compChangeEvent.mRanges = mClauses;
   }
 
   compChangeEvent.mFlags.mIsSynthesizedForTests = aDispatcher->mForTests;
 
-  nsresult rv = widget->DispatchEvent(&compChangeEvent, aStatus);
+  // While this method dispatches a composition event, some other event handler
+  // cause more clauses to be added.  So, we should clear pending composition
+  // before dispatching the event.
   Clear();
+  nsresult rv = widget->DispatchEvent(&compChangeEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
