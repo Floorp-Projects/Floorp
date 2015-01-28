@@ -848,6 +848,15 @@ class ParseNode
         pn_count++;
     }
 
+    void prepend(ParseNode *pn) {
+        MOZ_ASSERT(pn_arity == PN_LIST);
+        pn->pn_next = pn_head;
+        pn_head = pn;
+        if (pn_tail == &pn_head)
+            pn_tail = &pn->pn_next;
+        pn_count++;
+    }
+
     void checkListConsistency()
 #ifndef DEBUG
     {}
