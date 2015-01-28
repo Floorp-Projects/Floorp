@@ -10,9 +10,9 @@ function checkCommon(f) {
 
   // other iterable objects
   assertEqArray(f.apply(...Set([null, [1, 2, 3]])), [1, 2, 3]);
-  assertEqArray(f.apply(...[null, [1, 2, 3]][std_iterator]()), [1, 2, 3]);
+  assertEqArray(f.apply(...[null, [1, 2, 3]][Symbol.iterator]()), [1, 2, 3]);
   let itr = {};
-  itr[std_iterator] = function() {
+  itr[Symbol.iterator] = function() {
       return {
           i: 0,
           next: function() {

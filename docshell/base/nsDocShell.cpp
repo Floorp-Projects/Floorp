@@ -9635,9 +9635,13 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             nsAutoCString spec;
             if (aURI)
                 aURI->GetSpec(spec);
+            nsAutoString features;
+            if (mInPrivateBrowsing) {
+              features.AssignLiteral("private");
+            }
             rv = win->OpenNoNavigate(NS_ConvertUTF8toUTF16(spec),
                                      name,          // window name
-                                     EmptyString(), // Features
+                                     features,
                                      getter_AddRefs(newWin));
 
             // In some cases the Open call doesn't actually result in a new

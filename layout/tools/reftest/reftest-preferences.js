@@ -24,6 +24,10 @@
     branch.setIntPref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
     branch.setBoolPref("image.high_quality_downscaling.enabled", false);
+    // Disable the single-color optimization, since it can cause intermittent
+    // oranges and it causes many of our tests to test a different code path
+    // than the one that normal images on the web use.
+    branch.setBoolPref("image.single-color-optimization.enabled", false);
     // Checking whether two files are the same is slow on Windows.
     // Setting this pref makes tests run much faster there.
     branch.setBoolPref("security.fileuri.strict_origin_policy", false);

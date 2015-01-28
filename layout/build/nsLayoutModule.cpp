@@ -250,6 +250,8 @@ static void Shutdown();
 
 #include "mozilla/dom/presentation/PresentationDeviceManager.h"
 
+#include "mozilla/TextInputProcessor.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::dom::alarm::AlarmHalService;
@@ -377,6 +379,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(TVTunerData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVChannelData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVProgramData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationDeviceManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(TextInputProcessor)
 
 //-----------------------------------------------------------------------------
 
@@ -824,6 +827,8 @@ NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
 
 NS_DEFINE_NAMED_CID(PRESENTATION_DEVICE_MANAGER_CID);
 
+NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
+
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
@@ -1113,6 +1118,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTV_CHANNEL_DATA_CID, false, nullptr, TVChannelDataConstructor },
   { &kTV_PROGRAM_DATA_CID, false, nullptr, TVProgramDataConstructor },
   { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
+  { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
   { nullptr }
 };
 
@@ -1273,6 +1279,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_MOBILE_CONNECTION_SERVICE_CONTRACTID, &kNS_MOBILE_CONNECTION_SERVICE_CID },
   { NS_VOICEMAIL_SERVICE_CONTRACTID, &kNS_VOICEMAIL_SERVICE_CID },
   { PRESENTATION_DEVICE_MANAGER_CONTRACTID, &kPRESENTATION_DEVICE_MANAGER_CID },
+  { "@mozilla.org/text-input-processor;1", &kTEXT_INPUT_PROCESSOR_CID },
   { nullptr }
 };
 

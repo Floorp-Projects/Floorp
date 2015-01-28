@@ -3,12 +3,12 @@
 load(libdir + "iteration.js");
 
 var m = Map();
-var it = m[std_iterator]();
+var it = m[Symbol.iterator]();
 m.clear();
 assertIteratorDone(it, undefined);
 
 m = Map([["a", 1], ["b", 2], ["c", 3], ["d", 4]]);
-it = m[std_iterator]();
+it = m[Symbol.iterator]();
 assertIteratorNext(it, ["a", 1]);
 m.clear();
 assertIteratorDone(it, undefined);
