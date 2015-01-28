@@ -1077,14 +1077,9 @@ MapObject::initClass(JSContext *cx, JSObject *obj)
 
         // Define its alias.
         RootedValue funval(cx, ObjectValue(*fun));
-#if JS_HAS_SYMBOLS
         RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
         if (!JS_DefinePropertyById(cx, proto, iteratorId, funval, 0))
             return nullptr;
-#else
-        if (!JS_DefineProperty(cx, proto, js_std_iterator_str, funval, 0))
-            return nullptr;
-#endif
     }
     return proto;
 }
@@ -1730,14 +1725,9 @@ SetObject::initClass(JSContext *cx, JSObject *obj)
         if (!JS_DefineProperty(cx, proto, "keys", funval, 0))
             return nullptr;
 
-#if JS_HAS_SYMBOLS
         RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
         if (!JS_DefinePropertyById(cx, proto, iteratorId, funval, 0))
             return nullptr;
-#else
-        if (!JS_DefineProperty(cx, proto, js_std_iterator_str, funval, 0))
-            return nullptr;
-#endif
     }
     return proto;
 }
