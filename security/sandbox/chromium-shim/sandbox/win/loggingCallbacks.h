@@ -103,7 +103,9 @@ Log(const char* aMessageType,
   NS_DebugBreak(NS_DEBUG_WARNING, nullptr, msg.c_str(), nullptr, -1);
 #endif
 
-  nsContentUtils::LogMessageToConsole(msg.c_str());
+  if (nsContentUtils::IsInitialized()) {
+    nsContentUtils::LogMessageToConsole(msg.c_str());
+  }
 }
 
 // Initialize sandbox logging if required.
