@@ -221,6 +221,7 @@ public:
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) MOZ_OVERRIDE;
   NS_IMETHOD              RegisterTouchWindow() MOZ_OVERRIDE;
   NS_IMETHOD              UnregisterTouchWindow() MOZ_OVERRIDE;
+  NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() MOZ_OVERRIDE MOZ_FINAL;
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
@@ -428,6 +429,7 @@ protected:
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
+  nsRefPtr<TextEventDispatcher> mTextEventDispatcher;
   nsCursor          mCursor;
   bool              mUpdateCursor;
   nsBorderStyle     mBorderStyle;
