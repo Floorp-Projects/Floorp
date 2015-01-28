@@ -740,7 +740,7 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.dataChannels = [ ];
 
-  this.onAddStreamFired = false;
+  this.addStreamCounter = {audio: 0, video: 0 };
 
   this._local_ice_candidates = [];
   this._remote_ice_candidates = [];
@@ -777,17 +777,15 @@ function PeerConnectionWrapper(label, configuration, h264) {
    */
   this._pc.onaddstream = event => {
     info(this + ": 'onaddstream' event fired for " + JSON.stringify(event.stream));
-    // TODO: remove this once Bugs 998552 and 998546 are closed
-    this.onAddStreamFired = true;
 
     var type = '';
     if (event.stream.getAudioTracks().length > 0) {
       type = 'audio';
-      self.onAddStreamAudioCounter += event.stream.getAudioTracks().length;
+      this.addStreamCounter.audio += this.countTracksInStreams('audio', [event.stream]);
     }
     if (event.stream.getVideoTracks().length > 0) {
       type += 'video';
-      self.onAddStreamVideoCounter += event.stream.getVideoTracks().length;
+      this.addStreamCounter.video += this.countTracksInStreams('video', [event.stream]);
     }
     this.attachMedia(event.stream, type, 'remote');
   };
@@ -1223,17 +1221,11 @@ PeerConnectionWrapper.prototype = {
    * @param constraints
    *        The contraint to be examined.
    */
-  countAudioTracksInMediaConstraint : function(constraints) {
-    if ((!constraints) || (constraints.length === 0)) {
+  countTracksInConstraint : function(type, constraints) {
+    if (!Array.isArray(constraints)) {
       return 0;
     }
-    var numAudioTracks = 0;
-    for (var i = 0; i < constraints.length; i++) {
-      if (constraints[i].audio) {
-        numAudioTracks++;
-      }
-    }
-    return numAudioTracks;
+    return constraints.reduce((sum, c) => sum + (c[type] ? 1 : 0), 0);
   },
 
   /**
@@ -1265,25 +1257,6 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Counts the amount of video tracks in a given media constraint.
-   *
-   * @param constraint
-   *        The contraint to be examined.
-   */
-  countVideoTracksInMediaConstraint : function(constraints) {
-    if ((!constraints) || (constraints.length === 0)) {
-      return 0;
-    }
-    var numVideoTracks = 0;
-    for (var i = 0; i < constraints.length; i++) {
-      if (constraints[i].video) {
-        numVideoTracks++;
-      }
-    }
-    return numVideoTracks;
-  },
-
-  /**
    * Checks for video in given offer options.
    *
    * @param options
@@ -1312,109 +1285,85 @@ PeerConnectionWrapper.prototype = {
   },
 
   /*
-   * Counts the amount of audio tracks in a given set of streams.
+   * Counts the amount of tracks of the given type in a set of streams.
    *
+   * @param type audio|video
    * @param streams
    *        An array of streams (as returned by getLocalStreams()) to be
    *        examined.
    */
-  countAudioTracksInStreams : function(streams) {
-    if (!streams || (streams.length === 0)) {
+  countTracksInStreams: function(type, streams) {
+    if (!Array.isArray(streams)) {
       return 0;
     }
+    var f = (type === 'video') ? "getVideoTracks" : "getAudioTracks";
 
     return streams.reduce((count, st) => {
-      return count + st.getAudioTracks().length;
-    }, 0);
-  },
-
-  /*
-   * Counts the amount of video tracks in a given set of streams.
-   *
-   * @param streams
-   *        An array of streams (as returned by getLocalStreams()) to be
-   *        examined.
-   */
-  countVideoTracksInStreams: function(streams) {
-    if (!streams || (streams.length === 0)) {
-      return 0;
-    }
-
-    return streams.reduce((count, st) => {
-      return count + st.getVideoTracks().length;
+      return count + st[f]().length;
     }, 0);
   },
 
   /**
    * Checks that we are getting the media tracks we expect.
    *
-   * @param {object} constraintsRemote
-   *        The media constraints of the local and remote peer connection object
+   * @param {object} constraints
+   *        The media constraints of the remote peer connection object
    */
-  checkMediaTracks : function(constraintsRemote) {
-    var _checkMediaTracks = () => {
-      var localConstraintAudioTracks =
-        this.countAudioTracksInMediaConstraint(this.constraints);
-      var localStreams = this._pc.getLocalStreams();
-      var localAudioTracks = this.countAudioTracksInStreams(localStreams, false);
-      is(localAudioTracks, localConstraintAudioTracks, this + ' has ' +
-        localAudioTracks + ' local audio tracks');
+  checkMediaTracks : function(remoteConstraints) {
+    var waitForExpectedTracks = type => {
+      var outstandingCount = this.countTracksInConstraint(type, remoteConstraints);
+      outstandingCount -= this.addStreamCounter[type];
+      if (outstandingCount <= 0) {
+        return Promise.resolve();
+      }
 
-      var localConstraintVideoTracks =
-        this.countVideoTracksInMediaConstraint(this.constraints);
-      var localVideoTracks = this.countVideoTracksInStreams(localStreams, false);
-      is(localVideoTracks, localConstraintVideoTracks, this + ' has ' +
-        localVideoTracks + ' local video tracks');
+      return new Promise(resolve => {
+        this._pc.addEventListener('addstream', e => {
+          outstandingCount -= this.countTracksInStreams(type, [e.stream]);
+          if (outstandingCount <= 0) {
+            resolve();
+          }
+        });
+      });
+    };
 
-      var remoteConstraintAudioTracks =
-        this.countAudioTracksInMediaConstraint(constraintsRemote);
-      var remoteStreams = this._pc.getRemoteStreams();
-      var remoteAudioTracks = this.countAudioTracksInStreams(remoteStreams, false);
-      is(remoteAudioTracks, remoteConstraintAudioTracks, this + ' has ' +
-        remoteAudioTracks + ' remote audio tracks');
-
-      var remoteConstraintVideoTracks =
-        this.countVideoTracksInMediaConstraint(constraintsRemote);
-      var remoteVideoTracks = this.countVideoTracksInStreams(remoteStreams, false);
-      is(remoteVideoTracks, remoteConstraintVideoTracks, this + ' has ' +
-        remoteVideoTracks + ' remote video tracks');
-    }
-
-    // we have to do this check as the onaddstream never fires if the remote
-    // stream has no track at all!
-    var expectedRemoteTracks =
-      this.countAudioTracksInMediaConstraint(constraintsRemote) +
-      this.countVideoTracksInMediaConstraint(constraintsRemote);
-
-    // TODO: remove this once Bugs 998552 and 998546 are closed
-    if (this.onAddStreamFired || (expectedRemoteTracks == 0)) {
-      _checkMediaTracks();
-      return Promise.resolve();
-    }
+    var checkTrackCounts = (side, streams, constraints) => {
+      ['audio', 'video'].forEach(type => {
+        var actual = this.countTracksInStreams(type, streams);
+        var expected = this.countTracksInConstraint(type, constraints);
+        is(actual, expected, this + ' has ' + actual + ' ' +
+           side + ' ' + type + ' tracks');
+      });
+    };
 
     info(this + " checkMediaTracks() got called before onAddStream fired");
-    var checkPromise = new Promise(r => this._pc.addEventListener('addstream', r))
-      .then(_checkMediaTracks);
+    var checkPromise = Promise.all([
+      waitForExpectedTracks('audio'),
+      waitForExpectedTracks('video')
+    ]).then(() => {
+      checkTrackCounts('local', this._pc.getLocalStreams(), this.constraints);
+      checkTrackCounts('remote', this._pc.getRemoteStreams(), remoteConstraints);
+    });
     return timerGuard(checkPromise, 60000, "onaddstream never fired");
   },
 
   checkMsids: function() {
-    function _checkMsids(desc, streams, sdpLabel) {
+    var checkSdpForMsids = (desc, streams, side) => {
       streams.forEach(stream => {
         stream.getTracks().forEach(track => {
           // TODO(bug 1089798): Once DOMMediaStream has an id field, we
           // should be verifying that the SDP contains
           // a=msid:<stream-id> <track-id>
           ok(desc.sdp.match(new RegExp("a=msid:[^ ]+ " + track.id)),
-             sdpLabel + " SDP contains track id " + track.id );
+             side + " SDP contains track id " + track.id );
         });
       });
-    }
+    };
 
-    _checkMsids(this.localDescription, this._pc.getLocalStreams(),
-                "local");
-    _checkMsids(this.remoteDescription, this._pc.getRemoteStreams(),
-                "remote");
+    checkSdpForMsids(this.localDescription, this._pc.getLocalStreams(),
+                     "local");
+    checkSdpForMsids(this.remoteDescription, this._pc.getRemoteStreams(),
+                     "remote");
   },
 
   verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions, isLocal) {
@@ -1444,7 +1393,7 @@ PeerConnectionWrapper.prototype = {
     //TODO: how can we check for absence/presence of m=application?
 
     var audioTracks =
-      this.countAudioTracksInMediaConstraint(offerConstraintsList) ||
+        this.countTracksInConstraint('audio', offerConstraintsList) ||
       this.audioInOfferOptions(offerOptions);
 
     info("expected audio tracks: " + audioTracks);
@@ -1459,7 +1408,7 @@ PeerConnectionWrapper.prototype = {
     }
 
     var videoTracks =
-      this.countVideoTracksInMediaConstraint(offerConstraintsList) ||
+        this.countTracksInConstraint('video', offerConstraintsList) ||
       this.videoInOfferOptions(offerOptions);
 
     info("expected video tracks: " + videoTracks);
@@ -1690,11 +1639,11 @@ PeerConnectionWrapper.prototype = {
       // This code assumes that no media sections have been rejected due to
       // codec mismatch or other unrecoverable negotiation failures.
       var numAudioTracks =
-        this.countAudioTracksInMediaConstraint(offerConstraintsList) ||
+          this.countTracksInConstraint('audio', offerConstraintsList) ||
         this.audioInOfferOptions(offerOptions);
 
       var numVideoTracks =
-        this.countVideoTracksInMediaConstraint(offerConstraintsList) ||
+          this.countTracksInConstraint('video', offerConstraintsList) ||
         this.videoInOfferOptions(offerOptions);
 
       var numDataTracks = this.dataChannels.length;
@@ -1752,6 +1701,9 @@ PeerConnectionWrapper.prototype = {
   }
 };
 
+// haxx to prevent SimpleTest from failing at window.onload
+function addLoadEvent() {}
+
 var scriptsReady = Promise.all([
   "/tests/SimpleTest/SimpleTest.js",
   "head.js",
@@ -1759,13 +1711,12 @@ var scriptsReady = Promise.all([
   "turnConfig.js",
   "dataChannel.js",
   "network.js"
-].map(script => {
+].map(script  => {
   var el = document.createElement("script");
-  if (typeof scriptRelativePath === 'string' && script.charAt(0) !== "/") {
-    el.src = scriptRelativePath + script;
-  } else {
-    el.src = script;
+  if (typeof scriptRelativePath === 'string' && script.charAt(0) !== '/') {
+    script = scriptRelativePath + script;
   }
+  el.src = script;
   document.head.appendChild(el);
   return new Promise(r => { el.onload = r; el.onerror = r; });
 }));
@@ -1775,10 +1726,7 @@ function createHTML(options) {
 }
 
 function runNetworkTest(testFunction) {
-  return scriptsReady.then(() => {
-    if (window.SimpleTest) {
-      SimpleTest.waitForExplicitFinish();
-    }
-    return startNetworkAndTest();
-  }).then(() => runTestWhenReady(testFunction));
+  return scriptsReady
+    .then(() => startNetworkAndTest())
+    .then(() => runTestWhenReady(testFunction));
 }
