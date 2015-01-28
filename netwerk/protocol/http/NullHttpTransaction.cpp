@@ -97,6 +97,7 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
   , mCapsToClear(0)
   , mRequestHead(nullptr)
   , mIsDone(false)
+  , mClaimed(false)
   , mCallbacks(callbacks)
   , mConnectionInfo(ci)
 {
@@ -124,6 +125,16 @@ NullHttpTransaction::~NullHttpTransaction()
 {
   mCallbacks = nullptr;
   delete mRequestHead;
+}
+
+bool
+NullHttpTransaction::Claim()
+{
+  if (mClaimed) {
+    return false;
+  }
+  mClaimed = true;
+  return true;
 }
 
 void
