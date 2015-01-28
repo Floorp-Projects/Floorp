@@ -86,25 +86,9 @@
 
   function runTest() {
     simpleRegister()
-      .then(function(v) {
-        info("simpleRegister() promise resolved");
-      })
       .then(testControlled)
-      .then(function(v) {
-        info("testControlled() promise resolved");
-      }, function(e) {
-        info("testControlled() promise rejected " + e);
-      })
       .then(unregister)
-      .then(function(v) {
-        info("unregister() promise resolved");
-      })
       .then(testUncontrolled)
-      .then(function(v) {
-        info("testUncontrolled() promise resolved");
-      }, function(e) {
-        info("testUncontrolled() promise rejected " + e);
-      })
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

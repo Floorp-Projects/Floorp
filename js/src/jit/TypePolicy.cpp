@@ -95,6 +95,26 @@ ArithPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 }
 
 bool
+AllDoublePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
+        MDefinition *in = ins->getOperand(i);
+        if (in->type() == MIRType_Double)
+            continue;
+
+        MInstruction *replace = MToDouble::New(alloc, in);
+
+        ins->block()->insertBefore(ins, replace);
+        ins->replaceOperand(i, replace);
+
+        if (!replace->typePolicy()->adjustInputs(alloc, replace))
+            return false;
+    }
+
+    return true;
+}
+
+bool
 ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 {
     MOZ_ASSERT(def->isCompare());
@@ -1025,6 +1045,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(StoreTypedArrayPolicy)                    \
     _(StoreUnboxedObjectOrNullPolicy)           \
     _(TestPolicy)                               \
+    _(AllDoublePolicy)                          \
     _(ToDoublePolicy)                           \
     _(ToInt32Policy)                            \
     _(ToStringPolicy)                           \

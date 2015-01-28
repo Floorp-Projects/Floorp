@@ -1551,6 +1551,14 @@ Simulator::getFpArgs(double *x, double *y, int32_t *z)
 }
 
 void
+Simulator::getFpFromStack(int32_t *stack, double *x)
+{
+    MOZ_ASSERT(stack);
+    MOZ_ASSERT(x);
+    memcpy(x, stack, sizeof(double));
+}
+
+void
 Simulator::setCallResultDouble(double result)
 {
     setFpuRegisterDouble(f0, result);
@@ -1857,6 +1865,10 @@ typedef double (*Prototype_Double_IntDouble)(int32_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDouble)(double arg0, double arg1);
 typedef int32_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
 
+typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1, double arg2);
+typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0, double arg1,
+                                                            double arg2, double arg3);
+
 // Software interrupt instructions are used by the simulator to call into C++.
 void
 Simulator::softwareInterrupt(SimInstruction *instr)
@@ -2020,6 +2032,29 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             Prototype_Int_IntDouble target = reinterpret_cast<Prototype_Int_IntDouble>(external);
             int32_t result = target(ival, dval0);
             setRegister(v0, result);
+            break;
+          }
+          case Args_Double_DoubleDoubleDouble: {
+            double dval0, dval1, dval2;
+            int32_t ival;
+            getFpArgs(&dval0, &dval1, &ival);
+            // the last argument is on stack
+            getFpFromStack(stack_pointer + 4, &dval2);
+            Prototype_Double_DoubleDoubleDouble target = reinterpret_cast<Prototype_Double_DoubleDoubleDouble>(external);
+            double dresult = target(dval0, dval1, dval2);
+            setCallResultDouble(dresult);
+            break;
+         }
+         case Args_Double_DoubleDoubleDoubleDouble: {
+            double dval0, dval1, dval2, dval3;
+            int32_t ival;
+            getFpArgs(&dval0, &dval1, &ival);
+            // the two last arguments are on stack
+            getFpFromStack(stack_pointer + 4, &dval2);
+            getFpFromStack(stack_pointer + 6, &dval3);
+            Prototype_Double_DoubleDoubleDoubleDouble target = reinterpret_cast<Prototype_Double_DoubleDoubleDoubleDouble>(external);
+            double dresult = target(dval0, dval1, dval2, dval3);
+            setCallResultDouble(dresult);
             break;
           }
           default:
