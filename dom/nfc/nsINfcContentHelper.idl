@@ -111,7 +111,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(b5194ae8-d5d5-482f-a73f-dd0d755a1972)]
+[scriptable, uuid(b35f4bf5-e1b8-45f4-b5d3-2ae9b6d5871e)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -278,4 +278,19 @@ interface nsINfcContentHelper : nsISupports
    */
   void changeRFState(in DOMString rfState,
                      in nsINfcRequestCallback callback);
+
+  /**
+   * Notify parent process to call the default tagfound or peerfound event
+   * handler.
+   *
+   * @param sessionToken
+   *        Session token of this event.
+   * @param isP2P
+   *        Is this a P2P Session.
+   * @param records
+   *        NDEF Records.
+   */
+  void callDefaultFoundHandler(in DOMString sessionToken,
+                               in boolean isP2P,
+                               in nsIVariant records);
 };

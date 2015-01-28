@@ -17,7 +17,7 @@ var initialSet = new Set(['a', 1, undefined]);
 initialSet.forEach(callback);
 
 // test that both the Sets are equal and are in same order
-var iterator = initialSet[std_iterator]();
+var iterator = initialSet[Symbol.iterator]();
 var count = 0;
 for (var v of testSet) {
     assertEq(initialSet.has(v), true);

@@ -82,7 +82,6 @@ if CONFIG['MOZ_MEMORY']:
 #CPP_UNIT_TESTS += [
 #    'TestThreads',
 #    'TestXPIDLString',
-#    'TestUTF',
 #    'TestAtoms',
 #]
 

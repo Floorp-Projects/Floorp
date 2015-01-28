@@ -155,9 +155,9 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 
   if (mPlaceholderMap.IsInitialized()) {
     PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-                                            (PL_DHashTableLookup(const_cast<PLDHashTable*>(&mPlaceholderMap),
+                                            (PL_DHashTableSearch(const_cast<PLDHashTable*>(&mPlaceholderMap),
                                 aFrame));
-    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+    if (entry) {
       return entry->placeholderFrame;
     }
   }

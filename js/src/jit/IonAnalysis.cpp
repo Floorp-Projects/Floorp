@@ -3482,9 +3482,7 @@ MakeLoopContiguous(MIRGraph &graph, MBasicBlock *header, size_t numMarked)
     size_t headerId = header->id();
     size_t inLoopId = headerId;
     size_t notInLoopId = inLoopId + numMarked;
-    size_t numOSRDominated = 0;
     ReversePostorderIterator i = graph.rpoBegin(header);
-    MBasicBlock *osrBlock = graph.osrBlock();
     for (;;) {
         MBasicBlock *block = *i++;
         MOZ_ASSERT(block->id() >= header->id() && block->id() <= backedge->id(),
@@ -3497,15 +3495,6 @@ MakeLoopContiguous(MIRGraph &graph, MBasicBlock *header, size_t numMarked)
             // If we've reached the loop backedge, we're done!
             if (block == backedge)
                 break;
-        } else if (osrBlock && osrBlock->dominates(block)) {
-            // This block is not in the loop, but since it's dominated by the
-            // OSR entry, the block was probably in the loop before some
-            // folding. This probably means that the block has outgoing paths
-            // which re-enter the loop in the middle. And that, finally, means
-            // that we can't move this block to the end, since it could create a
-            // backwards branch to a block which is not the loop header.
-            block->setId(inLoopId++);
-            ++numOSRDominated;
         } else {
             // This block is not in the loop. Move it to the end.
             graph.moveBlockBefore(insertPt, block);
@@ -3513,11 +3502,8 @@ MakeLoopContiguous(MIRGraph &graph, MBasicBlock *header, size_t numMarked)
         }
     }
     MOZ_ASSERT(header->id() == headerId, "Loop header id changed");
-    MOZ_ASSERT(inLoopId == headerId + numMarked + numOSRDominated,
-               "Wrong number of blocks kept in loop");
-    MOZ_ASSERT(notInLoopId == (insertIter != graph.rpoEnd()
-                               ? insertPt->id()
-                               : graph.numBlocks()) - numOSRDominated,
+    MOZ_ASSERT(inLoopId == headerId + numMarked, "Wrong number of blocks kept in loop");
+    MOZ_ASSERT(notInLoopId == (insertIter != graph.rpoEnd() ? insertPt->id() : graph.numBlocks()),
                "Wrong number of blocks moved out of loop");
 }
 
@@ -3538,6 +3524,13 @@ jit::MakeLoopsContiguous(MIRGraph &graph)
         // If the loop isn't a loop, don't try to optimize it.
         if (numMarked == 0)
             continue;
+
+        // If there's an OSR block entering the loop in the middle, it's tricky,
+        // so don't try to handle it, for now.
+        if (canOsr) {
+            UnmarkLoopBlocks(graph, header);
+            continue;
+        }
 
         // Move all blocks between header and backedge that aren't marked to
         // the end of the loop, making the loop itself contiguous.

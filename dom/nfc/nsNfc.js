@@ -431,18 +431,29 @@ MozNFCImpl.prototype = {
   },
 
   notifyTagFound: function notifyTagFound(sessionToken, tagInfo, ndefInfo, records) {
+    if (!this.handleTagFound(sessionToken, tagInfo, ndefInfo, records)) {
+      this._nfcContentHelper.callDefaultFoundHandler(sessionToken, false, records);
+    };
+  },
+
+  /**
+   * Handles Tag Found event.
+   *
+   * returns true if the app could process this event, false otherwise.
+   */
+  handleTagFound: function handleTagFound(sessionToken, tagInfo, ndefInfo, records) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
-      return;
+      return false;
     }
 
     if (!this.eventService.hasListenersFor(this.__DOM_IMPL__, "tagfound")) {
       debug("ontagfound is not registered.");
-      return;
+      return false;
     }
 
     if (!this.checkPermissions(["nfc"])) {
-      return;
+      return false;
     }
 
     this.eventService.addSystemEventListener(this._window, "visibilitychange",
@@ -465,6 +476,7 @@ MozNFCImpl.prototype = {
     }
 
     let eventData = {
+      "cancelable": true,
       "tag": tag,
       "ndefRecords": ndefRecords
     };
@@ -472,6 +484,15 @@ MozNFCImpl.prototype = {
     debug("fire ontagfound " + sessionToken);
     let tagEvent = new this._window.MozNFCTagEvent("tagfound", eventData);
     this.__DOM_IMPL__.dispatchEvent(tagEvent);
+
+    // If defaultPrevented is false, means we need to take the default action
+    // for this event - redirect this event to System app. Before redirecting to
+    // System app, we need revoke the tag object first.
+    if (!tagEvent.defaultPrevented) {
+      this.notifyTagLost(sessionToken);
+    }
+
+    return tagEvent.defaultPrevented;
   },
 
   notifyTagLost: function notifyTagLost(sessionToken) {
@@ -504,20 +525,31 @@ MozNFCImpl.prototype = {
   },
 
   notifyPeerFound: function notifyPeerFound(sessionToken, isPeerReady) {
+    if (!this.handlePeerFound(sessionToken, isPeerReady)) {
+      this._nfcContentHelper.callDefaultFoundHandler(sessionToken, true, null);
+    }
+  },
+
+  /**
+   * Handles Peer Found/Peer Ready event.
+   *
+   * returns true if the app could process this event, false otherwise.
+   */
+  handlePeerFound: function handlePeerFound(sessionToken, isPeerReady) {
     if (this.hasDeadWrapper()) {
       dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
-      return;
+      return false;
     }
 
     if (!isPeerReady &&
         !this.eventService.hasListenersFor(this.__DOM_IMPL__, "peerfound")) {
       debug("onpeerfound is not registered.");
-      return;
+      return false;
     }
 
     let perm = isPeerReady ? ["nfc-share"] : ["nfc"];
     if (!this.checkPermissions(perm)) {
-      return;
+      return false;
     }
 
     this.eventService.addSystemEventListener(this._window, "visibilitychange",
@@ -525,12 +557,36 @@ MozNFCImpl.prototype = {
 
     let peerImpl = new MozNFCPeerImpl(this._window, sessionToken);
     this.nfcPeer = this._window.MozNFCPeer._create(this._window, peerImpl);
-    let eventData = { "peer": this.nfcPeer };
-    let type = (isPeerReady) ? "peerready" : "peerfound";
 
-    debug("fire on" + type + " " + sessionToken);
-    let event = new this._window.MozNFCPeerEvent(type, eventData);
+    let eventType;
+    let eventData = {
+      "peer": this.nfcPeer
+    };
+
+    if (isPeerReady) {
+      eventType = "peerready";
+    } else {
+      eventData.cancelable = true;
+      eventType = "peerfound";
+    }
+
+    debug("fire on" + eventType + " " + sessionToken);
+    let event = new this._window.MozNFCPeerEvent(eventType, eventData);
     this.__DOM_IMPL__.dispatchEvent(event);
+
+    // For peerready we don't take the default action.
+    if (isPeerReady) {
+      return true;
+    }
+
+    // If defaultPrevented is false, means we need to take the default action
+    // for this event - redirect this event to System app. Before redirecting to
+    // System app, we need revoke the peer object first.
+    if (!event.defaultPrevented) {
+      this.notifyPeerLost(sessionToken);
+    }
+
+    return event.defaultPrevented;
   },
 
   notifyPeerLost: function notifyPeerLost(sessionToken) {
