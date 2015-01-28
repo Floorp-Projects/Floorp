@@ -552,12 +552,6 @@ function synthesizeKey(aKey, aEvent, aWindow)
         case KeyboardEvent.DOM_KEY_LOCATION_NUMPAD:
           flags |= utils.KEY_FLAG_LOCATION_NUMPAD;
           break;
-        case KeyboardEvent.DOM_KEY_LOCATION_MOBILE:
-          flags |= utils.KEY_FLAG_LOCATION_MOBILE;
-          break;
-        case KeyboardEvent.DOM_KEY_LOCATION_JOYSTICK:
-          flags |= utils.KEY_FLAG_LOCATION_JOYSTICK;
-          break;
       }
     }
 

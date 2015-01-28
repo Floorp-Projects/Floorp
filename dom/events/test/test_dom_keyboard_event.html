@@ -200,10 +200,6 @@ function testSynthesizedKeyLocation()
       event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
     },
-    { key: "VK_DOWN", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
-               location: KeyboardEvent.DOM_KEY_LOCATION_JOYSTICK },
-    },
     { key: "5", isModifier: false,
       event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
                location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD },
@@ -211,14 +207,6 @@ function testSynthesizedKeyLocation()
     { key: "VK_NUMPAD5", isModifier: false,
       event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
                location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD },
-    },
-    { key: "5", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
-               location: KeyboardEvent.DOM_KEY_LOCATION_MOBILE },
-    },
-    { key: "VK_NUMPAD5", isModifier: false,
-      event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
-               location: KeyboardEvent.DOM_KEY_LOCATION_MOBILE },
     },
     { key: "+", isModifier: false,
       event: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false,
@@ -259,12 +247,8 @@ function testSynthesizedKeyLocation()
         return "DOM_KEY_LOCATION_LEFT";
       case KeyboardEvent.DOM_KEY_LOCATION_RIGHT:
         return "DOM_KEY_LOCATION_RIGHT";
-      case KeyboardEvent.DOM_KEY_LOCATION_MOBILE:
-        return "DOM_KEY_LOCATION_MOBILE";
       case KeyboardEvent.DOM_KEY_LOCATION_NUMPAD:
         return "DOM_KEY_LOCATION_NUMPAD";
-      case KeyboardEvent.DOM_KEY_LOCATION_JOYSTICK:
-        return "DOM_KEY_LOCATION_JOYSTICK";
       default:
         return "Invalid value (" + aLocation + ")";
     }
