@@ -9,7 +9,7 @@ function results(results) {
         return results[i++];
     }
     var ret = { next: next }
-    ret[std_iterator] = iterator;
+    ret[Symbol.iterator] = iterator;
     return ret;
 }
 

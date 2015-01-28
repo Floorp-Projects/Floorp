@@ -17,7 +17,7 @@ var proxyObj = {
     }
 };
 
-var it = Array.prototype[std_iterator].call(Proxy.create(proxyObj));
+var it = Array.prototype[Symbol.iterator].call(Proxy.create(proxyObj));
 
 assertIteratorNext(it, "0");
 s += ' ';

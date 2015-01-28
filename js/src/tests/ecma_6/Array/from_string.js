@@ -11,11 +11,11 @@ assertDeepEq(Array.from(gclef), [gclef]);
 assertDeepEq(Array.from(gclef + " G"), [gclef, " ", "G"]);
 
 // Array.from on a string calls the @@iterator method.
-String.prototype[std_iterator] = function* () { yield 1; yield 2; };
+String.prototype[Symbol.iterator] = function* () { yield 1; yield 2; };
 assertDeepEq(Array.from("anything"), [1, 2]);
 
 // If the iterator method is deleted, Strings are still arraylike.
-delete String.prototype[std_iterator];
+delete String.prototype[Symbol.iterator];
 assertDeepEq(Array.from("works"), ['w', 'o', 'r', 'k', 's']);
 assertDeepEq(Array.from(gclef), ['\uD834', '\uDD1E']);
 

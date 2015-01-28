@@ -21,11 +21,11 @@ function checkLength(f, makeFn) {
   // other iterable objects
   assertEq(makeFn("...arg")(f, new Int32Array([1, 2, 3])), 3);
   assertEq(makeFn("...arg")(f, "abc"), 3);
-  assertEq(makeFn("...arg")(f, [1, 2, 3][std_iterator]()), 3);
+  assertEq(makeFn("...arg")(f, [1, 2, 3][Symbol.iterator]()), 3);
   assertEq(makeFn("...arg")(f, Set([1, 2, 3])), 3);
   assertEq(makeFn("...arg")(f, Map([["a", "A"], ["b", "B"], ["c", "C"]])), 3);
   let itr = {};
-  itr[std_iterator] = function() {
+  itr[Symbol.iterator] = function() {
       return {
           i: 1,
           next: function() {

@@ -36,7 +36,7 @@ assertDeepEq(log, ["define", "0", "define", "1", "define", "2", "set", "length"]
 // calls handler.get on it.
 log = [];
 assertDeepEq(Array.from(new LoggingProxy([3, 4, 5])), [3, 4, 5]);
-assertDeepEq(log, ["get", std_iterator,
+assertDeepEq(log, ["get", Symbol.iterator,
                    "get", "length", "get", "0",
                    "get", "length", "get", "1",
                    "get", "length", "get", "2",
@@ -45,9 +45,9 @@ assertDeepEq(log, ["get", std_iterator,
 // Array-like iteration only gets the length once.
 log = [];
 var arr = [5, 6, 7];
-arr[std_iterator] = undefined;
+arr[Symbol.iterator] = undefined;
 assertDeepEq(Array.from(new LoggingProxy(arr)), [5, 6, 7]);
-assertDeepEq(log, ["get", std_iterator,
+assertDeepEq(log, ["get", Symbol.iterator,
                    "get", "length", "get", "0", "get", "1", "get", "2"]);
 
 if (typeof reportCompare === 'function')

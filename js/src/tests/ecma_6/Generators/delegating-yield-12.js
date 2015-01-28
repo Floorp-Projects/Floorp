@@ -19,9 +19,9 @@ function IteratorWrapper(iterator) {
 function IterableWrapper(iterable) {
     var ret = {};
 
-    ret[std_iterator] = function () {
+    ret[Symbol.iterator] = function () {
         log += 'i';
-        return IteratorWrapper(iterable[std_iterator]());
+        return IteratorWrapper(iterable[Symbol.iterator]());
     }
 
     return ret;

@@ -12,7 +12,7 @@ function results(results) {
     }
     var iter = { next: next }
     var ret = {};
-    ret[std_iterator] = function () { return iter; }
+    ret[Symbol.iterator] = function () { return iter; }
     return ret;
 }
 
@@ -23,7 +23,7 @@ function* yield_results(expected) {
 function collect_results(iterable) {
     var ret = [];
     var result;
-    var iter = iterable[std_iterator]();
+    var iter = iterable[Symbol.iterator]();
     do {
         result = iter.next();
         ret.push(result);
