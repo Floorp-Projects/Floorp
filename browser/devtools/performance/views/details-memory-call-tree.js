@@ -4,16 +4,18 @@
 "use strict";
 
 /**
- * CallTree view containing profiler call tree, controlled by DetailsView.
+ * CallTree view containing memory allocation sites, controlled by DetailsView.
  */
-let CallTreeView = Heritage.extend(DetailsSubview, {
-  rangeChangeDebounceTime: 50, // ms
+let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
+  rangeChangeDebounceTime: 100, // ms
 
   /**
    * Sets up the view with event binding.
    */
   initialize: function () {
     DetailsSubview.initialize.call(this);
+
+    this._cache = new WeakMap();
 
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onLink = this._onLink.bind(this);
@@ -40,10 +42,10 @@ let CallTreeView = Heritage.extend(DetailsSubview, {
    */
   render: function (interval={}, options={}) {
     let recording = PerformanceController.getCurrentRecording();
-    let profile = recording.getProfile();
-    let threadNode = this._prepareCallTree(profile, interval, options);
+    let allocations = recording.getAllocations();
+    let threadNode = this._prepareCallTree(allocations, interval, options);
     this._populateCallTree(threadNode, options);
-    this.emit(EVENTS.CALL_TREE_RENDERED);
+    this.emit(EVENTS.MEMORY_CALL_TREE_RENDERED);
   },
 
   /**
@@ -60,12 +62,19 @@ let CallTreeView = Heritage.extend(DetailsSubview, {
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree: function (profile, { startTime, endTime }, options) {
-    let threadSamples = profile.threads[0].samples;
+  _prepareCallTree: function (allocations, { startTime, endTime }, options) {
+    let cached = this._cache.get(allocations);
+    if (cached) {
+      var samples = cached;
+    } else {
+      var samples = RecordingUtils.getSamplesFromAllocations(allocations);
+      this._cache.set(allocations, samples);
+    }
+
     let contentOnly = !Prefs.showPlatformData;
     let invertTree = PerformanceController.getPref("invert-call-tree");
 
-    let threadNode = new ThreadNode(threadSamples,
+    let threadNode = new ThreadNode(samples,
       { startTime, endTime, contentOnly, invertTree });
 
     // If we have an empty profile (no samples), then don't invert the tree, as
@@ -85,6 +94,8 @@ let CallTreeView = Heritage.extend(DetailsSubview, {
       inverted: options.inverted,
       // Root nodes are hidden in inverted call trees.
       hidden: options.inverted,
+      // Memory call trees should be sorted by allocations.
+      sortingPredicate: (a, b) => a.frame.allocations < b.frame.allocations ? 1 : -1,
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
       autoExpandDepth: options.inverted ? 0 : undefined,
@@ -94,14 +105,12 @@ let CallTreeView = Heritage.extend(DetailsSubview, {
     root.on("link", this._onLink);
 
     // Clear out other call trees.
-    let container = $(".call-tree-cells-container");
+    let container = $("#memory-calltree-view > .call-tree-cells-container");
     container.innerHTML = "";
     root.attachTo(container);
 
-    // When platform data isn't shown, hide the cateogry labels, since they're
-    // only available for C++ frames.
-    let contentOnly = !Prefs.showPlatformData;
-    root.toggleCategories(!contentOnly);
+    // Memory allocation samples don't contain cateogry labels.
+    root.toggleCategories(false);
   },
 
   /**
@@ -112,32 +121,4 @@ let CallTreeView = Heritage.extend(DetailsSubview, {
       this.render(OverviewView.getTimeInterval());
     }
   }
-});
-
-/**
- * Opens/selects the debugger in this toolbox and jumps to the specified
- * file name and line number.
- * @param string url
- * @param number line
- */
-let viewSourceInDebugger = Task.async(function *(url, line) {
-  // If the Debugger was already open, switch to it and try to show the
-  // source immediately. Otherwise, initialize it and wait for the sources
-  // to be added first.
-  let debuggerAlreadyOpen = gToolbox.getPanel("jsdebugger");
-  let { panelWin: dbg } = yield gToolbox.selectTool("jsdebugger");
-
-  if (!debuggerAlreadyOpen) {
-    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
-  }
-
-  let { DebuggerView } = dbg;
-  let { Sources } = DebuggerView;
-
-  let item = Sources.getItemForAttachment(a => a.source.url === url);
-  if (item) {
-    return DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true });
-  }
-
-  return Promise.reject("Couldn't find the specified source in the debugger.");
 });
