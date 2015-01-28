@@ -4,7 +4,7 @@ load(libdir + "asserts.js");
 load(libdir + "iteration.js");
 
 var a = [];
-a[std_iterator] = function* () {
+a[Symbol.iterator] = function* () {
     yield 'o';
     yield 'k';
 };
@@ -13,5 +13,5 @@ for (var v of a)
     s += v;
 assertEq(s, 'ok');
 
-a[std_iterator] = undefined;
+a[Symbol.iterator] = undefined;
 assertThrowsInstanceOf(function () { for (var v of a) ; }, TypeError);

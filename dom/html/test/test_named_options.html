@@ -42,9 +42,7 @@ var names2 = [];
 for (var name in opt) {
   names2.push(name);
 }
-var JS_HAS_SYMBOLS = typeof Symbol === "function";
-is(names2.length, JS_HAS_SYMBOLS ? 11 : 12,
-   "Should have eleven enumerated names (or twelve with '@@iterator')");
+is(names2.length, 11, "Should have eleven enumerated names");
 is(names2[0], "0", "Enum entry 1")
 is(names2[1], "1", "Enum entry 2")
 is(names2[2], "2", "Enum entry 3")
@@ -56,9 +54,6 @@ is(names2[7], "length", "Enum entry 8")
 is(names2[8], "selectedIndex", "Enum entry 9")
 is(names2[9], "item", "Enum entry 10")
 is(names2[10], "namedItem", "Enum entry 11")
-if (!JS_HAS_SYMBOLS) {
-  is(names2[11], "@@iterator", "Enum entry 12");
-}
 
 </script>
 </pre>

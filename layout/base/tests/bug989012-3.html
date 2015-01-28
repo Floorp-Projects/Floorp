@@ -1,0 +1,31 @@
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <style>
+      img {
+        border: solid 1px red;
+        mid-width: 1em;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body onload="start()">
+    <div onfocus="done()" contenteditable>foo<img>bar</div>
+    <script>
+      var div = document.querySelector("div");
+      function start() {
+        div.focus();
+      }
+      function done() {
+        var sel = getSelection();
+        sel.collapse(div, 0);
+        // Press Right four times to set the caret right before "bar"
+        for (var i = 0; i < 4; ++i) {
+          synthesizeKey("VK_RIGHT", {});
+        }
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

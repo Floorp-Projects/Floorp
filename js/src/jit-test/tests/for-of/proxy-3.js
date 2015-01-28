@@ -5,7 +5,7 @@ load(libdir + "iteration.js");
 
 var p = Proxy.create({
     getPropertyDescriptor: function (name) {
-        if (name == std_iterator)
+        if (name == Symbol.iterator)
             throw "fit";
         return undefined;
     }

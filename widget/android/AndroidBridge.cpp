@@ -1704,6 +1704,91 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
     return true;
 }
 
+static float
+GetScaleFactor(nsPresContext* mPresContext) {
+  nsIPresShell* presShell = mPresContext->PresShell();
+  LayoutDeviceToLayerScale cumulativeResolution(presShell->GetCumulativeResolution().width);
+  return cumulativeResolution.scale;
+}
+
+nsresult
+AndroidBridge::CaptureZoomedView (nsIDOMWindow *window, nsIntRect zoomedViewRect, Object::Param buffer,
+                                  float zoomFactor) {
+  nsresult rv;
+  struct timeval        timeStart;
+  gettimeofday (&timeStart, NULL);
+
+  if (!buffer)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr < nsIDOMWindowUtils > utils = do_GetInterface (window);
+  if (!utils)
+    return NS_ERROR_FAILURE;
+
+  JNIEnv* env = GetJNIEnv ();
+
+  AutoLocalJNIFrame jniFrame (env, 0);
+
+  nsCOMPtr < nsPIDOMWindow > win = do_QueryInterface (window);
+  if (!win) {
+    return NS_ERROR_FAILURE;
+  }
+  nsRefPtr < nsPresContext > presContext;
+
+  nsIDocShell* docshell = win->GetDocShell ();
+
+  if (docshell) {
+    docshell->GetPresContext (getter_AddRefs (presContext));
+  }
+
+  if (!presContext) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr < nsIPresShell > presShell = presContext->PresShell ();
+
+  float scaleFactor = GetScaleFactor(presContext) ;
+
+      nscolor bgColor = NS_RGB (255, 255, 255);
+  uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING | nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+  nsRect r (presContext->DevPixelsToAppUnits(zoomedViewRect.x / scaleFactor),
+            presContext->DevPixelsToAppUnits(zoomedViewRect.y / scaleFactor ),
+            presContext->DevPixelsToAppUnits(zoomedViewRect.width / scaleFactor ),
+            presContext->DevPixelsToAppUnits(zoomedViewRect.height / scaleFactor ));
+
+  bool is24bit = (GetScreenDepth () == 24);
+  SurfaceFormat format = is24bit ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R5G6B5;
+  gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
+  uint32_t stride = gfxASurface::FormatStrideForWidth(iFormat, zoomedViewRect.width);
+
+  uint8_t* data = static_cast<uint8_t*> (env->GetDirectBufferAddress (buffer.Get()));
+  if (!data) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT (gfxPlatform::GetPlatform ()->SupportsAzureContentForType (BackendType::CAIRO),
+              "Need BackendType::CAIRO support");
+  RefPtr < DrawTarget > dt = Factory::CreateDrawTargetForData (
+      BackendType::CAIRO, data, IntSize (zoomedViewRect.width, zoomedViewRect.height), stride,
+      format);
+  if (!dt) {
+    ALOG_BRIDGE ("Error creating DrawTarget");
+    return NS_ERROR_FAILURE;
+  }
+  nsRefPtr < gfxContext > context = new gfxContext (dt);
+  context->SetMatrix (context->CurrentMatrix ().Scale(zoomFactor, zoomFactor));
+
+  rv = presShell->RenderDocument (r, renderDocFlags, bgColor, context);
+
+  if (is24bit) {
+    gfxUtils::ConvertBGRAtoRGBA (data, stride * zoomedViewRect.height);
+  }
+
+  LayerView::updateZoomedView(buffer);
+
+  NS_ENSURE_SUCCESS (rv, rv);
+  return NS_OK;
+}
+
 nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int32_t bufH, int32_t tabId, Object::Param buffer, bool &shouldStore)
 {
     nsresult rv;

@@ -16,11 +16,11 @@ function checkCommon(f, makeFn) {
   // other iterable objects
   assertEqArray(makeFn("...arg")(f, new Int32Array([1, 2, 3])), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, "abc"), ["a", "b", "c"]);
-  assertEqArray(makeFn("...arg")(f, [1, 2, 3][std_iterator]()), [1, 2, 3]);
+  assertEqArray(makeFn("...arg")(f, [1, 2, 3][Symbol.iterator]()), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, Set([1, 2, 3])), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, Map([["a", "A"], ["b", "B"], ["c", "C"]])).map(([k, v]) => k + v), ["aA", "bB", "cC"]);
   let itr = {};
-  itr[std_iterator] = function() {
+  itr[Symbol.iterator] = function() {
       return {
           i: 1,
           next: function() {

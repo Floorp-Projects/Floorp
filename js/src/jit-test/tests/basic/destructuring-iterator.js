@@ -9,7 +9,7 @@ assertThrowsInstanceOf(() => { [a, b, c] = {0: 0, 1: 1, 2: 2} }, TypeError);
 var nextcalls = 0, donecalls = 0, valuecalls = 0;
 var doneafter = 0;
 var iterable = {};
-iterable[std_iterator] = function () {
+iterable[Symbol.iterator] = function () {
   return {
     next: function () {
       assertEq(arguments.length, 0, 'iterator.next() should be called with no arguments');
@@ -50,8 +50,8 @@ assertIterable([5,5,4,4],
   [3,4]);
 
 var arraycalls = 0;
-var ArrayIterator = Array.prototype[std_iterator];
-Array.prototype[std_iterator] = function () {
+var ArrayIterator = Array.prototype[Symbol.iterator];
+Array.prototype[Symbol.iterator] = function () {
   arraycalls++;
   return ArrayIterator.apply(this, arguments);
 };
@@ -72,14 +72,14 @@ loop(() => { doneafter = 4; var [a,b,...rest] = iterable; return rest; });
 
 // destructuring assignment should always use iterators and not optimize
 // to a "group assignment"
-delete Array.prototype[std_iterator];
+delete Array.prototype[Symbol.iterator];
 assertThrowsInstanceOf(() => { var [a,b] = [1,2]; }, TypeError);
-Array.prototype[std_iterator] = ArrayIterator;
+Array.prototype[Symbol.iterator] = ArrayIterator;
 
 // observe the binding order
 a = undefined, b = undefined, c = undefined;
 var obj = {};
-obj[std_iterator] = function* () {
+obj[Symbol.iterator] = function* () {
 	// normal fields should be initialized right after |.next()|
 	yield 1;
 	assertEq(a, 1);
@@ -99,11 +99,11 @@ assertEqArray(c, [4,5]);
 
 assertThrowsValue(function () {
   try {
-    Array.prototype[std_iterator] = function () { throw 'from iterator'; };
+    Array.prototype[Symbol.iterator] = function () { throw 'from iterator'; };
     throw [1, 2];
   } catch ([x, y]) {
     throw 'not reached';
   }
 }, 'from iterator');
-Array.prototype[std_iterator] = ArrayIterator;
+Array.prototype[Symbol.iterator] = ArrayIterator;
 

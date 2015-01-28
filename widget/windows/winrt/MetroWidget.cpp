@@ -1527,8 +1527,8 @@ MetroWidget::GetInputContext()
   return mInputContext;
 }
 
-NS_IMETHODIMP
-MetroWidget::NotifyIME(const IMENotification& aIMENotification)
+nsresult
+MetroWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:

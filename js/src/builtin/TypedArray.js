@@ -170,6 +170,41 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
     return -1;
 }
 
+// ES6 draft rev31 (2015-01-15) 22.1.3.10 %TypedArray%.prototype.forEach(callbackfn[,thisArg])
+function TypedArrayForEach(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+	return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+			    "TypedArrayForEach");
+    }
+
+    // Step 1-2.
+    var O = this;
+
+    // Step 3-4.
+    var len = TypedArrayLength(O);
+
+    // Step 5.
+    if (arguments.length === 0)
+	ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
+    if (!IsCallable(callbackfn))
+	ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+
+    // Step 6.
+    var T = thisArg;
+
+    // Step 7-8.
+    // Step 7, 8a (implicit) and 8e.
+    for (var k = 0; k < len; k++) {
+	// Step 8b-8c are unnecessary since the condition always holds true for TypedArray.
+	// Step 8d.
+	callFunction(callbackfn, T, O[k], k, O);
+    }
+
+    // Step 9.
+    return undefined;
+}
+
 // ES6 draft rev29 (2014/12/06) 22.2.3.13 %TypedArray%.prototype.indexOf(searchElement[, fromIndex]).
 function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     // This function is not generic.

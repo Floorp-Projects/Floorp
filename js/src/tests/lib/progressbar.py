@@ -49,7 +49,8 @@ class ProgressBar(object):
         sys.stdout.write('\r[')
         for layout in self.counters_fmt:
             Terminal.set_color(layout['color'])
-            sys.stdout.write(('%' + str(self.limit_digits) + 'd') % data[layout['value']])
+            sys.stdout.write(('{:' + str(self.limit_digits) + 'd}').format(
+                data[layout['value']]))
             Terminal.reset_color()
             if layout != self.counters_fmt[-1]:
                 sys.stdout.write('|')
@@ -58,7 +59,7 @@ class ProgressBar(object):
 
         # Build the bar.
         pct = int(100.0 * current / self.limit)
-        sys.stdout.write('%3d%% ' % pct)
+        sys.stdout.write('{:3d}% '.format(pct))
 
         barlen = int(1.0 * self.barlen * current / self.limit) - 1
         bar = '=' * barlen + '>' + ' ' * (self.barlen - barlen - 1)
@@ -67,7 +68,7 @@ class ProgressBar(object):
         # Update the bar.
         dt = datetime.now() - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
-        sys.stdout.write('%6.1fs' % dt)
+        sys.stdout.write('{:6.1f}s'.format(dt))
         Terminal.clear_right()
 
         # Force redisplay, since we didn't write a \n.
