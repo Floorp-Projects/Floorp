@@ -14,12 +14,14 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
+Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {InplaceEditor, editableItem} = devtools.require("devtools/shared/inplace-editor");
 const {parseDeclarations} = devtools.require("devtools/styleinspector/css-parsing-utils");
 const {ReflowFront} = devtools.require("devtools/server/actors/layout");
 
+const SHARED_L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/shared.properties");
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
@@ -401,7 +403,8 @@ LayoutView.prototype = {
       this._lastRequest = null;
       let width = layout.width;
       let height = layout.height;
-      let newLabel = width + "\u00D7" + height;
+      let newLabel = SHARED_L10N.getFormatStr("dimensions", width, height);
+
       if (this.sizeHeadingLabel.textContent != newLabel) {
         this.sizeHeadingLabel.textContent = newLabel;
       }
