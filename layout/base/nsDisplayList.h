@@ -3171,7 +3171,6 @@ public:
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
                                           const nsRect& aViewport,
-                                          bool aForceNullScrollId,
                                           bool aIsRoot,
                                           const ContainerLayerParameters& aContainerParameters);
 
