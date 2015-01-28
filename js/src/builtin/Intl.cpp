@@ -669,9 +669,15 @@ js::intl_Collator(JSContext *cx, unsigned argc, Value *vp)
 static void
 collator_finalize(FreeOp *fop, JSObject *obj)
 {
-    UCollator *coll = static_cast<UCollator*>(obj->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT).toPrivate());
-    if (coll)
-        ucol_close(coll);
+    // This is-undefined check shouldn't be necessary, but for internal
+    // brokenness in object allocation code.  For the moment, hack around it by
+    // explicitly guarding against the possibility of the reserved slot not
+    // containing a private.  See bug 949220.
+    const Value &slot = obj->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT);
+    if (!slot.isUndefined()) {
+        if (UCollator *coll = static_cast<UCollator*>(slot.toPrivate()))
+            ucol_close(coll);
+    }
 }
 
 static JSObject *
@@ -1156,10 +1162,15 @@ js::intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp)
 static void
 numberFormat_finalize(FreeOp *fop, JSObject *obj)
 {
-    UNumberFormat *nf =
-        static_cast<UNumberFormat*>(obj->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
-    if (nf)
-        unum_close(nf);
+    // This is-undefined check shouldn't be necessary, but for internal
+    // brokenness in object allocation code.  For the moment, hack around it by
+    // explicitly guarding against the possibility of the reserved slot not
+    // containing a private.  See bug 949220.
+    const Value &slot = obj->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT);
+    if (!slot.isUndefined()) {
+        if (UNumberFormat *nf = static_cast<UNumberFormat*>(slot.toPrivate()))
+            unum_close(nf);
+    }
 }
 
 static JSObject *
@@ -1610,9 +1621,15 @@ js::intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
 static void
 dateTimeFormat_finalize(FreeOp *fop, JSObject *obj)
 {
-    UDateFormat *df = static_cast<UDateFormat*>(obj->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
-    if (df)
-        udat_close(df);
+    // This is-undefined check shouldn't be necessary, but for internal
+    // brokenness in object allocation code.  For the moment, hack around it by
+    // explicitly guarding against the possibility of the reserved slot not
+    // containing a private.  See bug 949220.
+    const Value &slot = obj->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT);
+    if (!slot.isUndefined()) {
+        if (UDateFormat *df = static_cast<UDateFormat*>(slot.toPrivate()))
+            udat_close(df);
+    }
 }
 
 static JSObject *

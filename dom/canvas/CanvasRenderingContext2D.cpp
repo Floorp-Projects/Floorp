@@ -68,6 +68,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/Conversions.h"
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
@@ -4820,10 +4821,10 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
     return nullptr;
   }
 
-  int32_t x = JS_DoubleToInt32(aSx);
-  int32_t y = JS_DoubleToInt32(aSy);
-  int32_t wi = JS_DoubleToInt32(aSw);
-  int32_t hi = JS_DoubleToInt32(aSh);
+  int32_t x = JS::ToInt32(aSx);
+  int32_t y = JS::ToInt32(aSy);
+  int32_t wi = JS::ToInt32(aSw);
+  int32_t hi = JS::ToInt32(aSh);
 
   // Handle negative width and height by flipping the rectangle over in the
   // relevant direction.
@@ -5016,7 +5017,7 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
   DebugOnly<bool> inited = arr.Init(imageData.GetDataObject());
   MOZ_ASSERT(inited);
 
-  error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
+  error = PutImageData_explicit(JS::ToInt32(dx), JS::ToInt32(dy),
                                 imageData.Width(), imageData.Height(),
                                 &arr, false, 0, 0, 0, 0);
 }
@@ -5032,13 +5033,13 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
   DebugOnly<bool> inited = arr.Init(imageData.GetDataObject());
   MOZ_ASSERT(inited);
 
-  error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
+  error = PutImageData_explicit(JS::ToInt32(dx), JS::ToInt32(dy),
                                 imageData.Width(), imageData.Height(),
                                 &arr, true,
-                                JS_DoubleToInt32(dirtyX),
-                                JS_DoubleToInt32(dirtyY),
-                                JS_DoubleToInt32(dirtyWidth),
-                                JS_DoubleToInt32(dirtyHeight));
+                                JS::ToInt32(dirtyX),
+                                JS::ToInt32(dirtyY),
+                                JS::ToInt32(dirtyWidth),
+                                JS::ToInt32(dirtyHeight));
 }
 
 // void putImageData (in ImageData d, in float x, in float y);
@@ -5206,8 +5207,8 @@ CanvasRenderingContext2D::CreateImageData(JSContext* cx, double sw,
     return nullptr;
   }
 
-  int32_t wi = JS_DoubleToInt32(sw);
-  int32_t hi = JS_DoubleToInt32(sh);
+  int32_t wi = JS::ToInt32(sw);
+  int32_t hi = JS::ToInt32(sh);
 
   uint32_t w = Abs(wi);
   uint32_t h = Abs(hi);

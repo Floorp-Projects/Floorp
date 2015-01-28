@@ -636,7 +636,14 @@ enum ABIFunctionType
     // int f(int, double)
     Args_Int_IntDouble = Args_General0 |
         (ArgType_Double << (ArgType_Shift * 1)) |
-        (ArgType_General << (ArgType_Shift * 2))
+        (ArgType_General << (ArgType_Shift * 2)),
+
+    // double f(double, double, double)
+    Args_Double_DoubleDoubleDouble = Args_Double_DoubleDouble | (ArgType_Double << (ArgType_Shift * 3)),
+
+    // double f(double, double, double, double)
+    Args_Double_DoubleDoubleDoubleDouble = Args_Double_DoubleDoubleDouble | (ArgType_Double << (ArgType_Shift * 4))
+
 };
 
 enum class BarrierKind : uint32_t {

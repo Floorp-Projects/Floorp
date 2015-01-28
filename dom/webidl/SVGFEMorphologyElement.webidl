@@ -17,9 +17,13 @@ interface SVGFEMorphologyElement : SVGElement {
   const unsigned short SVG_MORPHOLOGY_OPERATOR_ERODE = 1;
   const unsigned short SVG_MORPHOLOGY_OPERATOR_DILATE = 2;
 
+  [Constant]
   readonly attribute SVGAnimatedString in1;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration operator;
+  [Constant]
   readonly attribute SVGAnimatedNumber radiusX;
+  [Constant]
   readonly attribute SVGAnimatedNumber radiusY;
 };
 

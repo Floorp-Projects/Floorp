@@ -188,8 +188,7 @@ private:
   DISALLOW_COPY_ASSIGN(nr_udp_message);
 };
 
-class NrSocketIpc : public NrSocketBase,
-                    public nsIUDPSocketInternal {
+class NrSocketIpc : public NrSocketBase {
 public:
 
   enum NrSocketIpcState {
@@ -200,8 +199,17 @@ public:
     NR_CLOSED,
   };
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIUDPSOCKETINTERNAL
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrSocketIpc)
+
+  NS_IMETHODIMP CallListenerError(const nsACString &message,
+                                  const nsACString &filename,
+                                  uint32_t line_number);
+  NS_IMETHODIMP CallListenerReceivedData(const nsACString &host,
+                                         uint16_t port,
+                                         const uint8_t *data,
+                                         uint32_t data_length);
+  NS_IMETHODIMP CallListenerOpened();
+  NS_IMETHODIMP CallListenerClosed();
 
   explicit NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread);
 
@@ -238,6 +246,22 @@ private:
   nsCOMPtr<nsIEventTarget> sts_thread_;
   const nsCOMPtr<nsIEventTarget> main_thread_;
   ReentrantMonitor monitor_;
+};
+
+// The socket child holds onto one of these, which just passes callbacks
+// through and makes sure the ref to the NrSocketIpc is released on STS.
+class NrSocketIpcProxy : public nsIUDPSocketInternal {
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIUDPSOCKETINTERNAL
+
+  nsresult Init(const nsRefPtr<NrSocketIpc>& socket);
+
+private:
+  virtual ~NrSocketIpcProxy();
+
+  nsRefPtr<NrSocketIpc> socket_;
+  nsCOMPtr<nsIEventTarget> sts_thread_;
 };
 
 int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,

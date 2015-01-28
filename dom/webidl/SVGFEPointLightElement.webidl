@@ -11,7 +11,10 @@
  */
 
 interface SVGFEPointLightElement : SVGElement {
+  [Constant]
   readonly attribute SVGAnimatedNumber x;
+  [Constant]
   readonly attribute SVGAnimatedNumber y;
+  [Constant]
   readonly attribute SVGAnimatedNumber z;
 };
