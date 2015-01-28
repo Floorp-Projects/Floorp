@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/TextEventDispatcher.h"
 
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -72,6 +73,7 @@ nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
 using namespace mozilla::ipc;
+using namespace mozilla::widget;
 using namespace mozilla;
 using base::Thread;
 
@@ -1139,6 +1141,12 @@ void nsBaseWidget::OnDestroy()
 {
   // release references to device context and app shell
   NS_IF_RELEASE(mContext);
+
+  if (mTextEventDispatcher) {
+    mTextEventDispatcher->OnDestroyWidget();
+    // Don't release it until this widget actually released because after this
+    // is called, TextEventDispatcher() may create it again.
+  }
 }
 
 NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
@@ -1576,6 +1584,45 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
       win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
     }
   }
+}
+
+NS_IMETHODIMP
+nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
+{
+  switch (aIMENotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      // Currently, if native IME handler doesn't use TextEventDispatcher,
+      // the request may be notified to mTextEventDispatcher or native IME
+      // directly.  Therefore, if mTextEventDispatcher has a composition,
+      // the request should be handled by the mTextEventDispatcher.
+      if (mTextEventDispatcher && mTextEventDispatcher->IsComposing()) {
+        return mTextEventDispatcher->NotifyIME(aIMENotification);
+      }
+      // Otherwise, it should be handled by native IME.
+      return NotifyIMEInternal(aIMENotification);
+    case NOTIFY_IME_OF_FOCUS:
+    case NOTIFY_IME_OF_BLUR:
+      // If the notification is a notification which is supported by
+      // nsITextInputProcessorCallback, we should notify the
+      // TextEventDispatcher, first.  After that, notify native IME too.
+      if (mTextEventDispatcher) {
+        mTextEventDispatcher->NotifyIME(aIMENotification);
+      }
+      return NotifyIMEInternal(aIMENotification);
+    default:
+      // Otherwise, notify only native IME for now.
+      return NotifyIMEInternal(aIMENotification);
+  }
+}
+
+NS_IMETHODIMP_(nsIWidget::TextEventDispatcher*)
+nsBaseWidget::GetTextEventDispatcher()
+{
+  if (!mTextEventDispatcher) {
+    mTextEventDispatcher = new TextEventDispatcher(this);
+  }
+  return mTextEventDispatcher;
 }
 
 #ifdef ACCESSIBILITY

@@ -37,24 +37,32 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// loglevel should be one of "Fatal", "Error", "Warn", "Info", "Config",
+// log.appender.dump should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Error" will be used by
 // default.
-const PREF_LOG_LEVEL = "services.hawk.loglevel";
+// Note however that Sync will also add this log to *its* DumpAppender, so
+// in a Sync context it shouldn't be necessary to adjust this - however, that
+// also means error logs are likely to be dump'd twice but that's OK.
+const PREF_LOG_LEVEL = "services.common.hawk.log.appender.dump";
 
 // A pref that can be set so "sensitive" information (eg, personally
 // identifiable info, credentials, etc) will be logged.
-const PREF_LOG_SENSITIVE_DETAILS = "services.hawk.log.sensitive";
+const PREF_LOG_SENSITIVE_DETAILS = "services.common.hawk.log.sensitive";
 
 XPCOMUtils.defineLazyGetter(this, "log", function() {
   let log = Log.repository.getLogger("Hawk");
-  log.addAppender(new Log.DumpAppender());
-  log.level = Log.Level.Error;
+  // We set the log itself to "debug" and set the level from the preference to
+  // the appender.  This allows other things to send the logs to different
+  // appenders, while still allowing the pref to control what is seen via dump()
+  log.level = Log.Level.Debug;
+  let appender = new Log.DumpAppender();
+  log.addAppender(appender);
+  appender.level = Log.Level.Error;
   try {
     let level =
       Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
       && Services.prefs.getCharPref(PREF_LOG_LEVEL);
-    log.level = Log.Level[level] || Log.Level.Error;
+    appender.level = Log.Level[level] || Log.Level.Error;
   } catch (e) {
     log.error(e);
   }
@@ -99,12 +107,17 @@ this.HawkClient.prototype = {
    * @param restResponse
    *        A RESTResponse object from a RESTRequest
    *
-   * @param errorString
-   *        A string describing the error
+   * @param error
+   *        A string or object describing the error
    */
-  _constructError: function(restResponse, errorString) {
+  _constructError: function(restResponse, error) {
     let errorObj = {
-      error: errorString,
+      error: error,
+      // This object is likely to be JSON.stringify'd, but neither Error()
+      // objects nor Components.Exception objects do the right thing there,
+      // so we add a new element which is simply the .toString() version of
+      // the error object, so it does appear in JSON'd values.
+      errorString: error.toString(),
       message: restResponse.statusText,
       code: restResponse.status,
       errno: restResponse.status
@@ -190,6 +203,12 @@ this.HawkClient.prototype = {
     let self = this;
 
     function _onComplete(error) {
+      // |error| can be either a normal caught error or an explicitly created
+      // Components.Exception() error. Log it now as it might not end up
+      // correctly in the logs by the time it's passed through _constructError.
+      if (error) {
+        log.warn("hawk request error", error);
+      }
       let restResponse = this.response;
       let status = restResponse.status;
 
@@ -262,10 +281,15 @@ this.HawkClient.prototype = {
     };
 
     let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);
-    if (method == "post" || method == "put" || method == "patch") {
-      request[method](payloadObj, onComplete);
-    } else {
-      request[method](onComplete);
+    try {
+      if (method == "post" || method == "put" || method == "patch") {
+        request[method](payloadObj, onComplete);
+      } else {
+        request[method](onComplete);
+      }
+    } catch (ex) {
+      log.error("Failed to make hawk request", ex);
+      deferred.reject(ex);
     }
 
     return deferred.promise;

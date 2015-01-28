@@ -12,7 +12,7 @@ function Iter() {
         return { get value() { throw 42; }, done: true }
     }
 
-    this[std_iterator] = function () { return this; }
+    this[Symbol.iterator] = function () { return this; }
     this.next = next;
 }
 

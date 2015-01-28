@@ -7,7 +7,7 @@ load(libdir + "iteration.js");
 var map = Map();
 for (var i = 0; i < 32; i++)
     map.set(i, i);
-var iter = map[std_iterator]();
+var iter = map[Symbol.iterator]();
 assertIteratorNext(iter, [0, 0]);
 for (var i = 0; i < 30; i++)
     map.delete(i);

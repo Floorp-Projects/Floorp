@@ -2,9 +2,9 @@
 
 load(libdir + "iteration.js");
 
-var aproto = Object.getPrototypeOf(Array()[std_iterator]());
-var mproto = Object.getPrototypeOf(Map()[std_iterator]());
-var sproto = Object.getPrototypeOf(Set()[std_iterator]());
+var aproto = Object.getPrototypeOf(Array()[Symbol.iterator]());
+var mproto = Object.getPrototypeOf(Map()[Symbol.iterator]());
+var sproto = Object.getPrototypeOf(Set()[Symbol.iterator]());
 assertEq(aproto !== mproto, true);
 assertEq(aproto !== sproto, true);
 assertEq(mproto !== sproto, true);

@@ -5977,8 +5977,8 @@ nsChildWindow::~nsChildWindow()
 {
 }
 
-NS_IMETHODIMP
-nsWindow::NotifyIME(const IMENotification& aIMENotification)
+nsresult
+nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
     if (MOZ_UNLIKELY(!mIMModule)) {
         return NS_ERROR_NOT_AVAILABLE;

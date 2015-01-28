@@ -235,7 +235,7 @@ nsVoidArray::GrowArrayBy(int32_t aGrowBy)
       newSize = SIZEOF_IMPL(newCapacity);
     } else {
       newSize = mozilla::CeilingLog2(newSize);
-      newCapacity = CAPACITYOF_IMPL(1u << newSize);
+      newCapacity = CAPACITYOF_IMPL(size_t(1) << newSize);
     }
   }
   // frees old mImpl IF this succeeds

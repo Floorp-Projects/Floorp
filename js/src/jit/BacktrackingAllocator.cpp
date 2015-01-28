@@ -168,6 +168,14 @@ BacktrackingAllocator::canAddToGroup(VirtualRegisterGroup *group, BacktrackingVi
     return true;
 }
 
+static bool
+IsThisSlotDefinition(LDefinition *def)
+{
+    return def->policy() == LDefinition::FIXED &&
+           def->output()->isArgument() &&
+           def->output()->toArgument()->index() < THIS_FRAME_ARGSLOT + sizeof(Value);
+}
+
 bool
 BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
 {
@@ -178,6 +186,15 @@ BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
 
     if (!reg0->isCompatibleVReg(*reg1))
         return true;
+
+    // Registers which might spill to the frame's |this| slot can only be
+    // grouped with other such registers. The frame's |this| slot must always
+    // hold the |this| value, as required by JitFrame tracing and by the Ion
+    // constructor calling convention.
+    if (IsThisSlotDefinition(reg0->def()) || IsThisSlotDefinition(reg1->def())) {
+        if (*reg0->def()->output() != *reg1->def()->output())
+            return true;
+    }
 
     VirtualRegisterGroup *group0 = reg0->group(), *group1 = reg1->group();
 
