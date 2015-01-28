@@ -384,7 +384,6 @@ xul|textbox[disabled="true"] {
 html|a,
 xul|*.text-link,
 xul|*.inline-link {
-  font-size: 1.25rem;
   line-height: 22px;
   color: #0095dd;
   text-decoration: none;

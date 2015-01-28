@@ -28,6 +28,7 @@ ul {
 }
 
 #errorPageContainer {
+  position: relative;
   min-width: 320px;
   max-width: 512px;
 }
@@ -74,15 +75,10 @@ button:disabled {
 
 div#certificateErrorReporting {
   display: none;
-  float:right;
+  float: right;
   /* Align with the "Try Again" button */
-  margin-top:24px;
-  margin-right:24px;
-}
-
-div#certificateErrorReporting a,
-div#certificateErrorReportingPanel a {
-  color: #0095DD;
+  margin-top: 24px;
+  -moz-margin-end: 24px;
 }
 
 div#certificateErrorReporting a {
@@ -94,7 +90,11 @@ div#certificateErrorReporting a:hover {
 }
 
 span.downArrow {
-  font-size: 0.9em;
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 0.6em;
+  -moz-margin-start: 0.5em;
+  transform: scaleY(0.7);
 }
 
 div#certificateErrorReportingPanel {
@@ -106,11 +106,18 @@ div#certificateErrorReportingPanel {
    * makes the overall div look uneven */
   padding: 0 12px 12px 12px;
   box-shadow: 0 0 4px #ddd;
-  position: relative;
-  width: 75%;
-  left: 34%;
   font-size: 0.9em;
-  top: 8px;
+  position: absolute;
+  width: 75%;
+  margin-top: 10px;
+}
+
+div#certificateErrorReportingPanel:-moz-dir(ltr) {
+  left: 34%;
+}
+
+div#certificateErrorReportingPanel:-moz-dir(rtl) {
+  right: 0;
 }
 
 span#hostname {
