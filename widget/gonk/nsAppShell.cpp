@@ -212,6 +212,7 @@ private:
     char16_t mUnmodifiedChar;
 
     uint32_t mDOMKeyCode;
+    uint32_t mDOMKeyLocation;
     KeyNameIndex mDOMKeyNameIndex;
     CodeNameIndex mDOMCodeNameIndex;
     char16_t mDOMPrintableKeyValue;
@@ -246,9 +247,12 @@ private:
 };
 
 KeyEventDispatcher::KeyEventDispatcher(const UserInputData& aData,
-                                       KeyCharacterMap* aKeyCharMap) :
-    mData(aData), mKeyCharMap(aKeyCharMap), mChar(0), mUnmodifiedChar(0),
-    mDOMPrintableKeyValue(0)
+                                       KeyCharacterMap* aKeyCharMap)
+    : mData(aData)
+    , mKeyCharMap(aKeyCharMap)
+    , mChar(0)
+    , mUnmodifiedChar(0)
+    , mDOMPrintableKeyValue(0)
 {
     // XXX Printable key's keyCode value should be computed with actual
     //     input character.
@@ -256,6 +260,8 @@ KeyEventDispatcher::KeyEventDispatcher(const UserInputData& aData,
         kKeyMapping[mData.key.keyCode] : 0;
     mDOMKeyNameIndex = GetKeyNameIndex(mData.key.keyCode);
     mDOMCodeNameIndex = GetCodeNameIndex(mData.key.scanCode);
+    mDOMKeyLocation =
+        WidgetKeyboardEvent::ComputeLocationFromCodeValue(mDOMCodeNameIndex);
 
     if (!mKeyCharMap.get()) {
         return;
@@ -308,7 +314,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
     }
     event.mCodeNameIndex = mDOMCodeNameIndex;
     event.modifiers = getDOMModifiers(mData.metaState);
-    event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
+    event.location = mDOMKeyLocation;
     event.time = mData.timeMs;
     return nsWindow::DispatchInputEvent(event);
 }

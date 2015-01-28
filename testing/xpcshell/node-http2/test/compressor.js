@@ -406,21 +406,21 @@ describe('compressor.js', function() {
           expect(table.encode(new Buffer(decoded)).toString('hex')).to.equal(encoded);
         }
       });
-    })
+    });
     describe('method decode(buffer)', function() {
       it('should return the Huffman decoded version of the input buffer', function() {
         var table = HuffmanTable.huffmanTable;
         for (var decoded in test_huffman_request) {
           var encoded = test_huffman_request[decoded];
-          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded)
+          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded);
         }
         table = HuffmanTable.huffmanTable;
         for (decoded in test_huffman_response) {
           encoded = test_huffman_response[decoded];
-          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded)
+          expect(table.decode(new Buffer(encoded, 'hex')).toString()).to.equal(decoded);
         }
       });
-    })
+    });
   });
 
   describe('HeaderSetCompressor', function() {
@@ -569,7 +569,7 @@ describe('compressor.js', function() {
           var result = table.decode(table.encode(buffer));
           expect(result).to.deep.equal(buffer);
         }
-      })
-    })
+      });
+    });
   });
 });
