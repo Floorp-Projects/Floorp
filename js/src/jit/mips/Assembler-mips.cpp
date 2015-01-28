@@ -969,7 +969,7 @@ Assembler::as_clz(Register rd, Register rs)
 BufferOffset
 Assembler::as_ins(Register rt, Register rs, uint16_t pos, uint16_t size)
 {
-    MOZ_ASSERT(pos < 32 && size != 0 && size <= 32 && pos + size != 0 && pos + size >= 32);
+    MOZ_ASSERT(pos < 32 && size != 0 && size <= 32 && pos + size != 0 && pos + size <= 32);
     Register rd;
     rd = Register::FromCode(pos + size - 1);
     return writeInst(InstReg(op_special3, rs, rt, rd, pos, ff_ins).encode());
@@ -978,7 +978,7 @@ Assembler::as_ins(Register rt, Register rs, uint16_t pos, uint16_t size)
 BufferOffset
 Assembler::as_ext(Register rt, Register rs, uint16_t pos, uint16_t size)
 {
-    MOZ_ASSERT(pos < 32 && size != 0 && size <= 32 && pos + size != 0 && pos + size >= 32);
+    MOZ_ASSERT(pos < 32 && size != 0 && size <= 32 && pos + size != 0 && pos + size <= 32);
     Register rd;
     rd = Register::FromCode(size - 1);
     return writeInst(InstReg(op_special3, rs, rt, rd, pos, ff_ext).encode());

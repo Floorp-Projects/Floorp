@@ -21,12 +21,19 @@ interface SVGFECompositeElement : SVGElement {
   const unsigned short SVG_FECOMPOSITE_OPERATOR_XOR = 5;
   const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
 
+  [Constant]
   readonly attribute SVGAnimatedString in1;
+  [Constant]
   readonly attribute SVGAnimatedString in2;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration operator;
+  [Constant]
   readonly attribute SVGAnimatedNumber k1;
+  [Constant]
   readonly attribute SVGAnimatedNumber k2;
+  [Constant]
   readonly attribute SVGAnimatedNumber k3;
+  [Constant]
   readonly attribute SVGAnimatedNumber k4;
 };
 

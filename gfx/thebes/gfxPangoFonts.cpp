@@ -205,8 +205,8 @@ public:
         cairo_font_face_destroy(mFontFace);
     }
 
-    virtual void ForgetHBFace();
-    virtual void ReleaseGrFace(gr_face* aFace);
+    virtual void ForgetHBFace() MOZ_OVERRIDE;
+    virtual void ReleaseGrFace(gr_face* aFace) MOZ_OVERRIDE;
 
 protected:
     virtual nsresult
@@ -671,12 +671,12 @@ public:
 
     // return a cloned font resized and offset to simulate sub/superscript glyphs
     virtual already_AddRefed<gfxFont>
-    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel) MOZ_OVERRIDE;
 
 protected:
     virtual already_AddRefed<gfxFont> MakeScaledFont(gfxFontStyle *aFontStyle,
                                                      gfxFloat aFontScale);
-    virtual already_AddRefed<gfxFont> GetSmallCapsFont();
+    virtual already_AddRefed<gfxFont> GetSmallCapsFont() MOZ_OVERRIDE;
 
 private:
     gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,

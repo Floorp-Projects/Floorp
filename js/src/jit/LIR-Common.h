@@ -2965,15 +2965,39 @@ class LAtan2D : public LCallInstructionHelper<1, 2, 1>
     }
 };
 
-class LHypot : public LCallInstructionHelper<1, 2, 1>
+class LHypot : public LCallInstructionHelper<1, 4, 1>
 {
+    uint32_t numOperands_;
   public:
     LIR_HEADER(Hypot)
-    LHypot(const LAllocation &x, const LAllocation &y, const LDefinition &temp) {
+    LHypot(const LAllocation &x, const LAllocation &y, const LDefinition &temp)
+      : numOperands_(2)
+    {
         setOperand(0, x);
         setOperand(1, y);
         setTemp(0, temp);
     }
+
+    LHypot(const LAllocation &x, const LAllocation &y, const LAllocation &z, const LDefinition &temp)
+      : numOperands_(3)
+    {
+        setOperand(0, x);
+        setOperand(1, y);
+        setOperand(2, z);
+        setTemp(0, temp);
+    }
+
+    LHypot(const LAllocation &x, const LAllocation &y, const LAllocation &z, const LAllocation &w, const LDefinition &temp)
+      : numOperands_(4)
+    {
+        setOperand(0, x);
+        setOperand(1, y);
+        setOperand(2, z);
+        setOperand(3, w);
+        setTemp(0, temp);
+    }
+
+    uint32_t numArgs() const { return numOperands_; }
 
     const LAllocation *x() {
         return getOperand(0);

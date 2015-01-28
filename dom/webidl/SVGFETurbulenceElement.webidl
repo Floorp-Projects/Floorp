@@ -22,11 +22,17 @@ interface SVGFETurbulenceElement : SVGElement {
   const unsigned short SVG_STITCHTYPE_STITCH = 1;
   const unsigned short SVG_STITCHTYPE_NOSTITCH = 2;
 
+  [Constant]
   readonly attribute SVGAnimatedNumber baseFrequencyX;
+  [Constant]
   readonly attribute SVGAnimatedNumber baseFrequencyY;
+  [Constant]
   readonly attribute SVGAnimatedInteger numOctaves;
+  [Constant]
   readonly attribute SVGAnimatedNumber seed;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration stitchTiles;
+  [Constant]
   readonly attribute SVGAnimatedEnumeration type;
 };
 

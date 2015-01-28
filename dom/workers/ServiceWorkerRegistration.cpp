@@ -164,6 +164,7 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 
   nsCOMPtr<nsIURI> scopeURI;
   nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
+  // "If the origin of scope is not client's origin..."
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), mScope, nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -179,7 +180,7 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
   }
 
   nsAutoCString uriSpec;
-  aRv = scopeURI->GetSpec(uriSpec);
+  aRv = scopeURI->GetSpecIgnoringRef(uriSpec);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

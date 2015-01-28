@@ -19,11 +19,18 @@ interface SVGComponentTransferFunctionElement : SVGElement {
   const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_LINEAR = 4;
   const unsigned short SVG_FECOMPONENTTRANSFER_TYPE_GAMMA = 5;
 
+  [Constant]
   readonly attribute SVGAnimatedEnumeration type;
+  [Constant]
   readonly attribute SVGAnimatedNumberList tableValues;
+  [Constant]
   readonly attribute SVGAnimatedNumber slope;
+  [Constant]
   readonly attribute SVGAnimatedNumber intercept;
+  [Constant]
   readonly attribute SVGAnimatedNumber amplitude;
+  [Constant]
   readonly attribute SVGAnimatedNumber exponent;
+  [Constant]
   readonly attribute SVGAnimatedNumber offset;
 };

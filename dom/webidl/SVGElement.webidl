@@ -15,6 +15,7 @@ interface SVGElement : Element {
 /*           [SetterThrows]
            attribute DOMString xmlbase; */
 
+  [Constant]
   readonly attribute SVGAnimatedString className;
   [PutForwards=cssText, Constant]
   readonly attribute CSSStyleDeclaration style;
