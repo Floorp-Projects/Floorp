@@ -38,9 +38,7 @@ var names = [];
 for (var name in x) {
   names.push(name);
 }
-var JS_HAS_SYMBOLS = typeof Symbol === "function";
-is(names.length, JS_HAS_SYMBOLS ? 10 : 11,
-   "Should have 10 enumerated names (or 11 with '@@iterator')");
+is(names.length, 10, "Should have 10 enumerated names");
 is(names[0], "0", "Enum entry 1")
 is(names[1], "1", "Enum entry 2")
 is(names[2], "2", "Enum entry 3")
@@ -50,12 +48,7 @@ is(names[5], "5", "Enum entry 6")
 is(names[6], "something", "Enum entry 7")
 is(names[7], "item", "Enum entry 8")
 is(names[8], "namedItem", "Enum entry 9")
-if (JS_HAS_SYMBOLS) {
-  is(names[9], "length", "Enum entry 10");
-} else {
-  is(names[9], "@@iterator", "Enum entry 10");
-  is(names[10], "length", "Enum entry 11");
-}
+is(names[9], "length", "Enum entry 10");
 
 names = Object.getOwnPropertyNames(x);
 is(names.length, 11, "Should have 11 items");
