@@ -7,21 +7,36 @@
   <head>
     <meta charset="utf-8">
     <style type="text/css">
+      .crop {
+        /* Wrapper-div to simulate the cropping that happens in
+           the testcase. (In the testcase, "object-position" pushes
+           the image's destination rect off towards the bottom-right,
+           and crops it to the content-box.) */
+        height: 32px;
+        width: 32px;
+        overflow: hidden;
+        margin-bottom: 2px;
+      }
       .test {
         background: salmon;
         padding-top: 5px;
         padding-left: 5px;
-        width: 27px;
-        height: 27px;
         display: block;
-        margin-bottom: 2px;
       }
     </style>
   </head>
   <body>
-    <img    class="test"    src="blue-32x32.png">
-    <embed  class="test"    src="blue-32x32.png">
-    <object class="test"   data="blue-32x32.png"></object>
-    <video  class="test" poster="blue-32x32.png"></video>
+    <div class="crop">
+      <img    class="test"    src="blue-32x32.png">
+    </div>
+    <div class="crop">
+      <embed  class="test"    src="blue-32x32.png">
+    </div>
+    <div class="crop">
+      <object class="test"   data="blue-32x32.png"></object>
+    </div>
+    <div class="crop">
+      <video  class="test" poster="blue-32x32.png"></video>
+    </div>
   </body>
 </html>
