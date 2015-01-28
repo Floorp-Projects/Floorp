@@ -151,6 +151,14 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
     return rv;
   }
 
+  // When there is no composition, caller shouldn't try to commit composition
+  // with non-existing composition string nor commit composition with empty
+  // string.
+  if (NS_WARN_IF(!IsComposing() &&
+                 (!aCommitString || aCommitString->IsEmpty()))) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIWidget> widget(mWidget);
   rv = StartCompositionAutomaticallyIfNecessary(aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
