@@ -450,10 +450,10 @@ class IonBuilder
                                    bool isDOM);
     bool setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                 PropertyName *name, MDefinition *value,
-                                types::TemporaryTypeSet *objTypes);
+                                bool barrier, types::TemporaryTypeSet *objTypes);
     bool setPropTryInlineAccess(bool *emitted, MDefinition *obj,
                                 PropertyName *name, MDefinition *value,
-                                types::TemporaryTypeSet *objTypes);
+                                bool barrier, types::TemporaryTypeSet *objTypes);
     bool setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                PropertyName *name, MDefinition *value);
     bool setPropTryReferencePropOfTypedObject(bool *emitted,
