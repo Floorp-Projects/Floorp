@@ -123,6 +123,23 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
   });
 }
 
+/**
+ * Allows setting focus on a window, and waiting for that window to achieve
+ * focus.
+ *
+ * @param aWindow
+ *        The window to focus and wait for.
+ *
+ * @return {Promise}
+ * @resolves When the window is focused.
+ * @rejects Never.
+ */
+function promiseWaitForFocus(aWindow) {
+  return new Promise((resolve) => {
+    waitForFocus(resolve, aWindow);
+  });
+}
+
 function getTestPlugin(aName) {
   var pluginName = aName || "Test Plug-in";
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -572,6 +589,21 @@ function promiseTabLoadEvent(tab, url, eventType="load")
   return deferred.promise;
 }
 
+/**
+ * Returns a Promise that resolves once a new tab has been opened in
+ * a xul:tabbrowser.
+ *
+ * @param aTabBrowser
+ *        The xul:tabbrowser to monitor for a new tab.
+ * @return {Promise}
+ *        Resolved when the new tab has been opened.
+ * @resolves to the TabOpen event that was fired.
+ * @rejects Never.
+ */
+function waitForNewTabEvent(aTabBrowser) {
+  return promiseWaitForEvent(aTabBrowser.tabContainer, "TabOpen");
+}
+
 function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
@@ -745,3 +777,26 @@ function promiseAutocompleteResultPopup(inputText, win = window) {
 
   return promiseSearchComplete(win);
 }
+
+/**
+ * Allows waiting for an observer notification once.
+ *
+ * @param aTopic
+ *        Notification topic to observe.
+ *
+ * @return {Promise}
+ * @resolves An object with subject and data properties from the observed
+ *           notification.
+ * @rejects Never.
+ */
+function promiseTopicObserved(aTopic)
+{
+  return new Promise((resolve) => {
+    Services.obs.addObserver(
+      function PTO_observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(PTO_observe, aTopic);
+        resolve({subject: aSubject, data: aData});
+      }, aTopic, false);
+  });
+}
+
