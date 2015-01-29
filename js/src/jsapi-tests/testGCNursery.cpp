@@ -60,6 +60,12 @@ static const js::Class NurseryClass = {
 
 BEGIN_TEST(testGCNurseryFinalizer)
 {
+#ifdef JS_GC_ZEAL
+    // Running extra GCs during this test will make us get incorrect
+    // finalization counts.
+    AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
+
     JS::RootedObject obj(cx);
 
     obj = JS_NewObject(cx, Jsvalify(&TenuredClass), JS::NullPtr(), JS::NullPtr());

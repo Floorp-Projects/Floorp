@@ -1473,18 +1473,55 @@ BaseShape::assertConsistency()
 #endif
 }
 
+#ifdef JSGC_COMPACTING
+
+bool
+BaseShape::fixupBaseShapeTableEntry()
+{
+    bool updated = false;
+    if (parent && IsForwarded(parent.get())) {
+        parent = Forwarded(parent.get());
+        updated = true;
+    }
+    if (metadata && IsForwarded(metadata.get())) {
+        metadata = Forwarded(metadata.get());
+        updated = true;
+    }
+    return updated;
+}
+
+void
+JSCompartment::fixupBaseShapeTable()
+{
+    if (!baseShapes.initialized())
+        return;
+
+    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+        UnownedBaseShape *base = e.front().unbarrieredGet();
+        if (base->fixupBaseShapeTableEntry()) {
+            ReadBarriered<UnownedBaseShape *> b(base);
+            e.rekeyFront(base, b);
+        }
+    }
+}
+
+#endif
+
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    if (baseShapes.initialized()) {
-        for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            UnownedBaseShape *base = e.front().unbarrieredGet();
-            if (IsBaseShapeAboutToBeFinalizedFromAnyThread(&base)) {
-                e.removeFront();
-            } else if (base != e.front().unbarrieredGet()) {
-                ReadBarriered<UnownedBaseShape *> b(base);
-                e.rekeyFront(base, b);
-            }
+    if (!baseShapes.initialized())
+        return;
+
+    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+        UnownedBaseShape *base = e.front().unbarrieredGet();
+        MOZ_ASSERT_IF(base->getObjectParent(), !IsForwarded(base->getObjectParent()));
+        MOZ_ASSERT_IF(base->getObjectMetadata(), !IsForwarded(base->getObjectMetadata()));
+        if (IsBaseShapeAboutToBeFinalizedFromAnyThread(&base)) {
+            e.removeFront();
+        } else if (base != e.front().unbarrieredGet()) {
+            ReadBarriered<UnownedBaseShape *> b(base);
+            e.rekeyFront(base, b);
         }
     }
 }
