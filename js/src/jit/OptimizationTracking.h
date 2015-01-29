@@ -44,37 +44,78 @@ namespace jit {
 // Ordering is important below. All outcomes before GenericSuccess will be
 // considered failures, and all outcomes after GenericSuccess will be
 // considered successes.
-#define TRACKED_OUTCOME_LIST(_)                 \
-    _(GenericFailure,                           \
-      "failure")                                \
-    _(NoTypeInfo,                               \
-      "no type info")                           \
-    _(NoAnalysisInfo,                           \
-      "no newscript analysis")                  \
-    _(NoShapeInfo,                              \
-      "cannot determine shape")                 \
-    _(UnknownObject,                            \
-      "unknown object")                         \
-    _(UnknownProperties,                        \
-      "unknown properties")                     \
-    _(Singleton,                                \
-      "is singleton")                           \
-    _(NotSingleton,                             \
-      "is not singleton")                       \
-    _(NotFixedSlot,                             \
-      "property not in fixed slot")             \
-    _(NotObject,                                \
-      "not definitely an object")               \
-    _(NeedsTypeBarrier,                         \
-      "needs type barrier")                     \
-    _(InDictionaryMode,                         \
-      "object in dictionary mode")              \
-                                                \
-    _(GenericSuccess,                           \
-      "success")                                \
-    _(Monomorphic,                              \
-      "monomorphic")                            \
-    _(Polymorphic,                              \
+#define TRACKED_OUTCOME_LIST(_)                                 \
+    _(GenericFailure,                                           \
+      "failure")                                                \
+    _(NoTypeInfo,                                               \
+      "no type info")                                           \
+    _(NoAnalysisInfo,                                           \
+      "no newscript analysis")                                  \
+    _(NoShapeInfo,                                              \
+      "cannot determine shape")                                 \
+    _(UnknownObject,                                            \
+      "unknown object")                                         \
+    _(UnknownProperties,                                        \
+      "unknown properties")                                     \
+    _(Singleton,                                                \
+      "is singleton")                                           \
+    _(NotSingleton,                                             \
+      "is not singleton")                                       \
+    _(NotFixedSlot,                                             \
+      "property not in fixed slot")                             \
+    _(NotObject,                                                \
+      "not definitely an object")                               \
+    _(NeedsTypeBarrier,                                         \
+      "needs type barrier")                                     \
+    _(InDictionaryMode,                                         \
+      "object in dictionary mode")                              \
+                                                                \
+    _(CantInlineGeneric,                                        \
+      "can't inline")                                           \
+    _(CantInlineNoTarget,                                       \
+      "can't inline: no target")                                \
+    _(CantInlineNotInterpreted,                                 \
+      "can't inline: not interpreted")                          \
+    _(CantInlineNoBaseline,                                     \
+      "can't inline: no baseline code")                         \
+    _(CantInlineLazy,                                           \
+      "can't inline: lazy script")                              \
+    _(CantInlineNotConstructor,                                 \
+      "can't inline: calling non-constructor with 'new'")       \
+    _(CantInlineDisabledIon,                                    \
+      "can't inline: ion disabled for callee")                  \
+    _(CantInlineTooManyArgs,                                    \
+      "can't inline: too many arguments")                       \
+    _(CantInlineRecursive,                                      \
+      "can't inline: recursive")                                \
+    _(CantInlineHeavyweight,                                    \
+      "can't inline: heavyweight")                              \
+    _(CantInlineNeedsArgsObj,                                   \
+      "can't inline: needs arguments object")                   \
+    _(CantInlineDebuggee,                                       \
+      "can't inline: debuggee")                                 \
+    _(CantInlineUnknownProps,                                   \
+      "can't inline: type has unknown properties")              \
+    _(CantInlineExceededDepth,                                  \
+      "can't inline: exceeded inlining depth")                  \
+    _(CantInlineBigLoop,                                        \
+      "can't inline: big function with a loop")                 \
+    _(CantInlineBigCaller,                                      \
+      "can't inline: big caller")                               \
+    _(CantInlineBigCallee,                                      \
+      "can't inline: big callee")                               \
+    _(CantInlineNotHot,                                         \
+      "can't inline: not hot enough")                           \
+                                                                \
+    _(GenericSuccess,                                           \
+      "success")                                                \
+    _(Inlined,                                                  \
+      "inlined")                                                \
+    _(DOM,                                                      \
+      "DOM")                                                    \
+    _(Monomorphic,                                              \
+      "monomorphic")                                            \
+    _(Polymorphic,                                              \
       "polymorphic")
 
 #define TRACKED_TYPESITE_LIST(_)                \
