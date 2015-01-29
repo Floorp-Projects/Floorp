@@ -608,7 +608,7 @@
 
   <binding id="menulist-popuponly" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist">
-    <content>
+    <content sizetopopup="pref">
       <children includes="menupopup"/>
     </content>
   </binding>
