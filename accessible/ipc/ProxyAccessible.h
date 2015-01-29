@@ -17,6 +17,7 @@ namespace a11y {
 
 class Attribute;
 class DocAccessibleParent;
+enum class RelationType;
 
 class ProxyAccessible
 {
@@ -86,6 +87,17 @@ public:
    * Get the set of attributes on the proxied accessible.
    */
   void Attributes(nsTArray<Attribute> *aAttrs) const;
+
+  /**
+   * Return set of targets of given relation type.
+   */
+  nsTArray<ProxyAccessible*> RelationByType(RelationType aType) const;
+
+  /**
+   * Get all relations for this accessible.
+   */
+  void Relations(nsTArray<RelationType>* aTypes,
+                 nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets) const;
 
   /**
    * Get the text between the given offsets.

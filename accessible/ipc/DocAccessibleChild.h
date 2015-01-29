@@ -55,8 +55,14 @@ public:
    * Get the description for the accessible with given id.
    */
   virtual bool RecvDescription(const uint64_t& aID, nsString* aDesc) MOZ_OVERRIDE;
+  virtual bool RecvRelationByType(const uint64_t& aID, const uint32_t& aType,
+                                  nsTArray<uint64_t>* aTargets) MOZ_OVERRIDE;
+  virtual bool RecvRelations(const uint64_t& aID,
+                             nsTArray<RelationTargets>* aRelations)
+    MOZ_OVERRIDE;
 
-  virtual bool RecvAttributes(const uint64_t& aID, nsTArray<Attribute> *aAttributes) MOZ_OVERRIDE;
+  virtual bool RecvAttributes(const uint64_t& aID,
+                              nsTArray<Attribute> *aAttributes) MOZ_OVERRIDE;
   virtual bool RecvTextSubstring(const uint64_t& aID,
                                  const int32_t& aStartOffset,
                                  const int32_t& aEndOffset, nsString* aText)
