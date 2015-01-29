@@ -66,8 +66,6 @@ PluginWidgetProxy::Create(nsIWidget*        aParent,
   mEnabled = true;
   mVisible = true;
 
-  mActor->SendResize(mBounds);
-
   return NS_OK;
 }
 
@@ -99,7 +97,6 @@ PluginWidgetProxy::Destroy()
   PWLOG("PluginWidgetProxy::Destroy()\n");
 
   if (mActor) {
-    mActor->SendShow(false);
     mActor->SendDestroy();
     mActor->mWidget = nullptr;
     mActor->Send__delete__(mActor);
@@ -109,21 +106,12 @@ PluginWidgetProxy::Destroy()
   return PuppetWidget::Destroy();
 }
 
-NS_IMETHODIMP
-PluginWidgetProxy::Show(bool aState)
+void
+PluginWidgetProxy::GetWindowClipRegion(nsTArray<nsIntRect>* aRects)
 {
-  ENSURE_CHANNEL;
-  mActor->SendShow(aState);
-  mVisible = aState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PluginWidgetProxy::Invalidate(const nsIntRect& aRect)
-{
-  ENSURE_CHANNEL;
-  mActor->SendInvalidate(aRect);
-  return NS_OK;
+  if (mClipRects && mClipRectCount) {
+    aRects->AppendElements(mClipRects.get(), mClipRectCount);
+  }
 }
 
 void*
@@ -148,58 +136,11 @@ PluginWidgetProxy::GetNativeData(uint32_t aDataType)
 }
 
 NS_IMETHODIMP
-PluginWidgetProxy::Resize(double aWidth, double aHeight, bool aRepaint)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetProxy::Resize(%0.2f, %0.2f, %d)\n", aWidth, aHeight, aRepaint);
-  nsIntRect oldBounds = mBounds;
-  mBounds.SizeTo(nsIntSize(NSToIntRound(aWidth), NSToIntRound(aHeight)));
-  mActor->SendResize(mBounds);
-  if (!oldBounds.IsEqualEdges(mBounds) && mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PluginWidgetProxy::Resize(double aX, double aY, double aWidth,
-                          double aHeight, bool aRepaint)
-{
-  nsresult rv = Move(aX, aY);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return Resize(aWidth, aHeight, aRepaint);
-}
-
-NS_IMETHODIMP
-PluginWidgetProxy::Move(double aX, double aY)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetProxy::Move(%0.2f, %0.2f)\n", aX, aY);
-  mActor->SendMove(aX, aY);
-  if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowMoved(this, aX, aY);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PluginWidgetProxy::SetFocus(bool aRaise)
 {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetProxy::SetFocus(%d)\n", aRaise);
   mActor->SendSetFocus(aRaise);
-  return NS_OK;
-}
-
-nsresult
-PluginWidgetProxy::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
-                                       bool aIntersectWithExisting)
-{
-  ENSURE_CHANNEL;
-  mActor->SendSetWindowClipRegion(aRects, aIntersectWithExisting);
-  nsBaseWidget::SetWindowClipRegion(aRects, aIntersectWithExisting);
   return NS_OK;
 }
 
