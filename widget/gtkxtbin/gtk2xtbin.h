@@ -13,11 +13,11 @@
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
 #ifdef MOZILLA_CLIENT
-#include "nscore.h"
+#include "mozilla/Types.h"
 #ifdef _IMPL_GTKXTBIN_API
-#define GTKXTBIN_API(type) NS_EXPORT_(type)
+#define GTKXTBIN_API(type) MOZ_EXPORT type
 #else
-#define GTKXTBIN_API(type) NS_IMPORT_(type)
+#define GTKXTBIN_API(type) MOZ_IMPORT_API type
 #endif
 #else
 #define GTKXTBIN_API(type) type
