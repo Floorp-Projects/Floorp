@@ -291,6 +291,7 @@ public:
 
   struct LayerTreeState {
     LayerTreeState();
+    ~LayerTreeState();
     nsRefPtr<Layer> mRoot;
     nsRefPtr<GeckoContentController> mController;
     CompositorParent* mParent;

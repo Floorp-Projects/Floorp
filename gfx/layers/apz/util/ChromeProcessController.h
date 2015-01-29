@@ -27,6 +27,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController
 
 public:
   explicit ChromeProcessController(nsIWidget* aWidget);
+  virtual void Destroy() MOZ_OVERRIDE;
 
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
