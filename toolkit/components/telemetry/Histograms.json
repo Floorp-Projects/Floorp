@@ -4336,6 +4336,32 @@
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_RELEASE_OPTOUT": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "releaseChannelCollection": "opt-out",
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_RELEASE_OPTIN": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "releaseChannelCollection": "opt-in",
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_RELEASE_OPTIN": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "keyed": true,
+    "releaseChannelCollection": "opt-in",
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT": {
+    "expires_in_version": "default",
+    "kind": "flag",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "a testing histogram; not meant to be touched"
+  },
   "STARTUP_CRASH_DETECTED": {
     "expires_in_version": "never",
     "kind": "flag",
