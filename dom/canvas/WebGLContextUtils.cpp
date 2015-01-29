@@ -1117,12 +1117,11 @@ WebGLContext::AssertCachedState()
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_CLEAR_VALUE, mStencilClearValue);
 
     GLint stencilBits = 0;
-    if (GetStencilBits(&stencilBits)) {
-        const GLuint stencilRefMask = (1 << stencilBits) - 1;
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_BITS, &stencilBits);
+    const GLuint stencilRefMask = (1 << stencilBits) - 1;
 
-        AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
-        AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
-    }
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
 
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_VALUE_MASK,      mStencilValueMaskFront);
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_VALUE_MASK, mStencilValueMaskBack);
