@@ -267,6 +267,10 @@ private:
   bool mIndexReady;
   Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
+
+#if defined(XP_WIN)
+  const bool mDormantEnabled;
+#endif
 };
 
 } // namespace mozilla
