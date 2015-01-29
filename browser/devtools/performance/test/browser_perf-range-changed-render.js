@@ -52,8 +52,8 @@ function spawnTest () {
   ok(true, "Waterfall rerenders after its corresponding pane is shown.");
 
   is(updatedWaterfall, 3, "WaterfallView rerendered 3 times.");
-  is(updatedCallTree, 3, "CallTreeView rerendered 3 times.");
-  is(updatedFlameGraph, 3, "FlameGraphView rerendered 3 times.");
+  is(updatedCallTree, 2, "CallTreeView rerendered 2 times.");
+  is(updatedFlameGraph, 2, "FlameGraphView rerendered 2 times.");
 
   yield teardown(panel);
   finish();
