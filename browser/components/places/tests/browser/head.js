@@ -392,8 +392,9 @@ function promiseSetToolbarVisibility(aToolbar, aVisible, aCallback) {
     let transitionProperties =
       window.getComputedStyle(aToolbar).transitionProperty.split(", ");
     if (isToolbarVisible(aToolbar) != aVisible &&
-        (transitionProperties.includes("max-height") ||
-         transitionProperties.includes("all"))) {
+        transitionProperties.some(
+          prop => prop == "max-height" || prop == "all"
+        )) {
       // Just because max-height is a transitionable property doesn't mean
       // a transition will be triggered, but it's more likely.
       aToolbar.addEventListener("transitionend", listener);
