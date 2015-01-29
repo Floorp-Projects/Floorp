@@ -29,8 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022913
 
     var onSecondSeekComplete = function(event) {
       var v = event.target;
+      v.removeEventListener("seeked", onSecondSeekComplete);
       ok(v.currentTime >= v.firstSeekTarget, v.name + " seek never go backwards. time=" + v.currentTime + " firstSeekTarget=" + v.firstSeekTarget + " secondSeekTarget=" + v.secondSeekTarget);
       manager.finished(v.token);
+      removeNodeAndSource(v);
     };
 
     var onFirstSeekComplete = function(event) {
@@ -47,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022913
     var onLoadedMetadata = function(event) {
       // Seek to the mid-point between the start and the first keyframe.
       var v = event.target;
+      v.removeEventListener("loadedmetadata", onLoadedMetadata);
       v.addEventListener("seeked", onFirstSeekComplete);
       v.firstSeekTarget = v.keyframes[1] * 0.5;
       v.currentTime = v.firstSeekTarget;
