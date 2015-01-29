@@ -8,6 +8,7 @@
 #include "DocAccessibleParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/a11y/Platform.h"
+#include "RelationType.h"
 #include "mozilla/a11y/Role.h"
 
 namespace mozilla {
@@ -100,6 +101,52 @@ void
 ProxyAccessible::Attributes(nsTArray<Attribute> *aAttrs) const
 {
   unused << mDoc->SendAttributes(mID, aAttrs);
+}
+
+nsTArray<ProxyAccessible*>
+ProxyAccessible::RelationByType(RelationType aType) const
+{
+  nsTArray<uint64_t> targetIDs;
+  unused << mDoc->SendRelationByType(mID, static_cast<uint32_t>(aType),
+                                     &targetIDs);
+
+  size_t targetCount = targetIDs.Length();
+  nsTArray<ProxyAccessible*> targets(targetCount);
+  for (size_t i = 0; i < targetCount; i++)
+    if (ProxyAccessible* proxy = mDoc->GetAccessible(targetIDs[i]))
+      targets.AppendElement(proxy);
+
+  return Move(targets);
+}
+
+void
+ProxyAccessible::Relations(nsTArray<RelationType>* aTypes,
+                           nsTArray<nsTArray<ProxyAccessible*>>* aTargetSets)
+  const
+{
+  nsTArray<RelationTargets> ipcRelations;
+  unused << mDoc->SendRelations(mID, &ipcRelations);
+
+  size_t relationCount = ipcRelations.Length();
+  aTypes->SetCapacity(relationCount);
+  aTargetSets->SetCapacity(relationCount);
+  for (size_t i = 0; i < relationCount; i++) {
+    uint32_t type = ipcRelations[i].Type();
+    if (type > static_cast<uint32_t>(RelationType::LAST))
+      continue;
+
+    size_t targetCount = ipcRelations[i].Targets().Length();
+    nsTArray<ProxyAccessible*> targets(targetCount);
+    for (size_t j = 0; j < targetCount; j++)
+      if (ProxyAccessible* proxy = mDoc->GetAccessible(ipcRelations[i].Targets()[j]))
+        targets.AppendElement(proxy);
+
+    if (targets.IsEmpty())
+      continue;
+
+    aTargetSets->AppendElement(Move(targets));
+    aTypes->AppendElement(static_cast<RelationType>(type));
+  }
 }
 
 void
