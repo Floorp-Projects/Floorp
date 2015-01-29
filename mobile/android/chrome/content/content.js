@@ -66,12 +66,15 @@ let AboutReaderListener = {
         sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
 
         ReaderMode.parseDocument(content.document).then(article => {
+          // Do nothing if there is no article, or if the content window has been destroyed.
+          if (article === null || content === null) {
+            return;
+          }
+
           // The loaded page may have changed while we were parsing the document.
           // Make sure we've got the current one.
           let currentURL = Services.io.newURI(content.document.documentURI, null, null).specIgnoringRef;
-
-          // Do nothing if there's no article or the page in this tab has changed.
-          if (article == null || (article.url != currentURL)) {
+          if (article.url !== currentURL) {
             return;
           }
 

@@ -41,8 +41,7 @@ add_task(function docshell_capabilities() {
   is(disallow.size, 2, "two capabilities disallowed");
 
   // Reuse the tab to restore a new, clean state into it.
-  ss.setTabState(tab, JSON.stringify({ entries: [{url: "about:robots"}] }));
-  yield promiseTabRestored(tab);
+  yield promiseTabState(tab, {entries: [{url: "about:robots"}]});
 
   // Flush to make sure chrome received all data.
   TabState.flush(browser);
@@ -53,8 +52,7 @@ add_task(function docshell_capabilities() {
   ok(flags.every(f => docShell[f]), "all flags set to true");
 
   // Restore the state with disallowed features.
-  ss.setTabState(tab, JSON.stringify(disallowedState));
-  yield promiseTabRestored(tab);
+  yield promiseTabState(tab, disallowedState);
 
   // Check that docShell flags are set.
   ok(!docShell.allowImages, "images not allowed");

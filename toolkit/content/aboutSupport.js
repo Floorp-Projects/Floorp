@@ -41,7 +41,9 @@ let snapshotFormatters = {
     if (data.vendor)
       version += " (" + data.vendor + ")";
     $("version-box").textContent = version;
-    $("multiprocess-box").textContent = data.numRemoteWindows + "/" + data.numTotalWindows;
+
+    $("multiprocess-box").textContent = stringBundle().formatStringFromName("multiProcessStatus",
+      [data.numRemoteWindows, data.numTotalWindows, data.remoteAutoStart], 3);
   },
 
 #ifdef MOZ_CRASHREPORTER
