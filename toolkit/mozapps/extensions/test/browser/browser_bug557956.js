@@ -13,8 +13,8 @@ const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion
 Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
 // avoid the 'leaked window property' check
 let scope = {};
-Components.utils.import("resource://gre/modules/TelemetryPing.jsm", scope);
-let TelemetryPing = scope.TelemetryPing;
+Components.utils.import("resource://gre/modules/TelemetrySession.jsm", scope);
+let TelemetrySession = scope.TelemetrySession;
 
 /**
  * Test add-ons:
@@ -176,7 +176,7 @@ function get_list_names(aList) {
 }
 
 function check_telemetry({disabled, metaenabled, metadisabled, upgraded, failed, declined}) {
-  let ping = TelemetryPing.getPayload();
+  let ping = TelemetrySession.getPayload();
   // info(JSON.stringify(ping));
   let am = ping.simpleMeasurements.addonManager;
   if (disabled !== undefined)
@@ -192,6 +192,10 @@ function check_telemetry({disabled, metaenabled, metadisabled, upgraded, failed,
   if (declined !== undefined)
     is(am.appUpdate_upgradeDeclined, declined, declined + " upgrades declined");
 }
+
+add_test(function test_setup() {
+  TelemetrySession.setup().then(run_next_test);
+});
 
 // Tests that the right add-ons show up in the mismatch dialog and updates can
 // be installed
@@ -507,4 +511,8 @@ add_test(function overrides_retrieved() {
       });
     });
   });
+});
+
+add_test(function test_shutdown() {
+  TelemetrySession.shutdown().then(run_next_test);
 });
