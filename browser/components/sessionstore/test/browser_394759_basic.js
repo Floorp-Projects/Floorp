@@ -20,9 +20,7 @@ function test() {
   let uniqueText = "pi != " + Math.random();
 
   // Clear the list of closed windows.
-  while (SessionStore.getClosedWindowCount()) {
-    SessionStore.forgetClosedWindow(0);
-  }
+  forgetClosedWindows();
 
   provideWindow(function onTestURLLoaded(newWin) {
     newWin.gBrowser.addTab().linkedBrowser.stop();
