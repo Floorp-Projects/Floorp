@@ -60,6 +60,14 @@ let tests = [
       done();
     });
   },
+  function test_getConfigurationLoop(done) {
+    let gettingStartedSeen = Services.prefs.getBoolPref("loop.gettingStarted.seen");
+    gContentAPI.getConfiguration("loop", (data) => {
+      is(data.gettingStartedSeen, gettingStartedSeen,
+         "The configuration property should equal that of the pref");
+      done();
+    });
+  },
   function test_hideMenuHidesAnnotations(done) {
     let infoPanel = document.getElementById("UITourTooltip");
     let highlightPanel = document.getElementById("UITourHighlightContainer");
