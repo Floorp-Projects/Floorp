@@ -37,11 +37,6 @@ namespace detail {
 nsresult DispatchMediaPromiseRunnable(MediaTaskQueue* aQueue, nsIRunnable* aRunnable);
 nsresult DispatchMediaPromiseRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable);
 
-#ifdef DEBUG
-void AssertOnThread(MediaTaskQueue* aQueue);
-void AssertOnThread(nsIEventTarget* aTarget);
-#endif
-
 } // namespace detail
 
 /*
@@ -86,32 +81,6 @@ public:
     return p;
   }
 
-  class Consumer
-  {
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Consumer)
-
-    void Disconnect()
-    {
-      AssertOnDispatchThread();
-      MOZ_RELEASE_ASSERT(!mComplete);
-      mDisconnected = true;
-    }
-
-#ifdef DEBUG
-    virtual void AssertOnDispatchThread() = 0;
-#else
-    void AssertOnDispatchThread() {}
-#endif
-
-  protected:
-    Consumer() : mComplete(false), mDisconnected(false) {}
-    virtual ~Consumer() {}
-
-    bool mComplete;
-    bool mDisconnected;
-  };
-
 protected:
 
   /*
@@ -120,7 +89,7 @@ protected:
    * resolved or rejected, a {Resolve,Reject}Runnable is dispatched, which
    * invokes the resolve/reject method and then deletes the ThenValue.
    */
-  class ThenValueBase : public Consumer
+  class ThenValueBase
   {
   public:
     class ResolveRunnable : public nsRunnable
@@ -139,12 +108,14 @@ protected:
       {
         PROMISE_LOG("ResolveRunnable::Run() [this=%p]", this);
         mThenValue->DoResolve(mResolveValue);
+
+        delete mThenValue;
         mThenValue = nullptr;
         return NS_OK;
       }
 
     private:
-      nsRefPtr<ThenValueBase> mThenValue;
+      ThenValueBase* mThenValue;
       ResolveValueType mResolveValue;
     };
 
@@ -164,20 +135,28 @@ protected:
       {
         PROMISE_LOG("RejectRunnable::Run() [this=%p]", this);
         mThenValue->DoReject(mRejectValue);
+
+        delete mThenValue;
         mThenValue = nullptr;
         return NS_OK;
       }
 
     private:
-      nsRefPtr<ThenValueBase> mThenValue;
+      ThenValueBase* mThenValue;
       RejectValueType mRejectValue;
     };
 
-    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite) {}
+    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite)
+    {
+      MOZ_COUNT_CTOR(ThenValueBase);
+    }
 
     virtual void Dispatch(MediaPromise *aPromise) = 0;
 
   protected:
+    // This may only be deleted by {Resolve,Reject}Runnable::Run.
+    virtual ~ThenValueBase() { MOZ_COUNT_DTOR(ThenValueBase); }
+
     virtual void DoResolve(ResolveValueType aResolveValue) = 0;
     virtual void DoReject(RejectValueType aRejectValue) = 0;
 
@@ -239,47 +218,18 @@ protected:
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-#ifdef DEBUG
-  void AssertOnDispatchThread() MOZ_OVERRIDE
-  {
-    detail::AssertOnThread(mResponseTarget);
-  }
-#endif
-
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue) MOZ_OVERRIDE
     {
-      Consumer::mComplete = true;
-      if (Consumer::mDisconnected) {
-        PROMISE_LOG("ThenValue::DoResolve disconnected - bailing out [this=%p]", this);
-        return;
-      }
       InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
-
-      // Null these out after invoking the callback so that any references are
-      // released predictably on the target thread. Otherwise, they would be
-      // released on whatever thread last drops its reference to the ThenValue,
-      // which may or may not be ok.
-      mResponseTarget = nullptr;
-      mThisVal = nullptr;
     }
 
     virtual void DoReject(RejectValueType aRejectValue) MOZ_OVERRIDE
     {
-      Consumer::mComplete = true;
-      if (Consumer::mDisconnected) {
-        PROMISE_LOG("ThenValue::DoReject disconnected - bailing out [this=%p]", this);
-        return;
-      }
       InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
-
-      // Null these out after invoking the callback so that any references are
-      // released predictably on the target thread. Otherwise, they would be
-      // released on whatever thread last drops its reference to the ThenValue,
-      // which may or may not be ok.
-      mResponseTarget = nullptr;
-      mThisVal = nullptr;
     }
+
+    virtual ~ThenValue() {}
 
   private:
     nsRefPtr<TargetType> mResponseTarget;
@@ -291,35 +241,23 @@ public:
 
   template<typename TargetType, typename ThisType,
            typename ResolveMethodType, typename RejectMethodType>
-  already_AddRefed<Consumer> RefableThen(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
-                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  void Then(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
+            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     MutexAutoLock lock(mMutex);
     MOZ_RELEASE_ASSERT(!IsExclusive || !mHaveConsumer);
     mHaveConsumer = true;
-    nsRefPtr<ThenValueBase> thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
-                                                      RejectMethodType>(aResponseTarget, aThisVal,
-                                                                        aResolveMethod, aRejectMethod,
-                                                                        aCallSite);
+    ThenValueBase* thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
+                                             RejectMethodType>(aResponseTarget, aThisVal,
+                                                               aResolveMethod, aRejectMethod,
+                                                               aCallSite);
     PROMISE_LOG("%s invoking Then() [this=%p, thenValue=%p, aThisVal=%p, isPending=%d]",
-                aCallSite, this, thenValue.get(), aThisVal, (int) IsPending());
+                aCallSite, this, thenValue, aThisVal, (int) IsPending());
     if (!IsPending()) {
       thenValue->Dispatch(this);
     } else {
       mThenValues.AppendElement(thenValue);
     }
-
-    return thenValue.forget();
-  }
-
-  template<typename TargetType, typename ThisType,
-           typename ResolveMethodType, typename RejectMethodType>
-  void Then(TargetType* aResponseTarget, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
-  {
-    nsRefPtr<Consumer> c =
-      RefableThen(aResponseTarget, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
-    return;
   }
 
   void ChainTo(already_AddRefed<MediaPromise> aChainedPromise, const char* aCallSite)
@@ -393,7 +331,7 @@ protected:
   Mutex mMutex;
   Maybe<ResolveValueType> mResolveValue;
   Maybe<RejectValueType> mRejectValue;
-  nsTArray<nsRefPtr<ThenValueBase>> mThenValues;
+  nsTArray<ThenValueBase*> mThenValues;
   nsTArray<nsRefPtr<MediaPromise>> mChainedPromises;
   bool mHaveConsumer;
 };
@@ -485,49 +423,6 @@ public:
 private:
   Monitor* mMonitor;
   nsRefPtr<PromiseType> mPromise;
-};
-
-/*
- * Class to encapsulate a MediaPromise::Consumer reference. Use this as the member
- * variable for a class waiting on a media promise.
- */
-template<typename PromiseType>
-class MediaPromiseConsumerHolder
-{
-public:
-  MediaPromiseConsumerHolder() {}
-  ~MediaPromiseConsumerHolder() { MOZ_ASSERT(!mConsumer); }
-
-  void Begin(already_AddRefed<typename PromiseType::Consumer> aConsumer)
-  {
-    MOZ_RELEASE_ASSERT(!Exists());
-    mConsumer = aConsumer;
-  }
-
-  void Complete()
-  {
-    MOZ_RELEASE_ASSERT(Exists());
-    mConsumer = nullptr;
-  }
-
-  // Disconnects and forgets an outstanding promise. The resolve/reject methods
-  // will never be called.
-  void Disconnect() {
-    MOZ_ASSERT(Exists());
-    mConsumer->Disconnect();
-    mConsumer = nullptr;
-  }
-
-  void DisconnectIfExists() {
-    if (Exists()) {
-      Disconnect();
-    }
-  }
-
-  bool Exists() { return !!mConsumer; }
-
-private:
-  nsRefPtr<typename PromiseType::Consumer> mConsumer;
 };
 
 #undef PROMISE_LOG
