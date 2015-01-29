@@ -20,8 +20,24 @@ Census.walkCensus(census1, "census1", Census.assertAllNotLessThan(census0));
 
 function pointCheck(label, lhs, rhs, objComp, funComp) {
   print(label);
-  assertEq(objComp(lhs.objects.Object.count, rhs.objects.Object.count), true);
-  assertEq(funComp(lhs.objects.Function.count, rhs.objects.Function.count), true);
+  try {
+    assertEq(objComp(lhs.objects.Object.count, rhs.objects.Object.count), true);
+    assertEq(funComp(lhs.objects.Function.count, rhs.objects.Function.count), true);
+  } catch (ex) {
+    print("pointCheck failed: " + ex);
+    print("lhs: " + JSON.stringify(lhs, undefined, 2));
+    print("rhs: " + JSON.stringify(rhs, undefined, 2));
+
+    // Do it again, and put the result where Mozilla's continuous integration
+    // code will find it.
+    var upload_dir = os.getenv("MOZ_UPLOAD_DIR") || ".";
+    redirect(upload_dir + "/Memory-takeCensus-02.txt");
+    print("pointCheck failed: " + ex);
+    print("lhs: " + JSON.stringify(lhs, undefined, 2));
+    print("rhs: " + JSON.stringify(rhs, undefined, 2));
+
+    throw ex;
+  }
 }
 
 function eq(lhs, rhs) { return lhs === rhs; }
