@@ -50,6 +50,23 @@ namespace jit {
     _(SetProp_InlineAccess,                             \
       "setprop inline access")                          \
                                                         \
+    _(GetElem_TypedObject,                              \
+      "getprop TypedObject")                            \
+    _(GetElem_Dense,                                    \
+      "getelem dense")                                  \
+    _(GetElem_TypedStatic,                              \
+      "getelem TypedArray static")                      \
+    _(GetElem_TypedArray,                               \
+      "getelem TypedArray")                             \
+    _(GetElem_String,                                   \
+      "getelem string")                                 \
+    _(GetElem_Arguments,                                \
+      "getelem arguments")                              \
+    _(GetElem_ArgumentsInlined,                         \
+      "getelem arguments inlined")                      \
+    _(GetElem_InlineCache,                              \
+      "getelem IC")                                     \
+                                                        \
     _(Call_Inline,                                      \
       "call inline")
 
@@ -60,6 +77,8 @@ namespace jit {
 #define TRACKED_OUTCOME_LIST(_)                                         \
     _(GenericFailure,                                                   \
       "failure")                                                        \
+    _(Disabled,                                                         \
+      "disabled")                                                       \
     _(NoTypeInfo,                                                       \
       "no type info")                                                   \
     _(NoAnalysisInfo,                                                   \
@@ -78,6 +97,10 @@ namespace jit {
       "property not in fixed slot")                                     \
     _(NotObject,                                                        \
       "not definitely an object")                                       \
+    _(NotStruct,                                                        \
+      "not definitely a TypedObject struct")                            \
+    _(StructNoField,                                                    \
+      "struct doesn't definitely have field")                           \
     _(NeedsTypeBarrier,                                                 \
       "needs type barrier")                                             \
     _(InDictionaryMode,                                                 \
@@ -88,14 +111,40 @@ namespace jit {
       "not all paths to property go through same proto")                \
     _(NonWritableProperty,                                              \
       "non-writable property")                                          \
-    _(ArrayProtoIndexedProps,                                           \
-      "Array.prototype has indexed properties")                         \
+    _(ProtoIndexedProps,                                                \
+      "prototype has indexed properties")                               \
     _(ArrayBadFlags,                                                    \
       "array observed to be sparse, overflowed .length, or has been iterated") \
     _(ArrayDoubleConversion,                                            \
       "array has ambiguous double conversion")                          \
     _(ArrayRange,                                                       \
       "array range issue (.length problems)")                           \
+    _(ArraySeenNegativeIndex,                                           \
+      "has seen array access with negative index")                      \
+    _(TypedObjectNeutered,                                              \
+      "TypedObject might have been neutered")                           \
+    _(TypedObjectArrayRange,                                            \
+      "TypedObject array of unknown length")                            \
+    _(AccessNotDense,                                                   \
+      "access not on dense native (check receiver, index, and result types)") \
+    _(AccessNotTypedObject,                                             \
+      "access not on typed array (check receiver and index types)")     \
+    _(AccessNotTypedArray,                                              \
+      "access not on typed array (check receiver, index, and result types)") \
+    _(AccessNotString,                                                  \
+      "getelem not on string (check receiver and index types)")         \
+    _(StaticTypedArrayUint32,                                           \
+      "static uint32 arrays currently cannot be optimized")             \
+    _(StaticTypedArrayCantComputeMask,                                  \
+      "can't compute mask for static typed array access (index isn't constant or not int32)") \
+    _(OutOfBounds,                                                      \
+      "observed out of bounds access")                                  \
+    _(GetElemStringNotCached,                                           \
+      "getelem on strings is not inline cached")                        \
+    _(NonNativeReceiver,                                                \
+      "observed non-native receiver")                                   \
+    _(IndexType,                                                        \
+      "index type must be int32, string, or symbol")                    \
                                                                         \
     _(CantInlineGeneric,                                                \
       "can't inline")                                                   \
@@ -158,6 +207,8 @@ namespace jit {
 #define TRACKED_TYPESITE_LIST(_)                \
     _(Receiver,                                 \
       "receiver object")                        \
+    _(Index,                                    \
+      "index")                                  \
     _(Value,                                    \
       "value")                                  \
     _(Call_Target,                              \

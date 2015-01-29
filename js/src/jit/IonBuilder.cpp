@@ -7417,8 +7417,13 @@ GetElemKnownType(bool needsHoleCheck, types::TemporaryTypeSet *types)
 bool
 IonBuilder::jsop_getelem()
 {
+    startTrackingOptimizations();
+
     MDefinition *index = current->pop();
     MDefinition *obj = current->pop();
+
+    trackTypeInfo(TrackedTypeSite::Receiver, obj->type(), obj->resultTypeSet());
+    trackTypeInfo(TrackedTypeSite::Index, index->type(), index->resultTypeSet());
 
     // Always use a call if we are performing analysis and not actually
     // emitting code, to simplify later analysis.
@@ -7437,30 +7442,38 @@ IonBuilder::jsop_getelem()
 
     bool emitted = false;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_TypedObject);
     if (!getElemTryTypedObject(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_Dense);
     if (!getElemTryDense(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_TypedStatic);
     if (!getElemTryTypedStatic(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_TypedArray);
     if (!getElemTryTypedArray(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_String);
     if (!getElemTryString(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_Arguments);
     if (!getElemTryArguments(&emitted, obj, index) || emitted)
         return emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlined);
     if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
         return emitted;
 
     if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType_MagicOptimizedArguments))
         return abort("Type is not definitely lazy arguments.");
 
+    trackOptimizationAttempt(TrackedStrategy::GetElem_InlineCache);
     if (!getElemTryCache(&emitted, obj, index) || emitted)
         return emitted;
 
@@ -7482,6 +7495,10 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
 {
     MOZ_ASSERT(*emitted == false);
 
+    // The next several failures are all due to types not predicting that we
+    // are definitely doing a getelem access on a typed object.
+    trackOptimizationOutcome(TrackedOutcome::AccessNotTypedObject);
+
     TypedObjectPrediction objPrediction = typedObjectPrediction(obj);
     if (objPrediction.isUseless())
         return true;
@@ -7500,6 +7517,7 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
     switch (elemPrediction.kind()) {
       case type::Simd:
         // FIXME (bug 894105): load into a MIRType_float32x4 etc
+        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
         return true;
 
       case type::Struct:
@@ -7555,9 +7573,12 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
         // If we are not loading the length from the object itself, only
         // optimize if the array buffer can't have been neutered.
         types::TypeObjectKey *globalType = types::TypeObjectKey::get(&script()->global());
-        if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
+        if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED)) {
+            trackOptimizationOutcome(TrackedOutcome::TypedObjectNeutered);
             return false;
+        }
     } else {
+        trackOptimizationOutcome(TrackedOutcome::TypedObjectArrayRange);
         return false;
     }
 
@@ -7584,6 +7605,7 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
         return true;
 
+    trackOptimizationSuccess();
     *emitted = true;
 
     return pushScalarLoadFromTypedObject(obj, indexAsByteOffset, elemType);
@@ -7605,6 +7627,7 @@ IonBuilder::getElemTryReferenceElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
         return true;
 
+    trackOptimizationSuccess();
     *emitted = true;
 
     return pushReferenceLoadFromTypedObject(obj, indexAsByteOffset, elemType, nullptr);
@@ -7807,23 +7830,30 @@ IonBuilder::getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index)
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (!ElementAccessIsDenseNative(constraints(), obj, index))
+    if (!ElementAccessIsDenseNative(constraints(), obj, index)) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotDense);
         return true;
+    }
 
     // Don't generate a fast path if there have been bounds check failures
     // and this access might be on a sparse property.
-    if (ElementAccessHasExtraIndexedProperty(constraints(), obj) && failedBoundsCheck_)
+    if (ElementAccessHasExtraIndexedProperty(constraints(), obj) && failedBoundsCheck_) {
+        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
         return true;
+    }
 
     // Don't generate a fast path if this pc has seen negative indexes accessed,
     // which will not appear to be extra indexed properties.
-    if (inspector->hasSeenNegativeIndexGetElement(pc))
+    if (inspector->hasSeenNegativeIndexGetElement(pc)) {
+        trackOptimizationOutcome(TrackedOutcome::ArraySeenNegativeIndex);
         return true;
+    }
 
     // Emit dense getelem variant.
     if (!jsop_getelem_dense(obj, index))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -7834,34 +7864,50 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
     MOZ_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsAnyTypedArray(constraints(), obj, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(constraints(), obj, index, &arrayType)) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedArray);
         return true;
+    }
 
-    if (!LIRGenerator::allowStaticTypedArrayAccesses())
+    if (!LIRGenerator::allowStaticTypedArrayAccesses()) {
+        trackOptimizationOutcome(TrackedOutcome::Disabled);
         return true;
+    }
 
-    if (ElementAccessHasExtraIndexedProperty(constraints(), obj))
+    if (ElementAccessHasExtraIndexedProperty(constraints(), obj)) {
+        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
         return true;
+    }
 
-    if (!obj->resultTypeSet())
+    if (!obj->resultTypeSet()) {
+        trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         return true;
+    }
 
     JSObject *tarrObj = obj->resultTypeSet()->getSingleton();
-    if (!tarrObj)
+    if (!tarrObj) {
+        trackOptimizationOutcome(TrackedOutcome::NotSingleton);
         return true;
+    }
 
     types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarrObj);
-    if (tarrType->unknownProperties())
+    if (tarrType->unknownProperties()) {
+        trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
         return true;
+    }
 
     // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
     Scalar::Type viewType = AnyTypedArrayType(tarrObj);
-    if (viewType == Scalar::Uint32)
+    if (viewType == Scalar::Uint32) {
+        trackOptimizationOutcome(TrackedOutcome::StaticTypedArrayUint32);
         return true;
+    }
 
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
-    if (!ptr)
+    if (!ptr) {
+        trackOptimizationOutcome(TrackedOutcome::StaticTypedArrayCantComputeMask);
         return true;
+    }
 
     // Emit LoadTypedArrayElementStatic.
 
@@ -7890,6 +7936,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
             load->setInfallible();
     }
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -7900,13 +7947,16 @@ IonBuilder::getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *i
     MOZ_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsAnyTypedArray(constraints(), obj, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(constraints(), obj, index, &arrayType)) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedArray);
         return true;
+    }
 
     // Emit typed getelem variant.
     if (!jsop_getelem_typed(obj, index, arrayType))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -7916,13 +7966,17 @@ IonBuilder::getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (obj->type() != MIRType_String || !IsNumberType(index->type()))
+    if (obj->type() != MIRType_String || !IsNumberType(index->type())) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotString);
         return true;
+    }
 
     // If the index is expected to be out-of-bounds, don't optimize to avoid
     // frequent bailouts.
-    if (bytecodeTypes(pc)->hasType(types::Type::UndefinedType()))
+    if (bytecodeTypes(pc)->hasType(types::Type::UndefinedType())) {
+        trackOptimizationOutcome(TrackedOutcome::OutOfBounds);
         return true;
+    }
 
     // Emit fast path for string[index].
     MInstruction *idInt32 = MToInt32::New(alloc(), index);
@@ -7941,6 +7995,7 @@ IonBuilder::getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index
     current->add(result);
     current->push(result);
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -7984,6 +8039,7 @@ IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *in
     if (!pushTypeBarrier(load, types, BarrierKind::TypeSet))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -8016,6 +8072,7 @@ IonBuilder::getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinit
         else
             pushConstant(UndefinedValue());
 
+        trackOptimizationSuccess();
         *emitted = true;
         return true;
     }
@@ -8030,26 +8087,33 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     MOZ_ASSERT(*emitted == false);
 
     // Make sure we have at least an object.
-    if (!obj->mightBeType(MIRType_Object))
+    if (!obj->mightBeType(MIRType_Object)) {
+        trackOptimizationOutcome(TrackedOutcome::NotObject);
         return true;
+    }
 
     // Don't cache for strings.
-    if (obj->mightBeType(MIRType_String))
+    if (obj->mightBeType(MIRType_String)) {
+        trackOptimizationOutcome(TrackedOutcome::GetElemStringNotCached);
         return true;
+    }
 
     // Index should be integer, string, or symbol
     if (!index->mightBeType(MIRType_Int32) &&
         !index->mightBeType(MIRType_String) &&
         !index->mightBeType(MIRType_Symbol))
     {
+        trackOptimizationOutcome(TrackedOutcome::IndexType);
         return true;
     }
 
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.
     bool nonNativeGetElement = inspector->hasSeenNonNativeGetElement(pc);
-    if (index->mightBeType(MIRType_Int32) && nonNativeGetElement)
+    if (index->mightBeType(MIRType_Int32) && nonNativeGetElement) {
+        trackOptimizationOutcome(TrackedOutcome::NonNativeReceiver);
         return true;
+    }
 
     // Emit GetElementCache.
 
@@ -8082,6 +8146,7 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     if (!pushTypeBarrier(ins, types, barrier))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -11748,16 +11813,26 @@ IonBuilder::typedObjectHasField(MDefinition *typedObj,
                                 size_t *fieldIndex)
 {
     TypedObjectPrediction objPrediction = typedObjectPrediction(typedObj);
-    if (objPrediction.isUseless())
+    if (objPrediction.isUseless()) {
+        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedObject);
         return false;
+    }
 
     // Must be accessing a struct.
-    if (objPrediction.kind() != type::Struct)
+    if (objPrediction.kind() != type::Struct) {
+        trackOptimizationOutcome(TrackedOutcome::NotStruct);
         return false;
+    }
 
     // Determine the type/offset of the field `name`, if any.
-    return objPrediction.hasFieldNamed(NameToId(name), fieldOffset,
-                                       fieldPrediction, fieldIndex);
+    if (!objPrediction.hasFieldNamed(NameToId(name), fieldOffset,
+                                     fieldPrediction, fieldIndex))
+    {
+        trackOptimizationOutcome(TrackedOutcome::StructNoField);
+        return false;
+    }
+
+    return true;
 }
 
 MDefinition *
