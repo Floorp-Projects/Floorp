@@ -10,15 +10,23 @@
   'variables': {
     'codecs': [
       'G711',
-      'G722',
       'PCM16B',
-      'iLBC',
-      'iSAC',
-      'iSACFix',
       'CNG',
     ],
     'neteq_defines': [],
     'conditions': [
+      ['include_g722==1', {
+        'neteq_dependencies': ['G722'],
+        'neteq_defines': ['WEBRTC_CODEC_G722',],
+      }],
+      ['include_ilbc==1', {
+        'neteq_dependencies': ['iLBC'],
+        'neteq_defines': ['WEBRTC_CODEC_ILBC',],
+      }],
+      ['include_isac==1', {
+        'neteq_dependencies': ['iSAC', 'iSACFix',],
+        'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
+      }],
       ['include_opus==1', {
         'codecs': ['webrtc_opus',],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
@@ -141,6 +149,7 @@
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
+# FIX for include_isac/etc
           'defines': [
             'AUDIO_DECODER_UNITTEST',
             'WEBRTC_CODEC_G722',

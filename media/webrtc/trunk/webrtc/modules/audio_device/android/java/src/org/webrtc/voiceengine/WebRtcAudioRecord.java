@@ -20,8 +20,11 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.util.Log;
 
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class WebRtcAudioRecord {
-    private AudioRecord _audioRecord = null;
+    private AudioRecord _audioRecord;
 
     private Context _context;
 
@@ -31,9 +34,9 @@ class WebRtcAudioRecord {
     private final ReentrantLock _recLock = new ReentrantLock();
 
     private boolean _doRecInit = true;
-    private boolean _isRecording = false;
+    private boolean _isRecording;
 
-    private int _bufferedRecSamples = 0;
+    private int _bufferedRecSamples;
 
     WebRtcAudioRecord() {
         try {
@@ -48,7 +51,11 @@ class WebRtcAudioRecord {
 
     @SuppressWarnings("unused")
     private int InitRecording(int audioSource, int sampleRate) {
-        audioSource = AudioSource.VOICE_COMMUNICATION;
+        if(android.os.Build.VERSION.SDK_INT>=11) {
+            audioSource = AudioSource.VOICE_COMMUNICATION;
+        } else {
+            audioSource = AudioSource.DEFAULT;
+        }
         // get the minimum buffer size that can be used
         int minRecBufSize = AudioRecord.getMinBufferSize(
             sampleRate,
@@ -185,7 +192,7 @@ class WebRtcAudioRecord {
         return _bufferedRecSamples;
     }
 
-    final String logTag = "WebRTC AD java";
+    final String logTag = "WebRTC AR java";
 
     private void DoLog(String msg) {
         Log.d(logTag, msg);

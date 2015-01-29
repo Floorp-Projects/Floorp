@@ -133,7 +133,7 @@ int32_t VideoCaptureDS::Init(const int32_t id, const char* deviceUniqueIdUTF8)
 
     // Temporary connect here.
     // This is done so that no one else can use the capture device.
-    if (SetCameraOutput(_requestedCapability) != 0)
+    if (SetCameraOutputIfNeeded(_requestedCapability) != 0)
     {
         return -1;
     }
@@ -155,15 +155,11 @@ int32_t VideoCaptureDS::StartCapture(
 {
     CriticalSectionScoped cs(&_apiCs);
 
-    if (capability != _requestedCapability)
+    if (SetCameraOutputIfNeeded(capability) != 0)
     {
-        DisconnectGraph();
-
-        if (SetCameraOutput(capability) != 0)
-        {
-            return -1;
-        }
+        return -1;
     }
+
     HRESULT hr = _mediaControl->Run();
     if (FAILED(hr))
     {
@@ -187,6 +183,7 @@ int32_t VideoCaptureDS::StopCapture()
     }
     return 0;
 }
+
 bool VideoCaptureDS::CaptureStarted()
 {
     OAFilterState state = 0;
@@ -201,6 +198,7 @@ bool VideoCaptureDS::CaptureStarted()
     return state == State_Running;
 
 }
+
 int32_t VideoCaptureDS::CaptureSettings(
                                              VideoCaptureCapability& settings)
 {
@@ -208,10 +206,9 @@ int32_t VideoCaptureDS::CaptureSettings(
     return 0;
 }
 
-int32_t VideoCaptureDS::SetCameraOutput(
-                             const VideoCaptureCapability& requestedCapability)
+int32_t VideoCaptureDS::SetCameraOutputIfNeeded(
+    const VideoCaptureCapability& requestedCapability)
 {
-
     // Get the best matching capability
     VideoCaptureCapability capability;
     int32_t capabilityIndex;
@@ -225,6 +222,16 @@ int32_t VideoCaptureDS::SetCameraOutput(
     {
         return -1;
     }
+
+    if (capability != _activeCapability) {
+        DisconnectGraph();
+        // Store the new mode the camera actually selected
+        _activeCapability = capability;
+    } else {
+        // Camera selected the same mode, nothing to do
+        return 0;
+    }
+
     //Reduce the frame rate if possible.
     if (capability.maxFPS > requestedCapability.maxFPS)
     {
@@ -233,9 +240,17 @@ int32_t VideoCaptureDS::SetCameraOutput(
     {
         capability.maxFPS = 30;
     }
+
     // Store the new expected capture delay
     _captureDelay = capability.expectedCaptureDelay;
 
+    return SetCameraOutput(capability, capabilityIndex);
+}
+
+int32_t VideoCaptureDS::SetCameraOutput(
+                                        const VideoCaptureCapability& capability,
+                                        int32_t capabilityIndex)
+{
     // Convert it to the windows capability index since they are not nexessary
     // the same
     VideoCaptureCapabilityWindows windowsCapability;

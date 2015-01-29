@@ -42,6 +42,7 @@ public:
 
     int32_t Init();
     virtual uint32_t NumberOfDevices();
+    int32_t Refresh() { return 0; }
 
     /*
      * Returns the available capture devices.
@@ -97,7 +98,6 @@ protected:
 
 private:
     ICreateDevEnum* _dsDevEnum;
-    IEnumMoniker* _dsMonikerDevEnum;
     bool _CoUninitializeIsRequired;
     std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
 };

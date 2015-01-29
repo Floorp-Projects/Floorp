@@ -13,6 +13,7 @@
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 namespace {

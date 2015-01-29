@@ -18,7 +18,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 //v4l includes
+#if defined(__NetBSD__) || defined(__OpenBSD__)
+#include <sys/videoio.h>
+#elif defined(__sun)
+#include <sys/videodev2.h>
+#else
 #include <linux/videodev2.h>
+#endif
 
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/trace.h"
@@ -93,9 +99,10 @@ int32_t DeviceInfoLinux::GetDeviceName(
     char device[20];
     int fd = -1;
     bool found = false;
-    for (int n = 0; n < 64; n++)
+    int device_index;
+    for (device_index = 0; device_index < 64; device_index++)
     {
-        sprintf(device, "/dev/video%d", n);
+        sprintf(device, "/dev/video%d", device_index);
         if ((fd = open(device, O_RDONLY)) != -1)
         {
             if (count == deviceNumber) {
@@ -154,6 +161,15 @@ int32_t DeviceInfoLinux::GetDeviceName(
                        "buffer passed is too small");
             return -1;
         }
+    } else {
+        // if there's no bus info to use for uniqueId, invent one - and it has to be repeatable
+        if (snprintf(deviceUniqueIdUTF8, deviceUniqueIdUTF8Length, "fake_%u", device_index) >=
+            deviceUniqueIdUTF8Length)
+        {
+            WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                       "buffer passed is too small");
+            return -1;
+        }
     }
 
     return 0;
@@ -165,6 +181,7 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(
     int fd;
     char device[32];
     bool found = false;
+    int device_index;
 
     const int32_t deviceUniqueIdUTF8Length =
                             (int32_t) strlen((char*) deviceUniqueIdUTF8);
@@ -177,40 +194,41 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(
                "CreateCapabilityMap called for device %s", deviceUniqueIdUTF8);
 
     /* detect /dev/video [0-63] entries */
-    for (int n = 0; n < 64; ++n)
+    if (sscanf(deviceUniqueIdUTF8,"fake_%d",&device_index) == 1)
     {
-        sprintf(device, "/dev/video%d", n);
+        sprintf(device, "/dev/video%d", device_index);
         fd = open(device, O_RDONLY);
-        if (fd == -1)
-          continue;
-
-        // query device capabilities
-        struct v4l2_capability cap;
-        if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0)
-        {
-            if (cap.bus_info[0] != 0)
-            {
-                if (strncmp((const char*) cap.bus_info,
-                            (const char*) deviceUniqueIdUTF8,
-                            strlen((const char*) deviceUniqueIdUTF8)) == 0) //match with device id
-                {
-                    found = true;
-                    break; // fd matches with device unique id supplied
-                }
-            }
-            else //match for device name
-            {
-                if (IsDeviceNameMatches((const char*) cap.card,
-                                        (const char*) deviceUniqueIdUTF8))
-                {
-                    found = true;
-                    break;
-                }
-            }
+        if (fd != -1) {
+            found = true;
         }
-        close(fd); // close since this is not the matching device
-    }
+    } else {
+        /* detect /dev/video [0-63] entries */
+        for (int n = 0; n < 64; ++n)
+        {
+            sprintf(device, "/dev/video%d", n);
+            fd = open(device, O_RDONLY);
+            if (fd == -1)
+                continue;
 
+            // query device capabilities
+            struct v4l2_capability cap;
+            if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0)
+            {
+                if (cap.bus_info[0] != 0)
+                {
+                    if (strncmp((const char*) cap.bus_info,
+                                (const char*) deviceUniqueIdUTF8,
+                                strlen((const char*) deviceUniqueIdUTF8)) == 0) //match with device id
+                    {
+                        found = true;
+                        break; // fd matches with device unique id supplied
+                    }
+                }
+                // else can't be a match as the test for fake_* above would have matched it
+            }
+            close(fd); // close since this is not the matching device
+        }
+    }
     if (!found)
     {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id, "no matching device found");

@@ -211,6 +211,10 @@ class WEBRTC_DLLEXPORT ViEBase {
   virtual void RegisterSendSideDelayObserver(
       int channel, SendSideDelayObserver* observer) {}
 
+  // Changing the current state of the host CPU. Encoding engines
+  // can adapt their behavior if needed. (Optional)
+  virtual void SetLoadManager(CPULoadStateCallbackInvoker* load_manager) = 0;
+
   // Specifies the VoiceEngine and VideoEngine channel pair to use for
   // audio/video synchronization.
   virtual int ConnectAudioChannel(const int video_channel,

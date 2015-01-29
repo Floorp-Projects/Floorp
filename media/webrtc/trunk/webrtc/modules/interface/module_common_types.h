@@ -61,7 +61,8 @@ struct RTPVideoHeaderVP8 {
 };
 
 struct RTPVideoHeaderH264 {
-  bool stap_a;
+  uint8_t nalu_header;    // us ********* REMOVE ME??? *********
+  bool stap_a;            // them *** or this? ***
   bool single_nalu;
 };
 
@@ -80,7 +81,7 @@ struct RTPVideoHeader {
   uint16_t width;  // size
   uint16_t height;
 
-  bool isFirstPacket;    // first packet in frame
+  bool isFirstPacket;    // first packet in frame (or NAL for H.264)
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
@@ -894,6 +895,11 @@ inline bool IsNewerSequenceNumber(uint16_t sequence_number,
 inline bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
   return timestamp != prev_timestamp &&
          static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
+}
+
+inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
+  return timestamp == prev_timestamp ||
+      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
 }
 
 inline uint16_t LatestSequenceNumber(uint16_t sequence_number1,

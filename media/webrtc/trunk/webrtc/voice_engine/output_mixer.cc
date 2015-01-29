@@ -542,8 +542,9 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
     }
 
     // --- Far-end Voice Quality Enhancement (AudioProcessing Module)
-    if (feed_data_to_apm)
-      APMAnalyzeReverseStream();
+    if (feed_data_to_apm) {
+      APMAnalyzeReverseStream(_audioFrame);
+    }
 
     // --- External media processing
     {
@@ -570,23 +571,23 @@ OutputMixer::DoOperationsOnCombinedSignal(bool feed_data_to_apm)
     return 0;
 }
 
-// ----------------------------------------------------------------------------
-//                             Private methods
-// ----------------------------------------------------------------------------
-
-void OutputMixer::APMAnalyzeReverseStream() {
+void OutputMixer::APMAnalyzeReverseStream(AudioFrame &audioFrame) {
   // Convert from mixing to AudioProcessing sample rate, determined by the send
   // side. Downmix to mono.
   AudioFrame frame;
   frame.num_channels_ = 1;
   frame.sample_rate_hz_ = _audioProcessingModulePtr->input_sample_rate_hz();
-  RemixAndResample(_audioFrame, &audioproc_resampler_, &frame);
+  RemixAndResample(audioFrame, &audioproc_resampler_, &frame);
 
   if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) == -1) {
     WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId,-1),
                  "AudioProcessingModule::AnalyzeReverseStream() => error");
   }
 }
+
+// ----------------------------------------------------------------------------
+//                             Private methods
+// ----------------------------------------------------------------------------
 
 int
 OutputMixer::InsertInbandDtmfTone()
