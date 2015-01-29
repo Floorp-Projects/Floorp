@@ -122,6 +122,39 @@ treecol {
 
 /* General Pane */
 
+#startupTable {
+  border-collapse: collapse;
+}
+
+#startupTable > tr > td {
+  padding: 0; /* remove the padding from html.css */
+}
+
+#startupTable > tr:not(:first-child) > td {
+  padding-top: 0.5em; /* add a spacing between the rows */
+}
+
+#startupTable > tr > .label-cell {
+  text-align: end;
+  width: 0; /* make the column as small as possible */
+}
+
+#startupTable > tr > .label-cell > label {
+  white-space: nowrap;
+}
+
+#startupTable > tr > .content-cell {
+  display: flex;
+}
+
+#startupTable > tr > .homepage-buttons {
+  flex-wrap: wrap;
+}
+
+#startupTable > tr > td > .content-cell-item {
+  flex-grow: 1;
+}
+
 #useFirefoxSync  {
   font-size: 90%;
   -moz-margin-end: 8px !important;
