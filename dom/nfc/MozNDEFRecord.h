@@ -52,6 +52,11 @@ public:
               const MozNDEFRecordOptions& aOptions,
               ErrorResult& aRv);
 
+  static already_AddRefed<MozNDEFRecord>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aURI,
+              ErrorResult& aRv);
+
   TNF Tnf() const
   {
     return mTnf;
@@ -92,13 +97,16 @@ private:
   void HoldData();
   void DropData();
   void InitType(JSContext* aCx, const Optional<Uint8Array>& aType);
+  void InitType(JSContext* aCx, const RTD rtd);
   void InitId(JSContext* aCx, const Optional<Uint8Array>& aId);
   void InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload);
+  void InitPayload(JSContext* aCx, const nsAString& aUri);
   void IncSize(uint32_t aCount);
   void IncSizeForPayload(uint32_t aLen);
 
   static bool
   ValidateTNF(const MozNDEFRecordOptions& aOptions, ErrorResult& aRv);
+  static uint32_t GetURIIdentifier(const nsCString& aUri);
 
   TNF mTnf;
   JS::Heap<JSObject*> mType;
