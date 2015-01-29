@@ -515,7 +515,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     }
 
     if (types::ArrayPrototypeHasIndexedProperty(constraints(), script())) {
-        trackOptimizationOutcome(TrackedOutcome::ArrayProtoIndexedProps);
+        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
         return InliningStatus_NotInlined;
     }
 
@@ -645,7 +645,7 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
     }
 
     if (types::ArrayPrototypeHasIndexedProperty(constraints(), script())) {
-        trackOptimizationOutcome(TrackedOutcome::ArrayProtoIndexedProps);
+        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
         return InliningStatus_NotInlined;
     }
 
@@ -723,7 +723,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
 
     // Watch out for indexed properties on the prototype.
     if (types::ArrayPrototypeHasIndexedProperty(constraints(), script())) {
-        trackOptimizationOutcome(TrackedOutcome::ArrayProtoIndexedProps);
+        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
         return InliningStatus_NotInlined;
     }
 
