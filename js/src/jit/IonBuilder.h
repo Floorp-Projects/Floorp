@@ -1089,15 +1089,56 @@ class IonBuilder
 
     // Used in tracking outcomes of optimization strategies for devtools.
     void startTrackingOptimizations();
+
+    // The track* methods below are called often. Do not combine them with the
+    // unchecked variants, despite the unchecked variants having no other
+    // callers.
     void trackTypeInfo(TrackedTypeSite site, MIRType mirType,
-                       types::TemporaryTypeSet *typeSet);
-    void trackTypeInfo(TrackedTypeSite site, JSObject *obj);
-    void trackTypeInfo(CallInfo &callInfo);
-    void trackOptimizationAttempt(TrackedStrategy strategy);
-    void amendOptimizationAttempt(uint32_t index);
-    void trackOptimizationOutcome(TrackedOutcome outcome);
-    void trackOptimizationSuccess();
-    void trackInlineSuccess(InliningStatus status = InliningStatus_Inlined);
+                       types::TemporaryTypeSet *typeSet)
+    {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackTypeInfoUnchecked(site, mirType, typeSet);
+    }
+    void trackTypeInfo(TrackedTypeSite site, JSObject *obj) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackTypeInfoUnchecked(site, obj);
+    }
+    void trackTypeInfo(CallInfo &callInfo) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackTypeInfoUnchecked(callInfo);
+    }
+    void trackOptimizationAttempt(TrackedStrategy strategy) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackOptimizationAttemptUnchecked(strategy);
+    }
+    void amendOptimizationAttempt(uint32_t index) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            amendOptimizationAttemptUnchecked(index);
+    }
+    void trackOptimizationOutcome(TrackedOutcome outcome) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackOptimizationOutcomeUnchecked(outcome);
+    }
+    void trackOptimizationSuccess() {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackOptimizationSuccessUnchecked();
+    }
+    void trackInlineSuccess(InliningStatus status = InliningStatus_Inlined) {
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+            trackInlineSuccessUnchecked(status);
+    }
+
+    // Out-of-line variants that don't check if optimization tracking is
+    // enabled.
+    void trackTypeInfoUnchecked(TrackedTypeSite site, MIRType mirType,
+                                types::TemporaryTypeSet *typeSet);
+    void trackTypeInfoUnchecked(TrackedTypeSite site, JSObject *obj);
+    void trackTypeInfoUnchecked(CallInfo &callInfo);
+    void trackOptimizationAttemptUnchecked(TrackedStrategy strategy);
+    void amendOptimizationAttemptUnchecked(uint32_t index);
+    void trackOptimizationOutcomeUnchecked(TrackedOutcome outcome);
+    void trackOptimizationSuccessUnchecked();
+    void trackInlineSuccessUnchecked(InliningStatus status);
 };
 
 class CallInfo

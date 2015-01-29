@@ -951,88 +951,80 @@ IonBuilder::startTrackingOptimizations()
 }
 
 void
-IonBuilder::trackTypeInfo(TrackedTypeSite kind, MIRType mirType,
-                          types::TemporaryTypeSet *typeSet)
+IonBuilder::trackTypeInfoUnchecked(TrackedTypeSite kind, MIRType mirType,
+                                   types::TemporaryTypeSet *typeSet)
 {
     BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations()) {
-        // OOMs are handled as if optimization tracking were turned off.
-        TrackedTypeInfo typeInfo(kind, mirType);
-        if (!typeInfo.trackTypeSet(typeSet)) {
-            site->setOptimizations(nullptr);
-            return;
-        }
-        if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
-            site->setOptimizations(nullptr);
+    // OOMs are handled as if optimization tracking were turned off.
+    TrackedTypeInfo typeInfo(kind, mirType);
+    if (!typeInfo.trackTypeSet(typeSet)) {
+        site->setOptimizations(nullptr);
+        return;
     }
+    if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
+        site->setOptimizations(nullptr);
 }
 
 void
-IonBuilder::trackTypeInfo(TrackedTypeSite kind, JSObject *obj)
+IonBuilder::trackTypeInfoUnchecked(TrackedTypeSite kind, JSObject *obj)
 {
     BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations()) {
-        // OOMs are handled as if optimization tracking were turned off.
-        TrackedTypeInfo typeInfo(kind, MIRType_Object);
-        if (!typeInfo.trackType(types::Type::ObjectType(obj)))
-            return;
-        if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
-            site->setOptimizations(nullptr);
-    }
+    // OOMs are handled as if optimization tracking were turned off.
+    TrackedTypeInfo typeInfo(kind, MIRType_Object);
+    if (!typeInfo.trackType(types::Type::ObjectType(obj)))
+        return;
+    if (!site->optimizations()->trackTypeInfo(mozilla::Move(typeInfo)))
+        site->setOptimizations(nullptr);
 }
 
 void
-IonBuilder::trackTypeInfo(CallInfo &callInfo)
+IonBuilder::trackTypeInfoUnchecked(CallInfo &callInfo)
 {
     MDefinition *thisArg = callInfo.thisArg();
-    trackTypeInfo(TrackedTypeSite::Call_This, thisArg->type(), thisArg->resultTypeSet());
+    trackTypeInfoUnchecked(TrackedTypeSite::Call_This, thisArg->type(), thisArg->resultTypeSet());
 
     for (uint32_t i = 0; i < callInfo.argc(); i++) {
         MDefinition *arg = callInfo.getArg(i);
-        trackTypeInfo(TrackedTypeSite::Call_Arg, arg->type(), arg->resultTypeSet());
+        trackTypeInfoUnchecked(TrackedTypeSite::Call_Arg, arg->type(), arg->resultTypeSet());
     }
 
     types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
-    trackTypeInfo(TrackedTypeSite::Call_Return, returnTypes->getKnownMIRType(), returnTypes);
+    trackTypeInfoUnchecked(TrackedTypeSite::Call_Return, returnTypes->getKnownMIRType(),
+                           returnTypes);
 }
 
 void
-IonBuilder::trackOptimizationAttempt(TrackedStrategy strategy)
+IonBuilder::trackOptimizationAttemptUnchecked(TrackedStrategy strategy)
 {
     BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations()) {
-        // OOMs are handled as if optimization tracking were turned off.
-        if (!site->optimizations()->trackAttempt(strategy))
-            site->setOptimizations(nullptr);
-    }
+    // OOMs are handled as if optimization tracking were turned off.
+    if (!site->optimizations()->trackAttempt(strategy))
+        site->setOptimizations(nullptr);
 }
 
 void
-IonBuilder::amendOptimizationAttempt(uint32_t index)
+IonBuilder::amendOptimizationAttemptUnchecked(uint32_t index)
 {
     const BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations())
-        site->optimizations()->amendAttempt(index);
+    site->optimizations()->amendAttempt(index);
 }
 
 void
-IonBuilder::trackOptimizationOutcome(TrackedOutcome outcome)
+IonBuilder::trackOptimizationOutcomeUnchecked(TrackedOutcome outcome)
 {
     const BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations())
-        site->optimizations()->trackOutcome(outcome);
+    site->optimizations()->trackOutcome(outcome);
 }
 
 void
-IonBuilder::trackOptimizationSuccess()
+IonBuilder::trackOptimizationSuccessUnchecked()
 {
     const BytecodeSite *site = current->trackedSite();
-    if (site->hasOptimizations())
-        site->optimizations()->trackSuccess();
+    site->optimizations()->trackSuccess();
 }
 
 void
-IonBuilder::trackInlineSuccess(InliningStatus status)
+IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
 {
     if (status == InliningStatus_Inlined)
         trackOptimizationOutcome(TrackedOutcome::Inlined);
