@@ -1188,6 +1188,10 @@ pref("security.sandbox.windows.log", false);
 pref("dom.ipc.plugins.sandbox.default", false);
 pref("dom.ipc.plugins.sandbox.flash", true);
 
+// This controls whether the Windows NPAPI process sandbox is using a more
+// strict sandboxing policy.  This will require a restart.
+pref("dom.ipc.plugins.moreStrictSandbox", false);
+
 #if defined(MOZ_CONTENT_SANDBOX)
 // This controls whether the Windows content process sandbox is using a more
 // strict sandboxing policy.  This will require a restart.
