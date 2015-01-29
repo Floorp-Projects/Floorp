@@ -7,8 +7,17 @@
  * http://xhr.spec.whatwg.org
  */
 
+typedef (File or USVString) FormDataEntryValue;
+
 [Constructor(optional HTMLFormElement form)]
 interface FormData {
-  void append(DOMString name, Blob value, optional DOMString filename);
-  void append(DOMString name, DOMString value);
+  void append(USVString name, Blob value, optional USVString filename);
+  void append(USVString name, USVString value);
+  void delete(USVString name);
+  FormDataEntryValue? get(USVString name);
+  sequence<FormDataEntryValue> getAll(USVString name);
+  boolean has(USVString name);
+  void set(USVString name, Blob value, optional USVString filename);
+  void set(USVString name, USVString value);
+  // iterable<USVString, FormDataEntryValue>; - Bug 1127703
 };
