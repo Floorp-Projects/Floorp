@@ -84,8 +84,8 @@ StrategyString(TrackedStrategy strategy)
 {
     switch (strategy) {
 #define STRATEGY_CASE(name, msg)                  \
-    case TrackedStrategy::name:                   \
-      return msg;
+      case TrackedStrategy::name:                 \
+        return msg;
     TRACKED_STRATEGY_LIST(STRATEGY_CASE)
 #undef STRATEGY_CASE
 
@@ -982,6 +982,21 @@ IonBuilder::trackTypeInfo(TrackedTypeSite kind, JSObject *obj)
 }
 
 void
+IonBuilder::trackTypeInfo(CallInfo &callInfo)
+{
+    MDefinition *thisArg = callInfo.thisArg();
+    trackTypeInfo(TrackedTypeSite::Call_This, thisArg->type(), thisArg->resultTypeSet());
+
+    for (uint32_t i = 0; i < callInfo.argc(); i++) {
+        MDefinition *arg = callInfo.getArg(i);
+        trackTypeInfo(TrackedTypeSite::Call_Arg, arg->type(), arg->resultTypeSet());
+    }
+
+    types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
+    trackTypeInfo(TrackedTypeSite::Call_Return, returnTypes->getKnownMIRType(), returnTypes);
+}
+
+void
 IonBuilder::trackOptimizationAttempt(TrackedStrategy strategy)
 {
     BytecodeSite *site = current->trackedSite();
@@ -1014,4 +1029,11 @@ IonBuilder::trackOptimizationSuccess()
     const BytecodeSite *site = current->trackedSite();
     if (site->hasOptimizations())
         site->optimizations()->trackSuccess();
+}
+
+void
+IonBuilder::trackInlineSuccess(InliningStatus status)
+{
+    if (status == InliningStatus_Inlined)
+        trackOptimizationOutcome(TrackedOutcome::Inlined);
 }

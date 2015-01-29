@@ -4730,6 +4730,10 @@ IonBuilder::selectInliningTargets(const ObjectVector &targets, CallInfo &callInf
 
     for (size_t i = 0; i < targets.length(); i++) {
         JSObject *target = targets[i];
+
+        trackOptimizationAttempt(TrackedStrategy::Call_Inline);
+        trackTypeInfo(TrackedTypeSite::Call_Target, target);
+
         bool inlineable;
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
@@ -4761,6 +4765,18 @@ IonBuilder::selectInliningTargets(const ObjectVector &targets, CallInfo &callInf
         choiceSet.append(inlineable);
         if (inlineable)
             *numInlineable += 1;
+    }
+
+    // If optimization tracking is turned on and one of the inlineable targets
+    // is a native, track the type info of the call. Most native inlinings
+    // depend on the types of the arguments and the return value.
+    if (isOptimizationTrackingEnabled()) {
+        for (size_t i = 0; i < targets.length(); i++) {
+            if (choiceSet[i] && targets[i]->as<JSFunction>().isNative()) {
+                trackTypeInfo(callInfo);
+                break;
+            }
+        }
     }
 
     MOZ_ASSERT(choiceSet.length() == targets.length());
@@ -4885,13 +4901,22 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineSingleCall(CallInfo &callInfo, JSObject *targetArg)
 {
-    if (!targetArg->is<JSFunction>())
-        return inlineNonFunctionCall(callInfo, targetArg);
+    if (!targetArg->is<JSFunction>()) {
+        InliningStatus status = inlineNonFunctionCall(callInfo, targetArg);
+        trackInlineSuccess(status);
+        return status;
+    }
 
     JSFunction *target = &targetArg->as<JSFunction>();
-    if (target->isNative())
-        return inlineNativeCall(callInfo, target);
+    if (target->isNative()) {
+        InliningStatus status = inlineNativeCall(callInfo, target);
+        trackInlineSuccess(status);
+        return status;
+    }
 
+    // Track success now, as inlining a scripted call makes a new return block
+    // which has a different pc than the current call pc.
+    trackInlineSuccess();
     if (!inlineScriptedCall(callInfo, target))
         return InliningStatus_Error;
     return InliningStatus_Inlined;
@@ -4901,8 +4926,11 @@ IonBuilder::InliningStatus
 IonBuilder::inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
                            CallInfo &callInfo)
 {
-    if (targets.empty())
+    if (targets.empty()) {
+        trackOptimizationAttempt(TrackedStrategy::Call_Inline);
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNoTarget);
         return InliningStatus_NotInlined;
+    }
 
     // Is the function provided by an MGetPropertyCache?
     // If so, the cache may be movable to a fallback path, with a dispatch
@@ -4914,6 +4942,10 @@ IonBuilder::inlineCallsite(const ObjectVector &targets, ObjectVector &originals,
     // avoiding the cache and guarding is still faster.
     if (!propCache.get() && targets.length() == 1) {
         JSObject *target = targets[0];
+
+        trackOptimizationAttempt(TrackedStrategy::Call_Inline);
+        trackTypeInfo(TrackedTypeSite::Call_Target, target);
+
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
           case InliningDecision_Error:
@@ -5160,6 +5192,10 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         if (!choiceSet[i])
             continue;
 
+        // Even though we made one round of inline decisions already, we may
+        // be amending them below.
+        amendOptimizationAttempt(i);
+
         // When original != target, the target is a callsite clone. The
         // original should be used for guards, and the target should be the
         // actual function inlined.
@@ -5169,6 +5205,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, const ObjectVector &targets,
         // Target must be reachable by the MDispatchInstruction.
         if (maybeCache && !maybeCache->propTable()->hasFunction(original)) {
             choiceSet[i] = false;
+            trackOptimizationOutcome(TrackedOutcome::CantInlineNotInDispatch);
             continue;
         }
 
@@ -5704,6 +5741,8 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 bool
 IonBuilder::jsop_call(uint32_t argc, bool constructing)
 {
+    startTrackingOptimizations();
+
     // If this call has never executed, try to seed the observed type set
     // based on how the call result is used.
     types::TemporaryTypeSet *observed = bytecodeTypes(pc);
@@ -9941,7 +9980,6 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
           case InliningDecision_Inline:
             if (!inlineScriptedCall(callInfo, commonGetter))
                 return false;
-            trackOptimizationOutcome(TrackedOutcome::Inlined);
             *emitted = true;
             return true;
         }
@@ -10382,7 +10420,6 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
             if (!inlineScriptedCall(callInfo, commonSetter))
                 return false;
             *emitted = true;
-            trackOptimizationOutcome(TrackedOutcome::Inlined);
             return true;
         }
     }

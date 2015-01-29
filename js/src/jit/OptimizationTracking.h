@@ -48,97 +48,126 @@ namespace jit {
     _(SetProp_DefiniteSlot,                             \
       "setprop definite slot")                          \
     _(SetProp_InlineAccess,                             \
-      "setprop inline access")
+      "setprop inline access")                          \
+                                                        \
+    _(Call_Inline,                                      \
+      "call inline")
 
 
 // Ordering is important below. All outcomes before GenericSuccess will be
 // considered failures, and all outcomes after GenericSuccess will be
 // considered successes.
-#define TRACKED_OUTCOME_LIST(_)                                 \
-    _(GenericFailure,                                           \
-      "failure")                                                \
-    _(NoTypeInfo,                                               \
-      "no type info")                                           \
-    _(NoAnalysisInfo,                                           \
-      "no newscript analysis")                                  \
-    _(NoShapeInfo,                                              \
-      "cannot determine shape")                                 \
-    _(UnknownObject,                                            \
-      "unknown object")                                         \
-    _(UnknownProperties,                                        \
-      "unknown properties")                                     \
-    _(Singleton,                                                \
-      "is singleton")                                           \
-    _(NotSingleton,                                             \
-      "is not singleton")                                       \
-    _(NotFixedSlot,                                             \
-      "property not in fixed slot")                             \
-    _(NotObject,                                                \
-      "not definitely an object")                               \
-    _(NeedsTypeBarrier,                                         \
-      "needs type barrier")                                     \
-    _(InDictionaryMode,                                         \
-      "object in dictionary mode")                              \
-    _(NoProtoFound,                                             \
-      "no proto found")                                         \
-    _(MultiProtoPaths,                                          \
-      "not all paths to property go through same proto")        \
-    _(NonWritableProperty,                                      \
-      "non-writable property")                                  \
-                                                                \
-    _(CantInlineGeneric,                                        \
-      "can't inline")                                           \
-    _(CantInlineNoTarget,                                       \
-      "can't inline: no target")                                \
-    _(CantInlineNotInterpreted,                                 \
-      "can't inline: not interpreted")                          \
-    _(CantInlineNoBaseline,                                     \
-      "can't inline: no baseline code")                         \
-    _(CantInlineLazy,                                           \
-      "can't inline: lazy script")                              \
-    _(CantInlineNotConstructor,                                 \
-      "can't inline: calling non-constructor with 'new'")       \
-    _(CantInlineDisabledIon,                                    \
-      "can't inline: ion disabled for callee")                  \
-    _(CantInlineTooManyArgs,                                    \
-      "can't inline: too many arguments")                       \
-    _(CantInlineRecursive,                                      \
-      "can't inline: recursive")                                \
-    _(CantInlineHeavyweight,                                    \
-      "can't inline: heavyweight")                              \
-    _(CantInlineNeedsArgsObj,                                   \
-      "can't inline: needs arguments object")                   \
-    _(CantInlineDebuggee,                                       \
-      "can't inline: debuggee")                                 \
-    _(CantInlineUnknownProps,                                   \
-      "can't inline: type has unknown properties")              \
-    _(CantInlineExceededDepth,                                  \
-      "can't inline: exceeded inlining depth")                  \
-    _(CantInlineBigLoop,                                        \
-      "can't inline: big function with a loop")                 \
-    _(CantInlineBigCaller,                                      \
-      "can't inline: big caller")                               \
-    _(CantInlineBigCallee,                                      \
-      "can't inline: big callee")                               \
-    _(CantInlineNotHot,                                         \
-      "can't inline: not hot enough")                           \
-                                                                \
-    _(GenericSuccess,                                           \
-      "success")                                                \
-    _(Inlined,                                                  \
-      "inlined")                                                \
-    _(DOM,                                                      \
-      "DOM")                                                    \
-    _(Monomorphic,                                              \
-      "monomorphic")                                            \
-    _(Polymorphic,                                              \
+#define TRACKED_OUTCOME_LIST(_)                                         \
+    _(GenericFailure,                                                   \
+      "failure")                                                        \
+    _(NoTypeInfo,                                                       \
+      "no type info")                                                   \
+    _(NoAnalysisInfo,                                                   \
+      "no newscript analysis")                                          \
+    _(NoShapeInfo,                                                      \
+      "cannot determine shape")                                         \
+    _(UnknownObject,                                                    \
+      "unknown object")                                                 \
+    _(UnknownProperties,                                                \
+      "unknown properties")                                             \
+    _(Singleton,                                                        \
+      "is singleton")                                                   \
+    _(NotSingleton,                                                     \
+      "is not singleton")                                               \
+    _(NotFixedSlot,                                                     \
+      "property not in fixed slot")                                     \
+    _(NotObject,                                                        \
+      "not definitely an object")                                       \
+    _(NeedsTypeBarrier,                                                 \
+      "needs type barrier")                                             \
+    _(InDictionaryMode,                                                 \
+      "object in dictionary mode")                                      \
+    _(NoProtoFound,                                                     \
+      "no proto found")                                                 \
+    _(MultiProtoPaths,                                                  \
+      "not all paths to property go through same proto")                \
+    _(NonWritableProperty,                                              \
+      "non-writable property")                                          \
+    _(ArrayProtoIndexedProps,                                           \
+      "Array.prototype has indexed properties")                         \
+    _(ArrayBadFlags,                                                    \
+      "array observed to be sparse, overflowed .length, or has been iterated") \
+    _(ArrayDoubleConversion,                                            \
+      "array has ambiguous double conversion")                          \
+    _(ArrayRange,                                                       \
+      "array range issue (.length problems)")                           \
+                                                                        \
+    _(CantInlineGeneric,                                                \
+      "can't inline")                                                   \
+    _(CantInlineNoTarget,                                               \
+      "can't inline: no target")                                        \
+    _(CantInlineNotInterpreted,                                         \
+      "can't inline: not interpreted")                                  \
+    _(CantInlineNoBaseline,                                             \
+      "can't inline: no baseline code")                                 \
+    _(CantInlineLazy,                                                   \
+      "can't inline: lazy script")                                      \
+    _(CantInlineNotConstructor,                                         \
+      "can't inline: calling non-constructor with 'new'")               \
+    _(CantInlineDisabledIon,                                            \
+      "can't inline: ion disabled for callee")                          \
+    _(CantInlineTooManyArgs,                                            \
+      "can't inline: too many arguments")                               \
+    _(CantInlineRecursive,                                              \
+      "can't inline: recursive")                                        \
+    _(CantInlineHeavyweight,                                            \
+      "can't inline: heavyweight")                                      \
+    _(CantInlineNeedsArgsObj,                                           \
+      "can't inline: needs arguments object")                           \
+    _(CantInlineDebuggee,                                               \
+      "can't inline: debuggee")                                         \
+    _(CantInlineUnknownProps,                                           \
+      "can't inline: type has unknown properties")                      \
+    _(CantInlineExceededDepth,                                          \
+      "can't inline: exceeded inlining depth")                          \
+    _(CantInlineBigLoop,                                                \
+      "can't inline: big function with a loop")                         \
+    _(CantInlineBigCaller,                                              \
+      "can't inline: big caller")                                       \
+    _(CantInlineBigCallee,                                              \
+      "can't inline: big callee")                                       \
+    _(CantInlineNotHot,                                                 \
+      "can't inline: not hot enough")                                   \
+    _(CantInlineNotInDispatch,                                          \
+      "can't inline: not in dispatch table")                            \
+    _(CantInlineNativeBadForm,                                          \
+      "can't inline native: bad form (arity mismatch/constructing)")    \
+    _(CantInlineNativeBadType,                                          \
+      "can't inline native: bad argument or return type observed")      \
+    _(CantInlineNativeNoTemplateObj,                                    \
+      "can't inline native: no template object")                        \
+    _(CantInlineBound,                                                  \
+      "can't inline bound function invocation")                         \
+                                                                        \
+    _(GenericSuccess,                                                   \
+      "success")                                                        \
+    _(Inlined,                                                          \
+      "inlined")                                                        \
+    _(DOM,                                                              \
+      "DOM")                                                            \
+    _(Monomorphic,                                                      \
+      "monomorphic")                                                    \
+    _(Polymorphic,                                                      \
       "polymorphic")
 
 #define TRACKED_TYPESITE_LIST(_)                \
     _(Receiver,                                 \
       "receiver object")                        \
     _(Value,                                    \
-      "value")
+      "value")                                  \
+    _(Call_Target,                              \
+      "call target")                            \
+    _(Call_This,                                \
+      "call 'this'")                            \
+    _(Call_Arg,                                 \
+      "call argument")                          \
+    _(Call_Return,                              \
+      "call return")
 
 enum class TrackedStrategy : uint32_t {
 #define STRATEGY_OP(name, msg) name,
