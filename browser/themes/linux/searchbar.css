@@ -4,6 +4,7 @@
 
 #PopupSearchAutoComplete {
   -moz-margin-start: -24px;
+  padding: 1px;
 }
 
 .searchbar-textbox {
@@ -123,7 +124,6 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   font-weight: normal;
   background-color: rgb(245, 245, 245);
   border-top: 1px solid #ccc;
-  margin: 0 1px;
   padding: 3px 5px;
   color: #666;
 }
@@ -137,7 +137,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 }
 
 .search-panel-one-offs {
-  margin: 0 0 !important;
+  margin: 0 -1px !important;
   border-top: 1px solid #ccc;
 }
 
@@ -172,7 +172,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 
 .searchbar-engine-one-off-item > .button-box {
   border: none;
-  padding: 0 0;
+  padding: 0;
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-text {
@@ -190,7 +190,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   -moz-appearance: none;
   border: none;
   height: 32px;
-  margin: 0 0;
+  margin: 0;
   padding: 0 10px;
 }
 
@@ -260,10 +260,9 @@ searchbar[oneoffui] .searchbar-engine-image {
 
 .search-setting-button {
   -moz-appearance: none;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
-  -moz-border-top-colors: none;
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 0;
   min-height: 32px;
 }
 
