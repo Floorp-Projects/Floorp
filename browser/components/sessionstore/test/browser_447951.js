@@ -18,14 +18,13 @@ function test() {
   });
 
   let tab = gBrowser.addTab();
-  whenBrowserLoaded(tab.linkedBrowser, function() {
+  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     let tabState = { entries: [] };
     let max_entries = gPrefService.getIntPref("browser.sessionhistory.max_entries");
     for (let i = 0; i < max_entries; i++)
       tabState.entries.push({ url: baseURL + i });
 
-    ss.setTabState(tab, JSON.stringify(tabState));
-    whenTabRestored(tab, function() {
+    promiseTabState(tab, tabState).then(() => {
       TabState.flush(tab.linkedBrowser);
       tabState = JSON.parse(ss.getTabState(tab));
       is(tabState.entries.length, max_entries, "session history filled to the limit");

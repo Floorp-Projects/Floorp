@@ -972,9 +972,8 @@ nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
   _subjectName.Truncate();
   if (mCert->subjectName) {
     _subjectName = NS_ConvertUTF8toUTF16(mCert->subjectName);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -987,9 +986,8 @@ nsNSSCertificate::GetIssuerName(nsAString& _issuerName)
   _issuerName.Truncate();
   if (mCert->issuerName) {
     _issuerName = NS_ConvertUTF8toUTF16(mCert->issuerName);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

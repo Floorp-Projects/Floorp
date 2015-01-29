@@ -37,10 +37,10 @@ function spawnTest () {
 }
 
 function checkViews (DetailsView, doc, currentView) {
-  for (let viewName in DetailsView.viewIndexes) {
+  for (let viewName in DetailsView.components) {
     let button = doc.querySelector(`toolbarbutton[data-view="${viewName}"]`);
 
-    is(DetailsView.el.selectedIndex, DetailsView.viewIndexes[currentView],
+    is(DetailsView.el.selectedPanel.id, DetailsView.components[currentView].id,
       `DetailsView correctly has ${currentView} selected.`);
     if (viewName === currentView) {
       ok(button.getAttribute("checked"), `${viewName} button checked`);

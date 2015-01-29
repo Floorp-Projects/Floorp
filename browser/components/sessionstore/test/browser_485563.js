@@ -10,7 +10,7 @@ function test() {
   let uniqueValue = Math.random() + "\u2028Second line\u2029Second paragraph\u2027";
 
   let tab = gBrowser.addTab();
-  whenBrowserLoaded(tab.linkedBrowser, function() {
+  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     ss.setTabValue(tab, "bug485563", uniqueValue);
     let tabState = JSON.parse(ss.getTabState(tab));
     is(tabState.extData["bug485563"], uniqueValue,

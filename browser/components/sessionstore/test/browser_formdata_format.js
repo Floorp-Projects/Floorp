@@ -75,9 +75,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
 
   Task.spawn(function () {
     yield promiseBrowserLoaded(tab.linkedBrowser);
-
-    ss.setTabState(tab, JSON.stringify(tabState));
-    yield promiseTabRestored(tab);
+    yield promiseTabState(tab, tabState);
 
     TabState.flush(tab.linkedBrowser);
     let restoredTabState = JSON.parse(ss.getTabState(tab));

@@ -1,183 +1,116 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const originalState = ss.getBrowserState();
-
-/** Private Browsing Test for Bug 819510 **/
-function test() {
-  waitForExplicitFinish();
-  runNextTest();
-}
-
-let tests = [test_1, test_2, test_3 ];
-
-const testState = {
-  windows: [{
-    tabs: [
-      { entries: [{ url: "about:blank" }] },
-    ]
-  }]
-};
-
-function runNextTest() {
-  // Set an empty state
-  closeAllButPrimaryWindow();
-
-  // Run the next test, or finish
-  if (tests.length) {
-    let currentTest = tests.shift();
-    waitForBrowserState(testState, currentTest);
-  } else {
-    Services.obs.addObserver(
-      function observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(observe, aTopic);
-        finish();
-      },
-      "sessionstore-browser-state-restored", false);
-    ss.setBrowserState(originalState);
-  }
-}
-
 // Test opening default mochitest-normal-private-normal-private windows
 // (saving the state with last window being private)
-function test_1() {
-  testOnWindow(false, function(aWindow) {
-    aWindow.gBrowser.addTab("http://www.example.com/1");
-    testOnWindow(true, function(aWindow) {
-      aWindow.gBrowser.addTab("http://www.example.com/2");
-      testOnWindow(false, function(aWindow) {
-        aWindow.gBrowser.addTab("http://www.example.com/3");
-        testOnWindow(true, function(aWindow) {
-          aWindow.gBrowser.addTab("http://www.example.com/4");
+add_task(function* test_1() {
+  let win = yield promiseNewWindowLoaded();
+  win.gBrowser.addTab("http://www.example.com/1");
 
-          let curState = JSON.parse(ss.getBrowserState());
-          is (curState.windows.length, 5, "Browser has opened 5 windows");
-          is (curState.windows[2].isPrivate, true, "Window is private");
-          is (curState.windows[4].isPrivate, true, "Last window is private");
-          is (curState.selectedWindow, 5, "Last window opened is the one selected");
+  win = yield promiseNewWindowLoaded({private: true});
+  win.gBrowser.addTab("http://www.example.com/2");
 
-          forceWriteState(function(state) {
-            is(state.windows.length, 3,
-               "sessionstore state: 3 windows in data being written to disk");
-            is (state.selectedWindow, 3,
-               "Selected window is updated to match one of the saved windows");
-            state.windows.forEach(function(win) {
-              is(!win.isPrivate, true, "Saved window is not private");
-            });
-            is(state._closedWindows.length, 0,
-               "sessionstore state: no closed windows in data being written to disk");
-            runNextTest();
-          });
-        });
-      });
-    });
-  });
-}
+  win = yield promiseNewWindowLoaded();
+  win.gBrowser.addTab("http://www.example.com/3");
+
+  win = yield promiseNewWindowLoaded({private: true});
+  win.gBrowser.addTab("http://www.example.com/4");
+
+  let curState = JSON.parse(ss.getBrowserState());
+  is(curState.windows.length, 5, "Browser has opened 5 windows");
+  is(curState.windows[2].isPrivate, true, "Window is private");
+  is(curState.windows[4].isPrivate, true, "Last window is private");
+  is(curState.selectedWindow, 5, "Last window opened is the one selected");
+
+  let state = JSON.parse(yield promiseRecoveryFileContents());
+
+  is(state.windows.length, 3,
+     "sessionstore state: 3 windows in data being written to disk");
+  is(state.selectedWindow, 3,
+     "Selected window is updated to match one of the saved windows");
+  ok(state.windows.every(win => !win.isPrivate),
+    "Saved windows are not private");
+  is(state._closedWindows.length, 0,
+     "sessionstore state: no closed windows in data being written to disk");
+
+  // Cleanup.
+  yield promiseAllButPrimaryWindowClosed();
+  forgetClosedWindows();
+});
 
 // Test opening default mochitest window + 2 private windows
-function test_2() {
-  testOnWindow(true, function(aWindow) {
-    aWindow.gBrowser.addTab("http://www.example.com/1");
-    testOnWindow(true, function(aWindow) {
-      aWindow.gBrowser.addTab("http://www.example.com/2");
+add_task(function* test_2() {
+  let win = yield promiseNewWindowLoaded({private: true});
+  win.gBrowser.addTab("http://www.example.com/1");
 
-      let curState = JSON.parse(ss.getBrowserState());
-      is (curState.windows.length, 3, "Browser has opened 3 windows");
-      is (curState.windows[1].isPrivate, true, "Window 1 is private");
-      is (curState.windows[2].isPrivate, true, "Window 2 is private");
-      is (curState.selectedWindow, 3, "Last window opened is the one selected");
+  win = yield promiseNewWindowLoaded({private: true});
+  win.gBrowser.addTab("http://www.example.com/2");
 
-      forceWriteState(function(state) {
-        is(state.windows.length, 1,
-           "sessionstore state: 1 windows in data being written to disk");
-        is (state.selectedWindow, 1,
-           "Selected window is updated to match one of the saved windows");
-        is(state._closedWindows.length, 0,
-           "sessionstore state: no closed windows in data being written to disk");
-        runNextTest();
-      });
-    });
-  });
-}
+  let curState = JSON.parse(ss.getBrowserState());
+  is(curState.windows.length, 3, "Browser has opened 3 windows");
+  is(curState.windows[1].isPrivate, true, "Window 1 is private");
+  is(curState.windows[2].isPrivate, true, "Window 2 is private");
+  is(curState.selectedWindow, 3, "Last window opened is the one selected");
+
+  let state = JSON.parse(yield promiseRecoveryFileContents());
+
+  is(state.windows.length, 1,
+     "sessionstore state: 1 windows in data being written to disk");
+  is(state.selectedWindow, 1,
+     "Selected window is updated to match one of the saved windows");
+  is(state._closedWindows.length, 0,
+     "sessionstore state: no closed windows in data being written to disk");
+
+  // Cleanup.
+  yield promiseAllButPrimaryWindowClosed();
+  forgetClosedWindows();
+});
 
 // Test opening default-normal-private-normal windows and closing a normal window
-function test_3() {
-  testOnWindow(false, function(normalWindow) {
-    waitForTabLoad(normalWindow, "http://www.example.com/", function() {
-      testOnWindow(true, function(aWindow) {
-        waitForTabLoad(aWindow, "http://www.example.com/", function() {
-          testOnWindow(false, function(aWindow) {
-            waitForTabLoad(aWindow, "http://www.example.com/", function() {
+add_task(function* test_3() {
+  let normalWindow = yield promiseNewWindowLoaded();
+  yield promiseTabLoad(normalWindow, "http://www.example.com/");
 
-              let curState = JSON.parse(ss.getBrowserState());
-              is(curState.windows.length, 4, "Browser has opened 4 windows");
-              is(curState.windows[2].isPrivate, true, "Window 2 is private");
-              is(curState.selectedWindow, 4, "Last window opened is the one selected");
+  let win = yield promiseNewWindowLoaded({private: true});
+  yield promiseTabLoad(win, "http://www.example.com/");
 
-              waitForWindowClose(normalWindow, function() {
-                // Pin and unpin a tab before checking the written state so that
-                // the list of restoring windows gets cleared. Otherwise the
-                // window we just closed would be marked as not closed.
-                let tab = aWindow.gBrowser.tabs[0];
-                aWindow.gBrowser.pinTab(tab);
-                aWindow.gBrowser.unpinTab(tab);
+  win = yield promiseNewWindowLoaded();
+  yield promiseTabLoad(win, "http://www.example.com/");
 
-                forceWriteState(function(state) {
-                  is(state.windows.length, 2,
-                     "sessionstore state: 2 windows in data being written to disk");
-                  is(state.selectedWindow, 2,
-                     "Selected window is updated to match one of the saved windows");
-                  state.windows.forEach(function(win) {
-                    is(!win.isPrivate, true, "Saved window is not private");
-                  });
-                  is(state._closedWindows.length, 1,
-                     "sessionstore state: 1 closed window in data being written to disk");
-                  state._closedWindows.forEach(function(win) {
-                    is(!win.isPrivate, true, "Closed window is not private");
-                  });
-                  runNextTest();
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-}
+  let curState = JSON.parse(ss.getBrowserState());
+  is(curState.windows.length, 4, "Browser has opened 4 windows");
+  is(curState.windows[2].isPrivate, true, "Window 2 is private");
+  is(curState.selectedWindow, 4, "Last window opened is the one selected");
 
-function waitForWindowClose(aWin, aCallback) {
-  let winCount = JSON.parse(ss.getBrowserState()).windows.length;
-  aWin.addEventListener("SSWindowClosing", function onWindowClosing() {
-    aWin.removeEventListener("SSWindowClosing", onWindowClosing, false);
-    function checkCount() {
-      let state = JSON.parse(ss.getBrowserState());
-      if (state.windows.length == (winCount - 1)) {
-        aCallback();
-      } else {
-        executeSoon(checkCount);
-      }
-    }
-    executeSoon(checkCount);
-  }, false);
-  aWin.close();
-}
+  yield promiseWindowClosed(normalWindow);
 
-function forceWriteState(aCallback) {
-  return promiseRecoveryFileContents().then(function(data) {
-    aCallback(JSON.parse(data));
-  });
-}
+  // Pin and unpin a tab before checking the written state so that
+  // the list of restoring windows gets cleared. Otherwise the
+  // window we just closed would be marked as not closed.
+  let tab = win.gBrowser.tabs[0];
+  win.gBrowser.pinTab(tab);
+  win.gBrowser.unpinTab(tab);
 
-function testOnWindow(aIsPrivate, aCallback) {
-  whenNewWindowLoaded({private: aIsPrivate}, aCallback);
-}
+  let state = JSON.parse(yield promiseRecoveryFileContents());
 
-function waitForTabLoad(aWin, aURL, aCallback) {
-  let browser = aWin.gBrowser.selectedBrowser;
-  browser.loadURI(aURL);
-  whenBrowserLoaded(browser, function () {
-    TabState.flush(browser);
-    executeSoon(aCallback);
-  });
+  is(state.windows.length, 2,
+     "sessionstore state: 2 windows in data being written to disk");
+  is(state.selectedWindow, 2,
+     "Selected window is updated to match one of the saved windows");
+  ok(state.windows.every(win => !win.isPrivate),
+    "Saved windows are not private");
+  is(state._closedWindows.length, 1,
+     "sessionstore state: 1 closed window in data being written to disk");
+  ok(state._closedWindows.every(win => !win.isPrivate),
+    "Closed windows are not private");
+
+  // Cleanup.
+  yield promiseAllButPrimaryWindowClosed();
+  forgetClosedWindows();
+});
+
+function promiseTabLoad(win, url) {
+  let browser = win.gBrowser.selectedBrowser;
+  browser.loadURI(url);
+  return promiseBrowserLoaded(browser).then(() => TabState.flush(browser));
 }

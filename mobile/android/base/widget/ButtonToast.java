@@ -173,4 +173,8 @@ public class ButtonToast {
             hide(false, ReasonHidden.TIMEOUT);
         }
     };
+
+    public boolean isVisible() {
+        return (mView.getVisibility() == View.VISIBLE);
+    }
 }

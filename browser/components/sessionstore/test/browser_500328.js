@@ -83,10 +83,10 @@ function test() {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
 
-  whenBrowserLoaded(browser, function() {
+  promiseBrowserLoaded(browser).then(() => {
     browser.loadURI("http://example.com", null, null);
 
-    whenBrowserLoaded(browser, function() {
+    promiseBrowserLoaded(browser).then(() => {
       // After these push/replaceState calls, the window should have three
       // history entries:
       //   testURL        (state object: null)          <-- oldest
@@ -109,9 +109,7 @@ function test() {
         ss.setTabState(tab2, state, true);
 
         // Run checkState() once the tab finishes loading its restored state.
-        whenTabRestored(tab2, function() {
-          checkState(tab2);
-        });
+        promiseTabRestored(tab2).then(() => checkState(tab2));
       });
     });
   });
