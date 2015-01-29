@@ -2384,6 +2384,20 @@ print_iso_string(char* buf, size_t size, double utctime)
                 int(msFromTime(utctime)));
 }
 
+static void
+print_iso_extended_string(char* buf, size_t size, double utctime)
+{
+    MOZ_ASSERT(TimeClip(utctime) == utctime);
+    JS_snprintf(buf, size, "%+.6d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                int(YearFromTime(utctime)),
+                int(MonthFromTime(utctime)) + 1,
+                int(DateFromTime(utctime)),
+                int(HourFromTime(utctime)),
+                int(MinFromTime(utctime)),
+                int(SecFromTime(utctime)),
+                int(msFromTime(utctime)));
+}
+
 /* ES5 B.2.6. */
 MOZ_ALWAYS_INLINE bool
 date_toGMTString_impl(JSContext *cx, CallArgs args)
@@ -2403,7 +2417,6 @@ date_toGMTString_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-/* ES5 15.9.5.43. */
 static bool
 date_toGMTString(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2411,6 +2424,7 @@ date_toGMTString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsDate, date_toGMTString_impl>(cx, args);
 }
 
+/* ES6 draft 2015-01-15 20.3.4.36. */
 MOZ_ALWAYS_INLINE bool
 date_toISOString_impl(JSContext *cx, CallArgs args)
 {
@@ -2421,7 +2435,11 @@ date_toISOString_impl(JSContext *cx, CallArgs args)
     }
 
     char buf[100];
-    print_iso_string(buf, sizeof buf, utctime);
+    int year = int(YearFromTime(utctime));
+    if (year < 0 || year > 9999)
+        print_iso_extended_string(buf, sizeof buf, utctime);
+    else
+        print_iso_string(buf, sizeof buf, utctime);
 
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)

@@ -601,6 +601,8 @@ public:
   virtual void PrincipalChanged(DOMMediaStream* aMediaStream) MOZ_OVERRIDE;
 #endif
 
+  static std::string GetTrackId(const dom::MediaStreamTrack& track);
+
 private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl&rhs);

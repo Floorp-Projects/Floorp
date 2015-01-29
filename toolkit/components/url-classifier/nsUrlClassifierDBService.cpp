@@ -1132,6 +1132,9 @@ nsUrlClassifierDBService::Init()
   if (NS_FAILED(rv)) {
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(cacheDir));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   // Start the background thread.

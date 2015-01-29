@@ -605,6 +605,20 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         }
         break;
 
+    case SDP_ATTR_MSID_SEMANTIC:
+        sstrncpy(dst_attr_p->attr.msid_semantic.semantic,
+                 src_attr_p->attr.msid_semantic.semantic,
+                 SDP_MAX_STRING_LEN+1);
+        for (i=0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
+          if (!src_attr_p->attr.msid_semantic.msids[i]) {
+            break;
+          }
+
+          dst_attr_p->attr.msid_semantic.msids[i] =
+            cpr_strdup(src_attr_p->attr.msid_semantic.msids[i]);
+        }
+        break;
+
     case SDP_ATTR_SOURCE_FILTER:
         dst_attr_p->attr.source_filter.mode =
                          src_attr_p->attr.source_filter.mode;
@@ -1176,6 +1190,10 @@ void sdp_free_attr (sdp_attr_t *attr_p)
         for (i = 0; i < attr_p->attr.stream_data.num_group_id; i++) {
             SDP_FREE(attr_p->attr.stream_data.group_ids[i]);
         }
+    } else if (attr_p->type == SDP_ATTR_MSID_SEMANTIC) {
+        for (i = 0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
+            SDP_FREE(attr_p->attr.msid_semantic.msids[i]);
+        }
     }
 
     /* Now free the actual attribute memory. */
@@ -1658,7 +1676,6 @@ static boolean sdp_attr_is_simple_string(sdp_attr_e attr_type) {
         (attr_type != SDP_ATTR_X_CONFID) &&
         (attr_type != SDP_ATTR_LABEL) &&
         (attr_type != SDP_ATTR_IDENTITY) &&
-        (attr_type != SDP_ATTR_MSID_SEMANTIC) &&
         (attr_type != SDP_ATTR_ICE_OPTIONS)) {
       return FALSE;
     }
@@ -10305,7 +10322,7 @@ sdp_result_e sdp_set_group_num_id (void *sdp_ptr, uint16_t level,
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
-    } else if ((group_num_id == 0) || (group_num_id > SDP_MAX_GROUP_STREAM_ID)){
+    } else if ((group_num_id == 0) || (group_num_id > SDP_MAX_MEDIA_STREAMS)){
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Number of group id value provided - %u is invalid",
                       sdp_p->debug_str, (unsigned)group_num_id);
@@ -10388,7 +10405,7 @@ sdp_result_e sdp_set_group_id (void *sdp_ptr, uint16_t level,
         return (SDP_INVALID_PARAMETER);
     } else {
         num_group_id = attr_p->attr.stream_data.num_group_id;
-        if (num_group_id == SDP_MAX_GROUP_STREAM_ID) {
+        if (num_group_id == SDP_MAX_MEDIA_STREAMS) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 CSFLogError(logTag, "%s Max number of Group Ids already defined "
                       "for this group line %u", sdp_p->debug_str, (unsigned)level);
