@@ -340,6 +340,11 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                // Don't do anything if the activity is destroyed before the animation ends.
+                if (SearchActivity.this.isDestroyed()) {
+                    return;
+                }
+
                 setEditState(EditState.WAITING);
                 setSearchState(SearchState.POSTSEARCH);
 
