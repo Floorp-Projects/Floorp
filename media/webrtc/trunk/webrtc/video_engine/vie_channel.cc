@@ -1066,9 +1066,6 @@ int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
                                               uint16_t* fractionLost,
                                               uint32_t* cumulativeLost,
                                               int32_t* rttMs) {
-  WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, channel_id_), "%s",
-               __FUNCTION__);
-
   // TODO: how do we do this for simulcast ? average for all
   // except cumulative_lost that is the sum ?
   // CriticalSectionScoped cs(rtp_rtcp_cs_.get());
@@ -1086,8 +1083,7 @@ int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
   // Otherwise use the first report block.
   std::vector<RTCPReportBlock> remote_stats;
   if (rtp_rtcp_->RemoteRTCPStat(&remote_stats) != 0 || remote_stats.empty()) {
-    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
-                 "%s: Could not get remote stats", __FUNCTION__);
+    LOG_F(LS_ERROR) << "Could not get remote stats";
     return -1;
   }
   std::vector<RTCPReportBlock>::const_iterator statistics =
@@ -1110,8 +1106,7 @@ int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
                                     &NTPLow,
                                     &receivedPacketCount,
                                     &receivedOctetCount) != 0) {
-    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
-                 "%s: failed to retrieve RTT", __FUNCTION__);
+    LOG_F(LS_ERROR) << "failed to retrieve RTT";
     NTPHigh = 0;
     NTPLow = 0;
     receivedPacketCount = 0;
@@ -1125,8 +1120,7 @@ int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
   uint16_t dummy;
   uint16_t rtt = 0;
   if (rtp_rtcp_->RTT(remote_ssrc, &rtt, &dummy, &dummy, &dummy) != 0) {
-    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
-                 "%s: Could not get RTT", __FUNCTION__);
+    LOG_F(LS_ERROR) << "failed to get RTT";
     return -1;
   }
   *rttMs = rtt;
@@ -1312,14 +1306,10 @@ void ViEChannel::GetRtcpPacketTypeCounters(
 }
 
 int32_t ViEChannel::GetRemoteRTCPSenderInfo(SenderInfo* sender_info) const {
-  WEBRTC_TRACE(kTraceInfo, kTraceVideo, ViEId(engine_id_, channel_id_), "%s",
-               __FUNCTION__);
-
   // Get the sender info from the latest received RTCP Sender Report.
   RTCPSenderInfo rtcp_sender_info;
   if (rtp_rtcp_->RemoteRTCPStat(&rtcp_sender_info) != 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo, ViEId(engine_id_, channel_id_),
-                 "%s: failed to read RTCP SR sender info", __FUNCTION__);
+    LOG_F(LS_ERROR) << "failed to read RTCP SR sender info";
     return -1;
   }
 
@@ -1690,8 +1680,7 @@ int32_t ViEChannel::ResendPackets(const uint16_t* sequence_numbers,
 }
 
 void ViEChannel::ReceiveStateChange(VideoReceiveState state) {
-  WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, channel_id_),
-               "%s", __FUNCTION__);
+  LOG_F(LS_INFO);
   {
     CriticalSectionScoped cs(callback_cs_.get());
     if (codec_observer_) {

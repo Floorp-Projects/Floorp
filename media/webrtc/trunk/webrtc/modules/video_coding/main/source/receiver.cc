@@ -350,10 +350,7 @@ void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {
 void VCMReceiver::UpdateState(VCMReceiverState new_state) {
   CriticalSectionScoped cs(crit_sect_);
   assert(!(state_ == kPassive && new_state == kWaitForPrimaryDecode));
-  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCoding,
-               VCMId(vcm_id_, receiver_id_),
-               "Receiver changing state: %d to %d",
-               state_, new_state);
+  LOG(LS_INFO) << "Receiver changing state: " << state_ << " to " << new_state;
   state_ = new_state;
 }
 

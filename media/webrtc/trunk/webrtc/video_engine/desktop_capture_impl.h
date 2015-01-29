@@ -211,9 +211,6 @@ public:
   virtual SharedMemory* CreateSharedMemory(size_t size) OVERRIDE;
   virtual void OnCaptureCompleted(DesktopFrame* frame) OVERRIDE;
 
-  //ScreenCapturer::MouseShapeObserver
-  virtual void OnCursorShapeChanged(MouseCursorShape* cursor_shape) OVERRIDE;
-
 protected:
   DesktopCaptureImpl(const int32_t id);
   virtual ~DesktopCaptureImpl();
