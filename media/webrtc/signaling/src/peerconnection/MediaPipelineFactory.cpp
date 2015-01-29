@@ -608,7 +608,7 @@ MediaPipelineFactory::CreateVideoConduit(const JsepTrackPair& aTrackPair,
   // The two sides of a send/receive pair of conduits each keep a raw
   // pointer to the other, and are responsible for cleanly shutting down.
   RefPtr<VideoSessionConduit> conduit = VideoSessionConduit::Create(
-      static_cast<VideoSessionConduit*>(peerConduit.get()));
+      static_cast<VideoSessionConduit*>(peerConduit.get()), receiving);
 
   if (!conduit) {
     MOZ_MTLOG(ML_ERROR, "Could not create video conduit");
