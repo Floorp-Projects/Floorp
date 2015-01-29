@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  TestRunner.run();
-}
-
 /**
  * This test makes sure that we correctly preserve tab attributes when storing
  * and restoring tabs. It also ensures that we skip special attributes like
@@ -13,13 +9,13 @@ function test() {
 
 const PREF = "browser.sessionstore.restore_on_demand";
 
-function runTests() {
+add_task(function* test() {
   Services.prefs.setBoolPref(PREF, true)
   registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
 
   // Add a new tab with a nice icon.
   let tab = gBrowser.addTab("about:robots");
-  yield whenBrowserLoaded(tab.linkedBrowser);
+  yield promiseBrowserLoaded(tab.linkedBrowser);
 
   // Check that the tab has an 'image' attribute.
   ok(tab.hasAttribute("image"), "tab.image exists");
@@ -44,15 +40,16 @@ function runTests() {
   };
 
   // Prepare a pending tab waiting to be restored.
-  whenTabRestoring(tab);
-  yield ss.setTabState(tab, JSON.stringify(state));
+  let promise = promiseTabRestoring(tab);
+  ss.setTabState(tab, JSON.stringify(state));
+  yield promise;
 
   ok(tab.hasAttribute("pending"), "tab is pending");
   is(gBrowser.getIcon(tab), state.attributes.image, "tab has correct icon");
 
   // Let the pending tab load.
   gBrowser.selectedTab = tab;
-  yield whenTabRestored(tab);
+  yield promiseTabRestored(tab);
 
   // Ensure no 'image' or 'pending' attributes are stored.
   ({attributes} = JSON.parse(ss.getTabState(tab)));
@@ -62,11 +59,13 @@ function runTests() {
 
   // Clean up.
   gBrowser.removeTab(tab);
-}
+});
 
-function whenTabRestoring(tab) {
-  tab.addEventListener("SSTabRestoring", function onRestoring() {
-    tab.removeEventListener("SSTabRestoring", onRestoring);
-    executeSoon(next);
+function promiseTabRestoring(tab) {
+  return new Promise(resolve => {
+    tab.addEventListener("SSTabRestoring", function onRestoring() {
+      tab.removeEventListener("SSTabRestoring", onRestoring);
+      resolve();
+    });
   });
 }

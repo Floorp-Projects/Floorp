@@ -36,8 +36,8 @@ function invalidEventHandler(e)
 function checkValidEmailAddress(element)
 {
   gInvalid = false;
-  ok(!element.validity.typeMismatch,
-     "Element should not suffer from type mismatch (with value='"+element.value+"')");
+  ok(!element.validity.typeMismatch && !element.validity.badInput,
+     "Element should not suffer from type mismatch or bad input (with value='"+element.value+"')");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "Element should be valid");
   ok(!gInvalid, "The invalid event should not have been thrown");
@@ -46,11 +46,20 @@ function checkValidEmailAddress(element)
   ok(element.matches(":valid"), ":valid pseudo-class should apply");
 }
 
-function checkInvalidEmailAddress(element)
+const VALID = 0;
+const TYPE_MISMATCH = 1 << 0;
+const BAD_INPUT = 1 << 1;
+
+function checkInvalidEmailAddress(element, failedValidityStates)
 {
+  info("Checking " + element.value);
   gInvalid = false;
-  ok(element.validity.typeMismatch,
-     "Element should suffer from type mismatch (with value='"+element.value+"')");
+  var expectTypeMismatch = !!(failedValidityStates & TYPE_MISMATCH);
+  var expectBadInput = !!(failedValidityStates & BAD_INPUT);
+  ok(element.validity.typeMismatch == expectTypeMismatch,
+     "Element should " + (expectTypeMismatch ? "" : "not ") + "suffer from type mismatch (with value='"+element.value+"')");
+  ok(element.validity.badInput == expectBadInput,
+     "Element should " + (expectBadInput ? "" : "not ") + "suffer from bad input (with value='"+element.value+"')");
   ok(!element.validity.valid, "Element should not be valid");
   ok(!element.checkValidity(), "Element should not be valid");
   ok(gInvalid, "The invalid event should have been thrown");
@@ -59,15 +68,15 @@ function checkInvalidEmailAddress(element)
   ok(element.matches(":invalid"), ":invalid pseudo-class should apply");
 }
 
-function testEmailAddress(aElement, aValue, aMultiple, aValidity)
+function testEmailAddress(aElement, aValue, aMultiple, aValidityFailures)
 {
   aElement.multiple = aMultiple;
   aElement.value = aValue;
 
-  if (aValidity) {
+  if (!aValidityFailures) {
     checkValidEmailAddress(aElement);
   } else {
-    checkInvalidEmailAddress(aElement);
+    checkInvalidEmailAddress(aElement, aValidityFailures);
   }
 }
 
@@ -75,91 +84,92 @@ var email = document.forms[0].elements[0];
 
 // Simple values, checking the e-mail syntax validity.
 var values = [
-  [ '', true ], // The empty string shouldn't be considered as invalid.
-  [ 'foo@bar.com', true ],
-  [ ' foo@bar.com', true ],
-  [ 'foo@bar.com ', true ],
-  [ '\r\n foo@bar.com', true ],
-  [ 'foo@bar.com \n\r', true ],
-  [ '\n\n \r\rfoo@bar.com\n\n   \r\r', true ],
-  [ '\n\r \n\rfoo@bar.com\n\r   \n\r', true ],
-  [ 'tulip', false ],
+  [ '' ], // The empty string shouldn't be considered as invalid.
+  [ 'foo@bar.com', VALID ],
+  [ ' foo@bar.com', VALID ],
+  [ 'foo@bar.com ', VALID ],
+  [ '\r\n foo@bar.com', VALID ],
+  [ 'foo@bar.com \n\r', VALID ],
+  [ '\n\n \r\rfoo@bar.com\n\n   \r\r', VALID ],
+  [ '\n\r \n\rfoo@bar.com\n\r   \n\r', VALID ],
+  [ 'tulip', TYPE_MISMATCH ],
   // Some checks on the user part of the address.
-  [ '@bar.com', false ],
-  [ 'f\noo@bar.com', true ],
-  [ 'f\roo@bar.com', true ],
-  [ 'f\r\noo@bar.com', true ],
-  [ 'fü@foo.com', true ],
+  [ '@bar.com', TYPE_MISMATCH ],
+  [ 'f\noo@bar.com', VALID ],
+  [ 'f\roo@bar.com', VALID ],
+  [ 'f\r\noo@bar.com', VALID ],
+  [ 'fü@foo.com', TYPE_MISMATCH ],
   // Some checks for the domain part.
-  [ 'foo@bar', true ],
-  [ 'foo@b', true ],
-  [ 'foo@', false ],
-  [ 'foo@bar.', false ],
-  [ 'foo@foo.bar', true ],
-  [ 'foo@foo..bar', false ],
-  [ 'foo@.bar', false ],
-  [ 'foo@tulip.foo.bar', true ],
-  [ 'foo@tulip.foo-bar', true ],
-  [ 'foo@1.2', true ],
-  [ 'foo@127.0.0.1', true ],
-  [ 'foo@1.2.3', true ],
-  [ 'foo@b\nar.com', true ],
-  [ 'foo@b\rar.com', true ],
-  [ 'foo@b\r\nar.com', true ],
-  [ 'foo@.', false ],
-  [ 'foo@fü.com', true ],
-  [ 'foo@fu.cüm', true ],
-  // Long strings with UTF-8.
-  [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', true ],
-  [ 'this-is-email-should-be-longer-than-sixty-four-characters-föö@mözillä.tld', true, true ],
-  // Long labels.
-  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss', true ],
-  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', true ],
-  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', true ],
-  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss', true ],
-  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', false ],
-  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', false ],
-  // Long labels with UTF-8.
-  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', false ],
-  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', false ],
+  [ 'foo@bar', VALID ],
+  [ 'foo@b', VALID ],
+  [ 'foo@', TYPE_MISMATCH ],
+  [ 'foo@bar.', TYPE_MISMATCH ],
+  [ 'foo@foo.bar', VALID ],
+  [ 'foo@foo..bar', TYPE_MISMATCH ],
+  [ 'foo@.bar', TYPE_MISMATCH ],
+  [ 'foo@tulip.foo.bar', VALID ],
+  [ 'foo@tulip.foo-bar', VALID ],
+  [ 'foo@1.2', VALID ],
+  [ 'foo@127.0.0.1', VALID ],
+  [ 'foo@1.2.3', VALID ],
+  [ 'foo@b\nar.com', VALID ],
+  [ 'foo@b\rar.com', VALID ],
+  [ 'foo@b\r\nar.com', VALID ],
+  [ 'foo@.', TYPE_MISMATCH ],
+  [ 'foo@fü.com', VALID ],
+  [ 'foo@fu.cüm', VALID ],
+  [ 'thisUsernameIsLongerThanSixtyThreeCharactersInLengthRightAboutNow@mozilla.tld', VALID ],
+  // Long strings with UTF-8 in username.
+  [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', TYPE_MISMATCH ],
+  [ 'this-is-email-should-be-longer-than-sixty-four-characters-föö@mözillä.tld', TYPE_MISMATCH, true ],
+  // Long labels (labels greater than 63 chars long are not allowed).
+  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss', VALID ],
+  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', VALID ],
+  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', VALID ],
+  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss', VALID ],
+  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', TYPE_MISMATCH | BAD_INPUT ],
+  // Long labels with UTF-8 (punycode encoding will increase the label to more than 63 chars).
+  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', TYPE_MISMATCH | BAD_INPUT ],
+  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', TYPE_MISMATCH | BAD_INPUT ],
   // The domains labels (sub-domains or tld) can't start or finish with a '-'
-  [ 'foo@foo-bar', true ],
-  [ 'foo@-foo', false ],
-  [ 'foo@foo-.bar', false ],
-  [ 'foo@-.-', false ],
-  [ 'foo@fo-o.bar', true ],
-  [ 'foo@fo-o.-bar', false ],
-  [ 'foo@fo-o.bar-', false ],
-  [ 'foo@fo-o.-', false ],
-  [ 'foo@fo--o', true ],
+  [ 'foo@foo-bar', VALID ],
+  [ 'foo@-foo', TYPE_MISMATCH ],
+  [ 'foo@foo-.bar', TYPE_MISMATCH ],
+  [ 'foo@-.-', TYPE_MISMATCH ],
+  [ 'foo@fo-o.bar', VALID ],
+  [ 'foo@fo-o.-bar', TYPE_MISMATCH ],
+  [ 'foo@fo-o.bar-', TYPE_MISMATCH ],
+  [ 'foo@fo-o.-', TYPE_MISMATCH ],
+  [ 'foo@fo--o', VALID ],
 ];
 
 // Multiple values, we don't check e-mail validity, only multiple stuff.
 var multipleValues = [
-  [ 'foo@bar.com, foo@bar.com', true ],
-  [ 'foo@bar.com,foo@bar.com', true ],
-  [ 'foo@bar.com,foo@bar.com,foo@bar.com', true ],
-  [ '     foo@bar.com     ,     foo@bar.com    ', true ],
-  [ '\tfoo@bar.com\t,\tfoo@bar.com\t', true ],
-  [ '\rfoo@bar.com\r,\rfoo@bar.com\r', true ],
-  [ '\nfoo@bar.com\n,\nfoo@bar.com\n', true ],
-  [ '\ffoo@bar.com\f,\ffoo@bar.com\f', true ],
-  [ '\t foo@bar.com\r,\nfoo@bar.com\f', true ],
-  [ 'foo@b,ar.com,foo@bar.com', false ],
-  [ 'foo@bar.com,foo@bar.com,', false ],
-  [ '   foo@bar.com   ,   foo@bar.com   ,   ', false ],
-  [ ',foo@bar.com,foo@bar.com', false ],
-  [ ',foo@bar.com,foo@bar.com', false ],
-  [ 'foo@bar.com,,,foo@bar.com', false ],
-  [ 'foo@bar.com;foo@bar.com', false ],
-  [ '<foo@bar.com>, <foo@bar.com>', false ],
-  [ 'foo@bar, foo@bar.com', true ],
-  [ 'foo@bar.com, foo', false ],
-  [ 'foo, foo@bar.com', false ],
+  [ 'foo@bar.com, foo@bar.com', VALID ],
+  [ 'foo@bar.com,foo@bar.com', VALID ],
+  [ 'foo@bar.com,foo@bar.com,foo@bar.com', VALID ],
+  [ '     foo@bar.com     ,     foo@bar.com    ', VALID ],
+  [ '\tfoo@bar.com\t,\tfoo@bar.com\t', VALID ],
+  [ '\rfoo@bar.com\r,\rfoo@bar.com\r', VALID ],
+  [ '\nfoo@bar.com\n,\nfoo@bar.com\n', VALID ],
+  [ '\ffoo@bar.com\f,\ffoo@bar.com\f', VALID ],
+  [ '\t foo@bar.com\r,\nfoo@bar.com\f', VALID ],
+  [ 'foo@b,ar.com,foo@bar.com', TYPE_MISMATCH ],
+  [ 'foo@bar.com,foo@bar.com,', TYPE_MISMATCH ],
+  [ '   foo@bar.com   ,   foo@bar.com   ,   ', TYPE_MISMATCH ],
+  [ ',foo@bar.com,foo@bar.com', TYPE_MISMATCH ],
+  [ ',foo@bar.com,foo@bar.com', TYPE_MISMATCH ],
+  [ 'foo@bar.com,,,foo@bar.com', TYPE_MISMATCH ],
+  [ 'foo@bar.com;foo@bar.com', TYPE_MISMATCH ],
+  [ '<foo@bar.com>, <foo@bar.com>', TYPE_MISMATCH ],
+  [ 'foo@bar, foo@bar.com', VALID ],
+  [ 'foo@bar.com, foo', TYPE_MISMATCH ],
+  [ 'foo, foo@bar.com', TYPE_MISMATCH ],
 ];
 
 /* Additional username checks. */
@@ -171,15 +181,15 @@ legalCharacters += "!#$%&'*+-/=?^_`{|}~.";
 
 // Add all username legal characters individually to the list.
 for (c of legalCharacters) {
-  values.push([c + "@bar.com", true]);
+  values.push([c + "@bar.com", VALID]);
 }
 // Add the concatenation of all legal characters too.
-values.push([legalCharacters + "@bar.com", true]);
+values.push([legalCharacters + "@bar.com", VALID]);
 
 // Add username illegal characters, the same way.
 var illegalCharacters = "()<>[]:;@\\, \t";
 for (c of illegalCharacters) {
-  values.push([illegalCharacters + "@bar.com", false]);
+  values.push([illegalCharacters + "@bar.com", TYPE_MISMATCH]);
 }
 
 /* Additional domain checks. */
@@ -190,15 +200,15 @@ legalCharacters += "0123456789";
 
 // Add domain legal characters (except '.' and '-' because they are special).
 for (c of legalCharacters) {
-  values.push(["foo@foo.bar" + c, true]);
+  values.push(["foo@foo.bar" + c, VALID]);
 }
 // Add the concatenation of all legal characters too.
-values.push(["foo@bar." + legalCharacters, true]);
+values.push(["foo@bar." + legalCharacters, VALID]);
 
 // Add domain illegal characters.
 illegalCharacters = "()<>[]:;@\\,!#$%&'*+/=?^_`{|}~ \t";
 for (c of illegalCharacters) {
-  values.push(['foo@foo.ba' + c + 'r', false]);
+  values.push(['foo@foo.ba' + c + 'r', TYPE_MISMATCH]);
 }
 
 values.forEach(function([value, valid, todo]) {
@@ -217,7 +227,7 @@ multipleValues.forEach(function([value, valid]) {
 // Make sure setting multiple changes the value.
 email.multiple = false;
 email.value = "foo@bar.com, foo@bar.com";
-checkInvalidEmailAddress(email);
+checkInvalidEmailAddress(email, TYPE_MISMATCH);
 email.multiple = true;
 checkValidEmailAddress(email);
 

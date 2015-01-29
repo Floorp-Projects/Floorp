@@ -186,7 +186,6 @@ public:
   static PRIOMethods nsSSLIOLayerMethods;
   static PRIOMethods nsSSLPlaintextLayerMethods;
 
-  nsTHashtable<nsCStringHashKey> mRenegoUnrestrictedSites;
   bool mTreatUnsafeNegotiationAsBroken;
   int32_t mWarnLevelMissingRFC5746;
 
@@ -230,15 +229,9 @@ public:
                                /*out*/ StrongCipherStatus& strongCipherStatus);
   PRErrorCode getIntoleranceReason(const nsACString& hostname, int16_t port);
 
-  void setSiteList(nsTHashtable<nsCStringHashKey>& sites,
-                   const nsCString& str);
-  bool isRenegoUnrestrictedSite(const nsCString& str);
   void clearStoredData();
   void loadVersionFallbackLimit();
-  void setInsecureFallbackSites(const nsCString& str)
-  {
-    setSiteList(mInsecureFallbackSites, str);
-  }
+  void setInsecureFallbackSites(const nsCString& str);
 
   bool mFalseStartRequireNPN;
   bool mFalseStartRequireForwardSecrecy;

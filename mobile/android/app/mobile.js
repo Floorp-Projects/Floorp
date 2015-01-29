@@ -846,3 +846,8 @@ pref("dom.meta-viewport.enabled", true);
 
 // Enable the OpenH264 plugin support in the addon manager.
 pref("media.gmp-gmpopenh264.provider.enabled", true);
+
+// The default color scheme in reader mode (light, dark, print, auto)
+// auto = color automatically adjusts according to ambient light level
+// (auto only works on platforms where the 'devicelight' event is enabled)
+pref("reader.color_scheme", "auto");

@@ -68,9 +68,7 @@ add_task(function () {
     "docShell.QueryInterface%28Components.interfaces.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
 
   // Clear the list of closed windows.
-  while (ss.getClosedWindowCount()) {
-    ss.forgetClosedWindow(0);
-  }
+  forgetClosedWindows();
 
   // Create a new window to attach our frame script to.
   let win = yield promiseNewWindowLoaded();
@@ -109,9 +107,7 @@ add_task(function () {
 
 add_task(function () {
   // Clear the list of closed windows.
-  while (ss.getClosedWindowCount()) {
-    ss.forgetClosedWindow(0);
-  }
+  forgetClosedWindows();
 
   // Create a new window to attach our frame script to.
   let win = yield promiseNewWindowLoaded({private: true});
