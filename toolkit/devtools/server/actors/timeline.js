@@ -251,7 +251,6 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
     if (withMemory) {
       this._memoryActor = new MemoryActor(this.conn, this.tabActor, this._stackFrames);
-      events.emit(this, "memory", this._startTime, this._memoryActor.measure());
     }
 
     if (withTicks) {

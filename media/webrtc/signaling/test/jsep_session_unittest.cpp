@@ -246,6 +246,20 @@ protected:
     if (checkFlags & CHECK_TRACKS) {
       // Check that the transports exist.
       ASSERT_EQ(types.size(), mSessionOff.GetTransportCount());
+      for (size_t i = 0; i < types.size(); ++i) {
+        RefPtr<JsepTrack> ltrack;
+        ASSERT_EQ(NS_OK, mSessionOff.GetLocalTrack(i, &ltrack));
+        ASSERT_NE("", ltrack->GetStreamId());
+        ASSERT_NE("", ltrack->GetTrackId());
+        if (ltrack->GetMediaType() != SdpMediaSection::kApplication) {
+          std::string msidAttr("a=msid:");
+          msidAttr += ltrack->GetStreamId();
+          msidAttr += " ";
+          msidAttr += ltrack->GetTrackId();
+          ASSERT_NE(std::string::npos, offer.find(msidAttr))
+            << "Did not find " << msidAttr << " in offer";
+        }
+      }
     }
   }
 
@@ -265,6 +279,16 @@ protected:
         RefPtr<JsepTrack> rtrack;
         ASSERT_EQ(NS_OK, mSessionAns.GetRemoteTrack(i, &rtrack));
         ASSERT_EQ(types[i], rtrack->GetMediaType());
+        ASSERT_NE("", rtrack->GetStreamId());
+        ASSERT_NE("", rtrack->GetTrackId());
+        if (rtrack->GetMediaType() != SdpMediaSection::kApplication) {
+          std::string msidAttr("a=msid:");
+          msidAttr += rtrack->GetStreamId();
+          msidAttr += " ";
+          msidAttr += rtrack->GetTrackId();
+          ASSERT_NE(std::string::npos, offer.find(msidAttr))
+            << "Did not find " << msidAttr << " in offer";
+        }
       }
     }
   }
@@ -287,6 +311,21 @@ protected:
         ASSERT_EQ(types[i], pair->mSending->GetMediaType());
         ASSERT_TRUE(pair->mReceiving);
         ASSERT_EQ(types[i], pair->mReceiving->GetMediaType());
+        ASSERT_NE("", pair->mSending->GetStreamId());
+        ASSERT_NE("", pair->mSending->GetTrackId());
+        // These might have been in the SDP, or might have been randomly
+        // chosen by JsepSessionImpl
+        ASSERT_NE("", pair->mReceiving->GetStreamId());
+        ASSERT_NE("", pair->mReceiving->GetTrackId());
+
+        if (pair->mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
+          std::string msidAttr("a=msid:");
+          msidAttr += pair->mSending->GetStreamId();
+          msidAttr += " ";
+          msidAttr += pair->mSending->GetTrackId();
+          ASSERT_NE(std::string::npos, answer.find(msidAttr))
+            << "Did not find " << msidAttr << " in offer";
+        }
       }
     }
     DumpTrackPairs(mSessionOff);
@@ -302,14 +341,29 @@ protected:
 
     if (checkFlags & CHECK_TRACKS) {
       // Verify that the right stuff is in the tracks.
-      ASSERT_EQ(types.size(), mSessionAns.GetNegotiatedTrackPairCount());
+      ASSERT_EQ(types.size(), mSessionOff.GetNegotiatedTrackPairCount());
       for (size_t i = 0; i < types.size(); ++i) {
         const JsepTrackPair* pair;
-        ASSERT_EQ(NS_OK, mSessionAns.GetNegotiatedTrackPair(i, &pair));
+        ASSERT_EQ(NS_OK, mSessionOff.GetNegotiatedTrackPair(i, &pair));
         ASSERT_TRUE(pair->mSending);
         ASSERT_EQ(types[i], pair->mSending->GetMediaType());
         ASSERT_TRUE(pair->mReceiving);
         ASSERT_EQ(types[i], pair->mReceiving->GetMediaType());
+        ASSERT_NE("", pair->mSending->GetStreamId());
+        ASSERT_NE("", pair->mSending->GetTrackId());
+        // These might have been in the SDP, or might have been randomly
+        // chosen by JsepSessionImpl
+        ASSERT_NE("", pair->mReceiving->GetStreamId());
+        ASSERT_NE("", pair->mReceiving->GetTrackId());
+
+        if (pair->mReceiving->GetMediaType() != SdpMediaSection::kApplication) {
+          std::string msidAttr("a=msid:");
+          msidAttr += pair->mReceiving->GetStreamId();
+          msidAttr += " ";
+          msidAttr += pair->mReceiving->GetTrackId();
+          ASSERT_NE(std::string::npos, answer.find(msidAttr))
+            << "Did not find " << msidAttr << " in offer";
+        }
       }
     }
     DumpTrackPairs(mSessionAns);

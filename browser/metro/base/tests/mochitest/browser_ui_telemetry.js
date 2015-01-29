@@ -5,14 +5,20 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
+
 function test() {
   runTests();
 }
 
 function getTelemetryPayload() {
-  return Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).
-    TelemetryPing.getPayload();
+  return TelemetrySession.getPayload();
 }
+
+gTests.push({
+  desc: "Setup",
+  run: () => { yield TelemetrySession.setup(); }
+});
 
 gTests.push({
   desc: "Test browser-ui telemetry",
@@ -63,4 +69,9 @@ gTests.push({
     is(simpleMeasurements.UITelemetry["metro-tabs"]["currTabCount"], 1);
     is(simpleMeasurements.UITelemetry["metro-tabs"]["maxTabCount"], 3);
   }
+});
+
+gTests.push({
+  desc: "Shutdown",
+  run: () => { yield TelemetrySession.shutdown(); }
 });

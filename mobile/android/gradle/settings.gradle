@@ -8,20 +8,20 @@ if (!hasProperty('topsrcdir')) {
     logger.warn("topsrcdir is undefined: assuming source directory Gradle invocation with topsrcdir=${topsrcdir}.")
 }
 
-def command = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
-def proc = command.execute(null, new File(topsrcdir))
-def sout = new StringBuffer()
-def serr = new StringBuffer()
-proc.consumeProcessOutput(sout, serr)
+def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+def proc = commandLine.execute(null, new File(topsrcdir))
+def standardOutput = new ByteArrayOutputStream()
+proc.consumeProcessOutput(standardOutput, standardOutput)
 proc.waitFor()
 
+// Only show the output if something went wrong.
 if (proc.exitValue() != 0) {
-    throw new GradleException("Could not extract mozconfig/build environment from |${topsrcdir}/mach environment|!");
+    throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n${standardOutput.toString()}")
 }
 
 import groovy.json.JsonSlurper
 def slurper = new JsonSlurper()
-def json = slurper.parseText(sout.toString())
+def json = slurper.parseText(standardOutput.toString())
 
 include ':app'
 include ':base'

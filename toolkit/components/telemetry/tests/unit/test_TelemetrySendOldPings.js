@@ -22,6 +22,7 @@ Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let {OS: {File, Path, Constants}} = Cu.import("resource://gre/modules/osfile.jsm", {});
@@ -52,7 +53,7 @@ let gCreatedPings = 0;
 let gSeenPings = 0;
 
 /**
- * Creates some TelemetryPings for the current session and
+ * Creates some TelemetrySession pings for the current session and
  * saves them to disk. Each ping gets a unique ID slug based on
  * an incrementor.
  *
@@ -65,14 +66,11 @@ let gSeenPings = 0;
  */
 function createSavedPings(aNum, aAge) {
   return Task.spawn(function*(){
-    // Create a TelemetryPing service that we can generate payloads from.
-    // Luckily, the TelemetryPing constructor does nothing that we need to
-    // clean up.
     let pings = [];
     let age = Date.now() - aAge;
 
     for (let i = 0; i < aNum; ++i) {
-      let payload = TelemetryPing.getPayload();
+      let payload = TelemetrySession.getPayload();
       let ping = { slug: "test-ping-" + gCreatedPings, reason: "test", payload: payload };
 
       yield TelemetryFile.savePing(ping);
@@ -117,7 +115,7 @@ function getSavePathForPing(aPing) {
 }
 
 /**
- * Check if the number of TelemetryPings received by the
+ * Check if the number of TelemetrySession pings received by the
  * HttpServer is not equal to aExpectedNum.
  *
  * @param aExpectedNum the number of pings we expect to receive.
@@ -150,7 +148,7 @@ function assertNotSaved(aPings) {
 /**
  * Our handler function for the HttpServer that simply
  * increments the gSeenPings global when it successfully
- * receives and decodes a TelemetryPing payload.
+ * receives and decodes a TelemetrySession payload.
  *
  * @param aRequest the HTTP request sent from HttpServer.
  */
@@ -173,11 +171,10 @@ function stopHttpServer() {
 }
 
 /**
- * Teardown a TelemetryPing instance and clear out any pending
- * pings to put as back in the starting state.
+ * Reset Telemetry state.
  */
 function resetTelemetry() {
-  TelemetryPing.uninstall();
+  TelemetrySession.uninstall();
   // Quick and dirty way to clear TelemetryFile's pendingPings
   // collection, and put it back in its initial state.
   let gen = TelemetryFile.popPendingPings();
@@ -190,6 +187,10 @@ function resetTelemetry() {
  */
 function startTelemetry() {
   return TelemetryPing.setup();
+}
+
+function startTelemetrySession() {
+  return TelemetrySession.setup();
 }
 
 function run_test() {
@@ -213,6 +214,7 @@ function run_test() {
  * immediately and never sent.
  */
 add_task(function* test_expired_pings_are_deleted() {
+  yield startTelemetrySession();
   let expiredPings = yield createSavedPings(EXPIRED_PINGS, EXPIRED_PING_FILE_AGE);
   yield startTelemetry();
   assertReceivedPings(0);
@@ -224,6 +226,7 @@ add_task(function* test_expired_pings_are_deleted() {
  * Test that really recent pings are not sent on Telemetry initialization.
  */
 add_task(function* test_recent_pings_not_sent() {
+  yield startTelemetrySession();
   let recentPings = yield createSavedPings(RECENT_PINGS);
   yield startTelemetry();
   assertReceivedPings(0);
@@ -235,6 +238,7 @@ add_task(function* test_recent_pings_not_sent() {
  * Test that only the most recent LRU_PINGS pings are kept at startup.
  */
 add_task(function* test_most_recent_pings_kept() {
+  yield startTelemetrySession();
   let head = yield createSavedPings(LRU_PINGS);
   let tail = yield createSavedPings(3, ONE_MINUTE_MS);
   let pings = head.concat(tail);
@@ -259,6 +263,7 @@ add_task(function* test_most_recent_pings_kept() {
  * should just be deleted.
  */
 add_task(function* test_overdue_pings_trigger_send() {
+  yield startTelemetrySession();
   let recentPings = yield createSavedPings(RECENT_PINGS);
   let expiredPings = yield createSavedPings(EXPIRED_PINGS, EXPIRED_PING_FILE_AGE);
   let overduePings = yield createSavedPings(OVERDUE_PINGS, OVERDUE_PING_FILE_AGE);
