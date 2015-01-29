@@ -478,6 +478,7 @@ class BaseShape : public gc::TenuredCell
 
 #ifdef JSGC_COMPACTING
     void fixupAfterMovingGC();
+    bool fixupBaseShapeTableEntry();
 #endif
 
   private:
