@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test EME blocked cross-origin</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function TestNoCORS(test, token)
+{
+  var token = token + "_nocors";
+
+  manager.started(token);
+
+  var v = document.createElement("video");
+
+  v.addEventListener("encrypted", function(ev) {
+    is(ev.initDataType, "", "initDataType should be empty for CORS cross-origin media");
+    is(ev.initData, null, "initData should be null for CORS cross-origin media");
+
+    manager.finished(token);
+  });
+
+  v.addEventListener("error", function() {
+    ok(false, "Should not receive error loading cross-origin media without crossorigin attribute");
+  });
+
+  v.src = test.uri;
+}
+
+function TestCORSFailure(test, token)
+{
+  var token = token + "_corsfail";
+
+  manager.started(token);
+
+  var v = document.createElement("video");
+  v.crossOrigin = true;
+
+  v.addEventListener("error", function(ev) {
+    ok(true, "Should get error loading cross-origin media");
+    manager.finished(token);
+  });
+
+  v.addEventListener("encrypted", function() {
+    ok(false, "Should not receive encrypted event loading cross-origin media");
+  });
+
+  v.src = test.uri;
+}
+
+function TestCORSSuccess(test, token)
+{
+  var token = token + "_corsok";
+
+  manager.started(token);
+
+  var v = document.createElement("video");
+  v.crossOrigin = true;
+
+  v.addEventListener("error", function(ev) {
+    ok(false, "Should not get error loading cross-origin media");
+  });
+
+  v.addEventListener("encrypted", function(ev) {
+    ok(ev.initData.byteLength > 0, "Should get encryption initData loading cross-origin media");
+    is(ev.initDataType, "cenc", "Should get correct encryption initDataType loading cross-origin media");
+    manager.finished(token);
+  });
+
+  v.src = test.uri;
+}
+
+function startTest(test, token)
+{
+  test.uri = "http://test1.mochi.test:8888/tests/dom/media/test/" + test.name;
+  TestNoCORS(test, token);
+  TestCORSFailure(test, token);
+
+  test.uri = "http://test1.mochi.test:8888/tests/dom/media/test/allowed.sjs?" + test.name;
+  TestCORSSuccess(test, token);
+}
+
+function beginTest() {
+  manager.runTests(gEMETests.filter(t => t.crossOrigin), startTest);
+}
+
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.youtubeonly", false ],
+  [ "media.mediasource.mp4.enabled", true ],
+];
+
+if (/Linux/.test(navigator.userAgent) ||
+    !document.createElement('video').canPlayType("video/mp4")) {
+  // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+  prefs.push([ "media.fragmented-mp4.exposed", true ]);
+  prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+</script>
+</pre>
+</body>
+</html>
