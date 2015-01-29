@@ -11,12 +11,12 @@ const DEFAULT_DETAILS_SUBVIEW = "waterfall";
  */
 let DetailsView = {
   /**
-   * Name to index mapping of subviews, used by selecting view.
+   * Name to node+object mapping of subviews.
    */
   components: {
-    waterfall: { index: 0, view: WaterfallView },
-    calltree: { index: 1, view: CallTreeView },
-    flamegraph: { index: 2, view: FlameGraphView }
+    waterfall: { id: "waterfall-view", view: WaterfallView },
+    calltree: { id: "calltree-view", view: CallTreeView },
+    flamegraph: { id: "flamegraph-view", view: FlameGraphView }
   },
 
   /**
@@ -60,7 +60,7 @@ let DetailsView = {
    *        Name of the view to be shown.
    */
   selectView: function (viewName) {
-    this.el.selectedIndex = this.components[viewName].index;
+    this.el.selectedPanel = $("#" + this.components[viewName].id);
 
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
       if (button.getAttribute("data-view") === viewName) {
@@ -80,10 +80,11 @@ let DetailsView = {
    * @return boolean
    */
   isViewSelected: function(viewObject) {
-    let selectedIndex = this.el.selectedIndex;
+    let selectedPanel = this.el.selectedPanel;
+    let selectedId = selectedPanel.id;
 
-    for (let [, { index, view }] of Iterator(this.components)) {
-      if (index == selectedIndex && view == viewObject) {
+    for (let [, { id, view }] of Iterator(this.components)) {
+      if (id == selectedId && view == viewObject) {
         return true;
       }
     }
