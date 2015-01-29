@@ -190,7 +190,7 @@
       ['target_arch=="arm" or target_arch=="armv7"', {
         'prefer_fixed_point%': 1,
       }],
-      ['OS!="ios" and (target_arch!="arm" or arm_version>=7)', {
+      ['OS!="ios" and (target_arch!="arm" or arm_version>=7) and build_with_mozilla==0', {
         'rtc_use_openmax_dl%': 1,
       }, {
         'rtc_use_openmax_dl%': 0,

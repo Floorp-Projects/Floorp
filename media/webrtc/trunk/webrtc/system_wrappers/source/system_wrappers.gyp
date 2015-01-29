@@ -130,6 +130,11 @@
             'WEBRTC_LAZY_TRACE_ALLOC',
           ],
         }],
+        ['build_with_mozilla', {
+          'sources': [
+            'metrics_default.cc',
+          ],
+        }],
         ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'defines': [
             'WEBRTC_THREAD_RR',
