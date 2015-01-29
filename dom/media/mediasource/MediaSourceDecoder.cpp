@@ -290,6 +290,12 @@ MediaSourceDecoder::PrepareReaderInitialization()
   mReader->PrepareInitialization();
 }
 
+void
+MediaSourceDecoder::GetMozDebugReaderData(nsAString& aString)
+{
+  mReader->GetMozDebugReaderData(aString);
+}
+
 #ifdef MOZ_EME
 nsresult
 MediaSourceDecoder::SetCDMProxy(CDMProxy* aProxy)

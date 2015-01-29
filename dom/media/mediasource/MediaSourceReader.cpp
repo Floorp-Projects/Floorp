@@ -13,6 +13,7 @@
 #include "MediaSourceUtils.h"
 #include "SourceBufferDecoder.h"
 #include "TrackBuffer.h"
+#include "nsPrintfCString.h"
 
 #ifdef MOZ_FMP4
 #include "SharedDecoderManager.h"
@@ -966,6 +967,40 @@ MediaSourceReader::SetMediaSourceDuration(double aDuration)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mMediaSourceDuration = aDuration;
+}
+
+void
+MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  nsAutoCString result;
+  result += nsPrintfCString("Dumping data for reader %p:\n", this);
+  if (mAudioTrack) {
+    result += nsPrintfCString("\tDumping Audio Track Decoders: - mLastAudioTime: %f\n", double(mLastAudioTime) / USECS_PER_S);
+    for (int32_t i = mAudioTrack->Decoders().Length() - 1; i >= 0; --i) {
+      nsRefPtr<MediaDecoderReader> newReader = mAudioTrack->Decoders()[i]->GetReader();
+
+      nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
+      mAudioTrack->Decoders()[i]->GetBuffered(ranges);
+      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s\n",
+                                i, newReader.get(), DumpTimeRanges(ranges).get(),
+                                newReader.get() == mAudioReader.get() ? "true" : "false");
+    }
+  }
+
+  if (mVideoTrack) {
+    result += nsPrintfCString("\tDumping Video Track Decoders - mLastVideoTime: %f\n", double(mLastVideoTime) / USECS_PER_S);
+    for (int32_t i = mVideoTrack->Decoders().Length() - 1; i >= 0; --i) {
+      nsRefPtr<MediaDecoderReader> newReader = mVideoTrack->Decoders()[i]->GetReader();
+
+      nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
+      mVideoTrack->Decoders()[i]->GetBuffered(ranges);
+      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s\n",
+                                i, newReader.get(), DumpTimeRanges(ranges).get(),
+                                newReader.get() == mVideoReader.get() ? "true" : "false");
+    }
+  }
+  aString += NS_ConvertUTF8toUTF16(result);
 }
 
 #ifdef MOZ_EME
