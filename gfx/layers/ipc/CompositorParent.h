@@ -303,6 +303,7 @@ public:
     APZTestData mApzTestData;
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
+    bool mUpdatedPluginDataAvailable;
   };
 
   /**
