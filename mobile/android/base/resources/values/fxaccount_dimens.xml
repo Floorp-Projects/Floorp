@@ -5,11 +5,11 @@
 
 <resources>
   <dimen name="fxaccount_stroke_width">1dp</dimen>
-  <dimen name="fxaccount_corner_radius">5dp</dimen>
+  <dimen name="fxaccount_corner_radius">3dp</dimen>
 
   <!-- The amount of horizontal padding that appears inside the email,
        password, etc input fields. -->
-  <dimen name="fxaccount_input_padding_horizontal">20dp</dimen>
+  <dimen name="fxaccount_input_padding_horizontal">10dp</dimen>
   <!-- And the amount of vertical padding that appears inside input
        fields. -->
   <dimen name="fxaccount_input_padding_vertical">10dp</dimen>

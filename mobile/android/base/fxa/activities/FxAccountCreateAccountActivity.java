@@ -105,6 +105,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
     });
 
     updateFromIntentExtras();
+    maybeEnableAnimations();
   }
 
   @Override
