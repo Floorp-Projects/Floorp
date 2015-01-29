@@ -39,7 +39,17 @@ namespace jit {
     _(GetProp_Innerize,                                 \
       "getprop innerize (access on global window)")     \
     _(GetProp_InlineCache,                              \
-      "getprop IC")
+      "getprop IC")                                     \
+                                                        \
+    _(SetProp_CommonSetter,                             \
+      "setprop common setter")                          \
+    _(SetProp_TypedObject,                              \
+      "setprop TypedObject")                            \
+    _(SetProp_DefiniteSlot,                             \
+      "setprop definite slot")                          \
+    _(SetProp_InlineAccess,                             \
+      "setprop inline access")
+
 
 // Ordering is important below. All outcomes before GenericSuccess will be
 // considered failures, and all outcomes after GenericSuccess will be
@@ -69,6 +79,12 @@ namespace jit {
       "needs type barrier")                                     \
     _(InDictionaryMode,                                         \
       "object in dictionary mode")                              \
+    _(NoProtoFound,                                             \
+      "no proto found")                                         \
+    _(MultiProtoPaths,                                          \
+      "not all paths to property go through same proto")        \
+    _(NonWritableProperty,                                      \
+      "non-writable property")                                  \
                                                                 \
     _(CantInlineGeneric,                                        \
       "can't inline")                                           \
@@ -120,7 +136,9 @@ namespace jit {
 
 #define TRACKED_TYPESITE_LIST(_)                \
     _(Receiver,                                 \
-      "receiver object")
+      "receiver object")                        \
+    _(Value,                                    \
+      "value")
 
 enum class TrackedStrategy : uint32_t {
 #define STRATEGY_OP(name, msg) name,

@@ -9214,6 +9214,7 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
     if (!objectsHaveCommonPrototype(types, name, isGetter, foundProto, &guardGlobal) ||
         (guardGlobal && !globalShape))
     {
+        trackOptimizationOutcome(TrackedOutcome::MultiProtoPaths);
         return false;
     }
 
@@ -10257,6 +10258,9 @@ IonBuilder::jsop_setprop(PropertyName *name)
     MDefinition *obj = current->pop();
 
     bool emitted = false;
+    startTrackingOptimizations();
+    trackTypeInfo(TrackedTypeSite::Receiver, obj->type(), obj->resultTypeSet());
+    trackTypeInfo(TrackedTypeSite::Value, value->type(), value->resultTypeSet());
 
     // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis.
@@ -10273,10 +10277,12 @@ IonBuilder::jsop_setprop(PropertyName *name)
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     // Try to inline a common property setter, or make a call.
+    trackOptimizationAttempt(TrackedStrategy::SetProp_CommonSetter);
     if (!setPropTryCommonSetter(&emitted, obj, name, value) || emitted)
         return emitted;
 
     // Try to emit stores to known binary data blocks
+    trackOptimizationAttempt(TrackedStrategy::SetProp_TypedObject);
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
 
@@ -10284,15 +10290,15 @@ IonBuilder::jsop_setprop(PropertyName *name)
     bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
                                                  /* canModify = */ true);
 
-    if (!barrier) {
-        // Try to emit store from definite slots.
-        if (!setPropTryDefiniteSlot(&emitted, obj, name, value, objTypes) || emitted)
-            return emitted;
+    // Try to emit store from definite slots.
+    trackOptimizationAttempt(TrackedStrategy::SetProp_DefiniteSlot);
+    if (!setPropTryDefiniteSlot(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        return emitted;
 
-        // Try to emit a monomorphic/polymorphic store based on baseline caches.
-        if (!setPropTryInlineAccess(&emitted, obj, name, value, objTypes) || emitted)
-            return emitted;
-    }
+    // Try to emit a monomorphic/polymorphic store based on baseline caches.
+    trackOptimizationAttempt(TrackedStrategy::SetProp_InlineAccess);
+    if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
+        return emitted;
 
     // Emit a polymorphic cache.
     return setPropTryCache(&emitted, obj, name, value, barrier, objTypes);
@@ -10307,8 +10313,10 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     Shape *lastProperty = nullptr;
     JSFunction *commonSetter = nullptr;
     JSObject *foundProto = inspector->commonSetPropFunction(pc, &lastProperty, &commonSetter);
-    if (!foundProto)
+    if (!foundProto) {
+        trackOptimizationOutcome(TrackedOutcome::NoProtoFound);
         return true;
+    }
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
     MDefinition *guard = nullptr;
@@ -10330,8 +10338,10 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     if (!setPropTryCommonDOMSetter(emitted, obj, value, commonSetter, isDOM))
         return false;
 
-    if (*emitted)
+    if (*emitted) {
+        trackOptimizationOutcome(TrackedOutcome::DOM);
         return true;
+    }
 
     // Don't call the setter with a primitive value.
     if (objTypes->getKnownMIRType() != MIRType_Object) {
@@ -10372,6 +10382,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
             if (!inlineScriptedCall(callInfo, commonSetter))
                 return false;
             *emitted = true;
+            trackOptimizationOutcome(TrackedOutcome::Inlined);
             return true;
         }
     }
@@ -10383,6 +10394,12 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     current->push(value);
     if (!resumeAfter(call))
         return false;
+
+    // If the setter could have been inlined, don't track success. The call to
+    // makeInliningDecision above would have tracked a specific reason why we
+    // couldn't inline.
+    if (!commonSetter->isInterpreted())
+        trackOptimizationSuccess();
 
     *emitted = true;
     return true;
@@ -10470,6 +10487,7 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool *emitted,
 
     current->push(value);
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -10498,6 +10516,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
 
     current->push(value);
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -10505,9 +10524,14 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
 bool
 IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
                                    PropertyName *name, MDefinition *value,
-                                   types::TemporaryTypeSet *objTypes)
+                                   bool barrier, types::TemporaryTypeSet *objTypes)
 {
     MOZ_ASSERT(*emitted == false);
+
+    if (barrier) {
+        trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
+        return true;
+    }
 
     uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
     if (slot == UINT32_MAX)
@@ -10520,8 +10544,10 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
             continue;
 
         types::HeapTypeSetKey property = type->property(NameToId(name));
-        if (property.nonWritable(constraints()))
+        if (property.nonWritable(constraints())) {
+            trackOptimizationOutcome(TrackedOutcome::NonWritableProperty);
             return true;
+        }
         writeBarrier |= property.needsBarrier(constraints());
     }
 
@@ -10545,6 +10571,7 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
     if (!resumeAfter(store))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -10552,19 +10579,28 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
 bool
 IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
                                    PropertyName *name, MDefinition *value,
-                                   types::TemporaryTypeSet *objTypes)
+                                   bool barrier, types::TemporaryTypeSet *objTypes)
 {
     MOZ_ASSERT(*emitted == false);
+
+    if (barrier) {
+        trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
+        return true;
+    }
 
     BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))
         return false;
 
-    if (shapes.empty())
+    if (shapes.empty()) {
+        trackOptimizationOutcome(TrackedOutcome::NoShapeInfo);
         return true;
+    }
 
-    if (!CanInlinePropertyOpShapes(shapes))
+    if (!CanInlinePropertyOpShapes(shapes)) {
+        trackOptimizationOutcome(TrackedOutcome::InDictionaryMode);
         return true;
+    }
 
     if (shapes.length() == 1) {
         spew("Inlining monomorphic SETPROP");
@@ -10583,6 +10619,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         if (!storeSlot(obj, shape, value, needsBarrier))
             return false;
 
+        trackOptimizationOutcome(TrackedOutcome::Monomorphic);
         *emitted = true;
         return true;
     }
@@ -10612,6 +10649,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         if (!storeSlot(obj, propShapes[0], value, needsBarrier))
             return false;
 
+        trackOptimizationOutcome(TrackedOutcome::Polymorphic);
         *emitted = true;
         return true;
     }
@@ -10634,6 +10672,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
     if (!resumeAfter(ins))
         return false;
 
+    trackOptimizationOutcome(TrackedOutcome::Polymorphic);
     *emitted = true;
     return true;
 }
