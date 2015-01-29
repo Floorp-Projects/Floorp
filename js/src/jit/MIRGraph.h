@@ -46,7 +46,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     };
 
   private:
-    MBasicBlock(MIRGraph &graph, CompileInfo &info, const BytecodeSite *site, Kind kind);
+    MBasicBlock(MIRGraph &graph, CompileInfo &info, BytecodeSite *site, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
     bool inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlock *pred,
@@ -107,14 +107,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Creates a new basic block for a MIR generator. If |pred| is not nullptr,
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
-                            MBasicBlock *pred, const BytecodeSite *site, Kind kind);
+                            MBasicBlock *pred, BytecodeSite *site, Kind kind);
     static MBasicBlock *NewPopN(MIRGraph &graph, CompileInfo &info,
-                                MBasicBlock *pred, const BytecodeSite *site, Kind kind, uint32_t popn);
+                                MBasicBlock *pred, BytecodeSite *site, Kind kind, uint32_t popn);
     static MBasicBlock *NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
-                                           MBasicBlock *pred, const BytecodeSite *site,
+                                           MBasicBlock *pred, BytecodeSite *site,
                                            MResumePoint *resumePoint);
     static MBasicBlock *NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
-                                             MBasicBlock *pred, const BytecodeSite *site,
+                                             MBasicBlock *pred, BytecodeSite *site,
                                              unsigned loopStateSlots);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
     static MBasicBlock *NewAsmJS(MIRGraph &graph, CompileInfo &info,
@@ -602,13 +602,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void dump(FILE *fp);
     void dump();
 
-    // Track bailouts by storing the current pc in MIR instruction added at this
-    // cycle. This is also used for tracking calls when profiling.
-    void updateTrackedSite(const BytecodeSite *site) {
+    // Track bailouts by storing the current pc in MIR instruction added at
+    // this cycle. This is also used for tracking calls and optimizations when
+    // profiling.
+    void updateTrackedSite(BytecodeSite *site) {
         MOZ_ASSERT(site->tree() == trackedSite_->tree());
         trackedSite_ = site;
     }
-    const BytecodeSite *trackedSite() const {
+    BytecodeSite *trackedSite() const {
         return trackedSite_;
     }
     jsbytecode *trackedPc() const {
@@ -657,7 +658,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     Vector<MBasicBlock *, 1, JitAllocPolicy> immediatelyDominated_;
     MBasicBlock *immediateDominator_;
 
-    const BytecodeSite *trackedSite_;
+    BytecodeSite *trackedSite_;
 
 #if defined(JS_ION_PERF) || defined(DEBUG)
     unsigned lineno_;

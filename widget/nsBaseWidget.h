@@ -362,9 +362,12 @@ protected:
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
 protected:
-  // Stores the clip rectangles in aRects into mClipRects. Returns true
-  // if the new rectangles are different from the old rectangles.
-  bool StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
+  // Utility to check if an array of clip rects is equal to our
+  // internally stored clip rect array mClipRects.
+  bool IsWindowClipRegionEqual(const nsTArray<nsIntRect>& aRects);
+
+  // Stores the clip rectangles in aRects into mClipRects.
+  void StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
