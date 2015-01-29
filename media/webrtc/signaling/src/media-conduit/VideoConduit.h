@@ -226,7 +226,8 @@ public:
   WebrtcVideoConduit();
   virtual ~WebrtcVideoConduit();
 
-  MediaConduitErrorCode Init(WebrtcVideoConduit *other);
+  MediaConduitErrorCode Init(WebrtcVideoConduit *other,
+                             bool receiving);
 
   int GetChannel() { return mChannel; }
   webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
