@@ -62,7 +62,9 @@ child:
    * application on the widgets. Used on Windows and Linux in managing
    * plugin widgets.
    */
-  async UpdatePluginConfigurations(PluginWindowData[] plugins);
+  async UpdatePluginConfigurations(nsIntPoint aContentOffset,
+                                   nsIntRegion aVisibleRegion,
+                                   PluginWindowData[] aPlugins);
 
 parent:
   // Child sends the parent a request for fill ratio numbers.
