@@ -35,7 +35,7 @@ const NODE_CREATION_METHODS = [
 
 const AUTOMATION_METHODS = [
   "setValueAtTime", "linearRampToValueAtTime", "exponentialRampToValueAtTime",
-  "setTargetAtTime", "setValueCurveAtTime"
+  "setTargetAtTime", "setValueCurveAtTime", "cancelScheduledValues"
 ];
 
 const NODE_ROUTING_METHODS = [

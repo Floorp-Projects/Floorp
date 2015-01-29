@@ -23,6 +23,16 @@ task buildOmnijar(type:Exec) {
     args '-C'
     args 'mobile/android/base'
     args 'gradle-omnijar'
+
+    // Only show the output if something went wrong.
+    ignoreExitValue = true
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    doLast {
+        if (execResult.exitValue != 0) {
+            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+        }
+    }
 }
 
 apply plugin: 'idea'
