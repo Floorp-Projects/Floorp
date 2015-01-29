@@ -44,6 +44,8 @@ var gContentPane = {
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
     document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
+    document.getElementById("playDRMContentRow").hidden =
+      !Services.prefs.getBoolPref("browser.eme.ui.enabled");
   },
 
   // UTILITY FUNCTIONS
