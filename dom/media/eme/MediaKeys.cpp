@@ -433,33 +433,6 @@ MediaKeys::Bind(HTMLMediaElement* aElement)
   }
 
   mElement = aElement;
-  nsresult rv = CheckPrincipals();
-  if (NS_FAILED(rv)) {
-    mElement = nullptr;
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-MediaKeys::CheckPrincipals()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!IsBoundToMediaElement()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<nsIPrincipal> elementPrincipal(mElement->GetCurrentPrincipal());
-  nsRefPtr<nsIPrincipal> elementTopLevelPrincipal(mElement->GetTopLevelPrincipal());
-  if (!elementPrincipal ||
-      !mPrincipal ||
-      !elementPrincipal->Equals(mPrincipal) ||
-      !elementTopLevelPrincipal ||
-      !mTopLevelPrincipal ||
-      !elementTopLevelPrincipal->Equals(mTopLevelPrincipal)) {
-    return NS_ERROR_FAILURE;
-  }
 
   return NS_OK;
 }

@@ -39,6 +39,9 @@ public:
   virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
 
   static already_AddRefed<MediaEncryptedEvent>
+  Constructor(EventTarget* aOwner);
+
+  static already_AddRefed<MediaEncryptedEvent>
   Constructor(EventTarget* aOwner,
               const nsAString& aInitDataType,
               const nsTArray<uint8_t>& aInitData);
