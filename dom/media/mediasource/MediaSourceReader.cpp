@@ -982,9 +982,10 @@ MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
 
       nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
       mAudioTrack->Decoders()[i]->GetBuffered(ranges);
-      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s\n",
+      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
                                 i, newReader.get(), DumpTimeRanges(ranges).get(),
-                                newReader.get() == mAudioReader.get() ? "true" : "false");
+                                newReader.get() == mAudioReader.get() ? "true" : "false",
+                                mAudioTrack->Decoders()[i]->GetResource()->GetSize());
     }
   }
 
@@ -995,9 +996,10 @@ MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
 
       nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
       mVideoTrack->Decoders()[i]->GetBuffered(ranges);
-      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s\n",
+      result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
                                 i, newReader.get(), DumpTimeRanges(ranges).get(),
-                                newReader.get() == mVideoReader.get() ? "true" : "false");
+                                newReader.get() == mVideoReader.get() ? "true" : "false",
+                                mVideoTrack->Decoders()[i]->GetResource()->GetSize());
     }
   }
   aString += NS_ConvertUTF8toUTF16(result);
