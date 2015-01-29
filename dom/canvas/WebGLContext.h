@@ -1209,9 +1209,10 @@ protected:
 
     // -------------------------------------------------------------------------
     // WebGL 2 specifics (implemented in WebGL2Context.cpp)
-
+public:
     virtual bool IsWebGL2() const = 0;
 
+protected:
     bool InitWebGL2();
 
     // -------------------------------------------------------------------------
