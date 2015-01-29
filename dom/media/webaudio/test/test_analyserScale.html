@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AnalyserNode when the input is scaled </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  var context = new AudioContext();
+
+  var gain = context.createGain();
+  var analyser = context.createAnalyser();
+  var osc = context.createOscillator();
+
+
+  osc.connect(gain);
+  gain.connect(analyser);
+
+  osc.start();
+
+  var array = new Uint8Array(analyser.frequencyBinCount);
+
+  function getAnalyserData() {
+    gain.gain.setValueAtTime(currentGain, context.currentTime);
+    analyser.getByteTimeDomainData(array);
+    var inrange = true;
+    var max = -1;
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] > max) {
+        max = Math.abs(array[i] - 128);
+      }
+    }
+    if (max <= currentGain * 128) {
+      ok(true, "Analyser got scaled data for " + currentGain);
+      currentGain = tests.shift();
+      if (currentGain == undefined) {
+        SimpleTest.finish();
+        return;
+      }
+    }
+    requestAnimationFrame(getAnalyserData);
+  }
+
+  var tests = [1.0, 0.5, 0.0];
+  var currentGain = tests.shift();
+  requestAnimationFrame(getAnalyserData);
+});
+
+</script>
+</pre>
+</body>
+</html>
