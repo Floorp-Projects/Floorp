@@ -165,6 +165,18 @@ SdpMsidAttributeList::Serialize(std::ostream& os) const
 }
 
 void
+SdpMsidSemanticAttributeList::Serialize(std::ostream& os) const
+{
+  for (auto i = mMsidSemantics.begin(); i != mMsidSemantics.end(); ++i) {
+    os << "a=" << mType << ":" << i->semantic;
+    for (auto j = i->msids.begin(); j != i->msids.end(); ++j) {
+      os << " " << *j;
+    }
+    os << CRLF;
+  }
+}
+
+void
 SdpRemoteCandidatesAttribute::Serialize(std::ostream& os) const
 {
   if (mCandidates.empty()) {

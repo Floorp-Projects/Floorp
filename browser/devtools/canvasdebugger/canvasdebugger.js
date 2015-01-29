@@ -70,7 +70,8 @@ const EVENTS = {
 };
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const STRINGS_URI = "chrome://browser/locale/devtools/canvasdebugger.properties"
+const STRINGS_URI = "chrome://browser/locale/devtools/canvasdebugger.properties";
+const SHARED_STRINGS_URI = "chrome://browser/locale/devtools/shared.properties";
 
 const SNAPSHOT_START_RECORDING_DELAY = 10; // ms
 const SNAPSHOT_DATA_EXPORT_MAX_BLOCK = 1000; // ms
@@ -701,7 +702,8 @@ let CallsListView = Heritage.extend(WidgetMethods, {
     let dimensionsNode = $("#screenshot-dimensions");
     let actualWidth = (width / scaling) | 0;
     let actualHeight = (height / scaling) | 0;
-    dimensionsNode.setAttribute("value", actualWidth + " \u00D7 " + actualHeight);
+    dimensionsNode.setAttribute("value",
+      SHARED_L10N.getFormatStr("dimensions", actualWidth, actualHeight));
 
     window.emit(EVENTS.CALL_SCREENSHOT_DISPLAYED);
   },
@@ -1050,6 +1052,7 @@ let CallsListView = Heritage.extend(WidgetMethods, {
  * Localization convenience methods.
  */
 let L10N = new ViewHelpers.L10N(STRINGS_URI);
+let SHARED_L10N = new ViewHelpers.L10N(SHARED_STRINGS_URI);
 
 /**
  * Convenient way of emitting events from the panel window.

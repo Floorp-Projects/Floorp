@@ -341,7 +341,7 @@ let snapshotFormatters = {
     const keys = ["hasSeccompBPF", "canSandboxContent", "canSandboxMedia"];
     let strings = stringBundle();
     let tbody = $("sandbox-tbody");
-    for (key of keys) {
+    for (let key of keys) {
       if (key in data) {
 	tbody.appendChild($.new("tr", [
 	  $.new("th", strings.GetStringFromName(key), "column"),

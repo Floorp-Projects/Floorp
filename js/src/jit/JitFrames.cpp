@@ -2780,15 +2780,12 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
     // Profiler sampling must NOT be suppressed if we are here.
     MOZ_ASSERT(rt->isProfilerSamplingEnabled());
 
-    // Since the frame is on stack, and is a jit frame, it MUST have Baseline jitcode.
-    MOZ_ASSERT(frameScript()->hasBaselineScript());
-
     // Try initializing with sampler pc
     if (tryInitWithPC(state.pc))
         return;
 
     // Try initializing with sampler pc using native=>bytecode table.
-    if (tryInitWithTable(table, state.pc, rt))
+    if (tryInitWithTable(table, state.pc, rt, /* forLastCallSite = */ false))
         return;
 
     // Try initializing with lastProfilingCallSite pc
@@ -2797,15 +2794,24 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
             return;
 
         // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
-        if (tryInitWithTable(table, lastCallSite, rt))
+        if (tryInitWithTable(table, lastCallSite, rt, /* forLastCallSite = */ true))
             return;
+    }
+
+    // In some rare cases (e.g. baseline eval frame), the callee script may
+    // not have a baselineScript.  Treat this is an empty frame-sequence and
+    // move on.
+    if (!frameScript()->hasBaselineScript()) {
+        type_ = JitFrame_Entry;
+        fp_ = nullptr;
+        returnAddressToFp_ = nullptr;
+        return;
     }
 
     // If nothing matches, for now just assume we are at the start of the last frame's
     // baseline jit code.
     type_ = JitFrame_BaselineJS;
     returnAddressToFp_ = frameScript()->baselineScript()->method()->raw();
-    //++(*this);
 }
 
 template <typename FrameType, typename ReturnType=CommonFrameLayout*>
@@ -2862,7 +2868,7 @@ JitProfilingFrameIterator::tryInitWithPC(void *pc)
     }
 
     // Check for containment in Baseline jitcode second.
-    if (callee->baselineScript()->method()->containsNativePC(pc)) {
+    if (callee->hasBaselineScript() && callee->baselineScript()->method()->containsNativePC(pc)) {
         type_ = JitFrame_BaselineJS;
         returnAddressToFp_ = pc;
         return true;
@@ -2872,7 +2878,8 @@ JitProfilingFrameIterator::tryInitWithPC(void *pc)
 }
 
 bool
-JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt)
+JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable *table, void *pc, JSRuntime *rt,
+                                            bool forLastCallSite)
 {
     if (!pc)
         return false;
@@ -2896,7 +2903,7 @@ JitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable *table, void *pc,
 
     if (entry.isBaseline()) {
         // If looked-up callee doesn't match frame callee, don't accept lastProfilingCallSite
-        if (entry.baselineEntry().script() != callee)
+        if (forLastCallSite && entry.baselineEntry().script() != callee)
             return false;
 
         type_ = JitFrame_BaselineJS;

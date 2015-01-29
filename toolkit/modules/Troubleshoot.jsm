@@ -484,7 +484,7 @@ let dataProviders = {
     let sysInfo = Cc["@mozilla.org/system-info;1"].
                   getService(Ci.nsIPropertyBag2);
     let data = {};
-    for (key of keys) {
+    for (let key of keys) {
       if (sysInfo.hasKey(key)) {
         data[key] = sysInfo.getPropertyAsBool(key);
       }

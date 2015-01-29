@@ -18,7 +18,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
@@ -26,8 +26,8 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .getService(Ci.nsISupports)
           .wrappedJSObject);
 
-// Force the Telemetry enabled preference so that TelemetryPing.reset() doesn't exit early.
-Services.prefs.setBoolPref(TelemetryPing.Constants.PREF_ENABLED, true);
+// Force the Telemetry enabled preference so that TelemetrySession.reset() doesn't exit early.
+Services.prefs.setBoolPref(TelemetrySession.Constants.PREF_ENABLED, true);
 
 // Set up our dummy AppInfo object so we can control the appBuildID.
 Cu.import("resource://testing-common/AppInfo.jsm", this);
@@ -36,19 +36,19 @@ updateAppInfo();
 // Check that when run with no previous build ID stored, we update the pref but do not
 // put anything into the metadata.
 add_task(function* test_firstRun() {
-  yield TelemetryPing.reset();
-  let metadata = TelemetryPing.getMetadata();
+  yield TelemetrySession.reset();
+  let metadata = TelemetrySession.getMetadata();
   do_check_false("previousBuildID" in metadata);
   let appBuildID = getAppInfo().appBuildID;
-  let buildIDPref = Services.prefs.getCharPref(TelemetryPing.Constants.PREF_PREVIOUS_BUILDID);
+  let buildIDPref = Services.prefs.getCharPref(TelemetrySession.Constants.PREF_PREVIOUS_BUILDID);
   do_check_eq(appBuildID, buildIDPref);
 });
 
 // Check that a subsequent run with the same build ID does not put prev build ID in
 // metadata. Assumes testFirstRun() has already been called to set the previousBuildID pref.
 add_task(function* test_secondRun() {
-  yield TelemetryPing.reset();
-  let metadata = TelemetryPing.getMetadata();
+  yield TelemetrySession.reset();
+  let metadata = TelemetrySession.getMetadata();
   do_check_false("previousBuildID" in metadata);
 });
 
@@ -60,10 +60,10 @@ add_task(function* test_newBuild() {
   let info = getAppInfo();
   let oldBuildID = info.appBuildID;
   info.appBuildID = NEW_BUILD_ID;
-  yield TelemetryPing.reset();
-  let metadata = TelemetryPing.getMetadata();
+  yield TelemetrySession.reset();
+  let metadata = TelemetrySession.getMetadata();
   do_check_eq(metadata.previousBuildID, oldBuildID);
-  let buildIDPref = Services.prefs.getCharPref(TelemetryPing.Constants.PREF_PREVIOUS_BUILDID);
+  let buildIDPref = Services.prefs.getCharPref(TelemetrySession.Constants.PREF_PREVIOUS_BUILDID);
   do_check_eq(NEW_BUILD_ID, buildIDPref);
 });
 
