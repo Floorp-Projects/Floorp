@@ -102,7 +102,8 @@ interface MozNFC : EventTarget {
 
   /**
    * This event will be fired when NFCPeer, earlier detected in onpeerready
-   * or onpeerfound, moves out of range.
+   * or onpeerfound, moves out of range, or if the application has been switched
+   * to the background (decided by System app).
    */
   attribute EventHandler onpeerlost;
 
@@ -121,7 +122,9 @@ interface MozNFC : EventTarget {
   attribute EventHandler ontagfound;
 
   /**
-   * This event will be fired if the tag detected in ontagfound has been removed.
+   * This event will be fired if the tag detected in ontagfound has been
+   * removed, or if the application has been switched to the background (decided
+   * by System app).
    */
   attribute EventHandler ontaglost;
 };
