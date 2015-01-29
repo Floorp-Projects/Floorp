@@ -44,6 +44,15 @@ parent:
    * native HWND of the plugin widget.
    */
   sync GetNativePluginPort() returns (uintptr_t value);
+
+child:
+  /**
+   * Sent from content when a plugin is unloaded via layout. We shut down
+   * some things in response to this so that we don't end up firing async
+   * msgs after the child is destroyed. We know that after this call
+   * the child actor may not be on the other side.
+   */
+  async ParentShutdown();
 };
 
 }
