@@ -789,7 +789,10 @@ TabBrowserElementInterposition.getters.contentDocument = function(addon, target)
 let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
                                                   EventTargetInterposition);
 
-ChromeWindowInterposition.getters.content = function(addon, target) {
+// _content is for older add-ons like pinboard and all-in-one gestures
+// that should be using content instead.
+ChromeWindowInterposition.getters.content =
+ChromeWindowInterposition.getters._content = function(addon, target) {
   let browser = target.gBrowser.selectedBrowser;
   if (!browser.contentWindowAsCPOW) {
     return makeDummyContentWindow(browser);
