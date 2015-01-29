@@ -5160,27 +5160,37 @@ GCRuntime::drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase)
     return marker.drainMarkStack(sliceBudget);
 }
 
-// Advance to the next entry in a list of arenas, returning false if the
-// mutator should resume running.
-static bool
-AdvanceArenaList(ArenaHeader **list, AllocKind kind, SliceBudget &sliceBudget)
+static void
+SweepThing(Shape *shape)
 {
-    *list = (*list)->next;
-    sliceBudget.step(Arena::thingsPerArena(Arena::thingSize(kind)));
-    return !sliceBudget.isOverBudget();
+    if (!shape->isMarked())
+        shape->sweep();
 }
 
+static void
+SweepThing(JSScript *script, types::AutoClearTypeInferenceStateOnOOM *oom)
+{
+    script->maybeSweepTypes(oom);
+}
+
+static void
+SweepThing(types::TypeObject *typeObject, types::AutoClearTypeInferenceStateOnOOM *oom)
+{
+    typeObject->maybeSweep(oom);
+}
+
+template <typename T, typename... Args>
 static bool
-SweepShapes(ArenaHeader **arenasToSweep, AllocKind kind, SliceBudget &sliceBudget)
+SweepArenaList(ArenaHeader **arenasToSweep, SliceBudget &sliceBudget, Args... args)
 {
     while (ArenaHeader *arena = *arenasToSweep) {
-        for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-            Shape *shape = i.get<Shape>();
-            if (!shape->isMarked())
-                shape->sweep();
-        }
+        for (ArenaCellIterUnderGC i(arena); !i.done(); i.next())
+            SweepThing(i.get<T>(), args...);
 
-        if (!AdvanceArenaList(arenasToSweep, kind, sliceBudget))
+        *arenasToSweep = (*arenasToSweep)->next;
+        AllocKind kind = MapTypeToFinalizeKind<T>::kind;
+        sliceBudget.step(Arena::thingsPerArena(Arena::thingSize(kind)));
+        if (sliceBudget.isOverBudget())
             return false;
     }
 
@@ -5214,30 +5224,13 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 
                 types::AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
-                while (ArenaHeader *arena = al.gcScriptArenasToUpdate) {
-                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-                        JSScript *script = i.get<JSScript>();
-                        script->maybeSweepTypes(&oom);
-                    }
+                if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate, sliceBudget, &oom))
+                    return false;
 
-                    if (!AdvanceArenaList(&al.gcScriptArenasToUpdate,
-                                          FINALIZE_SCRIPT, sliceBudget))
-                    {
-                        return false;
-                    }
-                }
-
-                while (ArenaHeader *arena = al.gcTypeObjectArenasToUpdate) {
-                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-                        types::TypeObject *object = i.get<types::TypeObject>();
-                        object->maybeSweep(&oom);
-                    }
-
-                    if (!AdvanceArenaList(&al.gcTypeObjectArenasToUpdate,
-                                          FINALIZE_TYPE_OBJECT, sliceBudget))
-                    {
-                        return false;
-                    }
+                if (!SweepArenaList<types::TypeObject>(
+                        &al.gcTypeObjectArenasToUpdate, sliceBudget, &oom))
+                {
+                    return false;
                 }
 
                 // Finish sweeping type information in the zone.
@@ -5289,14 +5282,13 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
             gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_SHAPE);
 
             for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
-                Zone *zone = sweepZone;
-                if (!SweepShapes(&zone->arenas.gcShapeArenasToUpdate, FINALIZE_SHAPE, sliceBudget))
+                ArenaLists &al = sweepZone->arenas;
+
+                if (!SweepArenaList<Shape>(&al.gcShapeArenasToUpdate, sliceBudget))
                     return false;  /* Yield to the mutator. */
-                if (!SweepShapes(&zone->arenas.gcAccessorShapeArenasToUpdate,
-                                 FINALIZE_ACCESSOR_SHAPE, sliceBudget))
-                {
+
+                if (!SweepArenaList<AccessorShape>(&al.gcAccessorShapeArenasToUpdate, sliceBudget))
                     return false;  /* Yield to the mutator. */
-                }
             }
         }
 
