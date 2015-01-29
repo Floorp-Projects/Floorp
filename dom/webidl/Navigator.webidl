@@ -312,7 +312,8 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.icc.enabled", CheckPermissions="mobileconnection", UnsafeInPrerendering]
+  [Throws, Pref="dom.icc.enabled", CheckPermissions="mobileconnection",
+   AvailableIn="CertifiedApps", UnsafeInPrerendering]
   readonly attribute MozIccManager? mozIccManager;
 };
 
