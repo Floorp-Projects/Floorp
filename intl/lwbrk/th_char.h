@@ -10,7 +10,6 @@ purpose.  It is provided "as is" without express or implied warranty.
 */
 #ifndef __TH_CHAR_H__
 #define __TH_CHAR_H__
-#include "nscore.h"
 
 
 typedef unsigned char	tis_char;
