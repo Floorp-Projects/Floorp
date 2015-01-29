@@ -398,6 +398,7 @@ struct JSCompartment
     void fixupNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
     void fixupAfterMovingGC();
     void fixupGlobal();
+    void fixupBaseShapeTable();
 #endif
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
