@@ -440,9 +440,13 @@ private:
     Tick(vsyncJsNow, aTimeStamp);
   }
 
-  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
   nsRefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
-  VsyncChild* mVsyncChild;
+  // Used for parent process.
+  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  // Used for child process.
+  // The mVsyncChild will be always available before VsncChild::ActorDestroy().
+  // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
+  nsRefPtr<VsyncChild> mVsyncChild;
 }; // VsyncRefreshDriverTimer
 
 /*
