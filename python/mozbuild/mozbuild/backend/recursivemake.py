@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import errno
-import itertools
 import json
 import logging
 import os
@@ -18,7 +17,6 @@ from collections import (
 )
 from StringIO import StringIO
 
-import mozwebidlcodegen
 from reftest import ReftestManifest
 
 from mozpack.copier import FilePurger
@@ -66,6 +64,7 @@ from ..frontend.data import (
 from ..util import (
     ensureParentDir,
     FileAvoidWrite,
+    group_unified_files,
 )
 from ..makeutil import Makefile
 
@@ -408,15 +407,16 @@ class RecursiveMakeBackend(CommonBackend):
                 unified_prefix = unified_prefix.replace('/', '_')
 
                 suffix = obj.canonical_suffix[1:]
-                self._add_unified_build_rules(backend_file, source_files,
-                    backend_file.objdir,
-                    unified_prefix='Unified_%s_%s' % (
-                        suffix,
-                        unified_prefix),
-                    unified_suffix=suffix,
+                unified_prefix='Unified_%s_%s' % (suffix, unified_prefix)
+                unified_source_mapping = list(group_unified_files(source_files,
+                                                                  unified_prefix=unified_prefix,
+                                                                  unified_suffix=suffix,
+                                                                  files_per_unified_file=files_per_unification))
+                self._write_unified_files(unified_source_mapping, backend_file.objdir)
+                self._add_unified_build_rules(backend_file,
+                    unified_source_mapping,
                     unified_files_makefile_variable=var,
-                    include_curdir_build_rules=False,
-                    files_per_unified_file=files_per_unification)
+                    include_curdir_build_rules=False)
                 backend_file.write('%s += $(%s)\n' % (non_unified_var, var))
             else:
                 backend_file.write('%s += %s\n' % (
@@ -609,94 +609,22 @@ class RecursiveMakeBackend(CommonBackend):
                 mozpath.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
             root_deps_mk.dump(root_deps, removal_guard=False)
 
-    def _group_unified_files(self, files, unified_prefix, unified_suffix,
-                             files_per_unified_file):
-        "Return an iterator of (unified_filename, source_filenames) tuples."
-        # Our last returned list of source filenames may be short, and we
-        # don't want the fill value inserted by izip_longest to be an
-        # issue.  So we do a little dance to filter it out ourselves.
-        dummy_fill_value = ("dummy",)
-        def filter_out_dummy(iterable):
-            return itertools.ifilter(lambda x: x != dummy_fill_value,
-                                     iterable)
-
-        # From the itertools documentation, slightly modified:
-        def grouper(n, iterable):
-            "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
-            args = [iter(iterable)] * n
-            return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
-
-        for i, unified_group in enumerate(grouper(files_per_unified_file,
-                                                  files)):
-            just_the_filenames = list(filter_out_dummy(unified_group))
-            yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
-
-    def _write_unified_file(self, unified_file, source_filenames,
-                            output_directory, poison_windows_h=False):
-        with self._write_file(mozpath.join(output_directory, unified_file)) as f:
-            f.write('#define MOZ_UNIFIED_BUILD\n')
-            includeTemplate = '#include "%(cppfile)s"'
-            if poison_windows_h:
-                includeTemplate += (
-                    '\n'
-                    '#ifdef _WINDOWS_\n'
-                    '#error "%(cppfile)s included windows.h"\n'
-                    "#endif")
-            includeTemplate += (
-                '\n'
-                '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
-                '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
-                'so it cannot be built in unified mode."\n'
-                '#undef PL_ARENA_CONST_ALIGN_MASK\n'
-                '#endif\n'
-                '#ifdef INITGUID\n'
-                '#error "%(cppfile)s defines INITGUID, '
-                'so it cannot be built in unified mode."\n'
-                '#undef INITGUID\n'
-                '#endif')
-            f.write('\n'.join(includeTemplate % { "cppfile": s } for
-                              s in source_filenames))
-
-    def _add_unified_build_rules(self, makefile, files, output_directory,
-                                 unified_prefix='Unified',
-                                 unified_suffix='cpp',
-                                 extra_dependencies=[],
+    def _add_unified_build_rules(self, makefile, unified_source_mapping,
                                  unified_files_makefile_variable='unified_files',
-                                 include_curdir_build_rules=True,
-                                 poison_windows_h=False,
-                                 files_per_unified_file=16):
+                                 include_curdir_build_rules=True):
 
         # In case it's a generator.
-        files = sorted(files)
+        unified_source_mapping = sorted(unified_source_mapping)
 
         explanation = "\n" \
             "# We build files in 'unified' mode by including several files\n" \
             "# together into a single source file.  This cuts down on\n" \
-            "# compilation times and debug information size.  %d was chosen as\n" \
-            "# a reasonable compromise between clobber rebuild time, incremental\n" \
-            "# rebuild time, and compiler memory usage." % files_per_unified_file
+            "# compilation times and debug information size."
         makefile.add_statement(explanation)
 
-        unified_source_mapping = list(self._group_unified_files(files,
-                                                                unified_prefix=unified_prefix,
-                                                                unified_suffix=unified_suffix,
-                                                                files_per_unified_file=files_per_unified_file))
         all_sources = ' '.join(source for source, _ in unified_source_mapping)
         makefile.add_statement('%s := %s' % (unified_files_makefile_variable,
-                                               all_sources))
-
-        for unified_file, source_filenames in unified_source_mapping:
-            if extra_dependencies:
-                rule = makefile.create_rule([unified_file])
-                rule.add_dependencies(extra_dependencies)
-
-            # The rule we just defined is only for cases where the cpp files get
-            # blown away and we need to regenerate them.  The rule doesn't correctly
-            # handle source files being added/removed/renamed.  Therefore, we
-            # generate them here also to make sure everything's up-to-date.
-            self._write_unified_file(unified_file, source_filenames,
-                                     output_directory,
-                                     poison_windows_h=poison_windows_h)
+                                             all_sources))
 
         if include_curdir_build_rules:
             makefile.add_statement('\n'
@@ -1307,15 +1235,14 @@ INSTALL_TARGETS += %(prefix)s
 
         self.summary.makefile_out_count += 1
 
-    def _handle_ipdl_sources(self, sorted_ipdl_sources, ipdl_cppsrcs):
+    def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
+                             unified_ipdl_cppsrcs_mapping):
         # Write out a master list of all IPDL source files.
-        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
         mk = Makefile()
 
         mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
 
-        self._add_unified_build_rules(mk, ipdl_cppsrcs, ipdl_dir,
-                                      unified_prefix='UnifiedProtocols',
+        self._add_unified_build_rules(mk, unified_ipdl_cppsrcs_mapping,
                                       unified_files_makefile_variable='CPPSRCS')
 
         mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
@@ -1324,44 +1251,12 @@ INSTALL_TARGETS += %(prefix)s
         with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
             mk.dump(ipdls, removal_guard=False)
 
-    def _handle_webidl_collection(self, webidls):
-        if not webidls.all_stems():
-            return
-
-        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom',
-            'bindings')
-
-        all_inputs = set(webidls.all_static_sources())
-        for s in webidls.all_non_static_basenames():
-            all_inputs.add(mozpath.join(bindings_dir, s))
-
-        generated_events_stems = webidls.generated_events_stems()
-        exported_stems = webidls.all_regular_stems()
-
-        # The WebIDL manager reads configuration from a JSON file. So, we
-        # need to write this file early.
-        o = dict(
-            webidls=sorted(all_inputs),
-            generated_events_stems=sorted(generated_events_stems),
-            exported_stems=sorted(exported_stems),
-            example_interfaces=sorted(webidls.example_interfaces),
-        )
-
-        file_lists = mozpath.join(bindings_dir, 'file-lists.json')
-        with self._write_file(file_lists) as fh:
-            json.dump(o, fh, sort_keys=True, indent=2)
-
-        manager = mozwebidlcodegen.create_build_system_manager(
-            self.environment.topsrcdir,
-            self.environment.topobjdir,
-            mozpath.join(self.environment.topobjdir, 'dist')
-        )
-
-        # The manager is the source of truth on what files are generated.
-        # Consult it for install manifests.
+    def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
+                             webidls, expected_build_output_files,
+                             global_define_files):
         include_dir = mozpath.join(self.environment.topobjdir, 'dist',
             'include')
-        for f in manager.expected_build_output_files():
+        for f in expected_build_output_files:
             if f.startswith(include_dir):
                 self._install_manifests['dist_include'].add_optional_exists(
                     mozpath.relpath(f, include_dir))
@@ -1371,7 +1266,7 @@ INSTALL_TARGETS += %(prefix)s
         mk.add_statement('nonstatic_webidl_files := %s' % ' '.join(
             sorted(webidls.all_non_static_basenames())))
         mk.add_statement('globalgen_sources := %s' % ' '.join(
-            sorted(manager.GLOBAL_DEFINE_FILES)))
+            sorted(global_define_files)))
         mk.add_statement('test_sources := %s' % ' '.join(
             sorted('%sBinding.cpp' % s for s in webidls.all_test_stems())))
 
@@ -1394,16 +1289,9 @@ INSTALL_TARGETS += %(prefix)s
                     '$(XULPPFLAGS) $< -o $@)'
             ])
 
-        # Bindings are compiled in unified mode to speed up compilation and
-        # to reduce linker memory size. Note that test bindings are separated
-        # from regular ones so tests bindings aren't shipped.
         self._add_unified_build_rules(mk,
-            webidls.all_regular_cpp_basenames(),
-            bindings_dir,
-            unified_prefix='UnifiedBindings',
-            unified_files_makefile_variable='unified_binding_cpp_files',
-            poison_windows_h=True,
-            files_per_unified_file=32)
+            unified_source_mapping,
+            unified_files_makefile_variable='unified_binding_cpp_files')
 
         webidls_mk = mozpath.join(bindings_dir, 'webidlsrcs.mk')
         with self._write_file(webidls_mk) as fh:

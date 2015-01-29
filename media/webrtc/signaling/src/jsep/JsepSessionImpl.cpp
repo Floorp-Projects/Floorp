@@ -236,6 +236,9 @@ JsepSessionImpl::AddOfferMSectionsByType(SdpMediaSection::MediaType mediatype,
 
     AddLocalSsrcs(*track->mTrack,
                   &sdp->GetMediaSection(*track->mAssignedMLine));
+
+    AddLocalIds(*track->mTrack,
+                &sdp->GetMediaSection(*track->mAssignedMLine));
   }
 
   while (offerToReceive.isSome() && added < *offerToReceive) {
@@ -266,6 +269,133 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());
   }
+}
+
+void
+JsepSessionImpl::SetupMsidSemantic(const std::vector<std::string>& msids,
+                                   Sdp* sdp) const
+{
+  if (!msids.empty()) {
+    UniquePtr<SdpMsidSemanticAttributeList> msidSemantics(
+        new SdpMsidSemanticAttributeList);
+    msidSemantics->PushEntry("WMS", msids);
+    sdp->GetAttributeList().SetAttribute(msidSemantics.release());
+  }
+}
+
+nsresult
+JsepSessionImpl::GetIdsFromMsid(const Sdp& sdp,
+                                const SdpMediaSection& msection,
+                                std::string* streamId,
+                                std::string* trackId)
+{
+  if (!sdp.GetAttributeList().HasAttribute(
+        SdpAttribute::kMsidSemanticAttribute)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& msidSemantics = sdp.GetAttributeList().GetMsidSemantic().mMsidSemantics;
+  std::vector<SdpMsidAttributeList::Msid> allMsids;
+  nsresult rv = GetMsids(msection, &allMsids);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool allMsidsAreWebrtc = false;
+  std::set<std::string> webrtcMsids;
+
+  for (auto i = msidSemantics.begin(); i != msidSemantics.end(); ++i) {
+    if (i->semantic == "WMS") {
+      for (auto j = i->msids.begin(); j != i->msids.end(); ++j) {
+        if (*j == "*") {
+          allMsidsAreWebrtc = true;
+        } else {
+          webrtcMsids.insert(*j);
+        }
+      }
+      break;
+    }
+  }
+
+  bool found = false;
+
+  for (auto i = allMsids.begin(); i != allMsids.end(); ++i) {
+    if (allMsidsAreWebrtc || webrtcMsids.count(i->identifier)) {
+      // For now, we assume that there is exactly one streamId/trackId pair
+      // per m-section. Later on, we'll add handling for multiple remote tracks
+      // per m-section.
+      if (!found) {
+        *streamId = i->identifier;
+        *trackId = i->appdata;
+        found = true;
+      } else if ((*streamId != i->identifier) || (*trackId != i->appdata)) {
+        // Bail if there are multiple stream/track ids for now
+        JSEP_SET_ERROR("Found multiple different webrtc msids in m-section "
+                       << msection.GetLevel() << ". The behavior here is "
+                       "undefined.");
+        return NS_ERROR_INVALID_ARG;
+      }
+    }
+  }
+
+  if (!found) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+JsepSessionImpl::GetMsids(
+    const SdpMediaSection& msection,
+    std::vector<SdpMsidAttributeList::Msid>* msids)
+{
+  if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
+    *msids = msection.GetAttributeList().GetMsid().mMsids;
+  }
+
+  // Can we find some additional msids in ssrc attributes?
+  // (Chrome does not put plain-old msid attributes in its SDP)
+  if (msection.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
+    auto& ssrcs = msection.GetAttributeList().GetSsrc().mSsrcs;
+
+    for (auto i = ssrcs.begin(); i != ssrcs.end(); ++i) {
+      if (i->attribute.find("msid:") == 0) {
+        // Would be nice if SdpSsrcAttributeList could parse out the contained
+        // attribute, but at least the parse here is simple.
+        size_t streamIdStart = i->attribute.find_first_not_of(" \t", 5);
+        // We do not assume the appdata token is here, since this is not
+        // necessarily a webrtc msid
+        if (streamIdStart == std::string::npos) {
+          JSEP_SET_ERROR("Malformed source-level msid attribute: "
+                         << i->attribute);
+          return NS_ERROR_INVALID_ARG;
+        }
+
+        size_t streamIdEnd = i->attribute.find_first_of(" \t", streamIdStart);
+        if (streamIdEnd == std::string::npos) {
+          streamIdEnd = i->attribute.size();
+        }
+
+        size_t trackIdStart =
+          i->attribute.find_first_not_of(" \t", streamIdEnd);
+        if (trackIdStart == std::string::npos) {
+          trackIdStart = i->attribute.size();
+        }
+
+        size_t trackIdEnd = i->attribute.find_first_of(" \t", trackIdStart);
+        if (trackIdEnd == std::string::npos) {
+          trackIdEnd = i->attribute.size();
+        }
+
+        size_t streamIdSize = streamIdEnd - streamIdStart;
+        size_t trackIdSize = trackIdEnd - trackIdStart;
+
+        msids->push_back({i->attribute.substr(streamIdStart, streamIdSize),
+                          i->attribute.substr(trackIdStart, trackIdSize)});
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -393,6 +523,24 @@ JsepSessionImpl::AddLocalSsrcs(const JsepTrack& track,
   if (!ssrcs->mSsrcs.empty()) {
     msection->GetAttributeList().SetAttribute(ssrcs.release());
   }
+}
+
+void
+JsepSessionImpl::AddLocalIds(const JsepTrack& track,
+                             SdpMediaSection* msection) const
+{
+  if (track.GetMediaType() == SdpMediaSection::kApplication) {
+    return;
+  }
+
+  UniquePtr<SdpMsidAttributeList> msids(new SdpMsidAttributeList);
+  if (msection->GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
+    msids->mMsids = msection->GetAttributeList().GetMsid().mMsids;
+  }
+
+  msids->PushEntry(track.GetStreamId(), track.GetTrackId());
+
+  msection->GetAttributeList().SetAttribute(msids.release());
 }
 
 JsepCodecDescription*
@@ -662,6 +810,8 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
         continue;
 
       AddLocalSsrcs(*track->mTrack, msection);
+
+      AddLocalIds(*track->mTrack, msection);
 
       localDirection = SdpDirectionAttribute::kSendonly;
       track->mAssignedMLine = Some(mlineIndex);
@@ -1363,6 +1513,8 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
     return NS_ERROR_INVALID_ARG;
   }
 
+  std::set<std::string> trackIds;
+
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     if (parsed->GetMediaSection(i).GetPort() == 0) {
       // Disabled, let this stuff slide.
@@ -1403,6 +1555,26 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
                        << i);
         return NS_ERROR_INVALID_ARG;
       }
+    }
+
+    std::string streamId;
+    std::string trackId;
+    nsresult rv = GetIdsFromMsid(*parsed,
+                                 parsed->GetMediaSection(i),
+                                 &streamId,
+                                 &trackId);
+
+    if (NS_SUCCEEDED(rv)) {
+      if (trackIds.count(trackId)) {
+        JSEP_SET_ERROR("track id:" << trackId
+                       << " appears in more than one m-section at level " << i);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      trackIds.insert(trackId);
+    } else if (rv != NS_ERROR_NOT_AVAILABLE) {
+      // Error has already been set
+      return rv;
     }
   }
 
@@ -1462,7 +1634,7 @@ JsepSessionImpl::SetRemoteTracksFromDescription(const Sdp& remoteDescription)
     // TODO(bug 1017888): Suppress new track creation on renegotiation
     // of existing tracks.
     if (direction & SdpDirectionAttribute::kSendFlag) {
-      nsresult rv = CreateReceivingTrack(i, msection);
+      nsresult rv = CreateReceivingTrack(i, remoteDescription, msection);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1521,20 +1693,31 @@ JsepSessionImpl::ValidateLocalDescription(const Sdp& description)
 
 nsresult
 JsepSessionImpl::CreateReceivingTrack(size_t mline,
+                                      const Sdp& sdp,
                                       const SdpMediaSection& msection)
 {
   std::string streamId;
   std::string trackId;
 
-  // Generate random track ids.
-  // TODO(bug 1095218): Pull track and stream IDs out of SDP if available.
-  if (!mUuidGen->Generate(&trackId)) {
-    JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
-    return NS_ERROR_FAILURE;
+  nsresult rv = GetIdsFromMsid(sdp, msection, &streamId, &trackId);
+
+  if (NS_FAILED(rv)) {
+    if (rv != NS_ERROR_NOT_AVAILABLE) {
+      // Malformed ssrc attribute, probably
+      return rv;
+    }
+
+    streamId = mDefaultRemoteStreamId;
+
+    // Generate random track ids.
+    if (!mUuidGen->Generate(&trackId)) {
+      JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
+      return NS_ERROR_FAILURE;
+    }
   }
 
   JsepTrack* remote = new JsepTrack(msection.GetMediaType(),
-                                    mDefaultRemoteStreamId,
+                                    streamId,
                                     trackId,
                                     JsepTrack::kJsepTrackReceiving);
 
@@ -1589,6 +1772,12 @@ JsepSessionImpl::CreateGenericSDP(UniquePtr<Sdp>* sdpp)
   auto* iceOpts = new SdpOptionsAttribute(SdpAttribute::kIceOptionsAttribute);
   iceOpts->PushEntry("trickle");
   sdp->GetAttributeList().SetAttribute(iceOpts);
+
+  // This assumes content doesn't add a bunch of msid attributes with a
+  // different semantic in mind.
+  std::vector<std::string> msids;
+  msids.push_back("*");
+  SetupMsidSemantic(msids, sdp.get());
 
   *sdpp = Move(sdp);
   return NS_OK;
