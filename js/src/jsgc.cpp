@@ -2180,7 +2180,7 @@ GCRuntime::relocateArenas()
 
         if (CanRelocateZone(rt, zone)) {
             zone->setGCState(Zone::Compact);
-            StopAllOffThreadCompilations(zone);
+            jit::StopAllOffThreadCompilations(zone);
             relocatedList = zone->arenas.relocateArenas(relocatedList);
         }
     }
