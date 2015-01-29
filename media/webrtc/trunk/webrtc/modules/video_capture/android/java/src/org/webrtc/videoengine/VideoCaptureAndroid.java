@@ -11,6 +11,7 @@
 package org.webrtc.videoengine;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Exchanger;
 
@@ -367,7 +368,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         // We already got onPause, but now the native code wants us to stop.
         // Do not resume capturing when resuming the app.
         mResumeCapture = false;
-        return true;
+        return;
       }
       throw new RuntimeException("Camera is already stopped!");
     }
@@ -476,7 +477,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     rotation = (info.orientation + rotation) % 360;
 
     if (data != null) {
-      ProvideCameraFrame(data, data.length, native_capturer, mCaptureRotation);
+      ProvideCameraFrame(data, data.length, mCaptureRotation, lastCaptureTimeMs, native_capturer);
       camera.addCallbackBuffer(data);
     }
   }
