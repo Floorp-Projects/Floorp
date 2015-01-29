@@ -57,3 +57,43 @@ exports.RecordingUtils.offsetMarkerTimes = function(markers, timeOffset) {
     marker.end -= timeOffset;
   }
 }
+
+/**
+ * Converts allocation data from the memory actor to something that follows
+ * the same structure as the samples data received from the profiler.
+ *
+ * @see MemoryActor.prototype.getAllocations for more information.
+ *
+ * @param object allocations
+ *        A list of { sites, timestamps, frames, counts } arrays.
+ * @return array
+ *         The samples data.
+ */
+exports.RecordingUtils.getSamplesFromAllocations = function(allocations) {
+  let { sites, timestamps, frames, counts } = allocations;
+  let samples = [];
+
+  for (let i = 0, len = sites.length; i < len; i++) {
+    let site = sites[i];
+    let timestamp = timestamps[i];
+    let frame = frames[site];
+    let count = counts[site];
+
+    let sample = { time: timestamp, frames: [] };
+    samples.push(sample);
+
+    while (frame) {
+      sample.frames.push({
+        location: frame.source + ":" + frame.line + ":" + frame.column,
+        allocations: count
+      });
+      site = frame.parent;
+      frame = frames[site];
+      count = counts[site];
+    }
+
+    sample.frames.reverse();
+  }
+
+  return samples;
+}
