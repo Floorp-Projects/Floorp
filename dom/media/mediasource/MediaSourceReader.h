@@ -173,6 +173,7 @@ private:
   bool HaveData(int64_t aTarget, MediaData::Type aType);
 
   void AttemptSeek();
+  bool IsSeeking() { return mPendingSeekTime != -1; }
 
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
