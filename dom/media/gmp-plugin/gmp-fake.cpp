@@ -60,6 +60,8 @@
 #define PUBLIC_FUNC
 #endif
 
+#define BIG_FRAME 10000
+
 static int g_log_level = 0;
 
 #define GMPLOG(l, x) do { \
@@ -166,7 +168,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
 
     // Now return the encoded data back to the parent.
     GMPVideoFrame* ftmp;
-    GMPErr err = host_->CreateFrame (kGMPEncodedVideoFrame, &ftmp);
+    GMPErr err = host_->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
     if (err != GMPNoErr) {
       GMPLOG (GL_ERROR, "Error creating encoded frame");
       return;
@@ -192,13 +194,17 @@ class FakeVideoEncoder : public GMPVideoEncoder {
 
     eframe.timestamp_ = inputImage->Timestamp();
 
-    err = f->CreateEmptyFrame (sizeof(eframe));
+    err = f->CreateEmptyFrame (sizeof(eframe) +
+                               (frame_type  == kGMPKeyFrame ? sizeof(uint32_t) + BIG_FRAME : 0));
     if (err != GMPNoErr) {
       GMPLOG (GL_ERROR, "Error allocating frame data");
       f->Destroy();
       return;
     }
     memcpy(f->Buffer(), &eframe, sizeof(eframe));
+    if (frame_type  == kGMPKeyFrame) {
+      *((uint32_t*) f->Buffer() + sizeof(eframe)) = BIG_FRAME;
+    }
 
     f->SetEncodedWidth (inputImage->Width());
     f->SetEncodedHeight (inputImage->Height());
