@@ -2058,18 +2058,17 @@ MMinMax::foldsTo(TempAllocator &alloc)
 
         // The folded MConstant should maintain the same MIRType with
         // the original MMinMax.
-        MConstant *constant;
         if (type() == MIRType_Int32) {
-            int32_t cast = static_cast<int32_t>(result);
-            MOZ_ASSERT(cast == result);
-            constant = MConstant::New(alloc, Int32Value(cast));
+            int32_t cast;
+            if (mozilla::NumberEqualsInt32(result, &cast))
+                return MConstant::New(alloc, Int32Value(cast));
         } else {
             MOZ_ASSERT(IsFloatingPointType(type()));
-            constant = MConstant::New(alloc, DoubleValue(result));
+            MConstant *constant = MConstant::New(alloc, DoubleValue(result));
             if (type() == MIRType_Float32)
                 constant->setResultType(MIRType_Float32);
+            return constant;
         }
-        return constant;
     }
 
     MDefinition *operand = lhs()->isConstantValue() ? rhs() : lhs();
