@@ -432,6 +432,9 @@ private:
     void                DispatchRestoreEventAccessible();
 #endif
 
+    // Updates the bounds of the socket widget we manage for remote plugins.
+    void ResizePluginSocketWidget();
+
     // e10s specific - for managing the socket widget this window hosts.
     nsPluginNativeWindowGtk* mPluginNativeWindow;
 

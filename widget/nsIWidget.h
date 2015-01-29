@@ -108,6 +108,8 @@ typedef void* nsNativeWidget;
 // set/get nsPluginNativeWindowGtk, e10s specific
 #define NS_NATIVE_PLUGIN_OBJECT_PTR    104
 #endif
+// See RegisterPluginWindowForRemoteUpdates
+#define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
 { 0xa7db3e01, 0xb8fe, 0x4122, \

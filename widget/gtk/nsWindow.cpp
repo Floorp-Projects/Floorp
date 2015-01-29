@@ -1052,24 +1052,13 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     }
 
     NotifyRollupGeometryChange();
+    ResizePluginSocketWidget();
 
     // send a resize notification if this is a toplevel
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized(width, height);
     }
 
-    // e10s specific, a eWindowType_plugin_ipc_chrome holds its own
-    // nsPluginNativeWindowGtk wrapper. We are responsible for
-    // resizing the embedded socket widget.
-    if (mWindowType == eWindowType_plugin_ipc_chrome) {
-        nsPluginNativeWindowGtk* wrapper = (nsPluginNativeWindowGtk*)
-          GetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR);
-        if (wrapper) {
-            wrapper->width = mBounds.width;
-            wrapper->height = mBounds.height;
-            wrapper->SetAllocation();
-        }
-    }
     return NS_OK;
 }
 
@@ -1136,12 +1125,30 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     }
 
     NotifyRollupGeometryChange();
+    ResizePluginSocketWidget();
 
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized(width, height);
     }
 
     return NS_OK;
+}
+
+void
+nsWindow::ResizePluginSocketWidget()
+{
+    // e10s specific, a eWindowType_plugin_ipc_chrome holds its own
+    // nsPluginNativeWindowGtk wrapper. We are responsible for resizing
+    // the embedded socket widget.
+    if (mWindowType == eWindowType_plugin_ipc_chrome) {
+        nsPluginNativeWindowGtk* wrapper = (nsPluginNativeWindowGtk*)
+          GetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR);
+        if (wrapper) {
+            wrapper->width = mBounds.width;
+            wrapper->height = mBounds.height;
+            wrapper->SetAllocation();
+        }
+    }
 }
 
 NS_IMETHODIMP
@@ -1660,6 +1667,15 @@ nsWindow::GetNativeData(uint32_t aDataType)
 
     case NS_NATIVE_PLUGIN_PORT:
         return SetupPluginPort();
+        break;
+
+    case NS_NATIVE_PLUGIN_ID:
+        if (!mPluginNativeWindow) {
+          NS_WARNING("no native plugin instance!");
+          return nullptr;
+        }
+        // Return the socket widget XID
+        return (void*)mPluginNativeWindow->window;
         break;
 
     case NS_NATIVE_DISPLAY:

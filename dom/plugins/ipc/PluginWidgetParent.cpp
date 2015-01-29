@@ -144,12 +144,6 @@ PluginWidgetParent::RecvCreate()
   drv = mWidget->Enable(true);
   NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
 
-  // This is a special call we make to nsBaseWidget to register this
-  // window as a remote plugin window which is expected to receive
-  // visibility updates from the compositor, which ships this data
-  // over with corresponding layer updates.
-  mWidget->RegisterPluginWindowForRemoteUpdates();
-
 #if defined(MOZ_WIDGET_GTK)
   // For setup, initially GTK code expects 'window' to hold the parent.
   mWrapper->window = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
@@ -163,6 +157,12 @@ PluginWidgetParent::RecvCreate()
                kPluginWidgetParentProperty, this);
   NS_ASSERTION(winres, "SetPropW call failure");
 #endif
+
+  // This is a special call we make to nsBaseWidget to register this
+  // window as a remote plugin window which is expected to receive
+  // visibility updates from the compositor, which ships this data
+  // over with corresponding layer updates.
+  mWidget->RegisterPluginWindowForRemoteUpdates();
 
   return true;
 }
