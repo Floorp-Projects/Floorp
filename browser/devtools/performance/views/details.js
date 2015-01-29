@@ -32,9 +32,9 @@ let DetailsView = {
       button.addEventListener("command", this._onViewToggle);
     }
 
-    yield WaterfallView.initialize();
-    yield CallTreeView.initialize();
-    yield FlameGraphView.initialize();
+    for (let [_, { view }] of Iterator(this.components)) {
+      yield view.initialize();
+    }
 
     this.selectView(DEFAULT_DETAILS_SUBVIEW);
   }),
@@ -47,9 +47,9 @@ let DetailsView = {
       button.removeEventListener("command", this._onViewToggle);
     }
 
-    yield WaterfallView.destroy();
-    yield CallTreeView.destroy();
-    yield FlameGraphView.destroy();
+    for (let [_, { view }] of Iterator(this.components)) {
+      yield view.destroy();
+    }
   }),
 
   /**

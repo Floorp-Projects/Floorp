@@ -49,11 +49,22 @@ let DetailsSubview = {
   shouldUpdateWhenShown: false,
 
   /**
+   * Flag specifying if this view may get updated even when it's not selected.
+   * Should only be used in tests.
+   */
+  canUpdateWhileHidden: false,
+
+  /**
    * Called when recording stops or is selected.
    */
   _onRecordingStoppedOrSelected: function(_, recording) {
-    if (!recording.isRecording()) {
+    if (recording.isRecording()) {
+      return;
+    }
+    if (DetailsView.isViewSelected(this) || this.canUpdateWhileHidden) {
       this.render();
+    } else {
+      this.shouldUpdateWhenShown = true;
     }
   },
 

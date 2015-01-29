@@ -3,12 +3,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that all components get rerendered for a profile when switching.
+ * Tests that all components can get rerendered for a profile when switching.
  */
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { $, EVENTS, PerformanceController, RecordingsView } = panel.panelWin;
+  let { $, EVENTS, PerformanceController, DetailsSubview, RecordingsView } = panel.panelWin;
+
+  DetailsSubview.canUpdateWhileHidden = true;
 
   yield startRecording(panel);
   yield stopRecording(panel);
