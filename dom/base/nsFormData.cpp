@@ -6,9 +6,7 @@
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLFormElement.h"
-#include "mozilla/dom/FormDataBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -84,6 +82,119 @@ nsFormData::Append(const nsAString& aName, File& aBlob,
     filename.SetIsVoid(true);
   }
   AddNameFilePair(aName, &aBlob, filename);
+}
+
+void
+nsFormData::Delete(const nsAString& aName)
+{
+  // We have to use this slightly awkward for loop since uint32_t >= 0 is an
+  // error for being always true.
+  for (uint32_t i = mFormData.Length(); i-- > 0; ) {
+    if (aName.Equals(mFormData[i].name)) {
+      mFormData.RemoveElementAt(i);
+    }
+  }
+}
+
+void
+nsFormData::ExtractValue(const FormDataTuple& aTuple,
+                         OwningFileOrUSVString* aOutValue)
+{
+  if (aTuple.valueIsFile) {
+    aOutValue->SetAsFile() = aTuple.fileValue;
+  } else {
+    aOutValue->SetAsUSVString() = aTuple.stringValue;
+  }
+}
+
+void
+nsFormData::Get(const nsAString& aName,
+                Nullable<OwningFileOrUSVString>& aOutValue)
+{
+  for (uint32_t i = 0; i < mFormData.Length(); ++i) {
+    if (aName.Equals(mFormData[i].name)) {
+      ExtractValue(mFormData[i], &aOutValue.SetValue());
+      return;
+    }
+  }
+
+  aOutValue.SetNull();
+}
+
+void
+nsFormData::GetAll(const nsAString& aName,
+                   nsTArray<OwningFileOrUSVString>& aValues)
+{
+  for (uint32_t i = 0; i < mFormData.Length(); ++i) {
+    if (aName.Equals(mFormData[i].name)) {
+      OwningFileOrUSVString* element = aValues.AppendElement();
+      ExtractValue(mFormData[i], element);
+    }
+  }
+}
+
+bool
+nsFormData::Has(const nsAString& aName)
+{
+  for (uint32_t i = 0; i < mFormData.Length(); ++i) {
+    if (aName.Equals(mFormData[i].name)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+nsFormData::FormDataTuple*
+nsFormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
+{
+  FormDataTuple* lastFoundTuple = nullptr;
+  uint32_t lastFoundIndex = mFormData.Length();
+  // We have to use this slightly awkward for loop since uint32_t >= 0 is an
+  // error for being always true.
+  for (uint32_t i = mFormData.Length(); i-- > 0; ) {
+    if (aName.Equals(mFormData[i].name)) {
+      if (lastFoundTuple) {
+        // The one we found earlier was not the first one, we can remove it.
+        mFormData.RemoveElementAt(lastFoundIndex);
+      }
+
+      lastFoundTuple = &mFormData[i];
+      lastFoundIndex = i;
+    }
+  }
+
+  return lastFoundTuple;
+}
+
+void
+nsFormData::Set(const nsAString& aName, File& aBlob,
+                const Optional<nsAString>& aFilename)
+{
+  FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
+  if (tuple) {
+    nsAutoString filename;
+    if (aFilename.WasPassed()) {
+      filename = aFilename.Value();
+    } else {
+      filename.SetIsVoid(true);
+    }
+
+    SetNameFilePair(tuple, aName, &aBlob, filename);
+  } else {
+    Append(aName, aBlob, aFilename);
+  }
+}
+
+void
+nsFormData::Set(const nsAString& aName, const nsAString& aValue)
+{
+  FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
+  if (tuple) {
+    SetNameValuePair(tuple, aName, aValue);
+  } else {
+    Append(aName, aValue);
+  }
 }
 
 // -------------------------------------------------------------------------
