@@ -20,7 +20,7 @@ add_task(function test_load_start() {
   // Undo close the tab.
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
-  yield promiseBrowserLoaded(browser);
+  yield promiseTabRestored(tab);
 
   // Check that the correct URL was restored.
   is(browser.currentURI.spec, "about:mozilla", "url is correct");

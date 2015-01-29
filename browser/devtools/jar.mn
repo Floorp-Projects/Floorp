@@ -98,6 +98,7 @@ browser.jar:
     content/browser/devtools/performance/views/overview.js             (performance/views/overview.js)
     content/browser/devtools/performance/views/toolbar.js              (performance/views/toolbar.js)
     content/browser/devtools/performance/views/details.js              (performance/views/details.js)
+    content/browser/devtools/performance/views/details-subview.js      (performance/views/details-abstract-subview.js)
     content/browser/devtools/performance/views/details-call-tree.js    (performance/views/details-call-tree.js)
     content/browser/devtools/performance/views/details-waterfall.js    (performance/views/details-waterfall.js)
     content/browser/devtools/performance/views/details-flamegraph.js   (performance/views/details-flamegraph.js)

@@ -102,8 +102,7 @@ add_task(function flush_on_settabstate() {
   // asynchronous messages.
   TabState.flushAsync(browser);
 
-  ss.setTabState(tab, state);
-  yield promiseTabRestored(tab);
+  yield promiseTabState(tab, state);
 
   let {storage} = JSON.parse(ss.getTabState(tab));
   is(storage["http://example.com"].test, INITIAL_VALUE,

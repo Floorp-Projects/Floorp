@@ -1,29 +1,24 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  TestRunner.run();
-}
-
 /**
  * This test ensures that after closing a window we keep its state data around
  * as long as something keeps a reference to it. It should only be possible to
  * read data after closing - writing should fail.
  */
 
-function runTests() {
+add_task(function* test() {
   // Open a new window.
-  let win = OpenBrowserWindow();
-  yield whenDelayedStartupFinished(win, next);
+  let win = yield promiseNewWindowLoaded();
 
   // Load some URL in the current tab.
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
   win.gBrowser.selectedBrowser.loadURIWithFlags("about:robots", flags);
-  yield whenBrowserLoaded(win.gBrowser.selectedBrowser);
+  yield promiseBrowserLoaded(win.gBrowser.selectedBrowser);
 
   // Open a second tab and close the first one.
   let tab = win.gBrowser.addTab("about:mozilla");
-  yield whenBrowserLoaded(tab.linkedBrowser);
+  yield promiseBrowserLoaded(tab.linkedBrowser);
   TabState.flush(tab.linkedBrowser);
   win.gBrowser.removeTab(win.gBrowser.tabs[0]);
 
@@ -36,9 +31,8 @@ function runTests() {
   let state = ss.getWindowState(win);
   let closedTabData = ss.getClosedTabData(win);
 
-  // Close our window and wait a tick.
-  whenWindowClosed(win);
-  yield win.close();
+  // Close our window.
+  yield promiseWindowClosed(win);
 
   // SessionStore should no longer track our window
   // but it should still report the same state.
@@ -46,11 +40,11 @@ function runTests() {
   checkWindowState(win);
 
   // Make sure we're not allowed to modify state data.
-  ok(shouldThrow(() => ss.setWindowState(win, {})),
-     "we're not allowed to modify state data anymore");
-  ok(shouldThrow(() => ss.setWindowValue(win, "foo", "baz")),
-     "we're not allowed to modify state data anymore");
-}
+  Assert.throws(() => ss.setWindowState(win, {}),
+    "we're not allowed to modify state data anymore");
+  Assert.throws(() => ss.setWindowValue(win, "foo", "baz"),
+    "we're not allowed to modify state data anymore");
+});
 
 function checkWindowState(window) {
   let {windows: [{tabs}]} = JSON.parse(ss.getWindowState(window));
@@ -70,11 +64,4 @@ function shouldThrow(f) {
   } catch (e) {
     return true;
   }
-}
-
-function whenWindowClosed(window) {
-  window.addEventListener("SSWindowClosing", function onClosing() {
-    window.removeEventListener("SSWindowClosing", onClosing);
-    executeSoon(next);
-  });
 }

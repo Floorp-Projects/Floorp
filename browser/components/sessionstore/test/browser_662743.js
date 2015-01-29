@@ -63,10 +63,8 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let tab = gBrowser.addTab(testURL);
   let tabState = { entries: [{ url: testURL, formdata: aFormData}] };
 
-  whenBrowserLoaded(tab.linkedBrowser, function() {
-    ss.setTabState(tab, JSON.stringify(tabState));
-
-    whenTabRestored(tab, function() {
+  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
+    promiseTabState(tab, tabState).then(() => {
       let doc = tab.linkedBrowser.contentDocument;
       let select = doc.getElementById("select_id");
       let value = select.options[select.selectedIndex].value;

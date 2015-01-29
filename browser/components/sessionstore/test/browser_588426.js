@@ -32,7 +32,7 @@ function newWindowWithState(state, callback) {
     executeSoon(function () {
       win.addEventListener("SSWindowStateReady", function onReady() {
         win.removeEventListener("SSWindowStateReady", onReady, false);
-        whenTabRestored(win.gBrowser.tabs[0], () => callback(win));
+        promiseTabRestored(win.gBrowser.tabs[0]).then(() => callback(win));
       }, false);
 
       ss.setWindowState(win, JSON.stringify(state), true);

@@ -6,7 +6,10 @@
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, WaterfallView } = panel.panelWin;
+  let { EVENTS, PerformanceController, DetailsView, WaterfallView } = panel.panelWin;
+
+  ok(DetailsView.isViewSelected(WaterfallView),
+    "The waterfall view is selected by default in the details view.");
 
   yield startRecording(panel);
   yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length);

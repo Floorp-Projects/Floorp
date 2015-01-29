@@ -70,25 +70,18 @@ var common_tests = [
  */
 
 function testConstraints(tests) {
-  function testgum(p, test) {
-    return p.then(function() {
-      return navigator.mediaDevices.getUserMedia(test.constraints);
-    })
-    .then(function() {
-      is(null, test.error, test.message);
-    }, function(reason) {
-      is(reason.name, test.error, test.message + ": " + reason.message);
-    });
+  function testgum(prev, test) {
+    return prev.then(() => navigator.mediaDevices.getUserMedia(test.constraints))
+      .then(() => is(null, test.error, test.message),
+            reason => is(reason.name, test.error, test.message + ": " + reason.message));
   }
 
-  var p = new Promise(r => SpecialPowers.pushPrefEnv({
-      set : [ ['media.getusermedia.browser.enabled', false],
-              ['media.getusermedia.screensharing.enabled', false] ]
-    }, r));
+  var p = new Promise(resolve => SpecialPowers.pushPrefEnv({
+    set : [ ['media.getusermedia.browser.enabled', false],
+            ['media.getusermedia.screensharing.enabled', false] ]
+  }, resolve));
 
-  tests.forEach(function(test) {
-    p = testgum(p, test);
-  });
-  p.catch(reason => ok(false, "Unexpected failure: " + reason.message))
-  .then(SimpleTest.finish);
+  tests.reduce(testgum, p)
+    .catch(reason => ok(false, "Unexpected failure: " + reason.message))
+    .then(SimpleTest.finish);
 }

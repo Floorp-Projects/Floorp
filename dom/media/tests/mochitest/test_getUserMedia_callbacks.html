@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "navigator.mozGetUserMedia Callback Test",
+    bug: "1119593"
+  });
+  /**
+   * Check that the old fashioned callback-based function works.
+   */
+  runTest(function () {
+    var testAudio = createMediaElement('audio', 'testAudio');
+    var constraints = {audio: true};
+
+    SimpleTest.waitForExplicitFinish();
+    navigator.mozGetUserMedia(constraints, aStream => {
+      checkMediaStreamTracks(constraints, aStream);
+
+      var playback = new LocalMediaStreamPlayback(testAudio, aStream);
+      return playback.playMedia(false)
+        .then(() => SimpleTest.finish(), generateErrorCallback());
+    }, generateErrorCallback());
+  });
+
+</script>
+</pre>
+</body>
+</html>

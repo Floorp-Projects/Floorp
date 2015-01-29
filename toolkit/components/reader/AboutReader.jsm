@@ -590,10 +590,10 @@ AboutReader.prototype = {
                                                     false, articleUri, this._contentElement);
     this._contentElement.innerHTML = "";
     this._contentElement.appendChild(contentFragment);
-    this._updateImageMargins();
     this._maybeSetTextDirection(article);
 
     this._contentElement.style.display = "block";
+    this._updateImageMargins();
     this._requestReadingListStatus();
 
     this._toolbarEnabled = true;
