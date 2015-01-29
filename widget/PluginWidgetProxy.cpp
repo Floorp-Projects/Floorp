@@ -97,9 +97,22 @@ PluginWidgetProxy::Destroy()
   PWLOG("PluginWidgetProxy::Destroy()\n");
 
   if (mActor) {
+   /**
+    * We need to communicate that the sub protocol is going to be torn down
+    * before the sub protocol dies. Otherwise we can end up with async events
+    * in transit from chrome to content, which on arrival will trigger an abort
+    * in the content process, crashing all tabs.
+    *
+    * Note, this is one of two ways PluginWidget tear down initiates. Here we
+    * are a plugin in content and content has just unloaded us for some reason,
+    * usually due to swap out for flash ads or the user simply loaded a
+    * different page. The other involves a full tear down of the tab (PBrowser)
+    * which happens prior to widgets getting collected by ref counting in
+    * layout. We still get this Destroy call, but in all likelyhood mActor is
+    * already null via a call on ChannelDestroyed from PluginWidgetChild.
+    */
     mActor->SendDestroy();
     mActor->mWidget = nullptr;
-    mActor->Send__delete__(mActor);
     mActor = nullptr;
   }
 

@@ -8,6 +8,7 @@
 #include "nsWidgetsCID.h"
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
+#include "mozilla/unused.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #include "nsPluginNativeWindowGtk.h"
@@ -15,6 +16,7 @@
 #include "nsPluginNativeWindow.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
 #define PWLOG(...)
@@ -34,9 +36,10 @@ static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
   }                                                           \
 }
 
-PluginWidgetParent::PluginWidgetParent()
+PluginWidgetParent::PluginWidgetParent() :
+  mActorDestroyed(false)
 #if defined(MOZ_WIDGET_GTK)
-  : mWrapper(nullptr)
+  , mWrapper(nullptr)
 #endif
 {
   PWLOG("PluginWidgetParent::PluginWidgetParent()\n");
@@ -61,12 +64,6 @@ mozilla::dom::TabParent*
 PluginWidgetParent::GetTabParent()
 {
   return static_cast<mozilla::dom::TabParent*>(Manager());
-}
-
-void
-PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-  PWLOG("PluginWidgetParent::ActorDestroy()\n");
 }
 
 // When plugins run in chrome, nsPluginNativeWindow(Plat) implements platform
@@ -135,15 +132,42 @@ PluginWidgetParent::RecvCreate()
   return true;
 }
 
-bool
-PluginWidgetParent::RecvDestroy()
+void
+PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvDestroy()\n");
+  mActorDestroyed = true;
+  PWLOG("PluginWidgetParent::ActorDestroy()\n");
+}
+
+// Called by TabParent's Destroy() in response to an early tear down (Early
+// in that this is happening before layout in the child has had a chance
+// to destroy the child widget.) when the tab is closing. We will not receive
+// RecvDestroy here.
+void
+PluginWidgetParent::ParentDestroy()
+{
+  if (mActorDestroyed || !mWidget) {
+    return;
+  }
+  PWLOG("PluginWidgetParent::ParentDestroy()\n");
   mWidget->UnregisterPluginWindowForRemoteUpdates();
   DebugOnly<nsresult> rv = mWidget->Destroy();
   NS_ASSERTION(NS_SUCCEEDED(rv), "widget destroy failure");
   mWidget = nullptr;
+  mActorDestroyed = true;
+  return;
+}
+
+// Called by the child when a plugin is torn down within a tab
+// normally.
+bool
+PluginWidgetParent::RecvDestroy()
+{
+  bool destroyed = mActorDestroyed;
+  ParentDestroy();
+  if (!destroyed) {
+    unused << SendParentShutdown();
+  }
   return true;
 }
 
