@@ -734,7 +734,6 @@ nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
 
 static const int32_t OCSP_ENABLED_DEFAULT = 1;
 static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
-static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
 static const bool FALSE_START_ENABLED_DEFAULT = true;
 static const bool NPN_ENABLED_DEFAULT = true;
 static const bool ALPN_ENABLED_DEFAULT = false;
@@ -1054,13 +1053,7 @@ nsNSSComponent::InitializeNSS()
                          REQUIRE_SAFE_NEGOTIATION_DEFAULT);
   SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
 
-  bool allowUnrestrictedRenego =
-    Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
-                         ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
-  SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
-                       allowUnrestrictedRenego ?
-                         SSL_RENEGOTIATE_UNRESTRICTED :
-                         SSL_RENEGOTIATE_REQUIRES_XTN);
+  SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_REQUIRES_XTN);
 
   SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
                        Preferences::GetBool("security.ssl.enable_false_start",
@@ -1337,14 +1330,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
         Preferences::GetBool("security.ssl.require_safe_negotiation",
                              REQUIRE_SAFE_NEGOTIATION_DEFAULT);
       SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
-    } else if (prefName.EqualsLiteral("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref")) {
-      bool allowUnrestrictedRenego =
-        Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
-                             ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
-      SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
-                           allowUnrestrictedRenego ?
-                             SSL_RENEGOTIATE_UNRESTRICTED :
-                             SSL_RENEGOTIATE_REQUIRES_XTN);
     } else if (prefName.EqualsLiteral("security.ssl.enable_false_start")) {
       SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
                            Preferences::GetBool("security.ssl.enable_false_start",
