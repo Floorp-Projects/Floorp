@@ -362,7 +362,7 @@ public:
   SurfaceCacheImpl(uint32_t aSurfaceCacheExpirationTimeMS,
                    uint32_t aSurfaceCacheDiscardFactor,
                    uint32_t aSurfaceCacheSize)
-    : mExpirationTracker(aSurfaceCacheExpirationTimeMS)
+    : mExpirationTracker(this, aSurfaceCacheExpirationTimeMS)
     , mMemoryPressureObserver(new MemoryPressureObserver)
     , mMutex("SurfaceCache")
     , mDiscardFactor(aSurfaceCacheDiscardFactor)
@@ -742,8 +742,6 @@ public:
                  nsISupports*             aData,
                  bool                     aAnonymize) MOZ_OVERRIDE
   {
-    MutexAutoLock lock(mMutex);
-
     // We have explicit memory reporting for the surface cache which is more
     // accurate than the cost metrics we report here, but these metrics are
     // still useful to report, since they control the cache's behavior.
@@ -811,18 +809,21 @@ private:
 
   struct SurfaceTracker : public nsExpirationTracker<CachedSurface, 2>
   {
-    explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
+    SurfaceTracker(SurfaceCacheImpl* aCache, uint32_t aSurfaceCacheExpirationTimeMS)
       : nsExpirationTracker<CachedSurface, 2>(aSurfaceCacheExpirationTimeMS)
+      , mCache(aCache)
     { }
 
   protected:
     virtual void NotifyExpired(CachedSurface* aSurface) MOZ_OVERRIDE
     {
-      if (sInstance) {
-        MutexAutoLock lock(sInstance->GetMutex());
-        sInstance->Remove(aSurface);
+      if (mCache) {
+        mCache->Remove(aSurface);
       }
     }
+
+  private:
+    SurfaceCacheImpl* const mCache;  // Weak pointer to owner.
   };
 
   struct MemoryPressureObserver : public nsIObserver
@@ -834,7 +835,6 @@ private:
                        const char16_t*) MOZ_OVERRIDE
     {
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
-        MutexAutoLock lock(sInstance->GetMutex());
         sInstance->DiscardForMemoryPressure();
       }
       return NS_OK;
