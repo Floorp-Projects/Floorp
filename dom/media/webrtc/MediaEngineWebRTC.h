@@ -40,7 +40,6 @@
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
-#include "webrtc/voice_engine/include/voe_call_report.h"
 
 // Video Engine
 // conflicts with #include of scoped_ptr.h
@@ -220,7 +219,6 @@ private:
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
   ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
   ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
-  ScopedCustomReleasePtr<webrtc::VoECallReport> mVoECallReport;
 
   // mMonitor protects mSources[] access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack()).
