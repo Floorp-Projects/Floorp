@@ -614,11 +614,16 @@ RasterImage::IsOpaque()
 void
 RasterImage::OnSurfaceDiscarded()
 {
-  MOZ_ASSERT(mProgressTracker);
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &RasterImage::OnSurfaceDiscarded);
+    NS_DispatchToMainThread(runnable);
+    return;
+  }
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(mProgressTracker, &ProgressTracker::OnDiscard);
-  NS_DispatchToMainThread(runnable);
+  if (mProgressTracker) {
+    mProgressTracker->OnDiscard();
+  }
 }
 
 //******************************************************************************
