@@ -1366,6 +1366,7 @@
             var aRelatedToCurrent;
             var aAllowMixedContent;
             var aSkipAnimation;
+            var aForceNotRemote;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1379,6 +1380,7 @@
               aRelatedToCurrent     = params.relatedToCurrent;
               aAllowMixedContent    = params.allowMixedContent;
               aSkipAnimation        = params.skipAnimation;
+              aForceNotRemote       = params.forceNotRemote;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1393,7 +1395,8 @@
                                   fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent,
                                   skipAnimation: aSkipAnimation,
-                                  allowMixedContent: aAllowMixedContent });
+                                  allowMixedContent: aAllowMixedContent,
+                                  forceNotRemote: aForceNotRemote });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1672,6 +1675,7 @@
             var aRelatedToCurrent;
             var aSkipAnimation;
             var aAllowMixedContent;
+            var aForceNotRemote;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1685,6 +1689,7 @@
               aRelatedToCurrent     = params.relatedToCurrent;
               aSkipAnimation        = params.skipAnimation;
               aAllowMixedContent    = params.allowMixedContent;
+              aForceNotRemote       = params.forceNotRemote;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -1702,6 +1707,7 @@
             // The new browser should be remote if this is an e10s window and
             // the uri to load can be loaded remotely.
             let remote = gMultiProcessBrowser &&
+                         !aForceNotRemote &&
                          E10SUtils.canLoadURIInProcess(aURI, Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
             if (remote)
               t.setAttribute("remote", "true");
