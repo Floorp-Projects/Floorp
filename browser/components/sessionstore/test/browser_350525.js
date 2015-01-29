@@ -71,7 +71,7 @@ function test() {
   // create a new tab
   let testURL = "about:";
   tab = gBrowser.addTab(testURL);
-  whenBrowserLoaded(tab.linkedBrowser, function() {
+  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     // make sure that the next closed tab will increase getClosedTabCount
     gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
 
@@ -86,7 +86,7 @@ function test() {
     tab = test(function() ss.undoCloseTab(window, 0));
     ok(tab, "undoCloseTab doesn't throw")
 
-    whenTabRestored(tab, function() {
+    promiseTabRestored(tab).then(() => {
       is(tab.linkedBrowser.currentURI.spec, testURL, "correct tab was reopened");
 
       // clean up

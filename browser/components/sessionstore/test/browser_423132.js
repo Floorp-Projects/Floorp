@@ -29,7 +29,7 @@ function test() {
     executeSoon(function() {
       newWin.gBrowser.loadURI(testURL, null, null);
 
-      whenBrowserLoaded(newWin.gBrowser.selectedBrowser, function() {
+      promiseBrowserLoaded(newWin.gBrowser.selectedBrowser).then(() => {
         // get the sessionstore state for the window
         TabState.flush(newWin.gBrowser.selectedBrowser);
         let state = ss.getWindowState(newWin);

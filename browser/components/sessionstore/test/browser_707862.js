@@ -18,15 +18,14 @@ function test() {
 
   let browser = tab.linkedBrowser;
 
-  waitForTabState(tab, tabState, function() {
-
+  promiseTabState(tab, tabState).then(() => {
     let sessionHistory = browser.sessionHistory;
     let entry = sessionHistory.getEntryAtIndex(0, false);
     entry.QueryInterface(Ci.nsISHContainer);
 
     whenChildCount(entry, 1, function () {
       whenChildCount(entry, 2, function () {
-        whenBrowserLoaded(browser, function () {
+        promiseBrowserLoaded(browser).then(() => {
           let sessionHistory = browser.sessionHistory;
           let entry = sessionHistory.getEntryAtIndex(0, false);
 
