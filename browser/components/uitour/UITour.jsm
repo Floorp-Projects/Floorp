@@ -33,8 +33,12 @@ const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
+  "endUrlbarCapture",
   "getConfiguration",
   "getTreatmentTag",
+  "hideHighlight",
+  "hideInfo",
+  "hideMenu",
   "ping",
   "registerPageID",
   "setConfiguration",
