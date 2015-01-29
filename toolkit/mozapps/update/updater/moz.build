@@ -100,6 +100,7 @@ LOCAL_INCLUDES += [
 
 DELAYLOAD_DLLS += [
     'crypt32.dll',
+    'comctl32.dll',
     'userenv.dll',
     'wsock32.dll',
 ]
