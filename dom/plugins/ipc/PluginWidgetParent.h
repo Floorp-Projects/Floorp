@@ -54,7 +54,7 @@ private:
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;
 #if defined(MOZ_WIDGET_GTK)
-  UniquePtr<nsPluginNativeWindowGtk> mWrapper;
+  nsAutoPtr<nsPluginNativeWindowGtk> mWrapper;
 #endif
   bool mActorDestroyed;
 };
