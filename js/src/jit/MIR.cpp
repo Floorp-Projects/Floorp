@@ -3065,6 +3065,8 @@ MToInt32::foldsTo(TempAllocator &alloc)
             // Only the value within the range of Int32 can be substitued as constant.
             if (mozilla::NumberEqualsInt32(val.toNumber(), &ival))
                 return MConstant::New(alloc, Int32Value(ival));
+          default:
+            break;
         }
     }
 
