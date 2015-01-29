@@ -23,6 +23,8 @@
 
 #include "mozilla/plugins/PluginInstanceParent.h"
 using mozilla::plugins::PluginInstanceParent;
+#include "mozilla/plugins/PluginWidgetParent.h"
+using mozilla::plugins::PluginWidgetParent;
 
 #include "nsWindowGfx.h"
 #include "nsAppRunner.h"
@@ -55,10 +57,18 @@ extern "C" {
 #include "pixman.h"
 }
 
+namespace mozilla {
+namespace plugins {
+// For plugins with e10s
+extern const wchar_t* kPluginWidgetParentProperty;
+}
+}
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+using namespace mozilla::plugins;
 
 /**************************************************************
  **************************************************************
@@ -193,12 +203,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
   // loop. See bug 543788.
   if (IsPlugin()) {
-    // XXX Ignore for now when we're running with full blown e10s
-    if (mozilla::BrowserTabsRemoteAutostart()) {
-      printf_stderr("nsWindow::OnPaint() bailing on paint!\n");
-      ValidateRect(mWnd, nullptr);
-      return true;
-    }
     RECT updateRect;
     if (!GetUpdateRect(mWnd, &updateRect, FALSE) ||
         (updateRect.left == updateRect.right &&
@@ -206,6 +210,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
       PAINTSTRUCT ps;
       BeginPaint(mWnd, &ps);
       EndPaint(mWnd, &ps);
+      return true;
+    }
+
+    if (mWindowType == eWindowType_plugin_ipc_chrome) {
+      // Fire off an async request to the plugin to paint its window
+      PluginWidgetParent::SendAsyncUpdate(this);
+      ValidateRect(mWnd, nullptr);
       return true;
     }
 

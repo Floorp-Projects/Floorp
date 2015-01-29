@@ -1060,9 +1060,6 @@ struct GrayRoot {
         : thing(thing), kind(kind) {}
 };
 
-void
-MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
-
 typedef void (*IterateChunkCallback)(JSRuntime *rt, void *data, gc::Chunk *chunk);
 typedef void (*IterateZoneCallback)(JSRuntime *rt, void *data, JS::Zone *zone);
 typedef void (*IterateArenaCallback)(JSRuntime *rt, void *data, gc::Arena *arena,

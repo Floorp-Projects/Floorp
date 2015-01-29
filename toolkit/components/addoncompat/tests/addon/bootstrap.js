@@ -1,6 +1,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
+var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserUtils.jsm");
@@ -269,6 +270,73 @@ function testAboutModuleRegistration()
 
   let modulesToUnregister = new Map();
 
+  function TestChannel(uri, aboutName) {
+    this.aboutName = aboutName;
+    this.URI = this.originalURI = uri;
+  }
+
+  TestChannel.prototype = {
+    asyncOpen: function(listener, context) {
+      let stream = this.open();
+      let runnable = {
+        run: () => {
+          try {
+            listener.onStartRequest(this, context);
+          } catch(e) {}
+          try {
+            listener.onDataAvailable(this, context, stream, 0, stream.available());
+          } catch(e) {}
+          try {
+            listener.onStopRequest(this, context, Cr.NS_OK);
+          } catch(e) {}
+        }
+      };
+      Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+    },
+
+    open: function() {
+      function getWindow(channel) {
+        try
+        {
+          if (channel.notificationCallbacks)
+            return channel.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+        } catch(e) {}
+
+        try
+        {
+          if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
+            return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+        } catch(e) {}
+
+        return null;
+      }
+
+      let data = `<html><h1>${this.aboutName}</h1></html>`;
+      let wnd = getWindow(this);
+      if (!wnd)
+        throw Cr.NS_ERROR_UNEXPECTED;
+
+      let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+      stream.setData(data, data.length);
+      return stream;
+    },
+
+    isPending: function() {
+      return false;
+    },
+    cancel: function() {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    suspend: function() {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    resume: function() {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel, Ci.nsIRequest])
+  };
+
   /**
    * This function creates a new nsIAboutModule and registers it. Callers
    * should also call unregisterModules after using this function to clean
@@ -294,10 +362,7 @@ function testAboutModuleRegistration()
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
 
       newChannel: (aURI) => {
-        let uri = Services.io.newURI(`data:,<html><h1>${aboutName}</h1></html>`, null, null);
-        let chan = Services.io.newChannelFromURI(uri);
-        chan.originalURI = aURI;
-        return chan;
+        return new TestChannel(aURI, aboutName);
       },
 
       getURIFlags: (aURI) => {
@@ -357,22 +422,26 @@ function testAboutModuleRegistration()
    */
   let testAboutModulesWork = (browser) => {
     let testConnection = () => {
-      const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1",
-                                                    "nsIXMLHttpRequest");
-      let request = new XMLHttpRequest();
+      let request = new content.XMLHttpRequest();
       try {
         request.open("GET", "about:test1", false);
         request.send(null);
         if (request.status != 200) {
           throw(`about:test1 response had status ${request.status} - expected 200`);
         }
+        if (request.responseText.indexOf("test1") == -1) {
+          throw(`about:test1 response had result ${request.responseText}`);
+        }
 
-        request = new XMLHttpRequest();
+        request = new content.XMLHttpRequest();
         request.open("GET", "about:test2", false);
         request.send(null);
 
         if (request.status != 200) {
           throw(`about:test2 response had status ${request.status} - expected 200`);
+        }
+        if (request.responseText.indexOf("test2") == -1) {
+          throw(`about:test2 response had result ${request.responseText}`);
         }
 
         sendAsyncMessage("test:result", {
@@ -406,14 +475,20 @@ function testAboutModuleRegistration()
     createAndRegisterAboutModule("test1", "5f3a921b-250f-4ac5-a61c-8f79372e6063");
     createAndRegisterAboutModule("test2", "d7ec0389-1d49-40fa-b55c-a1fc3a6dbf6f");
 
-    let newTab = gBrowser.addTab();
+    // This needs to be a chrome-privileged page that loads in the
+    // content process. It needs chrome privs because otherwise the
+    // XHRs for about:test[12] will fail with a privilege error
+    // despite the presence of URI_SAFE_FOR_UNTRUSTED_CONTENT.
+    let newTab = gBrowser.addTab("chrome://addonshim1/content/page.html");
     gBrowser.selectedTab = newTab;
     let browser = newTab.linkedBrowser;
 
-    testAboutModulesWork(browser).then(() => {
-      gBrowser.removeTab(newTab);
-      unregisterModules();
-      resolve();
+    addLoadListener(browser, function() {
+      testAboutModulesWork(browser).then(() => {
+        gBrowser.removeTab(newTab);
+        unregisterModules();
+        resolve();
+      });
     });
   });
 }

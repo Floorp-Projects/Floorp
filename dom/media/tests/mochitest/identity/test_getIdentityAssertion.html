@@ -1,17 +1,15 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="../head.js"></script>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
   <script type="application/javascript" src="../pc.js"></script>
-  <script type="application/javascript" src="../templates.js"></script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    title: "getIdentityAssertion Tests"
+    title: "getIdentityAssertion Tests",
+    bug: "942367"
   });
 
 function checkIdentity(assertion, identity) {
@@ -28,85 +26,80 @@ function theTest() {
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.chain.removeAfter('PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE');
   test.chain.append([
-  [
-    "GET_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER",
-    function(test) {
-      test.pcLocal._pc.onidpassertionerror = function(e) {
-        ok(e, "getIdentityAssertion must fail without provider");
-        test.next();
-      };
-      test.pcLocal._pc.getIdentityAssertion();
+    function GET_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER(test) {
+      return new Promise(resolve => {
+        test.pcLocal._pc.onidpassertionerror = function(e) {
+          ok(e, "getIdentityAssertion must fail without provider");
+          resolve();
+        };
+        test.pcLocal._pc.getIdentityAssertion();
+      });
     },
-  ],
-  [
-    "GET_IDENTITY_ASSERTION_FIRES_EVENTUALLY_AND_SUBSEQUENTLY",
-    function(test) {
-      var fired = 0;
-      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html');
-      test.pcLocal._pc.onidentityresult = function(e) {
-        fired++;
-        if (fired == 1) {
-          ok(true, "identityresult fired");
-          checkIdentity(e.assertion, 'someone@example.com');
-        } else if (fired == 2) {
-          ok(true, "identityresult fired 2x");
-          checkIdentity(e.assertion, 'someone@example.com');
-          test.next();
-        }
-      };
-      test.pcLocal._pc.onidpassertionerror = function(e) {
-        ok(false, "error event fired");
-        test.next();
-      };
-      test.pcLocal._pc.getIdentityAssertion();
-      test.pcLocal._pc.getIdentityAssertion();
+    function GET_IDENTITY_ASSERTION_FIRES_EVENTUALLY_AND_SUBSEQUENTLY(test) {
+      return new Promise(resolve => {
+        var fired = 0;
+        test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html');
+        test.pcLocal._pc.onidentityresult = function(e) {
+          fired++;
+          if (fired == 1) {
+            ok(true, "identityresult fired");
+            checkIdentity(e.assertion, 'someone@example.com');
+          } else if (fired == 2) {
+            ok(true, "identityresult fired 2x");
+            checkIdentity(e.assertion, 'someone@example.com');
+            resolve();
+          }
+        };
+        test.pcLocal._pc.onidpassertionerror = function(e) {
+          ok(false, "error event fired");
+          resolve();
+        };
+        test.pcLocal._pc.getIdentityAssertion();
+        test.pcLocal._pc.getIdentityAssertion();
+      });
+    },
+    function GET_IDENTITY_ASSERTION_FAILS(test) {
+      return new Promise(resolve => {
+        test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error');
+        test.pcLocal._pc.onidentityresult = function(e) {
+          ok(false, "Should not get an identity result");
+          resolve();
+        };
+        test.pcLocal._pc.onidpassertionerror = function(err) {
+          ok(err, "Got error event from getIdentityAssertion");
+          resolve();
+        };
+        test.pcLocal._pc.getIdentityAssertion();
+      });
+    },
+    function GET_IDENTITY_ASSERTION_IDP_NOT_READY(test) {
+      return new Promise(resolve => {
+        test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error:ready');
+        test.pcLocal._pc.onidentityresult = function(e) {
+          ok(false, "Should not get an identity result");
+          resolve();
+        };
+        test.pcLocal._pc.onidpassertionerror = function(e) {
+          ok(e, "Got error callback from getIdentityAssertion");
+          resolve();
+        };
+        test.pcLocal._pc.getIdentityAssertion();
+      });
+    },
+    function GET_IDENTITY_ASSERTION_WITH_SPECIFIC_NAME(test) {
+      return new Promise(resolve => {
+        test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html', 'user@example.com');
+        test.pcLocal._pc.onidentityresult = function(e) {
+          checkIdentity(e.assertion, 'user@example.com');
+          resolve();
+        };
+        test.pcLocal._pc.onidpassertionerror = function(e) {
+          ok(false, "Got error callback from getIdentityAssertion");
+          resolve();
+        };
+        test.pcLocal._pc.getIdentityAssertion();
+      });
     }
-  ],
-  [
-    "GET_IDENTITY_ASSERTION_FAILS",
-    function(test) {
-      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error');
-      test.pcLocal._pc.onidentityresult = function(e) {
-        ok(false, "Should not get an identity result");
-        test.next();
-      };
-      test.pcLocal._pc.onidpassertionerror = function(err) {
-        ok(err, "Got error event from getIdentityAssertion");
-        test.next();
-      };
-      test.pcLocal._pc.getIdentityAssertion();
-    }
-  ],
-  [
-    "GET_IDENTITY_ASSERTION_IDP_NOT_READY",
-    function(test) {
-      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html#error:ready');
-      test.pcLocal._pc.onidentityresult = function(e) {
-        ok(false, "Should not get an identity result");
-        test.next();
-      };
-      test.pcLocal._pc.onidpassertionerror = function(e) {
-        ok(e, "Got error callback from getIdentityAssertion");
-        test.next();
-      };
-      test.pcLocal._pc.getIdentityAssertion();
-    }
-  ],
-  [
-    "GET_IDENTITY_ASSERTION_WITH_SPECIFIC_NAME",
-    function(test) {
-      test.setIdentityProvider(test.pcLocal, 'example.com', 'idp.html', 'user@example.com');
-      test.pcLocal._pc.onidentityresult = function(e) {
-        checkIdentity(e.assertion, 'user@example.com');
-        test.next();
-      };
-      test.pcLocal._pc.onidpassertionerror = function(e) {
-        ok(false, "Got error callback from getIdentityAssertion");
-        test.next();
-      };
-      test.pcLocal._pc.getIdentityAssertion();
-    }
-  ]
   ]);
   test.run();
 }

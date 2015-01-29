@@ -1,43 +1,24 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=822109
--->
 <head>
-  <meta charset="utf-8">
-  <title>mozGetUserMedia Play Video Twice</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia Play Video Twice</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  <video id="testVideo"></video>
-</div>
 <pre id="test">
 <script type="application/javascript">
+  createHTML({ title: "getUserMedia Play Video Twice", bug: "822109" });
   /**
    * Run a test that we can complete a video playback cycle twice in a row.
    */
   runTest(function () {
-    getUserMedia({video: true}, function(videoStream) {
-      var testVideo = document.getElementById('testVideo');
-      var videoStreamPlayback = new LocalMediaStreamPlayback(testVideo,
-        videoStream);
+    getUserMedia({video: true}).then(stream => {
+      var testVideo = createMediaElement('video', 'testVideo');
+      var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
 
-      videoStreamPlayback.playMedia(false, function() {
-
-        videoStreamPlayback.playMedia(true, function() {
-          videoStream.stop();
-          SimpleTest.finish();
-        }, generateErrorCallback());
-
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
+      return streamPlayback.playMedia(false)
+        .then(() => streamPlayback.playMedia(true))
+        .then(() => stream.stop());
+    }).then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>

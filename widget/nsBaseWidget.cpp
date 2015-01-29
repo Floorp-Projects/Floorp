@@ -49,7 +49,7 @@
 #include "mozilla/layers/ChromeProcessController.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/dom/TabParent.h"
-
+#include "nsRefPtrHashtable.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -69,6 +69,9 @@ static int32_t gNumWidgets;
 #include "nsCocoaFeatures.h"
 #endif
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+static nsRefPtrHashtable<nsVoidPtrHashKey, nsIWidget>* sPluginWidgetList;
+#endif
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
@@ -141,6 +144,11 @@ nsBaseWidget::nsBaseWidget()
   debug_RegisterPrefCallbacks();
 #endif
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  if (!sPluginWidgetList) {
+    sPluginWidgetList = new nsRefPtrHashtable<nsVoidPtrHashKey, nsIWidget>();
+  }
+#endif
   mShutdownObserver = new WidgetShutdownObserver(this);
   nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
@@ -154,6 +162,12 @@ WidgetShutdownObserver::Observe(nsISupports *aSubject,
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0 &&
       mWidget) {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+    if (sPluginWidgetList) {
+      delete sPluginWidgetList;
+      sPluginWidgetList = nullptr;
+    }
+#endif
     mWidget->Shutdown();
     nsContentUtils::UnregisterShutdownObserver(this);
   }
@@ -1742,6 +1756,88 @@ nsIWidget::ClearNativeTouchSequence()
                              mLongTapTouchPoint->mPosition, 0, 0);
   mLongTapTouchPoint = nullptr;
   return NS_OK;
+}
+
+void
+nsBaseWidget::RegisterPluginWindowForRemoteUpdates()
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("nsBaseWidget::RegisterPluginWindowForRemoteUpdates not implemented!");
+  return;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
+  if (!id) {
+    NS_WARNING("This is not a valid native widget!");
+    return;
+  }
+  MOZ_ASSERT(sPluginWidgetList);
+  sPluginWidgetList->Put(id, this);
+#endif
+}
+
+void
+nsBaseWidget::UnregisterPluginWindowForRemoteUpdates()
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("nsBaseWidget::UnregisterPluginWindowForRemoteUpdates not implemented!");
+  return;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
+  if (!id) {
+    NS_WARNING("This is not a valid native widget!");
+    return;
+  }
+  MOZ_ASSERT(sPluginWidgetList);
+  sPluginWidgetList->Remove(id);
+#endif
+}
+
+// static
+nsIWidget*
+nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID)
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("nsBaseWidget::LookupRegisteredPluginWindow not implemented!");
+  return nullptr;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIWidget* widget = nullptr;
+  MOZ_ASSERT(sPluginWidgetList);
+  sPluginWidgetList->Get((void*)aWindowID, &widget);
+  return widget;
+#endif
+}
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+static PLDHashOperator
+RegisteredPluginEnumerator(const void* aWindowId, nsIWidget* aWidget, void* aUserArg)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindowId);
+  MOZ_ASSERT(aWidget);
+  MOZ_ASSERT(aUserArg);
+  const nsTArray<uintptr_t>* visible = static_cast<const nsTArray<uintptr_t>*>(aUserArg);
+  if (!visible->Contains((uintptr_t)aWindowId) && !aWidget->Destroyed()) {
+    aWidget->Show(false);
+  }
+  return PLDHashOperator::PL_DHASH_NEXT;
+}
+#endif
+
+// static
+void
+nsIWidget::UpdateRegisteredPluginWindowVisibility(nsTArray<uintptr_t>& aVisibleList)
+{
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+  NS_NOTREACHED("nsBaseWidget::UpdateRegisteredPluginWindowVisibility not implemented!");
+  return;
+#else
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sPluginWidgetList);
+  sPluginWidgetList->EnumerateRead(RegisteredPluginEnumerator, static_cast<void*>(&aVisibleList));
+#endif
 }
 
 #ifdef DEBUG

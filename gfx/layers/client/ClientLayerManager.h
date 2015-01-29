@@ -26,8 +26,7 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsAString
 #include "mozilla/layers/TransactionIdAllocator.h"
-
-class nsIWidget;
+#include "nsIWidget.h"                  // For plugin window configuration information structs
 
 namespace mozilla {
 namespace layers {
@@ -128,6 +127,15 @@ public:
   void ReturnTextureClientDeferred(TextureClient& aClient);
   void ReturnTextureClient(TextureClient& aClient);
   void ReportClientLost(TextureClient& aClient);
+
+  /**
+   * Pass through call to the forwarder for nsPresContext's
+   * CollectPluginGeometryUpdates. Passes widget configuration information
+   * to the compositor for transmission to the chrome process. This
+   * configuration gets set when the window paints.
+   */
+  void StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
+                                       aConfigurations) MOZ_OVERRIDE;
 
   // Drop cached resources and ask our shadow manager to do the same,
   // if we have one.

@@ -1,13 +1,7 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="application/javascript" src="templates.js"></script>
-  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -23,20 +17,18 @@
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.chain.removeAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION");
 
-    test.chain.append([[
-      "PC_LOCAL_ADD_CANDIDATE",
-      function (test) {
-        test.pcLocal.addIceCandidateAndFail(
-          new mozRTCIceCandidate(
-            {candidate:"1 1 UDP 2130706431 192.168.2.1 50005 typ host",
-             sdpMLineIndex: 1}),
-          function(err) {
+    test.chain.append([
+      function PC_LOCAL_ADD_CANDIDATE(test) {
+        var candidate = new mozRTCIceCandidate(
+          {candidate:"1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 1});
+        return test.pcLocal._pc.addIceCandidate(candidate).then(
+          generateErrorCallback("addIceCandidate should have failed."),
+          err => {
             is(err.name, "InvalidStateError", "Error is InvalidStateError");
-            test.next();
-          } );
-      }
-    ]]);
-
+          });
+        }
+    ]);
     test.run();
   });
 </script>

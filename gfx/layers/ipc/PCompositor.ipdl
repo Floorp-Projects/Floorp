@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
+include LayersMessages;
 include protocol PLayerTransaction;
 include "mozilla/GfxMessageUtils.h";
 include "nsRegion.h";
@@ -56,8 +57,16 @@ child:
    */
   async RemotePaintIsReady();
 
-parent:
+  /**
+   * Bounce plugin widget configurations over to the main thread for
+   * application on the widgets. Used on Windows and Linux in managing
+   * plugin widgets.
+   */
+  async UpdatePluginConfigurations(nsIntPoint aContentOffset,
+                                   nsIntRegion aVisibleRegion,
+                                   PluginWindowData[] aPlugins);
 
+parent:
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();
 
