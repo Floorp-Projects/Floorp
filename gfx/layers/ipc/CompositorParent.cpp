@@ -84,6 +84,7 @@ CompositorParent::LayerTreeState::LayerTreeState()
   , mLayerManager(nullptr)
   , mCrossProcessParent(nullptr)
   , mLayerTree(nullptr)
+  , mUpdatedPluginDataAvailable(false)
 {
 }
 
@@ -1695,6 +1696,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,
   const uint64_t& aTransactionId,
   const TargetConfig& aTargetConfig,
+  const InfallibleTArray<PluginWindowData>& aPlugins,
   bool aIsFirstPaint,
   bool aScheduleComposite,
   uint32_t aPaintSequenceNumber,
@@ -1704,7 +1706,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 
   MOZ_ASSERT(id != 0);
 
-  const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(id);
+  CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(id);
   if (!state) {
     return;
   }
@@ -1716,6 +1718,10 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
     CompositorParent::SetShadowProperties(shadowRoot);
   }
   UpdateIndirectTree(id, shadowRoot, aTargetConfig);
+
+  // Cache the plugin data for this remote layer tree
+  state->mPluginData = aPlugins;
+  state->mUpdatedPluginDataAvailable = !!state->mPluginData.Length();
 
   state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
       aPaintSequenceNumber, aIsRepeatTransaction);
@@ -1729,6 +1735,62 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   aLayerTree->SetPendingTransactionId(aTransactionId);
 }
 
+// Sends plugin window state changes to the main thread
+static void
+UpdatePluginWindowState(uint64_t aId)
+{
+  CompositorParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
+  if (!lts.mPluginData.Length()) {
+    return;
+  }
+
+  bool shouldComposePlugin = !!lts.mRoot &&
+                             !!lts.mRoot->GetParent() &&
+                             lts.mUpdatedPluginDataAvailable;
+
+  bool shouldHidePlugin = (!lts.mRoot ||
+                           !lts.mRoot->GetParent()) &&
+                          !lts.mUpdatedPluginDataAvailable;
+
+  if (shouldComposePlugin) {
+    // Retrieve the offset and visible region of the layer that hosts
+    // the plugins, CompositorChild needs these in calculating proper
+    // plugin clipping.
+    LayerTransactionParent* layerTree = lts.mLayerTree;
+    Layer* contentRoot = layerTree->GetRoot();
+    if (contentRoot) {
+      nsIntPoint offset;
+      nsIntRegion visibleRegion;
+      if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
+                                                           &offset)) {
+        unused <<
+          lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
+                                                      lts.mPluginData);
+        lts.mUpdatedPluginDataAvailable = false;
+      } else {
+        shouldHidePlugin = true;
+      }
+    }
+  }
+
+  // Hide all plugins, this remote layer tree is no longer active
+  if (shouldHidePlugin) {
+    // hide all the plugins
+    for (uint32_t pluginsIdx = 0; pluginsIdx < lts.mPluginData.Length();
+         pluginsIdx++) {
+      lts.mPluginData[pluginsIdx].visible() = false;
+    }
+    nsIntPoint offset;
+    nsIntRegion region;
+    unused << lts.mParent->SendUpdatePluginConfigurations(offset,
+                                                          region,
+                                                          lts.mPluginData);
+    // Clear because there's no recovering from this until we receive
+    // new shadow layer plugin data in ShadowLayersUpdated.
+    lts.mPluginData.Clear();
+  }
+}
+
 void
 CrossProcessCompositorParent::DidComposite(uint64_t aId)
 {
@@ -1738,6 +1800,7 @@ CrossProcessCompositorParent::DidComposite(uint64_t aId)
     unused << SendDidComposite(aId, layerTree->GetPendingTransactionId());
     layerTree->SetPendingTransactionId(0);
   }
+  UpdatePluginWindowState(aId);
 }
 
 void
