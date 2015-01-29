@@ -1,8 +1,27 @@
 apply plugin: 'com.android.library'
 
-apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
-
 android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        targetSdkVersion 21
+        minSdkVersion 9
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    dexOptions {
+        incremental true
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -31,12 +50,13 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:19.1.+'
+    compile 'com.android.support:support-v4:21.+'
 
     if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
-        compile 'com.android.support:appcompat-v7:19.1.+'
-        compile 'com.android.support:mediarouter-v7:19.1.+'
-        compile 'com.google.android.gms:play-services:5.+'
+        compile 'com.android.support:appcompat-v7:21.+'
+        compile 'com.android.support:mediarouter-v7:21.+'
+        compile 'com.google.android.gms:play-services-base:6.5.+'
+        compile 'com.google.android.gms:play-services-cast:6.5.+'
     }
 
     compile project(':branding')
@@ -53,9 +73,7 @@ apply plugin: 'idea'
 
 idea {
     module {
-        // excludeDirs = []
-        excludeDirs += file('src/main/java/org/mozilla/gecko/tests')
+        excludeDirs += file('org/mozilla/gecko/resources')
         excludeDirs += file('org/mozilla/gecko/tests')
-        excludeDirs += file('tests')
     }
 }

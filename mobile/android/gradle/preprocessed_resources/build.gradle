@@ -1,13 +1,25 @@
 apply plugin: 'com.android.library'
 
-apply from: "${topsrcdir}/mobile/android/gradle/android.gradle"
-
 android {
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFile getDefaultProguardFile('proguard-android.txt')
-        }
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        targetSdkVersion 21
+        minSdkVersion 9
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    dexOptions {
+        incremental true
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
