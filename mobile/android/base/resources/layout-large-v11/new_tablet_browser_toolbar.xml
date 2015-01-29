@@ -19,7 +19,7 @@
                android:focusable="false"
                android:background="@drawable/url_bar_entry"/>
 
-    <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward.NewTablet"
+    <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward"
                                              android:id="@+id/forward"
                                              android:layout_alignLeft="@id/back"/>
 

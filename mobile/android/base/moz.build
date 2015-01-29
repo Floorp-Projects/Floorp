@@ -454,7 +454,6 @@ gbjar.sources += [
     'toolbar/ShapedButton.java',
     'toolbar/SiteIdentityPopup.java',
     'toolbar/TabCounter.java',
-    'toolbar/TabletTabsButton.java',
     'toolbar/ToolbarDisplayLayout.java',
     'toolbar/ToolbarEditLayout.java',
     'toolbar/ToolbarEditText.java',
