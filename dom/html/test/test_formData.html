@@ -14,7 +14,90 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=690659
 <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTest() {
+function testHas() {
+  var f = new FormData();
+  f.append("foo", "bar");
+  f.append("another", "value");
+  ok(f.has("foo"), "has() on existing name should be true.");
+  ok(f.has("another"), "has() on existing name should be true.");
+  ok(!f.has("nonexistent"), "has() on non-existent name should be false.");
+}
+
+function testGet() {
+  var f = new FormData();
+  f.append("foo", "bar");
+  f.append("foo", "bar2");
+  f.append("blob", new Blob(["hey"], { type: 'text/plain' }));
+  f.append("file", new File(["hey"], 'testname',  {type: 'text/plain'}));
+
+  is(f.get("foo"), "bar", "get() on existing name should return first value");
+  ok(f.get("blob") instanceof Blob, "get() on existing name should return first value");
+  is(f.get("blob").type, 'text/plain', "get() on existing name should return first value");
+  ok(f.get("file") instanceof File, "get() on existing name should return first value");
+  is(f.get("file").name, 'testname', "get() on existing name should return first value");
+
+  is(f.get("nonexistent"), null, "get() on non-existent name should return null.");
+}
+
+function testGetAll() {
+  var f = new FormData();
+  f.append("other", "value");
+  f.append("foo", "bar");
+  f.append("foo", "bar2");
+  f.append("foo", new Blob(["hey"], { type: 'text/plain' }));
+
+  var arr = f.getAll("foo");
+  is(arr.length, 3, "getAll() should retrieve all matching entries.");
+  is(arr[0], "bar", "values should match and be in order");
+  is(arr[1], "bar2", "values should match and be in order");
+  ok(arr[2] instanceof Blob, "values should match and be in order");
+
+  is(f.get("nonexistent"), null, "get() on non-existent name should return null.");
+}
+
+function testDelete() {
+  var f = new FormData();
+  f.append("other", "value");
+  f.append("foo", "bar");
+  f.append("foo", "bar2");
+  f.append("foo", new Blob(["hey"], { type: 'text/plain' }));
+
+  ok(f.has("foo"), "has() on existing name should be true.");
+  f.delete("foo");
+  ok(!f.has("foo"), "has() on deleted name should be false.");
+  is(f.getAll("foo").length, 0, "all entries should be deleted.");
+
+  is(f.getAll("other").length, 1, "other names should still be there.");
+  f.delete("other");
+  is(f.getAll("other").length, 0, "all entries should be deleted.");
+}
+
+function testSet() {
+  var f = new FormData();
+
+  f.set("other", "value");
+  ok(f.has("other"), "set() on new name should be similar to append()");
+  is(f.getAll("other").length, 1, "set() on new name should be similar to append()");
+
+  f.append("other", "value2");
+  is(f.getAll("other").length, 2, "append() should not replace existing entries.");
+
+  f.append("foo", "bar");
+  f.append("other", "value3");
+  f.append("other", "value3");
+  f.append("other", "value3");
+  is(f.getAll("other").length, 5, "append() should not replace existing entries.");
+
+  f.set("other", "value4");
+  is(f.getAll("other").length, 1, "set() should replace existing entries.");
+  is(f.getAll("other")[0], "value4", "set() should replace existing entries.");
+}
+
+function testIterate() {
+  todo(false, "Implement this in Bug 1085284.");
+}
+
+function testSend() {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "form_submit_server.sjs");
     xhr.onload = function () {
@@ -60,6 +143,17 @@ function runTest() {
     fd.append("file-name-overwrite", file, "overwrite");
     xhr.responseType = 'json';
     xhr.send(fd);
+}
+
+function runTest() {
+  testHas();
+  testGet();
+  testGetAll();
+  testDelete();
+  testSet();
+  testIterate();
+  // Finally, send an XHR and verify the response matches.
+  testSend();
 }
 
 runTest()
