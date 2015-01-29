@@ -4,45 +4,62 @@
 
 package org.mozilla.gecko.tests;
 
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
+
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
-import org.mozilla.gecko.PaintedSurface;
 import org.mozilla.gecko.R;
 
-public class testFindInPage extends PixelTest {
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.GeckoEventListener;
+
+import org.json.JSONObject;
+
+public class testFindInPage extends JavascriptTest implements GeckoEventListener {
     private static final int WAIT_FOR_TEST = 3000;
     protected Element next, close;
-    int height,width;
 
-    public void testFindInPage() {
-        blockForGeckoReady();
-        String url = getAbsoluteUrl(StringHelper.ROBOCOP_TEXT_PAGE_URL);
-        loadAndPaint(url);
+    public testFindInPage() {
+        super("testFindInPage.js");
+    }
 
-        height = mDriver.getGeckoHeight()/8;
-        width = mDriver.getGeckoWidth()/2;
-
-        // Search that does not find the term and therefor should not pan the page
-        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        findText("Robocoop", 3); // This will be close enough to existing text to test that search finds just what it should
-        PaintedSurface painted = waitForPaint(paintExpecter);
-        paintExpecter.unregisterListener();
-        try {
-            mAsserter.ispixel(painted.getPixelAt(width,height), 255, 0, 0, "Pixel at " + String.valueOf(width) + "," + String.valueOf(height));
-        } finally {
-            painted.close();
+    @Override
+    public void handleMessage(String event, final JSONObject message) {
+        if (event.equals("Test:FindInPage")) {
+            try {
+                final String text = message.getString("text");
+                final int nrOfMatches = Integer.parseInt(message.getString("nrOfMatches"));
+                findText(text, nrOfMatches);
+            } catch (Exception e) {
+                fFail("Can't extract find query from JSON");
+            }
         }
 
-        // Search that finds matches and therefor pans the page
-        paintExpecter = mActions.expectPaint();
-        findText("Robocop", 3);
-        painted = waitForPaint(paintExpecter);
-        paintExpecter.unregisterListener();
-        try {
-            mAsserter.isnotpixel(painted.getPixelAt(width,height), 255, 0, 0, "Pixel at " + String.valueOf(width) + "," + String.valueOf(height));
-        } finally {
-            painted.close();
+        if (event.equals("Test:CloseFindInPage")) {
+            try {
+                close.click();
+            } catch (Exception e) {
+                fFail("FindInPage prompt not opened");
+            }
         }
+    }
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "Test:FindInPage",
+            "Test:CloseFindInPage");
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "Test:FindInPage",
+            "Test:CloseFindInPage");
     }
 
     public void findText(String text, int nrOfMatches){
@@ -83,6 +100,5 @@ public class testFindInPage extends PixelTest {
             mSolo.sleep(500); // TODO: Find a better way to wait here because waitForTest is not enough
             mAsserter.ok(success, "Checking if the next button was clicked", "button was clicked");
         }
-        close.click(); // Close find in page bar
     }
 }
