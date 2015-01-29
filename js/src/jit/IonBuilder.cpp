@@ -359,16 +359,20 @@ IonBuilder::DontInline(JSScript *targetScript, const char *reason)
 IonBuilder::InliningDecision
 IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 {
-    if (!optimizationInfo().inlineInterpreted())
+    if (!optimizationInfo().inlineInterpreted()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineGeneric);
         return InliningDecision_DontInline;
+    }
 
     if (TraceLogTextIdEnabled(TraceLogger_InlinedScripts)) {
         return DontInline(nullptr, "Tracelogging of inlined scripts is enabled"
                                    "but Tracelogger cannot do that yet.");
     }
 
-    if (!target->isInterpreted())
+    if (!target->isInterpreted()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNotInterpreted);
         return DontInline(nullptr, "Non-interpreted target");
+    }
 
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
@@ -381,58 +385,84 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
             MethodStatus status = BaselineCompile(analysisContext, script);
             if (status == Method_Error)
                 return InliningDecision_Error;
-            if (status != Method_Compiled)
+            if (status != Method_Compiled) {
+                trackOptimizationOutcome(TrackedOutcome::CantInlineNoBaseline);
                 return InliningDecision_DontInline;
+            }
         }
     }
 
-    if (!target->hasScript())
+    if (!target->hasScript()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineLazy);
         return DontInline(nullptr, "Lazy script");
+    }
 
     JSScript *inlineScript = target->nonLazyScript();
-    if (callInfo.constructing() && !target->isInterpretedConstructor())
+    if (callInfo.constructing() && !target->isInterpretedConstructor()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNotConstructor);
         return DontInline(inlineScript, "Callee is not a constructor");
+    }
 
     AnalysisMode analysisMode = info().analysisMode();
-    if (!CanIonCompile(inlineScript, analysisMode))
+    if (!CanIonCompile(inlineScript, analysisMode)) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineDisabledIon);
         return DontInline(inlineScript, "Disabled Ion compilation");
+    }
 
     // Don't inline functions which don't have baseline scripts.
-    if (!inlineScript->hasBaselineScript())
+    if (!inlineScript->hasBaselineScript()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNoBaseline);
         return DontInline(inlineScript, "No baseline jitcode");
+    }
 
-    if (TooManyFormalArguments(target->nargs()))
+    if (TooManyFormalArguments(target->nargs())) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineTooManyArgs);
         return DontInline(inlineScript, "Too many args");
+    }
 
     // We check the number of actual arguments against the maximum number of
     // formal arguments as we do not want to encode all actual arguments in the
     // callerResumePoint.
-    if (TooManyFormalArguments(callInfo.argc()))
+    if (TooManyFormalArguments(callInfo.argc())) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineTooManyArgs);
         return DontInline(inlineScript, "Too many actual args");
+    }
 
     // Allow inlining of recursive calls, but only one level deep.
     IonBuilder *builder = callerBuilder_;
     while (builder) {
-        if (builder->script() == inlineScript)
+        if (builder->script() == inlineScript) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineRecursive);
             return DontInline(inlineScript, "Recursive call");
+        }
         builder = builder->callerBuilder_;
     }
 
-    if (target->isHeavyweight())
+    if (target->isHeavyweight()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineHeavyweight);
         return DontInline(inlineScript, "Heavyweight function");
+    }
 
-    if (inlineScript->uninlineable())
+    if (inlineScript->uninlineable()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineGeneric);
         return DontInline(inlineScript, "Uninlineable script");
+    }
 
-    if (inlineScript->needsArgsObj())
+    if (inlineScript->needsArgsObj()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNeedsArgsObj);
         return DontInline(inlineScript, "Script that needs an arguments object");
+    }
 
-    if (inlineScript->isDebuggee())
+    if (inlineScript->isDebuggee()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineDebuggee);
         return DontInline(inlineScript, "Script is debuggee");
+    }
 
     types::TypeObjectKey *targetType = types::TypeObjectKey::get(target);
-    if (targetType->unknownProperties())
+    if (targetType->unknownProperties()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineUnknownProps);
         return DontInline(inlineScript, "Target type has unknown properties");
+    }
 
     return InliningDecision_Inline;
 }
@@ -4575,8 +4605,10 @@ IonBuilder::InliningDecision
 IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
 {
     // When there is no target, inlining is impossible.
-    if (targetArg == nullptr)
+    if (targetArg == nullptr) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNoTarget);
         return InliningDecision_DontInline;
+    }
 
     // Inlining non-function targets is handled by inlineNonFunctionCall().
     if (!targetArg->is<JSFunction>())
@@ -4604,11 +4636,15 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
     if (!targetScript->shouldInline()) {
         // Cap the inlining depth.
         if (js_JitOptions.isSmallFunction(targetScript)) {
-            if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth())
+            if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth()) {
+                trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
                 return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
+            }
         } else {
-            if (inliningDepth_ >= optimizationInfo().maxInlineDepth())
+            if (inliningDepth_ >= optimizationInfo().maxInlineDepth()) {
+                trackOptimizationOutcome(TrackedOutcome::CantInlineExceededDepth);
                 return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
+            }
 
             if (targetScript->hasLoops()) {
                 // Currently, we are not inlining function which have loops because
@@ -4635,19 +4671,25 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
                     hasOpportunities = arg->isLambda() || arg->isConstantValue();
                 }
 
-                if (!hasOpportunities)
+                if (!hasOpportunities) {
+                    trackOptimizationOutcome(TrackedOutcome::CantInlineBigLoop);
                     return DontInline(targetScript, "Vetoed: big function that contains a loop");
+                }
             }
 
             // Caller must not be excessively large.
-            if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength())
+            if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength()) {
+                trackOptimizationOutcome(TrackedOutcome::CantInlineBigCaller);
                 return DontInline(targetScript, "Vetoed: caller excessively large");
+            }
         }
 
         // Callee must not be excessively large.
         // This heuristic also applies to the callsite as a whole.
-        if (targetScript->length() > optimizationInfo().inlineMaxTotalBytecodeLength())
+        if (targetScript->length() > optimizationInfo().inlineMaxTotalBytecodeLength()) {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineBigCallee);
             return DontInline(targetScript, "Vetoed: callee excessively large");
+        }
 
         // Callee must have been called a few times to have somewhat stable
         // type information, except for definite properties analysis,
@@ -4656,6 +4698,7 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
             !targetScript->baselineScript()->ionCompiledOrInlined() &&
             info().analysisMode() != Analysis_DefiniteProperties)
         {
+            trackOptimizationOutcome(TrackedOutcome::CantInlineNotHot);
             JitSpew(JitSpew_Inlining, "Cannot inline %s:%u: callee is insufficiently hot.",
                     targetScript->filename(), targetScript->lineno());
             return InliningDecision_WarmUpCountTooLow;
@@ -7715,6 +7758,7 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
             return false;
     }
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -8963,8 +9007,10 @@ IonBuilder::jsop_rest()
 uint32_t
 IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
 {
-    if (!types || types->unknownObject())
+    if (!types || types->unknownObject()) {
+        trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         return UINT32_MAX;
+    }
 
     // Watch for types which the new script properties analysis has not been
     // performed on yet. Normally this is done after a small number of the
@@ -8985,6 +9031,7 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
         if (types::TypeObject *typeObject = type->maybeType()) {
             if (typeObject->newScript() && !typeObject->newScript()->analyzed()) {
                 addAbortedNewScriptPropertiesType(typeObject);
+                trackOptimizationOutcome(TrackedOutcome::NoAnalysisInfo);
                 return UINT32_MAX;
             }
         }
@@ -8997,22 +9044,32 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name)
         if (!type)
             continue;
 
-        if (type->unknownProperties() || type->singleton())
+        if (type->unknownProperties()) {
+            trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
             return UINT32_MAX;
+        }
+
+        if (type->singleton()) {
+            trackOptimizationOutcome(TrackedOutcome::Singleton);
+            return UINT32_MAX;
+        }
 
         types::HeapTypeSetKey property = type->property(NameToId(name));
         if (!property.maybeTypes() ||
             !property.maybeTypes()->definiteProperty() ||
             property.nonData(constraints()))
         {
+            trackOptimizationOutcome(TrackedOutcome::NotFixedSlot);
             return UINT32_MAX;
         }
 
         uint32_t propertySlot = property.maybeTypes()->definiteSlot();
-        if (slot == UINT32_MAX)
+        if (slot == UINT32_MAX) {
             slot = propertySlot;
-        else if (slot != propertySlot)
+        } else if (slot != propertySlot) {
+            trackOptimizationOutcome(TrackedOutcome::NotFixedSlot);
             return UINT32_MAX;
+        }
     }
 
     return slot;
@@ -9369,19 +9426,23 @@ bool
 IonBuilder::jsop_getprop(PropertyName *name)
 {
     bool emitted = false;
+    startTrackingOptimizations();
 
     MDefinition *obj = current->pop();
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
+    trackTypeInfo(TrackedTypeSite::Receiver, obj->type(), obj->resultTypeSet());
+
     if (!info().isAnalysis()) {
         // The calls below can abort compilation, so we only try this if we're
         // not analyzing.
-
         // Try to optimize arguments.length.
+        trackOptimizationAttempt(TrackedStrategy::GetProp_ArgumentsLength);
         if (!getPropTryArgumentsLength(&emitted, obj) || emitted)
             return emitted;
 
         // Try to optimize arguments.callee.
+        trackOptimizationAttempt(TrackedStrategy::GetProp_ArgumentsCallee);
         if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
             return emitted;
     }
@@ -9390,9 +9451,12 @@ IonBuilder::jsop_getprop(PropertyName *name)
                                                        obj, name, types);
 
     // Try to optimize to a specific constant.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_InferredConstant);
     if (barrier == BarrierKind::NoBarrier) {
         if (!getPropTryInferredConstant(&emitted, obj, name, types) || emitted)
             return emitted;
+    } else {
+        trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
     }
 
     // Always use a call if we are performing analysis and
@@ -9400,6 +9464,14 @@ IonBuilder::jsop_getprop(PropertyName *name)
     // analysis if there are no known types for this operation, as it will
     // always invalidate when executing.
     if (info().isAnalysis() || types->empty()) {
+        if (types->empty()) {
+            // Since no further optimizations will be tried, use the IC
+            // strategy, which would have been the last one to be tried, as a
+            // sentinel value for why everything failed.
+            trackOptimizationAttempt(TrackedStrategy::GetProp_InlineCache);
+            trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
+        }
+
         MCallGetProperty *call = MCallGetProperty::New(alloc(), obj, name, *pc == JSOP_CALLPROP);
         current->add(call);
 
@@ -9417,30 +9489,37 @@ IonBuilder::jsop_getprop(PropertyName *name)
     }
 
     // Try to hardcode known constants.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_Constant);
     if (!getPropTryConstant(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to emit loads from known binary data blocks
+    trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
     if (!getPropTryTypedObject(&emitted, obj, name) || emitted)
         return emitted;
 
     // Try to emit loads from definite slots.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_DefiniteSlot);
     if (!getPropTryDefiniteSlot(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
     // Try to inline a common property getter, or make a call.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_CommonGetter);
     if (!getPropTryCommonGetter(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to emit a monomorphic/polymorphic access based on baseline caches.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_InlineAccess);
     if (!getPropTryInlineAccess(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
     // Try to optimize accesses on outer window proxies, for example window.foo.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_Innerize);
     if (!getPropTryInnerize(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to emit a polymorphic cache.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_InlineCache);
     if (!getPropTryCache(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
@@ -9480,16 +9559,22 @@ IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, Property
 
     // Need a result typeset to optimize.
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    if (!objTypes)
+    if (!objTypes) {
+        trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         return true;
+    }
 
     JSObject *singleton = objTypes->getSingleton();
-    if (!singleton)
+    if (!singleton) {
+        trackOptimizationOutcome(TrackedOutcome::NotSingleton);
         return true;
+    }
 
     types::TypeObjectKey *type = types::TypeObjectKey::get(singleton);
-    if (type->unknownProperties())
+    if (type->unknownProperties()) {
+        trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
         return true;
+    }
 
     types::HeapTypeSetKey property = type->property(NameToId(name));
 
@@ -9500,6 +9585,7 @@ IonBuilder::getPropTryInferredConstant(bool *emitted, MDefinition *obj, Property
         if (!pushConstant(constantValue))
             return false;
         types->addType(types::GetValueType(constantValue), alloc_->lifoAlloc());
+        trackOptimizationSuccess();
         *emitted = true;
     }
 
@@ -9520,6 +9606,7 @@ IonBuilder::getPropTryArgumentsLength(bool *emitted, MDefinition *obj)
     if (JSOp(*pc) != JSOP_LENGTH)
         return true;
 
+    trackOptimizationSuccess();
     *emitted = true;
 
     obj->setImplicitlyUsedUnchecked();
@@ -9555,6 +9642,7 @@ IonBuilder::getPropTryArgumentsCallee(bool *emitted, MDefinition *obj, PropertyN
     obj->setImplicitlyUsedUnchecked();
     current->push(getCallee());
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -9564,9 +9652,12 @@ IonBuilder::getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *na
                                types::TemporaryTypeSet *types)
 {
     MOZ_ASSERT(*emitted == false);
+
     JSObject *singleton = types ? types->getSingleton() : nullptr;
-    if (!singleton)
+    if (!singleton) {
+        trackOptimizationOutcome(TrackedOutcome::NotSingleton);
         return true;
+    }
 
     bool testObject, testString;
     if (!testSingletonPropertyTypes(obj, singleton, name, &testObject, &testString))
@@ -9583,6 +9674,7 @@ IonBuilder::getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *na
 
     pushConstant(ObjectValue(*singleton));
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -9641,6 +9733,7 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted, MDefinition *typedO
     if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
+    trackOptimizationSuccess();
     *emitted = true;
 
     LinearSum byteOffset(alloc());
@@ -9662,6 +9755,7 @@ IonBuilder::getPropTryReferencePropOfTypedObject(bool *emitted, MDefinition *typ
     if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
         return true;
 
+    trackOptimizationSuccess();
     *emitted = true;
 
     LinearSum byteOffset(alloc());
@@ -9702,6 +9796,7 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName
                                    BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     MOZ_ASSERT(*emitted == false);
+
     uint32_t slot = getDefiniteSlot(obj->resultTypeSet(), name);
     if (slot == UINT32_MAX)
         return true;
@@ -9731,6 +9826,7 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName
     if (!pushTypeBarrier(load, types, barrier))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -9792,6 +9888,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         if (!pushDOMTypeBarrier(get, types, commonGetter))
             return false;
 
+        trackOptimizationOutcome(TrackedOutcome::DOM);
         *emitted = true;
         return true;
     }
@@ -9825,13 +9922,13 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
           case InliningStatus_NotInlined:
             break;
           case InliningStatus_Inlined:
+            trackOptimizationOutcome(TrackedOutcome::Inlined);
             *emitted = true;
             return true;
         }
     }
 
     // Inline if we can, otherwise, forget it and just generate a call.
-    bool inlineable = false;
     if (commonGetter->isInterpreted()) {
         InliningDecision decision = makeInliningDecision(commonGetter, callInfo);
         switch (decision) {
@@ -9841,18 +9938,22 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
           case InliningDecision_WarmUpCountTooLow:
             break;
           case InliningDecision_Inline:
-            inlineable = true;
-            break;
+            if (!inlineScriptedCall(callInfo, commonGetter))
+                return false;
+            trackOptimizationOutcome(TrackedOutcome::Inlined);
+            *emitted = true;
+            return true;
         }
     }
 
-    if (inlineable) {
-        if (!inlineScriptedCall(callInfo, commonGetter))
-            return false;
-    } else {
-        if (!makeCall(commonGetter, callInfo, false))
-            return false;
-    }
+    if (!makeCall(commonGetter, callInfo, false))
+        return false;
+
+    // If the getter could have been inlined, don't track success. The call to
+    // makeInliningDecision above would have tracked a specific reason why we
+    // couldn't inline.
+    if (!commonGetter->isInterpreted())
+        trackOptimizationSuccess();
 
     *emitted = true;
     return true;
@@ -9907,15 +10008,25 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
                                    BarrierKind barrier, types::TemporaryTypeSet *types)
 {
     MOZ_ASSERT(*emitted == false);
-    if (obj->type() != MIRType_Object)
+
+    if (obj->type() != MIRType_Object) {
+        trackOptimizationOutcome(TrackedOutcome::NotObject);
         return true;
+    }
 
     BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))
         return false;
 
-    if (shapes.empty() || !CanInlinePropertyOpShapes(shapes))
+    if (shapes.empty()) {
+        trackOptimizationOutcome(TrackedOutcome::NoShapeInfo);
         return true;
+    }
+
+    if (!CanInlinePropertyOpShapes(shapes)) {
+        trackOptimizationOutcome(TrackedOutcome::InDictionaryMode);
+        return true;
+    }
 
     MIRType rvalType = types->getKnownMIRType();
     if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
@@ -9935,6 +10046,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
         if (!loadSlot(obj, shape, rvalType, barrier, types))
             return false;
 
+        trackOptimizationOutcome(TrackedOutcome::Monomorphic);
         *emitted = true;
         return true;
     }
@@ -9963,6 +10075,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
         if (!loadSlot(obj, propShapes[0], rvalType, barrier, types))
             return false;
 
+        trackOptimizationOutcome(TrackedOutcome::Polymorphic);
         *emitted = true;
         return true;
     }
@@ -9983,6 +10096,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, MDefinition *obj, PropertyName
     if (!pushTypeBarrier(load, types, barrier))
         return false;
 
+    trackOptimizationOutcome(TrackedOutcome::Polymorphic);
     *emitted = true;
     return true;
 }
@@ -9997,8 +10111,10 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
     // that it can be safely unboxed to an object.
     if (obj->type() != MIRType_Object) {
         types::TemporaryTypeSet *types = obj->resultTypeSet();
-        if (!types || !types->objectOrSentinel())
+        if (!types || !types->objectOrSentinel()) {
+            trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
             return true;
+        }
     }
 
     // Since getters have no guaranteed return values, we must barrier in order to be
@@ -10058,6 +10174,7 @@ IonBuilder::getPropTryCache(bool *emitted, MDefinition *obj, PropertyName *name,
     if (!pushTypeBarrier(load, types, barrier))
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
