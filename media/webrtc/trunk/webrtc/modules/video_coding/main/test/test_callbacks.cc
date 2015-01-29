@@ -82,6 +82,9 @@ VCMEncodeCompleteCallback::SendData(
         rtpInfo.type.Video.codecHeader.VP8.pictureId =
             videoHdr->codecHeader.VP8.pictureId;
         break;
+    case webrtc::kRtpVideoGeneric:
+      // Leave for now, until we add kRtpVideoVp9 to RTP.
+      break;
     default:
         assert(false);
         return -1;
@@ -406,7 +409,7 @@ RTPSendCompleteCallback::PacketLoss()
 bool
 RTPSendCompleteCallback::UnifomLoss(double lossPct)
 {
-    double randVal = (std::rand() + 1.0)/(RAND_MAX + 1.0);
+    double randVal = (rand() + 1.0) / (RAND_MAX + 1.0);
     return randVal < lossPct/100;
 }
 

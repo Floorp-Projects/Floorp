@@ -12,7 +12,6 @@
 
 #include <assert.h>
 
-#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/utility/interface/helpers_android.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -52,10 +51,20 @@ void AudioManagerJni::SetAndroidAudioDeviceObjects(void* jvm, void* env,
   g_jni_env_ = reinterpret_cast<JNIEnv*>(env);
   g_context_ = g_jni_env_->NewGlobalRef(reinterpret_cast<jobject>(context));
 
+  // FindClass must be made in this function since this function's contract
+  // requires it to be called by a Java thread.
+  // See
+  // http://developer.android.com/training/articles/perf-jni.html#faq_FindClass
+  // as to why this is necessary.
+  // Get the AudioManagerAndroid class object.
+  jclass javaAmClassLocal = g_jni_env_->FindClass(
+      "org/webrtc/voiceengine/AudioManagerAndroid");
+  assert(javaAmClassLocal);
+
   // Create a global reference such that the class object is not recycled by
   // the garbage collector.
-  g_audio_manager_class_ = jsjni_GetGlobalClassRef(
-    "org/webrtc/voiceengine/AudioManagerAndroid");
+  g_audio_manager_class_ = reinterpret_cast<jclass>(
+      g_jni_env_->NewGlobalRef(javaAmClassLocal));
   assert(g_audio_manager_class_);
 }
 

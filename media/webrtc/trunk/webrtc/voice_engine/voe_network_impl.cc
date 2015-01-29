@@ -88,7 +88,14 @@ int VoENetworkImpl::DeRegisterExternalTransport(int channel)
 
 int VoENetworkImpl::ReceivedRTPPacket(int channel,
                                       const void* data,
-                                      unsigned int length)
+                                      unsigned int length) {
+  return ReceivedRTPPacket(channel, data, length, webrtc::PacketTime());
+}
+
+int VoENetworkImpl::ReceivedRTPPacket(int channel,
+                                      const void* data,
+                                      unsigned int length,
+                                      const PacketTime& packet_time)
 {
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "ReceivedRTPPacket(channel=%d, length=%u)", channel, length);
@@ -125,7 +132,8 @@ int VoENetworkImpl::ReceivedRTPPacket(int channel,
             "ReceivedRTPPacket() external transport is not enabled");
         return -1;
     }
-    return channelPtr->ReceivedRTPPacket((const int8_t*) data, length);
+    return channelPtr->ReceivedRTPPacket((const int8_t*) data, length,
+                                         packet_time);
 }
 
 int VoENetworkImpl::ReceivedRTCPPacket(int channel, const void* data,

@@ -10,8 +10,9 @@
 
 #import <Cocoa/Cocoa.h>
 #import <AppKit/AppKit.h>
-#import "cocoa_render_view.h"
-#include "trace.h"
+
+#include "webrtc/modules/video_render/mac/cocoa_render_view.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
 

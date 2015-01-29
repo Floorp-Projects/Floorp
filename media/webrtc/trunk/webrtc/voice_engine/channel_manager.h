@@ -13,8 +13,8 @@
 
 #include <vector>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"

@@ -13,8 +13,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "modules/audio_coding/neteq/test/NETEQTEST_RTPpacket.h"
-#include "modules/audio_coding/neteq/test/NETEQTEST_DummyRTPpacket.h"
+#include "webrtc/modules/audio_coding/neteq/test/NETEQTEST_DummyRTPpacket.h"
+#include "webrtc/modules/audio_coding/neteq/test/NETEQTEST_RTPpacket.h"
 
 #define FIRSTLINELEN 40
 //#define WEBRTC_DUMMY_RTP
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
   uint32_t send_time;
 
   while (fscanf(stat_file,
-                "%hu %u %u %*i %*i %*i %*x\n", &seq_no, &ts, &send_time) == 3) {
+                "%hu %u %u %*i %*i\n", &seq_no, &ts, &send_time) == 3) {
     std::pair<uint16_t, uint32_t>
         temp_pair = std::pair<uint16_t, uint32_t>(seq_no, ts);
 

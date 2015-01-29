@@ -41,8 +41,10 @@ float SincResampler::Convolve_SSE(const float* input_ptr, const float* k1,
   }
 
   // Linearly interpolate the two "convolutions".
-  m_sums1 = _mm_mul_ps(m_sums1, _mm_set_ps1(1.0 - kernel_interpolation_factor));
-  m_sums2 = _mm_mul_ps(m_sums2, _mm_set_ps1(kernel_interpolation_factor));
+  m_sums1 = _mm_mul_ps(m_sums1, _mm_set_ps1(
+      static_cast<float>(1.0 - kernel_interpolation_factor)));
+  m_sums2 = _mm_mul_ps(m_sums2, _mm_set_ps1(
+      static_cast<float>(kernel_interpolation_factor)));
   m_sums1 = _mm_add_ps(m_sums1, m_sums2);
 
   // Sum components together.

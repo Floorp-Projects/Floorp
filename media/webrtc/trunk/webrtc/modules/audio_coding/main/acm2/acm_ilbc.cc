@@ -40,8 +40,6 @@ int16_t ACMILBC::InternalCreateEncoder() { return -1; }
 
 void ACMILBC::DestructEncoderSafe() { return; }
 
-void ACMILBC::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 int16_t ACMILBC::SetBitRateSafe(const int32_t /* rate */) { return -1; }
 
 #else  //===================== Actual Implementation =======================
@@ -115,13 +113,6 @@ void ACMILBC::DestructEncoderSafe() {
     WebRtcIlbcfix_EncoderFree(encoder_inst_ptr_);
     encoder_inst_ptr_ = NULL;
   }
-}
-
-void ACMILBC::InternalDestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    WebRtcIlbcfix_EncoderFree(static_cast<iLBC_encinst_t_*>(ptr_inst));
-  }
-  return;
 }
 
 int16_t ACMILBC::SetBitRateSafe(const int32_t rate) {

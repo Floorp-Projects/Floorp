@@ -52,8 +52,7 @@ public:
     // TODO (hellner): make destructor protected.
     virtual void CloseBlocking() OVERRIDE;
 
-    virtual SOCKET GetFd();
-    virtual int32_t GetError();
+    SOCKET GetFd();
 
     virtual bool ValidHandle() OVERRIDE;
 
@@ -76,7 +75,6 @@ private:
     int32_t _id;
     IncomingSocketCallback _incomingCb;
     CallbackObj _obj;
-    int32_t _error;
 
     SOCKET _socket;
     UdpSocketManager* _mgr;

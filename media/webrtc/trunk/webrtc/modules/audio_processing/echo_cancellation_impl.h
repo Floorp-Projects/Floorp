@@ -11,37 +11,37 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_ECHO_CANCELLATION_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_ECHO_CANCELLATION_IMPL_H_
 
-#include "webrtc/modules/audio_processing/echo_cancellation_impl_wrapper.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "webrtc/modules/audio_processing/processing_component.h"
 
 namespace webrtc {
 
-class AudioProcessingImpl;
 class AudioBuffer;
+class CriticalSectionWrapper;
 
-class EchoCancellationImpl : public EchoCancellationImplWrapper {
+class EchoCancellationImpl : public EchoCancellation,
+                             public ProcessingComponent {
  public:
-  explicit EchoCancellationImpl(const AudioProcessingImpl* apm);
+  EchoCancellationImpl(const AudioProcessing* apm,
+                       CriticalSectionWrapper* crit);
   virtual ~EchoCancellationImpl();
 
-  // EchoCancellationImplWrapper implementation.
-  virtual int ProcessRenderAudio(const AudioBuffer* audio) OVERRIDE;
-  virtual int ProcessCaptureAudio(AudioBuffer* audio) OVERRIDE;
+  int ProcessRenderAudio(const AudioBuffer* audio);
+  int ProcessCaptureAudio(AudioBuffer* audio);
 
   // EchoCancellation implementation.
   virtual bool is_enabled() const OVERRIDE;
-  virtual int device_sample_rate_hz() const OVERRIDE;
   virtual int stream_drift_samples() const OVERRIDE;
 
   // ProcessingComponent implementation.
   virtual int Initialize() OVERRIDE;
-  // virtual void SetExtraOptions(const Config& config) OVERRIDE;
+  virtual void SetExtraOptions(const Config& config) OVERRIDE;
 
  private:
   // EchoCancellation implementation.
   virtual int Enable(bool enable) OVERRIDE;
   virtual int enable_drift_compensation(bool enable) OVERRIDE;
   virtual bool is_drift_compensation_enabled() const OVERRIDE;
-  virtual int set_device_sample_rate_hz(int rate) OVERRIDE;
   virtual void set_stream_drift_samples(int drift) OVERRIDE;
   virtual int set_suppression_level(SuppressionLevel level) OVERRIDE;
   virtual SuppressionLevel suppression_level() const OVERRIDE;
@@ -58,20 +58,21 @@ class EchoCancellationImpl : public EchoCancellationImplWrapper {
   virtual void* CreateHandle() const OVERRIDE;
   virtual int InitializeHandle(void* handle) const OVERRIDE;
   virtual int ConfigureHandle(void* handle) const OVERRIDE;
-  virtual int DestroyHandle(void* handle) const OVERRIDE;
+  virtual void DestroyHandle(void* handle) const OVERRIDE;
   virtual int num_handles_required() const OVERRIDE;
   virtual int GetHandleError(void* handle) const OVERRIDE;
 
-  const AudioProcessingImpl* apm_;
+  const AudioProcessing* apm_;
+  CriticalSectionWrapper* crit_;
   bool drift_compensation_enabled_;
   bool metrics_enabled_;
   SuppressionLevel suppression_level_;
-  int device_sample_rate_hz_;
   int stream_drift_samples_;
   bool was_stream_drift_set_;
   bool stream_has_echo_;
   bool delay_logging_enabled_;
   bool delay_correction_enabled_;
+  bool reported_delay_enabled_;
 };
 
 }  // namespace webrtc

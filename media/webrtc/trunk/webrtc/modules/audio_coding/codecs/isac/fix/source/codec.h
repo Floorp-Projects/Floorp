@@ -101,6 +101,16 @@ void WebRtcIsacfix_Spec2TimeNeon(int16_t* inreQ7,
                                  int32_t* outre2Q16);
 #endif
 
+#if defined(MIPS32_LE)
+void WebRtcIsacfix_Time2SpecMIPS(int16_t* inre1Q9,
+                                 int16_t* inre2Q9,
+                                 int16_t* outre,
+                                 int16_t* outim);
+void WebRtcIsacfix_Spec2TimeMIPS(int16_t* inreQ7,
+                                 int16_t* inimQ7,
+                                 int32_t* outre1Q16,
+                                 int32_t* outre2Q16);
+#endif
 
 /* filterbank functions */
 
@@ -172,6 +182,21 @@ int WebRtcIsacfix_AutocorrNeon(int32_t* __restrict r,
                                int16_t* __restrict scale);
 
 void WebRtcIsacfix_FilterMaLoopNeon(int16_t input0,
+                                    int16_t input1,
+                                    int32_t input2,
+                                    int32_t* ptr0,
+                                    int32_t* ptr1,
+                                    int32_t* ptr2);
+#endif
+
+#if defined(MIPS32_LE)
+int WebRtcIsacfix_AutocorrMIPS(int32_t* __restrict r,
+                               const int16_t* __restrict x,
+                               int16_t N,
+                               int16_t order,
+                               int16_t* __restrict scale);
+
+void WebRtcIsacfix_FilterMaLoopMIPS(int16_t input0,
                                     int16_t input1,
                                     int32_t input2,
                                     int32_t* ptr0,

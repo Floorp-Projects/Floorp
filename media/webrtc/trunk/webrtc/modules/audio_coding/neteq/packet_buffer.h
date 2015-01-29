@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,247 +8,152 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * Interface for the actual packet buffer data structure.
- */
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_
 
-#ifndef PACKET_BUFFER_H
-#define PACKET_BUFFER_H
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/neteq/packet.h"
+#include "webrtc/typedefs.h"
 
-#include "typedefs.h"
+namespace webrtc {
 
-#include "webrtc_neteq.h"
-#include "rtp.h"
+// Forward declaration.
+class DecoderDatabase;
 
-/* Define minimum allowed buffer memory, in 16-bit words */
-#define PBUFFER_MIN_MEMORY_SIZE	150
+// This is the actual buffer holding the packets before decoding.
+class PacketBuffer {
+ public:
+  enum BufferReturnCodes {
+    kOK = 0,
+    kFlushed,
+    kNotFound,
+    kBufferEmpty,
+    kInvalidPacket,
+    kInvalidPointer
+  };
 
-/****************************/
-/* The packet buffer struct */
-/****************************/
+  // Constructor creates a buffer which can hold a maximum of
+  // |max_number_of_packets| packets.
+  PacketBuffer(size_t max_number_of_packets);
 
-typedef struct
-{
+  // Deletes all packets in the buffer before destroying the buffer.
+  virtual ~PacketBuffer();
 
-    /* Variables common to the entire buffer */
-    uint16_t packSizeSamples; /* packet size in samples of last decoded packet */
-    int16_t *startPayloadMemory; /* pointer to the payload memory */
-    int memorySizeW16; /* the size (in int16_t) of the payload memory */
-    int16_t *currentMemoryPos; /* The memory position to insert next payload */
-    int numPacketsInBuffer; /* The number of packets in the buffer */
-    int insertPosition; /* The position to insert next packet */
-    int maxInsertPositions; /* Maximum number of packets allowed */
+  // Flushes the buffer and deletes all packets in it.
+  virtual void Flush();
 
-    /* Arrays with one entry per packet slot */
-    /* NOTE: If these are changed, the changes must be accounted for at the end of
-     the function WebRtcNetEQ_GetDefaultCodecSettings(). */
-    uint32_t *timeStamp; /* Timestamp in slot n */
-    int16_t **payloadLocation; /* Memory location of payload in slot n */
-    uint16_t *seqNumber; /* Sequence number in slot n */
-    int16_t *payloadType; /* Payload type of packet in slot n */
-    int16_t *payloadLengthBytes; /* Payload length of packet in slot n */
-    int16_t *rcuPlCntr; /* zero for non-RCU payload, 1 for main payload
-     2 for redundant payload */
-    int *waitingTime;
+  // Returns true for an empty buffer.
+  virtual bool Empty() const { return buffer_.empty(); }
 
-    /* Statistics counter */
-    uint16_t discardedPackets; /* Number of discarded packets */
+  // Inserts |packet| into the buffer. The buffer will take over ownership of
+  // the packet object.
+  // Returns PacketBuffer::kOK on success, PacketBuffer::kFlushed if the buffer
+  // was flushed due to overfilling.
+  virtual int InsertPacket(Packet* packet);
 
-} PacketBuf_t;
+  // Inserts a list of packets into the buffer. The buffer will take over
+  // ownership of the packet objects.
+  // Returns PacketBuffer::kOK if all packets were inserted successfully.
+  // If the buffer was flushed due to overfilling, only a subset of the list is
+  // inserted, and PacketBuffer::kFlushed is returned.
+  // The last three parameters are included for legacy compatibility.
+  // TODO(hlundin): Redesign to not use current_*_payload_type and
+  // decoder_database.
+  virtual int InsertPacketList(PacketList* packet_list,
+                               const DecoderDatabase& decoder_database,
+                               uint8_t* current_rtp_payload_type,
+                               uint8_t* current_cng_rtp_payload_type);
 
-/*************************/
-/* Function declarations */
-/*************************/
+  // Gets the timestamp for the first packet in the buffer and writes it to the
+  // output variable |next_timestamp|.
+  // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
+  // PacketBuffer::kOK otherwise.
+  virtual int NextTimestamp(uint32_t* next_timestamp) const;
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferInit(...)
- *
- * This function initializes the packet buffer.
- *
- * Input:
- *		- bufferInst	: Buffer instance to be initialized
- *		- noOfPackets	: Maximum number of packets that buffer should hold
- *		- memory		: Pointer to the storage memory for the payloads
- *		- memorySize	: The size of the payload memory (in int16_t)
- *
- * Output:
- *      - bufferInst    : Updated buffer instance
- *
- * Return value			:  0 - Ok
- *						  <0 - Error
- */
+  // Gets the timestamp for the first packet in the buffer with a timestamp no
+  // lower than the input limit |timestamp|. The result is written to the output
+  // variable |next_timestamp|.
+  // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
+  // PacketBuffer::kOK otherwise.
+  virtual int NextHigherTimestamp(uint32_t timestamp,
+                                  uint32_t* next_timestamp) const;
 
-int WebRtcNetEQ_PacketBufferInit(PacketBuf_t *bufferInst, int maxNoOfPackets,
-                                 int16_t *pw16_memory, int memorySize);
+  // Returns a (constant) pointer the RTP header of the first packet in the
+  // buffer. Returns NULL if the buffer is empty.
+  virtual const RTPHeader* NextRtpHeader() const;
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferFlush(...)
- *
- * This function flushes all the packets in the buffer.
- *
- * Input:
- *		- bufferInst	: Buffer instance to be flushed
- *
- * Output:
- *      - bufferInst    : Flushed buffer instance
- *
- * Return value			:  0 - Ok
- */
+  // Extracts the first packet in the buffer and returns a pointer to it.
+  // Returns NULL if the buffer is empty. The caller is responsible for deleting
+  // the packet.
+  // Subsequent packets with the same timestamp as the one extracted will be
+  // discarded and properly deleted. The number of discarded packets will be
+  // written to the output variable |discard_count|.
+  virtual Packet* GetNextPacket(int* discard_count);
 
-int WebRtcNetEQ_PacketBufferFlush(PacketBuf_t *bufferInst);
+  // Discards the first packet in the buffer. The packet is deleted.
+  // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
+  // PacketBuffer::kOK otherwise.
+  virtual int DiscardNextPacket();
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferInsert(...)
- *
- * This function inserts an RTP packet into the packet buffer.
- *
- * Input:
- *    - bufferInst  : Buffer instance
- *    - RTPpacket   : An RTP packet struct (with payload, sequence
- *                    number, etc.)
- *    - av_sync     : 1 indicates AV-sync enabled, 0 disabled.
- *
- * Output:
- *    - bufferInst  : Updated buffer instance
- *    - flushed     : 1 if buffer was flushed, 0 otherwise
- *
- * Return value     : 0 - Ok
- *                   -1 - Error
- */
+  // Discards all packets that are (strictly) older than timestamp_limit,
+  // but newer than timestamp_limit - horizon_samples. Setting horizon_samples
+  // to zero implies that the horizon is set to half the timestamp range. That
+  // is, if a packet is more than 2^31 timestamps into the future compared with
+  // timestamp_limit (including wrap-around), it is considered old.
+  // Returns number of packets discarded.
+  virtual int DiscardOldPackets(uint32_t timestamp_limit,
+                                uint32_t horizon_samples);
 
-int WebRtcNetEQ_PacketBufferInsert(PacketBuf_t *bufferInst, const RTPPacket_t *RTPpacket,
-                                   int16_t *flushed, int av_sync);
+  // Discards all packets that are (strictly) older than timestamp_limit.
+  virtual int DiscardAllOldPackets(uint32_t timestamp_limit) {
+    return DiscardOldPackets(timestamp_limit, 0);
+  }
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferExtract(...)
- *
- * This function extracts a payload from the buffer.
- *
- * Input:
- *		- bufferInst	: Buffer instance
- *		- bufferPosition: Position of the packet that should be extracted
- *
- * Output:
- *		- RTPpacket		: An RTP packet struct (with payload, sequence 
- *						  number, etc)
- *      - bufferInst    : Updated buffer instance
- *
- * Return value			:  0 - Ok
- *						  <0 - Error
- */
+  // Returns the number of packets in the buffer, including duplicates and
+  // redundant packets.
+  virtual int NumPacketsInBuffer() const {
+    return static_cast<int>(buffer_.size());
+  }
 
-int WebRtcNetEQ_PacketBufferExtract(PacketBuf_t *bufferInst, RTPPacket_t *RTPpacket,
-                                    int bufferPosition, int *waitingTime);
+  // Returns the number of samples in the buffer, including samples carried in
+  // duplicate and redundant packets.
+  virtual int NumSamplesInBuffer(DecoderDatabase* decoder_database,
+                                 int last_decoded_length) const;
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferFindLowestTimestamp(...)
- *
- * This function finds the next packet with the lowest timestamp.
- *
- * Input:
- *       - buffer_inst        : Buffer instance.
- *       - current_time_stamp : The timestamp to compare packet timestamps with.
- *       - erase_old_packets  : If non-zero, erase packets older than currentTS.
- *
- * Output:
- *       - time_stamp         : Lowest timestamp that was found.
- *       - buffer_position    : Position of this packet (-1 if there are no
- *                              packets in the buffer).
- *       - payload_type       : Payload type of the found payload.
- *
- * Return value               :  0 - Ok;
- *                             < 0 - Error.
- */
+  // Increase the waiting time counter for every packet in the buffer by |inc|.
+  // The default value for |inc| is 1.
+  virtual void IncrementWaitingTimes(int inc = 1);
 
-int WebRtcNetEQ_PacketBufferFindLowestTimestamp(PacketBuf_t* buffer_inst,
-                                                uint32_t current_time_stamp,
-                                                uint32_t* time_stamp,
-                                                int* buffer_position,
-                                                int erase_old_packets,
-                                                int16_t* payload_type);
+  virtual void BufferStat(int* num_packets, int* max_num_packets) const;
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferGetPacketSize(...)
- *
- * Calculate and return an estimate of the data length (in samples) of the
- * given packet. If no estimate is available (because we do not know how to
- * compute packet durations for the associated payload type), last_duration
- * will be returned instead.
- *
- * Input:
- *    - buffer_inst     : Buffer instance
- *    - buffer_pos      : The index of the buffer of which to estimate the
- *                        duration
- *    - codec_database  : Codec database instance
- *    - codec_pos       : The codec database entry associated with the payload
- *                        type of the specified buffer.
- *    - last_duration   : The duration of the previous frame.
- *    - av_sync         : 1 indicates AV-sync enabled, 0 disabled.
- *
- * Return value         : The buffer size in samples
- */
+  // Static method that properly deletes the first packet, and its payload
+  // array, in |packet_list|. Returns false if |packet_list| already was empty,
+  // otherwise true.
+  static bool DeleteFirstPacket(PacketList* packet_list);
 
-int WebRtcNetEQ_PacketBufferGetPacketSize(const PacketBuf_t* buffer_inst,
-                                          int buffer_pos,
-                                          const CodecDbInst_t* codec_database,
-                                          int codec_pos, int last_duration,
-                                          int av_sync);
+  // Static method that properly deletes all packets, and their payload arrays,
+  // in |packet_list|.
+  static void DeleteAllPackets(PacketList* packet_list);
 
-/****************************************************************************
- * WebRtcNetEQ_PacketBufferGetSize(...)
- *
- * Calculate and return an estimate of the total data length (in samples)
- * currently in the buffer. The estimate is calculated as the number of
- * packets currently in the buffer (which does not have any remaining waiting
- * time), multiplied with the number of samples obtained from the last
- * decoded packet.
- *
- * Input:
- *    - buffer_inst     : Buffer instance
- *    - codec_database  : Codec database instance
- *    - av_sync         : 1 indicates AV-sync enabled, 0 disabled.
- *
- * Return value         : The buffer size in samples
- */
+  // Static method returning true if |timestamp| is older than |timestamp_limit|
+  // but less than |horizon_samples| behind |timestamp_limit|. For instance,
+  // with timestamp_limit = 100 and horizon_samples = 10, a timestamp in the
+  // range (90, 100) is considered obsolete, and will yield true.
+  // Setting |horizon_samples| to 0 is the same as setting it to 2^31, i.e.,
+  // half the 32-bit timestamp range.
+  static bool IsObsoleteTimestamp(uint32_t timestamp,
+                                  uint32_t timestamp_limit,
+                                  uint32_t horizon_samples) {
+    return IsNewerTimestamp(timestamp_limit, timestamp) &&
+           (horizon_samples == 0 ||
+            IsNewerTimestamp(timestamp, timestamp_limit - horizon_samples));
+  }
 
-int32_t WebRtcNetEQ_PacketBufferGetSize(const PacketBuf_t* buffer_inst,
-                                        const CodecDbInst_t* codec_database,
-                                        int av_sync);
+ private:
+  size_t max_number_of_packets_;
+  PacketList buffer_;
+  DISALLOW_COPY_AND_ASSIGN(PacketBuffer);
+};
 
-/****************************************************************************
- * WebRtcNetEQ_IncrementWaitingTimes(...)
- *
- * Increment the waiting time for all packets in the buffer by one.
- *
- * Input:
- *    - bufferInst  : Buffer instance
- *
- * Return value     : n/a
- */
-
-void WebRtcNetEQ_IncrementWaitingTimes(PacketBuf_t *buffer_inst);
-
-/****************************************************************************
- * WebRtcNetEQ_GetDefaultCodecSettings(...)
- *
- * Calculates a recommended buffer size for a specific set of codecs.
- *
- * Input:
- *		- codecID	    : An array of codec types that will be used
- *      - noOfCodecs    : Number of codecs in array codecID
- *
- * Output:
- *		- maxBytes	    : Recommended buffer memory size in bytes
- *      - maxSlots      : Recommended number of slots in buffer
- *      - per_slot_overhead_bytes : overhead in bytes for each slot in buffer.
- *
- * Return value			:  0 - Ok
- *						  <0 - Error
- */
-
-int WebRtcNetEQ_GetDefaultCodecSettings(const enum WebRtcNetEQDecoder *codecID,
-                                        int noOfCodecs, int *maxBytes,
-                                        int *maxSlots,
-                                        int* per_slot_overhead_bytes);
-
-#endif /* PACKET_BUFFER_H */
+}  // namespace webrtc
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_PACKET_BUFFER_H_

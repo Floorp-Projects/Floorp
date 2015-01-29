@@ -37,9 +37,7 @@ class ThreadWindows : public ThreadWrapper {
  protected:
   virtual void Run();
 
-  void SetThreadNameHelper();
-  void ThreadStoppedHelper();
-
+ private:
   ThreadRunFunction    run_function_;
   ThreadObj            obj_;
 
@@ -61,41 +59,6 @@ class ThreadWindows : public ThreadWrapper {
   bool                    set_thread_name_;
 
 };
-
-class ThreadWindowsUI : public ThreadWindows {
- public:
-  ThreadWindowsUI(ThreadRunFunction func, ThreadObj obj, ThreadPriority prio,
-                  const char* thread_name) :
-  ThreadWindows(func, obj, prio, thread_name),
-  hwnd_(nullptr),
-  timerid_(0) {
- }
-
- virtual bool Start(unsigned int& id);
- virtual bool Stop();
-
- /**
-  * Request an async callback soon.
-  */
- void RequestCallback();
-
- /**
-  * Request a recurring callback.
-  */
- bool RequestCallbackTimer(unsigned int milliseconds);
-
- protected:
-  virtual void Run();
-
- private:
-  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
-  void NativeEventCallback();
-  bool InternalInit();
-
-  HWND hwnd_;
-  UINT_PTR timerid_;
-};
-
 
 }  // namespace webrtc
 

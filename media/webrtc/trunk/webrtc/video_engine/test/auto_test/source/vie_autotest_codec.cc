@@ -124,7 +124,8 @@ class RenderFilter : public webrtc::ViEEffectFilter {
   }
   virtual int Transform(int size,
                         unsigned char* frame_buffer,
-                        unsigned int time_stamp90KHz,
+                        int64_t ntp_time_ms,
+                        unsigned int timestamp,
                         unsigned int width,
                         unsigned int height)  {
     num_frames_++;
@@ -509,6 +510,13 @@ void ViEAutoTest::ViECodecAPITest() {
       break;
     }
   }
+  const unsigned int kMinBitrate = 123;
+  video_codec.minBitrate = kMinBitrate;
+  video_codec.startBitrate = 50;
+  EXPECT_EQ(0, codec->SetSendCodec(video_channel, video_codec));
+  EXPECT_EQ(0, codec->GetSendCodec(video_channel, video_codec));
+  EXPECT_EQ(kMinBitrate, video_codec.startBitrate);
+
   memset(&video_codec, 0, sizeof(video_codec));
   EXPECT_EQ(0, codec->GetSendCodec(video_channel, video_codec));
   EXPECT_EQ(webrtc::kVideoCodecVP8, video_codec.codecType);

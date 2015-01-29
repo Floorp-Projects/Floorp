@@ -166,4 +166,24 @@ void WebRtcIsacfix_MatrixProduct2Neon(const int16_t matrix0[],
                                       const int matrix0_index_step);
 #endif
 
+#if defined(MIPS32_LE)
+void WebRtcIsacfix_MatrixProduct1MIPS(const int16_t matrix0[],
+                                      const int32_t matrix1[],
+                                      int32_t matrix_product[],
+                                      const int matrix1_index_factor1,
+                                      const int matrix0_index_factor1,
+                                      const int matrix1_index_init_case,
+                                      const int matrix1_index_step,
+                                      const int matrix0_index_step,
+                                      const int inner_loop_count,
+                                      const int mid_loop_count,
+                                      const int shift);
+
+void WebRtcIsacfix_MatrixProduct2MIPS(const int16_t matrix0[],
+                                      const int32_t matrix1[],
+                                      int32_t matrix_product[],
+                                      const int matrix0_index_factor,
+                                      const int matrix0_index_step);
+#endif
+
 #endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_ENTROPY_CODING_H_

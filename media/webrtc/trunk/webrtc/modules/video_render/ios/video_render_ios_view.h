@@ -16,15 +16,7 @@
 
 #include "webrtc/modules/video_render/ios/open_gles20.h"
 
-@interface VideoRenderIosView : UIView {
- @private  // NOLINT
-  EAGLContext* context_;
-  webrtc::OpenGles20* gles_renderer20_;
-  int _frameBufferWidth;
-  int _frameBufferHeight;
-  unsigned int _defaultFrameBuffer;
-  unsigned int _colorRenderBuffer;
-}
+@interface VideoRenderIosView : UIView
 
 - (BOOL)createContext;
 - (BOOL)presentFramebuffer;

@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 
+#include <assert.h>
 #include <string.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xcomposite.h>
@@ -17,7 +18,6 @@
 #include <X11/Xutil.h>
 
 #include <algorithm>
-#include <cassert>
 
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -27,11 +27,63 @@
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
-#include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
 
 namespace webrtc {
 
 namespace {
+
+// Convenience wrapper for XGetWindowProperty() results.
+template <class PropertyType>
+class XWindowProperty {
+ public:
+  XWindowProperty(Display* display, Window window, Atom property)
+      : is_valid_(false),
+        size_(0),
+        data_(NULL) {
+    const int kBitsPerByte = 8;
+    Atom actual_type;
+    int actual_format;
+    unsigned long bytes_after;  // NOLINT: type required by XGetWindowProperty
+    int status = XGetWindowProperty(display, window, property, 0L, ~0L, False,
+                                    AnyPropertyType, &actual_type,
+                                    &actual_format, &size_,
+                                    &bytes_after, &data_);
+    if (status != Success) {
+      data_ = NULL;
+      return;
+    }
+    if (sizeof(PropertyType) * kBitsPerByte != actual_format) {
+      size_ = 0;
+      return;
+    }
+
+    is_valid_ = true;
+  }
+
+  ~XWindowProperty() {
+    if (data_)
+      XFree(data_);
+  }
+
+  // True if we got properly value successfully.
+  bool is_valid() const { return is_valid_; }
+
+  // Size and value of the property.
+  size_t size() const { return size_; }
+  const PropertyType* data() const {
+    return reinterpret_cast<PropertyType*>(data_);
+  }
+  PropertyType* data() {
+    return reinterpret_cast<PropertyType*>(data_);
+  }
+
+ private:
+  bool is_valid_;
+  unsigned long size_;  // NOLINT: type required by XGetWindowProperty
+  unsigned char* data_;
+
+  DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
+};
 
 class WindowCapturerLinux : public WindowCapturer,
                             public SharedXDisplay::XEventHandler {
@@ -226,6 +278,12 @@ void WindowCapturerLinux::Start(Callback* callback) {
 }
 
 void WindowCapturerLinux::Capture(const DesktopRegion& region) {
+  if (!x_server_pixel_buffer_.IsWindowValid()) {
+    LOG(LS_INFO) << "The window is no longer valid.";
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
   x_display_->ProcessPendingXEvents();
 
   if (!has_composite_extension_) {
@@ -243,6 +301,9 @@ void WindowCapturerLinux::Capture(const DesktopRegion& region) {
   x_server_pixel_buffer_.Synchronize();
   x_server_pixel_buffer_.CaptureRect(DesktopRect::MakeSize(frame->size()),
                                      frame);
+
+  frame->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(frame->size()));
 
   callback_->OnCaptureCompleted(frame);
 }

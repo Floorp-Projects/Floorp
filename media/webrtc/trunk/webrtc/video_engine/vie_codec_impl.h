@@ -43,17 +43,17 @@ class ViECodecImpl
     unsigned char config_parameters[kConfigParameterSize],
     unsigned char& config_parameters_size) const;
   virtual int SetImageScaleStatus(const int video_channel, const bool enable);
-  virtual int GetSendCodecStatistics(const int video_channel,
-                                     unsigned int& key_frames,
-                                     unsigned int& delta_frames) const;
-  virtual int GetReceiveCodecStatistics(const int video_channel,
-                                        unsigned int& key_frames,
-                                        unsigned int& delta_frames) const;
+  virtual int GetSendCodecStastistics(const int video_channel,
+                                      unsigned int& key_frames,
+                                      unsigned int& delta_frames) const;
+  virtual int GetReceiveCodecStastistics(const int video_channel,
+                                         unsigned int& key_frames,
+                                         unsigned int& delta_frames) const;
   virtual int GetReceiveSideDelay(const int video_channel,
                                   int* delay_ms) const;
   virtual int GetCodecTargetBitrate(const int video_channel,
                                     unsigned int* bitrate) const;
-  virtual unsigned int GetDiscardedPackets(const int video_channel) const;
+  virtual int GetNumDiscardedPackets(int video_channel) const;
   virtual int SetKeyFrameRequestCallbackStatus(const int video_channel,
                                                const bool enable);
   virtual int SetSignalKeyPacketLossStatus(const int video_channel,

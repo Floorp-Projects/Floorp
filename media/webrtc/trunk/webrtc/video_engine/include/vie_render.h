@@ -38,10 +38,13 @@ class ExternalRenderer {
   virtual int DeliverFrame(unsigned char* buffer,
                            int buffer_size,
                            // RTP timestamp in 90kHz.
-                           uint32_t time_stamp,
-                           // Wallclock render time in miliseconds
-                           int64_t render_time,
-                           // Handle of the underlying video frame,
+                           uint32_t timestamp,
+                           // NTP time of the capture time in local timebase
+                           // in milliseconds.
+                           int64_t ntp_time_ms,
+                           // Wallclock render time in milliseconds.
+                           int64_t render_time_ms,
+                           // Handle of the underlying video frame.
                            void* handle) = 0;
 
   // Returns true if the renderer supports textures. DeliverFrame can be called

@@ -22,9 +22,7 @@ class AgcConfigTest : public AfterStreamingFixture {
   webrtc::AgcConfig default_agc_config_;
 };
 
-// TODO(aluebs): Re-enable tests in agc_config_test and audio_processing_test
-// when possible. Bug: issue 2784.
-TEST_F(AgcConfigTest, DISABLED_HasCorrectDefaultConfiguration) {
+TEST_F(AgcConfigTest, HasCorrectDefaultConfiguration) {
   webrtc::AgcConfig agc_config;
 
   EXPECT_EQ(0, voe_apm_->GetAgcConfig(agc_config));
@@ -35,7 +33,7 @@ TEST_F(AgcConfigTest, DISABLED_HasCorrectDefaultConfiguration) {
   EXPECT_EQ(default_agc_config_.limiterEnable, agc_config.limiterEnable);
 }
 
-TEST_F(AgcConfigTest, DISABLED_DealsWithInvalidParameters) {
+TEST_F(AgcConfigTest, DealsWithInvalidParameters) {
   webrtc::AgcConfig agc_config = default_agc_config_;
   agc_config.digitalCompressionGaindB = 91;
   EXPECT_EQ(-1, voe_apm_->SetAgcConfig(agc_config)) << "Should not be able "
@@ -49,7 +47,7 @@ TEST_F(AgcConfigTest, DISABLED_DealsWithInvalidParameters) {
   EXPECT_EQ(VE_APM_ERROR, voe_base_->LastError());
 }
 
-TEST_F(AgcConfigTest, DISABLED_CanGetAndSetAgcStatus) {
+TEST_F(AgcConfigTest, CanGetAndSetAgcStatus) {
   webrtc::AgcConfig agc_config;
   agc_config.digitalCompressionGaindB = 17;
   agc_config.targetLeveldBOv = 11;
@@ -67,7 +65,7 @@ TEST_F(AgcConfigTest, DISABLED_CanGetAndSetAgcStatus) {
             actual_config.targetLeveldBOv);
 }
 
-TEST_F(AgcConfigTest, DISABLED_HasCorrectDefaultRxConfiguration) {
+TEST_F(AgcConfigTest, HasCorrectDefaultRxConfiguration) {
   webrtc::AgcConfig agc_config;
 
   EXPECT_EQ(0, voe_apm_->GetRxAgcConfig(channel_, agc_config));
@@ -78,7 +76,7 @@ TEST_F(AgcConfigTest, DISABLED_HasCorrectDefaultRxConfiguration) {
   EXPECT_EQ(default_agc_config_.limiterEnable, agc_config.limiterEnable);
 }
 
-TEST_F(AgcConfigTest, DISABLED_DealsWithInvalidRxParameters) {
+TEST_F(AgcConfigTest, DealsWithInvalidRxParameters) {
   webrtc::AgcConfig agc_config = default_agc_config_;
   agc_config.digitalCompressionGaindB = 91;
   EXPECT_EQ(-1, voe_apm_->SetRxAgcConfig(channel_, agc_config)) <<
@@ -92,7 +90,7 @@ TEST_F(AgcConfigTest, DISABLED_DealsWithInvalidRxParameters) {
   EXPECT_EQ(VE_APM_ERROR, voe_base_->LastError());
 }
 
-TEST_F(AgcConfigTest, DISABLED_CanGetAndSetRxAgcStatus) {
+TEST_F(AgcConfigTest, CanGetAndSetRxAgcStatus) {
   webrtc::AgcConfig agc_config;
   agc_config.digitalCompressionGaindB = 17;
   agc_config.targetLeveldBOv = 11;

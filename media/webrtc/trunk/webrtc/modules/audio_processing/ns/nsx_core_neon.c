@@ -89,7 +89,7 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
     int32x4_t v32x4A = vandq_s32(v32x4B, constA32x4);
     v32x4A = vorrq_s32(v32x4A, constB32x4);
 
-    // tmp16 = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmp32no2, 21);
+    // tmp16 = (int16_t)(tmp32no2 >> 21);
     v32x4B = vshrq_n_s32(v32x4B, 21);
 
     // tmp16 -= 21;// shift 21 to get result in Q0
@@ -100,9 +100,9 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
     v32x4B = vaddq_s32(v32x4B, qNoise32x4);
 
     // if (tmp16 < 0) {
-    //   tmp32no1 = WEBRTC_SPL_RSHIFT_W32(tmp32no1, -tmp16);
+    //   tmp32no1 >>= -tmp16;
     // } else {
-    //   tmp32no1 = WEBRTC_SPL_LSHIFT_W32(tmp32no1, tmp16);
+    //   tmp32no1 <<= tmp16;
     // }
     v32x4B = vshlq_s32(v32x4A, v32x4B);
 
@@ -121,13 +121,13 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
                                           *ptr_noiseEstLogQuantile);
   int32_t tmp32no1 = (0x00200000 | (tmp32no2 & 0x001FFFFF)); // 2^21 + frac
 
-  tmp16 = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmp32no2, 21);
+  tmp16 = (int16_t)(tmp32no2 >> 21);
   tmp16 -= 21;// shift 21 to get result in Q0
   tmp16 += (int16_t) inst->qNoise; //shift to get result in Q(qNoise)
   if (tmp16 < 0) {
-    tmp32no1 = WEBRTC_SPL_RSHIFT_W32(tmp32no1, -tmp16);
+    tmp32no1 >>= -tmp16;
   } else {
-    tmp32no1 = WEBRTC_SPL_LSHIFT_W32(tmp32no1, tmp16);
+    tmp32no1 <<= tmp16;
   }
   *ptr_noiseEstQuantile = WebRtcSpl_SatW32ToW16(tmp32no1);
 }
@@ -313,13 +313,11 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
       // +=QUANTILE*delta/(inst->counter[s]+1) QUANTILE=0.25, =1 in Q2
       // CounterDiv=1/(inst->counter[s]+1) in Q15
       tmp16 += 2;
-      tmp16no1 = WEBRTC_SPL_RSHIFT_W16(tmp16, 2);
-      inst->noiseEstLogQuantile[offset + i] += tmp16no1;
+      inst->noiseEstLogQuantile[offset + i] += tmp16 / 4;
     } else {
       tmp16 += 1;
-      tmp16no1 = WEBRTC_SPL_RSHIFT_W16(tmp16, 1);
       // *(1-QUANTILE), in Q2 QUANTILE=0.25, 1-0.25=0.75=3 in Q2
-      tmp16no2 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16no1, 3, 1);
+      tmp16no2 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16 / 2, 3, 1);
       inst->noiseEstLogQuantile[offset + i] -= tmp16no2;
       if (inst->noiseEstLogQuantile[offset + i] < logval) {
         // logval is the smallest fixed point representation we can have.
@@ -363,6 +361,8 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
 
 // Filter the data in the frequency domain, and create spectrum.
 void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
+  assert(inst->magnLen % 8 == 1);
+  assert(inst->anaLen2 % 16 == 0);
 
   // (1) Filtering.
 
@@ -374,49 +374,38 @@ void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
   //      (int16_t)(inst->noiseSupFilter[i]), 14); // Q(normData-stages)
   // }
 
-  int16_t* ptr_real = &inst->real[0];
-  int16_t* ptr_imag = &inst->imag[0];
-  uint16_t* ptr_noiseSupFilter = &inst->noiseSupFilter[0];
+  int16_t* preal = &inst->real[0];
+  int16_t* pimag = &inst->imag[0];
+  int16_t* pns_filter = (int16_t*)&inst->noiseSupFilter[0];
+  int16_t* pimag_end = pimag + inst->magnLen - 4;
 
-  // Filter the rest in the frequency domain.
-  for (; ptr_real < &inst->real[inst->magnLen - 1];) {
-    // Loop unrolled once. Both pointers are incremented by 4 twice.
-    __asm__ __volatile__(
-      "vld1.16 d20, [%[ptr_real]]\n\t"
-      "vld1.16 d22, [%[ptr_imag]]\n\t"
-      "vld1.16 d23, [%[ptr_noiseSupFilter]]!\n\t"
-      "vmull.s16 q10, d20, d23\n\t"
-      "vmull.s16 q11, d22, d23\n\t"
-      "vshrn.s32 d20, q10, #14\n\t"
-      "vshrn.s32 d22, q11, #14\n\t"
-      "vst1.16 d20, [%[ptr_real]]!\n\t"
-      "vst1.16 d22, [%[ptr_imag]]!\n\t"
+  while (pimag < pimag_end) {
+    int16x8_t real = vld1q_s16(preal);
+    int16x8_t imag = vld1q_s16(pimag);
+    int16x8_t ns_filter = vld1q_s16(pns_filter);
 
-      "vld1.16 d18, [%[ptr_real]]\n\t"
-      "vld1.16 d24, [%[ptr_imag]]\n\t"
-      "vld1.16 d25, [%[ptr_noiseSupFilter]]!\n\t"
-      "vmull.s16 q9, d18, d25\n\t"
-      "vmull.s16 q12, d24, d25\n\t"
-      "vshrn.s32 d18, q9, #14\n\t"
-      "vshrn.s32 d24, q12, #14\n\t"
-      "vst1.16 d18, [%[ptr_real]]!\n\t"
-      "vst1.16 d24, [%[ptr_imag]]!\n\t"
+    int32x4_t tmp_r_0 = vmull_s16(vget_low_s16(real), vget_low_s16(ns_filter));
+    int32x4_t tmp_i_0 = vmull_s16(vget_low_s16(imag), vget_low_s16(ns_filter));
+    int32x4_t tmp_r_1 = vmull_s16(vget_high_s16(real),
+                                  vget_high_s16(ns_filter));
+    int32x4_t tmp_i_1 = vmull_s16(vget_high_s16(imag),
+                                  vget_high_s16(ns_filter));
 
-      // Specify constraints.
-      :[ptr_imag]"+r"(ptr_imag),
-       [ptr_real]"+r"(ptr_real),
-       [ptr_noiseSupFilter]"+r"(ptr_noiseSupFilter)
-      :
-      :"d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25",
-       "q9", "q10", "q11", "q12"
-    );
+    int16x4_t result_r_0 = vshrn_n_s32(tmp_r_0, 14);
+    int16x4_t result_i_0 = vshrn_n_s32(tmp_i_0, 14);
+    int16x4_t result_r_1 = vshrn_n_s32(tmp_r_1, 14);
+    int16x4_t result_i_1 = vshrn_n_s32(tmp_i_1, 14);
+
+    vst1q_s16(preal, vcombine_s16(result_r_0, result_r_1));
+    vst1q_s16(pimag, vcombine_s16(result_i_0, result_i_1));
+    preal += 8;
+    pimag += 8;
+    pns_filter += 8;
   }
 
-  // Filter the last pair of elements in the frequency domain.
-  *ptr_real = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*ptr_real,
-      (int16_t)(*ptr_noiseSupFilter), 14); // Q(normData-stages)
-  *ptr_imag = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*ptr_imag,
-      (int16_t)(*ptr_noiseSupFilter), 14); // Q(normData-stages)
+  // Filter the last element
+  *preal = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*preal, *pns_filter, 14);
+  *pimag = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*pimag, *pns_filter, 14);
 
   // (2) Create spectrum.
 
@@ -424,74 +413,36 @@ void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
   // freq_buf[0] = inst->real[0];
   // freq_buf[1] = -inst->imag[0];
   // for (i = 1, j = 2; i < inst->anaLen2; i += 1, j += 2) {
-  //   tmp16 = (inst->anaLen << 1) - j;
   //   freq_buf[j] = inst->real[i];
   //   freq_buf[j + 1] = -inst->imag[i];
-  //   freq_buf[tmp16] = inst->real[i];
-  //   freq_buf[tmp16 + 1] = inst->imag[i];
   // }
   // freq_buf[inst->anaLen] = inst->real[inst->anaLen2];
   // freq_buf[inst->anaLen + 1] = -inst->imag[inst->anaLen2];
 
-  freq_buf[0] = inst->real[0];
-  freq_buf[1] = -inst->imag[0];
+  preal = &inst->real[0];
+  pimag = &inst->imag[0];
+  pimag_end = pimag + inst->anaLen2;
+  int16_t * freq_buf_start = freq_buf;
+  while (pimag < pimag_end) {
+    // loop unroll
+    int16x8x2_t real_imag_0;
+    int16x8x2_t real_imag_1;
+    real_imag_0.val[1] = vld1q_s16(pimag);
+    real_imag_0.val[0] = vld1q_s16(preal);
+    preal += 8;
+    pimag += 8;
+    real_imag_1.val[1] = vld1q_s16(pimag);
+    real_imag_1.val[0] = vld1q_s16(preal);
+    preal += 8;
+    pimag += 8;
 
-  int offset = -16;
-  int16_t* ptr_realImag1 = &freq_buf[2];
-  int16_t* ptr_realImag2 = ptr_realImag2 = &freq_buf[(inst->anaLen << 1) - 8];
-  ptr_real = &inst->real[1];
-  ptr_imag = &inst->imag[1];
-  for (; ptr_real < &inst->real[inst->anaLen2 - 11];) {
-    // Loop unrolled once. All pointers are incremented twice.
-    __asm__ __volatile__(
-      "vld1.16 d22, [%[ptr_real]]!\n\t"
-      "vld1.16 d23, [%[ptr_imag]]!\n\t"
-      // Negate and interleave:
-      "vmov.s16 d20, d22\n\t"
-      "vneg.s16 d21, d23\n\t"
-      "vzip.16 d20, d21\n\t"
-      // Write 8 elements to &freq_buf[j]
-      "vst1.16 {d20, d21}, [%[ptr_realImag1]]!\n\t"
-      // Interleave and reverse elements:
-      "vzip.16 d22, d23\n\t"
-      "vrev64.32 d18, d23\n\t"
-      "vrev64.32 d19, d22\n\t"
-      // Write 8 elements to &freq_buf[tmp16]
-      "vst1.16 {d18, d19}, [%[ptr_realImag2]], %[offset]\n\t"
-
-      "vld1.16 d22, [%[ptr_real]]!\n\t"
-      "vld1.16 d23, [%[ptr_imag]]!\n\t"
-      // Negate and interleave:
-      "vmov.s16 d20, d22\n\t"
-      "vneg.s16 d21, d23\n\t"
-      "vzip.16 d20, d21\n\t"
-      // Write 8 elements to &freq_buf[j]
-      "vst1.16 {d20, d21}, [%[ptr_realImag1]]!\n\t"
-      // Interleave and reverse elements:
-      "vzip.16 d22, d23\n\t"
-      "vrev64.32 d18, d23\n\t"
-      "vrev64.32 d19, d22\n\t"
-      // Write 8 elements to &freq_buf[tmp16]
-      "vst1.16 {d18, d19}, [%[ptr_realImag2]], %[offset]\n\t"
-
-      // Specify constraints.
-      :[ptr_imag]"+r"(ptr_imag),
-       [ptr_real]"+r"(ptr_real),
-       [ptr_realImag1]"+r"(ptr_realImag1),
-       [ptr_realImag2]"+r"(ptr_realImag2)
-      :[offset]"r"(offset)
-      :"d18", "d19", "d20", "d21", "d22", "d23"
-    );
+    real_imag_0.val[1] = vnegq_s16(real_imag_0.val[1]);
+    real_imag_1.val[1] = vnegq_s16(real_imag_1.val[1]);
+    vst2q_s16(freq_buf_start, real_imag_0);
+    freq_buf_start += 16;
+    vst2q_s16(freq_buf_start, real_imag_1);
+    freq_buf_start += 16;
   }
-  for (ptr_realImag2 += 6;
-       ptr_real <= &inst->real[inst->anaLen2];
-       ptr_real += 1, ptr_imag += 1, ptr_realImag1 += 2, ptr_realImag2 -= 2) {
-    *ptr_realImag1 = *ptr_real;
-    *(ptr_realImag1 + 1) = -(*ptr_imag);
-    *ptr_realImag2 = *ptr_real;
-    *(ptr_realImag2 + 1) = *ptr_imag;
-  }
-
   freq_buf[inst->anaLen] = inst->real[inst->anaLen2];
   freq_buf[inst->anaLen + 1] = -inst->imag[inst->anaLen2];
 }
@@ -539,110 +490,91 @@ void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor) {
 void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
                                    int16_t* out_frame,
                                    int16_t gain_factor) {
-  int16_t* ptr_real = &inst->real[0];
-  int16_t* ptr_syn = &inst->synthesisBuffer[0];
-  const int16_t* ptr_window = &inst->window[0];
+  assert(inst->anaLen % 16 == 0);
+  assert(inst->blockLen10ms % 16 == 0);
 
-  // synthesis
-  __asm__ __volatile__("vdup.16 d24, %0" : : "r"(gain_factor) : "d24");
-  // Loop unrolled once. All pointers are incremented in the assembly code.
-  for (; ptr_syn < &inst->synthesisBuffer[inst->anaLen];) {
-    __asm__ __volatile__(
-      // Load variables.
-      "vld1.16 d22, [%[ptr_real]]!\n\t"
-      "vld1.16 d23, [%[ptr_window]]!\n\t"
-      "vld1.16 d25, [%[ptr_syn]]\n\t"
-      // tmp16a = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
-      //           inst->window[i], inst->real[i], 14); // Q0, window in Q14
-      "vmull.s16 q11, d22, d23\n\t"
-      "vrshrn.i32 d22, q11, #14\n\t"
-      // tmp32 = WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(tmp16a, gain_factor, 13);
-      "vmull.s16 q11, d24, d22\n\t"
-      // tmp16b = WebRtcSpl_SatW32ToW16(tmp32); // Q0
-      "vqrshrn.s32 d22, q11, #13\n\t"
-      // inst->synthesisBuffer[i] = WEBRTC_SPL_ADD_SAT_W16(
-      //     inst->synthesisBuffer[i], tmp16b); // Q0
-      "vqadd.s16 d25, d22\n\t"
-      "vst1.16 d25, [%[ptr_syn]]!\n\t"
+  int16_t* preal_start = inst->real;
+  const int16_t* pwindow = inst->window;
+  int16_t* preal_end = preal_start + inst->anaLen;
+  int16_t* psynthesis_buffer = inst->synthesisBuffer;
 
-      // Load variables.
-      "vld1.16 d26, [%[ptr_real]]!\n\t"
-      "vld1.16 d27, [%[ptr_window]]!\n\t"
-      "vld1.16 d28, [%[ptr_syn]]\n\t"
-      // tmp16a = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
-      //           inst->window[i], inst->real[i], 14); // Q0, window in Q14
-      "vmull.s16 q13, d26, d27\n\t"
-      "vrshrn.i32 d26, q13, #14\n\t"
-      // tmp32 = WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(tmp16a, gain_factor, 13);
-      "vmull.s16 q13, d24, d26\n\t"
-      // tmp16b = WebRtcSpl_SatW32ToW16(tmp32); // Q0
-      "vqrshrn.s32 d26, q13, #13\n\t"
-      // inst->synthesisBuffer[i] = WEBRTC_SPL_ADD_SAT_W16(
-      //     inst->synthesisBuffer[i], tmp16b); // Q0
-      "vqadd.s16 d28, d26\n\t"
-      "vst1.16 d28, [%[ptr_syn]]!\n\t"
+  while (preal_start < preal_end) {
+    // Loop unroll.
+    int16x8_t window_0 = vld1q_s16(pwindow);
+    int16x8_t real_0 = vld1q_s16(preal_start);
+    int16x8_t synthesis_buffer_0 = vld1q_s16(psynthesis_buffer);
 
-      // Specify constraints.
-      :[ptr_real]"+r"(ptr_real),
-       [ptr_window]"+r"(ptr_window),
-       [ptr_syn]"+r"(ptr_syn)
-      :
-      :"d22", "d23", "d24", "d25", "d26", "d27", "d28", "q11", "q12", "q13"
-    );
+    int16x8_t window_1 = vld1q_s16(pwindow + 8);
+    int16x8_t real_1 = vld1q_s16(preal_start + 8);
+    int16x8_t synthesis_buffer_1 = vld1q_s16(psynthesis_buffer + 8);
+
+    int32x4_t tmp32a_0_low = vmull_s16(vget_low_s16(real_0),
+                                       vget_low_s16(window_0));
+    int32x4_t tmp32a_0_high = vmull_s16(vget_high_s16(real_0),
+                                        vget_high_s16(window_0));
+
+    int32x4_t tmp32a_1_low = vmull_s16(vget_low_s16(real_1),
+                                       vget_low_s16(window_1));
+    int32x4_t tmp32a_1_high = vmull_s16(vget_high_s16(real_1),
+                                        vget_high_s16(window_1));
+
+    int16x4_t tmp16a_0_low = vqrshrn_n_s32(tmp32a_0_low, 14);
+    int16x4_t tmp16a_0_high = vqrshrn_n_s32(tmp32a_0_high, 14);
+
+    int16x4_t tmp16a_1_low = vqrshrn_n_s32(tmp32a_1_low, 14);
+    int16x4_t tmp16a_1_high = vqrshrn_n_s32(tmp32a_1_high, 14);
+
+    int32x4_t tmp32b_0_low = vmull_n_s16(tmp16a_0_low, gain_factor);
+    int32x4_t tmp32b_0_high = vmull_n_s16(tmp16a_0_high, gain_factor);
+
+    int32x4_t tmp32b_1_low = vmull_n_s16(tmp16a_1_low, gain_factor);
+    int32x4_t tmp32b_1_high = vmull_n_s16(tmp16a_1_high, gain_factor);
+
+    int16x4_t tmp16b_0_low = vqrshrn_n_s32(tmp32b_0_low, 13);
+    int16x4_t tmp16b_0_high = vqrshrn_n_s32(tmp32b_0_high, 13);
+
+    int16x4_t tmp16b_1_low = vqrshrn_n_s32(tmp32b_1_low, 13);
+    int16x4_t tmp16b_1_high = vqrshrn_n_s32(tmp32b_1_high, 13);
+
+    synthesis_buffer_0 = vqaddq_s16(vcombine_s16(tmp16b_0_low, tmp16b_0_high),
+                                    synthesis_buffer_0);
+    synthesis_buffer_1 = vqaddq_s16(vcombine_s16(tmp16b_1_low, tmp16b_1_high),
+                                    synthesis_buffer_1);
+    vst1q_s16(psynthesis_buffer, synthesis_buffer_0);
+    vst1q_s16(psynthesis_buffer + 8, synthesis_buffer_1);
+
+    pwindow += 16;
+    preal_start += 16;
+    psynthesis_buffer += 16;
   }
 
-  int16_t* ptr_out = &out_frame[0];
-  ptr_syn = &inst->synthesisBuffer[0];
-  // read out fully processed segment
-  for (; ptr_syn < &inst->synthesisBuffer[inst->blockLen10ms];) {
-    // Loop unrolled once. Both pointers are incremented in the assembly code.
-    __asm__ __volatile__(
-      // out_frame[i] = inst->synthesisBuffer[i]; // Q0
-      "vld1.16 {d22, d23}, [%[ptr_syn]]!\n\t"
-      "vld1.16 {d24, d25}, [%[ptr_syn]]!\n\t"
-      "vst1.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      "vst1.16 {d24, d25}, [%[ptr_out]]!\n\t"
-      :[ptr_syn]"+r"(ptr_syn),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d22", "d23", "d24", "d25"
-    );
+  // Read out fully processed segment.
+  int16_t * p_start = inst->synthesisBuffer;
+  int16_t * p_end = inst->synthesisBuffer + inst->blockLen10ms;
+  int16_t * p_frame = out_frame;
+  while (p_start < p_end) {
+    int16x8_t frame_0 = vld1q_s16(p_start);
+    vst1q_s16(p_frame, frame_0);
+    p_start += 8;
+    p_frame += 8;
   }
 
   // Update synthesis buffer.
-  // C code:
-  // WEBRTC_SPL_MEMCPY_W16(inst->synthesisBuffer,
-  //                      inst->synthesisBuffer + inst->blockLen10ms,
-  //                      inst->anaLen - inst->blockLen10ms);
-  ptr_out = &inst->synthesisBuffer[0],
-  ptr_syn = &inst->synthesisBuffer[inst->blockLen10ms];
-  for (; ptr_syn < &inst->synthesisBuffer[inst->anaLen];) {
-    // Loop unrolled once. Both pointers are incremented in the assembly code.
-    __asm__ __volatile__(
-      "vld1.16 {d22, d23}, [%[ptr_syn]]!\n\t"
-      "vld1.16 {d24, d25}, [%[ptr_syn]]!\n\t"
-      "vst1.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      "vst1.16 {d24, d25}, [%[ptr_out]]!\n\t"
-      :[ptr_syn]"+r"(ptr_syn),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d22", "d23", "d24", "d25"
-    );
+  int16_t* p_start_src = inst->synthesisBuffer + inst->blockLen10ms;
+  int16_t* p_end_src = inst->synthesisBuffer + inst->anaLen;
+  int16_t* p_start_dst = inst->synthesisBuffer;
+  while (p_start_src < p_end_src) {
+    int16x8_t frame = vld1q_s16(p_start_src);
+    vst1q_s16(p_start_dst, frame);
+    p_start_src += 8;
+    p_start_dst += 8;
   }
 
-  // C code:
-  // WebRtcSpl_ZerosArrayW16(inst->synthesisBuffer
-  //    + inst->anaLen - inst->blockLen10ms, inst->blockLen10ms);
-  __asm__ __volatile__("vdup.16 q10, %0" : : "r"(0) : "q10");
-  for (; ptr_out < &inst->synthesisBuffer[inst->anaLen];) {
-    // Loop unrolled once. Pointer is incremented in the assembly code.
-    __asm__ __volatile__(
-      "vst1.16 {d20, d21}, [%[ptr_out]]!\n\t"
-      "vst1.16 {d20, d21}, [%[ptr_out]]!\n\t"
-      :[ptr_out]"+r"(ptr_out)
-      :
-      :"d20", "d21"
-    );
+  p_start = inst->synthesisBuffer + inst->anaLen - inst->blockLen10ms;
+  p_end = p_start + inst->blockLen10ms;
+  int16x8_t zero = vdupq_n_s16(0);
+  for (;p_start < p_end; p_start += 8) {
+    vst1q_s16(p_start, zero);
   }
 }
 
@@ -650,75 +582,64 @@ void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
 void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
                                   int16_t* out,
                                   int16_t* new_speech) {
-
-  int16_t* ptr_ana = &inst->analysisBuffer[inst->blockLen10ms];
-  int16_t* ptr_out = &inst->analysisBuffer[0];
+  assert(inst->blockLen10ms % 16 == 0);
+  assert(inst->anaLen % 16 == 0);
 
   // For lower band update analysis buffer.
   // WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer,
   //                      inst->analysisBuffer + inst->blockLen10ms,
   //                      inst->anaLen - inst->blockLen10ms);
-  for (; ptr_out < &inst->analysisBuffer[inst->anaLen - inst->blockLen10ms];) {
-    // Loop unrolled once, so both pointers are incremented by 8 twice.
-    __asm__ __volatile__(
-      "vld1.16 {d20, d21}, [%[ptr_ana]]!\n\t"
-      "vst1.16 {d20, d21}, [%[ptr_out]]!\n\t"
-      "vld1.16 {d22, d23}, [%[ptr_ana]]!\n\t"
-      "vst1.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      :[ptr_ana]"+r"(ptr_ana),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d20", "d21", "d22", "d23"
-    );
+  int16_t* p_start_src = inst->analysisBuffer + inst->blockLen10ms;
+  int16_t* p_end_src = inst->analysisBuffer + inst->anaLen;
+  int16_t* p_start_dst = inst->analysisBuffer;
+  while (p_start_src < p_end_src) {
+    int16x8_t frame = vld1q_s16(p_start_src);
+    vst1q_s16(p_start_dst, frame);
+
+    p_start_src += 8;
+    p_start_dst += 8;
   }
 
   // WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer
   //    + inst->anaLen - inst->blockLen10ms, new_speech, inst->blockLen10ms);
-  for (ptr_ana = new_speech; ptr_out < &inst->analysisBuffer[inst->anaLen];) {
-    // Loop unrolled once, so both pointers are incremented by 8 twice.
-    __asm__ __volatile__(
-      "vld1.16 {d20, d21}, [%[ptr_ana]]!\n\t"
-      "vst1.16 {d20, d21}, [%[ptr_out]]!\n\t"
-      "vld1.16 {d22, d23}, [%[ptr_ana]]!\n\t"
-      "vst1.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      :[ptr_ana]"+r"(ptr_ana),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d20", "d21", "d22", "d23"
-    );
+  p_start_src = new_speech;
+  p_end_src = new_speech + inst->blockLen10ms;
+  p_start_dst = inst->analysisBuffer + inst->anaLen - inst->blockLen10ms;
+  while (p_start_src < p_end_src) {
+    int16x8_t frame = vld1q_s16(p_start_src);
+    vst1q_s16(p_start_dst, frame);
+
+    p_start_src += 8;
+    p_start_dst += 8;
   }
 
-  // Window data before FFT
-  const int16_t* ptr_window = &inst->window[0];
-  ptr_out = &out[0];
-  ptr_ana = &inst->analysisBuffer[0];
-  for (; ptr_out < &out[inst->anaLen];) {
+  // Window data before FFT.
+  int16_t* p_start_window = (int16_t*) inst->window;
+  int16_t* p_start_buffer = inst->analysisBuffer;
+  int16_t* p_start_out = out;
+  const int16_t* p_end_out = out + inst->anaLen;
 
-    // Loop unrolled once, so all pointers are incremented by 4 twice.
-    __asm__ __volatile__(
-      "vld1.16 d20, [%[ptr_ana]]!\n\t"
-      "vld1.16 d21, [%[ptr_window]]!\n\t"
-      // out[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
-      //           inst->window[i], inst->analysisBuffer[i], 14); // Q0
-      "vmull.s16 q10, d20, d21\n\t"
-      "vrshrn.i32 d20, q10, #14\n\t"
-      "vst1.16 d20, [%[ptr_out]]!\n\t"
+  // Load the first element to reduce pipeline bubble.
+  int16x8_t window = vld1q_s16(p_start_window);
+  int16x8_t buffer = vld1q_s16(p_start_buffer);
+  p_start_window += 8;
+  p_start_buffer += 8;
 
-      "vld1.16 d22, [%[ptr_ana]]!\n\t"
-      "vld1.16 d23, [%[ptr_window]]!\n\t"
-      // out[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
-      //           inst->window[i], inst->analysisBuffer[i], 14); // Q0
-      "vmull.s16 q11, d22, d23\n\t"
-      "vrshrn.i32 d22, q11, #14\n\t"
-      "vst1.16 d22, [%[ptr_out]]!\n\t"
+  while (p_start_out < p_end_out) {
+    // Unroll loop.
+    int32x4_t tmp32_low = vmull_s16(vget_low_s16(window), vget_low_s16(buffer));
+    int32x4_t tmp32_high = vmull_s16(vget_high_s16(window),
+                                     vget_high_s16(buffer));
+    window = vld1q_s16(p_start_window);
+    buffer = vld1q_s16(p_start_buffer);
 
-      // Specify constraints.
-      :[ptr_ana]"+r"(ptr_ana),
-       [ptr_window]"+r"(ptr_window),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d20", "d21", "d22", "d23", "q10", "q11"
-    );
+    int16x4_t result_low = vrshrn_n_s32(tmp32_low, 14);
+    int16x4_t result_high = vrshrn_n_s32(tmp32_high, 14);
+    vst1q_s16(p_start_out, vcombine_s16(result_low, result_high));
+
+    p_start_buffer += 8;
+    p_start_window += 8;
+    p_start_out += 8;
   }
 }
 
@@ -737,7 +658,7 @@ void WebRtcNsx_CreateComplexBufferNeon(NsxInst_t* inst,
     // Loop unrolled once, so ptr_in is incremented by 8 twice,
     // and ptr_out is incremented by 8 four times.
     __asm__ __volatile__(
-      // out[j] = WEBRTC_SPL_LSHIFT_W16(in[i], inst->normData); // Q(normData)
+      // out[j] = in[i] << inst->normData;  // Q(normData)
       "vld1.16 {d22, d23}, [%[ptr_in]]!\n\t"
       "vshl.s16 q11, q10\n\t"
       "vmov d24, d23\n\t"
@@ -747,7 +668,7 @@ void WebRtcNsx_CreateComplexBufferNeon(NsxInst_t* inst,
       "vst2.16 {d22, d23}, [%[ptr_out]]!\n\t"
       "vst2.16 {d24, d25}, [%[ptr_out]]!\n\t"
 
-      // out[j] = WEBRTC_SPL_LSHIFT_W16(in[i], inst->normData); // Q(normData)
+      // out[j] = in[i] << inst->normData;  // Q(normData)
       "vld1.16 {d22, d23}, [%[ptr_in]]!\n\t"
       "vshl.s16 q11, q10\n\t"
       "vmov d24, d23\n\t"

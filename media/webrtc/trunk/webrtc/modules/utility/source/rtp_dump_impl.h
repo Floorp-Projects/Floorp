@@ -22,10 +22,11 @@ public:
     RtpDumpImpl();
     virtual ~RtpDumpImpl();
 
-    virtual int32_t Start(const char* fileNameUTF8);
-    virtual int32_t Stop();
-    virtual bool IsActive() const;
-    virtual int32_t DumpPacket(const uint8_t* packet, uint16_t packetLength);
+    virtual int32_t Start(const char* fileNameUTF8) OVERRIDE;
+    virtual int32_t Stop() OVERRIDE;
+    virtual bool IsActive() const OVERRIDE;
+    virtual int32_t DumpPacket(const uint8_t* packet,
+                               uint16_t packetLength) OVERRIDE;
 private:
     // Return the system time in ms.
     inline uint32_t GetTimeInMS() const;
@@ -35,7 +36,7 @@ private:
     inline uint16_t RtpDumpHtons(uint16_t x) const;
 
     // Return true if the packet starts with a valid RTCP header.
-    // Note: See ModuleRTPUtility::RTPHeaderParser::RTCP() for details on how
+    // Note: See RtpUtility::RtpHeaderParser::RTCP() for details on how
     //       to determine if the packet is an RTCP packet.
     bool RTCP(const uint8_t* packet) const;
 

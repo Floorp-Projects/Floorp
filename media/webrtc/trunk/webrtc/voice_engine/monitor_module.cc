@@ -53,14 +53,6 @@ MonitorModule::DeRegisterObserver()
 }
 
 int32_t 
-MonitorModule::Version(char* version,
-                       uint32_t& remainingBufferInBytes,
-                       uint32_t& position) const
-{
-    return 0;
-}
-   
-int32_t 
 MonitorModule::ChangeUniqueId(int32_t id)
 {
     return 0;

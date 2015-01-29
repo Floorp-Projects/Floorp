@@ -14,11 +14,8 @@
 #include "webrtc/modules/remote_bitrate_estimator/tools/bwe_rtp.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
-#include "webrtc/modules/video_coding/main/test/rtp_file_reader.h"
-#include "webrtc/modules/video_coding/main/test/rtp_player.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
-
-using webrtc::rtpplayer::RtpPacketSourceInterface;
+#include "webrtc/test/rtp_file_reader.h"
 
 class Observer : public webrtc::RemoteBitrateObserver {
  public:
@@ -49,7 +46,7 @@ int main(int argc, char** argv) {
            "<extension id> is the id associated with the extension.\n");
     return -1;
   }
-  RtpPacketSourceInterface* reader;
+  webrtc::test::RtpFileReader* reader;
   webrtc::RemoteBitrateEstimator* estimator;
   webrtc::RtpHeaderParser* parser;
   std::string estimator_used;
@@ -59,7 +56,7 @@ int main(int argc, char** argv) {
                                   &parser, &estimator, &estimator_used)) {
     return -1;
   }
-  webrtc::scoped_ptr<RtpPacketSourceInterface> rtp_reader(reader);
+  webrtc::scoped_ptr<webrtc::test::RtpFileReader> rtp_reader(reader);
   webrtc::scoped_ptr<webrtc::RtpHeaderParser> rtp_parser(parser);
   webrtc::scoped_ptr<webrtc::RemoteBitrateEstimator> rbe(estimator);
 
@@ -68,30 +65,25 @@ int main(int argc, char** argv) {
   int64_t next_process_time_ms = 0;
   int64_t next_rtp_time_ms = 0;
   int64_t first_rtp_time_ms = -1;
-  const uint32_t kMaxPacketSize = 1500;
-  uint8_t packet_buffer[kMaxPacketSize];
-  uint8_t* packet = packet_buffer;
   int non_zero_abs_send_time = 0;
   int non_zero_ts_offsets = 0;
   while (true) {
-    uint32_t next_rtp_time;
     if (next_rtp_time_ms <= clock.TimeInMilliseconds()) {
-      uint32_t packet_length = kMaxPacketSize;
-      if (rtp_reader->NextPacket(packet, &packet_length,
-                                 &next_rtp_time) == -1) {
+      webrtc::test::RtpFileReader::Packet packet;
+      if (!rtp_reader->NextPacket(&packet)) {
         break;
       }
       if (first_rtp_time_ms == -1)
-        first_rtp_time_ms = next_rtp_time;
-      next_rtp_time_ms = next_rtp_time - first_rtp_time_ms;
+        first_rtp_time_ms = packet.time_ms;
+      packet.time_ms = packet.time_ms - first_rtp_time_ms;
       webrtc::RTPHeader header;
-      parser->Parse(packet, packet_length, &header);
+      parser->Parse(packet.data, packet.length, &header);
       if (header.extension.absoluteSendTime != 0)
         ++non_zero_abs_send_time;
       if (header.extension.transmissionTimeOffset != 0)
         ++non_zero_ts_offsets;
       rbe->IncomingPacket(clock.TimeInMilliseconds(),
-                          packet_length - header.headerLength,
+                          static_cast<int>(packet.length - header.headerLength),
                           header);
       ++packet_counter;
     }

@@ -25,7 +25,9 @@ class ACMPCMA : public ACMGenericCodec {
   // For FEC.
   ACMGenericCodec* CreateInstance(void);
 
-  int16_t InternalEncode(uint8_t* bitstream, int16_t* bitstream_len_byte);
+  int16_t InternalEncode(uint8_t* bitstream,
+                         int16_t* bitstream_len_byte) OVERRIDE
+      EXCLUSIVE_LOCKS_REQUIRED(codec_wrapper_lock_);
 
   int16_t InternalInitEncoder(WebRtcACMCodecParams* codec_params);
 
@@ -33,8 +35,6 @@ class ACMPCMA : public ACMGenericCodec {
   void DestructEncoderSafe();
 
   int16_t InternalCreateEncoder();
-
-  void InternalDestructEncoderInst(void* ptr_inst);
 };
 
 }  // namespace acm2

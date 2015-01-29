@@ -23,13 +23,14 @@ class RtpHeaderParser {
   virtual ~RtpHeaderParser() {}
 
   // Returns true if the packet is an RTCP packet, false otherwise.
-  static bool IsRtcp(const uint8_t* packet, int length);
+  static bool IsRtcp(const uint8_t* packet, size_t length);
 
   // Parses the packet and stores the parsed packet in |header|. Returns true on
   // success, false otherwise.
   // This method is thread-safe in the sense that it can parse multiple packets
   // at once.
-  virtual bool Parse(const uint8_t* packet, int length,
+  virtual bool Parse(const uint8_t* packet,
+                     size_t length,
                      RTPHeader* header) const = 0;
 
   // Registers an RTP header extension and binds it to |id|.

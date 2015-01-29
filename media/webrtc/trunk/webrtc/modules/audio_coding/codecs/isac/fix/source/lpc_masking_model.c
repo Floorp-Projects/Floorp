@@ -35,11 +35,11 @@ void WebRtcSpl_AToK_JSK(
   int32_t tmp_inv_denum32;
   int16_t tmp_inv_denum16;
 
-  k16[useOrder-1]= WEBRTC_SPL_LSHIFT_W16(a16[useOrder], 4); //Q11<<4 => Q15
+  k16[useOrder-1] = a16[useOrder] << 4;  // Q11<<4 => Q15
 
   for (m=useOrder-1; m>0; m--) {
     tmp_inv_denum32 = ((int32_t) 1073741823) - WEBRTC_SPL_MUL_16_16(k16[m], k16[m]); // (1 - k^2) in Q30
-    tmp_inv_denum16 = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmp_inv_denum32, 15); // (1 - k^2) in Q15
+    tmp_inv_denum16 = (int16_t)(tmp_inv_denum32 >> 15);  // (1 - k^2) in Q15.
 
     for (k=1; k<=m; k++) {
       tmp32b = WEBRTC_SPL_LSHIFT_W32((int32_t)a16[k], 16) -
@@ -49,7 +49,7 @@ void WebRtcSpl_AToK_JSK(
     }
 
     for (k=1; k<m; k++) {
-      a16[k] = (int16_t) WEBRTC_SPL_RSHIFT_W32(tmp32[k], 1); //Q12>>1 => Q11
+      a16[k] = (int16_t)(tmp32[k] >> 1);  // Q12>>1 => Q11
     }
 
     tmp32[m] = WEBRTC_SPL_SAT(4092, tmp32[m], -4092);
@@ -90,8 +90,8 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
   for (i=order;i>=0;i--) {
     temp1W32 = WEBRTC_SPL_LSHIFT_W32(R[i], norm);
     /* Put R in hi and low format */
-    R_hi[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-    R_low[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)R_hi[i], 16)), 1);
+    R_hi[i] = (int16_t)(temp1W32 >> 16);
+    R_low[i] = (int16_t)((temp1W32 - ((int32_t)R_hi[i] << 16)) >> 1);
   }
 
   /* K = A[1] = -R[1] / R[0] */
@@ -106,41 +106,39 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
   }
 
   /* Put K in hi and low format */
-  K_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-  K_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)K_hi, 16)), 1);
+  K_hi = (int16_t)(temp1W32 >> 16);
+  K_low = (int16_t)((temp1W32 - ((int32_t)K_hi << 16)) >> 1);
 
   /* Store first reflection coefficient */
   K[0] = K_hi;
 
-  temp1W32 = WEBRTC_SPL_RSHIFT_W32(temp1W32, 4);    /* A[1] in Q27      */
+  temp1W32 >>= 4;  /* A[1] in Q27. */
 
   /* Put A[1] in hi and low format */
-  A_hi[1] = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-  A_low[1] = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)A_hi[1], 16)), 1);
+  A_hi[1] = (int16_t)(temp1W32 >> 16);
+  A_low[1] = (int16_t)((temp1W32 - ((int32_t)A_hi[1] << 16)) >> 1);
 
   /*  Alpha = R[0] * (1-K^2) */
 
-  temp1W32  = WEBRTC_SPL_LSHIFT_W32((WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(K_hi, K_low), 14) +
-                                      WEBRTC_SPL_MUL_16_16(K_hi, K_hi)), 1); /* temp1W32 = k^2 in Q31 */
+  temp1W32  = (((K_hi * K_low) >> 14) + K_hi * K_hi) << 1;  /* = k^2 in Q31 */
 
   temp1W32 = WEBRTC_SPL_ABS_W32(temp1W32);    /* Guard against <0 */
   temp1W32 = (int32_t)0x7fffffffL - temp1W32;    /* temp1W32 = (1 - K[0]*K[0]) in Q31 */
 
   /* Store temp1W32 = 1 - K[0]*K[0] on hi and low format */
-  tmp_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-  tmp_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)tmp_hi, 16)), 1);
+  tmp_hi = (int16_t)(temp1W32 >> 16);
+  tmp_low = (int16_t)((temp1W32 - ((int32_t)tmp_hi << 16)) >> 1);
 
   /* Calculate Alpha in Q31 */
-  temp1W32 = WEBRTC_SPL_LSHIFT_W32((WEBRTC_SPL_MUL_16_16(R_hi[0], tmp_hi) +
-                                     WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(R_hi[0], tmp_low), 15) +
-                                     WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(R_low[0], tmp_hi), 15) ), 1);
+  temp1W32 = (R_hi[0] * tmp_hi + ((R_hi[0] * tmp_low) >> 15) +
+      ((R_low[0] * tmp_hi) >> 15)) << 1;
 
   /* Normalize Alpha and put it in hi and low format */
 
   Alpha_exp = WebRtcSpl_NormW32(temp1W32);
   temp1W32 = WEBRTC_SPL_LSHIFT_W32(temp1W32, Alpha_exp);
-  Alpha_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-  Alpha_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)Alpha_hi, 16)), 1);
+  Alpha_hi = (int16_t)(temp1W32 >> 16);
+  Alpha_low = (int16_t)((temp1W32 - ((int32_t)Alpha_hi<< 16)) >> 1);
 
   /* Perform the iterative calculations in the
      Levinson Durbin algorithm */
@@ -150,7 +148,7 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
 
     /*                    ----
                           \
-                          temp1W32 =  R[i] + > R[j]*A[i-j]
+        temp1W32 =  R[i] + > R[j]*A[i-j]
                           /
                           ----
                           j=1..i-1
@@ -160,9 +158,9 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
 
     for(j=1; j<i; j++) {
       /* temp1W32 is in Q31 */
-      temp1W32 += (WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(R_hi[j], A_hi[i-j]), 1) +
-                   WEBRTC_SPL_LSHIFT_W32(( WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(R_hi[j], A_low[i-j]), 15) +
-                                            WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(R_low[j], A_hi[i-j]), 15) ), 1));
+      temp1W32 += ((R_hi[j] * A_hi[i - j]) << 1) +
+          ((((R_hi[j] * A_low[i - j]) >> 15) +
+              ((R_low[j] * A_hi[i - j]) >> 15)) << 1);
     }
 
     temp1W32  = WEBRTC_SPL_LSHIFT_W32(temp1W32, 4);
@@ -193,8 +191,8 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
     }
 
     /* Put K on hi and low format */
-    K_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp3W32, 16);
-    K_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp3W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)K_hi, 16)), 1);
+    K_hi = (int16_t)(temp3W32 >> 16);
+    K_low = (int16_t)((temp3W32 - ((int32_t)K_hi << 16)) >> 1);
 
     /* Store Reflection coefficient in Q15 */
     K[i-1] = K_hi;
@@ -218,45 +216,42 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
       temp1W32  = WEBRTC_SPL_LSHIFT_W32((int32_t)A_hi[j],16) +
           WEBRTC_SPL_LSHIFT_W32((int32_t)A_low[j],1);    /* temp1W32 = A[j] in Q27 */
 
-      temp1W32 += WEBRTC_SPL_LSHIFT_W32(( WEBRTC_SPL_MUL_16_16(K_hi, A_hi[i-j]) +
-                                           WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(K_hi, A_low[i-j]), 15) +
-                                           WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(K_low, A_hi[i-j]), 15) ), 1); /* temp1W32 += K*A[i-j] in Q27 */
+      temp1W32 += (K_hi * A_hi[i - j] + ((K_hi * A_low[i - j]) >> 15) +
+          ((K_low * A_hi[i - j]) >> 15)) << 1;  // temp1W32 += K*A[i-j] in Q27.
 
       /* Put Anew in hi and low format */
-      A_upd_hi[j] = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-      A_upd_low[j] = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)A_upd_hi[j], 16)), 1);
+      A_upd_hi[j] = (int16_t)(temp1W32 >> 16);
+      A_upd_low[j] = (int16_t)((temp1W32 - ((int32_t)A_upd_hi[j] << 16)) >> 1);
     }
 
-    temp3W32 = WEBRTC_SPL_RSHIFT_W32(temp3W32, 4);     /* temp3W32 = K in Q27 (Convert from Q31 to Q27) */
+    temp3W32 >>= 4;  /* temp3W32 = K in Q27 (Convert from Q31 to Q27) */
 
     /* Store Anew in hi and low format */
-    A_upd_hi[i] = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp3W32, 16);
-    A_upd_low[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp3W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)A_upd_hi[i], 16)), 1);
+    A_upd_hi[i] = (int16_t)(temp3W32 >> 16);
+    A_upd_low[i] = (int16_t)((temp3W32 - ((int32_t)A_upd_hi[i] << 16)) >> 1);
 
     /*  Alpha = Alpha * (1-K^2) */
 
-    temp1W32  = WEBRTC_SPL_LSHIFT_W32((WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(K_hi, K_low), 14) +
-                                        WEBRTC_SPL_MUL_16_16(K_hi, K_hi)), 1);  /* K*K in Q31 */
+    temp1W32 = (((K_hi * K_low) >> 14) + K_hi * K_hi) << 1;  /* K*K in Q31 */
 
     temp1W32 = WEBRTC_SPL_ABS_W32(temp1W32);      /* Guard against <0 */
     temp1W32 = (int32_t)0x7fffffffL - temp1W32;      /* 1 - K*K  in Q31 */
 
     /* Convert 1- K^2 in hi and low format */
-    tmp_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-    tmp_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)tmp_hi, 16)), 1);
+    tmp_hi = (int16_t)(temp1W32 >> 16);
+    tmp_low = (int16_t)((temp1W32 - ((int32_t)tmp_hi << 16)) >> 1);
 
     /* Calculate Alpha = Alpha * (1-K^2) in Q31 */
-    temp1W32 = WEBRTC_SPL_LSHIFT_W32(( WEBRTC_SPL_MUL_16_16(Alpha_hi, tmp_hi) +
-                                        WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(Alpha_hi, tmp_low), 15) +
-                                        WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_16(Alpha_low, tmp_hi), 15)), 1);
+    temp1W32 = (Alpha_hi * tmp_hi + ((Alpha_hi * tmp_low) >> 15) +
+        ((Alpha_low * tmp_hi) >> 15)) << 1;
 
     /* Normalize Alpha and store it on hi and low format */
 
     norm = WebRtcSpl_NormW32(temp1W32);
     temp1W32 = WEBRTC_SPL_LSHIFT_W32(temp1W32, norm);
 
-    Alpha_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(temp1W32, 16);
-    Alpha_low = (int16_t)WEBRTC_SPL_RSHIFT_W32((temp1W32 - WEBRTC_SPL_LSHIFT_W32((int32_t)Alpha_hi, 16)), 1);
+    Alpha_hi = (int16_t)(temp1W32 >> 16);
+    Alpha_low = (int16_t)((temp1W32 - ((int32_t)Alpha_hi << 16)) >> 1);
 
     /* Update the total nomalization of Alpha */
     Alpha_exp = Alpha_exp + norm;
@@ -282,7 +277,7 @@ int16_t WebRtcSpl_LevinsonW32_JSK(
     temp1W32 = WEBRTC_SPL_LSHIFT_W32((int32_t)A_hi[i], 16) +
         WEBRTC_SPL_LSHIFT_W32((int32_t)A_low[i], 1);
     /* Round and store upper word */
-    A[i] = (int16_t)WEBRTC_SPL_RSHIFT_W32(temp1W32+(int32_t)32768, 16);
+    A[i] = (int16_t)((temp1W32 + 32768) >> 16);
   }
   return(1); /* Stable filters */
 }
@@ -346,17 +341,14 @@ static const int16_t kPolyVecHi[6] = {
 
 static __inline int32_t log2_Q8_LPC( uint32_t x ) {
 
-  int32_t zeros, lg2;
+  int32_t zeros;
   int16_t frac;
 
   zeros=WebRtcSpl_NormU32(x);
-  frac=(int16_t)WEBRTC_SPL_RSHIFT_W32(((uint32_t)WEBRTC_SPL_LSHIFT_W32(x, zeros)&0x7FFFFFFF), 23);
+  frac = (int16_t)(((x << zeros) & 0x7FFFFFFF) >> 23);
 
   /* log2(x) */
-
-  lg2= (WEBRTC_SPL_LSHIFT_W16((31-zeros), 8)+frac);
-  return lg2;
-
+  return ((31 - zeros) << 8) + frac;
 }
 
 static const int16_t kMulPitchGain = -25; /* 200/256 in Q5 */
@@ -422,25 +414,25 @@ void WebRtcIsacfix_GetVars(const int16_t *input, const int16_t *pitchGains_Q12,
   tmp16=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(kExp2,pg3,13);/* Q13*Q10>>13 => Q10*/
   if (tmp16<0) {
     tmp16_2 = (0x0400 | (tmp16 & 0x03FF));
-    tmp16_1 = (WEBRTC_SPL_RSHIFT_W16((uint16_t)(tmp16 ^ 0xFFFF), 10)-3); /* Gives result in Q14 */
+    tmp16_1 = ((uint16_t)(tmp16 ^ 0xFFFF) >> 10) - 3;  /* Gives result in Q14 */
     if (tmp16_1<0)
-      expPg=(int16_t) -WEBRTC_SPL_LSHIFT_W16(tmp16_2, -tmp16_1);
+      expPg = -(tmp16_2 << -tmp16_1);
     else
-      expPg=(int16_t) -WEBRTC_SPL_RSHIFT_W16(tmp16_2, tmp16_1);
+      expPg = -(tmp16_2 >> tmp16_1);
   } else
     expPg = (int16_t) -16384; /* 1 in Q14, since 2^0=1 */
 
-  expPg32 = (int32_t)WEBRTC_SPL_LSHIFT_W16((int32_t)expPg, 8); /* Q22 */
+  expPg32 = (int32_t)expPg << 8;  /* Q22 */
   divVal = WebRtcSpl_DivW32W16ResW16(expPg32, chngQ); /* Q22/Q12=Q10 */
 
   tmp16=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(kExp2,divVal,13);/* Q13*Q10>>13 => Q10*/
   if (tmp16<0) {
     tmp16_2 = (0x0400 | (tmp16 & 0x03FF));
-    tmp16_1 = (WEBRTC_SPL_RSHIFT_W16((uint16_t)(tmp16 ^ 0xFFFF), 10)-3); /* Gives result in Q14 */
+    tmp16_1 = ((uint16_t)(tmp16 ^ 0xFFFF) >> 10) - 3;  /* Gives result in Q14 */
     if (tmp16_1<0)
-      expPg=(int16_t) WEBRTC_SPL_LSHIFT_W16(tmp16_2, -tmp16_1);
+      expPg = tmp16_2 << -tmp16_1;
     else
-      expPg=(int16_t) WEBRTC_SPL_RSHIFT_W16(tmp16_2, tmp16_1);
+      expPg = tmp16_2 >> tmp16_1;
   } else
     expPg = (int16_t) 16384; /* 1 in Q14, since 2^0=1 */
 
@@ -455,11 +447,11 @@ static __inline int16_t  exp2_Q10_T(int16_t x) { // Both in and out in Q10
   int16_t tmp16_1, tmp16_2;
 
   tmp16_2=(int16_t)(0x0400|(x&0x03FF));
-  tmp16_1=-(int16_t)WEBRTC_SPL_RSHIFT_W16(x,10);
+  tmp16_1 = -(x >> 10);
   if(tmp16_1>0)
-    return (int16_t) WEBRTC_SPL_RSHIFT_W16(tmp16_2, tmp16_1);
+    return tmp16_2 >> tmp16_1;
   else
-    return (int16_t) WEBRTC_SPL_LSHIFT_W16(tmp16_2, -tmp16_1);
+    return tmp16_2 << -tmp16_1;
 
 }
 
@@ -604,16 +596,14 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
      With 0.35 in Q16 (0.35 ~= 22938/65536.0 = 0.3500061) and varscaleQ14 in Q14,
      we get Q16*Q14>>16 = Q14
   */
-  aaQ14 = (int16_t) WEBRTC_SPL_RSHIFT_W32(
-      (WEBRTC_SPL_MUL_16_16(22938, (8192 + WEBRTC_SPL_RSHIFT_W32(varscaleQ14, 1)))
-       + ((int32_t)32768)), 16);
+  aaQ14 = (int16_t)((22938 * (8192 + (varscaleQ14 >> 1)) + 32768) >> 16);
 
   /* Calculate tmp = (1.0 + aa*aa); in Q12 */
   tmp16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(aaQ14, aaQ14, 15); //Q14*Q14>>15 = Q13
-  tmpQQlo = 4096 + WEBRTC_SPL_RSHIFT_W16(tmp16, 1); // Q12 + Q13>>1 = Q12
+  tmpQQlo = 4096 + (tmp16 >> 1);  // Q12 + Q13>>1 = Q12.
 
   /* Calculate tmp = (1.0+aa) * (1.0+aa); */
-  tmp16 = 8192 + WEBRTC_SPL_RSHIFT_W16(aaQ14, 1); // 1+a in Q13
+  tmp16 = 8192 + (aaQ14 >> 1);  // 1+a in Q13.
   tmpQQhi = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(tmp16, tmp16, 14); //Q13*Q13>>14 = Q12
 
   /* replace data in buffer by new look-ahead data */
@@ -676,16 +666,16 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     /* less noise for lower frequencies, by filtering/scaling autocorrelation sequences */
 
     /* Calculate corrlo2[0] = tmpQQlo * corrlo[0] - 2.0*tmpQQlo * corrlo[1];*/
-    corrlo2QQ[0] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_32_RSFT16(tmpQQlo, corrloQQ[0]), 1)- // Q(12+QdomLO-16)>>1 = Q(QdomLO-5)
-        WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_32_RSFT16(aaQ14, corrloQQ[1]), 2); // 2*Q(14+QdomLO-16)>>3 = Q(QdomLO-2)>>2 = Q(QdomLO-5)
+    // |corrlo2QQ| in Q(QdomLO-5).
+    corrlo2QQ[0] = (WEBRTC_SPL_MUL_16_32_RSFT16(tmpQQlo, corrloQQ[0]) >> 1) -
+        (WEBRTC_SPL_MUL_16_32_RSFT16(aaQ14, corrloQQ[1]) >> 2);
 
     /* Calculate corrlo2[n] = tmpQQlo * corrlo[n] - tmpQQlo * (corrlo[n-1] + corrlo[n+1]);*/
     for (n = 1; n <= ORDERLO; n++) {
 
-      tmp32 = WEBRTC_SPL_RSHIFT_W32(corrloQQ[n-1], 1) + WEBRTC_SPL_RSHIFT_W32(corrloQQ[n+1], 1); // Q(QdomLO-1)
-      corrlo2QQ[n] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_32_RSFT16(tmpQQlo, corrloQQ[n]), 1)- // Q(12+QdomLO-16)>>1 = Q(QdomLO-5)
-          WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_16_32_RSFT16(aaQ14, tmp32), 2); // Q(14+QdomLO-1-16)>>2 = Q(QdomLO-3)>>2 = Q(QdomLO-5)
-
+      tmp32 = (corrloQQ[n - 1] >> 1) + (corrloQQ[n + 1] >> 1);  // Q(QdomLO-1).
+      corrlo2QQ[n] = (WEBRTC_SPL_MUL_16_32_RSFT16(tmpQQlo, corrloQQ[n]) >> 1) -
+          (WEBRTC_SPL_MUL_16_32_RSFT16(aaQ14, tmp32) >> 2);
     }
     QdomLO -= 5;
 
@@ -708,12 +698,12 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     /* corrlo2QQ is in Q(QdomLO) and corrhiQQ is in Q(QdomHI) before the following
        code segment, where we want to make sure we get a 1-bit margin */
     for (n = 0; n <= ORDERLO; n++) {
-      corrlo2QQ[n] = WEBRTC_SPL_RSHIFT_W32(corrlo2QQ[n], 1); // Make sure we have a 1-bit margin
+      corrlo2QQ[n] >>= 1;  // Make sure we have a 1-bit margin.
     }
     QdomLO -= 1; // Now, corrlo2QQ is in Q(QdomLO), with a 1-bit margin
 
     for (n = 0; n <= ORDERHI; n++) {
-      corrhiQQ[n] = WEBRTC_SPL_RSHIFT_W32(corrhiQQ[n], 1); // Make sure we have a 1-bit margin
+      corrhiQQ[n] >>= 1;  // Make sure we have a 1-bit margin.
     }
     QdomHI -= 1; // Now, corrhiQQ is in Q(QdomHI), with a 1-bit margin
 
@@ -734,11 +724,14 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
           tmp = WEBRTC_SPL_MUL_16_32_RSFT15(alpha, tmp);
         } else if ((sh-shMem)<7){
           tmp = WEBRTC_SPL_SHIFT_W32(maskdata->CorrBufLoQQ[n], shMem); // Shift up CorrBufLoQQ as much as possible
-          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(WEBRTC_SPL_LSHIFT_W16(alpha, (sh-shMem)), tmp); // Shift alpha the number of times required to get tmp in QdomLO
+          // Shift |alpha| the number of times required to get |tmp| in QdomLO.
+          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(alpha << (sh - shMem), tmp);
         } else {
           tmp = WEBRTC_SPL_SHIFT_W32(maskdata->CorrBufLoQQ[n], shMem); // Shift up CorrBufHiQQ as much as possible
-          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(WEBRTC_SPL_LSHIFT_W16(alpha, 6), tmp); // Shift alpha as much as possible without overflow the number of times required to get tmp in QdomHI
-          tmpCorr = WEBRTC_SPL_RSHIFT_W32(corrloQQ[n], sh-shMem-6);
+          // Shift |alpha| as much as possible without overflow the number of
+          // times required to get |tmp| in QdomLO.
+          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(alpha << 6, tmp);
+          tmpCorr = corrloQQ[n] >> (sh - shMem - 6);
           tmp = tmp + tmpCorr;
           maskdata->CorrBufLoQQ[n] = tmp;
           newQdomLO = QdomLO-(sh-shMem-6);
@@ -759,7 +752,7 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     if( newQdomLO!=QdomLO) {
       for (n = 0; n <= ORDERLO; n++) {
         if (maskdata->CorrBufLoQdom[n] != newQdomLO)
-          corrloQQ[n] = WEBRTC_SPL_RSHIFT_W32(corrloQQ[n], maskdata->CorrBufLoQdom[n]-newQdomLO);
+          corrloQQ[n] >>= maskdata->CorrBufLoQdom[n] - newQdomLO;
       }
       QdomLO = newQdomLO;
     }
@@ -784,15 +777,18 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
           maskdata->CorrBufHiQdom[n] = QdomHI;
         } else if ((sh-shMem)<7) {
           tmp = WEBRTC_SPL_SHIFT_W32(maskdata->CorrBufHiQQ[n], shMem); // Shift up CorrBufHiQQ as much as possible
-          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(WEBRTC_SPL_LSHIFT_W16(alpha, (sh-shMem)), tmp); // Shift alpha the number of times required to get tmp in QdomHI
+          // Shift |alpha| the number of times required to get |tmp| in QdomHI.
+          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(alpha << (sh - shMem), tmp);
           tmpCorr = corrhiQQ[n];
           tmp = tmp + tmpCorr;
           maskdata->CorrBufHiQQ[n] = tmp;
           maskdata->CorrBufHiQdom[n] = QdomHI;
         } else {
           tmp = WEBRTC_SPL_SHIFT_W32(maskdata->CorrBufHiQQ[n], shMem); // Shift up CorrBufHiQQ as much as possible
-          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(WEBRTC_SPL_LSHIFT_W16(alpha, 6), tmp); // Shift alpha as much as possible without overflow the number of times required to get tmp in QdomHI
-          tmpCorr = WEBRTC_SPL_RSHIFT_W32(corrhiQQ[n], sh-shMem-6);
+          // Shift |alpha| as much as possible without overflow the number of
+          // times required to get |tmp| in QdomHI.
+          tmp = WEBRTC_SPL_MUL_16_32_RSFT15(alpha << 6, tmp);
+          tmpCorr = corrhiQQ[n] >> (sh - shMem - 6);
           tmp = tmp + tmpCorr;
           maskdata->CorrBufHiQQ[n] = tmp;
           newQdomHI = QdomHI-(sh-shMem-6);
@@ -813,7 +809,7 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     if( newQdomHI!=QdomHI) {
       for (n = 0; n <= ORDERHI; n++) {
         if (maskdata->CorrBufHiQdom[n] != newQdomHI)
-          corrhiQQ[n] = WEBRTC_SPL_RSHIFT_W32(corrhiQQ[n], maskdata->CorrBufHiQdom[n]-newQdomHI);
+          corrhiQQ[n] >>= maskdata->CorrBufHiQdom[n] - newQdomHI;
       }
       QdomHI = newQdomHI;
     }
@@ -834,13 +830,15 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
 
     /* bandwidth expansion */
     for (n = 1; n <= ORDERLO; n++) {
-      a_LOQ11[n] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT_WITH_FIXROUND(kPolyVecLo[n-1], a_LOQ11[n]);
+      a_LOQ11[n] = (int16_t) ((WEBRTC_SPL_MUL_16_16(
+          kPolyVecLo[n-1], a_LOQ11[n]) + ((int32_t) (1 << 14))) >> 15);
     }
 
 
     polyHI[0] = a_HIQ12[0];
     for (n = 1; n <= ORDERHI; n++) {
-      a_HIQ12[n] = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT_WITH_FIXROUND(kPolyVecHi[n-1], a_HIQ12[n]);
+      a_HIQ12[n] = (int16_t) ((WEBRTC_SPL_MUL_16_16(
+          kPolyVecHi[n-1], a_HIQ12[n]) + ((int32_t) (1 << 14))) >> 15);
       polyHI[n] = a_HIQ12[n];
     }
 
@@ -862,7 +860,7 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     WebRtcSpl_AToK_JSK(a_LOQ11, ORDERLO, rcQ15_lo);
 
     if (sh_lo & 0x0001) {
-      res_nrgQQ=WEBRTC_SPL_RSHIFT_W32(res_nrgQQ, 1);
+      res_nrgQQ >>= 1;
       sh_lo-=1;
     }
 
@@ -876,8 +874,8 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
 
 
       //tmp32a=WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, H_T_HQ19, 17);  // Q14
-      tmp32a=WEBRTC_SPL_RSHIFT_W32((int32_t) varscaleQ14,1);  // H_T_HQ19=65536 (16-17=-1)   ssh= WEBRTC_SPL_RSHIFT_W16(sh_lo, 1);  // sqrt_nrg is in Qssh
-      ssh= WEBRTC_SPL_RSHIFT_W16(sh_lo, 1);  // sqrt_nrg is in Qssh
+      tmp32a = varscaleQ14 >> 1;  // H_T_HQ19=65536 (16-17=-1)
+      ssh = sh_lo >> 1;  // sqrt_nrg is in Qssh.
       sh = ssh - 14;
       tmp32b = WEBRTC_SPL_SHIFT_W32(tmp32a, sh); // Q14->Qssh
       tmp32c = sqrt_nrg + tmp32b;  // Qssh  (denominator)
@@ -911,7 +909,7 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
     WebRtcSpl_LpcToReflCoef(polyHI, ORDERHI, rcQ15_hi);
 
     if (sh_hi & 0x0001) {
-      res_nrgQQ=WEBRTC_SPL_RSHIFT_W32(res_nrgQQ, 1);
+      res_nrgQQ >>= 1;
       sh_hi-=1;
     }
 
@@ -925,9 +923,9 @@ void WebRtcIsacfix_GetLpcCoef(int16_t *inLoQ0,
       /* hi_coeff = varscale * S_N_R / (sqrt_nrg + varscale * H_T_H); */
 
       //tmp32a=WEBRTC_SPL_MUL_16_16_RSFT(varscaleQ14, H_T_HQ19, 17);  // Q14
-      tmp32a=WEBRTC_SPL_RSHIFT_W32((int32_t) varscaleQ14,1);  // H_T_HQ19=65536 (16-17=-1)
+      tmp32a = varscaleQ14 >> 1;  // H_T_HQ19=65536 (16-17=-1)
 
-      ssh= WEBRTC_SPL_RSHIFT_W32(sh_hi, 1);  // sqrt_nrg is in Qssh
+      ssh = sh_hi >> 1;  // |sqrt_nrg| is in Qssh.
       sh = ssh - 14;
       tmp32b = WEBRTC_SPL_SHIFT_W32(tmp32a, sh); // Q14->Qssh
       tmp32c = sqrt_nrg + tmp32b;  // Qssh  (denominator)

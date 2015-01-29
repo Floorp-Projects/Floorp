@@ -17,6 +17,7 @@
 #include "webrtc/modules/video_coding/main/source/encoded_frame.h"
 #include "webrtc/modules/video_coding/main/source/video_coding_impl.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 namespace vcm {
@@ -57,20 +58,18 @@ class DebugRecorder {
   FILE* file_ GUARDED_BY(cs_);
 };
 
-VideoSender::VideoSender(const int32_t id,
-                         Clock* clock,
+VideoSender::VideoSender(Clock* clock,
                          EncodedImageCallback* post_encode_callback)
-    : _id(id),
-      clock_(clock),
+    : clock_(clock),
       recorder_(new DebugRecorder()),
       process_crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       _sendCritSect(CriticalSectionWrapper::CreateCriticalSection()),
       _encoder(),
       _encodedFrameCallback(post_encode_callback),
       _nextFrameTypes(1, kVideoFrameDelta),
-      _mediaOpt(id, clock_),
+      _mediaOpt(clock_),
       _sendStatsCallback(NULL),
-      _codecDataBase(id),
+      _codecDataBase(),
       frame_dropper_enabled_(true),
       _sendStatsTimer(1000, clock_),
       qm_settings_callback_(NULL),
@@ -107,7 +106,6 @@ int32_t VideoSender::InitializeSender() {
   _codecDataBase.ResetSender();
   _encoder = NULL;
   _encodedFrameCallback.SetTransportCallback(NULL);
-  _encodedFrameCallback.SetCritSect(_sendCritSect);
   _mediaOpt.Reset();  // Resetting frame dropper
   return VCM_OK;
 }
@@ -133,10 +131,8 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
   _encoder = _codecDataBase.GetEncoder();
 
   if (!ret) {
-    WEBRTC_TRACE(webrtc::kTraceError,
-                 webrtc::kTraceVideoCoding,
-                 VCMId(_id),
-                 "Failed to initialize encoder");
+    LOG(LS_ERROR) << "Failed to initialize the encoder with payload name "
+                  << sendCodec->plName << ". Error code: " << ret;
     return VCM_CODEC_ERROR;
   }
 
@@ -161,7 +157,6 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
                             sendCodec->startBitrate * 1000,
                             sendCodec->width,
                             sendCodec->height,
-                            sendCodec->resolution_divisor,
                             numLayers,
                             maxPayloadSize);
   return VCM_OK;
@@ -365,26 +360,18 @@ int32_t VideoSender::AddVideoFrame(const I420VideoFrame& videoFrame,
     return VCM_OK;
   }
   if (_mediaOpt.DropFrame()) {
-    WEBRTC_TRACE(webrtc::kTraceStream,
-                 webrtc::kTraceVideoCoding,
-                 VCMId(_id),
-                 "Drop frame due to bitrate");
-  } else {
-    _mediaOpt.UpdateContentData(contentMetrics);
-    int32_t ret =
-        _encoder->Encode(videoFrame, codecSpecificInfo, _nextFrameTypes);
-    recorder_->Add(videoFrame);
-    if (ret < 0) {
-      WEBRTC_TRACE(webrtc::kTraceError,
-                   webrtc::kTraceVideoCoding,
-                   VCMId(_id),
-                   "Encode error: %d",
-                   ret);
-      return ret;
-    }
-    for (size_t i = 0; i < _nextFrameTypes.size(); ++i) {
-      _nextFrameTypes[i] = kVideoFrameDelta;  // Default frame type.
-    }
+    return VCM_OK;
+  }
+  _mediaOpt.UpdateContentData(contentMetrics);
+  int32_t ret =
+      _encoder->Encode(videoFrame, codecSpecificInfo, _nextFrameTypes);
+  recorder_->Add(videoFrame);
+  if (ret < 0) {
+    LOG(LS_ERROR) << "Failed to encode frame. Error code: " << ret;
+    return ret;
+  }
+  for (size_t i = 0; i < _nextFrameTypes.size(); ++i) {
+    _nextFrameTypes[i] = kVideoFrameDelta;  // Default frame type.
   }
   return VCM_OK;
 }
@@ -475,11 +462,5 @@ bool VideoSender::VideoSuspended() const {
   CriticalSectionScoped cs(_sendCritSect);
   return _mediaOpt.IsVideoSuspended();
 }
-
-void VideoSender::SetCPULoadState(CPULoadState state) {
-  CriticalSectionScoped cs(_sendCritSect);
-  _mediaOpt.SetCPULoadState(state);
-}
-
 }  // namespace vcm
 }  // namespace webrtc

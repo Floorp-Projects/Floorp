@@ -14,9 +14,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "webrtc/base/exp_filter.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
-#include "webrtc/modules/video_coding/utility/include/exp_filter.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/typedefs.h"
 
@@ -367,27 +367,27 @@ private:
     // Sets the available loss protection methods.
     void UpdateMaxLossHistory(uint8_t lossPr255, int64_t now);
     uint8_t MaxFilteredLossPr(int64_t nowMs) const;
-    VCMProtectionMethod*      _selectedMethod;
-    VCMProtectionParameters   _currentParameters;
-    uint32_t            _rtt;
-    float                     _lossPr;
-    float                     _bitRate;
-    float                     _frameRate;
-    float                     _keyFrameSize;
-    uint8_t             _fecRateKey;
-    uint8_t             _fecRateDelta;
-    int64_t             _lastPrUpdateT;
-    int64_t             _lastPacketPerFrameUpdateT;
-    int64_t             _lastPacketPerFrameUpdateTKey;
-    VCMExpFilter              _lossPr255;
-    VCMLossProbabilitySample  _lossPrHistory[kLossPrHistorySize];
-    uint8_t             _shortMaxLossPr255;
-    VCMExpFilter              _packetsPerFrame;
-    VCMExpFilter              _packetsPerFrameKey;
-    float                     _residualPacketLossFec;
-    uint16_t            _codecWidth;
-    uint16_t            _codecHeight;
-    int                       _numLayers;
+    VCMProtectionMethod* _selectedMethod;
+    VCMProtectionParameters _currentParameters;
+    uint32_t _rtt;
+    float _lossPr;
+    float _bitRate;
+    float _frameRate;
+    float _keyFrameSize;
+    uint8_t _fecRateKey;
+    uint8_t _fecRateDelta;
+    int64_t _lastPrUpdateT;
+    int64_t _lastPacketPerFrameUpdateT;
+    int64_t _lastPacketPerFrameUpdateTKey;
+    rtc::ExpFilter _lossPr255;
+    VCMLossProbabilitySample _lossPrHistory[kLossPrHistorySize];
+    uint8_t _shortMaxLossPr255;
+    rtc::ExpFilter _packetsPerFrame;
+    rtc::ExpFilter _packetsPerFrameKey;
+    float _residualPacketLossFec;
+    uint16_t _codecWidth;
+    uint16_t _codecHeight;
+    int _numLayers;
 };
 
 }  // namespace media_optimization

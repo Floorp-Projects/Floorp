@@ -63,6 +63,8 @@ int ParseArguments(CmdArgs& args) {
   args.codecName = FLAGS_codec;
   if (args.codecName == "VP8") {
     args.codecType = kVideoCodecVP8;
+  } else if (args.codecName == "VP9") {
+    args.codecType = kVideoCodecVP9;
   } else if (args.codecName == "I420") {
     args.codecType = kVideoCodecI420;
   } else {

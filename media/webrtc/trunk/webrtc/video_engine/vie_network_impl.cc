@@ -16,7 +16,7 @@
 #endif
 
 #include "webrtc/engine_configurations.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/video_engine/include/vie_errors.h"
 #include "webrtc/video_engine/vie_channel.h"
 #include "webrtc/video_engine/vie_channel_manager.h"
@@ -39,35 +39,25 @@ ViENetwork* ViENetwork::GetInterface(VideoEngine* video_engine) {
 }
 
 int ViENetworkImpl::Release() {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo, shared_data_->instance_id(),
-               "ViENetwork::Release()");
   // Decrease ref count.
   (*this)--;
 
   int32_t ref_count = GetCount();
   if (ref_count < 0) {
-    WEBRTC_TRACE(kTraceWarning, kTraceVideo, shared_data_->instance_id(),
-                 "ViENetwork release too many times");
+    LOG(LS_ERROR) << "ViENetwork release too many times";
     shared_data_->SetLastError(kViEAPIDoesNotExist);
     return -1;
   }
-  WEBRTC_TRACE(kTraceInfo, kTraceVideo, shared_data_->instance_id(),
-               "ViENetwork reference count: %d", ref_count);
   return ref_count;
 }
 
 void ViENetworkImpl::SetNetworkTransmissionState(const int video_channel,
                                                  const bool is_transmitting) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(event: Network %s)", __FUNCTION__,
-               is_transmitting ? "transmitting" : "not transmitting");
+  LOG_F(LS_INFO) << "channel: " << video_channel
+                 << " transmitting: " << (is_transmitting ? "yes" : "no");
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEEncoder* vie_encoder = cs.Encoder(video_channel);
   if (!vie_encoder) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "An encoder doesn't exist for this channel");
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return;
   }
@@ -75,34 +65,21 @@ void ViENetworkImpl::SetNetworkTransmissionState(const int video_channel,
 }
 
 ViENetworkImpl::ViENetworkImpl(ViESharedData* shared_data)
-    : shared_data_(shared_data) {
-  WEBRTC_TRACE(kTraceMemory, kTraceVideo, shared_data_->instance_id(),
-               "ViENetworkImpl::ViENetworkImpl() Ctor");
-}
+    : shared_data_(shared_data) {}
 
-ViENetworkImpl::~ViENetworkImpl() {
-  WEBRTC_TRACE(kTraceMemory, kTraceVideo, shared_data_->instance_id(),
-               "ViENetworkImpl::~ViENetworkImpl() Dtor");
-}
+ViENetworkImpl::~ViENetworkImpl() {}
 
 int ViENetworkImpl::RegisterSendTransport(const int video_channel,
                                           Transport& transport) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(channel: %d)", __FUNCTION__, video_channel);
+  LOG_F(LS_INFO) << "channel: " << video_channel;
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "%s Channel doesn't exist", __FUNCTION__);
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return -1;
   }
   if (vie_channel->Sending()) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "%s Channel already sending.", __FUNCTION__);
+    LOG_F(LS_ERROR) << "Already sending on channel: " << video_channel;
     shared_data_->SetLastError(kViENetworkAlreadySending);
     return -1;
   }
@@ -114,22 +91,15 @@ int ViENetworkImpl::RegisterSendTransport(const int video_channel,
 }
 
 int ViENetworkImpl::DeregisterSendTransport(const int video_channel) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(channel: %d)", __FUNCTION__, video_channel);
+  LOG_F(LS_INFO) << "channel: " << video_channel;
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "%s Channel doesn't exist", __FUNCTION__);
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return -1;
   }
   if (vie_channel->Sending()) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "%s Channel already sending", __FUNCTION__);
+    LOG_F(LS_ERROR) << "Actively sending on channel: " << video_channel;
     shared_data_->SetLastError(kViENetworkAlreadySending);
     return -1;
   }
@@ -143,17 +113,9 @@ int ViENetworkImpl::DeregisterSendTransport(const int video_channel) {
 int ViENetworkImpl::ReceivedRTPPacket(const int video_channel, const void* data,
                                       const int length,
                                       const PacketTime& packet_time) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(channel: %d, data: -, length: %d)", __FUNCTION__,
-               video_channel, length);
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
-    // The channel doesn't exists
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "Channel doesn't exist");
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return -1;
   }
@@ -162,16 +124,9 @@ int ViENetworkImpl::ReceivedRTPPacket(const int video_channel, const void* data,
 
 int ViENetworkImpl::ReceivedRTCPPacket(const int video_channel,
                                        const void* data, const int length) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(channel: %d, data: -, length: %d)", __FUNCTION__,
-               video_channel, length);
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "Channel doesn't exist");
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return -1;
   }
@@ -179,15 +134,10 @@ int ViENetworkImpl::ReceivedRTCPPacket(const int video_channel,
 }
 
 int ViENetworkImpl::SetMTU(int video_channel, unsigned int mtu) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
-               ViEId(shared_data_->instance_id(), video_channel),
-               "%s(channel: %d, mtu: %u)", __FUNCTION__, video_channel, mtu);
+  LOG_F(LS_INFO) << "channel: " << video_channel << " mtu: " << mtu;
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo,
-                 ViEId(shared_data_->instance_id(), video_channel),
-                 "Channel doesn't exist");
     shared_data_->SetLastError(kViENetworkInvalidChannelId);
     return -1;
   }
@@ -196,5 +146,25 @@ int ViENetworkImpl::SetMTU(int video_channel, unsigned int mtu) {
     return -1;
   }
   return 0;
+}
+
+int ViENetworkImpl::ReceivedBWEPacket(const int video_channel,
+    int64_t arrival_time_ms, int payload_size, const RTPHeader& header) {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    shared_data_->SetLastError(kViENetworkInvalidChannelId);
+    return -1;
+  }
+
+  vie_channel->ReceivedBWEPacket(arrival_time_ms, payload_size, header);
+  return 0;
+}
+
+bool ViENetworkImpl::SetBandwidthEstimationConfig(
+    int video_channel, const webrtc::Config& config) {
+  LOG_F(LS_INFO) << "channel: " << video_channel;
+  return shared_data_->channel_manager()->SetBandwidthEstimationConfig(
+      video_channel, config);
 }
 }  // namespace webrtc

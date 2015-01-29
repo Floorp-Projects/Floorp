@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MAIN_SOURCE_DIGITAL_AGC_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AGC_MAIN_SOURCE_DIGITAL_AGC_H_
 
-#ifdef AGC_DEBUG
+#ifdef WEBRTC_AGC_DEBUG_DUMP
 #include <stdio.h>
 #endif
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
@@ -46,9 +46,9 @@ typedef struct
     int16_t agcMode;
     AgcVad_t      vadNearend;
     AgcVad_t      vadFarend;
-#ifdef AGC_DEBUG
-    FILE*         logFile;
-    int           frameCounter;
+#ifdef WEBRTC_AGC_DEBUG_DUMP
+    FILE* logFile;
+    int frameCounter;
 #endif
 } DigitalAgc_t;
 

@@ -65,10 +65,6 @@ public:
     // computes based on inter-arrival times and its playout mode.
     virtual int SetMinimumPlayoutDelay(int channel, int delay_ms) = 0;
 
-    // Sets the current a/v delay in ms (negative is video leading) if known,
-    // otherwise 0.
-    virtual int SetCurrentSyncOffset(int channel, int offset_ms) = 0;
-
     // Sets an initial delay for the playout jitter buffer. The playout of the
     // audio is delayed by |delay_ms| in milliseconds. Thereafter, the delay is
     // maintained, unless NetEq's internal mechanism requires a higher latency.
@@ -76,13 +72,11 @@ public:
     // playout mode.
     virtual int SetInitialPlayoutDelay(int channel, int delay_ms) = 0;
 
-    // Gets the |jitter_buffer_delay_ms| (including the algorithmic delay),
-    // the |playout_buffer_delay_ms| and |avsync_offset_ms| for a specified
-    // |channel|.
+    // Gets the |jitter_buffer_delay_ms| (including the algorithmic delay), and
+    // the |playout_buffer_delay_ms| for a specified |channel|.
     virtual int GetDelayEstimate(int channel,
                                  int* jitter_buffer_delay_ms,
-                                 int* playout_buffer_delay_ms,
-                                 int* avsync_offset_ms) = 0;
+                                 int* playout_buffer_delay_ms) = 0;
 
     // Returns the least required jitter buffer delay. This is computed by the
     // the jitter buffer based on the inter-arrival time of RTP packets and

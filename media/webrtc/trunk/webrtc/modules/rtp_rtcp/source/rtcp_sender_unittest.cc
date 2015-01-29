@@ -227,11 +227,15 @@ class TestTransport : public Transport,
   void SetRTCPReceiver(RTCPReceiver* rtcp_receiver) {
     rtcp_receiver_ = rtcp_receiver;
   }
-  virtual int SendPacket(int /*ch*/, const void* /*data*/, int /*len*/) {
+  virtual int SendPacket(int /*ch*/,
+                         const void* /*data*/,
+                         int /*len*/) OVERRIDE {
     return -1;
   }
 
-  virtual int SendRTCPPacket(int /*ch*/, const void *packet, int packet_len) {
+  virtual int SendRTCPPacket(int /*ch*/,
+                             const void *packet,
+                             int packet_len) OVERRIDE {
     RTCPUtility::RTCPParserV2 rtcpParser((uint8_t*)packet,
                                          (int32_t)packet_len,
                                          true); // Allow non-compound RTCP
@@ -263,7 +267,7 @@ class TestTransport : public Transport,
 
   virtual int OnReceivedPayloadData(const uint8_t* payloadData,
                                     const uint16_t payloadSize,
-                                    const WebRtcRTPHeader* rtpHeader) {
+                                    const WebRtcRTPHeader* rtpHeader) OVERRIDE {
     return 0;
   }
   RTCPReceiver* rtcp_receiver_;
@@ -278,12 +282,13 @@ class RtcpSenderTest : public ::testing::Test {
       : over_use_detector_options_(),
         clock_(1335900000),
         rtp_payload_registry_(new RTPPayloadRegistry(
-            0, RTPPayloadStrategy::CreateStrategy(false))),
+            RTPPayloadStrategy::CreateStrategy(false))),
         remote_bitrate_observer_(),
         remote_bitrate_estimator_(
             RemoteBitrateEstimatorFactory().Create(
                 &remote_bitrate_observer_,
                 &clock_,
+                kMimdControl,
                 kRemoteBitrateEstimatorMinBitrateBps)),
         receive_statistics_(ReceiveStatistics::Create(&clock_)) {
     test_transport_ = new TestTransport();
@@ -303,7 +308,6 @@ class RtcpSenderTest : public ::testing::Test {
     rtcp_receiver_ = new RTCPReceiver(0, &clock_, rtp_rtcp_impl_);
     test_transport_->SetRTCPReceiver(rtcp_receiver_);
     // Initialize
-    EXPECT_EQ(0, rtcp_sender_->Init());
     EXPECT_EQ(0, rtcp_sender_->RegisterSendTransport(test_transport_));
   }
   ~RtcpSenderTest() {
@@ -337,7 +341,7 @@ class RtcpSenderTest : public ::testing::Test {
 
 TEST_F(RtcpSenderTest, RtcpOff) {
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpOff));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(-1, rtcp_sender_->SendRTCP(feedback_state, kRtcpSr));
 }
 
@@ -381,7 +385,7 @@ TEST_F(RtcpSenderTest, TestCompound) {
 
   EXPECT_EQ(0, rtcp_sender_->SetIJStatus(true));
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpRr));
 
   // Transmission time offset packet should be received.
@@ -392,7 +396,7 @@ TEST_F(RtcpSenderTest, TestCompound) {
 TEST_F(RtcpSenderTest, TestCompound_NoRtpReceived) {
   EXPECT_EQ(0, rtcp_sender_->SetIJStatus(true));
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpRr));
 
   // Transmission time offset packet should not be received.
@@ -402,7 +406,7 @@ TEST_F(RtcpSenderTest, TestCompound_NoRtpReceived) {
 
 TEST_F(RtcpSenderTest, TestXrReceiverReferenceTime) {
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SetSendingStatus(feedback_state, false));
   rtcp_sender_->SendRtcpXrReceiverReferenceTime(true);
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpReport));
@@ -413,7 +417,7 @@ TEST_F(RtcpSenderTest, TestXrReceiverReferenceTime) {
 
 TEST_F(RtcpSenderTest, TestNoXrReceiverReferenceTimeIfSending) {
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SetSendingStatus(feedback_state, true));
   rtcp_sender_->SendRtcpXrReceiverReferenceTime(true);
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpReport));
@@ -424,7 +428,7 @@ TEST_F(RtcpSenderTest, TestNoXrReceiverReferenceTimeIfSending) {
 
 TEST_F(RtcpSenderTest, TestNoXrReceiverReferenceTimeIfNotEnabled) {
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SetSendingStatus(feedback_state, false));
   rtcp_sender_->SendRtcpXrReceiverReferenceTime(false);
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpReport));
@@ -435,7 +439,7 @@ TEST_F(RtcpSenderTest, TestNoXrReceiverReferenceTimeIfNotEnabled) {
 
 TEST_F(RtcpSenderTest, TestSendTimeOfXrRrReport) {
   EXPECT_EQ(0, rtcp_sender_->SetRTCPStatus(kRtcpCompound));
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SetSendingStatus(feedback_state, false));
   rtcp_sender_->SendRtcpXrReceiverReferenceTime(true);
   uint32_t ntp_sec;
@@ -475,7 +479,7 @@ TEST_F(RtcpSenderTest, SendsTmmbnIfSetAndEmpty) {
   TMMBRSet bounding_set;
   EXPECT_EQ(0, rtcp_sender_->SetTMMBN(&bounding_set, 3));
   ASSERT_EQ(0U, test_transport_->rtcp_packet_info_.rtcpPacketTypeFlags);
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state,kRtcpSr));
   // We now expect the packet to show up in the rtcp_packet_info_ of
   // test_transport_.
@@ -498,7 +502,7 @@ TEST_F(RtcpSenderTest, SendsTmmbnIfSetAndValid) {
 
   EXPECT_EQ(0, rtcp_sender_->SetTMMBN(&bounding_set, 3));
   ASSERT_EQ(0U, test_transport_->rtcp_packet_info_.rtcpPacketTypeFlags);
-  RTCPSender::FeedbackState feedback_state(rtp_rtcp_impl_);
+  RTCPSender::FeedbackState feedback_state = rtp_rtcp_impl_->GetFeedbackState();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpSr));
   // We now expect the packet to show up in the rtcp_packet_info_ of
   // test_transport_.

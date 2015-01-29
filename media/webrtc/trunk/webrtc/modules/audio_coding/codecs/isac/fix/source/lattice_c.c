@@ -16,7 +16,7 @@
 
 #include "settings.h"
 #include "signal_processing_library.h"
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 /* Filter ar_g_Q0[] and ar_f_Q0[] through an AR filter with coefficients
  * cth_Q15[] and sth_Q15[].
@@ -36,10 +36,8 @@ void WebRtcIsacfix_FilterArLoop(int16_t* ar_g_Q0,     // Input samples
 
     tmpAR = ar_f_Q0[n + 1];
     for (k = order_coef - 1; k >= 0; k--) {
-      tmp32 = WEBRTC_SPL_RSHIFT_W32(((WEBRTC_SPL_MUL_16_16(cth_Q15[k], tmpAR))
-              - (WEBRTC_SPL_MUL_16_16(sth_Q15[k], ar_g_Q0[k])) + 16384), 15);
-      tmp32_2 = WEBRTC_SPL_RSHIFT_W32(((WEBRTC_SPL_MUL_16_16(sth_Q15[k], tmpAR))
-                + (WEBRTC_SPL_MUL_16_16(cth_Q15[k], ar_g_Q0[k])) + 16384), 15);
+      tmp32 = (cth_Q15[k] * tmpAR - sth_Q15[k] * ar_g_Q0[k] + 16384) >> 15;
+      tmp32_2 = (sth_Q15[k] * tmpAR + cth_Q15[k] * ar_g_Q0[k] + 16384) >> 15;
       tmpAR   = (int16_t)WebRtcSpl_SatW32ToW16(tmp32);
       ar_g_Q0[k + 1] = (int16_t)WebRtcSpl_SatW32ToW16(tmp32_2);
     }

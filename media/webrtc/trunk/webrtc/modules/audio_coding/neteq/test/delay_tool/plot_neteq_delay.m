@@ -57,6 +57,7 @@ if length(unique(s.ts(isfinite(s.ts)))) < length(s.ts(isfinite(s.ts)))
     s.playout_delay=s.playout_delay(ix);
     s.pt=s.pt(ix);
     s.optbuf=s.optbuf(ix);
+    plen=plen(ix);
     s.decode=s.decode(ix);
 end
 
@@ -75,30 +76,17 @@ s.decode=s.decode(sort_ix);
 s.playout_delay=s.playout_delay(sort_ix);
 s.pt=s.pt(sort_ix);
 
-ts_unw = unwrap_ts(s.ts);
-unwrapped = any(ts_unw ~= s.ts);
-send_t = ts_unw - ts_unw(1);
-
+send_t=s.ts-s.ts(1);
 if length(s.fs)<1
     warning('No info about sample rate found in file. Using default 8000.');
     s.fs(1)=8000;
     s.fschange_ts(1)=min(s.ts);
-elseif s.fschange_ts(1) ~= s.ts(1)
-    if ~unwrapped
-        s.fschange_ts(1) = s.ts(1);
-    else
-        error('TS wrapped, and sample rate change info is not found at the start of file => problem...')
-    end
+elseif s.fschange_ts(1)>min(s.ts)
+    s.fschange_ts(1)=min(s.ts);
 end
 
 end_ix=length(send_t);
 for k=length(s.fs):-1:1
-    if (k < length(s.fs) && s.fschange_ts(k) > s.fschange_ts(k+1))
-        % The sample rate changes are out of order, probably due to
-        % packet re-ordering.
-        warning('fschange_ts is out of order')
-        continue  % Skip to the next one.
-    end
     start_ix=find(s.ts==s.fschange_ts(k));
     send_t(start_ix:end_ix)=send_t(start_ix:end_ix)/s.fs(k)*1000;
     s.playout_delay(start_ix:end_ix)=s.playout_delay(start_ix:end_ix)/s.fs(k)*1000;
@@ -154,14 +142,12 @@ use_ix = intersect(cng_ix,... % use those that are not CNG/SID frames...
 
 mean_delay = mean(s.decode(use_ix)+s.playout_delay(use_ix)-send_t(use_ix));
 neteq_delay = mean(s.decode(use_ix)+s.playout_delay(use_ix)-s.arrival(use_ix));
-max_neteq_delay = max(s.decode(use_ix)+s.playout_delay(use_ix)-s.arrival(use_ix));
 
 Npack=max(s.sn(delayskip_ix:end))-min(s.sn(delayskip_ix:end))+1;
 nw_lossrate=(Npack-length(s.sn(delayskip_ix:end)))/Npack;
 neteq_lossrate=(length(s.sn(delayskip_ix:end))-length(use_ix))/Npack;
 
 delay_struct=struct('mean_delay',mean_delay,'neteq_delay',neteq_delay,...
-    'max_neteq_delay', max_neteq_delay,...
     'nw_lossrate',nw_lossrate,'neteq_lossrate',neteq_lossrate,...
     'tot_expand',round(s.tot_expand),'tot_accelerate',round(s.tot_accelerate),...
     'tot_preemptive',round(s.tot_preemptive),'tot_time',tot_time,...
@@ -174,7 +160,7 @@ if not(isempty(delaypoints))
 else
     delayvalues=[];
 end
-end
+
 
 
 % SUBFUNCTIONS %
@@ -193,15 +179,9 @@ while ~isempty(jumps)
         x(n+1:end)=x(n+1:end)-65536;
     end
     
-    jumps=find(abs((diff(x)-1))>65000);
+    jumps=find(abs((diff(x(n+1:end))-1))>65000);
 end
 
 y=x;
 
-end
-
-function y = unwrap_ts(x)
-    max_u32 = 4294967295;  % 0xFFFFFFFF
-    % Use the unwrap function made for unrwapping phase angle in radians.
-    y = round(max_u32 / (2*pi) * unwrap(x * 2*pi / max_u32));
-end
+return;

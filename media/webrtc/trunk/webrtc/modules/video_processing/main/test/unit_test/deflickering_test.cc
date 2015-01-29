@@ -43,7 +43,7 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
         "Could not open output file: " << output_file << "\n";
 
     printf("\nRun time [us / frame]:\n");
-    scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+    scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
     for (uint32_t run_idx = 0; run_idx < NumRuns; run_idx++)
     {
         TickTime t0;

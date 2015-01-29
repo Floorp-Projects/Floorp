@@ -19,7 +19,7 @@ namespace webrtc
 class VCMRttFilter
 {
 public:
-    VCMRttFilter(int32_t vcmId = 0, int32_t receiverId = 0);
+    VCMRttFilter();
 
     VCMRttFilter& operator=(const VCMRttFilter& rhs);
 
@@ -48,8 +48,6 @@ private:
     // Computes the short time average and maximum of the vector buf.
     void ShortRttFilter(uint32_t* buf, uint32_t length);
 
-    int32_t         _vcmId;
-    int32_t         _receiverId;
     bool                  _gotNonZeroUpdate;
     double                _avgRtt;
     double                _varRtt;

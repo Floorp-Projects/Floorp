@@ -75,9 +75,6 @@ class WEBRTC_DLLEXPORT ViEDecoderObserver {
   // on the sender.
   virtual void RequestNewKeyFrame(const int video_channel) = 0;
 
-  // This method is called when the decoder changes state
-  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) = 0;
-
  protected:
   virtual ~ViEDecoderObserver() {}
 };
@@ -133,12 +130,12 @@ class WEBRTC_DLLEXPORT ViECodec {
                                   const bool enable) = 0;
 
   // Gets the number of sent key frames and number of sent delta frames.
-  virtual int GetSendCodecStatistics(const int video_channel,
+  virtual int GetSendCodecStastistics(const int video_channel,
                                       unsigned int& key_frames,
                                       unsigned int& delta_frames) const = 0;
 
   // Gets the number of decoded key frames and number of decoded delta frames.
-  virtual int GetReceiveCodecStatistics(const int video_channel,
+  virtual int GetReceiveCodecStastistics(const int video_channel,
                                          unsigned int& key_frames,
                                          unsigned int& delta_frames) const = 0;
 
@@ -153,7 +150,13 @@ class WEBRTC_DLLEXPORT ViECodec {
 
   // Gets the number of packets discarded by the jitter buffer because they
   // arrived too late.
-  virtual unsigned int GetDiscardedPackets(const int video_channel) const = 0;
+  // TODO(asapersson): Remove default implementation.
+  virtual int GetNumDiscardedPackets(int video_channel) const { return -1; }
+
+  // TODO(asapersson): Remove once the api has been removed from
+  // fakewebrtcvideoengine.h.
+  virtual unsigned int GetDiscardedPackets(
+      const int video_channel) const { return 0; }
 
   // Enables key frame request callback in ViEDecoderObserver.
   virtual int SetKeyFrameRequestCallbackStatus(const int video_channel,

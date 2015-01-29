@@ -134,11 +134,15 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
     // Add the display to the configuration.
     desktop_config.displays.push_back(display_config);
 
-    // Update the desktop bounds to account for this display.
-    desktop_config.bounds =
-        JoinRects(desktop_config.bounds, display_config.bounds);
-    desktop_config.pixel_bounds =
-        JoinRects(desktop_config.pixel_bounds, display_config.pixel_bounds);
+    // Update the desktop bounds to account for this display, unless the current
+    // display uses different DPI settings.
+    if (display_config.dip_to_pixel_scale ==
+        desktop_config.dip_to_pixel_scale) {
+      desktop_config.bounds =
+          JoinRects(desktop_config.bounds, display_config.bounds);
+      desktop_config.pixel_bounds =
+          JoinRects(desktop_config.pixel_bounds, display_config.pixel_bounds);
+    }
   }
 
   return desktop_config;

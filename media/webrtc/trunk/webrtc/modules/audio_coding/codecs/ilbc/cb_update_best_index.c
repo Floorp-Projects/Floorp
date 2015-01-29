@@ -51,8 +51,7 @@ void WebRtcIlbcfix_CbUpdateBestIndex(
      calculate the gain and store this index as the new best one
   */
 
-  if (WEBRTC_SPL_RSHIFT_W32(CritNew, shNew)>
-      WEBRTC_SPL_RSHIFT_W32((*CritMax),shOld)) {
+  if ((CritNew >> shNew) > (*CritMax >> shOld)) {
 
     tmp16 = (int16_t)WebRtcSpl_NormW32(cDotNew);
     tmp16 = 16 - tmp16;

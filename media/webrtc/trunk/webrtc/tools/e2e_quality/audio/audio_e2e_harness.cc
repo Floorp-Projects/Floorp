@@ -13,7 +13,7 @@
 // flags.
 
 #include "gflags/gflags.h"
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"

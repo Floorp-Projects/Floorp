@@ -86,25 +86,27 @@ FrameDropper::Fill(uint32_t frameSizeBytes, bool deltaFrame)
     {
         _keyFrameSizeAvgKbits.Apply(1, frameSizeKbits);
         _keyFrameRatio.Apply(1.0, 1.0);
-        if (frameSizeKbits > _keyFrameSizeAvgKbits.Value())
+        if (frameSizeKbits > _keyFrameSizeAvgKbits.filtered())
         {
             // Remove the average key frame size since we
             // compensate for key frames when adding delta
             // frames.
-            frameSizeKbits -= _keyFrameSizeAvgKbits.Value();
+            frameSizeKbits -= _keyFrameSizeAvgKbits.filtered();
         }
         else
         {
             // Shouldn't be negative, so zero is the lower bound.
             frameSizeKbits = 0;
         }
-        if (_keyFrameRatio.Value() > 1e-5 && 1 / _keyFrameRatio.Value() < _keyFrameSpreadFrames)
+        if (_keyFrameRatio.filtered() > 1e-5 &&
+            1 / _keyFrameRatio.filtered() < _keyFrameSpreadFrames)
         {
             // We are sending key frames more often than our upper bound for
             // how much we allow the key frame compensation to be spread
             // out in time. Therefor we must use the key frame ratio rather
             // than keyFrameSpreadFrames.
-            _keyFrameCount = static_cast<int32_t>(1 / _keyFrameRatio.Value() + 0.5);
+            _keyFrameCount =
+                static_cast<int32_t>(1 / _keyFrameRatio.filtered() + 0.5);
         }
         else
         {
@@ -145,13 +147,14 @@ FrameDropper::Leak(uint32_t inputFrameRate)
     if (_keyFrameCount > 0)
     {
         // Perform the key frame compensation
-        if (_keyFrameRatio.Value() > 0 && 1 / _keyFrameRatio.Value() < _keyFrameSpreadFrames)
+        if (_keyFrameRatio.filtered() > 0 &&
+            1 / _keyFrameRatio.filtered() < _keyFrameSpreadFrames)
         {
-            T -= _keyFrameSizeAvgKbits.Value() * _keyFrameRatio.Value();
+            T -= _keyFrameSizeAvgKbits.filtered() * _keyFrameRatio.filtered();
         }
         else
         {
-            T -= _keyFrameSizeAvgKbits.Value() / _keyFrameSpreadFrames;
+            T -= _keyFrameSizeAvgKbits.filtered() / _keyFrameSpreadFrames;
         }
         _keyFrameCount--;
     }
@@ -232,11 +235,11 @@ FrameDropper::DropFrame()
         _dropCount = 0;
     }
 
-    if (_dropRatio.Value() >= 0.5f) // Drops per keep
+    if (_dropRatio.filtered() >= 0.5f) // Drops per keep
     {
         // limit is the number of frames we should drop between each kept frame
         // to keep our drop ratio. limit is positive in this case.
-        float denom = 1.0f - _dropRatio.Value();
+        float denom = 1.0f - _dropRatio.filtered();
         if (denom < 1e-5)
         {
             denom = (float)1e-5;
@@ -252,7 +255,7 @@ FrameDropper::DropFrame()
         if (_dropCount < 0)
         {
             // Reset the _dropCount since it was negative and should be positive.
-            if (_dropRatio.Value() > 0.4f)
+            if (_dropRatio.filtered() > 0.4f)
             {
                 _dropCount = -_dropCount;
             }
@@ -274,12 +277,13 @@ FrameDropper::DropFrame()
             return false;
         }
     }
-    else if (_dropRatio.Value() > 0.0f && _dropRatio.Value() < 0.5f) // Keeps per drop
+    else if (_dropRatio.filtered() > 0.0f &&
+        _dropRatio.filtered() < 0.5f) // Keeps per drop
     {
         // limit is the number of frames we should keep between each drop
         // in order to keep the drop ratio. limit is negative in this case,
         // and the _dropCount is also negative.
-        float denom = _dropRatio.Value();
+        float denom = _dropRatio.filtered();
         if (denom < 1e-5)
         {
             denom = (float)1e-5;
@@ -289,7 +293,7 @@ FrameDropper::DropFrame()
         {
             // Reset the _dropCount since we have a positive
             // _dropCount, and it should be negative.
-            if (_dropRatio.Value() < 0.6f)
+            if (_dropRatio.filtered() < 0.6f)
             {
                 _dropCount = -_dropCount;
             }
@@ -350,7 +354,7 @@ FrameDropper::ActualFrameRate(uint32_t inputFrameRate) const
     {
         return static_cast<float>(inputFrameRate);
     }
-    return inputFrameRate * (1.0f - _dropRatio.Value());
+    return inputFrameRate * (1.0f - _dropRatio.filtered());
 }
 
 // Put a cap on the accumulator, i.e., don't let it grow beyond some level.

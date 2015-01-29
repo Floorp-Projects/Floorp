@@ -14,6 +14,7 @@
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
 #include "webrtc/modules/video_coding/utility/include/frame_dropper.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 namespace media_optimization {
@@ -73,8 +74,8 @@ struct MediaOptimization::EncodedFrameSample {
   int64_t time_complete_ms;
 };
 
-MediaOptimization::MediaOptimization(int32_t id, Clock* clock)
-    : id_(id),
+MediaOptimization::MediaOptimization(Clock* clock)
+    : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       clock_(clock),
       max_bit_rate_(0),
       send_codec_type_(kVideoCodecUnknown),
@@ -103,8 +104,7 @@ MediaOptimization::MediaOptimization(int32_t id, Clock* clock)
       suspension_enabled_(false),
       video_suspended_(false),
       suspension_threshold_bps_(0),
-      suspension_window_bps_(0),
-      loadstate_(kLoadNormal) {
+      suspension_window_bps_(0) {
   memset(send_statistics_, 0, sizeof(send_statistics_));
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
 }
@@ -114,7 +114,9 @@ MediaOptimization::~MediaOptimization(void) {
 }
 
 void MediaOptimization::Reset() {
-  SetEncodingData(kVideoCodecUnknown, 0, 0, 0, 0, 0, 1, 0, max_payload_size_);
+  CriticalSectionScoped lock(crit_sect_.get());
+  SetEncodingDataInternal(
+      kVideoCodecUnknown, 0, 0, 0, 0, 0, 0, max_payload_size_);
   memset(incoming_frame_times_, -1, sizeof(incoming_frame_times_));
   incoming_frame_rate_ = 0.0;
   frame_dropper_->Reset();
@@ -128,8 +130,6 @@ void MediaOptimization::Reset() {
   target_bit_rate_ = 0;
   codec_width_ = 0;
   codec_height_ = 0;
-  min_width_ = 0;
-  min_height_ = 0;
   user_frame_rate_ = 0;
   key_frame_cnt_ = 0;
   delta_frame_cnt_ = 0;
@@ -140,50 +140,54 @@ void MediaOptimization::Reset() {
   num_layers_ = 1;
 }
 
-// Euclid's algorithm
-// on arm, binary may be faster, but we do this rarely
-static int GreatestCommonDenominator(int a, int b) {
-  while (b != 0) {
-    int t = b;
-    b = a % b;
-    a = t;
-  }
-  return a;
-}
-
 void MediaOptimization::SetEncodingData(VideoCodecType send_codec_type,
-                                        int32_t max_bit_rate,    // in bits/s
-                                        uint32_t frame_rate,     // in fps*1000
-                                        uint32_t target_bitrate, // in bits/s
+                                        int32_t max_bit_rate,
+                                        uint32_t frame_rate,
+                                        uint32_t target_bitrate,
                                         uint16_t width,
                                         uint16_t height,
-                                        uint8_t  divisor,
                                         int num_layers,
                                         int32_t mtu) {
+  CriticalSectionScoped lock(crit_sect_.get());
+  SetEncodingDataInternal(send_codec_type,
+                          max_bit_rate,
+                          frame_rate,
+                          target_bitrate,
+                          width,
+                          height,
+                          num_layers,
+                          mtu);
+}
+
+void MediaOptimization::SetEncodingDataInternal(VideoCodecType send_codec_type,
+                                                int32_t max_bit_rate,
+                                                uint32_t frame_rate,
+                                                uint32_t target_bitrate,
+                                                uint16_t width,
+                                                uint16_t height,
+                                                int num_layers,
+                                                int32_t mtu) {
   // Everything codec specific should be reset here since this means the codec
   // has changed. If native dimension values have changed, then either user
   // initiated change, or QM initiated change. Will be able to determine only
   // after the processing of the first frame.
   last_change_time_ = clock_->TimeInMilliseconds();
   content_->Reset();
-  content_->UpdateFrameRate(static_cast<float>(frame_rate) / 1000.0f);
+  content_->UpdateFrameRate(frame_rate);
 
   max_bit_rate_ = max_bit_rate;
   send_codec_type_ = send_codec_type;
   target_bit_rate_ = target_bitrate;
   float target_bitrate_kbps = static_cast<float>(target_bitrate) / 1000.0f;
   loss_prot_logic_->UpdateBitRate(target_bitrate_kbps);
-  loss_prot_logic_->UpdateFrameRate(static_cast<float>(frame_rate) / 1000.0f);
+  loss_prot_logic_->UpdateFrameRate(static_cast<float>(frame_rate));
   loss_prot_logic_->UpdateFrameSize(width, height);
   loss_prot_logic_->UpdateNumLayers(num_layers);
   frame_dropper_->Reset();
-  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate) / 1000.0f);
-  user_frame_rate_ = static_cast<float>(frame_rate)/1000.0f;
+  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate));
+  user_frame_rate_ = static_cast<float>(frame_rate);
   codec_width_ = width;
   codec_height_ = height;
-  int gcd = GreatestCommonDenominator(codec_width_, codec_height_);
-  min_width_ = gcd ? (codec_width_/gcd * divisor) : 0;
-  min_height_ = gcd ? (codec_height_/gcd * divisor) : 0;
   num_layers_ = (num_layers <= 1) ? 1 : num_layers;  // Can also be zero.
   max_payload_size_ = mtu;
   qm_resolution_->Initialize(target_bitrate_kbps,
@@ -199,12 +203,7 @@ uint32_t MediaOptimization::SetTargetRates(
     uint32_t round_trip_time_ms,
     VCMProtectionCallback* protection_callback,
     VCMQMSettingsCallback* qmsettings_callback) {
-  WEBRTC_TRACE(webrtc::kTraceDebug,
-               webrtc::kTraceVideoCoding,
-               id_,
-               "SetTargetRates: %u bps %u%% loss %dms RTT",
-               target_bitrate, fraction_lost, round_trip_time_ms);
-
+  CriticalSectionScoped lock(crit_sect_.get());
   // TODO(holmer): Consider putting this threshold only on the video bitrate,
   // and not on protection.
   if (max_bit_rate_ > 0 &&
@@ -218,7 +217,7 @@ uint32_t MediaOptimization::SetTargetRates(
   loss_prot_logic_->UpdateResidualPacketLoss(static_cast<float>(fraction_lost));
 
   // Get frame rate for encoder: this is the actual/sent frame rate.
-  float actual_frame_rate = SentFrameRate();
+  float actual_frame_rate = SentFrameRateInternal();
 
   // Sanity check.
   if (actual_frame_rate < 1.0) {
@@ -300,15 +299,6 @@ uint32_t MediaOptimization::SetTargetRates(
   frame_dropper_->SetRates(target_video_bitrate_kbps, incoming_frame_rate_);
 
   if (enable_qm_ && qmsettings_callback) {
-    WEBRTC_TRACE(webrtc::kTraceDebug,
-                 webrtc::kTraceVideoCoding,
-                 id_,
-                 "SetTargetRates/enable_qm: %f bps %f kbps %f fps %d loss",
-                 target_video_bitrate_kbps,
-                 sent_video_rate_kbps,
-                 incoming_frame_rate_,
-                 fraction_lost_);
-
     // Update QM with rates.
     qm_resolution_->UpdateRates(target_video_bitrate_kbps,
                                 sent_video_rate_kbps,
@@ -330,6 +320,7 @@ uint32_t MediaOptimization::SetTargetRates(
 
 void MediaOptimization::EnableProtectionMethod(bool enable,
                                                VCMProtectionMethodEnum method) {
+  CriticalSectionScoped lock(crit_sect_.get());
   bool updated = false;
   if (enable) {
     updated = loss_prot_logic_->SetMethod(method);
@@ -342,17 +333,28 @@ void MediaOptimization::EnableProtectionMethod(bool enable,
 }
 
 uint32_t MediaOptimization::InputFrameRate() {
+  CriticalSectionScoped lock(crit_sect_.get());
+  return InputFrameRateInternal();
+}
+
+uint32_t MediaOptimization::InputFrameRateInternal() {
   ProcessIncomingFrameRate(clock_->TimeInMilliseconds());
   return uint32_t(incoming_frame_rate_ + 0.5f);
 }
 
 uint32_t MediaOptimization::SentFrameRate() {
+  CriticalSectionScoped lock(crit_sect_.get());
+  return SentFrameRateInternal();
+}
+
+uint32_t MediaOptimization::SentFrameRateInternal() {
   PurgeOldFrameSamples(clock_->TimeInMilliseconds());
   UpdateSentFramerate();
   return avg_sent_framerate_;
 }
 
 uint32_t MediaOptimization::SentBitRate() {
+  CriticalSectionScoped lock(crit_sect_.get());
   const int64_t now_ms = clock_->TimeInMilliseconds();
   PurgeOldFrameSamples(now_ms);
   UpdateSentBitrate(now_ms);
@@ -360,6 +362,7 @@ uint32_t MediaOptimization::SentBitRate() {
 }
 
 VCMFrameCount MediaOptimization::SentFrameCount() {
+  CriticalSectionScoped lock(crit_sect_.get());
   VCMFrameCount count;
   count.numDeltaFrames = delta_frame_cnt_;
   count.numKeyFrames = key_frame_cnt_;
@@ -369,8 +372,8 @@ VCMFrameCount MediaOptimization::SentFrameCount() {
 int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
                                                  uint32_t timestamp,
                                                  FrameType encoded_frame_type) {
+  CriticalSectionScoped lock(crit_sect_.get());
   const int64_t now_ms = clock_->TimeInMilliseconds();
-  bool same_frame;
   PurgeOldFrameSamples(now_ms);
   if (encoded_frame_samples_.size() > 0 &&
       encoded_frame_samples_.back().timestamp == timestamp) {
@@ -379,19 +382,15 @@ int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
     // size_bytes.
     encoded_frame_samples_.back().size_bytes += encoded_length;
     encoded_frame_samples_.back().time_complete_ms = now_ms;
-    same_frame = true;
   } else {
     encoded_frame_samples_.push_back(
         EncodedFrameSample(encoded_length, timestamp, now_ms));
-    same_frame = false;
   }
   UpdateSentBitrate(now_ms);
   UpdateSentFramerate();
   if (encoded_length > 0) {
     const bool delta_frame = (encoded_frame_type != kVideoFrameKey);
 
-    // XXX TODO(jesup): if same_frame is true, we should be considering it a single
-    // frame here.
     frame_dropper_->Fill(encoded_length, delta_frame);
     if (max_payload_size_ > 0 && encoded_length > 0) {
       const float min_packets_per_frame =
@@ -414,32 +413,63 @@ int32_t MediaOptimization::UpdateWithEncodedData(int encoded_length,
     }
 
     // Updating counters.
-    if (!same_frame) {
-      if (delta_frame) {
-        delta_frame_cnt_++;
-      } else {
-        key_frame_cnt_++;
-      }
+    if (delta_frame) {
+      delta_frame_cnt_++;
+    } else {
+      key_frame_cnt_++;
     }
   }
 
   return VCM_OK;
 }
 
-void MediaOptimization::EnableQM(bool enable) { enable_qm_ = enable; }
+void MediaOptimization::EnableQM(bool enable) {
+  CriticalSectionScoped lock(crit_sect_.get());
+  enable_qm_ = enable;
+}
 
 void MediaOptimization::EnableFrameDropper(bool enable) {
+  CriticalSectionScoped lock(crit_sect_.get());
   frame_dropper_->Enable(enable);
 }
 
+void MediaOptimization::SuspendBelowMinBitrate(int threshold_bps,
+                                               int window_bps) {
+  CriticalSectionScoped lock(crit_sect_.get());
+  assert(threshold_bps > 0 && window_bps >= 0);
+  suspension_threshold_bps_ = threshold_bps;
+  suspension_window_bps_ = window_bps;
+  suspension_enabled_ = true;
+  video_suspended_ = false;
+}
+
+bool MediaOptimization::IsVideoSuspended() const {
+  CriticalSectionScoped lock(crit_sect_.get());
+  return video_suspended_;
+}
+
 bool MediaOptimization::DropFrame() {
+  CriticalSectionScoped lock(crit_sect_.get());
   UpdateIncomingFrameRate();
   // Leak appropriate number of bytes.
-  frame_dropper_->Leak((uint32_t)(InputFrameRate() + 0.5f));
+  frame_dropper_->Leak((uint32_t)(InputFrameRateInternal() + 0.5f));
   if (video_suspended_) {
     return true;  // Drop all frames when muted.
   }
   return frame_dropper_->DropFrame();
+}
+
+void MediaOptimization::UpdateContentData(
+    const VideoContentMetrics* content_metrics) {
+  CriticalSectionScoped lock(crit_sect_.get());
+  // Updating content metrics.
+  if (content_metrics == NULL) {
+    // Disable QM if metrics are NULL.
+    enable_qm_ = false;
+    qm_resolution_->Reset();
+  } else {
+    content_->UpdateContentData(content_metrics);
+  }
 }
 
 void MediaOptimization::UpdateIncomingFrameRate() {
@@ -456,18 +486,6 @@ void MediaOptimization::UpdateIncomingFrameRate() {
   ProcessIncomingFrameRate(now);
 }
 
-void MediaOptimization::UpdateContentData(
-    const VideoContentMetrics* content_metrics) {
-  // Updating content metrics.
-  if (content_metrics == NULL) {
-    // Disable QM if metrics are NULL.
-    enable_qm_ = false;
-    qm_resolution_->Reset();
-  } else {
-    content_->UpdateContentData(content_metrics);
-  }
-}
-
 int32_t MediaOptimization::SelectQuality(
     VCMQMSettingsCallback* video_qmsettings_callback) {
   // Reset quantities for QM select.
@@ -475,9 +493,6 @@ int32_t MediaOptimization::SelectQuality(
 
   // Update QM will long-term averaged content metrics.
   qm_resolution_->UpdateContent(content_->LongTermAvgData());
-
-  // Update QM with current CPU load
-  qm_resolution_->SetCPULoadState(loadstate_);
 
   // Select quality mode.
   VCMResolutionScale* qm = NULL;
@@ -500,17 +515,6 @@ int32_t MediaOptimization::SelectQuality(
 
   return VCM_OK;
 }
-
-void MediaOptimization::SuspendBelowMinBitrate(int threshold_bps,
-                                               int window_bps) {
-  assert(threshold_bps > 0 && window_bps >= 0);
-  suspension_threshold_bps_ = threshold_bps;
-  suspension_window_bps_ = window_bps;
-  suspension_enabled_ = true;
-  video_suspended_ = false;
-}
-
-bool MediaOptimization::IsVideoSuspended() const { return video_suspended_; }
 
 void MediaOptimization::PurgeOldFrameSamples(int64_t now_ms) {
   while (!encoded_frame_samples_.empty()) {
@@ -538,7 +542,7 @@ void MediaOptimization::UpdateSentBitrate(int64_t now_ms) {
       now_ms - encoded_frame_samples_.front().time_complete_ms);
   if (denom >= 1.0f) {
     avg_sent_bit_rate_bps_ =
-        static_cast<uint32_t>(framesize_sum * 8 * 1000 / denom + 0.5f);
+        static_cast<uint32_t>(framesize_sum * 8.0f * 1000.0f / denom + 0.5f);
   } else {
     avg_sent_bit_rate_bps_ = framesize_sum * 8;
   }
@@ -579,27 +583,10 @@ bool MediaOptimization::QMUpdate(
     codec_width_ = qm->codec_width;
     codec_height_ = qm->codec_height;
   }
-  // handle codec limitations on input resolutions
-  if (codec_width_ % min_width_ != 0 || codec_height_ % min_height_ != 0) {
-    // XXX find a better algorithm for selecting sizes
-    // This uses the GCD to find options that meet alignment requirements
-    // (divisor) and at the same time retain the aspect ratio exactly.
-    codec_width_ = ((codec_width_ + min_width_-1)/min_width_)*min_width_;
-    codec_height_ = ((codec_height_ + min_height_-1)/min_height_)*min_height_;
 
-    // to avoid confusion later
-    qm->codec_width = codec_width_;
-    qm->codec_height = codec_height_;
-  }
-
-
-  WEBRTC_TRACE(webrtc::kTraceDebug,
-               webrtc::kTraceVideoCoding,
-               id_,
-               "Resolution change from QM select: W = %d (%d), H = %d (%d), FR = %f",
-               qm->codec_width, codec_width_,
-               qm->codec_height, codec_height_,
-               qm->frame_rate);
+  LOG(LS_INFO) << "Media optimizer requests the video resolution to be changed "
+                  "to " << qm->codec_width << "x" << qm->codec_height << "@"
+               << qm->frame_rate;
 
   // Update VPM with new target frame rate and frame size.
   // Note: use |qm->frame_rate| instead of |_incoming_frame_rate| for updating
@@ -654,10 +641,6 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
       incoming_frame_rate_ = nr_of_frames * 1000.0f / static_cast<float>(diff);
     }
   }
-}
-
-void MediaOptimization::SetCPULoadState(CPULoadState state) {
-    loadstate_ = state;
 }
 
 void MediaOptimization::CheckSuspendConditions() {

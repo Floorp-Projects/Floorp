@@ -28,8 +28,7 @@ RtpFeedback* NullObjectRtpFeedback();
 RtpAudioFeedback* NullObjectRtpAudioFeedback();
 ReceiveStatistics* NullObjectReceiveStatistics();
 
-namespace ModuleRTPUtility
-{
+namespace RtpUtility {
     // January 1970, in NTP seconds.
     const uint32_t NTP_JAN_1970 = 2208988800UL;
 
@@ -92,12 +91,10 @@ namespace ModuleRTPUtility
      */
     uint32_t BufferToUWord32(const uint8_t* dataBuffer);
 
-    class RTPHeaderParser
-    {
+    class RtpHeaderParser {
     public:
-        RTPHeaderParser(const uint8_t* rtpData,
-                        const uint32_t rtpDataLength);
-        ~RTPHeaderParser();
+     RtpHeaderParser(const uint8_t* rtpData, size_t rtpDataLength);
+     ~RtpHeaderParser();
 
         bool RTCP() const;
         bool ParseRtcp(RTPHeader* header) const;
@@ -118,98 +115,7 @@ namespace ModuleRTPUtility
         const uint8_t* const _ptrRTPDataBegin;
         const uint8_t* const _ptrRTPDataEnd;
     };
-
-    enum FrameTypes
-    {
-        kIFrame,    // key frame
-        kPFrame         // Delta frame
-    };
-
-    struct RTPPayloadVP8
-    {
-        bool                 nonReferenceFrame;
-        bool                 beginningOfPartition;
-        int                  partitionID;
-        bool                 hasPictureID;
-        bool                 hasTl0PicIdx;
-        bool                 hasTID;
-        bool                 hasKeyIdx;
-        int                  pictureID;
-        int                  tl0PicIdx;
-        int                  tID;
-        bool                 layerSync;
-        int                  keyIdx;
-        int                  frameWidth;
-        int                  frameHeight;
-
-        const uint8_t*   data;
-        uint16_t         dataLength;
-    };
-
-    union RTPPayloadUnion
-    {
-        RTPPayloadVP8   VP8;
-    };
-
-    struct RTPPayload
-    {
-        void SetType(RtpVideoCodecTypes videoType);
-
-        RtpVideoCodecTypes  type;
-        FrameTypes          frameType;
-        RTPPayloadUnion     info;
-    };
-
-    // RTP payload parser
-    class RTPPayloadParser
-    {
-    public:
-        RTPPayloadParser(const RtpVideoCodecTypes payloadType,
-                         const uint8_t* payloadData,
-                         const uint16_t payloadDataLength, // Length w/o padding.
-                         const int32_t id);
-
-        ~RTPPayloadParser();
-
-        bool Parse(RTPPayload& parsedPacket) const;
-
-    private:
-        bool ParseGeneric(RTPPayload& parsedPacket) const;
-
-        bool ParseVP8(RTPPayload& parsedPacket) const;
-
-        int ParseVP8Extension(RTPPayloadVP8 *vp8,
-                              const uint8_t *dataPtr,
-                              int dataLength) const;
-
-        int ParseVP8PictureID(RTPPayloadVP8 *vp8,
-                              const uint8_t **dataPtr,
-                              int *dataLength,
-                              int *parsedBytes) const;
-
-        int ParseVP8Tl0PicIdx(RTPPayloadVP8 *vp8,
-                              const uint8_t **dataPtr,
-                              int *dataLength,
-                              int *parsedBytes) const;
-
-        int ParseVP8TIDAndKeyIdx(RTPPayloadVP8 *vp8,
-                                 const uint8_t **dataPtr,
-                                 int *dataLength,
-                                 int *parsedBytes) const;
-
-        int ParseVP8FrameSize(RTPPayload& parsedPacket,
-                              const uint8_t *dataPtr,
-                              int dataLength) const;
-
-    private:
-        int32_t               _id;
-        const uint8_t*        _dataPtr;
-        const uint16_t        _dataLength;
-        const RtpVideoCodecTypes    _videoType;
-    };
-
-}  // namespace ModuleRTPUtility
-
+}  // namespace RtpUtility
 }  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_

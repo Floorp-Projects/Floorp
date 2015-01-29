@@ -65,6 +65,16 @@ int32_t RtpHeaderExtensionMap::Deregister(const RTPExtensionType type) {
   return 0;
 }
 
+bool RtpHeaderExtensionMap::IsRegistered(RTPExtensionType type) const {
+  std::map<uint8_t, HeaderExtension*>::const_iterator it =
+    extensionMap_.begin();
+  for (; it != extensionMap_.end(); ++it) {
+    if (it->second->type == type)
+      return true;
+  }
+  return false;
+}
+
 int32_t RtpHeaderExtensionMap::GetType(const uint8_t id,
                                        RTPExtensionType* type) const {
   assert(type);

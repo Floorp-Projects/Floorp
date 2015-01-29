@@ -33,9 +33,8 @@ class Time {
       : kNtpJan1970(2208988800UL),
         time_now_ms_(offset) {}
 
-    synchronization::RtcpMeasurement GenerateRtcp(int frequency,
-                                                  uint32_t offset) const {
-    synchronization::RtcpMeasurement rtcp;
+  RtcpMeasurement GenerateRtcp(int frequency, uint32_t offset) const {
+    RtcpMeasurement rtcp;
     NowNtp(&rtcp.ntp_secs, &rtcp.ntp_frac);
     rtcp.rtp_timestamp = NowRtp(frequency, offset);
     return rtcp;

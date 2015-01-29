@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-double const pi = 4*std::atan(1.0);
+double const pi = 4 * atan(1.0);
 
 class GaussDist
 {
@@ -26,9 +26,10 @@ public:
 
     double RandValue() // returns a single normally distributed number
     {
-        double r1 = (std::rand() + 1.0)/(RAND_MAX + 1.0); // gives equal distribution in (0, 1]
-        double r2 = (std::rand() + 1.0)/(RAND_MAX + 1.0);
-        return _mu + _sigma * sqrt(-2*std::log(r1))*std::cos(2*pi*r2);
+        double r1 = (rand() + 1.0) /
+                    (RAND_MAX + 1.0);  // gives equal distribution in (0, 1]
+        double r2 = (rand() + 1.0) / (RAND_MAX + 1.0);
+        return _mu + _sigma * sqrt(-2 * log(r1)) * cos(2 * pi * r2);
     }
 
     double GetAverage()
@@ -86,7 +87,7 @@ public:
     void SetLossRate(double rate);
 
 private:
-    double RandUniform() { return (std::rand() + 1.0)/(RAND_MAX + 1.0); }
+    double RandUniform() { return (rand() + 1.0)/(RAND_MAX + 1.0); }
     unsigned int _frameRate;
     unsigned int _capacity;
     unsigned int _rate;

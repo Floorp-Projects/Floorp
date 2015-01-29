@@ -181,6 +181,7 @@ int32_t ViEExternalRendererImpl::RenderFrame(
       external_renderer_->DeliverFrame(NULL,
                                        0,
                                        video_frame.timestamp(),
+                                       video_frame.ntp_time_ms(),
                                        video_frame.render_time_ms(),
                                        video_frame.native_handle());
     } else {
@@ -244,6 +245,7 @@ int32_t ViEExternalRendererImpl::RenderFrame(
     external_renderer_->DeliverFrame(out_frame->Buffer(),
                                      out_frame->Length(),
                                      video_frame.timestamp(),
+                                     video_frame.ntp_time_ms(),
                                      video_frame.render_time_ms(),
                                      NULL);
   }

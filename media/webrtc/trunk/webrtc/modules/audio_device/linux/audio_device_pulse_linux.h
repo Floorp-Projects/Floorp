@@ -15,9 +15,7 @@
 #include "webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
-#ifdef USE_X11
 #include <X11/Xlib.h>
-#endif
 #include <pulse/pulseaudio.h>
 
 // We define this flag if it's missing from our headers, because we want to be
@@ -153,10 +151,8 @@ public:
                                   uint16_t& volumeRight) const OVERRIDE;
 
     // Audio mixer initialization
-    virtual int32_t SpeakerIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitSpeaker() OVERRIDE;
     virtual bool SpeakerIsInitialized() const OVERRIDE;
-    virtual int32_t MicrophoneIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitMicrophone() OVERRIDE;
     virtual bool MicrophoneIsInitialized() const OVERRIDE;
 
@@ -377,9 +373,7 @@ private:
     pa_buffer_attr _recBufferAttr;
 
     char _oldKeyState[32];
-#ifdef USE_X11
     Display* _XDisplay;
-#endif
 };
 
 }

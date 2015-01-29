@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_MANAGER_BASE_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_MANAGER_BASE_H_
 
-#include "webrtc/system_wrappers/interface/thread_annotations.h"
+#include "webrtc/base/thread_annotations.h"
 
 namespace webrtc {
 

@@ -147,7 +147,7 @@ extern "C" {
   int16_t WebRtcIsac_Encode(
       ISACStruct*        ISAC_main_inst,
       const int16_t* speechIn,
-      int16_t*       encoded);
+      uint8_t* encoded);
 
 
   /******************************************************************************
@@ -187,7 +187,7 @@ extern "C" {
 
   int16_t WebRtcIsac_UpdateBwEstimate(
       ISACStruct*         ISAC_main_inst,
-      const uint16_t* encoded,
+      const uint8_t* encoded,
       int32_t         packet_size,
       uint16_t        rtp_seq_number,
       uint32_t        send_ts,
@@ -216,7 +216,7 @@ extern "C" {
 
   int16_t WebRtcIsac_Decode(
       ISACStruct*           ISAC_main_inst,
-      const uint16_t* encoded,
+      const uint8_t* encoded,
       int16_t         len,
       int16_t*        decoded,
       int16_t*        speechType);
@@ -319,7 +319,7 @@ extern "C" {
 
   int16_t WebRtcIsac_ReadFrameLen(
       ISACStruct*          ISAC_main_inst,
-      const int16_t* encoded,
+      const uint8_t* encoded,
       int16_t*       frameLength);
 
 
@@ -574,7 +574,7 @@ extern "C" {
       int16_t  bweIndex,
       int16_t  jitterInfo,
       int32_t  rate,
-      int16_t* encoded,
+      uint8_t* encoded,
       int16_t  isRCU);
 
 
@@ -631,7 +631,7 @@ extern "C" {
    */
 
   int16_t WebRtcIsac_ReadBwIndex(
-      const int16_t* encoded,
+      const uint8_t* encoded,
       int16_t*       bweIndex);
 
 
@@ -679,7 +679,7 @@ extern "C" {
    */
   int16_t WebRtcIsac_GetRedPayload(
       ISACStruct*    ISAC_main_inst,
-      int16_t* encoded);
+      uint8_t* encoded);
 
 
   /****************************************************************************
@@ -703,7 +703,7 @@ extern "C" {
    */
   int16_t WebRtcIsac_DecodeRcu(
       ISACStruct*           ISAC_main_inst,
-      const uint16_t* encoded,
+      const uint8_t* encoded,
       int16_t         len,
       int16_t*        decoded,
       int16_t*        speechType);

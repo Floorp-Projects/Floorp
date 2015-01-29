@@ -45,7 +45,7 @@ extern "C" {
  *
  * Inputs                           Description
  * -------------------------------------------------------------------
- * void **aecmInst                  Pointer to the AECM instance to be
+ * void**  aecmInst                 Pointer to the AECM instance to be
  *                                  created and initialized
  *
  * Outputs                          Description
@@ -60,11 +60,11 @@ int32_t WebRtcAecm_Create(void **aecmInst);
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void *aecmInst               Pointer to the AECM instance
+ * void*    aecmInst            Pointer to the AECM instance
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t  return        0: OK
+ * int32_t  return              0: OK
  *                             -1: error
  */
 int32_t WebRtcAecm_Free(void *aecmInst);
@@ -74,7 +74,7 @@ int32_t WebRtcAecm_Free(void *aecmInst);
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void           *aecmInst     Pointer to the AECM instance
+ * void*          aecmInst      Pointer to the AECM instance
  * int32_t        sampFreq      Sampling frequency of data
  *
  * Outputs                      Description
@@ -89,8 +89,8 @@ int32_t WebRtcAecm_Init(void* aecmInst, int32_t sampFreq);
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void           *aecmInst     Pointer to the AECM instance
- * int16_t        *farend       In buffer containing one frame of
+ * void*          aecmInst      Pointer to the AECM instance
+ * int16_t*       farend        In buffer containing one frame of
  *                              farend signal
  * int16_t        nrOfSamples   Number of samples in farend buffer
  *
@@ -106,14 +106,14 @@ int32_t WebRtcAecm_BufferFarend(void* aecmInst,
 /*
  * Runs the AECM on an 80 or 160 sample blocks of data.
  *
- * Inputs                       Description
+ * Inputs                        Description
  * -------------------------------------------------------------------
- * void           *aecmInst      Pointer to the AECM instance
- * int16_t        *nearendNoisy  In buffer containing one frame of
+ * void*          aecmInst       Pointer to the AECM instance
+ * int16_t*       nearendNoisy   In buffer containing one frame of
  *                               reference nearend+echo signal. If
  *                               noise reduction is active, provide
  *                               the noisy signal here.
- * int16_t        *nearendClean  In buffer containing one frame of
+ * int16_t*       nearendClean   In buffer containing one frame of
  *                               nearend+echo signal. If noise
  *                               reduction is active, provide the
  *                               clean signal here. Otherwise pass a
@@ -122,11 +122,11 @@ int32_t WebRtcAecm_BufferFarend(void* aecmInst,
  * int16_t        msInSndCardBuf Delay estimate for sound card and
  *                               system buffers
  *
- * Outputs                      Description
+ * Outputs                       Description
  * -------------------------------------------------------------------
- * int16_t        *out          Out buffer, one frame of processed nearend
- * int32_t        return        0: OK
- *                             -1: error
+ * int16_t*       out            Out buffer, one frame of processed nearend
+ * int32_t        return         0: OK
+ *                              -1: error
  */
 int32_t WebRtcAecm_Process(void* aecmInst,
                            const int16_t* nearendNoisy,
@@ -140,8 +140,8 @@ int32_t WebRtcAecm_Process(void* aecmInst,
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void     *aecmInst           Pointer to the AECM instance
- * AecmConfig config            Config instance that contains all
+ * void*          aecmInst      Pointer to the AECM instance
+ * AecmConfig     config        Config instance that contains all
  *                              properties to be set
  *
  * Outputs                      Description
@@ -156,11 +156,11 @@ int32_t WebRtcAecm_set_config(void* aecmInst, AecmConfig config);
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void *aecmInst               Pointer to the AECM instance
+ * void*          aecmInst      Pointer to the AECM instance
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * AecmConfig  *config          Pointer to the config instance that
+ * AecmConfig*    config        Pointer to the config instance that
  *                              all properties will be written to
  * int32_t        return        0: OK
  *                             -1: error
@@ -178,7 +178,7 @@ int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config);
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        0: OK
+ * int32_t      return          0: OK
  *                             -1: error
  */
 int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
@@ -197,7 +197,7 @@ int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        0: OK
+ * int32_t      return          0: OK
  *                             -1: error
  */
 int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
@@ -209,7 +209,7 @@ int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * size_t       return           : size in bytes
+ * size_t       return          Size in bytes
  */
 size_t WebRtcAecm_echo_path_size_bytes();
 
@@ -218,7 +218,7 @@ size_t WebRtcAecm_echo_path_size_bytes();
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void         *aecmInst       Pointer to the AECM instance
+ * void*          aecmInst      Pointer to the AECM instance
  *
  * Outputs                      Description
  * -------------------------------------------------------------------

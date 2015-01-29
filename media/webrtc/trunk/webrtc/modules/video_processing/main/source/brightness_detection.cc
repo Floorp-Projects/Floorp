@@ -10,7 +10,6 @@
 
 #include "webrtc/modules/video_processing/main/interface/video_processing.h"
 #include "webrtc/modules/video_processing/main/source/brightness_detection.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <math.h>
 
@@ -37,16 +36,12 @@ int32_t VPMBrightnessDetection::ProcessFrame(
     const I420VideoFrame& frame,
     const VideoProcessingModule::FrameStats& stats) {
   if (frame.IsZeroSize()) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, id_,
-                 "Null frame pointer");
     return VPM_PARAMETER_ERROR;
   }
   int width = frame.width();
   int height = frame.height();
 
   if (!VideoProcessingModule::ValidFrameStats(stats)) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, id_,
-                 "Invalid frame stats");
     return VPM_PARAMETER_ERROR;
   }
 
@@ -58,7 +53,7 @@ int32_t VPMBrightnessDetection::ProcessFrame(
   for (uint32_t i = 0; i < low_th; i++) {
     prop_low += stats.hist[i];
   }
-prop_low /= stats.num_pixels;
+  prop_low /= stats.num_pixels;
 
   // Get proportion in highest bins.
   unsigned char high_th = 230;

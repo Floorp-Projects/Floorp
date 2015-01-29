@@ -71,15 +71,17 @@ DtmfInbandQueue::NextDtmf(uint16_t* len, uint8_t* level)
     return nextDtmf;
 }
 
-bool 
+bool
 DtmfInbandQueue::PendingDtmf()
 {
-    return(_nextEmptyIndex>0);        
+    CriticalSectionScoped lock(&_DtmfCritsect);
+    return _nextEmptyIndex > 0;
 }
 
-void 
+void
 DtmfInbandQueue::ResetDtmf()
 {
+    CriticalSectionScoped lock(&_DtmfCritsect);
     _nextEmptyIndex = 0;
 }
 

@@ -51,8 +51,6 @@ int16_t ACMG729_1::InternalCreateEncoder() { return -1; }
 
 void ACMG729_1::DestructEncoderSafe() { return; }
 
-void ACMG729_1::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 int16_t ACMG729_1::SetBitRateSafe(const int32_t /*rate*/) { return -1; }
 
 #else  //===================== Actual Implementation =======================
@@ -157,13 +155,6 @@ void ACMG729_1::DestructEncoderSafe() {
     WebRtcG7291_Free(encoder_inst_ptr_);
     encoder_inst_ptr_ = NULL;
   }
-}
-
-void ACMG729_1::InternalDestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    // WebRtcG7291_Free((G729_1_inst_t*)ptrInst);
-  }
-  return;
 }
 
 int16_t ACMG729_1::SetBitRateSafe(const int32_t rate) {

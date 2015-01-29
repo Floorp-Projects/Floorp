@@ -14,12 +14,12 @@
 #include <stdio.h>
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 #if defined(_WIN32)
 #include <Windows.h>
 #include <mmsystem.h>
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC) || defined(WEBRTC_BSD)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
@@ -71,7 +71,6 @@ RtpDumpImpl::RtpDumpImpl()
       _file(*FileWrapper::Create()),
       _startTime(0)
 {
-    WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s created", __FUNCTION__);
 }
 
 RtpDump::~RtpDump()
@@ -84,7 +83,6 @@ RtpDumpImpl::~RtpDumpImpl()
     _file.CloseFile();
     delete &_file;
     delete _critSect;
-    WEBRTC_TRACE(kTraceMemory, kTraceUtility, -1, "%s deleted", __FUNCTION__);
 }
 
 int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
@@ -100,8 +98,7 @@ int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
     _file.CloseFile();
     if (_file.OpenFile(fileNameUTF8, false, false, false) == -1)
     {
-        WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                     "failed to open the specified file");
+        LOG(LS_ERROR) << "Failed to open file.";
         return -1;
     }
 
@@ -113,8 +110,7 @@ int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
     sprintf(magic, "#!rtpplay%s \n", RTPFILE_VERSION);
     if (_file.WriteText(magic) == -1)
     {
-        WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                     "error writing to file");
+        LOG(LS_ERROR) << "Error writing to file.";
         return -1;
     }
 
@@ -129,8 +125,7 @@ int32_t RtpDumpImpl::Start(const char* fileNameUTF8)
     memset(dummyHdr, 0, 16);
     if (!_file.Write(dummyHdr, sizeof(dummyHdr)))
     {
-        WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                     "error writing to file");
+        LOG(LS_ERROR) << "Error writing to file.";
         return -1;
     }
     return 0;
@@ -198,14 +193,12 @@ int32_t RtpDumpImpl::DumpPacket(const uint8_t* packet, uint16_t packetLength)
 
     if (!_file.Write(&hdr, sizeof(hdr)))
     {
-        WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                     "error writing to file");
+        LOG(LS_ERROR) << "Error writing to file.";
         return -1;
     }
     if (!_file.Write(packet, packetLength))
     {
-        WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                     "error writing to file");
+        LOG(LS_ERROR) << "Error writing to file.";
         return -1;
     }
 
@@ -237,7 +230,7 @@ inline uint32_t RtpDumpImpl::GetTimeInMS() const
 {
 #if defined(_WIN32)
     return timeGetTime();
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
     struct timeval tv;
     struct timezone tz;
     unsigned long val;

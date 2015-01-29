@@ -42,15 +42,6 @@ public:
                              int lengthMs = 200,
                              int attenuationDb = 10);
 
-    virtual int StartPlayingDtmfTone(int eventCode,
-                                     int attenuationDb = 10);
-
-    virtual int StopPlayingDtmfTone();
-
-    virtual int SetDtmfPlayoutStatus(int channel, bool enable);
-
-    virtual int GetDtmfPlayoutStatus(int channel, bool& enabled);
-
 protected:
     VoEDtmfImpl(voe::SharedData* shared);
     virtual ~VoEDtmfImpl();

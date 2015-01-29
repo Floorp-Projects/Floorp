@@ -30,7 +30,7 @@ struct Frame {
     memcpy(this->buffer.get(), buffer, buffer_size);
   }
 
-  webrtc::scoped_array<unsigned char> buffer;
+  webrtc::scoped_ptr<unsigned char[]> buffer;
   int buffer_size;
   uint32_t timestamp;
   int64_t render_time;
@@ -123,6 +123,7 @@ void ViEToFileRenderer::ForgetOutputFile() {
 int ViEToFileRenderer::DeliverFrame(unsigned char *buffer,
                                     int buffer_size,
                                     uint32_t time_stamp,
+                                    int64_t ntp_time_ms,
                                     int64_t render_time,
                                     void* /*handle*/) {
   webrtc::CriticalSectionScoped lock(frame_queue_cs_.get());

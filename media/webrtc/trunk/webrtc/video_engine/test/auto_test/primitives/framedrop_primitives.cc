@@ -40,15 +40,18 @@ class LocalRendererEffectFilter : public webrtc::ExternalRendererEffectFilter {
                             FrameDropDetector* frame_drop_detector)
       : ExternalRendererEffectFilter(renderer),
         frame_drop_detector_(frame_drop_detector) {}
-  int Transform(int size, unsigned char* frameBuffer,
-                unsigned int timeStamp90KHz, unsigned int width,
+  int Transform(int size,
+                unsigned char* frame_buffer,
+                int64_t ntp_time_ms,
+                unsigned int timestamp,
+                unsigned int width,
                 unsigned int height) {
     frame_drop_detector_->ReportFrameState(
         FrameDropDetector::kCreated,
-        timeStamp90KHz,
+        timestamp,
         webrtc::TickTime::MicrosecondTimestamp());
     return webrtc::ExternalRendererEffectFilter::Transform(
-        size, frameBuffer, timeStamp90KHz, width, height);
+        size, frame_buffer, ntp_time_ms, timestamp, width, height);
   }
  private:
   FrameDropDetector* frame_drop_detector_;
@@ -97,12 +100,15 @@ class DecodedTimestampEffectFilter : public webrtc::ViEEffectFilter {
   explicit DecodedTimestampEffectFilter(FrameDropDetector* frame_drop_detector)
       : frame_drop_detector_(frame_drop_detector) {}
   virtual ~DecodedTimestampEffectFilter() {}
-  virtual int Transform(int size, unsigned char* frameBuffer,
-                        unsigned int timeStamp90KHz, unsigned int width,
+  virtual int Transform(int size,
+                        unsigned char* frame_buffer,
+                        int64_t ntp_time_ms,
+                        unsigned int timestamp,
+                        unsigned int width,
                         unsigned int height) {
     frame_drop_detector_->ReportFrameState(
         FrameDropDetector::kDecoded,
-        timeStamp90KHz,
+        timestamp,
         webrtc::TickTime::MicrosecondTimestamp());
     return 0;
   }
@@ -588,7 +594,7 @@ int FrameDropDetector::GetNumberOfFramesDroppedAt(State state) {
 
 int FrameDropMonitoringRemoteFileRenderer::DeliverFrame(
     unsigned char *buffer, int buffer_size, uint32_t time_stamp,
-    int64_t render_time, void* /*handle*/) {
+    int64_t ntp_time_ms, int64_t render_time, void* /*handle*/) {
   // |render_time| provides the ideal render time for this frame. If that time
   // has already passed we will render it immediately.
   int64_t report_render_time_us = render_time * 1000;
@@ -600,7 +606,8 @@ int FrameDropMonitoringRemoteFileRenderer::DeliverFrame(
   frame_drop_detector_->ReportFrameState(FrameDropDetector::kRendered,
                                          time_stamp, report_render_time_us);
   return ViEToFileRenderer::DeliverFrame(buffer, buffer_size,
-                                         time_stamp, render_time, NULL);
+                                         time_stamp, ntp_time_ms,
+                                         render_time, NULL);
 }
 
 int FrameDropMonitoringRemoteFileRenderer::FrameSizeChange(

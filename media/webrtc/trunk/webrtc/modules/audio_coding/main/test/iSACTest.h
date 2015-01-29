@@ -13,7 +13,6 @@
 
 #include <string.h>
 
-#include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
@@ -26,8 +25,6 @@
 #define NO_OF_CLIENTS             15
 
 namespace webrtc {
-
-class Config;
 
 struct ACMTestISACConfig {
   int32_t currentRateBitPerSec;
@@ -42,7 +39,7 @@ struct ACMTestISACConfig {
 
 class ISACTest : public ACMTest {
  public:
-  ISACTest(int testMode, const Config& config);
+  explicit ISACTest(int testMode);
   ~ISACTest();
 
   void Perform();

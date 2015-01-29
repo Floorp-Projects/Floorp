@@ -12,15 +12,12 @@
 
 #include <assert.h>
 
-#include "webrtc/modules/audio_processing/audio_processing_impl.h"
+#include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 
-ProcessingComponent::ProcessingComponent() {}
-
-ProcessingComponent::ProcessingComponent(const AudioProcessingImpl* apm)
-  : apm_(apm),
-    initialized_(false),
+ProcessingComponent::ProcessingComponent()
+  : initialized_(false),
     enabled_(false),
     num_handles_(0) {}
 
@@ -35,7 +32,7 @@ int ProcessingComponent::Destroy() {
   }
   initialized_ = false;
 
-  return apm_->kNoError;
+  return AudioProcessing::kNoError;
 }
 
 int ProcessingComponent::EnableComponent(bool enable) {
@@ -43,7 +40,7 @@ int ProcessingComponent::EnableComponent(bool enable) {
     enabled_ = enable; // Must be set before Initialize() is called.
 
     int err = Initialize();
-    if (err != apm_->kNoError) {
+    if (err != AudioProcessing::kNoError) {
       enabled_ = false;
       return err;
     }
@@ -51,7 +48,7 @@ int ProcessingComponent::EnableComponent(bool enable) {
     enabled_ = enable;
   }
 
-  return apm_->kNoError;
+  return AudioProcessing::kNoError;
 }
 
 bool ProcessingComponent::is_component_enabled() const {
@@ -69,7 +66,7 @@ int ProcessingComponent::num_handles() const {
 
 int ProcessingComponent::Initialize() {
   if (!enabled_) {
-    return apm_->kNoError;
+    return AudioProcessing::kNoError;
   }
 
   num_handles_ = num_handles_required();
@@ -82,12 +79,12 @@ int ProcessingComponent::Initialize() {
     if (handles_[i] == NULL) {
       handles_[i] = CreateHandle();
       if (handles_[i] == NULL) {
-        return apm_->kCreationFailedError;
+        return AudioProcessing::kCreationFailedError;
       }
     }
 
     int err = InitializeHandle(handles_[i]);
-    if (err != apm_->kNoError) {
+    if (err != AudioProcessing::kNoError) {
       return GetHandleError(handles_[i]);
     }
   }
@@ -98,17 +95,17 @@ int ProcessingComponent::Initialize() {
 
 int ProcessingComponent::Configure() {
   if (!initialized_) {
-    return apm_->kNoError;
+    return AudioProcessing::kNoError;
   }
 
   assert(static_cast<int>(handles_.size()) >= num_handles_);
   for (int i = 0; i < num_handles_; i++) {
     int err = ConfigureHandle(handles_[i]);
-    if (err != apm_->kNoError) {
+    if (err != AudioProcessing::kNoError) {
       return GetHandleError(handles_[i]);
     }
   }
 
-  return apm_->kNoError;
+  return AudioProcessing::kNoError;
 }
 }  // namespace webrtc

@@ -32,6 +32,7 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
 
   int32_t OnIncomingFrame(uint8_t* videoFrame,
                           int32_t videoFrameLength,
+                          int32_t degrees,
                           int64_t captureTime = 0);
 
  protected:
@@ -40,6 +41,7 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   DeviceInfoAndroid _deviceInfo;
   jobject _jCapturer; // Global ref to Java VideoCaptureAndroid object.
   VideoCaptureCapability _captureCapability;
+  VideoCaptureRotation _rotation;
   bool _captureStarted;
 };
 

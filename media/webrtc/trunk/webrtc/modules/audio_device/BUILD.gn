@@ -1,0 +1,186 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../build/webrtc.gni")
+
+config("audio_device_config") {
+  include_dirs = [
+    "../interface",
+    "include",
+    "dummy",  # Contains dummy audio device implementations.
+  ]
+}
+
+source_set("audio_device") {
+  sources = [
+    "include/audio_device.h",
+    "include/audio_device_defines.h",
+    "audio_device_buffer.cc",
+    "audio_device_buffer.h",
+    "audio_device_generic.cc",
+    "audio_device_generic.h",
+    "audio_device_utility.cc",
+    "audio_device_utility.h",
+    "audio_device_impl.cc",
+    "audio_device_impl.h",
+    "audio_device_config.h",
+    "dummy/audio_device_dummy.cc",
+    "dummy/audio_device_dummy.h",
+    "dummy/audio_device_utility_dummy.cc",
+    "dummy/audio_device_utility_dummy.h",
+    "dummy/file_audio_device.cc",
+    "dummy/file_audio_device.h",
+  ]
+
+  include_dirs = []
+  if (is_linux) {
+    include_dirs += [ "linux" ]
+  }
+  if (is_ios) {
+    include_dirs += [ "ios" ]
+  }
+  if (is_mac) {
+    include_dirs += [ "mac" ]
+  }
+  if (is_win) {
+    include_dirs += [ "win" ]
+  }
+  if (is_android) {
+    include_dirs += [ "android" ]
+  }
+  if (rtc_include_internal_audio_device) {
+    sources += [
+      "linux/alsasymboltable_linux.cc",
+      "linux/alsasymboltable_linux.h",
+      "linux/audio_device_alsa_linux.cc",
+      "linux/audio_device_alsa_linux.h",
+      "linux/audio_device_utility_linux.cc",
+      "linux/audio_device_utility_linux.h",
+      "linux/audio_mixer_manager_alsa_linux.cc",
+      "linux/audio_mixer_manager_alsa_linux.h",
+      "linux/latebindingsymboltable_linux.cc",
+      "linux/latebindingsymboltable_linux.h",
+      "ios/audio_device_ios.mm",
+      "ios/audio_device_ios.h",
+      "ios/audio_device_utility_ios.cc",
+      "ios/audio_device_utility_ios.h",
+      "mac/audio_device_mac.cc",
+      "mac/audio_device_mac.h",
+      "mac/audio_device_utility_mac.cc",
+      "mac/audio_device_utility_mac.h",
+      "mac/audio_mixer_manager_mac.cc",
+      "mac/audio_mixer_manager_mac.h",
+      "mac/portaudio/pa_memorybarrier.h",
+      "mac/portaudio/pa_ringbuffer.c",
+      "mac/portaudio/pa_ringbuffer.h",
+      "win/audio_device_core_win.cc",
+      "win/audio_device_core_win.h",
+      "win/audio_device_wave_win.cc",
+      "win/audio_device_wave_win.h",
+      "win/audio_device_utility_win.cc",
+      "win/audio_device_utility_win.h",
+      "win/audio_mixer_manager_win.cc",
+      "win/audio_mixer_manager_win.h",
+      "android/audio_device_template.h",
+      "android/audio_device_utility_android.cc",
+      "android/audio_device_utility_android.h",
+      "android/audio_manager_jni.cc",
+      "android/audio_manager_jni.h",
+      "android/audio_record_jni.cc",
+      "android/audio_record_jni.h",
+      "android/audio_track_jni.cc",
+      "android/audio_track_jni.h",
+      "android/fine_audio_buffer.cc",
+      "android/fine_audio_buffer.h",
+      "android/low_latency_event_posix.cc",
+      "android/low_latency_event.h",
+      "android/opensles_common.cc",
+      "android/opensles_common.h",
+      "android/opensles_input.cc",
+      "android/opensles_input.h",
+      "android/opensles_output.cc",
+      "android/opensles_output.h",
+      "android/single_rw_fifo.cc",
+      "android/single_rw_fifo.h",
+    ]
+    if (is_linux) {
+      defines += [ "LINUX_ALSA" ]
+
+      libs = [
+        "dl",
+        "X11",
+      ]
+
+      if (rtc_include_pulse_audio) {
+        sources += [
+          "linux/audio_device_pulse_linux.cc",
+          "linux/audio_device_pulse_linux.h",
+          "linux/audio_mixer_manager_pulse_linux.cc",
+          "linux/audio_mixer_manager_pulse_linux.h",
+          "linux/pulseaudiosymboltable_linux.cc",
+          "linux/pulseaudiosymboltable_linux.h",
+        ]
+
+        defines += [ "LINUX_PULSE" ]
+      }
+    }
+    if (is_mac) {
+      libs = [
+        "AudioToolbox.framework",
+        "CoreAudio.framework",
+      ]
+    }
+    if (is_ios) {
+      cflags += [ "-fobjc-arc" ]  # CLANG_ENABLE_OBJC_ARC = YES.
+
+      libs = [
+        "AudioToolbox.framework",
+        "AVFoundation.framework",
+      ]
+    }
+    if (is_win) {
+      libs = [
+        # Required for the built-in WASAPI AEC.
+        "dmoguids.lib",
+        "wmcodecdspuuid.lib",
+        "amstrmid.lib",
+        "msdmo.lib",
+      ]
+    }
+  } else {
+    defines = [ "WEBRTC_DUMMY_AUDIO_BUILD" ]
+  }
+
+  if (!build_with_chromium) {
+    sources += [
+      # Do not link these into Chrome since they contain static data.
+      "dummy/file_audio_device_factory.cc",
+      "dummy/file_audio_device_factory.h",
+    ]
+  }
+
+  configs += [ "../..:common_config" ]
+  public_configs = [
+    "../..:common_inherited_config",
+     ":audio_device_config",
+  ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    "../../common_audio",
+    "../../system_wrappers",
+    "../utility",
+  ]
+}
+
+

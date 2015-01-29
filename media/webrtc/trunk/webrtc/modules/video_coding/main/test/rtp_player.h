@@ -44,20 +44,6 @@ class PayloadCodecTuple {
 typedef std::vector<PayloadCodecTuple> PayloadTypes;
 typedef std::vector<PayloadCodecTuple>::const_iterator PayloadTypesIterator;
 
-// Implemented by something that can provide RTP packets, for instance a file
-// format parser such as the rtp_file_reader or the pcap_file_reader.
-class RtpPacketSourceInterface {
- public:
-  virtual ~RtpPacketSourceInterface() {}
-
-  // Read next RTP packet into buffer pointed to by rtp_data. On call, 'length'
-  // field must be filled in with the size of the buffer. The actual size of
-  // the packet is available in 'length' upon returning. Time in milliseconds
-  // from start of stream is returned in 'time_ms'.
-  virtual int NextPacket(uint8_t* rtp_data, uint32_t* length,
-                         uint32_t* time_ms) = 0;
-};
-
 // Implemented by RtpPlayer and given to client as a means to retrieve
 // information about a specific RTP stream.
 class RtpStreamInterface {

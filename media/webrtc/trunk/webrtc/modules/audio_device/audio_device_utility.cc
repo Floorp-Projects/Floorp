@@ -46,7 +46,7 @@ bool AudioDeviceUtility::StringCompare(
 
 }  // namespace webrtc
 
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 
 // ============================================================================
 //                                 Linux & Mac
@@ -82,9 +82,9 @@ void AudioDeviceUtility::WaitForKey()
 
     // choose enter out of all available keys
 
-    if (getchar() == '\n')
+    if (getc(stdin) == '\n')
     {
-        getchar();
+        getc(stdin);
     }
 
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt );
@@ -109,4 +109,4 @@ bool AudioDeviceUtility::StringCompare(
 
 }  // namespace webrtc
 
-#endif  // defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#endif  // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)

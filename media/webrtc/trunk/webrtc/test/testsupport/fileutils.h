@@ -103,6 +103,10 @@ std::string ProjectRootPath();
 // found, the current working directory ("./") is returned as a fallback.
 std::string OutputPath();
 
+// Generates an empty file with a unique name in the specified directory and
+// returns the file name and path.
+std::string TempFilename(const std::string &dir, const std::string &prefix);
+
 // Returns a path to a resource file for the currently executing platform.
 // Adapts to what filenames are currently present in the
 // [project-root]/resources/ dir.
@@ -132,7 +136,10 @@ std::string WorkingDir();
 // Creates a directory if it not already exists.
 // Returns true if successful. Will print an error message to stderr and return
 // false if a file with the same name already exists.
-bool CreateDirectory(std::string directory_name);
+bool CreateDir(std::string directory_name);
+
+// Checks if a file exists.
+bool FileExists(std::string& file_name);
 
 // File size of the supplied file in bytes. Will return 0 if the file is
 // empty or if the file does not exist/is readable.
