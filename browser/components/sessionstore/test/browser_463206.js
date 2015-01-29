@@ -32,7 +32,7 @@ function test() {
     typeText(doc.defaultView.frames[0].frames[1].document.getElementById("in1"), new Date());
 
     let tab2 = gBrowser.duplicateTab(tab);
-    whenTabRestored(tab2, function() {
+    promiseTabRestored(tab2).then(() => {
       let doc = tab2.linkedBrowser.contentDocument;
       let win = tab2.linkedBrowser.contentWindow;
       isnot(doc.getElementById("out1").value,

@@ -13,12 +13,12 @@ function test() {
   let tab = gBrowser.addTab("about:sessionrestore");
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  whenBrowserLoaded(browser, function() {
+  promiseBrowserLoaded(browser).then(() => {
     let doc = browser.contentDocument;
 
     // click on the "Start New Session" button after about:sessionrestore is loaded
     doc.getElementById("errorCancel").click();
-    whenBrowserLoaded(browser, function() {
+    promiseBrowserLoaded(browser).then(() => {
       let doc = browser.contentDocument;
 
       is(doc.URL, "about:blank", "loaded page is about:blank");
@@ -29,12 +29,12 @@ function test() {
       gPrefService.setCharPref("browser.startup.homepage", homepage);
       gPrefService.setIntPref("browser.startup.page", 1);
       gBrowser.loadURI("about:sessionrestore");
-      whenBrowserLoaded(browser, function() {
+      promiseBrowserLoaded(browser).then(() => {
         let doc = browser.contentDocument;
 
         // click on the "Start New Session" button after about:sessionrestore is loaded
         doc.getElementById("errorCancel").click();
-        whenBrowserLoaded(browser, function() {
+        promiseBrowserLoaded(browser).then(() => {
           let doc = browser.contentDocument;
 
           is(doc.URL, homepage, "loaded page is the homepage");

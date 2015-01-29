@@ -13,7 +13,7 @@ function test() {
 
   // set a unique value on a new, blank tab
   let tab1 = gBrowser.addTab();
-  whenBrowserLoaded(tab1.linkedBrowser, function() {
+  promiseBrowserLoaded(tab1.linkedBrowser).then(() => {
     ss.setTabValue(tab1, uniqueName, uniqueValue1);
 
     // duplicate the tab with that value
@@ -24,8 +24,7 @@ function test() {
     isnot(ss.getTabValue(tab1, uniqueName), uniqueValue2, "tab values aren't sync'd");
 
     // overwrite the tab with the value which should remove it
-    ss.setTabState(tab1, JSON.stringify({ entries: [] }));
-    whenTabRestored(tab1, function() {
+    promiseTabState(tab1, {entries: []}).then(() => {
       is(ss.getTabValue(tab1, uniqueName), "", "tab value was cleared");
 
       // clean up

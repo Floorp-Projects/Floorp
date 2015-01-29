@@ -5,18 +5,14 @@
 // security policy with the document.
 // The policy being tested disallows inline scripts
 
-function test() {
-  TestRunner.run();
-}
-
-function runTests() {
+add_task(function* test() {
   // create a tab that has a CSP
   let testURL = "http://mochi.test:8888/browser/browser/components/sessionstore/test/browser_911547_sample.html";
   let tab = gBrowser.selectedTab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
 
   let browser = tab.linkedBrowser;
-  yield waitForLoad(browser);
+  yield promiseBrowserLoaded(browser);
 
   // this is a baseline to ensure CSP is active
   // attempt to inject and run a script via inline (pre-restore, allowed)
@@ -27,7 +23,7 @@ function runTests() {
   // attempt to click a link to a data: URI (will inherit the CSP of the
   // origin document) and navigate to the data URI in the link.
   browser.contentDocument.getElementById("test_data_link").click();
-  yield waitForLoad(browser);
+  yield promiseBrowserLoaded(browser);
 
   is(browser.contentDocument.getElementById("test_id2").value, "ok",
      "CSP should block the script loaded by the clicked data URI");
@@ -37,7 +33,7 @@ function runTests() {
 
   // open new tab and recover the state
   tab = ss.undoCloseTab(window, 0);
-  yield waitForTabRestored(tab);
+  yield promiseTabRestored(tab);
   browser = tab.linkedBrowser;
 
   is(browser.contentDocument.getElementById("test_id2").value, "ok",
@@ -45,21 +41,7 @@ function runTests() {
 
   // clean up
   gBrowser.removeTab(tab);
-}
-
-function waitForLoad(aElement) {
-  aElement.addEventListener("load", function onLoad() {
-    aElement.removeEventListener("load", onLoad, true);
-    executeSoon(next);
-  }, true);
-}
-
-function waitForTabRestored(aElement) {
-  aElement.addEventListener("SSTabRestored", function tabRestored(e) {
-    aElement.removeEventListener("SSTabRestored", tabRestored, true);
-    executeSoon(next);
-  }, true);
-}
+});
 
 // injects an inline script element (with a text body)
 function injectInlineScript(browser, scriptText) {
