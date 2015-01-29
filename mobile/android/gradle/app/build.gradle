@@ -1,13 +1,38 @@
 apply plugin: 'com.android.application'
 
-apply from: rootProject.file("${topsrcdir}/mobile/android/gradle/android.gradle")
-
 android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        targetSdkVersion 21
+        minSdkVersion 9
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    dexOptions {
+        incremental true
+        preDexLibraries true
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
         }
+    }
+
+    defaultConfig {
+        testApplicationId 'org.mozilla.roboexample.test'
+        testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
     }
 
     sourceSets {
