@@ -165,7 +165,6 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   mTimer = nullptr;
 
   aSource->EndTrack(aID);
-  aSource->Finish();
 
   mState = kStopped;
   return NS_OK;
@@ -402,7 +401,6 @@ MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
   mTimer = nullptr;
 
   aSource->EndTrack(aID);
-  aSource->Finish();
 
   mState = kStopped;
   return NS_OK;
