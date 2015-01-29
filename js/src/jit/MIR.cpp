@@ -3048,7 +3048,7 @@ MToInt32::foldsTo(TempAllocator &alloc)
     // Fold this operation if the input operand is constant.
     if (input->isConstant()) {
         Value val = input->toConstant()->value();
-        MacroAssembler::IntConversionInputKind convert = conversion();
+        DebugOnly<MacroAssembler::IntConversionInputKind> convert = conversion();
         switch (input->type()) {
           case MIRType_Null:
             MOZ_ASSERT(convert == MacroAssembler::IntConversion_Any);
