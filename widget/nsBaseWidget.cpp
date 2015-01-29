@@ -1766,7 +1766,7 @@ nsBaseWidget::RegisterPluginWindowForRemoteUpdates()
   return;
 #else
   MOZ_ASSERT(NS_IsMainThread());
-  void* id = GetNativeData(NS_NATIVE_PLUGIN_PORT);
+  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
   if (!id) {
     NS_WARNING("This is not a valid native widget!");
     return;
@@ -1784,7 +1784,7 @@ nsBaseWidget::UnregisterPluginWindowForRemoteUpdates()
   return;
 #else
   MOZ_ASSERT(NS_IsMainThread());
-  void* id = GetNativeData(NS_NATIVE_PLUGIN_PORT);
+  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
   if (!id) {
     NS_WARNING("This is not a valid native widget!");
     return;

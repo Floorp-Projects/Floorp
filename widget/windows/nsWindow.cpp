@@ -2919,6 +2919,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
                                       nullptr,
                                       nsToolkit::mDllInstance,
                                       nullptr);
+    case NS_NATIVE_PLUGIN_ID:
     case NS_NATIVE_PLUGIN_PORT:
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
