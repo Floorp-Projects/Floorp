@@ -19,7 +19,16 @@
           # Mozilla provides its own build of the opus library.
           'include_dirs': [
             '/media/libopus/include',
-           ]
+            '/media/libopus/src',
+            '/media/libopus/celt',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              '/media/libopus/include',
+              '/media/libopus/src',
+              '/media/libopus/celt',
+            ],
+          },
         }, {
           'dependencies': [
             '<(DEPTH)/third_party/opus/opus.gyp:opus'

@@ -44,6 +44,9 @@
       'dependencies': [
         'video_capture_module',
       ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
       'sources': [
         'external/device_info_external.cc',
         'external/video_capture_external.cc',
@@ -54,6 +57,9 @@
       'type': 'static_library',
       'dependencies': [
         'video_capture_module',
+      ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
       ],
       'conditions': [
         ['include_v4l2_video_capture==1', {
@@ -98,8 +104,6 @@
                 '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
               ],
             }],
-          'dependencies': [
-            '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
           ],
           'sources': [
             'windows/device_info_ds.cc',
