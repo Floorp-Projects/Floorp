@@ -41,6 +41,9 @@
       'sources': [
         'checks.cc',
         'checks.h',
+# Moved by mozilla
+#        'common.cc',
+#        'common.h',
         'exp_filter.cc',
         'exp_filter.h',
         'md5.cc',
