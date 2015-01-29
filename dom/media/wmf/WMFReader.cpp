@@ -111,7 +111,8 @@ WMFReader::InitializeDXVA()
     return false;
   }
 
-  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
+  if (gfxWindowsPlatform::GetPlatform()->IsWARP() ||
+      !gfxPlatform::CanUseDXVA()) {
     return false;
   }
 

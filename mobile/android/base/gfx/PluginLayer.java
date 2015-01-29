@@ -37,7 +37,7 @@ public class PluginLayer extends TileLayer {
     };
 
     public PluginLayer(View view, RectF rect, int maxDimension) {
-        super(new BufferedCairoImage(null, 0, 0, 0), TileLayer.PaintMode.NORMAL);
+        super(new BufferedImage(), TileLayer.PaintMode.NORMAL);
 
         mView = view;
         mContainer = GeckoAppShell.getGeckoInterface().getPluginContainer();
