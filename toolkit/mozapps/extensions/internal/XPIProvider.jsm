@@ -2396,7 +2396,9 @@ this.XPIProvider = {
     }
     catch (e) { }
 
-    Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).TelemetryPing.setAddOns(data);
+    let TelemetrySession =
+      Cu.import("resource://gre/modules/TelemetrySession.jsm", {}).TelemetrySession;
+    TelemetrySession.setAddOns(data);
   },
 
   /**

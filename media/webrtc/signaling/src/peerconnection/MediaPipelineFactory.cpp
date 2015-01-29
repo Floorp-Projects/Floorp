@@ -16,6 +16,7 @@
 #include "signaling/src/jsep/JsepTransport.h"
 
 #ifdef MOZILLA_INTERNAL_API
+#include "MediaStreamTrack.h"
 #include "nsIPrincipal.h"
 #include "nsIDocument.h"
 #include "mozilla/Preferences.h"
@@ -338,14 +339,18 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
     }
   }
 
+  // We need to choose a numeric track id for MediaStreamGraph to use. Must be
+  // unique within the MediaStream, so level + 1 should be fine (cannot use 0).
+  TrackID numericTrackId = aTrackPair.mLevel + 1;
+
   if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
     pipeline = new MediaPipelineReceiveAudio(
         mPC->GetHandle(),
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
         stream->GetMediaStream()->GetStream(),
-        // Use the level + 1 as the track id. 0 is forbidden
-        aTrackPair.mLevel + 1,
+        aTrack.GetTrackId(),
+        numericTrackId,
         aTrackPair.mLevel,
         static_cast<AudioSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
@@ -358,8 +363,8 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
         stream->GetMediaStream()->GetStream(),
-        // Use the level + 1 as the track id. 0 is forbidden
-        aTrackPair.mLevel + 1,
+        aTrack.GetTrackId(),
+        numericTrackId,
         aTrackPair.mLevel,
         static_cast<VideoSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
@@ -377,7 +382,15 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
     return rv;
   }
 
-  stream->StorePipeline(aTrackPair.mLevel, SdpMediaSection::kVideo, pipeline);
+  rv = stream->StorePipeline(aTrack.GetTrackId(),
+                             RefPtr<MediaPipeline>(pipeline));
+  if (NS_FAILED(rv)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't store receiving pipeline " <<
+                        static_cast<unsigned>(rv));
+    return rv;
+  }
+
+  stream->SyncPipeline(pipeline);
   return NS_OK;
 }
 
@@ -415,10 +428,17 @@ MediaPipelineFactory::CreateMediaPipelineSending(
 
   // Now we have all the pieces, create the pipeline
   RefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
-      mPC->GetHandle(), mPC->GetMainThread().get(), mPC->GetSTSThread(),
-      stream->GetMediaStream(), aTrackPair.mLevel,
-      aTrack.GetMediaType() == SdpMediaSection::kVideo, aConduit, aRtpFlow,
-      aRtcpFlow, filter);
+      mPC->GetHandle(),
+      mPC->GetMainThread().get(),
+      mPC->GetSTSThread(),
+      stream->GetMediaStream(),
+      aTrack.GetTrackId(),
+      aTrackPair.mLevel,
+      aTrack.GetMediaType() == SdpMediaSection::kVideo,
+      aConduit,
+      aRtpFlow,
+      aRtcpFlow,
+      filter);
 
 #ifdef MOZILLA_INTERNAL_API
   // implement checking for peerIdentity (where failure == black/silence)
@@ -438,7 +458,13 @@ MediaPipelineFactory::CreateMediaPipelineSending(
     return rv;
   }
 
-  stream->StorePipeline(aTrackPair.mLevel, pipeline);
+  rv = stream->StorePipeline(aTrack.GetTrackId(),
+                             RefPtr<MediaPipeline>(pipeline));
+  if (NS_FAILED(rv)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't store receiving pipeline " <<
+                        static_cast<unsigned>(rv));
+    return rv;
+  }
 
   return NS_OK;
 }
