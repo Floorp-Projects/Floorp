@@ -318,9 +318,6 @@ nsresult PeerConnectionMedia::UpdateMediaPipelines(
       return rv;
     }
 
-    // TODO(bug 1099318): We are forced to do receive then transmit, because of
-    // a bug in the VideoConduit code. This will need to be fixed for
-    // renegotiation.
     if (pair->mReceiving) {
       rv = factory.CreateMediaPipeline(*pair, *pair->mReceiving);
       if (NS_FAILED(rv)) {
