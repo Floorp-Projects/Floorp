@@ -50,7 +50,9 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mLastVideoTime(0)
   , mPendingSeekTime(-1)
   , mWaitingForSeekData(false)
-  , mTimeThreshold(0)
+  , mAudioIsSeeking(false)
+  , mVideoIsSeeking(false)
+  , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
@@ -117,20 +119,18 @@ MediaSourceReader::RequestAudioData()
     mAudioPromise.Reject(DECODE_ERROR, __func__);
     return p;
   }
-  if (IsSeeking()) {
+  if (mAudioIsSeeking) {
     MSE_DEBUG("MediaSourceReader(%p)::RequestAudioData called mid-seek. Rejecting.", this);
     mAudioPromise.Reject(CANCELED, __func__);
     return p;
   }
-  MOZ_RELEASE_ASSERT(!mSeekRequest.Exists());
-
   SwitchReaderResult ret = SwitchAudioReader(mLastAudioTime);
   switch (ret) {
     case READER_NEW:
-      mSeekRequest.Begin(mAudioReader->Seek(mLastAudioTime, 0)
-                         ->RefableThen(GetTaskQueue(), __func__, this,
-                                       &MediaSourceReader::CompleteSeekAndDoAudioRequest,
-                                       &MediaSourceReader::CompleteSeekAndRejectAudioPromise));
+      mAudioReader->Seek(mLastAudioTime, 0)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::RequestAudioDataComplete,
+                         &MediaSourceReader::RequestAudioDataFailed);
       break;
     case READER_ERROR:
       if (mLastAudioTime) {
@@ -139,42 +139,49 @@ MediaSourceReader::RequestAudioData()
       }
       // Fallback to using current reader
     default:
-      DoAudioRequest();
+      RequestAudioDataComplete(0);
       break;
   }
   return p;
 }
 
-void MediaSourceReader::DoAudioRequest()
+void
+MediaSourceReader::RequestAudioDataComplete(int64_t aTime)
 {
-  mAudioRequest.Begin(mAudioReader->RequestAudioData()
-                      ->RefableThen(GetTaskQueue(), __func__, this,
-                                    &MediaSourceReader::OnAudioDecoded,
-                                    &MediaSourceReader::OnAudioNotDecoded));
+  mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
+                                         &MediaSourceReader::OnAudioDecoded,
+                                         &MediaSourceReader::OnAudioNotDecoded);
+}
+
+void
+MediaSourceReader::RequestAudioDataFailed(nsresult aResult)
+{
+  OnAudioNotDecoded(DECODE_ERROR);
 }
 
 void
 MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 {
-  MOZ_RELEASE_ASSERT(!IsSeeking());
-  mAudioRequest.Complete();
-
   MSE_DEBUGV("MediaSourceReader(%p)::OnAudioDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropAudioBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnAudioDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      mAudioRequest.Begin(mAudioReader->RequestAudioData()
-                          ->RefableThen(GetTaskQueue(), __func__, this,
-                                        &MediaSourceReader::OnAudioDecoded,
-                                        &MediaSourceReader::OnAudioNotDecoded));
+      mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
+                                             &MediaSourceReader::OnAudioDecoded,
+                                             &MediaSourceReader::OnAudioNotDecoded);
       return;
     }
     mDropAudioBeforeThreshold = false;
   }
 
-  mLastAudioTime = aSample->mTime + aSample->mDuration;
+  // Any OnAudioDecoded callbacks received while mAudioIsSeeking must be not
+  // update our last used timestamp, as these are emitted by the reader we're
+  // switching away from.
+  if (!mAudioIsSeeking) {
+    mLastAudioTime = aSample->mTime + aSample->mDuration;
+  }
 
   mAudioPromise.Resolve(aSample, __func__);
 }
@@ -208,9 +215,6 @@ AdjustEndTime(int64_t* aEndTime, MediaDecoderReader* aReader)
 void
 MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
 {
-  MOZ_RELEASE_ASSERT(!IsSeeking());
-  mAudioRequest.Complete();
-
   MSE_DEBUG("MediaSourceReader(%p)::OnAudioNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
     mAudioPromise.Reject(aReason, __func__);
@@ -228,10 +232,10 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
   if (SwitchAudioReader(mLastAudioTime, EOS_FUZZ_US) == READER_NEW) {
-    mSeekRequest.Begin(mAudioReader->Seek(mLastAudioTime, 0)
-                       ->RefableThen(GetTaskQueue(), __func__, this,
-                                     &MediaSourceReader::CompleteSeekAndDoAudioRequest,
-                                     &MediaSourceReader::CompleteSeekAndRejectAudioPromise));
+    mAudioReader->Seek(mLastAudioTime, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::RequestAudioDataComplete,
+                       &MediaSourceReader::RequestAudioDataFailed);
     return;
   }
 
@@ -255,20 +259,18 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
     mDropAudioBeforeThreshold = true;
     mDropVideoBeforeThreshold = true;
   }
-  if (IsSeeking()) {
+  if (mVideoIsSeeking) {
     MSE_DEBUG("MediaSourceReader(%p)::RequestVideoData called mid-seek. Rejecting.", this);
     mVideoPromise.Reject(CANCELED, __func__);
     return p;
   }
-  MOZ_RELEASE_ASSERT(!mSeekRequest.Exists());
-
   SwitchReaderResult ret = SwitchVideoReader(mLastVideoTime);
   switch (ret) {
     case READER_NEW:
-      mSeekRequest.Begin(mVideoReader->Seek(mLastVideoTime, 0)
-                         ->RefableThen(GetTaskQueue(), __func__, this,
-                                       &MediaSourceReader::CompleteSeekAndDoVideoRequest,
-                                       &MediaSourceReader::CompleteSeekAndRejectVideoPromise));
+      mVideoReader->Seek(mLastVideoTime, 0)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::RequestVideoDataComplete,
+                         &MediaSourceReader::RequestVideoDataFailed);
       break;
     case READER_ERROR:
       if (mLastVideoTime) {
@@ -277,7 +279,9 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
       }
       // Fallback to using current reader.
     default:
-      DoVideoRequest();
+      mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+                  ->Then(GetTaskQueue(), __func__, this,
+                         &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
       break;
   }
 
@@ -285,34 +289,42 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
 }
 
 void
-MediaSourceReader::DoVideoRequest()
+MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
 {
-  mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
-                      ->RefableThen(GetTaskQueue(), __func__, this,
-                                    &MediaSourceReader::OnVideoDecoded,
-                                    &MediaSourceReader::OnVideoNotDecoded));
+  mVideoReader->RequestVideoData(false, 0)
+              ->Then(GetTaskQueue(), __func__, this,
+                     &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+}
+
+void
+MediaSourceReader::RequestVideoDataFailed(nsresult aResult)
+{
+  OnVideoNotDecoded(DECODE_ERROR);
 }
 
 void
 MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 {
-  MOZ_RELEASE_ASSERT(!IsSeeking());
-  mVideoRequest.Complete();
-
   MSE_DEBUGV("MediaSourceReader(%p)::OnVideoDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropVideoBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      DoVideoRequest();
+      mVideoReader->RequestVideoData(false, 0)->Then(GetTaskQueue(), __func__, this,
+                                                     &MediaSourceReader::OnVideoDecoded,
+                                                     &MediaSourceReader::OnVideoNotDecoded);
       return;
     }
     mDropVideoBeforeThreshold = false;
-    mTimeThreshold = 0;
   }
 
-  mLastVideoTime = aSample->mTime + aSample->mDuration;
+  // Any OnVideoDecoded callbacks received while mVideoIsSeeking must be not
+  // update our last used timestamp, as these are emitted by the reader we're
+  // switching away from.
+  if (!mVideoIsSeeking) {
+    mLastVideoTime = aSample->mTime + aSample->mDuration;
+  }
 
   mVideoPromise.Resolve(aSample, __func__);
 }
@@ -320,9 +332,6 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 void
 MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
 {
-  MOZ_RELEASE_ASSERT(!IsSeeking());
-  mVideoRequest.Complete();
-
   MSE_DEBUG("MediaSourceReader(%p)::OnVideoNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
     mVideoPromise.Reject(aReason, __func__);
@@ -340,10 +349,10 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
   // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
   // 1065207.
   if (SwitchVideoReader(mLastVideoTime, EOS_FUZZ_US) == READER_NEW) {
-    mSeekRequest.Begin(mVideoReader->Seek(mLastVideoTime, 0)
-                       ->RefableThen(GetTaskQueue(), __func__, this,
-                                     &MediaSourceReader::CompleteSeekAndDoVideoRequest,
-                                     &MediaSourceReader::CompleteSeekAndRejectVideoPromise));
+    mVideoReader->Seek(mLastVideoTime, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::RequestVideoDataComplete,
+                       &MediaSourceReader::RequestVideoDataFailed);
     return;
   }
 
@@ -661,19 +670,6 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
     return p;
   }
 
-  // Any previous requests we've been waiting on are now unwanted.
-  mAudioRequest.DisconnectIfExists();
-  mVideoRequest.DisconnectIfExists();
-
-  // Additionally, reject any outstanding promises _we_ made that we might have
-  // been waiting on the above to fulfill.
-  mAudioPromise.RejectIfExists(CANCELED, __func__);
-  mVideoPromise.RejectIfExists(CANCELED, __func__);
-
-  // Finally, if we were midway seeking a new reader to find a sample, abandon
-  // that too.
-  mSeekRequest.DisconnectIfExists();
-
   // Store pending seek target in case the track buffers don't contain
   // the desired time and we delay doing the seek.
   mPendingSeekTime = aTime;
@@ -692,55 +688,69 @@ MediaSourceReader::CancelSeek()
 {
   MOZ_ASSERT(OnDecodeThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mWaitingForSeekData = false;
-  mPendingSeekTime = -1;
-  mSeekRequest.DisconnectIfExists();
-  if (mAudioReader) {
-    mAudioReader->CancelSeek();
-  }
-  if (mVideoReader) {
+  if (mWaitingForSeekData) {
+    mSeekPromise.Reject(NS_OK, __func__);
+    mWaitingForSeekData = false;
+    mPendingSeekTime = -1;
+  } else if (mVideoIsSeeking) {
+    // NB: Currently all readers have sync Seeks(), so this is a no-op.
     mVideoReader->CancelSeek();
+  } else if (mAudioIsSeeking) {
+    // NB: Currently all readers have sync Seeks(), so this is a no-op.
+    mAudioReader->CancelSeek();
+  } else {
+    MOZ_ASSERT(mSeekPromise.IsEmpty());
   }
-  mSeekPromise.RejectIfExists(NS_OK, __func__);
 }
 
 void
 MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 {
-  mSeekRequest.Complete();
+  mPendingSeekTime = aTime;
+  MOZ_ASSERT(mVideoIsSeeking);
+  MOZ_ASSERT(!mAudioIsSeeking);
+  mVideoIsSeeking = false;
 
   if (mAudioTrack) {
-    mPendingSeekTime = aTime;
-    DoAudioSeek();
-  } else {
-    mPendingSeekTime = -1;
-    mSeekPromise.Resolve(aTime, __func__);
-  }
-}
-
-void
-MediaSourceReader::DoAudioSeek()
-{
+    mAudioIsSeeking = true;
     SwitchAudioReader(mPendingSeekTime);
-    mSeekRequest.Begin(mAudioReader->Seek(mPendingSeekTime, 0)
-                       ->RefableThen(GetTaskQueue(), __func__, this,
-                                     &MediaSourceReader::OnAudioSeekCompleted,
-                                     &MediaSourceReader::OnSeekFailed));
-    MSE_DEBUG("MediaSourceReader(%p)::DoAudioSeek reader=%p", this, mAudioReader.get());
+    mAudioReader->Seek(mPendingSeekTime, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnAudioSeekCompleted,
+                       &MediaSourceReader::OnSeekFailed);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
+    return;
+  }
+  mSeekPromise.Resolve(mPendingSeekTime, __func__);
 }
 
 void
 MediaSourceReader::OnAudioSeekCompleted(int64_t aTime)
 {
-  mSeekRequest.Complete();
+  mPendingSeekTime = aTime;
+  MOZ_ASSERT(mAudioIsSeeking);
+  MOZ_ASSERT(!mVideoIsSeeking);
+  mAudioIsSeeking = false;
+
+  mSeekPromise.Resolve(mPendingSeekTime, __func__);
   mPendingSeekTime = -1;
-  mSeekPromise.Resolve(aTime, __func__);
 }
 
 void
 MediaSourceReader::OnSeekFailed(nsresult aResult)
 {
-  mSeekRequest.Complete();
+  MOZ_ASSERT(mVideoIsSeeking || mAudioIsSeeking);
+
+  if (mVideoIsSeeking) {
+    MOZ_ASSERT(!mAudioIsSeeking);
+    mVideoIsSeeking = false;
+  }
+
+  if (mAudioIsSeeking) {
+    MOZ_ASSERT(!mVideoIsSeeking);
+    mAudioIsSeeking = false;
+  }
+
   mPendingSeekTime = -1;
   mSeekPromise.Reject(aResult, __func__);
 }
@@ -768,23 +778,16 @@ MediaSourceReader::AttemptSeek()
   mLastVideoTime = mPendingSeekTime;
 
   if (mVideoTrack) {
-    DoVideoSeek();
-  } else if (mAudioTrack) {
-    DoAudioSeek();
+    mVideoIsSeeking = true;
+    SwitchVideoReader(mPendingSeekTime);
+    mVideoReader->Seek(mPendingSeekTime, 0)
+                ->Then(GetTaskQueue(), __func__, this,
+                       &MediaSourceReader::OnVideoSeekCompleted,
+                       &MediaSourceReader::OnSeekFailed);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
   } else {
-    MOZ_CRASH();
+    OnVideoSeekCompleted(mPendingSeekTime);
   }
-}
-
-void
-MediaSourceReader::DoVideoSeek()
-{
-  SwitchVideoReader(mPendingSeekTime);
-  mSeekRequest.Begin(mVideoReader->Seek(mPendingSeekTime, 0)
-                     ->RefableThen(GetTaskQueue(), __func__, this,
-                                   &MediaSourceReader::OnVideoSeekCompleted,
-                                   &MediaSourceReader::OnSeekFailed));
-  MSE_DEBUG("MediaSourceReader(%p)::DoVideoSeek reader=%p", this, mVideoReader.get());
 }
 
 nsresult
@@ -841,11 +844,11 @@ MediaSourceReader::MaybeNotifyHaveData()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   bool haveAudio = false, haveVideo = false;
-  if (!IsSeeking() && mAudioTrack && HaveData(mLastAudioTime, MediaData::AUDIO_DATA)) {
+  if (!mAudioIsSeeking && mAudioTrack && HaveData(mLastAudioTime, MediaData::AUDIO_DATA)) {
     haveAudio = true;
     WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
   }
-  if (!IsSeeking() && mVideoTrack && HaveData(mLastVideoTime, MediaData::VIDEO_DATA)) {
+  if (!mVideoIsSeeking && mVideoTrack && HaveData(mLastVideoTime, MediaData::VIDEO_DATA)) {
     haveVideo = true;
     WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
   }
