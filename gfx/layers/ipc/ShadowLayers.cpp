@@ -538,6 +538,22 @@ ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
   }
 }
 
+void
+ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
+                                                      aConfigurations)
+{
+  // Cache new plugin widget configs here until we call update, at which
+  // point this data will get shipped over to chrome.
+  mPluginWindowData.Clear();
+  for (uint32_t idx = 0; idx < aConfigurations.Length(); idx++) {
+    const nsIWidget::Configuration& configuration = aConfigurations[idx];
+    mPluginWindowData.AppendElement(PluginWindowData(configuration.mWindowID,
+                                                     configuration.mClipRegion,
+                                                     configuration.mBounds,
+                                                     configuration.mVisible));
+  }
+}
+
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                                      const nsIntRegion& aRegionToClear,
@@ -674,10 +690,10 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
-        !mShadowManager->SendUpdate(cset, aId, targetConfig, mIsFirstPaint,
-                                    aScheduleComposite, aPaintSequenceNumber,
-                                    aIsRepeatTransaction, aTransactionStart,
-                                    aReplies)) {
+        !mShadowManager->SendUpdate(cset, aId, targetConfig, mPluginWindowData,
+                                    mIsFirstPaint, aScheduleComposite,
+                                    aPaintSequenceNumber, aIsRepeatTransaction,
+                                    aTransactionStart, aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -688,13 +704,18 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
-        !mShadowManager->SendUpdateNoSwap(cset, aId, targetConfig, mIsFirstPaint,
-                                          aScheduleComposite, aPaintSequenceNumber,
-                                          aIsRepeatTransaction, aTransactionStart)) {
+        !mShadowManager->SendUpdateNoSwap(cset, aId, targetConfig, mPluginWindowData,
+                                          mIsFirstPaint, aScheduleComposite,
+                                          aPaintSequenceNumber, aIsRepeatTransaction,
+                                          aTransactionStart)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
   }
+
+  // Clear any cached plugin data we might have, now that the
+  // transaction is complete.
+  mPluginWindowData.Clear();
 
   *aSent = true;
   mIsFirstPaint = false;

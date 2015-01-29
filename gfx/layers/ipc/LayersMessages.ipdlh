@@ -259,6 +259,14 @@ struct LayerAttributes {
   SpecificLayerAttributes specific;
 };
 
+// See nsIWidget Configurations
+struct PluginWindowData {
+  uintptr_t windowId;
+  nsIntRect[] clip;
+  nsIntRect bounds;
+  bool visible;
+};
+
 struct OpSetLayerAttributes {
   PLayer layer;
   LayerAttributes attrs;

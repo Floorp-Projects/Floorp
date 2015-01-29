@@ -2723,13 +2723,14 @@ public:
   {
   }
 
+  void NotifySelectionBackgroundNeedsFill(const Rect& aBackgroundRect,
+                                          nscolor aColor,
+                                          DrawTarget& aDrawTarget) MOZ_OVERRIDE;
   void NotifyBeforeText(nscolor aColor) MOZ_OVERRIDE;
   void NotifyGlyphPathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterSVGGlyphPainted() MOZ_OVERRIDE;
   void NotifyAfterText() MOZ_OVERRIDE;
-  void NotifyBeforeSelectionBackground(nscolor aColor) MOZ_OVERRIDE;
-  void NotifySelectionBackgroundPathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeDecorationLine(nscolor aColor) MOZ_OVERRIDE;
   void NotifyDecorationLinePathEmitted() MOZ_OVERRIDE;
   void NotifyBeforeSelectionDecorationLine(nscolor aColor) MOZ_OVERRIDE;
@@ -2787,6 +2788,27 @@ private:
 };
 
 void
+SVGTextDrawPathCallbacks::NotifySelectionBackgroundNeedsFill(
+                                                      const Rect& aBackgroundRect,
+                                                      nscolor aColor,
+                                                      DrawTarget& aDrawTarget)
+{
+  if (IsClipPathChild()) {
+    // Don't paint selection backgrounds when in a clip path.
+    return;
+  }
+
+  mColor = aColor; // currently needed by MakeFillPattern
+
+  GeneralPattern fillPattern;
+  MakeFillPattern(&fillPattern);
+  if (fillPattern.GetPattern()) {
+    DrawOptions drawOptions(aColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
+    aDrawTarget.FillRect(aBackgroundRect, fillPattern, drawOptions);
+  }
+}
+
+void
 SVGTextDrawPathCallbacks::NotifyBeforeText(nscolor aColor)
 {
   mColor = aColor;
@@ -2817,41 +2839,6 @@ SVGTextDrawPathCallbacks::NotifyAfterSVGGlyphPainted()
 void
 SVGTextDrawPathCallbacks::NotifyAfterText()
 {
-  gfx->Restore();
-}
-
-void
-SVGTextDrawPathCallbacks::NotifyBeforeSelectionBackground(nscolor aColor)
-{
-  if (IsClipPathChild()) {
-    // Don't paint selection backgrounds when in a clip path.
-    return;
-  }
-
-  mColor = aColor;
-  gfx->Save();
-}
-
-void
-SVGTextDrawPathCallbacks::NotifySelectionBackgroundPathEmitted()
-{
-  if (IsClipPathChild()) {
-    // Don't paint selection backgrounds when in a clip path.
-    return;
-  }
-
-  GeneralPattern fillPattern;
-  MakeFillPattern(&fillPattern);
-  if (fillPattern.GetPattern()) {
-    RefPtr<Path> path = gfx->GetPath();
-    FillRule fillRule = nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule);
-    if (fillRule != path->GetFillRule()) {
-      RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
-      path = builder->Finish();
-    }
-    DrawOptions drawOptions(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
-    gfx->GetDrawTarget()->Fill(path, fillPattern, drawOptions);
-  }
   gfx->Restore();
 }
 

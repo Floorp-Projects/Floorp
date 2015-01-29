@@ -193,13 +193,14 @@ bool
 LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
                                          const uint64_t& aTransactionId,
                                          const TargetConfig& targetConfig,
+                                         PluginsArray&& aPlugins,
                                          const bool& isFirstPaint,
                                          const bool& scheduleComposite,
                                          const uint32_t& paintSequenceNumber,
                                          const bool& isRepeatTransaction,
                                          const mozilla::TimeStamp& aTransactionStart)
 {
-  return RecvUpdate(Move(cset), aTransactionId, targetConfig, isFirstPaint,
+  return RecvUpdate(Move(cset), aTransactionId, targetConfig, Move(aPlugins), isFirstPaint,
       scheduleComposite, paintSequenceNumber, isRepeatTransaction,
       aTransactionStart, nullptr);
 }
@@ -223,6 +224,7 @@ bool
 LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
                                    const uint64_t& aTransactionId,
                                    const TargetConfig& targetConfig,
+                                   PluginsArray&& aPlugins,
                                    const bool& isFirstPaint,
                                    const bool& scheduleComposite,
                                    const uint32_t& paintSequenceNumber,
@@ -581,7 +583,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   }
 
   mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
-      isFirstPaint, scheduleComposite, paintSequenceNumber, isRepeatTransaction);
+                                            aPlugins, isFirstPaint, scheduleComposite,
+                                            paintSequenceNumber, isRepeatTransaction);
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
