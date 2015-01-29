@@ -3760,13 +3760,14 @@ function FillHistoryMenu(aParent) {
     let item = document.createElement("menuitem");
     let entry = sessionHistory.getEntryAtIndex(j, false);
     let uri = entry.URI.spec;
+    let uriCopy = BrowserUtils.makeURI(uri);
 
     item.setAttribute("uri", uri);
     item.setAttribute("label", entry.title || uri);
     item.setAttribute("index", j);
 
     if (j != index) {
-      PlacesUtils.favicons.getFaviconURLForPage(entry.URI, function (aURI) {
+      PlacesUtils.favicons.getFaviconURLForPage(uriCopy, function (aURI) {
         if (aURI) {
           let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
           iconURL = PlacesUtils.getImageURLForResolution(window, iconURL);
