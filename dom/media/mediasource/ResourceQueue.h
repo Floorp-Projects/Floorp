@@ -108,7 +108,7 @@ public:
   uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict) {
     SBR_DEBUG("ResourceQueue(%p)::Evict(aOffset=%llu, aSizeToEvict=%u)",
               this, aOffset, aSizeToEvict);
-    return EvictBefore(std::min(aOffset, (uint64_t)aSizeToEvict));
+    return EvictBefore(std::min(aOffset, mOffset + (uint64_t)aSizeToEvict));
   }
 
   uint32_t EvictBefore(uint64_t aOffset) {
