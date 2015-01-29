@@ -377,6 +377,9 @@ this.ImportExport = {
           if (meta.id in DOMApplicationRegistry.webapps) {
             throw "DuplicateOrigin";
           }
+          // We need to change the app directory name to match the new meta.id
+          appDir.moveTo(appDir.parent, meta.id);
+
           meta.origin = uri.prePath;
         }
       } else {
