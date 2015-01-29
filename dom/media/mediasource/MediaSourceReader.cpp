@@ -156,7 +156,7 @@ MediaSourceReader::RequestAudioDataComplete(int64_t aTime)
 void
 MediaSourceReader::RequestAudioDataFailed(nsresult aResult)
 {
-  OnAudioNotDecoded(DECODE_ERROR);
+  mAudioPromise.Reject(DECODE_ERROR, __func__);
 }
 
 void
@@ -299,7 +299,7 @@ MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
 void
 MediaSourceReader::RequestVideoDataFailed(nsresult aResult)
 {
-  OnVideoNotDecoded(DECODE_ERROR);
+  mVideoPromise.Reject(DECODE_ERROR, __func__);
 }
 
 void
