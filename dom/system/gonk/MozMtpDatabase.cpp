@@ -204,6 +204,30 @@ MozMtpDatabase::RemoveEntryAndNotify(MtpObjectHandle aHandle, RefCountedMtpServe
   aMtpServer->sendObjectRemoved(aHandle);
 }
 
+void
+MozMtpDatabase::UpdateEntryAndNotify(MtpObjectHandle aHandle, DeviceStorageFile* aFile, RefCountedMtpServer* aMtpServer)
+{
+  UpdateEntry(aHandle, aFile);
+  aMtpServer->sendObjectAdded(aHandle);
+}
+
+
+void
+MozMtpDatabase::UpdateEntry(MtpObjectHandle aHandle, DeviceStorageFile* aFile)
+{
+  MutexAutoLock lock(mMutex);
+
+  RefPtr<DbEntry> entry = mDb[aHandle];
+
+  int64_t fileSize = 0;
+  aFile->mFile->GetFileSize(&fileSize);
+  entry->mObjectSize = fileSize;
+  aFile->mFile->GetLastModifiedTime(&entry->mDateCreated);
+  entry->mDateModified = entry->mDateCreated;
+  MTP_DBG("UpdateEntry (0x%08x file %s)", entry->mHandle, entry->mPath.get());
+}
+
+
 class FileWatcherNotifyRunnable MOZ_FINAL : public nsRunnable
 {
 public:
@@ -304,13 +328,16 @@ MozMtpDatabase::FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
   if (aEventType.EqualsLiteral("modified")) {
     // To update the file information to the newest, we remove the entry for
     // the existing file, then re-add the entry for the file.
-    if (entryHandle != 0) {
-      MTP_LOG("About to call sendObjectRemoved Handle 0x%08x file %s", entryHandle, filePath.get());
-      RemoveEntryAndNotify(entryHandle, aMtpServer);
-    }
 
-    // create entry for the file and tell MTP.
-    CreateEntryForFileAndNotify(filePath, aFile, aMtpServer);
+    if (entryHandle != 0) {
+      // Update entry for the file and tell MTP.
+      MTP_LOG("About to update handle 0x%08x file %s", entryHandle, filePath.get());
+      UpdateEntryAndNotify(entryHandle, aFile, aMtpServer);
+    }
+    else {
+      // Create entry for the file and tell MTP.
+      CreateEntryForFileAndNotify(filePath, aFile, aMtpServer);
+    }
     return;
   }
 
