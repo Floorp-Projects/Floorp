@@ -28,12 +28,14 @@ public:
 
   virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
-
   virtual nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
-  virtual nsresult Flush() MOZ_OVERRIDE;
+protected:
+  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+
+  virtual status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+
 private:
 
   nsresult CreateAudioData(int64_t aStreamOffset,

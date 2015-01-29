@@ -24,6 +24,86 @@ using namespace android;
 
 namespace mozilla {
 
+GonkDecoderManager::GonkDecoderManager()
+  : mMonitor("GonkDecoderManager")
+  , mInputEOS(false)
+{
+}
+
+nsresult
+GonkDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
+{
+  ReentrantMonitorAutoEnter mon(mMonitor);
+
+  // To maintain the order of the MP4Sample, it needs to send the queued samples
+  // to OMX first. And then the current input aSample.
+  // If it fails to input sample to OMX, it needs to add current into queue
+  // for next round.
+  uint32_t len = mQueueSample.Length();
+  status_t rv = OK;
+
+  for (uint32_t i = 0; i < len; i++) {
+    rv = SendSampleToOMX(mQueueSample.ElementAt(0));
+    if (rv != OK) {
+      break;
+    }
+    mQueueSample.RemoveElementAt(0);
+  }
+
+  // Already reaching EOS, do not add any sample to queue.
+  if (mInputEOS) {
+    return NS_OK;
+  }
+
+  // When EOS, aSample will be null and sends this empty MP4Sample to nofity
+  // OMX it reachs EOS.
+  nsAutoPtr<mp4_demuxer::MP4Sample> sample;
+  if (!aSample) {
+    sample = new mp4_demuxer::MP4Sample();
+    mInputEOS = true;
+  }
+
+  // If rv is OK, that means mQueueSample is empty, now try to queue current input
+  // aSample.
+  if (rv == OK) {
+    MOZ_ASSERT(!mQueueSample.Length());
+    mp4_demuxer::MP4Sample* tmp;
+    if (aSample) {
+      tmp = aSample;
+      PerformFormatSpecificProcess(aSample);
+    } else {
+      tmp = sample;
+    }
+    rv = SendSampleToOMX(tmp);
+    if (rv == OK) {
+      return NS_OK;
+    }
+  }
+
+  // Current valid sample can't be sent into OMX, adding the clone one into queue
+  // for next round.
+  if (!sample) {
+      sample = new mp4_demuxer::MP4Sample(*aSample);
+  }
+  mQueueSample.AppendElement(sample);
+
+  // In most cases, EAGAIN or ETIMEOUT safe due to OMX can't process the
+  // filled buffer on time. It should be gone When requeuing sample next time.
+  if (rv == -EAGAIN || rv == -ETIMEDOUT) {
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+GonkDecoderManager::Flush()
+{
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  mQueueSample.Clear();
+  return NS_OK;
+}
+
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
                                            MediaTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
@@ -92,6 +172,11 @@ GonkMediaDataDecoder::ProcessOutput()
   nsresult rv = NS_ERROR_ABORT;
 
   while (!mDrainComplete) {
+    // There are samples in queue, try to send them into decoder when EOS.
+    if (mSignaledEOS && mManager->HasQueuedSample()) {
+      GMDD_LOG("ProcessOutput: drain all input samples");
+      rv = mManager->Input(nullptr);
+    }
     rv = mManager->Output(mLastStreamOffset, output);
     if (rv == NS_OK) {
       mCallback->Output(output);
@@ -104,6 +189,8 @@ GonkMediaDataDecoder::ProcessOutput()
       break;
     }
   }
+
+  MOZ_ASSERT_IF(mSignaledEOS, !mManager->HasQueuedSample());
 
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     mCallback->InputExhausted();
@@ -161,8 +248,8 @@ GonkMediaDataDecoder::IsWaitingMediaResources() {
 }
 
 bool
-GonkMediaDataDecoder::IsDormantNeeded() {
-
+GonkMediaDataDecoder::IsDormantNeeded()
+{
   return mDecoder.get() ? true : false;
 }
 
@@ -173,7 +260,8 @@ GonkMediaDataDecoder::AllocateMediaResources()
 }
 
 void
-GonkMediaDataDecoder::ReleaseMediaResources() {
+GonkMediaDataDecoder::ReleaseMediaResources()
+{
   mManager->ReleaseMediaResources();
 }
 
