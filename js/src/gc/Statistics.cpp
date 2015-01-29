@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "jscrashreport.h"
 #include "jsprf.h"
 #include "jsutil.h"
 #include "prmjtime.h"
@@ -927,6 +928,8 @@ Statistics::beginGC(JSGCInvocationKind kind)
 void
 Statistics::endGC()
 {
+    crash::SnapshotGCStack();
+
     for (size_t j = 0; j < MAX_MULTIPARENT_PHASES + 1; j++)
         for (int i = 0; i < PHASE_LIMIT; i++)
             phaseTotals[j][i] += phaseTimes[j][i];
