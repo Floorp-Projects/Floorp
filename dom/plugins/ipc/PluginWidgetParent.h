@@ -24,6 +24,15 @@ namespace plugins {
 class PluginWidgetParent : public PPluginWidgetParent
 {
 public:
+  /**
+   * Windows helper for firing off an update window request to a plugin.
+   *
+   * aWidget - the eWindowType_plugin_ipc_chrome widget associated with
+   *           this plugin window.
+   */
+  static void SendAsyncUpdate(nsIWidget* aWidget);
+
+public:
   PluginWidgetParent();
   virtual ~PluginWidgetParent();
 

@@ -53,6 +53,11 @@ child:
    * the child actor may not be on the other side.
    */
   async ParentShutdown();
+
+  /**
+   * Requests a full update of the plugin window.
+   */
+  async UpdateWindow(uintptr_t aChildId);
 };
 
 }
