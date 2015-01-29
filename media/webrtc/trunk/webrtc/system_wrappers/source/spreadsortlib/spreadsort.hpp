@@ -21,6 +21,10 @@ Scott McMurray
 #include <vector>
 #include "webrtc/system_wrappers/source/spreadsortlib/constants.hpp"
 
+#ifdef getchar
+#undef getchar
+#endif
+
 namespace boost {
   namespace detail {
   	//This only works on unsigned data types

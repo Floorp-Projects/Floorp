@@ -277,6 +277,11 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     return receiver_->RegisterPacketRequestCallback(callback);
   }
 
+  virtual int32_t RegisterReceiveStateCallback(
+      VCMReceiveStateCallback* callback) OVERRIDE {
+    return receiver_->RegisterReceiveStateCallback(callback);
+  }
+
   virtual int RegisterRenderBufferSizeCallback(
       VCMRenderBufferSizeCallback* callback) OVERRIDE {
     return receiver_->RegisterRenderBufferSizeCallback(callback);
@@ -342,6 +347,10 @@ class VideoCodingModuleImpl : public VideoCodingModule {
 
   virtual int SetMinReceiverDelay(int desired_delay_ms) OVERRIDE {
     return receiver_->SetMinReceiverDelay(desired_delay_ms);
+  }
+
+  virtual void SetCPULoadState(CPULoadState state) OVERRIDE {
+    return sender_->SetCPULoadState(state);
   }
 
   virtual int32_t SetReceiveChannelParameters(uint32_t rtt) OVERRIDE {

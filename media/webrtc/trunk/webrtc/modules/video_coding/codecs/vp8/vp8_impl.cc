@@ -168,7 +168,9 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
   if (encoded_image_._buffer != NULL) {
     delete [] encoded_image_._buffer;
   }
-  encoded_image_._size = CalcBufferSize(kI420, codec_.width, codec_.height);
+  // Reserve 100 extra bytes for overhead at small resolutions.
+  encoded_image_._size = CalcBufferSize(kI420, codec_.width, codec_.height)
+                         + 100;
   encoded_image_._buffer = new uint8_t[encoded_image_._size];
   encoded_image_._completeFrame = true;
 
@@ -353,6 +355,9 @@ int VP8EncoderImpl::Encode(const I420VideoFrame& input_frame,
     if (ret < 0) {
       return ret;
     }
+#ifndef LIBVPX_ENCODER_CONFIG_ON_RESIZE //work around for bug 1030324
+    frame_type = kKeyFrame;
+#endif
   }
   // Image in vpx_image_t format.
   // Input frame is const. VP8's raw frame is not defined as const.
@@ -420,7 +425,15 @@ int VP8EncoderImpl::UpdateCodecFrameSize(const I420VideoFrame& input_image) {
   // Change of frame size will automatically trigger a key frame.
   config_->g_w = codec_.width;
   config_->g_h = codec_.height;
+#ifndef LIBVPX_ENCODER_CONFIG_ON_RESIZE
+  //work around for bug 1030324
+  // doing only a configuration change causes
+  // horizontal streaking and distortion in the output.
+  vpx_codec_flags_t flags = VPX_CODEC_USE_OUTPUT_PARTITION;
+  if (vpx_codec_enc_init(encoder_, vpx_codec_vp8_cx(), config_, flags)) {
+#else
   if (vpx_codec_enc_config_set(encoder_, config_)) {
+#endif
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   return WEBRTC_VIDEO_CODEC_OK;

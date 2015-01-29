@@ -10,12 +10,6 @@
   'variables': {
     'audio_coding_dependencies': [
       'CNG',
-      'G711',
-      'G722',
-      'iLBC',
-      'iSAC',
-      'iSACFix',
-      'PCM16B',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
     ],
@@ -24,6 +18,26 @@
       ['include_opus==1', {
         'audio_coding_dependencies': ['webrtc_opus',],
         'audio_coding_defines': ['WEBRTC_CODEC_OPUS',],
+      }],
+      ['include_g711==1', {
+        'audio_coding_dependencies': ['G711',],
+        'audio_coding_defines': ['WEBRTC_CODEC_G711',],
+      }],
+      ['include_g722==1', {
+        'audio_coding_dependencies': ['G722',],
+        'audio_coding_defines': ['WEBRTC_CODEC_G722',],
+      }],
+      ['include_ilbc==1', {
+        'audio_coding_dependencies': ['iLBC',],
+        'audio_coding_defines': ['WEBRTC_CODEC_ILBC',],
+      }],
+      ['include_isac==1', {
+        'audio_coding_dependencies': ['iSAC', 'iSACFix',],
+        'audio_coding_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFX',],
+      }],
+      ['include_pcm16b==1', {
+        'audio_coding_dependencies': ['PCM16B',],
+        'audio_coding_defines': ['WEBRTC_CODEC_PCM16',],
       }],
     ],
   },
@@ -53,12 +67,6 @@
       'sources': [
         '../interface/audio_coding_module.h',
         '../interface/audio_coding_module_typedefs.h',
-        'acm_amr.cc',
-        'acm_amr.h',
-        'acm_amrwb.cc',
-        'acm_amrwb.h',
-        'acm_celt.cc',
-        'acm_celt.h',
         'acm_cng.cc',
         'acm_cng.h',
         'acm_codec_database.cc',
@@ -66,35 +74,8 @@
         'acm_common_defs.h',
         'acm_dtmf_playout.cc',
         'acm_dtmf_playout.h',
-        'acm_g722.cc',
-        'acm_g722.h',
-        'acm_g7221.cc',
-        'acm_g7221.h',
-        'acm_g7221c.cc',
-        'acm_g7221c.h',
-        'acm_g729.cc',
-        'acm_g729.h',
-        'acm_g7291.cc',
-        'acm_g7291.h',
         'acm_generic_codec.cc',
         'acm_generic_codec.h',
-        'acm_gsmfr.cc',
-        'acm_gsmfr.h',
-        'acm_ilbc.cc',
-        'acm_ilbc.h',
-        'acm_isac.cc',
-        'acm_isac.h',
-        'acm_isac_macros.h',
-        'acm_opus.cc',
-        'acm_opus.h',
-        'acm_speex.cc',
-        'acm_speex.h',
-        'acm_pcm16b.cc',
-        'acm_pcm16b.h',
-        'acm_pcma.cc',
-        'acm_pcma.h',
-        'acm_pcmu.cc',
-        'acm_pcmu.h',
         'acm_red.cc',
         'acm_red.h',
         'acm_receiver.cc',
@@ -110,6 +91,44 @@
         'initial_delay_manager.h',
         'nack.cc',
         'nack.h',
+      ],
+      'conditions': [
+        ['include_opus==1', {
+          'sources': [
+            'acm_opus.cc',
+           'acm_opus.h',
+          ],
+        }],
+        ['include_g711==1', {
+          'sources': [
+            'acm_pcma.cc',
+            'acm_pcma.h',
+            'acm_pcmu.cc',
+            'acm_pcmu.h',
+          ],
+        }],
+        ['include_g722==1', {
+          'sources': [
+             'acm_g722.cc',
+             'acm_g722.h',
+          ],
+        }],
+        ['include_ilbc==1', {
+          'sources': [
+#           FIX
+          ],
+        }],
+        ['include_isac==1', {
+          'sources': [
+#           FIX
+          ],
+        }],
+        ['include_pcm16b==1', {
+          'sources': [
+            'acm_pcm16b.cc',
+            'acm_pcm16b.h',
+          ],
+        }],
       ],
     },
   ],

@@ -17,7 +17,6 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h>
-#include <Streams.h>
 
 namespace webrtc
 {
@@ -42,6 +41,23 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
   },
 };
 
+
+  void _FreeMediaType(AM_MEDIA_TYPE& mt)
+{
+    if (mt.cbFormat != 0)
+    {
+        CoTaskMemFree((PVOID)mt.pbFormat);
+        mt.cbFormat = 0;
+        mt.pbFormat = NULL;
+    }
+    if (mt.pUnk != NULL)
+    {
+        // pUnk should not be used.
+        mt.pUnk->Release();
+        mt.pUnk = NULL;
+    }
+}
+
 // static
 DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
 {
@@ -55,7 +71,7 @@ DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
 }
 
 DeviceInfoDS::DeviceInfoDS(const int32_t id)
-    : DeviceInfoImpl(id), _dsDevEnum(NULL), _dsMonikerDevEnum(NULL),
+    : DeviceInfoImpl(id), _dsDevEnum(NULL),
       _CoUninitializeIsRequired(true)
 {
     // 1) Initialize the COM library (make Windows load the DLLs).
@@ -100,7 +116,6 @@ DeviceInfoDS::DeviceInfoDS(const int32_t id)
 
 DeviceInfoDS::~DeviceInfoDS()
 {
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     RELEASE_AND_CLEAR(_dsDevEnum);
     if (_CoUninitializeIsRequired)
     {
@@ -157,7 +172,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
 {
 
     // enumerate all video capture devices
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
+    IEnumMoniker* _dsMonikerDevEnum = NULL;
     HRESULT hr =
         _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                           &_dsMonikerDevEnum, 0);
@@ -166,6 +181,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to enumerate CLSID_SystemDeviceEnum, error 0x%x."
                      " No webcam exist?", hr);
+        RELEASE_AND_CLEAR(_dsMonikerDevEnum);
         return 0;
     }
 
@@ -211,6 +227,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
                                              webrtc::kTraceVideoCapture, _id,
                                              "Failed to convert device name to UTF8. %d",
                                              GetLastError());
+                                RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                                 return -1;
                             }
                         }
@@ -242,6 +259,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
                                                  webrtc::kTraceVideoCapture, _id,
                                                  "Failed to convert device name to UTF8. %d",
                                                  GetLastError());
+                                    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                                     return -1;
                                 }
                                 if (productUniqueIdUTF8
@@ -269,6 +287,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
         WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id, "%s %s",
                      __FUNCTION__, deviceNameUTF8);
     }
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return index;
 }
 
@@ -287,8 +306,8 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
         return NULL;
     }
 
+    IEnumMoniker* _dsMonikerDevEnum = NULL;
     // enumerate all video capture devices
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     HRESULT hr = _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                                    &_dsMonikerDevEnum, 0);
     if (hr != NOERROR)
@@ -296,6 +315,7 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to enumerate CLSID_SystemDeviceEnum, error 0x%x."
                      " No webcam exist?", hr);
+        RELEASE_AND_CLEAR(_dsMonikerDevEnum);
         return 0;
     }
     _dsMonikerDevEnum->Reset();
@@ -363,6 +383,7 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
             pM->Release();
         }
     }
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return captureFilter;
 }
 
@@ -555,7 +576,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             if (hrVC == S_OK)
             {
-                LONGLONG *frameDurationList;
+                LONGLONG *frameDurationList = NULL;
                 LONGLONG maxFPS;
                 long listSize;
                 SIZE size;
@@ -574,7 +595,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-                if (hrVC == S_OK && listSize > 0 &&
+                // Initialize and check the returned list for null since
+                // some broken drivers don't modify it.
+                if (hrVC == S_OK && listSize > 0 && frameDurationList &&
                     0 != (maxFPS = GetMaxOfFrameArray(frameDurationList,
                                                       listSize)))
                 {
@@ -669,7 +692,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
                          capability.width, capability.height,
                          capability.rawType, capability.maxFPS);
         }
-        DeleteMediaType(pmt);
+        _FreeMediaType(*pmt);
         pmt = NULL;
     }
     RELEASE_AND_CLEAR(streamConfig);

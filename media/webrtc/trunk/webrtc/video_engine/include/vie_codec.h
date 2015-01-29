@@ -75,6 +75,9 @@ class WEBRTC_DLLEXPORT ViEDecoderObserver {
   // on the sender.
   virtual void RequestNewKeyFrame(const int video_channel) = 0;
 
+  // This method is called when the decoder changes state
+  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) = 0;
+
  protected:
   virtual ~ViEDecoderObserver() {}
 };
@@ -130,12 +133,12 @@ class WEBRTC_DLLEXPORT ViECodec {
                                   const bool enable) = 0;
 
   // Gets the number of sent key frames and number of sent delta frames.
-  virtual int GetSendCodecStastistics(const int video_channel,
+  virtual int GetSendCodecStatistics(const int video_channel,
                                       unsigned int& key_frames,
                                       unsigned int& delta_frames) const = 0;
 
   // Gets the number of decoded key frames and number of decoded delta frames.
-  virtual int GetReceiveCodecStastistics(const int video_channel,
+  virtual int GetReceiveCodecStatistics(const int video_channel,
                                          unsigned int& key_frames,
                                          unsigned int& delta_frames) const = 0;
 

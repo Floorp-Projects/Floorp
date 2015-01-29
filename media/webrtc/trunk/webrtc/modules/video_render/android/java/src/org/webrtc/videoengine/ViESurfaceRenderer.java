@@ -26,6 +26,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder.Callback;
 
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
+
 public class ViESurfaceRenderer implements Callback {
 
     private final static String TAG = "WEBRTC";
@@ -43,6 +45,7 @@ public class ViESurfaceRenderer implements Callback {
     private float dstLeftScale = 0;
     private float dstRightScale = 1;
 
+    @WebRTCJNITarget
     public ViESurfaceRenderer(SurfaceView view) {
         surfaceHolder = view.getHolder();
         if(surfaceHolder == null)
@@ -122,6 +125,7 @@ public class ViESurfaceRenderer implements Callback {
         return bitmap;
     }
 
+    @WebRTCJNITarget
     public ByteBuffer CreateByteBuffer(int width, int height) {
         Log.d(TAG, "CreateByteBuffer " + width + ":" + height);
         if (bitmap == null) {
@@ -131,6 +135,7 @@ public class ViESurfaceRenderer implements Callback {
         return byteBuffer;
     }
 
+    @WebRTCJNITarget
     public void SetCoordinates(float left, float top,
             float right, float bottom) {
         Log.d(TAG, "SetCoordinates " + left + "," + top + ":" +
@@ -142,6 +147,7 @@ public class ViESurfaceRenderer implements Callback {
     }
 
     // It saves bitmap data to a JPEG picture, this function is for debug only.
+    @WebRTCJNITarget
     private void saveBitmapToJPEG(int width, int height) {
         ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteOutStream);
@@ -159,6 +165,7 @@ public class ViESurfaceRenderer implements Callback {
         }
     }
 
+    @WebRTCJNITarget
     public void DrawByteBuffer() {
         if(byteBuffer == null)
             return;

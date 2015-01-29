@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if defined(_MSC_VER)
+#include <windows.h>
+#endif
+
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 
 #include <assert.h>
@@ -20,7 +24,19 @@ namespace webrtc {
 
 namespace subtle {
 
-#if defined(__aarch64__)
+// Start with compiler support, then processor-specific hacks
+#if defined(__GNUC__) || defined(__clang__)
+// Available on GCC and clang - others?
+inline void MemoryBarrier() {
+  __sync_synchronize();
+}
+
+#elif defined(_MSC_VER)
+inline void MemoryBarrier() {
+  ::MemoryBarrier();
+}
+
+#elif defined(__aarch64__)
 // From http://http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_arm64_gcc.h
 inline void MemoryBarrier() {
   __asm__ __volatile__ ("dmb ish" ::: "memory");
