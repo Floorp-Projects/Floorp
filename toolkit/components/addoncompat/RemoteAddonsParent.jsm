@@ -730,8 +730,16 @@ function makeDummyContentWindow(browser) {
   let dummyContentWindow = {
     set location(url) {
       browser.loadURI(url, null, null);
-    }
+    },
+    document: {
+      readyState: "loading",
+      location: { href: "about:blank" }
+    },
+    frames: [],
   };
+  dummyContentWindow.top = dummyContentWindow;
+  dummyContentWindow.document.defaultView = dummyContentWindow;
+  browser._contentWindow = dummyContentWindow;
   return dummyContentWindow;
 }
 
@@ -745,26 +753,18 @@ RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target
   return target.contentWindowAsCPOW;
 };
 
-let DummyContentDocument = {
-  readyState: "loading",
-  location: { href: "about:blank" }
-};
-
 function getContentDocument(addon, browser)
 {
+  if (!browser.contentWindowAsCPOW) {
+    return makeDummyContentWindow(browser).document;
+  }
+
   let doc = Prefetcher.lookupInCache(addon, browser.contentWindowAsCPOW, "document");
   if (doc) {
     return doc;
   }
 
-  doc = browser.contentDocumentAsCPOW;
-  if (!doc) {
-    // If we don't have a CPOW yet, just return something we can use to
-    // examine readyState. This is useful for tests that create a new
-    // tab and then immediately start polling readyState.
-    return DummyContentDocument;
-  }
-  return doc;
+  return browser.contentDocumentAsCPOW;
 }
 
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
