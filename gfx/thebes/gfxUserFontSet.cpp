@@ -650,9 +650,10 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
         if (LOG_ENABLED()) {
             nsAutoCString fontURI;
             mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
-            LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
+            LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) (%p) gen: %8.8x\n",
                  mFontSet, mSrcIndex, fontURI.get(),
                  NS_ConvertUTF16toUTF8(mFamilyName).get(),
+                 this,
                  uint32_t(mFontSet->mGeneration)));
         }
 #endif
@@ -786,17 +787,6 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                   aItalicStyle, aFeatureSettings,
                                   aLanguageOverride, aUnicodeRanges);
       entry->mFamilyName = aFamilyName;
-
-#ifdef PR_LOGGING
-      if (LOG_ENABLED()) {
-          LOG(("userfonts (%p) created \"%s\" (%p) with style: %s weight: %d "
-               "stretch: %d",
-               this, NS_ConvertUTF16toUTF8(aFamilyName).get(), entry.get(),
-               (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
-                   (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
-               aWeight, aStretch));
-      }
-#endif
     }
 
     return entry.forget();
@@ -865,8 +855,11 @@ gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
 
 #ifdef PR_LOGGING
     if (LOG_ENABLED()) {
-        LOG(("userfonts (%p) added \"%s\" (%p)",
-             this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry));
+        LOG(("userfonts (%p) added to \"%s\" (%p) style: %s weight: %d "
+             "stretch: %d",
+             this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry,
+             (aUserFontEntry->IsItalic() ? "italic" : "normal"),
+             aUserFontEntry->Weight(), aUserFontEntry->Stretch()));
     }
 #endif
 }
