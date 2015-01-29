@@ -22,7 +22,6 @@
 #include "Units.h"
 #include "WritingModes.h"
 #include "js/TypeDecls.h"
-#include "nsIDOMEventListener.h"
 
 class nsFrameLoader;
 class nsIContent;
@@ -58,8 +57,7 @@ class nsIContentParent;
 class Element;
 struct StructuredCloneData;
 
-class TabParent : public PBrowserParent
-                , public nsIDOMEventListener
+class TabParent : public PBrowserParent 
                 , public nsITabParent 
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
@@ -99,9 +97,6 @@ public:
     void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
-
-    // nsIDOMEventListener interfaces 
-    NS_DECL_NSIDOMEVENTLISTENER
 
     already_AddRefed<nsILoadContext> GetLoadContext();
 
@@ -430,7 +425,6 @@ protected:
     nsIntRect mRect;
     nsIntSize mDimensions;
     ScreenOrientation mOrientation;
-    nsIntPoint mChromeDisp;
     float mDPI;
     CSSToLayoutDeviceScale mDefaultScale;
     bool mShown;
