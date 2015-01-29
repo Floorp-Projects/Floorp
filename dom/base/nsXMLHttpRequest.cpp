@@ -2899,13 +2899,18 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   if (method.EqualsLiteral("POST")) {
     AddLoadFlags(mChannel,
         nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING);
-  }
-  // When we are sync loading, we need to bypass the local cache when it would
-  // otherwise block us waiting for exclusive access to the cache.  If we don't
-  // do this, then we could dead lock in some cases (see bug 309424).
-  else if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+  } else {
+    // When we are sync loading, we need to bypass the local cache when it would
+    // otherwise block us waiting for exclusive access to the cache.  If we don't
+    // do this, then we could dead lock in some cases (see bug 309424).
+    //
+    // Also don't block on the cache entry on async if it is busy - favoring parallelism
+    // over cache hit rate for xhr. This does not disable the cache everywhere -
+    // only in cases where more than one channel for the same URI is accessed
+    // simultanously.
+
     AddLoadFlags(mChannel,
-        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
   }
 
   // Since we expect XML data, set the type hint accordingly
