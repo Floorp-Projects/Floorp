@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #endif
 
-Cu.import("resource://gre/modules/NewTabUtils.jsm");
-
 /**
  * Keeps thumbnails of open web pages up-to-date.
  */
