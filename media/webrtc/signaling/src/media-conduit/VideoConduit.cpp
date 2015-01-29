@@ -1238,6 +1238,7 @@ int
 WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
                                  int buffer_size,
                                  uint32_t time_stamp,
+                                 int64_t ntp_time_ms,
                                  int64_t render_time,
                                  void *handle)
 {
@@ -1318,7 +1319,8 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
 #ifdef MOZ_WEBRTC_OMX
     cinst.resolution_divisor = 16;
 #endif
-    cinst.codecSpecific.H264.profile = codecInfo->mProfile;
+    // cinst.codecSpecific.H264.profile = ?
+    cinst.codecSpecific.H264.profile_byte = codecInfo->mProfile;
     cinst.codecSpecific.H264.constraints = codecInfo->mConstraints;
     cinst.codecSpecific.H264.level = codecInfo->mLevel;
     cinst.codecSpecific.H264.packetizationMode = codecInfo->mPacketizationMode;

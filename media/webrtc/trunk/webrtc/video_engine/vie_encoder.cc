@@ -640,9 +640,7 @@ void ViEEncoder::DeliverFrame(int id,
   // XXX effectively disable resolution changes until Bug 1067437 is resolved with new DSP code
   if (qm_callback_ && vcm_.SendCodec() == webrtc::kVideoCodecH264) {
     if (vcm_.RegisterVideoQMCallback(NULL) != 0) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo,
-                   ViEId(engine_id_, channel_id_),
-                   "VCM::RegisterQMCallback(NULL) failure");
+      LOG_F(LS_ERROR) << "VCM::RegisterQMCallback(NULL) failure");
       return;
     }
     delete qm_callback_;
@@ -985,11 +983,8 @@ void ViEEncoder::OnNetworkChanged(const uint32_t bitrate_bps,
 }
 
 void ViEEncoder::onLoadStateChanged(CPULoadState load_state) {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo,
-                 ViEId(engine_id_, channel_id_),
-                 "%s: load state changed to %d",
-                 __FUNCTION__, (int)load_state);
-    vcm_.SetCPULoadState(load_state);
+  LOG(LS_INFO) << "load state changed to " << load_state;
+  vcm_.SetCPULoadState(load_state);
 }
 
 PacedSender* ViEEncoder::GetPacedSender() {

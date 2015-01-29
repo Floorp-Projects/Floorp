@@ -637,7 +637,7 @@ struct VideoCodecVP9 {
 // H264 specific.
 struct VideoCodecH264 {
   VideoCodecProfile profile;
-  uint8_t        profile;
+  uint8_t        profile_byte;
   uint8_t        constraints;
   uint8_t        level;
   uint8_t        packetizationMode; // 0 or 1
