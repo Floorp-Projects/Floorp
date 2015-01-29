@@ -196,7 +196,12 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
   nsTArray<uintptr_t> visiblePluginIds;
 
   for (uint32_t pluginsIdx = 0; pluginsIdx < aPlugins.Length(); pluginsIdx++) {
-    nsIWidget* widget = nsIWidget::LookupRegisteredPluginWindow(aPlugins[pluginsIdx].windowId());
+    nsIWidget* widget =
+      nsIWidget::LookupRegisteredPluginWindow(aPlugins[pluginsIdx].windowId());
+    if (!widget) {
+      NS_WARNING("Unexpected, plugin id not found!");
+      continue;
+    }
     bool isVisible = aPlugins[pluginsIdx].visible();
     if (widget && !widget->Destroyed()) {
       nsIntRect bounds;
