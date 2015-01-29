@@ -14,8 +14,6 @@ pref("security.tls.version.fallback-limit", 3);
 # bug 1126654, www.gamers-onlineshop.jp
 pref("security.tls.insecure_fallback_hosts", "www.kredodirect.com.ua,web3.secureinternetbank.com,cmypage.kuronekoyamato.co.jp,www.timewarnercable.com,wayfarer.timewarnercable.com,www.animate-onlineshop.jp,www.gamers-onlineshop.jp");
 
-pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
-pref("security.ssl.renego_unrestricted_hosts", "");
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
 pref("security.ssl.warn_missing_rfc5746",  1);

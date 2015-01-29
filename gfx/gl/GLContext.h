@@ -104,7 +104,6 @@ enum class GLFeature {
     get_integer_indexed,
     get_integer64_indexed,
     get_query_object_iv,
-    get_string_indexed,
     gpu_shader4,
     instanced_arrays,
     instanced_non_arrays,
@@ -309,6 +308,7 @@ public:
     virtual bool IsCurrent() = 0;
 
 protected:
+
     bool mInitialized;
     bool mIsOffscreen;
     bool mIsGlobalSharedContext;
@@ -325,12 +325,9 @@ protected:
     GLVendor mVendor;
     GLRenderer mRenderer;
 
-    void SetProfileVersion(ContextProfile profile, uint32_t version) {
-        MOZ_ASSERT(!mInitialized, "SetProfileVersion can only be called before"
-                                  " initialization!");
-        MOZ_ASSERT(profile != ContextProfile::Unknown &&
-                   profile != ContextProfile::OpenGL,
-                   "Invalid `profile` for SetProfileVersion");
+    inline void SetProfileVersion(ContextProfile profile, unsigned int version) {
+        MOZ_ASSERT(!mInitialized, "SetProfileVersion can only be called before initialization!");
+        MOZ_ASSERT(profile != ContextProfile::Unknown && profile != ContextProfile::OpenGL, "Invalid `profile` for SetProfileVersion");
         MOZ_ASSERT(version >= 100, "Invalid `version` for SetProfileVersion");
 
         mVersion = version;
@@ -460,7 +457,6 @@ public:
         return mAvailableExtensions[aKnownExtension];
     }
 
-protected:
     void MarkExtensionUnsupported(GLExtensions aKnownExtension) {
         mAvailableExtensions[aKnownExtension] = 0;
     }
@@ -469,6 +465,42 @@ protected:
         mAvailableExtensions[aKnownExtension] = 1;
     }
 
+public:
+    template<size_t N>
+    static void InitializeExtensionsBitSet(std::bitset<N>& extensionsBitset,
+                                           const char* extStr,
+                                           const char** extList)
+    {
+        char* exts = ::strdup(extStr);
+
+        if (ShouldSpew())
+            printf_stderr("Extensions: %s\n", exts);
+
+        char* cur = exts;
+        bool done = false;
+        while (!done) {
+            char* space = strchr(cur, ' ');
+            if (space) {
+                *space = '\0';
+            } else {
+                done = true;
+            }
+
+            for (int i = 0; extList[i]; ++i) {
+                if (PL_strcasecmp(cur, extList[i]) == 0) {
+                    if (ShouldSpew())
+                        printf_stderr("Found extension %s\n", cur);
+                    extensionsBitset[i] = true;
+                }
+            }
+
+            cur = space + 1;
+        }
+
+        free(exts);
+    }
+
+protected:
     std::bitset<Extensions_Max> mAvailableExtensions;
 
 // -----------------------------------------------------------------------------
@@ -3149,17 +3181,6 @@ public:
     }
 
 // -----------------------------------------------------------------------------
-// get_string_indexed
-
-    const GLubyte* fGetStringi(GLenum name, GLuint index) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGetStringi);
-        const GLubyte* ret = mSymbols.fGetStringi(name, index);
-        AFTER_GL_CALL;
-        return ret;
-    }
-
-// -----------------------------------------------------------------------------
 // Constructor
 protected:
     explicit GLContext(const SurfaceCaps& caps,
@@ -3427,9 +3448,11 @@ public:
         fViewport(0, 0, size.width, size.height);
 
         mCaps = mScreen->mCaps;
-        MOZ_ASSERT(!mCaps.any);
+        if (mCaps.any)
+            DetermineCaps();
 
         UpdateGLFormats(mCaps);
+        UpdatePixelFormat();
 
         return true;
     }
@@ -3452,8 +3475,10 @@ public:
 protected:
     SurfaceCaps mCaps;
     nsAutoPtr<GLFormats> mGLFormats;
+    nsAutoPtr<PixelBufferFormat> mPixelFormat;
 
 public:
+    void DetermineCaps();
     const SurfaceCaps& Caps() const {
         return mCaps;
     }
@@ -3467,6 +3492,14 @@ public:
     const GLFormats& GetGLFormats() const {
         MOZ_ASSERT(mGLFormats);
         return *mGLFormats;
+    }
+
+    PixelBufferFormat QueryPixelFormat();
+    void UpdatePixelFormat();
+
+    const PixelBufferFormat& GetPixelFormat() const {
+        MOZ_ASSERT(mPixelFormat);
+        return *mPixelFormat;
     }
 
     bool IsFramebufferComplete(GLuint fb, GLenum* status = nullptr);
@@ -3508,7 +3541,7 @@ public:
     }
 
     bool IsOffscreen() const {
-        return mIsOffscreen;
+        return mScreen;
     }
 
     GLScreenBuffer* Screen() const {
@@ -3544,8 +3577,6 @@ protected:
     bool InitWithPrefix(const char *prefix, bool trygl);
 
     void InitExtensions();
-
-    std::vector<nsACString*> mDriverExtensionList;
 
     GLint mViewportRect[4];
     GLint mScissorRect[4];
@@ -3665,55 +3696,10 @@ protected:
 public:
     void FlushIfHeavyGLCallsSinceLastFlush();
     static bool ShouldSpew();
-    static bool ShouldDumpExts();
 };
 
 bool DoesStringMatch(const char* aString, const char *aWantedString);
 
-void SplitByChar(const nsACString& str, const char delim,
-                 std::vector<nsACString*>* out);
-
-template<size_t N>
-bool
-MarkBitfieldByString(const nsACString& str, const char* (&markStrList)[N],
-                     std::bitset<N>& markList)
-{
-    for (size_t i = 0; i < N; i++) {
-        if (str.Equals(markStrList[i])) {
-            markList[i] = 1;
-            return true;
-        }
-    }
-    return false;
-}
-
-template<size_t N>
-void
-MarkBitfieldByStrings(const std::vector<nsACString*> strList,
-                      bool dumpStrings, const char* (&markStrList)[N],
-                      std::bitset<N>& markList)
-{
-    for (auto itr = strList.begin(); itr != strList.end(); ++itr) {
-        const nsACString& str = **itr;
-        const bool wasMarked = MarkBitfieldByString(str, markStrList,
-                                                    markList);
-        if (dumpStrings) {
-            nsCString nullTermed(str);
-            printf_stderr("  %s%s\n", nullTermed.BeginReading(),
-                          wasMarked ? "(*)" : "");
-        }
-    }
-}
-
-template<typename C>
-void
-DeleteAndClearIterable(C& cont)
-{
-    for(auto itr = cont.begin(); itr != cont.end(); ++itr) {
-        delete *itr;
-    }
-    cont.clear();
-}
 
 } /* namespace gl */
 } /* namespace mozilla */

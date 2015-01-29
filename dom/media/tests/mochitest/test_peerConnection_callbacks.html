@@ -1,0 +1,92 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    title: "PeerConnection using callback functions",
+    bug: "1119593",
+    visible: true
+  });
+
+// This still aggressively uses promises, but it is testing that the callback functions
+// are properly in place.
+
+// wrapper that turns a callback-based function call into a promise
+function pcall(o, f, beforeArg) {
+  return new Promise((resolve, reject) => {
+    var args = [resolve, reject];
+    if (typeof beforeArg !== 'undefined') {
+      args.unshift(beforeArg);
+    }
+    info('Calling ' + f.name);
+    f.apply(o, args);
+  });
+}
+
+var pc1 = new mozRTCPeerConnection();
+var pc2 = new mozRTCPeerConnection();
+
+var pc2_haveRemoteOffer = new Promise(resolve => {
+  pc2.onsignalingstatechange =
+    e => (e.target.signalingState == "have-remote-offer") && resolve();
+});
+var pc1_stable = new Promise(resolve => {
+  pc1.onsignalingstatechange =
+    e => (e.target.signalingState == "stable") && resolve();
+});
+
+pc1.onicecandidate = e => {
+  pc2_haveRemoteOffer
+    .then(() => !e.candidate || pcall(pc2, pc2.addIceCandidate, e.candidate))
+    .catch(generateErrorCallback());
+};
+pc2.onicecandidate = e => {
+  pc1_stable
+    .then(() => !e.candidate || pcall(pc1, pc1.addIceCandidate, e.candidate))
+    .catch(generateErrorCallback());
+};
+
+var v1, v2;
+var delivered = new Promise(resolve => {
+  pc2.onaddstream = e => {
+    v2.mozSrcObject = e.stream;
+    resolve(e.stream);
+  };
+});
+
+runNetworkTest(function() {
+  v1 = createMediaElement('video', 'v1');
+  v2 = createMediaElement('video', 'v2');
+  var canPlayThrough = new Promise(resolve => v2.canplaythrough = resolve);
+  is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+
+  // not testing legacy gUM here
+  navigator.mediaDevices.getUserMedia({ fake: true, video: true, audio: true })
+    .then(stream => pc1.addStream(v1.mozSrcObject = stream))
+    .then(() => pcall(pc1, pc1.createOffer))
+    .then(offer => pcall(pc1, pc1.setLocalDescription, offer))
+    .then(() => pcall(pc2, pc2.setRemoteDescription, pc1.localDescription))
+    .then(() => pcall(pc2, pc2.createAnswer))
+    .then(answer => pcall(pc2, pc2.setLocalDescription, answer))
+    .then(() => pcall(pc1, pc1.setRemoteDescription, pc2.localDescription))
+    .then(() => delivered)
+  //    .then(() => canPlayThrough)    // why doesn't this fire?
+    .then(() => waitUntil(() => v2.currentTime > 0 && v2.mozSrcObject.currentTime > 0))
+    .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
+    .then(() => ok(true, "Connected."))
+    .then(() => pcall(pc1, pc1.getStats, null))
+    .then(stats => ok(Object.keys(stats).length > 0, "pc1 has stats"))
+    .then(() => pcall(pc2, pc2.getStats, null))
+    .then(stats => ok(Object.keys(stats).length > 0, "pc2 has stats"))
+    .then(() => { v1.pause(); v2.pause(); })
+    .catch(reason => ok(false, "unexpected failure: " + reason))
+      .then(networkTestFinished);
+});
+</script>
+</pre>
+</body>
+</html>

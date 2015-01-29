@@ -1092,18 +1092,6 @@ extern bool
 SetClassAndProto(JSContext *cx, HandleObject obj,
                  const Class *clasp, Handle<TaggedProto> proto);
 
-/*
- * Property-lookup-based access to interface and prototype objects for classes.
- * If the class is built-in (hhas a non-null JSProtoKey), these forward to
- * GetClass{Object,Prototype}.
- */
-
-bool
-FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp);
-
-extern bool
-FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp);
-
 } /* namespace js */
 
 /*

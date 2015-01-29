@@ -655,6 +655,7 @@ void JSCompartment::fixupAfterMovingGC()
     fixupNewTypeObjectTable(newTypeObjects);
     fixupNewTypeObjectTable(lazyTypeObjects);
     fixupInitialShapeTable();
+    fixupBaseShapeTable();
 }
 
 void

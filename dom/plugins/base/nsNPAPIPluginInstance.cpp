@@ -91,8 +91,9 @@ static nsRefPtr<GLContext> sPluginContext = nullptr;
 static bool EnsureGLContext()
 {
   if (!sPluginContext) {
-    bool requireCompatProfile = true;
-    sPluginContext = GLContextProvider::CreateHeadless(requireCompatProfile);
+    gfxIntSize dummySize(16, 16);
+    sPluginContext = GLContextProvider::CreateOffscreen(dummySize,
+                                                        SurfaceCaps::Any());
   }
 
   return sPluginContext != nullptr;
