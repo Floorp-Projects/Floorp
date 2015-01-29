@@ -2140,7 +2140,42 @@ UpdateThreadFunc(void *param)
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
     if (rv == OK) {
+#ifdef XP_WIN
+      HKEY baseKey = nullptr;
+      wchar_t valueName[] = L"Image Path";
+      wchar_t rasenh[] = L"rsaenh.dll";
+      bool reset = false;
+      if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Cryptography\\Defaults\\Provider\\Microsoft Enhanced Cryptographic Provider v1.0",
+                        0, KEY_READ | KEY_WRITE,
+                        &baseKey) == ERROR_SUCCESS) {
+        wchar_t path[MAX_PATH + 1];
+        DWORD size = sizeof(path);
+        DWORD type;
+        if (RegQueryValueExW(baseKey, valueName, 0, &type,
+                             (LPBYTE)path, &size) == ERROR_SUCCESS) {
+          if (type == REG_SZ && wcscmp(path, rasenh) == 0) {
+            wchar_t rasenhFullPath[] = L"%SystemRoot%\\System32\\rsaenh.dll";
+            if (RegSetValueExW(baseKey, valueName, 0, REG_SZ,
+                               (const BYTE*)rasenhFullPath,
+                               sizeof(rasenhFullPath)) == ERROR_SUCCESS) {
+              reset = true;
+            }
+          }
+        }
+      }
+#endif
       rv = gArchiveReader.VerifySignature();
+#ifdef XP_WIN
+      if (baseKey) {
+        if (reset) {
+          RegSetValueExW(baseKey, valueName, 0, REG_SZ,
+                         (const BYTE*)rasenh,
+                         sizeof(rasenh));
+        }
+        RegCloseKey(baseKey);
+      }
+#endif
     }
 
     if (rv == OK) {
@@ -2289,7 +2324,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Remove everything except close window from the context menu
   {
-    HKEY hkApp;
+    HKEY hkApp = nullptr;
     RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Classes\\Applications",
                     0, nullptr, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr,
                     &hkApp, nullptr);
@@ -2529,7 +2564,7 @@ int NS_main(int argc, NS_tchar **argv)
     // updater, then we drop the permissions here. We do not drop the
     // permissions on the originally called updater because we use its token
     // to start the callback application.
-    if(startedFromUnelevatedUpdater) {
+    if (startedFromUnelevatedUpdater) {
       // Disable every privilege we don't need. Processes started using
       // CreateProcess will use the same token as this process.
       UACHelper::DisablePrivileges(nullptr);
@@ -2589,7 +2624,7 @@ int NS_main(int argc, NS_tchar **argv)
       if (useService) {
         WCHAR maintenanceServiceKey[MAX_PATH + 1];
         if (CalculateRegistryPathFromFilePath(gInstallDirPath, maintenanceServiceKey)) {
-          HKEY baseKey;
+          HKEY baseKey = nullptr;
           if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             maintenanceServiceKey, 0,
                             KEY_READ | KEY_WOW64_64KEY,
