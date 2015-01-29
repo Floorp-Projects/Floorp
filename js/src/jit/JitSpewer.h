@@ -46,6 +46,8 @@ namespace jit {
     _(Pools)                                \
     /* Profiling-related information */     \
     _(Profiling)                            \
+    /* Information of tracked opt strats */ \
+    _(OptimizationTracking)                 \
     /* Debug info about the I$ */           \
     _(CacheFlush)                           \
                                             \
