@@ -117,11 +117,6 @@ PluginWidgetParent::RecvCreate()
   // over with corresponding layer updates.
   mWidget->RegisterPluginWindowForRemoteUpdates();
 
-  // Force the initial position down into content. If we miss an
-  // initial position update this insures the widget doesn't overlap
-  // chrome.
-  RecvMove(0, 0);
-
 #if defined(MOZ_WIDGET_GTK)
   // For setup, initially GTK code expects 'window' to hold the parent.
   mWrapper->window = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
@@ -145,29 +140,11 @@ PluginWidgetParent::RecvDestroy()
 }
 
 bool
-PluginWidgetParent::RecvShow(const bool& aState)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvShow(%d)\n", aState);
-  mWidget->Show(aState);
-  return true;
-}
-
-bool
 PluginWidgetParent::RecvSetFocus(const bool& aRaise)
 {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetFocus(%d)\n", aRaise);
   mWidget->SetFocus(aRaise);
-  return true;
-}
-
-bool
-PluginWidgetParent::RecvInvalidate(const nsIntRect& aRect)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvInvalidate(%d, %d, %d, %d)\n", aRect.x, aRect.y, aRect.width, aRect.height);
-  mWidget->Invalidate(aRect);
   return true;
 }
 
@@ -182,55 +159,6 @@ PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
   *value = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
 #endif
   PWLOG("PluginWidgetParent::RecvGetNativeData() %p\n", (void*)*value);
-  return true;
-}
-
-bool
-PluginWidgetParent::RecvResize(const nsIntRect& aRect)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvResize(%d, %d, %d, %d)\n", aRect.x, aRect.y, aRect.width, aRect.height);
-  mWidget->Resize(aRect.width, aRect.height, true);
-#if defined(MOZ_WIDGET_GTK)
-  mWrapper->width = aRect.width;
-  mWrapper->height = aRect.height;
-  mWrapper->SetAllocation();
-#endif
-  return true;
-}
-
-bool
-PluginWidgetParent::RecvMove(const double& aX, const double& aY)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvMove(%f, %f)\n", aX, aY);
-
-
-  // This returns the top level window
-  nsCOMPtr<nsIWidget> widget = GetTabParent()->GetWidget();
-  if (!widget) {
-    // return true otherwise ipc will abort the content process, crashing
-    // all tabs.
-    return true;
-  }
-
-  // Passed in coords are at the tab origin, adjust to the main window.
-  nsIntPoint offset = GetTabParent()->GetChildProcessOffset();
-  offset.x = abs(offset.x);
-  offset.y = abs(offset.y);
-  offset += nsIntPoint(ceil(aX), ceil(aY));
-  mWidget->Move(offset.x, offset.y);
-
-  return true;
-}
-
-bool
-PluginWidgetParent::RecvSetWindowClipRegion(InfallibleTArray<nsIntRect>&& Regions,
-                                            const bool& aIntersectWithExisting)
-{
-  ENSURE_CHANNEL;
-  PWLOG("PluginWidgetParent::RecvSetWindowClipRegion()\n");
-  mWidget->SetWindowClipRegion(Regions, aIntersectWithExisting);
   return true;
 }
 
