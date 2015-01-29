@@ -8,6 +8,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 /**
@@ -22,6 +23,7 @@ TelemetryStartup.prototype.QueryInterface = XPCOMUtils.generateQI([Components.in
 TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
   if (aTopic == "profile-after-change" || aTopic == "app-startup") {
     TelemetryPing.observe(null, aTopic, null);
+    TelemetrySession.observe(null, aTopic, null);
   }
 }
 

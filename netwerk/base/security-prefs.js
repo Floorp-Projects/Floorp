@@ -5,6 +5,14 @@
 pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 3);
 pref("security.tls.version.fallback-limit", 3);
+# Do not add a site without filing a corresponding evangelism bug.
+# bug 1095507, www.kredodirect.com.ua
+# bug 1111354, web3.secureinternetbank.com
+# bug 1112110, cmypage.kuronekoyamato.co.jp
+# bug 1115883, www.timewarnercable.com and wayfarer.timewarnercable.com
+# bug 1126652, www.animate-onlineshop.jp
+# bug 1126654, www.gamers-onlineshop.jp
+pref("security.tls.insecure_fallback_hosts", "www.kredodirect.com.ua,web3.secureinternetbank.com,cmypage.kuronekoyamato.co.jp,www.timewarnercable.com,wayfarer.timewarnercable.com,www.animate-onlineshop.jp,www.gamers-onlineshop.jp");
 
 pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
 pref("security.ssl.renego_unrestricted_hosts", "");

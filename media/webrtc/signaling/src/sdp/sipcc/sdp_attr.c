@@ -4101,7 +4101,7 @@ sdp_result_e sdp_parse_attr_group (sdp_t *sdp_p, sdp_attr_t *attr_p,
      */
     attr_p->attr.stream_data.num_group_id =0;
 
-    for (i=0; i<SDP_MAX_GROUP_STREAM_ID; i++) {
+    for (i=0; i<SDP_MAX_MEDIA_STREAMS; i++) {
         ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
 
         if (result != SDP_SUCCESS) {
@@ -5312,6 +5312,82 @@ sdp_result_e sdp_build_attr_msid(sdp_t *sdp_p,
                         attr_p->attr.msid.identifier,
                         attr_p->attr.msid.appdata[0] ? " " : "",
                         attr_p->attr.msid.appdata);
+    return SDP_SUCCESS;
+}
+
+sdp_result_e sdp_parse_attr_msid_semantic(sdp_t *sdp_p,
+                                          sdp_attr_t *attr_p,
+                                          const char *ptr)
+{
+    sdp_result_e result;
+    int i;
+
+    ptr = sdp_getnextstrtok(ptr,
+                            attr_p->attr.msid_semantic.semantic,
+                            sizeof(attr_p->attr.msid_semantic.semantic),
+                            " \t",
+                            &result);
+
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p, "%s Warning: Bad msid-semantic attribute; "
+                        "missing semantic",
+                        sdp_p->debug_str);
+        sdp_p->conf_p->num_invalid_param++;
+        return SDP_INVALID_PARAMETER;
+    }
+
+    for (i = 0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
+      /* msid-id can be up to 64 characters long, plus null terminator */
+      char temp[65];
+      ptr = sdp_getnextstrtok(ptr, temp, sizeof(temp), " \t", &result);
+
+      if (result != SDP_SUCCESS) {
+        break;
+      }
+
+      attr_p->attr.msid_semantic.msids[i] = cpr_strdup(temp);
+    }
+
+    if ((result != SDP_SUCCESS) && (result != SDP_EMPTY_TOKEN)) {
+        sdp_parse_error(sdp_p, "%s Warning: Bad msid-semantic attribute",
+                        sdp_p->debug_str);
+        sdp_p->conf_p->num_invalid_param++;
+        return SDP_INVALID_PARAMETER;
+    }
+
+    if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+        SDP_PRINT("%s Parsed a=msid-semantic, %s", sdp_p->debug_str,
+                  attr_p->attr.msid_semantic.semantic);
+        for (i = 0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
+          if (!attr_p->attr.msid_semantic.msids[i]) {
+            break;
+          }
+
+          SDP_PRINT("%s ... msid %s", sdp_p->debug_str,
+                    attr_p->attr.msid_semantic.msids[i]);
+        }
+    }
+
+    return SDP_SUCCESS;
+}
+
+
+sdp_result_e sdp_build_attr_msid_semantic(sdp_t *sdp_p,
+                                          sdp_attr_t *attr_p,
+                                          flex_string *fs)
+{
+    int i;
+    flex_string_sprintf(fs, "a=msid-semantic:%s",
+                        attr_p->attr.msid_semantic.semantic);
+    for (i = 0; i < SDP_MAX_MEDIA_STREAMS; ++i) {
+        if (!attr_p->attr.msid_semantic.msids[i]) {
+            break;
+        }
+
+        flex_string_sprintf(fs, " %s",
+                            attr_p->attr.msid_semantic.msids[i]);
+    }
+    flex_string_sprintf(fs, "\r\n");
     return SDP_SUCCESS;
 }
 
