@@ -775,6 +775,15 @@ class CreateGMPParentTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+    if (!SandboxInfo::Get().CanSandboxMedia()) {
+      if (!Preferences::GetBool("media.gmp.insecure.allow")) {
+        NS_WARNING("Denying media plugin load due to lack of sandboxing.");
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+      NS_WARNING("Loading media plugin despite lack of sandboxing.");
+    }
+#endif
     mParent = new GMPParent();
     return NS_OK;
   }
@@ -832,7 +841,7 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
   MOZ_ASSERT(mainThread);
   mozilla::SyncRunnable::DispatchToThread(mainThread, task);
   nsRefPtr<GMPParent> gmp = task->GetParent();
-  rv = gmp->Init(this, directory);
+  rv = gmp ? gmp->Init(this, directory) : NS_ERROR_NOT_AVAILABLE;
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't Create GMPParent");
     return;

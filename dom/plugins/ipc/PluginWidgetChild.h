@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_plugins_PluginWidgetParent_h
-#define mozilla_plugins_PluginWidgetParent_h
+#ifndef mozilla_plugins_PluginWidgetChild_h
+#define mozilla_plugins_PluginWidgetChild_h
 
 #include "mozilla/plugins/PPluginWidgetChild.h"
 
@@ -27,5 +27,5 @@ public:
 } // namespace plugins
 } // namespace mozilla
 
-#endif // mozilla_plugins_PluginWidgetParent_h
+#endif // mozilla_plugins_PluginWidgetChild_h
 
