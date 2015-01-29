@@ -137,6 +137,7 @@ class MediaOptimization {
                                uint32_t bit_rate,
                                uint16_t width,
                                uint16_t height,
+                               uint8_t  divisor,
                                int num_temporal_layers,
                                int32_t mtu)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);

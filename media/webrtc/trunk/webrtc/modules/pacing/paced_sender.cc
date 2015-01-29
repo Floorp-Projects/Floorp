@@ -393,7 +393,11 @@ void PacedSender::UpdateBytesPerInterval(uint32_t delta_time_ms) {
 }
 
 bool PacedSender::ProbingExperimentIsEnabled() const {
+#ifndef WEBRTC_MOZILLA_BUILD
   return webrtc::field_trial::FindFullName("WebRTC-BitrateProbing") ==
          "Enabled";
+#else
+  return false;
+#endif
 }
 }  // namespace webrtc

@@ -620,8 +620,8 @@ int32_t RTCPSender::BuildSR(const FeedbackState& feedback_state,
 
     _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
     _lastSendReport[0] = (NTPsec << 16) + (NTPfrac >> 16);
-    _lastSRPacketCount[0] = feedback_state.packet_count_sent;
-    _lastSROctetCount[0] = feedback_state.byte_count_sent;
+    _lastSRPacketCount[0] = feedback_state.packets_sent;
+    _lastSROctetCount[0] = feedback_state.media_bytes_sent;
 
     // The timestamp of this RTCP packet should be estimated as the timestamp of
     // the frame being captured at this moment. We are calculating that

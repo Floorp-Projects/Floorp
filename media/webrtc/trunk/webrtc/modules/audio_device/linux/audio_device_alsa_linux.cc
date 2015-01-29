@@ -2337,8 +2337,5 @@ bool AudioDeviceLinuxALSA::KeyPressed() const{
 #else
   return false;
 #endif
-#else
-  return false;
-#endif
 }
 }  // namespace webrtc

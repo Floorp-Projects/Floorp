@@ -223,11 +223,8 @@ uint32_t MediaOptimization::SetTargetRates(
     uint32_t round_trip_time_ms,
     VCMProtectionCallback* protection_callback,
     VCMQMSettingsCallback* qmsettings_callback) {
-  WEBRTC_TRACE(webrtc::kTraceDebug,
-               webrtc::kTraceVideoCoding,
-               id_,
-               "SetTargetRates: %u bps %u%% loss %dms RTT",
-               target_bitrate, fraction_lost, round_trip_time_ms);
+  LOG(LS_INFO) << "SetTargetRates: " <<  target_bitrate << " bps " << fraction_lost
+               << "% loss " << round_trip_time_ms << "ms RTT";
 
   CriticalSectionScoped lock(crit_sect_.get());
   // TODO(holmer): Consider putting this threshold only on the video bitrate,
@@ -325,14 +322,9 @@ uint32_t MediaOptimization::SetTargetRates(
   frame_dropper_->SetRates(target_video_bitrate_kbps, incoming_frame_rate_);
 
   if (enable_qm_ && qmsettings_callback) {
-    WEBRTC_TRACE(webrtc::kTraceDebug,
-                 webrtc::kTraceVideoCoding,
-                 id_,
-                 "SetTargetRates/enable_qm: %f bps %f kbps %f fps %d loss",
-                 target_video_bitrate_kbps,
-                 sent_video_rate_kbps,
-                 incoming_frame_rate_,
-                 fraction_lost_);
+  LOG(LS_INFO) << "SetTargetRates/enable_qm: " <<  target_video_bitrate_kbps
+               << " bps, " << sent_video_rate_kbps << " kbps, " << incoming_frame_rate_
+               << " fps, " << fraction_lost << " loss";
 
     // Update QM with rates.
     qm_resolution_->UpdateRates(target_video_bitrate_kbps,
