@@ -8,6 +8,7 @@
 
 #include "Accessible-inl.h"
 #include "ProxyAccessible.h"
+#include "Relation.h"
 
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
@@ -152,6 +153,56 @@ DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAt
 
     aAttributes->AppendElement(Attribute(name, value));
     }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRelationByType(const uint64_t& aID,
+                                       const uint32_t& aType,
+                                       nsTArray<uint64_t>* aTargets)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!acc)
+    return false;
+
+  auto type = static_cast<RelationType>(aType);
+  Relation rel = acc->RelationByType(type);
+  while (Accessible* target = rel.Next())
+    aTargets->AppendElement(reinterpret_cast<uintptr_t>(target));
+
+  return true;
+}
+
+static void
+AddRelation(Accessible* aAcc, RelationType aType,
+            nsTArray<RelationTargets>* aTargets)
+{
+  Relation rel = aAcc->RelationByType(aType);
+  nsTArray<uint64_t> targets;
+  while (Accessible* target = rel.Next())
+    targets.AppendElement(reinterpret_cast<uintptr_t>(target));
+
+  if (!targets.IsEmpty()) {
+    RelationTargets* newRelation =
+      aTargets->AppendElement(RelationTargets(static_cast<uint32_t>(aType),
+                                              nsTArray<uint64_t>()));
+    newRelation->Targets().SwapElements(targets);
+  }
+}
+
+bool
+DocAccessibleChild::RecvRelations(const uint64_t& aID,
+                                  nsTArray<RelationTargets>* aRelations)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!aID)
+    return false;
+
+#define RELATIONTYPE(gecko, s, a, m, i) AddRelation(acc, RelationType::gecko, aRelations);
+
+#include "RelationTypeMap.h"
+#undef RELATIONTYPE
 
   return true;
 }

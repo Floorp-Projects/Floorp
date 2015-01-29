@@ -32,6 +32,12 @@ struct Attribute
   nsString Value;
 };
 
+struct RelationTargets
+{
+  uint32_t Type;
+  uint64_t[] Targets;
+};
+
 prio(normal upto high) sync protocol PDocAccessible
 {
   manager PContent;
@@ -54,6 +60,9 @@ child:
   prio(high) sync Value(uint64_t aID) returns(nsString value);
   prio(high) sync Description(uint64_t aID) returns(nsString desc);
   prio(high) sync Attributes(uint64_t aID) returns(Attribute[] attributes);
+  prio(high) sync RelationByType(uint64_t aID, uint32_t aRelationType)
+    returns(uint64_t[] targets);
+  prio(high) sync Relations(uint64_t aID) returns(RelationTargets[] relations);
 
   // AccessibleText
 
