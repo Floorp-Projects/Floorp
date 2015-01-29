@@ -1091,10 +1091,12 @@ class IonBuilder
     void trackTypeInfo(TrackedTypeSite site, MIRType mirType,
                        types::TemporaryTypeSet *typeSet);
     void trackTypeInfo(TrackedTypeSite site, JSObject *obj);
+    void trackTypeInfo(CallInfo &callInfo);
     void trackOptimizationAttempt(TrackedStrategy strategy);
     void amendOptimizationAttempt(uint32_t index);
     void trackOptimizationOutcome(TrackedOutcome outcome);
     void trackOptimizationSuccess();
+    void trackInlineSuccess(InliningStatus status = InliningStatus_Inlined);
 };
 
 class CallInfo
