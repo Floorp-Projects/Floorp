@@ -47,7 +47,7 @@ const OBSERVER_TOPICS = [
   fxAccountsCommon.ONLOGOUT_NOTIFICATION,
 ];
 
-const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
+const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync-setup.ui.showCustomizationDialog";
 
 function deriveKeyBundle(kB) {
   let out = CryptoUtils.hkdf(kB, undefined,

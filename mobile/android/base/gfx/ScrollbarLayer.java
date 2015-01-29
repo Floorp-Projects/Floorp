@@ -59,7 +59,7 @@ public class ScrollbarLayer extends TileLayer {
     private final Rect mEndCapTexCoords;    // bottom/right endcap coordinates
 
     ScrollbarLayer(LayerRenderer renderer, Bitmap scrollbarImage, IntSize imageSize, boolean vertical) {
-        super(new BufferedCairoImage(scrollbarImage), TileLayer.PaintMode.NORMAL);
+        super(new BufferedImage(scrollbarImage), TileLayer.PaintMode.NORMAL);
         mRenderer = renderer;
         mVertical = vertical;
 
