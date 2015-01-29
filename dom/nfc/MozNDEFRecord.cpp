@@ -10,11 +10,10 @@
 #include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsContentUtils.h"
-
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
-
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MozNDEFRecord)
 
@@ -123,6 +122,28 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
   return ndefRecord.forget();
 }
 
+/* static */ already_AddRefed<MozNDEFRecord>
+MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
+                           const nsAString& aUri,
+                           ErrorResult& aRv)
+{
+  if (aUri.IsVoid()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(win, TNF::Well_known);
+  ndefRecord->InitType(aGlobal.Context(), RTD::U);
+  ndefRecord->InitPayload(aGlobal.Context(), aUri);
+  return ndefRecord.forget();
+}
+
 MozNDEFRecord::MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf)
   : mWindow(aWindow) // For GetParentObject()
   , mTnf(aTnf)
@@ -142,6 +163,15 @@ MozNDEFRecord::InitType(JSContext* aCx, const Optional<Uint8Array>& aType)
   type.ComputeLengthAndData();
   mType = Uint8Array::Create(aCx, this, type.Length(), type.Data());
   IncSize(type.Length());
+}
+
+void
+MozNDEFRecord::InitType(JSContext* aCx, RTD rtd)
+{
+  EnumEntry rtdType = RTDValues::strings[static_cast<uint32_t>(rtd)];
+  mType = Uint8Array::Create(aCx, rtdType.length,
+                             reinterpret_cast<const uint8_t*>(rtdType.value));
+  IncSize(rtdType.length);
 }
 
 void
@@ -171,6 +201,23 @@ MozNDEFRecord::InitPayload(JSContext* aCx, const Optional<Uint8Array>& aPayload)
 }
 
 void
+MozNDEFRecord::InitPayload(JSContext* aCx, const nsAString& aUri)
+{
+  using namespace mozilla::dom::WellKnownURIPrefixValues;
+
+  nsCString uri = NS_ConvertUTF16toUTF8(aUri);
+  uint8_t id = GetURIIdentifier(uri);
+  uri = Substring(uri, strings[id].length);
+  mPayload = Uint8Array::Create(aCx, this, uri.Length() + 1);
+
+  JS::AutoCheckCannotGC nogc;
+  uint8_t* data = JS_GetUint8ArrayData(mPayload, nogc);
+  data[0] = id;
+  memcpy(&data[1], reinterpret_cast<const uint8_t*>(uri.Data()), uri.Length());
+  IncSizeForPayload(uri.Length() + 1);
+}
+
+void
 MozNDEFRecord::IncSize(uint32_t aCount)
 {
   mSize += aCount;
@@ -184,6 +231,21 @@ MozNDEFRecord::IncSizeForPayload(uint32_t aLen)
   }
 
   IncSize(aLen);
+}
+
+/* static */ uint32_t
+MozNDEFRecord::GetURIIdentifier(const nsCString& aUri)
+{
+  using namespace mozilla::dom::WellKnownURIPrefixValues;
+
+  // strings[0] is "", so we start from 1.
+  for (uint32_t i = 1; i < static_cast<uint32_t>(WellKnownURIPrefix::EndGuard_); i++) {
+    if (StringBeginsWith(aUri, nsDependentCString(strings[i].value))) {
+      return i;
+    }
+  }
+
+  return 0;
 }
 
 MozNDEFRecord::~MozNDEFRecord()
