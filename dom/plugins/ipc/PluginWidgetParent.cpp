@@ -6,6 +6,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetsCID.h"
+#include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 
 #if defined(MOZ_WIDGET_GTK)
@@ -81,6 +82,7 @@ PluginWidgetParent::RecvCreate()
   nsresult rv;
 
   mWidget = do_CreateInstance(kWidgetCID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "widget create failure");
 
 #if defined(MOZ_WIDGET_GTK)
   // We need this currently just for GTK in setting up a socket widget
@@ -107,9 +109,13 @@ PluginWidgetParent::RecvCreate()
     return false;
   }
 
-  mWidget->EnableDragDrop(true);
-  mWidget->Show(false);
-  mWidget->Enable(false);
+  DebugOnly<nsresult> drv;
+  drv = mWidget->EnableDragDrop(true);
+  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
+  drv = mWidget->Show(true);
+  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
+  drv = mWidget->Enable(true);
+  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
 
   // This is a special call we make to nsBaseWidget to register this
   // window as a remote plugin window which is expected to receive
@@ -120,7 +126,8 @@ PluginWidgetParent::RecvCreate()
 #if defined(MOZ_WIDGET_GTK)
   // For setup, initially GTK code expects 'window' to hold the parent.
   mWrapper->window = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-  mWrapper->CreateXEmbedWindow(false);
+  drv = mWrapper->CreateXEmbedWindow(false);
+  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
   mWrapper->SetAllocation();
   PWLOG("Plugin XID=%p\n", (void*)mWrapper->window);
 #endif
@@ -134,7 +141,8 @@ PluginWidgetParent::RecvDestroy()
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvDestroy()\n");
   mWidget->UnregisterPluginWindowForRemoteUpdates();
-  mWidget->Destroy();
+  DebugOnly<nsresult> rv = mWidget->Destroy();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "widget destroy failure");
   mWidget = nullptr;
   return true;
 }
@@ -155,8 +163,10 @@ PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
   PWLOG("PluginWidgetParent::RecvGetNativeData()\n");
 #if defined(MOZ_WIDGET_GTK)
   *value = (uintptr_t)mWrapper->window;
+  NS_ASSERTION(*value, "no xid??");
 #else
   *value = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+  NS_ASSERTION(*value, "no native port??");
 #endif
   PWLOG("PluginWidgetParent::RecvGetNativeData() %p\n", (void*)*value);
   return true;
