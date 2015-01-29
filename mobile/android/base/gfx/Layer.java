@@ -69,7 +69,7 @@ public abstract class Layer {
 
     /**
      * Call this before modifying the layer. Note that, for TileLayers, "modifying the layer"
-     * includes altering the underlying CairoImage in any way. Thus you must call this function
+     * includes altering the underlying BufferedImage in any way. Thus you must call this function
      * before modifying the byte buffer associated with this layer.
      *
      * This function may block, so you should never call this on the main UI thread.

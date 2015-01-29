@@ -458,18 +458,44 @@ add_test(function test_read_number_with_length() {
   let context = worker.ContextPool._contexts[0];
   let helper = context.GsmPDUHelper;
   let iccHelper = context.ICCPDUHelper;
-  let number = "123456789";
 
-  iccHelper.readDiallingNumber = function(numLen) {
-    return number.substring(0, numLen);
+  let numbers = [
+    {
+      number: "123456789",
+      epectedNumber: "123456789"
+    },
+    {
+      number: null,
+      epectedNumber: null
+    },
+    // Invalid length of BCD number/SSC contents
+    {
+      number: "12345678901234567890123",
+      epectedNumber: ""
+    },
+  ];
+
+  // To avoid obtaining wrong buffer content.
+  context.Buf.seekIncoming = function(offset) {
   };
 
-  helper.writeHexOctet(number.length + 1);
-  helper.writeHexOctet(PDU_TOA_ISDN);
-  do_check_eq(iccHelper.readNumberWithLength(), number);
+  function do_test(aNumber, aExpectedNumber) {
+    iccHelper.readDiallingNumber = function(numLen) {
+      return aNumber.substring(0, numLen);
+    };
 
-  helper.writeHexOctet(0xff);
-  do_check_eq(iccHelper.readNumberWithLength(), null);
+    if (aNumber != null) {
+      helper.writeHexOctet(aNumber.length + 1);
+    } else {
+      helper.writeHexOctet(0xff);
+    }
+
+    equal(iccHelper.readNumberWithLength(), aExpectedNumber);
+  }
+
+  for (let i = 0; i < numbers.length; i++) {
+    do_test(numbers[i].number, numbers[i].epectedNumber);
+  }
 
   run_next_test();
 });
