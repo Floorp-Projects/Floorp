@@ -61,6 +61,8 @@ public:
   void OnVideoDecoded(VideoData* aSample);
   void OnVideoNotDecoded(NotDecodedReason aReason);
 
+  void DoVideoSeek();
+  void DoAudioSeek();
   void OnVideoSeekCompleted(int64_t aTime);
   void OnAudioSeekCompleted(int64_t aTime);
   void OnSeekFailed(nsresult aResult);
