@@ -9,7 +9,7 @@
  */
 #include <string>
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc_cng.h"
 

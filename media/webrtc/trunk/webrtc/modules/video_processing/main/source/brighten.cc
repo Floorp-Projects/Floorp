@@ -12,22 +12,15 @@
 
 #include <stdlib.h>
 
-#include "webrtc/system_wrappers/interface/trace.h"
-
 namespace webrtc {
 namespace VideoProcessing {
 
 int32_t Brighten(I420VideoFrame* frame, int delta) {
   assert(frame);
   if (frame->IsZeroSize()) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
-                 "zero size frame");
     return VPM_PARAMETER_ERROR;
   }
-
   if (frame->width() <= 0 || frame->height() <= 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
-                 "Invalid frame size");
     return VPM_PARAMETER_ERROR;
   }
 

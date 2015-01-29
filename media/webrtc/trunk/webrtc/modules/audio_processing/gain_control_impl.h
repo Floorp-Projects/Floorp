@@ -17,13 +17,15 @@
 #include "webrtc/modules/audio_processing/processing_component.h"
 
 namespace webrtc {
-class AudioProcessingImpl;
+
 class AudioBuffer;
+class CriticalSectionWrapper;
 
 class GainControlImpl : public GainControl,
                         public ProcessingComponent {
  public:
-  explicit GainControlImpl(const AudioProcessingImpl* apm);
+  GainControlImpl(const AudioProcessing* apm,
+                  CriticalSectionWrapper* crit);
   virtual ~GainControlImpl();
 
   int ProcessRenderAudio(AudioBuffer* audio);
@@ -58,11 +60,12 @@ class GainControlImpl : public GainControl,
   virtual void* CreateHandle() const OVERRIDE;
   virtual int InitializeHandle(void* handle) const OVERRIDE;
   virtual int ConfigureHandle(void* handle) const OVERRIDE;
-  virtual int DestroyHandle(void* handle) const OVERRIDE;
+  virtual void DestroyHandle(void* handle) const OVERRIDE;
   virtual int num_handles_required() const OVERRIDE;
   virtual int GetHandleError(void* handle) const OVERRIDE;
 
-  const AudioProcessingImpl* apm_;
+  const AudioProcessing* apm_;
+  CriticalSectionWrapper* crit_;
   Mode mode_;
   int minimum_capture_level_;
   int maximum_capture_level_;

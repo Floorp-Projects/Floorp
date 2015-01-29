@@ -209,7 +209,7 @@ DEFINE_FUNCTION WebRtcSpl_MinValueW16Neon
   cmp r1, #0
   ble END_MIN_VALUE_W16
 
-  vmov.i16 q12, #0x7FFF
+  vdup.16 q12, r2
   cmp r1, #8
   blt LOOP_MIN_VALUE_W16
 

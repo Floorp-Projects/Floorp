@@ -11,7 +11,7 @@
 
 #include "webrtc/modules/video_processing/main/source/video_processing_impl.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 #include <assert.h>
 
@@ -51,7 +51,6 @@ int32_t VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id) {
   id_ = id;
   brightness_detection_.ChangeUniqueId(id);
   deflickering_.ChangeUniqueId(id);
-  denoising_.ChangeUniqueId(id);
   frame_pre_processor_.ChangeUniqueId(id);
   return VPM_OK;
 }
@@ -66,22 +65,16 @@ VideoProcessingModuleImpl::VideoProcessingModuleImpl(const int32_t id)
     mutex_(*CriticalSectionWrapper::CreateCriticalSection()) {
   brightness_detection_.ChangeUniqueId(id);
   deflickering_.ChangeUniqueId(id);
-  denoising_.ChangeUniqueId(id);
   frame_pre_processor_.ChangeUniqueId(id);
-  WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, id_,
-               "Created");
 }
 
 VideoProcessingModuleImpl::~VideoProcessingModuleImpl() {
-  WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideoPreocessing, id_,
-               "Destroyed");
   delete &mutex_;
 }
 
 void VideoProcessingModuleImpl::Reset() {
   CriticalSectionScoped mutex(&mutex_);
   deflickering_.Reset();
-  denoising_.Reset();
   brightness_detection_.Reset();
   frame_pre_processor_.Reset();
 }
@@ -89,8 +82,7 @@ void VideoProcessingModuleImpl::Reset() {
 int32_t VideoProcessingModule::GetFrameStats(FrameStats* stats,
                                              const I420VideoFrame& frame) {
   if (frame.IsZeroSize()) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoPreocessing, -1,
-                 "zero size frame");
+    LOG(LS_ERROR) << "Zero size frame.";
     return VPM_PARAMETER_ERROR;
   }
 
@@ -121,7 +113,10 @@ int32_t VideoProcessingModule::GetFrameStats(FrameStats* stats,
 }
 
 bool VideoProcessingModule::ValidFrameStats(const FrameStats& stats) {
-  if (stats.num_pixels == 0) return false;
+  if (stats.num_pixels == 0) {
+    LOG(LS_WARNING) << "Invalid frame stats.";
+    return false;
+  }
   return true;
 }
 
@@ -148,11 +143,6 @@ int32_t VideoProcessingModuleImpl::Deflickering(I420VideoFrame* frame,
   return deflickering_.ProcessFrame(frame, stats);
 }
 
-int32_t VideoProcessingModuleImpl::Denoising(I420VideoFrame* frame) {
-  CriticalSectionScoped mutex(&mutex_);
-  return denoising_.ProcessFrame(frame);
-}
-
 int32_t VideoProcessingModuleImpl::BrightnessDetection(
   const I420VideoFrame& frame,
   const FrameStats& stats) {
@@ -171,11 +161,6 @@ void VideoProcessingModuleImpl::SetInputFrameResampleMode(VideoFrameResampling
                                                           resampling_mode) {
   CriticalSectionScoped cs(&mutex_);
   frame_pre_processor_.SetInputFrameResampleMode(resampling_mode);
-}
-
-int32_t VideoProcessingModuleImpl::SetMaxFramerate(uint32_t max_frame_rate) {
-  CriticalSectionScoped cs(&mutex_);
-  return frame_pre_processor_.SetMaxFramerate(max_frame_rate);
 }
 
 int32_t VideoProcessingModuleImpl::SetTargetResolution(uint32_t width,

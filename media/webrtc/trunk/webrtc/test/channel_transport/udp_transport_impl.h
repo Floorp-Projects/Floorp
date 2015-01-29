@@ -60,8 +60,8 @@ public:
     virtual int32_t InitializeSourcePorts(
         const uint16_t rtpPort,
         const uint16_t rtcpPort = 0) OVERRIDE;
-    virtual int32_t SourcePorts(uint16_t& rtpPort, uint16_t& rtcpPort) const
-        OVERRIDE;
+    virtual int32_t SourcePorts(uint16_t& rtpPort,
+                                uint16_t& rtcpPort) const OVERRIDE;
     virtual int32_t ReceiveSocketInformation(
         char ipAddr[kIpAddressVersion6Length],
         uint16_t& rtpPort,

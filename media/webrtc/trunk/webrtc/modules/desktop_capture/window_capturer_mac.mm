@@ -15,36 +15,38 @@
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "webrtc/base/macutils.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
+#include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
+#include "webrtc/modules/desktop_capture/mac/window_list_utils.h"
 #include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 namespace webrtc {
 
 namespace {
 
-bool CFStringRefToUtf8(const CFStringRef string, std::string* str_utf8) {
-  assert(string);
-  assert(str_utf8);
-  CFIndex length = CFStringGetLength(string);
-  size_t max_length_utf8 =
-      CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-  str_utf8->resize(max_length_utf8);
-  CFIndex used_bytes;
-  int result = CFStringGetBytes(
-      string, CFRangeMake(0, length), kCFStringEncodingUTF8, 0, false,
-      reinterpret_cast<UInt8*>(&*str_utf8->begin()), max_length_utf8,
-      &used_bytes);
-  if (result != length) {
-    str_utf8->clear();
-    return false;
-  }
-  str_utf8->resize(used_bytes);
-  return true;
+// Returns true if the window exists.
+bool IsWindowValid(CGWindowID id) {
+  CFArrayRef window_id_array =
+      CFArrayCreate(NULL, reinterpret_cast<const void **>(&id), 1, NULL);
+  CFArrayRef window_array =
+      CGWindowListCreateDescriptionFromArray(window_id_array);
+  bool valid = window_array && CFArrayGetCount(window_array);
+  CFRelease(window_id_array);
+  CFRelease(window_array);
+
+  return valid;
 }
 
 class WindowCapturerMac : public WindowCapturer {
  public:
-  WindowCapturerMac();
+  explicit WindowCapturerMac(
+      scoped_refptr<FullScreenChromeWindowDetector>
+          full_screen_chrome_window_detector);
   virtual ~WindowCapturerMac();
 
   // WindowCapturer interface.
@@ -58,14 +60,22 @@ class WindowCapturerMac : public WindowCapturer {
 
  private:
   Callback* callback_;
+
+  // The window being captured.
   CGWindowID window_id_;
+
+  scoped_refptr<FullScreenChromeWindowDetector>
+      full_screen_chrome_window_detector_;
 
   DISALLOW_COPY_AND_ASSIGN(WindowCapturerMac);
 };
 
-WindowCapturerMac::WindowCapturerMac()
+WindowCapturerMac::WindowCapturerMac(
+    scoped_refptr<FullScreenChromeWindowDetector>
+        full_screen_chrome_window_detector)
     : callback_(NULL),
-      window_id_(0) {
+      window_id_(0),
+      full_screen_chrome_window_detector_(full_screen_chrome_window_detector) {
 }
 
 WindowCapturerMac::~WindowCapturerMac() {
@@ -102,7 +112,7 @@ bool WindowCapturerMac::GetWindowList(WindowList* windows) {
       CFNumberGetValue(window_id, kCFNumberIntType, &id);
       WindowCapturer::Window window;
       window.id = id;
-      if (!CFStringRefToUtf8(window_title, &(window.title)) ||
+      if (!rtc::ToUtf8(window_title, &(window.title)) ||
           window.title.empty()) {
         continue;
       }
@@ -115,22 +125,8 @@ bool WindowCapturerMac::GetWindowList(WindowList* windows) {
 }
 
 bool WindowCapturerMac::SelectWindow(WindowId id) {
-  // Request description for the specified window to make sure |id| is valid.
-  CGWindowID ids[1];
-  ids[0] = id;
-  CFArrayRef window_id_array =
-      CFArrayCreate(NULL, reinterpret_cast<const void **>(&ids), 1, NULL);
-  CFArrayRef window_array =
-      CGWindowListCreateDescriptionFromArray(window_id_array);
-  int results_count = window_array ? CFArrayGetCount(window_array) : 0;
-  CFRelease(window_id_array);
-  CFRelease(window_array);
-
-  if (results_count == 0) {
-    // Could not find the window. It might have been closed.
+  if (!IsWindowValid(id))
     return false;
-  }
-
   window_id_ = id;
   return true;
 }
@@ -180,12 +176,25 @@ void WindowCapturerMac::Start(Callback* callback) {
 }
 
 void WindowCapturerMac::Capture(const DesktopRegion& region) {
+  if (!IsWindowValid(window_id_)) {
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
+  CGWindowID on_screen_window = window_id_;
+  if (full_screen_chrome_window_detector_) {
+    CGWindowID full_screen_window =
+        full_screen_chrome_window_detector_->FindFullScreenWindow(window_id_);
+
+    if (full_screen_window != kCGNullWindowID)
+      on_screen_window = full_screen_window;
+  }
+
   CGImageRef window_image = CGWindowListCreateImage(
       CGRectNull, kCGWindowListOptionIncludingWindow,
-      window_id_, kCGWindowImageBoundsIgnoreFraming);
+      on_screen_window, kCGWindowImageBoundsIgnoreFraming);
 
   if (!window_image) {
-    CFRelease(window_image);
     callback_->OnCaptureCompleted(NULL);
     return;
   }
@@ -215,14 +224,20 @@ void WindowCapturerMac::Capture(const DesktopRegion& region) {
   CFRelease(cf_data);
   CFRelease(window_image);
 
+  frame->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(frame->size()));
+
   callback_->OnCaptureCompleted(frame);
+
+  if (full_screen_chrome_window_detector_)
+    full_screen_chrome_window_detector_->UpdateWindowListIfNeeded(window_id_);
 }
 
 }  // namespace
 
 // static
 WindowCapturer* WindowCapturer::Create(const DesktopCaptureOptions& options) {
-  return new WindowCapturerMac();
+  return new WindowCapturerMac(options.full_screen_chrome_window_detector());
 }
 
 }  // namespace webrtc

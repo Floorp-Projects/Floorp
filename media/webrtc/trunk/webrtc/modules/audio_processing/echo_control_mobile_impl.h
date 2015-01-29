@@ -15,13 +15,15 @@
 #include "webrtc/modules/audio_processing/processing_component.h"
 
 namespace webrtc {
-class AudioProcessingImpl;
+
 class AudioBuffer;
+class CriticalSectionWrapper;
 
 class EchoControlMobileImpl : public EchoControlMobile,
                               public ProcessingComponent {
  public:
-  explicit EchoControlMobileImpl(const AudioProcessingImpl* apm);
+  EchoControlMobileImpl(const AudioProcessing* apm,
+                        CriticalSectionWrapper* crit);
   virtual ~EchoControlMobileImpl();
 
   int ProcessRenderAudio(const AudioBuffer* audio);
@@ -47,11 +49,12 @@ class EchoControlMobileImpl : public EchoControlMobile,
   virtual void* CreateHandle() const OVERRIDE;
   virtual int InitializeHandle(void* handle) const OVERRIDE;
   virtual int ConfigureHandle(void* handle) const OVERRIDE;
-  virtual int DestroyHandle(void* handle) const OVERRIDE;
+  virtual void DestroyHandle(void* handle) const OVERRIDE;
   virtual int num_handles_required() const OVERRIDE;
   virtual int GetHandleError(void* handle) const OVERRIDE;
 
-  const AudioProcessingImpl* apm_;
+  const AudioProcessing* apm_;
+  CriticalSectionWrapper* crit_;
   RoutingMode routing_mode_;
   bool comfort_noise_enabled_;
   unsigned char* external_echo_path_;

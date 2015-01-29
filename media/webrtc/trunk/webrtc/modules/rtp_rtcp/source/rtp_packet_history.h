@@ -15,6 +15,7 @@
 
 #include <vector>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/typedefs.h"
@@ -39,14 +40,6 @@ class RTPPacketHistory {
                        uint16_t max_packet_length,
                        int64_t capture_time_ms,
                        StorageType type);
-
-  // Replaces the stored RTP packet with matching sequence number with the
-  // RTP header of the provided packet.
-  // Note: Calling this function assumes that the RTP header length should not
-  // have changed since the packet was stored.
-  int32_t ReplaceRTPHeader(const uint8_t* packet,
-                           uint16_t sequence_number,
-                           uint16_t rtp_header_length);
 
   // Gets stored RTP packet corresponding to the input sequence number.
   // The packet is copied to the buffer pointed to by ptr_rtp_packet.
@@ -74,8 +67,8 @@ class RTPPacketHistory {
  private:
   void GetPacket(int index, uint8_t* packet, uint16_t* packet_length,
                  int64_t* stored_time_ms) const;
-  void Allocate(uint16_t number_to_store);
-  void Free();
+  void Allocate(uint16_t number_to_store) EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+  void Free() EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
   void VerifyAndAllocatePacketLength(uint16_t packet_length);
   bool FindSeqNum(uint16_t sequence_number, int32_t* index) const;
   int FindBestFittingPacket(uint16_t size) const;

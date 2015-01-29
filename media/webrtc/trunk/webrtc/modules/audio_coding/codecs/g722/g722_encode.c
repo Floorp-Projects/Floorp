@@ -34,12 +34,12 @@
 #include <config.h>
 #endif
 
-#include <stdio.h>
 #include <memory.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "typedefs.h"
 #include "g722_enc_dec.h"
+#include "webrtc/typedefs.h"
 
 #if !defined(FALSE)
 #define FALSE 0

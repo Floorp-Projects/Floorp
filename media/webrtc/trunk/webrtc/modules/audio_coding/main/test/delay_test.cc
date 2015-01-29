@@ -35,7 +35,6 @@ DEFINE_string(input_file, "", "Input file, PCM16 32 kHz, optional.");
 DEFINE_int32(delay, 0, "Delay in millisecond.");
 DEFINE_int32(init_delay, 0, "Initial delay in millisecond.");
 DEFINE_bool(dtx, false, "Enable DTX at the sender side.");
-DEFINE_bool(acm2, false, "Run the test with ACM2.");
 DEFINE_bool(packet_loss, false, "Apply packet loss, c.f. Channel{.cc, .h}.");
 DEFINE_bool(fec, false, "Use Forward Error Correction (FEC).");
 
@@ -64,9 +63,9 @@ struct TestSettings {
 
 class DelayTest {
  public:
-  explicit DelayTest(const Config& config)
-      : acm_a_(config.Get<AudioCodingModuleFactory>().Create(0)),
-        acm_b_(config.Get<AudioCodingModuleFactory>().Create(1)),
+  DelayTest()
+      : acm_a_(AudioCodingModule::Create(0)),
+        acm_b_(AudioCodingModule::Create(1)),
         channel_a2b_(new Channel),
         test_cntr_(0),
         encoding_sample_rate_hz_(8000) {}
@@ -162,8 +161,8 @@ class DelayTest {
   void ConfigAcm(const AcmSettings& config) {
     ASSERT_EQ(0, acm_a_->SetVAD(config.dtx, config.dtx, VADAggr)) <<
         "Failed to set VAD.\n";
-    ASSERT_EQ(0, acm_a_->SetFECStatus(config.fec)) <<
-        "Failed to set FEC.\n";
+    ASSERT_EQ(0, acm_a_->SetREDStatus(config.fec)) <<
+        "Failed to set RED.\n";
   }
 
   void ConfigChannel(bool packet_loss) {
@@ -245,7 +244,6 @@ class DelayTest {
 
 int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
-  webrtc::Config config;
   webrtc::TestSettings test_setting;
   strcpy(test_setting.codec.name, FLAGS_codec.c_str());
 
@@ -266,13 +264,7 @@ int main(int argc, char* argv[]) {
   test_setting.acm.fec = FLAGS_fec;
   test_setting.packet_loss = FLAGS_packet_loss;
 
-  if (FLAGS_acm2) {
-    webrtc::UseNewAcm(&config);
-  } else {
-    webrtc::UseLegacyAcm(&config);
-  }
-
-  webrtc::DelayTest delay_test(config);
+  webrtc::DelayTest delay_test;
   delay_test.Initialize();
   delay_test.Perform(&test_setting, 1, 240, "delay_test");
   return 0;

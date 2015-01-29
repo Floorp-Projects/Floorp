@@ -16,9 +16,9 @@
 #include <utility>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
@@ -190,14 +190,14 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
                               unsigned int target_bitrate);
 
   void InitialBehaviorTestHelper(unsigned int expected_converge_bitrate);
-  void RateIncreaseReorderingTestHelper();
-  void RateIncreaseRtpTimestampsTestHelper();
+  void RateIncreaseReorderingTestHelper(unsigned int expected_bitrate);
+  void RateIncreaseRtpTimestampsTestHelper(int expected_iterations);
   void CapacityDropTestHelper(int number_of_streams,
                               bool wrap_time_stamp,
-                              unsigned int expected_converge_bitrate,
                               unsigned int expected_bitrate_drop_delta);
 
   static const unsigned int kDefaultSsrc;
+  static const int kArrivalTimeClockOffsetMs = 60000;
 
   SimulatedClock clock_;  // Time at the receiver.
   scoped_ptr<testing::TestBitrateObserver> bitrate_observer_;

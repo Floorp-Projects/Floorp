@@ -16,15 +16,7 @@
 
 namespace webrtc {
 
-VPMVideoDecimator::VPMVideoDecimator()
-    : overshoot_modifier_(0),
-      drop_count_(0),
-      keep_count_(0),
-      target_frame_rate_(30),
-      incoming_frame_rate_(0.0f),
-      max_frame_rate_(30),
-      incoming_frame_times_(),
-      enable_temporal_decimation_(true) {
+VPMVideoDecimator::VPMVideoDecimator() {
   Reset();
 }
 
@@ -36,7 +28,6 @@ void VPMVideoDecimator::Reset()  {
   keep_count_ = 0;
   target_frame_rate_ = 30;
   incoming_frame_rate_ = 0.0f;
-  max_frame_rate_ = 30;
   memset(incoming_frame_times_, 0, sizeof(incoming_frame_times_));
   enable_temporal_decimation_ = true;
 }
@@ -45,26 +36,10 @@ void VPMVideoDecimator::EnableTemporalDecimation(bool enable) {
   enable_temporal_decimation_ = enable;
 }
 
-int32_t VPMVideoDecimator::SetMaxFramerate(uint32_t max_frame_rate) {
-  if (max_frame_rate == 0) return VPM_PARAMETER_ERROR;
-
-  max_frame_rate_ = max_frame_rate;
-
-  if (target_frame_rate_ > max_frame_rate_)
-    target_frame_rate_ = max_frame_rate_;
-
-  return VPM_OK;
-}
-
-int32_t VPMVideoDecimator::SetTargetframe_rate(uint32_t frame_rate) {
+int32_t VPMVideoDecimator::SetTargetFramerate(uint32_t frame_rate) {
   if (frame_rate == 0) return VPM_PARAMETER_ERROR;
 
-  if (frame_rate > max_frame_rate_) {
-    // Override.
-    target_frame_rate_ = max_frame_rate_;
-  } else {
-    target_frame_rate_ = frame_rate;
-  }
+  target_frame_rate_ = frame_rate;
   return VPM_OK;
 }
 

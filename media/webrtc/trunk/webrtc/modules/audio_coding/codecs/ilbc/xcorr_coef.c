@@ -131,9 +131,7 @@ int WebRtcIlbcfix_XcorrCoef(
     pos+=step;
 
     /* Do a +/- to get the next energy */
-    Energy += step*(WEBRTC_SPL_RSHIFT_W32(
-        ((int32_t)(*rp_end)*(*rp_end)) - ((int32_t)(*rp_beg)*(*rp_beg)),
-        shifts));
+    Energy += step * ((*rp_end * *rp_end - *rp_beg * *rp_beg) >> shifts);
     rp_beg+=step;
     rp_end+=step;
   }

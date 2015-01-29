@@ -10,13 +10,14 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_baselinefile.h"
 
+#include <stdio.h>
+
 #include <algorithm>
-#include <cstdio>
 #include <vector>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_fileutils.h"
 #include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -117,7 +118,7 @@ class BaseLineFileUpdate : public BaseLineFileInterface {
   virtual bool VerifyOrWrite() {
     if (!verifier_->VerifyOrWrite()) {
       std::string dir_path = webrtc::test::OutputPath() + kResourceSubDir;
-      if (!webrtc::test::CreateDirectory(dir_path)) {
+      if (!webrtc::test::CreateDir(dir_path)) {
         printf("WARNING: Cannot create output dir: %s\n", dir_path.c_str());
         return false;
       }

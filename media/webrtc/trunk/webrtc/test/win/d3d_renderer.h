@@ -12,6 +12,7 @@
 
 #include <Windows.h>
 #include <d3d9.h>
+#pragma comment(lib, "d3d9.lib")       // located in DirectX SDK
 
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 #include "webrtc/test/video_renderer.h"

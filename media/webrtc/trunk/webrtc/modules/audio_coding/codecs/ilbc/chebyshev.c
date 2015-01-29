@@ -46,8 +46,8 @@ int16_t WebRtcIlbcfix_Chebyshev(
     tmp2W32 = tmp1W32;
 
     /* Split b1 (in tmp1W32) into a high and low part */
-    b1_high = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp1W32, 16);
-    b1_low = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp1W32-WEBRTC_SPL_LSHIFT_W32(((int32_t)b1_high),16), 1);
+    b1_high = (int16_t)(tmp1W32 >> 16);
+    b1_low = (int16_t)((tmp1W32 - ((int32_t)b1_high << 16)) >> 1);
 
     /* Calculate 2*x*b1-b2+f[i] */
     tmp1W32 = WEBRTC_SPL_LSHIFT_W32( (WEBRTC_SPL_MUL_16_16(b1_high, x) +
@@ -61,8 +61,8 @@ int16_t WebRtcIlbcfix_Chebyshev(
   }
 
   /* Split b1 (in tmp1W32) into a high and low part */
-  b1_high = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp1W32, 16);
-  b1_low = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp1W32-WEBRTC_SPL_LSHIFT_W32(((int32_t)b1_high),16), 1);
+  b1_high = (int16_t)(tmp1W32 >> 16);
+  b1_low = (int16_t)((tmp1W32 - ((int32_t)b1_high << 16)) >> 1);
 
   /* tmp1W32 = x*b1 - b2 + f[i]/2 */
   tmp1W32 = WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(b1_high, x), 1) +
@@ -77,6 +77,6 @@ int16_t WebRtcIlbcfix_Chebyshev(
   } else if (tmp1W32<((int32_t)-33554432)) {
     return(WEBRTC_SPL_WORD16_MIN);
   } else {
-    return((int16_t)WEBRTC_SPL_RSHIFT_W32(tmp1W32, 10));
+    return (int16_t)(tmp1W32 >> 10);
   }
 }

@@ -11,40 +11,14 @@
 #ifndef SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 #define SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_
 
-#include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
-#include "webrtc/voice_engine/test/auto_test/resource_manager.h"
+#include "webrtc/voice_engine/test/auto_test/fixtures/before_streaming_fixture.h"
 
 // This fixture will, in addition to the work done by its superclasses,
-// create a channel and start playing a file through the fake microphone
-// to simulate microphone input. The purpose is to make it convenient
-// to write tests that require microphone input.
-class AfterStreamingFixture : public AfterInitializationFixture {
+// start play back on construction.
+class AfterStreamingFixture : public BeforeStreamingFixture {
  public:
   AfterStreamingFixture();
-  virtual ~AfterStreamingFixture();
-
- protected:
-  int             channel_;
-  ResourceManager resource_manager_;
-  std::string     fake_microphone_input_file_;
-
-  // Shuts off the fake microphone for this test.
-  void SwitchToManualMicrophone();
-
-  // Restarts the fake microphone if it's been shut off earlier.
-  void RestartFakeMicrophone();
-
-  // Stops all sending and playout.
-  void PausePlaying();
-
-  // Resumes all sending and playout.
-  void ResumePlaying();
-
- private:
-  void SetUpLocalPlayback();
-
-  LoopBackTransport* transport_;
+  virtual ~AfterStreamingFixture() {}
 };
-
 
 #endif  // SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_AFTER_STREAMING_H_

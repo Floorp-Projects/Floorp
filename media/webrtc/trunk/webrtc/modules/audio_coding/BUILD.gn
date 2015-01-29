@@ -1,0 +1,733 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("//build/config/arm.gni")
+import("../../build/webrtc.gni")
+
+config("audio_coding_config") {
+  include_dirs = [
+    "main/interface",
+    "../interface",
+  ]
+}
+
+source_set("audio_coding") {
+  sources = [
+    "main/acm2/acm_amr.cc",
+    "main/acm2/acm_amr.h",
+    "main/acm2/acm_amrwb.cc",
+    "main/acm2/acm_amrwb.h",
+    "main/acm2/acm_celt.cc",
+    "main/acm2/acm_celt.h",
+    "main/acm2/acm_cng.cc",
+    "main/acm2/acm_cng.h",
+    "main/acm2/acm_codec_database.cc",
+    "main/acm2/acm_codec_database.h",
+    "main/acm2/acm_common_defs.h",
+    "main/acm2/acm_dtmf_playout.cc",
+    "main/acm2/acm_dtmf_playout.h",
+    "main/acm2/acm_g722.cc",
+    "main/acm2/acm_g722.h",
+    "main/acm2/acm_g7221.cc",
+    "main/acm2/acm_g7221.h",
+    "main/acm2/acm_g7221c.cc",
+    "main/acm2/acm_g7221c.h",
+    "main/acm2/acm_g729.cc",
+    "main/acm2/acm_g729.h",
+    "main/acm2/acm_g7291.cc",
+    "main/acm2/acm_g7291.h",
+    "main/acm2/acm_generic_codec.cc",
+    "main/acm2/acm_generic_codec.h",
+    "main/acm2/acm_gsmfr.cc",
+    "main/acm2/acm_gsmfr.h",
+    "main/acm2/acm_ilbc.cc",
+    "main/acm2/acm_ilbc.h",
+    "main/acm2/acm_isac.cc",
+    "main/acm2/acm_isac.h",
+    "main/acm2/acm_isac_macros.h",
+    "main/acm2/acm_opus.cc",
+    "main/acm2/acm_opus.h",
+    "main/acm2/acm_speex.cc",
+    "main/acm2/acm_speex.h",
+    "main/acm2/acm_pcm16b.cc",
+    "main/acm2/acm_pcm16b.h",
+    "main/acm2/acm_pcma.cc",
+    "main/acm2/acm_pcma.h",
+    "main/acm2/acm_pcmu.cc",
+    "main/acm2/acm_pcmu.h",
+    "main/acm2/acm_red.cc",
+    "main/acm2/acm_red.h",
+    "main/acm2/acm_receiver.cc",
+    "main/acm2/acm_receiver.h",
+    "main/acm2/acm_resampler.cc",
+    "main/acm2/acm_resampler.h",
+    "main/acm2/audio_coding_module.cc",
+    "main/acm2/audio_coding_module_impl.cc",
+    "main/acm2/audio_coding_module_impl.h",
+    "main/acm2/call_statistics.cc",
+    "main/acm2/call_statistics.h",
+    "main/acm2/initial_delay_manager.cc",
+    "main/acm2/initial_delay_manager.h",
+    "main/acm2/nack.cc",
+    "main/acm2/nack.h",
+    "main/interface/audio_coding_module.h",
+    "main/interface/audio_coding_module_typedefs.h",
+  ]
+
+  defines = []
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":audio_coding_config",
+  ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    ":cng",
+    ":g711",
+    ":g722",
+    ":ilbc",
+    ":isac",
+    ":isacfix",
+    ":neteq",
+    ":pcm16b",
+    "../../common_audio",
+    "../../system_wrappers",
+  ]
+
+  if (rtc_include_opus) {
+    defines += [ "WEBRTC_CODEC_OPUS" ]
+    deps += [ ":webrtc_opus" ]
+  }
+}
+
+config("cng_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/cng/include",
+  ]
+}
+
+source_set("cng") {
+  sources = [
+    "codecs/cng/cng_helpfuns.c",
+    "codecs/cng/cng_helpfuns.h",
+    "codecs/cng/include/webrtc_cng.h",
+    "codecs/cng/webrtc_cng.c",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":cng_config",
+  ]
+
+  deps = [ "../../common_audio" ]
+}
+
+config("g711_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/g711/include",
+  ]
+}
+
+source_set("g711") {
+  sources = [
+    "codecs/g711/include/audio_encoder_pcm.h",
+    "codecs/g711/include/g711_interface.h",
+    "codecs/g711/audio_encoder_pcm.cc",
+    "codecs/g711/g711_interface.c",
+    "codecs/g711/g711.c",
+    "codecs/g711/g711.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":g711_config",
+  ]
+}
+
+config("g722_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/g722/include",
+  ]
+}
+
+source_set("g722") {
+  sources = [
+    "codecs/g722/include/g722_interface.h",
+    "codecs/g722/g722_interface.c",
+    "codecs/g722/g722_encode.c",
+    "codecs/g722/g722_decode.c",
+    "codecs/g722/g722_enc_dec.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":g722_config",
+  ]
+}
+
+config("ilbc_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/ilbc/interface",
+  ]
+}
+
+source_set("ilbc") {
+  sources = [
+    "codecs/ilbc/abs_quant.c",
+    "codecs/ilbc/abs_quant.h",
+    "codecs/ilbc/abs_quant_loop.c",
+    "codecs/ilbc/abs_quant_loop.h",
+    "codecs/ilbc/augmented_cb_corr.c",
+    "codecs/ilbc/augmented_cb_corr.h",
+    "codecs/ilbc/bw_expand.c",
+    "codecs/ilbc/bw_expand.h",
+    "codecs/ilbc/cb_construct.c",
+    "codecs/ilbc/cb_construct.h",
+    "codecs/ilbc/cb_mem_energy_augmentation.c",
+    "codecs/ilbc/cb_mem_energy_augmentation.h",
+    "codecs/ilbc/cb_mem_energy.c",
+    "codecs/ilbc/cb_mem_energy_calc.c",
+    "codecs/ilbc/cb_mem_energy_calc.h",
+    "codecs/ilbc/cb_mem_energy.h",
+    "codecs/ilbc/cb_search.c",
+    "codecs/ilbc/cb_search_core.c",
+    "codecs/ilbc/cb_search_core.h",
+    "codecs/ilbc/cb_search.h",
+    "codecs/ilbc/cb_update_best_index.c",
+    "codecs/ilbc/cb_update_best_index.h",
+    "codecs/ilbc/chebyshev.c",
+    "codecs/ilbc/chebyshev.h",
+    "codecs/ilbc/comp_corr.c",
+    "codecs/ilbc/comp_corr.h",
+    "codecs/ilbc/constants.c",
+    "codecs/ilbc/constants.h",
+    "codecs/ilbc/create_augmented_vec.c",
+    "codecs/ilbc/create_augmented_vec.h",
+    "codecs/ilbc/decode.c",
+    "codecs/ilbc/decode.h",
+    "codecs/ilbc/decode_residual.c",
+    "codecs/ilbc/decode_residual.h",
+    "codecs/ilbc/decoder_interpolate_lsf.c",
+    "codecs/ilbc/decoder_interpolate_lsf.h",
+    "codecs/ilbc/defines.h",
+    "codecs/ilbc/do_plc.c",
+    "codecs/ilbc/do_plc.h",
+    "codecs/ilbc/encode.c",
+    "codecs/ilbc/encode.h",
+    "codecs/ilbc/energy_inverse.c",
+    "codecs/ilbc/energy_inverse.h",
+    "codecs/ilbc/enhancer.c",
+    "codecs/ilbc/enhancer.h",
+    "codecs/ilbc/enhancer_interface.c",
+    "codecs/ilbc/enhancer_interface.h",
+    "codecs/ilbc/enh_upsample.c",
+    "codecs/ilbc/enh_upsample.h",
+    "codecs/ilbc/filtered_cb_vecs.c",
+    "codecs/ilbc/filtered_cb_vecs.h",
+    "codecs/ilbc/frame_classify.c",
+    "codecs/ilbc/frame_classify.h",
+    "codecs/ilbc/gain_dequant.c",
+    "codecs/ilbc/gain_dequant.h",
+    "codecs/ilbc/gain_quant.c",
+    "codecs/ilbc/gain_quant.h",
+    "codecs/ilbc/get_cd_vec.c",
+    "codecs/ilbc/get_cd_vec.h",
+    "codecs/ilbc/get_lsp_poly.c",
+    "codecs/ilbc/get_lsp_poly.h",
+    "codecs/ilbc/get_sync_seq.c",
+    "codecs/ilbc/get_sync_seq.h",
+    "codecs/ilbc/hp_input.c",
+    "codecs/ilbc/hp_input.h",
+    "codecs/ilbc/hp_output.c",
+    "codecs/ilbc/hp_output.h",
+    "codecs/ilbc/ilbc.c",
+    "codecs/ilbc/index_conv_dec.c",
+    "codecs/ilbc/index_conv_dec.h",
+    "codecs/ilbc/index_conv_enc.c",
+    "codecs/ilbc/index_conv_enc.h",
+    "codecs/ilbc/init_decode.c",
+    "codecs/ilbc/init_decode.h",
+    "codecs/ilbc/init_encode.c",
+    "codecs/ilbc/init_encode.h",
+    "codecs/ilbc/interface/ilbc.h",
+    "codecs/ilbc/interpolate.c",
+    "codecs/ilbc/interpolate.h",
+    "codecs/ilbc/interpolate_samples.c",
+    "codecs/ilbc/interpolate_samples.h",
+    "codecs/ilbc/lpc_encode.c",
+    "codecs/ilbc/lpc_encode.h",
+    "codecs/ilbc/lsf_check.c",
+    "codecs/ilbc/lsf_check.h",
+    "codecs/ilbc/lsf_interpolate_to_poly_dec.c",
+    "codecs/ilbc/lsf_interpolate_to_poly_dec.h",
+    "codecs/ilbc/lsf_interpolate_to_poly_enc.c",
+    "codecs/ilbc/lsf_interpolate_to_poly_enc.h",
+    "codecs/ilbc/lsf_to_lsp.c",
+    "codecs/ilbc/lsf_to_lsp.h",
+    "codecs/ilbc/lsf_to_poly.c",
+    "codecs/ilbc/lsf_to_poly.h",
+    "codecs/ilbc/lsp_to_lsf.c",
+    "codecs/ilbc/lsp_to_lsf.h",
+    "codecs/ilbc/my_corr.c",
+    "codecs/ilbc/my_corr.h",
+    "codecs/ilbc/nearest_neighbor.c",
+    "codecs/ilbc/nearest_neighbor.h",
+    "codecs/ilbc/pack_bits.c",
+    "codecs/ilbc/pack_bits.h",
+    "codecs/ilbc/poly_to_lsf.c",
+    "codecs/ilbc/poly_to_lsf.h",
+    "codecs/ilbc/poly_to_lsp.c",
+    "codecs/ilbc/poly_to_lsp.h",
+    "codecs/ilbc/refiner.c",
+    "codecs/ilbc/refiner.h",
+    "codecs/ilbc/simple_interpolate_lsf.c",
+    "codecs/ilbc/simple_interpolate_lsf.h",
+    "codecs/ilbc/simple_lpc_analysis.c",
+    "codecs/ilbc/simple_lpc_analysis.h",
+    "codecs/ilbc/simple_lsf_dequant.c",
+    "codecs/ilbc/simple_lsf_dequant.h",
+    "codecs/ilbc/simple_lsf_quant.c",
+    "codecs/ilbc/simple_lsf_quant.h",
+    "codecs/ilbc/smooth.c",
+    "codecs/ilbc/smooth.h",
+    "codecs/ilbc/smooth_out_data.c",
+    "codecs/ilbc/smooth_out_data.h",
+    "codecs/ilbc/sort_sq.c",
+    "codecs/ilbc/sort_sq.h",
+    "codecs/ilbc/split_vq.c",
+    "codecs/ilbc/split_vq.h",
+    "codecs/ilbc/state_construct.c",
+    "codecs/ilbc/state_construct.h",
+    "codecs/ilbc/state_search.c",
+    "codecs/ilbc/state_search.h",
+    "codecs/ilbc/swap_bytes.c",
+    "codecs/ilbc/swap_bytes.h",
+    "codecs/ilbc/unpack_bits.c",
+    "codecs/ilbc/unpack_bits.h",
+    "codecs/ilbc/vq3.c",
+    "codecs/ilbc/vq3.h",
+    "codecs/ilbc/vq4.c",
+    "codecs/ilbc/vq4.h",
+    "codecs/ilbc/window32_w32.c",
+    "codecs/ilbc/window32_w32.h",
+    "codecs/ilbc/xcorr_coef.c",
+    "codecs/ilbc/xcorr_coef.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":ilbc_config",
+  ]
+
+  deps = [ "../../common_audio" ]
+}
+
+config("isac_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/isac/main/interface",
+  ]
+}
+
+source_set("isac") {
+  sources = [
+    "codecs/isac/main/interface/isac.h",
+    "codecs/isac/main/source/arith_routines.c",
+    "codecs/isac/main/source/arith_routines.h",
+    "codecs/isac/main/source/arith_routines_hist.c",
+    "codecs/isac/main/source/arith_routines_logist.c",
+    "codecs/isac/main/source/bandwidth_estimator.c",
+    "codecs/isac/main/source/bandwidth_estimator.h",
+    "codecs/isac/main/source/codec.h",
+    "codecs/isac/main/source/crc.c",
+    "codecs/isac/main/source/crc.h",
+    "codecs/isac/main/source/decode_bwe.c",
+    "codecs/isac/main/source/decode.c",
+    "codecs/isac/main/source/encode.c",
+    "codecs/isac/main/source/encode_lpc_swb.c",
+    "codecs/isac/main/source/encode_lpc_swb.h",
+    "codecs/isac/main/source/entropy_coding.c",
+    "codecs/isac/main/source/entropy_coding.h",
+    "codecs/isac/main/source/fft.c",
+    "codecs/isac/main/source/fft.h",
+    "codecs/isac/main/source/filterbanks.c",
+    "codecs/isac/main/source/filterbank_tables.c",
+    "codecs/isac/main/source/filterbank_tables.h",
+    "codecs/isac/main/source/filter_functions.c",
+    "codecs/isac/main/source/intialize.c",
+    "codecs/isac/main/source/isac.c",
+    "codecs/isac/main/source/lattice.c",
+    "codecs/isac/main/source/lpc_analysis.c",
+    "codecs/isac/main/source/lpc_analysis.h",
+    "codecs/isac/main/source/lpc_gain_swb_tables.c",
+    "codecs/isac/main/source/lpc_gain_swb_tables.h",
+    "codecs/isac/main/source/lpc_shape_swb12_tables.c",
+    "codecs/isac/main/source/lpc_shape_swb12_tables.h",
+    "codecs/isac/main/source/lpc_shape_swb16_tables.c",
+    "codecs/isac/main/source/lpc_shape_swb16_tables.h",
+    "codecs/isac/main/source/lpc_tables.c",
+    "codecs/isac/main/source/lpc_tables.h",
+    "codecs/isac/main/source/os_specific_inline.h",
+    "codecs/isac/main/source/pitch_estimator.c",
+    "codecs/isac/main/source/pitch_estimator.h",
+    "codecs/isac/main/source/pitch_filter.c",
+    "codecs/isac/main/source/pitch_gain_tables.c",
+    "codecs/isac/main/source/pitch_gain_tables.h",
+    "codecs/isac/main/source/pitch_lag_tables.c",
+    "codecs/isac/main/source/pitch_lag_tables.h",
+    "codecs/isac/main/source/settings.h",
+    "codecs/isac/main/source/spectrum_ar_model_tables.c",
+    "codecs/isac/main/source/spectrum_ar_model_tables.h",
+    "codecs/isac/main/source/structs.h",
+    "codecs/isac/main/source/transform.c",
+  ]
+
+  if (is_linux) {
+    libs = [ "m" ]
+  }
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":isac_config",
+  ]
+
+  deps = [ "../../common_audio" ]
+}
+
+config("isac_fix_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/isac/fix/interface",
+  ]
+}
+
+source_set("isacfix") {
+  sources = [
+    "codecs/isac/fix/interface/isacfix.h",
+    "codecs/isac/fix/source/arith_routines.c",
+    "codecs/isac/fix/source/arith_routines_hist.c",
+    "codecs/isac/fix/source/arith_routines_logist.c",
+    "codecs/isac/fix/source/arith_routins.h",
+    "codecs/isac/fix/source/bandwidth_estimator.c",
+    "codecs/isac/fix/source/bandwidth_estimator.h",
+    "codecs/isac/fix/source/codec.h",
+    "codecs/isac/fix/source/decode_bwe.c",
+    "codecs/isac/fix/source/decode.c",
+    "codecs/isac/fix/source/decode_plc.c",
+    "codecs/isac/fix/source/encode.c",
+    "codecs/isac/fix/source/entropy_coding.c",
+    "codecs/isac/fix/source/entropy_coding.h",
+    "codecs/isac/fix/source/fft.c",
+    "codecs/isac/fix/source/fft.h",
+    "codecs/isac/fix/source/filterbanks.c",
+    "codecs/isac/fix/source/filterbank_tables.c",
+    "codecs/isac/fix/source/filterbank_tables.h",
+    "codecs/isac/fix/source/filters.c",
+    "codecs/isac/fix/source/initialize.c",
+    "codecs/isac/fix/source/isacfix.c",
+    "codecs/isac/fix/source/lattice.c",
+    "codecs/isac/fix/source/lpc_masking_model.c",
+    "codecs/isac/fix/source/lpc_masking_model.h",
+    "codecs/isac/fix/source/lpc_tables.c",
+    "codecs/isac/fix/source/lpc_tables.h",
+    "codecs/isac/fix/source/pitch_estimator.c",
+    "codecs/isac/fix/source/pitch_estimator.h",
+    "codecs/isac/fix/source/pitch_filter.c",
+    "codecs/isac/fix/source/pitch_gain_tables.c",
+    "codecs/isac/fix/source/pitch_gain_tables.h",
+    "codecs/isac/fix/source/pitch_lag_tables.c",
+    "codecs/isac/fix/source/pitch_lag_tables.h",
+    "codecs/isac/fix/source/settings.h",
+    "codecs/isac/fix/source/spectrum_ar_model_tables.c",
+    "codecs/isac/fix/source/spectrum_ar_model_tables.h",
+    "codecs/isac/fix/source/structs.h",
+    "codecs/isac/fix/source/transform.c",
+    "codecs/isac/fix/source/transform_tables.c",
+  ]
+
+  if (!is_win) {
+    defines = [ "WEBRTC_LINUX" ]
+  }
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":isac_fix_config",
+  ]
+
+  deps = [
+    "../../common_audio",
+    "../../system_wrappers",
+  ]
+
+  if (rtc_build_armv7_neon) {
+    deps += [ ":isac_neon" ]
+
+    # Enable compilation for the ARM v7 Neon instruction set. This is needed
+    # since //build/config/arm.gni only enables Neon for iOS, not Android.
+    # This provides the same functionality as webrtc/build/arm_neon.gypi.
+    # TODO(kjellander): Investigate if this can be moved into webrtc.gni or
+    # //build/config/arm.gni instead, to reduce code duplication.
+    # Remove the -mfpu=vfpv3-d16 cflag.
+    configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [
+      "-flax-vector-conversions",
+      "-mfpu=neon",
+    ]
+
+    sources += [
+      "codecs/isac/fix/source/lattice_armv7.S",
+      "codecs/isac/fix/source/pitch_filter_armv6.S",
+    ]
+  } else {
+    sources += [ "codecs/isac/fix/source/pitch_filter_c.c" ]
+  }
+
+  if (cpu_arch == "mipsel") {
+    sources += [
+      "codecs/isac/fix/source/entropy_coding_mips.c",
+      "codecs/isac/fix/source/filters_mips.c",
+      "codecs/isac/fix/source/lattice_mips.c",
+      "codecs/isac/fix/source/pitch_estimator_mips.c",
+      "codecs/isac/fix/source/transform_mips.c",
+    ]
+    if (mips_dsp_rev > 0) {
+      sources += [ "codecs/isac/fix/source/filterbanks_mips.c" ]
+    }
+    if (mips_dsp_rev > 1) {
+      sources += [
+        "codecs/isac/fix/source/lpc_masking_model_mips.c",
+        "codecs/isac/fix/source/pitch_filter_mips.c",
+      ]
+    } else {
+      sources += [ "codecs/isac/fix/source/pitch_filter_c.c" ]
+    }
+  } else {
+    sources += [ "codecs/isac/fix/source/pitch_estimator_c.c" ]
+  }
+
+  if (!rtc_build_armv7_neon && cpu_arch != "mipsel") {
+    sources += [ "codecs/isac/fix/source/lattice_c.c" ]
+  }
+}
+
+if (rtc_build_armv7_neon) {
+  source_set("isac_neon") {
+    sources = [
+      "codecs/isac/fix/source/entropy_coding_neon.c",
+      "codecs/isac/fix/source/filterbanks_neon.S",
+      "codecs/isac/fix/source/filters_neon.S",
+      "codecs/isac/fix/source/lattice_neon.S",
+      "codecs/isac/fix/source/lpc_masking_model_neon.S",
+      "codecs/isac/fix/source/transform_neon.S",
+    ]
+
+    include_dirs = [
+      "../../..",
+    ]
+
+    # Disable LTO in audio_processing_neon target due to compiler bug.
+    if (rtc_use_lto) {
+      cflags -= [
+        "-flto",
+        "-ffat-lto-objects",
+      ]
+    }
+
+    # Enable compilation for the ARM v7 Neon instruction set. This is needed
+    # since //build/config/arm.gni only enables Neon for iOS, not Android.
+    # This provides the same functionality as webrtc/build/arm_neon.gypi.
+    # TODO(kjellander): Investigate if this can be moved into webrtc.gni or
+    # //build/config/arm.gni instead, to reduce code duplication.
+    # Remove the -mfpu=vfpv3-d16 cflag.
+    configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [
+      "-flax-vector-conversions",
+      "-mfpu=neon",
+    ]
+
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
+
+    deps = [ "../../common_audio" ]
+  }
+}
+
+config("pcm16b_config") {
+  include_dirs = [
+    "../../..",
+    "codecs/pcm16b/include",
+  ]
+}
+
+source_set("pcm16b") {
+  sources = [
+    "codecs/pcm16b/include/pcm16b.h",
+    "codecs/pcm16b/pcm16b.c",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":pcm16b_config",
+  ]
+}
+
+config("opus_config") {
+  include_dirs = [ "../../.." ]
+}
+
+source_set("webrtc_opus") {
+  sources = [
+    "codecs/opus/audio_encoder_opus.cc",
+    "codecs/opus/interface/audio_encoder_opus.h",
+    "codecs/opus/interface/opus_interface.h",
+    "codecs/opus/opus_inst.h",
+    "codecs/opus/opus_interface.c",
+  ]
+  if (build_with_mozilla) {
+    include_dirs = [ getenv("DIST") + "/include/opus" ]
+  } else {
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
+
+    deps = [ "//third_party/opus" ]
+  }
+}
+
+config("neteq_config") {
+  include_dirs = [
+    # Need Opus header files for the audio classifier.
+    "//third_party/opus/src/celt",
+    "//third_party/opus/src/src",
+  ]
+}
+
+source_set("neteq") {
+  sources = [
+    "neteq/interface/audio_decoder.h",
+    "neteq/interface/neteq.h",
+    "neteq/accelerate.cc",
+    "neteq/accelerate.h",
+    "neteq/audio_classifier.cc",
+    "neteq/audio_classifier.h",
+    "neteq/audio_decoder_impl.cc",
+    "neteq/audio_decoder_impl.h",
+    "neteq/audio_decoder.cc",
+    "neteq/audio_multi_vector.cc",
+    "neteq/audio_multi_vector.h",
+    "neteq/audio_vector.cc",
+    "neteq/audio_vector.h",
+    "neteq/background_noise.cc",
+    "neteq/background_noise.h",
+    "neteq/buffer_level_filter.cc",
+    "neteq/buffer_level_filter.h",
+    "neteq/comfort_noise.cc",
+    "neteq/comfort_noise.h",
+    "neteq/decision_logic.cc",
+    "neteq/decision_logic.h",
+    "neteq/decision_logic_fax.cc",
+    "neteq/decision_logic_fax.h",
+    "neteq/decision_logic_normal.cc",
+    "neteq/decision_logic_normal.h",
+    "neteq/decoder_database.cc",
+    "neteq/decoder_database.h",
+    "neteq/defines.h",
+    "neteq/delay_manager.cc",
+    "neteq/delay_manager.h",
+    "neteq/delay_peak_detector.cc",
+    "neteq/delay_peak_detector.h",
+    "neteq/dsp_helper.cc",
+    "neteq/dsp_helper.h",
+    "neteq/dtmf_buffer.cc",
+    "neteq/dtmf_buffer.h",
+    "neteq/dtmf_tone_generator.cc",
+    "neteq/dtmf_tone_generator.h",
+    "neteq/expand.cc",
+    "neteq/expand.h",
+    "neteq/merge.cc",
+    "neteq/merge.h",
+    "neteq/neteq_impl.cc",
+    "neteq/neteq_impl.h",
+    "neteq/neteq.cc",
+    "neteq/statistics_calculator.cc",
+    "neteq/statistics_calculator.h",
+    "neteq/normal.cc",
+    "neteq/normal.h",
+    "neteq/packet_buffer.cc",
+    "neteq/packet_buffer.h",
+    "neteq/payload_splitter.cc",
+    "neteq/payload_splitter.h",
+    "neteq/post_decode_vad.cc",
+    "neteq/post_decode_vad.h",
+    "neteq/preemptive_expand.cc",
+    "neteq/preemptive_expand.h",
+    "neteq/random_vector.cc",
+    "neteq/random_vector.h",
+    "neteq/rtcp.cc",
+    "neteq/rtcp.h",
+    "neteq/sync_buffer.cc",
+    "neteq/sync_buffer.h",
+    "neteq/timestamp_scaler.cc",
+    "neteq/timestamp_scaler.h",
+    "neteq/time_stretch.cc",
+    "neteq/time_stretch.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+
+  public_configs = [
+    "../..:common_inherited_config",
+    ":neteq_config",
+  ]
+
+  forward_dependent_configs_from = [ "//third_party/opus" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    ":cng",
+    ":g711",
+    ":g722",
+    ":ilbc",
+    ":isac",
+    ":isacfix",
+    ":pcm16b",
+    "../../common_audio",
+    "../../system_wrappers",
+    "//third_party/opus",
+  ]
+}

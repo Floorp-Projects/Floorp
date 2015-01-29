@@ -43,8 +43,6 @@ class ACMG722_1C : public ACMGenericCodec {
 
   int16_t InternalCreateEncoder();
 
-  void InternalDestructEncoderInst(void* ptr_inst);
-
   int32_t operational_rate_;
 
   G722_1_Inst_t_* encoder_inst_ptr_;

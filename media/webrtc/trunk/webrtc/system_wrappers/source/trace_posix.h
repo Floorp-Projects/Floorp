@@ -26,7 +26,6 @@ class TracePosix : public TraceImpl {
   virtual int32_t AddTime(char* trace_message, const TraceLevel level) const
       OVERRIDE;
 
-  virtual int32_t AddBuildInfo(char* trace_message) const OVERRIDE;
   virtual int32_t AddDateTimeInfo(char* trace_message) const OVERRIDE;
 
  private:

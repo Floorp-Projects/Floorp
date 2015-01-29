@@ -294,8 +294,8 @@ VideoRenderDirect3D9::VideoRenderDirect3D9(Trace* trace,
     _logoRight(0),
     _logoBottom(0),
     _pd3dSurface(NULL),
-    _totalMemory(-1),
-    _availableMemory(-1)
+    _totalMemory(0),
+    _availableMemory(0)
 {
     _screenUpdateThread = ThreadWrapper::CreateThread(ScreenUpdateThreadProc,
                                                       this, kRealtimePriority);

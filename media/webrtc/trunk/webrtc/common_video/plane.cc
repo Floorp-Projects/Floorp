@@ -20,8 +20,7 @@ namespace webrtc {
 static const int kBufferAlignment =  64;
 
 Plane::Plane()
-    : buffer_(NULL),
-      allocated_size_(0),
+    : allocated_size_(0),
       plane_size_(0),
       stride_(0) {}
 
@@ -42,8 +41,8 @@ int Plane::MaybeResize(int new_size) {
     return -1;
   if (new_size <= allocated_size_)
     return 0;
-  Allocator<uint8_t>::scoped_ptr_aligned new_buffer(
-    AlignedMalloc<uint8_t>(new_size, kBufferAlignment));
+  scoped_ptr<uint8_t, AlignedFreeDeleter> new_buffer(static_cast<uint8_t*>(
+      AlignedMalloc(new_size, kBufferAlignment)));
   if (buffer_.get()) {
     memcpy(new_buffer.get(), buffer_.get(), plane_size_);
   }

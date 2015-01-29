@@ -10,25 +10,18 @@
 
 #include "webrtc/modules/video_coding/main/source/timing.h"
 
-
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/jitter_buffer_common.h"
-#include "webrtc/modules/video_coding/main/source/timestamp_extrapolator.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-
+#include "webrtc/system_wrappers/interface/timestamp_extrapolator.h"
 
 
 namespace webrtc {
 
 VCMTiming::VCMTiming(Clock* clock,
-                     int32_t vcm_id,
-                     int32_t timing_id,
                      VCMTiming* master_timing)
     : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
-      vcm_id_(vcm_id),
       clock_(clock),
-      timing_id_(timing_id),
       master_(false),
       ts_extrapolator_(),
       codec_timer_(),
@@ -40,7 +33,7 @@ VCMTiming::VCMTiming(Clock* clock,
       prev_frame_timestamp_(0) {
   if (master_timing == NULL) {
     master_ = true;
-    ts_extrapolator_ = new VCMTimestampExtrapolator(clock_, vcm_id, timing_id);
+    ts_extrapolator_ = new TimestampExtrapolator(clock_->TimeInMilliseconds());
   } else {
     ts_extrapolator_ = master_timing->ts_extrapolator_;
   }
@@ -55,7 +48,7 @@ VCMTiming::~VCMTiming() {
 
 void VCMTiming::Reset() {
   CriticalSectionScoped cs(crit_sect_);
-  ts_extrapolator_->Reset();
+  ts_extrapolator_->Reset(clock_->TimeInMilliseconds());
   codec_timer_.Reset();
   render_delay_ms_ = kDefaultRenderDelayMs;
   min_playout_delay_ms_ = 0;
@@ -65,6 +58,7 @@ void VCMTiming::Reset() {
 }
 
 void VCMTiming::ResetDecodeTime() {
+  CriticalSectionScoped lock(crit_sect_);
   codec_timer_.Reset();
 }
 
@@ -81,11 +75,6 @@ void VCMTiming::set_min_playout_delay(uint32_t min_playout_delay_ms) {
 void VCMTiming::SetJitterDelay(uint32_t jitter_delay_ms) {
   CriticalSectionScoped cs(crit_sect_);
   if (jitter_delay_ms != jitter_delay_ms_) {
-    if (master_) {
-      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-          VCMId(vcm_id_, timing_id_),
-          "Desired jitter buffer level: %u ms", jitter_delay_ms);
-    }
     jitter_delay_ms_ = jitter_delay_ms;
     // When in initial state, set current delay to minimum delay.
     if (current_delay_ms_ == 0) {
@@ -152,39 +141,21 @@ int32_t VCMTiming::StopDecodeTimer(uint32_t time_stamp,
                                    int64_t start_time_ms,
                                    int64_t now_ms) {
   CriticalSectionScoped cs(crit_sect_);
-  const int32_t max_dec_time = MaxDecodeTimeMs();
   int32_t time_diff_ms = codec_timer_.StopTimer(start_time_ms, now_ms);
-  if (time_diff_ms < 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, VCMId(vcm_id_,
-        timing_id_), "Codec timer error: %d", time_diff_ms);
-    assert(false);
-  }
+  assert(time_diff_ms >= 0);
   last_decode_ms_ = time_diff_ms;
-  if (master_) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding, VCMId(vcm_id_,
-        timing_id_),
-        "Frame decoded: time_stamp=%u dec_time=%d max_dec_time=%u, at %u",
-        time_stamp, time_diff_ms, max_dec_time, MaskWord64ToUWord32(now_ms));
-  }
   return 0;
 }
 
 void VCMTiming::IncomingTimestamp(uint32_t time_stamp, int64_t now_ms) {
   CriticalSectionScoped cs(crit_sect_);
-  ts_extrapolator_->Update(now_ms, time_stamp, master_);
+  ts_extrapolator_->Update(now_ms, time_stamp);
 }
 
 int64_t VCMTiming::RenderTimeMs(uint32_t frame_timestamp, int64_t now_ms)
     const {
   CriticalSectionScoped cs(crit_sect_);
   const int64_t render_time_ms = RenderTimeMsInternal(frame_timestamp, now_ms);
-  if (master_) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding, VCMId(vcm_id_,
-        timing_id_), "Render frame %u at %u. Render delay %u",
-        "jitter delay %u, max decode time %u, playout delay %u",
-        frame_timestamp, MaskWord64ToUWord32(render_time_ms), render_delay_ms_,
-        jitter_delay_ms_, MaxDecodeTimeMs(), min_playout_delay_ms_);
-  }
   return render_time_ms;
 }
 
@@ -192,11 +163,6 @@ int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
                                         int64_t now_ms) const {
   int64_t estimated_complete_time_ms =
     ts_extrapolator_->ExtrapolateLocalTime(frame_timestamp);
-  if (master_) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-        VCMId(vcm_id_, timing_id_), "ExtrapolateLocalTime(%u)=%u ms",
-        frame_timestamp, MaskWord64ToUWord32(estimated_complete_time_ms));
-  }
   if (estimated_complete_time_ms == -1) {
     estimated_complete_time_ms = now_ms;
   }
@@ -210,11 +176,7 @@ int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
 int32_t VCMTiming::MaxDecodeTimeMs(FrameType frame_type /*= kVideoFrameDelta*/)
     const {
   const int32_t decode_time_ms = codec_timer_.RequiredDecodeTimeMs(frame_type);
-  if (decode_time_ms < 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, VCMId(vcm_id_,
-        timing_id_), "Negative maximum decode time: %d", decode_time_ms);
-        return -1;
-  }
+  assert(decode_time_ms >= 0);
   return decode_time_ms;
 }
 
@@ -254,11 +216,6 @@ uint32_t VCMTiming::TargetVideoDelay() const {
 }
 
 uint32_t VCMTiming::TargetDelayInternal() const {
-  WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-      VCMId(vcm_id_, timing_id_),
-      "Delay: min_playout=%u jitter=%u max_decode=%u render=%u",
-      min_playout_delay_ms_, jitter_delay_ms_, MaxDecodeTimeMs(),
-      render_delay_ms_);
   return std::max(min_playout_delay_ms_,
       jitter_delay_ms_ + MaxDecodeTimeMs() + render_delay_ms_);
 }

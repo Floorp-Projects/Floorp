@@ -42,7 +42,11 @@ DEFINE_FUNCTION WebRtcIsacfix_Time2SpecNeon
   add r5, sp, #(16 + FRAMESAMPLES * 2)  @ tmpimQ16;
 
   adr r9, WebRtcIsacfix_kCosTab1
+#if defined(__APPLE__)
+  mov r6, #:lower16:(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
+#else
   mov r6, #(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
+#endif
   add r10, r9, r6             @ WebRtcIsacfix_kSinTab1
 
   vmov.u32 q14, #0            @ Initialize the maximum values for tmpInIm.
@@ -455,7 +459,12 @@ TransformAndFindMax:
   bgt TransformAndFindMax
 
   adr r10, WebRtcIsacfix_kSinTab1
+#if defined(__APPLE__)
+  mov r2, #:lower16:(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
+#else
   mov r2, #(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
+#endif
+
   sub r11, r10, r2            @ WebRtcIsacfix_kCosTab1
 
   @ Find the maximum value in the Neon registers

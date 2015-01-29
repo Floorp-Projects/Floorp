@@ -12,11 +12,13 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
 
 namespace webrtc {
 
 // Function that does nothing, and reports success.
 bool NullRunFunction(void* obj) {
+  SleepMs(0);  // Hand over timeslice, prevents busy looping.
   return true;
 }
 
@@ -32,6 +34,7 @@ TEST(ThreadTest, StartStop) {
 bool SetFlagRunFunction(void* obj) {
   bool* obj_as_bool = static_cast<bool*>(obj);
   *obj_as_bool = true;
+  SleepMs(0);  // Hand over timeslice, prevents busy looping.
   return true;
 }
 

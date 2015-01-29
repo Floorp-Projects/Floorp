@@ -133,11 +133,12 @@ void StreamStatisticianImpl::UpdateCounters(const RTPHeader& header,
 void StreamStatisticianImpl::UpdateJitter(const RTPHeader& header,
                                           uint32_t receive_time_secs,
                                           uint32_t receive_time_frac) {
-  uint32_t receive_time_rtp = ModuleRTPUtility::ConvertNTPTimeToRTP(
-          receive_time_secs, receive_time_frac, header.payload_type_frequency);
-  uint32_t last_receive_time_rtp = ModuleRTPUtility::ConvertNTPTimeToRTP(
-      last_receive_time_secs_, last_receive_time_frac_,
-      header.payload_type_frequency);
+  uint32_t receive_time_rtp = RtpUtility::ConvertNTPTimeToRTP(
+      receive_time_secs, receive_time_frac, header.payload_type_frequency);
+  uint32_t last_receive_time_rtp =
+      RtpUtility::ConvertNTPTimeToRTP(last_receive_time_secs_,
+                                      last_receive_time_frac_,
+                                      header.payload_type_frequency);
   int32_t time_diff_samples = (receive_time_rtp - last_receive_time_rtp) -
       (header.timestamp - last_received_timestamp_);
 
@@ -407,36 +408,31 @@ ReceiveStatisticsImpl::~ReceiveStatisticsImpl() {
 void ReceiveStatisticsImpl::IncomingPacket(const RTPHeader& header,
                                            size_t bytes,
                                            bool retransmitted) {
-  StatisticianImplMap::iterator it;
+  StreamStatisticianImpl* impl;
   {
     CriticalSectionScoped cs(receive_statistics_lock_.get());
-    it = statisticians_.find(header.ssrc);
-    if (it == statisticians_.end()) {
-      std::pair<StatisticianImplMap::iterator, uint32_t> insert_result =
-          statisticians_.insert(std::make_pair(
-              header.ssrc, new StreamStatisticianImpl(clock_, this, this)));
-      it = insert_result.first;
+    StatisticianImplMap::iterator it = statisticians_.find(header.ssrc);
+    if (it != statisticians_.end()) {
+      impl = it->second;
+    } else {
+      impl = new StreamStatisticianImpl(clock_, this, this);
+      statisticians_[header.ssrc] = impl;
     }
   }
-  it->second->IncomingPacket(header, bytes, retransmitted);
+  // StreamStatisticianImpl instance is created once and only destroyed when
+  // this whole ReceiveStatisticsImpl is destroyed. StreamStatisticianImpl has
+  // it's own locking so don't hold receive_statistics_lock_ (potential
+  // deadlock).
+  impl->IncomingPacket(header, bytes, retransmitted);
 }
 
 void ReceiveStatisticsImpl::FecPacketReceived(uint32_t ssrc) {
   CriticalSectionScoped cs(receive_statistics_lock_.get());
   StatisticianImplMap::iterator it = statisticians_.find(ssrc);
-  assert(it != statisticians_.end());
-  it->second->FecPacketReceived();
-}
-
-void ReceiveStatisticsImpl::ChangeSsrc(uint32_t from_ssrc, uint32_t to_ssrc) {
-  CriticalSectionScoped cs(receive_statistics_lock_.get());
-  StatisticianImplMap::iterator from_it = statisticians_.find(from_ssrc);
-  if (from_it == statisticians_.end())
-    return;
-  if (statisticians_.find(to_ssrc) != statisticians_.end())
-    return;
-  statisticians_[to_ssrc] = from_it->second;
-  statisticians_.erase(from_it);
+  // Ignore FEC if it is the first packet.
+  if (it != statisticians_.end()) {
+    it->second->FecPacketReceived();
+  }
 }
 
 StatisticianMap ReceiveStatisticsImpl::GetActiveStatisticians() const {

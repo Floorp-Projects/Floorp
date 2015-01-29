@@ -13,10 +13,8 @@
 #include <assert.h>
 
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-
 #include "webrtc/modules/audio_processing/audio_buffer.h"
-#include "webrtc/modules/audio_processing/audio_processing_impl.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -39,9 +37,11 @@ int MapSetting(VoiceDetection::Likelihood likelihood) {
 }
 }  // namespace
 
-VoiceDetectionImpl::VoiceDetectionImpl(const AudioProcessingImpl* apm)
-  : ProcessingComponent(apm),
+VoiceDetectionImpl::VoiceDetectionImpl(const AudioProcessing* apm,
+                                       CriticalSectionWrapper* crit)
+  : ProcessingComponent(),
     apm_(apm),
+    crit_(crit),
     stream_has_voice_(false),
     using_external_vad_(false),
     likelihood_(kLowLikelihood),
@@ -61,17 +61,11 @@ int VoiceDetectionImpl::ProcessCaptureAudio(AudioBuffer* audio) {
   }
   assert(audio->samples_per_split_channel() <= 160);
 
-  int16_t* mixed_data = audio->low_pass_split_data(0);
-  if (audio->num_channels() > 1) {
-    audio->CopyAndMixLowPass(1);
-    mixed_data = audio->mixed_low_pass_data(0);
-  }
-
   // TODO(ajm): concatenate data in frame buffer here.
 
   int vad_ret = WebRtcVad_Process(static_cast<Handle*>(handle(0)),
-                                  apm_->split_sample_rate_hz(),
-                                  mixed_data,
+                                  apm_->proc_split_sample_rate_hz(),
+                                  audio->mixed_low_pass_data(),
                                   frame_size_samples_);
   if (vad_ret == 0) {
     stream_has_voice_ = false;
@@ -87,7 +81,7 @@ int VoiceDetectionImpl::ProcessCaptureAudio(AudioBuffer* audio) {
 }
 
 int VoiceDetectionImpl::Enable(bool enable) {
-  CriticalSectionScoped crit_scoped(apm_->crit());
+  CriticalSectionScoped crit_scoped(crit_);
   return EnableComponent(enable);
 }
 
@@ -108,7 +102,7 @@ bool VoiceDetectionImpl::stream_has_voice() const {
 }
 
 int VoiceDetectionImpl::set_likelihood(VoiceDetection::Likelihood likelihood) {
-  CriticalSectionScoped crit_scoped(apm_->crit());
+  CriticalSectionScoped crit_scoped(crit_);
   if (MapSetting(likelihood) == -1) {
     return apm_->kBadParameterError;
   }
@@ -122,7 +116,7 @@ VoiceDetection::Likelihood VoiceDetectionImpl::likelihood() const {
 }
 
 int VoiceDetectionImpl::set_frame_size_ms(int size) {
-  CriticalSectionScoped crit_scoped(apm_->crit());
+  CriticalSectionScoped crit_scoped(crit_);
   assert(size == 10); // TODO(ajm): remove when supported.
   if (size != 10 &&
       size != 20 &&
@@ -146,7 +140,8 @@ int VoiceDetectionImpl::Initialize() {
   }
 
   using_external_vad_ = false;
-  frame_size_samples_ = frame_size_ms_ * (apm_->split_sample_rate_hz() / 1000);
+  frame_size_samples_ = frame_size_ms_ *
+      apm_->proc_split_sample_rate_hz() / 1000;
   // TODO(ajm): intialize frame buffer here.
 
   return apm_->kNoError;
@@ -163,8 +158,8 @@ void* VoiceDetectionImpl::CreateHandle() const {
   return handle;
 }
 
-int VoiceDetectionImpl::DestroyHandle(void* handle) const {
-  return WebRtcVad_Free(static_cast<Handle*>(handle));
+void VoiceDetectionImpl::DestroyHandle(void* handle) const {
+  WebRtcVad_Free(static_cast<Handle*>(handle));
 }
 
 int VoiceDetectionImpl::InitializeHandle(void* handle) const {

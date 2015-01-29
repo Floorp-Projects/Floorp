@@ -8,95 +8,51 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * RTCP statistics reporting.
- */
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_RTCP_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_RTCP_H_
 
-#ifndef RTCP_H
-#define RTCP_H
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/neteq/interface/neteq.h"
+#include "webrtc/typedefs.h"
 
-#include "typedefs.h"
+namespace webrtc {
 
-typedef struct
-{
-    uint16_t cycles; /* The number of wrap-arounds for the sequence number */
-    uint16_t max_seq; /* The maximum sequence number received
-     (starts from 0 again after wrap around) */
-    uint16_t base_seq; /* The sequence number of the first packet that arrived */
-    uint32_t received; /* The number of packets that has been received */
-    uint32_t rec_prior; /* Number of packets received when last report was generated */
-    uint32_t exp_prior; /* Number of packets that should have been received if no
-     packets were lost. Stored value from last report. */
-    uint32_t jitter; /* Jitter statistics at this instance (calculated according to RFC) */
-    int32_t transit; /* Clock difference for previous packet (RTPtimestamp - LOCALtime_rec) */
-} WebRtcNetEQ_RTCP_t;
+// Forward declaration.
+struct RTPHeader;
 
-/****************************************************************************
- * WebRtcNetEQ_RTCPInit(...)
- *
- * This function calculates the parameters that are needed for the RTCP 
- * report.
- *
- * Input:
- *		- RTCP_inst		: RTCP instance, that contains information about the 
- *						  packets that have been received etc.
- *		- seqNo			: Packet number of the first received frame.
- *
- * Return value			:  0 - Ok
- *						  -1 - Error
- */
+class Rtcp {
+ public:
+  Rtcp() {
+    Init(0);
+  }
 
-int WebRtcNetEQ_RTCPInit(WebRtcNetEQ_RTCP_t *RTCP_inst, uint16_t uw16_seqNo);
+  ~Rtcp() {}
 
-/****************************************************************************
- * WebRtcNetEQ_RTCPUpdate(...)
- *
- * This function calculates the parameters that are needed for the RTCP 
- * report.
- *
- * Input:
- *		- RTCP_inst		: RTCP instance, that contains information about the 
- *						  packets that have been received etc.
- *		- seqNo			: Packet number of the first received frame.
- *		- timeStamp		: Time stamp from the RTP header.
- *		- recTime		: Time (in RTP timestamps) when this packet was received.
- *
- * Return value			:  0 - Ok
- *						  -1 - Error
- */
+  // Resets the RTCP statistics, and sets the first received sequence number.
+  void Init(uint16_t start_sequence_number);
 
-int WebRtcNetEQ_RTCPUpdate(WebRtcNetEQ_RTCP_t *RTCP_inst, uint16_t uw16_seqNo,
-                           uint32_t uw32_timeStamp, uint32_t uw32_recTime);
+  // Updates the RTCP statistics with a new received packet.
+  void Update(const RTPHeader& rtp_header, uint32_t receive_timestamp);
 
-/****************************************************************************
- * WebRtcNetEQ_RTCPGetStats(...)
- *
- * This function calculates the parameters that are needed for the RTCP 
- * report.
- *
- * Input:
- *		- RTCP_inst		: RTCP instance, that contains information about the 
- *						  packets that have been received etc.
- *      - doNotReset    : If non-zero, the fraction lost statistics will not
- *                        be reset.
- *
- * Output:
- *		- RTCP_inst		: Updated RTCP information (some statistics are 
- *						  reset when generating this report)
- *		- fraction_lost : Number of lost RTP packets divided by the number of
- *						  expected packets, since the last RTCP Report.
- *		- cum_lost		: Cumulative number of lost packets during this 
- *						  session.
- *		- ext_max		: Extended highest sequence number received.
- *		- jitter		: Inter-arrival jitter.
- *
- * Return value			:  0 - Ok
- *						  -1 - Error
- */
+  // Returns the current RTCP statistics. If |no_reset| is true, the statistics
+  // are not reset, otherwise they are.
+  void GetStatistics(bool no_reset, RtcpStatistics* stats);
 
-int WebRtcNetEQ_RTCPGetStats(WebRtcNetEQ_RTCP_t *RTCP_inst,
-                             uint16_t *puw16_fraction_lost,
-                             uint32_t *puw32_cum_lost, uint32_t *puw32_ext_max,
-                             uint32_t *puw32_jitter, int16_t doNotReset);
+ private:
+  uint16_t cycles_;  // The number of wrap-arounds for the sequence number.
+  uint16_t max_seq_no_;  // The maximum sequence number received. Starts over
+                         // from 0 after wrap-around.
+  uint16_t base_seq_no_;  // The sequence number of the first received packet.
+  uint32_t received_packets_;  // The number of packets that have been received.
+  uint32_t received_packets_prior_;  // Number of packets received when last
+                                     // report was generated.
+  uint32_t expected_prior_;  // Expected number of packets, at the time of the
+                             // last report.
+  uint32_t jitter_;  // Current jitter value.
+  int32_t transit_;  // Clock difference for previous packet.
 
-#endif
+  DISALLOW_COPY_AND_ASSIGN(Rtcp);
+};
+
+}  // namespace webrtc
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_RTCP_H_

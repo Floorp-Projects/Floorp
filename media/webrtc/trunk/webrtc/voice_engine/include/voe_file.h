@@ -84,9 +84,6 @@ public:
     // Returns the current file playing state for a specific |channel|.
     virtual int IsPlayingFileLocally(int channel) = 0;
 
-    // Sets the volume scaling for a speaker file that is already playing.
-    virtual int ScaleLocalFilePlayout(int channel, float scale) = 0;
-
     // Starts reading data from a file and transmits the data either
     // mixed with or instead of the microphone signal.
     virtual int StartPlayingFileAsMicrophone(
@@ -111,9 +108,6 @@ public:
 
     // Returns whether the |channel| is currently playing a file as microphone.
     virtual int IsPlayingFileAsMicrophone(int channel) = 0;
-
-    // Sets the volume scaling for a microphone file that is already playing.
-    virtual int ScaleFileAsMicrophonePlayout(int channel, float scale) = 0;
 
     // Starts recording the mixed playout audio.
     virtual int StartRecordingPlayout(int channel,
@@ -140,40 +134,31 @@ public:
     // Stops recording the microphone signal.
     virtual int StopRecordingMicrophone() = 0;
 
-
-    // Gets the duration of a file.
+    // Don't use. To be removed.
+    virtual int ScaleLocalFilePlayout(int channel, float scale) { return -1; }
+    virtual int ScaleFileAsMicrophonePlayout(
+            int channel, float scale) { return -1; }
     virtual int GetFileDuration(const char* fileNameUTF8, int& durationMs,
-        FileFormats format = kFileFormatPcm16kHzFile) = 0;
-
-    // Gets the current played position of a file on a specific |channel|.
-    virtual int GetPlaybackPosition(int channel, int& positionMs) = 0;
-
+            FileFormats format = kFileFormatPcm16kHzFile) { return -1; }
+    virtual int GetPlaybackPosition(int channel, int& positionMs) { return -1; }
     virtual int ConvertPCMToWAV(const char* fileNameInUTF8,
-                                const char* fileNameOutUTF8) = 0;
-
+                                const char* fileNameOutUTF8) { return -1; }
     virtual int ConvertPCMToWAV(InStream* streamIn,
-                                OutStream* streamOut) = 0;
-
+                                OutStream* streamOut) { return -1; }
     virtual int ConvertWAVToPCM(const char* fileNameInUTF8,
-                                const char* fileNameOutUTF8) = 0;
-
+                                const char* fileNameOutUTF8) { return -1; }
     virtual int ConvertWAVToPCM(InStream* streamIn,
-                                OutStream* streamOut) = 0;
-
+                                OutStream* streamOut) { return -1; }
     virtual int ConvertPCMToCompressed(const char* fileNameInUTF8,
                                        const char* fileNameOutUTF8,
-                                       CodecInst* compression) = 0;
-
+                                       CodecInst* compression) { return -1; }
     virtual int ConvertPCMToCompressed(InStream* streamIn,
                                        OutStream* streamOut,
-                                       CodecInst* compression) = 0;
-
+                                       CodecInst* compression) { return -1; }
     virtual int ConvertCompressedToPCM(const char* fileNameInUTF8,
-                                       const char* fileNameOutUTF8) = 0;
-
+            const char* fileNameOutUTF8) { return -1; }
     virtual int ConvertCompressedToPCM(InStream* streamIn,
-                                       OutStream* streamOut) = 0;
-
+                                       OutStream* streamOut) { return -1; }
 protected:
     VoEFile() {}
     virtual ~VoEFile() {}

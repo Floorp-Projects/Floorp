@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_UTILITY_INCLUDE_FRAME_DROPPER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_UTILITY_INCLUDE_FRAME_DROPPER_H_
 
-#include "webrtc/modules/video_coding/utility/include/exp_filter.h"
+#include "webrtc/base/exp_filter.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc
@@ -72,23 +72,23 @@ private:
     void UpdateRatio();
     void CapAccumulator();
 
-    VCMExpFilter       _keyFrameSizeAvgKbits;
-    VCMExpFilter       _keyFrameRatio;
-    float           _keyFrameSpreadFrames;
-    int32_t     _keyFrameCount;
-    float           _accumulator;
-    float           _accumulatorMax;
-    float           _targetBitRate;
-    bool            _dropNext;
-    VCMExpFilter       _dropRatio;
-    int32_t     _dropCount;
-    float           _windowSize;
-    float           _incoming_frame_rate;
-    bool            _wasBelowMax;
-    bool            _enabled;
-    bool            _fastMode;
-    float           _cap_buffer_size;
-    float           _max_time_drops;
+    rtc::ExpFilter _keyFrameSizeAvgKbits;
+    rtc::ExpFilter _keyFrameRatio;
+    float _keyFrameSpreadFrames;
+    int32_t _keyFrameCount;
+    float _accumulator;
+    float _accumulatorMax;
+    float _targetBitRate;
+    bool _dropNext;
+    rtc::ExpFilter _dropRatio;
+    int32_t _dropCount;
+    float _windowSize;
+    float _incoming_frame_rate;
+    bool _wasBelowMax;
+    bool _enabled;
+    bool _fastMode;
+    float _cap_buffer_size;
+    float _max_time_drops;
 }; // end of VCMFrameDropper class
 
 }  // namespace webrtc

@@ -75,7 +75,7 @@ void WebRtcSpl_VectorBitShiftW32ToW16(int16_t* out, int length,
       (*out++) = WebRtcSpl_SatW32ToW16(tmp_w32);
     }
   } else {
-    int16_t left_shifts = -right_shifts;
+    int left_shifts = -right_shifts;
     for (i = length; i > 0; i--) {
       tmp_w32 = (*in++) << left_shifts;
       (*out++) = WebRtcSpl_SatW32ToW16(tmp_w32);

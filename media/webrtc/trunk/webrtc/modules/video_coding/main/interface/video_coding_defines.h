@@ -39,7 +39,11 @@ namespace webrtc {
 #define VCM_RED_PAYLOAD_TYPE        96
 #define VCM_ULPFEC_PAYLOAD_TYPE     97
 #define VCM_VP8_PAYLOAD_TYPE       100
+#define VCM_VP9_PAYLOAD_TYPE       101
 #define VCM_I420_PAYLOAD_TYPE      124
+#define VCM_H264_PAYLOAD_TYPE      127
+
+enum { kDefaultStartBitrateKbps = 300 };
 
 enum VCMVideoProtection {
   kProtectionNack,                // Both send-side and receive-side
@@ -172,17 +176,6 @@ class VCMPacketRequestCallback {
 
  protected:
   virtual ~VCMPacketRequestCallback() {
-  }
-};
-
-// Callback class used for telling the user about the state of the decoder & jitter buffer.
-//
-class VCMReceiveStateCallback {
- public:
-  virtual void ReceiveStateChange(VideoReceiveState state) = 0;
-
- protected:
-  virtual ~VCMReceiveStateCallback() {
   }
 };
 

@@ -106,14 +106,13 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
   for (n = 0; n < AR_ORDER + 1; n++) {
     sum += WEBRTC_SPL_MUL(ARCoefQ12[n], ARCoefQ12[n]);   /* Q24 */
   }
-  sum = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(WEBRTC_SPL_RSHIFT_W32(sum, 6),
-                                             65) + 32768, 16); /* Q8 */
-  CorrQ11[0] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(sum, gainQ10) + 256, 9);
+  sum = ((sum >> 6) * 65 + 32768) >> 16;  /* Q8 */
+  CorrQ11[0] = (sum * gainQ10 + 256) >> 9;
 
   /* To avoid overflow, we shift down gainQ10 if it is large.
    * We will not lose any precision */
   if (gainQ10 > 400000) {
-    tmpGain = WEBRTC_SPL_RSHIFT_W32(gainQ10, 3);
+    tmpGain = gainQ10 >> 3;
     round = 32;
     shftVal = 6;
   } else {
@@ -126,9 +125,8 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
     sum = 16384;
     for (n = k; n < AR_ORDER + 1; n++)
       sum += WEBRTC_SPL_MUL(ARCoefQ12[n - k], ARCoefQ12[n]); /* Q24 */
-    sum = WEBRTC_SPL_RSHIFT_W32(sum, 15);
-    CorrQ11[k] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(sum, tmpGain) + round,
-                                       shftVal);
+    sum >>= 15;
+    CorrQ11[k] = (sum * tmpGain + round) >> shftVal;
   }
   sum = WEBRTC_SPL_LSHIFT_W32(CorrQ11[0], 7);
   for (n = 0; n < FRAMESAMPLES / 8; n++) {
@@ -136,8 +134,7 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
   }
   for (k = 1; k < AR_ORDER; k += 2) {
     for (n = 0; n < FRAMESAMPLES / 8; n++) {
-      CurveQ16[n] += WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(
-          WebRtcIsac_kCos[k][n], CorrQ11[k + 1]) + 2, 2);
+      CurveQ16[n] += (WebRtcIsac_kCos[k][n] * CorrQ11[k + 1] + 2) >> 2;
     }
   }
 
@@ -155,14 +152,12 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
     shftVal = 0;
   }
   for (n = 0; n < FRAMESAMPLES / 8; n++) {
-    diffQ16[n] = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(
-        CS_ptrQ9[n], WEBRTC_SPL_RSHIFT_W32(CorrQ11[1], shftVal)) + 2, 2);
+    diffQ16[n] = (CS_ptrQ9[n] * (CorrQ11[1] >> shftVal) + 2) >> 2;
   }
   for (k = 2; k < AR_ORDER; k += 2) {
     CS_ptrQ9 = WebRtcIsac_kCos[k];
     for (n = 0; n < FRAMESAMPLES / 8; n++) {
-      diffQ16[n] += WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(
-          CS_ptrQ9[n], WEBRTC_SPL_RSHIFT_W32(CorrQ11[k + 1], shftVal)) + 2, 2);
+      diffQ16[n] += (CS_ptrQ9[n] * (CorrQ11[k + 1] >> shftVal) + 2) >> 2;
     }
   }
 

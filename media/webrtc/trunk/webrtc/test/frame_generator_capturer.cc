@@ -67,7 +67,8 @@ FrameGeneratorCapturer::FrameGeneratorCapturer(Clock* clock,
       tick_(EventWrapper::Create()),
       lock_(CriticalSectionWrapper::CreateCriticalSection()),
       frame_generator_(frame_generator),
-      target_fps_(target_fps) {
+      target_fps_(target_fps),
+      first_frame_capture_time_(-1) {
   assert(input != NULL);
   assert(frame_generator != NULL);
   assert(target_fps > 0);
@@ -113,6 +114,9 @@ void FrameGeneratorCapturer::InsertFrame() {
     if (sending_) {
       I420VideoFrame* frame = frame_generator_->NextFrame();
       frame->set_render_time_ms(clock_->CurrentNtpInMilliseconds());
+      if (first_frame_capture_time_ == -1) {
+        first_frame_capture_time_ = frame->render_time_ms();
+      }
       input_->SwapFrame(frame);
     }
   }

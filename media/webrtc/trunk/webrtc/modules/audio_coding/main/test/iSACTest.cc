@@ -86,11 +86,10 @@ int16_t SetISAConfig(ACMTestISACConfig& isacConfig, AudioCodingModule* acm,
   return 0;
 }
 
-ISACTest::ISACTest(int testMode, const Config& config)
-    : _acmA(config.Get<AudioCodingModuleFactory>().Create(1)),
-      _acmB(config.Get<AudioCodingModuleFactory>().Create(2)),
-      _testMode(testMode) {
-}
+ISACTest::ISACTest(int testMode)
+    : _acmA(AudioCodingModule::Create(1)),
+      _acmB(AudioCodingModule::Create(2)),
+      _testMode(testMode) {}
 
 ISACTest::~ISACTest() {}
 

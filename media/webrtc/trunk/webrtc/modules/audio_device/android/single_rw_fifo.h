@@ -35,7 +35,7 @@ class SingleRwFifo {
   int capacity() const { return capacity_; }
 
  private:
-  scoped_array<int8_t*> queue_;
+  scoped_ptr<int8_t*[]> queue_;
   int capacity_;
 
   Atomic32 size_;

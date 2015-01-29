@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/typedefs.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 
 namespace webrtc {
 
@@ -58,7 +58,7 @@ class DesktopSize {
   int32_t width() const { return width_; }
   int32_t height() const { return height_; }
 
-  bool is_empty() const { return width_ <= 0 && height_ <= 0; }
+  bool is_empty() const { return width_ <= 0 || height_ <= 0; }
 
   bool equals(const DesktopSize& other) const {
     return width_ == other.width_ && height_ == other.height_;

@@ -393,7 +393,7 @@ UnitTest::Perform()
     _inst.maxFramerate = 30;
 
     // Bad bitrate.
-    _inst.startBitrate = -1;
+    _inst.startBitrate = static_cast<unsigned int>(-1);
     EXPECT_TRUE(_encoder->InitEncode(&_inst, 1, 1440) ==
         WEBRTC_VIDEO_CODEC_ERR_PARAMETER);
     _inst.maxBitrate = _inst.startBitrate - 1;
@@ -565,7 +565,7 @@ UnitTest::Perform()
         frameLength = WaitForDecodedFrame();
     }
     unsigned int length = CalcBufferSize(kI420, width, height);
-    scoped_array<uint8_t> decoded_buffer(new uint8_t[length]);
+    scoped_ptr<uint8_t[]> decoded_buffer(new uint8_t[length]);
     ExtractBuffer(_decodedVideoBuffer, _lengthSourceFrame,
                   decoded_buffer.get());
     EXPECT_TRUE(CheckIfBitExact(decoded_buffer.get(), frameLength, _refDecFrame,
@@ -645,7 +645,7 @@ UnitTest::Perform()
 
         // check that decoded frame matches with reference
         unsigned int length = CalcBufferSize(kI420, width, height);
-        scoped_array<uint8_t> decoded_buffer(new uint8_t[length]);
+        scoped_ptr<uint8_t[]> decoded_buffer(new uint8_t[length]);
         ExtractBuffer(_decodedVideoBuffer, length, decoded_buffer.get());
         EXPECT_TRUE(CheckIfBitExact(decoded_buffer.get(), length,
                                     _refDecFrame, _lengthSourceFrame) == true);

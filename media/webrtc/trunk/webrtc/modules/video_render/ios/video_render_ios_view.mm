@@ -8,12 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(__has_feature) || !__has_feature(objc_arc)
+#error "This file requires ARC support."
+#endif
+
 #include "webrtc/modules/video_render/ios/video_render_ios_view.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
 
-@implementation VideoRenderIosView
+@implementation VideoRenderIosView {
+  EAGLContext* _context;
+  webrtc::scoped_ptr<webrtc::OpenGles20> _gles_renderer20;
+  int _frameBufferWidth;
+  int _frameBufferHeight;
+  unsigned int _defaultFrameBuffer;
+  unsigned int _colorRenderBuffer;
+}
 
 @synthesize context = context_;
 
@@ -25,7 +36,7 @@ using namespace webrtc;
   // init super class
   self = [super initWithCoder:coder];
   if (self) {
-    gles_renderer20_ = new OpenGles20();
+    _gles_renderer20.reset(new OpenGles20());
   }
   return self;
 }
@@ -34,7 +45,7 @@ using namespace webrtc;
   // init super class
   self = [super init];
   if (self) {
-    gles_renderer20_ = new OpenGles20();
+    _gles_renderer20.reset(new OpenGles20());
   }
   return self;
 }
@@ -43,7 +54,7 @@ using namespace webrtc;
   // init super class
   self = [super initWithFrame:frame];
   if (self) {
-    gles_renderer20_ = new OpenGles20();
+    _gles_renderer20.reset(new OpenGles20());
   }
   return self;
 }
@@ -59,13 +70,7 @@ using namespace webrtc;
     _colorRenderBuffer = 0;
   }
 
-  context_ = nil;
-
-  if (gles_renderer20_) {
-    delete gles_renderer20_;
-  }
-
-  [super dealloc];
+  [EAGLContext setCurrentContext:nil];
 }
 
 - (NSString*)description {
@@ -84,14 +89,13 @@ using namespace webrtc;
           kEAGLColorFormatRGBA8,
           kEAGLDrawablePropertyColorFormat,
           nil];
-  context_ = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+  _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
-  if (!context_) {
+  if (!_context) {
     return NO;
   }
 
-  // set current EAGLContext to self context_
-  if (![EAGLContext setCurrentContext:context_]) {
+  if (![EAGLContext setCurrentContext:_context]) {
     return NO;
   }
 
@@ -102,7 +106,7 @@ using namespace webrtc;
   // Create color render buffer and allocate backing store.
   glGenRenderbuffers(1, &_colorRenderBuffer);
   glBindRenderbuffer(GL_RENDERBUFFER, _colorRenderBuffer);
-  [context_ renderbufferStorage:GL_RENDERBUFFER
+  [_context renderbufferStorage:GL_RENDERBUFFER
                    fromDrawable:(CAEAGLLayer*)self.layer];
   glGetRenderbufferParameteriv(
       GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &_frameBufferWidth);
@@ -121,12 +125,12 @@ using namespace webrtc;
   glBindFramebuffer(GL_FRAMEBUFFER, _defaultFrameBuffer);
   glViewport(0, 0, self.frame.size.width, self.frame.size.height);
 
-  return gles_renderer20_->Setup([self bounds].size.width,
+  return _gles_renderer20->Setup([self bounds].size.width,
                                  [self bounds].size.height);
 }
 
 - (BOOL)presentFramebuffer {
-  if (![context_ presentRenderbuffer:GL_RENDERBUFFER]) {
+  if (![_context presentRenderbuffer:GL_RENDERBUFFER]) {
     WEBRTC_TRACE(kTraceWarning,
                  kTraceVideoRenderer,
                  0,
@@ -135,21 +139,15 @@ using namespace webrtc;
                  __FUNCTION__,
                  __LINE__);
   }
-
-  // update UI stuff on the main thread
-  [self performSelectorOnMainThread:@selector(setNeedsDisplay)
-                         withObject:nil
-                      waitUntilDone:NO];
-
   return YES;
 }
 
 - (BOOL)renderFrame:(I420VideoFrame*)frameToRender {
-  if (![EAGLContext setCurrentContext:context_]) {
+  if (![EAGLContext setCurrentContext:_context]) {
     return NO;
   }
 
-  return gles_renderer20_->Render(*frameToRender);
+  return _gles_renderer20->Render(*frameToRender);
 }
 
 - (BOOL)setCoordinatesForZOrder:(const float)zOrder
@@ -157,7 +155,7 @@ using namespace webrtc;
                             Top:(const float)top
                           Right:(const float)right
                          Bottom:(const float)bottom {
-  return gles_renderer20_->SetCoordinates(zOrder, left, top, right, bottom);
+  return _gles_renderer20->SetCoordinates(zOrder, left, top, right, bottom);
 }
 
 @end

@@ -120,6 +120,7 @@ int32_t Channel::SendData(const FrameType frameType, const uint8_t payloadType,
   return status;
 }
 
+// TODO(turajs): rewite this method.
 void Channel::CalcStatistics(WebRtcRTPHeader& rtpInfo, uint16_t payloadSize) {
   int n;
   if ((rtpInfo.header.payloadType != _lastPayloadType)
@@ -188,6 +189,8 @@ void Channel::CalcStatistics(WebRtcRTPHeader& rtpInfo, uint16_t payloadSize) {
       currentPayloadStr->lastPayloadLenByte = payloadSize;
       currentPayloadStr->lastTimestamp = rtpInfo.header.timestamp;
       currentPayloadStr->payloadType = rtpInfo.header.payloadType;
+      memset(currentPayloadStr->frameSizeStats, 0, MAX_NUM_FRAMESIZES *
+             sizeof(ACMTestFrameSizeStats));
     }
   } else {
     n = 0;
@@ -199,6 +202,8 @@ void Channel::CalcStatistics(WebRtcRTPHeader& rtpInfo, uint16_t payloadSize) {
     _payloadStats[n].lastPayloadLenByte = payloadSize;
     _payloadStats[n].lastTimestamp = rtpInfo.header.timestamp;
     _payloadStats[n].payloadType = rtpInfo.header.payloadType;
+    memset(_payloadStats[n].frameSizeStats, 0, MAX_NUM_FRAMESIZES *
+           sizeof(ACMTestFrameSizeStats));
   }
 }
 

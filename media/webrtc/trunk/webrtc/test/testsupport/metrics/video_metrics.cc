@@ -111,8 +111,8 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
   const size_t frame_length = 3 * width * height >> 1;
   I420VideoFrame ref_frame;
   I420VideoFrame test_frame;
-  scoped_array<uint8_t> ref_buffer(new uint8_t[frame_length]);
-  scoped_array<uint8_t> test_buffer(new uint8_t[frame_length]);
+  scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length]);
+  scoped_ptr<uint8_t[]> test_buffer(new uint8_t[frame_length]);
 
   // Set decoded image parameters.
   int half_width = (width + 1) / 2;

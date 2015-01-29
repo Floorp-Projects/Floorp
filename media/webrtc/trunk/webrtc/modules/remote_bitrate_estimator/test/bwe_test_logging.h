@@ -98,8 +98,8 @@
 #include <stack>
 #include <string>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/common_types.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 #define BWE_TEST_LOGGING_GLOBAL_CONTEXT(name) \

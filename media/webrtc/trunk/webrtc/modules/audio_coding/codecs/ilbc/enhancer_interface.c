@@ -16,6 +16,8 @@
 
 ******************************************************************/
 
+#include <string.h>
+
 #include "defines.h"
 #include "constants.h"
 #include "xcorr_coef.h"
@@ -71,9 +73,8 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
   enh_period=iLBCdec_inst->enh_period;
 
   /* Copy in the new data into the enhancer buffer */
-
-  WEBRTC_SPL_MEMMOVE_W16(enh_buf, &enh_buf[iLBCdec_inst->blockl],
-                         ENH_BUFL-iLBCdec_inst->blockl);
+  memmove(enh_buf, &enh_buf[iLBCdec_inst->blockl],
+          (ENH_BUFL - iLBCdec_inst->blockl) * sizeof(*enh_buf));
 
   WEBRTC_SPL_MEMCPY_W16(&enh_buf[ENH_BUFL-iLBCdec_inst->blockl], in,
                         iLBCdec_inst->blockl);
@@ -92,14 +93,14 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
   }
 
   /* Update the pitch prediction for each enhancer block, move the old ones */
-  WEBRTC_SPL_MEMMOVE_W16(enh_period, &enh_period[new_blocks],
-                         (ENH_NBLOCKS_TOT-new_blocks));
+  memmove(enh_period, &enh_period[new_blocks],
+          (ENH_NBLOCKS_TOT - new_blocks) * sizeof(*enh_period));
 
   k=WebRtcSpl_DownsampleFast(
       enh_buf+ENH_BUFL-inLen,    /* Input samples */
       (int16_t)(inLen+ENH_BUFL_FILTEROVERHEAD),
       downsampled,
-      (int16_t)WEBRTC_SPL_RSHIFT_W16(inLen, 1),
+      (int16_t)(inLen / 2),
       (int16_t*)WebRtcIlbcfix_kLpFiltCoefs,  /* Coefficients in Q12 */
       FILTERORDER_DS_PLUS1,    /* Length of filter (order-1) */
       FACTOR_DS,
@@ -291,7 +292,7 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
 
         /* Calculate increase parameter for window part (16 last samples) */
         /* (1-2*SqrtEnChange)/16 in Q15 */
-        inc=(2048-WEBRTC_SPL_RSHIFT_W16(SqrtEnChange, 3));
+        inc = 2048 - (SqrtEnChange >> 3);
 
         win=0;
         tmpW16ptr=&plc_pred[plc_blockl-16];

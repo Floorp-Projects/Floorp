@@ -15,11 +15,12 @@
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "webrtc/base/macutils.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.h"
-#include "webrtc/modules/desktop_capture/mac/osx_version.h"
+#include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
@@ -52,6 +53,8 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
   Callback* callback_;
   Mode mode_;
   scoped_ptr<MouseCursor> last_cursor_;
+  scoped_refptr<FullScreenChromeWindowDetector>
+      full_screen_chrome_window_detector_;
 };
 
 MouseCursorMonitorMac::MouseCursorMonitorMac(
@@ -62,9 +65,12 @@ MouseCursorMonitorMac::MouseCursorMonitorMac(
       window_id_(window_id),
       screen_id_(screen_id),
       callback_(NULL),
-      mode_(SHAPE_AND_POSITION) {
+      mode_(SHAPE_AND_POSITION),
+      full_screen_chrome_window_detector_(
+          options.full_screen_chrome_window_detector()) {
   assert(window_id == kCGNullWindowID || screen_id == kInvalidScreenId);
-  if (screen_id != kInvalidScreenId && !IsOSLionOrLater()) {
+  if (screen_id != kInvalidScreenId &&
+      rtc::GetOSVersionName() < rtc::kMacOSLion) {
     // Single screen capture is not supported on pre OS X 10.7.
     screen_id_ = kFullDesktopScreenId;
   }
@@ -115,14 +121,23 @@ void MouseCursorMonitorMac::Capture() {
   // if the current mouse position is covered by another window and also adjust
   // |position| to make it relative to the window origin.
   if (window_id_ != kCGNullWindowID) {
-    // Get list of windows that may be covering parts of |window_id_|.
+    CGWindowID on_screen_window = window_id_;
+    if (full_screen_chrome_window_detector_) {
+      CGWindowID full_screen_window =
+          full_screen_chrome_window_detector_->FindFullScreenWindow(window_id_);
+
+      if (full_screen_window != kCGNullWindowID)
+        on_screen_window = full_screen_window;
+    }
+
+    // Get list of windows that may be covering parts of |on_screen_window|.
     // CGWindowListCopyWindowInfo() returns windows in order from front to back,
-    // so |window_id_| is expected to be the last in the list.
+    // so |on_screen_window| is expected to be the last in the list.
     CFArrayRef window_array =
         CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly |
                                        kCGWindowListOptionOnScreenAboveWindow |
                                        kCGWindowListOptionIncludingWindow,
-                                   window_id_);
+                                   on_screen_window);
     bool found_window = false;
     if (window_array) {
       CFIndex count = CFArrayGetCount(window_array);
@@ -158,7 +173,7 @@ void MouseCursorMonitorMac::Capture() {
           if (!CFNumberGetValue(window_number, kCFNumberIntType, &window_id))
             continue;
 
-          if (window_id == window_id_) {
+          if (window_id == on_screen_window) {
             found_window = true;
             if (!window_rect.Contains(position))
               state = OUTSIDE;
@@ -247,6 +262,7 @@ void MouseCursorMonitorMac::CaptureImage() {
       last_cursor_->hotspot().equals(hotspot) &&
       memcmp(last_cursor_->image()->data(), src_data,
              last_cursor_->image()->stride() * size.height()) == 0) {
+    CFRelease(image_data_ref);
     return;
   }
 

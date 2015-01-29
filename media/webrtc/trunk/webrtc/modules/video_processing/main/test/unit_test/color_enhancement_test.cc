@@ -39,7 +39,7 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
     ASSERT_TRUE(modFile != NULL) << "Could not open output file.\n";
 
     uint32_t frameNum = 0;
-    scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+    scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
     while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
         frame_length_)
     {
@@ -86,7 +86,7 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
                                    width_, half_width_, half_width_);
 
     // Compare frame-by-frame.
-    scoped_array<uint8_t> ref_buffer(new uint8_t[frame_length_]);
+    scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length_]);
     while (fread(video_buffer.get(), 1, frame_length_, modFile) ==
         frame_length_)
     {
@@ -114,7 +114,7 @@ TEST_F(VideoProcessingModuleTest, ColorEnhancement)
     // Verify that all color pixels are enhanced, and no luminance values are
     // altered.
 
-    scoped_array<uint8_t> testFrame(new uint8_t[frame_length_]);
+    scoped_ptr<uint8_t[]> testFrame(new uint8_t[frame_length_]);
 
     // Use value 128 as probe value, since we know that this will be changed
     // in the enhancement.

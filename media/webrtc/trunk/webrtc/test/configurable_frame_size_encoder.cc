@@ -12,8 +12,10 @@
 
 #include <string.h>
 
-#include "webrtc/common_video/interface/video_image.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+#include "webrtc/common_video/interface/video_image.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 
 namespace webrtc {
 namespace test {

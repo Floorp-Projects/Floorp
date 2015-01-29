@@ -20,7 +20,7 @@
 #include <assert.h>
 
 #include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
-#include "webrtc/modules/audio_coding/neteq4/interface/audio_decoder.h"
+#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 // Includes needed to create the codecs.

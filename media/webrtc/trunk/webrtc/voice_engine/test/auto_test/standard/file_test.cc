@@ -16,6 +16,9 @@
 class FileTest : public AfterStreamingFixture {
  protected:
   // Creates the string åäö.pcm.
+// TODO(henrika): enable this test once CreateTrickyFilenameInUtf8 no longer
+// prevents compilation on Windows. Likely webrtc/base can be used here.
+#if 0
   std::string CreateTrickyFilenameInUtf8() {
     char filename[16] = { (char)0xc3, (char)0xa5,
                           (char)0xc3, (char)0xa4,
@@ -23,8 +26,12 @@ class FileTest : public AfterStreamingFixture {
                           static_cast<char>(0) };
     return std::string(filename) + ".pcm";
   }
+#endif  // 0
 };
 
+// TODO(henrika): enable this test once CreateTrickyFilenameInUtf8 no longer
+// prevents compilation on Windows. Likely webrtc/base can be used here.
+#if 0
 TEST_F(FileTest, ManualRecordToFileForThreeSecondsAndPlayback) {
   if (!FLAGS_include_timing_dependent_tests) {
     TEST_LOG("Skipping test - running in slow execution environment...\n");
@@ -45,16 +52,13 @@ TEST_F(FileTest, ManualRecordToFileForThreeSecondsAndPlayback) {
   EXPECT_EQ(0, voe_file_->StartPlayingFileLocally(
       channel_, recording_filename.c_str()));
 
-  // Play the file to the user and ensure the is-playing-locally
-  // and scaling methods also work. The clip is 3 seconds long.
+  // Play the file to the user and ensure the is-playing-locally.
+  // The clip is 3 seconds long.
   Sleep(250);
   EXPECT_EQ(1, voe_file_->IsPlayingFileLocally(channel_));
   Sleep(1500);
-  TEST_LOG("Decreasing level by 50%%.\n");
-  EXPECT_EQ(0, voe_file_->ScaleLocalFilePlayout(channel_, 0.5f));
-  Sleep(1500);
-  EXPECT_EQ(0, voe_file_->IsPlayingFileLocally(channel_));
 }
+#endif  // 0
 
 TEST_F(FileTest, ManualRecordPlayoutToWavFileForThreeSecondsAndPlayback) {
   webrtc::CodecInst send_codec;
@@ -79,11 +83,4 @@ TEST_F(FileTest, ManualRecordPlayoutToWavFileForThreeSecondsAndPlayback) {
   Sleep(2000);
   // We should still be playing since we're looping.
   EXPECT_EQ(1, voe_file_->IsPlayingFileAsMicrophone(channel_));
-
-  // Try scaling as well.
-  TEST_LOG("Decreasing level by 50%%.\n");
-  EXPECT_EQ(0, voe_file_->ScaleFileAsMicrophonePlayout(channel_, 0.5f));
-  Sleep(1000);
-
-  EXPECT_EQ(0, voe_file_->StopPlayingFileAsMicrophone(channel_));
 }

@@ -10,61 +10,59 @@
 
 #include "webrtc/modules/audio_coding/main/acm2/acm_resampler.h"
 
+#include <assert.h>
 #include <string.h>
 
 #include "webrtc/common_audio/resampler/include/resampler.h"
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
-
 namespace acm2 {
 
-ACMResampler::ACMResampler()
-    : resampler_crit_sect_(CriticalSectionWrapper::CreateCriticalSection()) {
+ACMResampler::ACMResampler() {
 }
 
 ACMResampler::~ACMResampler() {
-  delete resampler_crit_sect_;
 }
 
 int ACMResampler::Resample10Msec(const int16_t* in_audio,
                                  int in_freq_hz,
                                  int out_freq_hz,
                                  int num_audio_channels,
+                                 int out_capacity_samples,
                                  int16_t* out_audio) {
-  CriticalSectionScoped cs(resampler_crit_sect_);
-
+  int in_length = in_freq_hz * num_audio_channels / 100;
+  int out_length = out_freq_hz * num_audio_channels / 100;
   if (in_freq_hz == out_freq_hz) {
-    size_t length = static_cast<size_t>(in_freq_hz * num_audio_channels / 100);
-    memcpy(out_audio, in_audio, length * sizeof(int16_t));
-    return static_cast<int16_t>(in_freq_hz / 100);
+    if (out_capacity_samples < in_length) {
+      assert(false);
+      return -1;
+    }
+    memcpy(out_audio, in_audio, in_length * sizeof(int16_t));
+    return in_length / num_audio_channels;
   }
 
-  // |maxLen| is maximum number of samples for 10ms at 48kHz.
-  int max_len = 480 * num_audio_channels;
-  int length_in = (in_freq_hz / 100) * num_audio_channels;
-  int out_len;
-
-  ResamplerType type = (num_audio_channels == 1) ? kResamplerSynchronous :
-      kResamplerSynchronousStereo;
-
-  if (resampler_.ResetIfNeeded(in_freq_hz, out_freq_hz, type) < 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, 0,
-                 "Error in reset of resampler");
+  if (resampler_.InitializeIfNeeded(in_freq_hz, out_freq_hz,
+                                    num_audio_channels) != 0) {
+    LOG_FERR3(LS_ERROR, InitializeIfNeeded, in_freq_hz, out_freq_hz,
+              num_audio_channels);
     return -1;
   }
 
-  if (resampler_.Push(in_audio, length_in, out_audio, max_len, out_len) < 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, 0,
-                 "Error in resampler: resampler.Push");
+  out_length =
+      resampler_.Resample(in_audio, in_length, out_audio, out_capacity_samples);
+  if (out_length == -1) {
+    LOG_FERR4(LS_ERROR,
+              Resample,
+              in_audio,
+              in_length,
+              out_audio,
+              out_capacity_samples);
     return -1;
   }
 
-  return out_len / num_audio_channels;
+  return out_length / num_audio_channels;
 }
 
 }  // namespace acm2
-
 }  // namespace webrtc

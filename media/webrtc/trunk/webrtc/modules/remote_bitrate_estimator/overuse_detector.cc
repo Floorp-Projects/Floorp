@@ -10,18 +10,11 @@
 
 #include <math.h>
 #include <stdlib.h>  // fabsf
-#if _WIN32
-#include <windows.h>
-#endif
 
 #include "webrtc/modules/remote_bitrate_estimator/overuse_detector.h"
 #include "webrtc/modules/remote_bitrate_estimator/remote_rate_control.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-
-#ifdef WEBRTC_BWE_MATLAB
-extern MatlabEngine eng;  // global variable defined elsewhere
-#endif
 
 enum { kOverUsingTimeThreshold = 100 };
 enum { kMinFramePeriodHistoryLength = 60 };
@@ -43,74 +36,20 @@ OveruseDetector::OveruseDetector(const OverUseDetectorOptions& options)
       prev_offset_(0.0),
       time_over_using_(-1),
       over_use_counter_(0),
-      hypothesis_(kBwNormal),
-      time_of_last_received_packet_(-1)
-#ifdef WEBRTC_BWE_MATLAB
-      , plots_()
-#endif
-      {
+      hypothesis_(kBwNormal) {
   memcpy(E_, options_.initial_e, sizeof(E_));
   memcpy(process_noise_, options_.initial_process_noise,
          sizeof(process_noise_));
 }
 
 OveruseDetector::~OveruseDetector() {
-#ifdef WEBRTC_BWE_MATLAB
-  if (plots_.plot1_) {
-    eng.DeletePlot(plots_.plot1_);
-    plots_.plot1_ = NULL;
-  }
-  if (plots_.plot2_) {
-    eng.DeletePlot(plots_.plot2_);
-    plots_.plot2_ = NULL;
-  }
-  if (plots_.plot3_) {
-    eng.DeletePlot(plots_.plot3_);
-    plots_.plot3_ = NULL;
-  }
-  if (plots_.plot4_) {
-    eng.DeletePlot(plots_.plot4_);
-    plots_.plot4_ = NULL;
-  }
-#endif
-
   ts_delta_hist_.clear();
 }
 
 void OveruseDetector::Update(uint16_t packet_size,
                              int64_t timestamp_ms,
                              uint32_t timestamp,
-                             const int64_t now_ms) {
-  time_of_last_received_packet_ = now_ms;
-#ifdef WEBRTC_BWE_MATLAB
-  // Create plots
-  const int64_t startTimeMs = nowMS;
-  if (plots_.plot1_ == NULL) {
-    plots_.plot1_ = eng.NewPlot(new MatlabPlot());
-    plots_.plot1_->AddLine(1000, "b.", "scatter");
-  }
-  if (plots_.plot2_ == NULL) {
-    plots_.plot2_ = eng.NewPlot(new MatlabPlot());
-    plots_.plot2_->AddTimeLine(30, "b", "offset", startTimeMs);
-    plots_.plot2_->AddTimeLine(30, "r--", "limitPos", startTimeMs);
-    plots_.plot2_->AddTimeLine(30, "k.", "trigger", startTimeMs);
-    plots_.plot2_->AddTimeLine(30, "ko", "detection", startTimeMs);
-    //  plots_.plot2_->AddTimeLine(30, "g", "slowMean", startTimeMs);
-  }
-  if (plots_.plot3_ == NULL) {
-    plots_.plot3_ = eng.NewPlot(new MatlabPlot());
-    plots_.plot3_->AddTimeLine(30, "b", "noiseVar", startTimeMs);
-  }
-  if (plots_.plot4_ == NULL) {
-    plots_.plot4_ = eng.NewPlot(new MatlabPlot());
-    //  plots_.plot4_->AddTimeLine(60, "b", "p11", startTimeMs);
-    //  plots_.plot4_->AddTimeLine(60, "r", "p12", startTimeMs);
-    plots_.plot4_->AddTimeLine(60, "g", "p22", startTimeMs);
-    //  plots_.plot4_->AddTimeLine(60, "g--", "p22_hat", startTimeMs);
-    //  plots_.plot4_->AddTimeLine(30, "b.-", "deltaFs", startTimeMs);
-  }
-
-#endif
+                             const int64_t arrival_time_ms) {
   bool new_timestamp = (timestamp != current_frame_.timestamp);
   if (timestamp_ms >= 0) {
     if (prev_frame_.timestamp_ms == -1 && current_frame_.timestamp_ms == -1) {
@@ -127,8 +66,6 @@ void OveruseDetector::Update(uint16_t packet_size,
     return;
   } else if (new_timestamp) {
     // First packet of a later frame, the previous frame sample is ready.
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "Frame complete at %I64i",
-                 current_frame_.complete_time_ms);
     if (prev_frame_.complete_time_ms >= 0) {  // This is our second frame.
       int64_t t_delta = 0;
       double ts_delta = 0;
@@ -143,7 +80,7 @@ void OveruseDetector::Update(uint16_t packet_size,
   }
   // Accumulate the frame size
   current_frame_.size += packet_size;
-  current_frame_.complete_time_ms = now_ms;
+  current_frame_.complete_time_ms = arrival_time_ms;
 }
 
 BandwidthUsage OveruseDetector::State() const {
@@ -166,10 +103,6 @@ void OveruseDetector::SetRateControlRegion(RateControlRegion region) {
       break;
     }
   }
-}
-
-int64_t OveruseDetector::time_of_last_received_packet() const {
-  return time_of_last_received_packet_;
 }
 
 void OveruseDetector::SwitchTimeBase() {
@@ -279,39 +212,11 @@ void OveruseDetector::UpdateKalman(int64_t t_delta,
          E_[0][0] * E_[1][1] - E_[0][1] * E_[1][0] >= 0 &&
          E_[0][0] >= 0);
 
-#ifdef WEBRTC_BWE_MATLAB
-  // plots_.plot4_->Append("p11",E_[0][0]);
-  // plots_.plot4_->Append("p12",E_[0][1]);
-  plots_.plot4_->Append("p22", E_[1][1]);
-  // plots_.plot4_->Append("p22_hat", 0.5*(process_noise_[1] +
-  //    sqrt(process_noise_[1]*(process_noise_[1] + 4*var_noise_))));
-  // plots_.plot4_->Append("deltaFs", fsDelta);
-  plots_.plot4_->Plot();
-#endif
   slope_ = slope_ + K[0] * residual;
   prev_offset_ = offset_;
   offset_ = offset_ + K[1] * residual;
 
   Detect(ts_delta);
-
-#ifdef WEBRTC_BWE_MATLAB
-  plots_.plot1_->Append("scatter",
-                 static_cast<double>(current_frame_.size) - prev_frame_.size,
-                 static_cast<double>(t_delta - ts_delta));
-  plots_.plot1_->MakeTrend("scatter", "slope", slope_, offset_, "k-");
-  plots_.plot1_->MakeTrend("scatter", "thresholdPos",
-                    slope_, offset_ + 2 * sqrt(var_noise_), "r-");
-  plots_.plot1_->MakeTrend("scatter", "thresholdNeg",
-                    slope_, offset_ - 2 * sqrt(var_noise_), "r-");
-  plots_.plot1_->Plot();
-
-  plots_.plot2_->Append("offset", offset_);
-  plots_.plot2_->Append("limitPos", threshold_/BWE_MIN(num_of_deltas_, 60));
-  plots_.plot2_->Plot();
-
-  plots_.plot3_->Append("noiseVar", var_noise_);
-  plots_.plot3_->Plot();
-#endif
 }
 
 double OveruseDetector::UpdateMinFramePeriod(double ts_delta) {
@@ -373,38 +278,17 @@ BandwidthUsage OveruseDetector::Detect(double ts_delta) {
       if (time_over_using_ > kOverUsingTimeThreshold
           && over_use_counter_ > 1) {
         if (offset_ >= prev_offset_) {
-#ifdef _DEBUG
-          if (hypothesis_ != kBwOverusing) {
-            WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "BWE: kBwOverusing");
-          }
-#endif
           time_over_using_ = 0;
           over_use_counter_ = 0;
           hypothesis_ = kBwOverusing;
-#ifdef WEBRTC_BWE_MATLAB
-          plots_.plot2_->Append("detection", offset_);  // plot it later
-#endif
         }
       }
-#ifdef WEBRTC_BWE_MATLAB
-      plots_.plot2_->Append("trigger", offset_);  // plot it later
-#endif
     } else {
-#ifdef _DEBUG
-      if (hypothesis_ != kBwUnderusing) {
-        WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "BWE: kBwUnderUsing");
-      }
-#endif
       time_over_using_ = -1;
       over_use_counter_ = 0;
       hypothesis_ = kBwUnderusing;
     }
   } else {
-#ifdef _DEBUG
-    if (hypothesis_ != kBwNormal) {
-      WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "BWE: kBwNormal");
-    }
-#endif
     time_over_using_ = -1;
     over_use_counter_ = 0;
     hypothesis_ = kBwNormal;

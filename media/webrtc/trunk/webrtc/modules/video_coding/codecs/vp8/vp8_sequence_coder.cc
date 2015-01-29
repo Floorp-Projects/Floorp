@@ -142,7 +142,7 @@ int SequenceCoder(webrtc::test::CommandLineParser& parser) {
   EXPECT_EQ(0, decoder->InitDecode(&inst, 1));
   webrtc::I420VideoFrame input_frame;
   unsigned int length = webrtc::CalcBufferSize(webrtc::kI420, width, height);
-  webrtc::scoped_array<uint8_t> frame_buffer(new uint8_t[length]);
+  webrtc::scoped_ptr<uint8_t[]> frame_buffer(new uint8_t[length]);
 
   int half_width = (width + 1) / 2;
   // Set and register callbacks.

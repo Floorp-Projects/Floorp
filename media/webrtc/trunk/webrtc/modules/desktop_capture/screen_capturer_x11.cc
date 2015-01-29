@@ -21,7 +21,6 @@
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/differ.h"
-#include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
@@ -55,8 +54,6 @@ class ScreenCapturerLinux : public ScreenCapturer,
   virtual void Capture(const DesktopRegion& region) OVERRIDE;
 
   // ScreenCapturer interface.
-  virtual void SetMouseShapeObserver(
-      MouseShapeObserver* mouse_shape_observer) OVERRIDE;
   virtual bool GetScreenList(ScreenList* screens) OVERRIDE;
   virtual bool SelectScreen(ScreenId id) OVERRIDE;
 
@@ -67,9 +64,6 @@ class ScreenCapturerLinux : public ScreenCapturer,
   virtual bool HandleXEvent(const XEvent& event) OVERRIDE;
 
   void InitXDamage();
-
-  // Capture the cursor image and notify the delegate if it was captured.
-  void CaptureCursor();
 
   // Capture screen pixels to the current buffer in the queue. In the DAMAGE
   // case, the ScreenCapturerHelper already holds the list of invalid rectangles
@@ -93,7 +87,6 @@ class ScreenCapturerLinux : public ScreenCapturer,
   DesktopCaptureOptions options_;
 
   Callback* callback_;
-  MouseShapeObserver* mouse_shape_observer_;
 
   // X11 graphics context.
   GC gc_;
@@ -133,7 +126,6 @@ class ScreenCapturerLinux : public ScreenCapturer,
 
 ScreenCapturerLinux::ScreenCapturerLinux()
     : callback_(NULL),
-      mouse_shape_observer_(NULL),
       gc_(NULL),
       root_window_(BadValue),
       has_xfixes_(false),
@@ -152,10 +144,6 @@ ScreenCapturerLinux::~ScreenCapturerLinux() {
   if (use_damage_) {
     options_.x_display()->RemoveEventHandler(
         damage_event_base_ + XDamageNotify, this);
-  }
-  if (has_xfixes_) {
-    options_.x_display()->RemoveEventHandler(
-        xfixes_event_base_ + XFixesCursorNotify, this);
   }
   DeinitXlib();
 }
@@ -194,14 +182,6 @@ bool ScreenCapturerLinux::Init(const DesktopCaptureOptions& options) {
   if (!x_server_pixel_buffer_.Init(display(), DefaultRootWindow(display()))) {
     LOG(LS_ERROR) << "Failed to initialize pixel buffer.";
     return false;
-  }
-
-  if (has_xfixes_) {
-    // Register for changes to the cursor shape.
-    XFixesSelectCursorInput(display(), root_window_,
-                            XFixesDisplayCursorNotifyMask);
-    options_.x_display()->AddEventHandler(
-        xfixes_event_base_ + XFixesCursorNotify, this);
   }
 
   if (options_.use_update_notifications()) {
@@ -304,14 +284,6 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
   callback_->OnCaptureCompleted(result);
 }
 
-void ScreenCapturerLinux::SetMouseShapeObserver(
-      MouseShapeObserver* mouse_shape_observer) {
-  DCHECK(!mouse_shape_observer_);
-  DCHECK(mouse_shape_observer);
-
-  mouse_shape_observer_ = mouse_shape_observer;
-}
-
 bool ScreenCapturerLinux::GetScreenList(ScreenList* screens) {
   DCHECK(screens->size() == 0);
   // TODO(jiayl): implement screen enumeration.
@@ -337,48 +309,8 @@ bool ScreenCapturerLinux::HandleXEvent(const XEvent& event) {
   } else if (event.type == ConfigureNotify) {
     ScreenConfigurationChanged();
     return true;
-  } else if (has_xfixes_ &&
-             event.type == xfixes_event_base_ + XFixesCursorNotify) {
-    const XFixesCursorNotifyEvent* cursor_event =
-        reinterpret_cast<const XFixesCursorNotifyEvent*>(&event);
-    if (cursor_event->window == root_window_ &&
-        cursor_event->subtype == XFixesDisplayCursorNotify) {
-      CaptureCursor();
-    }
-    // Always return false for cursor notifications, because there might be
-    // other listeners for these for the same window.
-    return false;
   }
   return false;
-}
-
-void ScreenCapturerLinux::CaptureCursor() {
-  DCHECK(has_xfixes_);
-
-  XFixesCursorImage* img = XFixesGetCursorImage(display());
-  if (!img) {
-    return;
-  }
-
-  scoped_ptr<MouseCursorShape> cursor(new MouseCursorShape());
-  cursor->size = DesktopSize(img->width, img->height);
-  cursor->hotspot = DesktopVector(img->xhot, img->yhot);
-
-  int total_bytes = cursor->size.width ()* cursor->size.height() *
-      DesktopFrame::kBytesPerPixel;
-  cursor->data.resize(total_bytes);
-
-  // Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-  unsigned long* src = img->pixels;
-  uint32_t* dst = reinterpret_cast<uint32_t*>(&*(cursor->data.begin()));
-  uint32_t* dst_end = dst + (img->width * img->height);
-  while (dst < dst_end) {
-    *dst++ = static_cast<uint32_t>(*src++);
-  }
-  XFree(img);
-
-  if (mouse_shape_observer_)
-    mouse_shape_observer_->OnCursorShapeChanged(cursor.release());
 }
 
 DesktopFrame* ScreenCapturerLinux::CaptureScreen() {

@@ -53,7 +53,7 @@ int WebRtcIsacfix_EstimateBandwidth(BwEstimatorstr *bwest_str,
   err = WebRtcIsacfix_UpdateUplinkBwImpl(
       bwest_str,
       rtp_seq_number,
-      (uint16_t)WEBRTC_SPL_UDIV(WEBRTC_SPL_UMUL(frame_samples,1000), FS),
+      frame_samples * 1000 / FS,
       send_ts,
       arr_ts,
       (int16_t) packet_size,  /* in bytes */

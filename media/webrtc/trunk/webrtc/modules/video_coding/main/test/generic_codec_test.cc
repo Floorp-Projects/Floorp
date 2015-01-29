@@ -28,8 +28,7 @@ int GenericCodecTest::RunTest(CmdArgs& args)
 {
     SimulatedClock clock(0);
     NullEventFactory event_factory;
-    VideoCodingModule* vcm = VideoCodingModule::Create(1, &clock,
-                                                       &event_factory);
+    VideoCodingModule* vcm = VideoCodingModule::Create(&clock, &event_factory);
     GenericCodecTest* get = new GenericCodecTest(vcm, &clock);
     Trace::CreateTrace();
     Trace::SetTraceFile(
@@ -127,7 +126,6 @@ GenericCodecTest::Perform(CmdArgs& args)
     I420VideoFrame sourceFrame;
     _vcm->InitializeSender();
     TEST(_vcm->Codec(kVideoCodecVP8, &sendCodec) == 0);
-    TEST(_vcm->RegisterSendCodec(&sendCodec, -1, 1440) < 0); // bad number of cores
     sendCodec.maxBitrate = 8000;
     _vcm->RegisterSendCodec(&sendCodec, 1, 1440);
     _vcm->InitializeSender();
@@ -135,8 +133,6 @@ GenericCodecTest::Perform(CmdArgs& args)
     sendCodec.height = 0;
     TEST(_vcm->RegisterSendCodec(&sendCodec, 1, 1440) < 0); // bad height
     _vcm->Codec(kVideoCodecVP8, &sendCodec);
-    sendCodec.startBitrate = -2;
-    TEST(_vcm->RegisterSendCodec(&sendCodec, 1, 1440) < 0); // bad bit rate
     _vcm->Codec(kVideoCodecVP8, &sendCodec);
     _vcm->InitializeSender();
     // Setting rate when encoder uninitialized.
@@ -283,7 +279,7 @@ GenericCodecTest::Perform(CmdArgs& args)
     const float nBitrates = sizeof(bitRate)/sizeof(*bitRate);
     float _bitRate = 0;
     int _frameCnt = 0;
-    float totalBytesOneSec;//, totalBytesTenSec;
+    float totalBytesOneSec = 0;//, totalBytesTenSec;
     float totalBytes, actualBitrate;
     VCMFrameCount frameCount; // testing frame type counters
     // start test

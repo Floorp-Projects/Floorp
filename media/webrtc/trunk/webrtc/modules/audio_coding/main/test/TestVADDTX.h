@@ -18,8 +18,6 @@
 
 namespace webrtc {
 
-class Config;
-
 typedef struct {
   bool statusDTX;
   bool statusVAD;
@@ -49,7 +47,7 @@ class ActivityMonitor : public ACMVADCallback {
 
 class TestVADDTX : public ACMTest {
  public:
-  explicit TestVADDTX(const Config& config);
+  TestVADDTX();
   ~TestVADDTX();
 
   void Perform();

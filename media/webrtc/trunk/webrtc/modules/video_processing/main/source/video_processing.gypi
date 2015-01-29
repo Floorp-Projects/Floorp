@@ -31,8 +31,6 @@
         'content_analysis.h',
         'deflickering.cc',
         'deflickering.h',
-        'denoising.cc',
-        'denoising.h',
         'frame_preprocessor.cc',
         'frame_preprocessor.h',
         'spatial_resampler.cc',
@@ -61,7 +59,6 @@
           'conditions': [
             ['os_posix==1 and OS!="mac"', {
               'cflags': [ '-msse2', ],
-              'cflags_mozilla': [ '-msse2', ],
             }],
             ['OS=="mac"', {
               'xcode_settings': {

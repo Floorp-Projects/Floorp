@@ -1,33 +1,16 @@
 /*
- * libjingle
- * Copyright 2004--2010, Google Inc.
+ *  Copyright (c) 2010 The WebRTC project authors. All Rights Reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  1. Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *  2. Redistributions in binary form must reproduce the above copyright notice,
- *     this list of conditions and the following disclaimer in the documentation
- *     and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
  */
 
 #include "webrtc/modules/audio_device/linux/latebindingsymboltable_linux.h"
 
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
 #include <dlfcn.h>
 #endif
 
@@ -37,8 +20,8 @@ using namespace webrtc;
 namespace webrtc_adm_linux {
 
 inline static const char *GetDllError() {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-  const char *err = dlerror();
+#ifdef WEBRTC_LINUX
+  char *err = dlerror();
   if (err) {
     return err;
   } else {
@@ -50,7 +33,7 @@ inline static const char *GetDllError() {
 }
 
 DllHandle InternalLoadDll(const char dll_name[]) {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
   DllHandle handle = dlopen(dll_name, RTLD_NOW);
 #else
 #error Not implemented
@@ -63,11 +46,23 @@ DllHandle InternalLoadDll(const char dll_name[]) {
 }
 
 void InternalUnloadDll(DllHandle handle) {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
+// TODO(pbos): Remove this dlclose() exclusion when leaks and suppressions from
+// here are gone (or AddressSanitizer can display them properly).
+//
+// Skip dlclose() on AddressSanitizer as leaks including this module in the
+// stack trace gets displayed as <unknown module> instead of the actual library
+// -> it can not be suppressed.
+// https://code.google.com/p/address-sanitizer/issues/detail?id=89
+//
+// Skip dlclose() on ThreadSanitizer since it's hitting an assert.
+// https://code.google.com/p/webrtc/issues/detail?id=3895
+#if !defined(ADDRESS_SANITIZER) && !defined(THREAD_SANITIZER)
   if (dlclose(handle) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                "%s", GetDllError());
   }
+#endif  // !defined(ADDRESS_SANITIZER) && !defined(THREAD_SANITIZER)
 #else
 #error Not implemented
 #endif
@@ -76,9 +71,9 @@ void InternalUnloadDll(DllHandle handle) {
 static bool LoadSymbol(DllHandle handle,
                        const char *symbol_name,
                        void **symbol) {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
   *symbol = dlsym(handle, symbol_name);
-  const char *err = dlerror();
+  char *err = dlerror();
   if (err) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                "Error loading symbol %s : %d", symbol_name, err);
@@ -101,7 +96,7 @@ bool InternalLoadSymbols(DllHandle handle,
                          int num_symbols,
                          const char *const symbol_names[],
                          void *symbols[]) {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
   // Clear any old errors.
   dlerror();
 #endif

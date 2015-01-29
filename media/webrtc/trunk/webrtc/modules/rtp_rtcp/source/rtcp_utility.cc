@@ -17,6 +17,23 @@
 namespace webrtc {
 
 namespace RTCPUtility {
+
+NackStats::NackStats()
+    : max_sequence_number_(0),
+      requests_(0),
+      unique_requests_(0) {}
+
+NackStats::~NackStats() {}
+
+void NackStats::ReportRequest(uint16_t sequence_number) {
+  if (requests_ == 0 ||
+      webrtc::IsNewerSequenceNumber(sequence_number, max_sequence_number_)) {
+    max_sequence_number_ =  sequence_number;
+    ++unique_requests_;
+  }
+  ++requests_;
+}
+
 uint32_t MidNtp(uint32_t ntp_sec, uint32_t ntp_frac) {
   return (ntp_sec << 16) + (ntp_frac >> 16);
 }  // end RTCPUtility
@@ -1266,31 +1283,27 @@ RTCPUtility::RTCPParserV2::ParseFBCommon(const RTCPCommonHeader& header)
     }
 }
 
-bool
-RTCPUtility::RTCPParserV2::ParseRPSIItem()
-{
-    // RFC 4585 6.3.3.  Reference Picture Selection Indication (RPSI)
-    /*
-    0                   1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |      PB       |0| Payload Type|    Native RPSI bit string     |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |   defined per codec          ...                | Padding (0) |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    */
+bool RTCPUtility::RTCPParserV2::ParseRPSIItem() {
+
+    // RFC 4585 6.3.3.  Reference Picture Selection Indication (RPSI).
+    //
+    //  0                   1                   2                   3
+    //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |      PB       |0| Payload Type|    Native RPSI bit string     |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |   defined per codec          ...                | Padding (0) |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
     const ptrdiff_t length = _ptrRTCPBlockEnd - _ptrRTCPData;
 
-    if (length < 4)
-    {
+    if (length < 4) {
         _state = State_TopLevel;
 
         EndCurrentBlock();
         return false;
     }
-    if(length > 2+RTCP_RPSI_DATA_SIZE)
-    {
+    if (length > 2 + RTCP_RPSI_DATA_SIZE) {
         _state = State_TopLevel;
 
         EndCurrentBlock();
@@ -1299,12 +1312,14 @@ RTCPUtility::RTCPParserV2::ParseRPSIItem()
 
     _packetType = kRtcpPsfbRpsiCode;
 
-    uint8_t paddingBits = *_ptrRTCPData++;
+    uint8_t padding_bits = *_ptrRTCPData++;
     _packet.RPSI.PayloadType = *_ptrRTCPData++;
 
-    memcpy(_packet.RPSI.NativeBitString, _ptrRTCPData, length-2);
+    memcpy(_packet.RPSI.NativeBitString, _ptrRTCPData, length - 2);
+    _ptrRTCPData += length - 2;
 
-    _packet.RPSI.NumberOfValidBits = uint16_t(length-2)*8 - paddingBits;
+    _packet.RPSI.NumberOfValidBits =
+        static_cast<uint16_t>(length - 2) * 8 - padding_bits;
     return true;
 }
 

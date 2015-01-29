@@ -65,8 +65,10 @@ static void InitPointersToNeon() {
   WebRtcSpl_MinValueW32 = WebRtcSpl_MinValueW32Neon;
   WebRtcSpl_CrossCorrelation = WebRtcSpl_CrossCorrelationNeon;
   WebRtcSpl_DownsampleFast = WebRtcSpl_DownsampleFastNeon;
+  /* TODO(henrik.lundin): re-enable NEON when the crash from bug 3243 is
+     understood. */
   WebRtcSpl_ScaleAndAddVectorsWithRound =
-      WebRtcSpl_ScaleAndAddVectorsWithRoundNeon;
+      WebRtcSpl_ScaleAndAddVectorsWithRoundC;
   WebRtcSpl_CreateRealFFT = WebRtcSpl_CreateRealFFTNeon;
   WebRtcSpl_FreeRealFFT = WebRtcSpl_FreeRealFFTNeon;
   WebRtcSpl_RealForwardFFT = WebRtcSpl_RealForwardFFTNeon;

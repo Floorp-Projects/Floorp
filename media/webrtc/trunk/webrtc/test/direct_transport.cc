@@ -42,6 +42,10 @@ DirectTransport::DirectTransport(
 
 DirectTransport::~DirectTransport() { StopSending(); }
 
+void DirectTransport::SetConfig(const FakeNetworkPipe::Config& config) {
+  fake_network_.SetConfig(config);
+}
+
 void DirectTransport::StopSending() {
   {
     CriticalSectionScoped crit_(lock_.get());
