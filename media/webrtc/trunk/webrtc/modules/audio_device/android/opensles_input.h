@@ -15,6 +15,9 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
+// Not defined in the android version we use to build with
+#define SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION ((SLuint32) 0x00000004)
+
 #if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
 #else
