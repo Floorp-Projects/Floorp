@@ -117,10 +117,6 @@ public:
   // Returns true if this MediaKeys has been bound to a media element.
   bool IsBoundToMediaElement() const;
 
-  // Return NS_OK if the principals are the same as when the MediaKeys
-  // was created, failure otherwise.
-  nsresult CheckPrincipals();
-
 private:
 
   bool IsInPrivateBrowsing();

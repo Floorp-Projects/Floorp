@@ -245,6 +245,10 @@ public:
   // Check if the media element had crossorigin set when loading started
   bool ShouldCheckAllowOrigin();
 
+  // Returns true if the currently loaded resource is CORS same-origin with
+  // respect to the document.
+  bool IsCORSSameOrigin();
+
   // Is the media element potentially playing as defined by the HTML 5 specification.
   // http://www.whatwg.org/specs/web-apps/current-work/#potentially-playing
   bool IsPotentiallyPlaying() const;
