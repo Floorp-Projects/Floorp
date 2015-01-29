@@ -83,3 +83,17 @@ ChromeProcessController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aSc
 {
   APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
 }
+
+void
+ChromeProcessController::Destroy()
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(
+      FROM_HERE,
+      NewRunnableMethod(this, &ChromeProcessController::Destroy));
+    return;
+  }
+
+  MOZ_ASSERT(MessageLoop::current() == mUILoop);
+  mWidget = nullptr;
+}
