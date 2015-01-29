@@ -58,26 +58,21 @@ abstract class NavButton extends ShapedButton {
         canvas.drawPath(mBorderPath, mBorderPaint);
     }
 
-    // The drawable is constructed as per @drawable/url_bar_nav_button.
+    // The drawable is constructed as per @drawable/new_tablet_url_bar_nav_button.
     @Override
     public void onLightweightThemeChanged() {
-        final Drawable drawable;
-        if (!NewTabletUI.isEnabled(getContext())) {
-            drawable = getTheme().getDrawable(this);
-        } else {
-            drawable = BrowserToolbar.getLightweightThemeDrawable(this, getResources(), getTheme(),
-                    R.color.background_normal);
-        }
+        final Drawable drawable = BrowserToolbar.getLightweightThemeDrawable(this, getResources(),
+                getTheme(), R.color.background_normal);
 
         if (drawable == null) {
             return;
         }
 
         final StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.highlight_nav_pb));
-        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.highlight_nav));
-        stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.highlight_nav_focused_pb));
-        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.highlight_nav_focused));
+        stateList.addState(PRIVATE_PRESSED_STATE_SET, getColorDrawable(R.color.new_tablet_highlight_pb));
+        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.new_tablet_highlight));
+        stateList.addState(PRIVATE_FOCUSED_STATE_SET, getColorDrawable(R.color.new_tablet_highlight_focused_pb));
+        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.new_tablet_highlight_focused));
         stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_private));
         stateList.addState(EMPTY_STATE_SET, drawable);
 
@@ -86,6 +81,6 @@ abstract class NavButton extends ShapedButton {
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.url_bar_nav_button);
+        setBackgroundResource(R.drawable.new_tablet_url_bar_nav_button);
     }
 }
