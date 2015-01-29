@@ -22,6 +22,9 @@
     <preferences id="contentPreferences">
       <!--XXX buttons prefs -->
 
+      <!-- DRM content -->
+      <preference id="media.eme.enabled" name="media.eme.enabled" type="bool"/>
+
       <!-- POPUPS -->
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
 
@@ -50,6 +53,15 @@
           <column/>
         </columns>
         <rows id="contentRows-1">
+          <row id="playDRMContentRow">
+            <vbox align="start">
+              <checkbox id="playDRMContent" preference="media.eme.enabled"
+                        label="&playDRMContent.label;" accesskey="&playDRMContent.accesskey;"/>
+            </vbox>
+            <hbox pack="end">
+              <label id="playDRMContentLink" class="text-link" value="&playDRMContent.learnMore.label;"/>
+            </hbox>
+          </row>
           <row id="popupPolicyRow">
             <vbox align="start">
               <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
@@ -57,9 +69,11 @@
                         onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton', 
                                                                             'dom.disable_open_during_load');"/>
             </vbox>
-            <button id="popupPolicyButton" label="&popupExceptions.label;"
-                    oncommand="gContentPane.showPopupExceptions();"
-                    accesskey="&popupExceptions.accesskey;"/>
+            <hbox pack="end">
+              <button id="popupPolicyButton" label="&popupExceptions.label;"
+                      oncommand="gContentPane.showPopupExceptions();"
+                      accesskey="&popupExceptions.accesskey;"/>
+            </hbox>
           </row>
         </rows>
       </grid>
