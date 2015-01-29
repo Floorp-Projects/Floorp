@@ -36,7 +36,6 @@ parent:
   async Create();
   async Destroy();
   async SetFocus(bool aRaise);
-  async Invalidate(nsIntRect aRect);
 
   /**
    * Returns NS_NATIVE_PLUGIN_PORT and its variants: a sharable native
@@ -45,15 +44,6 @@ parent:
    * native HWND of the plugin widget.
    */
   sync GetNativePluginPort() returns (uintptr_t value);
-
-  /**
-   * nsIWidget interfaces we'll need until this information flows
-   * over the compositor connection.
-   */
-  async Show(bool aState);
-  async Resize(nsIntRect aRect);
-  async Move(double aX, double aY);
-  async SetWindowClipRegion(nsIntRect[] Regions, bool aIntersectWithExisting);
 };
 
 }
