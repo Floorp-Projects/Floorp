@@ -231,6 +231,8 @@ public:
   virtual void RegisterPluginWindowForRemoteUpdates() MOZ_OVERRIDE;
   virtual void UnregisterPluginWindowForRemoteUpdates() MOZ_OVERRIDE;
 
+  virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal) MOZ_OVERRIDE {};
+
   // Should be called by derived implementations to notify on system color and
   // theme changes.
   void NotifySysColorChanged();
