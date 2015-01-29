@@ -744,17 +744,23 @@ MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 
   if (mAudioTrack) {
     mPendingSeekTime = aTime;
+    DoAudioSeek();
+  } else {
+    mPendingSeekTime = -1;
+    mSeekPromise.Resolve(aTime, __func__);
+  }
+}
+
+void
+MediaSourceReader::DoAudioSeek()
+{
     mAudioIsSeeking = true;
     SwitchAudioReader(mPendingSeekTime);
     mAudioReader->Seek(mPendingSeekTime, 0)
                 ->Then(GetTaskQueue(), __func__, this,
                        &MediaSourceReader::OnAudioSeekCompleted,
                        &MediaSourceReader::OnSeekFailed);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
-    return;
-  }
-  mPendingSeekTime = -1;
-  mSeekPromise.Resolve(aTime, __func__);
+    MSE_DEBUG("MediaSourceReader(%p)::DoAudioSeek reader=%p", this, mAudioReader.get());
 }
 
 void
@@ -811,16 +817,24 @@ MediaSourceReader::AttemptSeek()
   mLastVideoTime = mPendingSeekTime;
 
   if (mVideoTrack) {
-    mVideoIsSeeking = true;
-    SwitchVideoReader(mPendingSeekTime);
-    mVideoReader->Seek(mPendingSeekTime, 0)
-                ->Then(GetTaskQueue(), __func__, this,
-                       &MediaSourceReader::OnVideoSeekCompleted,
-                       &MediaSourceReader::OnSeekFailed);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
+    DoVideoSeek();
+  } else if (mAudioTrack) {
+    DoAudioSeek();
   } else {
-    OnVideoSeekCompleted(mPendingSeekTime);
+    MOZ_CRASH();
   }
+}
+
+void
+MediaSourceReader::DoVideoSeek()
+{
+  mVideoIsSeeking = true;
+  SwitchVideoReader(mPendingSeekTime);
+  mVideoReader->Seek(mPendingSeekTime, 0)
+              ->Then(GetTaskQueue(), __func__, this,
+                     &MediaSourceReader::OnVideoSeekCompleted,
+                     &MediaSourceReader::OnSeekFailed);
+  MSE_DEBUG("MediaSourceReader(%p)::DoVideoSeek reader=%p", this, mVideoReader.get());
 }
 
 nsresult
