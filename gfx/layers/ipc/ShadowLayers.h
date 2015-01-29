@@ -20,7 +20,8 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
- 
+#include "nsIWidget.h"
+
 struct nsIntPoint;
 struct nsIntRect;
 
@@ -313,6 +314,14 @@ public:
    */
   void SetShadowManager(PLayerTransactionChild* aShadowManager);
 
+  /**
+   * Layout calls here to cache current plugin widget configuration
+   * data. We ship this across with the rest of the layer updates when
+   * we update. Chrome handles applying these changes.
+   */
+  void StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
+                                       aConfigurations);
+
   void StopReceiveAsyncParentMessge();
 
   void ClearCachedResources();
@@ -407,6 +416,7 @@ private:
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   bool mWindowOverlayChanged;
+  InfallibleTArray<PluginWindowData> mPluginWindowData;
 };
 
 class CompositableClient;

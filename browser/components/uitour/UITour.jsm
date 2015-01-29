@@ -1559,19 +1559,19 @@ this.UITour = {
 
   getConfiguration: function(aMessageManager, aWindow, aConfiguration, aCallbackID) {
     switch (aConfiguration) {
-      case "availableTargets":
-        this.getAvailableTargets(aMessageManager, aWindow, aCallbackID);
-        break;
-      case "sync":
-        this.sendPageCallback(aMessageManager, aCallbackID, {
-          setup: Services.prefs.prefHasUserValue("services.sync.username"),
-        });
-        break;
       case "appinfo":
         let props = ["defaultUpdateChannel", "version"];
         let appinfo = {};
         props.forEach(property => appinfo[property] = Services.appinfo[property]);
         this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
+        break;
+      case "availableTargets":
+        this.getAvailableTargets(aMessageManager, aWindow, aCallbackID);
+        break;
+      case "loop":
+        this.sendPageCallback(aMessageManager, aCallbackID, {
+          gettingStartedSeen: Services.prefs.getBoolPref("loop.gettingStarted.seen"),
+        });
         break;
       case "selectedSearchEngine":
         Services.search.init(rv => {
@@ -1584,6 +1584,11 @@ this.UITour = {
           this.sendPageCallback(aMessageManager, aCallbackID, {
             searchEngineIdentifier: engine.identifier
           });
+        });
+        break;
+      case "sync":
+        this.sendPageCallback(aMessageManager, aCallbackID, {
+          setup: Services.prefs.prefHasUserValue("services.sync.username"),
         });
         break;
       default:

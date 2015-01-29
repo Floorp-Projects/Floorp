@@ -640,7 +640,12 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
 
     /* Construct the new shape, without updating type information. */
     RootedId id(cx);
-    RootedShape newShape(cx, res->lastProperty());
+    RootedShape newShape(cx, EmptyShape::getInitialShape(cx, res->getClass(),
+                                                         res->getTaggedProto(),
+                                                         res->getMetadata(),
+                                                         res->getParent(),
+                                                         res->numFixedSlots(),
+                                                         shape->getObjectFlags()));
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
         MOZ_ASSERT(!res->contains(cx, id));
@@ -1361,19 +1366,53 @@ BaseShape::assertConsistency()
 #endif
 }
 
+bool
+BaseShape::fixupBaseShapeTableEntry()
+{
+    bool updated = false;
+    if (parent && IsForwarded(parent.get())) {
+        parent = Forwarded(parent.get());
+        updated = true;
+    }
+    if (metadata && IsForwarded(metadata.get())) {
+        metadata = Forwarded(metadata.get());
+        updated = true;
+    }
+    return updated;
+}
+
+void
+JSCompartment::fixupBaseShapeTable()
+{
+    if (!baseShapes.initialized())
+        return;
+
+    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+        UnownedBaseShape *base = e.front().unbarrieredGet();
+        if (base->fixupBaseShapeTableEntry()) {
+            StackBaseShape sbase(base);
+            ReadBarriered<UnownedBaseShape *> b(base);
+            e.rekeyFront(&sbase, b);
+        }
+    }
+}
+
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    if (baseShapes.initialized()) {
-        for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            UnownedBaseShape *base = e.front().unbarrieredGet();
-            if (IsBaseShapeAboutToBeFinalizedFromAnyThread(&base)) {
-                e.removeFront();
-            } else if (base != e.front().unbarrieredGet()) {
-                StackBaseShape sbase(base);
-                ReadBarriered<UnownedBaseShape *> b(base);
-                e.rekeyFront(&sbase, b);
-            }
+    if (!baseShapes.initialized())
+        return;
+
+    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+        UnownedBaseShape *base = e.front().unbarrieredGet();
+        MOZ_ASSERT_IF(base->getObjectParent(), !IsForwarded(base->getObjectParent()));
+        MOZ_ASSERT_IF(base->getObjectMetadata(), !IsForwarded(base->getObjectMetadata()));
+        if (IsBaseShapeAboutToBeFinalizedFromAnyThread(&base)) {
+            e.removeFront();
+        } else if (base != e.front().unbarrieredGet()) {
+            StackBaseShape sbase(base);
+            ReadBarriered<UnownedBaseShape *> b(base);
+            e.rekeyFront(&sbase, b);
         }
     }
 }

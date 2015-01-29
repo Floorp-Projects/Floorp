@@ -192,6 +192,8 @@
     <dimen name="tab_history_bg_width">2dp</dimen>
     <dimen name="tab_history_border_padding">2dp</dimen>
 
+    <dimen name="horizontal_drag_area">256dp</dimen>
+
     <!-- Find-In-Page dialog dimensions. -->
     <dimen name="find_in_page_text_margin_left">5dip</dimen>
     <dimen name="find_in_page_text_margin_right">12dip</dimen>

@@ -39,35 +39,38 @@ function open_preferences(aCallback) {
 }
 
 function openAndLoadSubDialog(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
-  let dialog = content.gSubDialog.open(aURL, aFeatures, aParams, aClosingCallback);
-  let deferred = Promise.defer();
+  let promise = promiseLoadSubDialog(aURL);
+  content.gSubDialog.open(aURL, aFeatures, aParams, aClosingCallback);
+  return promise;
+}
 
-  content.gSubDialog._frame.addEventListener("load", function load(aEvent) {
-    if (aEvent.target.contentWindow.location == "about:blank")
-      return;
-    content.gSubDialog._frame.removeEventListener("load", load);
+function promiseLoadSubDialog(aURL) {
+  return new Promise((resolve, reject) => {
+    content.gSubDialog._frame.addEventListener("load", function load(aEvent) {
+      if (aEvent.target.contentWindow.location == "about:blank")
+        return;
+      content.gSubDialog._frame.removeEventListener("load", load);
 
-    ise(content.gSubDialog._frame.contentWindow.location.toString(), aURL,
-        "Check the proper URL is loaded");
+      ise(content.gSubDialog._frame.contentWindow.location.toString(), aURL,
+          "Check the proper URL is loaded");
 
-    // Check visibility
-    is_element_visible(content.gSubDialog._overlay, "Overlay is visible");
+      // Check visibility
+      is_element_visible(content.gSubDialog._overlay, "Overlay is visible");
 
-    // Check that stylesheets were injected
-    let expectedStyleSheetURLs = content.gSubDialog._injectedStyleSheets.slice(0);
-    for (let styleSheet of content.gSubDialog._frame.contentDocument.styleSheets) {
-      let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
-      if (i >= 0) {
-        info("found " + styleSheet.href);
-        expectedStyleSheetURLs.splice(i, 1);
+      // Check that stylesheets were injected
+      let expectedStyleSheetURLs = content.gSubDialog._injectedStyleSheets.slice(0);
+      for (let styleSheet of content.gSubDialog._frame.contentDocument.styleSheets) {
+        let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
+        if (i >= 0) {
+          info("found " + styleSheet.href);
+          expectedStyleSheetURLs.splice(i, 1);
+        }
       }
-    }
-    ise(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
+      ise(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
 
-    deferred.resolve(dialog);
+      resolve(content.gSubDialog._frame.contentWindow);
+    });
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -138,4 +141,25 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab, aOptions) {
   }, true);
 
   return deferred.promise;
+}
+
+function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
+  return new Promise((resolve, reject) => {
+    function tryNow() {
+      tries++;
+      let rv = aConditionFn();
+      if (rv) {
+        resolve(rv);
+      } else if (tries < aMaxTries) {
+        tryAgain();
+      } else {
+        reject("Condition timed out: " + aConditionFn.toSource());
+      }
+    }
+    function tryAgain() {
+      setTimeout(tryNow, aCheckInterval);
+    }
+    let tries = 0;
+    tryAgain();
+  });
 }

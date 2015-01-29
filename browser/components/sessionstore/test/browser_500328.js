@@ -42,9 +42,9 @@ function checkState(tab) {
       // deserialized in the content scope. And in this case, since RegExps are
       // not currently Xrayable (see bug 1014991), trying to pull |obj3| (a RegExp)
       // off of an Xrayed Object won't work. So we need to waive.
-      runInContent(tab.linkedBrowser, function(win, event) {
-        return Cu.waiveXrays(event.state).obj3.toString();
-      }, aEvent).then(function(stateStr) {
+      runInContent(tab.linkedBrowser, function(win, state) {
+        return Cu.waiveXrays(state).obj3.toString();
+      }, aEvent.state).then(function(stateStr) {
         is(stateStr, '/^a$/', "second popstate object.");
 
         // Make sure that the new-elem node is present in the document.  If it's
@@ -83,10 +83,10 @@ function test() {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
 
-  whenBrowserLoaded(browser, function() {
+  promiseBrowserLoaded(browser).then(() => {
     browser.loadURI("http://example.com", null, null);
 
-    whenBrowserLoaded(browser, function() {
+    promiseBrowserLoaded(browser).then(() => {
       // After these push/replaceState calls, the window should have three
       // history entries:
       //   testURL        (state object: null)          <-- oldest
@@ -109,9 +109,7 @@ function test() {
         ss.setTabState(tab2, state, true);
 
         // Run checkState() once the tab finishes loading its restored state.
-        whenTabRestored(tab2, function() {
-          checkState(tab2);
-        });
+        promiseTabRestored(tab2).then(() => checkState(tab2));
       });
     });
   });

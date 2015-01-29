@@ -856,9 +856,15 @@ const COLOR_PALLETTE = Array.from(Array(PALLETTE_SIZE)).map((_, i) => "hsla" +
  * into a format drawable by the FlameGraph.
  */
 let FlameGraphUtils = {
+  _cache: new WeakMap(),
+
   /**
    * Converts a list of samples from the profiler data to something that's
    * drawable by a FlameGraph widget.
+   *
+   * The outputted data will be cached, so the next time this method is called
+   * the previous output is returned. If this is undesirable, or should the
+   * options change, use `removeFromCache`.
    *
    * @param array samples
    *        A list of { time, frames: [{ location }] } objects.
@@ -876,6 +882,11 @@ let FlameGraphUtils = {
    *         The flame graph data.
    */
   createFlameGraphDataFromSamples: function(samples, options = {}, out = []) {
+    let cached = this._cache.get(samples);
+    if (cached) {
+      return cached;
+    }
+
     // 1. Create a map of colors to arrays, representing buckets of
     // blocks inside the flame graph pyramid sharing the same style.
 
@@ -952,7 +963,16 @@ let FlameGraphUtils = {
       out.push({ color, blocks });
     }
 
+    this._cache.set(samples, out);
     return out;
+  },
+
+  /**
+   * Clears the cached flame graph data created for the given source.
+   * @param any source
+   */
+  removeFromCache: function(source) {
+    this._cache.delete(source);
   },
 
   /**

@@ -62,9 +62,9 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 class gfxASurface;
 class gfxPattern;
 class nsDragService;
+class nsPluginNativeWindowGtk;
 #if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
 #  define MOZ_HAVE_SHMIMAGE
-
 class nsShmImage;
 #endif
 
@@ -134,6 +134,7 @@ public:
                                  uint32_t aHotspotX, uint32_t aHotspotY) MOZ_OVERRIDE;
     NS_IMETHOD         Invalidate(const nsIntRect &aRect) MOZ_OVERRIDE;
     virtual void*      GetNativeData(uint32_t aDataType) MOZ_OVERRIDE;
+    void               SetNativeData(uint32_t aDataType, uintptr_t aVal) MOZ_OVERRIDE;
     NS_IMETHOD         SetTitle(const nsAString& aTitle) MOZ_OVERRIDE;
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) MOZ_OVERRIDE;
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) MOZ_OVERRIDE;
@@ -430,6 +431,12 @@ private:
      */
     void                DispatchRestoreEventAccessible();
 #endif
+
+    // Updates the bounds of the socket widget we manage for remote plugins.
+    void ResizePluginSocketWidget();
+
+    // e10s specific - for managing the socket widget this window hosts.
+    nsPluginNativeWindowGtk* mPluginNativeWindow;
 
     // The cursor cache
     static GdkCursor   *gsGtkCursorCache[eCursorCount];

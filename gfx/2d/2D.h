@@ -188,6 +188,8 @@ protected:
 class ColorPattern : public Pattern
 {
 public:
+  // Explicit because consumers should generally use ToDeviceColor when
+  // creating a ColorPattern.
   explicit ColorPattern(const Color &aColor)
     : mColor(aColor)
   {}

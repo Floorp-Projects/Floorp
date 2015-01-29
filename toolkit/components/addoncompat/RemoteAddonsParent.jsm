@@ -239,12 +239,22 @@ let AboutProtocolParent = {
   // We immediately read all the data out of the channel here and
   // return it to the child.
   openChannel: function(msg) {
+    function wrapGetInterface(cpow) {
+      return {
+        getInterface: function(intf) { return cpow.getInterface(intf); }
+      };
+    }
+
     let uri = BrowserUtils.makeURI(msg.data.uri);
     let contractID = msg.data.contractID;
     let module = Cc[contractID].getService(Ci.nsIAboutModule);
     try {
       let channel = module.newChannel(uri, null);
-      channel.notificationCallbacks = msg.objects.notificationCallbacks;
+      // We're not allowed to set channel.notificationCallbacks to a
+      // CPOW, since the setter for notificationCallbacks is in C++,
+      // which can't tolerate CPOWs. Instead we just use a JS object
+      // that wraps the CPOW.
+      channel.notificationCallbacks = wrapGetInterface(msg.objects.notificationCallbacks);
       if (msg.objects.loadGroupNotificationCallbacks) {
         channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
       } else {
@@ -329,8 +339,13 @@ let ObserverParent = {
 ObserverParent.init();
 
 // We only forward observers for these topics.
-let TOPIC_WHITELIST = ["content-document-global-created",
-                       "document-element-inserted",];
+let TOPIC_WHITELIST = [
+  "content-document-global-created",
+  "document-element-inserted",
+  "dom-window-destroyed",
+  "inner-window-destroyed",
+  "outer-window-destroyed",
+];
 
 // This interposition listens for
 // nsIObserverService.{add,remove}Observer.
@@ -429,13 +444,17 @@ let EventTargetParent = {
     // If there's already an identical listener, don't do anything.
     for (let i = 0; i < forType.length; i++) {
       if (forType[i].listener === listener &&
+          forType[i].target === target &&
           forType[i].useCapture === useCapture &&
           forType[i].wantsUntrusted === wantsUntrusted) {
         return;
       }
     }
 
-    forType.push({listener: listener, wantsUntrusted: wantsUntrusted, useCapture: useCapture});
+    forType.push({listener: listener,
+                  target: target,
+                  wantsUntrusted: wantsUntrusted,
+                  useCapture: useCapture});
   },
 
   removeEventListener: function(addon, target, type, listener, useCapture) {
@@ -453,7 +472,9 @@ let EventTargetParent = {
     let forType = setDefault(listeners, type, []);
 
     for (let i = 0; i < forType.length; i++) {
-      if (forType[i].listener === listener && forType[i].useCapture === useCapture) {
+      if (forType[i].listener === listener &&
+          forType[i].target === target &&
+          forType[i].useCapture === useCapture) {
         forType.splice(i, 1);
         NotificationTracker.remove(["event", type, useCapture, addon]);
         break;
@@ -483,19 +504,30 @@ let EventTargetParent = {
 
       // Make a copy in case they call removeEventListener in the listener.
       let handlers = [];
-      for (let {listener, wantsUntrusted, useCapture} of forType) {
+      for (let {listener, target, wantsUntrusted, useCapture} of forType) {
         if ((wantsUntrusted || isTrusted) && useCapture == capturing) {
-          handlers.push(listener);
+          handlers.push([listener, target]);
         }
       }
 
-      for (let handler of handlers) {
+      for (let [handler, target] of handlers) {
+        let EventProxy = {
+          get: function(actualEvent, name) {
+            if (name == "currentTarget") {
+              return target;
+            } else {
+              return actualEvent[name];
+            }
+          }
+        };
+        let proxyEvent = new Proxy(event, EventProxy);
+
         try {
           Prefetcher.withPrefetching(prefetched, cpows, () => {
             if ("handleEvent" in handler) {
-              handler.handleEvent(event);
+              handler.handleEvent(proxyEvent);
             } else {
-              handler.call(event.target, event);
+              handler.call(event.target, proxyEvent);
             }
           });
         } catch (e) {
@@ -730,8 +762,16 @@ function makeDummyContentWindow(browser) {
   let dummyContentWindow = {
     set location(url) {
       browser.loadURI(url, null, null);
-    }
+    },
+    document: {
+      readyState: "loading",
+      location: { href: "about:blank" }
+    },
+    frames: [],
   };
+  dummyContentWindow.top = dummyContentWindow;
+  dummyContentWindow.document.defaultView = dummyContentWindow;
+  browser._contentWindow = dummyContentWindow;
   return dummyContentWindow;
 }
 
@@ -745,26 +785,18 @@ RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target
   return target.contentWindowAsCPOW;
 };
 
-let DummyContentDocument = {
-  readyState: "loading",
-  location: { href: "about:blank" }
-};
-
 function getContentDocument(addon, browser)
 {
+  if (!browser.contentWindowAsCPOW) {
+    return makeDummyContentWindow(browser).document;
+  }
+
   let doc = Prefetcher.lookupInCache(addon, browser.contentWindowAsCPOW, "document");
   if (doc) {
     return doc;
   }
 
-  doc = browser.contentDocumentAsCPOW;
-  if (!doc) {
-    // If we don't have a CPOW yet, just return something we can use to
-    // examine readyState. This is useful for tests that create a new
-    // tab and then immediately start polling readyState.
-    return DummyContentDocument;
-  }
-  return doc;
+  return browser.contentDocumentAsCPOW;
 }
 
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
@@ -789,7 +821,10 @@ TabBrowserElementInterposition.getters.contentDocument = function(addon, target)
 let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
                                                   EventTargetInterposition);
 
-ChromeWindowInterposition.getters.content = function(addon, target) {
+// _content is for older add-ons like pinboard and all-in-one gestures
+// that should be using content instead.
+ChromeWindowInterposition.getters.content =
+ChromeWindowInterposition.getters._content = function(addon, target) {
   let browser = target.gBrowser.selectedBrowser;
   if (!browser.contentWindowAsCPOW) {
     return makeDummyContentWindow(browser);
