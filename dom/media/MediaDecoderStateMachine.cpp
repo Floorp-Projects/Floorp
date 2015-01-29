@@ -1578,9 +1578,9 @@ void MediaDecoderStateMachine::StartDecoding()
 
 void MediaDecoderStateMachine::StartWaitForResources()
 {
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  NS_ASSERTION(OnDecodeThread(),
+               "Should be on decode thread.");
   SetState(DECODER_STATE_WAIT_FOR_RESOURCES);
   DECODER_LOG("StartWaitForResources");
 }
@@ -2179,28 +2179,28 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
   DECODER_LOG("Decoding Media Headers");
 
-  mReader->PreReadMetadata();
-
-  if (mReader->IsWaitingMediaResources()) {
-    StartWaitForResources();
-    return NS_OK;
-  }
-
   nsresult res;
   MediaInfo info;
+  bool isAwaitingResources = false;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    res = mReader->ReadMetadata(&info, getter_Transfers(mMetadataTags));
-  }
+    mReader->PreReadMetadata();
 
-  if (NS_SUCCEEDED(res)) {
-    if (mState == DECODER_STATE_DECODING_METADATA &&
-        mReader->IsWaitingMediaResources()) {
-      // change state to DECODER_STATE_WAIT_FOR_RESOURCES
+    if (mReader->IsWaitingMediaResources()) {
       StartWaitForResources();
-      // affect values only if ReadMetadata succeeds
       return NS_OK;
     }
+    res = mReader->ReadMetadata(&info, getter_Transfers(mMetadataTags));
+    isAwaitingResources = mReader->IsWaitingMediaResources();
+  }
+
+  if (NS_SUCCEEDED(res) &&
+      mState == DECODER_STATE_DECODING_METADATA &&
+      isAwaitingResources) {
+    // change state to DECODER_STATE_WAIT_FOR_RESOURCES
+    StartWaitForResources();
+    // affect values only if ReadMetadata succeeds
+    return NS_OK;
   }
 
   if (NS_SUCCEEDED(res)) {
