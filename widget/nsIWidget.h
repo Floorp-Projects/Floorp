@@ -107,8 +107,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x029a269f, 0x8b1a, 0x466b, \
-  { 0x89, 0x61, 0xc9, 0xcd, 0x23, 0x4e, 0x21, 0x27 } };
+{ 0xa7db3e01, 0xb8fe, 0x4122, \
+  { 0xbe, 0xa6, 0x45, 0x6c, 0xdd, 0x85, 0x30, 0x64 } };
 
 /*
  * Window shadow styles
@@ -1393,6 +1393,30 @@ class nsIWidget : public nsISupports {
      * (0, 0, bounds.width, bounds.height).
      */
     virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) = 0;
+
+    /**
+     * Register or unregister native plugin widgets which receive Configuration
+     * data from the content process via the compositor.
+     *
+     * Lookups are used by the main thread via the compositor to lookup widgets
+     * based on a unique window id. On Windows and Linux this is the
+     * NS_NATIVE_PLUGIN_PORT (hwnd/XID). This tracking maintains a reference to
+     * widgets held. Consumers are responsible for removing widgets from this
+     * list.
+     */
+    virtual void RegisterPluginWindowForRemoteUpdates() = 0;
+    virtual void UnregisterPluginWindowForRemoteUpdates() = 0;
+    static nsIWidget* LookupRegisteredPluginWindow(uintptr_t aWindowID);
+
+    /**
+     * Iterates across the list of registered plugin widgets and updates thier
+     * visibility based on which plugins are included in the 'visible' list.
+     *
+     * The compositor knows little about tabs, but it does know which plugin
+     * widgets are currently included in the visible layer tree. It calls this
+     * helper to hide widgets it knows nothing about.
+     */
+    static void UpdateRegisteredPluginWindowVisibility(nsTArray<uintptr_t>& aVisibleList);
 
     /**
      * Set the shadow style of the window.
