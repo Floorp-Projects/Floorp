@@ -2753,6 +2753,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         DecodeTaskQueue()->AwaitIdle();
         mReader->ReleaseMediaResources();
       }
+      mAudioRequestStatus = RequestStatus::Idle;
+      mVideoRequestStatus = RequestStatus::Idle;
       return NS_OK;
     }
 
