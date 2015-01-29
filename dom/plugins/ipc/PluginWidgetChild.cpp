@@ -26,6 +26,22 @@ PluginWidgetChild::~PluginWidgetChild()
   MOZ_COUNT_DTOR(PluginWidgetChild);
 }
 
+/*
+ * Tear down scenarios
+ * layout (plugin content unloading):
+ *  - PluginWidgetProxy nsIWidget Destroy()
+ *  - PluginWidgetProxy->PluginWidgetChild->SendDestroy()
+ *  - PluginWidgetParent::RecvDestroy(), sends async Destroyed() to PluginWidgetChild
+ *  - PluginWidgetChild::RecvDestroyed() calls Send__delete__()
+ *  - PluginWidgetParent::ActorDestroy() called in response to __delete__.
+ * PBrowser teardown (tab closing):
+ *  - PluginWidgetParent::ParentDestroy() called by TabParent::Destroy()
+ *  - PluginWidgetParent::ActorDestroy()
+ *  - PluginWidgetParent::~PluginWidgetParent() in response to PBrowserParent::DeallocSubtree()
+ *  - PluginWidgetChild::ActorDestroy() from PPluginWidgetChild::DestroySubtree
+ *  - ~PluginWidgetChild() in response to PBrowserChild::DeallocSubtree()
+ **/
+
 void
 PluginWidgetChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -33,6 +49,13 @@ PluginWidgetChild::ActorDestroy(ActorDestroyReason aWhy)
     mWidget->ChannelDestroyed();
   }
   mWidget = nullptr;
+}
+
+bool
+PluginWidgetChild::RecvParentShutdown()
+{
+  Send__delete__(this);
+  return true;
 }
 
 bool
@@ -57,6 +80,3 @@ PluginWidgetChild::RecvUpdateWindow(const uintptr_t& aChildId)
 
 } // namespace plugins
 } // namespace mozilla
-
-
-

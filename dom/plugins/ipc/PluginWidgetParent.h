@@ -33,6 +33,12 @@ public:
   virtual bool RecvSetFocus(const bool& aRaise) MOZ_OVERRIDE;
   virtual bool RecvGetNativePluginPort(uintptr_t* value) MOZ_OVERRIDE;
 
+  // Helper for compositor checks on the channel
+  bool ActorDestroyed() { return mActorDestroyed; }
+
+  // Called by PBrowser when it receives a Destroy() call from the child.
+  void ParentDestroy();
+
 private:
   // The tab our connection is associated with.
   mozilla::dom::TabParent* GetTabParent();
@@ -41,6 +47,7 @@ private:
 #if defined(MOZ_WIDGET_GTK)
   UniquePtr<nsPluginNativeWindowGtk> mWrapper;
 #endif
+  bool mActorDestroyed;
 };
 
 } // namespace plugins
