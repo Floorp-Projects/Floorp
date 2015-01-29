@@ -35,4 +35,6 @@ interface MediaSource : EventTarget {
   [Throws]
   void endOfStream(optional MediaSourceEndOfStreamError error);
   static boolean isTypeSupported(DOMString type);
+  [ChromeOnly]
+  readonly attribute DOMString mozDebugReaderData;
 };
