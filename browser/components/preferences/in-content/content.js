@@ -3,10 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var gContentPane = {
-
-  /**
-   * Initializes the fonts dropdowns displayed in this pane.
-   */
   init: function ()
   {
     function setEventListener(aId, aEventType, aCallback)
@@ -15,6 +11,7 @@ var gContentPane = {
               .addEventListener(aEventType, aCallback.bind(gContentPane));
     }
 
+    // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
     var menulist = document.getElementById("defaultFont");
     if (menulist.selectedIndex == -1) {
@@ -43,6 +40,12 @@ var gContentPane = {
       gContentPane.openTranslationProviderAttribution);
     setEventListener("translateButton", "command",
       gContentPane.showTranslationExceptions);
+
+    let drmInfoURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
+    document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
+    document.getElementById("playDRMContentRow").hidden =
+      !Services.prefs.getBoolPref("browser.eme.ui.enabled");
   },
 
   // UTILITY FUNCTIONS
