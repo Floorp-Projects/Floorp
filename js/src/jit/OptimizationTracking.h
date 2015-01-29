@@ -67,6 +67,19 @@ namespace jit {
     _(GetElem_InlineCache,                              \
       "getelem IC")                                     \
                                                         \
+    _(SetElem_TypedObject,                              \
+      "setelem TypedObject")                            \
+    _(SetElem_TypedStatic,                              \
+      "setelem TypedArray static")                      \
+    _(SetElem_TypedArray,                               \
+      "setelem TypedArray")                             \
+    _(SetElem_Dense,                                    \
+      "setelem dense")                                  \
+    _(SetElem_Arguments,                                \
+      "setelem arguments")                              \
+    _(SetElem_InlineCache,                              \
+      "setelem IC")                                     \
+                                                        \
     _(Call_Inline,                                      \
       "call inline")
 
@@ -145,6 +158,8 @@ namespace jit {
       "observed non-native receiver")                                   \
     _(IndexType,                                                        \
       "index type must be int32, string, or symbol")                    \
+    _(SetElemNonDenseNonTANotCached,                                    \
+      "setelem on non-dense non-TAs are not inline cached")             \
                                                                         \
     _(CantInlineGeneric,                                                \
       "can't inline")                                                   \
