@@ -5152,12 +5152,12 @@ ArenaLists::foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sl
     return true;
 }
 
-bool
+GCRuntime::IncrementalProgress
 GCRuntime::drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase)
 {
     /* Run a marking slice and return whether the stack is now empty. */
     gcstats::AutoPhase ap(stats, phase);
-    return marker.drainMarkStack(sliceBudget);
+    return marker.drainMarkStack(sliceBudget) ? Finished : NotFinished;
 }
 
 static void
@@ -5197,15 +5197,15 @@ SweepArenaList(ArenaHeader **arenasToSweep, SliceBudget &sliceBudget, Args... ar
     return true;
 }
 
-bool
+GCRuntime::IncrementalProgress
 GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
     FreeOp fop(rt);
 
-    bool finished = drainMarkStack(sliceBudget, gcstats::PHASE_SWEEP_MARK);
-    if (!finished)
-        return false;
+    if (drainMarkStack(sliceBudget, gcstats::PHASE_SWEEP_MARK) == NotFinished)
+        return NotFinished;
+
 
     for (;;) {
         // Sweep dead type information stored in scripts and type objects, but
@@ -5225,12 +5225,12 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
                 types::AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
                 if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate, sliceBudget, &oom))
-                    return false;
+                    return NotFinished;
 
                 if (!SweepArenaList<types::TypeObject>(
                         &al.gcTypeObjectArenasToUpdate, sliceBudget, &oom))
                 {
-                    return false;
+                    return NotFinished;
                 }
 
                 // Finish sweeping type information in the zone.
@@ -5265,7 +5265,7 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 
                     if (!zone->arenas.foregroundFinalize(&fop, kind, sliceBudget,
                                                          incrementalSweepList))
-                        return false;  /* Yield to the mutator. */
+                        return NotFinished;
 
                     /* Reset the slots of the sweep list that we used. */
                     incrementalSweepList.reset(thingsPerArena);
@@ -5285,17 +5285,18 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
                 ArenaLists &al = sweepZone->arenas;
 
                 if (!SweepArenaList<Shape>(&al.gcShapeArenasToUpdate, sliceBudget))
-                    return false;  /* Yield to the mutator. */
+                    return NotFinished;
 
                 if (!SweepArenaList<AccessorShape>(&al.gcAccessorShapeArenasToUpdate, sliceBudget))
-                    return false;  /* Yield to the mutator. */
+                    return NotFinished;
             }
         }
 
         endSweepingZoneGroup();
         getNextZoneGroup();
         if (!currentZoneGroup)
-            return true;  /* We're finished. */
+            return Finished;
+
         endMarkingZoneGroup();
         beginSweepingZoneGroup();
     }
@@ -5415,7 +5416,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 #endif
 }
 
-bool
+GCRuntime::IncrementalProgress
 GCRuntime::compactPhase(bool lastGC)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
@@ -5424,7 +5425,7 @@ GCRuntime::compactPhase(bool lastGC)
         // Poll for end of background sweeping
         AutoLockGC lock(rt);
         if (isBackgroundSweeping())
-            return false;
+            return NotFinished;
     } else {
         waitBackgroundSweepEnd();
     }
@@ -5482,7 +5483,7 @@ GCRuntime::compactPhase(bool lastGC)
         }
     }
 #endif
-    return true;
+    return Finished;
 }
 
 void
@@ -5801,15 +5802,14 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
 
         /* fall through */
 
-      case MARK: {
+      case MARK:
         /* If we needed delayed marking for gray roots, then collect until done. */
         if (!marker.hasBufferedGrayRoots()) {
             budget.makeUnlimited();
             isIncremental = false;
         }
 
-        bool finished = drainMarkStack(budget, gcstats::PHASE_MARK);
-        if (!finished)
+        if (drainMarkStack(budget, gcstats::PHASE_MARK) == NotFinished)
             break;
 
         MOZ_ASSERT(marker.isDrained());
@@ -5845,14 +5845,10 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             break;
 
         /* fall through */
-      }
 
       case SWEEP:
-        {
-            bool finished = sweepPhase(budget);
-            if (!finished)
-                break;
-        }
+        if (sweepPhase(budget) == NotFinished)
+            break;
 
         endSweepPhase(lastGC);
 
@@ -5863,12 +5859,8 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
             break;
 
       case COMPACT:
-        if (shouldCompact()) {
-            bool finished = compactPhase(lastGC);
-            if (!finished)
-                break;
-        }
-
+        if (shouldCompact() && compactPhase(lastGC) == NotFinished)
+            break;
         finishCollection();
         incrementalState = NO_INCREMENTAL;
         break;
