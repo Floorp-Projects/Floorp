@@ -55,11 +55,14 @@ public:
 };
 
 SharedDecoderManager::SharedDecoderManager()
-  : mActiveProxy(nullptr)
+  : mTaskQueue(new MediaTaskQueue(GetMediaDecodeThreadPool()))
+  , mActiveProxy(nullptr)
   , mActiveCallback(nullptr)
   , mWaitForInternalDrain(false)
   , mMonitor("SharedDecoderProxy")
+  , mDecoderReleasedResources(false)
 {
+  MOZ_ASSERT(NS_IsMainThread()); // taskqueue must be created on main thread.
   mCallback = new SharedDecoderCallback(this);
 }
 
@@ -67,14 +70,18 @@ SharedDecoderManager::~SharedDecoderManager() {}
 
 already_AddRefed<MediaDataDecoder>
 SharedDecoderManager::CreateVideoDecoder(
+  PlatformDecoderModule* aPDM,
   const mp4_demuxer::VideoDecoderConfig& aConfig,
   layers::LayersBackend aLayersBackend, layers::ImageContainer* aImageContainer,
   MediaTaskQueue* aVideoTaskQueue, MediaDataDecoderCallback* aCallback)
 {
   if (!mDecoder) {
-    nsRefPtr<PlatformDecoderModule> platform(PlatformDecoderModule::Create());
-    mDecoder = platform->CreateVideoDecoder(
-      aConfig, aLayersBackend, aImageContainer, aVideoTaskQueue, mCallback);
+    // We use the manager's task queue for the decoder, rather than the one
+    // passed in, so that none of the objects sharing the decoder can shutdown
+    // the task queue while we're potentially still using it for a *different*
+    // object also sharing the decoder.
+    mDecoder = aPDM->CreateVideoDecoder(
+      aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
     if (!mDecoder) {
       return nullptr;
     }
@@ -96,6 +103,11 @@ SharedDecoderManager::Select(SharedDecoderProxy* aProxy)
 
   mActiveProxy = aProxy;
   mActiveCallback = aProxy->mCallback;
+
+  if (mDecoderReleasedResources) {
+    mDecoder->AllocateMediaResources();
+    mDecoderReleasedResources = false;
+  }
 }
 
 void
@@ -125,6 +137,28 @@ SharedDecoderManager::DrainComplete()
   }
 }
 
+void
+SharedDecoderManager::ReleaseMediaResources()
+{
+  mDecoderReleasedResources = true;
+  mDecoder->ReleaseMediaResources();
+  mActiveProxy = nullptr;
+}
+
+void
+SharedDecoderManager::Shutdown()
+{
+  if (mDecoder) {
+    mDecoder->Shutdown();
+    mDecoder = nullptr;
+  }
+  if (mTaskQueue) {
+    mTaskQueue->BeginShutdown();
+    mTaskQueue->AwaitShutdownAndIdle();
+    mTaskQueue = nullptr;
+  }
+}
+
 SharedDecoderProxy::SharedDecoderProxy(
   SharedDecoderManager* aManager, MediaDataDecoderCallback* aCallback)
   : mManager(aManager), mCallback(aCallback)
@@ -146,7 +180,6 @@ SharedDecoderProxy::Input(mp4_demuxer::MP4Sample* aSample)
     mManager->Select(this);
   }
   return mManager->mDecoder->Input(aSample);
-  return NS_OK;
 }
 
 nsresult
@@ -193,7 +226,7 @@ void
 SharedDecoderProxy::ReleaseMediaResources()
 {
   if (mManager->mActiveProxy == this) {
-    mManager->mDecoder->ReleaseMediaResources();
+    mManager->ReleaseMediaResources();
   }
 }
 
