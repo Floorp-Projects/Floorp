@@ -64,11 +64,16 @@ public:
 
   static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
 
-  virtual bool RecvInvalidateAll() MOZ_OVERRIDE;
-  virtual bool RecvOverfill(const uint32_t &aOverfill) MOZ_OVERRIDE;
   void AddOverfillObserver(ClientLayerManager* aLayerManager);
 
-  virtual bool RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId) MOZ_OVERRIDE;
+  virtual bool
+  RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvInvalidateAll() MOZ_OVERRIDE;
+
+  virtual bool
+  RecvOverfill(const uint32_t &aOverfill) MOZ_OVERRIDE;
 
   virtual bool
   RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset,

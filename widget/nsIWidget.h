@@ -1378,12 +1378,12 @@ class nsIWidget : public nsISupports {
      * mClipRegion, all relative to the top-left of the child
      * widget. Clip regions are not implemented on all platforms and only
      * need to actually work for children that are plugins.
-     * 
+     *
      * Also sets the bounds of each child to mBounds.
-     * 
+     *
      * This will invalidate areas of the children that have changed, but
      * does not need to invalidate any part of this widget.
-     * 
+     *
      * Children should be moved in the order given; the array is
      * sorted so to minimize unnecessary invalidation if children are
      * moved in that order.
@@ -1629,7 +1629,7 @@ class nsIWidget : public nsISupports {
      */
     virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) {}
 
-    /** 
+    /**
      * Internal methods
      */
 
