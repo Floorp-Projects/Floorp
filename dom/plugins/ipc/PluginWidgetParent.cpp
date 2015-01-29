@@ -12,8 +12,6 @@
 
 #if defined(MOZ_WIDGET_GTK)
 #include "nsPluginNativeWindowGtk.h"
-#else
-#include "nsPluginNativeWindow.h"
 #endif
 
 using namespace mozilla;
