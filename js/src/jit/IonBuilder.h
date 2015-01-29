@@ -235,6 +235,7 @@ class IonBuilder
     uint32_t readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);
     bool abort(const char *message, ...);
+    void trackActionableAbort(const char *message);
     void spew(const char *message);
 
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
@@ -905,6 +906,14 @@ class IonBuilder
     // performed by FinishOffThreadBuilder().
     CodeGenerator *backgroundCodegen_;
 
+    // Some aborts are actionable (e.g., using an unsupported bytecode). When
+    // optimization tracking is enabled, the location and message of the abort
+    // are recorded here so they may be propagated to the script's
+    // corresponding JitcodeGlobalEntry::BaselineEntry.
+    JSScript *actionableAbortScript_;
+    jsbytecode *actionableAbortPc_;
+    const char *actionableAbortMessage_;
+
   public:
     void clearForBackEnd();
 
@@ -922,6 +931,21 @@ class IonBuilder
     }
 
     const JSAtomState &names() { return compartment->runtime()->names(); }
+
+    bool hadActionableAbort() const {
+        MOZ_ASSERT(!actionableAbortScript_ ||
+                   (actionableAbortPc_ && actionableAbortMessage_));
+        return actionableAbortScript_ != nullptr;
+    }
+
+    void actionableAbortLocationAndMessage(JSScript **abortScript, jsbytecode **abortPc,
+                                           const char **abortMessage)
+    {
+        MOZ_ASSERT(hadActionableAbort());
+        *abortScript = actionableAbortScript_;
+        *abortPc = actionableAbortPc_;
+        *abortMessage = actionableAbortMessage_;
+    }
 
   private:
     bool init();
