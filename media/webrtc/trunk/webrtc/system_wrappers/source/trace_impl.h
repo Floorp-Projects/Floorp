@@ -27,7 +27,7 @@ namespace webrtc {
 #if defined(WEBRTC_IOS)
 #define WEBRTC_TRACE_MAX_QUEUE  2000
 #else
-#define WEBRTC_TRACE_MAX_QUEUE  8000
+#define WEBRTC_TRACE_MAX_QUEUE  16000
 #endif
 #define WEBRTC_TRACE_NUM_ARRAY 2
 #define WEBRTC_TRACE_MAX_MESSAGE_SIZE 1024
@@ -48,6 +48,7 @@ class TraceImpl : public Trace {
   static TraceImpl* CreateInstance();
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
+  void AllocateTraceBuffers();
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);
   int32_t TraceFileImpl(char file_name[FileWrapper::kMaxFileNameSize]);
 

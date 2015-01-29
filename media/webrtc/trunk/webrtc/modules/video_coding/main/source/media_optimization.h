@@ -45,6 +45,7 @@ class MediaOptimization {
                        uint32_t bit_rate,
                        uint16_t width,
                        uint16_t height,
+                       uint8_t divisor,
                        int num_temporal_layers,
                        int32_t mtu);
 
@@ -80,6 +81,9 @@ class MediaOptimization {
   int32_t UpdateWithEncodedData(int encoded_length,
                                 uint32_t timestamp,
                                 FrameType encoded_frame_type);
+
+  // Informs Media Optimization of CPU Load state
+  void SetCPULoadState(CPULoadState state);
 
   uint32_t InputFrameRate();
   uint32_t SentFrameRate();
@@ -149,6 +153,8 @@ class MediaOptimization {
   VideoCodecType send_codec_type_ GUARDED_BY(crit_sect_);
   uint16_t codec_width_ GUARDED_BY(crit_sect_);
   uint16_t codec_height_ GUARDED_BY(crit_sect_);
+  uint16_t min_width_ GUARDED_BY(crit_sect_);
+  uint16_t min_height_  GUARDED_BY(crit_sect_);
   float user_frame_rate_ GUARDED_BY(crit_sect_);
   scoped_ptr<FrameDropper> frame_dropper_ GUARDED_BY(crit_sect_);
   scoped_ptr<VCMLossProtectionLogic> loss_prot_logic_ GUARDED_BY(crit_sect_);
@@ -174,6 +180,7 @@ class MediaOptimization {
   bool video_suspended_ GUARDED_BY(crit_sect_);
   int suspension_threshold_bps_ GUARDED_BY(crit_sect_);
   int suspension_window_bps_ GUARDED_BY(crit_sect_);
+  CPULoadState loadstate_ GUARDED_BY(crit_sect_);
 };
 }  // namespace media_optimization
 }  // namespace webrtc

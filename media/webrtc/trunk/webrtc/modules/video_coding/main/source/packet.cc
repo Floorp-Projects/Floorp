@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/source/packet.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 #include <assert.h>
 
@@ -113,9 +114,9 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       return;
     case kRtpVideoH264:
       isFirstPacket = videoHeader.isFirstPacket;
-      if (isFirstPacket)
+      if (isFirstPacket) {
         insertStartCode = true;
-
+      }
       if (videoHeader.codecHeader.H264.single_nalu) {
         completeNALU = kNaluComplete;
       } else if (isFirstPacket) {

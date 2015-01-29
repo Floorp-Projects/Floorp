@@ -40,6 +40,7 @@ void CopyCodecSpecific(const CodecSpecificInfo* info, RTPVideoHeader** rtp) {
     }
     case kVideoCodecH264:
       (*rtp)->codec = kRtpVideoH264;
+      (*rtp)->simulcastIdx = info->codecSpecific.H264.simulcastIdx;
       return;
     case kVideoCodecGeneric:
       (*rtp)->codec = kRtpVideoGeneric;
@@ -181,6 +182,7 @@ VCMGenericEncoder::InternalSource() const
 VCMEncodedFrameCallback::VCMEncodedFrameCallback(
     EncodedImageCallback* post_encode_callback):
 _sendCallback(),
+_critSect(NULL),
 _mediaOpt(NULL),
 _payloadType(0),
 _internalSource(false),
@@ -201,6 +203,12 @@ VCMEncodedFrameCallback::~VCMEncodedFrameCallback()
 #endif
 }
 
+void
+VCMEncodedFrameCallback::SetCritSect(CriticalSectionWrapper* critSect)
+{
+    _critSect = critSect;
+}
+
 int32_t
 VCMEncodedFrameCallback::SetTransportCallback(VCMPacketizationCallback* transport)
 {
@@ -214,6 +222,9 @@ VCMEncodedFrameCallback::Encoded(
     const CodecSpecificInfo* codecSpecificInfo,
     const RTPFragmentationHeader* fragmentationHeader)
 {
+    assert(_critSect);
+    CriticalSectionScoped cs(_critSect);
+
     post_encode_callback_->Encoded(encodedImage);
 
     FrameType frameType = VCMEncodedFrame::ConvertFrameType(encodedImage._frameType);

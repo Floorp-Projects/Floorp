@@ -15,6 +15,7 @@
 // TODO(xians): Break out attach and detach current thread to JVM to
 // separate functions.
 
+#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 
 #include <android/log.h>
@@ -41,34 +42,24 @@ int32_t AudioRecordJni::SetAndroidAudioDeviceObjects(void* javaVM, void* env,
   globalJvm = reinterpret_cast<JavaVM*>(javaVM);
   globalJNIEnv = reinterpret_cast<JNIEnv*>(env);
   // Get java class type (note path to class packet).
-  jclass javaScClassLocal = globalJNIEnv->FindClass(
-      "org/webrtc/voiceengine/WebRtcAudioRecord");
-  if (!javaScClassLocal) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not find java class", __FUNCTION__);
-    return -1; // exception thrown
-  }
-
-  // Create a global reference to the class (to tell JNI that we are
-  // referencing it after this function has returned).
-  globalScClass = reinterpret_cast<jclass> (
-      globalJNIEnv->NewGlobalRef(javaScClassLocal));
   if (!globalScClass) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not create reference", __FUNCTION__);
-    return -1;
+    globalScClass = jsjni_GetGlobalClassRef(
+        "org/webrtc/voiceengine/WebRtcAudioRecord");
+    if (!globalScClass) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+                   "%s: could not find java class", __FUNCTION__);
+      return -1; // exception thrown
+    }
   }
 
-  globalContext = globalJNIEnv->NewGlobalRef(
-      reinterpret_cast<jobject>(context));
   if (!globalContext) {
-    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-                 "%s: could not create context reference", __FUNCTION__);
-    return -1;
+    globalContext = jsjni_GetGlobalContextRef();
+    if (!globalContext) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+                   "%s: could not create context reference", __FUNCTION__);
+      return -1;
+    }
   }
-
-  // Delete local class ref, we only use the global ref
-  globalJNIEnv->DeleteLocalRef(javaScClassLocal);
 
   return 0;
 }
@@ -77,14 +68,13 @@ void AudioRecordJni::ClearAndroidAudioDeviceObjects() {
   WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
                "%s: env is NULL, assuming deinit", __FUNCTION__);
 
-  globalJvm = NULL;;
+  globalJvm = NULL;
   if (!globalJNIEnv) {
     WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, -1,
                  "%s: saved env already NULL", __FUNCTION__);
     return;
   }
 
-  globalJNIEnv->DeleteGlobalRef(globalContext);
   globalContext = reinterpret_cast<jobject>(NULL);
 
   globalJNIEnv->DeleteGlobalRef(globalScClass);
@@ -122,7 +112,7 @@ AudioRecordJni::AudioRecordJni(
       _recError(0),
       _delayRecording(0),
       _AGC(false),
-      _samplingFreqIn((N_REC_SAMPLES_PER_SEC/1000)),
+      _samplingFreqIn((N_REC_SAMPLES_PER_SEC)),
       _recAudioSource(1) { // 1 is AudioSource.MIC which is our default
   memset(_recBuffer, 0, sizeof(_recBuffer));
 }
@@ -419,17 +409,11 @@ int32_t AudioRecordJni::InitRecording() {
   jmethodID initRecordingID = env->GetMethodID(_javaScClass, "InitRecording",
                                                "(II)I");
 
-  int samplingFreq = 44100;
-  if (_samplingFreqIn != 44)
-  {
-    samplingFreq = _samplingFreqIn * 1000;
-  }
-
   int retVal = -1;
 
   // call java sc object method
   jint res = env->CallIntMethod(_javaScObj, initRecordingID, _recAudioSource,
-                                samplingFreq);
+                                _samplingFreqIn);
   if (res < 0)
   {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -438,7 +422,7 @@ int32_t AudioRecordJni::InitRecording() {
   else
   {
     // Set the audio device buffer sampling rate
-    _ptrAudioBuffer->SetRecordingSampleRate(_samplingFreqIn * 1000);
+    _ptrAudioBuffer->SetRecordingSampleRate(_samplingFreqIn);
 
     // the init rec function returns a fixed delay
     _delayRecording = res / _samplingFreqIn;
@@ -784,14 +768,7 @@ int32_t AudioRecordJni::SetRecordingSampleRate(const uint32_t samplesPerSec) {
   }
 
   // set the recording sample rate to use
-  if (samplesPerSec == 44100)
-  {
-    _samplingFreqIn = 44;
-  }
-  else
-  {
-    _samplingFreqIn = samplesPerSec / 1000;
-  }
+  _samplingFreqIn = samplesPerSec;
 
   // Update the AudioDeviceBuffer
   _ptrAudioBuffer->SetRecordingSampleRate(samplesPerSec);
@@ -991,11 +968,7 @@ int32_t AudioRecordJni::InitSampleRate() {
   if (_samplingFreqIn > 0)
   {
     // read the configured sampling rate
-    samplingFreq = 44100;
-    if (_samplingFreqIn != 44)
-    {
-      samplingFreq = _samplingFreqIn * 1000;
-    }
+    samplingFreq = _samplingFreqIn;
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                  "  Trying configured recording sampling rate %d",
                  samplingFreq);
@@ -1036,14 +1009,7 @@ int32_t AudioRecordJni::InitSampleRate() {
   }
 
   // set the recording sample rate to use
-  if (samplingFreq == 44100)
-  {
-    _samplingFreqIn = 44;
-  }
-  else
-  {
-    _samplingFreqIn = samplingFreq / 1000;
-  }
+  _samplingFreqIn = samplingFreq;
 
   WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                "Recording sample rate set to (%d)", _samplingFreqIn);
@@ -1135,7 +1101,7 @@ bool AudioRecordJni::RecThreadProcess()
 
   if (_recording)
   {
-    uint32_t samplesToRec = _samplingFreqIn * 10;
+    uint32_t samplesToRec = _samplingFreqIn / 100;
 
     // Call java sc object method to record data to direct buffer
     // Will block until data has been recorded (see java sc class),
@@ -1152,7 +1118,7 @@ bool AudioRecordJni::RecThreadProcess()
     }
     else
     {
-      _delayRecording = recDelayInSamples / _samplingFreqIn;
+      _delayRecording = (recDelayInSamples * 1000) / _samplingFreqIn;
     }
     Lock();
 

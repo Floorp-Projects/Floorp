@@ -11,6 +11,9 @@
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
 
 #include <math.h>
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
@@ -57,6 +60,10 @@ void VCMQmMethod::UpdateContent(const VideoContentMetrics*  contentMetrics) {
 }
 
 void VCMQmMethod::ComputeMotionNFD() {
+#if defined(WEBRTC_GONK)
+  motion_.value = (kHighMotionNfd + kLowMotionNfd)/2;
+  motion_.level = kDefault;
+#else
   if (content_metrics_) {
     motion_.value = content_metrics_->motion_magnitude;
   }
@@ -68,9 +75,15 @@ void VCMQmMethod::ComputeMotionNFD() {
   } else {
     motion_.level = kDefault;
   }
+#endif
 }
 
 void VCMQmMethod::ComputeSpatial() {
+#if defined(WEBRTC_GONK)
+  float scale2 = image_type_ > kVGA ? kScaleTexture : 1.0;
+  spatial_.value = (kHighTexture + kLowTexture)*scale2/2;
+  spatial_.level = kDefault;
+#else
   float spatial_err = 0.0;
   float spatial_err_h = 0.0;
   float spatial_err_v = 0.0;
@@ -92,6 +105,7 @@ void VCMQmMethod::ComputeSpatial() {
   } else {
     spatial_.level = kDefault;
   }
+#endif
 }
 
 ImageType VCMQmMethod::GetImageType(uint16_t width,
@@ -210,6 +224,12 @@ int VCMQmResolution::Initialize(float bitrate,
                                 uint16_t width,
                                 uint16_t height,
                                 int num_layers) {
+  WEBRTC_TRACE(webrtc::kTraceDebug,
+               webrtc::kTraceVideoCoding,
+               -1,
+               "qm_select.cc:initialize: %f %f %u %u",
+               bitrate, user_framerate, width, height);
+
   if (user_framerate == 0.0f || width == 0 || height == 0) {
     return VCM_PARAMETER_ERROR;
   }
@@ -308,6 +328,8 @@ void VCMQmResolution::UpdateRates(float target_bitrate,
 //    Initialize() state are kept in |down_action_history_|.
 // 4) The total amount of down-sampling (spatial and/or temporal) from the
 //    Initialize() state (native resolution) is limited by various factors.
+// 5) If the codec can't handle arbitrary input resolutions, limit to %16==0
+//    i.e. for h.264
 int VCMQmResolution::SelectResolution(VCMResolutionScale** qm) {
   if (!init_) {
     return VCM_UNINITIALIZED;
@@ -415,6 +437,11 @@ void VCMQmResolution::ComputeEncoderState() {
       ((avg_rate_mismatch_ > kMaxRateMisMatch) &&
           (avg_rate_mismatch_sgn_ < -kRateOverShoot))) {
     encoder_state_ = kStressedEncoding;
+    WEBRTC_TRACE(webrtc::kTraceDebug,
+                 webrtc::kTraceVideoCoding,
+                 -1,
+                 "ComputeEncoderState==Stressed");
+    return;
   }
   // Assign easy state if:
   // 1) rate mis-match is high, and
@@ -422,10 +449,25 @@ void VCMQmResolution::ComputeEncoderState() {
   if ((avg_rate_mismatch_ > kMaxRateMisMatch) &&
       (avg_rate_mismatch_sgn_ > kRateUnderShoot)) {
     encoder_state_ = kEasyEncoding;
+    WEBRTC_TRACE(webrtc::kTraceDebug,
+                 webrtc::kTraceVideoCoding,
+                 -1,
+                 "ComputeEncoderState==Easy");
+    return;
   }
+
+  WEBRTC_TRACE(webrtc::kTraceDebug,
+               webrtc::kTraceVideoCoding,
+               -1,
+               "ComputeEncoderState==Stable");
 }
 
 bool VCMQmResolution::GoingUpResolution() {
+  // We do not go up if we're already near max CPU load
+  if (loadstate_ == kLoadStressed) {
+    return false;
+  }
+
   // For going up, we check for undoing the previous down-sampling action.
 
   float fac_width = kFactorWidthSpatial[down_action_history_[0].spatial];
@@ -503,11 +545,20 @@ bool VCMQmResolution::GoingDownResolution() {
   float estimated_transition_rate_down =
       GetTransitionRate(1.0f, 1.0f, 1.0f, 1.0f);
   float max_rate = kFrameRateFac[framerate_level_] * kMaxRateQm[image_type_];
+
+  WEBRTC_TRACE(webrtc::kTraceDebug,
+               webrtc::kTraceVideoCoding,
+               -1,
+               "state %d avg_target_rate %f estimated_trans_rate_down %f max %f",
+               loadstate_, avg_target_rate_, estimated_transition_rate_down, max_rate
+               );
+
   // Resolution reduction if:
   // (1) target rate is below transition rate, or
   // (2) encoder is in stressed state and target rate below a max threshold.
-  if ((avg_target_rate_ < estimated_transition_rate_down ) ||
-      (encoder_state_ == kStressedEncoding && avg_target_rate_ < max_rate)) {
+  if (loadstate_ == kLoadStressed
+      || (avg_target_rate_ < estimated_transition_rate_down)
+      || (encoder_state_ == kStressedEncoding && avg_target_rate_ < max_rate)) {
     // Get the down-sampling action: based on content class, and how low
     // average target rate is relative to transition rate.
     uint8_t spatial_fact =
@@ -554,6 +605,22 @@ bool VCMQmResolution::GoingDownResolution() {
     // Only allow for one action (spatial or temporal) at a given time.
     assert(action_.temporal == kNoChangeTemporal ||
            action_.spatial == kNoChangeSpatial);
+
+    // CPU stressed but we did not get an action yet, likely because our
+    // bitrate is too high relative to the target.
+    if (loadstate_ == kLoadStressed
+        && action_.temporal == kNoChangeTemporal
+        && action_.spatial == kNoChangeSpatial) {
+      // If FPS is high, allow dropping it to 20 fps.
+      if (avg_incoming_framerate_ >= 40) {
+        action_.temporal = kOneHalfTemporal;
+      } else if (avg_incoming_framerate_ >= 24) {
+        action_.temporal = kTwoThirdsTemporal;
+      } else {
+        // Drop resolution in all other cases.
+        action_.spatial = kOneHalfSpatialUniform;
+      }
+    }
 
     // Adjust cases not captured in tables, mainly based on frame rate, and
     // also check for odd frame sizes.
@@ -636,6 +703,8 @@ void VCMQmResolution::UpdateDownsamplingState(UpDownAction up_down) {
 void  VCMQmResolution::UpdateCodecResolution() {
   if (action_.spatial != kNoChangeSpatial) {
     qm_->change_resolution_spatial = true;
+    int old_width = qm_->codec_width;
+    int old_height = qm_->codec_height;
     qm_->codec_width = static_cast<uint16_t>(width_ /
                                              qm_->spatial_width_fact + 0.5f);
     qm_->codec_height = static_cast<uint16_t>(height_ /
@@ -647,9 +716,25 @@ void  VCMQmResolution::UpdateCodecResolution() {
     // been selected.
     assert(qm_->codec_width % 2 == 0);
     assert(qm_->codec_height % 2 == 0);
+    WEBRTC_TRACE(webrtc::kTraceDebug,
+                 webrtc::kTraceVideoCoding,
+                 -1,
+                 "UpdateCodecResolution: [%d %d] %d %d => %d %d",
+                 native_width_, native_height_,
+                 old_width, old_height,
+                 qm_->codec_width, qm_->codec_height
+                 );
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "WebRTC",
+                        "UpdateCodecResolution: [%d %d] %d %d => %d %d",
+                        native_width_, native_height_,
+                        old_width, old_height,
+                        qm_->codec_width, qm_->codec_height);
+#endif
   }
   if (action_.temporal != kNoChangeTemporal) {
     qm_->change_resolution_temporal = true;
+    float old_rate = qm_->frame_rate;
     // Update the frame rate based on the average incoming frame rate.
     qm_->frame_rate = avg_incoming_framerate_ / qm_->temporal_fact + 0.5f;
     if (down_action_history_[0].temporal == 0) {
@@ -659,6 +744,22 @@ void  VCMQmResolution::UpdateCodecResolution() {
       // be smaller than |native_frame rate_|.
       qm_->frame_rate = native_frame_rate_;
     }
+    WEBRTC_TRACE(webrtc::kTraceDebug,
+                 webrtc::kTraceVideoCoding,
+                 -1,
+                 "UpdateCodecResolution: [%f] %f fps => %f fps",
+                 native_frame_rate_,
+                 old_rate,
+                 qm_->frame_rate
+                 );
+#ifdef ANDROID
+    __android_log_print(ANDROID_LOG_INFO, "WebRTC",
+                        "UpdateCodecResolution: [%f] %f fps => %f fps",
+                        native_frame_rate_,
+                        old_rate,
+                        qm_->frame_rate);
+#endif
+
   }
 }
 
@@ -903,6 +1004,10 @@ void VCMQmResolution::SelectSpatialDirectionMode(float transition_rate) {
   }
 }
 
+void VCMQmResolution::SetCPULoadState(CPULoadState state) {
+  loadstate_ = state;
+}
+
 // ROBUSTNESS CLASS
 
 VCMQmRobustness::VCMQmRobustness() {
@@ -956,4 +1061,5 @@ bool VCMQmRobustness::SetUepProtection(uint8_t code_rate_delta,
   // Default.
   return false;
 }
+
 }  // namespace

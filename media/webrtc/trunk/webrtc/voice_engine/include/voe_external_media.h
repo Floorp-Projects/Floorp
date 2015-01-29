@@ -64,7 +64,7 @@ public:
     // Pulls an audio frame from the specified |channel| for external mixing.
     // If the |desired_sample_rate_hz| is 0, the signal will be returned with
     // its native frequency, otherwise it will be resampled. Valid frequencies
-    // are 16, 22, 32, 44 or 48 kHz.
+    // are 16000, 22050, 32000, 44100 or 48000 kHz.
     virtual int GetAudioFrame(int channel, int desired_sample_rate_hz,
                               AudioFrame* frame) = 0;
 
@@ -77,6 +77,15 @@ public:
     virtual int ExternalRecordingInsertData(
         const int16_t speechData10ms[], int lengthSamples,
         int samplingFreqHz, int current_delay_ms) { return -1; }
+
+    // This function inserts audio written to the OS audio drivers for use
+    // as the far-end signal for AEC processing.  The length of the block
+    // must be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or
+    // 48000 kHz sampling rates respectively).
+    virtual int ExternalPlayoutData(
+        int16_t speechData10ms[], int samplingFreqHz, int num_channels,
+        int current_delay_ms, int& lengthSamples) = 0;
+
     virtual int ExternalPlayoutGetData(
         int16_t speechData10ms[], int samplingFreqHz,
         int current_delay_ms, int& lengthSamples) { return -1; }

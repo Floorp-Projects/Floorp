@@ -40,6 +40,7 @@ class ScreenCapturerWinGdi : public ScreenCapturer {
 
  private:
   typedef HRESULT (WINAPI * DwmEnableCompositionFunc)(UINT);
+  typedef HRESULT (WINAPI * DwmIsCompositionEnabledFunc)(BOOL*);
 
   // Make sure that the device contexts match the screen configuration.
   void PrepareCaptureResources();
@@ -77,6 +78,9 @@ class ScreenCapturerWinGdi : public ScreenCapturer {
 
   HMODULE dwmapi_library_;
   DwmEnableCompositionFunc composition_func_;
+  DwmIsCompositionEnabledFunc composition_enabled_func_;
+
+  bool disable_composition_;
 
   // Used to suppress duplicate logging of SetThreadExecutionState errors.
   bool set_thread_execution_state_failed_;

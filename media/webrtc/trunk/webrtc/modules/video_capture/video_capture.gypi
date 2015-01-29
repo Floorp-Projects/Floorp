@@ -20,6 +20,9 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+      ],
       'sources': [
         'device_info_impl.cc',
         'device_info_impl.h',
@@ -53,7 +56,7 @@
         'video_capture_module',
       ],
       'conditions': [
-        ['OS=="linux"', {
+        ['include_v4l2_video_capture==1', {
           'sources': [
             'linux/device_info_linux.cc',
             'linux/device_info_linux.h',
@@ -89,6 +92,12 @@
         # is not a problem since the internal video capture implementation
         # should not be used in chrome - issue 3831.
         ['OS=="win" and build_with_chromium==0', {
+          'conditions': [
+            ['build_with_mozilla==0', {
+              'dependencies': [
+                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
+              ],
+            }],
           'dependencies': [
             '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
           ],
@@ -106,6 +115,10 @@
             'windows/video_capture_factory_windows.cc',
             'windows/video_capture_mf.cc',
             'windows/video_capture_mf.h',
+            'windows/BasePin.cpp',
+            'windows/BaseFilter.cpp',
+            'windows/BaseInputPin.cpp',
+            'windows/MediaType.cpp',
           ],
           'link_settings': {
             'libraries': [
@@ -114,10 +127,6 @@
           },
         }],  # win
         ['OS=="android"', {
-          'dependencies': [
-            '<(DEPTH)/third_party/icu/icu.gyp:icuuc',
-            '<(DEPTH)/third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
-          ],
           'sources': [
             'android/device_info_android.cc',
             'android/device_info_android.h',
@@ -173,7 +182,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS=="mac" or OS=="linux"', {
+            ['OS!="win" and OS!="android"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -181,11 +190,15 @@
                 '-lpthread -lm',
               ],
             }],
+            ['include_v4l2_video_capture==1', {
+              'libraries': [
+                '-lXext',
+                '-lX11',
+              ],
+            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
-                '-lXext',
-                '-lX11',
               ],
             }],
             ['OS=="android"', {

@@ -125,7 +125,12 @@
         }, {
           'sources!': [ 'data_log.cc', ],
         },],
-        ['OS=="android"', {
+        ['enable_lazy_trace_alloc==1', {
+          'defines': [
+            'WEBRTC_LAZY_TRACE_ALLOC',
+          ],
+        }],
+        ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'defines': [
             'WEBRTC_THREAD_RR',
             # TODO(leozwang): Investigate CLOCK_REALTIME and CLOCK_MONOTONIC
@@ -135,6 +140,11 @@
             'WEBRTC_CLOCK_TYPE_REALTIME',
            ],
           'dependencies': [ 'cpu_features_android', ],
+          'sources!': [
+            # Android doesn't have these in <=2.2
+            'rw_lock_posix.cc',
+            'rw_lock_posix.h',
+          ],
           'link_settings': {
             'libraries': [
               '-llog',
@@ -224,7 +234,7 @@
     },
   ], # targets
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'targets': [
         {
           'target_name': 'cpu_features_android',
@@ -233,18 +243,26 @@
             'cpu_features_android.c',
           ],
           'conditions': [
-            ['android_webview_build == 1', {
-              'libraries': [
-                'cpufeatures.a'
+            ['include_ndk_cpu_features==1', {
+              'conditions': [
+                ['android_webview_build == 1', {
+                  'libraries': [
+                    'cpufeatures.a'
+                  ],
+                }, {
+                  'dependencies': [
+                    '<(android_ndk_root)/android_tools_ndk.gyp:cpu_features',
+                  ],
+                }],
               ],
-            }, {
-              'dependencies': [
-                '<(android_ndk_root)/android_tools_ndk.gyp:cpu_features',
-              ],
-            }],
-          ],
-        },
-      ],
+         }, {
+           'sources': [
+             'droid-cpu-features.c',
+             'droid-cpu-features.h',
+           ],
+         }],
+        ],
+      }],
     }],
   ], # conditions
 }

@@ -24,6 +24,12 @@
           'dependencies': [
             '<(DEPTH)/third_party/libvpx/libvpx.gyp:libvpx',
           ],
+        },{
+          'link_settings': {
+            'libraries': [
+              '$(LIBVPX_OBJ)/libvpx.a',
+            ],
+          },
         }],
       ],
       'sources': [
