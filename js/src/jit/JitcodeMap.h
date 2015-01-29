@@ -10,6 +10,7 @@
 #include "ds/SplayTree.h"
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
+#include "jit/OptimizationTracking.h"
 #include "jit/shared/CodeGenerator-shared.h"
 
 namespace js {
@@ -106,6 +107,23 @@ class JitcodeGlobalEntry
         // of the memory space.
         JitcodeIonTable *regionTable_;
 
+        // optsRegionTable_ points to the table within the compact
+        // optimizations map indexing all regions that have tracked
+        // optimization attempts. optsTypesTable_ is the tracked typed info
+        // associated with the attempts vectors; it is the same length as the
+        // attempts table. optsAttemptsTable_ is the table indexing those
+        // attempts vectors.
+        //
+        // All pointers point into the same block of memory; the beginning of
+        // the block is optimizationRegionTable_->payloadStart().
+        const IonTrackedOptimizationsRegionTable *optsRegionTable_;
+        const IonTrackedOptimizationsTypesTable *optsTypesTable_;
+        const IonTrackedOptimizationsAttemptsTable *optsAttemptsTable_;
+
+        // The types table above records type sets, which have been gathered
+        // into one vector here.
+        types::TypeSet::TypeList *optsAllTypes_;
+
         struct ScriptNamePair {
             JSScript *script;
             char *str;
@@ -136,6 +154,21 @@ class JitcodeGlobalEntry
             BaseEntry::init(Ion, nativeStartAddr, nativeEndAddr);
             regionTable_ = regionTable;
             scriptList_ = scriptList;
+            optsRegionTable_ = nullptr;
+            optsTypesTable_ = nullptr;
+            optsAllTypes_ = nullptr;
+            optsAttemptsTable_ = nullptr;
+        }
+
+        void initTrackedOptimizations(const IonTrackedOptimizationsRegionTable *regionTable,
+                                      const IonTrackedOptimizationsTypesTable *typesTable,
+                                      const IonTrackedOptimizationsAttemptsTable *attemptsTable,
+                                      types::TypeSet::TypeList *allTypes)
+        {
+            optsRegionTable_ = regionTable;
+            optsTypesTable_ = typesTable;
+            optsAttemptsTable_ = attemptsTable;
+            optsAllTypes_ = allTypes;
         }
 
         SizedScriptList *sizedScriptList() const {
@@ -176,6 +209,12 @@ class JitcodeGlobalEntry
 
         uint32_t callStackAtAddr(JSRuntime *rt, void *ptr, const char **results,
                                  uint32_t maxResults) const;
+
+        bool hasTrackedOptimizations() const {
+            return !!optsRegionTable_;
+        }
+
+        bool optimizationAttemptsAtAddr(void *ptr, mozilla::Maybe<AttemptsVector> &attempts);
     };
 
     struct BaselineEntry : public BaseEntry

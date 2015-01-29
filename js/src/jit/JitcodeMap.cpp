@@ -109,6 +109,19 @@ JitcodeGlobalEntry::IonEntry::destroy()
     // Free the script list
     js_free(scriptList_);
     scriptList_ = nullptr;
+
+    // The optimizations region and attempts table is in the same block of
+    // memory, the beginning of which is pointed to by
+    // optimizationsRegionTable_->payloadStart().
+    if (optsRegionTable_) {
+        MOZ_ASSERT(optsAttemptsTable_);
+        js_free((void *) optsRegionTable_->payloadStart());
+    }
+    optsRegionTable_ = nullptr;
+    optsTypesTable_ = nullptr;
+    optsAttemptsTable_ = nullptr;
+    js_delete(optsAllTypes_);
+    optsAllTypes_ = nullptr;
 }
 
 bool
