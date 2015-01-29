@@ -50,6 +50,7 @@ PluginWidgetParent::~PluginWidgetParent()
   // with the last out-of-process page, make sure and cleanup any left
   // over widgets if we have them.
   if (mWidget) {
+    mWidget->UnregisterPluginWindowForRemoteUpdates();
     mWidget->Destroy();
     mWidget = nullptr;
   }
@@ -110,6 +111,12 @@ PluginWidgetParent::RecvCreate()
   mWidget->Show(false);
   mWidget->Enable(false);
 
+  // This is a special call we make to nsBaseWidget to register this
+  // window as a remote plugin window which is expected to receive
+  // visibility updates from the compositor, which ships this data
+  // over with corresponding layer updates.
+  mWidget->RegisterPluginWindowForRemoteUpdates();
+
   // Force the initial position down into content. If we miss an
   // initial position update this insures the widget doesn't overlap
   // chrome.
@@ -131,6 +138,7 @@ PluginWidgetParent::RecvDestroy()
 {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvDestroy()\n");
+  mWidget->UnregisterPluginWindowForRemoteUpdates();
   mWidget->Destroy();
   mWidget = nullptr;
   return true;
