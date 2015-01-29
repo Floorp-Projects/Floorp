@@ -332,7 +332,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     MOZ_ASSERT(other->mVideoEngine);
     mVideoEngine = other->mVideoEngine;
   } else {
-
 #ifdef MOZ_WIDGET_ANDROID
     // get the JVM
     JavaVM *jvm = jsjni_GetVM();
