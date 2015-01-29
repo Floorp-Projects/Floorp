@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
@@ -34,6 +35,8 @@ import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.animation.LayoutTransition;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -50,6 +53,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -147,7 +151,14 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
   }
 
   protected void hideRemoteError() {
-    remoteErrorTextView.setVisibility(View.INVISIBLE);
+    if (AppConstants.Versions.feature11Plus) {
+      // On v11+, we remove the view entirely, which triggers a smooth
+      // animation.
+      remoteErrorTextView.setVisibility(View.GONE);
+    } else {
+      // On earlier versions, we just hide the error.
+      remoteErrorTextView.setVisibility(View.INVISIBLE);
+    }
   }
 
   protected void showRemoteError(Exception e, int defaultResourceId) {
@@ -426,6 +437,16 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+  }
+
+  @SuppressLint("NewApi")
+  protected void maybeEnableAnimations() {
+    // On v11+, we animate the error display being added and removed. This saves
+    // us some vertical space when we start the activity.
+    if (AppConstants.Versions.feature11Plus) {
+      final ViewGroup container = (ViewGroup) remoteErrorTextView.getParent();
+      container.setLayoutTransition(new LayoutTransition());
+    }
   }
 
   protected void updateFromIntentExtras() {

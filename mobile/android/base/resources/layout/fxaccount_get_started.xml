@@ -9,8 +9,11 @@
     android:layout_height="fill_parent"
     android:fillViewport="true" >
 
+    <!-- In order to animate the icon from the bottom of the screen,
+         the icon needs to pass over the padding. -->
     <LinearLayout
         android:id="@+id/intro_view"
+        android:clipToPadding="false"
         style="@style/FxAccountMiddle" >
 
         <LinearLayout style="@style/FxAccountSpacer" />
@@ -24,8 +27,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="30dp"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
             android:contentDescription="@string/fxaccount_empty_contentDescription"
             android:src="@drawable/fxaccount_intro" >
         </ImageView>
@@ -48,6 +51,7 @@
         <LinearLayout style="@style/FxAccountSpacer" />
 
         <ImageView
+            android:id="@+id/icon"
             style="@style/FxAccountIcon"
             android:contentDescription="@string/fxaccount_empty_contentDescription" />
     </LinearLayout>
