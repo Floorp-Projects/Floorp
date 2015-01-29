@@ -305,7 +305,8 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.voicemail.enabled", CheckPermissions="voicemail", UnsafeInPrerendering]
+  [Throws, Pref="dom.voicemail.enabled", CheckPermissions="voicemail",
+   AvailableIn="CertifiedApps", UnsafeInPrerendering]
   readonly attribute MozVoicemail mozVoicemail;
 };
 
