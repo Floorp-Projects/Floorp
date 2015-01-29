@@ -36,7 +36,6 @@ parent:
   async Create();
   async Destroy();
   async SetFocus(bool aRaise);
-  async Invalidate(nsIntRect aRect);
 
   /**
    * Returns NS_NATIVE_PLUGIN_PORT and its variants: a sharable native
@@ -46,14 +45,19 @@ parent:
    */
   sync GetNativePluginPort() returns (uintptr_t value);
 
+child:
   /**
-   * nsIWidget interfaces we'll need until this information flows
-   * over the compositor connection.
+   * Sent from content when a plugin is unloaded via layout. We shut down
+   * some things in response to this so that we don't end up firing async
+   * msgs after the child is destroyed. We know that after this call
+   * the child actor may not be on the other side.
    */
-  async Show(bool aState);
-  async Resize(nsIntRect aRect);
-  async Move(double aX, double aY);
-  async SetWindowClipRegion(nsIntRect[] Regions, bool aIntersectWithExisting);
+  async ParentShutdown();
+
+  /**
+   * Requests a full update of the plugin window.
+   */
+  async UpdateWindow(uintptr_t aChildId);
 };
 
 }

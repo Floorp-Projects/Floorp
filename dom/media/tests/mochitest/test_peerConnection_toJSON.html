@@ -1,14 +1,6 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=872377
--->
 <head>
-  <meta charset="utf-8">
-  <title>Test for Bug 872377 and Bug 928304</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
@@ -29,9 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872377
       if (typeof(rtcSession[key]) == "function") continue;
       is(rtcSession[key], jsonCopy[key], "key " + key + " should match.");
     }
-  
+
     /** Test for Bug 928304 **/
-  
+
     var rtcIceCandidate = new mozRTCIceCandidate({ candidate: "dummy",
                                                    sdpMid: "test",
                                                    sdpMLineIndex: 3 });

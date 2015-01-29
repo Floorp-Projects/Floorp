@@ -21,6 +21,7 @@ public:
     virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                      const uint64_t& aTransactionId,
                                      const TargetConfig& aTargetConfig,
+                                     const InfallibleTArray<PluginWindowData>& aPlugins,
                                      bool aIsFirstPaint,
                                      bool aScheduleComposite,
                                      uint32_t aPaintSequenceNumber,

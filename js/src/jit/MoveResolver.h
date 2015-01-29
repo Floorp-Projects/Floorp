@@ -240,6 +240,8 @@ class MoveResolver
 
     PendingMove *findBlockingMove(const PendingMove *last);
     PendingMove *findCycledMove(PendingMoveIterator *stack, PendingMoveIterator end, const PendingMove *first);
+    bool addOrderedMove(const MoveOp &move);
+
     // Internal reset function. Does not clear lists.
     void resetState();
 

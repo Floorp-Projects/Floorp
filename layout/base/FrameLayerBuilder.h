@@ -312,12 +312,6 @@ public:
                             const nsPoint& aTopLeft);
 
   /**
-   * Gets the frame property descriptor for the given manager, or for the current
-   * widget layer manager if nullptr is passed.
-   */
-  static const FramePropertyDescriptor* GetDescriptorForManager(LayerManager* aManager);
-
-  /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
    * and each subsequent merged frame if no layer is found for the underlying
    * frame.
@@ -652,10 +646,6 @@ public:
   void ComputeGeometryChangeForItem(DisplayItemData* aData);
 
 protected:
-  void RemoveThebesItemsAndOwnerDataForLayerSubtree(Layer* aLayer,
-                                                    bool aRemoveThebesItems,
-                                                    bool aRemoveOwnerData);
-
   static PLDHashOperator ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* aEntry,
                                                     void* aUserArg);
   static PLDHashOperator RestoreDisplayItemData(nsRefPtrHashKey<DisplayItemData>* aEntry,

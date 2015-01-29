@@ -402,6 +402,7 @@ struct JSCompartment
     void fixupNewTypeObjectTable(js::types::NewTypeObjectTable &table);
     void fixupAfterMovingGC();
     void fixupGlobal();
+    void fixupBaseShapeTable();
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);

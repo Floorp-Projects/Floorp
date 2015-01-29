@@ -1,13 +1,7 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="application/javascript" src="templates.js"></script>
-  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -18,62 +12,40 @@
     visible: true
   });
 
-  // Test setDescription without callbacks, which many webrtc examples still do
+// Test setDescription without callbacks, which many webrtc examples still do
 
-  var pc1_local =
-  [[
-    'PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC',
-    function (test) {
-      test.pcLocal.onsignalingstatechange = function() {};
-      test.pcLocal.setLocalDescription(test.originalOffer);
-      test.next();
-    }
-  ]];
+function PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC(test) {
+  test.pcLocal.onsignalingstatechange = function() {};
+  test.pcLocal._pc.setLocalDescription(test.originalOffer);
+}
 
-  var pc2_remote =
-  [[
-    'PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC',
-    function (test) {
-      test.pcRemote.onsignalingstatechange = function() {};
-      test.pcRemote.setRemoteDescription(test._local_offer);
-      test.next();
-    }
-  ]];
+function PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC(test) {
+  test.pcRemote.onsignalingstatechange = function() {};
+  test.pcRemote._pc.setRemoteDescription(test._local_offer);
+}
+function PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC(test) {
+  test.pcRemote.onsignalingstatechange = function() {};
+  test.pcRemote._pc.setLocalDescription(test.originalAnswer);
+}
+function PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC(test) {
+  test.pcLocal.onsignalingstatechange = function() {};
+  test.pcLocal._pc.setRemoteDescription(test._remote_answer);
+}
 
-  var pc2_local =
-  [[
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC',
-    function (test) {
-      test.pcRemote.onsignalingstatechange = function() {};
-      test.pcRemote.setLocalDescription(test.originalAnswer);
-      test.next();
-    }
-  ]];
+runNetworkTest(() => {
+  var replace = (test, name, command) => {
+    test.chain.insertAfter(name, command);
+    test.chain.remove(name);
+  }
 
-  var pc1_remote =
-  [[
-    'PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC',
-    function (test) {
-      test.pcLocal.onsignalingstatechange = function() {};
-      test.pcLocal.setRemoteDescription(test._remote_answer);
-      test.next();
-    }
-  ]];
-
-  runNetworkTest(function () {
-    function replace(test, name, command) {
-      test.chain.insertAfter(name, command);
-      test.chain.remove(name);
-    }
-
-    var test = new PeerConnectionTest();
-    test.setMediaConstraints([{video: true}], [{video: true}]);
-    replace(test, "PC_LOCAL_SET_LOCAL_DESCRIPTION", pc1_local);
-    replace(test, "PC_REMOTE_SET_REMOTE_DESCRIPTION", pc2_remote);
-    replace(test, "PC_REMOTE_SET_LOCAL_DESCRIPTION", pc2_local);
-    replace(test, "PC_LOCAL_SET_REMOTE_DESCRIPTION", pc1_remote);
-    test.run();
-  });
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{video: true}], [{video: true}]);
+  test.chain.replace(test, "PC_LOCAL_SET_LOCAL_DESCRIPTION", PC_LOCAL_SET_LOCAL_DESCRIPTION_SYNC);
+  test.chain.replace(test, "PC_REMOTE_SET_REMOTE_DESCRIPTION", PC_REMOTE_SET_REMOTE_DESCRIPTION_SYNC);
+  test.chain.replace(test, "PC_REMOTE_SET_LOCAL_DESCRIPTION", PC_REMOTE_SET_LOCAL_DESCRIPTION_SYNC);
+  test.chain.replace(test, "PC_LOCAL_SET_REMOTE_DESCRIPTION", PC_LOCAL_SET_REMOTE_DESCRIPTION_SYNC);
+  test.run();
+});
 </script>
 </pre>
 </body>

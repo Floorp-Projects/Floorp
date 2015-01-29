@@ -22,7 +22,6 @@
 #include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
-#include "nsIWidget.h"                  // for nsIWidget
 #include "nsIWidgetListener.h"
 #include "nsTArray.h"                   // for AutoInfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
@@ -297,6 +296,14 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   }
 
   return !mTransactionIncomplete;
+}
+
+void
+ClientLayerManager::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>& aConfigurations)
+{
+  if (mForwarder) {
+    mForwarder->StorePluginWidgetConfigurations(aConfigurations);
+  }
 }
 
 void

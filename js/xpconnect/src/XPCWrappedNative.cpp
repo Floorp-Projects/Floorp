@@ -7,6 +7,7 @@
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
 #include "xpcprivate.h"
+#include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
 #include "jsprf.h"
@@ -2169,6 +2170,21 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
                                                     &param_iid))) {
         ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, i, mCallContext);
         return false;
+    }
+
+    // Don't allow CPOWs to be passed to native code (in case they try to cast
+    // to a concrete type).
+    if (src.isObject() &&
+        jsipc::IsWrappedCPOW(&src.toObject()) &&
+        type_tag == nsXPTType::T_INTERFACE &&
+        !param_iid.Equals(NS_GET_IID(nsISupports)))
+    {
+        // Allow passing CPOWs to XPCWrappedJS.
+        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(mCallee));
+        if (!wrappedJS) {
+            ThrowBadParam(NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE, i, mCallContext);
+            return false;
+        }
     }
 
     nsresult err;

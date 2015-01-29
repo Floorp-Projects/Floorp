@@ -3252,7 +3252,17 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     // We could instead have the compositor send back an equivalent to WillPaintWindow,
     // but it should be close enough to now not to matter.
     if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
-      rootPresContext->ApplyPluginGeometryUpdates();
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      if (XRE_GetProcessType() == GeckoProcessType_Content) {
+        // If this is a remotely managed widget (PluginWidgetProxy in content)
+        // store this information in the compositor, which ships this
+        // over to chrome for application when we paint.
+        rootPresContext->CollectPluginGeometryUpdates(layerManager);
+      } else
+#endif
+      {
+        rootPresContext->ApplyPluginGeometryUpdates();
+      }
     }
 
     // We told the compositor thread not to composite when it received the transaction because

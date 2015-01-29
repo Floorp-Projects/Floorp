@@ -24,20 +24,29 @@ namespace plugins {
 class PluginWidgetParent : public PPluginWidgetParent
 {
 public:
+  /**
+   * Windows helper for firing off an update window request to a plugin.
+   *
+   * aWidget - the eWindowType_plugin_ipc_chrome widget associated with
+   *           this plugin window.
+   */
+  static void SendAsyncUpdate(nsIWidget* aWidget);
+
+public:
   PluginWidgetParent();
   virtual ~PluginWidgetParent();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual bool RecvCreate() MOZ_OVERRIDE;
   virtual bool RecvDestroy() MOZ_OVERRIDE;
-  virtual bool RecvShow(const bool& aState) MOZ_OVERRIDE;
   virtual bool RecvSetFocus(const bool& aRaise) MOZ_OVERRIDE;
-  virtual bool RecvInvalidate(const nsIntRect& aRect) MOZ_OVERRIDE;
   virtual bool RecvGetNativePluginPort(uintptr_t* value) MOZ_OVERRIDE;
-  virtual bool RecvResize(const nsIntRect& aRect) MOZ_OVERRIDE;
-  virtual bool RecvMove(const double& aX, const double& aY) MOZ_OVERRIDE;
-  virtual bool RecvSetWindowClipRegion(InfallibleTArray<nsIntRect>&& Regions,
-				       const bool& aIntersectWithExisting) MOZ_OVERRIDE;
+
+  // Helper for compositor checks on the channel
+  bool ActorDestroyed() { return mActorDestroyed; }
+
+  // Called by PBrowser when it receives a Destroy() call from the child.
+  void ParentDestroy();
 
 private:
   // The tab our connection is associated with.
@@ -45,8 +54,9 @@ private:
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;
 #if defined(MOZ_WIDGET_GTK)
-  UniquePtr<nsPluginNativeWindowGtk> mWrapper;
+  nsAutoPtr<nsPluginNativeWindowGtk> mWrapper;
 #endif
+  bool mActorDestroyed;
 };
 
 } // namespace plugins

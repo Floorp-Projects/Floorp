@@ -1,53 +1,37 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=822109
--->
 <head>
-  <meta charset="utf-8">
-  <title>mozGetUserMedia gum within gum</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia gum within gum</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  <video id="testVideo"></video>
-  <audio id="testAudio"></audio>
-</div>
 <pre id="test">
 <script type="application/javascript">
+  createHTML({title: "getUserMedia within getUserMedia", bug: "822109" });
   /**
    * Run a test that we can complete a playback cycle for a video,
    * then upon completion, do a playback cycle with audio, such that
    * the audio gum call happens within the video gum call.
    */
   runTest(function () {
-    getUserMedia({video: true}, function(videoStream) {
-      var testVideo = document.getElementById('testVideo');
-      var videoStreamPlayback = new LocalMediaStreamPlayback(testVideo,
-        videoStream);
+    getUserMedia({video: true})
+      .then(videoStream => {
+        var testVideo = createMediaElement('video', 'testVideo');
+        var videoPlayback = new LocalMediaStreamPlayback(testVideo,
+                                                         videoStream);
 
-      videoStreamPlayback.playMedia(false, function() {
-        getUserMedia({audio: true}, function(audioStream) {
-          var testAudio = document.getElementById('testAudio');
-          var audioStreamPlayback = new LocalMediaStreamPlayback(testAudio,
-            audioStream);
+        return videoPlayback.playMedia(false)
+          .then(() => getUserMedia({audio: true}))
+          .then(audioStream => {
+            var testAudio = createMediaElement('audio', 'testAudio');
+            var audioPlayback = new LocalMediaStreamPlayback(testAudio,
+                                                             audioStream);
 
-          audioStreamPlayback.playMedia(false, function() {
-            audioStream.stop();
-            videoStream.stop();
-            SimpleTest.finish();
-          }, generateErrorCallback());
-
-        }, generateErrorCallback());
-
-      }, generateErrorCallback());
-
-    }, generateErrorCallback());
+            return audioPlayback.playMedia(false)
+              .then(() => audioStream.stop());
+          })
+          .then(() => videoStream.stop());
+      })
+      .then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>

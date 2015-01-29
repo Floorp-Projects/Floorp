@@ -22,14 +22,13 @@ GLContextProviderNull::CreateWrappingExisting(void*, void*)
 
 already_AddRefed<GLContext>
 GLContextProviderNull::CreateOffscreen(const gfxIntSize&,
-                                       const SurfaceCaps&,
-                                       bool)
+                                       const SurfaceCaps&)
 {
     return nullptr;
 }
 
 already_AddRefed<GLContext>
-GLContextProviderNull::CreateHeadless(bool)
+GLContextProviderNull::CreateHeadless()
 {
     return nullptr;
 }
