@@ -130,6 +130,10 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
         break;
       }
       case kRtpVideoH264: {
+        _codecSpecificInfo.codecSpecific.H264.nalu_header =
+            header->codecHeader.H264.nalu_header;
+        _codecSpecificInfo.codecSpecific.H264.single_nalu =
+            header->codecHeader.H264.single_nalu;
         _codecSpecificInfo.codecType = kVideoCodecH264;
         break;
       }
