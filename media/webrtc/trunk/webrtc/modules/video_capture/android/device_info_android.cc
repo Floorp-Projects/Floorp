@@ -142,10 +142,10 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
     info.name = std::string(camChars);
     jni->ReleaseStringUTFChars(camName, camChars);
 
-    info.min_mfps = jni->GetIntField(capabilityElement, minFpsField);
-    info.max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
     info.orientation = jni->GetIntField(capabilityElement, orientationField);
     info.front_facing = jni->GetBooleanField(capabilityElement, frontFacingField);
+    jint min_mfps = jni->GetIntField(capabilityElement, minFpsField);
+    jint max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
 
     jintArray widthResArray =
         static_cast<jintArray>(jni->GetObjectField(capabilityElement, widthField));
@@ -160,6 +160,8 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
     for (jsize j = 0; j < numRes; ++j) {
         info.resolutions.push_back(std::make_pair(widths[j], heights[j]));
     }
+
+    info.mfpsRanges.push_back(std::make_pair(min_mfps, max_mfps));
     g_camera_info->push_back(info);
 
     jni->ReleaseIntArrayElements(widthResArray, widths, JNI_ABORT);
