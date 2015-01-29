@@ -4046,8 +4046,13 @@ TypeNewScript::maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, b
         // For now, we require all preliminary objects to have only simple
         // lineages of plain data properties.
         Shape *shape = obj->lastProperty();
-        if (shape->inDictionary() || !OnlyHasDataProperties(shape))
+        if (shape->inDictionary() ||
+            !OnlyHasDataProperties(shape) ||
+            shape->getObjectFlags() != 0 ||
+            shape->getObjectMetadata() != nullptr)
+        {
             return true;
+        }
 
         maxSlotSpan = Max<size_t>(maxSlotSpan, obj->slotSpan());
 
