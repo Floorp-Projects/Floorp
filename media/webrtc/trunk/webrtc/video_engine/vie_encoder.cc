@@ -640,7 +640,7 @@ void ViEEncoder::DeliverFrame(int id,
   // XXX effectively disable resolution changes until Bug 1067437 is resolved with new DSP code
   if (qm_callback_ && vcm_.SendCodec() == webrtc::kVideoCodecH264) {
     if (vcm_.RegisterVideoQMCallback(NULL) != 0) {
-      LOG_F(LS_ERROR) << "VCM::RegisterQMCallback(NULL) failure");
+      LOG_F(LS_ERROR) << "VCM::RegisterQMCallback(NULL) failure";
       return;
     }
     delete qm_callback_;

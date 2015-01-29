@@ -5,7 +5,6 @@
 
 // Original author: ekr@rtfm.com
 
-#include "logging.h"
 #include "MediaPipeline.h"
 
 #ifndef USE_FAKE_MEDIA_STREAMS
@@ -45,8 +44,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 
-#include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "logging.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
