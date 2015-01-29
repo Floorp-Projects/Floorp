@@ -4426,9 +4426,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  themselves from roots that keep |thing| from being collected. (We could make\n"
 "  this distinction if it is useful.)\n"
 "\n"
-"  If any references are found by the conservative scanner, the references\n"
-"  object will have a property named \"edge: machine stack\"; the referrers will\n"
-"  be 'null', because they are roots."),
+"  If there are any references on the native stack, the references\n"
+"  object will have properties named like \"edge: exact-value \"; the referrers\n"
+"  will be 'null', because they are roots."),
 
 #endif
     JS_FN_HELP("build", BuildDate, 0, 0,

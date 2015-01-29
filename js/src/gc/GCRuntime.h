@@ -905,8 +905,6 @@ class GCRuntime
     void validateIncrementalMarking();
     void finishMarkingValidation();
 
-    void markConservativeStackRoots(JSTracer *trc, bool useSavedRoots);
-
 #ifdef DEBUG
     void checkForCompartmentMismatches();
 #endif
