@@ -31,7 +31,7 @@ interface nsITagNDEFInfo : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(be09c440-8385-4210-bb7b-7d3333ec3d43)]
+[scriptable, uuid(151b4024-0443-434f-99ca-47ec247508ce)]
 interface nsINfcEventListener : nsISupports
 {
   /**
@@ -83,7 +83,15 @@ interface nsINfcEventListener : nsISupports
    * @param rfState
    *        RF state received from parent process
    */
-  void notifyRFStateChange(in DOMString rfState);
+  void notifyRFStateChanged(in DOMString rfState);
+
+  /**
+   * Callback function used to notify focus changed.
+   *
+   * @param focus
+   *        focus value receveid from parent process.
+   */
+  void notifyFocusChanged(in boolean focus);
 };
 
 [scriptable, uuid(6c913015-9658-46a9-88d9-6ecfda2bd020)]
@@ -111,7 +119,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(b35f4bf5-e1b8-45f4-b5d3-2ae9b6d5871e)]
+[scriptable, uuid(39e1b25b-5063-449e-b9e8-5514cdca9c3a)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -293,4 +301,17 @@ interface nsINfcContentHelper : nsISupports
   void callDefaultFoundHandler(in DOMString sessionToken,
                                in boolean isP2P,
                                in nsIVariant records);
+
+  /**
+   * Notify parent process to call the default taglost or peerlost event
+   * handler.
+   *
+   * @param sessionToken
+   *        Session token of this event.
+   * @param isP2P
+   *        Is this a P2P Session.
+   */
+  void callDefaultLostHandler(in DOMString sessionToken,
+                              in boolean isP2P);
+
 };
