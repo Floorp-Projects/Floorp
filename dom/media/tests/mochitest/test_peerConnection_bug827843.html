@@ -1,12 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="application/javascript" src="templates.js"></script>
-  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -16,56 +11,59 @@
     title: "Ensure that localDescription and remoteDescription are null after close"
   });
 
-  var steps = [
-    [
-      "CHECK_SDP_ON_CLOSED_PC",
-      function (test) {
-        var description;
-        var exception = null;
+var steps = [
+  function CHECK_SDP_ON_CLOSED_PC(test) {
+    var description;
+    var exception = null;
 
-        // handle the event which the close() triggers
-        test.pcLocal.onsignalingstatechange = function (e) {
-          is(e.target.signalingState, "closed",
-             "Received expected onsignalingstatechange event on 'closed'");
-        }
-
-        test.pcLocal.close();
-
-        try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
-        ok(exception, "Attempt to access localDescription of pcLocal after close throws exception");
-        exception = null;
-
-        try { description = test.pcLocal.remoteDescription; } catch (e) { exception = e; }
-        ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
-        exception = null;
-
-        // handle the event which the close() triggers
-        test.pcRemote.onsignalingstatechange = function (e) {
-          is(e.target.signalingState, "closed",
-             "Received expected onsignalingstatechange event on 'closed'");
-        }
-
-        test.pcRemote.close();
-
-        try  { description = test.pcRemote.localDescription; } catch (e) { exception = e; }
-        ok(exception, "Attempt to access localDescription of pcRemote after close throws exception");
-        exception = null;
-
-        try  { description = test.pcRemote.remoteDescription; } catch (e) { exception = e; }
-        ok(exception, "Attempt to access remoteDescription of pcRemote after close throws exception");
-
-        test.next();
+    // handle the event which the close() triggers
+    var localClosed = new Promise(resolve => {
+      test.pcLocal.onsignalingstatechange = e => {
+        is(e.target.signalingState, "closed",
+           "Received expected onsignalingstatechange event on 'closed'");
+        resolve();
       }
-    ]
-  ];
+    });
 
-  var test;
-  runNetworkTest(function () {
-    test = new PeerConnectionTest();
-    test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.chain.append(steps);
-    test.run();
-  });
+    test.pcLocal.close();
+
+    try { description = test.pcLocal.localDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access localDescription of pcLocal after close throws exception");
+    exception = null;
+
+    try { description = test.pcLocal.remoteDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access remoteDescription of pcLocal after close throws exception");
+    exception = null;
+
+    // handle the event which the close() triggers
+    var remoteClosed = new Promise(resolve => {
+      test.pcRemote.onsignalingstatechange = e => {
+        is(e.target.signalingState, "closed",
+           "Received expected onsignalingstatechange event on 'closed'");
+        resolve();
+      }
+    });
+
+    test.pcRemote.close();
+
+    try  { description = test.pcRemote.localDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access localDescription of pcRemote after close throws exception");
+    exception = null;
+
+    try  { description = test.pcRemote.remoteDescription; } catch (e) { exception = e; }
+    ok(exception, "Attempt to access remoteDescription of pcRemote after close throws exception");
+
+    return Promise.all([localClosed, remoteClosed]);
+  }
+];
+
+var test;
+runNetworkTest(() => {
+  test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.append(steps);
+  test.run();
+});
 </script>
 </pre>
 </body>

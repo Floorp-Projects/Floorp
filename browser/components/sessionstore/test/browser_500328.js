@@ -42,9 +42,9 @@ function checkState(tab) {
       // deserialized in the content scope. And in this case, since RegExps are
       // not currently Xrayable (see bug 1014991), trying to pull |obj3| (a RegExp)
       // off of an Xrayed Object won't work. So we need to waive.
-      runInContent(tab.linkedBrowser, function(win, event) {
-        return Cu.waiveXrays(event.state).obj3.toString();
-      }, aEvent).then(function(stateStr) {
+      runInContent(tab.linkedBrowser, function(win, state) {
+        return Cu.waiveXrays(state).obj3.toString();
+      }, aEvent.state).then(function(stateStr) {
         is(stateStr, '/^a$/', "second popstate object.");
 
         // Make sure that the new-elem node is present in the document.  If it's

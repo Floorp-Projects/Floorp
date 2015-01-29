@@ -197,6 +197,24 @@
     let savedElement = null;
     function recvDomTest(message) {
       savedElement = message.objects.element;
+
+      // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
+      // See bug 1072980.
+      if (test_state == "remote") {
+        let walker = Components.classes["@mozilla.org/inspector/deep-tree-walker;1"]
+                               .createInstance(Components.interfaces.inIDeepTreeWalker);
+        const SHOW_ELEMENT = Components.interfaces.nsIDOMNodeFilter.SHOW_ELEMENT;
+        walker.showAnonymousContent = true;
+        walker.showSubDocuments = false;
+
+        try {
+          walker.init(savedElement, SHOW_ELEMENT);
+          ok(false, "expected exception passing CPOW to C++");
+        } catch (e) {
+          is(e.result, Components.results.NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,
+             "got exception when passing CPOW to C++");
+        }
+      }
     }
 
     function recvDomTestAfterGC(message) {

@@ -73,6 +73,7 @@
 #include "nsIPropertyBag2.h"
 #include "GLContext.h"
 #include "gfx2DGlue.h"
+#include "nsPluginNativeWindowGtk.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
@@ -358,6 +359,7 @@ nsWindow::nsWindow()
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
     mShell               = nullptr;
+    mPluginNativeWindow  = nullptr;
     mHasMappedToplevel   = false;
     mIsFullyObscured     = false;
     mRetryPointerGrab    = false;
@@ -1050,6 +1052,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     }
 
     NotifyRollupGeometryChange();
+    ResizePluginSocketWidget();
 
     // send a resize notification if this is a toplevel
     if (mIsTopLevel || mListenForResizes) {
@@ -1122,12 +1125,30 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     }
 
     NotifyRollupGeometryChange();
+    ResizePluginSocketWidget();
 
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized(width, height);
     }
 
     return NS_OK;
+}
+
+void
+nsWindow::ResizePluginSocketWidget()
+{
+    // e10s specific, a eWindowType_plugin_ipc_chrome holds its own
+    // nsPluginNativeWindowGtk wrapper. We are responsible for resizing
+    // the embedded socket widget.
+    if (mWindowType == eWindowType_plugin_ipc_chrome) {
+        nsPluginNativeWindowGtk* wrapper = (nsPluginNativeWindowGtk*)
+          GetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR);
+        if (wrapper) {
+            wrapper->width = mBounds.width;
+            wrapper->height = mBounds.height;
+            wrapper->SetAllocation();
+        }
+    }
 }
 
 NS_IMETHODIMP
@@ -1648,6 +1669,15 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return SetupPluginPort();
         break;
 
+    case NS_NATIVE_PLUGIN_ID:
+        if (!mPluginNativeWindow) {
+          NS_WARNING("no native plugin instance!");
+          return nullptr;
+        }
+        // Return the socket widget XID
+        return (void*)mPluginNativeWindow->window;
+        break;
+
     case NS_NATIVE_DISPLAY:
 #ifdef MOZ_X11
         return GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
@@ -1661,11 +1691,22 @@ nsWindow::GetNativeData(uint32_t aDataType)
 
     case NS_NATIVE_SHAREABLE_WINDOW:
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
-
+    case NS_NATIVE_PLUGIN_OBJECT_PTR:
+        return (void *) mPluginNativeWindow;
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;
     }
+}
+
+void
+nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
+{
+    if (aDataType != NS_NATIVE_PLUGIN_OBJECT_PTR) {
+        NS_WARNING("nsWindow::SetNativeData called with bad value");
+        return;
+    }
+    mPluginNativeWindow = (nsPluginNativeWindowGtk*)aVal;
 }
 
 NS_IMETHODIMP

@@ -1,36 +1,25 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=822109
--->
 <head>
-  <meta charset="utf-8">
-  <title>mozGetUserMedia Stop Audio Stream</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="mediaStreamPlayback.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822109">mozGetUserMedia Stop Audio Stream</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  <audio id="testAudio"></video>
-</div>
 <pre id="test">
 <script type="application/javascript">
+  createHTML({ title: "getUserMedia Stop Audio Stream", bug: "822109" });
   /**
    * Run a test to verify that we can start an audio stream in a media element,
    * call stop() on the stream, and successfully get an ended event fired.
    */
   runTest(function () {
-    getUserMedia({audio: true}, function(stream) {
-      var testAudio = document.getElementById('testAudio');
-      var audioStreamPlayback = new LocalMediaStreamPlayback(testAudio, stream);
+    getUserMedia({audio: true})
+      .then(stream => {
+        var testAudio = createMediaElement('audio', 'testAudio');
+        var streamPlayback = new LocalMediaStreamPlayback(testAudio, stream);
 
-      audioStreamPlayback.playMediaWithStreamStop(false, SimpleTest.finish,
-        generateErrorCallback());
-    }, generateErrorCallback());
+        return streamPlayback.playMediaWithStreamStop(false);
+      })
+      .then(() => SimpleTest.finish(), generateErrorCallback());
   });
 
 </script>

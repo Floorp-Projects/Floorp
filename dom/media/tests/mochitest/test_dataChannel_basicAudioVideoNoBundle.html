@@ -1,13 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="dataChannel.js"></script>
-  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="application/javascript" src="templates.js"></script>
-  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -17,27 +11,22 @@
     title: "Basic data channel audio/video connection without bundle"
   });
 
-  var test;
-  runNetworkTest(function () {
-    test = new PeerConnectionTest();
-    addInitialDataChannel(test.chain);
-    test.chain.insertAfter("PC_LOCAL_CREATE_OFFER",
-      [[
-        'PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER',
-        function (test) {
-          // Just replace a=group:BUNDLE with something that will be ignored.
-          test.originalOffer.sdp = test.originalOffer.sdp.replace(
-            "a=group:BUNDLE",
-            "a=foo:");
-          test.next();
-        }
-      ]]
-      );
-    test.setMediaConstraints([{audio: true}, {video: true}],
-                             [{audio: true}, {video: true}]);
-    test.run();
-  });
-
+var test;
+runNetworkTest(function () {
+  test = new PeerConnectionTest();
+  addInitialDataChannel(test.chain);
+  test.chain.insertAfter("PC_LOCAL_CREATE_OFFER", [
+    function PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER(test) {
+      // Just replace a=group:BUNDLE with something that will be ignored.
+      test.originalOffer.sdp = test.originalOffer.sdp.replace(
+        "a=group:BUNDLE",
+        "a=foo:");
+    }
+  ]);
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  test.run();
+});
 </script>
 </pre>
 </body>

@@ -84,15 +84,7 @@ MoveResolver::resolve()
     InlineList<PendingMove> stack;
 
     // This is a depth-first-search without recursion, which tries to find
-    // cycles in a list of moves. The output is not entirely optimal for cases
-    // where a source has multiple destinations, i.e.:
-    //      [stack0] -> A
-    //      [stack0] -> B
-    //
-    // These moves may not occur next to each other in the list, making it
-    // harder for the emitter to optimize memory to memory traffic. However, we
-    // expect duplicate sources to be rare in greedy allocation, and indicative
-    // of an error in LSRA.
+    // cycles in a list of moves.
     //
     // Algorithm.
     //
@@ -160,7 +152,7 @@ MoveResolver::resolve()
                 // complete and not participating in a cycle. The resulting
                 // move can safely be added to the ordered move list.
                 PendingMove *done = stack.popBack();
-                if (!orderedMoves_.append(*done))
+                if (!addOrderedMove(*done))
                     return false;
                 movePool_.free(done);
             }
@@ -174,4 +166,49 @@ MoveResolver::resolve()
     }
 
     return true;
+}
+
+bool
+MoveResolver::addOrderedMove(const MoveOp &move)
+{
+    // Sometimes the register allocator generates move groups where multiple
+    // moves have the same source. Try to optimize these cases when the source
+    // is in memory and the target of one of the moves is in a register.
+    MOZ_ASSERT(!move.from().aliases(move.to()));
+
+    if (!move.from().isMemory() || move.isCycleBegin() || move.isCycleEnd())
+        return orderedMoves_.append(move);
+
+    // Look for an earlier move with the same source, where no intervening move
+    // touches either the source or destination of the new move.
+    for (int i = orderedMoves_.length() - 1; i >= 0; i--) {
+        const MoveOp &existing = orderedMoves_[i];
+
+        if (existing.from() == move.from() &&
+            !existing.to().aliases(move.to()) &&
+            existing.type() == move.type() &&
+            !existing.isCycleBegin() &&
+            !existing.isCycleEnd())
+        {
+            MoveOp *after = orderedMoves_.begin() + i + 1;
+            if (existing.to().isGeneralReg() || existing.to().isFloatReg()) {
+                MoveOp nmove(existing.to(), move.to(), move.type());
+                return orderedMoves_.insert(after, nmove);
+            } else if (move.to().isGeneralReg() || move.to().isFloatReg()) {
+                MoveOp nmove(move.to(), existing.to(), move.type());
+                orderedMoves_[i] = move;
+                return orderedMoves_.insert(after, nmove);
+            }
+        }
+
+        if (existing.to().aliases(move.from()) ||
+            existing.to().aliases(move.to()) ||
+            existing.from().aliases(move.to()) ||
+            existing.from().aliases(move.from()))
+        {
+            break;
+        }
+    }
+
+    return orderedMoves_.append(move);
 }

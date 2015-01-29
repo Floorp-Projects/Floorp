@@ -53,7 +53,7 @@ HashString(const nsACString& aStr)
  * nsUint32HashKey
  * nsUint64HashKey
  * nsFloatHashKey
- * nsPtrHashkey
+ * nsPtrHashKey
  * nsClearingPtrHashKey
  * nsVoidPtrHashKey
  * nsClearingVoidPtrHashKey

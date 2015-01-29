@@ -37,13 +37,9 @@ MediaStreamPlayback.prototype = {
    * @param {Function} onError the error callback if the media playback
    *                           start and stop cycle fails
    */
-  playMedia : function MSP_playMedia(isResume, onSuccess, onError) {
-    var self = this;
-
-    this.startMedia(isResume, function() {
-      self.stopMediaElement();
-      onSuccess();
-    }, onError);
+  playMedia : function(isResume) {
+    return this.startMedia(isResume)
+      .then(() => this.stopMediaElement());
   },
 
   /**
@@ -51,13 +47,8 @@ MediaStreamPlayback.prototype = {
    *
    * @param {Boolean} isResume specifies if the media element playback
    *                           is being resumed from a previous run
-   * @param {Function} onSuccess the success function call back
-   *                             if media starts correctly
-   * @param {Function} onError the error function call back
-   *                           if media fails to start
    */
-  startMedia : function MSP_startMedia(isResume, onSuccess, onError) {
-    var self = this;
+  startMedia : function(isResume) {
     var canPlayThroughFired = false;
 
     // If we're initially running this media, check that the time is zero
@@ -66,89 +57,84 @@ MediaStreamPlayback.prototype = {
          "Before starting the media element, currentTime = 0");
     }
 
-    /**
-     * Callback fired when the canplaythrough event is fired. We only
-     * run the logic of this function once, as this event can fire
-     * multiple times while a HTMLMediaStream is playing content from
-     * a real-time MediaStream.
-     */
-    var canPlayThroughCallback = function() {
-      // Disable the canplaythrough event listener to prevent multiple calls
-      canPlayThroughFired = true;
-      self.mediaElement.removeEventListener('canplaythrough',
-        canPlayThroughCallback, false);
+    return new Promise((resolve, reject) => {
+      /**
+       * Callback fired when the canplaythrough event is fired. We only
+       * run the logic of this function once, as this event can fire
+       * multiple times while a HTMLMediaStream is playing content from
+       * a real-time MediaStream.
+       */
+      var canPlayThroughCallback = () => {
+        // Disable the canplaythrough event listener to prevent multiple calls
+        canPlayThroughFired = true;
+        this.mediaElement.removeEventListener('canplaythrough',
+                                              canPlayThroughCallback, false);
 
-      is(self.mediaElement.paused, false,
-        "Media element should be playing");
-      is(self.mediaElement.duration, Number.POSITIVE_INFINITY,
-        "Duration should be infinity");
+        is(this.mediaElement.paused, false,
+           "Media element should be playing");
+        is(this.mediaElement.duration, Number.POSITIVE_INFINITY,
+           "Duration should be infinity");
 
-      // When the media element is playing with a real-time stream, we
-      // constantly switch between having data to play vs. queuing up data,
-      // so we can only check that the ready state is one of those two values
-      ok(self.mediaElement.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA ||
-         self.mediaElement.readyState === HTMLMediaElement.HAVE_CURRENT_DATA,
-         "Ready state shall be HAVE_ENOUGH_DATA or HAVE_CURRENT_DATA");
+        // When the media element is playing with a real-time stream, we
+        // constantly switch between having data to play vs. queuing up data,
+        // so we can only check that the ready state is one of those two values
+        ok(this.mediaElement.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA ||
+           this.mediaElement.readyState === HTMLMediaElement.HAVE_CURRENT_DATA,
+           "Ready state shall be HAVE_ENOUGH_DATA or HAVE_CURRENT_DATA");
 
-      is(self.mediaElement.seekable.length, 0,
-         "Seekable length shall be zero");
-      is(self.mediaElement.buffered.length, 0,
-         "Buffered length shall be zero");
+        is(this.mediaElement.seekable.length, 0,
+           "Seekable length shall be zero");
+        is(this.mediaElement.buffered.length, 0,
+           "Buffered length shall be zero");
 
-      is(self.mediaElement.seeking, false,
-         "MediaElement is not seekable with MediaStream");
-      ok(isNaN(self.mediaElement.startOffsetTime),
-         "Start offset time shall not be a number");
-      is(self.mediaElement.loop, false, "Loop shall be false");
-      is(self.mediaElement.preload, "", "Preload should not exist");
-      is(self.mediaElement.src, "", "No src should be defined");
-      is(self.mediaElement.currentSrc, "",
-         "Current src should still be an empty string");
+        is(this.mediaElement.seeking, false,
+           "MediaElement is not seekable with MediaStream");
+        ok(isNaN(this.mediaElement.startOffsetTime),
+           "Start offset time shall not be a number");
+        is(this.mediaElement.loop, false, "Loop shall be false");
+        is(this.mediaElement.preload, "", "Preload should not exist");
+        is(this.mediaElement.src, "", "No src should be defined");
+        is(this.mediaElement.currentSrc, "",
+           "Current src should still be an empty string");
 
-      var timeUpdateFired = false;
+        var timeUpdateCallback = () => {
+          if (this.mediaStream.currentTime > 0 &&
+              this.mediaElement.currentTime > 0) {
+            this.mediaElement.removeEventListener('timeupdate',
+                                                  timeUpdateCallback, false);
+            resolve();
+          }
+        };
 
-      var timeUpdateCallback = function() {
-        if (self.mediaStream.currentTime > 0 &&
-            self.mediaElement.currentTime > 0) {
-          timeUpdateFired = true;
-          self.mediaElement.removeEventListener('timeupdate',
-            timeUpdateCallback, false);
-          onSuccess();
-        }
+        // When timeupdate fires, we validate time has passed and move
+        // onto the success condition
+        this.mediaElement.addEventListener('timeupdate', timeUpdateCallback,
+                                           false);
+
+        // If timeupdate doesn't fire in enough time, we fail the test
+        setTimeout(() => {
+          this.mediaElement.removeEventListener('timeupdate',
+                                                timeUpdateCallback, false);
+          reject(new Error("timeUpdate event never fired"));
+        }, TIMEUPDATE_TIMEOUT_LENGTH);
       };
 
-      // When timeupdate fires, we validate time has passed and move
-      // onto the success condition
-      self.mediaElement.addEventListener('timeupdate', timeUpdateCallback,
-        false);
+      // Adds a listener intended to be fired when playback is available
+      // without further buffering.
+      this.mediaElement.addEventListener('canplaythrough', canPlayThroughCallback,
+                                         false);
 
-      // If timeupdate doesn't fire in enough time, we fail the test
-      setTimeout(function() {
-        if (!timeUpdateFired) {
-          self.mediaElement.removeEventListener('timeupdate',
-            timeUpdateCallback, false);
-          onError("timeUpdate event never fired");
-        }
-      }, TIMEUPDATE_TIMEOUT_LENGTH);
-    };
+      // Hooks up the media stream to the media element and starts playing it
+      this.mediaElement.mozSrcObject = this.mediaStream;
+      this.mediaElement.play();
 
-    // Adds a listener intended to be fired when playback is available
-    // without further buffering.
-    this.mediaElement.addEventListener('canplaythrough', canPlayThroughCallback,
-      false);
-
-    // Hooks up the media stream to the media element and starts playing it
-    this.mediaElement.mozSrcObject = this.mediaStream;
-    this.mediaElement.play();
-
-    // If canplaythrough doesn't fire in enough time, we fail the test
-    setTimeout(function() {
-      if (!canPlayThroughFired) {
-        self.mediaElement.removeEventListener('canplaythrough',
-          canPlayThroughCallback, false);
-        onError("canplaythrough event never fired");
-      }
-    }, CANPLAYTHROUGH_TIMEOUT_LENGTH);
+      // If canplaythrough doesn't fire in enough time, we fail the test
+      setTimeout(() => {
+        this.mediaElement.removeEventListener('canplaythrough',
+                                              canPlayThroughCallback, false);
+        reject(new Error("canplaythrough event never fired"));
+      }, CANPLAYTHROUGH_TIMEOUT_LENGTH);
+    });
   },
 
   /**
@@ -157,7 +143,7 @@ MediaStreamPlayback.prototype = {
    * Precondition: The media stream and element should both be actively
    *               being played.
    */
-  stopMediaElement : function MSP_stopMediaElement() {
+  stopMediaElement : function() {
     this.mediaElement.pause();
     this.mediaElement.mozSrcObject = null;
   }
@@ -186,23 +172,12 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
    *
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
-   * @param {Function} onSuccess the success callback if the media element
-   *                             successfully fires ended on a stop() call
-   *                             on the stream
-   * @param {Function} onError the error callback if the media element fails
-   *                           to fire an ended callback on a stop() call
-   *                           on the stream
    */
   playMediaWithStreamStop : {
-    value: function (isResume, onSuccess, onError) {
-      var self = this;
-
-      this.startMedia(isResume, function() {
-        self.stopStreamInMediaPlayback(function() {
-          self.stopMediaElement();
-          onSuccess();
-        }, onError);
-      }, onError);
+    value: function(isResume) {
+      return this.startMedia(isResume)
+        .then(() => this.stopStreamInMediaPlayback())
+        .then(() => this.stopMediaElement());
     }
   },
 
@@ -213,37 +188,49 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
    * Precondition: The media stream and element should both be actively
    *               being played.
    *
-   * @param {Function} onSuccess the success callback if the media element
-   *                             fires an ended event from stop() being called
-   * @param {Function} onError the error callback if the media element
-   *                           fails to fire an ended event from stop() being
-   *                           called
    */
   stopStreamInMediaPlayback : {
-    value: function (onSuccess, onError) {
-      var endedFired = false;
-      var self = this;
+    value: function () {
+      return new Promise((resolve, reject) => {
+        /**
+         * Callback fired when the ended event fires when stop() is called on the
+         * stream.
+         */
+        var endedCallback = () => {
+          this.mediaElement.removeEventListener('ended', endedCallback, false);
+          ok(true, "ended event successfully fired");
+          resolve();
+        };
 
-      /**
-       * Callback fired when the ended event fires when stop() is called on the
-       * stream.
-       */
-      var endedCallback = function() {
-        endedFired = true;
-        self.mediaElement.removeEventListener('ended', endedCallback, false);
-        ok(true, "ended event successfully fired");
-        onSuccess();
-      };
+        this.mediaElement.addEventListener('ended', endedCallback, false);
+        this.mediaStream.stop();
 
-      this.mediaElement.addEventListener('ended', endedCallback, false);
-      this.mediaStream.stop();
-
-      // If ended doesn't fire in enough time, then we fail the test
-      setTimeout(function() {
-        if (!endedFired) {
-          onError("ended event never fired");
-        }
-      }, ENDED_TIMEOUT_LENGTH);
+        // If ended doesn't fire in enough time, then we fail the test
+        setTimeout(() => {
+          reject(new Error("ended event never fired"));
+        }, ENDED_TIMEOUT_LENGTH);
+      });
     }
   }
 });
+
+// haxx to prevent SimpleTest from failing at window.onload
+function addLoadEvent() {}
+
+var scriptsReady = Promise.all([
+  "/tests/SimpleTest/SimpleTest.js",
+  "head.js"
+].map(script  => {
+  var el = document.createElement("script");
+  el.src = script;
+  document.head.appendChild(el);
+  return new Promise(r => el.onload = r);
+}));
+
+function createHTML(options) {
+  return scriptsReady.then(() => realCreateHTML(options));
+}
+
+function runTest(f) {
+  return scriptsReady.then(() => runTestWhenReady(f));
+}

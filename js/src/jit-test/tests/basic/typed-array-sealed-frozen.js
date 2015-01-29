@@ -72,7 +72,7 @@ for (constructor of constructors) {
 
   // Don't define old properties.
   Object.defineProperty(a, 5, {value: 3});
-  assertEq(a[5], 0);
+  assertEq(a[5], 3);
 
   // Don't define new properties.
   Object.defineProperty(a, 20, {value: 3});
