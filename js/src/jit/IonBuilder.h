@@ -18,6 +18,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "jit/OptimizationTracking.h"
 
 namespace js {
 namespace jit {
@@ -948,10 +949,19 @@ class IonBuilder
     MBasicBlock *current;
     uint32_t loopDepth_;
 
+    Vector<BytecodeSite *, 0, JitAllocPolicy> trackedOptimizationSites_;
+
     BytecodeSite *bytecodeSite(jsbytecode *pc) {
         MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
+        // See comment in maybeTrackedOptimizationSite.
+        if (isOptimizationTrackingEnabled()) {
+            if (BytecodeSite *site = maybeTrackedOptimizationSite(pc))
+                return site;
+        }
         return new(alloc()) BytecodeSite(info().inlineScriptTree(), pc);
     }
+
+    BytecodeSite *maybeTrackedOptimizationSite(jsbytecode *pc);
 
     MDefinition *lexicalCheck_;
 
@@ -1051,6 +1061,16 @@ class IonBuilder
     }
 
     MGetPropertyCache *maybeFallbackFunctionGetter_;
+
+    // Used in tracking outcomes of optimization strategies for devtools.
+    void startTrackingOptimizations();
+    void trackTypeInfo(TrackedTypeSite site, MIRType mirType,
+                       types::TemporaryTypeSet *typeSet);
+    void trackTypeInfo(TrackedTypeSite site, JSObject *obj);
+    void trackOptimizationAttempt(TrackedStrategy strategy);
+    void amendOptimizationAttempt(uint32_t index);
+    void trackOptimizationOutcome(TrackedOutcome outcome);
+    void trackOptimizationSuccess();
 };
 
 class CallInfo

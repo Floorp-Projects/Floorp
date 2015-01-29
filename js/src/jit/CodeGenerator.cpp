@@ -3806,9 +3806,19 @@ CodeGenerator::generateBody()
                     if (!addNativeToBytecodeEntry(iter->mirRaw()->trackedSite()))
                         return false;
                 }
+
+                // Track the start native offset of optimizations.
+                if (iter->mirRaw()->trackedOptimizations()) {
+                    if (!addTrackedOptimizationsEntry(iter->mirRaw()->trackedOptimizations()))
+                        return false;
+                }
             }
 
             iter->accept(this);
+
+            // Track the end native offset of optimizations.
+            if (iter->mirRaw() && iter->mirRaw()->trackedOptimizations())
+                extendTrackedOptimizationsEntry(iter->mirRaw()->trackedOptimizations());
 
 #ifdef DEBUG
             if (!counts)
@@ -7234,6 +7244,28 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
         // nativeToBytecodeScriptList_ is no longer needed.
         js_free(nativeToBytecodeScriptList_);
+
+        // Generate the tracked optimizations map.
+        if (isOptimizationTrackingEnabled()) {
+            // Treat OOMs and failures as if optimization tracking were turned off.
+            types::TypeSet::TypeList *allTypes = cx->new_<types::TypeSet::TypeList>();
+            if (allTypes && generateCompactTrackedOptimizationsMap(cx, code, allTypes)) {
+                const uint8_t *optsRegionTableAddr = trackedOptimizationsMap_ +
+                                                     trackedOptimizationsRegionTableOffset_;
+                const IonTrackedOptimizationsRegionTable *optsRegionTable =
+                    (const IonTrackedOptimizationsRegionTable *) optsRegionTableAddr;
+                const uint8_t *optsTypesTableAddr = trackedOptimizationsMap_ +
+                                                    trackedOptimizationsTypesTableOffset_;
+                const IonTrackedOptimizationsTypesTable *optsTypesTable =
+                    (const IonTrackedOptimizationsTypesTable *) optsTypesTableAddr;
+                const uint8_t *optsAttemptsTableAddr = trackedOptimizationsMap_ +
+                                                       trackedOptimizationsAttemptsTableOffset_;
+                const IonTrackedOptimizationsAttemptsTable *optsAttemptsTable =
+                    (const IonTrackedOptimizationsAttemptsTable *) optsAttemptsTableAddr;
+                entry.initTrackedOptimizations(optsRegionTable, optsTypesTable, optsAttemptsTable,
+                                               allTypes);
+            }
+        }
 
         // Add entry to the global table.
         JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
