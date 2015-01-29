@@ -117,19 +117,54 @@ SandboxBroker::SetSecurityLevelForContentProcess(bool aMoreStrict)
 #endif
 
 bool
-SandboxBroker::SetSecurityLevelForPluginProcess()
+SandboxBroker::SetSecurityLevelForPluginProcess(bool aMoreStrict)
 {
   if (!mPolicy) {
     return false;
   }
 
-  auto result = mPolicy->SetJobLevel(sandbox::JOB_NONE,
+  sandbox::ResultCode result;
+  bool ret;
+  if (aMoreStrict) {
+    result = mPolicy->SetJobLevel(sandbox::JOB_UNPROTECTED,
                                      0 /* ui_exceptions */);
-  bool ret = (sandbox::SBOX_ALL_OK == result);
+    ret = (sandbox::SBOX_ALL_OK == result);
 
-  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                  sandbox::USER_NON_ADMIN);
-  ret = ret && (sandbox::SBOX_ALL_OK == result);
+    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                    sandbox::USER_INTERACTIVE);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+    sandbox::MitigationFlags mitigations =
+      sandbox::MITIGATION_BOTTOM_UP_ASLR |
+      sandbox::MITIGATION_HEAP_TERMINATE |
+      sandbox::MITIGATION_SEHOP |
+      sandbox::MITIGATION_DEP_NO_ATL_THUNK |
+      sandbox::MITIGATION_DEP;
+
+    result = mPolicy->SetProcessMitigations(mitigations);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+    mitigations =
+      sandbox::MITIGATION_STRICT_HANDLE_CHECKS;
+
+    result = mPolicy->SetDelayedProcessMitigations(mitigations);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+    // The following is required for the Java plugin.
+    result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                              sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                              L"\\??\\pipe\\jpi2_pid*_pipe*");
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+  } else {
+    result = mPolicy->SetJobLevel(sandbox::JOB_NONE,
+                                     0 /* ui_exceptions */);
+    ret = (sandbox::SBOX_ALL_OK == result);
+
+    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                    sandbox::USER_NON_ADMIN);
+    ret = ret && (sandbox::SBOX_ALL_OK == result);
+  }
 
   result = mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_MEDIUM);
   ret = ret && (sandbox::SBOX_ALL_OK == result);

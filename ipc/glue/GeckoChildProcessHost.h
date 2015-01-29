@@ -177,9 +177,7 @@ protected:
   // sandboxing in this class at some point. Unfortunately it will take a bit
   // of reorganizing so I don't think this patch is the right time.
   bool mEnableNPAPISandbox;
-#if defined(MOZ_CONTENT_SANDBOX)
-  bool mMoreStrictContentSandbox;
-#endif
+  bool mMoreStrictSandbox;
 #endif
 #endif // XP_WIN
 
