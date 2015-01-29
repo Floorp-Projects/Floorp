@@ -50,7 +50,7 @@ void JNICALL ProvideCameraFrame(
   env->ReleaseByteArrayElements(javaCameraFrame, cameraFrame, JNI_ABORT);
 }
 
-int32_t SetCaptureAndroidVM(JavaVM* javaVM, jobject context) {
+int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
   if (g_java_capturer_class)
     return 0;
 
@@ -58,12 +58,13 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM, jobject context) {
     assert(!g_jvm);
     g_jvm = javaVM;
     AttachThreadScoped ats(g_jvm);
-    g_context = ats.env()->NewGlobalRef(context);
+
+    g_context = jsjni_GetGlobalContextRef();
 
     videocapturemodule::DeviceInfoAndroid::Initialize(ats.env());
 
     g_java_capturer_class =
-    jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
+      jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
     assert(g_java_capturer_class);
 
     JNINativeMethod native_methods[] = {
@@ -82,7 +83,6 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM, jobject context) {
       ats.env()->UnregisterNatives(g_java_capturer_class);
       ats.env()->DeleteGlobalRef(g_java_capturer_class);
       g_java_capturer_class = NULL;
-      ats.env()->DeleteGlobalRef(g_context);
       g_context = NULL;
       videocapturemodule::DeviceInfoAndroid::DeInitialize();
       g_jvm = NULL;
