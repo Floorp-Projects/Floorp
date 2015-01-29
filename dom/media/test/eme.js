@@ -118,6 +118,15 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
   }
 }
 
+function MaybeCrossOriginURI(test, uri)
+{
+  if (test.crossOrigin) {
+    return "http://test2.mochi.test:8888/tests/dom/media/test/allowed.sjs?" + uri;
+  } else {
+    return uri;
+  }
+}
+
 function PlayFragmented(test, elem, token)
 {
   return new Promise(function(resolve, reject) {
@@ -144,7 +153,7 @@ function PlayFragmented(test, elem, token)
         return;
       }
 
-      var fragmentFile = test.fragments[curFragment++];
+      var fragmentFile = MaybeCrossOriginURI(test, test.fragments[curFragment++]);
 
       var req = new XMLHttpRequest();
       req.open("GET", fragmentFile);
@@ -183,7 +192,7 @@ function LoadTest(test, elem, token)
 
   // This file isn't fragmented; set the media source normally.
   return new Promise(function(resolve, reject) {
-    elem.src = test.name;
+    elem.src = MaybeCrossOriginURI(test, test.name);
     resolve();
   });
 }
@@ -191,6 +200,7 @@ function LoadTest(test, elem, token)
 function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
+  v.crossOrigin = test.crossOrigin || false;
 
   // Log events dispatched to make debugging easier...
   [ "canplay", "canplaythrough", "ended", "error", "loadeddata",
