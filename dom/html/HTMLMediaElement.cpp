@@ -515,6 +515,16 @@ HTMLMediaElement::IsVideo()
   return false;
 }
 
+already_AddRefed<MediaSource>
+HTMLMediaElement::GetMozMediaSourceObject() const
+{
+  nsRefPtr<MediaSource> source;
+  if (IsMediaSourceURI(mLoadingSrc)) {
+    NS_GetSourceForMediaSourceURI(mLoadingSrc, getter_AddRefs(source));
+  }
+  return source.forget();
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetMozSrcObject() const
 {
