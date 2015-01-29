@@ -260,6 +260,8 @@ private:
 
   // True if AsyncPanZoom is enabled
   bool mAsyncPanZoomEnabled;
+  // True if AsyncPanZoom is started
+  bool mInAsyncPanZoomGesture;
 
   bool mEndCaretVisible;
   bool mStartCaretVisible;

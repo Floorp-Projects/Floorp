@@ -493,6 +493,20 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_LOCAL_CHECK_MSID',
+    function (test) {
+      test.pcLocal.checkMsids();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_MSID',
+    function (test) {
+      test.pcRemote.checkMsids();
+      test.next();
+    }
+  ],
+  [
     'PC_LOCAL_CHECK_STATS',
     function (test) {
       test.pcLocal.getStats(null, function(stats) {
