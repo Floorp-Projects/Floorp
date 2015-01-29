@@ -29,6 +29,16 @@ interface nsITelemetry : nsISupports
   const unsigned long HISTOGRAM_FLAG = 3;
   const unsigned long HISTOGRAM_COUNT = 4;
 
+  /**
+   * Dataset types:
+   * DATASET_RELEASE_CHANNEL_OPTOUT - the basic dataset that is on-by-default on all channels
+   * DATASET_RELEASE_CHANNEL_OPTIN - the extended dataset that is opt-in on release,
+   *                                 opt-out on pre-release channels.
+   */
+  const unsigned long DATASET_RELEASE_CHANNEL_OPTOUT = 0;
+  const unsigned long DATASET_RELEASE_CHANNEL_OPTIN = 1;
+
+
   /*
    * An object containing a snapshot from all of the currently registered histograms.
    * { name1: {data1}, name2:{data2}...}
@@ -134,8 +144,11 @@ interface nsITelemetry : nsISupports
   /**
    * Returns an array whose values are the names of histograms defined
    * in Histograms.json.
+   *
+   * @param dataset - DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN
    */
-  void registeredHistograms(out uint32_t count,
+  void registeredHistograms(in uint32_t dataset,
+                            out uint32_t count,
                             [retval, array, size_is(count)] out string histograms);
 
   /**
@@ -151,6 +164,7 @@ interface nsITelemetry : nsISupports
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
    *   clear() - Zeros out the histogram's buckets and sum
+   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
    */
   [implicit_jscontext, optional_argc]
   jsval newHistogram(in ACString name, in ACString expiration,
@@ -200,6 +214,7 @@ interface nsITelemetry : nsISupports
    *   snapshot([optional] string key) - If key is provided, returns a snapshot for the histogram with that key or null. If key is not provided, returns the snapshots of all the registered keys in the form {key1: snapshot1, key2: snapshot2, ...}.
    *   keys() - Returns an array with the string keys of the currently registered histograms
    *   clear() - Clears the registered histograms from this.
+   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
    */
   [implicit_jscontext, optional_argc]
   jsval newKeyedHistogram(in ACString name,
@@ -212,8 +227,10 @@ interface nsITelemetry : nsISupports
   /**
    * Returns an array whose values are the names of histograms defined
    * in Histograms.json.
+   *
+   * @param dataset - DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
    */
-  void registeredKeyedHistograms(out uint32_t count,
+  void registeredKeyedHistograms(in uint32_t dataset, out uint32_t count,
                                  [retval, array, size_is(count)] out string histograms);
 
   /**
