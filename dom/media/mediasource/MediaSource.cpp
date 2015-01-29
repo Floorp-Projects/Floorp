@@ -535,6 +535,12 @@ MediaSource::Dump(const char* aPath)
 }
 #endif
 
+void
+MediaSource::GetMozDebugReaderData(nsAString& aString)
+{
+  mDecoder->GetMozDebugReaderData(aString);
+}
+
 nsPIDOMWindow*
 MediaSource::GetParentObject() const
 {

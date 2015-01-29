@@ -114,6 +114,10 @@ public:
   void Dump(const char* aPath);
 #endif
 
+  // Returns a string describing the state of the MediaSource internal
+  // buffered data. Used for debugging purposes.
+  void GetMozDebugReaderData(nsAString& aString);
+
 private:
   // MediaSourceDecoder uses DurationChange to set the duration
   // without hitting the checks in SetDuration.
