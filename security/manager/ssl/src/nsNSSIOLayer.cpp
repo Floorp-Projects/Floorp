@@ -678,7 +678,6 @@ void nsSSLIOLayerHelpers::Cleanup()
 {
   MutexAutoLock lock(mutex);
   mTLSIntoleranceInfo.Clear();
-  mRenegoUnrestrictedSites.Clear();
   mInsecureFallbackSites.Clear();
 }
 
@@ -1662,11 +1661,7 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     NS_ConvertUTF16toUTF8 prefName(someData);
 
-    if (prefName.EqualsLiteral("security.ssl.renego_unrestricted_hosts")) {
-      nsCString unrestrictedHosts;
-      Preferences::GetCString("security.ssl.renego_unrestricted_hosts", &unrestrictedHosts);
-      mOwner->setSiteList(mOwner->mRenegoUnrestrictedSites, unrestrictedHosts);
-    } else if (prefName.EqualsLiteral("security.ssl.treat_unsafe_negotiation_as_broken")) {
+    if (prefName.EqualsLiteral("security.ssl.treat_unsafe_negotiation_as_broken")) {
       bool enabled;
       Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
       mOwner->setTreatUnsafeNegotiationAsBroken(enabled);
@@ -1712,8 +1707,6 @@ nsSSLIOLayerHelpers::~nsSSLIOLayerHelpers()
   // mPrefObserver will only be set if this->Init was called. The GTest tests
   // do not call Init.
   if (mPrefObserver) {
-    Preferences::RemoveObserver(mPrefObserver,
-      "security.ssl.renego_unrestricted_hosts");
     Preferences::RemoveObserver(mPrefObserver,
         "security.ssl.treat_unsafe_negotiation_as_broken");
     Preferences::RemoveObserver(mPrefObserver,
@@ -1772,10 +1765,6 @@ nsSSLIOLayerHelpers::Init()
     nsSSLPlaintextLayerMethods.recv = PlaintextRecv;
   }
 
-  nsCString unrestrictedHosts;
-  Preferences::GetCString("security.ssl.renego_unrestricted_hosts", &unrestrictedHosts);
-  setSiteList(mRenegoUnrestrictedSites, unrestrictedHosts);
-
   bool enabled = false;
   Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
   setTreatUnsafeNegotiationAsBroken(enabled);
@@ -1793,8 +1782,6 @@ nsSSLIOLayerHelpers::Init()
   setInsecureFallbackSites(insecureFallbackHosts);
 
   mPrefObserver = new PrefObserver(this);
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.ssl.renego_unrestricted_hosts");
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.ssl.treat_unsafe_negotiation_as_broken");
   Preferences::AddStrongObserver(mPrefObserver,
@@ -1826,18 +1813,16 @@ void
 nsSSLIOLayerHelpers::clearStoredData()
 {
   MutexAutoLock lock(mutex);
-  mRenegoUnrestrictedSites.Clear();
   mInsecureFallbackSites.Clear();
   mTLSIntoleranceInfo.Clear();
 }
 
 void
-nsSSLIOLayerHelpers::setSiteList(nsTHashtable<nsCStringHashKey>& sites,
-                                 const nsCString& str)
+nsSSLIOLayerHelpers::setInsecureFallbackSites(const nsCString& str)
 {
   MutexAutoLock lock(mutex);
 
-  sites.Clear();
+  mInsecureFallbackSites.Clear();
 
   if (str.IsEmpty()) {
     return;
@@ -1848,16 +1833,9 @@ nsSSLIOLayerHelpers::setSiteList(nsTHashtable<nsCStringHashKey>& sites,
   while (toker.hasMoreTokens()) {
     const nsCSubstring& host = toker.nextToken();
     if (!host.IsEmpty()) {
-      sites.PutEntry(host);
+      mInsecureFallbackSites.PutEntry(host);
     }
   }
-}
-
-bool
-nsSSLIOLayerHelpers::isRenegoUnrestrictedSite(const nsCString& str)
-{
-  MutexAutoLock lock(mutex);
-  return mRenegoUnrestrictedSites.Contains(str);
 }
 
 void
@@ -2647,16 +2625,6 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
 
   if (SECSuccess != SSL_OptionSet(fd, SSL_HANDSHAKE_AS_CLIENT, true)) {
     return NS_ERROR_FAILURE;
-  }
-
-  nsSSLIOLayerHelpers& ioHelpers = infoObject->SharedState().IOLayerHelpers();
-  if (ioHelpers.isRenegoUnrestrictedSite(nsDependentCString(host))) {
-    if (SECSuccess != SSL_OptionSet(fd, SSL_REQUIRE_SAFE_NEGOTIATION, false)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_UNRESTRICTED)) {
-      return NS_ERROR_FAILURE;
-    }
   }
 
   // Set the Peer ID so that SSL proxy connections work properly and to

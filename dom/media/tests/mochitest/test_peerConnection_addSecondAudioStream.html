@@ -1,13 +1,7 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="application/javascript" src="templates.js"></script>
-  <script type="application/javascript" src="turnConfig.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -21,77 +15,40 @@
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     test.chain.append([
-    [
-      'PC_LOCAL_SETUP_NEGOTIATION_CALLBACK',
-      function (test) {
+      function PC_LOCAL_SETUP_NEGOTIATION_CALLBACK(test) {
         test.pcLocal.onNegotiationneededFired = false;
-        test.pcLocal._pc.onnegotiationneeded = function (anEvent) {
+        test.pcLocal._pc.onnegotiationneeded = anEvent => {
           info("pcLocal.onnegotiationneeded fired");
           test.pcLocal.onNegotiationneededFired = true;
         };
-        test.next();
-      }
-    ],
-    [
-      'PC_LOCAL_ADD_SECOND_STREAM',
-      function (test) {
-        test.pcLocal.getAllUserMedia([{audio: true}], function () {
-          test.next();
-        });
-      }
-    ],
-    [
-      'PC_LOCAL_CREATE_NEW_OFFER',
-      function (test) {
+      },
+      function PC_LOCAL_ADD_SECOND_STREAM(test) {
+        return test.pcLocal.getAllUserMedia([{audio: true}]);
+      },
+      function PC_LOCAL_CREATE_NEW_OFFER(test) {
         ok(test.pcLocal.onNegotiationneededFired, "onnegotiationneeded");
-        test.createOffer(test.pcLocal, function (offer) {
+        return test.createOffer(test.pcLocal).then(offer => {
           test._new_offer = offer;
-          test.next();
         });
-      }
-    ],
-    [
-      'PC_LOCAL_SET_NEW_LOCAL_DESCRIPTION',
-      function (test) {
-        test.setLocalDescription(test.pcLocal, test._new_offer, HAVE_LOCAL_OFFER, function () {
-          test.next();
-        });
-      }
-    ],
-    [
-      'PC_REMOTE_SET_NEW_REMOTE_DESCRIPTION',
-      function (test) {
-        test.setRemoteDescription(test.pcRemote, test._new_offer, HAVE_REMOTE_OFFER, function () {
-          test.next();
-        });
-      }
-    ],
-    [
-      'PC_REMOTE_CREATE_NEW_ANSWER',
-      function (test) {
-        test.createAnswer(test.pcRemote, function (answer) {
+      },
+      function PC_LOCAL_SET_NEW_LOCAL_DESCRIPTION(test) {
+        return test.setLocalDescription(test.pcLocal, test._new_offer, HAVE_LOCAL_OFFER);
+      },
+      function PC_REMOTE_SET_NEW_REMOTE_DESCRIPTION(test) {
+        return test.setRemoteDescription(test.pcRemote, test._new_offer, HAVE_REMOTE_OFFER);
+      },
+      function PC_REMOTE_CREATE_NEW_ANSWER(test) {
+        return test.createAnswer(test.pcRemote).then(answer => {
           test._new_answer = answer;
-          test.next();
         });
+      },
+      function PC_REMOTE_SET_NEW_LOCAL_DESCRIPTION(test) {
+        return test.setLocalDescription(test.pcRemote, test._new_answer, STABLE);
+      },
+      function PC_LOCAL_SET_NEW_REMOTE_DESCRIPTION(test) {
+        return test.setRemoteDescription(test.pcLocal, test._new_answer, STABLE);
       }
-    ],
-    [
-      'PC_REMOTE_SET_NEW_LOCAL_DESCRIPTION',
-      function (test) {
-        test.setLocalDescription(test.pcRemote, test._new_answer, STABLE, function () {
-          test.next();
-        });
-      }
-    ],
-    [
-      'PC_LOCAL_SET_NEW_REMOTE_DESCRIPTION',
-      function (test) {
-        test.setRemoteDescription(test.pcLocal, test._new_answer, STABLE, function () {
-          test.next();
-        });
-      }
-    ]
-    // TODO(bug 1093835): figure out how to verify if media flows through the new stream
+      // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     ]);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();

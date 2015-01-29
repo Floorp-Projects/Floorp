@@ -56,6 +56,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "nsRefreshDriver.h"
 #include "Layers.h"
+#include "ClientLayerManager.h"
 #include "nsIDOMEvent.h"
 #include "gfxPrefs.h"
 #include "nsIDOMChromeWindow.h"
@@ -3080,6 +3081,28 @@ nsRootPresContext::ApplyPluginGeometryUpdates()
 #endif  // #ifndef XP_MACOSX
 
   mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+}
+
+void
+nsRootPresContext::CollectPluginGeometryUpdates(LayerManager* aLayerManager)
+{
+#ifndef XP_MACOSX
+  // Collect and pass plugin widget configurations down to the compositor
+  // for transmission to the chrome process.
+  NS_ASSERTION(aLayerManager, "layer manager is invalid!");
+  mozilla::layers::ClientLayerManager* clm = aLayerManager->AsClientLayerManager();
+  PluginGetGeometryUpdateClosure closure;
+  mRegisteredPlugins.EnumerateEntries(PluginGetGeometryUpdate, &closure);
+  if (closure.mConfigurations.IsEmpty()) {
+    mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+    return;
+  }
+  SortConfigurations(&closure.mConfigurations);
+  if (clm) {
+    clm->StorePluginWidgetConfigurations(closure.mConfigurations);
+  }
+  mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+#endif  // #ifndef XP_MACOSX
 }
 
 static void
