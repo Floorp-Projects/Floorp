@@ -300,7 +300,8 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.cellbroadcast.enabled", CheckPermissions="cellbroadcast", UnsafeInPrerendering]
+  [Throws, Pref="dom.cellbroadcast.enabled", CheckPermissions="cellbroadcast",
+   AvailableIn="CertifiedApps", UnsafeInPrerendering]
   readonly attribute MozCellBroadcast mozCellBroadcast;
 };
 
