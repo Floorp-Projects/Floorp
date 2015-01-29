@@ -19,6 +19,7 @@ public:
   PluginWidgetChild();
   virtual ~PluginWidgetChild();
 
+  virtual bool RecvUpdateWindow(const uintptr_t& aChildId) MOZ_OVERRIDE;
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   mozilla::widget::PluginWidgetProxy* mWidget;
