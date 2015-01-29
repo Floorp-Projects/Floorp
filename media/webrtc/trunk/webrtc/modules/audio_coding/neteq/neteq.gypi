@@ -28,41 +28,76 @@
         'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
       }],
       ['include_opus==1', {
-        'codecs': ['webrtc_opus',],
+        'codecs': ['webrtc_opus'],
+        'neteq_dependencies': ['webrtc_opus'],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
+        'conditions': [
+          ['build_with_mozilla==0', {
+            'neteq_dependencies': [
+              '<(DEPTH)/third_party/opus/opus.gyp:opus',
+	    ],
+	  }],
+ 	],
       }],
     ],
     'neteq_dependencies': [
       '<@(codecs)',
-      '<(DEPTH)/third_party/opus/opus.gyp:opus',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
     ],
+
   },
   'targets': [
     {
       'target_name': 'neteq',
       'type': 'static_library',
+      'include_dirs': [
+        '../../../../../../media/opus/celt',
+      ],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '../../../../../../media/opus/celt',
+	],
+      },
       'dependencies': [
         '<@(neteq_dependencies)',
       ],
       'defines': [
         '<@(neteq_defines)',
       ],
-      'include_dirs': [
-        # Need Opus header files for the audio classifier.
-        '<(DEPTH)/third_party/opus/src/celt',
-        '<(DEPTH)/third_party/opus/src/src',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          # Need Opus header files for the audio classifier.
-          '<(DEPTH)/third_party/opus/src/celt',
-          '<(DEPTH)/third_party/opus/src/src',
-        ],
-      },
-      'export_dependent_settings': [
-        '<(DEPTH)/third_party/opus/opus.gyp:opus',
+      'conditions': [
+        ['build_with_mozilla==0', {
+          'include_dirs': [
+            # Need Opus header files for the audio classifier.
+            '<(DEPTH)/third_party/opus/src/celt',
+            '<(DEPTH)/third_party/opus/src/src',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              # Need Opus header files for the audio classifier.
+              '<(DEPTH)/third_party/opus/src/celt',
+              '<(DEPTH)/third_party/opus/src/src',
+            ],
+          },
+          'export_dependent_settings': [
+            '<(DEPTH)/third_party/opus/opus.gyp:opus',
+          ],
+	}],
+        ['build_with_mozilla==1', {
+          'include_dirs': [
+            # Need Opus header files for the audio classifier.
+            '<(DEPTH)/../../../media/opus/celt',
+#            '<(DEPTH)/third_party/opus/src/src',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              '../../../../../../media/opus/celt',
+              # Need Opus header files for the audio classifier.
+              '<(DEPTH)/../../../media/opus/celt',
+#              '<(DEPTH)/third_party/opus/src/src',
+            ],
+          },
+        }],
       ],
       'sources': [
         'interface/audio_decoder.h',

@@ -22,9 +22,11 @@ gyp_vars = {
     # use_system_lib* still seems to be in use in trunk/build
     'use_system_libjpeg': 0,
     'use_system_libvpx': 0,
+    'build_json': 0,
     'build_libjpeg': 0,
-    'build_libvpx': 0,
     'build_libyuv': 0,
+    'build_libvpx': 0,
+    'build_ssl': 0,
     'libyuv_dir': '/media/libyuv',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
