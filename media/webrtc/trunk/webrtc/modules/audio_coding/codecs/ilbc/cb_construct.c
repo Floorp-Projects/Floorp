@@ -60,7 +60,7 @@ void WebRtcIlbcfix_CbConstruct(
     a32 += WEBRTC_SPL_MUL_16_16(*gainPtr++, cbvec1[j]);
     a32 += WEBRTC_SPL_MUL_16_16(*gainPtr, cbvec2[j]);
     gainPtr -= 2;
-    decvector[j] = (int16_t) WEBRTC_SPL_RSHIFT_W32(a32 + 8192, 14);
+    decvector[j] = (int16_t)((a32 + 8192) >> 14);
   }
 
   return;

@@ -42,36 +42,37 @@ public:
                       bool ipV6Enable = false, bool disableGQOS = false);
     virtual ~UdpSocket2Windows();
 
-    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 
-    virtual bool ValidHandle();
+    virtual bool ValidHandle() OVERRIDE;
 
-    virtual bool SetCallback(CallbackObj, IncomingSocketCallback);
+    virtual bool SetCallback(CallbackObj, IncomingSocketCallback) OVERRIDE;
 
-    virtual bool Bind(const SocketAddress& name);
+    virtual bool Bind(const SocketAddress& name) OVERRIDE;
     virtual bool SetSockopt(int32_t level, int32_t optname,
-                            const int8_t* optval, int32_t optlen);
+                            const int8_t* optval, int32_t optlen) OVERRIDE;
 
-    virtual bool StartReceiving(const uint32_t receiveBuffers);
-    virtual inline bool StartReceiving() {return StartReceiving(8);}
-    virtual bool StopReceiving();
+    virtual bool StartReceiving(const uint32_t receiveBuffers) OVERRIDE;
+    virtual inline bool StartReceiving() OVERRIDE {return StartReceiving(8);}
+    virtual bool StopReceiving() OVERRIDE;
 
     virtual int32_t SendTo(const int8_t* buf, int32_t len,
-                           const SocketAddress& to);
+                           const SocketAddress& to) OVERRIDE;
 
-    virtual void CloseBlocking();
+    virtual void CloseBlocking() OVERRIDE;
 
-    virtual SOCKET GetFd() { return _socket;}
+    SOCKET GetFd() { return _socket;}
+
     virtual bool SetQos(int32_t serviceType, int32_t tokenRate,
                         int32_t bucketSize, int32_t peekBandwith,
                         int32_t minPolicedSize, int32_t maxSduSize,
                         const SocketAddress &stRemName,
-                        int32_t overrideDSCP = 0);
+                        int32_t overrideDSCP = 0) OVERRIDE;
 
-    virtual int32_t SetTOS(const int32_t serviceType);
-    virtual int32_t SetPCP(const int32_t pcp);
+    virtual int32_t SetTOS(const int32_t serviceType) OVERRIDE;
+    virtual int32_t SetPCP(const int32_t pcp) OVERRIDE;
 
-    virtual uint32_t ReceiveBuffers(){return _receiveBuffers.Value();}
+    virtual uint32_t ReceiveBuffers() OVERRIDE {return _receiveBuffers.Value();}
 
 protected:
     void IOCompleted(PerIoContext* pIOContext, uint32_t ioSize, uint32_t error);

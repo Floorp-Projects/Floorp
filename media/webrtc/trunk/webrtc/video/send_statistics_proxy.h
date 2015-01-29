@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_types.h"
 #include "webrtc/video_engine/include/vie_codec.h"
 #include "webrtc/video_engine/include/vie_capture.h"
@@ -28,20 +29,10 @@ class SendStatisticsProxy : public RtcpStatisticsCallback,
                             public BitrateStatisticsObserver,
                             public FrameCountObserver,
                             public ViEEncoderObserver,
-                            public ViECaptureObserver {
+                            public ViECaptureObserver,
+                            public SendSideDelayObserver {
  public:
-  class StatsProvider {
-   protected:
-    StatsProvider() {}
-    virtual ~StatsProvider() {}
-
-   public:
-    virtual bool GetSendSideDelay(VideoSendStream::Stats* stats) = 0;
-    virtual std::string GetCName() = 0;
-  };
-
-  SendStatisticsProxy(const VideoSendStream::Config& config,
-                      StatsProvider* stats_provider);
+  explicit SendStatisticsProxy(const VideoSendStream::Config& config);
   virtual ~SendStatisticsProxy();
 
   VideoSendStream::Stats GetStats() const;
@@ -55,7 +46,9 @@ class SendStatisticsProxy : public RtcpStatisticsCallback,
                                    uint32_t ssrc) OVERRIDE;
 
   // From BitrateStatisticsObserver.
-  virtual void Notify(const BitrateStatistics& stats, uint32_t ssrc) OVERRIDE;
+  virtual void Notify(const BitrateStatistics& total_stats,
+                      const BitrateStatistics& retransmit_stats,
+                      uint32_t ssrc) OVERRIDE;
 
   // From FrameCountObserver.
   virtual void FrameCountUpdated(FrameType frame_type,
@@ -67,7 +60,7 @@ class SendStatisticsProxy : public RtcpStatisticsCallback,
                             const unsigned int framerate,
                             const unsigned int bitrate) OVERRIDE;
 
-  virtual void SuspendChange(int video_channel, bool is_suspended) OVERRIDE {}
+  virtual void SuspendChange(int video_channel, bool is_suspended) OVERRIDE;
 
   // From ViECaptureObserver.
   virtual void BrightnessAlarm(const int capture_id,
@@ -79,13 +72,16 @@ class SendStatisticsProxy : public RtcpStatisticsCallback,
   virtual void NoPictureAlarm(const int capture_id,
                               const CaptureAlarm alarm) OVERRIDE {}
 
+  virtual void SendSideDelayUpdated(int avg_delay_ms,
+                                    int max_delay_ms,
+                                    uint32_t ssrc) OVERRIDE;
+
  private:
-  StreamStats* GetStatsEntry(uint32_t ssrc);
+  SsrcStats* GetStatsEntry(uint32_t ssrc) EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   const VideoSendStream::Config config_;
-  scoped_ptr<CriticalSectionWrapper> lock_;
-  VideoSendStream::Stats stats_;
-  StatsProvider* stats_provider_;
+  scoped_ptr<CriticalSectionWrapper> crit_;
+  VideoSendStream::Stats stats_ GUARDED_BY(crit_);
 };
 
 }  // namespace webrtc

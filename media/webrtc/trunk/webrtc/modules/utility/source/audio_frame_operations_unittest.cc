@@ -142,17 +142,13 @@ TEST_F(AudioFrameOperationsTest, SwapStereoChannelsFailsOnMono) {
 
 TEST_F(AudioFrameOperationsTest, MuteSucceeds) {
   SetFrameData(&frame_, 1000, 1000);
-  frame_.energy_ = 1000 * 1000 * frame_.samples_per_channel_ *
-      frame_.num_channels_;
   AudioFrameOperations::Mute(frame_);
 
   AudioFrame muted_frame;
   muted_frame.samples_per_channel_ = 320;
   muted_frame.num_channels_ = 2;
   SetFrameData(&muted_frame, 0, 0);
-  muted_frame.energy_ = 0;
   VerifyFramesAreEqual(muted_frame, frame_);
-  EXPECT_EQ(muted_frame.energy_, frame_.energy_);
 }
 
 // TODO(andrew): should not allow negative scales.

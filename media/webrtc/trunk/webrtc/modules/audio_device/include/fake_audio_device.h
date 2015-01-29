@@ -25,19 +25,11 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
     return 0;
   }
   virtual int32_t Init() { return 0; }
-  virtual int32_t SpeakerIsAvailable(bool* available) {
-    *available = true;
-    return 0;
-  }
   virtual int32_t InitSpeaker() { return 0; }
   virtual int32_t SetPlayoutDevice(uint16_t index) { return 0; }
   virtual int32_t SetPlayoutDevice(WindowsDeviceType device) { return 0; }
   virtual int32_t SetStereoPlayout(bool enable) { return 0; }
   virtual int32_t StopPlayout() { return 0; }
-  virtual int32_t MicrophoneIsAvailable(bool* available) {
-    *available = true;
-    return 0;
-  }
   virtual int32_t InitMicrophone() { return 0; }
   virtual int32_t SetRecordingDevice(uint16_t index) { return 0; }
   virtual int32_t SetRecordingDevice(WindowsDeviceType device) { return 0; }

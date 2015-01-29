@@ -65,14 +65,14 @@ class RTPBuffer : public RTPStream {
 
   ~RTPBuffer();
 
-  void Write(const uint8_t payloadType, const uint32_t timeStamp,
-             const int16_t seqNo, const uint8_t* payloadData,
-             const uint16_t payloadSize, uint32_t frequency);
+  virtual void Write(const uint8_t payloadType, const uint32_t timeStamp,
+                     const int16_t seqNo, const uint8_t* payloadData,
+                     const uint16_t payloadSize, uint32_t frequency) OVERRIDE;
 
-  uint16_t Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
-                uint16_t payloadSize, uint32_t* offset);
+  virtual uint16_t Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
+                        uint16_t payloadSize, uint32_t* offset) OVERRIDE;
 
-  virtual bool EndOfFile() const;
+  virtual bool EndOfFile() const OVERRIDE;
 
  private:
   RWLockWrapper* _queueRWLock;
@@ -97,14 +97,14 @@ class RTPFile : public RTPStream {
 
   void ReadHeader();
 
-  void Write(const uint8_t payloadType, const uint32_t timeStamp,
-             const int16_t seqNo, const uint8_t* payloadData,
-             const uint16_t payloadSize, uint32_t frequency);
+  virtual void Write(const uint8_t payloadType, const uint32_t timeStamp,
+                     const int16_t seqNo, const uint8_t* payloadData,
+                     const uint16_t payloadSize, uint32_t frequency) OVERRIDE;
 
-  uint16_t Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
-                uint16_t payloadSize, uint32_t* offset);
+  virtual uint16_t Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
+                        uint16_t payloadSize, uint32_t* offset) OVERRIDE;
 
-  bool EndOfFile() const {
+  virtual bool EndOfFile() const OVERRIDE {
     return _rtpEOF;
   }
 

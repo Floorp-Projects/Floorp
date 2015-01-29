@@ -1,0 +1,55 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../build/webrtc.gni")
+
+config("common_video_config") {
+  include_dirs = [
+    "interface",
+    "libyuv/include",
+  ]
+}
+
+source_set("common_video") {
+  sources = [
+    "i420_video_frame.cc",
+    "interface/i420_video_frame.h",
+    "interface/native_handle.h",
+    "interface/texture_video_frame.h",
+    "libyuv/include/scaler.h",
+    "libyuv/include/webrtc_libyuv.h",
+    "libyuv/scaler.cc",
+    "libyuv/webrtc_libyuv.cc",
+    "plane.cc",
+    "plane.h",
+    "texture_video_frame.cc"
+  ]
+
+  include_dirs = [ "../modules/interface" ]
+
+  configs += [ "..:common_config" ]
+  public_configs = [
+    "..:common_inherited_config",
+    ":common_video_config",
+  ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [ "../system_wrappers" ]
+
+  if (rtc_build_libyuv) {
+    deps += [ "//third_party/libyuv" ]
+  } else {
+    # Need to add a directory normally exported by libyuv.
+    include_dirs += [ "//third_party/libyuv/include" ]
+  }
+}

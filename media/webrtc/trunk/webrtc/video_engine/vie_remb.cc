@@ -22,8 +22,7 @@
 
 namespace webrtc {
 
-const int kRembSendIntervallMs = 1000;
-const unsigned int kRembMinimumBitrateKbps = 50;
+const int kRembSendIntervalMs = 200;
 
 // % threshold for if we should send a new REMB asap.
 const unsigned int kSendThresholdPercent = 97;
@@ -38,15 +37,12 @@ VieRemb::~VieRemb() {}
 
 void VieRemb::AddReceiveChannel(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
-  WEBRTC_TRACE(kTraceStateInfo, kTraceVideo, -1,
-               "VieRemb::AddReceiveChannel(%p)", rtp_rtcp);
 
   CriticalSectionScoped cs(list_crit_.get());
   if (std::find(receive_modules_.begin(), receive_modules_.end(), rtp_rtcp) !=
       receive_modules_.end())
     return;
 
-  WEBRTC_TRACE(kTraceInfo, kTraceVideo, -1, "AddRembChannel");
   // The module probably doesn't have a remote SSRC yet, so don't add it to the
   // map.
   receive_modules_.push_back(rtp_rtcp);
@@ -54,8 +50,6 @@ void VieRemb::AddReceiveChannel(RtpRtcp* rtp_rtcp) {
 
 void VieRemb::RemoveReceiveChannel(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
-  WEBRTC_TRACE(kTraceStateInfo, kTraceVideo, -1,
-               "VieRemb::RemoveReceiveChannel(%p)", rtp_rtcp);
 
   CriticalSectionScoped cs(list_crit_.get());
   for (RtpModules::iterator it = receive_modules_.begin();
@@ -69,8 +63,6 @@ void VieRemb::RemoveReceiveChannel(RtpRtcp* rtp_rtcp) {
 
 void VieRemb::AddRembSender(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
-  WEBRTC_TRACE(kTraceStateInfo, kTraceVideo, -1,
-               "VieRemb::AddRembSender(%p)", rtp_rtcp);
 
   CriticalSectionScoped cs(list_crit_.get());
 
@@ -83,8 +75,6 @@ void VieRemb::AddRembSender(RtpRtcp* rtp_rtcp) {
 
 void VieRemb::RemoveRembSender(RtpRtcp* rtp_rtcp) {
   assert(rtp_rtcp);
-  WEBRTC_TRACE(kTraceStateInfo, kTraceVideo, -1,
-               "VieRemb::RemoveRembSender(%p)", rtp_rtcp);
 
   CriticalSectionScoped cs(list_crit_.get());
   for (RtpModules::iterator it = rtcp_sender_.begin();
@@ -106,8 +96,6 @@ bool VieRemb::InUse() const {
 
 void VieRemb::OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
                                       unsigned int bitrate) {
-  WEBRTC_TRACE(kTraceStream, kTraceVideo, -1,
-               "VieRemb::UpdateBitrateEstimate(bitrate: %u)", bitrate);
   list_crit_->Enter();
   // If we already have an estimate, check if the new total estimate is below
   // kSendThresholdPercent of the previous estimate.
@@ -117,7 +105,7 @@ void VieRemb::OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
     if (new_remb_bitrate < kSendThresholdPercent * last_send_bitrate_ / 100) {
       // The new bitrate estimate is less than kSendThresholdPercent % of the
       // last report. Send a REMB asap.
-      last_remb_time_ = TickTime::MillisecondTimestamp() - kRembSendIntervallMs;
+      last_remb_time_ = TickTime::MillisecondTimestamp() - kRembSendIntervalMs;
     }
   }
   bitrate_ = bitrate;
@@ -125,7 +113,7 @@ void VieRemb::OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
   // Calculate total receive bitrate estimate.
   int64_t now = TickTime::MillisecondTimestamp();
 
-  if (now - last_remb_time_ < kRembSendIntervallMs) {
+  if (now - last_remb_time_ < kRembSendIntervalMs) {
     list_crit_->Leave();
     return;
   }
@@ -144,11 +132,6 @@ void VieRemb::OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
     sender = receive_modules_.front();
   }
   last_send_bitrate_ = bitrate_;
-
-  // Never send a REMB lower than last_send_bitrate_.
-  if (last_send_bitrate_ < kRembMinimumBitrateKbps) {
-    last_send_bitrate_ = kRembMinimumBitrateKbps;
-  }
 
   list_crit_->Leave();
 

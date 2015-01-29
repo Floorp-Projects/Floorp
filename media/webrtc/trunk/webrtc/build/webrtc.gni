@@ -1,0 +1,116 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("//build/config/arm.gni")
+
+declare_args() {
+  # Assume Chromium build for now, since that's the priority case for getting GN
+  # up and running with WebRTC.
+  build_with_chromium = true
+  build_with_libjingle = true
+
+  # Disable this to avoid building the Opus audio codec.
+  rtc_include_opus = true
+
+  # Used to specify an external Jsoncpp include path when not compiling the
+  # library that comes with WebRTC (i.e. rtc_build_json == 0).
+  rtc_jsoncpp_root = "//third_party/jsoncpp/source/include"
+
+  # Used to specify an external OpenSSL include path when not compiling the
+  # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
+  rtc_ssl_root = ""
+
+  # Adds video support to dependencies shared by voice and video engine.
+  # This should normally be enabled; the intended use is to disable only
+  # when building voice engine exclusively.
+  rtc_enable_video = true
+
+  # Selects fixed-point code where possible.
+  rtc_prefer_fixed_point = false
+
+  # Enable data logging. Produces text files with data logged within engines
+  # which can be easily parsed for offline processing.
+  rtc_enable_data_logging = false
+
+  # Enables the use of protocol buffers for debug recordings.
+  rtc_enable_protobuf = true
+
+  # Disable these to not build components which can be externally provided.
+  rtc_build_json = true
+  rtc_build_libjpeg = true
+  rtc_build_libyuv = true
+  rtc_build_libvpx = true
+  rtc_build_ssl = true
+
+  # Disable by default.
+  rtc_have_dbus_glib = false
+
+  # Enable to use the Mozilla internal settings.
+  build_with_mozilla = false
+
+  # Define MIPS architecture variant, MIPS DSP variant and MIPS FPU
+  # This may be subject to change in accordance to Chromium's MIPS flags
+  mips_arch_variant = "mips32r1"
+  mips_dsp_rev = 0
+  mips_fpu = true
+
+  rtc_enable_android_opensl = true
+
+  # Link-Time Optimizations.
+  # Executes code generation at link-time instead of compile-time.
+  # https://gcc.gnu.org/wiki/LinkTimeOptimization
+  rtc_use_lto = false
+
+  if (build_with_chromium) {
+    # Exclude pulse audio on Chromium since its prerequisites don't require
+    # pulse audio.
+    rtc_include_pulse_audio = false
+
+    # Exclude internal ADM since Chromium uses its own IO handling.
+    rtc_include_internal_audio_device = false
+
+  } else {
+    # Settings for the standalone (not-in-Chromium) build.
+
+    # TODO(andrew): For now, disable the Chrome plugins, which causes a
+    # flood of chromium-style warnings. Investigate enabling them:
+    # http://code.google.com/p/webrtc/issues/detail?id=163
+    clang_use_chrome_plugins = false
+
+    rtc_include_pulse_audio = true
+    rtc_include_internal_audio_device = true
+  }
+
+  if (build_with_libjingle) {
+    rtc_include_tests = false
+    rtc_restrict_logging = true
+  } else {
+    rtc_include_tests = true
+    rtc_restrict_logging = false
+  }
+
+  if (is_ios) {
+    rtc_build_libjpeg = false
+    rtc_enable_protobuf = false
+  }
+
+  if (cpu_arch == "arm") {
+    rtc_prefer_fixed_point = true
+  }
+
+  if (!is_ios && (cpu_arch != "arm" || arm_version >= 7)) {
+    rtc_use_openmax_dl = true
+  } else {
+    rtc_use_openmax_dl = false
+  }
+
+  # WebRTC builds ARM v7 Neon instruction set optimized code for both iOS and
+  # Android, which is why we currently cannot use the variables in
+  # //build/config/arm.gni (since it disables Neon for Android).
+  rtc_build_armv7_neon = (cpu_arch == "arm" && arm_version == 7)
+}

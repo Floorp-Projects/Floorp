@@ -114,8 +114,6 @@ class ReceiveStatisticsImpl : public ReceiveStatistics,
   virtual int32_t Process() OVERRIDE;
   virtual int32_t TimeUntilNextProcess() OVERRIDE;
 
-  void ChangeSsrc(uint32_t from_ssrc, uint32_t to_ssrc);
-
   virtual void RegisterRtcpStatisticsCallback(RtcpStatisticsCallback* callback)
       OVERRIDE;
 

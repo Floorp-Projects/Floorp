@@ -14,28 +14,29 @@
 
 namespace webrtc {
 
-void Deinterleave(const int16_t* interleaved, int samples_per_channel,
-                  int num_channels, int16_t** deinterleaved) {
-  for (int i = 0; i < num_channels; i++) {
-    int16_t* channel = deinterleaved[i];
-    int interleaved_idx = i;
-    for (int j = 0; j < samples_per_channel; j++) {
-      channel[j] = interleaved[interleaved_idx];
-      interleaved_idx += num_channels;
-    }
-  }
+void FloatToS16(const float* src, size_t size, int16_t* dest) {
+  for (size_t i = 0; i < size; ++i)
+    dest[i] = FloatToS16(src[i]);
 }
 
-void Interleave(const int16_t* const* deinterleaved, int samples_per_channel,
-                int num_channels, int16_t* interleaved) {
-  for (int i = 0; i < num_channels; ++i) {
-    const int16_t* channel = deinterleaved[i];
-    int interleaved_idx = i;
-    for (int j = 0; j < samples_per_channel; j++) {
-      interleaved[interleaved_idx] = channel[j];
-      interleaved_idx += num_channels;
-    }
-  }
+void S16ToFloat(const int16_t* src, size_t size, float* dest) {
+  for (size_t i = 0; i < size; ++i)
+    dest[i] = S16ToFloat(src[i]);
+}
+
+void FloatS16ToS16(const float* src, size_t size, int16_t* dest) {
+  for (size_t i = 0; i < size; ++i)
+    dest[i] = FloatS16ToS16(src[i]);
+}
+
+void FloatToFloatS16(const float* src, size_t size, float* dest) {
+  for (size_t i = 0; i < size; ++i)
+    dest[i] = FloatToFloatS16(src[i]);
+}
+
+void FloatS16ToFloat(const float* src, size_t size, float* dest) {
+  for (size_t i = 0; i < size; ++i)
+    dest[i] = FloatS16ToFloat(src[i]);
 }
 
 }  // namespace webrtc

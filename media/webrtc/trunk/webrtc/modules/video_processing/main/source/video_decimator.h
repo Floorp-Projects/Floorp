@@ -25,8 +25,7 @@ class VPMVideoDecimator {
 
   void EnableTemporalDecimation(bool enable);
 
-  int32_t SetMaxFramerate(uint32_t max_frame_rate);
-  int32_t SetTargetframe_rate(uint32_t frame_rate);
+  int32_t SetTargetFramerate(uint32_t frame_rate);
 
   bool DropFrame();
 
@@ -50,7 +49,6 @@ class VPMVideoDecimator {
   uint32_t keep_count_;
   uint32_t target_frame_rate_;
   float incoming_frame_rate_;
-  uint32_t max_frame_rate_;
   int64_t incoming_frame_times_[kFrameCountHistory_size];
   bool enable_temporal_decimation_;
 };

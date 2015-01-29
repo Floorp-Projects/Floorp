@@ -38,8 +38,6 @@ class ACMG729 : public ACMGenericCodec {
 
   int16_t InternalCreateEncoder();
 
-  void InternalDestructEncoderInst(void* ptr_inst);
-
   int16_t EnableDTX();
 
   int16_t DisableDTX();

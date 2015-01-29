@@ -42,7 +42,6 @@ typedef struct {
   short lastDelayDiff;
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
-  RingBuffer* far_pre_buf_s16;  // Time domain far-end pre-buffer in int16_t.
   FILE* bufFile;
   FILE* delayFile;
   FILE* skewFile;

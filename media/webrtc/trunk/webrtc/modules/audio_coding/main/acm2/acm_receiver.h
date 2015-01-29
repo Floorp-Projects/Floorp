@@ -13,6 +13,7 @@
 
 #include <vector>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
@@ -20,7 +21,7 @@
 #include "webrtc/modules/audio_coding/main/acm2/acm_resampler.h"
 #include "webrtc/modules/audio_coding/main/acm2/call_statistics.h"
 #include "webrtc/modules/audio_coding/main/acm2/initial_delay_manager.h"
-#include "webrtc/modules/audio_coding/neteq4/interface/neteq.h"
+#include "webrtc/modules/audio_coding/neteq/interface/neteq.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
@@ -29,7 +30,6 @@ namespace webrtc {
 
 struct CodecInst;
 class CriticalSectionWrapper;
-class RWLockWrapper;
 class NetEq;
 
 namespace acm2 {
@@ -47,9 +47,7 @@ class AcmReceiver {
   };
 
   // Constructor of the class
-  AcmReceiver();
-
-  explicit AcmReceiver(NetEq* neteq);
+  explicit AcmReceiver(const AudioCodingModule::Config& config);
 
   // Destructor of the class.
   ~AcmReceiver();
@@ -211,13 +209,6 @@ class AcmReceiver {
   bool vad_enabled() const { return vad_enabled_; }
 
   //
-  // Get the decode lock used to protect decoder instances while decoding.
-  //
-  // Return value             : Pointer to the decode lock.
-  //
-  RWLockWrapper* DecodeLock() const { return decode_lock_; }
-
-  //
   // Flushes the NetEq packet and speech buffers.
   //
   void FlushBuffers();
@@ -244,9 +235,10 @@ class AcmReceiver {
   void set_id(int id);  // TODO(turajs): can be inline.
 
   //
-  // Returns the RTP timestamp of the last sample delivered by GetAudio().
+  // Gets the RTP timestamp of the last sample delivered by GetAudio().
+  // Returns true if the RTP timestamp is valid, otherwise false.
   //
-  uint32_t PlayoutTimestamp();
+  bool GetPlayoutTimestamp(uint32_t* timestamp);
 
   //
   // Return the index of the codec associated with the last non-CNG/non-DTMF
@@ -316,19 +308,14 @@ class AcmReceiver {
   std::vector<uint16_t> GetNackList(int round_trip_time_ms) const;
 
   //
-  // Returns the background noise mode. This is only for testing and ACM is not
-  // calling this function. Used in acm_receiver_unittest.cc.
-  //
-  NetEqBackgroundNoiseMode BackgroundNoiseModeForTest() const;
-
-  //
   // Get statistics of calls to GetAudio().
   void GetDecodingCallStatistics(AudioDecodingCallStats* stats) const;
 
  private:
   int PayloadType2CodecIndex(uint8_t payload_type) const;
 
-  bool GetSilence(int desired_sample_rate_hz, AudioFrame* frame);
+  bool GetSilence(int desired_sample_rate_hz, AudioFrame* frame)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   int GetNumSyncPacketToInsert(uint16_t received_squence_number);
 
@@ -339,20 +326,24 @@ class AcmReceiver {
 
   void InsertStreamOfSyncPackets(InitialDelayManager::SyncStream* sync_stream);
 
-  int id_;
+  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  int id_;  // TODO(henrik.lundin) Make const.
+  int last_audio_decoder_ GUARDED_BY(crit_sect_);
+  AudioFrame::VADActivity previous_audio_activity_ GUARDED_BY(crit_sect_);
+  int current_sample_rate_hz_ GUARDED_BY(crit_sect_);
+  ACMResampler resampler_ GUARDED_BY(crit_sect_);
+  // Used in GetAudio, declared as member to avoid allocating every 10ms.
+  // TODO(henrik.lundin) Stack-allocate in GetAudio instead?
+  scoped_ptr<int16_t[]> audio_buffer_ GUARDED_BY(crit_sect_);
+  scoped_ptr<int16_t[]> last_audio_buffer_ GUARDED_BY(crit_sect_);
+  scoped_ptr<Nack> nack_ GUARDED_BY(crit_sect_);
+  bool nack_enabled_ GUARDED_BY(crit_sect_);
+  CallStatistics call_stats_ GUARDED_BY(crit_sect_);
   NetEq* neteq_;
   Decoder decoders_[ACMCodecDB::kMaxNumCodecs];
-  int last_audio_decoder_;
-  RWLockWrapper* decode_lock_;
-  CriticalSectionWrapper* neteq_crit_sect_;
   bool vad_enabled_;
-  AudioFrame::VADActivity previous_audio_activity_;
-  int current_sample_rate_hz_;
-  ACMResampler resampler_;
-  // Used in GetAudio, declared as member to avoid allocating every 10ms.
-  int16_t audio_buffer_[AudioFrame::kMaxDataSizeSamples];
-  scoped_ptr<Nack> nack_;
-  bool nack_enabled_;
+  Clock* clock_;  // TODO(henrik.lundin) Make const if possible.
+  bool resampled_last_output_frame_ GUARDED_BY(crit_sect_);
 
   // Indicates if a non-zero initial delay is set, and the receiver is in
   // AV-sync mode.
@@ -366,8 +357,6 @@ class AcmReceiver {
   // initial delay is set.
   scoped_ptr<InitialDelayManager::SyncStream> missing_packets_sync_stream_;
   scoped_ptr<InitialDelayManager::SyncStream> late_packets_sync_stream_;
-
-  CallStatistics call_stats_;
 };
 
 }  // namespace acm2

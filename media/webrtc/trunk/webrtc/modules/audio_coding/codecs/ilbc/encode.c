@@ -16,6 +16,8 @@
 
 ******************************************************************/
 
+#include <string.h>
+
 #include "defines.h"
 #include "lpc_encode.h"
 #include "frame_classify.h"
@@ -352,7 +354,7 @@ void WebRtcIlbcfix_EncodeImpl(
 
       /* update memory */
 
-      WEBRTC_SPL_MEMMOVE_W16(mem, mem+SUBL, (CB_MEML-SUBL));
+      memmove(mem, mem + SUBL, (CB_MEML - SUBL) * sizeof(*mem));
       WEBRTC_SPL_MEMCPY_W16(mem+CB_MEML-SUBL,
                             &decresidual[(iLBCbits_inst->startIdx+1+subframe)*SUBL], SUBL);
 
@@ -457,8 +459,7 @@ void WebRtcIlbcfix_EncodeImpl(
                                 );
 
       /* update memory */
-
-      WEBRTC_SPL_MEMMOVE_W16(mem, mem+SUBL, (CB_MEML-SUBL));
+      memmove(mem, mem + SUBL, (CB_MEML - SUBL) * sizeof(*mem));
       WEBRTC_SPL_MEMCPY_W16(mem+CB_MEML-SUBL,
                             &reverseDecresidual[subframe*SUBL], SUBL);
 

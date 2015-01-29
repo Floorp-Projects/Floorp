@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
 	int i, errtype, VADusage = 0, packetLossPercent = 0;
 	int16_t CodingMode;
-	int32_t bottleneck;
+	int32_t bottleneck = 0;
 	int16_t framesize = 30;           /* ms */
 	int cur_framesmpls, err;
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	double starttime, runtime, length_file;
 
 	int16_t stream_len = 0;
-	int16_t declen, lostFrame = 0, declenTC = 0;
+	int16_t declen = 0, lostFrame = 0, declenTC = 0;
 
 	int16_t shortdata[SWBFRAMESAMPLES_10ms];
 	int16_t vaddata[SWBFRAMESAMPLES_10ms*3];
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     //FILE logFile;
     bool doTransCoding = false;
     int32_t rateTransCoding = 0;
-    uint16_t streamDataTransCoding[600];
+    uint8_t streamDataTransCoding[1200];
     int16_t streamLenTransCoding = 0;
     FILE* transCodingFile = NULL;
     FILE* transcodingBitstream = NULL;
@@ -448,7 +448,7 @@ int main(int argc, char* argv[])
     {
 		printf("  Error iSAC Cannot write file %s.\n", outname);
         cout << flush;
-        getchar();
+        getc(stdin);
 		exit(1);
 	}
 	if(VADusage)
@@ -609,8 +609,8 @@ int main(int argc, char* argv[])
     cout << "\n" << flush;
 
     length_file = 0;
-    int16_t bnIdxTC;
-    int16_t jitterInfoTC;
+    int16_t bnIdxTC = 0;
+    int16_t jitterInfoTC = 0;
     while (endfile == 0)
     {
         /* Call init functions at random, fault test number 7 */
@@ -662,8 +662,8 @@ int main(int argc, char* argv[])
             if(!(testNum == 3 && framecnt == 0))
             {
                 stream_len = WebRtcIsac_Encode(ISAC_main_inst,
-                    shortdata,
-                    (int16_t*)streamdata);
+                                               shortdata,
+                                               (uint8_t*)streamdata);
                 if((payloadSize != 0) && (stream_len > payloadSize))
                 {
                     if(testNum == 0)
@@ -687,8 +687,12 @@ int main(int argc, char* argv[])
                         /************************* Main Transcoding stream *******************************/
                         WebRtcIsac_GetDownLinkBwIndex(ISAC_main_inst, &bnIdxTC, &jitterInfoTC);
                         streamLenTransCoding = WebRtcIsac_GetNewBitStream(
-                            ISAC_main_inst, bnIdxTC, jitterInfoTC, rateTransCoding,
-                            (int16_t*)streamDataTransCoding, false);
+                            ISAC_main_inst,
+                            bnIdxTC,
+                            jitterInfoTC,
+                            rateTransCoding,
+                            streamDataTransCoding,
+                            false);
                         if(streamLenTransCoding < 0)
                         {
                             fprintf(stderr, "Error in trans-coding\n");
@@ -706,7 +710,7 @@ int main(int argc, char* argv[])
                           return -1;
                         }
 
-                        if (fwrite((uint8_t*)streamDataTransCoding,
+                        if (fwrite(streamDataTransCoding,
                                    sizeof(uint8_t),
                                    streamLenTransCoding,
                                    transcodingBitstream) !=
@@ -714,9 +718,9 @@ int main(int argc, char* argv[])
                           return -1;
                         }
 
-                        WebRtcIsac_ReadBwIndex((int16_t*)streamDataTransCoding, &indexStream);
-                        if(indexStream != bnIdxTC)
-                        {
+                        WebRtcIsac_ReadBwIndex(streamDataTransCoding,
+                                               &indexStream);
+                        if (indexStream != bnIdxTC) {
                             fprintf(stderr, "Error in inserting Bandwidth index into transcoding stream.\n");
                             exit(0);
                         }
@@ -780,14 +784,18 @@ int main(int argc, char* argv[])
         // RED.
         if(lostFrame)
         {
-            stream_len = WebRtcIsac_GetRedPayload(ISAC_main_inst,
-                (int16_t*)streamdata);
+            stream_len = WebRtcIsac_GetRedPayload(
+                ISAC_main_inst, reinterpret_cast<uint8_t*>(streamdata));
 
             if(doTransCoding)
             {
                 streamLenTransCoding = WebRtcIsac_GetNewBitStream(
-                    ISAC_main_inst, bnIdxTC, jitterInfoTC, rateTransCoding,
-                    (int16_t*)streamDataTransCoding, true);
+                    ISAC_main_inst,
+                    bnIdxTC,
+                    jitterInfoTC,
+                    rateTransCoding,
+                    streamDataTransCoding,
+                    true);
                 if(streamLenTransCoding < 0)
                 {
                     fprintf(stderr, "Error in RED trans-coding\n");
@@ -848,9 +856,13 @@ int main(int argc, char* argv[])
 
             if(testNum != 9)
             {
-                err = WebRtcIsac_UpdateBwEstimate(ISAC_main_inst, streamdata,
-                    stream_len, BN_data.rtp_number, BN_data.sample_count,
-                    BN_data.arrival_time);
+              err = WebRtcIsac_UpdateBwEstimate(
+                  ISAC_main_inst,
+                  reinterpret_cast<const uint8_t*>(streamdata),
+                  stream_len,
+                  BN_data.rtp_number,
+                  BN_data.sample_count,
+                  BN_data.arrival_time);
 
                 if(err < 0)
                 {
@@ -872,8 +884,10 @@ int main(int argc, char* argv[])
             }
 
             /* Call getFramelen, only used here for function test */
-            err = WebRtcIsac_ReadFrameLen(ISAC_main_inst,
-                (int16_t*)streamdata, &FL);
+            err = WebRtcIsac_ReadFrameLen(
+                ISAC_main_inst,
+                reinterpret_cast<const uint8_t*>(streamdata),
+                &FL);
             if(err < 0)
             {
                 /* exit if returned with error */
@@ -894,26 +908,39 @@ int main(int argc, char* argv[])
 
             if(lostFrame)
             {
-                declen = WebRtcIsac_DecodeRcu(ISAC_main_inst, streamdata,
-                    stream_len, decoded, speechType);
+                declen = WebRtcIsac_DecodeRcu(
+                    ISAC_main_inst,
+                    reinterpret_cast<const uint8_t*>(streamdata),
+                    stream_len,
+                    decoded,
+                    speechType);
 
                 if(doTransCoding)
                 {
-                    declenTC = WebRtcIsac_DecodeRcu(decoderTransCoding,
-                        streamDataTransCoding, streamLenTransCoding,
-                        decodedTC, speechType);
+                    declenTC = WebRtcIsac_DecodeRcu(
+                        decoderTransCoding,
+                        streamDataTransCoding,
+                        streamLenTransCoding,
+                        decodedTC,
+                        speechType);
                 }
             }
             else
             {
-                declen = WebRtcIsac_Decode(ISAC_main_inst, streamdata,
-                    stream_len, decoded, speechType);
-
+                declen = WebRtcIsac_Decode(
+                    ISAC_main_inst,
+                    reinterpret_cast<const uint8_t*>(streamdata),
+                    stream_len,
+                    decoded,
+                    speechType);
                 if(doTransCoding)
                 {
-                    declenTC = WebRtcIsac_Decode(decoderTransCoding,
-                        streamDataTransCoding, streamLenTransCoding,
-                        decodedTC, speechType);
+                    declenTC = WebRtcIsac_Decode(
+                        decoderTransCoding,
+                        streamDataTransCoding,
+                        streamLenTransCoding,
+                        decodedTC,
+                        speechType);
                 }
             }
 

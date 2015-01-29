@@ -16,7 +16,7 @@
 namespace webrtc {
 
 TEST(PushResamplerTest, VerifiesInputParameters) {
-  PushResampler resampler;
+  PushResampler<int16_t> resampler;
   EXPECT_EQ(-1, resampler.InitializeIfNeeded(-1, 16000, 1));
   EXPECT_EQ(-1, resampler.InitializeIfNeeded(16000, -1, 1));
   EXPECT_EQ(-1, resampler.InitializeIfNeeded(16000, 16000, 0));

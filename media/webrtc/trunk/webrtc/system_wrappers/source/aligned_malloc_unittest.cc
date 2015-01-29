@@ -16,14 +16,16 @@
 #include <stdint.h>
 #endif
 
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+namespace webrtc {
 
 // Returns true if |size| and |alignment| are valid combinations.
 bool CorrectUsage(size_t size, size_t alignment) {
-  webrtc::Allocator<char>::scoped_ptr_aligned scoped(
-      webrtc::AlignedMalloc<char>(size, alignment));
+  scoped_ptr<char, AlignedFreeDeleter> scoped(
+      static_cast<char*>(AlignedMalloc(size, alignment)));
   if (scoped.get() == NULL) {
     return false;
   }
@@ -34,16 +36,15 @@ bool CorrectUsage(size_t size, size_t alignment) {
 TEST(AlignedMalloc, GetRightAlign) {
   const size_t size = 100;
   const size_t alignment = 32;
-  const size_t left_missalignment = 8;
-  webrtc::Allocator<char>::scoped_ptr_aligned scoped(
-      webrtc::AlignedMalloc<char>(size, alignment));
+  const size_t left_misalignment = 1;
+  scoped_ptr<char, AlignedFreeDeleter> scoped(
+      static_cast<char*>(AlignedMalloc(size, alignment)));
   EXPECT_TRUE(scoped.get() != NULL);
   const uintptr_t aligned_address = reinterpret_cast<uintptr_t> (scoped.get());
-  const uintptr_t missaligned_address = aligned_address - left_missalignment;
-  const char* missaligned_ptr = reinterpret_cast<const char*>(
-      missaligned_address);
-  const char* realigned_ptr = webrtc::GetRightAlign(
-      missaligned_ptr, alignment);
+  const uintptr_t misaligned_address = aligned_address - left_misalignment;
+  const char* misaligned_ptr = reinterpret_cast<const char*>(
+      misaligned_address);
+  const char* realigned_ptr = GetRightAlign(misaligned_ptr, alignment);
   EXPECT_EQ(scoped.get(), realigned_ptr);
 }
 
@@ -76,3 +77,6 @@ TEST(AlignedMalloc, AlignTo128Bytes) {
   size_t alignment = 128;
   EXPECT_TRUE(CorrectUsage(size, alignment));
 }
+
+}  // namespace webrtc
+

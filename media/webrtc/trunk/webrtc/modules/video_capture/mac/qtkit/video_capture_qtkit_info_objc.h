@@ -25,6 +25,7 @@
 @interface VideoCaptureMacQTKitInfoObjC : NSObject{
     bool                                _OSSupportedInfo;
     NSArray*                            _captureDevicesInfo;
+    NSAutoreleasePool*                    _poolInfo;
     int                                    _captureDeviceCountInfo;
 
 }

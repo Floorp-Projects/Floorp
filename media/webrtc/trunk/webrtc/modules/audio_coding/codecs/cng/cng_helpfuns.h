@@ -10,7 +10,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_CNG_HELPFUNS_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_CNG_HELPFUNS_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 #ifdef __cplusplus
 extern "C" {

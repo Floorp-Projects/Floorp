@@ -202,7 +202,6 @@ int32_t AudioDeviceLinuxPulse::Init()
     _recWarning = 0;
     _recError = 0;
 
-#ifdef USE_X11
     //Get X display handle for typing detection
     _XDisplay = XOpenDisplay(NULL);
     if (!_XDisplay)
@@ -210,7 +209,6 @@ int32_t AudioDeviceLinuxPulse::Init()
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
           "  failed to open X display, typing detection will not work");
     }
-#endif
 
     // RECORDING
     const char* threadName = "webrtc_audio_module_rec_thread";
@@ -325,13 +323,11 @@ int32_t AudioDeviceLinuxPulse::Terminate()
         return -1;
     }
 
-#ifdef USE_X11
     if (_XDisplay)
     {
       XCloseDisplay(_XDisplay);
       _XDisplay = NULL;
     }
-#endif
 
     _initialized = false;
     _outputDeviceIsSpecified = false;
@@ -343,34 +339,6 @@ int32_t AudioDeviceLinuxPulse::Terminate()
 bool AudioDeviceLinuxPulse::Initialized() const
 {
     return (_initialized);
-}
-
-int32_t AudioDeviceLinuxPulse::SpeakerIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.SpeakerIsInitialized();
-
-    // Make an attempt to open up the
-    // output mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitSpeaker() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitSpeaker was successful, we know that a valid speaker exists
-    //
-    available = true;
-
-    // Close the initialized output mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseSpeaker();
-    }
-
-    return 0;
 }
 
 int32_t AudioDeviceLinuxPulse::InitSpeaker()
@@ -414,34 +382,6 @@ int32_t AudioDeviceLinuxPulse::InitSpeaker()
     // clear _deviceIndex
     _deviceIndex = -1;
     _paDeviceIndex = -1;
-
-    return 0;
-}
-
-int32_t AudioDeviceLinuxPulse::MicrophoneIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
-
-    // Make an attempt to open up the
-    // input mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitMicrophone() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitMicrophone was successful, we know that a valid microphone
-    // exists
-    available = true;
-
-    // Close the initialized input mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseMicrophone();
-    }
 
     return 0;
 }
@@ -2473,18 +2413,6 @@ void AudioDeviceLinuxPulse::PaStreamReadCallbackHandler()
         return;
     }
 
-    // PulseAudio record streams can have holes (for reasons not entirely clear
-    // to the PA developers themselves). Since version 4 of PA, these are passed
-    // over to the application (us), signaled by a non-zero sample data size
-    // (the size of the hole) and a NULL sample data.
-    // We handle stream holes as recommended by PulseAudio, i.e. by skipping
-    // it, which is done with a stream drop.
-    if (_tempSampleDataSize && !_tempSampleData) {
-        LATE(pa_stream_drop)(_recStream);
-        _tempSampleDataSize = 0; // reset
-        return;
-    }
-
     // Since we consume the data asynchronously on a different thread, we have
     // to temporarily disable the read callback or else Pulse will call it
     // continuously until we consume the data. We re-enable it below
@@ -3097,7 +3025,7 @@ bool AudioDeviceLinuxPulse::RecThreadProcess()
 }
 
 bool AudioDeviceLinuxPulse::KeyPressed() const{
-#ifdef USE_X11
+
   char szKey[32];
   unsigned int i = 0;
   char state = 0;
@@ -3115,8 +3043,5 @@ bool AudioDeviceLinuxPulse::KeyPressed() const{
   // Save old state
   memcpy((char*)_oldKeyState, (char*)szKey, sizeof(_oldKeyState));
   return (state != 0);
-#else
-  return false;
-#endif
 }
 }

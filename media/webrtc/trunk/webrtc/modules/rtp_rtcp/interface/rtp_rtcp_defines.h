@@ -63,6 +63,11 @@ enum RTPAliveType
     kRtpAlive  = 2
 };
 
+enum ProtectionType {
+  kUnprotectedPacket,
+  kProtectedPacket
+};
+
 enum StorageType {
   kDontStore,
   kDontRetransmit,
@@ -191,6 +196,22 @@ struct RtcpReceiveTimeInfo {
 };
 
 typedef std::list<RTCPReportBlock> ReportBlockList;
+
+struct RtpState {
+  RtpState()
+      : sequence_number(0),
+        start_timestamp(0),
+        timestamp(0),
+        capture_time_ms(-1),
+        last_timestamp_time_ms(-1),
+        media_has_been_sent(false) {}
+  uint16_t sequence_number;
+  uint32_t start_timestamp;
+  uint32_t timestamp;
+  int64_t capture_time_ms;
+  int64_t last_timestamp_time_ms;
+  bool media_has_been_sent;
+};
 
 class RtpData
 {
@@ -339,7 +360,7 @@ class NullRtpData : public RtpData {
   }
 
   virtual bool OnRecoveredPacket(const uint8_t* packet,
-                                 int packet_length) {
+                                 int packet_length) OVERRIDE {
     return true;
   }
 };

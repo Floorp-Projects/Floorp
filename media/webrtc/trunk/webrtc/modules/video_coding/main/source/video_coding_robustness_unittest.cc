@@ -35,7 +35,7 @@ class VCMRobustnessTest : public ::testing::Test {
   virtual void SetUp() {
     clock_.reset(new SimulatedClock(0));
     ASSERT_TRUE(clock_.get() != NULL);
-    vcm_ = VideoCodingModule::Create(0, clock_.get(), &event_factory_);
+    vcm_ = VideoCodingModule::Create(clock_.get(), &event_factory_);
     ASSERT_TRUE(vcm_ != NULL);
     ASSERT_EQ(0, vcm_->InitializeReceiver());
     const size_t kMaxNackListSize = 250;

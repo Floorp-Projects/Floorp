@@ -23,14 +23,13 @@ namespace webrtc {
 class EventWrapper;
 class ThreadWrapper;
 
+const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
+const uint32_t N_PLAY_CHANNELS = 1; // default is mono playout
+
 class AudioTrackJni : public PlayoutDelayProvider {
  public:
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM, void* env,
                                               void* context);
-
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* context);
-
   static void ClearAndroidAudioDeviceObjects();
   explicit AudioTrackJni(const int32_t id);
   virtual ~AudioTrackJni();
@@ -63,7 +62,6 @@ class AudioTrackJni : public PlayoutDelayProvider {
   bool Playing() const { return _playing; }
 
   // Audio mixer initialization
-  int32_t SpeakerIsAvailable(bool& available);  // NOLINT
   int32_t InitSpeaker();
   bool SpeakerIsInitialized() const { return _speakerIsInitialized; }
 
@@ -107,9 +105,6 @@ class AudioTrackJni : public PlayoutDelayProvider {
   // Speaker audio routing
   int32_t SetLoudspeakerStatus(bool enable);
   int32_t GetLoudspeakerStatus(bool& enable) const;  // NOLINT
-
-  static const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-  static const uint32_t N_PLAY_CHANNELS = 1; // default is mono playout
 
  protected:
   virtual int PlayoutDelayMs() { return 0; }

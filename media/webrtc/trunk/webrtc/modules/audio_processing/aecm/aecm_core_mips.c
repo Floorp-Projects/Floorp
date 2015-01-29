@@ -512,8 +512,7 @@ void WebRtcAecm_CalcLinearEnergies_mips(AecmCore_t* aecm,
   echo_est[PART_LEN] = WEBRTC_SPL_MUL_16_U16(aecm->channelStored[PART_LEN],
                                              far_spectrum[PART_LEN]);
   par1 += (uint32_t)(far_spectrum[PART_LEN]);
-  par2 += WEBRTC_SPL_UMUL_16_16(aecm->channelAdapt16[PART_LEN],
-                                far_spectrum[PART_LEN]);
+  par2 += aecm->channelAdapt16[PART_LEN] * far_spectrum[PART_LEN];
   par3 += (uint32_t)echo_est[PART_LEN];
 
   (*far_energy) = par1;
@@ -607,8 +606,7 @@ void WebRtcAecm_ResetAdaptiveChannel_mips(AecmCore_t* aecm) {
     );
   }
 
-  aecm->channelAdapt32[i] = WEBRTC_SPL_LSHIFT_W32(
-                              (int32_t)aecm->channelStored[i], 16);
+  aecm->channelAdapt32[i] = (int32_t)aecm->channelStored[i] << 16;
 }
 #endif  // #if defined(MIPS_DSP_R1_LE)
 
@@ -693,7 +691,7 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
       tmp16no2 = WEBRTC_SPL_ABS_W16(freq_signal[i].imag);
       tmp32no1 = WEBRTC_SPL_MUL_16_16(tmp16no1, tmp16no1);
       tmp32no2 = WEBRTC_SPL_MUL_16_16(tmp16no2, tmp16no2);
-      tmp32no2 = WEBRTC_SPL_ADD_SAT_W32(tmp32no1, tmp32no2);
+      tmp32no2 = WebRtcSpl_AddSatW32(tmp32no1, tmp32no2);
       tmp32no1 = WebRtcSpl_SqrtFloor(tmp32no2);
 
       freq_signal_abs[i] = (uint16_t)tmp32no1;
@@ -836,7 +834,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
   int16_t zeros32, zeros16;
   int16_t zerosDBufNoisy, zerosDBufClean, zerosXBuf;
   int far_q;
-  int16_t resolutionDiff, qDomainDiff;
+  int16_t resolutionDiff, qDomainDiff, dfa_clean_q_domain_diff;
 
   const int kMinPrefBand = 4;
   const int kMaxPrefBand = 24;
@@ -970,8 +968,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
     // Far end signal through channel estimate in Q8
     // How much can we shift right to preserve resolution
     tmp32no1 = echoEst32[i] - aecm->echoFilt[i];
-    aecm->echoFilt[i] += WEBRTC_SPL_RSHIFT_W32(
-                           WEBRTC_SPL_MUL_32_16(tmp32no1, 50), 8);
+    aecm->echoFilt[i] += (tmp32no1 * 50) >> 8;
 
     zeros32 = WebRtcSpl_NormW32(aecm->echoFilt[i]) + 1;
     zeros16 = WebRtcSpl_NormW16(supGain) + 1;
@@ -991,38 +988,37 @@ int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
       if (zeros32 > tmp16no1) {
         echoEst32Gained = WEBRTC_SPL_UMUL_32_16(
                             (uint32_t)aecm->echoFilt[i],
-                            (uint16_t)WEBRTC_SPL_RSHIFT_W16(supGain, tmp16no1));
+                            supGain >> tmp16no1);
       } else {
         // Result in Q-(RESOLUTION_CHANNEL+RESOLUTION_SUPGAIN-16)
-        echoEst32Gained = WEBRTC_SPL_UMUL_32_16(
-                            (uint32_t)WEBRTC_SPL_RSHIFT_W32(aecm->echoFilt[i],
-                                                            tmp16no1),
-                            (uint16_t)supGain);
+        echoEst32Gained = (aecm->echoFilt[i] >> tmp16no1) * supGain;
       }
     }
 
     zeros16 = WebRtcSpl_NormW16(aecm->nearFilt[i]);
-    if ((zeros16 < (aecm->dfaCleanQDomain - aecm->dfaCleanQDomainOld))
-         & (aecm->nearFilt[i])) {
-      tmp16no1 = WEBRTC_SPL_SHIFT_W16(aecm->nearFilt[i], zeros16);
-      qDomainDiff = zeros16 - aecm->dfaCleanQDomain + aecm->dfaCleanQDomainOld;
-      tmp16no2 = WEBRTC_SPL_SHIFT_W16(ptrDfaClean[i], qDomainDiff);
+    assert(zeros16 >= 0);  // |zeros16| is a norm, hence non-negative.
+    dfa_clean_q_domain_diff = aecm->dfaCleanQDomain - aecm->dfaCleanQDomainOld;
+    if (zeros16 < dfa_clean_q_domain_diff && aecm->nearFilt[i]) {
+      tmp16no1 = aecm->nearFilt[i] << zeros16;
+      qDomainDiff = zeros16 - dfa_clean_q_domain_diff;
+      tmp16no2 = ptrDfaClean[i] >> -qDomainDiff;
     } else {
-      tmp16no1 = WEBRTC_SPL_SHIFT_W16(aecm->nearFilt[i],
-                                      aecm->dfaCleanQDomain
-                                        - aecm->dfaCleanQDomainOld);
+      tmp16no1 = dfa_clean_q_domain_diff < 0
+          ? aecm->nearFilt[i] >> -dfa_clean_q_domain_diff
+          : aecm->nearFilt[i] << dfa_clean_q_domain_diff;
       qDomainDiff = 0;
       tmp16no2 = ptrDfaClean[i];
     }
 
     tmp32no1 = (int32_t)(tmp16no2 - tmp16no1);
-    tmp16no2 = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32no1, 4);
+    tmp16no2 = (int16_t)(tmp32no1 >> 4);
     tmp16no2 += tmp16no1;
     zeros16 = WebRtcSpl_NormW16(tmp16no2);
     if ((tmp16no2) & (-qDomainDiff > zeros16)) {
       aecm->nearFilt[i] = WEBRTC_SPL_WORD16_MAX;
     } else {
-      aecm->nearFilt[i] = WEBRTC_SPL_SHIFT_W16(tmp16no2, -qDomainDiff);
+      aecm->nearFilt[i] = qDomainDiff < 0 ? tmp16no2 << -qDomainDiff
+                                          : tmp16no2 >> qDomainDiff;
     }
 
     // Wiener filter coefficients, resulting hnl in Q14
@@ -1471,11 +1467,11 @@ static void ComfortNoise(AecmCore_t* aecm,
 
     if (tmp32 > 32767) {
       tmp32 = 32767;
-      aecm->noiseEst[i] = WEBRTC_SPL_LSHIFT_W32(tmp32, shiftFromNearToNoise);
+      aecm->noiseEst[i] = tmp32 << shiftFromNearToNoise;
     }
     if (tmp321 > 32767) {
       tmp321 = 32767;
-      aecm->noiseEst[i+1] = WEBRTC_SPL_LSHIFT_W32(tmp321, shiftFromNearToNoise);
+      aecm->noiseEst[i+1] = tmp321 << shiftFromNearToNoise;
     }
 
     __asm __volatile (
@@ -1483,7 +1479,7 @@ static void ComfortNoise(AecmCore_t* aecm,
       "mul    %[tmp321],  %[tmp321],      %[tmp161]               \n\t"
       "sra    %[nrsh1],   %[tmp32],       14                      \n\t"
       "sra    %[nrsh2],   %[tmp321],      14                      \n\t"
-      : [nrsh1] "=r" (nrsh1), [nrsh2] "=r" (nrsh2)
+      : [nrsh1] "=&r" (nrsh1), [nrsh2] "=r" (nrsh2)
       : [tmp16] "r" (tmp16), [tmp161] "r" (tmp161), [tmp32] "r" (tmp32),
         [tmp321] "r" (tmp321)
       : "memory", "hi", "lo"

@@ -1625,8 +1625,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Receive statistics"
                 << std::endl;
       // Get and print the Receive Codec Statistics
-      error = vie_codec->GetReceiveCodecStatistics(video_channel, key_frames,
-                                                   delta_frames);
+      error = vie_codec->GetReceiveCodecStastistics(video_channel, key_frames,
+                                                    delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
@@ -1635,8 +1635,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Send statistics"
                 << std::endl;
       // Get and print the Send Codec Statistics
-      error = vie_codec->GetSendCodecStatistics(video_channel, key_frames,
-                                                delta_frames);
+      error = vie_codec->GetSendCodecStastistics(video_channel, key_frames,
+                                                 delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
@@ -1651,7 +1651,7 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
 void PrintGetDiscardedPackets(webrtc::ViECodec* vie_codec, int video_channel) {
   std::cout << "Discarded Packets" << std::endl;
   int discarded_packets = 0;
-  discarded_packets = vie_codec->GetDiscardedPackets(video_channel);
+  discarded_packets = vie_codec->GetNumDiscardedPackets(video_channel);
   std::cout << "\tNumber of discarded packets: "
             << discarded_packets << std::endl;
 }

@@ -31,7 +31,7 @@ class IsacTest : public ::testing::Test {
 
   int16_t speech_data_[kIsacNumberOfSamples];
   int16_t output_data_[kIsacNumberOfSamples];
-  int16_t bitstream_[kMaxBytes / 2];
+  uint8_t bitstream_[kMaxBytes];
   uint8_t bitstream_small_[7];  // Simulate sync packets.
 };
 
@@ -79,13 +79,10 @@ TEST_F(IsacTest, IsacUpdateBWE) {
   WebRtcIsac_EncoderInit(isac_codec_, 0);
   WebRtcIsac_DecoderInit(isac_codec_);
 
-  // Encode & decode.
   int16_t encoded_bytes;
-  uint16_t* coded = reinterpret_cast<uint16_t*>(bitstream_);
-  uint16_t* coded_small = reinterpret_cast<uint16_t*>(bitstream_small_);
 
   // Test with call with a small packet (sync packet).
-  EXPECT_EQ(-1, WebRtcIsac_UpdateBwEstimate(isac_codec_, coded_small, 7, 1,
+  EXPECT_EQ(-1, WebRtcIsac_UpdateBwEstimate(isac_codec_, bitstream_small_, 7, 1,
                                             12345, 56789));
 
   // Encode 60 ms of data (needed to create a first packet).
@@ -102,8 +99,8 @@ TEST_F(IsacTest, IsacUpdateBWE) {
   encoded_bytes =  WebRtcIsac_Encode(isac_codec_, speech_data_, bitstream_);
 
   // Call to update bandwidth estimator with real data.
-  EXPECT_EQ(0, WebRtcIsac_UpdateBwEstimate(isac_codec_, coded, encoded_bytes, 1,
-                                           12345, 56789));
+  EXPECT_EQ(0, WebRtcIsac_UpdateBwEstimate(isac_codec_, bitstream_,
+                                           encoded_bytes, 1, 12345, 56789));
 
   // Free memory.
   EXPECT_EQ(0, WebRtcIsac_Free(isac_codec_));

@@ -54,19 +54,19 @@ class VcmPayloadSinkFactory::VcmPayloadSink
   virtual int32_t OnReceivedPayloadData(
       const uint8_t* payload_data,
       const uint16_t payload_size,
-      const WebRtcRTPHeader* rtp_header) {
+      const WebRtcRTPHeader* rtp_header) OVERRIDE {
     return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
   }
 
   virtual bool OnRecoveredPacket(const uint8_t* packet,
-                                 int packet_length) {
+                                 int packet_length) OVERRIDE {
     // We currently don't handle FEC.
     return true;
   }
 
   // VCMPacketRequestCallback
   virtual int32_t ResendPackets(const uint16_t* sequence_numbers,
-                                uint16_t length) {
+                                uint16_t length) OVERRIDE {
     stream_->ResendPackets(sequence_numbers, length);
     return 0;
   }
@@ -108,9 +108,13 @@ class VcmPayloadSinkFactory::VcmPayloadSink
 };
 
 VcmPayloadSinkFactory::VcmPayloadSinkFactory(
-    const std::string& base_out_filename, Clock* clock, bool protection_enabled,
-    VCMVideoProtection protection_method, uint32_t rtt_ms,
-    uint32_t render_delay_ms, uint32_t min_playout_delay_ms)
+    const std::string& base_out_filename,
+    Clock* clock,
+    bool protection_enabled,
+    VCMVideoProtection protection_method,
+    uint32_t rtt_ms,
+    uint32_t render_delay_ms,
+    uint32_t min_playout_delay_ms)
     : base_out_filename_(base_out_filename),
       clock_(clock),
       protection_enabled_(protection_enabled),
@@ -120,8 +124,7 @@ VcmPayloadSinkFactory::VcmPayloadSinkFactory(
       min_playout_delay_ms_(min_playout_delay_ms),
       null_event_factory_(new NullEventFactory()),
       crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
-      sinks_(),
-      next_id_(1) {
+      sinks_() {
   assert(clock);
   assert(crit_sect_.get());
 }
@@ -136,7 +139,7 @@ PayloadSinkInterface* VcmPayloadSinkFactory::Create(
   CriticalSectionScoped cs(crit_sect_.get());
 
   scoped_ptr<VideoCodingModule> vcm(
-      VideoCodingModule::Create(next_id_++, clock_, null_event_factory_.get()));
+      VideoCodingModule::Create(clock_, null_event_factory_.get()));
   if (vcm.get() == NULL) {
     return NULL;
   }

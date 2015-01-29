@@ -30,7 +30,8 @@ class FrameEditingTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
     reference_video_ = ResourcePath("foreman_cif", "yuv");
-    test_video_ = OutputPath() + "testvideo.yuv";
+    test_video_ = webrtc::test::TempFilename(webrtc::test::OutputPath(),
+                                             "frame_editing_unittest.yuv");
 
     original_fid_ = fopen(reference_video_.c_str(), "rb");
     ASSERT_TRUE(original_fid_ != NULL);
@@ -50,11 +51,12 @@ class FrameEditingTest : public ::testing::Test {
   virtual void TearDown() {
     fclose(original_fid_);
     fclose(edited_fid_);
+    remove(test_video_.c_str());
   }
   // Compares the frames in both streams to the end of one of the streams.
   void CompareToTheEnd(FILE* test_video_fid, FILE* ref_video_fid,
-                       scoped_array<int>* ref_buffer,
-                       scoped_array<int>* test_buffer) {
+                       scoped_ptr<int[]>* ref_buffer,
+                       scoped_ptr<int[]>* test_buffer) {
     while (!feof(test_video_fid) && !feof(ref_video_fid)) {
       num_bytes_read_ = fread(ref_buffer->get(), 1, kFrameSize, ref_video_fid);
       if (!feof(ref_video_fid)) {
@@ -78,8 +80,8 @@ class FrameEditingTest : public ::testing::Test {
   FILE* original_fid_;
   FILE* edited_fid_;
   int num_bytes_read_;
-  scoped_array<int> original_buffer_;
-  scoped_array<int> edited_buffer_;
+  scoped_ptr<int[]> original_buffer_;
+  scoped_ptr<int[]> edited_buffer_;
   int num_frames_read_;
 };
 

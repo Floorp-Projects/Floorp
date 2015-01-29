@@ -14,10 +14,6 @@
 
 using namespace webrtc;
 
-static const char* kNoDevicesErrorMessage =
-    "Either you have no recording / playout device "
-    "on your system, or the method failed.";
-
 class HardwareBeforeStreamingTest : public AfterInitializationFixture {
 };
 
@@ -27,17 +23,6 @@ TEST_F(HardwareBeforeStreamingTest,
        SetAudioDeviceLayerFailsSinceTheVoiceEngineHasBeenInitialized) {
   EXPECT_NE(0, voe_hardware_->SetAudioDeviceLayer(kAudioPlatformDefault));
   EXPECT_EQ(VE_ALREADY_INITED, voe_base_->LastError());
-}
-
-TEST_F(HardwareBeforeStreamingTest,
-       GetCPULoadSucceedsOnWindowsButNotOtherPlatforms) {
-  int load_percent;
-#if defined(_WIN32)
-  EXPECT_EQ(0, voe_hardware_->GetCPULoad(load_percent));
-#else
-  EXPECT_NE(0, voe_hardware_->GetCPULoad(load_percent)) <<
-      "Should fail on non-Windows platforms.";
-#endif
 }
 
 // Tests that only apply to mobile:
@@ -51,19 +36,9 @@ TEST_F(HardwareBeforeStreamingTest, ResetsAudioDeviceOnIphone) {
 // Tests that only apply to desktop:
 #if !defined(WEBRTC_IOS) & !defined(WEBRTC_ANDROID)
 
-TEST_F(HardwareBeforeStreamingTest, GetPlayoutDeviceStatusReturnsTrue) {
-  bool play_available = false;
-  EXPECT_EQ(0, voe_hardware_->GetPlayoutDeviceStatus(play_available));
-  ASSERT_TRUE(play_available) <<
-      "Ensures that the method works and that hardware is in the right state.";
-}
-
-TEST_F(HardwareBeforeStreamingTest, GetRecordingDeviceStatusReturnsTrue) {
-  bool recording_available = false;
-  EXPECT_EQ(0, voe_hardware_->GetRecordingDeviceStatus(recording_available));
-  EXPECT_TRUE(recording_available) <<
-      "Ensures that the method works and that hardware is in the right state.";
-}
+static const char* kNoDevicesErrorMessage =
+    "Either you have no recording / playout device "
+    "on your system, or the method failed.";
 
   // Win, Mac and Linux sound device tests.
 TEST_F(HardwareBeforeStreamingTest,

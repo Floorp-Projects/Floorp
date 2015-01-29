@@ -42,15 +42,15 @@ void WebRtcIlbcfix_Window32W32(
    */
   for (i = 0; i < N; i++) {
     /* Extract higher bytes */
-    x_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(x[i], 16);
-    y_hi = (int16_t) WEBRTC_SPL_RSHIFT_W32(y[i], 16);
+    x_hi = (int16_t)(x[i] >> 16);
+    y_hi = (int16_t)(y[i] >> 16);
 
     /* Extract lower bytes, defined as (w32 - hi<<16)>>1 */
     temp = WEBRTC_SPL_LSHIFT_W32((int32_t)x_hi, 16);
-    x_low = (int16_t) WEBRTC_SPL_RSHIFT_W32((x[i] - temp), 1);
+    x_low = (int16_t)((x[i] - temp) >> 1);
 
     temp = WEBRTC_SPL_LSHIFT_W32((int32_t)y_hi, 16);
-    y_low = (int16_t) WEBRTC_SPL_RSHIFT_W32((y[i] - temp), 1);
+    y_low = (int16_t)((y[i] - temp) >> 1);
 
     /* Calculate z by a 32 bit multiplication using both low and high from x and y */
     temp = WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(x_hi, y_hi), 1);

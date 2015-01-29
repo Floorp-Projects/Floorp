@@ -23,9 +23,11 @@
       },
       'sources': [
         'include/g711_interface.h',
+        'include/audio_encoder_pcm.h',
         'g711_interface.c',
         'g711.c',
         'g711.h',
+        'audio_encoder_pcm.cc',
       ],
     },
   ], # targets

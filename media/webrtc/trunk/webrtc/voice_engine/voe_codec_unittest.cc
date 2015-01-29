@@ -169,6 +169,56 @@ TEST_F(VoECodecTest, DISABLED_ON_ANDROID(DualStreamRemoveSecondaryCodec)) {
   EXPECT_EQ(-1, voe_codec_->GetSecondarySendCodec(channel_, my_codec));
 }
 
+TEST(VoECodecInst, TestCompareCodecInstances) {
+  CodecInst codec1, codec2;
+  memset(&codec1, 0, sizeof(CodecInst));
+  memset(&codec2, 0, sizeof(CodecInst));
+
+  codec1.pltype = 101;
+  strncpy(codec1.plname, "isac", 4);
+  codec1.plfreq = 8000;
+  codec1.pacsize = 110;
+  codec1.channels = 1;
+  codec1.rate = 8000;
+  memcpy(&codec2, &codec1, sizeof(CodecInst));
+  // Compare two codecs now.
+  EXPECT_TRUE(codec1 == codec2);
+  EXPECT_FALSE(codec1 != codec2);
+
+  // Changing pltype.
+  codec2.pltype = 102;
+  EXPECT_FALSE(codec1 == codec2);
+  EXPECT_TRUE(codec1 != codec2);
+
+  // Reset to codec2 to codec1 state.
+  memcpy(&codec2, &codec1, sizeof(CodecInst));
+  // payload name should be case insensitive.
+  strncpy(codec2.plname, "ISAC", 4);
+  EXPECT_TRUE(codec1 == codec2);
+
+  // Test modifying the |plfreq|
+  codec2.plfreq = 16000;
+  EXPECT_FALSE(codec1 == codec2);
+
+  // Reset to codec2 to codec1 state.
+  memcpy(&codec2, &codec1, sizeof(CodecInst));
+  // Test modifying the |pacsize|.
+  codec2.pacsize = 440;
+  EXPECT_FALSE(codec1 == codec2);
+
+  // Reset to codec2 to codec1 state.
+  memcpy(&codec2, &codec1, sizeof(CodecInst));
+  // Test modifying the |channels|.
+  codec2.channels = 2;
+  EXPECT_FALSE(codec1 == codec2);
+
+  // Reset to codec2 to codec1 state.
+  memcpy(&codec2, &codec1, sizeof(CodecInst));
+  // Test modifying the |rate|.
+  codec2.rate = 0;
+  EXPECT_FALSE(codec1 == codec2);
+}
+
 }  // namespace
 }  // namespace voe
 }  // namespace webrtc

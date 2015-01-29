@@ -26,97 +26,104 @@
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
-// constants shared by all paths (C, SSE2).
-float rdft_w[64];
-// constants used by the C path.
-float rdft_wk3ri_first[32];
-float rdft_wk3ri_second[32];
-// constants used by SSE2 but initialized in C path.
-ALIGN16_BEG float ALIGN16_END rdft_wk1r[32];
-ALIGN16_BEG float ALIGN16_END rdft_wk2r[32];
-ALIGN16_BEG float ALIGN16_END rdft_wk3r[32];
-ALIGN16_BEG float ALIGN16_END rdft_wk1i[32];
-ALIGN16_BEG float ALIGN16_END rdft_wk2i[32];
-ALIGN16_BEG float ALIGN16_END rdft_wk3i[32];
-ALIGN16_BEG float ALIGN16_END cftmdl_wk1r[4];
+// These tables used to be computed at run-time. For example, refer to:
+// https://code.google.com/p/webrtc/source/browse/trunk/webrtc/modules/audio_processing/aec/aec_rdft.c?r=6564
+// to see the initialization code.
+const float rdft_w[64] = {
+    1.0000000000f, 0.0000000000f, 0.7071067691f, 0.7071067691f,
+    0.9238795638f, 0.3826834559f, 0.3826834559f, 0.9238795638f,
+    0.9807852507f, 0.1950903237f, 0.5555702448f, 0.8314695954f,
+    0.8314695954f, 0.5555702448f, 0.1950903237f, 0.9807852507f,
+    0.9951847196f, 0.0980171412f, 0.6343933344f, 0.7730104327f,
+    0.8819212914f, 0.4713967443f, 0.2902846634f, 0.9569403529f,
+    0.9569403529f, 0.2902846634f, 0.4713967443f, 0.8819212914f,
+    0.7730104327f, 0.6343933344f, 0.0980171412f, 0.9951847196f,
+    0.7071067691f, 0.4993977249f, 0.4975923598f, 0.4945882559f,
+    0.4903926253f, 0.4850156307f, 0.4784701765f, 0.4707720280f,
+    0.4619397819f, 0.4519946277f, 0.4409606457f, 0.4288643003f,
+    0.4157347977f, 0.4016037583f, 0.3865052164f, 0.3704755902f,
+    0.3535533845f, 0.3357794881f, 0.3171966672f, 0.2978496552f,
+    0.2777851224f, 0.2570513785f, 0.2356983721f, 0.2137775421f,
+    0.1913417280f, 0.1684449315f, 0.1451423317f, 0.1214900985f,
+    0.0975451618f, 0.0733652338f, 0.0490085706f, 0.0245338380f,
+};
+const float rdft_wk3ri_first[16] = {
+    1.000000000f, 0.000000000f, 0.382683456f, 0.923879564f,
+    0.831469536f, 0.555570245f, -0.195090353f, 0.980785251f,
+    0.956940353f, 0.290284693f, 0.098017156f, 0.995184720f,
+    0.634393334f, 0.773010492f, -0.471396863f, 0.881921172f,
+};
+const float rdft_wk3ri_second[16] = {
+    -0.707106769f, 0.707106769f, -0.923879564f, -0.382683456f,
+    -0.980785251f, 0.195090353f, -0.555570245f, -0.831469536f,
+    -0.881921172f, 0.471396863f, -0.773010492f, -0.634393334f,
+    -0.995184720f, -0.098017156f, -0.290284693f, -0.956940353f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk1r[32] = {
+    1.000000000f, 1.000000000f, 0.707106769f, 0.707106769f,
+    0.923879564f, 0.923879564f, 0.382683456f, 0.382683456f,
+    0.980785251f, 0.980785251f, 0.555570245f, 0.555570245f,
+    0.831469595f, 0.831469595f, 0.195090324f, 0.195090324f,
+    0.995184720f, 0.995184720f, 0.634393334f, 0.634393334f,
+    0.881921291f, 0.881921291f, 0.290284663f, 0.290284663f,
+    0.956940353f, 0.956940353f, 0.471396744f, 0.471396744f,
+    0.773010433f, 0.773010433f, 0.098017141f, 0.098017141f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk2r[32] = {
+    1.000000000f, 1.000000000f, -0.000000000f, -0.000000000f,
+    0.707106769f, 0.707106769f, -0.707106769f, -0.707106769f,
+    0.923879564f, 0.923879564f, -0.382683456f, -0.382683456f,
+    0.382683456f, 0.382683456f, -0.923879564f, -0.923879564f,
+    0.980785251f, 0.980785251f, -0.195090324f, -0.195090324f,
+    0.555570245f, 0.555570245f, -0.831469595f, -0.831469595f,
+    0.831469595f, 0.831469595f, -0.555570245f, -0.555570245f,
+    0.195090324f, 0.195090324f, -0.980785251f, -0.980785251f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk3r[32] = {
+    1.000000000f, 1.000000000f, -0.707106769f, -0.707106769f,
+    0.382683456f, 0.382683456f, -0.923879564f, -0.923879564f,
+    0.831469536f, 0.831469536f, -0.980785251f, -0.980785251f,
+    -0.195090353f, -0.195090353f, -0.555570245f, -0.555570245f,
+    0.956940353f, 0.956940353f, -0.881921172f, -0.881921172f,
+    0.098017156f, 0.098017156f, -0.773010492f, -0.773010492f,
+    0.634393334f, 0.634393334f, -0.995184720f, -0.995184720f,
+    -0.471396863f, -0.471396863f, -0.290284693f, -0.290284693f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk1i[32] = {
+    -0.000000000f, 0.000000000f, -0.707106769f, 0.707106769f,
+    -0.382683456f, 0.382683456f, -0.923879564f, 0.923879564f,
+    -0.195090324f, 0.195090324f, -0.831469595f, 0.831469595f,
+    -0.555570245f, 0.555570245f, -0.980785251f, 0.980785251f,
+    -0.098017141f, 0.098017141f, -0.773010433f, 0.773010433f,
+    -0.471396744f, 0.471396744f, -0.956940353f, 0.956940353f,
+    -0.290284663f, 0.290284663f, -0.881921291f, 0.881921291f,
+    -0.634393334f, 0.634393334f, -0.995184720f, 0.995184720f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk2i[32] = {
+    -0.000000000f, 0.000000000f, -1.000000000f, 1.000000000f,
+    -0.707106769f, 0.707106769f, -0.707106769f, 0.707106769f,
+    -0.382683456f, 0.382683456f, -0.923879564f, 0.923879564f,
+    -0.923879564f, 0.923879564f, -0.382683456f, 0.382683456f,
+    -0.195090324f, 0.195090324f, -0.980785251f, 0.980785251f,
+    -0.831469595f, 0.831469595f, -0.555570245f, 0.555570245f,
+    -0.555570245f, 0.555570245f, -0.831469595f, 0.831469595f,
+    -0.980785251f, 0.980785251f, -0.195090324f, 0.195090324f,
+};
+ALIGN16_BEG const float ALIGN16_END rdft_wk3i[32] = {
+    -0.000000000f, 0.000000000f, -0.707106769f, 0.707106769f,
+    -0.923879564f, 0.923879564f, 0.382683456f, -0.382683456f,
+    -0.555570245f, 0.555570245f, -0.195090353f, 0.195090353f,
+    -0.980785251f, 0.980785251f, 0.831469536f, -0.831469536f,
+    -0.290284693f, 0.290284693f, -0.471396863f, 0.471396863f,
+    -0.995184720f, 0.995184720f, 0.634393334f, -0.634393334f,
+    -0.773010492f, 0.773010492f, 0.098017156f, -0.098017156f,
+    -0.881921172f, 0.881921172f, 0.956940353f, -0.956940353f,
+};
+ALIGN16_BEG const float ALIGN16_END cftmdl_wk1r[4] = {
+    0.707106769f, 0.707106769f, 0.707106769f, -0.707106769f,
+};
 
-static int ip[16];
-
-static void bitrv2_32(int* ip, float* a) {
-  const int n = 32;
-  int j, j1, k, k1, m, m2;
-  float xr, xi, yr, yi;
-
-  ip[0] = 0;
-  {
-    int l = n;
-    m = 1;
-    while ((m << 3) < l) {
-      l >>= 1;
-      for (j = 0; j < m; j++) {
-        ip[m + j] = ip[j] + l;
-      }
-      m <<= 1;
-    }
-  }
-  m2 = 2 * m;
-  for (k = 0; k < m; k++) {
-    for (j = 0; j < k; j++) {
-      j1 = 2 * j + ip[k];
-      k1 = 2 * k + ip[j];
-      xr = a[j1];
-      xi = a[j1 + 1];
-      yr = a[k1];
-      yi = a[k1 + 1];
-      a[j1] = yr;
-      a[j1 + 1] = yi;
-      a[k1] = xr;
-      a[k1 + 1] = xi;
-      j1 += m2;
-      k1 += 2 * m2;
-      xr = a[j1];
-      xi = a[j1 + 1];
-      yr = a[k1];
-      yi = a[k1 + 1];
-      a[j1] = yr;
-      a[j1 + 1] = yi;
-      a[k1] = xr;
-      a[k1 + 1] = xi;
-      j1 += m2;
-      k1 -= m2;
-      xr = a[j1];
-      xi = a[j1 + 1];
-      yr = a[k1];
-      yi = a[k1 + 1];
-      a[j1] = yr;
-      a[j1 + 1] = yi;
-      a[k1] = xr;
-      a[k1 + 1] = xi;
-      j1 += m2;
-      k1 += 2 * m2;
-      xr = a[j1];
-      xi = a[j1 + 1];
-      yr = a[k1];
-      yi = a[k1 + 1];
-      a[j1] = yr;
-      a[j1 + 1] = yi;
-      a[k1] = xr;
-      a[k1 + 1] = xi;
-    }
-    j1 = 2 * k + m2 + ip[k];
-    k1 = j1 + m2;
-    xr = a[j1];
-    xi = a[j1 + 1];
-    yr = a[k1];
-    yi = a[k1 + 1];
-    a[j1] = yr;
-    a[j1 + 1] = yi;
-    a[k1] = xr;
-    a[k1 + 1] = xi;
-  }
-}
-
-static void bitrv2_128(float* a) {
+static void bitrv2_128_C(float* a) {
   /*
       Following things have been attempted but are no faster:
       (a) Storing the swap indexes in a LUT (index calculations are done
@@ -190,103 +197,15 @@ static void bitrv2_128(float* a) {
   }
 }
 
-static void makewt_32(void) {
-  const int nw = 32;
-  int j, nwh;
-  float delta, x, y;
-
-  ip[0] = nw;
-  ip[1] = 1;
-  nwh = nw >> 1;
-  delta = atanf(1.0f) / nwh;
-  rdft_w[0] = 1;
-  rdft_w[1] = 0;
-  rdft_w[nwh] = cosf(delta * nwh);
-  rdft_w[nwh + 1] = rdft_w[nwh];
-  for (j = 2; j < nwh; j += 2) {
-    x = cosf(delta * j);
-    y = sinf(delta * j);
-    rdft_w[j] = x;
-    rdft_w[j + 1] = y;
-    rdft_w[nw - j] = y;
-    rdft_w[nw - j + 1] = x;
-  }
-  bitrv2_32(ip + 2, rdft_w);
-
-  // pre-calculate constants used by cft1st_128 and cftmdl_128...
-  cftmdl_wk1r[0] = rdft_w[2];
-  cftmdl_wk1r[1] = rdft_w[2];
-  cftmdl_wk1r[2] = rdft_w[2];
-  cftmdl_wk1r[3] = -rdft_w[2];
-  {
-    int k1;
-
-    for (k1 = 0, j = 0; j < 128; j += 16, k1 += 2) {
-      const int k2 = 2 * k1;
-      const float wk2r = rdft_w[k1 + 0];
-      const float wk2i = rdft_w[k1 + 1];
-      float wk1r, wk1i;
-      // ... scalar version.
-      wk1r = rdft_w[k2 + 0];
-      wk1i = rdft_w[k2 + 1];
-      rdft_wk3ri_first[k1 + 0] = wk1r - 2 * wk2i * wk1i;
-      rdft_wk3ri_first[k1 + 1] = 2 * wk2i * wk1r - wk1i;
-      wk1r = rdft_w[k2 + 2];
-      wk1i = rdft_w[k2 + 3];
-      rdft_wk3ri_second[k1 + 0] = wk1r - 2 * wk2r * wk1i;
-      rdft_wk3ri_second[k1 + 1] = 2 * wk2r * wk1r - wk1i;
-      // ... vector version.
-      rdft_wk1r[k2 + 0] = rdft_w[k2 + 0];
-      rdft_wk1r[k2 + 1] = rdft_w[k2 + 0];
-      rdft_wk1r[k2 + 2] = rdft_w[k2 + 2];
-      rdft_wk1r[k2 + 3] = rdft_w[k2 + 2];
-      rdft_wk2r[k2 + 0] = rdft_w[k1 + 0];
-      rdft_wk2r[k2 + 1] = rdft_w[k1 + 0];
-      rdft_wk2r[k2 + 2] = -rdft_w[k1 + 1];
-      rdft_wk2r[k2 + 3] = -rdft_w[k1 + 1];
-      rdft_wk3r[k2 + 0] = rdft_wk3ri_first[k1 + 0];
-      rdft_wk3r[k2 + 1] = rdft_wk3ri_first[k1 + 0];
-      rdft_wk3r[k2 + 2] = rdft_wk3ri_second[k1 + 0];
-      rdft_wk3r[k2 + 3] = rdft_wk3ri_second[k1 + 0];
-      rdft_wk1i[k2 + 0] = -rdft_w[k2 + 1];
-      rdft_wk1i[k2 + 1] = rdft_w[k2 + 1];
-      rdft_wk1i[k2 + 2] = -rdft_w[k2 + 3];
-      rdft_wk1i[k2 + 3] = rdft_w[k2 + 3];
-      rdft_wk2i[k2 + 0] = -rdft_w[k1 + 1];
-      rdft_wk2i[k2 + 1] = rdft_w[k1 + 1];
-      rdft_wk2i[k2 + 2] = -rdft_w[k1 + 0];
-      rdft_wk2i[k2 + 3] = rdft_w[k1 + 0];
-      rdft_wk3i[k2 + 0] = -rdft_wk3ri_first[k1 + 1];
-      rdft_wk3i[k2 + 1] = rdft_wk3ri_first[k1 + 1];
-      rdft_wk3i[k2 + 2] = -rdft_wk3ri_second[k1 + 1];
-      rdft_wk3i[k2 + 3] = rdft_wk3ri_second[k1 + 1];
-    }
-  }
-}
-
-static void makect_32(void) {
-  float* c = rdft_w + 32;
-  const int nc = 32;
-  int j, nch;
-  float delta;
-
-  ip[1] = nc;
-  nch = nc >> 1;
-  delta = atanf(1.0f) / nch;
-  c[0] = cosf(delta * nch);
-  c[nch] = 0.5f * c[0];
-  for (j = 1; j < nch; j++) {
-    c[j] = 0.5f * cosf(delta * j);
-    c[nc - j] = 0.5f * sinf(delta * j);
-  }
-}
-
 static void cft1st_128_C(float* a) {
   const int n = 128;
   int j, k1, k2;
   float wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
+  // The processing of the first set of elements was simplified in C to avoid
+  // some operations (multiplication by zero or one, addition of two elements
+  // multiplied by the same weight, ...).
   x0r = a[0] + a[2];
   x0i = a[1] + a[3];
   x1r = a[0] - a[2];
@@ -512,7 +431,7 @@ static void cftmdl_128_C(float* a) {
   }
 }
 
-static void cftfsub_128(float* a) {
+static void cftfsub_128_C(float* a) {
   int j, j1, j2, j3, l;
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
@@ -542,7 +461,7 @@ static void cftfsub_128(float* a) {
   }
 }
 
-static void cftbsub_128(float* a) {
+static void cftbsub_128_C(float* a) {
   int j, j1, j2, j3, l;
   float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
@@ -640,18 +559,27 @@ rft_sub_128_t cft1st_128;
 rft_sub_128_t cftmdl_128;
 rft_sub_128_t rftfsub_128;
 rft_sub_128_t rftbsub_128;
+rft_sub_128_t cftfsub_128;
+rft_sub_128_t cftbsub_128;
+rft_sub_128_t bitrv2_128;
 
 void aec_rdft_init(void) {
   cft1st_128 = cft1st_128_C;
   cftmdl_128 = cftmdl_128_C;
   rftfsub_128 = rftfsub_128_C;
   rftbsub_128 = rftbsub_128_C;
+  cftfsub_128 = cftfsub_128_C;
+  cftbsub_128 = cftbsub_128_C;
+  bitrv2_128 = bitrv2_128_C;
 #if defined(WEBRTC_ARCH_X86_FAMILY)
   if (WebRtc_GetCPUInfo(kSSE2)) {
     aec_rdft_init_sse2();
   }
 #endif
-  // init library constants.
-  makewt_32();
-  makect_32();
+#if defined(MIPS_FPU_LE)
+  aec_rdft_init_mips();
+#endif
+#if defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON)
+  aec_rdft_init_neon();
+#endif
 }

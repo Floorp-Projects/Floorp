@@ -88,15 +88,15 @@ void WebRtcSpl_AutoCorrToReflCoef(const int32_t *R, int use_order, int16_t *K)
         pptr = P;
         wptr = w1ptr;
         tmp = (int16_t)(((int32_t)*p1ptr * (int32_t)*K + 16384) >> 15);
-        *pptr = WEBRTC_SPL_ADD_SAT_W16( *pptr, tmp );
+        *pptr = WebRtcSpl_AddSatW16(*pptr, tmp);
         pptr++;
         for (i = 1; i <= use_order - n; i++)
         {
             tmp = (int16_t)(((int32_t)*wptr * (int32_t)*K + 16384) >> 15);
-            *pptr = WEBRTC_SPL_ADD_SAT_W16( *(pptr+1), tmp );
+            *pptr = WebRtcSpl_AddSatW16(*(pptr + 1), tmp);
             pptr++;
             tmp = (int16_t)(((int32_t)*pptr * (int32_t)*K + 16384) >> 15);
-            *wptr = WEBRTC_SPL_ADD_SAT_W16( *wptr, tmp );
+            *wptr = WebRtcSpl_AddSatW16(*wptr, tmp);
             wptr++;
         }
     }

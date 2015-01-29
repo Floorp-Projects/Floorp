@@ -11,7 +11,7 @@
 #include "cng_helpfuns.h"
 
 #include "signal_processing_library.h"
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 #include "webrtc_cng.h"
 
 /* Values in |k| are Q15, and |a| Q12. */

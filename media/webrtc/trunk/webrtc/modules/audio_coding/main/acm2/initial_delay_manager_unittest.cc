@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cstring>
+#include <string.h>
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/audio_coding/main/acm2/initial_delay_manager.h"
 
 namespace webrtc {
@@ -359,7 +359,9 @@ TEST_F(InitialDelayManagerTest, BufferingAudio) {
     EXPECT_TRUE(manager_->buffering());
     const uint32_t expected_playout_timestamp = rtp_info_.header.timestamp -
         kInitDelayMs * kSamplingRateHz / 1000;
-    EXPECT_EQ(expected_playout_timestamp, manager_->playout_timestamp());
+    uint32_t actual_playout_timestamp = 0;
+    EXPECT_TRUE(manager_->GetPlayoutTimestamp(&actual_playout_timestamp));
+    EXPECT_EQ(expected_playout_timestamp, actual_playout_timestamp);
     NextRtpHeader(&rtp_info_, &rtp_receive_timestamp_);
   }
 

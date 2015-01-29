@@ -17,6 +17,9 @@
 #include <string>
 
 #define STATS_LINE_LENGTH 32
+#define Y4M_FILE_HEADER_MAX_SIZE 200
+#define Y4M_FRAME_DELIMITER "FRAME"
+#define Y4M_FRAME_HEADER_SIZE 6
 
 namespace webrtc {
 namespace test {
@@ -84,25 +87,8 @@ bool GetNextStatsLine(FILE* stats_file, char* line) {
   return true;
 }
 
-bool GetNextI420Frame(FILE* input_file, int width, int height,
-                      uint8* result_frame) {
-  int frame_size = GetI420FrameSize(width, height);
-  bool errors = false;
-
-  size_t bytes_read = fread(result_frame, 1, frame_size, input_file);
-  if (bytes_read != static_cast<size_t>(frame_size)) {
-    // If end-of-file is reached, don't print an error.
-    if (feof(input_file)) {
-      return false;
-    }
-    fprintf(stdout, "Error while reading frame from file\n");
-    errors = true;
-  }
-  return !errors;
-}
-
-bool ExtractFrameFromI420(const char* i420_file_name, int width, int height,
-                          int frame_number, uint8* result_frame) {
+bool ExtractFrameFromYuvFile(const char* i420_file_name, int width, int height,
+                             int frame_number, uint8* result_frame) {
   int frame_size = GetI420FrameSize(width, height);
   int offset = frame_number * frame_size;  // Calculate offset for the frame.
   bool errors = false;
@@ -124,6 +110,58 @@ bool ExtractFrameFromI420(const char* i420_file_name, int width, int height,
             frame_number, i420_file_name);
     errors = true;
   }
+  fclose(input_file);
+  return !errors;
+}
+
+bool ExtractFrameFromY4mFile(const char* y4m_file_name, int width, int height,
+                             int frame_number, uint8* result_frame) {
+  int frame_size = GetI420FrameSize(width, height);
+  int frame_offset = frame_number * frame_size;
+  bool errors = false;
+
+  FILE* input_file = fopen(y4m_file_name, "rb");
+  if (input_file == NULL) {
+    fprintf(stderr, "Couldn't open input file for reading: %s\n",
+            y4m_file_name);
+    return false;
+  }
+
+  // YUV4MPEG2, a.k.a. Y4M File format has a file header and a frame header. The
+  // file header has the aspect: "YUV4MPEG2 C420 W640 H360 Ip F30:1 A1:1".
+  // Skip the header if this is the first frame of the file.
+  if (frame_number == 0) {
+    char frame_header[Y4M_FILE_HEADER_MAX_SIZE];
+    size_t bytes_read =
+        fread(frame_header, 1, Y4M_FILE_HEADER_MAX_SIZE, input_file);
+    if (bytes_read != static_cast<size_t>(frame_size) && ferror(input_file)) {
+      fprintf(stdout, "Error while reading first frame from file %s\n",
+          y4m_file_name);
+      fclose(input_file);
+      return false;
+    }
+    std::string header_contents(frame_header);
+    std::size_t found = header_contents.find(Y4M_FRAME_DELIMITER);
+    if (found == std::string::npos) {
+      fprintf(stdout, "Corrupted Y4M header, could not find \"FRAME\" in %s\n",
+          header_contents.c_str());
+      fclose(input_file);
+      return false;
+    }
+    frame_offset = static_cast<int>(found);
+  }
+
+  // Change stream pointer to new offset, skipping the frame header as well.
+  fseek(input_file, frame_offset + Y4M_FRAME_HEADER_SIZE, SEEK_SET);
+
+  size_t bytes_read = fread(result_frame, 1, frame_size, input_file);
+  if (bytes_read != static_cast<size_t>(frame_size) &&
+      ferror(input_file)) {
+    fprintf(stdout, "Error while reading frame no %d from file %s\n",
+            frame_number, y4m_file_name);
+    errors = true;
+  }
+
   fclose(input_file);
   return !errors;
 }
@@ -176,6 +214,12 @@ double CalculateMetrics(VideoAnalysisMetricsType video_metrics_type,
 void RunAnalysis(const char* reference_file_name, const char* test_file_name,
                  const char* stats_file_name, int width, int height,
                  ResultsContainer* results) {
+  // Check if the reference_file_name ends with "y4m".
+  bool y4m_mode = false;
+  if (std::string(reference_file_name).find("y4m") != std::string::npos){
+    y4m_mode = true;
+  }
+
   int size = GetI420FrameSize(width, height);
   FILE* stats_file = fopen(stats_file_name, "r");
 
@@ -202,10 +246,15 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
     assert(extracted_test_frame != -1);
     assert(decoded_frame_number != -1);
 
-    ExtractFrameFromI420(test_file_name, width, height, extracted_test_frame,
-                         test_frame);
-    ExtractFrameFromI420(reference_file_name, width, height,
-                         decoded_frame_number, reference_frame);
+    ExtractFrameFromYuvFile(test_file_name, width, height, extracted_test_frame,
+                            test_frame);
+    if (y4m_mode) {
+      ExtractFrameFromY4mFile(reference_file_name, width, height,
+                              decoded_frame_number, reference_frame);
+    } else {
+      ExtractFrameFromYuvFile(reference_file_name, width, height,
+                              decoded_frame_number, reference_frame);
+    }
 
     // Calculate the PSNR and SSIM.
     double result_psnr = CalculateMetrics(kPSNR, reference_frame, test_frame,

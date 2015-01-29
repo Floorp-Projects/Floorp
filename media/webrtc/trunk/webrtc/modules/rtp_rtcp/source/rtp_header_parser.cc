@@ -13,7 +13,6 @@
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -22,7 +21,8 @@ class RtpHeaderParserImpl : public RtpHeaderParser {
   RtpHeaderParserImpl();
   virtual ~RtpHeaderParserImpl() {}
 
-  virtual bool Parse(const uint8_t* packet, int length,
+  virtual bool Parse(const uint8_t* packet,
+                     size_t length,
                      RTPHeader* header) const OVERRIDE;
 
   virtual bool RegisterRtpHeaderExtension(RTPExtensionType type,
@@ -32,7 +32,7 @@ class RtpHeaderParserImpl : public RtpHeaderParser {
 
  private:
   scoped_ptr<CriticalSectionWrapper> critical_section_;
-  RtpHeaderExtensionMap rtp_header_extension_map_;
+  RtpHeaderExtensionMap rtp_header_extension_map_ GUARDED_BY(critical_section_);
 };
 
 RtpHeaderParser* RtpHeaderParser::Create() {
@@ -42,14 +42,15 @@ RtpHeaderParser* RtpHeaderParser::Create() {
 RtpHeaderParserImpl::RtpHeaderParserImpl()
     : critical_section_(CriticalSectionWrapper::CreateCriticalSection()) {}
 
-bool RtpHeaderParser::IsRtcp(const uint8_t* packet, int length) {
-  ModuleRTPUtility::RTPHeaderParser rtp_parser(packet, length);
+bool RtpHeaderParser::IsRtcp(const uint8_t* packet, size_t length) {
+  RtpUtility::RtpHeaderParser rtp_parser(packet, length);
   return rtp_parser.RTCP();
 }
 
-bool RtpHeaderParserImpl::Parse(const uint8_t* packet, int length,
-                            RTPHeader* header) const {
-  ModuleRTPUtility::RTPHeaderParser rtp_parser(packet, length);
+bool RtpHeaderParserImpl::Parse(const uint8_t* packet,
+                                size_t length,
+                                RTPHeader* header) const {
+  RtpUtility::RtpHeaderParser rtp_parser(packet, length);
   memset(header, 0, sizeof(*header));
 
   RtpHeaderExtensionMap map;
@@ -60,8 +61,6 @@ bool RtpHeaderParserImpl::Parse(const uint8_t* packet, int length,
 
   const bool valid_rtpheader = rtp_parser.Parse(*header, &map);
   if (!valid_rtpheader) {
-    WEBRTC_TRACE(kTraceDebug, kTraceRtpRtcp, -1,
-                 "IncomingPacket invalid RTP header");
     return false;
   }
   return true;

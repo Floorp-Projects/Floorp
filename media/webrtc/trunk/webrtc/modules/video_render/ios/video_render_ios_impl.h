@@ -99,7 +99,7 @@ class VideoRenderIosImpl : IVideoRender {
   bool full_screen_;
 
   CriticalSectionWrapper* crit_sec_;
-  VideoRenderIosGles20* ptr_ios_render_;
+  webrtc::scoped_ptr<VideoRenderIosGles20> ptr_ios_render_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_IOS_VIDEO_RENDER_IOS_IMPL_H_

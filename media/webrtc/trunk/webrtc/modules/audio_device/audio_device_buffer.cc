@@ -548,13 +548,16 @@ int32_t AudioDeviceBuffer::RequestPlayoutData(uint32_t nSamples)
     if (_ptrCbAudioTransport)
     {
         uint32_t res(0);
-
+        int64_t elapsed_time_ms = -1;
+        int64_t ntp_time_ms = -1;
         res = _ptrCbAudioTransport->NeedMorePlayData(_playSamples,
                                                      playBytesPerSample,
                                                      playChannels,
                                                      playSampleRate,
                                                      &_playBuffer[0],
-                                                     nSamplesOut);
+                                                     nSamplesOut,
+                                                     &elapsed_time_ms,
+                                                     &ntp_time_ms);
         if (res != 0)
         {
             WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id, "NeedMorePlayData() failed");

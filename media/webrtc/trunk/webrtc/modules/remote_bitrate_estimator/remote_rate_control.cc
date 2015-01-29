@@ -122,8 +122,6 @@ RateControlRegion RemoteRateControl::Update(const RateControlInput* input,
   }
   updated_ = true;
   current_input_ = *input;
-  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "BWE: Incoming rate = %u kbps",
-               input->_incomingBitRate/1000);
   return rate_control_region_;
 }
 
@@ -158,17 +156,10 @@ uint32_t RemoteRateControl::ChangeBitRate(uint32_t current_bit_rate,
           ChangeRegion(kRcAboveMax);
         }
       }
-      WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-                   "BWE: Response time: %f + %i + 10*33\n",
-                   avg_change_period_, rtt_);
       const uint32_t response_time = static_cast<uint32_t>(avg_change_period_ +
           0.5f) + rtt_ + 300;
       double alpha = RateIncreaseFactor(now_ms, last_bit_rate_change_,
                                         response_time, noise_var);
-
-      WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-          "BWE: avg_change_period_ = %f ms; RTT = %u ms", avg_change_period_,
-          rtt_);
 
       current_bit_rate = static_cast<uint32_t>(current_bit_rate * alpha) + 1000;
       if (max_hold_rate_ > 0 && beta_ * max_hold_rate_ > current_bit_rate) {
@@ -178,9 +169,6 @@ uint32_t RemoteRateControl::ChangeBitRate(uint32_t current_bit_rate,
         recovery = true;
       }
       max_hold_rate_ = 0;
-      WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-          "BWE: Increase rate to current_bit_rate = %u kbps",
-          current_bit_rate / 1000);
       last_bit_rate_change_ = now_ms;
       break;
     }
@@ -207,10 +195,6 @@ uint32_t RemoteRateControl::ChangeBitRate(uint32_t current_bit_rate,
         }
 
         UpdateMaxBitRateEstimate(incoming_bit_rate_kbps);
-
-        WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-            "BWE: Decrease rate to current_bit_rate = %u kbps",
-            current_bit_rate / 1000);
       }
       // Stay on hold until the pipes are cleared.
       ChangeState(kRcHold);
@@ -250,8 +234,6 @@ double RemoteRateControl::RateIncreaseFactor(int64_t now_ms,
   } else if (alpha > 1.3) {
     alpha = 1.3;
   }
-
-  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, "BWE: alpha = %f", alpha);
 
   if (last_ms > -1) {
     alpha = pow(alpha, (now_ms - last_ms) / 1000.0);
@@ -341,45 +323,5 @@ void RemoteRateControl::ChangeRegion(RateControlRegion region) {
 void RemoteRateControl::ChangeState(RateControlState new_state) {
   came_from_state_ = rate_control_state_;
   rate_control_state_ = new_state;
-  char state1[15];
-  char state2[15];
-  char state3[15];
-  StateStr(came_from_state_, state1);
-  StateStr(rate_control_state_, state2);
-  StateStr(current_input_._bwState, state3);
-  WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-               "\t%s => %s due to %s\n", state1, state2, state3);
-}
-
-void RemoteRateControl::StateStr(RateControlState state, char* str) {
-  switch (state) {
-    case kRcDecrease:
-      strncpy(str, "DECREASE", 9);
-      break;
-    case kRcHold:
-      strncpy(str, "HOLD", 5);
-      break;
-    case kRcIncrease:
-      strncpy(str, "INCREASE", 9);
-      break;
-    default:
-      assert(false);
-  }
-}
-
-void RemoteRateControl::StateStr(BandwidthUsage state, char* str) {
-  switch (state) {
-    case kBwNormal:
-      strncpy(str, "NORMAL", 7);
-      break;
-    case kBwOverusing:
-      strncpy(str, "OVER USING", 11);
-      break;
-    case kBwUnderusing:
-      strncpy(str, "UNDER USING", 12);
-      break;
-    default:
-      assert(false);
-  }
 }
 }  // namespace webrtc

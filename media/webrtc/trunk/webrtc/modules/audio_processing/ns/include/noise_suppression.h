@@ -79,6 +79,21 @@ int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs);
  */
 int WebRtcNs_set_policy(NsHandle* NS_inst, int mode);
 
+/*
+ * This functions estimates the background noise for the inserted speech frame.
+ * The input and output signals should always be 10ms (80 or 160 samples).
+ *
+ * Input
+ *      - NS_inst       : Noise suppression instance.
+ *      - spframe       : Pointer to speech frame buffer for L band
+ *
+ * Output:
+ *      - NS_inst       : Updated NS instance
+ *
+ * Return value         :  0 - OK
+ *                        -1 - Error
+ */
+int WebRtcNs_Analyze(NsHandle* NS_inst, float* spframe);
 
 /*
  * This functions does Noise Suppression for the inserted speech frame. The
@@ -99,10 +114,10 @@ int WebRtcNs_set_policy(NsHandle* NS_inst, int mode);
  *                        -1 - Error
  */
 int WebRtcNs_Process(NsHandle* NS_inst,
-                     short* spframe,
-                     short* spframe_H,
-                     short* outframe,
-                     short* outframe_H);
+                     float* spframe,
+                     float* spframe_H,
+                     float* outframe,
+                     float* outframe_H);
 
 /* Returns the internally used prior speech probability of the current frame.
  * There is a frequency bin based one as well, with which this should not be

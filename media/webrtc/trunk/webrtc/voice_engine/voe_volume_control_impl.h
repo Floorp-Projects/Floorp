@@ -24,10 +24,6 @@ public:
 
     virtual int GetSpeakerVolume(unsigned int& volume);
 
-    virtual int SetSystemOutputMute(bool enable);
-
-    virtual int GetSystemOutputMute(bool& enabled);
-
     virtual int SetMicVolume(unsigned int volume);
 
     virtual int GetMicVolume(unsigned int& volume);
@@ -35,10 +31,6 @@ public:
     virtual int SetInputMute(int channel, bool enable);
 
     virtual int GetInputMute(int channel, bool& enabled);
-
-    virtual int SetSystemInputMute(bool enable);
-
-    virtual int GetSystemInputMute(bool& enabled);
 
     virtual int GetSpeechInputLevel(unsigned int& level);
 

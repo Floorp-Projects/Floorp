@@ -14,7 +14,7 @@
 class ACMTest {
  public:
   ACMTest() {}
-  virtual ~ACMTest() = 0;
+  virtual ~ACMTest() {}
   virtual void Perform() = 0;
 };
 

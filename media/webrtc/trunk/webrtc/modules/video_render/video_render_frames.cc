@@ -55,12 +55,7 @@ int32_t VideoRenderFrames::AddFrame(I420VideoFrame* new_frame) {
   }
 
   if (new_frame->native_handle() != NULL) {
-    incoming_frames_.push_back(new TextureVideoFrame(
-        static_cast<NativeHandle*>(new_frame->native_handle()),
-        new_frame->width(),
-        new_frame->height(),
-        new_frame->timestamp(),
-        new_frame->render_time_ms()));
+    incoming_frames_.push_back(new_frame->CloneFrame());
     return static_cast<int32_t>(incoming_frames_.size());
   }
 

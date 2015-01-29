@@ -8,11 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(_MSC_VER)
-#include <windows.h>
-#endif
-
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
+
+#include <assert.h>
 
 static int UpdatePos(int pos, int capacity) {
   return (pos + 1) % capacity;
@@ -22,26 +20,16 @@ namespace webrtc {
 
 namespace subtle {
 
-// Start with compiler support, then processor-specific hacks
-#if defined(__GNUC__) || defined(__clang__)
-// Available on GCC and clang - others?
+#if defined(__aarch64__)
+// From http://http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_arm64_gcc.h
 inline void MemoryBarrier() {
-  __sync_synchronize();
-}
-
-#elif defined(_MSC_VER)
-inline void MemoryBarrier() {
-  ::MemoryBarrier();
+  __asm__ __volatile__ ("dmb ish" ::: "memory");
 }
 
 #elif defined(__ARMEL__)
 // From http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_arm_gcc.h
-// Note that it is only the MemoryBarrier function that makes this class arm
-// specific. Borrowing other MemoryBarrier implementations, this class could
-// be extended to more platforms.
 inline void MemoryBarrier() {
-  // Note: This is a function call, which is also an implicit compiler
-  // barrier.
+  // Note: This is a function call, which is also an implicit compiler barrier.
   typedef void (*KernelMemoryBarrierFunc)();
   ((KernelMemoryBarrierFunc)0xffff0fa0)();
 }

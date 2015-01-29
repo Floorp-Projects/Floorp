@@ -28,9 +28,7 @@
 #define _TEST_AUDIO_PROCESSING_
 #define _TEST_FILE_
 #define _TEST_NETWORK_
-#define _TEST_CALL_REPORT_
 #define _TEST_VIDEO_SYNC_
-#define _TEST_ENCRYPT_
 #define _TEST_NETEQ_STATS_
 #define _TEST_XMEDIA_
 
@@ -69,9 +67,6 @@
 #ifndef WEBRTC_VOICE_ENGINE_VIDEO_SYNC_API
 #undef _TEST_VIDEO_SYNC_
 #endif
-#ifndef WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-#undef _TEST_ENCRYPT_
-#endif
 #ifndef WEBRTC_VOICE_ENGINE_HARDWARE_API
 #undef _TEST_HARDWARE_
 #endif
@@ -80,9 +75,6 @@
 #endif
 #ifndef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
 #undef _TEST_NETEQ_STATS_
-#endif
-#ifndef WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-#undef _TEST_CALL_REPORT_
 #endif
 
 // Some parts can cause problems while running Insure

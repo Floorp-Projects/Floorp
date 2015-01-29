@@ -43,9 +43,6 @@ class FakeVoEExternalMedia : public VoEExternalMedia {
   WEBRTC_STUB(ExternalPlayoutGetData,
       (int16_t speechData10ms[], int samplingFreqHz,
        int current_delay_ms, int& lengthSamples));
-  WEBRTC_STUB(ExternalPlayoutData,
-      (int16_t speechData10ms[], int samplingFreqHz,
-       int num_channels, int current_delay_ms, int& lengthSamples));
   WEBRTC_STUB(GetAudioFrame, (int channel, int desired_sample_rate_hz,
                               AudioFrame* frame));
   WEBRTC_STUB(SetExternalMixing, (int channel, bool enable));
@@ -56,7 +53,7 @@ class FakeVoEExternalMedia : public VoEExternalMedia {
                    int samples_per_channel, int sample_rate_hz,
                    int num_channels) {
     const int length = samples_per_channel * num_channels;
-    scoped_array<int16_t> data;
+    scoped_ptr<int16_t[]> data;
     if (!audio) {
       data.reset(new int16_t[length]);
       memset(data.get(), 0, length * sizeof(data[0]));

@@ -31,6 +31,8 @@
 #if !defined(_G722_ENC_DEC_H_)
 #define _G722_ENC_DEC_H_
 
+#include "webrtc/typedefs.h"
+
 /*! \page g722_page G.722 encoding and decoding
 \section g722_page_sec_1 What does it do?
 The G.722 module is a bit exact implementation of the ITU G.722 specification for all three

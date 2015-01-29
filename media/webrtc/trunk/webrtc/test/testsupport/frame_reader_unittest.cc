@@ -16,7 +16,6 @@
 namespace webrtc {
 namespace test {
 
-const std::string kInputFilename = "temp_inputfile.tmp";
 const std::string kInputFileContents = "baz";
 // Setting the kFrameLength value to a value much larger than the
 // file to test causes the ReadFrame test to fail on Windows.
@@ -27,27 +26,27 @@ class FrameReaderTest: public testing::Test {
   FrameReaderTest() {}
   virtual ~FrameReaderTest() {}
   void SetUp() {
-    // Cleanup any previous dummy input file.
-    remove(kInputFilename.c_str());
-
     // Create a dummy input file.
-    FILE* dummy = fopen(kInputFilename.c_str(), "wb");
+    temp_filename_ = webrtc::test::TempFilename(webrtc::test::OutputPath(),
+                                                "frame_reader_unittest");
+    FILE* dummy = fopen(temp_filename_.c_str(), "wb");
     fprintf(dummy, "%s", kInputFileContents.c_str());
     fclose(dummy);
 
-    frame_reader_ = new FrameReaderImpl(kInputFilename, kFrameLength);
+    frame_reader_ = new FrameReaderImpl(temp_filename_, kFrameLength);
     ASSERT_TRUE(frame_reader_->Init());
   }
   void TearDown() {
     delete frame_reader_;
     // Cleanup the dummy input file.
-    remove(kInputFilename.c_str());
+    remove(temp_filename_.c_str());
   }
   FrameReader* frame_reader_;
+  std::string temp_filename_;
 };
 
 TEST_F(FrameReaderTest, InitSuccess) {
-  FrameReaderImpl frame_reader(kInputFilename, kFrameLength);
+  FrameReaderImpl frame_reader(temp_filename_, kFrameLength);
   ASSERT_TRUE(frame_reader.Init());
   ASSERT_EQ(kFrameLength, frame_reader.FrameLength());
   ASSERT_EQ(0, frame_reader.NumberOfFrames());
@@ -64,7 +63,7 @@ TEST_F(FrameReaderTest, ReadFrame) {
 
 TEST_F(FrameReaderTest, ReadFrameUninitialized) {
   uint8_t buffer[3];
-  FrameReaderImpl file_reader(kInputFilename, kFrameLength);
+  FrameReaderImpl file_reader(temp_filename_, kFrameLength);
   ASSERT_FALSE(file_reader.ReadFrame(buffer));
 }
 

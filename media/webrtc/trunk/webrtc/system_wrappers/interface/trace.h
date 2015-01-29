@@ -18,7 +18,6 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
-#include <string>
 
 namespace webrtc {
 
@@ -55,16 +54,6 @@ class Trace {
   // Returns what type of messages are written to the trace file.
   static uint32_t level_filter() { return level_filter_; }
 
-  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
-  static void set_aec_debug(bool enable) { aec_debug_ = enable; }
-  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
-  static bool aec_debug() { return aec_debug_; }
-  static uint32_t aec_debug_size() { return aec_debug_size_; }
-  static void aec_debug_filename(char *buffer, size_t size);
-  static void set_aec_debug_filename(const char* filename) {
-    aec_filename_base_ = filename;
-  }
-
   // Sets the file name. If add_file_counter is false the same file will be
   // reused when it fills up. If it's true a new file with incremented name
   // will be used.
@@ -96,18 +85,8 @@ class Trace {
 
  private:
   static uint32_t level_filter_;
-  static bool aec_debug_;
-  static uint32_t aec_debug_size_;
-  static std::string aec_filename_base_;
 };
 
 }  // namespace webrtc
-
-extern "C" {
-  extern int AECDebug();
-  extern uint32_t AECDebugMaxSize();
-  extern void AECDebugEnable(uint32_t enable);
-  extern void AECDebugFilenameBase(char *buffer, size_t size);
-}
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_TRACE_H_

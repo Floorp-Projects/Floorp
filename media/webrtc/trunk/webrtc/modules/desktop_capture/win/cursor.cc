@@ -137,7 +137,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
 
   int width = bitmap_info.bmWidth;
   int height = bitmap_info.bmHeight;
-  scoped_array<uint32_t> mask_data(new uint32_t[width * height]);
+  scoped_ptr<uint32_t[]> mask_data(new uint32_t[width * height]);
 
   // Get pixel data from |scoped_mask| converting it to 32bpp along the way.
   // GetDIBits() sets the alpha component of every pixel to 0.
@@ -197,7 +197,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
 
     // The XOR mask becomes the color bitmap.
     memcpy(
-        image->data(), mask_plane + (width * height), image->stride() * width);
+        image->data(), mask_plane + (width * height), image->stride() * height);
   }
 
   // Reconstruct transparency from the mask if the color image does not has

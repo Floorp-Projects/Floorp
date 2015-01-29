@@ -37,8 +37,6 @@ class ACMCELT : public ACMGenericCodec {
 
   int16_t InternalCreateEncoder();
 
-  void InternalDestructEncoderInst(void* ptr_inst);
-
   int16_t SetBitRateSafe(const int32_t rate);
 
   CELT_encinst_t_* enc_inst_ptr_;

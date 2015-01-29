@@ -17,8 +17,6 @@
  * WebRtcSpl_CopyFromEndW16()
  * WebRtcSpl_ZerosArrayW16()
  * WebRtcSpl_ZerosArrayW32()
- * WebRtcSpl_OnesArrayW16()
- * WebRtcSpl_OnesArrayW32()
  *
  * The description header can be found in signal_processing_library.h
  *
@@ -62,47 +60,21 @@ void WebRtcSpl_MemCpyReversedOrder(int16_t* dest, int16_t* source, int length)
     }
 }
 
-int16_t WebRtcSpl_CopyFromEndW16(const int16_t *vector_in,
-                                 int16_t length,
-                                 int16_t samples,
-                                 int16_t *vector_out)
+void WebRtcSpl_CopyFromEndW16(const int16_t *vector_in,
+                              int length,
+                              int samples,
+                              int16_t *vector_out)
 {
     // Copy the last <samples> of the input vector to vector_out
     WEBRTC_SPL_MEMCPY_W16(vector_out, &vector_in[length - samples], samples);
-
-    return samples;
 }
 
-int16_t WebRtcSpl_ZerosArrayW16(int16_t *vector, int16_t length)
+void WebRtcSpl_ZerosArrayW16(int16_t *vector, int length)
 {
     WebRtcSpl_MemSetW16(vector, 0, length);
-    return length;
 }
 
-int16_t WebRtcSpl_ZerosArrayW32(int32_t *vector, int16_t length)
+void WebRtcSpl_ZerosArrayW32(int32_t *vector, int length)
 {
     WebRtcSpl_MemSetW32(vector, 0, length);
-    return length;
-}
-
-int16_t WebRtcSpl_OnesArrayW16(int16_t *vector, int16_t length)
-{
-    int16_t i;
-    int16_t *tmpvec = vector;
-    for (i = 0; i < length; i++)
-    {
-        *tmpvec++ = 1;
-    }
-    return length;
-}
-
-int16_t WebRtcSpl_OnesArrayW32(int32_t *vector, int16_t length)
-{
-    int16_t i;
-    int32_t *tmpvec = vector;
-    for (i = 0; i < length; i++)
-    {
-        *tmpvec++ = 1;
-    }
-    return length;
 }

@@ -565,18 +565,21 @@ int main(int argc, char* argv[])
           /* Encode */
           stream_len = WebRtcIsacfix_Encode(ISAC_main_inst,
                                             shortdata,
-                                            (int16_t*)streamdata);
+                                            (uint8_t*)streamdata);
 
           /* If packet is ready, and CE testing, call the different API
              functions from the internal API. */
           if (stream_len>0) {
             if (testCE == 1) {
-              err = WebRtcIsacfix_ReadBwIndex((int16_t*)streamdata, &bwe);
+              err = WebRtcIsacfix_ReadBwIndex(
+                  reinterpret_cast<const uint8_t*>(streamdata),
+                  stream_len,
+                  &bwe);
               stream_len = WebRtcIsacfix_GetNewBitStream(
                   ISAC_main_inst,
                   bwe,
                   scale,
-                  (int16_t*)streamdata);
+                  reinterpret_cast<uint8_t*>(streamdata));
             } else if (testCE == 2) {
               /* transcode function not supported */
             } else if (testCE == 3) {
@@ -697,12 +700,13 @@ int main(int argc, char* argv[])
       }
 
       if (testNum != 9) {
-        err = WebRtcIsacfix_UpdateBwEstimate(ISAC_main_inst,
-                                             streamdata,
-                                             stream_len,
-                                             BN_data.rtp_number,
-                                             BN_data.send_time,
-                                             BN_data.arrival_time);
+        err = WebRtcIsacfix_UpdateBwEstimate(
+            ISAC_main_inst,
+            reinterpret_cast<const uint8_t*>(streamdata),
+            stream_len,
+            BN_data.rtp_number,
+            BN_data.send_time,
+            BN_data.arrival_time);
 
         if (err < 0) {
           /* exit if returned with error */
@@ -740,9 +744,14 @@ int main(int argc, char* argv[])
         if (nbTest !=2 ) {
           short FL;
           /* Call getFramelen, only used here for function test */
-          err = WebRtcIsacfix_ReadFrameLen((int16_t*)streamdata, &FL);
-          declen = WebRtcIsacfix_Decode( ISAC_main_inst, streamdata, stream_len,
-                                         decoded, speechType );
+          err = WebRtcIsacfix_ReadFrameLen(
+              reinterpret_cast<const uint8_t*>(streamdata), stream_len, &FL);
+          declen = WebRtcIsacfix_Decode(
+              ISAC_main_inst,
+              reinterpret_cast<const uint8_t*>(streamdata),
+              stream_len,
+              decoded,
+              speechType);
           /* Error check */
           if (err<0 || declen<0 || FL!=declen) {
             errtype=WebRtcIsacfix_GetErrorCode(ISAC_main_inst);

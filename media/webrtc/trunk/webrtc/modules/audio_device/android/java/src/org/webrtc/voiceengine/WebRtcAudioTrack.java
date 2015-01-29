@@ -20,11 +20,8 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.util.Log;
 
-import org.mozilla.gecko.mozglue.WebRTCJNITarget;
-
-@WebRTCJNITarget
 class WebRtcAudioTrack {
-    private AudioTrack _audioTrack;
+    private AudioTrack _audioTrack = null;
 
     private Context _context;
     private AudioManager _audioManager;
@@ -36,11 +33,11 @@ class WebRtcAudioTrack {
 
     private boolean _doPlayInit = true;
     private boolean _doRecInit = true;
-    private boolean _isRecording;
-    private boolean _isPlaying;
+    private boolean _isRecording = false;
+    private boolean _isPlaying = false;
 
-    private int _bufferedPlaySamples;
-    private int _playPosition;
+    private int _bufferedPlaySamples = 0;
+    private int _playPosition = 0;
 
     WebRtcAudioTrack() {
         try {
@@ -300,7 +297,7 @@ class WebRtcAudioTrack {
         return level;
     }
 
-    final String logTag = "WebRTC AT java";
+    final String logTag = "WebRTC AD java";
 
     private void DoLog(String msg) {
         Log.d(logTag, msg);

@@ -66,8 +66,8 @@ bool ViEFileBasedComparisonTests::TestCallSetup(
   const char* device_name = "Fake Capture Device";
 
   ::TestI420CallSetup(interfaces.codec, interfaces.video_engine,
-                      interfaces.base, interfaces.network, video_channel,
-                      device_name);
+                      interfaces.base, interfaces.network, interfaces.rtp_rtcp,
+                      video_channel, device_name);
 
   EXPECT_EQ(0, render_interface->StopRender(video_channel));
   EXPECT_EQ(0, render_interface->RemoveRenderer(video_channel));
