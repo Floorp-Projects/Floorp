@@ -45,25 +45,25 @@ class RelocationOverlay;
 }
 
 inline JSObject *
-CastAsObject(PropertyOp op)
+CastAsObject(GetterOp op)
 {
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
 inline JSObject *
-CastAsObject(StrictPropertyOp op)
+CastAsObject(SetterOp op)
 {
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
 inline Value
-CastAsObjectJsval(PropertyOp op)
+CastAsObjectJsval(GetterOp op)
 {
     return ObjectOrNullValue(CastAsObject(op));
 }
 
 inline Value
-CastAsObjectJsval(StrictPropertyOp op)
+CastAsObjectJsval(SetterOp op)
 {
     return ObjectOrNullValue(CastAsObject(op));
 }
@@ -763,20 +763,20 @@ StandardDefineProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 extern bool
 DefineProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
-               JSPropertyOp getter = nullptr,
-               JSStrictPropertyOp setter = nullptr,
+               JSGetterOp getter = nullptr,
+               JSSetterOp setter = nullptr,
                unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
 DefineProperty(ExclusiveContext *cx, HandleObject obj, PropertyName *name, HandleValue value,
-               JSPropertyOp getter = nullptr,
-               JSStrictPropertyOp setter = nullptr,
+               JSGetterOp getter = nullptr,
+               JSSetterOp setter = nullptr,
                unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
 DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, HandleValue value,
-              JSPropertyOp getter = nullptr,
-              JSStrictPropertyOp setter = nullptr,
+              JSGetterOp getter = nullptr,
+              JSSetterOp setter = nullptr,
               unsigned attrs = JSPROP_ENUMERATE);
 
 /*

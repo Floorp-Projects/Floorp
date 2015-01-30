@@ -5848,7 +5848,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
             id = INT_TO_JSID(i);
             if (!getobj ||
                 !NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue,
-                                      JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.get()), nullptr,
+                                      JS_DATA_TO_FUNC_PTR(GetterOp, getobj.get()), nullptr,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
             {
                 return false;

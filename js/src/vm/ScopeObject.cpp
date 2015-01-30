@@ -347,8 +347,8 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     const Class *clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
 
-    JSPropertyOp getter = clasp->getProperty;
-    JSStrictPropertyOp setter = clasp->setProperty;
+    JSGetterOp getter = clasp->getProperty;
+    JSSetterOp setter = clasp->setProperty;
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
@@ -471,7 +471,7 @@ with_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 static bool
 with_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+                    JSGetterOp getter, JSSetterOp setter, unsigned attrs)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
     return DefineProperty(cx, actual, id, value, getter, setter, attrs);

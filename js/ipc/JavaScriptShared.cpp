@@ -627,7 +627,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
         getter = fromObjectVariant(cx, in.getter().get_ObjectVariant());
         if (!getter)
             return false;
-        out.setGetter(JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()));
+        out.setGetter(JS_DATA_TO_FUNC_PTR(JSGetterOp, getter.get()));
     } else {
         out.setGetter(UnknownPropertyStub);
     }
@@ -639,7 +639,7 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
         setter = fromObjectVariant(cx, in.setter().get_ObjectVariant());
         if (!setter)
             return false;
-        out.setSetter(JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()));
+        out.setSetter(JS_DATA_TO_FUNC_PTR(JSSetterOp, setter.get()));
     } else {
         out.setSetter(UnknownStrictPropertyStub);
     }

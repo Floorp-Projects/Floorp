@@ -998,7 +998,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     if (mFlags.IsGlobalObject())
         mJSClass.base.flags |= XPCONNECT_GLOBAL_FLAGS;
 
-    JSPropertyOp addProperty;
+    JSAddPropertyOp addProperty;
     if (mFlags.WantAddProperty())
         addProperty = XPC_WN_Helper_AddProperty;
     else if (mFlags.UseJSStubForAddProperty())
@@ -1023,7 +1023,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     else
         mJSClass.base.getProperty = nullptr;
 
-    JSStrictPropertyOp setProperty;
+    JSSetterOp setProperty;
     if (mFlags.WantSetProperty())
         setProperty = XPC_WN_Helper_SetProperty;
     else if (mFlags.UseJSStubForSetProperty())

@@ -513,9 +513,9 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
             }
         } else {
             desc.setGetter(JS_CAST_NATIVE_TO(psMatch->getter.native.op,
-                                             JSPropertyOp));
+                                             JSGetterOp));
             desc.setSetter(JS_CAST_NATIVE_TO(psMatch->setter.native.op,
-                                             JSStrictPropertyOp));
+                                             JSSetterOp));
         }
         desc.setAttributes(flags);
 

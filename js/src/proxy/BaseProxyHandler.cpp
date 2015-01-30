@@ -68,7 +68,7 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     else
         vp.setUndefined();
 
-    return CallJSPropertyOp(cx, desc.getter(), receiver, id, vp);
+    return CallJSGetterOp(cx, desc.getter(), receiver, id, vp);
 }
 
 bool
@@ -115,7 +115,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         }
 
         // Nonstandard SpiderMonkey special case: setter ops.
-        StrictPropertyOp setter = ownDesc.setter();
+        SetterOp setter = ownDesc.setter();
         MOZ_ASSERT(setter != JS_StrictPropertyStub);
         if (setter && setter != JS_StrictPropertyStub)
             return CallSetter(cx, receiver, id, setter, ownDesc.attributes(), strict, vp);

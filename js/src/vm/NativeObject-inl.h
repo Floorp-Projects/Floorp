@@ -600,7 +600,7 @@ NativeLookupProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName 
 
 inline bool
 NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
-                     HandleValue value, PropertyOp getter, StrictPropertyOp setter,
+                     HandleValue value, GetterOp getter, SetterOp setter,
                      unsigned attrs)
 {
     MOZ_ASSERT(getter != JS_PropertyStub);

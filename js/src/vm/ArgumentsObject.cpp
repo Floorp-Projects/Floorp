@@ -478,8 +478,8 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp
     Rooted<StrictArgumentsObject*> argsobj(cx, &obj->as<StrictArgumentsObject>());
 
     unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
-    PropertyOp getter = StrictArgGetter;
-    StrictPropertyOp setter = StrictArgSetter;
+    GetterOp getter = StrictArgGetter;
+    SetterOp setter = StrictArgSetter;
 
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
@@ -495,8 +495,8 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp
             return true;
 
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-        getter = CastAsPropertyOp(argsobj->global().getThrowTypeError());
-        setter = CastAsStrictPropertyOp(argsobj->global().getThrowTypeError());
+        getter = CastAsGetterOp(argsobj->global().getThrowTypeError());
+        setter = CastAsSetterOp(argsobj->global().getThrowTypeError());
     }
 
     if (!NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue, getter, setter, attrs))

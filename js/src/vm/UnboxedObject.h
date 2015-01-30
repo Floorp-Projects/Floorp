@@ -165,7 +165,7 @@ class UnboxedPlainObject : public JSObject
                                    MutableHandleShape propp);
 
     static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                   PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+                                   GetterOp getter, SetterOp setter, unsigned attrs);
 
     static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
 
