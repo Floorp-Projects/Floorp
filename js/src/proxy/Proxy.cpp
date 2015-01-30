@@ -134,14 +134,17 @@ Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
 
 bool
 Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                      MutableHandle<PropertyDescriptor> desc)
+                      MutableHandle<PropertyDescriptor> desc, ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
-    if (!policy.allowed())
-        return policy.returnValue();
-    return proxy->as<ProxyObject>().handler()->defineProperty(cx, proxy, id, desc);
+    if (!policy.allowed()) {
+        if (!policy.returnValue())
+            return false;
+        return result.succeed();
+    }
+    return proxy->as<ProxyObject>().handler()->defineProperty(cx, proxy, id, desc, result);
 }
 
 bool
@@ -551,7 +554,8 @@ js::proxy_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 bool
 js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                         GetterOp getter, SetterOp setter, unsigned attrs)
+                         GetterOp getter, SetterOp setter, unsigned attrs,
+                         ObjectOpResult &result)
 {
     Rooted<PropertyDescriptor> desc(cx);
     desc.object().set(obj);
@@ -559,7 +563,7 @@ js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleVal
     desc.setAttributes(attrs);
     desc.setGetter(getter);
     desc.setSetter(setter);
-    return Proxy::defineProperty(cx, obj, id, &desc);
+    return Proxy::defineProperty(cx, obj, id, &desc, result);
 }
 
 bool

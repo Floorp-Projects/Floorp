@@ -529,7 +529,8 @@ class TypedObject : public JSObject
                                   MutableHandleObject objp, MutableHandleShape propp);
 
     static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                   GetterOp getter, SetterOp setter, unsigned attrs);
+                                   GetterOp getter, SetterOp setter, unsigned attrs,
+                                   ObjectOpResult &result);
 
     static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
 

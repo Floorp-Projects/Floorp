@@ -126,7 +126,8 @@ public:
                                     JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::ObjectOpResult &result, bool *defined);
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector &props);
     static bool call(JSContext *cx, JS::HandleObject wrapper,
@@ -177,7 +178,8 @@ public:
                                     JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::ObjectOpResult &result, bool *defined);
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector &props);
     static bool call(JSContext *cx, JS::HandleObject wrapper,
@@ -219,7 +221,8 @@ public:
 
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::ObjectOpResult &result, bool *defined);
 
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector &props);
@@ -336,7 +339,8 @@ public:
 
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc,
-                        JS::Handle<JSPropertyDescriptor> existingDesc, bool *defined)
+                        JS::Handle<JSPropertyDescriptor> existingDesc,
+                        JS::ObjectOpResult &result, bool *defined)
     {
         *defined = false;
         return true;
@@ -408,7 +412,8 @@ class XrayWrapper : public Base {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                JS::MutableHandle<JSPropertyDescriptor> desc,
+                                JS::ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                  JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,

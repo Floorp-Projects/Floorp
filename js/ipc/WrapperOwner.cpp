@@ -90,7 +90,8 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                MutableHandle<JSPropertyDescriptor> desc,
+                                ObjectOpResult &result) const MOZ_OVERRIDE;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
@@ -202,14 +203,16 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
 
 bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                 MutableHandle<JSPropertyDescriptor> desc) const
+                                 MutableHandle<JSPropertyDescriptor> desc,
+                                 ObjectOpResult &result) const
 {
-    FORWARD(defineProperty, (cx, proxy, id, desc));
+    FORWARD(defineProperty, (cx, proxy, id, desc, result));
 }
 
 bool
 WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-			     MutableHandle<JSPropertyDescriptor> desc)
+			     MutableHandle<JSPropertyDescriptor> desc,
+                             ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
 
@@ -227,7 +230,7 @@ WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 
     LOG_STACK();
 
-    return ok(cx, status);
+    return ok(cx, status, result);
 }
 
 bool
@@ -932,6 +935,16 @@ WrapperOwner::ok(JSContext *cx, const ReturnStatus &status)
 
     JS_SetPendingException(cx, exn);
     return false;
+}
+
+bool
+WrapperOwner::ok(JSContext *cx, const ReturnStatus &status, ObjectOpResult &result)
+{
+    if (status.type() == ReturnStatus::TReturnObjectOpResult)
+        return result.fail(status.get_ReturnObjectOpResult().code());
+    if (!ok(cx, status))
+        return false;
+    return result.succeed();
 }
 
 static RemoteObject

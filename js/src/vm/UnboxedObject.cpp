@@ -358,12 +358,13 @@ UnboxedPlainObject::obj_lookupProperty(JSContext *cx, HandleObject obj,
 
 /* static */ bool
 UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                       GetterOp getter, SetterOp setter, unsigned attrs)
+                                       GetterOp getter, SetterOp setter, unsigned attrs,
+                                       ObjectOpResult &result)
 {
     if (!convertToNative(cx, obj))
         return false;
 
-    return DefineProperty(cx, obj, id, v, getter, setter, attrs);
+    return DefineProperty(cx, obj, id, v, getter, setter, attrs, result);
 }
 
 /* static */ bool
