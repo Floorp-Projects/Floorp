@@ -247,8 +247,7 @@ public:
     // message-sending functions under a layer of indirection and
     // eating the return values
     void Show(const nsIntSize& size, bool aParentIsActive);
-    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size,
-                          const nsIntPoint& chromeDisp);
+    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void UIResolutionChanged();
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);
@@ -445,7 +444,6 @@ protected:
     nsIntRect mRect;
     nsIntSize mDimensions;
     ScreenOrientation mOrientation;
-    nsIntPoint mChromeDisp;
     float mDPI;
     CSSToLayoutDeviceScale mDefaultScale;
     bool mShown;
