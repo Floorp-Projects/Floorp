@@ -147,6 +147,63 @@ Http2PushListener.prototype.onDataAvailable = function(request, ctx, stream, off
   read_stream(stream, cnt);
 };
 
+const pushHdrTxt = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const pullHdrTxt = pushHdrTxt.split('').reverse().join('');
+
+function checkContinuedHeaders(getHeader, headerPrefix, headerText) {
+  for (var i = 0; i < 265; i++) {
+    do_check_eq(getHeader(headerPrefix + 1), headerText);
+  }
+}
+
+var Http2ContinuedHeaderListener = function() {};
+
+Http2ContinuedHeaderListener.prototype = new Http2CheckListener();
+
+Http2ContinuedHeaderListener.prototype.onStopsLeft = 2;
+
+Http2ContinuedHeaderListener.prototype.QueryInterface = function (aIID) {
+  if (aIID.equals(Ci.nsIHttpPushListener) ||
+      aIID.equals(Ci.nsIStreamListener))
+    return this;
+  throw Components.results.NS_ERROR_NO_INTERFACE;
+};
+
+Http2ContinuedHeaderListener.prototype.getInterface = function(aIID) {
+  return this.QueryInterface(aIID);
+};
+
+Http2ContinuedHeaderListener.prototype.onDataAvailable = function (request, ctx, stream, off, cnt) {
+  this.onDataAvailableFired = true;
+  this.isHttp2Connection = checkIsHttp2(request);
+  if (request.originalURI.spec == "https://localhost:" + serverPort + "/continuedheaders") {
+    // This is the original request, so the only one where we'll have continued response headers
+    checkContinuedHeaders(request.getResponseHeader, "X-Pull-Test-Header-", pullHdrTxt);
+  }
+  read_stream(stream, cnt);
+};
+
+Http2ContinuedHeaderListener.prototype.onStopRequest = function (request, ctx, status) {
+  do_check_true(this.onStartRequestFired);
+  do_check_true(Components.isSuccessCode(status));
+  do_check_true(this.onDataAvailableFired);
+  do_check_true(this.isHttp2Connection);
+
+  --this.onStopsLeft;
+  if (this.onStopsLeft === 0) {
+    run_next_test();
+    do_test_finished();
+  }
+};
+
+Http2ContinuedHeaderListener.prototype.onPush = function(associatedChannel, pushChannel) {
+  do_check_eq(associatedChannel.originalURI.spec, "https://localhost:" + serverPort + "/continuedheaders");
+  do_check_eq(pushChannel.getRequestHeader("x-pushed-request"), "true");
+  checkContinuedHeaders(pushChannel.getRequestHeader, "X-Push-Test-Header-", pushHdrTxt);
+
+  pushChannel.asyncOpen(this, pushChannel);
+};
+
 // Does the appropriate checks for a large GET response
 var Http2BigListener = function() {};
 
@@ -644,6 +701,14 @@ function test_http2_retry_rst() {
   chan.asyncOpen(listener, null);
 }
 
+function test_http2_continuations() {
+  var chan = makeChan("https://localhost:" + serverPort + "/continuedheaders");
+  chan.loadGroup = loadGroup;
+  var listener = new Http2ContinuedHeaderListener();
+  chan.notificationCallbacks = listener;
+  chan.asyncOpen(listener, chan);
+}
+
 function test_complete() {
   resetPrefs();
   do_test_finished();
@@ -680,6 +745,7 @@ var tests = [ test_http2_post_big
             , test_http2_h11required_session
             , test_http2_retry_rst
             , test_http2_wrongsuite
+            , test_http2_continuations
 
             // cleanup
             , test_complete

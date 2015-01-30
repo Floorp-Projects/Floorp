@@ -350,6 +350,28 @@ function handleRequest(req, res) {
     return;
   }
 
+  else if (u.pathname === "/continuedheaders") {
+    var pushRequestHeaders = {'x-pushed-request': 'true'};
+    var pushResponseHeaders = {'content-type': 'text/plain',
+                               'content-length': '2',
+                               'X-Connection-Http2': 'yes'};
+    var pushHdrTxt = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    var pullHdrTxt = pushHdrTxt.split('').reverse().join('');
+    for (var i = 0; i < 265; i++) {
+      pushRequestHeaders['X-Push-Test-Header-' + i] = pushHdrTxt;
+      res.setHeader('X-Pull-Test-Header-' + i, pullHdrTxt);
+    }
+    push = res.push({
+      hostname: 'localhost:' + serverPort,
+      port: serverPort,
+      path: '/continuedheaders/push',
+      method: 'GET',
+      headers: pushRequestHeaders
+    });
+    push.writeHead(200, pushResponseHeaders);
+    push.end("ok");
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');
