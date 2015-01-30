@@ -592,7 +592,7 @@ parent:
      * process. We use intr semantics here to ensure that the PluginModuleParent
      * allocation message is dispatched before LoadPlugin returns.
      */
-    sync LoadPlugin(uint32_t pluginId);
+    sync LoadPlugin(uint32_t pluginId) returns (nsresult rv);
 
     /**
      * This call is used by asynchronous plugin instantiation to notify the
@@ -600,7 +600,7 @@ parent:
      * the specified plugin id. When this call returns, the requested bridge
      * connection has been made.
      */
-    sync ConnectPluginBridge(uint32_t aPluginId);
+    sync ConnectPluginBridge(uint32_t aPluginId) returns (nsresult rv);
 
     /**
      * This call returns the set of plugins loaded in the chrome
