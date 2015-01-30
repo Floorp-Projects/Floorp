@@ -727,7 +727,7 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "gfxMacPlatformFontList::InitFontList Total (ms)",
-    "cpp_guard": "XP_MACOSX"
+    "cpp_guard": "XP_DARWIN"
   },
   "SYSTEM_FONT_FALLBACK": {
     "expires_in_version": "never",
