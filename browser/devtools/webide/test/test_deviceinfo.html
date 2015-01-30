@@ -31,9 +31,6 @@
           let permIframe = win.document.querySelector("#deck-panel-permissionstable");
           let infoIframe = win.document.querySelector("#deck-panel-runtimedetails");
 
-          yield documentIsLoaded(permIframe.contentWindow.document);
-          yield documentIsLoaded(infoIframe.contentWindow.document);
-
           yield connectToLocalRuntime(win);
 
           yield nextTick();
@@ -49,9 +46,13 @@
           win.Cmds.showRuntimeDetails();
           is(deck.selectedPanel, infoIframe, "info iframe selected");
 
-          yield infoIframe.contentWindow.getDescriptionPromise;
+          yield nextTick();
+
+          yield documentIsLoaded(infoIframe.contentWindow.document);
 
           yield nextTick();
+
+          yield infoIframe.contentWindow.getDescriptionPromise;
 
           // device info and permissions content is checked in other tests
           // We just test one value to make sure we get something
@@ -71,6 +72,12 @@
 
           win.Cmds.showPermissionsTable();
           is(deck.selectedPanel, permIframe, "permission iframe selected");
+
+          yield nextTick();
+
+          yield documentIsLoaded(permIframe.contentWindow.document);
+
+          yield nextTick();
 
           yield permIframe.contentWindow.getRawPermissionsTablePromise;
 
