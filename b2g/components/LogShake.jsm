@@ -85,6 +85,7 @@ let LogShake = {
     "/dev/log/events": LogParser.prettyPrintLogArray,
     "/proc/cmdline": LogParser.prettyPrintArray,
     "/proc/kmsg": LogParser.prettyPrintArray,
+    "/proc/last_kmsg": LogParser.prettyPrintArray,
     "/proc/meminfo": LogParser.prettyPrintArray,
     "/proc/uptime": LogParser.prettyPrintArray,
     "/proc/version": LogParser.prettyPrintArray,
