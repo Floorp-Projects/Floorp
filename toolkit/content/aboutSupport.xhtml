@@ -81,6 +81,13 @@
             </td>
           </tr>
 
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsBuildID;
+              </th>
+            <td id="buildid-box"></td>
+          </tr>
+
 #ifndef ANDROID
           <tr class="no-copy">
             <th class="column">
@@ -92,6 +99,15 @@
                 &aboutSupport.appBasicsShowUpdateHistory;
               </button>
             </td>
+          </tr>
+#endif
+
+#ifdef MOZ_UPDATER
+          <tr>
+            <th class="column">
+              &aboutSupport.appBasicsUpdateChannel;
+            </th>
+            <td id="updatechannel-box"></td>
           </tr>
 #endif
 
