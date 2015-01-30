@@ -64,8 +64,9 @@ public:
   void DoVideoSeek();
   void DoAudioSeek();
   void OnVideoSeekCompleted(int64_t aTime);
+  void OnVideoSeekFailed(nsresult aResult);
   void OnAudioSeekCompleted(int64_t aTime);
-  void OnSeekFailed(nsresult aResult);
+  void OnAudioSeekFailed(nsresult aResult);
 
   virtual bool IsWaitForDataSupported() MOZ_OVERRIDE { return true; }
   virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) MOZ_OVERRIDE;
@@ -167,10 +168,30 @@ private:
   void DoAudioRequest();
   void DoVideoRequest();
 
-  void RequestAudioDataComplete(int64_t aTime);
-  void RequestAudioDataFailed(nsresult aResult);
-  void RequestVideoDataComplete(int64_t aTime);
-  void RequestVideoDataFailed(nsresult aResult);
+  void CompleteAudioSeekAndDoRequest()
+  {
+    mAudioSeekRequest.Complete();
+    DoAudioRequest();
+  }
+
+  void CompleteVideoSeekAndDoRequest()
+  {
+    mVideoSeekRequest.Complete();
+    DoVideoRequest();
+  }
+
+  void CompleteAudioSeekAndRejectPromise()
+  {
+    mAudioSeekRequest.Complete();
+    mAudioPromise.Reject(DECODE_ERROR, __func__);
+  }
+
+  void CompleteVideoSeekAndRejectPromise()
+  {
+    mVideoSeekRequest.Complete();
+    mVideoPromise.Reject(DECODE_ERROR, __func__);
+  }
+
   // Will reject the MediaPromise with END_OF_STREAM if mediasource has ended
   // or with WAIT_FOR_DATA otherwise.
   void CheckForWaitOrEndOfStream(MediaData::Type aType, int64_t aTime /* microseconds */);
@@ -215,13 +236,14 @@ private:
   int64_t mLastAudioTime;
   int64_t mLastVideoTime;
 
+  MediaPromiseConsumerHolder<SeekPromise> mAudioSeekRequest;
+  MediaPromiseConsumerHolder<SeekPromise> mVideoSeekRequest;
+  MediaPromiseHolder<SeekPromise> mSeekPromise;
+
   // Temporary seek information while we wait for the data
   // to be added to the track buffer.
-  MediaPromiseHolder<SeekPromise> mSeekPromise;
   int64_t mPendingSeekTime;
   bool mWaitingForSeekData;
-  bool mAudioIsSeeking;
-  bool mVideoIsSeeking;
 
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;
