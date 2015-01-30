@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonAvrcpInterface.h"
+#include "BluetoothDaemonSetupInterface.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -823,6 +824,233 @@ BluetoothDaemonAvrcpModule::HandleNtf(
   }
 
   (this->*(HandleNtf[index]))(aHeader, aPDU);
+}
+
+//
+// AVRCP interface
+//
+
+BluetoothDaemonAvrcpInterface::BluetoothDaemonAvrcpInterface(
+  BluetoothDaemonAvrcpModule* aModule)
+  : mModule(aModule)
+{ }
+
+BluetoothDaemonAvrcpInterface::~BluetoothDaemonAvrcpInterface()
+{ }
+
+class BluetoothDaemonAvrcpInterface::InitResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  InitResultHandler(BluetoothAvrcpResultHandler* aRes)
+    : mRes(aRes)
+  {
+    MOZ_ASSERT(mRes);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->OnError(aStatus);
+  }
+
+  void RegisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->Init();
+  }
+
+private:
+  nsRefPtr<BluetoothAvrcpResultHandler> mRes;
+};
+
+void
+BluetoothDaemonAvrcpInterface::Init(
+  BluetoothAvrcpNotificationHandler* aNotificationHandler,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  // Set notification handler _before_ registering the module. It could
+  // happen that we receive notifications, before the result handler runs.
+  mModule->SetNotificationHandler(aNotificationHandler);
+
+  InitResultHandler* res;
+
+  if (aRes) {
+    res = new InitResultHandler(aRes);
+  } else {
+    // We don't need a result handler if the caller is not interested.
+    res = nullptr;
+  }
+
+  nsresult rv = mModule->RegisterModule(
+    BluetoothDaemonAvrcpModule::SERVICE_ID, 0x00, res);
+
+  if (NS_FAILED(rv) && aRes) {
+    DispatchError(aRes, STATUS_FAIL);
+  }
+}
+
+class BluetoothDaemonAvrcpInterface::CleanupResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  CleanupResultHandler(BluetoothDaemonAvrcpModule* aModule,
+                       BluetoothAvrcpResultHandler* aRes)
+    : mModule(aModule)
+    , mRes(aRes)
+  {
+    MOZ_ASSERT(mModule);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mRes) {
+      mRes->OnError(aStatus);
+    }
+  }
+
+  void UnregisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Clear notification handler _after_ module has been
+    // unregistered. While unregistering the module, we might
+    // still receive notifications.
+    mModule->SetNotificationHandler(nullptr);
+
+    if (mRes) {
+      mRes->Cleanup();
+    }
+  }
+
+private:
+  BluetoothDaemonAvrcpModule* mModule;
+  nsRefPtr<BluetoothAvrcpResultHandler> mRes;
+};
+
+void
+BluetoothDaemonAvrcpInterface::Cleanup(
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->UnregisterModule(BluetoothDaemonAvrcpModule::SERVICE_ID,
+                            new CleanupResultHandler(mModule, aRes));
+}
+
+void
+BluetoothDaemonAvrcpInterface::GetPlayStatusRsp(
+  ControlPlayStatus aPlayStatus, uint32_t aSongLen, uint32_t aSongPos,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->GetPlayStatusRspCmd(aPlayStatus, aSongLen, aSongPos, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::ListPlayerAppAttrRsp(
+  int aNumAttr, const BluetoothAvrcpPlayerAttribute* aPAttrs,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ListPlayerAppAttrRspCmd(aNumAttr, aPAttrs, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::ListPlayerAppValueRsp(
+  int aNumVal, uint8_t* aPVals, BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ListPlayerAppValueRspCmd(aNumVal, aPVals, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::GetPlayerAppValueRsp(
+  uint8_t aNumAttrs, const uint8_t* aIds, const uint8_t* aValues,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->GetPlayerAppValueRspCmd(aNumAttrs, aIds, aValues, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::GetPlayerAppAttrTextRsp(
+  int aNumAttr, const uint8_t* aIds, const char** aTexts,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->GetPlayerAppAttrTextRspCmd(aNumAttr, aIds, aTexts, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::GetPlayerAppValueTextRsp(
+  int aNumVal, const uint8_t* aIds, const char** aTexts,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->GetPlayerAppValueTextRspCmd(aNumVal, aIds, aTexts, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::GetElementAttrRsp(
+  uint8_t aNumAttr, const BluetoothAvrcpElementAttribute* aAttr,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->GetElementAttrRspCmd(aNumAttr, aAttr, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::SetPlayerAppValueRsp(
+  BluetoothAvrcpStatus aRspStatus, BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->SetPlayerAppValueRspCmd(aRspStatus, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::RegisterNotificationRsp(
+  BluetoothAvrcpEvent aEvent,
+  BluetoothAvrcpNotification aType,
+  const BluetoothAvrcpNotificationParam& aParam,
+  BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->RegisterNotificationRspCmd(aEvent, aType, aParam, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::SetVolume(
+  uint8_t aVolume, BluetoothAvrcpResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->SetVolumeCmd(aVolume, aRes);
+}
+
+void
+BluetoothDaemonAvrcpInterface::DispatchError(
+  BluetoothAvrcpResultHandler* aRes, BluetoothStatus aStatus)
+{
+  BluetoothResultRunnable1<BluetoothAvrcpResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
+    aRes, &BluetoothAvrcpResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
 }
 
 END_BLUETOOTH_NAMESPACE
