@@ -693,8 +693,13 @@ class DeviceManagerADB(DeviceManager):
         return False
 
     def _isLocalZipAvailable(self):
+        def _noOutput(line):
+            # suppress output from zip ProcessHandler
+            pass
         try:
-            self._checkCmd(["zip", "-?"])
+            proc = ProcessHandler(["zip", "-?"], storeOutput=False, processOutputLine=_noOutput)
+            proc.run()
+            proc.wait()
         except:
             return False
         return True
