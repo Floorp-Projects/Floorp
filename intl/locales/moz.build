@@ -4,3 +4,45 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+locales = [
+    'af',
+    'bg',
+    'ca',
+    'cy',
+    'da',
+    'de-1901',
+    'de-1996',
+    'de-CH',
+    # 'en-US',  # en-US is renamed -- see below.
+    'eo',
+    'es',
+    'et',
+    'fi',
+    'fr',
+    'gl',
+    'hr',
+    'hsb',
+    'hu',
+    'ia',
+    'is',
+    'it',
+    'kmr',
+    'la',
+    'lt',
+    'mn',
+    'nb',
+    'nl',
+    'nn',
+    'pl',
+    'pt',
+    'ru',
+    'sh',
+    'sl',
+    'sv',
+    'tr',
+    'uk',
+]
+filename = '{locale}/hyphenation/hyph_{locale}.dic'
+FINAL_TARGET_FILES.hyphenation += [filename.format(locale=locale) for locale in locales]
+# en-US is a special case: the dic file is named like en_US.
+FINAL_TARGET_FILES.hyphenation += ['en-US/hyphenation/hyph_en_US.dic']
