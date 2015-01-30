@@ -282,6 +282,31 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
+  describe("#videoDimensionsChanged", function() {
+    it("should not contain any video dimensions at the very start", function() {
+      expect(store.getStoreState()).eql(store.getInitialStoreState());
+    });
+
+    it("should update the store with new video dimensions", function() {
+      var actionData = {
+        isLocal: true,
+        videoType: "camera",
+        dimensions: { width: 640, height: 480 }
+      };
+
+      store.videoDimensionsChanged(new sharedActions.VideoDimensionsChanged(actionData));
+
+      expect(store.getStoreState().localVideoDimensions)
+        .to.have.property(actionData.videoType, actionData.dimensions);
+
+      actionData.isLocal = false;
+      store.videoDimensionsChanged(new sharedActions.VideoDimensionsChanged(actionData));
+
+      expect(store.getStoreState().remoteVideoDimensions)
+        .to.have.property(actionData.videoType, actionData.dimensions);
+    });
+  });
+
   describe("#setupRoomInfo", function() {
     var fakeRoomInfo;
 
