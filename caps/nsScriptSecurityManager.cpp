@@ -986,8 +986,6 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
     }
 
     nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
-    if (!codebase)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = codebase->Init(aURI, aAppId, aInMozBrowser);
     if (NS_FAILED(rv))
@@ -1269,7 +1267,6 @@ nsresult nsScriptSecurityManager::Init()
 
     // Create our system principal singleton
     nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
-    NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
 
     mSystemPrincipal = system;
 
