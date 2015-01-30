@@ -4,23 +4,39 @@ package webrtc.audioproc;
 
 message Init {
   optional int32 sample_rate = 1;
-  optional int32 device_sample_rate = 2;
+  optional int32 device_sample_rate = 2 [deprecated=true];
   optional int32 num_input_channels = 3;
   optional int32 num_output_channels = 4;
   optional int32 num_reverse_channels = 5;
+  optional int32 reverse_sample_rate = 6;
+  optional int32 output_sample_rate = 7;
 }
 
+// May contain interleaved or deinterleaved data, but don't store both formats.
 message ReverseStream {
+  // int16 interleaved data.
   optional bytes data = 1;
+
+  // float deinterleaved data, where each repeated element points to a single
+  // channel buffer of data.
+  repeated bytes channel = 2;
 }
 
+// May contain interleaved or deinterleaved data, but don't store both formats.
 message Stream {
+  // int16 interleaved data.
   optional bytes input_data = 1;
   optional bytes output_data = 2;
+
   optional int32 delay = 3;
   optional sint32 drift = 4;
   optional int32 level = 5;
   optional bool keypress = 6;
+
+  // float deinterleaved data, where each repeated element points to a single
+  // channel buffer of data.
+  repeated bytes input_channel = 7;
+  repeated bytes output_channel = 8;
 }
 
 message Event {

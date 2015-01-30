@@ -45,6 +45,11 @@
                           android:layout_height="@dimen/home_banner_height"
                           android:layout_gravity="bottom"/>
 
+                <ViewStub android:id="@+id/firstrun_pager_stub"
+                          android:layout="@layout/firstrun_pane"
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"/>
+
             </FrameLayout>
 
         </RelativeLayout>

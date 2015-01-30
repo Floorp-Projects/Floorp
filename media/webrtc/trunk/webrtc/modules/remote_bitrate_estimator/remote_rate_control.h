@@ -53,8 +53,6 @@ class RemoteRateControl {
   void ChangeState(const RateControlInput& input, int64_t now_ms);
   void ChangeState(RateControlState new_state);
   void ChangeRegion(RateControlRegion region);
-  static void StateStr(RateControlState state, char* str);
-  static void StateStr(BandwidthUsage state, char* str);
 
   uint32_t min_configured_bit_rate_;
   uint32_t max_configured_bit_rate_;

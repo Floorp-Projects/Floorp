@@ -40,19 +40,6 @@ namespace webrtc {
 
 class VoiceEngine;
 
-// VoEConnectionObserver
-class WEBRTC_DLLEXPORT VoEConnectionObserver
-{
-public:
-    // This method will be called peridically and deliver dead-or-alive
-    // notifications for a specified |channel| when the observer interface
-    // has been installed and activated.
-    virtual void OnPeriodicDeadOrAlive(int channel, bool alive) = 0;
-
-protected:
-    virtual ~VoEConnectionObserver() {}
-};
-
 // VoENetwork
 class WEBRTC_DLLEXPORT VoENetwork
 {
@@ -80,8 +67,15 @@ public:
     // The packets received from the network should be passed to this
     // function when external transport is enabled. Note that the data
     // including the RTP-header must also be given to the VoiceEngine.
-    virtual int ReceivedRTPPacket(
-        int channel, const void* data, unsigned int length) = 0;
+    virtual int ReceivedRTPPacket(int channel,
+                                  const void* data,
+                                  unsigned int length) = 0;
+    virtual int ReceivedRTPPacket(int channel,
+                                  const void* data,
+                                  unsigned int length,
+                                  const PacketTime& packet_time) {
+      return 0;
+    }
 
     // The packets received from the network should be passed to this
     // function when external transport is enabled. Note that the data

@@ -22,36 +22,40 @@
 
 #include "AndroidJNIWrapper.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
-namespace videocapturemodule
-{
+namespace videocapturemodule {
 
-static std::string ResolutionsToString(
-    const std::vector<std::pair<int, int> >& pairs) {
+// Helper for storing lists of pairs of ints.  Used e.g. for resolutions & FPS
+// ranges.
+typedef std::pair<int, int> IntPair;
+typedef std::vector<IntPair> IntPairs;
+
+static std::string IntPairsToString(const IntPairs& pairs, char separator) {
   std::stringstream stream;
   for (size_t i = 0; i < pairs.size(); ++i) {
     if (i > 0)
       stream << ", ";
-    stream << "(" << pairs[i].first << "x" << pairs[i].second << ")";
+    stream << "(" << pairs[i].first << separator << pairs[i].second << ")";
   }
   return stream.str();
 }
 
 struct AndroidCameraInfo {
   std::string name;
-  int min_mfps, max_mfps;  // FPS*1000.
   bool front_facing;
   int orientation;
-  std::vector<std::pair<int, int> > resolutions;  // Pairs are: (width,height).
+  IntPairs resolutions;  // Pairs are: (width,height).
+  // Pairs are (min,max) in units of FPS*1000 ("milli-frame-per-second").
+  IntPairs mfpsRanges;
 
   std::string ToString() {
     std::stringstream stream;
-    stream << "Name: [" << name << "], mfps: [" << min_mfps << ":" << max_mfps
+    stream << "Name: [" << name << "], MFPS ranges: ["
+           << IntPairsToString(mfpsRanges, ':')
            << "], front_facing: " << front_facing
            << ", orientation: " << orientation << ", resolutions: ["
-           << ResolutionsToString(resolutions) << "]";
+           << IntPairsToString(resolutions, 'x') << "]";
     return stream.str();
   }
 };
@@ -98,7 +102,6 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
   jclass j_cap_class =
     jsjni_GetGlobalClassRef("org/webrtc/videoengine/CaptureCapabilityAndroid");
   assert(j_info_class);
-  assert(j_cap_class);
   jmethodID j_initialize = jni->GetStaticMethodID(
     j_info_class, "getDeviceInfo",
     "()[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
@@ -139,10 +142,10 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
     info.name = std::string(camChars);
     jni->ReleaseStringUTFChars(camName, camChars);
 
-    info.min_mfps = jni->GetIntField(capabilityElement, minFpsField);
-    info.max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
     info.orientation = jni->GetIntField(capabilityElement, orientationField);
     info.front_facing = jni->GetBooleanField(capabilityElement, frontFacingField);
+    jint min_mfps = jni->GetIntField(capabilityElement, minFpsField);
+    jint max_mfps = jni->GetIntField(capabilityElement, maxFpsField);
 
     jintArray widthResArray =
         static_cast<jintArray>(jni->GetObjectField(capabilityElement, widthField));
@@ -157,6 +160,8 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
     for (jsize j = 0; j < numRes; ++j) {
         info.resolutions.push_back(std::make_pair(widths[j], heights[j]));
     }
+
+    info.mfpsRanges.push_back(std::make_pair(min_mfps, max_mfps));
     g_camera_info->push_back(info);
 
     jni->ReleaseIntArrayElements(widthResArray, widths, JNI_ABORT);
@@ -165,6 +170,13 @@ void DeviceInfoAndroid::Initialize(JNIEnv* jni) {
 
   jni->DeleteGlobalRef(j_info_class);
   jni->DeleteGlobalRef(j_cap_class);
+}
+
+void DeviceInfoAndroid::DeInitialize() {
+  if (g_camera_info) {
+    delete g_camera_info;
+    g_camera_info = NULL;
+  }
 }
 
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
@@ -220,14 +232,17 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
     return -1;
 
   for (size_t i = 0; i < info->resolutions.size(); ++i) {
-    const std::pair<int, int>& size = info->resolutions[i];
-    VideoCaptureCapability cap;
-    cap.width = size.first;
-    cap.height = size.second;
-    cap.maxFPS = info->max_mfps / 1000;
-    cap.expectedCaptureDelay = kExpectedCaptureDelay;
-    cap.rawType = kVideoNV21;
-    _captureCapabilities.push_back(cap);
+    for (size_t j = 0; j < info->mfpsRanges.size(); ++j) {
+      const IntPair& size = info->resolutions[i];
+      const IntPair& mfpsRange = info->mfpsRanges[j];
+      VideoCaptureCapability cap;
+      cap.width = size.first;
+      cap.height = size.second;
+      cap.maxFPS = mfpsRange.second / 1000;
+      cap.expectedCaptureDelay = kExpectedCaptureDelay;
+      cap.rawType = kVideoNV21;
+      _captureCapabilities.push_back(cap);
+    }
   }
   return _captureCapabilities.size();
 }
@@ -237,19 +252,35 @@ int32_t DeviceInfoAndroid::GetOrientation(
     VideoCaptureRotation& orientation) {
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
   if (info == NULL ||
-      !VideoCaptureImpl::RotationFromDegrees(info->orientation, &orientation)) {
+      VideoCaptureImpl::RotationFromDegrees(info->orientation,
+                                            &orientation) != 0) {
     return -1;
   }
   return 0;
 }
 
-void DeviceInfoAndroid::GetFpsRange(const char* deviceUniqueIdUTF8,
-                                    int* min_mfps, int* max_mfps) {
+void DeviceInfoAndroid::GetMFpsRange(const char* deviceUniqueIdUTF8,
+                                     int max_fps_to_match,
+                                     int* min_mfps, int* max_mfps) {
   const AndroidCameraInfo* info = FindCameraInfoByName(deviceUniqueIdUTF8);
   if (info == NULL)
     return;
-  *min_mfps = info->min_mfps;
-  *max_mfps = info->max_mfps;
+  int desired_mfps = max_fps_to_match * 1000;
+  int best_diff_mfps = 0;
+  LOG(LS_INFO) << "Search for best target mfps " << desired_mfps;
+  // Search for best fps range with preference shifted to constant fps modes.
+  for (size_t i = 0; i < info->mfpsRanges.size(); ++i) {
+    int diff_mfps = abs(info->mfpsRanges[i].first - desired_mfps) +
+        abs(info->mfpsRanges[i].second - desired_mfps) +
+        (info->mfpsRanges[i].second - info->mfpsRanges[i].first) / 2;
+    LOG(LS_INFO) << "Fps range " << info->mfpsRanges[i].first << ":" <<
+        info->mfpsRanges[i].second << ". Distance: " << diff_mfps;
+    if (i == 0 || diff_mfps < best_diff_mfps) {
+      best_diff_mfps = diff_mfps;
+      *min_mfps = info->mfpsRanges[i].first;
+      *max_mfps = info->mfpsRanges[i].second;
+    }
+  }
 }
 
 }  // namespace videocapturemodule

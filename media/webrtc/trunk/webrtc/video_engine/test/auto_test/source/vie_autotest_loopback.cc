@@ -158,7 +158,7 @@ int VideoEngineSampleCode(void* window1, void* window2)
         printf("Error in scanf()\n");
         return -1;
     }
-    getchar();
+    getc(stdin);
     captureIdx = captureIdx - 1; // Compensate for idx start at 1.
 #endif
     error = ptrViECapture->GetCaptureDevice(captureIdx, deviceName,
@@ -350,7 +350,7 @@ int VideoEngineSampleCode(void* window1, void* window2)
         printf("Error in scanf()\n");
         return -1;
     }
-    getchar();
+    getc(stdin);
     codecIdx = codecIdx - 1; // Compensate for idx start at 1.
 #endif
     // VP8 over generic transport gets this special one.
@@ -624,7 +624,7 @@ int VideoEngineSampleCode(void* window1, void* window2)
     // Call started
     printf("\nLoopback call started\n\n");
     printf("Press enter to stop...");
-    while ((getchar()) != '\n')
+    while ((getc(stdin)) != '\n')
         ;
 
     //********************************************************

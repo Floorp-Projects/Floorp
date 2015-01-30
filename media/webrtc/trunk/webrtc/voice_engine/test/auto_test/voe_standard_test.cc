@@ -10,18 +10,17 @@
 
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "webrtc/engine_configurations.h"
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/voice_engine/include/voe_neteq_stats.h"
 #include "webrtc/voice_engine/test/auto_test/automated_mode.h"
 #include "webrtc/voice_engine/test/auto_test/voe_cpu_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_stress_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
-#include "webrtc/voice_engine/test/auto_test/voe_unit_test.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
 DEFINE_bool(include_timing_dependent_tests, true,
@@ -30,8 +29,6 @@ DEFINE_bool(include_timing_dependent_tests, true,
 DEFINE_bool(automated, false,
             "If true, we'll run the automated tests we have in noninteractive "
             "mode.");
-DEFINE_bool(use_acm_version_2, false,
-            "If true, we'll run the tests with Audio Coding Module version 2.");
 
 using namespace webrtc;
 
@@ -43,14 +40,10 @@ void SubAPIManager::DisplayStatus() const {
   TEST_LOG("Supported sub APIs:\n\n");
   if (_base)
     TEST_LOG("  Base\n");
-  if (_callReport)
-    TEST_LOG("  CallReport\n");
   if (_codec)
     TEST_LOG("  Codec\n");
   if (_dtmf)
     TEST_LOG("  Dtmf\n");
-  if (_encryption)
-    TEST_LOG("  Encryption\n");
   if (_externalMedia)
     TEST_LOG("  ExternalMedia\n");
   if (_file)
@@ -73,14 +66,10 @@ void SubAPIManager::DisplayStatus() const {
   TEST_LOG("Excluded sub APIs:\n\n");
   if (!_base)
     TEST_LOG("  Base\n");
-  if (!_callReport)
-    TEST_LOG("  CallReport\n");
   if (!_codec)
     TEST_LOG("  Codec\n");
   if (!_dtmf)
     TEST_LOG("  Dtmf\n");
-  if (!_encryption)
-    TEST_LOG("  Encryption\n");
   if (!_externalMedia)
     TEST_LOG("  ExternamMedia\n");
   if (!_file)
@@ -106,10 +95,8 @@ VoETestManager::VoETestManager()
     : initialized_(false),
       voice_engine_(NULL),
       voe_base_(0),
-      voe_call_report_(0),
       voe_codec_(0),
       voe_dtmf_(0),
-      voe_encrypt_(0),
       voe_xmedia_(0),
       voe_file_(0),
       voe_hardware_(0),
@@ -138,12 +125,7 @@ bool VoETestManager::Init() {
     return false;
   }
 
-  // TODO(minyue): Remove when the old ACM is removed (latest 2014-04-01).
-  config_.Set<AudioCodingModuleFactory>(FLAGS_use_acm_version_2 ?
-      new NewAudioCodingModuleFactory() :
-      new AudioCodingModuleFactory());
-  voice_engine_ = VoiceEngine::Create(config_);
-
+  voice_engine_ = VoiceEngine::Create();
   if (!voice_engine_) {
     TEST_LOG("Failed to create VoiceEngine\n");
     return false;
@@ -165,7 +147,6 @@ void VoETestManager::GetInterfaces() {
 #ifdef _TEST_VIDEO_SYNC_
     voe_vsync_ = VoEVideoSync::GetInterface(voice_engine_);
 #endif
-    voe_encrypt_ = VoEEncryption::GetInterface(voice_engine_);
     voe_hardware_ = VoEHardware::GetInterface(voice_engine_);
     // Set the audio layer to use in all tests
     if (voe_hardware_) {
@@ -180,9 +161,6 @@ void VoETestManager::GetInterfaces() {
     }
 #ifdef _TEST_XMEDIA_
     voe_xmedia_ = VoEExternalMedia::GetInterface(voice_engine_);
-#endif
-#ifdef _TEST_CALL_REPORT_
-    voe_call_report_ = VoECallReport::GetInterface(voice_engine_);
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
     voe_neteq_stats_ = VoENetEqStats::GetInterface(voice_engine_);
@@ -231,10 +209,6 @@ int VoETestManager::ReleaseInterfaces() {
     voe_vsync_ = NULL;
   }
 #endif
-  if (voe_encrypt_) {
-    voe_encrypt_->Release();
-    voe_encrypt_ = NULL;
-  }
   if (voe_hardware_) {
     voe_hardware_->Release();
     voe_hardware_ = NULL;
@@ -243,12 +217,6 @@ int VoETestManager::ReleaseInterfaces() {
   if (voe_xmedia_) {
     voe_xmedia_->Release();
     voe_xmedia_ = NULL;
-  }
-#endif
-#ifdef _TEST_CALL_REPORT_
-  if (voe_call_report_) {
-    voe_call_report_->Release();
-    voe_call_report_ = NULL;
   }
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API
@@ -289,9 +257,6 @@ int run_auto_test(TestType test_type) {
   if (test_type == Stress) {
     VoEStressTest stressTest(test_manager);
     result = stressTest.DoTest();
-  } else if (test_type == Unit) {
-    VoEUnitTest unitTest(test_manager);
-    result = unitTest.DoTest();
   } else if (test_type == CPU) {
     VoECpuTest cpuTest(test_manager);
     result = cpuTest.DoTest();
@@ -327,7 +292,7 @@ int RunInManualMode() {
   printf(" (1)  Standard test\n");
   printf(" (2)  [OBSOLETE: Extended test(s)...]\n");
   printf(" (3)  Stress test(s)...\n");
-  printf(" (4)  Unit test(s)...\n");
+  printf(" (4)  [OBSOLETE: Unit test(s)...]\n");
   printf(" (5)  CPU & memory reference test [Windows]...\n");
   printf("\n: ");
 
@@ -347,7 +312,6 @@ int RunInManualMode() {
       test_type = Stress;
       break;
     case 4:
-      test_type = Unit;
       break;
     case 5:
       test_type = CPU;
@@ -377,6 +341,9 @@ int main(int argc, char** argv) {
   // This function and RunInAutomatedMode is defined in automated_mode.cc
   // to avoid macro clashes with googletest (for instance ASSERT_TRUE).
   InitializeGoogleTest(&argc, argv);
+  // AllowCommandLineParsing allows us to ignore flags passed on to us by
+  // Chromium build bots without having to explicitly disable them.
+  google::AllowCommandLineReparsing();
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   if (FLAGS_automated) {

@@ -20,7 +20,7 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 
@@ -82,9 +82,8 @@ ForwardErrorCorrection::ReceivedPacket::~ReceivedPacket() {}
 ForwardErrorCorrection::RecoveredPacket::RecoveredPacket() {}
 ForwardErrorCorrection::RecoveredPacket::~RecoveredPacket() {}
 
-ForwardErrorCorrection::ForwardErrorCorrection(int32_t id)
-    : id_(id),
-      generated_fec_packets_(kMaxMediaPackets),
+ForwardErrorCorrection::ForwardErrorCorrection()
+    : generated_fec_packets_(kMaxMediaPackets),
       fec_packet_received_(false) {}
 
 ForwardErrorCorrection::~ForwardErrorCorrection() {}
@@ -112,43 +111,23 @@ int32_t ForwardErrorCorrection::GenerateFEC(const PacketList& media_packet_list,
                                             bool use_unequal_protection,
                                             FecMaskType fec_mask_type,
                                             PacketList* fec_packet_list) {
-  if (media_packet_list.empty()) {
-    WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, id_,
-                 "%s media packet list is empty", __FUNCTION__);
-    return -1;
-  }
-  if (!fec_packet_list->empty()) {
-    WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, id_,
-                 "%s FEC packet list is not empty", __FUNCTION__);
-    return -1;
-  }
   const uint16_t num_media_packets = media_packet_list.size();
+
+  // Sanity check arguments.
+  assert(num_media_packets > 0);
+  assert(num_important_packets >= 0 &&
+         num_important_packets <= num_media_packets);
+  assert(fec_packet_list->empty());
+
+  if (num_media_packets > kMaxMediaPackets) {
+    LOG(LS_WARNING) << "Can't protect " << num_media_packets
+                    << " media packets per frame. Max is " << kMaxMediaPackets;
+    return -1;
+  }
+
   bool l_bit = (num_media_packets > 8 * kMaskSizeLBitClear);
   int num_maskBytes = l_bit ? kMaskSizeLBitSet : kMaskSizeLBitClear;
 
-  if (num_media_packets > kMaxMediaPackets) {
-    WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, id_,
-                 "%s can only protect %d media packets per frame; %d requested",
-                 __FUNCTION__, kMaxMediaPackets, num_media_packets);
-    return -1;
-  }
-
-  // Error checking on the number of important packets.
-  // Can't have more important packets than media packets.
-  if (num_important_packets > num_media_packets) {
-    WEBRTC_TRACE(
-        kTraceError, kTraceRtpRtcp, id_,
-        "Number of important packets (%d) greater than number of media "
-        "packets (%d)",
-        num_important_packets, num_media_packets);
-    return -1;
-  }
-  if (num_important_packets < 0) {
-    WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, id_,
-                 "Number of important packets (%d) less than zero",
-                 num_important_packets);
-    return -1;
-  }
   // Do some error checking on the media packets.
   PacketList::const_iterator media_list_it = media_packet_list.begin();
   while (media_list_it != media_packet_list.end()) {
@@ -156,20 +135,16 @@ int32_t ForwardErrorCorrection::GenerateFEC(const PacketList& media_packet_list,
     assert(media_packet);
 
     if (media_packet->length < kRtpHeaderSize) {
-      WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, id_,
-                   "%s media packet (%d bytes) is smaller than RTP header",
-                   __FUNCTION__, media_packet->length);
+      LOG(LS_WARNING) << "Media packet " << media_packet->length << " bytes "
+                      << "is smaller than RTP header.";
       return -1;
     }
 
     // Ensure our FEC packets will fit in a typical MTU.
     if (media_packet->length + PacketOverhead() + kTransportOverhead >
         IP_PACKET_SIZE) {
-      WEBRTC_TRACE(
-          kTraceError, kTraceRtpRtcp, id_,
-          "%s media packet (%d bytes) with overhead is larger than MTU(%d)",
-          __FUNCTION__, media_packet->length, IP_PACKET_SIZE);
-      return -1;
+      LOG(LS_WARNING) << "Media packet " << media_packet->length << " bytes "
+                      << "with overhead is larger than " << IP_PACKET_SIZE;
     }
     media_list_it++;
   }
@@ -255,7 +230,7 @@ void ForwardErrorCorrection::GenerateFecBitStrings(
         Packet* media_packet = *media_list_it;
 
         // Assign network-ordered media payload length.
-        ModuleRTPUtility::AssignUWord16ToBuffer(
+        RtpUtility::AssignUWord16ToBuffer(
             media_payload_length, media_packet->length - kRtpHeaderSize);
 
         fec_packet_length = media_packet->length + fec_rtp_offset;
@@ -457,7 +432,7 @@ void ForwardErrorCorrection::GenerateFecUlpHeaders(
     // -- ULP header --
     // Copy the payload size to the protection length field.
     // (We protect the entire packet.)
-    ModuleRTPUtility::AssignUWord16ToBuffer(
+    RtpUtility::AssignUWord16ToBuffer(
         &generated_fec_packets_[i].data[10],
         generated_fec_packets_[i].length - kFecHeaderSize - ulp_header_size);
 
@@ -562,7 +537,7 @@ void ForwardErrorCorrection::InsertFECPacket(
   fec_packet->ssrc = rx_packet->ssrc;
 
   const uint16_t seq_num_base =
-      ModuleRTPUtility::BufferToUWord16(&fec_packet->pkt->data[2]);
+      RtpUtility::BufferToUWord16(&fec_packet->pkt->data[2]);
   const uint16_t maskSizeBytes =
       (fec_packet->pkt->data[0] & 0x40) ? kMaskSizeLBitSet
                                         : kMaskSizeLBitClear;  // L bit set?
@@ -582,9 +557,7 @@ void ForwardErrorCorrection::InsertFECPacket(
   }
   if (fec_packet->protected_pkt_list.empty()) {
     // All-zero packet mask; we can discard this FEC packet.
-    WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, id_,
-                 "FEC packet %u has an all-zero packet mask.",
-                 fec_packet->seq_num, __FUNCTION__);
+    LOG(LS_WARNING) << "FEC packet has an all-zero packet mask.";
     delete fec_packet;
   } else {
     AssignRecoveredPackets(fec_packet, recovered_packet_list);
@@ -630,6 +603,23 @@ void ForwardErrorCorrection::InsertPackets(
   while (!received_packet_list->empty()) {
     ReceivedPacket* rx_packet = received_packet_list->front();
 
+    // Check for discarding oldest FEC packet, to avoid wrong FEC decoding from
+    // sequence number wrap-around. Detection of old FEC packet is based on
+    // sequence number difference of received packet and oldest packet in FEC
+    // packet list.
+    // TODO(marpan/holmer): We should be able to improve detection/discarding of
+    // old FEC packets based on timestamp information or better sequence number
+    // thresholding (e.g., to distinguish between wrap-around and reordering).
+    if (!fec_packet_list_.empty()) {
+      uint16_t seq_num_diff = abs(
+          static_cast<int>(rx_packet->seq_num) -
+          static_cast<int>(fec_packet_list_.front()->seq_num));
+      if (seq_num_diff > 0x3fff) {
+        DiscardFECPacket(fec_packet_list_.front());
+        fec_packet_list_.pop_front();
+      }
+    }
+
     if (rx_packet->is_fec) {
       InsertFECPacket(rx_packet, recovered_packet_list);
     } else {
@@ -660,7 +650,7 @@ void ForwardErrorCorrection::InitRecovery(const FecPacket* fec_packet,
   // Copy FEC payload, skipping the ULP header.
   memcpy(&recovered->pkt->data[kRtpHeaderSize],
          &fec_packet->pkt->data[kFecHeaderSize + ulp_header_size],
-         ModuleRTPUtility::BufferToUWord16(protection_length));
+         RtpUtility::BufferToUWord16(protection_length));
   // Copy the length recovery field.
   memcpy(recovered->length_recovery, &fec_packet->pkt->data[8], 2);
   // Copy the first 2 bytes of the FEC header.
@@ -668,8 +658,7 @@ void ForwardErrorCorrection::InitRecovery(const FecPacket* fec_packet,
   // Copy the 5th to 8th bytes of the FEC header.
   memcpy(&recovered->pkt->data[4], &fec_packet->pkt->data[4], 4);
   // Set the SSRC field.
-  ModuleRTPUtility::AssignUWord32ToBuffer(&recovered->pkt->data[8],
-                                          fec_packet->ssrc);
+  RtpUtility::AssignUWord32ToBuffer(&recovered->pkt->data[8], fec_packet->ssrc);
 }
 
 void ForwardErrorCorrection::FinishRecovery(RecoveredPacket* recovered) {
@@ -678,12 +667,11 @@ void ForwardErrorCorrection::FinishRecovery(RecoveredPacket* recovered) {
   recovered->pkt->data[0] &= 0xbf;  // Clear the 2nd bit.
 
   // Set the SN field.
-  ModuleRTPUtility::AssignUWord16ToBuffer(&recovered->pkt->data[2],
-                                          recovered->seq_num);
+  RtpUtility::AssignUWord16ToBuffer(&recovered->pkt->data[2],
+                                    recovered->seq_num);
   // Recover the packet length.
   recovered->pkt->length =
-      ModuleRTPUtility::BufferToUWord16(recovered->length_recovery) +
-      kRtpHeaderSize;
+      RtpUtility::BufferToUWord16(recovered->length_recovery) + kRtpHeaderSize;
 }
 
 void ForwardErrorCorrection::XorPackets(const Packet* src_packet,
@@ -698,8 +686,8 @@ void ForwardErrorCorrection::XorPackets(const Packet* src_packet,
   }
   // XOR with the network-ordered payload size.
   uint8_t media_payload_length[2];
-  ModuleRTPUtility::AssignUWord16ToBuffer(media_payload_length,
-                                          src_packet->length - kRtpHeaderSize);
+  RtpUtility::AssignUWord16ToBuffer(media_payload_length,
+                                    src_packet->length - kRtpHeaderSize);
   dst_packet->length_recovery[0] ^= media_payload_length[0];
   dst_packet->length_recovery[1] ^= media_payload_length[1];
 

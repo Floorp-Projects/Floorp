@@ -585,12 +585,6 @@ int32_t AudioTrackJni::StopPlayout() {
 
 }
 
-int32_t AudioTrackJni::SpeakerIsAvailable(bool& available) {  // NOLINT
-  // We always assume it's available
-  available = true;
-  return 0;
-}
-
 int32_t AudioTrackJni::InitSpeaker() {
   CriticalSectionScoped lock(&_critSect);
 

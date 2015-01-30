@@ -219,41 +219,42 @@ TEST_F(ReceiveStatisticsTest, RtcpCallbacks) {
   EXPECT_EQ(1u, callback.num_calls_);
 }
 
+class RtpTestCallback : public StreamDataCountersCallback {
+ public:
+  RtpTestCallback()
+      : StreamDataCountersCallback(), num_calls_(0), ssrc_(0), stats_() {}
+  virtual ~RtpTestCallback() {}
+
+  virtual void DataCountersUpdated(const StreamDataCounters& counters,
+                                   uint32_t ssrc) {
+    ssrc_ = ssrc;
+    stats_ = counters;
+    ++num_calls_;
+  }
+
+  void ExpectMatches(uint32_t num_calls,
+                     uint32_t ssrc,
+                     uint32_t bytes,
+                     uint32_t padding,
+                     uint32_t packets,
+                     uint32_t retransmits,
+                     uint32_t fec) {
+    EXPECT_EQ(num_calls, num_calls_);
+    EXPECT_EQ(ssrc, ssrc_);
+    EXPECT_EQ(bytes, stats_.bytes);
+    EXPECT_EQ(padding, stats_.padding_bytes);
+    EXPECT_EQ(packets, stats_.packets);
+    EXPECT_EQ(retransmits, stats_.retransmitted_packets);
+    EXPECT_EQ(fec, stats_.fec_packets);
+  }
+
+  uint32_t num_calls_;
+  uint32_t ssrc_;
+  StreamDataCounters stats_;
+};
+
 TEST_F(ReceiveStatisticsTest, RtpCallbacks) {
-  class TestCallback : public StreamDataCountersCallback {
-   public:
-    TestCallback()
-        : StreamDataCountersCallback(), num_calls_(0), ssrc_(0), stats_() {}
-    virtual ~TestCallback() {}
-
-    virtual void DataCountersUpdated(const StreamDataCounters& counters,
-                                     uint32_t ssrc) {
-      ssrc_ = ssrc;
-      stats_ = counters;
-      ++num_calls_;
-    }
-
-    void ExpectMatches(uint32_t num_calls,
-                       uint32_t ssrc,
-                       uint32_t bytes,
-                       uint32_t padding,
-                       uint32_t packets,
-                       uint32_t retransmits,
-                       uint32_t fec) {
-      EXPECT_EQ(num_calls, num_calls_);
-      EXPECT_EQ(ssrc, ssrc_);
-      EXPECT_EQ(bytes, stats_.bytes);
-      EXPECT_EQ(padding, stats_.padding_bytes);
-      EXPECT_EQ(packets, stats_.packets);
-      EXPECT_EQ(retransmits, stats_.retransmitted_packets);
-      EXPECT_EQ(fec, stats_.fec_packets);
-    }
-
-    uint32_t num_calls_;
-    uint32_t ssrc_;
-    StreamDataCounters stats_;
-  } callback;
-
+  RtpTestCallback callback;
   receive_statistics_->RegisterRtpStatisticsCallback(&callback);
 
   const uint32_t kHeaderLength = 20;
@@ -299,5 +300,24 @@ TEST_F(ReceiveStatisticsTest, RtpCallbacks) {
       header1_, kPacketSize1 + kHeaderLength, true);
   callback.ExpectMatches(
       5, kSsrc1, 4 * kPacketSize1, kPaddingLength * 2, 4, 1, 1);
+}
+
+TEST_F(ReceiveStatisticsTest, RtpCallbacksFecFirst) {
+  RtpTestCallback callback;
+  receive_statistics_->RegisterRtpStatisticsCallback(&callback);
+
+  const uint32_t kHeaderLength = 20;
+
+  // If first packet is FEC, ignore it.
+  receive_statistics_->FecPacketReceived(kSsrc1);
+  EXPECT_EQ(0u, callback.num_calls_);
+
+  header1_.headerLength = kHeaderLength;
+  receive_statistics_->IncomingPacket(
+      header1_, kPacketSize1 + kHeaderLength, false);
+  callback.ExpectMatches(1, kSsrc1, kPacketSize1, 0, 1, 0, 0);
+
+  receive_statistics_->FecPacketReceived(kSsrc1);
+  callback.ExpectMatches(2, kSsrc1, kPacketSize1, 0, 1, 0, 1);
 }
 }  // namespace webrtc

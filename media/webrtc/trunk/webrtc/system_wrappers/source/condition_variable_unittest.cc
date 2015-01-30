@@ -14,13 +14,11 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/system_wrappers/source/unittest_utilities.h"
 
 namespace webrtc {
 
 namespace {
 
-const int kLogTrace = false;  // Set to true to enable debug logging to stdout.
 const int kLongWaitMs = 100 * 1000; // A long time in testing terms
 const int kShortWaitMs = 2 * 1000; // Long enough for process switches to happen
 
@@ -143,9 +141,7 @@ bool WaitingRunFunction(void* obj) {
 
 class CondVarTest : public ::testing::Test {
  public:
-  CondVarTest()
-    : trace_(kLogTrace) {
-  }
+  CondVarTest() {}
 
   virtual void SetUp() {
     thread_ = ThreadWrapper::CreateThread(&WaitingRunFunction,
@@ -171,7 +167,6 @@ class CondVarTest : public ::testing::Test {
   Baton baton_;
 
  private:
-  ScopedTracing trace_;
   ThreadWrapper* thread_;
 };
 

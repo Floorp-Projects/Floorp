@@ -188,8 +188,7 @@ int32_t AudioDeviceLinuxALSA::Init()
     {
         return 0;
     }
-
-#ifdef USE_X11
+#if defined(USE_X11)
     //Get X display handle for typing detection
     _XDisplay = XOpenDisplay(NULL);
     if (!_XDisplay)
@@ -198,7 +197,6 @@ int32_t AudioDeviceLinuxALSA::Init()
           "  failed to open X display, typing detection will not work");
     }
 #endif
-
     _playWarning = 0;
     _playError = 0;
     _recWarning = 0;
@@ -264,15 +262,13 @@ int32_t AudioDeviceLinuxALSA::Terminate()
 
         _critSect.Enter();
     }
-
-#ifdef USE_X11
+#if defined(USE_X11)
     if (_XDisplay)
     {
       XCloseDisplay(_XDisplay);
       _XDisplay = NULL;
     }
 #endif
-
     _initialized = false;
     _outputDeviceIsSpecified = false;
     _inputDeviceIsSpecified = false;
@@ -283,34 +279,6 @@ int32_t AudioDeviceLinuxALSA::Terminate()
 bool AudioDeviceLinuxALSA::Initialized() const
 {
     return (_initialized);
-}
-
-int32_t AudioDeviceLinuxALSA::SpeakerIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.SpeakerIsInitialized();
-
-    // Make an attempt to open up the
-    // output mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitSpeaker() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitSpeaker was successful, we know that a valid speaker
-    // exists
-    available = true;
-
-    // Close the initialized output mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseSpeaker();
-    }
-
-    return 0;
 }
 
 int32_t AudioDeviceLinuxALSA::InitSpeaker()
@@ -326,34 +294,6 @@ int32_t AudioDeviceLinuxALSA::InitSpeaker()
     char devName[kAdmMaxDeviceNameSize] = {0};
     GetDevicesInfo(2, true, _outputDeviceIndex, devName, kAdmMaxDeviceNameSize);
     return _mixerManager.OpenSpeaker(devName);
-}
-
-int32_t AudioDeviceLinuxALSA::MicrophoneIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
-
-    // Make an attempt to open up the
-    // input mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitMicrophone() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitMicrophone was successful, we know that a valid
-    // microphone exists
-    available = true;
-
-    // Close the initialized input mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseMicrophone();
-    }
-
-    return 0;
 }
 
 int32_t AudioDeviceLinuxALSA::InitMicrophone()
@@ -2376,7 +2316,7 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
 
 
 bool AudioDeviceLinuxALSA::KeyPressed() const{
-#ifdef USE_X11
+#if defined(USE_X11)
   char szKey[32];
   unsigned int i = 0;
   char state = 0;

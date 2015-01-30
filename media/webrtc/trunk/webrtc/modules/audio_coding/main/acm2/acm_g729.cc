@@ -57,8 +57,6 @@ int16_t ACMG729::InternalCreateEncoder() { return -1; }
 
 void ACMG729::DestructEncoderSafe() { return; }
 
-void ACMG729::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 #else  //===================== Actual Implementation =======================
 ACMG729::ACMG729(int16_t codec_id)
     : codec_id_(codec_id),
@@ -243,13 +241,6 @@ void ACMG729::DestructEncoderSafe() {
     WebRtcG729_FreeEnc(encoder_inst_ptr_);
     encoder_inst_ptr_ = NULL;
   }
-}
-
-void ACMG729::InternalDestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    WebRtcG729_FreeEnc(static_cast<G729_encinst_t_*>(ptr_inst));
-  }
-  return;
 }
 
 #endif

@@ -13,6 +13,8 @@
 
 #include <stddef.h>
 
+#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
+
 namespace webrtc {
 
 class DesktopFrame;
@@ -52,6 +54,11 @@ class DesktopCapturer {
   // the top left corner of the capture target. Pending capture operations are
   // canceled when DesktopCapturer is deleted.
   virtual void Capture(const DesktopRegion& region) = 0;
+
+  // Sets the window to be excluded from the captured image in the future
+  // Capture calls. Used to exclude the screenshare notification window for
+  // screen capturing.
+  virtual void SetExcludedWindow(WindowId window) {}
 };
 
 }  // namespace webrtc

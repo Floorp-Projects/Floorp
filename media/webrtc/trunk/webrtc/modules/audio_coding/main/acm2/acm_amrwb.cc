@@ -73,8 +73,6 @@ void ACMAMRwb::DestructEncoderSafe() { return; }
 
 int16_t ACMAMRwb::SetBitRateSafe(const int32_t /* rate */) { return -1; }
 
-void ACMAMRwb::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 int16_t ACMAMRwb::SetAMRwbEncoderPackingFormat(
     ACMAMRPackingFormat /* packing_format */) {
   return -1;
@@ -271,13 +269,6 @@ int16_t ACMAMRwb::SetBitRateSafe(const int32_t rate) {
     }
   }
   return 0;
-}
-
-void ACMAMRwb::InternalDestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    WebRtcAmrWb_FreeEnc(static_cast<AMRWB_encinst_t_*>(ptr_inst));
-  }
-  return;
 }
 
 int16_t ACMAMRwb::SetAMRwbEncoderPackingFormat(

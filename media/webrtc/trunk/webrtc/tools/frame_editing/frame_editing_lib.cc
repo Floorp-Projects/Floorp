@@ -38,7 +38,7 @@ int EditFrames(const string& in_path, int width, int height,
   // Frame size of I420.
   int frame_length = CalcBufferSize(kI420, width, height);
 
-  webrtc::scoped_array<uint8_t> temp_buffer(new uint8_t[frame_length]);
+  webrtc::scoped_ptr<uint8_t[]> temp_buffer(new uint8_t[frame_length]);
 
   FILE* out_fid = fopen(out_path.c_str(), "wb");
 

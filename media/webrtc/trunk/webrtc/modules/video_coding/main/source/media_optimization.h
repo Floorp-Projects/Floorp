@@ -17,8 +17,8 @@
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/media_opt_util.h"
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -29,10 +29,9 @@ class VCMContentMetricsProcessing;
 
 namespace media_optimization {
 
-// TODO(andresp): Make thread safe.
 class MediaOptimization {
  public:
-  MediaOptimization(int32_t id, Clock* clock);
+  explicit MediaOptimization(Clock* clock);
   ~MediaOptimization();
 
   // TODO(andresp): Can Reset and SetEncodingData be done at construction time
@@ -105,63 +104,84 @@ class MediaOptimization {
   struct EncodedFrameSample;
   typedef std::list<EncodedFrameSample> FrameSampleList;
 
-  void UpdateIncomingFrameRate();
-  void PurgeOldFrameSamples(int64_t now_ms);
-  void UpdateSentBitrate(int64_t now_ms);
-  void UpdateSentFramerate();
+  void UpdateIncomingFrameRate() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  void PurgeOldFrameSamples(int64_t now_ms)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  void UpdateSentBitrate(int64_t now_ms) EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  void UpdateSentFramerate() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Computes new Quality Mode.
-  int32_t SelectQuality(VCMQMSettingsCallback* qmsettings_callback);
+  int32_t SelectQuality(VCMQMSettingsCallback* qmsettings_callback)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Verifies if QM settings differ from default, i.e. if an update is required.
   // Computes actual values, as will be sent to the encoder.
   bool QMUpdate(VCMResolutionScale* qm,
-                VCMQMSettingsCallback* qmsettings_callback);
+                VCMQMSettingsCallback* qmsettings_callback)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Checks if we should make a QM change. Return true if yes, false otherwise.
-  bool CheckStatusForQMchange();
+  bool CheckStatusForQMchange() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
-  void ProcessIncomingFrameRate(int64_t now);
+  void ProcessIncomingFrameRate(int64_t now)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Checks conditions for suspending the video. The method compares
   // |target_bit_rate_| with the threshold values for suspension, and changes
   // the state of |video_suspended_| accordingly.
-  void CheckSuspendConditions();
+  void CheckSuspendConditions() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
-  int32_t id_;
-  Clock* clock_;
-  int32_t max_bit_rate_;
-  VideoCodecType send_codec_type_;
-  uint16_t codec_width_;
-  uint16_t codec_height_;
-  uint16_t min_width_;
-  uint16_t min_height_;
-  float user_frame_rate_;
-  scoped_ptr<FrameDropper> frame_dropper_;
-  scoped_ptr<VCMLossProtectionLogic> loss_prot_logic_;
-  uint8_t fraction_lost_;
-  uint32_t send_statistics_[4];
-  uint32_t send_statistics_zero_encode_;
-  int32_t max_payload_size_;
-  int target_bit_rate_;
-  float incoming_frame_rate_;
-  int64_t incoming_frame_times_[kFrameCountHistorySize];
-  bool enable_qm_;
-  std::list<EncodedFrameSample> encoded_frame_samples_;
-  uint32_t avg_sent_bit_rate_bps_;
-  uint32_t avg_sent_framerate_;
-  uint32_t key_frame_cnt_;
-  uint32_t delta_frame_cnt_;
-  scoped_ptr<VCMContentMetricsProcessing> content_;
-  scoped_ptr<VCMQmResolution> qm_resolution_;
-  int64_t last_qm_update_time_;
-  int64_t last_change_time_;  // Content/user triggered.
-  int num_layers_;
-  bool suspension_enabled_;
-  bool video_suspended_;
-  int suspension_threshold_bps_;
-  int suspension_window_bps_;
-  CPULoadState loadstate_;
+  void SetEncodingDataInternal(VideoCodecType send_codec_type,
+                               int32_t max_bit_rate,
+                               uint32_t frame_rate,
+                               uint32_t bit_rate,
+                               uint16_t width,
+                               uint16_t height,
+                               uint8_t  divisor,
+                               int num_temporal_layers,
+                               int32_t mtu)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+
+  uint32_t InputFrameRateInternal() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+
+  uint32_t SentFrameRateInternal() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+
+  // Protect all members.
+  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+
+  Clock* clock_ GUARDED_BY(crit_sect_);
+  int32_t max_bit_rate_ GUARDED_BY(crit_sect_);
+  VideoCodecType send_codec_type_ GUARDED_BY(crit_sect_);
+  uint16_t codec_width_ GUARDED_BY(crit_sect_);
+  uint16_t codec_height_ GUARDED_BY(crit_sect_);
+  uint16_t min_width_ GUARDED_BY(crit_sect_);
+  uint16_t min_height_  GUARDED_BY(crit_sect_);
+  float user_frame_rate_ GUARDED_BY(crit_sect_);
+  scoped_ptr<FrameDropper> frame_dropper_ GUARDED_BY(crit_sect_);
+  scoped_ptr<VCMLossProtectionLogic> loss_prot_logic_ GUARDED_BY(crit_sect_);
+  uint8_t fraction_lost_ GUARDED_BY(crit_sect_);
+  uint32_t send_statistics_[4] GUARDED_BY(crit_sect_);
+  uint32_t send_statistics_zero_encode_ GUARDED_BY(crit_sect_);
+  int32_t max_payload_size_ GUARDED_BY(crit_sect_);
+  int target_bit_rate_ GUARDED_BY(crit_sect_);
+  float incoming_frame_rate_ GUARDED_BY(crit_sect_);
+  int64_t incoming_frame_times_[kFrameCountHistorySize] GUARDED_BY(crit_sect_);
+  bool enable_qm_ GUARDED_BY(crit_sect_);
+  std::list<EncodedFrameSample> encoded_frame_samples_ GUARDED_BY(crit_sect_);
+  uint32_t avg_sent_bit_rate_bps_ GUARDED_BY(crit_sect_);
+  uint32_t avg_sent_framerate_ GUARDED_BY(crit_sect_);
+  uint32_t key_frame_cnt_ GUARDED_BY(crit_sect_);
+  uint32_t delta_frame_cnt_ GUARDED_BY(crit_sect_);
+  scoped_ptr<VCMContentMetricsProcessing> content_ GUARDED_BY(crit_sect_);
+  scoped_ptr<VCMQmResolution> qm_resolution_ GUARDED_BY(crit_sect_);
+  int64_t last_qm_update_time_ GUARDED_BY(crit_sect_);
+  int64_t last_change_time_ GUARDED_BY(crit_sect_);  // Content/user triggered.
+  int num_layers_ GUARDED_BY(crit_sect_);
+  bool suspension_enabled_ GUARDED_BY(crit_sect_);
+  bool video_suspended_ GUARDED_BY(crit_sect_);
+  int suspension_threshold_bps_ GUARDED_BY(crit_sect_);
+  int suspension_window_bps_ GUARDED_BY(crit_sect_);
+  CPULoadState loadstate_ GUARDED_BY(crit_sect_);
 };
 }  // namespace media_optimization
 }  // namespace webrtc

@@ -19,12 +19,11 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
-#include "webrtc/modules/video_coding/main/test/pcap_file_reader.h"
-#include "webrtc/modules/video_coding/main/test/rtp_file_reader.h"
 #include "webrtc/modules/video_coding/main/test/test_util.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/rtp_file_reader.h"
 
 #if 1
 # define DEBUG_LOG1(text, arg)
@@ -61,7 +60,7 @@ class RawRtpPacket {
   uint16_t seq_num() const { return seq_num_; }
 
  private:
-  scoped_array<uint8_t> data_;
+  scoped_ptr<uint8_t[]> data_;
   uint32_t length_;
   int64_t resend_time_ms_;
   uint32_t ssrc_;
@@ -273,7 +272,7 @@ class SsrcHandlers {
             LostPackets* lost_packets)
         : rtp_header_parser_(RtpHeaderParser::Create()),
           rtp_payload_registry_(new RTPPayloadRegistry(
-              0, RTPPayloadStrategy::CreateStrategy(false))),
+              RTPPayloadStrategy::CreateStrategy(false))),
           rtp_module_(),
           payload_sink_(),
           ssrc_(ssrc),
@@ -323,7 +322,7 @@ class RtpPlayerImpl : public RtpPlayerInterface {
  public:
   RtpPlayerImpl(PayloadSinkFactoryInterface* payload_sink_factory,
       const PayloadTypes& payload_types, Clock* clock,
-      scoped_ptr<RtpPacketSourceInterface>* packet_source,
+      scoped_ptr<test::RtpFileReader>* packet_source,
       float loss_rate, uint32_t rtt_ms, bool reordering)
     : ssrc_handlers_(payload_sink_factory, payload_types),
       clock_(clock),
@@ -337,9 +336,7 @@ class RtpPlayerImpl : public RtpPlayerInterface {
       no_loss_startup_(100),
       end_of_file_(false),
       reordering_(false),
-      reorder_buffer_(),
-      next_packet_(),
-      next_packet_length_(0) {
+      reorder_buffer_() {
     assert(clock);
     assert(packet_source);
     assert(packet_source->get());
@@ -351,8 +348,9 @@ class RtpPlayerImpl : public RtpPlayerInterface {
 
   virtual int NextPacket(int64_t time_now) {
     // Send any packets ready to be resent.
-    RawRtpPacket* packet;
-    while ((packet = lost_packets_.NextPacketToResend(time_now))) {
+    for (RawRtpPacket* packet = lost_packets_.NextPacketToResend(time_now);
+         packet != NULL;
+         packet = lost_packets_.NextPacketToResend(time_now)) {
       int ret = SendPacket(packet->data(), packet->length());
       if (ret > 0) {
         printf("Resend: %08x:%u\n", packet->ssrc(), packet->seq_num());
@@ -368,22 +366,23 @@ class RtpPlayerImpl : public RtpPlayerInterface {
     // Send any packets from packet source.
     if (!end_of_file_ && (TimeUntilNextPacket() == 0 || first_packet_)) {
       if (first_packet_) {
-        next_packet_length_ = sizeof(next_packet_);
-        if (packet_source_->NextPacket(next_packet_, &next_packet_length_,
-                                      &next_rtp_time_) != 0) {
+        if (!packet_source_->NextPacket(&next_packet_))
           return 0;
-        }
-        first_packet_rtp_time_ = next_rtp_time_;
+        first_packet_rtp_time_ = next_packet_.time_ms;
         first_packet_time_ms_ = clock_->TimeInMilliseconds();
         first_packet_ = false;
       }
 
       if (reordering_ && reorder_buffer_.get() == NULL) {
-        reorder_buffer_.reset(new RawRtpPacket(next_packet_,
-                                               next_packet_length_, 0, 0));
+        reorder_buffer_.reset(
+            new RawRtpPacket(next_packet_.data,
+                             static_cast<uint32_t>(next_packet_.length),
+                             0,
+                             0));
         return 0;
       }
-      int ret = SendPacket(next_packet_, next_packet_length_);
+      int ret = SendPacket(next_packet_.data,
+                           static_cast<uint32_t>(next_packet_.length));
       if (reorder_buffer_.get()) {
         SendPacket(reorder_buffer_->data(), reorder_buffer_->length());
         reorder_buffer_.reset(NULL);
@@ -392,13 +391,11 @@ class RtpPlayerImpl : public RtpPlayerInterface {
         return ret;
       }
 
-      next_packet_length_ = sizeof(next_packet_);
-      if (packet_source_->NextPacket(next_packet_, &next_packet_length_,
-                                    &next_rtp_time_) != 0) {
+      if (!packet_source_->NextPacket(&next_packet_)) {
         end_of_file_ = true;
         return 0;
       }
-      else if (next_packet_length_ == 0) {
+      else if (next_packet_.length == 0) {
         return 0;
       }
     }
@@ -456,7 +453,8 @@ class RtpPlayerImpl : public RtpPlayerInterface {
 
   SsrcHandlers ssrc_handlers_;
   Clock* clock_;
-  scoped_ptr<RtpPacketSourceInterface> packet_source_;
+  scoped_ptr<test::RtpFileReader> packet_source_;
+  test::RtpFileReader::Packet next_packet_;
   uint32_t next_rtp_time_;
   bool first_packet_;
   int64_t first_packet_rtp_time_;
@@ -468,8 +466,6 @@ class RtpPlayerImpl : public RtpPlayerInterface {
   bool end_of_file_;
   bool reordering_;
   scoped_ptr<RawRtpPacket> reorder_buffer_;
-  uint8_t next_packet_[kMaxPacketBufferSize];
-  uint32_t next_packet_length_;
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(RtpPlayerImpl);
 };
@@ -478,10 +474,11 @@ RtpPlayerInterface* Create(const std::string& input_filename,
     PayloadSinkFactoryInterface* payload_sink_factory, Clock* clock,
     const PayloadTypes& payload_types, float loss_rate, uint32_t rtt_ms,
     bool reordering) {
-  scoped_ptr<RtpPacketSourceInterface> packet_source(
-      CreateRtpFileReader(input_filename));
+  scoped_ptr<test::RtpFileReader> packet_source(test::RtpFileReader::Create(
+      test::RtpFileReader::kRtpDump, input_filename));
   if (packet_source.get() == NULL) {
-    packet_source.reset(CreatePcapFileReader(input_filename));
+    packet_source.reset(test::RtpFileReader::Create(test::RtpFileReader::kPcap,
+                                                    input_filename));
     if (packet_source.get() == NULL) {
       return NULL;
     }

@@ -1,0 +1,235 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("//build/config/arm.gni")
+import("//third_party/protobuf/proto_library.gni")
+import("../../build/webrtc.gni")
+
+declare_args() {
+  # Outputs some low-level debug files.
+  aec_debug_dump = false
+
+  # Disables the usual mode where we trust the reported system delay
+  # values the AEC receives. The corresponding define is set appropriately
+  # in the code, but it can be force-enabled here for testing.
+  aec_untrusted_delay_for_testing = false
+}
+
+source_set("audio_processing") {
+  sources = [
+    "aec/include/echo_cancellation.h",
+    "aec/echo_cancellation.c",
+    "aec/echo_cancellation_internal.h",
+    "aec/aec_core.h",
+    "aec/aec_core.c",
+    "aec/aec_core_internal.h",
+    "aec/aec_rdft.h",
+    "aec/aec_rdft.c",
+    "aec/aec_resampler.h",
+    "aec/aec_resampler.c",
+    "aecm/include/echo_control_mobile.h",
+    "aecm/echo_control_mobile.c",
+    "aecm/aecm_core.c",
+    "aecm/aecm_core.h",
+    "agc/include/gain_control.h",
+    "agc/analog_agc.c",
+    "agc/analog_agc.h",
+    "agc/digital_agc.c",
+    "agc/digital_agc.h",
+    "audio_buffer.cc",
+    "audio_buffer.h",
+    "audio_processing_impl.cc",
+    "audio_processing_impl.h",
+    "common.h",
+    "echo_cancellation_impl.cc",
+    "echo_cancellation_impl.h",
+    "echo_control_mobile_impl.cc",
+    "echo_control_mobile_impl.h",
+    "gain_control_impl.cc",
+    "gain_control_impl.h",
+    "high_pass_filter_impl.cc",
+    "high_pass_filter_impl.h",
+    "include/audio_processing.h",
+    "level_estimator_impl.cc",
+    "level_estimator_impl.h",
+    "noise_suppression_impl.cc",
+    "noise_suppression_impl.h",
+    "processing_component.cc",
+    "processing_component.h",
+    "rms_level.cc",
+    "rms_level.h",
+    "typing_detection.cc",
+    "typing_detection.h",
+    "utility/delay_estimator.c",
+    "utility/delay_estimator.h",
+    "utility/delay_estimator_internal.h",
+    "utility/delay_estimator_wrapper.c",
+    "utility/delay_estimator_wrapper.h",
+    "utility/fft4g.c",
+    "utility/fft4g.h",
+    "utility/ring_buffer.c",
+    "utility/ring_buffer.h",
+    "voice_detection_impl.cc",
+    "voice_detection_impl.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  defines = []
+  deps = []
+
+  if (aec_debug_dump) {
+    defines += [ "WEBRTC_AEC_DEBUG_DUMP" ]
+  }
+
+  if (aec_untrusted_delay_for_testing) {
+    defines += [ "WEBRTC_UNTRUSTED_DELAY" ]
+  }
+
+  if (rtc_enable_protobuf) {
+    defines += [ "WEBRTC_AUDIOPROC_DEBUG_DUMP" ]
+    deps += [ ":audioproc_debug_proto" ]
+  }
+
+  if (rtc_prefer_fixed_point) {
+    defines += [ "WEBRTC_NS_FIXED" ]
+    sources += [
+      "ns/include/noise_suppression_x.h",
+      "ns/noise_suppression_x.c",
+      "ns/nsx_core.c",
+      "ns/nsx_core.h",
+      "ns/nsx_defines.h",
+    ]
+    if (cpu_arch == "mipsel") {
+      sources += [ "ns/nsx_core_mips.c" ]
+    } else {
+      sources += [ "ns/nsx_core_c.c" ]
+    }
+  } else {
+    defines += [ "WEBRTC_NS_FLOAT" ]
+    sources += [
+      "ns/defines.h",
+      "ns/include/noise_suppression.h",
+      "ns/noise_suppression.c",
+      "ns/ns_core.c",
+      "ns/ns_core.h",
+      "ns/windows_private.h",
+    ]
+  }
+
+  if (cpu_arch == "x86" || cpu_arch == "x64") {
+    deps += [ ":audio_processing_sse2" ]
+  }
+
+  if (rtc_build_armv7_neon) {
+    deps += [ ":audio_processing_neon" ]
+  }
+
+  if (cpu_arch == "mipsel") {
+    sources += [ "aecm/aecm_core_mips.c" ]
+    if (mips_fpu)  {
+      sources += [
+        "aec/aec_core_mips.c",
+        "aec/aec_rdft_mips.c",
+      ]
+    }
+  } else {
+    sources += [ "aecm/aecm_core_c.c" ]
+  }
+
+  if (is_win) {
+    cflags = [
+      # TODO(jschuh): Bug 1348: fix this warning.
+      "/wd4267",  # size_t to int truncations
+    ]
+  }
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps += [
+    "../../base:rtc_base_approved",
+    "../../common_audio",
+    "../../system_wrappers",
+  ]
+}
+
+if (rtc_enable_protobuf) {
+  proto_library("audioproc_debug_proto") {
+    sources = [ "debug.proto" ]
+
+    proto_out_dir = "webrtc/audio_processing"
+  }
+}
+
+if (cpu_arch == "x86" || cpu_arch == "x64") {
+  source_set("audio_processing_sse2") {
+    sources = [
+      "aec/aec_core_sse2.c",
+      "aec/aec_rdft_sse2.c",
+    ]
+
+    cflags = [ "-msse2" ]
+
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
+  }
+}
+
+if (rtc_build_armv7_neon) {
+  source_set("audio_processing_neon") {
+    sources = [
+      "aec/aec_core_neon.c",
+      "aec/aec_rdft_neon.c",
+    ]
+
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
+
+    deps = [ "../../common_audio" ]
+
+    if (is_android || is_ios) {
+      sources += [
+        # TODO(andrew): Re-enable these once webrtc:3580 is resolved.
+        #"aecm/aecm_core_neon.S",
+        #"ns/nsx_core_neon.S",
+      ]
+
+      include_dirs = [ target_out_dir ]
+    } else {
+      sources += [
+        "aecm/aecm_core_neon.c",
+        "ns/nsx_core_neon.c",
+      ]
+    }
+
+    # Enable compilation for the ARM v7 Neon instruction set. This is needed
+    # since //build/config/arm.gni only enables Neon for iOS, not Android.
+    # This provides the same functionality as webrtc/build/arm_neon.gypi.
+    # TODO(kjellander): Investigate if this can be moved into webrtc.gni or
+    # //build/config/arm.gni instead, to reduce code duplication.
+    # Remove the -mfpu=vfpv3-d16 cflag.
+    configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [
+      "-flax-vector-conversions",
+      "-mfpu=neon",
+    ]
+
+    # Disable LTO in audio_processing_neon target due to compiler bug.
+    if (rtc_use_lto) {
+      cflags -= [
+        "-flto",
+        "-ffat-lto-objects",
+      ]
+    }
+  }
+}

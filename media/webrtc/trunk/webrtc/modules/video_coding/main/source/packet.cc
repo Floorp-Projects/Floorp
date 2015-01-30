@@ -20,6 +20,7 @@ VCMPacket::VCMPacket()
   :
     payloadType(0),
     timestamp(0),
+    ntp_time_ms_(0),
     seqNum(0),
     dataPtr(NULL),
     sizeBytes(0),
@@ -39,6 +40,7 @@ VCMPacket::VCMPacket(const uint8_t* ptr,
                      const WebRtcRTPHeader& rtpHeader) :
     payloadType(rtpHeader.header.payloadType),
     timestamp(rtpHeader.header.timestamp),
+    ntp_time_ms_(rtpHeader.ntp_time_ms),
     seqNum(rtpHeader.header.sequenceNumber),
     dataPtr(ptr),
     sizeBytes(size),
@@ -59,6 +61,7 @@ VCMPacket::VCMPacket(const uint8_t* ptr,
 VCMPacket::VCMPacket(const uint8_t* ptr, uint32_t size, uint16_t seq, uint32_t ts, bool mBit) :
     payloadType(0),
     timestamp(ts),
+    ntp_time_ms_(0),
     seqNum(seq),
     dataPtr(ptr),
     sizeBytes(size),
@@ -77,6 +80,7 @@ VCMPacket::VCMPacket(const uint8_t* ptr, uint32_t size, uint16_t seq, uint32_t t
 void VCMPacket::Reset() {
   payloadType = 0;
   timestamp = 0;
+  ntp_time_ms_ = 0;
   seqNum = 0;
   dataPtr = NULL;
   sizeBytes = 0;
@@ -93,42 +97,41 @@ void VCMPacket::Reset() {
 
 void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
   switch (videoHeader.codec) {
-    case kRtpVideoVp8: {
+    case kRtpVideoVp8:
       // Handle all packets within a frame as depending on the previous packet
       // TODO(holmer): This should be changed to make fragments independent
       // when the VP8 RTP receiver supports fragments.
       if (isFirstPacket && markerBit)
-          completeNALU = kNaluComplete;
+        completeNALU = kNaluComplete;
       else if (isFirstPacket)
-          completeNALU = kNaluStart;
+        completeNALU = kNaluStart;
       else if (markerBit)
-          completeNALU = kNaluEnd;
+        completeNALU = kNaluEnd;
       else
-          completeNALU = kNaluIncomplete;
+        completeNALU = kNaluIncomplete;
 
       codec = kVideoCodecVP8;
-      break;
-    }
-    case kRtpVideoH264: {
+      return;
+    case kRtpVideoH264:
       isFirstPacket = videoHeader.isFirstPacket;
       if (isFirstPacket) {
         insertStartCode = true;
       }
       if (videoHeader.codecHeader.H264.single_nalu) {
-         completeNALU = kNaluComplete;
-      } else if (isFirstPacket)
-         completeNALU = kNaluStart;
-      else if (markerBit)
-         completeNALU = kNaluEnd;
-      else
-         completeNALU = kNaluIncomplete;
+        completeNALU = kNaluComplete;
+      } else if (isFirstPacket) {
+        completeNALU = kNaluStart;
+      } else if (markerBit) {
+        completeNALU = kNaluEnd;
+      } else {
+        completeNALU = kNaluIncomplete;
+      }
       codec = kVideoCodecH264;
-      break;
-    }
-    default: {
+      return;
+    case kRtpVideoGeneric:
+    case kRtpVideoNone:
       codec = kVideoCodecUnknown;
-      break;
-    }
+      return;
   }
 }
 

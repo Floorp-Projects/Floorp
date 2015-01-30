@@ -32,23 +32,23 @@ class RtpPayloadRegistryTest : public ::testing::Test {
   void SetUp() {
     // Note: the payload registry takes ownership of the strategy.
     mock_payload_strategy_ = new testing::NiceMock<MockRTPPayloadStrategy>();
-    rtp_payload_registry_.reset(
-        new RTPPayloadRegistry(123, mock_payload_strategy_));
+    rtp_payload_registry_.reset(new RTPPayloadRegistry(mock_payload_strategy_));
   }
 
  protected:
-  ModuleRTPUtility::Payload* ExpectReturnOfTypicalAudioPayload(
-      uint8_t payload_type, uint32_t rate) {
+  RtpUtility::Payload* ExpectReturnOfTypicalAudioPayload(uint8_t payload_type,
+                                                         uint32_t rate) {
     bool audio = true;
-    ModuleRTPUtility::Payload returned_payload = { "name", audio, {
-        // Initialize the audio struct in this case.
-        { kTypicalFrequency, kTypicalChannels, rate }
-    }};
+    RtpUtility::Payload returned_payload = {
+        "name",
+        audio,
+        {// Initialize the audio struct in this case.
+         {kTypicalFrequency, kTypicalChannels, rate}}};
 
     // Note: we return a new payload since the payload registry takes ownership
     // of the created object.
-    ModuleRTPUtility::Payload* returned_payload_on_heap =
-        new ModuleRTPUtility::Payload(returned_payload);
+    RtpUtility::Payload* returned_payload_on_heap =
+        new RtpUtility::Payload(returned_payload);
     EXPECT_CALL(*mock_payload_strategy_,
         CreatePayloadType(kTypicalPayloadName, payload_type,
             kTypicalFrequency,
@@ -63,7 +63,7 @@ class RtpPayloadRegistryTest : public ::testing::Test {
 
 TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
   uint8_t payload_type = 97;
-  ModuleRTPUtility::Payload* returned_payload_on_heap =
+  RtpUtility::Payload* returned_payload_on_heap =
       ExpectReturnOfTypicalAudioPayload(payload_type, kTypicalRate);
 
   bool new_payload_created = false;
@@ -73,7 +73,7 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
 
   EXPECT_TRUE(new_payload_created) << "A new payload WAS created.";
 
-  ModuleRTPUtility::Payload* retrieved_payload = NULL;
+  RtpUtility::Payload* retrieved_payload = NULL;
   EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
                                                           retrieved_payload));
 
@@ -100,7 +100,7 @@ TEST_F(RtpPayloadRegistryTest, DoesNotCreateNewPayloadTypeIfRed) {
 
   ASSERT_EQ(red_type_of_the_day, rtp_payload_registry_->red_payload_type());
 
-  ModuleRTPUtility::Payload* retrieved_payload = NULL;
+  RtpUtility::Payload* retrieved_payload = NULL;
   EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(red_type_of_the_day,
                                                           retrieved_payload));
   EXPECT_FALSE(retrieved_payload->audio);
@@ -112,7 +112,7 @@ TEST_F(RtpPayloadRegistryTest,
   uint8_t payload_type = 97;
 
   bool ignored = false;
-  ModuleRTPUtility::Payload* first_payload_on_heap =
+  RtpUtility::Payload* first_payload_on_heap =
       ExpectReturnOfTypicalAudioPayload(payload_type, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
       kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
@@ -122,7 +122,7 @@ TEST_F(RtpPayloadRegistryTest,
       kTypicalPayloadName, payload_type, kTypicalFrequency, kTypicalChannels,
       kTypicalRate, &ignored)) << "Adding same codec twice = bad.";
 
-  ModuleRTPUtility::Payload* second_payload_on_heap =
+  RtpUtility::Payload* second_payload_on_heap =
       ExpectReturnOfTypicalAudioPayload(payload_type - 1, kTypicalRate);
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
       kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
@@ -130,7 +130,7 @@ TEST_F(RtpPayloadRegistryTest,
           "With a different payload type is fine though.";
 
   // Ensure both payloads are preserved.
-  ModuleRTPUtility::Payload* retrieved_payload = NULL;
+  RtpUtility::Payload* retrieved_payload = NULL;
   EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
                                                           retrieved_payload));
   EXPECT_EQ(first_payload_on_heap, retrieved_payload);
@@ -169,7 +169,7 @@ TEST_F(RtpPayloadRegistryTest,
       kTypicalPayloadName, payload_type - 1, kTypicalFrequency,
       kTypicalChannels, kTypicalRate, &ignored));
 
-  ModuleRTPUtility::Payload* retrieved_payload = NULL;
+  RtpUtility::Payload* retrieved_payload = NULL;
   EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type, retrieved_payload)) << "The first payload should be "
           "deregistered because the only thing that differs is payload type.";

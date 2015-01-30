@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 
+#include <assert.h>
 #include <algorithm>
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"

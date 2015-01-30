@@ -142,6 +142,10 @@ void DesktopAndCursorComposer::Capture(const DesktopRegion& region) {
   desktop_capturer_->Capture(region);
 }
 
+void DesktopAndCursorComposer::SetExcludedWindow(WindowId window) {
+  desktop_capturer_->SetExcludedWindow(window);
+}
+
 SharedMemory* DesktopAndCursorComposer::CreateSharedMemory(size_t size) {
   return callback_->CreateSharedMemory(size);
 }

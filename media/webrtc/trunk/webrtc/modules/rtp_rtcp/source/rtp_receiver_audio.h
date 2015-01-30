@@ -83,7 +83,7 @@ class RTPReceiverAudio : public RTPReceiverStrategy,
   // We do not allow codecs to have multiple payload types for audio, so we
   // need to override the default behavior (which is to do nothing).
   void PossiblyRemoveExistingPayloadType(
-      ModuleRTPUtility::PayloadTypeMap* payload_type_map,
+      RtpUtility::PayloadTypeMap* payload_type_map,
       const char payload_name[RTP_PAYLOAD_NAME_SIZE],
       size_t payload_name_length,
       uint32_t frequency,

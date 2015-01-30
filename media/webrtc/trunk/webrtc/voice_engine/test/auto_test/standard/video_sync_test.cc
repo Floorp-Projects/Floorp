@@ -125,9 +125,7 @@ TEST_F(VideoSyncTest,
   CheckEstimatesConvergeReasonablyWell(kMinimumReasonableDelayEstimateMs);
 }
 
-#if !defined(WEBRTC_ANDROID)
 TEST_F(VideoSyncTest, CanGetPlayoutBufferSize) {
   int ignored;
   EXPECT_EQ(0, voe_vsync_->GetPlayoutBufferSize(ignored));
 }
-#endif  // !ANDROID

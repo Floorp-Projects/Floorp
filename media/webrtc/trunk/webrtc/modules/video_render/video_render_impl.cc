@@ -11,54 +11,13 @@
 #include <assert.h>
 
 #include "webrtc/engine_configurations.h"
-#include "webrtc/modules/video_render/i_video_render.h"
+#include "webrtc/modules/video_render/external/video_render_external_impl.h"
 #include "webrtc/modules/video_render/include/video_render_defines.h"
 #include "webrtc/modules/video_render/incoming_video_stream.h"
+#include "webrtc/modules/video_render/i_video_render.h"
 #include "webrtc/modules/video_render/video_render_impl.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-
-#if defined (_WIN32)
-#include "webrtc/modules/video_render/windows/video_render_windows_impl.h"
-#define STANDARD_RENDERING kRenderWindows
-
-// WEBRTC_IOS should go before WEBRTC_MAC because WEBRTC_MAC
-// gets defined if WEBRTC_IOS is defined
-#elif defined(WEBRTC_IOS)
-#define STANDARD_RENDERING kRenderiOS
-#include "ios/video_render_ios_impl.h"
-#elif defined(WEBRTC_MAC)
-#if defined(COCOA_RENDERING)
-#define STANDARD_RENDERING kRenderCocoa
-#include "webrtc/modules/video_render/mac/video_render_mac_cocoa_impl.h"
-#elif defined(CARBON_RENDERING)
-#define STANDARD_RENDERING kRenderCarbon
-#include "webrtc/modules/video_render/mac/video_render_mac_carbon_impl.h"
-#endif
-
-#elif defined(WEBRTC_ANDROID)
-#include "webrtc/modules/video_render/android/video_render_android_impl.h"
-#include "webrtc/modules/video_render/android/video_render_android_native_opengl2.h"
-#include "webrtc/modules/video_render/android/video_render_android_surface_view.h"
-#define STANDARD_RENDERING kRenderAndroid
-
-#elif defined(WEBRTC_LINUX)
-#include "webrtc/modules/video_render/linux/video_render_linux_impl.h"
-#define STANDARD_RENDERING kRenderX11
-
-#else
-//Other platforms
-#endif
-
-#endif  // WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-
-// For external rendering
-#include "webrtc/modules/video_render/external/video_render_external_impl.h"
-#ifndef STANDARD_RENDERING
-#define STANDARD_RENDERING kRenderExternal
-#endif  // STANDARD_RENDERING
 
 namespace webrtc {
 
@@ -71,7 +30,7 @@ VideoRender::CreateVideoRender(const int32_t id,
     VideoRenderType resultVideoRenderType = videoRenderType;
     if (videoRenderType == kRenderDefault)
     {
-        resultVideoRenderType = STANDARD_RENDERING;
+        resultVideoRenderType = kRenderExternal;
     }
     return new ModuleVideoRenderImpl(id, resultVideoRenderType, window,
                                      fullscreen);
@@ -98,97 +57,6 @@ ModuleVideoRenderImpl::ModuleVideoRenderImpl(
     // Create platform specific renderer
     switch (videoRenderType)
     {
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-
-#if defined(_WIN32)
-        case kRenderWindows:
-        {
-            VideoRenderWindowsImpl* ptrRenderer;
-            ptrRenderer = new VideoRenderWindowsImpl(_id, videoRenderType, window, _fullScreen);
-            if (ptrRenderer)
-            {
-                _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-            }
-        }
-        break;
-
-#elif defined(WEBRTC_IOS)
-        case kRenderiOS:
-        {
-            VideoRenderIosImpl* ptrRenderer = new VideoRenderIosImpl(_id, window, _fullScreen);
-            if(ptrRenderer)
-            {
-                _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-            }
-        }
-        break;
-
-#elif defined(WEBRTC_MAC)
-
-#if defined(COCOA_RENDERING)
-        case kRenderCocoa:
-        {
-            VideoRenderMacCocoaImpl* ptrRenderer = new VideoRenderMacCocoaImpl(_id, videoRenderType, window, _fullScreen);
-            if(ptrRenderer)
-            {
-                _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-            }
-        }
-
-        break;
-#elif defined(CARBON_RENDERING)
-        case kRenderCarbon:
-        {
-            VideoRenderMacCarbonImpl* ptrRenderer = new VideoRenderMacCarbonImpl(_id, videoRenderType, window, _fullScreen);
-            if(ptrRenderer)
-            {
-                _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-            }
-        }
-        break;
-#endif
-
-#elif defined(WEBRTC_ANDROID)
-        case kRenderAndroid:
-        {
-            if(AndroidNativeOpenGl2Renderer::UseOpenGL2(window))
-            {
-                AndroidNativeOpenGl2Renderer* ptrRenderer = NULL;
-                ptrRenderer = new AndroidNativeOpenGl2Renderer(_id, videoRenderType, window, _fullScreen);
-                if (ptrRenderer)
-                {
-                    _ptrRenderer = reinterpret_cast<IVideoRender*> (ptrRenderer);
-                }
-            }
-            else
-            {
-                AndroidSurfaceViewRenderer* ptrRenderer = NULL;
-                ptrRenderer = new AndroidSurfaceViewRenderer(_id, videoRenderType, window, _fullScreen);
-                if (ptrRenderer)
-                {
-                    _ptrRenderer = reinterpret_cast<IVideoRender*> (ptrRenderer);
-                }
-            }
-
-        }
-        break;
-#elif defined(WEBRTC_LINUX)
-        case kRenderX11:
-        {
-            VideoRenderLinuxImpl* ptrRenderer = NULL;
-            ptrRenderer = new VideoRenderLinuxImpl(_id, videoRenderType, window, _fullScreen);
-            if ( ptrRenderer )
-            {
-                _ptrRenderer = reinterpret_cast<IVideoRender*> (ptrRenderer);
-            }
-        }
-        break;
-
-#else
-        // Other platforms
-#endif
-
-#endif  // WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
         case kRenderExternal:
         {
             VideoRenderExternalImpl* ptrRenderer(NULL);
@@ -238,66 +106,6 @@ ModuleVideoRenderImpl::~ModuleVideoRenderImpl()
                 delete ptrRenderer;
             }
             break;
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-
-#if defined(_WIN32)
-            case kRenderWindows:
-            {
-                VideoRenderWindowsImpl* ptrRenderer = reinterpret_cast<VideoRenderWindowsImpl*>(_ptrRenderer);
-                _ptrRenderer = NULL;
-                delete ptrRenderer;
-            }
-            break;
-#elif defined(WEBRTC_IOS)
-            case kRenderiOS:
-            {
-              VideoRenderIosImpl* ptrRenderer = reinterpret_cast<VideoRenderIosImpl*> (_ptrRenderer);
-              _ptrRenderer = NULL;
-              delete ptrRenderer;
-            }
-            break;
-#elif defined(WEBRTC_MAC)
-
-#if defined(COCOA_RENDERING)
-            case kRenderCocoa:
-            {
-                VideoRenderMacCocoaImpl* ptrRenderer = reinterpret_cast<VideoRenderMacCocoaImpl*> (_ptrRenderer);
-                _ptrRenderer = NULL;
-                delete ptrRenderer;
-            }
-            break;
-#elif defined(CARBON_RENDERING)
-            case kRenderCarbon:
-            {
-                VideoRenderMacCarbonImpl* ptrRenderer = reinterpret_cast<VideoRenderMacCarbonImpl*> (_ptrRenderer);
-                _ptrRenderer = NULL;
-                delete ptrRenderer;
-            }
-            break;
-#endif
-
-#elif defined(WEBRTC_ANDROID)
-            case kRenderAndroid:
-            {
-                VideoRenderAndroid* ptrRenderer = reinterpret_cast<VideoRenderAndroid*> (_ptrRenderer);
-                _ptrRenderer = NULL;
-                delete ptrRenderer;
-            }
-            break;
-
-#elif defined(WEBRTC_LINUX)
-            case kRenderX11:
-            {
-                VideoRenderLinuxImpl* ptrRenderer = reinterpret_cast<VideoRenderLinuxImpl*> (_ptrRenderer);
-                _ptrRenderer = NULL;
-                delete ptrRenderer;
-            }
-            break;
-#else
-            //other platforms
-#endif
-
-#endif  // WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
 
             default:
                 // Error...
@@ -341,56 +149,7 @@ ModuleVideoRenderImpl::Window()
 
 int32_t ModuleVideoRenderImpl::ChangeWindow(void* window)
 {
-
-    CriticalSectionScoped cs(&_moduleCrit);
-
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-
-#if defined(WEBRTC_IOS) // WEBRTC_IOS must go before WEBRTC_MAC
-    _ptrRenderer = NULL;
-    delete _ptrRenderer;
-
-    VideoRenderIosImpl* ptrRenderer;
-    ptrRenderer = new VideoRenderIosImpl(_id, window, _fullScreen);
-    if (!ptrRenderer)
-    {
-        return -1;
-    }
-    _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-    return _ptrRenderer->ChangeWindow(window);
-#elif defined(WEBRTC_MAC)
-
-    _ptrRenderer = NULL;
-    delete _ptrRenderer;
-
-#if defined(COCOA_RENDERING)
-    VideoRenderMacCocoaImpl* ptrRenderer;
-    ptrRenderer = new VideoRenderMacCocoaImpl(_id, kRenderCocoa, window, _fullScreen);
-#elif defined(CARBON_RENDERING)
-    VideoRenderMacCarbonImpl* ptrRenderer;
-    ptrRenderer = new VideoRenderMacCarbonImpl(_id, kRenderCarbon, window, _fullScreen);
-#endif
-    if (!ptrRenderer)
-    {
-        return -1;
-    }
-    _ptrRenderer = reinterpret_cast<IVideoRender*>(ptrRenderer);
-    return _ptrRenderer->ChangeWindow(window);
-
-#else
-    if (!_ptrRenderer)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
-                     "%s: No renderer", __FUNCTION__);
-        return -1;
-    }
-    return _ptrRenderer->ChangeWindow(window);
-
-#endif
-
-#else  // WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
     return -1;
-#endif
 }
 
 int32_t ModuleVideoRenderImpl::Id()

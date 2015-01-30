@@ -8,29 +8,22 @@
 {
   'conditions': [
     ['OS=="android"', {
-      # When doing Android builds, the WebRTC code is put in third_party/webrtc
-      # of a Chromium checkout, this is one level above the standalone build.
       'variables': {
-        'isolate_dependency_untracked': [
-          '../../data/',
-          '../../resources/',
+        'files': [
+          '<(DEPTH)/data/',
+          '<(DEPTH)/resources/',
         ],
       },
     }],
     ['OS=="linux" or OS=="mac" or OS=="win"', {
       'variables': {
         'command': [
-          '../testing/test_env.py',
           '<(PRODUCT_DIR)/video_engine_tests<(EXECUTABLE_SUFFIX)',
         ],
-        'isolate_dependency_tracked': [
-          '../DEPS',
-          '../resources/foreman_cif_short.yuv',
-          '../testing/test_env.py',
+        'files': [
+          '<(DEPTH)/DEPS',
+          '<(DEPTH)/resources/foreman_cif_short.yuv',
           '<(PRODUCT_DIR)/video_engine_tests<(EXECUTABLE_SUFFIX)',
-        ],
-        'isolate_dependency_untracked': [
-          '../tools/swarming_client/',
         ],
       },
     }],

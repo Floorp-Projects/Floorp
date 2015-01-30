@@ -30,7 +30,8 @@
   <!--     pseudo ruby base -->
   <p><rbc>a<rb class="remove"></rb>b</rbc><rt>xy</rt></p>
   <!--     pseudo ruby text -->
-  <p><rb>ab</rb><rtc>x<rt class="remove"></rt>y</rtc></p>
+  <!-- letter-spacing is added here to avoid fuzzy on Windows. See bug 1111891 -->
+  <p><rb>ab</rb><rtc style="letter-spacing: 1px">x<rt class="remove"></rt>y</rtc></p>
 
 </body>
 </html>

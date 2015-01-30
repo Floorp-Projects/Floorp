@@ -63,7 +63,7 @@ class VCMGenericDecoder
 {
     friend class VCMCodecDataBase;
 public:
-    VCMGenericDecoder(VideoDecoder& decoder, int32_t id = 0, bool isExternal = false);
+    VCMGenericDecoder(VideoDecoder& decoder, bool isExternal = false);
     ~VCMGenericDecoder();
 
     /**
@@ -105,17 +105,14 @@ public:
 
     bool External() const;
 
-protected:
-
-    int32_t               _id;
+private:
     VCMDecodedFrameCallback*    _callback;
     VCMFrameInformation         _frameInfos[kDecoderFrameMemoryLength];
-    uint32_t              _nextFrameInfoIdx;
+    uint32_t                    _nextFrameInfoIdx;
     VideoDecoder&               _decoder;
     VideoCodecType              _codecType;
     bool                        _isExternal;
     bool                        _keyFrameDecoded;
-
 };
 
 }  // namespace webrtc

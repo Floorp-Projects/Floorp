@@ -436,11 +436,6 @@ MediaEngineWebRTCAudioSource::Init()
     return;
   }
 
-  mVoECallReport = webrtc::VoECallReport::GetInterface(mVoiceEngine);
-  if (!mVoECallReport) {
-    return;
-  }
-
   mChannel = mVoEBase->CreateChannel();
   if (mChannel < 0) {
     return;
@@ -568,24 +563,6 @@ MediaEngineWebRTCAudioSource::Process(int channel,
       }
     }
   }
-
-#ifdef PR_LOGGING
-  mSamples += length;
-  if (mSamples > samplingFreq) {
-    mSamples %= samplingFreq; // just in case mSamples >> samplingFreq
-    if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
-      webrtc::EchoStatistics echo;
-
-      mVoECallReport->GetEchoMetricSummary(echo);
-#define DUMP_STATVAL(x) (x).min, (x).max, (x).average
-      LOG(("Echo: ERL: %d/%d/%d, ERLE: %d/%d/%d, RERL: %d/%d/%d, NLP: %d/%d/%d",
-           DUMP_STATVAL(echo.erl),
-           DUMP_STATVAL(echo.erle),
-           DUMP_STATVAL(echo.rerl),
-           DUMP_STATVAL(echo.a_nlp)));
-    }
-  }
-#endif
 
   MonitorAutoLock lock(mMonitor);
   if (mState != kStarted)

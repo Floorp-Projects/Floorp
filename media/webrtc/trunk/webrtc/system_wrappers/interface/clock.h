@@ -11,6 +11,8 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CLOCK_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CLOCK_H_
 
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -28,17 +30,17 @@ class Clock {
 
   // Return a timestamp in milliseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMilliseconds() = 0;
+  virtual int64_t TimeInMilliseconds() const = 0;
 
   // Return a timestamp in microseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMicroseconds() = 0;
+  virtual int64_t TimeInMicroseconds() const = 0;
 
   // Retrieve an NTP absolute timestamp in seconds and fractions of a second.
-  virtual void CurrentNtp(uint32_t& seconds, uint32_t& fractions) = 0;
+  virtual void CurrentNtp(uint32_t& seconds, uint32_t& fractions) const = 0;
 
   // Retrieve an NTP absolute timestamp in milliseconds.
-  virtual int64_t CurrentNtpInMilliseconds() = 0;
+  virtual int64_t CurrentNtpInMilliseconds() const = 0;
 
   // Converts an NTP timestamp to a millisecond timestamp.
   static int64_t NtpToMs(uint32_t seconds, uint32_t fractions);
@@ -51,21 +53,22 @@ class SimulatedClock : public Clock {
  public:
   explicit SimulatedClock(int64_t initial_time_us);
 
-  virtual ~SimulatedClock() {}
+  virtual ~SimulatedClock();
 
   // Return a timestamp in milliseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMilliseconds() OVERRIDE;
+  virtual int64_t TimeInMilliseconds() const OVERRIDE;
 
   // Return a timestamp in microseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMicroseconds() OVERRIDE;
+  virtual int64_t TimeInMicroseconds() const OVERRIDE;
 
   // Retrieve an NTP absolute timestamp in milliseconds.
-  virtual void CurrentNtp(uint32_t& seconds, uint32_t& fractions) OVERRIDE;
+  virtual void CurrentNtp(uint32_t& seconds,
+                          uint32_t& fractions) const OVERRIDE;
 
   // Converts an NTP timestamp to a millisecond timestamp.
-  virtual int64_t CurrentNtpInMilliseconds() OVERRIDE;
+  virtual int64_t CurrentNtpInMilliseconds() const OVERRIDE;
 
   // Advance the simulated clock with a given number of milliseconds or
   // microseconds.
@@ -74,6 +77,7 @@ class SimulatedClock : public Clock {
 
  private:
   int64_t time_us_;
+  scoped_ptr<RWLockWrapper> lock_;
 };
 
 };  // namespace webrtc

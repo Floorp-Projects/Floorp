@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     /* G.711 encoding */
     if (!strcmp(law, "A")) {
       /* A-law encoding */
-      stream_len = WebRtcG711_EncodeA(NULL, shortdata, framelength, streamdata);
+      stream_len = WebRtcG711_EncodeA(shortdata, framelength, streamdata);
       if (argc == 6) {
         /* Write bits to file */
         if (fwrite(streamdata, sizeof(unsigned char), stream_len, bitp) !=
@@ -135,11 +135,11 @@ int main(int argc, char* argv[]) {
           return -1;
         }
       }
-      err = WebRtcG711_DecodeA(NULL, streamdata, stream_len, decoded,
+      err = WebRtcG711_DecodeA(streamdata, stream_len, decoded,
                                speechType);
     } else if (!strcmp(law, "u")) {
       /* u-law encoding */
-      stream_len = WebRtcG711_EncodeU(NULL, shortdata, framelength, streamdata);
+      stream_len = WebRtcG711_EncodeU(shortdata, framelength, streamdata);
       if (argc == 6) {
         /* Write bits to file */
         if (fwrite(streamdata, sizeof(unsigned char), stream_len, bitp) !=
@@ -147,8 +147,7 @@ int main(int argc, char* argv[]) {
           return -1;
         }
       }
-      err = WebRtcG711_DecodeU(NULL, streamdata, stream_len, decoded,
-                               speechType);
+      err = WebRtcG711_DecodeU(streamdata, stream_len, decoded, speechType);
     } else {
       printf("Wrong law mode\n");
       exit(1);

@@ -48,8 +48,6 @@ class ACMAMR : public ACMGenericCodec {
 
   int16_t InternalCreateEncoder();
 
-  void InternalDestructEncoderInst(void* ptr_inst);
-
   int16_t SetBitRateSafe(const int32_t rate);
 
   int16_t EnableDTX();

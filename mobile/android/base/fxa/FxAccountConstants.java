@@ -16,8 +16,8 @@ public class FxAccountConstants {
   public static final String STAGE_AUTH_SERVER_ENDPOINT = "https://api-accounts.stage.mozaws.net/v1";
   public static final String STAGE_TOKEN_SERVER_ENDPOINT = "https://token.stage.mozaws.net/1.0/sync/1.5";
 
-  // You must be at least 14 years old to create a Firefox Account.
-  public static final int MINIMUM_AGE_TO_CREATE_AN_ACCOUNT = 14;
+  // You must be at least 13 years old, on the day of creation, to create a Firefox Account.
+  public static final int MINIMUM_AGE_TO_CREATE_AN_ACCOUNT = 13;
 
   // You must wait 15 minutes after failing an age check before trying to create a different account.
   public static final long MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS = 15 * 60 * 1000;

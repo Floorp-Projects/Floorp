@@ -83,7 +83,6 @@
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
 #include "webrtc/voice_engine/include/voe_dtmf.h"
-#include "webrtc/voice_engine/include/voe_encryption.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_file.h"
 #include "webrtc/voice_engine/include/voe_hardware.h"
@@ -97,8 +96,6 @@
 #include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
 
 class MediaProcessImpl;
-class ConnectionObserver;
-class MyEncryption;
 class RxCallback;
 class MyTransport;
 
@@ -153,7 +150,6 @@ private:
     VoECodec*               _veCodecPtr;
     VoEExternalMedia*       _veExternalMediaPtr;
     VoEVolumeControl*       _veVolumeControlPtr;
-    VoEEncryption*          _veEncryptionPtr;
     VoEHardware*            _veHardwarePtr;
     VoEVideoSync*           _veVideoSyncPtr;
     VoENetwork*             _veNetworkPtr;
@@ -164,8 +160,6 @@ private:
 
     MyTransport*            _transportPtr;
     MediaProcessImpl*       _externalMediaPtr;
-    ConnectionObserver*     _connectionObserverPtr;
-    MyEncryption*           _encryptionPtr;
     RxCallback*             _rxVadObserverPtr;
 
 private:
@@ -252,8 +246,6 @@ public:
     afx_msg void OnBnClickedCheckSrtpRx1();
     afx_msg void OnBnClickedCheckSrtpTx2();
     afx_msg void OnBnClickedCheckSrtpRx2();
-    afx_msg void OnBnClickedCheckExtEncryption1();
-    afx_msg void OnBnClickedCheckExtEncryption2();
     afx_msg void OnBnClickedButtonDtmf1();
     afx_msg void OnBnClickedCheckRecMic();
     afx_msg void OnBnClickedButtonDtmf2();
@@ -274,7 +266,7 @@ public:
     afx_msg void OnBnClickedCheckNs1();
     afx_msg void OnBnClickedCheckRecCall();
     afx_msg void OnBnClickedCheckTypingDetection();
-    afx_msg void OnBnClickedCheckFEC();
+    afx_msg void OnBnClickedCheckRED();
     afx_msg void OnBnClickedButtonClearErrorCallback();
     afx_msg void OnBnClickedCheckBwe1();
 };

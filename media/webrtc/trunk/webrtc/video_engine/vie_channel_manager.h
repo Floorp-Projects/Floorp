@@ -77,9 +77,21 @@ class ViEChannelManager: private ViEManagerBase {
   // Adds a channel to include when sending REMB.
   bool SetRembStatus(int channel_id, bool sender, bool receiver);
 
+  bool SetReservedTransmitBitrate(int channel_id,
+                                  uint32_t reserved_transmit_bitrate_bps);
+
   // Updates the SSRCs for a channel. If one of the SSRCs already is registered,
   // it will simply be ignored and no error is returned.
   void UpdateSsrcs(int channel_id, const std::list<unsigned int>& ssrcs);
+
+  // Sets bandwidth estimation related configurations.
+  bool SetBandwidthEstimationConfig(int channel_id,
+                                    const webrtc::Config& config);
+
+  bool GetEstimatedSendBandwidth(int channel_id,
+                                 uint32_t* estimated_bandwidth) const;
+  bool GetEstimatedReceiveBandwidth(int channel_id,
+                                    uint32_t* estimated_bandwidth) const;
 
  private:
   // Creates a channel object connected to |vie_encoder|. Assumed to be called
@@ -107,7 +119,7 @@ class ViEChannelManager: private ViEManagerBase {
   void ReturnChannelId(int channel_id);
 
   // Returns the iterator to the ChannelGroup containing |channel_id|.
-  ChannelGroup* FindGroup(int channel_id);
+  ChannelGroup* FindGroup(int channel_id) const;
 
   // Returns true if at least one other channels uses the same ViEEncoder as
   // channel_id.

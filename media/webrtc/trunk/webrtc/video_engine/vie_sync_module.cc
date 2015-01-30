@@ -14,7 +14,7 @@
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
 #include "webrtc/video_engine/stream_synchronization.h"
 #include "webrtc/video_engine/vie_channel.h"
@@ -30,31 +30,24 @@ int UpdateMeasurements(StreamSynchronization::Measurements* stream,
     return -1;
   if (!receiver.LastReceivedTimeMs(&stream->latest_receive_time_ms))
     return -1;
-  synchronization::RtcpMeasurement measurement;
-  if (0 != rtp_rtcp.RemoteNTP(&measurement.ntp_secs,
-                              &measurement.ntp_frac,
+
+  uint32_t ntp_secs = 0;
+  uint32_t ntp_frac = 0;
+  uint32_t rtp_timestamp = 0;
+  if (0 != rtp_rtcp.RemoteNTP(&ntp_secs,
+                              &ntp_frac,
                               NULL,
                               NULL,
-                              &measurement.rtp_timestamp)) {
+                              &rtp_timestamp)) {
     return -1;
   }
-  if (measurement.ntp_secs == 0 && measurement.ntp_frac == 0) {
+
+  bool new_rtcp_sr = false;
+  if (!UpdateRtcpList(
+      ntp_secs, ntp_frac, rtp_timestamp, &stream->rtcp, &new_rtcp_sr)) {
     return -1;
   }
-  for (synchronization::RtcpList::iterator it = stream->rtcp.begin();
-       it != stream->rtcp.end(); ++it) {
-    if (measurement.ntp_secs == (*it).ntp_secs &&
-        measurement.ntp_frac == (*it).ntp_frac) {
-      // This RTCP has already been added to the list.
-      return 0;
-    }
-  }
-  // We need two RTCP SR reports to map between RTP and NTP. More than two will
-  // not improve the mapping.
-  if (stream->rtcp.size() == 2) {
-    stream->rtcp.pop_back();
-  }
-  stream->rtcp.push_front(measurement);
+
   return 0;
 }
 
@@ -110,8 +103,6 @@ int32_t ViESyncModule::Process() {
   last_sync_time_ = TickTime::Now();
 
   const int current_video_delay_ms = vcm_->Delay();
-  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-               "Video delay (JB + decoder) is %d ms", current_video_delay_ms);
 
   if (voe_channel_id_ == -1) {
     return 0;
@@ -126,11 +117,6 @@ int32_t ViESyncModule::Process() {
                                             &audio_jitter_buffer_delay_ms,
                                             &playout_buffer_delay_ms,
                                             &avsync_offset_ms) != 0) {
-    // Could not get VoE delay value, probably not a valid channel Id or
-    // the channel have not received enough packets.
-    WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideo, vie_channel_->Id(),
-                 "%s: VE_GetDelayEstimate error for voice_channel %d",
-                 __FUNCTION__, voe_channel_id_);
     return 0;
   }
   const int current_audio_delay_ms = audio_jitter_buffer_delay_ms +
@@ -180,15 +166,9 @@ int32_t ViESyncModule::Process() {
     return 0;
   }
 
-  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-               "Set delay current(a=%d v=%d rel=%d) target(a=%d v=%d)",
-               current_audio_delay_ms, current_video_delay_ms,
-               relative_delay_ms,
-               target_audio_delay_ms, target_video_delay_ms);
   if (voe_sync_interface_->SetMinimumPlayoutDelay(
       voe_channel_id_, target_audio_delay_ms) == -1) {
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideo, vie_channel_->Id(),
-                 "Error setting voice delay");
+    LOG(LS_ERROR) << "Error setting voice delay.";
   }
   vcm_->SetMinimumPlayoutDelay(target_video_delay_ms);
   return 0;
@@ -196,9 +176,8 @@ int32_t ViESyncModule::Process() {
 
 int ViESyncModule::SetTargetBufferingDelay(int target_delay_ms) {
   CriticalSectionScoped cs(data_cs_.get());
- if (!voe_sync_interface_) {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo, vie_channel_->Id(),
-                 "voe_sync_interface_ NULL, can't set playout delay.");
+  if (!voe_sync_interface_) {
+    LOG(LS_ERROR) << "voe_sync_interface_ NULL, can't set playout delay.";
     return -1;
   }
   sync_->SetTargetBufferingDelay(target_delay_ms);

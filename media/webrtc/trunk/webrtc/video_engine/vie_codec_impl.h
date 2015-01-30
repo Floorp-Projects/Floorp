@@ -53,7 +53,7 @@ class ViECodecImpl
                                   int* delay_ms) const;
   virtual int GetCodecTargetBitrate(const int video_channel,
                                     unsigned int* bitrate) const;
-  virtual unsigned int GetDiscardedPackets(const int video_channel) const;
+  virtual int GetNumDiscardedPackets(int video_channel) const;
   virtual int SetKeyFrameRequestCallbackStatus(const int video_channel,
                                                const bool enable);
   virtual int SetSignalKeyPacketLossStatus(const int video_channel,

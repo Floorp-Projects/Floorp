@@ -43,10 +43,13 @@ void TestI420CallSetup(webrtc::ViECodec* codec_interface,
                        webrtc::VideoEngine* video_engine,
                        webrtc::ViEBase* base_interface,
                        webrtc::ViENetwork* network_interface,
+                       webrtc::ViERTP_RTCP* rtp_rtcp_interface,
                        int video_channel,
                        const char* device_name) {
   webrtc::VideoCodec video_codec;
   memset(&video_codec, 0, sizeof(webrtc::VideoCodec));
+  EXPECT_EQ(0, rtp_rtcp_interface->SetTransmissionSmoothingStatus(video_channel,
+                                                                  false));
 
   ConfigureCodecsToI420(video_channel, video_codec, codec_interface);
 

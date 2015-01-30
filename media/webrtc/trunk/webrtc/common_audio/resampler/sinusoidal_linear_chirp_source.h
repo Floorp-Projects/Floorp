@@ -14,8 +14,8 @@
 #ifndef WEBRTC_COMMON_AUDIO_RESAMPLER_SINUSOIDAL_LINEAR_CHIRP_SOURCE_H_
 #define WEBRTC_COMMON_AUDIO_RESAMPLER_SINUSOIDAL_LINEAR_CHIRP_SOURCE_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/common_audio/resampler/sinc_resampler.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 
 namespace webrtc {
 

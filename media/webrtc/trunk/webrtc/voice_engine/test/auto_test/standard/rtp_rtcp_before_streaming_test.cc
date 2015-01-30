@@ -48,9 +48,3 @@ TEST_F(RtpRtcpBeforeStreamingTest, GetLocalSsrcObeysSetLocalSsrc) {
   EXPECT_EQ(0, voe_rtp_rtcp_->GetLocalSSRC(channel_, result));
   EXPECT_EQ(1234u, result);
 }
-
-TEST_F(RtpRtcpBeforeStreamingTest, GetLastRemoteTimeStamp) {
-  uint32_t timestamp;
-  EXPECT_EQ(0, voe_rtp_rtcp_->GetLastRemoteTimeStamp(channel_, &timestamp));
-  EXPECT_EQ(0u, timestamp);
-}
