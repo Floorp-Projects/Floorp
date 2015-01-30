@@ -367,7 +367,7 @@ TextureClientD3D11::BorrowDrawTarget()
 static const GUID sD3D11TextureUsage =
 { 0xd89275b0, 0x6c7d, 0x4038, { 0xb5, 0xfa, 0x4d, 0x87, 0x16, 0xd5, 0xcc, 0x4e } };
 
-/* This class get's it's lifetime tied to a D3D texture
+/* This class gets its lifetime tied to a D3D texture
  * and increments memory usage on construction and decrements
  * on destruction */
 class TextureMemoryMeasurer : public IUnknown

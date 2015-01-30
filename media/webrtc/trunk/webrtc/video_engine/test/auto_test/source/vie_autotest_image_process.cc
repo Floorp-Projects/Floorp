@@ -28,12 +28,15 @@ public:
 
     ~MyEffectFilter() {}
 
-    virtual int Transform(int size, unsigned char* frameBuffer,
-                          unsigned int timeStamp90KHz, unsigned int width,
+    virtual int Transform(int size,
+                          unsigned char* frame_buffer,
+                          int64_t ntp_time_ms,
+                          unsigned int timestamp,
+                          unsigned int width,
                           unsigned int height)
     {
         // Black and white
-        memset(frameBuffer + (2 * size) / 3, 0x7f, size / 3);
+        memset(frame_buffer + (2 * size) / 3, 0x7f, size / 3);
         return 0;
     }
 };
@@ -157,10 +160,9 @@ void ViEAutoTest::ViEImageProcessAPITest()
         tbCapture.captureId, effectFilter));
     EXPECT_EQ(0, ViE.image_process->DeregisterCaptureEffectFilter(
         tbCapture.captureId));
-
-    // Double deregister
-    EXPECT_NE(0, ViE.image_process->DeregisterCaptureEffectFilter(
+    EXPECT_EQ(0, ViE.image_process->DeregisterCaptureEffectFilter(
         tbCapture.captureId));
+
     // Non-existing capture device
     EXPECT_NE(0, ViE.image_process->RegisterCaptureEffectFilter(
         tbChannel.videoChannel, effectFilter));
@@ -174,7 +176,7 @@ void ViEAutoTest::ViEImageProcessAPITest()
         tbChannel.videoChannel, effectFilter));
     EXPECT_EQ(0, ViE.image_process->DeregisterRenderEffectFilter(
         tbChannel.videoChannel));
-    EXPECT_NE(0, ViE.image_process->DeregisterRenderEffectFilter(
+    EXPECT_EQ(0, ViE.image_process->DeregisterRenderEffectFilter(
         tbChannel.videoChannel));
 
     // Non-existing channel id
@@ -190,24 +192,10 @@ void ViEAutoTest::ViEImageProcessAPITest()
         tbChannel.videoChannel, effectFilter));
     EXPECT_EQ(0, ViE.image_process->DeregisterSendEffectFilter(
         tbChannel.videoChannel));
-    EXPECT_NE(0, ViE.image_process->DeregisterSendEffectFilter(
+    EXPECT_EQ(0, ViE.image_process->DeregisterSendEffectFilter(
         tbChannel.videoChannel));
     EXPECT_NE(0, ViE.image_process->RegisterSendEffectFilter(
         tbCapture.captureId, effectFilter));
-
-    //
-    // Denoising
-    //
-    EXPECT_EQ(0, ViE.image_process->EnableDenoising(tbCapture.captureId, true));
-    // If the denoising is already enabled, it will just reuturn 0.
-    EXPECT_EQ(0, ViE.image_process->EnableDenoising(tbCapture.captureId, true));
-    EXPECT_EQ(0, ViE.image_process->EnableDenoising(
-        tbCapture.captureId, false));
-    // If the denoising is already disabled, it will just reuturn 0.
-    EXPECT_EQ(0, ViE.image_process->EnableDenoising(
-        tbCapture.captureId, false));
-    EXPECT_NE(0, ViE.image_process->EnableDenoising(
-        tbChannel.videoChannel, true));
 
     //
     // Deflickering

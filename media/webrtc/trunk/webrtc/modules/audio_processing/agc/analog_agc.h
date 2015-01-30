@@ -15,9 +15,8 @@
 #include "webrtc/modules/audio_processing/agc/include/gain_control.h"
 #include "webrtc/typedefs.h"
 
-//#define AGC_DEBUG
 //#define MIC_LEVEL_FEEDBACK
-#ifdef AGC_DEBUG
+#ifdef WEBRTC_AGC_DEBUG_DUMP
 #include <stdio.h>
 #endif
 
@@ -111,6 +110,7 @@ typedef struct
     int32_t             minLevel;           // Minimum possible volume level
     int32_t             minOutput;          // Minimum output volume level
     int32_t             zeroCtrlMax;        // Remember max gain => don't amp low input
+    int32_t             lastInMicLevel;
 
     int16_t             scale;              // Scale factor for internal volume levels
 #ifdef MIC_LEVEL_FEEDBACK
@@ -121,10 +121,10 @@ typedef struct
     AgcVad_t            vadMic;
     DigitalAgc_t        digitalAgc;
 
-#ifdef AGC_DEBUG
-    FILE*               fpt;
-    FILE*               agcLog;
-    int32_t             fcount;
+#ifdef WEBRTC_AGC_DEBUG_DUMP
+    FILE* fpt;
+    FILE* agcLog;
+    int32_t fcount;
 #endif
 
     int16_t             lowLevelSignal;

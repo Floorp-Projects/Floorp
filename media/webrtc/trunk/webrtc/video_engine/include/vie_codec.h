@@ -153,7 +153,13 @@ class WEBRTC_DLLEXPORT ViECodec {
 
   // Gets the number of packets discarded by the jitter buffer because they
   // arrived too late.
-  virtual unsigned int GetDiscardedPackets(const int video_channel) const = 0;
+  // TODO(asapersson): Remove default implementation.
+  virtual int GetNumDiscardedPackets(int video_channel) const { return -1; }
+
+  // TODO(asapersson): Remove once the api has been removed from
+  // fakewebrtcvideoengine.h.
+  virtual unsigned int GetDiscardedPackets(
+      const int video_channel) const { return 0; }
 
   // Enables key frame request callback in ViEDecoderObserver.
   virtual int SetKeyFrameRequestCallbackStatus(const int video_channel,

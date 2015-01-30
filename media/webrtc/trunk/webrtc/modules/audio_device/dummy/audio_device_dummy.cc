@@ -91,13 +91,9 @@ int32_t AudioDeviceDummy::WaveOutVolume(uint16_t& volumeLeft,
   return -1;
 }
 
-int32_t AudioDeviceDummy::SpeakerIsAvailable(bool& available) { return -1; }
-
 int32_t AudioDeviceDummy::InitSpeaker() { return -1; }
 
 bool AudioDeviceDummy::SpeakerIsInitialized() const { return false; }
-
-int32_t AudioDeviceDummy::MicrophoneIsAvailable(bool& available) { return -1; }
 
 int32_t AudioDeviceDummy::InitMicrophone() { return -1; }
 

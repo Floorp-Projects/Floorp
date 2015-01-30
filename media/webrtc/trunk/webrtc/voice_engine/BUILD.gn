@@ -1,0 +1,108 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../build/webrtc.gni")
+
+source_set("voice_engine") {
+
+  sources = [
+    "../common_types.h",
+    "../engine_configurations.h",
+    "../typedefs.h",
+    "include/voe_audio_processing.h",
+    "include/voe_base.h",
+    "include/voe_codec.h",
+    "include/voe_dtmf.h",
+    "include/voe_errors.h",
+    "include/voe_external_media.h",
+    "include/voe_file.h",
+    "include/voe_hardware.h",
+    "include/voe_neteq_stats.h",
+    "include/voe_network.h",
+    "include/voe_rtp_rtcp.h",
+    "include/voe_video_sync.h",
+    "include/voe_volume_control.h",
+    "channel.cc",
+    "channel.h",
+    "channel_manager.cc",
+    "channel_manager.h",
+    "dtmf_inband.cc",
+    "dtmf_inband.h",
+    "dtmf_inband_queue.cc",
+    "dtmf_inband_queue.h",
+    "level_indicator.cc",
+    "level_indicator.h",
+    "monitor_module.cc",
+    "monitor_module.h",
+    "network_predictor.cc",
+    "network_predictor.h",
+    "output_mixer.cc",
+    "output_mixer.h",
+    "shared_data.cc",
+    "shared_data.h",
+    "statistics.cc",
+    "statistics.h",
+    "transmit_mixer.cc",
+    "transmit_mixer.h",
+    "utility.cc",
+    "utility.h",
+    "voe_audio_processing_impl.cc",
+    "voe_audio_processing_impl.h",
+    "voe_base_impl.cc",
+    "voe_base_impl.h",
+    "voe_codec_impl.cc",
+    "voe_codec_impl.h",
+    "voe_dtmf_impl.cc",
+    "voe_dtmf_impl.h",
+    "voe_external_media_impl.cc",
+    "voe_external_media_impl.h",
+    "voe_file_impl.cc",
+    "voe_file_impl.h",
+    "voe_hardware_impl.cc",
+    "voe_hardware_impl.h",
+    "voe_neteq_stats_impl.cc",
+    "voe_neteq_stats_impl.h",
+    "voe_network_impl.cc",
+    "voe_network_impl.h",
+    "voe_rtp_rtcp_impl.cc",
+    "voe_rtp_rtcp_impl.h",
+    "voe_video_sync_impl.cc",
+    "voe_video_sync_impl.h",
+    "voe_volume_control_impl.cc",
+    "voe_volume_control_impl.h",
+    "voice_engine_defines.h",
+    "voice_engine_impl.cc",
+    "voice_engine_impl.h",
+  ]
+
+  if (is_win) {
+    defines = [ "WEBRTC_DRIFT_COMPENSATION_SUPPORTED" ]
+  }
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  deps = [
+    "../common_audio",
+    "../modules/audio_coding",
+    "../modules/audio_conference_mixer",
+    "../modules/audio_device",
+    "../modules/audio_processing",
+    "../modules/bitrate_controller",
+    "../modules/media_file",
+    "../modules/rtp_rtcp",
+    "../modules/utility",
+    "../system_wrappers",
+  ]
+}

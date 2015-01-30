@@ -16,6 +16,7 @@
 #include <set>
 #include <vector>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
@@ -23,7 +24,6 @@
 #include "webrtc/modules/video_coding/main/source/inter_frame_delay.h"
 #include "webrtc/modules/video_coding/main/source/jitter_buffer_common.h"
 #include "webrtc/modules/video_coding/main/source/jitter_estimator.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
 
@@ -77,10 +77,7 @@ class FrameList
 class VCMJitterBuffer {
  public:
   VCMJitterBuffer(Clock* clock,
-                  EventFactory* event_factory,
-                  int vcm_id,
-                  int receiver_id,
-                  bool master);
+                  EventFactory* event_factory);
   virtual ~VCMJitterBuffer();
 
   // Makes |this| a deep copy of |rhs|.
@@ -105,6 +102,12 @@ class VCMJitterBuffer {
   // The number of packets discarded by the jitter buffer because the decoder
   // won't be able to decode them.
   int num_not_decodable_packets() const;
+
+  // Gets number of packets received.
+  int num_packets() const;
+
+  // Gets number of duplicated packets received.
+  int num_duplicated_packets() const;
 
   // Gets number of packets discarded by the jitter buffer.
   int num_discarded_packets() const;
@@ -274,13 +277,12 @@ class VCMJitterBuffer {
 
   uint16_t EstimatedLowSequenceNumber(const VCMFrameBuffer& frame) const;
 
-  int vcm_id_;
-  int receiver_id_;
+  void UpdateHistograms();
+
   Clock* clock_;
   // If we are running (have started) or not.
   bool running_;
   CriticalSectionWrapper* crit_sect_;
-  bool master_;
   // Event to signal when we have a frame ready for decoder.
   scoped_ptr<EventWrapper> frame_event_;
   // Event to signal when we have received a packet.
@@ -309,6 +311,10 @@ class VCMJitterBuffer {
   int num_consecutive_old_frames_;
   // Number of packets in a row that have been too old.
   int num_consecutive_old_packets_;
+  // Number of packets received.
+  int num_packets_;
+  // Number of duplicated packets received.
+  int num_duplicated_packets_;
   // Number of packets discarded by the jitter buffer.
   int num_discarded_packets_;
 

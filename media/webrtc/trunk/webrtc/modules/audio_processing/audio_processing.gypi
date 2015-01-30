@@ -9,6 +9,7 @@
 {
   'variables': {
     'audio_processing_dependencies': [
+      '<(webrtc_root)/base/base.gyp:rtc_base_approved',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
       '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
     ],
@@ -21,6 +22,7 @@
       'variables': {
         # Outputs some low-level debug files.
         'aec_debug_dump%': 0,
+        'agc_debug_dump%': 0,
 
         # Disables the usual mode where we trust the reported system delay
         # values the AEC receives. The corresponding define is set appropriately
@@ -54,9 +56,9 @@
         'audio_buffer.h',
         'audio_processing_impl.cc',
         'audio_processing_impl.h',
+        'common.h',
         'echo_cancellation_impl.cc',
         'echo_cancellation_impl.h',
-        'echo_cancellation_impl_wrapper.h',
         'echo_control_mobile_impl.cc',
         'echo_control_mobile_impl.h',
         'gain_control_impl.cc',
@@ -70,6 +72,8 @@
         'noise_suppression_impl.h',
         'processing_component.cc',
         'processing_component.h',
+        'rms_level.cc',
+        'rms_level.h',
         'typing_detection.cc',
         'typing_detection.h',
         'utility/delay_estimator.c',
@@ -91,6 +95,9 @@
         ['aec_untrusted_delay_for_testing==1', {
           'defines': ['WEBRTC_UNTRUSTED_DELAY',],
         }],
+        ['agc_debug_dump==1', {
+          'defines': ['WEBRTC_AGC_DEBUG_DUMP',],
+        }],
         ['enable_protobuf==1', {
           'dependencies': ['audioproc_debug_proto'],
           'defines': ['WEBRTC_AUDIOPROC_DEBUG_DUMP'],
@@ -105,7 +112,7 @@
             'ns/nsx_defines.h',
           ],
           'conditions': [
-            ['target_arch=="mipsel"', {
+            ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
               'sources': [
                 'ns/nsx_core_mips.c',
               ],
@@ -132,9 +139,17 @@
         ['(target_arch=="arm" and arm_version==7) or target_arch=="armv7"', {
           'dependencies': ['audio_processing_neon',],
         }],
-        ['target_arch=="mipsel"', {
+        ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
           'sources': [
             'aecm/aecm_core_mips.c',
+          ],
+          'conditions': [
+            ['mips_fpu==1', {
+              'sources': [
+                'aec/aec_core_mips.c',
+                'aec/aec_rdft_mips.c',
+              ],
+            }],
           ],
         }, {
           'sources': [
@@ -194,6 +209,8 @@
           '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         ],
         'sources': [
+          'aec/aec_core_neon.c',
+          'aec/aec_rdft_neon.c',
           'aecm/aecm_core_neon.c',
           'ns/nsx_core_neon.c',
         ],
@@ -218,6 +235,13 @@
               'ns/nsx_core_neon.c',
             ],
             'includes!': ['../../build/arm_neon.gypi',],
+          }],
+          # Disable LTO in audio_processing_neon target due to compiler bug
+          ['use_lto==1', {
+            'cflags!': [
+              '-flto',
+              '-ffat-lto-objects',
+            ],
           }],
         ],
       }],

@@ -41,8 +41,6 @@ ACMGenericCodec* ACMPCM16B::CreateInstance(void) { return NULL; }
 
 int16_t ACMPCM16B::InternalCreateEncoder() { return -1; }
 
-void ACMPCM16B::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 void ACMPCM16B::DestructEncoderSafe() { return; }
 
 #else  //===================== Actual Implementation =======================
@@ -75,11 +73,6 @@ ACMGenericCodec* ACMPCM16B::CreateInstance(void) { return NULL; }
 int16_t ACMPCM16B::InternalCreateEncoder() {
   // PCM has no instance.
   return 0;
-}
-
-void ACMPCM16B::InternalDestructEncoderInst(void* /* ptr_inst */) {
-  // PCM has no instance.
-  return;
 }
 
 void ACMPCM16B::DestructEncoderSafe() {

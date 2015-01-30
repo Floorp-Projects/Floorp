@@ -21,8 +21,8 @@
 using namespace android;
 
 // WebRTC
-#include "common_video/interface/texture_video_frame.h"
-#include "video_engine/include/vie_external_codec.h"
+#include "webrtc/common_video/interface/texture_video_frame.h"
+#include "webrtc/video_engine/include/vie_external_codec.h"
 #include "runnable_utils.h"
 
 // Gecko

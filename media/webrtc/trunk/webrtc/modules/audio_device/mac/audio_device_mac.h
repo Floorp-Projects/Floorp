@@ -108,10 +108,8 @@ public:
                                   uint16_t& volumeRight) const;
 
     // Audio mixer initialization
-    virtual int32_t SpeakerIsAvailable(bool& available);
     virtual int32_t InitSpeaker();
     virtual bool SpeakerIsInitialized() const;
-    virtual int32_t MicrophoneIsAvailable(bool& available);
     virtual int32_t InitMicrophone();
     virtual bool MicrophoneIsInitialized() const;
 
@@ -167,7 +165,6 @@ public:
     // CPU load
     virtual int32_t CPULoad(uint16_t& load) const;
 
-public:
     virtual bool PlayoutWarning() const;
     virtual bool PlayoutError() const;
     virtual bool RecordingWarning() const;
@@ -177,10 +174,12 @@ public:
     virtual void ClearRecordingWarning();
     virtual void ClearRecordingError();
 
-public:
     virtual void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
 private:
+    virtual int32_t MicrophoneIsAvailable(bool& available);
+    virtual int32_t SpeakerIsAvailable(bool& available);
+
     void Lock()
     {
         _critSect.Enter();
@@ -236,7 +235,6 @@ private:
     int32_t
         HandleProcessorOverload(AudioObjectPropertyAddress propertyAddress);
 
-private:
     static OSStatus deviceIOProc(AudioDeviceID device,
                                  const AudioTimeStamp *now,
                                  const AudioBufferList *inputData,
@@ -284,10 +282,8 @@ private:
     bool CaptureWorkerThread();
     bool RenderWorkerThread();
 
-private:
     bool KeyPressed();
 
-private:
     AudioDeviceBuffer* _ptrAudioBuffer;
 
     CriticalSectionWrapper& _critSect;
@@ -325,7 +321,6 @@ private:
 
     AudioDeviceModule::BufferType _playBufType;
 
-private:
     bool _initialized;
     bool _isShutDown;
     bool _recording;
@@ -361,7 +356,6 @@ private:
 
     int32_t _renderDelayOffsetSamples;
 
-private:
     uint16_t _playBufDelayFixed; // fixed playback delay
 
     uint16_t _playWarning;
@@ -378,7 +372,6 @@ private:
     int _captureBufSizeSamples;
     int _renderBufSizeSamples;
 
-private:
     // Typing detection
     // 0x5c is key "9", after that comes function keys.
     bool prev_key_state_[0x5d];

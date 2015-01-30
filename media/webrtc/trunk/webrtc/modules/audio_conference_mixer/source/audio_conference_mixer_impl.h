@@ -64,27 +64,27 @@ public:
     bool Init();
 
     // Module functions
-    virtual int32_t ChangeUniqueId(const int32_t id);
-    virtual int32_t TimeUntilNextProcess();
-    virtual int32_t Process();
+    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
+    virtual int32_t TimeUntilNextProcess() OVERRIDE;
+    virtual int32_t Process() OVERRIDE;
 
     // AudioConferenceMixer functions
     virtual int32_t RegisterMixedStreamCallback(
-        AudioMixerOutputReceiver& mixReceiver);
-    virtual int32_t UnRegisterMixedStreamCallback();
+        AudioMixerOutputReceiver& mixReceiver) OVERRIDE;
+    virtual int32_t UnRegisterMixedStreamCallback() OVERRIDE;
     virtual int32_t RegisterMixerStatusCallback(
         AudioMixerStatusReceiver& mixerStatusCallback,
-        const uint32_t amountOf10MsBetweenCallbacks);
-    virtual int32_t UnRegisterMixerStatusCallback();
+        const uint32_t amountOf10MsBetweenCallbacks) OVERRIDE;
+    virtual int32_t UnRegisterMixerStatusCallback() OVERRIDE;
     virtual int32_t SetMixabilityStatus(MixerParticipant& participant,
-                                        bool mixable);
+                                        bool mixable) OVERRIDE;
     virtual int32_t MixabilityStatus(MixerParticipant& participant,
-                                     bool& mixable);
-    virtual int32_t SetMinimumMixingFrequency(Frequency freq);
+                                     bool& mixable) OVERRIDE;
+    virtual int32_t SetMinimumMixingFrequency(Frequency freq) OVERRIDE;
     virtual int32_t SetAnonymousMixabilityStatus(
-        MixerParticipant& participant, const bool mixable);
+        MixerParticipant& participant, const bool mixable) OVERRIDE;
     virtual int32_t AnonymousMixabilityStatus(
-        MixerParticipant& participant, bool& mixable);
+        MixerParticipant& participant, bool& mixable) OVERRIDE;
 private:
     enum{DEFAULT_AUDIO_FRAME_POOLSIZE = 50};
 
@@ -192,6 +192,9 @@ private:
     MixerParticipantList _additionalParticipantList;
 
     size_t _numMixedParticipants;
+    // Determines if we will use a limiter for clipping protection during
+    // mixing.
+    bool use_limiter_;
 
     uint32_t _timeStamp;
 

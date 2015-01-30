@@ -213,6 +213,18 @@ bool XServerPixelBuffer::InitPixmaps(int depth) {
   return true;
 }
 
+bool XServerPixelBuffer::IsWindowValid() const {
+  XWindowAttributes attributes;
+  {
+    XErrorTrap error_trap(display_);
+    if (!XGetWindowAttributes(display_, window_, &attributes) ||
+        error_trap.GetLastErrorAndDisable() != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void XServerPixelBuffer::Synchronize() {
   if (shm_segment_info_ && !shm_pixmap_) {
     // XShmGetImage can fail if the display is being reconfigured.

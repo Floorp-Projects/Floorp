@@ -332,6 +332,7 @@ public:
 
     virtual bool RecvLastPrivateDocShellDestroyed() MOZ_OVERRIDE;
 
+    virtual bool RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) MOZ_OVERRIDE;
     virtual bool RecvFilePathUpdate(const nsString& aStorageType,
                                     const nsString& aStorageName,
                                     const nsString& aPath,

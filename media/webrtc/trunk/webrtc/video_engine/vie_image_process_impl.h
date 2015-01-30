@@ -35,7 +35,6 @@ class ViEImageProcessImpl
                                          ViEEffectFilter& render_filter);
   virtual int DeregisterRenderEffectFilter(const int video_channel);
   virtual int EnableDeflickering(const int capture_id, const bool enable);
-  virtual int EnableDenoising(const int capture_id, const bool enable);
   virtual int EnableColorEnhancement(const int video_channel,
                                      const bool enable);
   virtual void RegisterPreEncodeCallback(

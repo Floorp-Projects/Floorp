@@ -544,9 +544,9 @@ WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
 {
   CSFLogDebug(logTag,  "%s %d %d ", __FUNCTION__, enabled, id);
 
-  if (mPtrVoERTP_RTCP->SetRTPAudioLevelIndicationStatus(mChannel, enabled, id) == -1)
+  if (mPtrVoERTP_RTCP->SetSendAudioLevelIndicationStatus(mChannel, enabled, id) == -1)
   {
-    CSFLogError(logTag, "%s SetRTPAudioLevelIndicationStatus Failed", __FUNCTION__);
+    CSFLogError(logTag, "%s SetSendAudioLevelIndicationStatus Failed", __FUNCTION__);
     return kMediaConduitUnknownError;
   }
 

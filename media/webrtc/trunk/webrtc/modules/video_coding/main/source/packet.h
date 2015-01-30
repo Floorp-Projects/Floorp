@@ -33,6 +33,8 @@ public:
 
     uint8_t           payloadType;
     uint32_t          timestamp;
+    // NTP time of the capture time in local timebase in milliseconds.
+    int64_t ntp_time_ms_;
     uint16_t          seqNum;
     const uint8_t*    dataPtr;
     uint32_t          sizeBytes;

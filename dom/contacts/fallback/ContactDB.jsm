@@ -944,7 +944,8 @@ ContactDB.prototype = {
       if (DEBUG) debug("No object ID passed");
       return;
     }
-    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function(txn, store) {
+    this.newTxn("readwrite", this.dbStoreNames, function(txn, stores) {
+      let store = txn.objectStore(SAVED_GETALL_STORE_NAME);
       store.openCursor().onsuccess = function(e) {
         let cursor = e.target.result;
         if (cursor) {
@@ -961,10 +962,7 @@ ContactDB.prototype = {
           aCallback(txn);
         }
       }.bind(this);
-    }.bind(this), null,
-    function(errorMsg) {
-      aFailureCb(errorMsg);
-    });
+    }.bind(this), null, aFailureCb);
   },
 
   incrementRevision: function CDB_incrementRevision(txn) {

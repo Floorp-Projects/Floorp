@@ -42,13 +42,15 @@ const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
 /**
  * Factory Method for VideoConduit
  */
-mozilla::RefPtr<VideoSessionConduit> VideoSessionConduit::Create(VideoSessionConduit *aOther)
+mozilla::RefPtr<VideoSessionConduit>
+VideoSessionConduit::Create(VideoSessionConduit *aOther,
+                            bool receiving)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
   WebrtcVideoConduit* obj = new WebrtcVideoConduit();
-  if(obj->Init(static_cast<WebrtcVideoConduit*>(aOther)) != kMediaConduitNoError)
+  if(obj->Init(static_cast<WebrtcVideoConduit*>(aOther), receiving) != kMediaConduitNoError)
   {
     CSFLogError(logTag,  "%s VideoConduit Init Failed ", __FUNCTION__);
     delete obj;
@@ -284,7 +286,9 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
 /**
  * Performs initialization of the MANDATORY components of the Video Engine
  */
-MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
+MediaConduitErrorCode
+WebrtcVideoConduit::Init(WebrtcVideoConduit *other,
+                         bool receiving)
 {
   CSFLogDebug(logTag,  "%s this=%p other=%p", __FUNCTION__, this, other);
 
@@ -332,7 +336,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     MOZ_ASSERT(other->mVideoEngine);
     mVideoEngine = other->mVideoEngine;
   } else {
-
 #ifdef MOZ_WIDGET_ANDROID
     // get the JVM
     JavaVM *jvm = jsjni_GetVM();
@@ -344,7 +347,8 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
 #endif
 
     // Per WebRTC APIs below function calls return nullptr on failure
-    if( !(mVideoEngine = webrtc::VideoEngine::Create()) )
+    mVideoEngine = webrtc::VideoEngine::Create();
+    if(!mVideoEngine)
     {
       CSFLogError(logTag, "%s Unable to create video engine ", __FUNCTION__);
       return kMediaConduitSessionNotInited;
@@ -445,14 +449,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
                   __FUNCTION__,mPtrViEBase->LastError());
       return kMediaConduitCaptureError;
     }
-
-    if(mPtrViERender->AddRenderer(mChannel,
-                                  webrtc::kVideoI420,
-                                  (webrtc::ExternalRenderer*) this) == -1)
-    {
-      CSFLogError(logTag, "%s Failed to added external renderer ", __FUNCTION__);
-      return kMediaConduitInvalidRenderer;
-    }
     // Set up some parameters, per juberti. Set MTU.
     if(mPtrViENetwork->SetMTU(mChannel, 1200) != 0)
     {
@@ -466,6 +462,15 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
       CSFLogError(logTag,  "%s RTCPStatus Failed %d ", __FUNCTION__,
                   mPtrViEBase->LastError());
       return kMediaConduitRTCPStatusError;
+    }
+  }
+
+  if (receiving) {
+    if (mPtrViERender->AddRenderer(mChannel,
+                                  webrtc::kVideoI420,
+                                  (webrtc::ExternalRenderer*) this) == -1) {
+        CSFLogError(logTag, "%s Failed to added external renderer ", __FUNCTION__);
+        return kMediaConduitInvalidRenderer;
     }
   }
 
@@ -1238,6 +1243,7 @@ int
 WebrtcVideoConduit::DeliverFrame(unsigned char* buffer,
                                  int buffer_size,
                                  uint32_t time_stamp,
+                                 int64_t ntp_time_ms,
                                  int64_t render_time,
                                  void *handle)
 {
@@ -1318,7 +1324,8 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
 #ifdef MOZ_WEBRTC_OMX
     cinst.resolution_divisor = 16;
 #endif
-    cinst.codecSpecific.H264.profile = codecInfo->mProfile;
+    // cinst.codecSpecific.H264.profile = ?
+    cinst.codecSpecific.H264.profile_byte = codecInfo->mProfile;
     cinst.codecSpecific.H264.constraints = codecInfo->mConstraints;
     cinst.codecSpecific.H264.level = codecInfo->mLevel;
     cinst.codecSpecific.H264.packetizationMode = codecInfo->mPacketizationMode;

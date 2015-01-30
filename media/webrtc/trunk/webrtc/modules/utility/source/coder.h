@@ -27,11 +27,11 @@ public:
 
     int32_t SetEncodeCodec(
         const CodecInst& codecInst,
-	ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
+        ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
 
     int32_t SetDecodeCodec(
         const CodecInst& codecInst,
-	ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
+        ACMAMRPackingFormat amrFormat = AMRBandwidthEfficient);
 
     int32_t Decode(AudioFrame& decodedAudio, uint32_t sampFreqHz,
                    const int8_t* incomingPayload, int32_t payloadLength);
@@ -42,12 +42,13 @@ public:
                    uint32_t& encodedLengthInBytes);
 
 protected:
-    virtual int32_t SendData(FrameType frameType,
-                             uint8_t payloadType,
-                             uint32_t timeStamp,
-                             const uint8_t* payloadData,
-                             uint16_t payloadSize,
-                             const RTPFragmentationHeader* fragmentation);
+    virtual int32_t SendData(
+        FrameType frameType,
+        uint8_t payloadType,
+        uint32_t timeStamp,
+        const uint8_t* payloadData,
+        uint16_t payloadSize,
+        const RTPFragmentationHeader* fragmentation) OVERRIDE;
 
 private:
     scoped_ptr<AudioCodingModule> _acm;

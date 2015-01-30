@@ -18,7 +18,7 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/acm2/acm_generic_codec.h"
-#include "webrtc/modules/audio_coding/neteq4/interface/neteq.h"
+#include "webrtc/modules/audio_coding/neteq/interface/neteq.h"
 
 namespace webrtc {
 

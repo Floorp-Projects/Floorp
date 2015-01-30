@@ -105,7 +105,8 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
 
     // Retrieve information about the current operating system
     //
-    if (!(bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO *) &osvi)))
+    bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO *) &osvi);
+    if (!bOsVersionInfoEx)
         return FALSE;
 
     // Parse our OS version string

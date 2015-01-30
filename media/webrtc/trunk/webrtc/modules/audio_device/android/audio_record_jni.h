@@ -67,7 +67,6 @@ class AudioRecordJni {
   bool AGC() const { return _AGC; }
 
   // Audio mixer initialization
-  int32_t MicrophoneIsAvailable(bool& available);  // NOLINT
   int32_t InitMicrophone();
   bool MicrophoneIsInitialized() const { return _micIsInitialized; }
 

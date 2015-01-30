@@ -43,7 +43,7 @@ class VoiceEngine;
 class WEBRTC_DLLEXPORT VoEDtmf
 {
 public:
-    
+
     // Factory for the VoEDtmf sub-API. Increases an internal
     // reference counter if successful. Returns NULL if the API is not
     // supported or if construction fails.
@@ -60,23 +60,16 @@ public:
                                    bool outOfBand = true, int lengthMs = 160,
                                    int attenuationDb = 10) = 0;
 
-   
+
     // Sets the dynamic payload |type| that should be used for telephone
     // events.
     virtual int SetSendTelephoneEventPayloadType(int channel,
                                                  unsigned char type) = 0;
 
-  
+
     // Gets the currently set dynamic payload |type| for telephone events.
     virtual int GetSendTelephoneEventPayloadType(int channel,
                                                  unsigned char& type) = 0;
-
-    // Enables or disables local tone playout for received DTMF events
-    // out-of-band.
-    virtual int SetDtmfPlayoutStatus(int channel, bool enable) = 0;
-
-    // Gets the DTMF playout status.
-    virtual int GetDtmfPlayoutStatus(int channel, bool& enabled) = 0;
 
     // Toogles DTMF feedback state: when a DTMF tone is sent, the same tone
     // is played out on the speaker.
@@ -90,14 +83,10 @@ public:
     virtual int PlayDtmfTone(int eventCode, int lengthMs = 200,
                              int attenuationDb = 10) = 0;
 
-    // Starts playing out a DTMF feedback tone locally.
-    // The tone will be played out until the corresponding stop function
-    // is called.
+    // To be removed. Don't use.
     virtual int StartPlayingDtmfTone(int eventCode,
-                                     int attenuationDb = 10) = 0;
-
-    // Stops playing out a DTMF feedback tone locally.
-    virtual int StopPlayingDtmfTone() = 0;
+        int attenuationDb = 10) { return -1; }
+    virtual int StopPlayingDtmfTone() { return -1; }
 
 protected:
     VoEDtmf() {}

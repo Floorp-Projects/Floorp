@@ -6,6 +6,7 @@
 
 #include "BluetoothDaemonInterface.h"
 #include "BluetoothDaemonA2dpInterface.h"
+#include "BluetoothDaemonAvrcpInterface.h"
 #include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
@@ -1453,6 +1454,54 @@ private:
 // Protocol handling
 //
 
+// |BluetoothDaemonProtocol| is the central class for communicating
+// with the Bluetooth daemon. It maintains both socket connections
+// to the external daemon and implements the complete HAL protocol
+// by inheriting from base-class modules.
+//
+// Each |BluetoothDaemon*Module| class implements an individual
+// module of the HAL protocol. Each class contains the abstract
+// methods
+//
+//  - |Send|,
+//  - |RegisterModule|, and
+//  - |UnregisterModule|.
+//
+// Module classes use |Send| to send out command PDUs. The socket
+// in |BluetoothDaemonProtocol| is required for sending. The abstract
+// method hides all these internal details from the modules.
+//
+// |RegisterModule| is required during module initialization, when
+// modules must register themselves at the daemon. The register command
+// is not part of the module itself, but contained in the Setup module
+// (id of 0x00). The abstract method |RegisterModule| allows modules to
+// call into the Setup module for generating the register command.
+//
+// |UnregisterModule| works like |RegisterModule|, but for cleanups.
+//
+// |BluetoothDaemonProtocol| also handles PDU receiving. It implements
+// the method |Handle| from |BluetoothDaemonPDUConsumer|. The socket
+// connections of type |BluetoothDaemonConnection| invoke this method
+// to forward received PDUs for processing by higher layers. The
+// implementation of |Handle| checks the service id of the PDU and
+// forwards it to the correct module class using the module's method
+// |HandleSvc|. Further PDU processing is module-dependent.
+//
+// To summarize the interface between |BluetoothDaemonProtocol| and
+// modules; the former implements the abstract methods
+//
+//  - |Send|,
+//  - |RegisterModule|, and
+//  - |UnregisterModule|,
+//
+// which allow modules to send out data. Each module implements the
+// method
+//
+//  - |HandleSvc|,
+//
+// which is called by |BluetoothDaemonProtcol| to hand over received
+// PDUs into a module.
+//
 class BluetoothDaemonProtocol MOZ_FINAL
   : public BluetoothDaemonPDUConsumer
   , public BluetoothDaemonSetupModule
@@ -1460,6 +1509,7 @@ class BluetoothDaemonProtocol MOZ_FINAL
   , public BluetoothDaemonSocketModule
   , public BluetoothDaemonHandsfreeModule
   , public BluetoothDaemonA2dpModule
+  , public BluetoothDaemonAvrcpModule
 {
 public:
   BluetoothDaemonProtocol(BluetoothDaemonConnection* aConnection);
@@ -1495,6 +1545,8 @@ private:
                           BluetoothDaemonPDU& aPDU, void* aUserData);
   void HandleA2dpSvc(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleAvrcpSvc(const BluetoothDaemonPDUHeader& aHeader,
+                      BluetoothDaemonPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1572,6 +1624,14 @@ BluetoothDaemonProtocol::HandleA2dpSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleAvrcpSvc(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  void* aUserData)
+{
+  BluetoothDaemonAvrcpModule::HandleSvc(aHeader, aPDU, aUserData);
+}
+
+void
 BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
@@ -1587,7 +1647,10 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
     INIT_ARRAY_AT(BluetoothDaemonHandsfreeModule::SERVICE_ID,
       &BluetoothDaemonProtocol::HandleHandsfreeSvc),
     INIT_ARRAY_AT(BluetoothDaemonA2dpModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleA2dpSvc)
+      &BluetoothDaemonProtocol::HandleA2dpSvc),
+    INIT_ARRAY_AT(0x07, nullptr), // Health
+    INIT_ARRAY_AT(BluetoothDaemonAvrcpModule::SERVICE_ID,
+      &BluetoothDaemonProtocol::HandleAvrcpSvc)
   };
 
   BluetoothDaemonPDUHeader header;
@@ -2184,7 +2247,13 @@ BluetoothDaemonInterface::GetBluetoothA2dpInterface()
 BluetoothAvrcpInterface*
 BluetoothDaemonInterface::GetBluetoothAvrcpInterface()
 {
-  return nullptr;
+  if (mAvrcpInterface) {
+    return mAvrcpInterface;
+  }
+
+  mAvrcpInterface = new BluetoothDaemonAvrcpInterface(mProtocol);
+
+  return mAvrcpInterface;
 }
 
 BluetoothGattInterface*

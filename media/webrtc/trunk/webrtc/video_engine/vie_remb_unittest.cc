@@ -18,35 +18,26 @@
 
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/utility/interface/mock/mock_process_thread.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/video_engine/vie_remb.h"
 
 using ::testing::_;
 using ::testing::AnyNumber;
+using ::testing::NiceMock;
 using ::testing::Return;
 
 namespace webrtc {
-
-class TestProcessThread : public ProcessThread {
- public:
-  explicit TestProcessThread() {}
-  ~TestProcessThread() {}
-  virtual int32_t Start() { return 0; }
-  virtual int32_t Stop() { return 0; }
-  virtual int32_t RegisterModule(Module* module) { return 0; }
-  virtual int32_t DeRegisterModule(const Module* module) { return 0; }
-};
 
 class ViERembTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
     TickTime::UseFakeClock(12345);
-    process_thread_.reset(new TestProcessThread);
+    process_thread_.reset(new NiceMock<MockProcessThread>);
     vie_remb_.reset(new VieRemb());
   }
-  scoped_ptr<TestProcessThread> process_thread_;
+  scoped_ptr<MockProcessThread> process_thread_;
   scoped_ptr<VieRemb> vie_remb_;
 };
 

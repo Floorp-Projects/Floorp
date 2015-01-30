@@ -39,7 +39,7 @@ void VerifyHeader(uint16_t seq_num,
 class ProducerFecTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    fec_ = new ForwardErrorCorrection(0);
+    fec_ = new ForwardErrorCorrection();
     producer_ = new ProducerFec(fec_);
     generator_ = new FrameGenerator;
   }
