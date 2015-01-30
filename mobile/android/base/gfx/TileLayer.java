@@ -15,16 +15,13 @@ import android.opengl.GLES20;
 public abstract class TileLayer extends Layer {
     private static final String LOGTAG = "GeckoTileLayer";
 
-    protected final BufferedImage mImage;
-
     public enum PaintMode { NORMAL, REPEAT, STRETCH };
     private PaintMode mPaintMode;
 
-    public TileLayer(BufferedImage image, PaintMode paintMode) {
-        super(image.getSize());
+    public TileLayer(IntSize size, PaintMode paintMode) {
+        super(size);
 
         mPaintMode = paintMode;
-        mImage = image;
     }
 
     protected boolean repeats() { return mPaintMode == PaintMode.REPEAT; }
