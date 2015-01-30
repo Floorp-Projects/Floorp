@@ -22,17 +22,6 @@
 #define PART_LEN1 (PART_LEN + 1)  // Unique fft coefficients
 #define PART_LEN2 (PART_LEN * 2)  // Length of partition * 2
 
-// Delay estimator constants, used for logging.
-enum {
-  kMaxDelayBlocks = 60
-};
-enum {
-  kLookaheadBlocks = 15
-};
-enum {
-  kHistorySizeBlocks = kMaxDelayBlocks + kLookaheadBlocks
-};
-
 typedef float complex_t[2];
 // For performance reasons, some arrays of complex numbers are replaced by twice
 // as long arrays of float, all the real parts followed by all the imaginary
@@ -65,14 +54,20 @@ int WebRtcAec_CreateAec(AecCore** aec);
 int WebRtcAec_FreeAec(AecCore* aec);
 int WebRtcAec_InitAec(AecCore* aec, int sampFreq);
 void WebRtcAec_InitAec_SSE2(void);
+#if defined(MIPS_FPU_LE)
+void WebRtcAec_InitAec_mips(void);
+#endif
+#if defined(WEBRTC_DETECT_ARM_NEON) || defined(WEBRTC_ARCH_ARM_NEON)
+void WebRtcAec_InitAec_neon(void);
+#endif
 
 void WebRtcAec_BufferFarendPartition(AecCore* aec, const float* farend);
 void WebRtcAec_ProcessFrame(AecCore* aec,
-                            const short* nearend,
-                            const short* nearendH,
+                            const float* nearend,
+                            const float* nearendH,
                             int knownDelay,
-                            int16_t* out,
-                            int16_t* outH);
+                            float* out,
+                            float* outH);
 
 // A helper function to call WebRtc_MoveReadPtr() for all far-end buffers.
 // Returns the number of elements moved, and adjusts |system_delay| by the
@@ -100,6 +95,12 @@ void WebRtcAec_SetConfigCore(AecCore* self,
                              int nlp_mode,
                              int metrics_mode,
                              int delay_logging);
+
+// Non-zero enables, zero disables.
+void WebRtcAec_enable_reported_delay(AecCore* self, int enable);
+
+// Returns non-zero if reported delay is enabled and zero if disabled.
+int WebRtcAec_reported_delay_enabled(AecCore* self);
 
 // We now interpret delay correction to mean an extended filter length feature.
 // We reuse the delay correction infrastructure to avoid changes through to

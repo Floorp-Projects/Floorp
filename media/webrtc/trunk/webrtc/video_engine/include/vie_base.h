@@ -43,6 +43,93 @@ class CpuOveruseObserver {
   virtual ~CpuOveruseObserver() {}
 };
 
+struct CpuOveruseOptions {
+  CpuOveruseOptions()
+      : enable_capture_jitter_method(true),
+        low_capture_jitter_threshold_ms(20.0f),
+        high_capture_jitter_threshold_ms(30.0f),
+        enable_encode_usage_method(false),
+        low_encode_usage_threshold_percent(60),
+        high_encode_usage_threshold_percent(90),
+        low_encode_time_rsd_threshold(-1),
+        high_encode_time_rsd_threshold(-1),
+        enable_extended_processing_usage(true),
+        frame_timeout_interval_ms(1500),
+        min_frame_samples(120),
+        min_process_count(3),
+        high_threshold_consecutive_count(2) {}
+
+  // Method based on inter-arrival jitter of captured frames.
+  bool enable_capture_jitter_method;
+  float low_capture_jitter_threshold_ms;  // Threshold for triggering underuse.
+  float high_capture_jitter_threshold_ms; // Threshold for triggering overuse.
+  // Method based on encode time of frames.
+  bool enable_encode_usage_method;
+  int low_encode_usage_threshold_percent;  // Threshold for triggering underuse.
+  int high_encode_usage_threshold_percent; // Threshold for triggering overuse.
+  // TODO(asapersson): Remove options, not used.
+  int low_encode_time_rsd_threshold;   // Additional threshold for triggering
+                                       // underuse (used in addition to
+                                       // threshold above if configured).
+  int high_encode_time_rsd_threshold;  // Additional threshold for triggering
+                                       // overuse (used in addition to
+                                       // threshold above if configured).
+  bool enable_extended_processing_usage;  // Include a larger time span (in
+                                          // addition to encode time) for
+                                          // measuring the processing time of a
+                                          // frame.
+  // General settings.
+  int frame_timeout_interval_ms;  // The maximum allowed interval between two
+                                  // frames before resetting estimations.
+  int min_frame_samples;  // The minimum number of frames required.
+  int min_process_count;  // The number of initial process times required before
+                          // triggering an overuse/underuse.
+  int high_threshold_consecutive_count; // The number of consecutive checks
+                                        // above the high threshold before
+                                        // triggering an overuse.
+
+  bool Equals(const CpuOveruseOptions& o) const {
+    return enable_capture_jitter_method == o.enable_capture_jitter_method &&
+        low_capture_jitter_threshold_ms == o.low_capture_jitter_threshold_ms &&
+        high_capture_jitter_threshold_ms ==
+        o.high_capture_jitter_threshold_ms &&
+        enable_encode_usage_method == o.enable_encode_usage_method &&
+        low_encode_usage_threshold_percent ==
+        o.low_encode_usage_threshold_percent &&
+        high_encode_usage_threshold_percent ==
+        o.high_encode_usage_threshold_percent &&
+        low_encode_time_rsd_threshold == o.low_encode_time_rsd_threshold &&
+        high_encode_time_rsd_threshold == o.high_encode_time_rsd_threshold &&
+        enable_extended_processing_usage ==
+        o.enable_extended_processing_usage &&
+        frame_timeout_interval_ms == o.frame_timeout_interval_ms &&
+        min_frame_samples == o.min_frame_samples &&
+        min_process_count == o.min_process_count &&
+        high_threshold_consecutive_count == o.high_threshold_consecutive_count;
+  }
+};
+
+struct CpuOveruseMetrics {
+  CpuOveruseMetrics()
+      : capture_jitter_ms(-1),
+        avg_encode_time_ms(-1),
+        encode_usage_percent(-1),
+        encode_rsd(-1),
+        capture_queue_delay_ms_per_s(-1) {}
+
+  int capture_jitter_ms;  // The current estimated jitter in ms based on
+                          // incoming captured frames.
+  int avg_encode_time_ms;   // The average encode time in ms.
+  int encode_usage_percent; // The average encode time divided by the average
+                            // time difference between incoming captured frames.
+  // TODO(asapersson): Remove metric, not used.
+  int encode_rsd;           // The relative std dev of encode time of frames.
+  int capture_queue_delay_ms_per_s;  // The current time delay between an
+                                     // incoming captured frame until the frame
+                                     // is being processed. The delay is
+                                     // expressed in ms delay per second.
+};
+
 class WEBRTC_DLLEXPORT VideoEngine {
  public:
   // Creates a VideoEngine object, which can then be used to acquire sub‐APIs.
@@ -119,24 +206,19 @@ class WEBRTC_DLLEXPORT ViEBase {
   virtual int RegisterCpuOveruseObserver(int channel,
                                          CpuOveruseObserver* observer) = 0;
 
+  // Sets options for cpu overuse detector.
+  virtual int SetCpuOveruseOptions(int channel,
+                                   const CpuOveruseOptions& options) = 0;
+
   // Gets cpu overuse measures.
-  // capture_jitter_ms: The current estimated jitter in ms based on incoming
-  //                    captured frames.
-  // avg_encode_time_ms: The average encode time in ms.
-  // encode_usage_percent: The average encode time divided by the average time
-  //                       difference between incoming captured frames.
-  // capture_queue_delay_ms_per_s: The current time delay between an incoming
-  //                               captured frame until the frame is being
-  //                               processed. The delay is expressed in ms
-  //                               delay per second.
-  // TODO(asapersson): Remove default implementation.
-  virtual int CpuOveruseMeasures(int channel,
-                                 int* capture_jitter_ms,
-                                 int* avg_encode_time_ms,
-                                 int* encode_usage_percent,
-                                 int* capture_queue_delay_ms_per_s) {
-    return -1;
-  }
+  virtual int GetCpuOveruseMetrics(int channel, CpuOveruseMetrics* metrics) = 0;
+
+  // Registers a callback which is called when send-side delay statistics has
+  // been updated.
+  // TODO(holmer): Remove the default implementation when fakevideoengine.h has
+  // been updated.
+  virtual void RegisterSendSideDelayObserver(
+      int channel, SendSideDelayObserver* observer) {}
 
   // Changing the current state of the host CPU. Encoding engines
   // can adapt their behavior if needed. (Optional)

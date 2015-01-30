@@ -36,6 +36,7 @@ int32_t FakeDecoder::Decode(const EncodedImage& input,
                             const CodecSpecificInfo* codec_specific_info,
                             int64_t render_time_ms) {
   frame_.set_timestamp(input._timeStamp);
+  frame_.set_ntp_time_ms(input.ntp_time_ms_);
   frame_.set_render_time_ms(render_time_ms);
 
   callback_->Decoded(frame_);
@@ -54,6 +55,32 @@ int32_t FakeDecoder::Release() {
 }
 int32_t FakeDecoder::Reset() {
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t FakeH264Decoder::Decode(const EncodedImage& input,
+                                bool missing_frames,
+                                const RTPFragmentationHeader* fragmentation,
+                                const CodecSpecificInfo* codec_specific_info,
+                                int64_t render_time_ms) {
+  uint8_t value = 0;
+  for (size_t i = 0; i < input._length; ++i) {
+    uint8_t kStartCode[] = {0, 0, 0, 1};
+    if (i < input._length - sizeof(kStartCode) &&
+        !memcmp(&input._buffer[i], kStartCode, sizeof(kStartCode))) {
+      i += sizeof(kStartCode) + 1;  // Skip start code and NAL header.
+    }
+    if (input._buffer[i] != value) {
+      EXPECT_EQ(value, input._buffer[i])
+          << "Bitstream mismatch between sender and receiver.";
+      return -1;
+    }
+    ++value;
+  }
+  return FakeDecoder::Decode(input,
+                             missing_frames,
+                             fragmentation,
+                             codec_specific_info,
+                             render_time_ms);
 }
 
 }  // namespace test

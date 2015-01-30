@@ -31,7 +31,7 @@ class TestVCMReceiver : public ::testing::Test {
   TestVCMReceiver()
       : clock_(new SimulatedClock(0)),
         timing_(clock_.get()),
-        receiver_(&timing_, clock_.get(), &event_factory_, 1, 1, true) {
+        receiver_(&timing_, clock_.get(), &event_factory_, true) {
     stream_generator_.reset(new
         StreamGenerator(0, 0, clock_->TimeInMilliseconds()));
     memset(data_buffer_, 0, kDataBufferSize);

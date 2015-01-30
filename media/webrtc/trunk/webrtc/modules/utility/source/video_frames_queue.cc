@@ -16,8 +16,8 @@
 
 #include "webrtc/common_video/interface/texture_video_frame.h"
 #include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 VideoFramesQueue::VideoFramesQueue()
@@ -38,12 +38,7 @@ VideoFramesQueue::~VideoFramesQueue() {
 
 int32_t VideoFramesQueue::AddFrame(const I420VideoFrame& newFrame) {
   if (newFrame.native_handle() != NULL) {
-    _incomingFrames.push_back(new TextureVideoFrame(
-        static_cast<NativeHandle*>(newFrame.native_handle()),
-        newFrame.width(),
-        newFrame.height(),
-        newFrame.timestamp(),
-        newFrame.render_time_ms()));
+    _incomingFrames.push_back(newFrame.CloneFrame());
     return 0;
   }
 
@@ -56,16 +51,9 @@ int32_t VideoFramesQueue::AddFrame(const I420VideoFrame& newFrame) {
   if (!ptrFrameToAdd) {
     if (_emptyFrames.size() + _incomingFrames.size() >
         KMaxNumberOfFrames) {
-      WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, -1,
-                   "%s: too many frames, limit: %d", __FUNCTION__,
-                   KMaxNumberOfFrames);
+      LOG(LS_WARNING) << "Too many frames, limit: " << KMaxNumberOfFrames;
       return -1;
     }
-
-    WEBRTC_TRACE(kTraceMemory, kTraceVideoRenderer, -1,
-                 "%s: allocating buffer %d", __FUNCTION__,
-                 _emptyFrames.size() + _incomingFrames.size());
-
     ptrFrameToAdd = new I420VideoFrame();
   }
   ptrFrameToAdd->CopyFrame(newFrame);
@@ -87,8 +75,10 @@ I420VideoFrame* VideoFramesQueue::FrameToRecord() {
       // List is traversed beginning to end. If ptrRenderFrame is not
       // NULL it must be the first, and thus oldest, VideoFrame in the
       // queue. It can be recycled.
-      ReturnFrame(ptrRenderFrame);
-      iter = _incomingFrames.erase(iter);
+      if (ptrRenderFrame) {
+        ReturnFrame(ptrRenderFrame);
+       _incomingFrames.pop_front();
+      }
       ptrRenderFrame = ptrOldestFrameInList;
     } else {
       // All VideoFrames following this one will be even newer. No match

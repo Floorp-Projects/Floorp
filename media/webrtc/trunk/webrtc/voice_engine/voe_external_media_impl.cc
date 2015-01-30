@@ -382,7 +382,7 @@ int VoEExternalMediaImpl::ExternalPlayoutGetData(
 
     // Retrieve mixed output at the specified rate
     shared_->output_mixer()->MixActiveChannels();
-    shared_->output_mixer()->DoOperationsOnCombinedSignal();
+    shared_->output_mixer()->DoOperationsOnCombinedSignal(true);
     shared_->output_mixer()->GetMixedAudio(samplingFreqHz, 1, &audioFrame);
 
     // Deliver audio (PCM) samples to the external sink

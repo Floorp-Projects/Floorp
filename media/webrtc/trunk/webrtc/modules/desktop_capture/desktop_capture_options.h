@@ -10,7 +10,7 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_OPTIONS_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_OPTIONS_H_
 
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 
 #if defined(USE_X11)
@@ -19,6 +19,7 @@
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.h"
+#include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
 #endif
 
 namespace webrtc {
@@ -50,6 +51,14 @@ class DesktopCaptureOptions {
   void set_configuration_monitor(scoped_refptr<DesktopConfigurationMonitor> m) {
     configuration_monitor_ = m;
   }
+
+  FullScreenChromeWindowDetector* full_screen_chrome_window_detector() const {
+    return full_screen_window_detector_;
+  }
+  void set_full_screen_chrome_window_detector(
+      scoped_refptr<FullScreenChromeWindowDetector> detector) {
+    full_screen_window_detector_ = detector;
+  }
 #endif
 
   // Flag indicating that the capturer should use screen change notifications.
@@ -66,6 +75,15 @@ class DesktopCaptureOptions {
     disable_effects_ = disable_effects;
   }
 
+#if defined(WEBRTC_WIN)
+  bool allow_use_magnification_api() const {
+    return allow_use_magnification_api_;
+  }
+  void set_allow_use_magnification_api(bool allow) {
+    allow_use_magnification_api_ = allow;
+  }
+#endif
+
  private:
 #if defined(USE_X11)
   scoped_refptr<SharedXDisplay> x_display_;
@@ -73,6 +91,11 @@ class DesktopCaptureOptions {
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
+  scoped_refptr<FullScreenChromeWindowDetector> full_screen_window_detector_;
+#endif
+
+#if defined(WEBRTC_WIN)
+  bool allow_use_magnification_api_;
 #endif
   bool use_update_notifications_;
   bool disable_effects_;

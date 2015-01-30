@@ -100,34 +100,34 @@ void VCMEncodedFrame::Reset()
 
 void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
 {
-    if (header) {
-      switch (header->codec) {
-        case kRtpVideoVp8: {
-          if (_codecSpecificInfo.codecType != kVideoCodecVP8) {
-            // This is the first packet for this frame.
-            _codecSpecificInfo.codecSpecific.VP8.pictureId = -1;
-            _codecSpecificInfo.codecSpecific.VP8.temporalIdx = 0;
-            _codecSpecificInfo.codecSpecific.VP8.layerSync = false;
-            _codecSpecificInfo.codecSpecific.VP8.keyIdx = -1;
-            _codecSpecificInfo.codecType = kVideoCodecVP8;
-          }
-          _codecSpecificInfo.codecSpecific.VP8.nonReference =
-              header->codecHeader.VP8.nonReference;
-          if (header->codecHeader.VP8.pictureId != kNoPictureId) {
-            _codecSpecificInfo.codecSpecific.VP8.pictureId =
-                header->codecHeader.VP8.pictureId;
-          }
-          if (header->codecHeader.VP8.temporalIdx != kNoTemporalIdx) {
-            _codecSpecificInfo.codecSpecific.VP8.temporalIdx =
-                header->codecHeader.VP8.temporalIdx;
-            _codecSpecificInfo.codecSpecific.VP8.layerSync =
-                header->codecHeader.VP8.layerSync;
-          }
-          if (header->codecHeader.VP8.keyIdx != kNoKeyIdx) {
-            _codecSpecificInfo.codecSpecific.VP8.keyIdx =
-                header->codecHeader.VP8.keyIdx;
-          }
-          break;
+  if (header) {
+    switch (header->codec) {
+      case kRtpVideoVp8: {
+        if (_codecSpecificInfo.codecType != kVideoCodecVP8) {
+          // This is the first packet for this frame.
+          _codecSpecificInfo.codecSpecific.VP8.pictureId = -1;
+          _codecSpecificInfo.codecSpecific.VP8.temporalIdx = 0;
+          _codecSpecificInfo.codecSpecific.VP8.layerSync = false;
+          _codecSpecificInfo.codecSpecific.VP8.keyIdx = -1;
+          _codecSpecificInfo.codecType = kVideoCodecVP8;
+        }
+        _codecSpecificInfo.codecSpecific.VP8.nonReference =
+            header->codecHeader.VP8.nonReference;
+        if (header->codecHeader.VP8.pictureId != kNoPictureId) {
+          _codecSpecificInfo.codecSpecific.VP8.pictureId =
+              header->codecHeader.VP8.pictureId;
+        }
+        if (header->codecHeader.VP8.temporalIdx != kNoTemporalIdx) {
+          _codecSpecificInfo.codecSpecific.VP8.temporalIdx =
+              header->codecHeader.VP8.temporalIdx;
+          _codecSpecificInfo.codecSpecific.VP8.layerSync =
+              header->codecHeader.VP8.layerSync;
+        }
+        if (header->codecHeader.VP8.keyIdx != kNoKeyIdx) {
+          _codecSpecificInfo.codecSpecific.VP8.keyIdx =
+              header->codecHeader.VP8.keyIdx;
+        }
+        break;
       }
       case kRtpVideoH264: {
         _codecSpecificInfo.codecSpecific.H264.nalu_header =
@@ -149,17 +149,12 @@ const RTPFragmentationHeader* VCMEncodedFrame::FragmentationHeader() const {
   return &_fragmentation;
 }
 
-int32_t
-VCMEncodedFrame::VerifyAndAllocate(const uint32_t minimumSize)
+void VCMEncodedFrame::VerifyAndAllocate(const uint32_t minimumSize)
 {
     if(minimumSize > _size)
     {
         // create buffer of sufficient size
         uint8_t* newBuffer = new uint8_t[minimumSize];
-        if (newBuffer == NULL)
-        {
-            return -1;
-        }
         if(_buffer)
         {
             // copy old data
@@ -169,7 +164,6 @@ VCMEncodedFrame::VerifyAndAllocate(const uint32_t minimumSize)
         _buffer = newBuffer;
         _size = minimumSize;
     }
-    return 0;
 }
 
 webrtc::FrameType VCMEncodedFrame::ConvertFrameType(VideoFrameType frameType)

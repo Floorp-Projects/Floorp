@@ -15,6 +15,9 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
+// Not defined in the android version we use to build with
+#define SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION ((SLuint32) 0x00000004)
+
 #if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
 #else
@@ -81,7 +84,6 @@ class OpenSlesInput {
   bool AGC() const { return agc_enabled_; }
 
   // Audio mixer initialization
-  int32_t MicrophoneIsAvailable(bool& available);  // NOLINT
   int32_t InitMicrophone();
   bool MicrophoneIsInitialized() const { return mic_initialized_; }
 
@@ -217,7 +219,7 @@ class OpenSlesInput {
   // Audio buffers
   AudioDeviceBuffer* audio_buffer_;
   // Holds all allocated memory such that it is deallocated properly.
-  scoped_array<scoped_array<int8_t> > rec_buf_;
+  scoped_ptr<scoped_ptr<int8_t[]>[]> rec_buf_;
   // Index in |rec_buf_| pointing to the audio buffer that will be ready the
   // next time RecorderSimpleBufferQueueCallbackHandler is invoked.
   // Ready means buffer contains audio data from the device.

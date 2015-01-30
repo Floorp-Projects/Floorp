@@ -245,7 +245,6 @@ AndroidNativeOpenGl2Channel::AndroidNativeOpenGl2Channel(
 AndroidNativeOpenGl2Channel::~AndroidNativeOpenGl2Channel() {
   WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id,
                "AndroidNativeOpenGl2Channel dtor");
-  delete &_renderCritSect;
   if (_jvm) {
     // get the JNI env for this thread
     bool isAttached = false;
@@ -277,6 +276,8 @@ AndroidNativeOpenGl2Channel::~AndroidNativeOpenGl2Channel() {
       }
     }
   }
+
+  delete &_renderCritSect;
 }
 
 int32_t AndroidNativeOpenGl2Channel::Init(int32_t zOrder,

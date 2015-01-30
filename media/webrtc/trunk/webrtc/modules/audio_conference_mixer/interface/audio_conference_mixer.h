@@ -40,9 +40,9 @@ public:
     virtual ~AudioConferenceMixer() {}
 
     // Module functions
-    virtual int32_t ChangeUniqueId(const int32_t id) = 0;
-    virtual int32_t TimeUntilNextProcess() = 0 ;
-    virtual int32_t Process() = 0;
+    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE = 0;
+    virtual int32_t TimeUntilNextProcess() OVERRIDE = 0;
+    virtual int32_t Process() OVERRIDE = 0;
 
     // Register/unregister a callback class for receiving the mixed audio.
     virtual int32_t RegisterMixedStreamCallback(

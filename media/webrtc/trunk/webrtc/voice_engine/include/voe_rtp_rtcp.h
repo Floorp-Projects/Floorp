@@ -15,10 +15,9 @@
 //  - Transmission of RTCP sender reports.
 //  - Obtaining RTCP data from incoming RTCP sender reports.
 //  - RTP and RTCP statistics (jitter, packet loss, RTT etc.).
-//  - Forward Error Correction (FEC).
+//  - Redundant Coding (RED)
 //  - Writing RTP and RTCP packets to binary files for off-line analysis of
 //    the call quality.
-//  - Inserting extra RTP packets into active audio stream.
 //
 // Usage example, omitting error checking:
 //
@@ -45,6 +44,7 @@
 
 namespace webrtc {
 
+class ViENetwork;
 class VoiceEngine;
 
 // VoERTPObserver
@@ -86,6 +86,9 @@ struct CallStatistics
     int packetsSent;
     int bytesReceived;
     int packetsReceived;
+    // The capture ntp time (in local timebase) of the first played out audio
+    // frame.
+    int64_t capture_start_ntp_time_ms_;
 };
 
 // See section 6.4.1 in http://www.ietf.org/rfc/rfc3550.txt for details.
@@ -125,24 +128,6 @@ public:
     // deleted.
     virtual int Release() = 0;
 
-    // Registers an instance of a VoERTPObserver derived class for a specified
-    // |channel|. It will allow the user to observe callbacks related to the
-    // RTP protocol such as changes in the incoming SSRC.
-    virtual int RegisterRTPObserver(int channel, VoERTPObserver& observer) = 0;
-
-    // Deregisters an instance of a VoERTPObserver derived class for a
-    // specified |channel|.
-    virtual int DeRegisterRTPObserver(int channel) = 0;
-
-    // Registers an instance of a VoERTCPObserver derived class for a specified
-    // |channel|.
-    virtual int RegisterRTCPObserver(
-        int channel, VoERTCPObserver& observer) = 0;
-
-    // Deregisters an instance of a VoERTCPObserver derived class for a
-    // specified |channel|.
-    virtual int DeRegisterRTCPObserver(int channel) = 0;
-
     // Sets the local RTP synchronization source identifier (SSRC) explicitly.
     virtual int SetLocalSSRC(int channel, unsigned int ssrc) = 0;
 
@@ -153,15 +138,28 @@ public:
     virtual int GetRemoteSSRC(int channel, unsigned int& ssrc) = 0;
 
     // Sets the status of rtp-audio-level-indication on a specific |channel|.
-    virtual int SetRTPAudioLevelIndicationStatus(
-        int channel, bool enable, unsigned char ID = 1) = 0;
+    virtual int SetSendAudioLevelIndicationStatus(int channel,
+                                                  bool enable,
+                                                  unsigned char id = 1) = 0;
 
-    // Sets the status of rtp-audio-level-indication on a specific |channel|.
-    virtual int GetRTPAudioLevelIndicationStatus(
-        int channel, bool& enabled, unsigned char& ID) = 0;
+    // Sets the status of receiving rtp-audio-level-indication on a specific
+    // |channel|.
+    virtual int SetReceiveAudioLevelIndicationStatus(int channel,
+                                                     bool enable,
+                                                     unsigned char id = 1) {
+      // TODO(wu): Remove default implementation once talk is updated.
+      return 0;
+    }
 
-    // Gets the CSRCs of the incoming RTP packets.
-    virtual int GetRemoteCSRCs(int channel, unsigned int arrCSRC[15]) = 0;
+    // Sets the status of sending absolute sender time on a specific |channel|.
+    virtual int SetSendAbsoluteSenderTimeStatus(int channel,
+                                                bool enable,
+                                                unsigned char id) = 0;
+
+    // Sets status of receiving absolute sender time on a specific |channel|.
+    virtual int SetReceiveAbsoluteSenderTimeStatus(int channel,
+                                                   bool enable,
+                                                   unsigned char id) = 0;
 
     // Sets the RTCP status on a specific |channel|.
     virtual int SetRTCPStatus(int channel, bool enable) = 0;
@@ -173,9 +171,11 @@ public:
     // specific |channel|.
     virtual int SetRTCP_CNAME(int channel, const char cName[256]) = 0;
 
-    // Gets the canonical name (CNAME) parameter for RTCP reports on a
-    // specific |channel|.
-    virtual int GetRTCP_CNAME(int channel, char cName[256]) = 0;
+    // TODO(holmer): Remove this API once it has been removed from
+    // fakewebrtcvoiceengine.h.
+    virtual int GetRTCP_CNAME(int channel, char cName[256]) {
+      return -1;
+    }
 
     // Gets the canonical name (CNAME) parameter for incoming RTCP reports
     // on a specific channel.
@@ -197,11 +197,6 @@ public:
     // Gets RTCP statistics for a specific |channel|.
     virtual int GetRTCPStatistics(int channel, CallStatistics& stats) = 0;
 
-    // Gets the sender info part of the last received RTCP Sender Report (SR)
-    // on a specified |channel|.
-    virtual int GetRemoteRTCPSenderInfo(
-        int channel, SenderInfo* sender_info) = 0;
-
     // Gets the report block parts of the last received RTCP Sender Report (SR),
     // or RTCP Receiver Report (RR) on a specified |channel|. Each vector
     // element also contains the SSRC of the sender in addition to a report
@@ -209,18 +204,33 @@ public:
     virtual int GetRemoteRTCPReportBlocks(
         int channel, std::vector<ReportBlock>* receive_blocks) = 0;
 
-    // Sends an RTCP APP packet on a specific |channel|.
-    virtual int SendApplicationDefinedRTCPPacket(
-        int channel, unsigned char subType, unsigned int name,
-        const char* data, unsigned short dataLengthInBytes) = 0;
+    // Sets the Redundant Coding (RED) status on a specific |channel|.
+    // TODO(minyue): Make SetREDStatus() pure virtual when fakewebrtcvoiceengine
+    // in talk is ready.
+    virtual int SetREDStatus(
+        int channel, bool enable, int redPayloadtype = -1) { return -1; }
+
+    // Gets the RED status on a specific |channel|.
+    // TODO(minyue): Make GetREDStatus() pure virtual when fakewebrtcvoiceengine
+    // in talk is ready.
+    virtual int GetREDStatus(
+        int channel, bool& enabled, int& redPayloadtype) { return -1; }
 
     // Sets the Forward Error Correction (FEC) status on a specific |channel|.
+    // TODO(minyue): Remove SetFECStatus() when SetFECStatus() is replaced by
+    // SetREDStatus() in fakewebrtcvoiceengine.
     virtual int SetFECStatus(
-        int channel, bool enable, int redPayloadtype = -1) = 0;
+        int channel, bool enable, int redPayloadtype = -1) {
+      return SetREDStatus(channel, enable, redPayloadtype);
+    };
 
     // Gets the FEC status on a specific |channel|.
+    // TODO(minyue): Remove GetFECStatus() when GetFECStatus() is replaced by
+    // GetREDStatus() in fakewebrtcvoiceengine.
     virtual int GetFECStatus(
-        int channel, bool& enabled, int& redPayloadtype) = 0;
+        int channel, bool& enabled, int& redPayloadtype) {
+      return SetREDStatus(channel, enabled, redPayloadtype);
+    }
 
     // This function enables Negative Acknowledgment (NACK) using RTCP,
     // implemented based on RFC 4585. NACK retransmits RTP packets if lost on
@@ -248,16 +258,33 @@ public:
     virtual int RTPDumpIsActive(
         int channel, RTPDirections direction = kRtpIncoming) = 0;
 
-    // Sends an extra RTP packet using an existing/active RTP session.
-    // It is possible to set the payload type, marker bit and payload
-    // of the extra RTP
-    virtual int InsertExtraRTPPacket(
-        int channel, unsigned char payloadType, bool markerBit,
-        const char* payloadData, unsigned short payloadSize) = 0;
+    // Sets video engine channel to receive incoming audio packets for
+    // aggregated bandwidth estimation. Takes ownership of the ViENetwork
+    // interface.
+    virtual int SetVideoEngineBWETarget(int channel, ViENetwork* vie_network,
+                                        int video_channel) {
+      return 0;
+    }
 
-    // Gets the timestamp of the last RTP packet received by |channel|.
+    // Will be removed. Don't use.
+    virtual int RegisterRTPObserver(int channel,
+            VoERTPObserver& observer) { return -1; };
+    virtual int DeRegisterRTPObserver(int channel) { return -1; };
+    virtual int RegisterRTCPObserver(
+            int channel, VoERTCPObserver& observer) { return -1; };
+    virtual int DeRegisterRTCPObserver(int channel) { return -1; };
+    virtual int GetRemoteCSRCs(int channel,
+            unsigned int arrCSRC[15]) { return -1; };
+    virtual int InsertExtraRTPPacket(
+            int channel, unsigned char payloadType, bool markerBit,
+            const char* payloadData, unsigned short payloadSize) { return -1; };
+    virtual int GetRemoteRTCPSenderInfo(
+            int channel, SenderInfo* sender_info) { return -1; };
+    virtual int SendApplicationDefinedRTCPPacket(
+            int channel, unsigned char subType, unsigned int name,
+            const char* data, unsigned short dataLengthInBytes) { return -1; };
     virtual int GetLastRemoteTimeStamp(int channel,
-                                       uint32_t* lastRemoteTimeStamp) = 0;
+            uint32_t* lastRemoteTimeStamp) { return -1; };
 
 protected:
     VoERTP_RTCP() {}

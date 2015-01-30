@@ -35,7 +35,6 @@
 #define NETEQ_CODEC_ISAC_PT				103
 #define NETEQ_CODEC_ISACLC_PT			119
 #define NETEQ_CODEC_ISACSWB_PT			104
-#define NETEQ_CODEC_ISACFB_PT      124
 #define NETEQ_CODEC_AVT_PT				106
 #define NETEQ_CODEC_G722_1_16_PT		108
 #define NETEQ_CODEC_G722_1_24_PT		109
@@ -54,7 +53,7 @@
 #define NETEQ_CODEC_CN_SWB_PT           126
 #define NETEQ_CODEC_G729_1_PT			107
 #define NETEQ_CODEC_G729D_PT			123
-//#define NETEQ_CODEC_MELPE_PT    124
+#define NETEQ_CODEC_MELPE_PT			124
 #define NETEQ_CODEC_CELT32_PT     114
 
 /* Extra dynamic codepoints */

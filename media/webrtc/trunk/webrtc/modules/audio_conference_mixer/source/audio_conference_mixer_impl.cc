@@ -32,10 +32,13 @@ typedef std::list<ParticipantFramePair*> ParticipantFramePairList;
 // stereo at most.
 //
 // TODO(andrew): consider not modifying |frame| here.
-void MixFrames(AudioFrame* mixed_frame, AudioFrame* frame) {
+void MixFrames(AudioFrame* mixed_frame, AudioFrame* frame, bool use_limiter) {
   assert(mixed_frame->num_channels_ >= frame->num_channels_);
-  // Divide by two to avoid saturation in the mixing.
-  *frame >>= 1;
+  if (use_limiter) {
+    // Divide by two to avoid saturation in the mixing.
+    // This is only meaningful if the limiter will be used.
+    *frame >>= 1;
+  }
   if (mixed_frame->num_channels_ > frame->num_channels_) {
     // We only support mono-to-stereo.
     assert(mixed_frame->num_channels_ == 2 &&
@@ -131,6 +134,7 @@ AudioConferenceMixerImpl::AudioConferenceMixerImpl(int id)
       _participantList(),
       _additionalParticipantList(),
       _numMixedParticipants(0),
+      use_limiter_(true),
       _timeStamp(0),
       _timeScheduler(kProcessPeriodicityInMs),
       _mixedAudioLevel(),
@@ -307,6 +311,11 @@ int32_t AudioConferenceMixerImpl::Process() {
                                 AudioFrame::kVadPassive, num_mixed_channels);
 
         _timeStamp += _sampleSize;
+
+        // We only use the limiter if it supports the output sample rate and
+        // we're actually mixing multiple streams.
+        use_limiter_ = _numMixedParticipants > 1 &&
+                       _outputFrequency <= kAudioProcMaxNativeSampleRateHz;
 
         MixFromList(*mixedAudio, &mixList);
         MixAnonomouslyFromList(*mixedAudio, &additionalFramesList);
@@ -651,6 +660,11 @@ void AudioConferenceMixerImpl::UpdateToMix(
             _audioFramePool->PushMemory(audioFrame);
             continue;
         }
+        if (_participantList.size() != 1) {
+          // TODO(wu): Issue 3390, add support for multiple participants case.
+          audioFrame->ntp_time_ms_ = -1;
+        }
+
         // TODO(henrike): this assert triggers in some test cases where SRTP is
         // used which prevents NetEQ from making a VAD. Temporarily disable this
         // assert until the problem is fixed on a higher level.
@@ -941,13 +955,15 @@ int32_t AudioConferenceMixerImpl::MixFromList(
     if(audioFrameList->empty()) return 0;
 
     uint32_t position = 0;
-    if(_numMixedParticipants == 1) {
-        // No mixing required here; skip the saturation protection.
-        AudioFrame* audioFrame = audioFrameList->front();
-        mixedAudio.CopyFrom(*audioFrame);
-        SetParticipantStatistics(&_scratchMixedParticipants[position],
-                                 *audioFrame);
-        return 0;
+
+    if (_numMixedParticipants == 1) {
+      mixedAudio.timestamp_ = audioFrameList->front()->timestamp_;
+      mixedAudio.elapsed_time_ms_ = audioFrameList->front()->elapsed_time_ms_;
+    } else {
+      // TODO(wu): Issue 3390.
+      // Audio frame timestamp is only supported in one channel case.
+      mixedAudio.timestamp_ = 0;
+      mixedAudio.elapsed_time_ms_ = -1;
     }
 
     for (AudioFrameList::const_iterator iter = audioFrameList->begin();
@@ -964,7 +980,7 @@ int32_t AudioConferenceMixerImpl::MixFromList(
             assert(false);
             position = 0;
         }
-        MixFrames(&mixedAudio, (*iter));
+        MixFrames(&mixedAudio, (*iter), use_limiter_);
 
         SetParticipantStatistics(&_scratchMixedParticipants[position],
                                  **iter);
@@ -984,24 +1000,17 @@ int32_t AudioConferenceMixerImpl::MixAnonomouslyFromList(
 
     if(audioFrameList->empty()) return 0;
 
-    if(_numMixedParticipants == 1) {
-        // No mixing required here; skip the saturation protection.
-        AudioFrame* audioFrame = audioFrameList->front();
-        mixedAudio.CopyFrom(*audioFrame);
-        return 0;
-    }
-
     for (AudioFrameList::const_iterator iter = audioFrameList->begin();
          iter != audioFrameList->end();
          ++iter) {
-        MixFrames(&mixedAudio, *iter);
+        MixFrames(&mixedAudio, *iter, use_limiter_);
     }
     return 0;
 }
 
 bool AudioConferenceMixerImpl::LimitMixedAudio(AudioFrame& mixedAudio) {
-    if(_numMixedParticipants == 1) {
-        return true;
+    if (!use_limiter_) {
+      return true;
     }
 
     // Smoothly limit the mixed frame.

@@ -41,10 +41,6 @@ const int rampSize = sizeof(rampArray)/sizeof(rampArray[0]);
 namespace webrtc {
 void CalculateEnergy(AudioFrame& audioFrame)
 {
-    if(audioFrame.energy_ != 0xffffffff)
-    {
-        return;
-    }
     audioFrame.energy_ = 0;
     for(int position = 0; position < audioFrame.samples_per_channel_;
         position++)

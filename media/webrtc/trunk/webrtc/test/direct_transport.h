@@ -34,6 +34,8 @@ class DirectTransport : public newapi::Transport {
   explicit DirectTransport(const FakeNetworkPipe::Config& config);
   ~DirectTransport();
 
+  void SetConfig(const FakeNetworkPipe::Config& config);
+
   virtual void StopSending();
   virtual void SetReceiver(PacketReceiver* receiver);
 
@@ -47,7 +49,7 @@ class DirectTransport : public newapi::Transport {
   scoped_ptr<CriticalSectionWrapper> lock_;
   scoped_ptr<EventWrapper> packet_event_;
   scoped_ptr<ThreadWrapper> thread_;
-  Clock* clock_;
+  Clock* const clock_;
 
   bool shutting_down_;
 

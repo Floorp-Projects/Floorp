@@ -53,7 +53,7 @@ static __inline int32_t CalcLrIntQ(int32_t fixVal,
   int32_t roundVal;
 
   roundVal = WEBRTC_SPL_LSHIFT_W32((int32_t)1,  qDomain - 1);
-  intgr = WEBRTC_SPL_RSHIFT_W32(fixVal + roundVal, qDomain);
+  intgr = (fixVal + roundVal) >> qDomain;
 
   return intgr;
 }
@@ -132,8 +132,7 @@ void WebRtcIsacfix_PitchFilter(int16_t* indatQQ, // Q10 if type is 1 or 4,
       indW32 = CalcLrIntQ(curLagQ7, 7);
       tmpW32 = WEBRTC_SPL_LSHIFT_W32(indW32, 7);
       tmpW32 -= curLagQ7;
-      frcQQ = WEBRTC_SPL_RSHIFT_W32(tmpW32, 4);
-      frcQQ += 4;
+      frcQQ = (tmpW32 >> 4) + 4;
 
       if (frcQQ == PITCH_FRACS) {
         frcQQ = 0;
@@ -205,10 +204,8 @@ void WebRtcIsacfix_PitchFilterGains(const int16_t* indatQ0,
       // Update parameters for each segment.
       curLagQ7 += lagdeltaQ7;
       indW16 = (int16_t)CalcLrIntQ(curLagQ7, 7);
-      tmpW16 = WEBRTC_SPL_LSHIFT_W16(indW16, 7);
-      tmpW16 -= curLagQ7;
-      frcQQ = WEBRTC_SPL_RSHIFT_W16(tmpW16, 4);
-      frcQQ += 4;
+      tmpW16 = (indW16 << 7) - curLagQ7;
+      frcQQ = (tmpW16 >> 4) + 4;
 
       if (frcQQ == PITCH_FRACS) {
         frcQQ = 0;
@@ -230,19 +227,17 @@ void WebRtcIsacfix_PitchFilterGains(const int16_t* indatQ0,
 
         tmp2W32 = WEBRTC_SPL_MUL_16_32_RSFT14(indatQ0[ind], tmpW32);
         tmpW32 += 8192;
-        tmpW16 = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmpW32, 14);
+        tmpW16 = (int16_t)(tmpW32 >> 14);
         tmpW32 = WEBRTC_SPL_MUL_16_16(tmpW16, tmpW16);
 
         if ((tmp2W32 > 1073700000) || (csum1QQ > 1073700000) ||
             (tmpW32 > 1073700000) || (esumxQQ > 1073700000)) {  // 2^30
           scale++;
-          csum1QQ = WEBRTC_SPL_RSHIFT_W32(csum1QQ, 1);
-          esumxQQ = WEBRTC_SPL_RSHIFT_W32(esumxQQ, 1);
+          csum1QQ >>= 1;
+          esumxQQ >>= 1;
         }
-        tmp2W32 = WEBRTC_SPL_RSHIFT_W32(tmp2W32, scale);
-        csum1QQ += tmp2W32;
-        tmpW32 = WEBRTC_SPL_RSHIFT_W32(tmpW32, scale);
-        esumxQQ += tmpW32;
+        csum1QQ += tmp2W32 >> scale;
+        esumxQQ += tmpW32 >> scale;
 
         ind++;
         pos++;
@@ -254,7 +249,7 @@ void WebRtcIsacfix_PitchFilterGains(const int16_t* indatQ0,
       tmp2W32 = WebRtcSpl_DivResultInQ31(csum1QQ, esumxQQ);
 
       // Gain should be half the correlation.
-      tmpW32 = WEBRTC_SPL_RSHIFT_W32(tmp2W32, 20);
+      tmpW32 = tmp2W32 >> 20;
     } else {
       tmpW32 = 4096;
     }

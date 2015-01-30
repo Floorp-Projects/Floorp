@@ -38,8 +38,6 @@ class ACMG729_1 : public ACMGenericCodec {
 
   int16_t InternalCreateEncoder();
 
-  void InternalDestructEncoderInst(void* ptr_inst);
-
   int16_t SetBitRateSafe(const int32_t rate);
 
   G729_1_inst_t_* encoder_inst_ptr_;

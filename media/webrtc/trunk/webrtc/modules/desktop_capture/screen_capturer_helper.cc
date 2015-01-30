@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 
+#include <assert.h>
 #include <algorithm>
 
 #include "webrtc/system_wrappers/interface/logging.h"

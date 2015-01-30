@@ -153,10 +153,8 @@ public:
                                   uint16_t& volumeRight) const OVERRIDE;
 
     // Audio mixer initialization
-    virtual int32_t SpeakerIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitSpeaker() OVERRIDE;
     virtual bool SpeakerIsInitialized() const OVERRIDE;
-    virtual int32_t MicrophoneIsAvailable(bool& available) OVERRIDE;
     virtual int32_t InitMicrophone() OVERRIDE;
     virtual bool MicrophoneIsInitialized() const OVERRIDE;
 

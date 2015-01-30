@@ -63,11 +63,11 @@ public:
                   char cName[RTCP_CNAME_SIZE]) const;
 
     // get received NTP
-    int32_t NTP(uint32_t *ReceivedNTPsecs,
-                uint32_t *ReceivedNTPfrac,
-                uint32_t *RTCPArrivalTimeSecs,
-                uint32_t *RTCPArrivalTimeFrac,
-                uint32_t *rtcp_timestamp) const;
+    bool NTP(uint32_t* ReceivedNTPsecs,
+             uint32_t* ReceivedNTPfrac,
+             uint32_t* RTCPArrivalTimeSecs,
+             uint32_t* RTCPArrivalTimeFrac,
+             uint32_t* rtcp_timestamp) const;
 
    bool LastReceivedXrReferenceTimeInfo(RtcpReceiveTimeInfo* info) const;
 
@@ -93,6 +93,8 @@ public:
     // get statistics
     int32_t StatisticsReceived(
         std::vector<RTCPReportBlock>* receiveBlocks) const;
+
+    void GetPacketTypeCounter(RtcpPacketTypeCounter* packet_counter) const;
 
     // Returns true if we haven't received an RTCP RR for several RTCP
     // intervals, but only triggers true once.
@@ -272,6 +274,10 @@ protected:
   int64_t _lastIncreasedSequenceNumberMs;
 
   RtcpStatisticsCallback* stats_callback_;
+
+  RtcpPacketTypeCounter packet_type_counter_;
+
+  RTCPUtility::NackStats nack_stats_;
 };
 }  // namespace webrtc
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_H_

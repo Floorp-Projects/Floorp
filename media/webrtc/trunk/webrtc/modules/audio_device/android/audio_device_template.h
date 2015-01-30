@@ -175,22 +175,12 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
     return -1;
   }
 
-  int32_t SpeakerIsAvailable(
-      bool& available) {  // NOLINT
-    return output_.SpeakerIsAvailable(available);
-  }
-
   int32_t InitSpeaker() {
     return output_.InitSpeaker();
   }
 
   bool SpeakerIsInitialized() const {
     return output_.SpeakerIsInitialized();
-  }
-
-  int32_t MicrophoneIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.MicrophoneIsAvailable(available);
   }
 
   int32_t InitMicrophone() {

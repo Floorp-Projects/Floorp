@@ -9,14 +9,12 @@
  */
 
 #include "webrtc/modules/video_processing/main/source/frame_preprocessor.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
 VPMFramePreprocessor::VPMFramePreprocessor()
     : id_(0),
       content_metrics_(NULL),
-      max_frame_rate_(0),
       resampled_frame_(),
       enable_ca_(false),
       frame_cnt_(0) {
@@ -60,14 +58,6 @@ void  VPMFramePreprocessor::SetInputFrameResampleMode(
   spatial_resampler_->SetInputFrameResampleMode(resampling_mode);
 }
 
-int32_t VPMFramePreprocessor::SetMaxFramerate(uint32_t max_frame_rate) {
-  if (max_frame_rate == 0) return VPM_PARAMETER_ERROR;
-
-  // Max allowed frame_rate.
-  max_frame_rate_ = max_frame_rate;
-  return vd_->SetMaxFramerate(max_frame_rate);
-}
-
 int32_t VPMFramePreprocessor::SetTargetResolution(
     uint32_t width, uint32_t height, uint32_t frame_rate) {
   if ( (width == 0) || (height == 0) || (frame_rate == 0)) {
@@ -78,7 +68,7 @@ int32_t VPMFramePreprocessor::SetTargetResolution(
 
   if (ret_val < 0) return ret_val;
 
-  ret_val = vd_->SetTargetframe_rate(frame_rate);
+  ret_val = vd_->SetTargetFramerate(frame_rate);
   if (ret_val < 0) return ret_val;
 
   return VPM_OK;
@@ -112,8 +102,6 @@ int32_t VPMFramePreprocessor::PreprocessFrame(const I420VideoFrame& frame,
   vd_->UpdateIncomingframe_rate();
 
   if (vd_->DropFrame()) {
-    WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideo, id_,
-                 "Drop frame due to frame rate");
     return 1;  // drop 1 frame
   }
 

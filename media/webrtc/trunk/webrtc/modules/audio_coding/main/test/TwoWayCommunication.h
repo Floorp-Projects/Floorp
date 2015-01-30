@@ -20,11 +20,9 @@
 
 namespace webrtc {
 
-class Config;
-
 class TwoWayCommunication : public ACMTest {
  public:
-  TwoWayCommunication(int testMode, const Config& config);
+  explicit TwoWayCommunication(int testMode);
   ~TwoWayCommunication();
 
   void Perform();

@@ -45,8 +45,6 @@ public:
 
   virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
-
   virtual nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
@@ -57,6 +55,11 @@ public:
   virtual void ReleaseMediaResources();
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
+
+protected:
+  virtual void PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+
+  virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
 private:
   struct FrameInfo
@@ -155,12 +158,11 @@ private:
   android::sp<ALooper> mManagerLooper;
   FrameInfo mFrameInfo;
 
-  // It protects mFrameTimeInfo.
-  Monitor mMonitor;
   // Array of FrameTimeInfo whose corresponding frames are sent to OMX.
   // Ideally, it is a FIFO. Input() adds the entry to the end element and
   // CreateVideoData() takes the first entry. However, there are exceptions
   // due to MediaCodec error or seeking.
+  // It is protected by mMonitor.
   nsTArray<FrameTimeInfo> mFrameTimeInfo;
 
   // color converter

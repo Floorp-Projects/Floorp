@@ -62,7 +62,7 @@ bool ConvertToMouseShapeAndCompare(unsigned left, unsigned right) {
 
   // Get the pixels from |scoped_color|.
   int size = width * height;
-  scoped_array<uint32_t> data(new uint32_t[size]);
+  scoped_ptr<uint32_t[]> data(new uint32_t[size]);
   EXPECT_TRUE(GetBitmapBits(scoped_color, size * sizeof(uint32_t), data.get()));
 
   // Compare the 32bpp image in |mouse_shape| with the one loaded from |right|.

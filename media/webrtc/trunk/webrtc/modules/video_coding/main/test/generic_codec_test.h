@@ -75,8 +75,8 @@ class RTPSendCallback_SizeTest : public webrtc::Transport
 public:
     // constructor input: (receive side) rtp module to send encoded data to
     RTPSendCallback_SizeTest() : _maxPayloadSize(0), _payloadSizeSum(0), _nPackets(0) {}
-    virtual int SendPacket(int channel, const void *data, int len);
-    virtual int SendRTCPPacket(int channel, const void *data, int len) {return 0;}
+    virtual int SendPacket(int channel, const void *data, int len) OVERRIDE;
+    virtual int SendRTCPPacket(int channel, const void *data, int len) OVERRIDE {return 0;}
     void SetMaxPayloadSize(uint32_t maxPayloadSize);
     void Reset();
     float AveragePayloadSize() const;
@@ -90,15 +90,15 @@ class VCMEncComplete_KeyReqTest : public webrtc::VCMPacketizationCallback
 {
 public:
     VCMEncComplete_KeyReqTest(webrtc::VideoCodingModule &vcm) : _vcm(vcm), _seqNo(0), _timeStamp(0) {}
-    int32_t SendData(
-            const webrtc::FrameType frameType,
-            const uint8_t payloadType,
-            uint32_t timeStamp,
-            int64_t capture_time_ms,
-            const uint8_t* payloadData,
-            const uint32_t payloadSize,
-            const webrtc::RTPFragmentationHeader& fragmentationHeader,
-            const webrtc::RTPVideoHeader* videoHdr);
+    virtual int32_t SendData(
+        const webrtc::FrameType frameType,
+        const uint8_t payloadType,
+        uint32_t timeStamp,
+        int64_t capture_time_ms,
+        const uint8_t* payloadData,
+        const uint32_t payloadSize,
+        const webrtc::RTPFragmentationHeader& fragmentationHeader,
+        const webrtc::RTPVideoHeader* videoHdr) OVERRIDE;
 private:
     webrtc::VideoCodingModule& _vcm;
     uint16_t _seqNo;

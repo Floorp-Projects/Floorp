@@ -62,6 +62,13 @@ public:
     return mInternalResponse->GetStatus();
   }
 
+  bool
+  Ok() const
+  {
+    return mInternalResponse->GetStatus() >= 200 &&
+           mInternalResponse->GetStatus() <= 299;
+  }
+
   void
   GetStatusText(nsCString& aStatusText) const
   {

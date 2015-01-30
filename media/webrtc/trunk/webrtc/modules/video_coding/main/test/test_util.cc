@@ -151,6 +151,7 @@ webrtc::RtpVideoCodecTypes ConvertCodecType(const char* plname) {
   if (strncmp(plname,"VP8" , 3) == 0) {
     return webrtc::kRtpVideoVp8;
   } else {
-    return webrtc::kRtpVideoNone;  // Default value
+    // Default value.
+    return webrtc::kRtpVideoGeneric;
   }
 }

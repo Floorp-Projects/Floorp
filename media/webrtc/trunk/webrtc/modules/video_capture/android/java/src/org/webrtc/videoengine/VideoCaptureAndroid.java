@@ -11,21 +11,26 @@
 package org.webrtc.videoengine;
 
 import java.io.IOException;
-import java.util.Locale;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Exchanger;
 
+import android.content.Context;
 import android.graphics.ImageFormat;
-import android.graphics.PixelFormat;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.graphics.YuvImage;
-import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
+import android.hardware.Camera;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
-import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoAppShell.AppStateListener;
@@ -37,17 +42,23 @@ import org.mozilla.gecko.mozglue.WebRTCJNITarget;
 // the entry points to this class are all synchronized.  This shouldn't present
 // a performance bottleneck because only onPreviewFrame() is called more than
 // once (and is called serially on a single thread), so the lock should be
-// uncontended.
+// uncontended.  Note that each of these synchronized methods must check
+// |camera| for null to account for having possibly waited for stopCapture() to
+// complete.
 public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateListener {
   private final static String TAG = "WEBRTC-JC";
 
+  private static SurfaceHolder localPreview;
   // Only non-null while capturing, accessed exclusively from synchronized methods.
   Camera camera;
   private Camera.CameraInfo info;
+  private CameraThread cameraThread;
+  private Handler cameraThreadHandler;
+  private Context context;
   private final int id;
   private final long native_capturer;  // |VideoCaptureAndroid*| in C++.
-  private SurfaceHolder localPreview;
-  private SurfaceTexture dummySurfaceTexture;
+  private SurfaceTexture cameraSurfaceTexture;
+  private int[] cameraGlTextures = null;
 
   // Arbitrary queue depth.  Higher number means more memory allocated & held,
   // lower number means more sensitivity to processing time in the client (and
@@ -64,10 +75,24 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   // due to the application being backgrounded.
   boolean mResumeCapture;
 
+  private double averageDurationMs;
+  private long lastCaptureTimeMs;
+  private int frameCount;
+  private int frameDropRatio;
+
+  // Requests future capturers to send their frames to |localPreview| directly.
+  public static void setLocalPreview(SurfaceHolder localPreview) {
+    // It is a gross hack that this is a class-static.  Doing it right would
+    // mean plumbing this through the C++ API and using it from
+    // webrtc/examples/android/media_demo's MediaEngine class.
+    VideoCaptureAndroid.localPreview = localPreview;
+  }
+
   @WebRTCJNITarget
   public VideoCaptureAndroid(int id, long native_capturer) {
     this.id = id;
     this.native_capturer = native_capturer;
+    this.context = GetContext();
     if(android.os.Build.VERSION.SDK_INT>8) {
       this.info = new Camera.CameraInfo();
       Camera.getCameraInfo(id, info);
@@ -122,16 +147,54 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     }
   }
 
+  // Return the global application context.
+  private static native Context GetContext();
+
+  private class CameraThread extends Thread {
+    private Exchanger<Handler> handlerExchanger;
+    public CameraThread(Exchanger<Handler> handlerExchanger) {
+      this.handlerExchanger = handlerExchanger;
+    }
+
+    @Override public void run() {
+      Looper.prepare();
+      exchange(handlerExchanger, new Handler());
+      Looper.loop();
+    }
+  }
+
   // Called by native code.  Returns true if capturer is started.
   //
-  // Note that this actually opens the camera, which can be a slow operation and
-  // thus might be done on a background thread, but ViE API needs a
-  // synchronous success return value so we can't do that.
+  // Note that this actually opens the camera, and Camera callbacks run on the
+  // thread that calls open(), so this is done on the CameraThread.  Since ViE
+  // API needs a synchronous success return value we wait for the result.
   @WebRTCJNITarget
   private synchronized boolean startCapture(
-      int width, int height, int min_mfps, int max_mfps) {
+      final int width, final int height,
+      final int min_mfps, final int max_mfps) {
     Log.d(TAG, "startCapture: " + width + "x" + height + "@" +
         min_mfps + ":" + max_mfps);
+    if (cameraThread != null || cameraThreadHandler != null) {
+      throw new RuntimeException("Camera thread already started!");
+    }
+    Exchanger<Handler> handlerExchanger = new Exchanger<Handler>();
+    cameraThread = new CameraThread(handlerExchanger);
+    cameraThread.start();
+    cameraThreadHandler = exchange(handlerExchanger, null);
+
+    final Exchanger<Boolean> result = new Exchanger<Boolean>();
+    cameraThreadHandler.post(new Runnable() {
+        @Override public void run() {
+          startCaptureOnCameraThread(width, height, min_mfps, max_mfps, result);
+        }
+      });
+    boolean startResult = exchange(result, false); // |false| is a dummy value.
+    return startResult;
+  }
+
+  private void startCaptureOnCameraThread(
+      int width, int height, int min_mfps, int max_mfps,
+      Exchanger<Boolean> result) {
     if (!mResumeCapture) {
       ViERenderer.CreateLocalRenderer();
     }
@@ -143,7 +206,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         camera = Camera.open();
       }
 
-      localPreview = ViERenderer.GetLocalRenderer();
       if (localPreview != null) {
         localPreview.addCallback(this);
         if (localPreview.getSurface() != null &&
@@ -154,13 +216,28 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         if(android.os.Build.VERSION.SDK_INT>10) {
           // No local renderer (we only care about onPreviewFrame() buffers, not a
           // directly-displayed UI element).  Camera won't capture without
-          // setPreview{Texture,Display}, so we create a dummy SurfaceTexture and
-          // hand it over to Camera, but never listen for frame-ready callbacks,
+          // setPreview{Texture,Display}, so we create a SurfaceTexture and hand
+          // it over to Camera, but never listen for frame-ready callbacks,
           // and never call updateTexImage on it.
           try {
-            // "42" because http://goo.gl/KaEn8
-            dummySurfaceTexture = new SurfaceTexture(42);
-            camera.setPreviewTexture(dummySurfaceTexture);
+            cameraGlTextures = new int[1];
+
+            // Generate one texture pointer and bind it as an external texture.
+            GLES20.glGenTextures(1, cameraGlTextures, 0);
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                                 cameraGlTextures[0]);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                                   GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                                   GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                                   GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                                   GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+            cameraSurfaceTexture = new SurfaceTexture(cameraGlTextures[0]);
+            cameraSurfaceTexture.setOnFrameAvailableListener(null);
+            camera.setPreviewTexture(cameraSurfaceTexture);
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -169,6 +246,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         }
       }
 
+      Log.d(TAG, "Camera orientation: " + info.orientation +
+          " .Device orientation: " + getDeviceOrientation());
       Camera.Parameters parameters = camera.getParameters();
       // This wasn't added until ICS MR1.
       if(android.os.Build.VERSION.SDK_INT>14) {
@@ -185,12 +264,44 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
       }
+      parameters.setPictureSize(width, height);
       parameters.setPreviewSize(width, height);
+
+      // Check if requested fps range is supported by camera,
+      // otherwise calculate frame drop ratio.
+      List<int[]> supportedFpsRanges = parameters.getSupportedPreviewFpsRange();
+      frameDropRatio = Integer.MAX_VALUE;
+      for (int i = 0; i < supportedFpsRanges.size(); i++) {
+        int[] range = supportedFpsRanges.get(i);
+        if (range[Parameters.PREVIEW_FPS_MIN_INDEX] == min_mfps &&
+            range[Parameters.PREVIEW_FPS_MAX_INDEX] == max_mfps) {
+          frameDropRatio = 1;
+          break;
+        }
+        if (range[Parameters.PREVIEW_FPS_MIN_INDEX] % min_mfps == 0 &&
+            range[Parameters.PREVIEW_FPS_MAX_INDEX] % max_mfps == 0) {
+          int dropRatio = range[Parameters.PREVIEW_FPS_MAX_INDEX] / max_mfps;
+          frameDropRatio = Math.min(dropRatio, frameDropRatio);
+        }
+      }
+      if (frameDropRatio == Integer.MAX_VALUE) {
+        Log.e(TAG, "Can not find camera fps range");
+        error = new RuntimeException("Can not find camera fps range");
+        exchange(result, false);
+        return;
+      }
+      if (frameDropRatio > 1) {
+        Log.d(TAG, "Frame dropper is enabled. Ratio: " + frameDropRatio);
+      }
+      min_mfps *= frameDropRatio;
+      max_mfps *= frameDropRatio;
+      Log.d(TAG, "Camera preview mfps range: " + min_mfps + " - " + max_mfps);
       if (android.os.Build.VERSION.SDK_INT>8) {
           parameters.setPreviewFpsRange(min_mfps, max_mfps);
       } else {
           parameters.setPreviewFrameRate(max_mfps / 1000);
       }
+
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
       camera.setParameters(parameters);
@@ -199,6 +310,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         camera.addCallbackBuffer(new byte[bufSize]);
       }
       camera.setPreviewCallbackWithBuffer(this);
+      frameCount = 0;
+      averageDurationMs = 1000000.0f / (max_mfps / frameDropRatio);
       camera.startPreview();
       // Remember parameters we were started with.
       mCaptureWidth = width;
@@ -209,7 +322,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       if (!mResumeCapture) {
         GeckoAppShell.getGeckoInterface().addAppStateListener(this);
       }
-      return true;
+      exchange(result, true);
+      return;
     } catch (IOException e) {
       error = e;
     } catch (RuntimeException e) {
@@ -217,21 +331,44 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     }
     Log.e(TAG, "startCapture failed", error);
     if (camera != null) {
-      stopCapture();
+      Exchanger<Boolean> resultDropper = new Exchanger<Boolean>();
+      stopCaptureOnCameraThread(resultDropper);
+      exchange(resultDropper, false);
     }
-    return false;
+    exchange(result, false);
+    return;
   }
 
   // Called by native code.  Returns true when camera is known to be stopped.
   @WebRTCJNITarget
   private synchronized boolean stopCapture() {
     Log.d(TAG, "stopCapture");
+    final Exchanger<Boolean> result = new Exchanger<Boolean>();
+    cameraThreadHandler.post(new Runnable() {
+        @Override public void run() {
+          stopCaptureOnCameraThread(result);
+        }
+      });
+    boolean status = exchange(result, false);  // |false| is a dummy value here.
+    try {
+      cameraThread.join();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    cameraThreadHandler = null;
+    cameraThread = null;
+    Log.d(TAG, "stopCapture done");
+    return status;
+  }
+
+  private void stopCaptureOnCameraThread(
+      Exchanger<Boolean> result) {
     if (camera == null) {
       if (mResumeCapture == true) {
         // We already got onPause, but now the native code wants us to stop.
         // Do not resume capturing when resuming the app.
         mResumeCapture = false;
-        return true;
+        return;
       }
       throw new RuntimeException("Camera is already stopped!");
     }
@@ -245,6 +382,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       } else {
         if(android.os.Build.VERSION.SDK_INT>10) {
           camera.setPreviewTexture(null);
+          cameraSurfaceTexture = null;
+          if (cameraGlTextures != null) {
+            GLES20.glDeleteTextures(1, cameraGlTextures, 0);
+            cameraGlTextures = null;
+          }
         }
       }
       camera.release();
@@ -254,29 +396,94 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
         GeckoAppShell.getGeckoInterface().removeAppStateListener(this);
         ViERenderer.DestroyLocalRenderer();
       }
-      return true;
+      exchange(result, true);
+      Looper.myLooper().quit();
+      return;
     } catch (IOException e) {
       error = e;
     } catch (RuntimeException e) {
       error = e;
     }
     Log.e(TAG, "Failed to stop camera", error);
-    return false;
+    exchange(result, false);
+    Looper.myLooper().quit();
+    return;
+  }
+
+  @WebRTCJNITarget
+  private int getDeviceOrientation() {
+    int orientation = 0;
+    if (context != null) {
+      WindowManager wm = (WindowManager) context.getSystemService(
+          Context.WINDOW_SERVICE);
+      switch(wm.getDefaultDisplay().getRotation()) {
+        case Surface.ROTATION_90:
+          orientation = 90;
+          break;
+        case Surface.ROTATION_180:
+          orientation = 180;
+          break;
+        case Surface.ROTATION_270:
+          orientation = 270;
+          break;
+        case Surface.ROTATION_0:
+        default:
+          orientation = 0;
+          break;
+      }
+    }
+    return orientation;
   }
 
   @WebRTCJNITarget
   private native void ProvideCameraFrame(
-    byte[] data, int length, long captureObject, int rotation);
+      byte[] data, int length, int rotation, long timeStamp, long captureObject);
 
+  // Called on cameraThread so must not "synchronized".
   @WebRTCJNITarget
-  public synchronized void onPreviewFrame(byte[] data, Camera camera) {
+  @Override
+  public void onPreviewFrame(byte[] data, Camera callbackCamera) {
+    if (Thread.currentThread() != cameraThread) {
+      throw new RuntimeException("Camera callback not on camera thread?!?");
+    }
+    if (camera == null) {
+      return;
+    }
+    if (camera != callbackCamera) {
+      throw new RuntimeException("Unexpected camera in callback!");
+    }
+    frameCount++;
+    // Check if frame needs to be dropped.
+    if ((frameDropRatio > 1) && (frameCount % frameDropRatio) > 0) {
+      camera.addCallbackBuffer(data);
+      return;
+    }
+    long captureTimeMs = SystemClock.elapsedRealtime();
+    if (frameCount > frameDropRatio) {
+      double durationMs = captureTimeMs - lastCaptureTimeMs;
+      averageDurationMs = 0.9 * averageDurationMs + 0.1 * durationMs;
+      if ((frameCount % 30) == 0) {
+        Log.d(TAG, "Camera TS " + captureTimeMs +
+            ". Duration: " + (int)durationMs + " ms. FPS: " +
+            (int) (1000 / averageDurationMs + 0.5));
+      }
+    }
+    lastCaptureTimeMs = captureTimeMs;
+
+    int rotation = getDeviceOrientation();
+    if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+      rotation = 360 - rotation;
+    }
+    rotation = (info.orientation + rotation) % 360;
+
     if (data != null) {
-      ProvideCameraFrame(data, data.length, native_capturer, mCaptureRotation);
+      ProvideCameraFrame(data, data.length, mCaptureRotation, lastCaptureTimeMs, native_capturer);
       camera.addCallbackBuffer(data);
     }
   }
 
   @WebRTCJNITarget
+  @Override
   public synchronized void surfaceChanged(
       SurfaceHolder holder, int format, int width, int height) {
     Log.d(TAG, "VideoCaptureAndroid::surfaceChanged ignored: " +
@@ -284,25 +491,61 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   }
 
   @WebRTCJNITarget
-  public synchronized void surfaceCreated(SurfaceHolder holder) {
+  @Override
+  public synchronized void surfaceCreated(final SurfaceHolder holder) {
     Log.d(TAG, "VideoCaptureAndroid::surfaceCreated");
-    try {
-      if (camera != null) {
-        camera.setPreviewDisplay(holder);
-      }
-    } catch (IOException e) {
+    if (camera == null || cameraThreadHandler == null) {
+      return;
+    }
+    final Exchanger<IOException> result = new Exchanger<IOException>();
+    cameraThreadHandler.post(new Runnable() {
+        @Override public void run() {
+          setPreviewDisplayOnCameraThread(holder, result);
+        }
+      });
+    IOException e = exchange(result, null);  // |null| is a dummy value here.
+    if (e != null) {
       throw new RuntimeException(e);
     }
   }
 
   @WebRTCJNITarget
+  @Override
   public synchronized void surfaceDestroyed(SurfaceHolder holder) {
     Log.d(TAG, "VideoCaptureAndroid::surfaceDestroyed");
+    if (camera == null || cameraThreadHandler == null) {
+      return;
+    }
+    final Exchanger<IOException> result = new Exchanger<IOException>();
+    cameraThreadHandler.post(new Runnable() {
+        @Override public void run() {
+          setPreviewDisplayOnCameraThread(null, result);
+        }
+      });
+    IOException e = exchange(result, null);  // |null| is a dummy value here.
+    if (e != null) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void setPreviewDisplayOnCameraThread(
+      SurfaceHolder holder, Exchanger<IOException> result) {
     try {
-      if (camera != null) {
-        camera.setPreviewDisplay(null);
-      }
+      camera.setPreviewDisplay(holder);
     } catch (IOException e) {
+      exchange(result, e);
+      return;
+    }
+    exchange(result, null);
+    return;
+  }
+
+  // Exchanges |value| with |exchanger|, converting InterruptedExceptions to
+  // RuntimeExceptions (since we expect never to see these).
+  private static <T> T exchange(Exchanger<T> exchanger, T value) {
+    try {
+      return exchanger.exchange(value);
+    } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
   }

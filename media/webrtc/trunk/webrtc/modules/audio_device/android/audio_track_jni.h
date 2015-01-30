@@ -63,7 +63,6 @@ class AudioTrackJni : public PlayoutDelayProvider {
   bool Playing() const { return _playing; }
 
   // Audio mixer initialization
-  int32_t SpeakerIsAvailable(bool& available);  // NOLINT
   int32_t InitSpeaker();
   bool SpeakerIsInitialized() const { return _speakerIsInitialized; }
 

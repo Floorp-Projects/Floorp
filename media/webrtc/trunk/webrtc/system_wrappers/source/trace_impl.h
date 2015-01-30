@@ -30,7 +30,7 @@ namespace webrtc {
 #define WEBRTC_TRACE_MAX_QUEUE  16000
 #endif
 #define WEBRTC_TRACE_NUM_ARRAY 2
-#define WEBRTC_TRACE_MAX_MESSAGE_SIZE 256
+#define WEBRTC_TRACE_MAX_MESSAGE_SIZE 1024
 // Total buffer size is WEBRTC_TRACE_NUM_ARRAY (number of buffer partitions) *
 // WEBRTC_TRACE_MAX_QUEUE (number of lines per buffer partition) *
 // WEBRTC_TRACE_MAX_MESSAGE_SIZE (number of 1 byte charachters per line) =
@@ -73,7 +73,6 @@ class TraceImpl : public Trace {
   virtual int32_t AddTime(char* trace_message,
                           const TraceLevel level) const = 0;
 
-  virtual int32_t AddBuildInfo(char* trace_message) const = 0;
   virtual int32_t AddDateTimeInfo(char* trace_message) const = 0;
 
   static bool Run(void* obj);
