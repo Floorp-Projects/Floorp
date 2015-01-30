@@ -187,6 +187,9 @@ private:
   nsRefPtr<TrackBuffer> mAudioTrack;
   nsRefPtr<TrackBuffer> mVideoTrack;
 
+  MediaPromiseConsumerHolder<AudioDataPromise> mAudioRequest;
+  MediaPromiseConsumerHolder<VideoDataPromise> mVideoRequest;
+
   MediaPromiseHolder<AudioDataPromise> mAudioPromise;
   MediaPromiseHolder<VideoDataPromise> mVideoPromise;
 

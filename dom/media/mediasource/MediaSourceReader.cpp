@@ -149,9 +149,10 @@ MediaSourceReader::RequestAudioData()
 void
 MediaSourceReader::RequestAudioDataComplete(int64_t aTime)
 {
-  mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
-                                         &MediaSourceReader::OnAudioDecoded,
-                                         &MediaSourceReader::OnAudioNotDecoded);
+  mAudioRequest.Begin(mAudioReader->RequestAudioData()
+                      ->RefableThen(GetTaskQueue(), __func__, this,
+                                    &MediaSourceReader::OnAudioDecoded,
+                                    &MediaSourceReader::OnAudioNotDecoded));
 }
 
 void
@@ -163,15 +164,18 @@ MediaSourceReader::RequestAudioDataFailed(nsresult aResult)
 void
 MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 {
+  mAudioRequest.Complete();
+
   MSE_DEBUGV("MediaSourceReader(%p)::OnAudioDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropAudioBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnAudioDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      mAudioReader->RequestAudioData()->Then(GetTaskQueue(), __func__, this,
-                                             &MediaSourceReader::OnAudioDecoded,
-                                             &MediaSourceReader::OnAudioNotDecoded);
+      mAudioRequest.Begin(mAudioReader->RequestAudioData()
+                          ->RefableThen(GetTaskQueue(), __func__, this,
+                                        &MediaSourceReader::OnAudioDecoded,
+                                        &MediaSourceReader::OnAudioNotDecoded));
       return;
     }
     mDropAudioBeforeThreshold = false;
@@ -216,6 +220,8 @@ AdjustEndTime(int64_t* aEndTime, MediaDecoderReader* aReader)
 void
 MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
 {
+  mAudioRequest.Complete();
+
   MSE_DEBUG("MediaSourceReader(%p)::OnAudioNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
     mAudioPromise.Reject(aReason, __func__);
@@ -280,9 +286,10 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
       }
       // Fallback to using current reader.
     default:
-      mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
-                  ->Then(GetTaskQueue(), __func__, this,
-                         &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+      mVideoRequest.Begin(mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+                          ->RefableThen(GetTaskQueue(), __func__, this,
+                                        &MediaSourceReader::OnVideoDecoded,
+                                        &MediaSourceReader::OnVideoNotDecoded));
       break;
   }
 
@@ -292,9 +299,10 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
 void
 MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
 {
-  mVideoReader->RequestVideoData(false, 0)
-              ->Then(GetTaskQueue(), __func__, this,
-                     &MediaSourceReader::OnVideoDecoded, &MediaSourceReader::OnVideoNotDecoded);
+  mVideoRequest.Begin(mVideoReader->RequestVideoData(false, 0)
+                      ->RefableThen(GetTaskQueue(), __func__, this,
+                                    &MediaSourceReader::OnVideoDecoded,
+                                    &MediaSourceReader::OnVideoNotDecoded));
 }
 
 void
@@ -306,15 +314,18 @@ MediaSourceReader::RequestVideoDataFailed(nsresult aResult)
 void
 MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 {
+  mVideoRequest.Complete();
+
   MSE_DEBUGV("MediaSourceReader(%p)::OnVideoDecoded [mTime=%lld mDuration=%lld mDiscontinuity=%d]",
              this, aSample->mTime, aSample->mDuration, aSample->mDiscontinuity);
   if (mDropVideoBeforeThreshold) {
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      mVideoReader->RequestVideoData(false, 0)->Then(GetTaskQueue(), __func__, this,
-                                                     &MediaSourceReader::OnVideoDecoded,
-                                                     &MediaSourceReader::OnVideoNotDecoded);
+      mVideoRequest.Begin(mVideoReader->RequestVideoData(false, 0)
+                          ->RefableThen(GetTaskQueue(), __func__, this,
+                                        &MediaSourceReader::OnVideoDecoded,
+                                        &MediaSourceReader::OnVideoNotDecoded));
       return;
     }
     mDropVideoBeforeThreshold = false;
@@ -333,6 +344,8 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 void
 MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
 {
+  mVideoRequest.Complete();
+
   MSE_DEBUG("MediaSourceReader(%p)::OnVideoNotDecoded aReason=%u IsEnded: %d", this, aReason, IsEnded());
   if (aReason == DECODE_ERROR || aReason == CANCELED) {
     mVideoPromise.Reject(aReason, __func__);
