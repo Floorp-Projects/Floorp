@@ -82,6 +82,15 @@ public:
     return p;
   }
 
+  class Consumer
+  {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Consumer)
+  protected:
+    Consumer() {}
+    virtual ~Consumer() {}
+  };
+
 protected:
 
   /*
@@ -90,7 +99,7 @@ protected:
    * resolved or rejected, a {Resolve,Reject}Runnable is dispatched, which
    * invokes the resolve/reject method and then deletes the ThenValue.
    */
-  class ThenValueBase
+  class ThenValueBase : public Consumer
   {
   public:
     class ResolveRunnable : public nsRunnable
@@ -109,14 +118,12 @@ protected:
       {
         PROMISE_LOG("ResolveRunnable::Run() [this=%p]", this);
         mThenValue->DoResolve(mResolveValue);
-
-        delete mThenValue;
         mThenValue = nullptr;
         return NS_OK;
       }
 
     private:
-      ThenValueBase* mThenValue;
+      nsRefPtr<ThenValueBase> mThenValue;
       ResolveValueType mResolveValue;
     };
 
@@ -136,28 +143,20 @@ protected:
       {
         PROMISE_LOG("RejectRunnable::Run() [this=%p]", this);
         mThenValue->DoReject(mRejectValue);
-
-        delete mThenValue;
         mThenValue = nullptr;
         return NS_OK;
       }
 
     private:
-      ThenValueBase* mThenValue;
+      nsRefPtr<ThenValueBase> mThenValue;
       RejectValueType mRejectValue;
     };
 
-    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite)
-    {
-      MOZ_COUNT_CTOR(ThenValueBase);
-    }
+    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite) {}
 
     virtual void Dispatch(MediaPromise *aPromise) = 0;
 
   protected:
-    // This may only be deleted by {Resolve,Reject}Runnable::Run.
-    virtual ~ThenValueBase() { MOZ_COUNT_DTOR(ThenValueBase); }
-
     virtual void DoResolve(ResolveValueType aResolveValue) = 0;
     virtual void DoReject(RejectValueType aRejectValue) = 0;
 
@@ -223,14 +222,26 @@ protected:
     virtual void DoResolve(ResolveValueType aResolveValue) MOZ_OVERRIDE
     {
       InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
+
+      // Null these out after invoking the callback so that any references are
+      // released predictably on the target thread. Otherwise, they would be
+      // released on whatever thread last drops its reference to the ThenValue,
+      // which may or may not be ok.
+      mResponseTarget = nullptr;
+      mThisVal = nullptr;
     }
 
     virtual void DoReject(RejectValueType aRejectValue) MOZ_OVERRIDE
     {
       InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
-    }
 
-    virtual ~ThenValue() {}
+      // Null these out after invoking the callback so that any references are
+      // released predictably on the target thread. Otherwise, they would be
+      // released on whatever thread last drops its reference to the ThenValue,
+      // which may or may not be ok.
+      mResponseTarget = nullptr;
+      mThisVal = nullptr;
+    }
 
   private:
     nsRefPtr<TargetType> mResponseTarget;
@@ -246,12 +257,12 @@ public:
             ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     MutexAutoLock lock(mMutex);
-    ThenValueBase* thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
-                                             RejectMethodType>(aResponseTarget, aThisVal,
-                                                               aResolveMethod, aRejectMethod,
-                                                               aCallSite);
+    nsRefPtr<ThenValueBase> thenValue = new ThenValue<TargetType, ThisType, ResolveMethodType,
+                                                      RejectMethodType>(aResponseTarget, aThisVal,
+                                                                        aResolveMethod, aRejectMethod,
+                                                                        aCallSite);
     PROMISE_LOG("%s invoking Then() [this=%p, thenValue=%p, aThisVal=%p, isPending=%d]",
-                aCallSite, this, thenValue, aThisVal, (int) IsPending());
+                aCallSite, this, thenValue.get(), aThisVal, (int) IsPending());
     if (!IsPending()) {
       thenValue->Dispatch(this);
     } else {
@@ -328,7 +339,7 @@ protected:
   Mutex mMutex;
   Maybe<ResolveValueType> mResolveValue;
   Maybe<RejectValueType> mRejectValue;
-  nsTArray<ThenValueBase*> mThenValues;
+  nsTArray<nsRefPtr<ThenValueBase>> mThenValues;
   nsTArray<nsRefPtr<MediaPromise>> mChainedPromises;
 };
 
