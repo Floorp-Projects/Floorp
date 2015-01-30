@@ -4386,6 +4386,9 @@ JSObject::splicePrototype(JSContext *cx, const Class *clasp, Handle<TaggedProto>
     /* Inner objects may not appear on prototype chains. */
     MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
 
+    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
+        return false;
+
     /*
      * Force type instantiation when splicing lazy types. This may fail,
      * in which case inference will be disabled for the compartment.
