@@ -914,8 +914,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      nsIntPoint chromeDisp = aFrame->GetChromeDisplacement();
-      mRemoteBrowser->UpdateDimensions(dimensions, size, chromeDisp);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
   }
 
@@ -1960,8 +1959,7 @@ nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
       nsIntSize size = aIFrame->GetSubdocumentSize();
       nsIntRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
-      nsIntPoint chromeDisp = aIFrame->GetChromeDisplacement();
-      mRemoteBrowser->UpdateDimensions(dimensions, size, chromeDisp);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }
