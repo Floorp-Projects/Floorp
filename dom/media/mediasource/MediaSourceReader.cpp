@@ -712,12 +712,12 @@ MediaSourceReader::CancelSeek()
 void
 MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
 {
-  mPendingSeekTime = aTime;
   MOZ_ASSERT(mVideoIsSeeking);
   MOZ_ASSERT(!mAudioIsSeeking);
   mVideoIsSeeking = false;
 
   if (mAudioTrack) {
+    mPendingSeekTime = aTime;
     mAudioIsSeeking = true;
     SwitchAudioReader(mPendingSeekTime);
     mAudioReader->Seek(mPendingSeekTime, 0)
@@ -727,7 +727,8 @@ MediaSourceReader::OnVideoSeekCompleted(int64_t aTime)
     MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
     return;
   }
-  mSeekPromise.Resolve(mPendingSeekTime, __func__);
+  mPendingSeekTime = -1;
+  mSeekPromise.Resolve(aTime, __func__);
 }
 
 void
@@ -738,8 +739,8 @@ MediaSourceReader::OnAudioSeekCompleted(int64_t aTime)
   MOZ_ASSERT(!mVideoIsSeeking);
   mAudioIsSeeking = false;
 
-  mSeekPromise.Resolve(mPendingSeekTime, __func__);
   mPendingSeekTime = -1;
+  mSeekPromise.Resolve(aTime, __func__);
 }
 
 void
