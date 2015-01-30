@@ -53,7 +53,7 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   , mWaitingForSeekData(false)
   , mAudioIsSeeking(false)
   , mVideoIsSeeking(false)
-  , mTimeThreshold(-1)
+  , mTimeThreshold(0)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
   , mEnded(false)
@@ -287,7 +287,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
       }
       // Fallback to using current reader.
     default:
-      mVideoRequest.Begin(mVideoReader->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold)
+      mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
                           ->RefableThen(GetTaskQueue(), __func__, this,
                                         &MediaSourceReader::OnVideoDecoded,
                                         &MediaSourceReader::OnVideoNotDecoded));
@@ -305,7 +305,7 @@ MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
     MOZ_ASSERT(mVideoPromise.IsEmpty()); // Already rejected in ::Seek().
     return;
   }
-  mVideoRequest.Begin(mVideoReader->RequestVideoData(false, 0)
+  mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
                       ->RefableThen(GetTaskQueue(), __func__, this,
                                     &MediaSourceReader::OnVideoDecoded,
                                     &MediaSourceReader::OnVideoNotDecoded));
@@ -329,13 +329,14 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      mVideoRequest.Begin(mVideoReader->RequestVideoData(false, 0)
+      mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
                           ->RefableThen(GetTaskQueue(), __func__, this,
                                         &MediaSourceReader::OnVideoDecoded,
                                         &MediaSourceReader::OnVideoNotDecoded));
       return;
     }
     mDropVideoBeforeThreshold = false;
+    mTimeThreshold = 0;
   }
 
   mLastVideoTime = aSample->mTime + aSample->mDuration;
