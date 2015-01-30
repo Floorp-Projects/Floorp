@@ -234,11 +234,6 @@ int32_t OpenSlesOutput::StopPlayout() {
   return 0;
 }
 
-int32_t OpenSlesOutput::SpeakerIsAvailable(bool& available) {  // NOLINT
-  available = true;
-  return 0;
-}
-
 int32_t OpenSlesOutput::InitSpeaker() {
   assert(!playing_);
   speaker_initialized_ = true;
@@ -395,7 +390,7 @@ void OpenSlesOutput::AllocateBuffers() {
   fifo_.reset(new SingleRwFifo(num_fifo_buffers_needed_));
 
   // Allocate the memory area to be used.
-  play_buf_.reset(new scoped_array<int8_t>[TotalBuffersUsed()]);
+  play_buf_.reset(new scoped_ptr<int8_t[]>[TotalBuffersUsed()]);
   int required_buffer_size = fine_buffer_->RequiredBufferSizeBytes();
   for (int i = 0; i < TotalBuffersUsed(); ++i) {
     play_buf_[i].reset(new int8_t[required_buffer_size]);
@@ -462,6 +457,24 @@ bool OpenSlesOutput::CreateAudioPlayer() {
                                              &audio_source, &audio_sink,
                                              kNumInterfaces, ids, req),
       false);
+
+  SLAndroidConfigurationItf player_config;
+  OPENSL_RETURN_ON_FAILURE(
+      (*sles_player_)->GetInterface(sles_player_,
+                                    SL_IID_ANDROIDCONFIGURATION_,
+                                    &player_config),
+      false);
+
+  // Set audio player configuration to SL_ANDROID_STREAM_VOICE which corresponds
+  // to android.media.AudioManager.STREAM_VOICE_CALL.
+  SLint32 stream_type = SL_ANDROID_STREAM_VOICE;
+  OPENSL_RETURN_ON_FAILURE(
+      (*player_config)->SetConfiguration(player_config,
+                                         SL_ANDROID_KEY_STREAM_TYPE,
+                                         &stream_type,
+                                         sizeof(SLint32)),
+      false);
+
   // Realize the player in synchronous mode.
   OPENSL_RETURN_ON_FAILURE((*sles_player_)->Realize(sles_player_,
                                                     SL_BOOLEAN_FALSE),

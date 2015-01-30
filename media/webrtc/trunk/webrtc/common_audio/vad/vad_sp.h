@@ -30,7 +30,7 @@
 //
 // Output:
 //      - signal_out    : Downsampled signal (of length |in_length| / 2).
-void WebRtcVad_Downsampling(int16_t* signal_in,
+void WebRtcVad_Downsampling(const int16_t* signal_in,
                             int16_t* signal_out,
                             int32_t* filter_state,
                             int in_length);

@@ -72,7 +72,6 @@ void AudioFrameOperations::SwapStereoChannels(AudioFrame* frame) {
 void AudioFrameOperations::Mute(AudioFrame& frame) {
   memset(frame.data_, 0, sizeof(int16_t) *
       frame.samples_per_channel_ * frame.num_channels_);
-  frame.energy_ = 0;
 }
 
 int AudioFrameOperations::Scale(float left, float right, AudioFrame& frame) {

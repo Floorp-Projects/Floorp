@@ -18,14 +18,21 @@ import sys
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 checkout_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
-chrome_build_dir = os.path.join(checkout_root, 'build')
 
-sys.path.insert(0, chrome_build_dir)
+sys.path.insert(0, os.path.join(checkout_root, 'build'))
 import gyp_chromium
 import gyp_helper
+import vs_toolchain
 
 sys.path.insert(0, os.path.join(checkout_root, 'tools', 'gyp', 'pylib'))
 import gyp
+
+def GetSupplementalFiles():
+  """Returns a list of the supplemental files that are included in all GYP
+  sources."""
+  # Can't use the one in gyp_chromium since the directory location of the root
+  # is different.
+  return glob.glob(os.path.join(checkout_root, '*', 'supplement.gypi'))
 
 
 if __name__ == '__main__':
@@ -51,7 +58,10 @@ if __name__ == '__main__':
 
   # If we didn't get a file, assume 'all.gyp' in the root of the checkout.
   if not gyp_file_specified:
-    args.append(os.path.join(checkout_root, 'all.gyp'))
+    # Because of a bug in gyp, simply adding the abspath to all.gyp doesn't
+    # work, but chdir'ing and adding the relative path does. Spooky :/
+    os.chdir(checkout_root)
+    args.append('all.gyp')
 
   # There shouldn't be a circular dependency relationship between .gyp files,
   args.append('--no-circular-check')
@@ -60,12 +70,22 @@ if __name__ == '__main__':
   if not os.environ.get('GYP_GENERATORS'):
     os.environ['GYP_GENERATORS'] = 'ninja'
 
+  vs2013_runtime_dll_dirs = None
+  if int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', '1')):
+    vs2013_runtime_dll_dirs = vs_toolchain.SetEnvironmentAndGetRuntimeDllDirs()
+
   # Enforce gyp syntax checking. This adds about 20% execution time.
   args.append('--check')
 
-  supplemental_includes = gyp_chromium.GetSupplementalFiles()
-  if not gyp_chromium.RunGN(supplemental_includes):
-    sys.exit(1)
+  supplemental_includes = GetSupplementalFiles()
+  gn_vars_dict = gyp_chromium.GetGypVars(supplemental_includes)
+
+  # Automatically turn on crosscompile support for platforms that need it.
+  if all(('ninja' in os.environ.get('GYP_GENERATORS', ''),
+          gn_vars_dict.get('OS') in ['android', 'ios'],
+          'GYP_CROSSCOMPILE' not in os.environ)):
+    os.environ['GYP_CROSSCOMPILE'] = '1'
+
   args.extend(['-I' + i for i in
                gyp_chromium.additional_include_files(supplemental_includes,
                                                      args)])
@@ -77,4 +97,12 @@ if __name__ == '__main__':
   sys.stdout.flush()
 
   # Off we go...
-  sys.exit(gyp.main(args))
+  gyp_rc = gyp.main(args)
+
+  if vs2013_runtime_dll_dirs:
+    x64_runtime, x86_runtime = vs2013_runtime_dll_dirs
+    vs_toolchain.CopyVsRuntimeDlls(
+        os.path.join(checkout_root, gyp_chromium.GetOutputDirectory()),
+        (x86_runtime, x64_runtime))
+
+  sys.exit(gyp_rc)

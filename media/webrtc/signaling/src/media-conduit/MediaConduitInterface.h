@@ -234,7 +234,8 @@ public:
    * return: Concrete VideoSessionConduitObject or nullptr in the case
    *         of failure
    */
-  static RefPtr<VideoSessionConduit> Create(VideoSessionConduit *aOther);
+  static RefPtr<VideoSessionConduit> Create(VideoSessionConduit *aOther,
+                                            bool receiving);
 
   enum FrameRequestType
   {

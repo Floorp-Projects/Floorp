@@ -262,11 +262,11 @@ void WebRtcIlbcfix_DoThePlc(
 
       /* mix noise and pitch repeatition */
 
-      PLCresidual[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tot_gain,
-                                                                (int16_t)WEBRTC_SPL_RSHIFT_W32( (WEBRTC_SPL_MUL_16_16(pitchfact, PLCresidual[i]) +
-                                                                                                       WEBRTC_SPL_MUL_16_16((32767-pitchfact), randvec[i]) + 16384),
-                                                                                                      15),
-                                                                15);
+      PLCresidual[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
+          tot_gain,
+          (pitchfact * PLCresidual[i] + (32767 - pitchfact) * randvec[i] +
+              16384) >> 15,
+          15);
 
       /* Shifting down the result one step extra to ensure that no overflow
          will occur */

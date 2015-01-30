@@ -13,8 +13,8 @@
 
 #include <list>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/interface/module.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
@@ -32,8 +32,8 @@ class CallStats : public Module {
   ~CallStats();
 
   // Implements Module, to use the process thread.
-  virtual int32_t TimeUntilNextProcess();
-  virtual int32_t Process();
+  virtual int32_t TimeUntilNextProcess() OVERRIDE;
+  virtual int32_t Process() OVERRIDE;
 
   // Returns a RtcpRttStats to register at a statistics provider. The object
   // has the same lifetime as the CallStats instance.

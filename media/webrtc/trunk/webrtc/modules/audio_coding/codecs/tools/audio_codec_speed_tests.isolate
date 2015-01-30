@@ -1,0 +1,35 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+{
+  'conditions': [
+    ['OS=="android"', {
+      'variables': {
+        'files': [
+          '<(DEPTH)/resources/',
+          '<(DEPTH)/data/',
+        ],
+      },
+    }],
+    ['OS=="linux" or OS=="mac" or OS=="win"', {
+      'variables': {
+        'command': [
+          '<(DEPTH)/testing/test_env.py',
+          '<(PRODUCT_DIR)/audio_codec_speed_tests<(EXECUTABLE_SUFFIX)',
+        ],
+        'files': [
+          '<(DEPTH)/DEPS',
+          '<(DEPTH)/resources/audio_coding/music_stereo_48kHz.pcm',
+          '<(DEPTH)/resources/audio_coding/speech_mono_16kHz.pcm',
+          '<(DEPTH)/resources/audio_coding/speech_mono_32_48kHz.pcm',
+          '<(DEPTH)/testing/test_env.py',
+          '<(PRODUCT_DIR)/audio_codec_speed_tests<(EXECUTABLE_SUFFIX)',
+        ],
+      },
+    }],
+  ],
+}

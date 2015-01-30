@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 
+#include <assert.h>
 #include <string.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xcomposite.h>
@@ -17,7 +18,6 @@
 #include <X11/Xutil.h>
 
 #include <algorithm>
-#include <cassert>
 
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -228,6 +228,12 @@ void WindowCapturerLinux::Start(Callback* callback) {
 void WindowCapturerLinux::Capture(const DesktopRegion& region) {
   x_display_->ProcessPendingXEvents();
 
+  if (!x_server_pixel_buffer_.IsWindowValid()) {
+    LOG(LS_INFO) << "The window is no longer valid.";
+    callback_->OnCaptureCompleted(NULL);
+    return;
+  }
+
   if (!has_composite_extension_) {
     // Without the Xcomposite extension we capture when the whole window is
     // visible on screen and not covered by any other window. This is not
@@ -243,6 +249,9 @@ void WindowCapturerLinux::Capture(const DesktopRegion& region) {
   x_server_pixel_buffer_.Synchronize();
   x_server_pixel_buffer_.CaptureRect(DesktopRect::MakeSize(frame->size()),
                                      frame);
+
+  frame->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(frame->size()));
 
   callback_->OnCaptureCompleted(frame);
 }

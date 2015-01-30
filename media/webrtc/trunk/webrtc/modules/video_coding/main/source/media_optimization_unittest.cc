@@ -18,9 +18,6 @@ namespace media_optimization {
 class TestMediaOptimization : public ::testing::Test {
  protected:
   enum {
-    kId = 4711  // Id number for the MediaOptimization class.
-  };
-  enum {
     kSampleRate = 90000  // RTP timestamps per second.
   };
 
@@ -28,7 +25,7 @@ class TestMediaOptimization : public ::testing::Test {
   // a special case (e.g. frame rate in media optimization).
   TestMediaOptimization()
       : clock_(1000),
-        media_opt_(kId, &clock_),
+        media_opt_(&clock_),
         frame_time_ms_(33),
         next_timestamp_(0) {}
 

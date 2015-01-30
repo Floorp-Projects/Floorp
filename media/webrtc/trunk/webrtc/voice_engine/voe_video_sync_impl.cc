@@ -51,7 +51,6 @@ int VoEVideoSyncImpl::GetPlayoutTimestamp(int channel, unsigned int& timestamp)
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetPlayoutTimestamp(channel=%d, timestamp=?)", channel);
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -75,7 +74,6 @@ int VoEVideoSyncImpl::SetInitTimestamp(int channel,
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "SetInitTimestamp(channel=%d, timestamp=%lu)",
                  channel, timestamp);
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -99,7 +97,6 @@ int VoEVideoSyncImpl::SetInitSequenceNumber(int channel,
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "SetInitSequenceNumber(channel=%d, sequenceNumber=%hd)",
                  channel, sequenceNumber);
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -122,7 +119,6 @@ int VoEVideoSyncImpl::SetMinimumPlayoutDelay(int channel,int delayMs)
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "SetMinimumPlayoutDelay(channel=%d, delayMs=%d)",
                  channel, delayMs);
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -162,7 +158,6 @@ int VoEVideoSyncImpl::SetInitialPlayoutDelay(int channel, int delay_ms)
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "SetInitialPlayoutDelay(channel=%d, delay_ms=%d)",
                  channel, delay_ms);
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -186,7 +181,6 @@ int VoEVideoSyncImpl::GetDelayEstimate(int channel,
                                        int* avsync_offset_ms) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "GetDelayEstimate(channel=%d, delayMs=?)", channel);
-  IPHONE_NOT_SUPPORTED(_shared->statistics());
 
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
@@ -211,7 +205,6 @@ int VoEVideoSyncImpl::GetPlayoutBufferSize(int& bufferMs)
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "GetPlayoutBufferSize(bufferMs=?)");
-    IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
     {
@@ -259,7 +252,6 @@ int VoEVideoSyncImpl::GetRtpRtcp(int channel, RtpRtcp** rtpRtcpModule,
 int VoEVideoSyncImpl::GetLeastRequiredDelayMs(int channel) const {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "GetLeastRequiredDelayMS(channel=%d)", channel);
-  IPHONE_NOT_SUPPORTED(_shared->statistics());
 
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);

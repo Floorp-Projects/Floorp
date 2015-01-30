@@ -27,7 +27,7 @@ enum TestType {
   Standard = 0,
 
   Stress = 2,
-  Unit = 3,
+
   CPU = 4
 };
 

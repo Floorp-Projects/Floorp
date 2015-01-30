@@ -46,22 +46,19 @@ class LoggingTest : public ::testing::Test, public TraceCallback {
   void SetUp() {
     Trace::CreateTrace();
     Trace::SetTraceCallback(this);
-    // Reduce the chance that spurious traces will ruin the test.
-    Trace::set_level_filter(kTraceWarning | kTraceError);
   }
 
   void TearDown() {
-    CriticalSectionScoped cs(crit_.get());
     Trace::SetTraceCallback(NULL);
     Trace::ReturnTrace();
+    CriticalSectionScoped cs(crit_.get());
     ASSERT_EQ(kTraceNone, level_) << "Print() was not called";
   }
 
   scoped_ptr<CriticalSectionWrapper> crit_;
   scoped_ptr<ConditionVariableWrapper> cv_;
-  TraceLevel level_;
-  int length_;
-  std::ostringstream expected_log_;
+  TraceLevel level_ GUARDED_BY(crit_);
+  std::ostringstream expected_log_ GUARDED_BY(crit_);
 };
 
 TEST_F(LoggingTest, LogStream) {

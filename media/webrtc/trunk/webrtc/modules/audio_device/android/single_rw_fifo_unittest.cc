@@ -90,7 +90,7 @@ class SingleRwFifoTest : public testing::Test {
  protected:
   SingleRwFifo fifo_;
   // Memory area for proper de-allocation.
-  scoped_array<int8_t> buffer_[kCapacity];
+  scoped_ptr<int8_t[]> buffer_[kCapacity];
   std::list<int8_t*> memory_queue_;
 
   int pushed_;

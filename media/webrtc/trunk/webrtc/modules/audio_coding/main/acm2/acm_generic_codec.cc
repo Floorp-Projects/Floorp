@@ -26,7 +26,7 @@ namespace acm2 {
 // Enum for CNG
 enum {
   kMaxPLCParamsCNG = WEBRTC_CNG_MAX_LPC_ORDER,
-  kNewCNGNumPLCParams = 8
+  kNewCNGNumLPCParams = 8
 };
 
 // Interval for sending new CNG parameters (SID frames) is 100 msec.
@@ -56,10 +56,10 @@ ACMGenericCodec::ACMGenericCodec()
       vad_mode_(VADNormal),
       dtx_enabled_(false),
       ptr_dtx_inst_(NULL),
-      num_lpc_params_(kNewCNGNumPLCParams),
+      num_lpc_params_(kNewCNGNumLPCParams),
       sent_cn_previous_(false),
       prev_frame_cng_(0),
-      neteq_decode_lock_(NULL),
+      has_internal_fec_(false),
       codec_wrapper_lock_(*RWLockWrapper::CreateRWLock()),
       last_timestamp_(0xD87F3F9F),
       unique_id_(0) {
@@ -196,6 +196,12 @@ bool ACMGenericCodec::HasFrameToEncode() const {
   return true;
 }
 
+int ACMGenericCodec::SetFEC(bool enable_fec) {
+  if (!HasInternalFEC() && enable_fec)
+    return -1;
+  return 0;
+}
+
 int16_t ACMGenericCodec::Encode(uint8_t* bitstream,
                                 int16_t* bitstream_len_byte,
                                 uint32_t* timestamp,
@@ -209,7 +215,6 @@ int16_t ACMGenericCodec::Encode(uint8_t* bitstream,
     return 0;
   }
   WriteLockScoped lockCodec(codec_wrapper_lock_);
-  ReadLockScoped lockNetEq(*neteq_decode_lock_);
 
   // Not all codecs accept the whole frame to be pushed into encoder at once.
   // Some codecs needs to be feed with a specific number of samples different
@@ -393,7 +398,6 @@ int16_t ACMGenericCodec::EncoderParamsSafe(WebRtcACMCodecParams* enc_params) {
 
 int16_t ACMGenericCodec::ResetEncoder() {
   WriteLockScoped lockCodec(codec_wrapper_lock_);
-  ReadLockScoped lockNetEq(*neteq_decode_lock_);
   return ResetEncoderSafe();
 }
 
@@ -442,7 +446,6 @@ int16_t ACMGenericCodec::InternalResetEncoder() {
 int16_t ACMGenericCodec::InitEncoder(WebRtcACMCodecParams* codec_params,
                                      bool force_initialization) {
   WriteLockScoped lockCodec(codec_wrapper_lock_);
-  ReadLockScoped lockNetEq(*neteq_decode_lock_);
   return InitEncoderSafe(codec_params, force_initialization);
 }
 
@@ -546,7 +549,7 @@ void ACMGenericCodec::DestructEncoder() {
     WebRtcCng_FreeEnc(ptr_dtx_inst_);
     ptr_dtx_inst_ = NULL;
   }
-  num_lpc_params_ = kNewCNGNumPLCParams;
+  num_lpc_params_ = kNewCNGNumLPCParams;
 
   DestructEncoderSafe();
 }
@@ -623,14 +626,6 @@ int16_t ACMGenericCodec::CreateEncoder() {
     encoder_exist_ = true;
   }
   return status;
-}
-
-void ACMGenericCodec::DestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    WriteLockScoped lockCodec(codec_wrapper_lock_);
-    ReadLockScoped lockNetEq(*neteq_decode_lock_);
-    InternalDestructEncoderInst(ptr_inst);
-  }
 }
 
 uint32_t ACMGenericCodec::EarliestTimestamp() const {
@@ -842,7 +837,7 @@ int16_t ACMGenericCodec::ProcessFrameVADDTX(uint8_t* bitstream,
   // Calculate number of samples in 10 ms blocks, and number ms in one frame.
   int16_t samples_in_10ms = static_cast<int16_t>(freq_hz / 100);
   int32_t frame_len_ms = static_cast<int32_t>(frame_len_smpl_) * 1000 / freq_hz;
-  int16_t status;
+  int16_t status = -1;
 
   // Vector for storing maximum 30 ms of mono audio at 48 kHz.
   int16_t audio[1440];
@@ -1001,6 +996,12 @@ int16_t ACMGenericCodec::REDPayloadISAC(const int32_t /* isac_rate */,
                                         int16_t* /* payload_len_bytes */) {
   WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceAudioCoding, unique_id_,
                "Error: REDPayloadISAC is an iSAC specific function");
+  return -1;
+}
+
+int ACMGenericCodec::SetOpusMaxPlaybackRate(int /* frequency_hz */) {
+  WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioCoding, unique_id_,
+      "The send-codec is not Opus, failed to set maximum playback rate.");
   return -1;
 }
 

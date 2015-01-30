@@ -33,7 +33,7 @@ class TestVideoReceiver : public ::testing::Test {
   TestVideoReceiver() : clock_(0) {}
 
   virtual void SetUp() {
-    receiver_.reset(new VideoReceiver(0, &clock_, &event_factory_));
+    receiver_.reset(new VideoReceiver(&clock_, &event_factory_));
     EXPECT_EQ(0, receiver_->InitializeReceiver());
     EXPECT_EQ(0,
               receiver_->RegisterExternalDecoder(

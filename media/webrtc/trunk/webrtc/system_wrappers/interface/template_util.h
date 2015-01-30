@@ -13,7 +13,7 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_TEMPLATE_UTIL_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_TEMPLATE_UTIL_H_
 
-#include <cstddef>  // For size_t.
+#include <stddef.h>  // For size_t.
 
 namespace webrtc {
 

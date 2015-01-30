@@ -8,9 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/common_video/interface/texture_video_frame.h"
+
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_video/interface/native_handle.h"
-#include "webrtc/common_video/interface/texture_video_frame.h"
 
 namespace webrtc {
 
@@ -26,6 +27,9 @@ class NativeHandleImpl : public NativeHandle {
  private:
   int32_t ref_count_;
 };
+
+bool EqualTextureFrames(const I420VideoFrame& frame1,
+                        const I420VideoFrame& frame2);
 
 TEST(TestTextureVideoFrame, InitialValues) {
   NativeHandleImpl handle;
@@ -53,6 +57,23 @@ TEST(TestTextureVideoFrame, RefCount) {
   EXPECT_EQ(1, handle.ref_count());
   delete frame;
   EXPECT_EQ(0, handle.ref_count());
+}
+
+TEST(TestTextureVideoFrame, CloneFrame) {
+  NativeHandleImpl handle;
+  TextureVideoFrame frame1(&handle, 640, 480, 100, 200);
+  scoped_ptr<I420VideoFrame> frame2(frame1.CloneFrame());
+  EXPECT_TRUE(frame2.get() != NULL);
+  EXPECT_TRUE(EqualTextureFrames(frame1, *frame2));
+}
+
+bool EqualTextureFrames(const I420VideoFrame& frame1,
+                        const I420VideoFrame& frame2) {
+  return ((frame1.native_handle() == frame2.native_handle()) &&
+          (frame1.width() == frame2.width()) &&
+          (frame1.height() == frame2.height()) &&
+          (frame1.timestamp() == frame2.timestamp()) &&
+          (frame1.render_time_ms() == frame2.render_time_ms()));
 }
 
 }  // namespace webrtc

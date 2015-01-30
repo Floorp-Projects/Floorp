@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_MAIN_SOURCE_TIMING_H_
 #define WEBRTC_MODULES_VIDEO_CODING_MAIN_SOURCE_TIMING_H_
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/video_coding/main/source/codec_timer.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
@@ -18,15 +19,13 @@
 namespace webrtc {
 
 class Clock;
-class VCMTimestampExtrapolator;
+class TimestampExtrapolator;
 
 class VCMTiming {
  public:
   // The primary timing component should be passed
   // if this is the dual timing component.
   VCMTiming(Clock* clock,
-            int32_t vcm_id = 0,
-            int32_t timing_id = 0,
             VCMTiming* master_timing = NULL);
   ~VCMTiming();
 
@@ -95,24 +94,24 @@ class VCMTiming {
   enum { kDelayMaxChangeMsPerS = 100 };
 
  protected:
-  int32_t MaxDecodeTimeMs(FrameType frame_type = kVideoFrameDelta) const;
-  int64_t RenderTimeMsInternal(uint32_t frame_timestamp, int64_t now_ms) const;
-  uint32_t TargetDelayInternal() const;
+  int32_t MaxDecodeTimeMs(FrameType frame_type = kVideoFrameDelta) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  int64_t RenderTimeMsInternal(uint32_t frame_timestamp, int64_t now_ms) const
+      EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
+  uint32_t TargetDelayInternal() const EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
  private:
   CriticalSectionWrapper* crit_sect_;
-  int32_t vcm_id_;
-  Clock* clock_;
-  int32_t timing_id_;
-  bool master_;
-  VCMTimestampExtrapolator* ts_extrapolator_;
-  VCMCodecTimer codec_timer_;
-  uint32_t render_delay_ms_;
-  uint32_t min_playout_delay_ms_;
-  uint32_t jitter_delay_ms_;
-  uint32_t current_delay_ms_;
-  int last_decode_ms_;
-  uint32_t prev_frame_timestamp_;
+  Clock* const clock_;
+  bool master_ GUARDED_BY(crit_sect_);
+  TimestampExtrapolator* ts_extrapolator_ GUARDED_BY(crit_sect_);
+  VCMCodecTimer codec_timer_ GUARDED_BY(crit_sect_);
+  uint32_t render_delay_ms_ GUARDED_BY(crit_sect_);
+  uint32_t min_playout_delay_ms_ GUARDED_BY(crit_sect_);
+  uint32_t jitter_delay_ms_ GUARDED_BY(crit_sect_);
+  uint32_t current_delay_ms_ GUARDED_BY(crit_sect_);
+  int last_decode_ms_ GUARDED_BY(crit_sect_);
+  uint32_t prev_frame_timestamp_ GUARDED_BY(crit_sect_);
 };
 }  // namespace webrtc
 

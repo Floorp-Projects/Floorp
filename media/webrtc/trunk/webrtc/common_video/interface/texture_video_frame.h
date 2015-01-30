@@ -49,6 +49,7 @@ class TextureVideoFrame : public I420VideoFrame {
                           int stride_u,
                           int stride_v) OVERRIDE;
   virtual int CopyFrame(const I420VideoFrame& videoFrame) OVERRIDE;
+  virtual I420VideoFrame* CloneFrame() const OVERRIDE;
   virtual void SwapFrame(I420VideoFrame* videoFrame) OVERRIDE;
   virtual uint8_t* buffer(PlaneType type) OVERRIDE;
   virtual const uint8_t* buffer(PlaneType type) const OVERRIDE;

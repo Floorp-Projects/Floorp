@@ -52,8 +52,6 @@ int16_t ACMG722::InternalCreateEncoder() { return -1; }
 
 void ACMG722::DestructEncoderSafe() { return; }
 
-void ACMG722::InternalDestructEncoderInst(void* /* ptr_inst */) { return; }
-
 #else     //===================== Actual Implementation =======================
 
 // Encoder and decoder memory
@@ -185,13 +183,6 @@ void ACMG722::DestructEncoderSafe() {
   }
   encoder_exist_ = false;
   encoder_initialized_ = false;
-}
-
-void ACMG722::InternalDestructEncoderInst(void* ptr_inst) {
-  if (ptr_inst != NULL) {
-    WebRtcG722_FreeEncoder(static_cast<G722EncInst*>(ptr_inst));
-  }
-  return;
 }
 
 #endif

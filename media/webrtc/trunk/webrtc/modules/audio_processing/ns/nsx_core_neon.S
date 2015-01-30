@@ -12,6 +12,8 @@
 @ This file contains some functions in NS, optimized for ARM Neon
 @ platforms. Reference C code is in file nsx_core.c. Bit-exact.
 
+.syntax unified
+
 #include "nsx_core_neon_offsets.h"
 #include "webrtc/modules/audio_processing/ns/nsx_defines.h"
 #include "webrtc/system_wrappers/interface/asm_defines.h"
@@ -119,7 +121,7 @@ DEFINE_FUNCTION WebRtcNsx_NoiseEstimationNeon
 LOOP_SET_LMAGN:
   ldrh r2, [r1], #2           @ magn[i]
   cmp r2, #0
-  streqh r3, [r12], #2        @ lmagn[i] = logval;
+  strheq r3, [r12], #2        @ lmagn[i] = logval;
   beq CHECK_LMAGN_COUNTER
 
   clz r6, r2
@@ -267,7 +269,7 @@ UPDATE_LOG_QUANTILE_ESTIMATE:
   mov r0, r12, lsr #1         @ tmp16no1
   mov r12, #3
   smulbb r12, r0, r12         @ tmp16no2
-  sub r2, r12, lsr #1
+  sub r2, r2, r12, lsr #1
   cmp r3, r2
   ldrgt r2, [sp]
   ldrgt r3, [sp]
@@ -275,7 +277,7 @@ UPDATE_LOG_QUANTILE_ESTIMATE:
 
 UPDATE_LOG_QUANTILE_ESTIMATE_BIGGER_LMAGN:
   add r3, r12, #2
-  add r2, r3, lsr #2
+  add r2, r2, r3, lsr #2
 
 UPDATE_LOG_QUANTILE_ESTIMATE_STORE:
   vmov.s16 r0, d25[0]         @ countProd

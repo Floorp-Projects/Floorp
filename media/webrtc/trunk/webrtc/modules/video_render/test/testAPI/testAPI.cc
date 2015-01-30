@@ -294,11 +294,6 @@ int TestSingleStream(VideoRender* renderModule) {
     VideoRenderCallback* renderCallback0 = renderModule->AddIncomingRenderStream(streamId0, 0, 0.0f, 0.0f, 1.0f, 1.0f);
     assert(renderCallback0 != NULL);
 
-#ifndef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-    MyRenderCallback externalRender;
-    renderModule->AddExternalRenderCallback(streamId0, &externalRender);
-#endif
-
     printf("Start render\n");
     error = renderModule->StartRender(streamId0);
     if (error != 0) {
@@ -423,6 +418,8 @@ int TestBitmapText(VideoRender* renderModule) {
 }
 
 int TestMultipleStreams(VideoRender* renderModule) {
+    int error = 0;
+
     // Add settings for a stream to render
     printf("Add stream 0\n");
     const int streamId0 = 0;
@@ -444,10 +441,19 @@ int TestMultipleStreams(VideoRender* renderModule) {
     VideoRenderCallback* renderCallback3 =
         renderModule->AddIncomingRenderStream(streamId3, 0, 0.55f, 0.55f, 1.0f, 1.0f);
     assert(renderCallback3 != NULL);
-    assert(renderModule->StartRender(streamId0) == 0);
-    assert(renderModule->StartRender(streamId1) == 0);
-    assert(renderModule->StartRender(streamId2) == 0);
-    assert(renderModule->StartRender(streamId3) == 0);
+    error = renderModule->StartRender(streamId0);
+    if (error != 0) {
+      // TODO(phoglund): This test will not work if compiled in release mode.
+      // This rather silly construct here is to avoid compilation errors when
+      // compiling in release. Release => no asserts => unused 'error' variable.
+      assert(false);
+    }
+    error = renderModule->StartRender(streamId1);
+    assert(error == 0);
+    error = renderModule->StartRender(streamId2);
+    assert(error == 0);
+    error = renderModule->StartRender(streamId3);
+    assert(error == 0);
 
     // Loop through an I420 file and render each frame
     const int width = 352;
@@ -493,19 +499,28 @@ int TestMultipleStreams(VideoRender* renderModule) {
 
     // Shut down
     printf("Closing...\n");
-    assert(renderModule->StopRender(streamId0) == 0);
-    assert(renderModule->DeleteIncomingRenderStream(streamId0) == 0);
-    assert(renderModule->StopRender(streamId1) == 0);
-    assert(renderModule->DeleteIncomingRenderStream(streamId1) == 0);
-    assert(renderModule->StopRender(streamId2) == 0);
-    assert(renderModule->DeleteIncomingRenderStream(streamId2) == 0);
-    assert(renderModule->StopRender(streamId3) == 0);
-    assert(renderModule->DeleteIncomingRenderStream(streamId3) == 0);
+    error = renderModule->StopRender(streamId0);
+    assert(error == 0);
+    error = renderModule->DeleteIncomingRenderStream(streamId0);
+    assert(error == 0);
+    error = renderModule->StopRender(streamId1);
+    assert(error == 0);
+    error = renderModule->DeleteIncomingRenderStream(streamId1);
+    assert(error == 0);
+    error = renderModule->StopRender(streamId2);
+    assert(error == 0);
+    error = renderModule->DeleteIncomingRenderStream(streamId2);
+    assert(error == 0);
+    error = renderModule->StopRender(streamId3);
+    assert(error == 0);
+    error = renderModule->DeleteIncomingRenderStream(streamId3);
+    assert(error == 0);
 
     return 0;
 }
 
 int TestExternalRender(VideoRender* renderModule) {
+    int error = 0;
     MyRenderCallback *externalRender = new MyRenderCallback();
 
     const int streamId0 = 0;
@@ -513,10 +528,16 @@ int TestExternalRender(VideoRender* renderModule) {
         renderModule->AddIncomingRenderStream(streamId0, 0, 0.0f, 0.0f,
                                                    1.0f, 1.0f);
     assert(renderCallback0 != NULL);
-    assert(renderModule->AddExternalRenderCallback(streamId0,
-                                                   externalRender) == 0);
+    error = renderModule->AddExternalRenderCallback(streamId0, externalRender);
+    if (error != 0) {
+      // TODO(phoglund): This test will not work if compiled in release mode.
+      // This rather silly construct here is to avoid compilation errors when
+      // compiling in release. Release => no asserts => unused 'error' variable.
+      assert(false);
+    }
 
-    assert(renderModule->StartRender(streamId0) == 0);
+    error = renderModule->StartRender(streamId0);
+    assert(error == 0);
 
     const int width = 352;
     const int half_width = (width + 1) / 2;
@@ -536,8 +557,12 @@ int TestExternalRender(VideoRender* renderModule) {
     // Sleep and let all frames be rendered before closing
     SleepMs(2*renderDelayMs);
 
-    assert(renderModule->StopRender(streamId0) == 0);
-    assert(renderModule->DeleteIncomingRenderStream(streamId0) == 0);
+    // Shut down
+    printf("Closing...\n");
+    error = renderModule->StopRender(streamId0);
+    assert(error == 0);
+    error = renderModule->DeleteIncomingRenderStream(streamId0);
+    assert(error == 0);
     assert(frameCount == externalRender->_cnt);
 
     delete externalRender;
@@ -547,10 +572,6 @@ int TestExternalRender(VideoRender* renderModule) {
 }
 
 void RunVideoRenderTests(void* window, VideoRenderType windowType) {
-#ifndef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-    windowType = kRenderExternal;
-#endif
-
     int myId = 12345;
 
     // Create the render module
@@ -561,7 +582,6 @@ void RunVideoRenderTests(void* window, VideoRenderType windowType) {
                                                   false,
                                                   windowType);
     assert(renderModule != NULL);
-
 
     // ##### Test single stream rendering ####
     printf("#### TestSingleStream ####\n");

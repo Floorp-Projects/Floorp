@@ -25,13 +25,7 @@
 #define WEBRTC_ABS(a) (((a) < 0) ? -(a) : (a))
 
 namespace webrtc {
-
 namespace voe {
-
-// Used for downmixing before resampling.
-// TODO(ajm): audio_device should advertise the maximum sample rate it can
-//            provide.
-static const int kMaxMonoDeviceDataSizeSamples = 960;  // 10 ms, 96 kHz, mono.
 
 // TODO(ajm): The thread safety of this is dubious...
 void
@@ -316,10 +310,7 @@ void TransmitMixer::GetSendCodecInfo(int* max_sample_rate, int* max_channels) {
     if (channel->Sending()) {
       CodecInst codec;
       channel->GetSendCodec(codec);
-      // TODO(tlegrand): Remove the 32 kHz restriction once we have full 48 kHz
-      // support in Audio Coding Module.
-      *max_sample_rate = std::min(32000,
-                                  std::max(*max_sample_rate, codec.plfreq));
+      *max_sample_rate = std::max(*max_sample_rate, codec.plfreq);
       *max_channels = std::max(*max_channels, codec.channels);
     }
   }
@@ -342,13 +333,10 @@ TransmitMixer::PrepareDemux(const void* audioSamples,
                  totalDelayMS, clockDrift, currentMicLevel);
 
     // --- Resample input audio and create/store the initial audio frame
-    if (GenerateAudioFrame(static_cast<const int16_t*>(audioSamples),
-                           nSamples,
-                           nChannels,
-                           samplesPerSec) == -1)
-    {
-        return -1;
-    }
+    GenerateAudioFrame(static_cast<const int16_t*>(audioSamples),
+                       nSamples,
+                       nChannels,
+                       samplesPerSec);
 
     {
       CriticalSectionScoped cs(&_callbackCritSect);
@@ -397,7 +385,12 @@ TransmitMixer::PrepareDemux(const void* audioSamples,
     }
 
     // --- Record to file
-    if (_fileRecording)
+    bool file_recording = false;
+    {
+        CriticalSectionScoped cs(&_critSect);
+        file_recording =  _fileRecording;
+    }
+    if (file_recording)
     {
         RecordAudioToFile(_audioFrame.sample_rate_hz_);
     }
@@ -428,10 +421,7 @@ TransmitMixer::DemuxAndMix()
          it.Increment())
     {
         Channel* channelPtr = it.GetChannel();
-        if (channelPtr->InputIsOnHold())
-        {
-            channelPtr->UpdateLocalTimeStamp();
-        } else if (channelPtr->Sending())
+        if (channelPtr->Sending())
         {
             // Demultiplex makes a copy of its input.
             channelPtr->Demultiplex(_audioFrame);
@@ -447,9 +437,7 @@ void TransmitMixer::DemuxAndMix(const int voe_channels[],
     voe::ChannelOwner ch = _channelManagerPtr->GetChannel(voe_channels[i]);
     voe::Channel* channel_ptr = ch.channel();
     if (channel_ptr) {
-      if (channel_ptr->InputIsOnHold()) {
-        channel_ptr->UpdateLocalTimeStamp();
-      } else if (channel_ptr->Sending()) {
+      if (channel_ptr->Sending()) {
         // Demultiplex makes a copy of its input.
         channel_ptr->Demultiplex(_audioFrame);
         channel_ptr->PrepareEncodeAndSend(_audioFrame.sample_rate_hz_);
@@ -468,7 +456,7 @@ TransmitMixer::EncodeAndSend()
          it.Increment())
     {
         Channel* channelPtr = it.GetChannel();
-        if (channelPtr->Sending() && !channelPtr->InputIsOnHold())
+        if (channelPtr->Sending())
         {
             channelPtr->EncodeAndSend();
         }
@@ -481,7 +469,7 @@ void TransmitMixer::EncodeAndSend(const int voe_channels[],
   for (int i = 0; i < number_of_voe_channels; ++i) {
     voe::ChannelOwner ch = _channelManagerPtr->GetChannel(voe_channels[i]);
     voe::Channel* channel_ptr = ch.channel();
-    if (channel_ptr && channel_ptr->Sending() && !channel_ptr->InputIsOnHold())
+    if (channel_ptr && channel_ptr->Sending())
       channel_ptr->EncodeAndSend();
   }
 }
@@ -693,40 +681,14 @@ int TransmitMixer::IsPlayingFileAsMicrophone() const
     return _filePlaying;
 }
 
-int TransmitMixer::ScaleFileAsMicrophonePlayout(float scale)
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
-                 "TransmitMixer::ScaleFileAsMicrophonePlayout(scale=%5.3f)",
-                 scale);
-
-    CriticalSectionScoped cs(&_critSect);
-
-    if (!_filePlaying)
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_INVALID_OPERATION, kTraceError,
-            "ScaleFileAsMicrophonePlayout() isnot playing file");
-        return -1;
-    }
-
-    if ((_filePlayerPtr == NULL) ||
-        (_filePlayerPtr->SetAudioScaling(scale) != 0))
-    {
-        _engineStatisticsPtr->SetLastError(
-            VE_BAD_ARGUMENT, kTraceError,
-            "SetAudioScaling() failed to scale playout");
-        return -1;
-    }
-
-    return 0;
-}
-
 int TransmitMixer::StartRecordingMicrophone(const char* fileName,
                                             const CodecInst* codecInst)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::StartRecordingMicrophone(fileName=%s)",
                  fileName);
+
+    CriticalSectionScoped cs(&_critSect);
 
     if (_fileRecording)
     {
@@ -760,8 +722,6 @@ int TransmitMixer::StartRecordingMicrophone(const char* fileName,
     {
         format = kFileFormatCompressedFile;
     }
-
-    CriticalSectionScoped cs(&_critSect);
 
     // Destroy the old instance
     if (_fileRecorderPtr)
@@ -807,6 +767,8 @@ int TransmitMixer::StartRecordingMicrophone(OutStream* stream,
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
                "TransmitMixer::StartRecordingMicrophone()");
 
+    CriticalSectionScoped cs(&_critSect);
+
     if (_fileRecording)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
@@ -838,8 +800,6 @@ int TransmitMixer::StartRecordingMicrophone(OutStream* stream,
     {
         format = kFileFormatCompressedFile;
     }
-
-    CriticalSectionScoped cs(&_critSect);
 
     // Destroy the old instance
     if (_fileRecorderPtr)
@@ -884,14 +844,14 @@ int TransmitMixer::StopRecordingMicrophone()
     WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::StopRecordingMicrophone()");
 
+    CriticalSectionScoped cs(&_critSect);
+
     if (!_fileRecording)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
                    "StopRecordingMicrophone() isnot recording");
         return 0;
     }
-
-    CriticalSectionScoped cs(&_critSect);
 
     if (_fileRecorderPtr->StopRecording() != 0)
     {
@@ -1170,65 +1130,44 @@ bool TransmitMixer::IsRecordingCall()
 
 bool TransmitMixer::IsRecordingMic()
 {
-
+    CriticalSectionScoped cs(&_critSect);
     return _fileRecording;
 }
 
-// TODO(andrew): use RemixAndResample for this.
 // Note that if drift compensation is done here, a buffering stage will be
 // needed and this will need to switch to non-fixed resamples.
-int TransmitMixer::GenerateAudioFrame(const int16_t audio[],
-                                      int samples_per_channel,
-                                      int num_channels,
-                                      int sample_rate_hz) {
-  int destination_rate;
+void TransmitMixer::GenerateAudioFrame(const int16_t* audio,
+                                       int samples_per_channel,
+                                       int num_channels,
+                                       int sample_rate_hz) {
+  int codec_rate;
   int num_codec_channels;
-  GetSendCodecInfo(&destination_rate, &num_codec_channels);
-
-  // Never upsample the capture signal here. This should be done at the
-  // end of the send chain.
-  destination_rate = std::min(destination_rate, sample_rate_hz);
+  GetSendCodecInfo(&codec_rate, &num_codec_channels);
+  // TODO(ajm): This currently restricts the sample rate to 32 kHz.
+  // See: https://code.google.com/p/webrtc/issues/detail?id=3146
+  // When 48 kHz is supported natively by AudioProcessing, this will have
+  // to be changed to handle 44.1 kHz.
+  int max_sample_rate_hz = kAudioProcMaxNativeSampleRateHz;
+  if (audioproc_->echo_control_mobile()->is_enabled()) {
+    // AECM only supports 8 and 16 kHz.
+    max_sample_rate_hz = 16000;
+  }
+  codec_rate = std::min(codec_rate, max_sample_rate_hz);
   stereo_codec_ = num_codec_channels == 2;
 
-  const int16_t* audio_ptr = audio;
-  int16_t mono_audio[kMaxMonoDeviceDataSizeSamples];
-  assert(samples_per_channel <= kMaxMonoDeviceDataSizeSamples);
-  // If no stereo codecs are in use, we downmix a stereo stream from the
-  // device early in the chain, before resampling.
-  if (num_channels == 2 && !stereo_codec_) {
-    AudioFrameOperations::StereoToMono(audio, samples_per_channel,
-                                       mono_audio);
-    audio_ptr = mono_audio;
-    num_channels = 1;
+  if (!mono_buffer_.get()) {
+    // Temporary space for DownConvertToCodecFormat.
+    mono_buffer_.reset(new int16_t[kMaxMonoDataSizeSamples]);
   }
-
-  if (resampler_.InitializeIfNeeded(sample_rate_hz,
-                                    destination_rate,
-                                    num_channels) != 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
-                 "TransmitMixer::GenerateAudioFrame() unable to resample");
-    return -1;
-  }
-
-  int out_length = resampler_.Resample(audio_ptr,
-                                       samples_per_channel * num_channels,
-                                       _audioFrame.data_,
-                                       AudioFrame::kMaxDataSizeSamples);
-  if (out_length == -1) {
-    WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_instanceId, -1),
-                 "TransmitMixer::GenerateAudioFrame() resampling failed");
-    return -1;
-  }
-
-  _audioFrame.samples_per_channel_ = out_length / num_channels;
-  _audioFrame.id_ = _instanceId;
-  _audioFrame.timestamp_ = -1;
-  _audioFrame.sample_rate_hz_ = destination_rate;
-  _audioFrame.speech_type_ = AudioFrame::kNormalSpeech;
-  _audioFrame.vad_activity_ = AudioFrame::kVadUnknown;
-  _audioFrame.num_channels_ = num_channels;
-
-  return 0;
+  DownConvertToCodecFormat(audio,
+                           samples_per_channel,
+                           num_channels,
+                           sample_rate_hz,
+                           num_codec_channels,
+                           codec_rate,
+                           mono_buffer_.get(),
+                           &resampler_,
+                           &_audioFrame);
 }
 
 int32_t TransmitMixer::RecordAudioToFile(
@@ -1257,7 +1196,7 @@ int32_t TransmitMixer::RecordAudioToFile(
 int32_t TransmitMixer::MixOrReplaceAudioWithFile(
     int mixingFrequency)
 {
-    scoped_array<int16_t> fileBuffer(new int16_t[640]);
+    scoped_ptr<int16_t[]> fileBuffer(new int16_t[640]);
 
     int fileSamples(0);
     {
@@ -1288,18 +1227,18 @@ int32_t TransmitMixer::MixOrReplaceAudioWithFile(
     {
         // Currently file stream is always mono.
         // TODO(xians): Change the code when FilePlayer supports real stereo.
-        Utility::MixWithSat(_audioFrame.data_,
-                            _audioFrame.num_channels_,
-                            fileBuffer.get(),
-                            1,
-                            fileSamples);
+        MixWithSat(_audioFrame.data_,
+                   _audioFrame.num_channels_,
+                   fileBuffer.get(),
+                   1,
+                   fileSamples);
     } else
     {
         // Replace ACM audio with file.
         // Currently file stream is always mono.
         // TODO(xians): Change the code when FilePlayer supports real stereo.
         _audioFrame.UpdateFrame(-1,
-                                -1,
+                                0xFFFFFFFF,
                                 fileBuffer.get(),
                                 fileSamples,
                                 mixingFrequency,
@@ -1411,5 +1350,4 @@ bool TransmitMixer::IsStereoChannelSwappingEnabled() {
 }
 
 }  // namespace voe
-
 }  // namespace webrtc

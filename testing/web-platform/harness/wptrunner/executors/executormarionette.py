@@ -30,7 +30,10 @@ required_files = [("testharness_runner.html", "", False),
 
 def do_delayed_imports():
     global marionette
-    import marionette
+    try:
+        import marionette
+    except ImportError:
+        import marionette_driver.marionette as marionette
 
 
 class MarionetteTestExecutor(TestExecutor):
@@ -38,10 +41,11 @@ class MarionetteTestExecutor(TestExecutor):
                  browser,
                  http_server_url,
                  timeout_multiplier=1,
+                 debug_args=None,
                  close_after_done=True):
         do_delayed_imports()
 
-        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier)
+        TestExecutor.__init__(self, browser, http_server_url, timeout_multiplier, debug_args)
         self.marionette_port = browser.marionette_port
         self.marionette = None
 
@@ -57,7 +61,12 @@ class MarionetteTestExecutor(TestExecutor):
         self.marionette = marionette.Marionette(host='localhost', port=self.marionette_port)
         # XXX Move this timeout somewhere
         self.logger.debug("Waiting for Marionette connection")
-        success = self.marionette.wait_for_port(60)
+        while True:
+            success = self.marionette.wait_for_port(60)
+            #When running in a debugger wait indefinitely for firefox to start
+            if success or self.debug_args is None:
+                break
+
         session_started = False
         if success:
             try:
@@ -138,8 +147,9 @@ class MarionetteTestExecutor(TestExecutor):
                     result = (test.result_cls("EXTERNAL-TIMEOUT", None), [])
                     self.runner.send_message("test_ended", test, result)
 
-        self.timer = threading.Timer(timeout + 2 * extra_timeout, timeout_func)
-        self.timer.start()
+        if self.debug_args is None:
+            self.timer = threading.Timer(timeout + 2 * extra_timeout, timeout_func)
+            self.timer.start()
 
         try:
             self.marionette.set_script_timeout((timeout + extra_timeout) * 1000)
@@ -178,7 +188,8 @@ class MarionetteTestExecutor(TestExecutor):
                     result_flag.set()
                     result = (test.result_cls("CRASH", None), [])
         finally:
-            self.timer.cancel()
+            if self.timer is not None:
+                self.timer.cancel()
 
         with result_lock:
             if result:
@@ -209,7 +220,8 @@ class MarionetteTestharnessExecutor(MarionetteTestExecutor):
                            "url": test.url,
                            "window_id": self.window_id,
                            "timeout_multiplier": self.timeout_multiplier,
-                           "timeout": timeout * 1000}, new_sandbox=False)
+                           "timeout": timeout * 1000,
+                           "explicit_timeout": self.debug_args is not None}, new_sandbox=False)
 
 
 class MarionetteReftestExecutor(MarionetteTestExecutor):

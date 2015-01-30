@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/video_render/android/video_render_android_impl.h"
 
+#include "webrtc/modules/video_render/video_render_internal.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
@@ -29,13 +30,11 @@ namespace webrtc {
 
 JavaVM* VideoRenderAndroid::g_jvm = NULL;
 
-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
-int32_t SetRenderAndroidVM(void* javaVM) {
+int32_t SetRenderAndroidVM(JavaVM* javaVM) {
   WEBRTC_TRACE(kTraceDebug, kTraceVideoRenderer, -1, "%s", __FUNCTION__);
-  VideoRenderAndroid::g_jvm = (JavaVM*)javaVM;
+  VideoRenderAndroid::g_jvm = javaVM;
   return 0;
 }
-#endif
 
 VideoRenderAndroid::VideoRenderAndroid(
     const int32_t id,

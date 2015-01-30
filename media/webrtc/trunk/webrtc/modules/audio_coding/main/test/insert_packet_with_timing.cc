@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #include "gflags/gflags.h"
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"

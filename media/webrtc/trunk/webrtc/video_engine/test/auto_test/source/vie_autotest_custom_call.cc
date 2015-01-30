@@ -1651,7 +1651,7 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
 void PrintGetDiscardedPackets(webrtc::ViECodec* vie_codec, int video_channel) {
   std::cout << "Discarded Packets" << std::endl;
   int discarded_packets = 0;
-  discarded_packets = vie_codec->GetDiscardedPackets(video_channel);
+  discarded_packets = vie_codec->GetNumDiscardedPackets(video_channel);
   std::cout << "\tNumber of discarded packets: "
             << discarded_packets << std::endl;
 }

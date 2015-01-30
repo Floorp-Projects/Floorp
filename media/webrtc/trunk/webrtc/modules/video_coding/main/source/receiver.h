@@ -25,7 +25,6 @@ class VCMEncodedFrame;
 
 enum VCMNackStatus {
   kNackOk,
-  kNackNeedMoreMemory,
   kNackKeyFrameRequest
 };
 
@@ -40,8 +39,6 @@ class VCMReceiver {
   VCMReceiver(VCMTiming* timing,
               Clock* clock,
               EventFactory* event_factory,
-              int32_t vcm_id,
-              int32_t receiver_id,
               bool master);
   ~VCMReceiver();
 
@@ -97,9 +94,7 @@ class VCMReceiver {
   static int32_t GenerateReceiverId();
 
   CriticalSectionWrapper* crit_sect_;
-  int32_t vcm_id_;
   Clock* clock_;
-  int32_t receiver_id_;
   bool master_;
   VCMJitterBuffer jitter_buffer_;
   VCMTiming* timing_;

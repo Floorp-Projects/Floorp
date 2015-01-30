@@ -86,9 +86,9 @@ void FrameGenerator::BuildRtpHeader(uint8_t* data, const RTPHeader* header) {
   data[0] = 0x80;  // Version 2.
   data[1] = header->payloadType;
   data[1] |= (header->markerBit ? kRtpMarkerBitMask : 0);
-  ModuleRTPUtility::AssignUWord16ToBuffer(data + 2, header->sequenceNumber);
-  ModuleRTPUtility::AssignUWord32ToBuffer(data + 4, header->timestamp);
-  ModuleRTPUtility::AssignUWord32ToBuffer(data + 8, header->ssrc);
+  RtpUtility::AssignUWord16ToBuffer(data + 2, header->sequenceNumber);
+  RtpUtility::AssignUWord32ToBuffer(data + 4, header->timestamp);
+  RtpUtility::AssignUWord32ToBuffer(data + 8, header->ssrc);
 }
 
 }  // namespace webrtc
