@@ -37,6 +37,11 @@ namespace detail {
 nsresult DispatchMediaPromiseRunnable(MediaTaskQueue* aQueue, nsIRunnable* aRunnable);
 nsresult DispatchMediaPromiseRunnable(nsIEventTarget* aTarget, nsIRunnable* aRunnable);
 
+#ifdef DEBUG
+void AssertOnThread(MediaTaskQueue* aQueue);
+void AssertOnThread(nsIEventTarget* aTarget);
+#endif
+
 } // namespace detail
 
 /*
@@ -85,9 +90,26 @@ public:
   {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Consumer)
+
+    void Disconnect()
+    {
+      AssertOnDispatchThread();
+      MOZ_RELEASE_ASSERT(!mComplete);
+      mDisconnected = true;
+    }
+
+#ifdef DEBUG
+    virtual void AssertOnDispatchThread() = 0;
+#else
+    void AssertOnDispatchThread() {}
+#endif
+
   protected:
-    Consumer() {}
+    Consumer() : mComplete(false), mDisconnected(false) {}
     virtual ~Consumer() {}
+
+    bool mComplete;
+    bool mDisconnected;
   };
 
 protected:
@@ -217,9 +239,22 @@ protected:
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
+#ifdef DEBUG
+  // Can't mark MOZ_OVERRIDE due to bug in clang builders we use for osx b2g desktop. :-(
+  virtual void AssertOnDispatchThread()
+  {
+    detail::AssertOnThread(mResponseTarget);
+  }
+#endif
+
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue) MOZ_OVERRIDE
     {
+      Consumer::mComplete = true;
+      if (Consumer::mDisconnected) {
+        PROMISE_LOG("ThenValue::DoResolve disconnected - bailing out [this=%p]", this);
+        return;
+      }
       InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aResolveValue);
 
       // Null these out after invoking the callback so that any references are
@@ -232,6 +267,11 @@ protected:
 
     virtual void DoReject(RejectValueType aRejectValue) MOZ_OVERRIDE
     {
+      Consumer::mComplete = true;
+      if (Consumer::mDisconnected) {
+        PROMISE_LOG("ThenValue::DoReject disconnected - bailing out [this=%p]", this);
+        return;
+      }
       InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aRejectValue);
 
       // Null these out after invoking the callback so that any references are
@@ -469,6 +509,20 @@ public:
   {
     MOZ_RELEASE_ASSERT(Exists());
     mConsumer = nullptr;
+  }
+
+  // Disconnects and forgets an outstanding promise. The resolve/reject methods
+  // will never be called.
+  void Disconnect() {
+    MOZ_ASSERT(Exists());
+    mConsumer->Disconnect();
+    mConsumer = nullptr;
+  }
+
+  void DisconnectIfExists() {
+    if (Exists()) {
+      Disconnect();
+    }
   }
 
   bool Exists() { return !!mConsumer; }
