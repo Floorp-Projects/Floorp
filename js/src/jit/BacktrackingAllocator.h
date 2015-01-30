@@ -241,6 +241,7 @@ class BacktrackingAllocator
     bool resolveControlFlow();
     bool reifyAllocations();
     bool populateSafepoints();
+    bool annotateMoveGroups();
 
     void dumpRegisterGroups();
     void dumpFixedRanges();

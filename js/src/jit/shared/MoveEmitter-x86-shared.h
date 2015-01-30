@@ -33,6 +33,11 @@ class MoveEmitterX86
     // codegen->framePushed_ at the time it is allocated. -1 if not allocated.
     int32_t pushedAtCycle_;
 
+#ifdef JS_CODEGEN_X86
+    // Optional scratch register for performing moves.
+    mozilla::Maybe<Register> scratchRegister_;
+#endif
+
     void assertDone();
     Address cycleSlot();
     Address toAddress(const MoveOperand &operand) const;
@@ -57,6 +62,29 @@ class MoveEmitterX86
     ~MoveEmitterX86();
     void emit(const MoveResolver &moves);
     void finish();
+
+    void setScratchRegister(Register reg) {
+#ifdef JS_CODEGEN_X86
+        scratchRegister_.emplace(reg);
+#endif
+    }
+
+    bool hasScratchRegister() {
+#ifdef JS_CODEGEN_X86
+        return scratchRegister_.isSome();
+#else
+        return true;
+#endif
+    }
+
+    Register scratchRegister() {
+        MOZ_ASSERT(hasScratchRegister());
+#ifdef JS_CODEGEN_X86
+        return scratchRegister_.value();
+#else
+        return ScratchReg;
+#endif
+    }
 };
 
 typedef MoveEmitterX86 MoveEmitter;
