@@ -510,7 +510,7 @@
  */
 .local-stream.local-stream-audio,
 .standalone .OT_subscriber .OT_video-poster,
-.fx-embedded .OT_video-container .OT_video-poster,
+.fx-embedded .OT_subscriber .OT_video-poster,
 .local-stream-audio .OT_publisher .OT_video-poster {
   background-image: url("../img/audio-call-avatar.svg");
   background-repeat: no-repeat;
@@ -537,7 +537,7 @@
  * Another less ugly possibility would be to work with Ted Mielczarek to use
  * the fake camera drivers he has for Linux.
  */
-.room-conversation .OT_publisher .OT_video-container {
+.room-conversation .OT_publisher .OT_widget-container {
   height: 100% !important;
   width: 100% !important;
   top: 0 !important;
@@ -545,12 +545,12 @@
   background-color: transparent; /* avoid visually obvious letterboxing */
 }
 
-.room-conversation .OT_publisher .OT_video-container video {
+.room-conversation .OT_publisher .OT_widget-container video {
   background-color: transparent; /* avoid visually obvious letterboxing */
 }
 
-.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container,
-.fx-embedded .room-conversation .room-preview .OT_publisher .OT_video-container video {
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_widget-container,
+.fx-embedded .room-conversation .room-preview .OT_publisher .OT_widget-container video {
   /* Desktop conversation window room preview local stream actually wants
      a black background */
   background-color: #000;
