@@ -145,6 +145,13 @@ nsLineBreaker::FlushCurrentWord()
   return NS_OK;
 }
 
+// If the aFlags parameter to AppendText has all these bits set,
+// then we don't need to worry about finding break opportunities
+// in the appended text.
+#define NO_BREAKS_NEEDED_FLAGS (BREAK_SUPPRESS_INITIAL | \
+                                BREAK_SUPPRESS_INSIDE | \
+                                BREAK_SKIP_SETTING_NO_BREAKS)
+
 nsresult
 nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
                           uint32_t aFlags, nsILineBreakSink* aSink)
@@ -184,23 +191,25 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
+  bool noCapitalizationNeeded = true;
   nsTArray<bool> capitalizationState;
   if (aSink && (aFlags & BREAK_NEED_CAPITALIZATION)) {
     if (!capitalizationState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
     memset(capitalizationState.Elements(), false, aLength*sizeof(bool));
+    noCapitalizationNeeded = false;
   }
 
   uint32_t start = offset;
   bool noBreaksNeeded = !aSink ||
-    (aFlags == (BREAK_SUPPRESS_INITIAL | BREAK_SUPPRESS_INSIDE | BREAK_SKIP_SETTING_NO_BREAKS) &&
+    ((aFlags & NO_BREAKS_NEEDED_FLAGS) == NO_BREAKS_NEEDED_FLAGS &&
      !mBreakHere && !mAfterBreakableSpace);
-  if (noBreaksNeeded) {
+  if (noBreaksNeeded && noCapitalizationNeeded) {
     // Skip to the space before the last word, since either the break data
     // here is not needed, or no breaks are set in the sink and there cannot
-    // be any breaks in this chunk; all we need is the context for the next
-    // chunk (if any)
+    // be any breaks in this chunk; and we don't need to do word-initial
+    // capitalization. All we need is the context for the next chunk (if any).
     offset = aLength;
     while (offset > start) {
       --offset;
@@ -223,7 +232,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
     bool isSpace = IsSpace(ch);
     bool isBreakableSpace = isSpace && !(aFlags & BREAK_SUPPRESS_INSIDE);
 
-    if (aSink) {
+    if (aSink && !noBreaksNeeded) {
       breakState[offset] =
         mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
         (mWordBreak == nsILineBreaker::kWordBreak_BreakAll)  ?
@@ -252,7 +261,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
                                   breakState.Elements() + wordStart);
           }
         }
-        if (aFlags & BREAK_NEED_CAPITALIZATION) {
+        if (!noCapitalizationNeeded) {
           SetupCapitalization(aText + wordStart, offset - wordStart,
                               capitalizationState.Elements() + wordStart);
         }
@@ -284,10 +293,11 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
     }
   }
 
-  if (!noBreaksNeeded) {
-    // aSink must not be null
-    aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
-    if (aFlags & BREAK_NEED_CAPITALIZATION) {
+  if (aSink) {
+    if (!noBreaksNeeded) {
+      aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+    }
+    if (!noCapitalizationNeeded) {
       aSink->SetCapitalization(start, offset - start,
                                capitalizationState.Elements() + start);
     }
@@ -365,7 +375,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const uint8_t* aText, u
 
   uint32_t start = offset;
   bool noBreaksNeeded = !aSink ||
-    (aFlags == (BREAK_SUPPRESS_INITIAL | BREAK_SUPPRESS_INSIDE | BREAK_SKIP_SETTING_NO_BREAKS) &&
+    ((aFlags & NO_BREAKS_NEEDED_FLAGS) == NO_BREAKS_NEEDED_FLAGS &&
      !mBreakHere && !mAfterBreakableSpace);
   if (noBreaksNeeded) {
     // Skip to the space before the last word, since either the break data
