@@ -140,7 +140,7 @@ MediaSourceReader::RequestAudioData()
       }
       // Fallback to using current reader
     default:
-      RequestAudioDataComplete(0);
+      DoAudioRequest();
       break;
   }
   return p;
@@ -154,7 +154,11 @@ MediaSourceReader::RequestAudioDataComplete(int64_t aTime)
     MOZ_RELEASE_ASSERT(mAudioPromise.IsEmpty()); // Already rejected in ::Seek().
     return;
   }
+  DoAudioRequest();
+}
 
+void MediaSourceReader::DoAudioRequest()
+{
   mAudioRequest.Begin(mAudioReader->RequestAudioData()
                       ->RefableThen(GetTaskQueue(), __func__, this,
                                     &MediaSourceReader::OnAudioDecoded,
@@ -289,10 +293,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
       }
       // Fallback to using current reader.
     default:
-      mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
-                          ->RefableThen(GetTaskQueue(), __func__, this,
-                                        &MediaSourceReader::OnVideoDecoded,
-                                        &MediaSourceReader::OnVideoNotDecoded));
+      DoVideoRequest();
       break;
   }
 
@@ -307,6 +308,12 @@ MediaSourceReader::RequestVideoDataComplete(int64_t aTime)
     MOZ_ASSERT(mVideoPromise.IsEmpty()); // Already rejected in ::Seek().
     return;
   }
+  DoVideoRequest();
+}
+
+void
+MediaSourceReader::DoVideoRequest()
+{
   mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
                       ->RefableThen(GetTaskQueue(), __func__, this,
                                     &MediaSourceReader::OnVideoDecoded,
@@ -331,10 +338,7 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      mVideoRequest.Begin(mVideoReader->RequestVideoData(mDropVideoBeforeThreshold, mTimeThreshold)
-                          ->RefableThen(GetTaskQueue(), __func__, this,
-                                        &MediaSourceReader::OnVideoDecoded,
-                                        &MediaSourceReader::OnVideoNotDecoded));
+      DoVideoRequest();
       return;
     }
     mDropVideoBeforeThreshold = false;
