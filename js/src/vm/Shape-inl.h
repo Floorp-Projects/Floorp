@@ -59,7 +59,7 @@ Shape::set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, bool st
         return true;
 
     RootedId id(cx, propid());
-    return CallJSPropertyOpSetter(cx, setterOp(), obj, id, strict, vp);
+    return CallJSSetterOp(cx, setterOp(), obj, id, strict, vp);
 }
 
 /* static */ inline Shape *
@@ -158,7 +158,7 @@ EmptyShape::ensureInitialCustomShape(ExclusiveContext *cx, Handle<ObjectSubclass
 
 inline
 AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
-                                     PropertyOp *pgetter_, StrictPropertyOp *psetter_)
+                                     GetterOp *pgetter_, SetterOp *psetter_)
   : CustomAutoRooter(cx), attrs(attrs),
     pgetter(pgetter_), psetter(psetter_)
 {
@@ -168,7 +168,7 @@ AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
 
 inline
 AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
-                                               PropertyOp *pgetter, StrictPropertyOp *psetter
+                                               GetterOp *pgetter, SetterOp *psetter
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
@@ -182,8 +182,8 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t att
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        inner.emplace(cx, attrs, reinterpret_cast<PropertyOp *>(pgetter),
-                      reinterpret_cast<StrictPropertyOp *>(psetter));
+        inner.emplace(cx, attrs, reinterpret_cast<GetterOp *>(pgetter),
+                      reinterpret_cast<SetterOp *>(psetter));
     }
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }

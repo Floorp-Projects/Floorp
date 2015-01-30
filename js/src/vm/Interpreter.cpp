@@ -4033,20 +4033,20 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
                               HandleObject val)
 {
     MOZ_ASSERT(val->isCallable());
-    PropertyOp getter;
-    StrictPropertyOp setter;
+    GetterOp getter;
+    SetterOp setter;
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
 
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER) {
-        getter = CastAsPropertyOp(val);
+        getter = CastAsGetterOp(val);
         setter = nullptr;
         attrs |= JSPROP_GETTER;
     } else {
         MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER);
         getter = nullptr;
-        setter = CastAsStrictPropertyOp(val);
+        setter = CastAsSetterOp(val);
         attrs |= JSPROP_SETTER;
     }
 

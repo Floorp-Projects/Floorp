@@ -2188,8 +2188,8 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
                    unsigned nargs, unsigned flags, AllocKind allocKind /* = FinalizeKind */,
                    NewObjectKind newKind /* = GenericObject */)
 {
-    PropertyOp gop;
-    StrictPropertyOp sop;
+    GetterOp gop;
+    SetterOp sop;
     if (flags & JSFUN_STUB_GSOPS) {
         /*
          * JSFUN_STUB_GSOPS is a request flag only, not stored in fun->flags or

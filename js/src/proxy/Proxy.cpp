@@ -551,7 +551,7 @@ js::proxy_LookupProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 bool
 js::proxy_DefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                         GetterOp getter, SetterOp setter, unsigned attrs)
 {
     Rooted<PropertyDescriptor> desc(cx);
     desc.object().set(obj);

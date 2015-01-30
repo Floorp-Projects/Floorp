@@ -710,7 +710,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
         return nullptr;
     if (!DefineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
                         nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
@@ -1203,7 +1203,7 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet, &getter))
         return nullptr;
     if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
                         nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
@@ -1662,7 +1662,7 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet, &getter))
         return nullptr;
     if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
+                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
                         nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
