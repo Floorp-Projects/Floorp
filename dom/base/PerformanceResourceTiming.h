@@ -28,8 +28,7 @@ public:
       PerformanceEntry)
 
   PerformanceResourceTiming(nsPerformanceTiming* aPerformanceTiming,
-                            nsPerformance* aPerformance,
-                            const nsAString& aName);
+                            nsPerformance* aPerformance);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 

@@ -320,8 +320,6 @@ WEBIDL_FILES = [
     'ParentNode.webidl',
     'Performance.webidl',
     'PerformanceEntry.webidl',
-    'PerformanceMark.webidl',
-    'PerformanceMeasure.webidl',
     'PerformanceNavigation.webidl',
     'PerformanceResourceTiming.webidl',
     'PerformanceTiming.webidl',
