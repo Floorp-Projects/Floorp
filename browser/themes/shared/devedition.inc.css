@@ -182,6 +182,10 @@
   color: var(--chrome-color);
 }
 
+.browserContainer > findbar {
+  background-image: none;
+}
+
 #navigator-toolbox .toolbarbutton-1,
 .browserContainer > findbar .findbar-button,
 #PlacesToolbar toolbarbutton.bookmark-item {
