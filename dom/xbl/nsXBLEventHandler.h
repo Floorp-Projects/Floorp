@@ -113,10 +113,9 @@ private:
   bool mUsingContentXBLScope;
 };
 
-nsresult
+already_AddRefed<nsXBLEventHandler>
 NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
-                      nsIAtom* aEventType,
-                      nsXBLEventHandler** aResult);
+                      nsIAtom* aEventType);
 
 nsresult
 NS_NewXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase,
