@@ -503,15 +503,32 @@
  * XXX this approach is fragile because it makes assumptions
  * about the generated OT markup, any change will break it
  */
-.local-stream.local-stream-audio,
-.standalone .OT_subscriber .OT_video-poster,
-.fx-embedded .OT_subscriber .OT_video-poster,
-.local-stream-audio .OT_publisher .OT_video-poster {
+
+/*
+ * For any audio-only streams, we want to display our own background
+ */
+.OT_audio-only .OT_widget-container .OT_video-poster {
   background-image: url("../img/audio-call-avatar.svg");
   background-repeat: no-repeat;
   background-color: #4BA6E7;
   background-size: contain;
   background-position: center;
+}
+
+/*
+ * Audio-only. For local streams, cancel out the SDK's opacity of 0.25.
+ * For remote streams we leave them shaded, as otherwise its too bright.
+ */
+.local-stream-audio .OT_publisher .OT_video-poster {
+  opacity: 1
+}
+
+/*
+ * In audio-only mode, don't display the video element, doing so interferes
+ * with the background opacity of the video-poster element.
+ */
+.OT_audio-only .OT_widget-container .OT_video-element {
+  display: none;
 }
 
 /*
