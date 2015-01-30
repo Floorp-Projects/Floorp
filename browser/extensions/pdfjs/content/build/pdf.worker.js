@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.1040';
-PDFJS.build = '997096f';
+PDFJS.version = '1.0.1130';
+PDFJS.build = 'e4f0ae2';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -341,6 +341,7 @@ function isValidUrl(url, allowRelative) {
     case 'https':
     case 'ftp':
     case 'mailto':
+    case 'tel':
       return true;
     default:
       return false;
@@ -470,6 +471,8 @@ var XRefParseException = (function XRefParseExceptionClosure() {
 
 
 function bytesToString(bytes) {
+  assert(bytes !== null && typeof bytes === 'object' &&
+         bytes.length !== undefined, 'Invalid argument for bytesToString');
   var length = bytes.length;
   var MAX_ARGUMENT_COUNT = 8192;
   if (length < MAX_ARGUMENT_COUNT) {
@@ -485,6 +488,7 @@ function bytesToString(bytes) {
 }
 
 function stringToBytes(str) {
+  assert(typeof str === 'string', 'Invalid argument for stringToBytes');
   var length = str.length;
   var bytes = new Uint8Array(length);
   for (var i = 0; i < length; ++i) {
@@ -1449,6 +1453,9 @@ var ChunkedStream = (function ChunkedStreamClosure() {
     getUint16: function ChunkedStream_getUint16() {
       var b0 = this.getByte();
       var b1 = this.getByte();
+      if (b0 === -1 || b1 === -1) {
+        return -1;
+      }
       return (b0 << 8) + b1;
     },
 
@@ -14056,7 +14063,7 @@ var SpecialPUASymbols = {
   '63731': 0x23A9, // braceleftbt (0xF8F3)
   '63740': 0x23AB, // bracerighttp (0xF8FC)
   '63741': 0x23AC, // bracerightmid (0xF8FD)
-  '63742': 0x23AD, // bracerightmid (0xF8FE)
+  '63742': 0x23AD, // bracerightbt (0xF8FE)
   '63726': 0x23A1, // bracketlefttp (0xF8EE)
   '63727': 0x23A2, // bracketleftex (0xF8EF)
   '63728': 0x23A3, // bracketleftbt (0xF8F0)
@@ -15996,7 +16003,7 @@ var Font = (function FontClosure() {
       // to be used with the canvas.font.
       var fontName = name.replace(/[,_]/g, '-');
       var isStandardFont = !!stdFontMap[fontName] ||
-        (nonStdFontMap[fontName] && !!stdFontMap[nonStdFontMap[fontName]]);
+        !!(nonStdFontMap[fontName] && stdFontMap[nonStdFontMap[fontName]]);
       fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
       this.bold = (fontName.search(/bold/gi) !== -1);
@@ -29596,6 +29603,102 @@ var Parser = (function ParserClosure() {
       return ((stream.pos - 4) - startPos);
     },
     /**
+     * Find the EOI (end-of-image) marker 0xFFD9 of the stream.
+     * @returns {number} The inline stream length.
+     */
+    findDCTDecodeInlineStreamEnd:
+        function Parser_findDCTDecodeInlineStreamEnd(stream) {
+      var startPos = stream.pos, foundEOI = false, b, markerLength, length;
+      while ((b = stream.getByte()) !== -1) {
+        if (b !== 0xFF) { // Not a valid marker.
+          continue;
+        }
+        switch (stream.getByte()) {
+          case 0x00: // Byte stuffing.
+            // 0xFF00 appears to be a very common byte sequence in JPEG images.
+            break;
+
+          case 0xFF: // Fill byte.
+            // Avoid skipping a valid marker, resetting the stream position.
+            stream.skip(-1);
+            break;
+
+          case 0xD9: // EOI
+            foundEOI = true;
+            break;
+
+          case 0xC0: // SOF0
+          case 0xC1: // SOF1
+          case 0xC2: // SOF2
+          case 0xC3: // SOF3
+
+          case 0xC5: // SOF5
+          case 0xC6: // SOF6
+          case 0xC7: // SOF7
+
+          case 0xC9: // SOF9
+          case 0xCA: // SOF10
+          case 0xCB: // SOF11
+
+          case 0xCD: // SOF13
+          case 0xCE: // SOF14
+          case 0xCF: // SOF15
+
+          case 0xC4: // DHT
+          case 0xCC: // DAC
+
+          case 0xDA: // SOS
+          case 0xDB: // DQT
+          case 0xDC: // DNL
+          case 0xDD: // DRI
+          case 0xDE: // DHP
+          case 0xDF: // EXP
+
+          case 0xE0: // APP0
+          case 0xE1: // APP1
+          case 0xE2: // APP2
+          case 0xE3: // APP3
+          case 0xE4: // APP4
+          case 0xE5: // APP5
+          case 0xE6: // APP6
+          case 0xE7: // APP7
+          case 0xE8: // APP8
+          case 0xE9: // APP9
+          case 0xEA: // APP10
+          case 0xEB: // APP11
+          case 0xEC: // APP12
+          case 0xED: // APP13
+          case 0xEE: // APP14
+          case 0xEF: // APP15
+
+          case 0xFE: // COM
+            // The marker should be followed by the length of the segment.
+            markerLength = stream.getUint16();
+            if (markerLength > 2) {
+              // |markerLength| contains the byte length of the marker segment,
+              // including its own length (2 bytes) and excluding the marker.
+              stream.skip(markerLength - 2); // Jump to the next marker.
+            } else {
+              // The marker length is invalid, resetting the stream position.
+              stream.skip(-2);
+            }
+            break;
+        }
+        if (foundEOI) {
+          break;
+        }
+      }
+      length = stream.pos - startPos;
+      if (b === -1) {
+        warn('Inline DCTDecode image stream: ' +
+             'EOI marker not found, searching for /EI/ instead.');
+        stream.skip(-length); // Reset the stream position.
+        return this.findDefaultInlineStreamEnd(stream);
+      }
+      this.inlineStreamSkipEI(stream);
+      return length;
+    },
+    /**
      * Find the EOD (end-of-data) marker '~>' (i.e. TILDE + GT) of the stream.
      * @returns {number} The inline stream length.
      */
@@ -29686,7 +29789,9 @@ var Parser = (function ParserClosure() {
 
       // Parse image stream.
       var startPos = stream.pos, length, i, ii;
-      if (filterName === 'ASCII85Decide' || filterName === 'A85') {
+      if (filterName === 'DCTDecode' || filterName === 'DCT') {
+        length = this.findDCTDecodeInlineStreamEnd(stream);
+      } else if (filterName === 'ASCII85Decide' || filterName === 'A85') {
         length = this.findASCII85DecodeInlineStreamEnd(stream);
       } else if (filterName === 'ASCIIHexDecode' || filterName === 'AHx') {
         length = this.findASCIIHexDecodeInlineStreamEnd(stream);
@@ -30613,6 +30718,9 @@ var Stream = (function StreamClosure() {
     getUint16: function Stream_getUint16() {
       var b0 = this.getByte();
       var b1 = this.getByte();
+      if (b0 === -1 || b1 === -1) {
+        return -1;
+      }
       return (b0 << 8) + b1;
     },
     getInt32: function Stream_getInt32() {
@@ -30740,6 +30848,9 @@ var DecodeStream = (function DecodeStreamClosure() {
     getUint16: function DecodeStream_getUint16() {
       var b0 = this.getByte();
       var b1 = this.getByte();
+      if (b0 === -1 || b1 === -1) {
+        return -1;
+      }
       return (b0 << 8) + b1;
     },
     getInt32: function DecodeStream_getInt32() {
@@ -34839,11 +34950,6 @@ var JpxImage = (function JpxImageClosure() {
               context.QCC = [];
               context.COC = [];
               break;
-            case 0xFF55: // Tile-part lengths, main header (TLM)
-              var Ltlm = readUint16(data, position); // Marker segment length
-              // Skip tile length markers
-              position += Ltlm;
-              break;
             case 0xFF5C: // Quantization default (QCD)
               length = readUint16(data, position);
               var qcd = {};
@@ -35033,6 +35139,9 @@ var JpxImage = (function JpxImageClosure() {
               length = tile.dataEnd - position;
               parseTilePackets(context, data, position, length);
               break;
+            case 0xFF55: // Tile-part lengths, main header (TLM)
+            case 0xFF57: // Packet length, main header (PLM)
+            case 0xFF58: // Packet length, tile-part header (PLT)
             case 0xFF64: // Comment (COM)
               length = readUint16(data, position);
               // skipping content
@@ -35373,7 +35482,7 @@ var JpxImage = (function JpxImageClosure() {
     r = 0;
     c = 0;
     p = 0;
-    
+
     this.nextPacket = function JpxImage_nextPacket() {
       // Section B.12.1.3 Resolution-position-component-layer
       for (; r <= maxDecompositionLevelsCount; r++) {
@@ -35457,7 +35566,7 @@ var JpxImage = (function JpxImageClosure() {
     var componentsCount = siz.Csiz;
     var precinctsSizes = getPrecinctSizesInImageScale(tile);
     var l = 0, r = 0, c = 0, px = 0, py = 0;
-    
+
     this.nextPacket = function JpxImage_nextPacket() {
       // Section B.12.1.5 Component-position-resolution-layer
       for (; c < componentsCount; ++c) {
@@ -37030,10 +37139,9 @@ var Jbig2Image = (function Jbig2ImageClosure() {
 
         // At each pixel: Clear contextLabel pixels that are shifted
         // out of the context, then add new ones.
-        // If j + n is out of range at the right image border, then
-        // the undefined value of bitmap[i - 2][j + n] is shifted to 0
         contextLabel = ((contextLabel & OLD_PIXEL_MASK) << 1) |
-                       (row2[j + 3] << 11) | (row1[j + 4] << 4) | pixel;
+                       (j + 3 < width ? row2[j + 3] << 11 : 0) |
+                       (j + 4 < width ? row1[j + 4] << 4 : 0) | pixel;
       }
     }
 
