@@ -455,7 +455,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def setupTestDir(self):
         print 'pushing %s' % self.xpcDir
         try:
-            self.device.pushDir(self.xpcDir, self.remoteScriptsDir, retryLimit=10)
+            # The tests directory can be quite large: 5000 files and growing!
+            # Sometimes - like on a low-end aws instance running an emulator - the push
+            # may exceed the default 5 minute timeout, so we increase it here to 10 minutes.
+            self.device.pushDir(self.xpcDir, self.remoteScriptsDir, timeout=600, retryLimit=10)
         except TypeError:
             # Foopies have an older mozdevice ver without retryLimit
             self.device.pushDir(self.xpcDir, self.remoteScriptsDir)
