@@ -1,6 +1,11 @@
 Version history
 ===============
 
+### 3.1.1 (2015-01-29) ###
+
+* Bugfix release.
+* Fixes an issue sending a push promise that is large enough to fill the frame (#93).
+
 ### 3.1.0 (2014-12-11) ###
 
 * Upgrade to the latest draft: [draft-ietf-httpbis-http2-16]
