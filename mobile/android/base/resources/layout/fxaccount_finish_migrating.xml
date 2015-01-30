@@ -22,16 +22,15 @@
 
         <include layout="@layout/fxaccount_custom_server_view" />
 
+        <TextView
+            android:id="@+id/remote_error"
+            style="@style/FxAccountErrorItem" />
+
         <include layout="@layout/fxaccount_email_password_view" />
 
         <TextView
             style="@style/FxAccountTextItem"
-            android:layout_marginTop="10dp"
             android:text="@string/fxaccount_finish_migrating_description" />
-
-        <TextView
-            android:id="@+id/remote_error"
-            style="@style/FxAccountErrorItem" />
 
         <RelativeLayout style="@style/FxAccountButtonLayout" >
 
@@ -41,14 +40,13 @@
 
             <Button
                 android:id="@+id/button"
-                style="@style/FxAccountButton"
+                style="@style/FxAccountProgressButton"
                 android:text="@string/fxaccount_finish_migrating_button_label" />
         </RelativeLayout>
 
         <TextView
             android:id="@+id/forgot_password_link"
             style="@style/FxAccountLinkifiedItem"
-            android:layout_marginTop="10dp"
             android:text="@string/fxaccount_sign_in_forgot_password" />
 
         <LinearLayout style="@style/FxAccountSpacer" />

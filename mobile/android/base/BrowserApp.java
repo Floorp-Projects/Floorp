@@ -27,7 +27,6 @@ import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.Favicons;
@@ -50,13 +49,13 @@ import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
-import org.mozilla.gecko.home.TopSitesPanel;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.firstrun.FirstrunPane;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
@@ -67,7 +66,6 @@ import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
-import org.mozilla.gecko.tiles.TilesRecorder;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -90,7 +88,6 @@ import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -113,10 +110,8 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -163,15 +158,12 @@ public class BrowserApp extends GeckoApp
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
 
     private static final String BROWSER_SEARCH_TAG = "browser_search";
-    private static final String ONBOARD_STARTPANE_TAG = "startpane_dialog";
 
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
-
-    public static final String PREF_STARTPANE_ENABLED = "startpane_enabled";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -181,6 +173,7 @@ public class BrowserApp extends GeckoApp
     public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
     private ToolbarProgressView mProgressView;
+    private FirstrunPane mFirstrunPane;
     private HomePager mHomePager;
     private TabsPanel mTabsPanel;
     private ViewGroup mHomePagerContainer;
@@ -237,8 +230,6 @@ public class BrowserApp extends GeckoApp
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
     private OrderedBroadcastHelper mOrderedBroadcastHelper;
-
-    private BroadcastReceiver mOnboardingReceiver;
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
@@ -860,31 +851,29 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Check and show onboarding start pane if the browser has never been launched and
+     * Check and show the firstrun pane if the browser has never been launched and
      * is not opening an external link from another application.
      *
-     * @param context Context of application; used to show Start Pane if appropriate
+     * @param context Context of application; used to show firstrun pane if appropriate
      * @param intent Intent that launched this activity
      */
-    private void checkStartPane(Context context, SafeIntent intent) {
+    private void checkFirstrun(Context context, SafeIntent intent) {
         if (intent.getBooleanExtra(EXTRA_SKIP_STARTPANE, false)) {
             // Note that we don't set the pref, so subsequent launches can result
-            // in the start pane being shown.
+            // in the firstrun pane being shown.
             return;
         }
-
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
 
-            if (prefs.getBoolean(PREF_STARTPANE_ENABLED, false)) {
+            if (prefs.getBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, false)) {
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
-                    final DialogFragment dialog = new StartPane();
-                    dialog.show(getSupportFragmentManager(), ONBOARD_STARTPANE_TAG);
+                    showFirstrunPager();
                 }
                 // Don't bother trying again to show the v1 minimal first run.
-                prefs.edit().putBoolean(PREF_STARTPANE_ENABLED, false).apply();
+                prefs.edit().putBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, false).apply();
             }
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
@@ -920,13 +909,18 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
+        if (hideFirstrunPager()) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BACK, "firstrun-pane");
+            return;
+        }
+
         super.onBackPressed();
     }
 
     @Override
     public void onAttachedToWindow() {
         // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
-        checkStartPane(this, new SafeIntent(getIntent()));
+        checkFirstrun(this, new SafeIntent(getIntent()));
     }
 
     @Override
@@ -955,9 +949,6 @@ public class BrowserApp extends GeckoApp
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Prompt:ShowTop");
-
-        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
-        lbm.unregisterReceiver(mOnboardingReceiver);
     }
 
     @Override
@@ -2115,12 +2106,21 @@ public class BrowserApp extends GeckoApp
             && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
     }
 
+    private boolean isFirstrunVisible() {
+        return (mFirstrunPane != null && mFirstrunPane.isVisible()
+            && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
+    }
+
     /**
      * Enters editing mode with the current tab's URL. There might be no
      * tabs loaded by the time the user enters editing mode e.g. just after
      * the app starts. In this case, we simply fallback to an empty URL.
      */
     private void enterEditingMode() {
+        if (hideFirstrunPager()) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.ACTIONBAR, "firstrun-pane");
+        }
+
         String url = "";
 
         final Tab tab = Tabs.getInstance().getSelectedTab();
@@ -2393,6 +2393,22 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    private void showFirstrunPager() {
+        if (mFirstrunPane == null) {
+            final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
+            mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
+            mFirstrunPane.load(getSupportFragmentManager());
+            mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
+                @Override
+                public void onFinish() {
+                    BrowserApp.this.mFirstrunPane = null;
+                }
+            });
+        }
+
+        mHomePagerContainer.setVisibility(View.VISIBLE);
+    }
+
     private void showHomePager(String panelId) {
         showHomePagerWithAnimator(panelId, null);
     }
@@ -2478,6 +2494,15 @@ public class BrowserApp extends GeckoApp
         // The view is set to INVISIBLE, rather than GONE, to avoid
         // the additional requestLayout() call.
         mLayerView.setVisibility(View.INVISIBLE);
+    }
+
+    public boolean hideFirstrunPager() {
+        if (!isFirstrunVisible()) {
+            return false;
+        }
+
+        mFirstrunPane.hide();
+        return true;
     }
 
     /**

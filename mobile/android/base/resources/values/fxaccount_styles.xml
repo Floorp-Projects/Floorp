@@ -19,10 +19,10 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingTop">10dp</item>
         <item name="android:paddingLeft">20dp</item>
         <item name="android:paddingRight">20dp</item>
-        <item name="android:paddingBottom">30dp</item>
+        <item name="android:paddingBottom">10dp</item>
     </style>
 
     <style name="FxAccountSpacer">
@@ -33,8 +33,10 @@
     </style>
 
     <style name="FxAccountHeaderItem" parent="@style/FxAccountTextItem">
-        <item name="android:textSize">28sp</item>
+        <item name="android:textSize">24sp</item>
         <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:layout_marginLeft">0dp</item>
+        <item name="android:layout_marginRight">0dp</item>
     </style>
 
     <style name="FxAccountTextItem" parent="@android:style/TextAppearance.Medium">
@@ -42,8 +44,10 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center_horizontal</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
     </style>
 
     <style name="FxAccountLinkItem" parent="@style/FxAccountTextItem">
@@ -55,15 +59,23 @@
     <style name="FxAccountButton" parent="@android:style/Widget.Button">
         <item name="android:background">@drawable/fxaccount_button_background</item>
         <item name="android:textColor">@drawable/fxaccount_button_color</item>
-        <item name="android:textSize">24sp</item>
-        <item name="android:padding">20dp</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingRight">20dp</item>
+        <item name="android:paddingBottom">10dp</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">10dp</item>
     </style>
 
+    <!-- Use this in a FxAccountButtonLayout. -->
+    <style name="FxAccountProgressButton" parent="@style/FxAccountButton">
+        <item name="android:layout_marginBottom">0dp</item>
+    </style>
+
     <style name="FxAccountEditItem" parent="@android:style/Widget.EditText">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:paddingLeft">@dimen/fxaccount_input_padding_horizontal</item>
         <item name="android:paddingRight">@dimen/fxaccount_input_padding_horizontal</item>
         <item name="android:paddingTop">@dimen/fxaccount_input_padding_vertical</item>
@@ -71,6 +83,7 @@
         <item name="android:background">@drawable/fxaccount_textfield_background</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">10dp</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/fxaccount_input_textColor</item>
         <item name="android:textColorHint">@color/fxaccount_input_textColorHint</item>
@@ -86,8 +99,13 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="FxAccountPolicyItem" parent="@style/FxAccountLinkifiedItem">
+        <item name="android:layout_marginBottom">20dp</item>
+        <item name="android:textColorLink">@color/fxaccount_linkified_textColorLinkSubdued</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <style name="FxAccountIcon">
-        <item name="android:layout_marginTop">20dp</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_horizontal</item>
@@ -97,7 +115,6 @@
     <style name="FxAccountErrorItem">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_marginBottom">10dp</item>
-        <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:background">@drawable/fxaccount_textview_error_background</item>
@@ -105,11 +122,11 @@
         <item name="android:text">Error</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textColorLink">@android:color/white</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:visibility">invisible</item>
     </style>
 
-    <style name="FxAccountProgress">
+    <style name="FxAccountProgress" parent="@android:style/Widget.ProgressBar.Small">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_centerInParent">true</item>
@@ -121,6 +138,8 @@
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@drawable/fxaccount_button_background</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginBottom">10dp</item>
     </style>
 
     <style name="FxAccountCheckBox">
@@ -137,7 +156,7 @@
         <item name="android:paddingLeft">@dimen/fxaccount_show_password_padding_horizontal</item>
         <item name="android:paddingRight">@dimen/fxaccount_show_password_padding_horizontal</item>
         <item name="android:textColor">@color/fxaccount_input_textColor</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
 </resources>

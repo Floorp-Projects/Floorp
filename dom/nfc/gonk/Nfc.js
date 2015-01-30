@@ -536,6 +536,9 @@ Nfc.prototype = {
         if (SessionHelper.isP2PSession(sessionId)) {
           if (message.records) {
             // TODO: Bug 1082493.
+            // This event should be sent to the focus app, but before Bug 1082493
+            // is landed we forward this to System app.
+            gMessageManager.callDefaultFoundHandler(message);
           } else {
             gMessageManager.onPeerEvent(NFC.PEER_EVENT_FOUND, message.sessionToken);
           }

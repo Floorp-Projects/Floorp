@@ -83,6 +83,7 @@ public abstract class FxAccountAbstractUpdateCredentialsActivity extends FxAccou
     ActivityUtils.linkTextView(view, R.string.fxaccount_sign_in_forgot_password, R.string.fxaccount_link_forgot_password);
 
     updateFromIntentExtras();
+    maybeEnableAnimations();
   }
 
   protected class UpdateCredentialsDelegate implements RequestDelegate<LoginResponse> {

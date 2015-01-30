@@ -48,6 +48,7 @@ public:
   void UpdateVolume(nsIVolume* aVolume, bool aNotifyObservers = true);
   void UpdateVolumeIOThread(const Volume* aVolume);
 
+  void RecvVolumesFromParent(const nsTArray<dom::VolumeInfo>& aVolumes);
   void GetVolumesForIPC(nsTArray<dom::VolumeInfo>* aResult);
 
 private:
@@ -58,7 +59,6 @@ private:
   already_AddRefed<nsVolume> FindVolumeByMountLockName(const nsAString& aMountLockName);
   already_AddRefed<nsVolume> FindVolumeByName(const nsAString& aName);
   already_AddRefed<nsVolume> CreateOrFindVolumeByName(const nsAString& aName, bool aIsFake = false);
-  void GetVolumesFromParent();
 
   Monitor mArrayMonitor;
   nsVolume::Array mVolumeArray;
