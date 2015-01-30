@@ -153,8 +153,8 @@ public:
                                         TabId* aTabId) MOZ_OVERRIDE;
     virtual bool RecvBridgeToChildProcess(const ContentParentId& aCpId) MOZ_OVERRIDE;
 
-    virtual bool RecvLoadPlugin(const uint32_t& aPluginId) MOZ_OVERRIDE;
-    virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId) MOZ_OVERRIDE;
+    virtual bool RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv) MOZ_OVERRIDE;
+    virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) MOZ_OVERRIDE;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
                                  nsTArray<PluginTag>* aPlugins,
                                  uint32_t* aNewPluginEpoch) MOZ_OVERRIDE;
