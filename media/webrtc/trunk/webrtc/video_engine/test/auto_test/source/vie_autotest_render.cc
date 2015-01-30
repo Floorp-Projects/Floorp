@@ -56,8 +56,10 @@ public:
         return 0;
     }
 
-    virtual int DeliverFrame(unsigned char* buffer, int bufferSize,
+    virtual int DeliverFrame(unsigned char* buffer,
+                             int bufferSize,
                              uint32_t time_stamp,
+                             int64_t ntp_time_ms,
                              int64_t render_time,
                              void* /*handle*/) {
       if (bufferSize != CalcBufferSize(webrtc::kI420, _width, _height)) {

@@ -10,17 +10,13 @@
 #include <string.h>
 #include "g711.h"
 #include "g711_interface.h"
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
-int16_t WebRtcG711_EncodeA(void* state,
-                           int16_t* speechIn,
+int16_t WebRtcG711_EncodeA(int16_t* speechIn,
                            int16_t len,
                            int16_t* encoded) {
   int n;
   uint16_t tempVal, tempVal2;
-
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
 
   // Sanity check of input length
   if (len < 0) {
@@ -50,15 +46,11 @@ int16_t WebRtcG711_EncodeA(void* state,
   return (len);
 }
 
-int16_t WebRtcG711_EncodeU(void* state,
-                           int16_t* speechIn,
+int16_t WebRtcG711_EncodeU(int16_t* speechIn,
                            int16_t len,
                            int16_t* encoded) {
   int n;
   uint16_t tempVal;
-
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
 
   // Sanity check of input length
   if (len < 0) {
@@ -86,16 +78,12 @@ int16_t WebRtcG711_EncodeU(void* state,
   return (len);
 }
 
-int16_t WebRtcG711_DecodeA(void* state,
-                           int16_t* encoded,
+int16_t WebRtcG711_DecodeA(int16_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType) {
   int n;
   uint16_t tempVal;
-
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
 
   // Sanity check of input length
   if (len < 0) {
@@ -123,16 +111,12 @@ int16_t WebRtcG711_DecodeA(void* state,
   return (len);
 }
 
-int16_t WebRtcG711_DecodeU(void* state,
-                           int16_t* encoded,
+int16_t WebRtcG711_DecodeU(int16_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType) {
   int n;
   uint16_t tempVal;
-
-  // Set and discard to avoid getting warnings
-  (void)(state = NULL);
 
   // Sanity check of input length
   if (len < 0) {
@@ -160,10 +144,8 @@ int16_t WebRtcG711_DecodeU(void* state,
   return (len);
 }
 
-int WebRtcG711_DurationEst(void* state,
-                           const uint8_t* payload,
+int WebRtcG711_DurationEst(const uint8_t* payload,
                            int payload_length_bytes) {
-  (void) state;
   (void) payload;
   /* G.711 is one byte per sample, so we can just return the number of bytes. */
   return payload_length_bytes;

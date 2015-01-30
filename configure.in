@@ -497,6 +497,24 @@ case "$target" in
             MSVS_VERSION=2013
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
+        elif test "$_CC_MAJOR_VERSION" = "19"; then
+            _CC_SUITE=14
+            MSVS_VERSION=2015
+            MSVC_C_RUNTIME_DLL=vcruntime140.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp140.dll
+            MSVC_APPCRT_DLL=appcrt140.dll
+            MSVC_DESKTOPCRT_DLL=desktopcrt140.dll
+
+            # -Wv:18 disables all warnings introduced after VS2013
+            # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
+            CFLAGS="$CFLAGS -Wv:18"
+            CXXFLAGS="$CXXFLAGS -Wv:18"
+
+            # https://connect.microsoft.com/VisualStudio/feedback/details/888527/warnings-on-dbghelp-h
+            # for dbghelp.h, imagehlp.h, and shobj.h
+            # C4091: 'typedef ': ignored on left of '' when no variable is declared
+            CFLAGS="$CFLAGS -wd4091"
+            CXXFLAGS="$CXXFLAGS -wd4091"
         else
             AC_MSG_ERROR([This version (${_CC_MAJOR_VERSION}.${_CC_MINOR_VERSION}.${_CC_BUILD_VERSION}) of the MSVC compiler is unsupported.
 You must install Visual C++ 2013 Update 3 or newer in order to build.
@@ -505,6 +523,8 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
+        AC_SUBST(MSVC_APPCRT_DLL)
+        AC_SUBST(MSVC_DESKTOPCRT_DLL)
 
         # Disable SEH on clang-cl because it doesn't implement them yet.
         if test -z "$CLANG_CL"; then

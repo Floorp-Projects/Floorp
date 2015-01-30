@@ -12,7 +12,6 @@
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_SCREEN_CAPTURER_MOCK_OBJECTS_H_
 
 #include "testing/gmock/include/gmock/gmock.h"
-#include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 
 namespace webrtc {
@@ -24,8 +23,6 @@ class MockScreenCapturer : public ScreenCapturer {
 
   MOCK_METHOD1(Start, void(Callback* callback));
   MOCK_METHOD1(Capture, void(const DesktopRegion& region));
-  MOCK_METHOD1(SetMouseShapeObserver, void(
-      MouseShapeObserver* mouse_shape_observer));
   MOCK_METHOD1(GetScreenList, bool(ScreenList* screens));
   MOCK_METHOD1(SelectScreen, bool(ScreenId id));
 
@@ -44,24 +41,6 @@ class MockScreenCapturerCallback : public ScreenCapturer::Callback {
  private:
   DISALLOW_COPY_AND_ASSIGN(MockScreenCapturerCallback);
 };
-
-class MockMouseShapeObserver : public ScreenCapturer::MouseShapeObserver {
- public:
-  MockMouseShapeObserver() {}
-  virtual ~MockMouseShapeObserver() {}
-
-  void OnCursorShapeChanged(MouseCursorShape* cursor_shape) OVERRIDE {
-    OnCursorShapeChangedPtr(cursor_shape);
-    delete cursor_shape;
-  }
-
-  MOCK_METHOD1(OnCursorShapeChangedPtr,
-               void(MouseCursorShape* cursor_shape));
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(MockMouseShapeObserver);
-};
-
 
 }  // namespace webrtc
 

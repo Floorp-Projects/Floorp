@@ -82,6 +82,8 @@ else:
         'silk/fixed',
     ]
     SOURCES += silk_sources_fixed
+# for webrtc
+    SOURCES += opus_sources_float
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     SOURCES += celt_sources_arm

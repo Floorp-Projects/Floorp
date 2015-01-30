@@ -13,15 +13,18 @@
 
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/processing_component.h"
+#include "webrtc/modules/audio_processing/rms_level.h"
 
 namespace webrtc {
-class AudioProcessingImpl;
+
 class AudioBuffer;
+class CriticalSectionWrapper;
 
 class LevelEstimatorImpl : public LevelEstimator,
                            public ProcessingComponent {
  public:
-  explicit LevelEstimatorImpl(const AudioProcessingImpl* apm);
+  LevelEstimatorImpl(const AudioProcessing* apm,
+                     CriticalSectionWrapper* crit);
   virtual ~LevelEstimatorImpl();
 
   int ProcessStream(AudioBuffer* audio);
@@ -38,12 +41,13 @@ class LevelEstimatorImpl : public LevelEstimator,
   virtual void* CreateHandle() const OVERRIDE;
   virtual int InitializeHandle(void* handle) const OVERRIDE;
   virtual int ConfigureHandle(void* handle) const OVERRIDE;
-  virtual int DestroyHandle(void* handle) const OVERRIDE;
+  virtual void DestroyHandle(void* handle) const OVERRIDE;
   virtual int num_handles_required() const OVERRIDE;
   virtual int GetHandleError(void* handle) const OVERRIDE;
 
-  const AudioProcessingImpl* apm_;
+  CriticalSectionWrapper* crit_;
 };
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_LEVEL_ESTIMATOR_IMPL_H_

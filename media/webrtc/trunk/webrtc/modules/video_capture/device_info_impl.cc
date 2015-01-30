@@ -8,11 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 #ifndef abs
 #define abs(a) (a>=0?a:-a)
@@ -75,13 +76,8 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
                                       const uint32_t deviceCapabilityNumber,
                                       VideoCaptureCapability& capability)
 {
+    assert(deviceUniqueIdUTF8 != NULL);
 
-    if (!deviceUniqueIdUTF8)
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "deviceUniqueIdUTF8 parameter not set in call to GetCapability");
-        return -1;
-    }
     ReadLockScoped cs(_apiLock);
 
     if ((_lastUsedDeviceNameLength != strlen((char*) deviceUniqueIdUTF8))
@@ -111,9 +107,9 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
     // Make sure the number is valid
     if (deviceCapabilityNumber >= (unsigned int) _captureCapabilities.size())
     {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "deviceCapabilityNumber %d is invalid in call to GetCapability",
-                   deviceCapabilityNumber);
+        LOG(LS_ERROR) << "Invalid deviceCapabilityNumber "
+                      << deviceCapabilityNumber << ">= number of capabilities ("
+                      << _captureCapabilities.size() << ").";
         return -1;
     }
 
@@ -266,9 +262,9 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
         }// else height not good
     }//end for
 
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
-               "Best camera format: Width %d, Height %d, Frame rate %d, Color format %d",
-               bestWidth, bestHeight, bestFrameRate, bestRawType);
+    LOG(LS_VERBOSE) << "Best camera format: " << bestWidth << "x" << bestHeight
+                    << "@" << bestFrameRate
+                    << "fps, color format: " << bestRawType;
 
     // Copy the capability
     if (bestformatIndex < 0)
@@ -343,11 +339,10 @@ int32_t DeviceInfoImpl::GetExpectedCaptureDelay(
     }
     if (bestDelay > kMaxCaptureDelay)
     {
-        WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, _id,
-                   "Expected capture delay too high. %dms, will use %d", bestDelay,
-                   kMaxCaptureDelay);
+        LOG(LS_WARNING) << "Expected capture delay (" << bestDelay
+                        << " ms) too high, using " << kMaxCaptureDelay
+                        << " ms.";
         bestDelay = kMaxCaptureDelay;
-
     }
 
     return bestDelay;

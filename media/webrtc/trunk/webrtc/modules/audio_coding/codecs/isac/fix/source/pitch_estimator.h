@@ -58,4 +58,8 @@ void WebRtcIsacfix_DecimateAllpass32(const int16_t *in,
                                      int16_t N,                   /* number of input samples */
                                      int16_t *out);             /* array of size N/2 */
 
+int32_t WebRtcIsacfix_Log2Q8( uint32_t x );
+
+void WebRtcIsacfix_PCorr2Q32(const int16_t* in, int32_t* logcorQ8);
+
 #endif /* WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_FIX_SOURCE_PITCH_ESTIMATOR_H_ */

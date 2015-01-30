@@ -266,180 +266,177 @@ TMMBRHelp::FindTMMBRBoundingSet(int32_t numCandidates, TMMBRSet& candidateSet)
                 numBoundingSet++;
             }
         }
-        if (numBoundingSet != 1)
-        {
-            numBoundingSet = -1;
-        }
-    } else
-    {
-        // 1. Sort by increasing packetOH
-        for (int i = candidateSet.sizeOfSet() - 1; i >= 0; i--)
-        {
-            for (int j = 1; j <= i; j++)
-            {
-                if (candidateSet.PacketOH(j-1) > candidateSet.PacketOH(j))
-                {
-                    candidateSet.SwapEntries(j-1, j);
-                }
-            }
-        }
-        // 2. For tuples with same OH, keep the one w/ the lowest bitrate
-        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
-        {
-            if (candidateSet.Tmmbr(i) > 0)
-            {
-                // get min bitrate for packets w/ same OH
-                uint32_t currentPacketOH = candidateSet.PacketOH(i);
-                uint32_t currentMinTMMBR = candidateSet.Tmmbr(i);
-                uint32_t currentMinIndexTMMBR = i;
-                for (uint32_t j = i+1; j < candidateSet.sizeOfSet(); j++)
-                {
-                    if(candidateSet.PacketOH(j) == currentPacketOH)
-                    {
-                        if(candidateSet.Tmmbr(j) < currentMinTMMBR)
-                        {
-                            currentMinTMMBR = candidateSet.Tmmbr(j);
-                            currentMinIndexTMMBR = j;
-                        }
-                    }
-                }
-                // keep lowest bitrate
-                for (uint32_t j = 0; j < candidateSet.sizeOfSet(); j++)
-                {
-                  if(candidateSet.PacketOH(j) == currentPacketOH
-                     && j != currentMinIndexTMMBR)
-                    {
-                        candidateSet.ClearEntry(j);
-                    }
-                }
-            }
-        }
-        // 3. Select and remove tuple w/ lowest tmmbr.
-        // (If more than 1, choose the one w/ highest OH).
-        uint32_t minTMMBR = 0;
-        uint32_t minIndexTMMBR = 0;
-        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
-        {
-            if (candidateSet.Tmmbr(i) > 0)
-            {
-                minTMMBR = candidateSet.Tmmbr(i);
-                minIndexTMMBR = i;
-                break;
-            }
-        }
-
-        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
-        {
-            if (candidateSet.Tmmbr(i) > 0 && candidateSet.Tmmbr(i) <= minTMMBR)
-            {
-                // get min bitrate
-                minTMMBR = candidateSet.Tmmbr(i);
-                minIndexTMMBR = i;
-            }
-        }
-        // first member of selected list
-        _boundingSet.SetEntry(numBoundingSet,
-                              candidateSet.Tmmbr(minIndexTMMBR),
-                              candidateSet.PacketOH(minIndexTMMBR),
-                              candidateSet.Ssrc(minIndexTMMBR));
-
-        // set intersection value
-        _ptrIntersectionBoundingSet[numBoundingSet] = 0;
-        // calculate its maximum packet rate (where its line crosses x-axis)
-        _ptrMaxPRBoundingSet[numBoundingSet]
-            = _boundingSet.Tmmbr(numBoundingSet) * 1000
-            / float(8 * _boundingSet.PacketOH(numBoundingSet));
-        numBoundingSet++;
-        // remove from candidate list
-        candidateSet.ClearEntry(minIndexTMMBR);
-        numCandidates--;
-
-        // 4. Discard from candidate list all tuple w/ lower OH
-        // (next tuple must be steeper)
-        for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
-        {
-            if(candidateSet.Tmmbr(i) > 0
-               && candidateSet.PacketOH(i) < _boundingSet.PacketOH(0))
-            {
-                candidateSet.ClearEntry(i);
-                numCandidates--;
-            }
-        }
-
-        if (numCandidates == 0)
-        {
-            // Should be true already:_boundingSet.lengthOfSet = numBoundingSet;
-            assert(_boundingSet.lengthOfSet() == numBoundingSet);
-            return numBoundingSet;
-        }
-
-        bool getNewCandidate = true;
-        int curCandidateTMMBR = 0;
-        int curCandidateIndex = 0;
-        int curCandidatePacketOH = 0;
-        int curCandidateSSRC = 0;
-        do
-        {
-            if (getNewCandidate)
-            {
-                // 5. Remove first remaining tuple from candidate list
-                for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
-                {
-                    if (candidateSet.Tmmbr(i) > 0)
-                    {
-                        curCandidateTMMBR    = candidateSet.Tmmbr(i);
-                        curCandidatePacketOH = candidateSet.PacketOH(i);
-                        curCandidateSSRC     = candidateSet.Ssrc(i);
-                        curCandidateIndex    = i;
-                        candidateSet.ClearEntry(curCandidateIndex);
-                        break;
-                    }
-                }
-            }
-
-            // 6. Calculate packet rate and intersection of the current
-            // line with line of last tuple in selected list
-            float packetRate
-                = float(curCandidateTMMBR
-                        - _boundingSet.Tmmbr(numBoundingSet-1))*1000
-                / (8*(curCandidatePacketOH
-                      - _boundingSet.PacketOH(numBoundingSet-1)));
-
-            // 7. If the packet rate is equal or lower than intersection of
-            //    last tuple in selected list,
-            //    remove last tuple in selected list & go back to step 6
-            if(packetRate <= _ptrIntersectionBoundingSet[numBoundingSet-1])
-            {
-                // remove last tuple and goto step 6
-                numBoundingSet--;
-                _boundingSet.ClearEntry(numBoundingSet);
-                _ptrIntersectionBoundingSet[numBoundingSet] = 0;
-                _ptrMaxPRBoundingSet[numBoundingSet]        = 0;
-                getNewCandidate = false;
-            } else
-            {
-                // 8. If packet rate is lower than maximum packet rate of
-                // last tuple in selected list, add current tuple to selected
-                // list
-                if (packetRate < _ptrMaxPRBoundingSet[numBoundingSet-1])
-                {
-                    _boundingSet.SetEntry(numBoundingSet,
-                                          curCandidateTMMBR,
-                                          curCandidatePacketOH,
-                                          curCandidateSSRC);
-                    _ptrIntersectionBoundingSet[numBoundingSet] = packetRate;
-                    _ptrMaxPRBoundingSet[numBoundingSet]
-                        = _boundingSet.Tmmbr(numBoundingSet)*1000
-                        / float(8*_boundingSet.PacketOH(numBoundingSet));
-                    numBoundingSet++;
-                }
-                numCandidates--;
-                getNewCandidate = true;
-            }
-
-            // 9. Go back to step 5 if any tuple remains in candidate list
-        } while (numCandidates > 0);
+        return (numBoundingSet == 1) ? 1 : -1;
     }
+
+    // 1. Sort by increasing packetOH
+    for (int i = candidateSet.sizeOfSet() - 1; i >= 0; i--)
+    {
+        for (int j = 1; j <= i; j++)
+        {
+            if (candidateSet.PacketOH(j-1) > candidateSet.PacketOH(j))
+            {
+                candidateSet.SwapEntries(j-1, j);
+            }
+        }
+    }
+    // 2. For tuples with same OH, keep the one w/ the lowest bitrate
+    for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
+    {
+        if (candidateSet.Tmmbr(i) > 0)
+        {
+            // get min bitrate for packets w/ same OH
+            uint32_t currentPacketOH = candidateSet.PacketOH(i);
+            uint32_t currentMinTMMBR = candidateSet.Tmmbr(i);
+            uint32_t currentMinIndexTMMBR = i;
+            for (uint32_t j = i+1; j < candidateSet.sizeOfSet(); j++)
+            {
+                if(candidateSet.PacketOH(j) == currentPacketOH)
+                {
+                    if(candidateSet.Tmmbr(j) < currentMinTMMBR)
+                    {
+                        currentMinTMMBR = candidateSet.Tmmbr(j);
+                        currentMinIndexTMMBR = j;
+                    }
+                }
+            }
+            // keep lowest bitrate
+            for (uint32_t j = 0; j < candidateSet.sizeOfSet(); j++)
+            {
+              if(candidateSet.PacketOH(j) == currentPacketOH
+                  && j != currentMinIndexTMMBR)
+                {
+                    candidateSet.ClearEntry(j);
+                }
+            }
+        }
+    }
+    // 3. Select and remove tuple w/ lowest tmmbr.
+    // (If more than 1, choose the one w/ highest OH).
+    uint32_t minTMMBR = 0;
+    uint32_t minIndexTMMBR = 0;
+    for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
+    {
+        if (candidateSet.Tmmbr(i) > 0)
+        {
+            minTMMBR = candidateSet.Tmmbr(i);
+            minIndexTMMBR = i;
+            break;
+        }
+    }
+
+    for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
+    {
+        if (candidateSet.Tmmbr(i) > 0 && candidateSet.Tmmbr(i) <= minTMMBR)
+        {
+            // get min bitrate
+            minTMMBR = candidateSet.Tmmbr(i);
+            minIndexTMMBR = i;
+        }
+    }
+    // first member of selected list
+    _boundingSet.SetEntry(numBoundingSet,
+                          candidateSet.Tmmbr(minIndexTMMBR),
+                          candidateSet.PacketOH(minIndexTMMBR),
+                          candidateSet.Ssrc(minIndexTMMBR));
+
+    // set intersection value
+    _ptrIntersectionBoundingSet[numBoundingSet] = 0;
+    // calculate its maximum packet rate (where its line crosses x-axis)
+    _ptrMaxPRBoundingSet[numBoundingSet]
+        = _boundingSet.Tmmbr(numBoundingSet) * 1000
+        / float(8 * _boundingSet.PacketOH(numBoundingSet));
+    numBoundingSet++;
+    // remove from candidate list
+    candidateSet.ClearEntry(minIndexTMMBR);
+    numCandidates--;
+
+    // 4. Discard from candidate list all tuple w/ lower OH
+    // (next tuple must be steeper)
+    for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
+    {
+        if(candidateSet.Tmmbr(i) > 0
+            && candidateSet.PacketOH(i) < _boundingSet.PacketOH(0))
+        {
+            candidateSet.ClearEntry(i);
+            numCandidates--;
+        }
+    }
+
+    if (numCandidates == 0)
+    {
+        // Should be true already:_boundingSet.lengthOfSet = numBoundingSet;
+        assert(_boundingSet.lengthOfSet() == numBoundingSet);
+        return numBoundingSet;
+    }
+
+    bool getNewCandidate = true;
+    int curCandidateTMMBR = 0;
+    int curCandidateIndex = 0;
+    int curCandidatePacketOH = 0;
+    int curCandidateSSRC = 0;
+    do
+    {
+        if (getNewCandidate)
+        {
+            // 5. Remove first remaining tuple from candidate list
+            for (uint32_t i = 0; i < candidateSet.sizeOfSet(); i++)
+            {
+                if (candidateSet.Tmmbr(i) > 0)
+                {
+                    curCandidateTMMBR    = candidateSet.Tmmbr(i);
+                    curCandidatePacketOH = candidateSet.PacketOH(i);
+                    curCandidateSSRC     = candidateSet.Ssrc(i);
+                    curCandidateIndex    = i;
+                    candidateSet.ClearEntry(curCandidateIndex);
+                    break;
+                }
+            }
+        }
+
+        // 6. Calculate packet rate and intersection of the current
+        // line with line of last tuple in selected list
+        float packetRate
+            = float(curCandidateTMMBR
+                    - _boundingSet.Tmmbr(numBoundingSet-1))*1000
+            / (8*(curCandidatePacketOH
+                  - _boundingSet.PacketOH(numBoundingSet-1)));
+
+        // 7. If the packet rate is equal or lower than intersection of
+        //    last tuple in selected list,
+        //    remove last tuple in selected list & go back to step 6
+        if(packetRate <= _ptrIntersectionBoundingSet[numBoundingSet-1])
+        {
+            // remove last tuple and goto step 6
+            numBoundingSet--;
+            _boundingSet.ClearEntry(numBoundingSet);
+            _ptrIntersectionBoundingSet[numBoundingSet] = 0;
+            _ptrMaxPRBoundingSet[numBoundingSet]        = 0;
+            getNewCandidate = false;
+        } else
+        {
+            // 8. If packet rate is lower than maximum packet rate of
+            // last tuple in selected list, add current tuple to selected
+            // list
+            if (packetRate < _ptrMaxPRBoundingSet[numBoundingSet-1])
+            {
+                _boundingSet.SetEntry(numBoundingSet,
+                                      curCandidateTMMBR,
+                                      curCandidatePacketOH,
+                                      curCandidateSSRC);
+                _ptrIntersectionBoundingSet[numBoundingSet] = packetRate;
+                _ptrMaxPRBoundingSet[numBoundingSet]
+                    = _boundingSet.Tmmbr(numBoundingSet)*1000
+                    / float(8*_boundingSet.PacketOH(numBoundingSet));
+                numBoundingSet++;
+            }
+            numCandidates--;
+            getNewCandidate = true;
+        }
+
+        // 9. Go back to step 5 if any tuple remains in candidate list
+    } while (numCandidates > 0);
+
     return numBoundingSet;
 }
 

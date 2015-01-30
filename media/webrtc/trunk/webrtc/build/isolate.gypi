@@ -62,18 +62,6 @@
         # Files that are known to be involved in this step.
         '<(DEPTH)/tools/swarming_client/isolate.py',
         '<(DEPTH)/tools/swarming_client/run_isolated.py',
-
-        # Disable file tracking by the build driver for now. This means the
-        # project must have the proper build-time dependency for their runtime
-        # dependency. This improves the runtime of the build driver since it
-        # doesn't have to stat() all these files.
-        #
-        # More importantly, it means that even if a isolate_dependency_tracked
-        # file is missing, for example if a file was deleted and the .isolate
-        # file was not updated, that won't break the build, especially in the
-        # case where foo_tests_run is not built! This should be reenabled once
-        # the switch-over to running tests on Swarm is completed.
-        #'<@(isolate_dependency_tracked)',
       ],
       'outputs': [
         '<(PRODUCT_DIR)/<(RULE_INPUT_ROOT).isolated',
@@ -94,6 +82,7 @@
 
         # Path variables are used to replace file paths when loading a .isolate
         # file
+        '--path-variable', 'DEPTH', '<(DEPTH)',
         '--path-variable', 'PRODUCT_DIR', '<(PRODUCT_DIR) ',
 
         '--config-variable', 'OS=<(OS)',
@@ -117,9 +106,6 @@
         }],
         ["test_isolation_outdir!=''", {
           'action': [ '--isolate-server', '<(test_isolation_outdir)' ],
-        }],
-        ['test_isolation_fail_on_missing == 0', {
-          'action': ['--ignore_broken_items'],
         }],
       ],
     },

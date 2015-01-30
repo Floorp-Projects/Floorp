@@ -18,7 +18,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 
@@ -33,13 +33,21 @@ RTPPacketHistory::RTPPacketHistory(Clock* clock)
 }
 
 RTPPacketHistory::~RTPPacketHistory() {
-  Free();
+  {
+    CriticalSectionScoped cs(critsect_);
+    Free();
+  }
   delete critsect_;
 }
 
-void RTPPacketHistory::SetStorePacketsStatus(bool enable, 
+void RTPPacketHistory::SetStorePacketsStatus(bool enable,
                                              uint16_t number_to_store) {
+  CriticalSectionScoped cs(critsect_);
   if (enable) {
+    if (store_) {
+      LOG(LS_WARNING) << "Purging packet history in order to re-set status.";
+      Free();
+    }
     Allocate(number_to_store);
   } else {
     Free();
@@ -48,13 +56,7 @@ void RTPPacketHistory::SetStorePacketsStatus(bool enable,
 
 void RTPPacketHistory::Allocate(uint16_t number_to_store) {
   assert(number_to_store > 0);
-  CriticalSectionScoped cs(critsect_);
-  if (store_) {
-    WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, -1,
-        "SetStorePacketsStatus already set, number: %d", number_to_store);
-    return;
-  }
-
+  assert(!store_);
   store_ = true;
   stored_packets_.resize(number_to_store);
   stored_seq_nums_.resize(number_to_store);
@@ -65,13 +67,12 @@ void RTPPacketHistory::Allocate(uint16_t number_to_store) {
 }
 
 void RTPPacketHistory::Free() {
-  CriticalSectionScoped cs(critsect_);
   if (!store_) {
     return;
   }
 
   std::vector<std::vector<uint8_t> >::iterator it;
-  for (it = stored_packets_.begin(); it != stored_packets_.end(); ++it) {   
+  for (it = stored_packets_.begin(); it != stored_packets_.end(); ++it) {
     it->clear();
   }
 
@@ -130,8 +131,8 @@ int32_t RTPPacketHistory::PutRTPPacket(const uint8_t* packet,
   VerifyAndAllocatePacketLength(max_packet_length);
 
   if (packet_length > max_packet_length_) {
-    WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, -1,
-        "Failed to store RTP packet, length: %d", packet_length);
+    LOG(LS_WARNING) << "Failed to store RTP packet with length: "
+                    << packet_length;
     return -1;
   }
 
@@ -156,46 +157,6 @@ int32_t RTPPacketHistory::PutRTPPacket(const uint8_t* packet,
   return 0;
 }
 
-int32_t RTPPacketHistory::ReplaceRTPHeader(const uint8_t* packet,
-                                           uint16_t sequence_number,
-                                           uint16_t rtp_header_length) {
-  CriticalSectionScoped cs(critsect_);
-  if (!store_) {
-    return 0;
-  }
-
-  assert(packet);
-  assert(rtp_header_length > 3);
-
-  if (rtp_header_length > max_packet_length_) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-        "Failed to replace RTP packet, length: %d", rtp_header_length);
-    return -1;
-  }
-
-  int32_t index = 0;
-  bool found = FindSeqNum(sequence_number, &index);
-  if (!found) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-        "No match for getting seqNum %u", sequence_number);
-    return -1;
-  }
-
-  uint16_t length = stored_lengths_.at(index);
-  if (length == 0 || length > max_packet_length_) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-        "No match for getting seqNum %u, len %d", sequence_number, length);
-    return -1;
-  }
-  assert(stored_seq_nums_[index] == sequence_number);
-
-  // Update RTP header.
-  std::vector<std::vector<uint8_t> >::iterator it =
-      stored_packets_.begin() + index;
-  std::copy(packet, packet + rtp_header_length, it->begin());
-  return 0;
-}
-
 bool RTPPacketHistory::HasRTPPacket(uint16_t sequence_number) const {
   CriticalSectionScoped cs(critsect_);
   if (!store_) {
@@ -207,7 +168,7 @@ bool RTPPacketHistory::HasRTPPacket(uint16_t sequence_number) const {
   if (!found) {
     return false;
   }
- 
+
   uint16_t length = stored_lengths_.at(index);
   if (length == 0 || length > max_packet_length_) {
     // Invalid length.
@@ -222,6 +183,7 @@ bool RTPPacketHistory::GetPacketAndSetSendTime(uint16_t sequence_number,
                                                uint8_t* packet,
                                                uint16_t* packet_length,
                                                int64_t* stored_time_ms) {
+  assert(*packet_length >= max_packet_length_);
   CriticalSectionScoped cs(critsect_);
   if (!store_) {
     return false;
@@ -230,30 +192,22 @@ bool RTPPacketHistory::GetPacketAndSetSendTime(uint16_t sequence_number,
   int32_t index = 0;
   bool found = FindSeqNum(sequence_number, &index);
   if (!found) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-        "No match for getting seqNum %u", sequence_number);
+    LOG(LS_WARNING) << "No match for getting seqNum " << sequence_number;
     return false;
   }
 
   uint16_t length = stored_lengths_.at(index);
-  if (length == 0 || length > max_packet_length_) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1,
-        "No match for getting seqNum %u, len %d", sequence_number, length);
+  assert(length <= max_packet_length_);
+  if (length == 0) {
+    LOG(LS_WARNING) << "No match for getting seqNum " << sequence_number
+                    << ", len " << length;
     return false;
   }
 
-  if (length > *packet_length) {
-    WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, -1, 
-                 "Input buffer too short for packet %u", sequence_number);
-    return false;
-  }
-
-  // Verify elapsed time since last retrieve. 
+  // Verify elapsed time since last retrieve.
   int64_t now = clock_->TimeInMilliseconds();
   if (min_elapsed_time_ms > 0 &&
       ((now - stored_send_times_.at(index)) < min_elapsed_time_ms)) {
-    WEBRTC_TRACE(kTraceStream, kTraceRtpRtcp, -1, 
-        "Skip getting packet %u, packet recently resent.", sequence_number);
     return false;
   }
 

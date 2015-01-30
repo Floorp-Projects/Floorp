@@ -17,7 +17,9 @@
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/video/receive_statistics_proxy.h"
+#include "webrtc/video_encoder.h"
 #include "webrtc/video_engine/include/vie_base.h"
 #include "webrtc/video_engine/include/vie_capture.h"
 #include "webrtc/video_engine/include/vie_codec.h"
@@ -30,6 +32,35 @@
 
 namespace webrtc {
 namespace internal {
+namespace {
+VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
+  VideoCodec codec;
+  memset(&codec, 0, sizeof(codec));
+
+  codec.plType = decoder.payload_type;
+  strcpy(codec.plName, decoder.payload_name.c_str());
+  if (decoder.payload_name == "VP8") {
+    codec.codecType = kVideoCodecVP8;
+  } else if (decoder.payload_name == "H264") {
+    codec.codecType = kVideoCodecH264;
+  } else {
+    codec.codecType = kVideoCodecGeneric;
+  }
+
+  if (codec.codecType == kVideoCodecVP8) {
+    codec.codecSpecific.VP8 = VideoEncoder::GetDefaultVp8Settings();
+  } else if (codec.codecType == kVideoCodecH264) {
+    codec.codecSpecific.H264 = VideoEncoder::GetDefaultH264Settings();
+  }
+
+  codec.width = 320;
+  codec.height = 180;
+  codec.startBitrate = codec.minBitrate = codec.maxBitrate =
+      Call::Config::kDefaultStartBitrateBps / 1000;
+
+  return codec;
+}
+}  // namespace
 
 VideoReceiveStream::VideoReceiveStream(webrtc::VideoEngine* video_engine,
                                        const VideoReceiveStream::Config& config,
@@ -51,14 +82,7 @@ VideoReceiveStream::VideoReceiveStream(webrtc::VideoEngine* video_engine,
   // TODO(pbos): This is not fine grained enough...
   rtp_rtcp_->SetNACKStatus(channel_, config_.rtp.nack.rtp_history_ms > 0);
   rtp_rtcp_->SetKeyFrameRequestMethod(channel_, kViEKeyFrameRequestPliRtcp);
-  switch (config_.rtp.rtcp_mode) {
-    case newapi::kRtcpCompound:
-      rtp_rtcp_->SetRTCPStatus(channel_, kRtcpCompound_RFC4585);
-      break;
-    case newapi::kRtcpReducedSize:
-      rtp_rtcp_->SetRTCPStatus(channel_, kRtcpNonCompound_RFC5506);
-      break;
-  }
+  SetRtcpMode(config_.rtp.rtcp_mode);
 
   assert(config_.rtp.remote_ssrc != 0);
   // TODO(pbos): What's an appropriate local_ssrc for receive-only streams?
@@ -99,10 +123,27 @@ VideoReceiveStream::VideoReceiveStream(webrtc::VideoEngine* video_engine,
 
   codec_ = ViECodec::GetInterface(video_engine);
 
-  for (size_t i = 0; i < config_.codecs.size(); ++i) {
-    if (codec_->SetReceiveCodec(channel_, config_.codecs[i]) != 0) {
-      // TODO(pbos): Abort gracefully, this can be a runtime error.
-      //             Factor out to an Init() method.
+  if (config_.rtp.fec.ulpfec_payload_type != -1) {
+    // ULPFEC without RED doesn't make sense.
+    assert(config_.rtp.fec.red_payload_type != -1);
+    VideoCodec codec;
+    memset(&codec, 0, sizeof(codec));
+    codec.codecType = kVideoCodecULPFEC;
+    strcpy(codec.plName, "ulpfec");
+    codec.plType = config_.rtp.fec.ulpfec_payload_type;
+    if (codec_->SetReceiveCodec(channel_, codec) != 0) {
+      LOG(LS_ERROR) << "Could not set ULPFEC codec. This shouldn't happen.";
+      abort();
+    }
+  }
+  if (config_.rtp.fec.red_payload_type != -1) {
+    VideoCodec codec;
+    memset(&codec, 0, sizeof(codec));
+    codec.codecType = kVideoCodecRED;
+    strcpy(codec.plName, "red");
+    codec.plType = config_.rtp.fec.red_payload_type;
+    if (codec_->SetReceiveCodec(channel_, codec) != 0) {
+      LOG(LS_ERROR) << "Could not set RED codec. This shouldn't happen.";
       abort();
     }
   }
@@ -122,15 +163,24 @@ VideoReceiveStream::VideoReceiveStream(webrtc::VideoEngine* video_engine,
     abort();
 
   external_codec_ = ViEExternalCodec::GetInterface(video_engine);
-  for (size_t i = 0; i < config_.external_decoders.size(); ++i) {
-    ExternalVideoDecoder* decoder = &config_.external_decoders[i];
+  assert(!config_.decoders.empty());
+  for (size_t i = 0; i < config_.decoders.size(); ++i) {
+    const Decoder& decoder = config_.decoders[i];
     if (external_codec_->RegisterExternalReceiveCodec(
             channel_,
-            decoder->payload_type,
-            decoder->decoder,
-            decoder->renderer,
-            decoder->expected_delay_ms) != 0) {
+            decoder.payload_type,
+            decoder.decoder,
+            decoder.renderer,
+            decoder.expected_delay_ms) != 0) {
       // TODO(pbos): Abort gracefully? Can this be a runtime error?
+      abort();
+    }
+
+    VideoCodec codec = CreateDecoderVideoCodec(decoder);
+
+    if (codec_->SetReceiveCodec(channel_, codec) != 0) {
+      // TODO(pbos): Abort gracefully, this can be a runtime error.
+      //             Factor out to an Init() method.
       abort();
     }
   }
@@ -140,7 +190,7 @@ VideoReceiveStream::VideoReceiveStream(webrtc::VideoEngine* video_engine,
 
   render_->AddRenderCallback(channel_, this);
 
-  if (voice_engine) {
+  if (voice_engine && config_.audio_channel_id != -1) {
     video_engine_base_->SetVoiceEngine(voice_engine);
     video_engine_base_->ConnectAudioChannel(channel_, config_.audio_channel_id);
   }
@@ -163,16 +213,15 @@ VideoReceiveStream::~VideoReceiveStream() {
 
   render_->RemoveRenderer(channel_);
 
-  for (size_t i = 0; i < config_.external_decoders.size(); ++i) {
+  for (size_t i = 0; i < config_.decoders.size(); ++i) {
     external_codec_->DeRegisterExternalReceiveCodec(
-        channel_, config_.external_decoders[i].payload_type);
+        channel_, config_.decoders[i].payload_type);
   }
 
   network_->DeregisterSendTransport(channel_);
 
   video_engine_base_->SetVoiceEngine(NULL);
   image_process_->Release();
-  video_engine_base_->Release();
   external_codec_->Release();
   codec_->DeregisterDecoderObserver(channel_);
   rtp_rtcp_->DeregisterReceiveChannelRtpStatisticsCallback(channel_,
@@ -183,9 +232,11 @@ VideoReceiveStream::~VideoReceiveStream() {
   network_->Release();
   render_->Release();
   rtp_rtcp_->Release();
+  video_engine_base_->DeleteChannel(channel_);
+  video_engine_base_->Release();
 }
 
-void VideoReceiveStream::StartReceiving() {
+void VideoReceiveStream::Start() {
   transport_adapter_.Enable();
   if (render_->StartRender(channel_) != 0)
     abort();
@@ -193,7 +244,7 @@ void VideoReceiveStream::StartReceiving() {
     abort();
 }
 
-void VideoReceiveStream::StopReceiving() {
+void VideoReceiveStream::Stop() {
   if (render_->StopRender(channel_) != 0)
     abort();
   if (video_engine_base_->StopReceive(channel_) != 0)
@@ -203,10 +254,6 @@ void VideoReceiveStream::StopReceiving() {
 
 VideoReceiveStream::Stats VideoReceiveStream::GetStats() const {
   return stats_proxy_->GetStats();
-}
-
-void VideoReceiveStream::GetCurrentReceiveCodec(VideoCodec* receive_codec) {
-  // TODO(pbos): Implement
 }
 
 bool VideoReceiveStream::DeliverRtcp(const uint8_t* packet, size_t length) {
@@ -236,6 +283,25 @@ int32_t VideoReceiveStream::RenderFrame(const uint32_t stream_id,
   stats_proxy_->OnRenderedFrame();
 
   return 0;
+}
+
+void VideoReceiveStream::SignalNetworkState(Call::NetworkState state) {
+  if (state == Call::kNetworkUp)
+    SetRtcpMode(config_.rtp.rtcp_mode);
+  network_->SetNetworkTransmissionState(channel_, state == Call::kNetworkUp);
+  if (state == Call::kNetworkDown)
+    rtp_rtcp_->SetRTCPStatus(channel_, kRtcpNone);
+}
+
+void VideoReceiveStream::SetRtcpMode(newapi::RtcpMode mode) {
+  switch (mode) {
+    case newapi::kRtcpCompound:
+      rtp_rtcp_->SetRTCPStatus(channel_, kRtcpCompound_RFC4585);
+      break;
+    case newapi::kRtcpReducedSize:
+      rtp_rtcp_->SetRTCPStatus(channel_, kRtcpNonCompound_RFC5506);
+      break;
+  }
 }
 }  // namespace internal
 }  // namespace webrtc

@@ -6,7 +6,7 @@ var elements = [
   ["audio", "Audio"],
   ["b", ""],
   ["base", "Base"],
-  ["basefont", ""],
+  ["basefont", "Unknown"],
   ["bdo", ""],
   ["bgsound", "Unknown"],
   ["big", ""],

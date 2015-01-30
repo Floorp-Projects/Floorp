@@ -1,0 +1,42 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+source_set("remote_bitrate_estimator") {
+  sources = [
+    "include/bwe_defines.h",
+    "include/remote_bitrate_estimator.h",
+    "rate_statistics.cc",
+    "rate_statistics.h",
+  ]
+
+  configs += [ "../../:common_inherited_config"]
+
+  deps = [
+    ":rbe_components",
+    "../../system_wrappers",
+  ]
+}
+
+source_set("rbe_components") {
+  sources = [
+    "overuse_detector.cc",
+    "overuse_detector.h",
+    "remote_bitrate_estimator_single_stream.cc",
+    "remote_rate_control.cc",
+    "remote_rate_control.h",
+  ]
+
+  configs += [ "../..:common_config" ]
+  public_configs = [ "../..:common_inherited_config" ]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+}

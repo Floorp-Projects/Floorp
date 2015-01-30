@@ -19,6 +19,29 @@
 
 namespace webrtc {
 namespace RTCPUtility {
+
+class NackStats {
+ public:
+  NackStats();
+  ~NackStats();
+
+  // Updates stats with requested sequence number.
+  // This function should be called for each NACK request to calculate the
+  // number of unique NACKed RTP packets.
+  void ReportRequest(uint16_t sequence_number);
+
+  // Gets the number of NACKed RTP packets.
+  uint32_t requests() const { return requests_; }
+
+  // Gets the number of unique NACKed RTP packets.
+  uint32_t unique_requests() const { return unique_requests_; }
+
+ private:
+  uint16_t max_sequence_number_;
+  uint32_t requests_;
+  uint32_t unique_requests_;
+};
+
     uint32_t MidNtp(uint32_t ntp_sec, uint32_t ntp_frac);
 
     // CNAME

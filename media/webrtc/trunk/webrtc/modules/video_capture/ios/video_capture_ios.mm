@@ -8,8 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(__has_feature) || !__has_feature(objc_arc)
+#error "This file requires ARC support."
+#endif
+
 #include "webrtc/modules/video_capture/ios/device_info_ios_objc.h"
-#include "webrtc/modules/video_capture/ios/video_capture_ios_objc.h"
+#include "webrtc/modules/video_capture/ios/rtc_video_capture_ios_objc.h"
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 #include "webrtc/system_wrappers/interface/trace.h"
@@ -30,7 +34,7 @@ VideoCaptureIos::VideoCaptureIos(const int32_t capture_id)
 }
 
 VideoCaptureIos::~VideoCaptureIos() {
-  if (capture_device_) {
+  if (is_capturing_) {
     [capture_device_ stopCapture];
   }
 }
@@ -53,8 +57,8 @@ VideoCaptureModule* VideoCaptureIos::Create(const int32_t capture_id,
   capture_module->_deviceUniqueId[name_length] = '\0';
 
   capture_module->capture_device_ =
-      [[VideoCaptureIosObjC alloc] initWithOwner:capture_module
-                                       captureId:capture_module->id_];
+      [[RTCVideoCaptureIosObjC alloc] initWithOwner:capture_module
+                                          captureId:capture_module->id_];
   if (!capture_module->capture_device_) {
     return NULL;
   }
@@ -86,7 +90,6 @@ int32_t VideoCaptureIos::StopCapture() {
   }
 
   is_capturing_ = false;
-
   return 0;
 }
 

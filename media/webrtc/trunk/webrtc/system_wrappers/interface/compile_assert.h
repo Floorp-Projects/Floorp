@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-// Borrowed from Chromium's src/base/basictypes.h.
+// Borrowed from Chromium's src/base/macros.h.
 
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_COMPILE_ASSERT_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_COMPILE_ASSERT_H_
@@ -31,13 +31,20 @@
 // TODO(ajm): Hack to avoid multiple definitions until the base/ of webrtc and
 // libjingle are merged.
 #if !defined(COMPILE_ASSERT)
+#if __cplusplus >= 201103L
+// Under C++11, just use static_assert.
+#define COMPILE_ASSERT(expr, msg) static_assert(expr, #msg)
+
+#else
 template <bool>
 struct CompileAssert {
 };
 
 #define COMPILE_ASSERT(expr, msg) \
   typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
-#endif  // COMPILE_ASSERT
+
+#endif  //  __cplusplus >= 201103L
+#endif  //  !defined(COMPILE_ASSERT)
 
 // Implementation details of COMPILE_ASSERT:
 //

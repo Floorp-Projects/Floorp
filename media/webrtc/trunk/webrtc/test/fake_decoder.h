@@ -22,6 +22,7 @@ namespace test {
 class FakeDecoder : public VideoDecoder {
  public:
   FakeDecoder();
+  virtual ~FakeDecoder() {}
 
   virtual int32_t InitDecode(const VideoCodec* config,
                              int32_t number_of_cores) OVERRIDE;
@@ -42,6 +43,17 @@ class FakeDecoder : public VideoDecoder {
   VideoCodec config_;
   I420VideoFrame frame_;
   DecodedImageCallback* callback_;
+};
+
+class FakeH264Decoder : public FakeDecoder {
+ public:
+  virtual ~FakeH264Decoder() {}
+
+  virtual int32_t Decode(const EncodedImage& input,
+                         bool missing_frames,
+                         const RTPFragmentationHeader* fragmentation,
+                         const CodecSpecificInfo* codec_specific_info,
+                         int64_t render_time_ms) OVERRIDE;
 };
 }  // namespace test
 }  // namespace webrtc

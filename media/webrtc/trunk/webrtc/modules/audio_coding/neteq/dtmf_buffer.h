@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2011 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,94 +8,109 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/*
- * Packet buffer for DTMF messages.
- */
+#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_DTMF_BUFFER_H_
+#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_DTMF_BUFFER_H_
 
-#ifndef DTMF_BUFFER_H
-#define DTMF_BUFFER_H
+#include <list>
+#include <string>  // size_t
 
-#include "typedefs.h"
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/typedefs.h"
 
-#include "neteq_defines.h"
+namespace webrtc {
 
-/* Include this code only if ATEVENT (DTMF) is defined in */
-#ifdef NETEQ_ATEVENT_DECODE
+struct DtmfEvent {
+  uint32_t timestamp;
+  int event_no;
+  int volume;
+  int duration;
+  bool end_bit;
 
-#define MAX_DTMF_QUEUE_SIZE 4 
+  // Constructors
+  DtmfEvent()
+      : timestamp(0),
+        event_no(0),
+        volume(0),
+        duration(0),
+        end_bit(false) {
+  }
+  DtmfEvent(uint32_t ts, int ev, int vol, int dur, bool end)
+      : timestamp(ts),
+        event_no(ev),
+        volume(vol),
+        duration(dur),
+        end_bit(end) {
+  }
+};
 
-typedef struct dtmf_inst_t_
-{
-    int16_t MaxPLCtime;
-    int16_t CurrentPLCtime;
-    int16_t EventQueue[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventQueueVolume[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventQueueEnded[MAX_DTMF_QUEUE_SIZE];
-    uint32_t EventQueueStartTime[MAX_DTMF_QUEUE_SIZE];
-    uint32_t EventQueueEndTime[MAX_DTMF_QUEUE_SIZE];
-    int16_t EventBufferSize;
-    int16_t framelen;
-} dtmf_inst_t;
+// This is the buffer holding DTMF events while waiting for them to be played.
+class DtmfBuffer {
+ public:
+  enum BufferReturnCodes {
+    kOK = 0,
+    kInvalidPointer,
+    kPayloadTooShort,
+    kInvalidEventParameters,
+    kInvalidSampleRate
+  };
 
-/****************************************************************************
- * WebRtcNetEQ_DtmfDecoderInit(...)
- *
- * This function initializes a DTMF instance.
- *
- * Input:
- *      - DTMF_decinst_t    : DTMF instance
- *      - fs                : The sample rate used for the DTMF
- *      - MaxPLCtime        : Maximum length for a PLC before zeros should be inserted
- *
- * Return value             :  0 - Ok
- *                            -1 - Error
- */
+  // Set up the buffer for use at sample rate |fs_hz|.
+  explicit DtmfBuffer(int fs_hz) {
+    SetSampleRate(fs_hz);
+  }
 
-int16_t WebRtcNetEQ_DtmfDecoderInit(dtmf_inst_t *DTMFdec_inst, uint16_t fs,
-                                    int16_t MaxPLCtime);
+  virtual ~DtmfBuffer() {}
 
-/****************************************************************************
- * WebRtcNetEQ_DtmfInsertEvent(...)
- *
- * This function decodes a packet with DTMF frames.
- *
- * Input:
- *      - DTMFdec_inst      : DTMF instance
- *      - encoded           : Encoded DTMF frame(s)
- *      - len               : Bytes in encoded vector
- *
- *
- * Return value             :  0 - Ok
- *                            -1 - Error
- */
+  // Flushes the buffer.
+  virtual void Flush() { buffer_.clear(); }
 
-int16_t WebRtcNetEQ_DtmfInsertEvent(dtmf_inst_t *DTMFdec_inst,
-                                    const int16_t *encoded, int16_t len,
-                                    uint32_t timeStamp);
+  // Static method to parse 4 bytes from |payload| as a DTMF event (RFC 4733)
+  // and write the parsed information into the struct |event|. Input variable
+  // |rtp_timestamp| is simply copied into the struct.
+  static int ParseEvent(uint32_t rtp_timestamp,
+                        const uint8_t* payload,
+                        int payload_length_bytes,
+                        DtmfEvent* event);
 
-/****************************************************************************
- * WebRtcNetEQ_DtmfDecode(...)
- *
- * This function decodes a packet with DTMF frame(s). Output will be the
- * event that should be played for next 10 ms. 
- *
- * Input:
- *      - DTMFdec_inst      : DTMF instance
- *      - currTimeStamp     : The current playout timestamp
- *
- * Output:
- *      - event             : Event number to be played
- *      - volume            : Event volume to be played
- *
- * Return value             : >0 - There is a event to be played
- *                             0 - No event to be played
- *                            -1 - Error
- */
+  // Inserts |event| into the buffer. The method looks for a matching event and
+  // merges the two if a match is found.
+  virtual int InsertEvent(const DtmfEvent& event);
 
-int16_t WebRtcNetEQ_DtmfDecode(dtmf_inst_t *DTMFdec_inst, int16_t *event,
-                               int16_t *volume, uint32_t currTimeStamp);
+  // Checks if a DTMF event should be played at time |current_timestamp|. If so,
+  // the method returns true; otherwise false. The parameters of the event to
+  // play will be written to |event|.
+  virtual bool GetEvent(uint32_t current_timestamp, DtmfEvent* event);
 
-#endif    /* NETEQ_ATEVENT_DECODE */
+  // Number of events in the buffer.
+  virtual size_t Length() const { return buffer_.size(); }
 
-#endif    /* DTMF_BUFFER_H */
+  virtual bool Empty() const { return buffer_.empty(); }
 
+  // Set a new sample rate.
+  virtual int SetSampleRate(int fs_hz);
+
+ private:
+  typedef std::list<DtmfEvent> DtmfList;
+
+  int max_extrapolation_samples_;
+  int frame_len_samples_;  // TODO(hlundin): Remove this later.
+
+  // Compares two events and returns true if they are the same.
+  static bool SameEvent(const DtmfEvent& a, const DtmfEvent& b);
+
+  // Merges |event| to the event pointed out by |it|. The method checks that
+  // the two events are the same (using the SameEvent method), and merges them
+  // if that was the case, returning true. If the events are not the same, false
+  // is returned.
+  bool MergeEvents(DtmfList::iterator it, const DtmfEvent& event);
+
+  // Method used by the sort algorithm to rank events in the buffer.
+  static bool CompareEvents(const DtmfEvent& a, const DtmfEvent& b);
+
+  DtmfList buffer_;
+
+  DISALLOW_COPY_AND_ASSIGN(DtmfBuffer);
+};
+
+}  // namespace webrtc
+#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_DTMF_BUFFER_H_

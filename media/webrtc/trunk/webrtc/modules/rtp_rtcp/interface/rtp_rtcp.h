@@ -47,8 +47,8 @@ class RtpRtcp : public Module {
     *  intra_frame_callback - Called when the receiver request a intra frame.
     *  bandwidth_callback   - Called when we receive a changed estimate from
     *                         the receiver of out stream.
-    *  audio_messages       - Telehone events. May not be NULL; default callback
-    *                         will do nothing.
+    *  audio_messages       - Telephone events. May not be NULL; default
+    *                         callback will do nothing.
     *  remote_bitrate_estimator - Estimates the bandwidth available for a set of
     *                             streams from the same client.
     *  paced_sender             - Spread any bursts of packets into smaller
@@ -67,6 +67,9 @@ class RtpRtcp : public Module {
     RtpAudioFeedback* audio_messages;
     RemoteBitrateEstimator* remote_bitrate_estimator;
     PacedSender* paced_sender;
+    BitrateStatisticsObserver* send_bitrate_observer;
+    FrameCountObserver* send_frame_count_observer;
+    SendSideDelayObserver* send_side_delay_observer;
   };
 
   /*
@@ -203,6 +206,10 @@ class RtpRtcp : public Module {
     */
     virtual int32_t SetSequenceNumber(const uint16_t seq) = 0;
 
+    virtual void SetRtpStateForSsrc(uint32_t ssrc,
+                                    const RtpState& rtp_state) = 0;
+    virtual bool GetRtpStateForSsrc(uint32_t ssrc, RtpState* rtp_state) = 0;
+
     /*
     *   Get SSRC
     */
@@ -213,7 +220,7 @@ class RtpRtcp : public Module {
     *
     *   return -1 on failure else 0
     */
-    virtual int32_t SetSSRC(const uint32_t ssrc) = 0;
+    virtual void SetSSRC(const uint32_t ssrc) = 0;
 
     /*
     *   Get CSRC
@@ -249,10 +256,14 @@ class RtpRtcp : public Module {
     virtual int32_t SetCSRCStatus(const bool include) = 0;
 
     /*
-    * Turn on/off sending RTX (RFC 4588) on a specific SSRC.
+    * Turn on/off sending RTX (RFC 4588). The modes can be set as a combination
+    * of values of the enumerator RtxMode.
     */
-    virtual int32_t SetRTXSendStatus(int modes, bool set_ssrc,
-                                     uint32_t ssrc) = 0;
+    virtual void SetRTXSendStatus(int modes) = 0;
+
+    // Sets the SSRC to use when sending RTX packets. This doesn't enable RTX,
+    // only the SSRC is set.
+    virtual void SetRtxSsrc(uint32_t ssrc) = 0;
 
     // Sets the payload type to use when sending RTX packets. Note that this
     // doesn't enable RTX, only the payload type is set.
@@ -261,8 +272,8 @@ class RtpRtcp : public Module {
     /*
     * Get status of sending RTX (RFC 4588) on a specific SSRC.
     */
-    virtual int32_t RTXSendStatus(int* modes, uint32_t* ssrc,
-                                  int* payloadType) const = 0;
+    virtual void RTXSendStatus(int* modes, uint32_t* ssrc,
+                               int* payloadType) const = 0;
 
     /*
     *   sends kRtcpByeCode when going from true to false
@@ -301,13 +312,6 @@ class RtpRtcp : public Module {
                              uint32_t* nackRate) const = 0;
 
     /*
-    *   Called on any new send bitrate estimate.
-    */
-    virtual void RegisterVideoBitrateObserver(
-        BitrateStatisticsObserver* observer) = 0;
-    virtual BitrateStatisticsObserver* GetVideoBitrateObserver() const = 0;
-
-    /*
     *   Used by the codec module to deliver a video or audio frame for
     *   packetization.
     *
@@ -337,10 +341,6 @@ class RtpRtcp : public Module {
                                   bool retransmission) = 0;
 
     virtual int TimeToSendPadding(int bytes) = 0;
-
-    virtual void RegisterSendFrameCountObserver(
-        FrameCountObserver* observer) = 0;
-    virtual FrameCountObserver* GetSendFrameCountObserver() const = 0;
 
     virtual bool GetSendSideDelay(int* avg_send_delay_ms,
                                   int* max_send_delay_ms) const = 0;
@@ -377,13 +377,6 @@ class RtpRtcp : public Module {
     *   return -1 on failure else 0
     */
     virtual int32_t SetCNAME(const char cName[RTCP_CNAME_SIZE]) = 0;
-
-    /*
-    *   Get RTCP CName (i.e unique identifier)
-    *
-    *   return -1 on failure else 0
-    */
-    virtual int32_t CNAME(char cName[RTCP_CNAME_SIZE]) = 0;
 
     /*
     *   Get remote CName
@@ -517,6 +510,13 @@ class RtpRtcp : public Module {
     *   return -1 on failure else 0
     */
     virtual int32_t RemoveRTCPReportBlock(const uint32_t SSRC) = 0;
+
+    /*
+    *   Get number of sent and received RTCP packet types.
+    */
+    virtual void GetRtcpPacketTypeCounters(
+        RtcpPacketTypeCounter* packets_sent,
+        RtcpPacketTypeCounter* packets_received) const = 0;
 
     /*
     *   (APP) Application specific data
@@ -673,25 +673,6 @@ class RtpRtcp : public Module {
     */
      virtual int32_t SendREDPayloadType(
          int8_t& payloadType) const = 0;
-
-     /*
-     * Set status and ID for header-extension-for-audio-level-indication.
-     * See http://tools.ietf.org/html/rfc6464 for more details.
-     *
-     * return -1 on failure else 0
-     */
-     virtual int32_t SetRTPAudioLevelIndicationStatus(
-         const bool enable,
-         const uint8_t ID) = 0;
-
-     /*
-     * Get status and ID for header-extension-for-audio-level-indication.
-     *
-     * return -1 on failure else 0
-     */
-     virtual int32_t GetRTPAudioLevelIndicationStatus(
-         bool& enable,
-         uint8_t& ID) const = 0;
 
      /*
      * Store the audio level in dBov for header-extension-for-audio-level-

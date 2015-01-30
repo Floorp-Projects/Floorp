@@ -18,17 +18,11 @@
 #ifdef WEBRTC_VOICE_ENGINE_AUDIO_PROCESSING_API
 #include "webrtc/voice_engine/voe_audio_processing_impl.h"
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-#include "webrtc/voice_engine/voe_call_report_impl.h"
-#endif
 #ifdef WEBRTC_VOICE_ENGINE_CODEC_API
 #include "webrtc/voice_engine/voe_codec_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_DTMF_API
 #include "webrtc/voice_engine/voe_dtmf_impl.h"
-#endif
-#ifdef WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-#include "webrtc/voice_engine/voe_encryption_impl.h"
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_EXTERNAL_MEDIA_API
 #include "webrtc/voice_engine/voe_external_media_impl.h"
@@ -61,17 +55,11 @@ class VoiceEngineImpl : public voe::SharedData,  // Must be the first base class
 #ifdef WEBRTC_VOICE_ENGINE_AUDIO_PROCESSING_API
                         public VoEAudioProcessingImpl,
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-                        public VoECallReportImpl,
-#endif
 #ifdef WEBRTC_VOICE_ENGINE_CODEC_API
                         public VoECodecImpl,
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_DTMF_API
                         public VoEDtmfImpl,
-#endif
-#ifdef WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-                        public VoEEncryptionImpl,
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_EXTERNAL_MEDIA_API
                         public VoEExternalMediaImpl,
@@ -103,17 +91,11 @@ public:
 #ifdef WEBRTC_VOICE_ENGINE_AUDIO_PROCESSING_API
         VoEAudioProcessingImpl(this),
 #endif
-#ifdef WEBRTC_VOICE_ENGINE_CALL_REPORT_API
-        VoECallReportImpl(this),
-#endif
 #ifdef WEBRTC_VOICE_ENGINE_CODEC_API
         VoECodecImpl(this),
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_DTMF_API
         VoEDtmfImpl(this),
-#endif
-#ifdef WEBRTC_VOICE_ENGINE_ENCRYPTION_API
-        VoEEncryptionImpl(this),
 #endif
 #ifdef WEBRTC_VOICE_ENGINE_EXTERNAL_MEDIA_API
         VoEExternalMediaImpl(this),

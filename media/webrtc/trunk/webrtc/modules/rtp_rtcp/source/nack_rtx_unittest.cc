@@ -41,7 +41,7 @@ class VerifyingRtxReceiver : public NullRtpData
   virtual int32_t OnReceivedPayloadData(
       const uint8_t* data,
       const uint16_t size,
-      const webrtc::WebRtcRTPHeader* rtp_header) {
+      const webrtc::WebRtcRTPHeader* rtp_header) OVERRIDE {
     if (!sequence_numbers_.empty())
       EXPECT_EQ(kTestSsrc, rtp_header->header.ssrc);
     sequence_numbers_.push_back(rtp_header->header.sequenceNumber);
@@ -56,7 +56,7 @@ class TestRtpFeedback : public NullRtpFeedback {
   virtual ~TestRtpFeedback() {}
 
   virtual void OnIncomingSSRCChanged(const int32_t id,
-                                     const uint32_t ssrc) {
+                                     const uint32_t ssrc) OVERRIDE {
     rtp_rtcp_->SetRemoteSSRC(ssrc);
   }
 
@@ -95,7 +95,7 @@ class RtxLoopBackTransport : public webrtc::Transport {
     packet_loss_ = 0;
   }
 
-  virtual int SendPacket(int channel, const void *data, int len) {
+  virtual int SendPacket(int channel, const void *data, int len) OVERRIDE {
     count_++;
     const unsigned char* ptr = static_cast<const unsigned  char*>(data);
     uint32_t ssrc = (ptr[8] << 24) + (ptr[9] << 16) + (ptr[10] << 8) + ptr[11];
@@ -112,7 +112,10 @@ class RtxLoopBackTransport : public webrtc::Transport {
       return len;
     }
     int packet_length = len;
-    uint8_t restored_packet[1500];
+    // TODO(pbos): Figure out why this needs to be initialized. Likely this
+    // is hiding a bug either in test setup or other code.
+    // https://code.google.com/p/webrtc/issues/detail?id=3183
+    uint8_t restored_packet[1500] = {0};
     uint8_t* restored_packet_ptr = restored_packet;
     RTPHeader header;
     scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
@@ -143,7 +146,7 @@ class RtxLoopBackTransport : public webrtc::Transport {
     return len;
   }
 
-  virtual int SendRTCPPacket(int channel, const void *data, int len) {
+  virtual int SendRTCPPacket(int channel, const void *data, int len) OVERRIDE {
     if (module_->IncomingRtcpPacket((const uint8_t*)data, len) == 0) {
       return len;
     }
@@ -164,7 +167,7 @@ class RtxLoopBackTransport : public webrtc::Transport {
 class RtpRtcpRtxNackTest : public ::testing::Test {
  protected:
   RtpRtcpRtxNackTest()
-      : rtp_payload_registry_(0, RTPPayloadStrategy::CreateStrategy(false)),
+      : rtp_payload_registry_(RTPPayloadStrategy::CreateStrategy(false)),
         rtp_rtcp_module_(NULL),
         transport_(kTestSsrc + 1),
         receiver_(),
@@ -172,7 +175,7 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
         fake_clock(123456) {}
   ~RtpRtcpRtxNackTest() {}
 
-  virtual void SetUp() {
+  virtual void SetUp() OVERRIDE {
     RtpRtcp::Configuration configuration;
     configuration.id = kTestId;
     configuration.audio = false;
@@ -188,7 +191,7 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
         kTestId, &fake_clock, &receiver_, rtp_feedback_.get(),
         &rtp_payload_registry_));
 
-    EXPECT_EQ(0, rtp_rtcp_module_->SetSSRC(kTestSsrc));
+    rtp_rtcp_module_->SetSSRC(kTestSsrc);
     EXPECT_EQ(0, rtp_rtcp_module_->SetRTCPStatus(kRtcpCompound));
     rtp_receiver_->SetNACKStatus(kNackRtcp);
     EXPECT_EQ(0, rtp_rtcp_module_->SetStorePacketsStatus(true, 600));
@@ -253,9 +256,9 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
   }
 
   void RunRtxTest(RtxMode rtx_method, int loss) {
-    rtp_payload_registry_.SetRtxStatus(true, kTestSsrc + 1);
-    EXPECT_EQ(0, rtp_rtcp_module_->SetRTXSendStatus(rtx_method, true,
-        kTestSsrc + 1));
+    rtp_payload_registry_.SetRtxSsrc(kTestSsrc + 1);
+    rtp_rtcp_module_->SetRTXSendStatus(rtx_method);
+    rtp_rtcp_module_->SetRtxSsrc(kTestSsrc + 1);
     transport_.DropEveryNthPacket(loss);
     uint32_t timestamp = 3000;
     uint16_t nack_list[kVideoNackListSize];
@@ -277,7 +280,7 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
     receiver_.sequence_numbers_.sort();
   }
 
-  virtual void TearDown() {
+  virtual void TearDown() OVERRIDE {
     delete rtp_rtcp_module_;
   }
 

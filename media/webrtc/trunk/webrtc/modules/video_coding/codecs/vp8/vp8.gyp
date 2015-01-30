@@ -37,6 +37,7 @@
         'reference_picture_selection.cc',
         'include/vp8.h',
         'include/vp8_common_types.h',
+        'vp8_factory.cc',
         'vp8_impl.cc',
         'default_temporal_layers.cc',
         'default_temporal_layers.h',

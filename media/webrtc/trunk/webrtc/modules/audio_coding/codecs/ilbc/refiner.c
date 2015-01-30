@@ -53,7 +53,7 @@ void WebRtcIlbcfix_Refiner(
 
   /* defining array bounds */
 
-  estSegPosRounded=WEBRTC_SPL_RSHIFT_W16((estSegPos - 2),2);
+  estSegPosRounded = (estSegPos - 2) >> 2;
 
   searchSegStartPos=estSegPosRounded-ENH_SLOP;
 
@@ -81,7 +81,7 @@ void WebRtcIlbcfix_Refiner(
 
   if (scalefact>0) {
     for (i=0;i<corrdim;i++) {
-      corrVec[i]=(int16_t)WEBRTC_SPL_RSHIFT_W32(corrVecTemp[i], scalefact);
+      corrVec[i] = (int16_t)(corrVecTemp[i] >> scalefact);
     }
   } else {
     for (i=0;i<corrdim;i++) {
@@ -103,7 +103,7 @@ void WebRtcIlbcfix_Refiner(
      bounds */
   *updStartPos = (int16_t)WEBRTC_SPL_MUL_16_16(searchSegStartPos,4) + tloc + 4;
 
-  tloc2 = WEBRTC_SPL_RSHIFT_W16((tloc+3), 2);
+  tloc2 = (tloc + 3) >> 2;
 
   st=searchSegStartPos+tloc2-ENH_FL0;
 
