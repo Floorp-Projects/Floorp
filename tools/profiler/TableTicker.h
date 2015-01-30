@@ -42,8 +42,6 @@ threadSelected(ThreadInfo* aInfo, char** aThreadNameFilters, uint32_t aFeatureCo
 extern mozilla::TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;
-extern unsigned int sCurrentEventGeneration;
-extern unsigned int sLastSampledEventGeneration;
 
 class BreakpadSampler;
 
@@ -54,6 +52,7 @@ class TableTicker: public Sampler {
               const char** aThreadNameFilters, uint32_t aFilterCount)
     : Sampler(aInterval, true, aEntrySize)
     , mPrimaryThreadProfile(nullptr)
+    , mBuffer(new ProfileBuffer(aEntrySize))
     , mSaveRequested(false)
     , mUnwinderThread(false)
     , mFilterCount(aFilterCount)
@@ -63,8 +62,6 @@ class TableTicker: public Sampler {
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
-    //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
-    mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
     mProfileJava = hasFeature(aFeatures, aFeatureCount, "java");
     mProfileGPU = hasFeature(aFeatures, aFeatureCount, "gpu");
@@ -156,7 +153,7 @@ class TableTicker: public Sampler {
       return;
     }
 
-    ThreadProfile* profile = new ThreadProfile(aInfo, EntrySize());
+    ThreadProfile* profile = new ThreadProfile(aInfo, mBuffer);
     aInfo->SetProfile(profile);
   }
 
@@ -178,6 +175,7 @@ class TableTicker: public Sampler {
   }
 
   virtual void HandleSaveRequest();
+  virtual void DeleteExpiredMarkers() MOZ_OVERRIDE;
 
   ThreadProfile* GetPrimaryThreadProfile()
   {
@@ -227,10 +225,10 @@ protected:
 
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile* mPrimaryThreadProfile;
+  nsRefPtr<ProfileBuffer> mBuffer;
   bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
-  bool mJankOnly;
   bool mProfileJS;
   bool mProfileGPU;
   bool mProfileThreads;
