@@ -14,10 +14,12 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebProgressListener.h"
+#include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsWeakReference.h"
@@ -27,7 +29,10 @@
 #include "nsINetUtil.h"
 
 class nsISSLStatus;
+class nsITransportSecurityInfo;
+class nsISecurityWarningDialogs;
 class nsIChannel;
+class nsIInterfaceRequestor;
 
 #define NS_SECURE_BROWSER_UI_CID \
 { 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
@@ -35,6 +40,7 @@ class nsIChannel;
 
 class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
                               public nsIWebProgressListener,
+                              public nsIFormSubmitObserver,
                               public nsSupportsWeakReference,
                               public nsISSLStatusProvider
 {
@@ -45,8 +51,14 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSISECUREBROWSERUI
+  
   NS_DECL_NSISSLSTATUSPROVIDER
 
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow* window,
+                    nsIURI *actionURL, bool* cancelSubmit) MOZ_OVERRIDE;
+  NS_IMETHOD NotifyInvalidSubmit(nsIDOMHTMLFormElement* formNode,
+                                 nsIArray* invalidElements) MOZ_OVERRIDE { return NS_OK; }
+  
 protected:
   virtual ~nsSecureBrowserUIImpl();
 
@@ -99,6 +111,20 @@ protected:
 
   nsCOMPtr<nsISSLStatus> mSSLStatus;
   nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
+
+  nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, bool *okayToPost);
+  nsresult IsURLHTTPS(nsIURI* aURL, bool *value);
+  nsresult IsURLJavaScript(nsIURI* aURL, bool *value);
+
+  bool ConfirmEnteringSecure();
+  bool ConfirmEnteringWeak();
+  bool ConfirmLeavingSecure();
+  bool ConfirmMixedMode();
+  bool ConfirmPostToInsecure();
+  bool ConfirmPostToInsecureFromSecure();
+
+  bool GetNSSDialogs(nsCOMPtr<nsISecurityWarningDialogs> & dialogs,
+                     nsCOMPtr<nsIInterfaceRequestor> & window);
 
   PLDHashTable mTransferringRequests;
 };
