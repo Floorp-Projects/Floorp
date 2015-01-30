@@ -7,9 +7,11 @@
 /* Copyright © 2013 Deutsche Telekom, Inc. */
 
 #include "MozNDEFRecord.h"
+#include "js/StructuredClone.h"
 #include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsContentUtils.h"
+#include "nsIGlobalObject.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -18,13 +20,13 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(MozNDEFRecord)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MozNDEFRecord)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->DropData();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MozNDEFRecord)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -107,14 +109,14 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!win) {
+  nsCOMPtr<nsISupports> parent = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!parent) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   JSContext* context = aGlobal.Context();
-  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(win, aOptions.mTnf);
+  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, aOptions.mTnf);
   ndefRecord->InitType(context, aOptions.mType);
   ndefRecord->InitId(context, aOptions.mId);
   ndefRecord->InitPayload(context, aOptions.mPayload);
@@ -132,20 +134,20 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!win) {
+  nsCOMPtr<nsISupports> parent = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!parent) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(win, TNF::Well_known);
+  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, TNF::Well_known);
   ndefRecord->InitType(aGlobal.Context(), RTD::U);
   ndefRecord->InitPayload(aGlobal.Context(), aUri);
   return ndefRecord.forget();
 }
 
-MozNDEFRecord::MozNDEFRecord(nsPIDOMWindow* aWindow, TNF aTnf)
-  : mWindow(aWindow) // For GetParentObject()
+MozNDEFRecord::MozNDEFRecord(nsISupports* aParent, TNF aTnf)
+  : mParent(aParent) // For GetParentObject()
   , mTnf(aTnf)
   , mSize(3) // 1(flags) + 1(type_length) + 1(payload_length)
 {
@@ -181,6 +183,72 @@ MozNDEFRecord::GetAsURI(nsAString& aRetVal)
     nsDependentCSubstring(reinterpret_cast<char*>(&payloadData[1]), payloadLen - 1)));
 }
 
+bool
+MozNDEFRecord::WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWriter) const
+{
+  uint8_t* dummy;
+  uint32_t typeLen = 0, idLen = 0, payloadLen = 0;
+  if (mType) {
+    js::GetUint8ArrayLengthAndData(mType, &typeLen, &dummy);
+  }
+
+  if (mId) {
+    js::GetUint8ArrayLengthAndData(mId, &idLen, &dummy);
+  }
+
+  if (mPayload) {
+    js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &dummy);
+  }
+
+  return JS_WriteUint32Pair(aWriter, static_cast<uint32_t>(mTnf), typeLen) &&
+         JS_WriteUint32Pair(aWriter, idLen, payloadLen) &&
+         WriteUint8Array(aCx, aWriter, mType, typeLen) &&
+         WriteUint8Array(aCx, aWriter, mId, idLen) &&
+         WriteUint8Array(aCx, aWriter, mPayload, payloadLen);
+}
+
+bool
+MozNDEFRecord::ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader)
+{
+  uint32_t tnf, typeLen, idLen, payloadLen;
+
+  if (!JS_ReadUint32Pair(aReader, &tnf, &typeLen) ||
+      !JS_ReadUint32Pair(aReader, &idLen, &payloadLen)) {
+    return false;
+  }
+
+  mTnf = static_cast<TNF>(tnf);
+
+  if (typeLen) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (!JS_ReadTypedArray(aReader, &value)) {
+      return false;
+    }
+    MOZ_ASSERT(value.isObject());
+    InitType(aCx, value.toObject(), typeLen);
+  }
+
+  if (idLen) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (!JS_ReadTypedArray(aReader, &value)) {
+      return false;
+    }
+    MOZ_ASSERT(value.isObject());
+    InitId(aCx, value.toObject(), idLen);
+  }
+
+  if (payloadLen) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (!JS_ReadTypedArray(aReader, &value)) {
+      return false;
+    }
+    MOZ_ASSERT(value.isObject());
+    InitPayload(aCx, value.toObject(), payloadLen);
+  }
+
+  return true;
+}
+
 void
 MozNDEFRecord::InitType(JSContext* aCx, const Optional<Uint8Array>& aType)
 {
@@ -204,6 +272,13 @@ MozNDEFRecord::InitType(JSContext* aCx, RTD rtd)
 }
 
 void
+MozNDEFRecord::InitType(JSContext* aCx, JSObject& aType, uint32_t aLen)
+{
+  mType = &aType;
+  IncSize(aLen);
+}
+
+void
 MozNDEFRecord::InitId(JSContext* aCx, const Optional<Uint8Array>& aId)
 {
   if (!aId.WasPassed()) {
@@ -214,6 +289,13 @@ MozNDEFRecord::InitId(JSContext* aCx, const Optional<Uint8Array>& aId)
   id.ComputeLengthAndData();
   mId = Uint8Array::Create(aCx, this, id.Length(), id.Data());
   IncSize(1 /* id_length */ + id.Length());
+}
+
+void
+MozNDEFRecord::InitId(JSContext* aCx, JSObject& aId, uint32_t aLen)
+{
+  mId = &aId;
+  IncSize(1 /* id_length */ + aLen);
 }
 
 void
@@ -247,6 +329,13 @@ MozNDEFRecord::InitPayload(JSContext* aCx, const nsAString& aUri)
 }
 
 void
+MozNDEFRecord::InitPayload(JSContext* aCx, JSObject& aPayload, uint32_t aLen)
+{
+  mPayload = &aPayload;
+  IncSizeForPayload(aLen);
+}
+
+void
 MozNDEFRecord::IncSize(uint32_t aCount)
 {
   mSize += aCount;
@@ -260,6 +349,19 @@ MozNDEFRecord::IncSizeForPayload(uint32_t aLen)
   }
 
   IncSize(aLen);
+}
+
+bool
+MozNDEFRecord::WriteUint8Array(JSContext* aCx, JSStructuredCloneWriter* aWriter, JSObject* aObj, uint32_t aLen) const
+{
+  if (!aLen) {
+    return true;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, aObj);
+  JSAutoCompartment ac(aCx, obj);
+  JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*obj));
+  return JS_WriteTypedArray(aWriter, value);
 }
 
 /* static */ uint32_t
