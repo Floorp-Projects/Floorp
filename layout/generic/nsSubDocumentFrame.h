@@ -127,8 +127,6 @@ public:
    */
   bool PassPointerEventsToChildren();
 
-  nsIntPoint GetChromeDisplacement();
-
 protected:
   friend class AsyncFrameInit;
 
