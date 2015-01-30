@@ -17,7 +17,7 @@ fails == autohiding-3.html autohiding-3-ref.html # bug 1107701
 == dynamic-insertion-3.html dynamic-insertion-3-ref.html
 == dynamic-removal-1.html dynamic-removal-1-ref.html
 == dynamic-removal-2.html dynamic-removal-2-ref.html
-fuzzy-if(winWidget,35,1) == dynamic-removal-3.html dynamic-removal-3-ref.html # bug 1111891
+== dynamic-removal-3.html dynamic-removal-3-ref.html
 == float-handling.html float-handling-ref.html
 == inlinize-blocks-1.html inlinize-blocks-1-ref.html
 == inlinize-blocks-2.html inlinize-blocks-2-ref.html
