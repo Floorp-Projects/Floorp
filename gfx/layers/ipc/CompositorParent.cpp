@@ -246,6 +246,7 @@ void
 CompositorVsyncObserver::SetNeedsComposite(bool aNeedsComposite)
 {
   if (aNeedsComposite && !CompositorParent::IsInCompositorThread()) {
+    MOZ_ASSERT(CompositorParent::CompositorLoop());
     CompositorParent::CompositorLoop()->PostTask(FROM_HERE,
       NewRunnableMethod(this,
                         &CompositorVsyncObserver::SetNeedsComposite,
@@ -270,6 +271,7 @@ CompositorVsyncObserver::NotifyVsync(TimeStamp aVsyncTimestamp)
     mCurrentCompositeTask = NewRunnableMethod(this,
                                               &CompositorVsyncObserver::Composite,
                                               aVsyncTimestamp);
+    MOZ_ASSERT(CompositorParent::CompositorLoop());
     CompositorParent::CompositorLoop()->PostTask(FROM_HERE, mCurrentCompositeTask);
   }
   return true;
@@ -390,6 +392,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   // FIXME: This holds on the the fact that right now the only thing that
   // can destroy this instance is initialized on the compositor thread after
   // this task has been processed.
+  MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor,
                                                           this, &mCompositorID));
 
@@ -619,6 +622,7 @@ void
 CompositorParent::ScheduleRenderOnCompositorThread()
 {
   CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
+  MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, renderTask);
 }
 
@@ -715,6 +719,7 @@ CompositorParent::SchedulePauseOnCompositorThread()
 
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
+  MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, pauseTask);
 
   // Wait until the pause has actually been processed by the compositor thread
@@ -728,6 +733,7 @@ CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 
   CancelableTask *resumeTask =
     NewRunnableMethod(this, &CompositorParent::ResumeCompositionAndResize, width, height);
+  MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, resumeTask);
 
   // Wait until the resume has actually been processed by the compositor thread
@@ -1298,6 +1304,7 @@ CompositorParent::DeallocateLayerTreeId(uint64_t aId)
   // Here main thread notifies compositor to remove an element from
   // sIndirectLayerTrees. This removed element might be queried soon.
   // Checking the elements of sIndirectLayerTrees exist or not before using.
+  MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE,
                              NewRunnableFunction(&EraseLayerState, aId));
 }
