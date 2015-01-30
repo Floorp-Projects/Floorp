@@ -196,8 +196,8 @@ function handleRequest(req, res) {
 
   else if (u.pathname === "/pushapi1") {
     push1 = res.push(
-	{ hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/1', method : 'GET',
-	  headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+        { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/1', method : 'GET',
+          headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
     push1.writeHead(200, {
       'pushed' : 'yes',
       'content-length' : 1,
@@ -207,37 +207,37 @@ function handleRequest(req, res) {
     push1.end('1');
 
     push1a = res.push(
-	{ hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/1', method : 'GET',
-	  headers: {'x-foo' : 'bar', 'x-pushed-request': 'true'}});
+        { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/1', method : 'GET',
+          headers: {'x-foo' : 'bar', 'x-pushed-request': 'true'}});
     push1a.writeHead(200, {
       'pushed' : 'yes',
       'content-length' : 1,
       'subresource' : '1a',
       'X-Connection-Http2': 'yes'
-      });
+    });
     push1a.end('1');
 
     push2 = res.push(
-	{ hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/2', method : 'GET',
-	  headers: {'x-pushed-request': 'true'}});
+        { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/2', method : 'GET',
+          headers: {'x-pushed-request': 'true'}});
     push2.writeHead(200, {
-	  'pushed' : 'yes',
-	  'subresource' : '2',
-	  'content-length' : 1,
-	  'X-Connection-Http2': 'yes'
-      });
+      'pushed' : 'yes',
+      'subresource' : '2',
+      'content-length' : 1,
+      'X-Connection-Http2': 'yes'
+    });
     push2.end('2');
 
     push3 = res.push(
-	{ hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/3', method : 'GET',
-	  headers: {'x-pushed-request': 'true'}});
+        { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/3', method : 'GET',
+          headers: {'x-pushed-request': 'true'}});
     push3.writeHead(200, {
-	  'pushed' : 'yes',
-	  'content-length' : 1,
-	  'subresource' : '3',
-	  'X-Connection-Http2': 'yes'
-      });
-     push3.end('3');
+      'pushed' : 'yes',
+      'content-length' : 1,
+      'subresource' : '3',
+      'X-Connection-Http2': 'yes'
+    });
+    push3.end('3');
 
     content = '0';
   }

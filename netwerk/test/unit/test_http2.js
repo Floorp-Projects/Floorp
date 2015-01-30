@@ -110,7 +110,7 @@ Http2MultiplexListener.prototype.onStopRequest = function(request, ctx, status) 
   do_check_true(this.onDataAvailableFired);
   do_check_true(this.isHttp2Connection);
   do_check_true(this.buffer == multiplexContent);
-  
+
   // This is what does most of the hard work for us
   register_completed_channel(this);
 };
@@ -468,21 +468,21 @@ var altsvcClientListener = {
   onStopRequest: function test_onStopR(request, ctx, status) {
     var isHttp2Connection = checkIsHttp2(request);
     if (!isHttp2Connection) {
-	// not over tls yet - retry. It's all async and transparent to client
-	var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
+      // not over tls yet - retry. It's all async and transparent to client
+      var chan = ios.newChannel2("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
+                                 null,
+                                 null,
+                                 null,      // aLoadingNode
+                                 Services.scriptSecurityManager.getSystemPrincipal(),
+                                 null,      // aTriggeringPrincipal
+                                 Ci.nsILoadInfo.SEC_NORMAL,
+                                 Ci.nsIContentPolicy.TYPE_OTHER)
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
-	chan.asyncOpen(altsvcClientListener, null);
+      chan.asyncOpen(altsvcClientListener, null);
     } else {
-        do_check_true(isHttp2Connection);
-	httpserv.stop(do_test_finished);
-	run_next_test();
+      do_check_true(isHttp2Connection);
+      httpserv.stop(do_test_finished);
+      run_next_test();
     }
   }
 };
@@ -535,7 +535,7 @@ Http2PushApiListener.prototype = {
 
     pushChannel.asyncOpen(this, pushChannel);
     if (pushChannel.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
-	pushChannel.cancel(Components.results.NS_ERROR_ABORT);
+      pushChannel.cancel(Components.results.NS_ERROR_ABORT);
     }
   },
 
@@ -549,30 +549,30 @@ Http2PushApiListener.prototype = {
     var data = read_stream(stream, cnt);
 
     if (ctx.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1") {
-	do_check_eq(data[0], '0');
-	--this.checksPending;
+      do_check_eq(data[0], '0');
+      --this.checksPending;
     } else if (ctx.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/1") {
-	do_check_eq(data[0], '1');
-	--this.checksPending; // twice
+      do_check_eq(data[0], '1');
+      --this.checksPending; // twice
     } else if (ctx.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/3") {
-	do_check_eq(data[0], '3');
-	--this.checksPending;
+      do_check_eq(data[0], '3');
+      --this.checksPending;
     } else {
-	do_check_eq(true, false);
+      do_check_eq(true, false);
     }
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
     if (ctx.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
-	do_check_eq(request.status, Components.results.NS_ERROR_ABORT);
+      do_check_eq(request.status, Components.results.NS_ERROR_ABORT);
     } else {
-	do_check_eq(request.status, Components.results.NS_OK);
+      do_check_eq(request.status, Components.results.NS_OK);
     }
 
     --this.checksPending; // 5 times - one for each push plus the pull
     if (!this.checksPending) {
-	run_next_test();
-        do_test_finished();
+      run_next_test();
+      do_test_finished();
     }
   }
 };
@@ -665,7 +665,7 @@ var tests = [ test_http2_post_big
             , test_http2_push2
             , test_http2_push3
             , test_http2_push4
-	    , test_http2_altsvc
+            , test_http2_altsvc
             , test_http2_doubleheader
             , test_http2_xhr
             , test_http2_header
