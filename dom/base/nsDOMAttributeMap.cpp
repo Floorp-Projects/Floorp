@@ -14,6 +14,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/NamedNodeMapBinding.h"
+#include "mozilla/dom/NodeInfoInlines.h"
 #include "nsAttrName.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
