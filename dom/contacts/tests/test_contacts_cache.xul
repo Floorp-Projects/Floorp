@@ -42,6 +42,13 @@
     req.onerror = makeFailure("onerror", true);
   };
 
+  function checkRevision(expectedRevision, then) {
+    contactsDB.getRevision(function(revision) {
+      ok(expectedRevision === revision, "Revision OK");
+      then();
+    }, makeFailure("Could not get revision"));
+  };
+
   let CONTACT_PROPS = {
     id: "ab74671e36be41b680f8f030e7e24ea2",
     properties: {
@@ -61,25 +68,31 @@
   };
 
   let Tests = [function() {
+    info("Deleting database");
+    deleteDatabase(next);
+  }, function() {
+    info("Checking initial revision");
+    checkRevision(0, next);
+  }, function() {
     info("Save contact");
     contactsDB.saveContact(CONTACT_PROPS, function() {
       ok(true, "Saved contact successfully");
-      next();
-    });
+      checkRevision(1, next);
+    }, makeFailure("Could not save contact"));
   }, function() {
     info("Save another contact");
     contactsDB.saveContact(ANOTHER_CONTACT_PROPS, function() {
       ok(true, "Saved contact successfully");
-      next();
-    });
+      checkRevision(2, next);
+    }, makeFailure("Could not save contact"));
   }, function() {
     info("Get all contacts so cache is built");
     contactsDB.getAll(function(contacts) {
       ok(true, "Got all contacts " + contacts.length);
       next();
-    }, function(e) {
-      makeFailure("Unexpected error getting contacts " + e);
-    }, {"sortBy":"givenName","sortOrder":"ascending"});
+    }, makeFailure("Unexpected error getting contacts"), {
+      "sortBy":"givenName","sortOrder":"ascending"
+    });
   }, function() {
     info("Contacts cache should have both ids");
     let contactsCount = 0;
@@ -87,20 +100,32 @@
       store.openCursor().onsuccess = function(e) {
         let cursor = e.target.result;
         if (!cursor) {
-          makeFailure("Wrong cache");
+          makeFailure("Wrong cache")();
           return;
         }
         ok(cursor.value.length == 2, "Both contacts ids are in the cache");
         next();
       };
-    }, null, makeFailure);
+    }, null, makeFailure("Txn error"));
   }, function() {
     info("Remove contact " + CONTACT_PROPS.id);
     contactsDB.removeContact(CONTACT_PROPS.id, function() {
       ok(true, "Removed contact");
-      next();
-    }, function() {
-      makeFailure("Unexpected error removing contact " + e);
+      checkRevision(3, next);
+    }, makeFailure("Unexpected error removing contact "));
+  }, function() {
+    info("Check that contact has been removed for good");
+    contactsDB.newTxn("readonly", STORE_NAME, function(txn, store) {
+      let req = store.openCursor(IDBKeyRange.only(CONTACT_PROPS.id));
+      req.onsuccess = function(event) {
+        if (event.target.result) {
+          makeFailure("Should not have cursor")();
+          return;
+        }
+        ok(true, "Yep, the contact was removed");
+        next();
+      };
+      req.onerror = makeFailure("OpenCursor error");
     });
   }, function() {
     info("Contacts cache should have only one id");
@@ -108,14 +133,14 @@
       store.openCursor().onsuccess = function(e) {
         let cursor = e.target.result;
         if (!cursor) {
-          makeFailure;
+          makeFailure("Missing cursor")();
           return;
         }
         ok(cursor.value.length == 1, "Only one contacts id is in the cache");
         ok(cursor.value[0] == ANOTHER_CONTACT_PROPS.id, "And it is the right id");
         next();
       };
-    }, null, makeFailure);
+    }, null, makeFailure("Txn error"));
   }, function() {
     deleteDatabase(next);
   }];

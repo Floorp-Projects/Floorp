@@ -19,12 +19,12 @@ import java.util.regex.Pattern;
 
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.firstrun.FirstrunPane;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
@@ -810,7 +810,7 @@ public final class GeckoProfile {
         // Initialize pref flag for displaying the start pane for a new non-webapp profile.
         if (!mIsWebAppProfile) {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
-            prefs.edit().putBoolean(BrowserApp.PREF_STARTPANE_ENABLED, true).apply();
+            prefs.edit().putBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, true).apply();
         }
 
         return profileDir;

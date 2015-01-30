@@ -48,9 +48,12 @@
   <!-- highlight-focused on private nav button: 10% white over background_private -->
   <color name="highlight_nav_focused_pb">#FF3F423F</color>
 
-  <!-- Onboarding start pane -->
-  <color name="onboard_start">#EAEAEA</color>
-  <color name="onboard_start_highlight">#D8D8D8</color>
+  <!-- Firstrun tour-->
+  <color name="firstrun_background">#99000000</color>
+  <color name="firstrun_tabstrip">#1193CB</color>
+  <color name="firstrun_pager_background">#16A3DF</color>
+  <color name="firstrun_pager_button">#E66000</color>
+  <color name="firstrun_pager_button_pressed">#DC5600</color>
 
   <!--
       Application theme colors

@@ -101,7 +101,7 @@ class VCSFileInfo:
     def GetCleanRoot(self):
         """ This method should return the repository root for the file or 'None'
             on failure. """
-        raise NotImplementedErrors
+        raise NotImplementedError
 
     def GetRevision(self):
         """ This method should return the revision number for the file or 'None'
@@ -669,7 +669,7 @@ class Dumper:
                         self.CopyDebug(file, debug_file, guid)
             except StopIteration:
                 pass
-            except e:
+            except Exception as e:
                 self.output(sys.stderr, "Unexpected error: %s" % (str(e),))
                 raise
             if result['status']:

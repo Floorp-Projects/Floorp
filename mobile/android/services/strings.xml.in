@@ -138,6 +138,8 @@
 
 <string name="fxaccount_create_account_header">&fxaccount_create_account_header2;</string>
 <string name="fxaccount_create_account_password_length_restriction">&fxaccount_create_account_password_length_restriction;</string>
+<string name="fxaccount_create_account_day_of_birth">&fxaccount_create_account_day_of_birth;</string>
+<string name="fxaccount_create_account_month_of_birth">&fxaccount_create_account_month_of_birth;</string>
 <string name="fxaccount_create_account_year_of_birth">&fxaccount_create_account_year_of_birth;</string>
 
 <string name="fxaccount_create_account_policy_text">&fxaccount_create_account_policy_text2;</string>

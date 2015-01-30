@@ -41,6 +41,9 @@ let snapshotFormatters = {
     if (data.vendor)
       version += " (" + data.vendor + ")";
     $("version-box").textContent = version;
+    $("buildid-box").textContent = data.buildID;
+    if (data.updateChannel)
+      $("updatechannel-box").textContent = data.updateChannel;
 
     $("multiprocess-box").textContent = stringBundle().formatStringFromName("multiProcessStatus",
       [data.numRemoteWindows, data.numTotalWindows, data.remoteAutoStart], 3);

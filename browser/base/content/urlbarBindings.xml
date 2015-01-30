@@ -1173,7 +1173,7 @@
           // Ensure the panel is wide enough to fit at least 3 engines.
           minWidth = Math.max(minWidth, ENGINE_WIDTH * 3);
         }
-        panel.setAttribute("style", "min-width: " + minWidth + "px");
+        panel.style.minWidth = minWidth + "px";
 
         if (!engines.length)
           return;
