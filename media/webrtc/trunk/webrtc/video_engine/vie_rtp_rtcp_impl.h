@@ -41,18 +41,22 @@ class ViERTP_RTCPImpl
                              unsigned int CSRCs[kRtpCsrcSize]) const;
   virtual int SetRtxSendPayloadType(const int video_channel,
                                     const uint8_t payload_type);
+  virtual int SetPadWithRedundantPayloads(int video_channel, bool enable);
   virtual int SetRtxReceivePayloadType(const int video_channel,
                                        const uint8_t payload_type);
   virtual int SetStartSequenceNumber(const int video_channel,
                                      uint16_t sequence_number);
+  virtual void SetRtpStateForSsrc(int video_channel,
+                                  uint32_t ssrc,
+                                  const RtpState& rtp_state) OVERRIDE;
+  virtual RtpState GetRtpStateForSsrc(int video_channel,
+                                      uint32_t ssrc) OVERRIDE;
   virtual int SetRTCPStatus(const int video_channel,
                             const ViERTCPMode rtcp_mode);
   virtual int GetRTCPStatus(const int video_channel,
                             ViERTCPMode& rtcp_mode) const;
   virtual int SetRTCPCName(const int video_channel,
                            const char rtcp_cname[KMaxRTCPCNameLength]);
-  virtual int GetRTCPCName(const int video_channel,
-                           char rtcp_cname[KMaxRTCPCNameLength]) const;
   virtual int GetRemoteRTCPCName(const int video_channel,
                                  char rtcp_cname[KMaxRTCPCNameLength]) const;
   virtual int GetRemoteRTCPReceiverInfo(const int video_channel,
@@ -99,6 +103,10 @@ class ViERTP_RTCPImpl
                                                int id);
   virtual int SetRtcpXrRrtrStatus(int video_channel, bool enable);
   virtual int SetTransmissionSmoothingStatus(int video_channel, bool enable);
+  virtual int SetMinTransmitBitrate(int video_channel,
+                                    int min_transmit_bitrate_kbps);
+  virtual int SetReservedTransmitBitrate(
+      int video_channel, unsigned int reserved_transmit_bitrate_bps);
   virtual int GetReceiveChannelRtcpStatistics(const int video_channel,
                                               RtcpStatistics& basic_stats,
                                               int& rtt_ms) const;
@@ -108,6 +116,10 @@ class ViERTP_RTCPImpl
   virtual int GetRtpStatistics(const int video_channel,
                                StreamDataCounters& sent,
                                StreamDataCounters& received) const;
+  virtual int GetRtcpPacketTypeCounters(
+      int video_channel,
+      RtcpPacketTypeCounter* packets_sent,
+      RtcpPacketTypeCounter* packets_received) const;
   virtual int GetRemoteRTCPSenderInfo(const int video_channel,
                                       SenderInfo* sender_info) const;
   virtual int GetBandwidthUsage(const int video_channel,
@@ -123,6 +135,8 @@ class ViERTP_RTCPImpl
       unsigned int* estimated_bandwidth) const;
   virtual int GetReceiveBandwidthEstimatorStats(
       const int video_channel, ReceiveBandwidthEstimatorStats* output) const;
+  virtual int GetPacerQueuingDelayMs(const int video_channel,
+                                     int* delay_ms) const;
   virtual int StartRTPDump(const int video_channel,
                            const char file_nameUTF8[1024],
                            RTPDirections direction);

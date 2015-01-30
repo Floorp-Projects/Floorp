@@ -147,14 +147,14 @@ FOR_LOOP:
 @  a0_ch1 = WEBRTC_SPL_MUL_16_16(factor_ch1[0], sample0_ch1) << 1;
 @  a0_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[0], sample0_ch2) << 1;
 @
-@  b0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1, state0_ch1);
-@  b0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2, state0_ch2); //Q16+Q16=Q16
+@  b0_ch1 = WebRtcSpl_AddSatW32(a0_ch1, state0_ch1);
+@  b0_ch2 = WebRtcSpl_AddSatW32(a0_ch2, state0_ch2); //Q16+Q16=Q16
 @
 @  a0_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[0], (int16_t) (b0_ch1 >> 16));
 @  a0_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[0], (int16_t) (b0_ch2 >> 16));
 @
-@  state0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1 <<1, (uint32_t)sample0_ch1 << 16);
-@  state0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2 <<1, (uint32_t)sample0_ch2 << 16);
+@  state0_ch1 = WebRtcSpl_AddSatW32(a0_ch1 <<1, (uint32_t)sample0_ch1 << 16);
+@  state0_ch2 = WebRtcSpl_AddSatW32(a0_ch2 <<1, (uint32_t)sample0_ch2 << 16);
 @
 @  sample1_ch1 = data_ch1[n + 1];
 @  sample0_ch1 = (int16_t) (b0_ch1 >> 16); //Save as Q0
@@ -168,20 +168,20 @@ FOR_LOOP:
 @    a1_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[0], sample1_ch2 ) << 1;
 @    a0_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[1], sample0_ch2) << 1;
 @
-@    b1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1, state0_ch1);
-@    b0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1, state1_ch1); //Q16+Q16=Q16
-@    b1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2, state0_ch2); //Q16+Q16=Q16
-@    b0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2, state1_ch2); //Q16+Q16=Q16
+@    b1_ch1 = WebRtcSpl_AddSatW32(a1_ch1, state0_ch1);
+@    b0_ch1 = WebRtcSpl_AddSatW32(a0_ch1, state1_ch1); //Q16+Q16=Q16
+@    b1_ch2 = WebRtcSpl_AddSatW32(a1_ch2, state0_ch2); //Q16+Q16=Q16
+@    b0_ch2 = WebRtcSpl_AddSatW32(a0_ch2, state1_ch2); //Q16+Q16=Q16
 @
 @    a1_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[0], (int16_t) (b1_ch1 >> 16));
 @    a0_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[1], (int16_t) (b0_ch1 >> 16));
 @    a1_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[0], (int16_t) (b1_ch2 >> 16));
 @    a0_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[1], (int16_t) (b0_ch2 >> 16));
 @
-@    state0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1<<1, (uint32_t)sample1_ch1 <<16);
-@    state1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1<<1, (uint32_t)sample0_ch1 <<16);
-@    state0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2<<1, (uint32_t)sample1_ch2 <<16);
-@    state1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2<<1, (uint32_t)sample0_ch2 <<16);
+@    state0_ch1 = WebRtcSpl_AddSatW32(a1_ch1<<1, (uint32_t)sample1_ch1 <<16);
+@    state1_ch1 = WebRtcSpl_AddSatW32(a0_ch1<<1, (uint32_t)sample0_ch1 <<16);
+@    state0_ch2 = WebRtcSpl_AddSatW32(a1_ch2<<1, (uint32_t)sample1_ch2 <<16);
+@    state1_ch2 = WebRtcSpl_AddSatW32(a0_ch2<<1, (uint32_t)sample0_ch2 <<16);
 @
 @    sample0_ch1 = data_ch1[n + 2];
 @    sample1_ch1 = (int16_t) (b1_ch1 >> 16); //Save as Q0
@@ -193,20 +193,20 @@ FOR_LOOP:
 @    a0_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[0], sample0_ch2) << 1;
 @    a1_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[1], sample1_ch2 ) << 1;
 @
-@    b2_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1, state0_ch1);
-@    b1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1, state1_ch1); //Q16+Q16=Q16
-@    b2_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2, state0_ch2); //Q16+Q16=Q16
-@    b1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2, state1_ch2); //Q16+Q16=Q16
+@    b2_ch1 = WebRtcSpl_AddSatW32(a0_ch1, state0_ch1);
+@    b1_ch1 = WebRtcSpl_AddSatW32(a1_ch1, state1_ch1); //Q16+Q16=Q16
+@    b2_ch2 = WebRtcSpl_AddSatW32(a0_ch2, state0_ch2); //Q16+Q16=Q16
+@    b1_ch2 = WebRtcSpl_AddSatW32(a1_ch2, state1_ch2); //Q16+Q16=Q16
 @
 @    a0_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[0], (int16_t) (b2_ch1 >> 16));
 @    a1_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[1], (int16_t) (b1_ch1 >> 16));
 @    a0_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[0], (int16_t) (b2_ch2 >> 16));
 @    a1_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[1], (int16_t) (b1_ch2 >> 16));
 @
-@    state0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1<<1, (uint32_t)sample0_ch1<<16);
-@    state1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1<<1, (uint32_t)sample1_ch1<<16);
-@    state0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2<<1, (uint32_t)sample0_ch2<<16);
-@    state1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2<<1, (uint32_t)sample1_ch2<<16);
+@    state0_ch1 = WebRtcSpl_AddSatW32(a0_ch1<<1, (uint32_t)sample0_ch1<<16);
+@    state1_ch1 = WebRtcSpl_AddSatW32(a1_ch1<<1, (uint32_t)sample1_ch1<<16);
+@    state0_ch2 = WebRtcSpl_AddSatW32(a0_ch2<<1, (uint32_t)sample0_ch2<<16);
+@    state1_ch2 = WebRtcSpl_AddSatW32(a1_ch2<<1, (uint32_t)sample1_ch2<<16);
 @
 @
 @    sample1_ch1 = data_ch1[n + 3];
@@ -227,20 +227,20 @@ FOR_LOOP:
 @  a1_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[0], sample1_ch2 ) << 1;
 @  a0_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[1], sample0_ch2) << 1;
 @
-@  b1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1, state0_ch1);
-@  b0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1, state1_ch1);
-@  b1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2, state0_ch2);
-@  b0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2, state1_ch2);
+@  b1_ch1 = WebRtcSpl_AddSatW32(a1_ch1, state0_ch1);
+@  b0_ch1 = WebRtcSpl_AddSatW32(a0_ch1, state1_ch1);
+@  b1_ch2 = WebRtcSpl_AddSatW32(a1_ch2, state0_ch2);
+@  b0_ch2 = WebRtcSpl_AddSatW32(a0_ch2, state1_ch2);
 @
 @  a1_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[0], (int16_t) (b1_ch1 >> 16));
 @  a0_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[1], (int16_t) (b0_ch1 >> 16));
 @  a1_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[0], (int16_t) (b1_ch2 >> 16));
 @  a0_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[1], (int16_t) (b0_ch2 >> 16));
 @
-@  state0_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1<<1, (uint32_t)sample1_ch1 << 16);
-@  state1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a0_ch1<<1, (uint32_t)sample0_ch1 << 16);
-@  state0_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2<<1, (uint32_t)sample1_ch2 << 16);
-@  state1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a0_ch2<<1, (uint32_t)sample0_ch2 << 16);
+@  state0_ch1 = WebRtcSpl_AddSatW32(a1_ch1<<1, (uint32_t)sample1_ch1 << 16);
+@  state1_ch1 = WebRtcSpl_AddSatW32(a0_ch1<<1, (uint32_t)sample0_ch1 << 16);
+@  state0_ch2 = WebRtcSpl_AddSatW32(a1_ch2<<1, (uint32_t)sample1_ch2 << 16);
+@  state1_ch2 = WebRtcSpl_AddSatW32(a0_ch2<<1, (uint32_t)sample0_ch2 << 16);
 @
 @  data_ch1[n] = (int16_t) (b0_ch1 >> 16); //Save as Q0
 @  data_ch2[n] = (int16_t) (b0_ch2 >> 16);
@@ -251,14 +251,14 @@ FOR_LOOP:
 @  a1_ch1 = WEBRTC_SPL_MUL_16_16(factor_ch1[1], sample1_ch1) << 1;
 @  a1_ch2 = WEBRTC_SPL_MUL_16_16(factor_ch2[1], sample1_ch2 ) << 1;
 @
-@  b1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1, state1_ch1); //Q16+Q16=Q16
-@  b1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2, state1_ch2); //Q16+Q16=Q16
+@  b1_ch1 = WebRtcSpl_AddSatW32(a1_ch1, state1_ch1); //Q16+Q16=Q16
+@  b1_ch2 = WebRtcSpl_AddSatW32(a1_ch2, state1_ch2); //Q16+Q16=Q16
 @
 @  a1_ch1 = WEBRTC_SPL_MUL_16_16(-factor_ch1[1], (int16_t) (b1_ch1 >> 16));
 @  a1_ch2 = WEBRTC_SPL_MUL_16_16(-factor_ch2[1], (int16_t) (b1_ch2 >> 16));
 @
-@  state1_ch1 = WEBRTC_SPL_ADD_SAT_W32(a1_ch1<<1, (uint32_t)sample1_ch1<<16);
-@  state1_ch2 = WEBRTC_SPL_ADD_SAT_W32(a1_ch2<<1, (uint32_t)sample1_ch2<<16);
+@  state1_ch1 = WebRtcSpl_AddSatW32(a1_ch1<<1, (uint32_t)sample1_ch1<<16);
+@  state1_ch2 = WebRtcSpl_AddSatW32(a1_ch2<<1, (uint32_t)sample1_ch2<<16);
 @
 @  data_ch1[n + 1] = (int16_t) (b1_ch1 >> 16); //Save as Q0
 @  data_ch2[n + 1] = (int16_t) (b1_ch2 >> 16);

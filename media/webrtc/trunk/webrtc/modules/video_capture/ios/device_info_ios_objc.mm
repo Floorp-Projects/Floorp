@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(__has_feature) || !__has_feature(objc_arc)
+#error "This file requires ARC support."
+#endif
+
 #import <AVFoundation/AVFoundation.h>
 
 #import "webrtc/modules/video_capture/ios/device_info_ios_objc.h"

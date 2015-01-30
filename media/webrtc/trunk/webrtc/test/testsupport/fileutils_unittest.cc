@@ -29,8 +29,6 @@ static const std::string kResourcesDir = "resources";
 static const std::string kTestName = "fileutils_unittest";
 static const std::string kExtension = "tmp";
 
-typedef std::list<std::string> FileList;
-
 namespace webrtc {
 
 // Test fixture to restore the working directory between each test, since some
@@ -44,38 +42,6 @@ class FileUtilsTest : public testing::Test {
   // Runs before the first test
   static void SetUpTestCase() {
     original_working_dir_ = webrtc::test::WorkingDir();
-    std::string resources_path = original_working_dir_ + kPathDelimiter +
-        kResourcesDir + kPathDelimiter;
-    webrtc::test::CreateDirectory(resources_path);
-
-    files_.push_back(resources_path + kTestName + "." + kExtension);
-    files_.push_back(resources_path + kTestName + "_32." + kExtension);
-    files_.push_back(resources_path + kTestName + "_64." + kExtension);
-    files_.push_back(resources_path + kTestName + "_linux." + kExtension);
-    files_.push_back(resources_path + kTestName + "_mac." + kExtension);
-    files_.push_back(resources_path + kTestName + "_win." + kExtension);
-    files_.push_back(resources_path + kTestName + "_linux_32." + kExtension);
-    files_.push_back(resources_path + kTestName + "_mac_32." + kExtension);
-    files_.push_back(resources_path + kTestName + "_win_32." + kExtension);
-    files_.push_back(resources_path + kTestName + "_linux_64." + kExtension);
-    files_.push_back(resources_path + kTestName + "_mac_64." + kExtension);
-    files_.push_back(resources_path + kTestName + "_win_64." + kExtension);
-
-    // Now that the resources dir exists, write some empty test files into it.
-    for (FileList::iterator file_it = files_.begin();
-        file_it != files_.end(); ++file_it) {
-      FILE* file = fopen(file_it->c_str(), "wb");
-      ASSERT_TRUE(file != NULL) << "Failed to write file: " << file_it->c_str();
-      ASSERT_GT(fprintf(file, "%s",  "Dummy data"), 0);
-      fclose(file);
-    }
-  }
-  static void TearDownTestCase() {
-    // Clean up all resource files written
-    for (FileList::iterator file_it = files_.begin();
-            file_it != files_.end(); ++file_it) {
-      remove(file_it->c_str());
-    }
   }
   void SetUp() {
     ASSERT_EQ(chdir(original_working_dir_.c_str()), 0);
@@ -83,13 +49,10 @@ class FileUtilsTest : public testing::Test {
   void TearDown() {
     ASSERT_EQ(chdir(original_working_dir_.c_str()), 0);
   }
- protected:
-  static FileList files_;
  private:
   static std::string original_working_dir_;
 };
 
-FileList FileUtilsTest::files_;
 std::string FileUtilsTest::original_working_dir_ = "";
 
 // Tests that the project root path is returned for the default working
@@ -103,7 +66,7 @@ TEST_F(FileUtilsTest, ProjectRootPath) {
 }
 
 // Similar to the above test, but for the output dir
-TEST_F(FileUtilsTest, OutputPathFromUnchangedWorkingDir) {
+TEST_F(FileUtilsTest, DISABLED_ON_ANDROID(OutputPathFromUnchangedWorkingDir)) {
   std::string path = webrtc::test::OutputPath();
   std::string expected_end = "out";
   expected_end = kPathDelimiter + expected_end + kPathDelimiter;
@@ -117,12 +80,20 @@ TEST_F(FileUtilsTest, DISABLED_ON_ANDROID(OutputPathFromRootWorkingDir)) {
   ASSERT_EQ("./", webrtc::test::OutputPath());
 }
 
+TEST_F(FileUtilsTest, TempFilename) {
+  std::string temp_filename = webrtc::test::TempFilename(
+      webrtc::test::OutputPath(), "TempFilenameTest");
+  ASSERT_TRUE(webrtc::test::FileExists(temp_filename))
+      << "Couldn't find file: " << temp_filename;
+  remove(temp_filename.c_str());
+}
+
 // Only tests that the code executes
-TEST_F(FileUtilsTest, CreateDirectory) {
+TEST_F(FileUtilsTest, CreateDir) {
   std::string directory = "fileutils-unittest-empty-dir";
   // Make sure it's removed if a previous test has failed:
   remove(directory.c_str());
-  ASSERT_TRUE(webrtc::test::CreateDirectory(directory));
+  ASSERT_TRUE(webrtc::test::CreateDir(directory));
   remove(directory.c_str());
 }
 
@@ -152,7 +123,16 @@ TEST_F(FileUtilsTest, ResourcePathFromRootWorkingDir) {
 }
 
 TEST_F(FileUtilsTest, GetFileSizeExistingFile) {
-  ASSERT_GT(webrtc::test::GetFileSize(files_.front()), 0u);
+  // Create a file with some dummy data in.
+  std::string temp_filename = webrtc::test::TempFilename(
+      webrtc::test::OutputPath(), "fileutils_unittest");
+  FILE* file = fopen(temp_filename.c_str(), "wb");
+  ASSERT_TRUE(file != NULL) << "Failed to open file: " << temp_filename;
+  ASSERT_GT(fprintf(file, "%s",  "Dummy data"), 0) <<
+      "Failed to write to file: " << temp_filename;
+  fclose(file);
+  ASSERT_GT(webrtc::test::GetFileSize(std::string(temp_filename.c_str())), 0u);
+  remove(temp_filename.c_str());
 }
 
 TEST_F(FileUtilsTest, GetFileSizeNonExistingFile) {

@@ -443,27 +443,14 @@ int32_t WebRtcAecm_Process(void *aecmInst, const int16_t *nearendNoisy,
             // Call the AECM
             /*WebRtcAecm_ProcessFrame(aecm->aecmCore, farend, &nearend[FRAME_LEN * i],
              &out[FRAME_LEN * i], aecm->knownDelay);*/
-            if (nearendClean == NULL)
-            {
-                if (WebRtcAecm_ProcessFrame(aecm->aecmCore,
-                                            farend_ptr,
-                                            &nearendNoisy[FRAME_LEN * i],
-                                            NULL,
-                                            &out[FRAME_LEN * i]) == -1)
-                {
-                    return -1;
-                }
-            } else
-            {
-                if (WebRtcAecm_ProcessFrame(aecm->aecmCore,
-                                            farend_ptr,
-                                            &nearendNoisy[FRAME_LEN * i],
-                                            &nearendClean[FRAME_LEN * i],
-                                            &out[FRAME_LEN * i]) == -1)
-                {
-                    return -1;
-                }
-            }
+            if (WebRtcAecm_ProcessFrame(aecm->aecmCore,
+                                        farend_ptr,
+                                        &nearendNoisy[FRAME_LEN * i],
+                                        (nearendClean
+                                         ? &nearendClean[FRAME_LEN * i]
+                                         : NULL),
+                                        &out[FRAME_LEN * i]) == -1)
+                return -1;
         }
     }
 

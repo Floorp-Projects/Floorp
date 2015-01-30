@@ -345,34 +345,6 @@ bool AudioDeviceLinuxPulse::Initialized() const
     return (_initialized);
 }
 
-int32_t AudioDeviceLinuxPulse::SpeakerIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.SpeakerIsInitialized();
-
-    // Make an attempt to open up the
-    // output mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitSpeaker() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitSpeaker was successful, we know that a valid speaker exists
-    //
-    available = true;
-
-    // Close the initialized output mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseSpeaker();
-    }
-
-    return 0;
-}
-
 int32_t AudioDeviceLinuxPulse::InitSpeaker()
 {
 
@@ -414,34 +386,6 @@ int32_t AudioDeviceLinuxPulse::InitSpeaker()
     // clear _deviceIndex
     _deviceIndex = -1;
     _paDeviceIndex = -1;
-
-    return 0;
-}
-
-int32_t AudioDeviceLinuxPulse::MicrophoneIsAvailable(bool& available)
-{
-
-    bool wasInitialized = _mixerManager.MicrophoneIsInitialized();
-
-    // Make an attempt to open up the
-    // input mixer corresponding to the currently selected output device.
-    //
-    if (!wasInitialized && InitMicrophone() == -1)
-    {
-        available = false;
-        return 0;
-    }
-
-    // Given that InitMicrophone was successful, we know that a valid microphone
-    // exists
-    available = true;
-
-    // Close the initialized input mixer
-    //
-    if (!wasInitialized)
-    {
-        _mixerManager.CloseMicrophone();
-    }
 
     return 0;
 }

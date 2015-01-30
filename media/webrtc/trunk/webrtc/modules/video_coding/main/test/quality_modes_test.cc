@@ -32,7 +32,7 @@ int qualityModeTest(const CmdArgs& args)
 {
   SimulatedClock clock(0);
   NullEventFactory event_factory;
-  VideoCodingModule* vcm = VideoCodingModule::Create(1, &clock, &event_factory);
+  VideoCodingModule* vcm = VideoCodingModule::Create(&clock, &event_factory);
   QualityModesTest QMTest(vcm, &clock);
   QMTest.Perform(args);
   VideoCodingModule::Destroy(vcm);
@@ -249,7 +249,6 @@ QualityModesTest::Perform(const CmdArgs& args)
 
   VideoContentMetrics* contentMetrics = NULL;
   // setting user frame rate
-  _vpm->SetMaxFramerate((uint32_t)(_nativeFrameRate+ 0.5f));
   // for starters: keeping native values:
   _vpm->SetTargetResolution(_width, _height,
                             (uint32_t)(_frameRate+ 0.5f));

@@ -10,10 +10,14 @@
 
 #include <stdio.h>
 
+#include <map>
+#include <sstream>
+
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/video_capture/ensure_initialized.h"
 #include "webrtc/modules/video_capture/include/video_capture.h"
 #include "webrtc/modules/video_capture/include/video_capture_factory.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
@@ -21,6 +25,7 @@
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 using webrtc::CriticalSectionWrapper;
 using webrtc::CriticalSectionScoped;
@@ -103,9 +108,14 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
   virtual void OnIncomingCapturedFrame(const int32_t id,
                                        webrtc::I420VideoFrame& videoFrame) {
     CriticalSectionScoped cs(capture_cs_.get());
-
     int height = videoFrame.height();
     int width = videoFrame.width();
+#if ANDROID
+    // Android camera frames may be rotated depending on test device
+    // orientation.
+    EXPECT_TRUE(height == capability_.height || height == capability_.width);
+    EXPECT_TRUE(width == capability_.width || width == capability_.height);
+#else
     if (rotate_frame_ == webrtc::kCameraRotate90 ||
         rotate_frame_ == webrtc::kCameraRotate270) {
       EXPECT_EQ(width, capability_.height);
@@ -114,6 +124,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
       EXPECT_EQ(height, capability_.height);
       EXPECT_EQ(width, capability_.width);
     }
+#endif
     // RenderTimstamp should be the time now.
     EXPECT_TRUE(
         videoFrame.render_time_ms() >= TickTime::MillisecondTimestamp()-30 &&
@@ -231,7 +242,9 @@ class VideoCaptureTest : public testing::Test {
   VideoCaptureTest() : number_of_devices_(0) {}
 
   void SetUp() {
-    device_info_.reset(VideoCaptureFactory::CreateDeviceInfo(5));
+    webrtc::videocapturemodule::EnsureInitialized();
+    device_info_.reset(VideoCaptureFactory::CreateDeviceInfo(0));
+    assert(device_info_.get());
     number_of_devices_ = device_info_->NumberOfDevices();
     ASSERT_GT(number_of_devices_, 0u);
   }
@@ -258,7 +271,7 @@ class VideoCaptureTest : public testing::Test {
 
   void StartCapture(VideoCaptureModule* capture_module,
                     VideoCaptureCapability capability) {
-    EXPECT_EQ(0, capture_module->StartCapture(capability));
+    ASSERT_EQ(0, capture_module->StartCapture(capability));
     EXPECT_TRUE(capture_module->CaptureStarted());
 
     VideoCaptureCapability resulting_capability;
@@ -289,7 +302,7 @@ TEST_F(VideoCaptureTest, CreateDelete) {
     capability.rawType = webrtc::kVideoUnknown;
 #endif
     capture_observer.SetExpectedCapability(capability);
-    StartCapture(module.get(), capability);
+    ASSERT_NO_FATAL_FAILURE(StartCapture(module.get(), capability));
 
     // Less than 4s to start the camera.
     EXPECT_LE(TickTime::MillisecondTimestamp() - start_time, 4000);
@@ -323,17 +336,50 @@ TEST_F(VideoCaptureTest, Capabilities) {
   int number_of_capabilities = device_info_->NumberOfCapabilities(
       module->CurrentDeviceName());
   EXPECT_GT(number_of_capabilities, 0);
+  // Key is <width>x<height>, value is vector of maxFPS values at that
+  // resolution.
+  typedef std::map<std::string, std::vector<int> > FrameRatesByResolution;
+  FrameRatesByResolution frame_rates_by_resolution;
   for (int i = 0; i < number_of_capabilities; ++i) {
     VideoCaptureCapability capability;
     EXPECT_EQ(0, device_info_->GetCapability(module->CurrentDeviceName(), i,
                                              capability));
+    std::ostringstream resolutionStream;
+    resolutionStream << capability.width << "x" << capability.height;
+    resolutionStream.flush();
+    std::string resolution = resolutionStream.str();
+    frame_rates_by_resolution[resolution].push_back(capability.maxFPS);
+
+    // Since Android presents so many resolution/FPS combinations and the test
+    // runner imposes a timeout, we only actually start the capture and test
+    // that a frame was captured for 2 frame-rates at each resolution.
+    if (frame_rates_by_resolution[resolution].size() > 2)
+      continue;
+
     capture_observer.SetExpectedCapability(capability);
-    StartCapture(module.get(), capability);
-    // Make sure 5 frames are captured.
-    EXPECT_TRUE_WAIT(capture_observer.incoming_frames() >= 5, kTimeOut);
+    ASSERT_NO_FATAL_FAILURE(StartCapture(module.get(), capability));
+    // Make sure at least one frame is captured.
+    EXPECT_TRUE_WAIT(capture_observer.incoming_frames() >= 1, kTimeOut);
 
     EXPECT_EQ(0, module->StopCapture());
   }
+
+#if ANDROID
+  // There's no reason for this to _necessarily_ be true, but in practice all
+  // Android devices this test runs on in fact do support multiple capture
+  // resolutions and multiple frame-rates per captured resolution, so we assert
+  // this fact here as a regression-test against the time that we only noticed a
+  // single frame-rate per resolution (bug 2974).  If this test starts being run
+  // on devices for which this is untrue (e.g. Nexus4) then the following should
+  // probably be wrapped in a base::android::BuildInfo::model()/device() check.
+  EXPECT_GT(frame_rates_by_resolution.size(), 1U);
+  for (FrameRatesByResolution::const_iterator it =
+           frame_rates_by_resolution.begin();
+       it != frame_rates_by_resolution.end();
+       ++it) {
+    EXPECT_GT(it->second.size(), 1U) << it->first;
+  }
+#endif  // ANDROID
 }
 
 // NOTE: flaky, crashes sometimes.
@@ -376,10 +422,12 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
 #endif
   capture_observer2.SetExpectedCapability(capability2);
 
-  StartCapture(module1.get(), capability1);
-  StartCapture(module2.get(), capability2);
+  ASSERT_NO_FATAL_FAILURE(StartCapture(module1.get(), capability1));
+  ASSERT_NO_FATAL_FAILURE(StartCapture(module2.get(), capability2));
   EXPECT_TRUE_WAIT(capture_observer1.incoming_frames() >= 5, kTimeOut);
   EXPECT_TRUE_WAIT(capture_observer2.incoming_frames() >= 5, kTimeOut);
+  EXPECT_EQ(0, module2->StopCapture());
+  EXPECT_EQ(0, module1->StopCapture());
 }
 
 // Test class for testing external capture and capture feedback information
@@ -432,7 +480,7 @@ TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
   unsigned int length = webrtc::CalcBufferSize(webrtc::kI420,
                                                test_frame_.width(),
                                                test_frame_.height());
-  webrtc::scoped_array<uint8_t> test_buffer(new uint8_t[length]);
+  webrtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
   webrtc::ExtractBuffer(test_frame_, length, test_buffer.get());
   EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
       length, capture_callback_.capability(), 0));
@@ -509,7 +557,8 @@ TEST_F(VideoCaptureExternalTest, DISABLED_TestExternalCaptureI420) {
 }
 
 // Test frame rate and no picture alarm.
-TEST_F(VideoCaptureExternalTest , FrameRate) {
+// Flaky on Win32, see webrtc:3270.
+TEST_F(VideoCaptureExternalTest, DISABLED_ON_WIN(FrameRate)) {
   int64_t testTime = 3;
   TickTime startTime = TickTime::Now();
 
@@ -517,7 +566,7 @@ TEST_F(VideoCaptureExternalTest , FrameRate) {
      unsigned int length = webrtc::CalcBufferSize(webrtc::kI420,
                                                  test_frame_.width(),
                                                  test_frame_.height());
-     webrtc::scoped_array<uint8_t> test_buffer(new uint8_t[length]);
+     webrtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
      webrtc::ExtractBuffer(test_frame_, length, test_buffer.get());
      EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
        length, capture_callback_.capability(), 0));
@@ -533,7 +582,7 @@ TEST_F(VideoCaptureExternalTest , FrameRate) {
     unsigned int length = webrtc::CalcBufferSize(webrtc::kI420,
                                                  test_frame_.width(),
                                                  test_frame_.height());
-    webrtc::scoped_array<uint8_t> test_buffer(new uint8_t[length]);
+    webrtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
     webrtc::ExtractBuffer(test_frame_, length, test_buffer.get());
     EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
       length, capture_callback_.capability(), 0));
@@ -551,7 +600,7 @@ TEST_F(VideoCaptureExternalTest, Rotation) {
   unsigned int length = webrtc::CalcBufferSize(webrtc::kI420,
                                                test_frame_.width(),
                                                test_frame_.height());
-  webrtc::scoped_array<uint8_t> test_buffer(new uint8_t[length]);
+  webrtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[length]);
   webrtc::ExtractBuffer(test_frame_, length, test_buffer.get());
   EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
     length, capture_callback_.capability(), 0));

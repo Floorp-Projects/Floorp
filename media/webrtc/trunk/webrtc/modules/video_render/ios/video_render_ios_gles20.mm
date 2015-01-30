@@ -8,6 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#if !defined(__has_feature) || !__has_feature(objc_arc)
+#error "This file requires ARC support."
+#endif
+
 #include "webrtc/modules/video_render/ios/video_render_ios_gles20.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
@@ -246,7 +250,7 @@ int VideoRenderIosGles20::GetWindowRect(Rect& rect) {
 int VideoRenderIosGles20::ChangeWindow(void* new_window) {
   CriticalSectionScoped cs(gles_crit_sec_.get());
 
-  view_ = (VideoRenderIosView*)new_window;
+  view_ = (__bridge VideoRenderIosView*)new_window;
 
   return 0;
 }

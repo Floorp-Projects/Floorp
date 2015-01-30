@@ -22,7 +22,12 @@ extern "C" {
 
 namespace webrtc {
 
-typedef scoped_ptr_malloc<RingBuffer, WebRtc_FreeBuffer> scoped_ring_buffer;
+struct FreeBufferDeleter {
+  inline void operator()(void* ptr) const {
+    WebRtc_FreeBuffer(ptr);
+  }
+};
+typedef scoped_ptr<RingBuffer, FreeBufferDeleter> scoped_ring_buffer;
 
 static void AssertElementEq(int expected, int actual) {
   ASSERT_EQ(expected, actual);
@@ -47,8 +52,8 @@ static int CheckIncrementingData(int* data, int num_elements,
 // We use ASSERTs in this test to avoid obscuring the seed in the case of a
 // failure.
 static void RandomStressTest(int** data_ptr) {
-  const int kNumTests = 100;
-  const int kNumOps = 10000;
+  const int kNumTests = 10;
+  const int kNumOps = 1000;
   const int kMaxBufferSize = 1000;
 
   unsigned int seed = time(NULL);
@@ -56,8 +61,8 @@ static void RandomStressTest(int** data_ptr) {
   srand(seed);
   for (int i = 0; i < kNumTests; i++) {
     const int buffer_size = std::max(rand() % kMaxBufferSize, 1);
-    scoped_array<int> write_data(new int[buffer_size]);
-    scoped_array<int> read_data(new int[buffer_size]);
+    scoped_ptr<int[]> write_data(new int[buffer_size]);
+    scoped_ptr<int[]> read_data(new int[buffer_size]);
     scoped_ring_buffer buffer(WebRtc_CreateBuffer(buffer_size, sizeof(int)));
     ASSERT_TRUE(buffer.get() != NULL);
     ASSERT_EQ(0, WebRtc_InitBuffer(buffer.get()));

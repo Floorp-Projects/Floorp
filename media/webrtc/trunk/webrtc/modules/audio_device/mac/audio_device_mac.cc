@@ -578,7 +578,6 @@ int32_t AudioDeviceMac::MicrophoneIsAvailable(bool& available)
     return 0;
 }
 
-
 int32_t AudioDeviceMac::InitMicrophone()
 {
 

@@ -586,7 +586,7 @@ int32_t AudioMixerManager::OpenSpeaker(AudioDeviceModule::WindowsDeviceType devi
         _outputMixerHandle = NULL;
     }
 
-    MMRESULT     res;
+    MMRESULT     res = MMSYSERR_NOERROR;
     WAVEFORMATEX waveFormat;
     HWAVEOUT     hWaveOut(NULL);
 
@@ -808,7 +808,7 @@ int32_t AudioMixerManager::OpenMicrophone(AudioDeviceModule::WindowsDeviceType d
         _inputMixerHandle = NULL;
     }
 
-    MMRESULT     res;
+    MMRESULT     res = MMSYSERR_NOERROR;
     WAVEFORMATEX waveFormat;
     HWAVEIN         hWaveIn(NULL);
 

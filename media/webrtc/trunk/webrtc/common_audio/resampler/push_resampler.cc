@@ -17,22 +17,21 @@
 
 namespace webrtc {
 
-PushResampler::PushResampler()
+template <typename T>
+PushResampler<T>::PushResampler()
     : src_sample_rate_hz_(0),
       dst_sample_rate_hz_(0),
-      num_channels_(0),
-      src_left_(NULL),
-      src_right_(NULL),
-      dst_left_(NULL),
-      dst_right_(NULL) {
+      num_channels_(0) {
 }
 
-PushResampler::~PushResampler() {
+template <typename T>
+PushResampler<T>::~PushResampler() {
 }
 
-int PushResampler::InitializeIfNeeded(int src_sample_rate_hz,
-                                      int dst_sample_rate_hz,
-                                      int num_channels) {
+template <typename T>
+int PushResampler<T>::InitializeIfNeeded(int src_sample_rate_hz,
+                                         int dst_sample_rate_hz,
+                                         int num_channels) {
   if (src_sample_rate_hz == src_sample_rate_hz_ &&
       dst_sample_rate_hz == dst_sample_rate_hz_ &&
       num_channels == num_channels_)
@@ -52,10 +51,10 @@ int PushResampler::InitializeIfNeeded(int src_sample_rate_hz,
   sinc_resampler_.reset(new PushSincResampler(src_size_10ms_mono,
                                               dst_size_10ms_mono));
   if (num_channels_ == 2) {
-    src_left_.reset(new int16_t[src_size_10ms_mono]);
-    src_right_.reset(new int16_t[src_size_10ms_mono]);
-    dst_left_.reset(new int16_t[dst_size_10ms_mono]);
-    dst_right_.reset(new int16_t[dst_size_10ms_mono]);
+    src_left_.reset(new T[src_size_10ms_mono]);
+    src_right_.reset(new T[src_size_10ms_mono]);
+    dst_left_.reset(new T[dst_size_10ms_mono]);
+    dst_right_.reset(new T[dst_size_10ms_mono]);
     sinc_resampler_right_.reset(new PushSincResampler(src_size_10ms_mono,
                                                       dst_size_10ms_mono));
   }
@@ -63,8 +62,9 @@ int PushResampler::InitializeIfNeeded(int src_sample_rate_hz,
   return 0;
 }
 
-int PushResampler::Resample(const int16_t* src, int src_length,
-                            int16_t* dst, int dst_capacity) {
+template <typename T>
+int PushResampler<T>::Resample(const T* src, int src_length, T* dst,
+                               int dst_capacity) {
   const int src_size_10ms = src_sample_rate_hz_ * num_channels_ / 100;
   const int dst_size_10ms = dst_sample_rate_hz_ * num_channels_ / 100;
   if (src_length != src_size_10ms || dst_capacity < dst_size_10ms)
@@ -73,13 +73,13 @@ int PushResampler::Resample(const int16_t* src, int src_length,
   if (src_sample_rate_hz_ == dst_sample_rate_hz_) {
     // The old resampler provides this memcpy facility in the case of matching
     // sample rates, so reproduce it here for the sinc resampler.
-    memcpy(dst, src, src_length * sizeof(int16_t));
+    memcpy(dst, src, src_length * sizeof(T));
     return src_length;
   }
   if (num_channels_ == 2) {
     const int src_length_mono = src_length / num_channels_;
     const int dst_capacity_mono = dst_capacity / num_channels_;
-    int16_t* deinterleaved[] = {src_left_.get(), src_right_.get()};
+    T* deinterleaved[] = {src_left_.get(), src_right_.get()};
     Deinterleave(src, src_length_mono, num_channels_, deinterleaved);
 
     int dst_length_mono =
@@ -96,5 +96,9 @@ int PushResampler::Resample(const int16_t* src, int src_length,
     return sinc_resampler_->Resample(src, src_length, dst, dst_capacity);
   }
 }
+
+// Explictly generate required instantiations.
+template class PushResampler<int16_t>;
+template class PushResampler<float>;
 
 }  // namespace webrtc

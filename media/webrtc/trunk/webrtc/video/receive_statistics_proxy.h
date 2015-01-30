@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_types.h"
 #include "webrtc/frame_callback.h"
 #include "webrtc/modules/remote_bitrate_estimator/rate_statistics.h"
@@ -51,7 +52,7 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
                                     const VideoCodec& video_codec) OVERRIDE {}
   virtual void IncomingRate(const int video_channel,
                             const unsigned int framerate,
-                            const unsigned int bitrate) OVERRIDE;
+                            const unsigned int bitrate_bps) OVERRIDE;
   virtual void DecoderTiming(int decode_ms,
                              int max_decode_ms,
                              int current_delay_ms,
@@ -74,14 +75,15 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
   std::string GetCName() const;
 
   const int channel_;
-  scoped_ptr<CriticalSectionWrapper> lock_;
-  Clock* clock_;
-  VideoReceiveStream::Stats stats_;
-  RateStatistics decode_fps_estimator_;
-  RateStatistics renders_fps_estimator_;
-  VideoReceiveState receive_state_;
-  ViECodec* codec_;
-  ViERTP_RTCP* rtp_rtcp_;
+  Clock* const clock_;
+  ViECodec* const codec_;
+  ViERTP_RTCP* const rtp_rtcp_;
+
+  scoped_ptr<CriticalSectionWrapper> crit_;
+  VideoReceiveStream::Stats stats_ GUARDED_BY(crit_);
+  RateStatistics decode_fps_estimator_ GUARDED_BY(crit_);
+  RateStatistics renders_fps_estimator_ GUARDED_BY(crit_);
+  VideoReceiveState receive_state_ GUARDED_BY(crit_);
 };
 
 }  // namespace internal

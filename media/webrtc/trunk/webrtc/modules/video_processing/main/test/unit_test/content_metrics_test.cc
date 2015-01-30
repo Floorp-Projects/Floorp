@@ -23,7 +23,7 @@ TEST_F(VideoProcessingModuleTest, ContentAnalysis) {
   ca__c.Initialize(width_,height_);
   ca__sse.Initialize(width_,height_);
 
-  scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+  scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
   while (fread(video_buffer.get(), 1, frame_length_, source_file_)
        == frame_length_) {
     // Using ConvertToI420 to add stride to the image.

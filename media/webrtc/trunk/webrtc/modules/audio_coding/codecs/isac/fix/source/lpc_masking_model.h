@@ -62,6 +62,15 @@ int32_t WebRtcIsacfix_CalculateResidualEnergyNeon(int lpc_order,
                                                   int* q_val_residual_energy);
 #endif
 
+#if defined(MIPS_DSP_R2_LE)
+int32_t WebRtcIsacfix_CalculateResidualEnergyMIPS(int lpc_order,
+                                                  int32_t q_val_corr,
+                                                  int q_val_polynomial,
+                                                  int16_t* a_polynomial,
+                                                  int32_t* corr_coeffs,
+                                                  int* q_val_residual_energy);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

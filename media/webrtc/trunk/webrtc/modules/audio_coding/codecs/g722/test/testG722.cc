@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 /* include API */
 #include "g722_interface.h"

@@ -39,9 +39,6 @@ class VPMFramePreprocessor {
   // Enable content analysis.
   void EnableContentAnalysis(bool enable);
 
-  // Set max frame rate.
-  int32_t SetMaxFramerate(uint32_t max_frame_rate);
-
   // Set target resolution: frame rate and dimension.
   int32_t SetTargetResolution(uint32_t width, uint32_t height,
                               uint32_t frame_rate);
@@ -68,7 +65,6 @@ class VPMFramePreprocessor {
 
   int32_t id_;
   VideoContentMetrics* content_metrics_;
-  uint32_t max_frame_rate_;
   I420VideoFrame resampled_frame_;
   VPMSpatialResampler* spatial_resampler_;
   VPMContentAnalysis* ca_;

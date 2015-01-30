@@ -1,0 +1,109 @@
+# Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+# TODO(kjellander): Convert the rest of the test.gyp targets and put here.
+
+source_set("test") {
+  testonly = true
+
+  deps = [
+    ":field_trial",
+    ":test_support",
+    ":test_support_main",
+  ]
+}
+
+source_set("field_trial") {
+  sources = [
+    "field_trial.cc",
+    "field_trial.h",
+  ]
+
+  deps = [
+    "../system_wrappers",
+  ]
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config"]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+}
+
+source_set("test_support") {
+  testonly = true
+
+  sources = [
+    "testsupport/fileutils.cc",
+    "testsupport/fileutils.h",
+    "testsupport/frame_reader.cc",
+    "testsupport/frame_reader.h",
+    "testsupport/frame_writer.cc",
+    "testsupport/frame_writer.h",
+    "testsupport/gtest_prod_util.h",
+    "testsupport/gtest_disable.h",
+    "testsupport/mock/mock_frame_reader.h",
+    "testsupport/mock/mock_frame_writer.h",
+    "testsupport/packet_reader.cc",
+    "testsupport/packet_reader.h",
+    "testsupport/perf_test.cc",
+    "testsupport/perf_test.h",
+    "testsupport/trace_to_stderr.cc",
+    "testsupport/trace_to_stderr.h",
+  ]
+
+  deps = [
+    "//testing/gmock",
+    "//testing/gtest",
+    "../system_wrappers",
+  ]
+
+  if (is_android) {
+    deps += [ "//base:base" ]
+  }
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config"]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+}
+
+source_set("test_support_main") {
+  testonly = true
+
+  sources = [
+    "run_all_unittests.cc",
+    "test_suite.cc",
+    "test_suite.h",
+  ]
+
+  deps = [
+    ":field_trial",
+    ":test_support",
+    "../system_wrappers:metrics_default",
+    "//testing/gmock",
+    "//testing/gtest",
+    "//third_party/gflags",
+  ]
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config"]
+
+  if (is_clang) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+}

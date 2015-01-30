@@ -15,6 +15,7 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/rtp_rtcp/interface/fec_receiver.h"
+#include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/source/fec_test_helper.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
@@ -25,22 +26,11 @@ using ::testing::Return;
 
 namespace webrtc {
 
-class MockRtpData : public RtpData {
- public:
-  MOCK_METHOD3(OnReceivedPayloadData,
-      int32_t(const uint8_t* payloadData,
-              const uint16_t payloadSize,
-              const WebRtcRTPHeader* rtpHeader));
-
-  MOCK_METHOD2(OnRecoveredPacket,
-      bool(const uint8_t* packet, int packet_length));
-};
-
 class ReceiverFecTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    fec_ = new ForwardErrorCorrection(0);
-    receiver_fec_ = FecReceiver::Create(0, &rtp_data_callback_);
+    fec_ = new ForwardErrorCorrection();
+    receiver_fec_ = FecReceiver::Create(&rtp_data_callback_);
     generator_ = new FrameGenerator();
   }
 

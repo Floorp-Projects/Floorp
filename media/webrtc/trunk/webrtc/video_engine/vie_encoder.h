@@ -14,6 +14,7 @@
 #include <list>
 #include <map>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
@@ -97,13 +98,13 @@ class ViEEncoder
   virtual void DeliverFrame(int id,
                             I420VideoFrame* video_frame,
                             int num_csrcs = 0,
-                            const uint32_t CSRC[kRtpCsrcSize] = NULL);
-  virtual void DelayChanged(int id, int frame_delay);
+                            const uint32_t CSRC[kRtpCsrcSize] = NULL) OVERRIDE;
+  virtual void DelayChanged(int id, int frame_delay) OVERRIDE;
   virtual int GetPreferedFrameSettings(int* width,
                                        int* height,
-                                       int* frame_rate);
+                                       int* frame_rate) OVERRIDE;
 
-  virtual void ProviderDestroyed(int id) {
+  virtual void ProviderDestroyed(int id) OVERRIDE {
     return;
   }
 
@@ -111,8 +112,7 @@ class ViEEncoder
   int32_t SendCodecStatistics(uint32_t* num_key_frames,
                               uint32_t* num_delta_frames);
 
-  int32_t EstimatedSendBandwidth(
-        uint32_t* available_bandwidth) const;
+  int PacerQueuingDelayMs() const;
 
   int CodecTargetBitrate(uint32_t* bitrate) const;
   // Loss protection.
@@ -131,7 +131,7 @@ class ViEEncoder
     const uint8_t* payload_data,
     uint32_t payload_size,
     const RTPFragmentationHeader& fragmentation_header,
-    const RTPVideoHeader* rtp_video_hdr);
+    const RTPVideoHeader* rtp_video_hdr) OVERRIDE;
 
   // Implements VideoProtectionCallback.
   virtual int ProtectionRequest(
@@ -139,21 +139,25 @@ class ViEEncoder
       const FecProtectionParams* key_fec_params,
       uint32_t* sent_video_rate_bps,
       uint32_t* sent_nack_rate_bps,
-      uint32_t* sent_fec_rate_bps);
+      uint32_t* sent_fec_rate_bps) OVERRIDE;
 
   // Implements VideoSendStatisticsCallback.
   virtual int32_t SendStatistics(const uint32_t bit_rate,
-                                 const uint32_t frame_rate);
+                                 const uint32_t frame_rate) OVERRIDE;
+
   int32_t RegisterCodecObserver(ViEEncoderObserver* observer);
 
   // Implements RtcpIntraFrameObserver.
-  virtual void OnReceivedIntraFrameRequest(uint32_t ssrc);
-  virtual void OnReceivedSLI(uint32_t ssrc, uint8_t picture_id);
-  virtual void OnReceivedRPSI(uint32_t ssrc, uint64_t picture_id);
-  virtual void OnLocalSsrcChanged(uint32_t old_ssrc, uint32_t new_ssrc);
+  virtual void OnReceivedIntraFrameRequest(uint32_t ssrc) OVERRIDE;
+  virtual void OnReceivedSLI(uint32_t ssrc, uint8_t picture_id) OVERRIDE;
+  virtual void OnReceivedRPSI(uint32_t ssrc, uint64_t picture_id) OVERRIDE;
+  virtual void OnLocalSsrcChanged(uint32_t old_ssrc,
+                                  uint32_t new_ssrc) OVERRIDE;
 
   // Sets SSRCs for all streams.
   bool SetSsrcs(const std::list<unsigned int>& ssrcs);
+
+  void SetMinTransmitBitrate(int min_transmit_bitrate_kbps);
 
   // Effect filter.
   int32_t RegisterEffectFilter(ViEEffectFilter* effect_filter);
@@ -162,15 +166,15 @@ class ViEEncoder
   void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
 
   // Enables recording of debugging information.
-  virtual int StartDebugRecording(const char* fileNameUTF8);
+  int StartDebugRecording(const char* fileNameUTF8);
 
   // Disables recording of debugging information.
-  virtual int StopDebugRecording();
+  int StopDebugRecording();
 
   // Lets the sender suspend video when the rate drops below
   // |threshold_bps|, and turns back on when the rate goes back up above
   // |threshold_bps| + |window_bps|.
-  virtual void SuspendBelowMinBitrate();
+  void SuspendBelowMinBitrate();
 
   // New-style callbacks, used by VideoSendStream.
   void RegisterPreEncodeCallback(I420FrameCallback* pre_encode_callback);
@@ -195,7 +199,11 @@ class ViEEncoder
                         int64_t capture_time_ms, bool retransmission);
   int TimeToSendPadding(int bytes);
  private:
-  bool EncoderPaused() const;
+  bool EncoderPaused() const EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
+  void TraceFrameDropStart() EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
+  void TraceFrameDropEnd() EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
+
+  void UpdateHistograms();
 
   int32_t engine_id_;
   const int channel_id_;
@@ -215,31 +223,34 @@ class ViEEncoder
   // Owned by PeerConnection, not ViEEncoder
   CPULoadStateCallbackInvoker* load_manager_;
 
-  int64_t time_of_last_incoming_frame_ms_;
-  bool send_padding_;
-  int target_delay_ms_;
-  bool network_is_transmitting_;
-  bool encoder_paused_;
-  bool encoder_paused_and_dropped_frame_;
-  std::map<unsigned int, int64_t> time_last_intra_request_ms_;
+  int64_t time_of_last_incoming_frame_ms_ GUARDED_BY(data_cs_);
+  bool send_padding_ GUARDED_BY(data_cs_);
+  int min_transmit_bitrate_kbps_ GUARDED_BY(data_cs_);
+  int target_delay_ms_ GUARDED_BY(data_cs_);
+  bool network_is_transmitting_ GUARDED_BY(data_cs_);
+  bool encoder_paused_ GUARDED_BY(data_cs_);
+  bool encoder_paused_and_dropped_frame_ GUARDED_BY(data_cs_);
+  std::map<unsigned int, int64_t> time_last_intra_request_ms_
+      GUARDED_BY(data_cs_);
 
   bool fec_enabled_;
   bool nack_enabled_;
 
-  ViEEncoderObserver* codec_observer_;
-  ViEEffectFilter* effect_filter_;
+  ViEEncoderObserver* codec_observer_ GUARDED_BY(callback_cs_);
+  ViEEffectFilter* effect_filter_ GUARDED_BY(callback_cs_);
   ProcessThread& module_process_thread_;
 
-  bool has_received_sli_;
-  uint8_t picture_id_sli_;
-  bool has_received_rpsi_;
-  uint64_t picture_id_rpsi_;
-  std::map<unsigned int, int> ssrc_streams_;
+  bool has_received_sli_ GUARDED_BY(data_cs_);
+  uint8_t picture_id_sli_ GUARDED_BY(data_cs_);
+  bool has_received_rpsi_ GUARDED_BY(data_cs_);
+  uint64_t picture_id_rpsi_ GUARDED_BY(data_cs_);
+  std::map<unsigned int, int> ssrc_streams_ GUARDED_BY(data_cs_);
 
   // Quality modes callback
   QMVideoSettingsCallback* qm_callback_;
-  bool video_suspended_;
-  I420FrameCallback* pre_encode_callback_;
+  bool video_suspended_ GUARDED_BY(data_cs_);
+  I420FrameCallback* pre_encode_callback_ GUARDED_BY(callback_cs_);
+  const int64_t start_ms_;
 };
 
 }  // namespace webrtc

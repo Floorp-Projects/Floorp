@@ -203,21 +203,6 @@ bool ThreadPosix::Start(unsigned int& thread_id)
   int result = pthread_attr_setdetachstate(&attr_, PTHREAD_CREATE_DETACHED);
   // Set the stack stack size to 1M.
   result |= pthread_attr_setstacksize(&attr_, 1024 * 1024);
-#if 0
-// Temporarily remove the attempt to set this to real-time scheduling.
-//
-// See: https://code.google.com/p/webrtc/issues/detail?id=1956
-//
-// To be removed when upstream is fixed.
-#ifdef WEBRTC_THREAD_RR
-  const int policy = SCHED_RR;
-#else
-  const int policy = SCHED_FIFO;
-#endif
-#else
-  const int policy = SCHED_OTHER;
-#endif
-
   event_->Reset();
   // If pthread_create was successful, a thread was created and is running.
   // Don't return false if it was successful since if there are any other
@@ -245,26 +230,6 @@ bool ThreadPosix::Start(unsigned int& thread_id)
 #if HAS_THREAD_ID
   thread_id = static_cast<unsigned int>(thread_);
 #endif
-  sched_param param;
-
-  const int min_prio = sched_get_priority_min(policy);
-  const int max_prio = sched_get_priority_max(policy);
-
-  if ((min_prio == EINVAL) || (max_prio == EINVAL)) {
-    WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                 "unable to retreive min or max priority for threads");
-    return true;
-  }
-  if (max_prio - min_prio <= 2) {
-    // There is no room for setting priorities with any granularity.
-    return true;
-  }
-  param.sched_priority = ConvertToSystemPriority(prio_, min_prio, max_prio);
-  result = pthread_setschedparam(thread_, policy, &param);
-  if (result == EINVAL) {
-    WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
-                 "unable to set thread priority");
-  }
   return true;
 }
 
@@ -373,6 +338,27 @@ void ThreadPosix::Run() {
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1,
                  "Thread without name started");
   }
+
+#ifdef WEBRTC_THREAD_RR
+  const int policy = SCHED_RR;
+#else
+  const int policy = SCHED_FIFO;
+#endif
+  const int min_prio = sched_get_priority_min(policy);
+  const int max_prio = sched_get_priority_max(policy);
+  if ((min_prio == -1) || (max_prio == -1)) {
+    WEBRTC_TRACE(kTraceError, kTraceUtility, -1,
+                 "unable to retreive min or max priority for threads");
+  }
+  if (max_prio - min_prio > 2) {
+    sched_param param;
+    param.sched_priority = ConvertToSystemPriority(prio_, min_prio, max_prio);
+    if (pthread_setschedparam(pthread_self(), policy, &param) != 0) {
+      WEBRTC_TRACE(
+          kTraceError, kTraceUtility, -1, "unable to set thread priority");
+    }
+  }
+
   bool alive = true;
   bool run = true;
   while (alive) {

@@ -40,6 +40,9 @@ class XServerPixelBuffer {
   // Returns the size of the window the buffer was initialized for.
   const DesktopSize& window_size() { return window_size_; }
 
+  // Returns true if the window can be found.
+  bool IsWindowValid() const;
+
   // If shared memory is being used without pixmaps, synchronize this pixel
   // buffer with the root window contents (otherwise, this is a no-op).
   // This is to avoid doing a full-screen capture for each individual

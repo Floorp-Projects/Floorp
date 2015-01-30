@@ -19,7 +19,7 @@ TEST_F(VideoProcessingModuleTest, BrightnessDetection)
     uint32_t frameNum = 0;
     int32_t brightnessWarning = 0;
     uint32_t warningCount = 0;
-    scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+    scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
     while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
            frame_length_)
     {

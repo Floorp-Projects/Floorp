@@ -21,21 +21,21 @@ class MockRTPPayloadStrategy : public RTPPayloadStrategy {
   MOCK_CONST_METHOD0(CodecsMustBeUnique,
       bool());
   MOCK_CONST_METHOD4(PayloadIsCompatible,
-      bool(const ModuleRTPUtility::Payload& payload,
-           const uint32_t frequency,
-           const uint8_t channels,
-           const uint32_t rate));
+                     bool(const RtpUtility::Payload& payload,
+                          const uint32_t frequency,
+                          const uint8_t channels,
+                          const uint32_t rate));
   MOCK_CONST_METHOD2(UpdatePayloadRate,
-      void(ModuleRTPUtility::Payload* payload, const uint32_t rate));
-  MOCK_CONST_METHOD1(GetPayloadTypeFrequency, int(
-      const ModuleRTPUtility::Payload& payload));
-  MOCK_CONST_METHOD5(CreatePayloadType,
-      ModuleRTPUtility::Payload*(
-          const char payloadName[RTP_PAYLOAD_NAME_SIZE],
-          const int8_t payloadType,
-          const uint32_t frequency,
-          const uint8_t channels,
-          const uint32_t rate));
+                     void(RtpUtility::Payload* payload, const uint32_t rate));
+  MOCK_CONST_METHOD1(GetPayloadTypeFrequency,
+                     int(const RtpUtility::Payload& payload));
+  MOCK_CONST_METHOD5(
+      CreatePayloadType,
+      RtpUtility::Payload*(const char payloadName[RTP_PAYLOAD_NAME_SIZE],
+                           const int8_t payloadType,
+                           const uint32_t frequency,
+                           const uint8_t channels,
+                           const uint32_t rate));
 };
 
 }  // namespace webrtc

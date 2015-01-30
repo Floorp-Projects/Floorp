@@ -12,7 +12,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
@@ -33,23 +32,6 @@ TbI420Encoder::~TbI420Encoder()
     }
 }
 
-int32_t TbI420Encoder::VersionStatic(char* version, int32_t length)
-{
-    const char* str = "I420 version 1.0.0\n";
-    int32_t verLen = (int32_t) strlen(str);
-    if (verLen > length)
-    {
-        return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
-    }
-    strncpy(version, str, length);
-    return verLen;
-}
-
-int32_t TbI420Encoder::Version(char* version, int32_t length) const
-{
-    return VersionStatic(version, length);
-}
-
 int32_t TbI420Encoder::Release()
 {
     _functionCalls.Release++;
@@ -62,17 +44,6 @@ int32_t TbI420Encoder::Release()
     }
     _inited = false;
     return WEBRTC_VIDEO_CODEC_OK;
-}
-
-int32_t TbI420Encoder::Reset()
-{
-    _functionCalls.Reset++;
-    if (!_inited)
-    {
-        return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
-    }
-    return WEBRTC_VIDEO_CODEC_OK;
-
 }
 
 int32_t TbI420Encoder::SetChannelParameters(uint32_t packetLoss, int rtt) {

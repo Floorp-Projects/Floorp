@@ -11,10 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_CORE_INTERNAL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_CORE_INTERNAL_H_
 
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-#include <stdio.h>
-#endif
-
+#include "webrtc/common_audio/wav_file.h"
+#include "webrtc/modules/audio_processing/aec/aec_common.h"
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
 #include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 #include "webrtc/typedefs.h"
@@ -25,6 +23,17 @@ enum {
   kExtendedNumPartitions = 32
 };
 static const int kNormalNumPartitions = 12;
+
+// Delay estimator constants, used for logging.
+enum {
+  kMaxDelayBlocks = 60
+};
+enum {
+  kLookaheadBlocks = 15
+};
+enum {
+  kHistorySizeBlocks = kMaxDelayBlocks + kLookaheadBlocks
+};
 
 // Extended filter adaptation parameters.
 // TODO(ajm): No narrowband tuning yet.
@@ -122,17 +131,26 @@ struct AecCore {
   void* delay_estimator_farend;
   void* delay_estimator;
 
+  int reported_delay_enabled;  // 0 = disabled, otherwise enabled.
   // 1 = extended filter mode enabled, 0 = disabled.
   int extended_filter_enabled;
   // Runtime selection of number of filter partitions.
   int num_partitions;
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
+  // Sequence number of this AEC instance, so that different instances can
+  // choose different dump file names.
+  int instance_index;
+
+  // Number of times we've restarted dumping; used to pick new dump file names
+  // each time.
+  int debug_dump_count;
+
   RingBuffer* far_time_buf;
-  FILE* farFile;
-  FILE* nearFile;
-  FILE* outFile;
-  FILE* outLinearFile;
+  rtc_WavWriter* farFile;
+  rtc_WavWriter* nearFile;
+  rtc_WavWriter* outFile;
+  rtc_WavWriter* outLinearFile;
   uint32_t debugWritten;
 #endif
 };
@@ -151,5 +169,20 @@ typedef void (*WebRtcAec_OverdriveAndSuppress_t)(AecCore* aec,
                                                  const float hNlFb,
                                                  float efw[2][PART_LEN1]);
 extern WebRtcAec_OverdriveAndSuppress_t WebRtcAec_OverdriveAndSuppress;
+
+typedef void (*WebRtcAec_ComfortNoise_t)(AecCore* aec,
+                                         float efw[2][PART_LEN1],
+                                         complex_t* comfortNoiseHband,
+                                         const float* noisePow,
+                                         const float* lambda);
+extern WebRtcAec_ComfortNoise_t WebRtcAec_ComfortNoise;
+
+typedef void (*WebRtcAec_SubbandCoherence_t)(AecCore* aec,
+                                             float efw[2][PART_LEN1],
+                                             float xfw[2][PART_LEN1],
+                                             float* fft,
+                                             float* cohde,
+                                             float* cohxd);
+extern WebRtcAec_SubbandCoherence_t WebRtcAec_SubbandCoherence;
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_AEC_CORE_INTERNAL_H_

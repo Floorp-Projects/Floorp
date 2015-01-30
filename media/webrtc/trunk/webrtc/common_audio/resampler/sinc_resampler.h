@@ -14,18 +14,11 @@
 #ifndef WEBRTC_COMMON_AUDIO_RESAMPLER_SINC_RESAMPLER_H_
 #define WEBRTC_COMMON_AUDIO_RESAMPLER_SINC_RESAMPLER_H_
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/system_wrappers/interface/aligned_malloc.h"
-#include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/gtest_prod_util.h"
 #include "webrtc/typedefs.h"
-
-#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(WEBRTC_IOS) &&  \
-        !defined(__SSE__)) ||  \
-    (defined(WEBRTC_ARCH_ARM_V7) && !defined(WEBRTC_ARCH_ARM_NEON))
-// Convenience define.
-#define WEBRTC_RESAMPLER_CPU_DETECTION
-#endif
 
 namespace webrtc {
 
@@ -106,9 +99,8 @@ class SincResampler {
   void InitializeCPUSpecificFeatures();
 
   // Compute convolution of |k1| and |k2| over |input_ptr|, resultant sums are
-  // linearly interpolated using |kernel_interpolation_factor|.  On x86, the
-  // underlying implementation is chosen at run time based on SSE support.  On
-  // ARM, NEON support is chosen at compile time based on compilation flags.
+  // linearly interpolated using |kernel_interpolation_factor|.  On x86 and ARM
+  // the underlying implementation is chosen at run time.
   static float Convolve_C(const float* input_ptr, const float* k1,
                           const float* k2, double kernel_interpolation_factor);
 #if defined(WEBRTC_ARCH_X86_FAMILY)
@@ -146,18 +138,18 @@ class SincResampler {
   // Contains kKernelOffsetCount kernels back-to-back, each of size kKernelSize.
   // The kernel offsets are sub-sample shifts of a windowed sinc shifted from
   // 0.0 to 1.0 sample.
-  scoped_ptr_malloc<float, AlignedFree> kernel_storage_;
-  scoped_ptr_malloc<float, AlignedFree> kernel_pre_sinc_storage_;
-  scoped_ptr_malloc<float, AlignedFree> kernel_window_storage_;
+  scoped_ptr<float[], AlignedFreeDeleter> kernel_storage_;
+  scoped_ptr<float[], AlignedFreeDeleter> kernel_pre_sinc_storage_;
+  scoped_ptr<float[], AlignedFreeDeleter> kernel_window_storage_;
 
   // Data from the source is copied into this buffer for each processing pass.
-  scoped_ptr_malloc<float, AlignedFree> input_buffer_;
+  scoped_ptr<float[], AlignedFreeDeleter> input_buffer_;
 
   // Stores the runtime selection of which Convolve function to use.
   // TODO(ajm): Move to using a global static which must only be initialized
   // once by the user. We're not doing this initially, because we don't have
   // e.g. a LazyInstance helper in webrtc.
-#if defined(WEBRTC_RESAMPLER_CPU_DETECTION)
+#if defined(WEBRTC_CPU_DETECTION)
   typedef float (*ConvolveProc)(const float*, const float*, const float*,
                                 double);
   ConvolveProc convolve_proc_;

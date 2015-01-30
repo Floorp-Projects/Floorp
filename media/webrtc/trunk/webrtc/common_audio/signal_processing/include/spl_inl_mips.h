@@ -66,62 +66,6 @@ static __inline int32_t WEBRTC_SPL_MUL_16_32_RSFT16(int16_t a,
   return value32;
 }
 
-static __inline int32_t WEBRTC_SPL_MUL_32_32_RSFT32BI(int32_t a,
-                                                      int32_t b) {
-  int32_t tmp = 0;
-
-  if ((32767 < a) || (a < 0))
-    tmp = WEBRTC_SPL_MUL_16_32_RSFT16(((int16_t)(a >> 16)), b);
-  tmp += WEBRTC_SPL_MUL_16_32_RSFT16(((int16_t)((a & 0x0000FFFF) >> 1)),
-                                     b) >> 15;
-
-  return tmp;
-}
-
-static __inline int32_t WEBRTC_SPL_MUL_32_32_RSFT32(int16_t a,
-                                                    int16_t b,
-                                                    int32_t c) {
-  int32_t tmp1 = 0, tmp2 = 0, tmp3 = 0, tmp4 = 0;
-
-  __asm __volatile(
-    "sra                %[tmp1],   %[c],      16      \n\t"
-    "andi               %[tmp2],   %[c],      0xFFFF  \n\t"
-#if defined(MIPS32_R2_LE)
-    "seh                %[a],      %[a]               \n\t"
-    "seh                %[b],      %[b]               \n\t"
-#else
-    "sll                %[a],      %[a],      16      \n\t"
-    "sra                %[a],      %[a],      16      \n\t"
-    "sll                %[b],      %[b],      16      \n\t"
-    "sra                %[b],      %[b],      16      \n\t"
-#endif
-    "sra                %[tmp2],   %[tmp2],   1       \n\t"
-    "mul                %[tmp3],   %[a],      %[tmp2] \n\t"
-    "mul                %[tmp4],   %[b],      %[tmp2] \n\t"
-    "mul                %[tmp2],   %[a],      %[tmp1] \n\t"
-    "mul                %[tmp1],   %[b],      %[tmp1] \n\t"
-#if defined(MIPS_DSP_R1_LE)
-    "shra_r.w           %[tmp3],   %[tmp3],   15      \n\t"
-    "shra_r.w           %[tmp4],   %[tmp4],   15      \n\t"
-#else
-    "addiu              %[tmp3],   %[tmp3],   0x4000  \n\t"
-    "sra                %[tmp3],   %[tmp3],   15      \n\t"
-    "addiu              %[tmp4],   %[tmp4],   0x4000  \n\t"
-    "sra                %[tmp4],   %[tmp4],   15      \n\t"
-#endif
-    "addu               %[tmp3],   %[tmp3],   %[tmp2] \n\t"
-    "addu               %[tmp4],   %[tmp4],   %[tmp1] \n\t"
-    "sra                %[tmp4],   %[tmp4],   16      \n\t"
-    "addu               %[tmp1],   %[tmp3],   %[tmp4] \n\t"
-    : [tmp1] "=&r" (tmp1), [tmp2] "=&r" (tmp2),
-      [tmp3] "=&r" (tmp3), [tmp4] "=&r" (tmp4),
-      [a] "+r" (a), [b] "+r" (b)
-    : [c] "r" (c)
-    : "hi", "lo"
-  );
-  return tmp1;
-}
-
 #if defined(MIPS_DSP_R1_LE)
 static __inline int16_t WebRtcSpl_SatW32ToW16(int32_t value32) {
   __asm __volatile(
@@ -193,10 +137,10 @@ static __inline int16_t WebRtcSpl_GetSizeInBits(uint32_t n) {
     : [n] "r" (n), [i32] "r" (i32)
   );
 
-  return bits;
+  return (int16_t)bits;
 }
 
-static __inline int WebRtcSpl_NormW32(int32_t a) {
+static __inline int16_t WebRtcSpl_NormW32(int32_t a) {
   int zeros = 0;
 
   __asm __volatile(
@@ -216,10 +160,10 @@ static __inline int WebRtcSpl_NormW32(int32_t a) {
     : [a] "r" (a)
   );
 
-  return zeros;
+  return (int16_t)zeros;
 }
 
-static __inline int WebRtcSpl_NormU32(uint32_t a) {
+static __inline int16_t WebRtcSpl_NormU32(uint32_t a) {
   int zeros = 0;
 
   __asm __volatile(
@@ -228,10 +172,10 @@ static __inline int WebRtcSpl_NormU32(uint32_t a) {
     : [a] "r" (a)
   );
 
-  return (zeros & 0x1f);
+  return (int16_t)(zeros & 0x1f);
 }
 
-static __inline int WebRtcSpl_NormW16(int16_t a) {
+static __inline int16_t WebRtcSpl_NormW16(int16_t a) {
   int zeros = 0;
   int a0 = a << 16;
 
@@ -252,7 +196,7 @@ static __inline int WebRtcSpl_NormW16(int16_t a) {
     : [a0] "r" (a0)
   );
 
-  return zeros;
+  return (int16_t)zeros;
 }
 
 static __inline int32_t WebRtc_MulAccumW16(int16_t a,

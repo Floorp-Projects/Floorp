@@ -79,6 +79,20 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // over the network.
   virtual int SetMTU(int video_channel, unsigned int mtu) = 0;
 
+  // Forward (audio) packet to bandwidth estimator for the given video channel,
+  // for aggregated audio+video BWE.
+  virtual int ReceivedBWEPacket(const int video_channel,
+      int64_t arrival_time_ms, int payload_size, const RTPHeader& header) {
+    return 0;
+  }
+
+  // TODO(holmer): Remove the default implementation when this has been fixed
+  // in fakewebrtcvideoengine.cc.
+  virtual bool SetBandwidthEstimationConfig(int video_channel,
+                                            const webrtc::Config& config) {
+    return false;
+  }
+
  protected:
   ViENetwork() {}
   virtual ~ViENetwork() {}

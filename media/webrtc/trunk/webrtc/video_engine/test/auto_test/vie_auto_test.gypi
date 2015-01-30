@@ -13,15 +13,16 @@
       'type': 'executable',
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-        '<(webrtc_root)/modules/modules.gyp:video_render_module',
-        '<(webrtc_root)/modules/modules.gyp:video_capture_module',
+        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:metrics_default',
+        '<(webrtc_root)/modules/modules.gyp:video_capture_module_internal_impl',
+        '<(webrtc_root)/modules/modules.gyp:video_render_module_internal_impl',
         '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/test/metrics.gyp:metrics',
         '<(webrtc_root)/test/test.gyp:channel_transport',
         '<(webrtc_root)/test/test.gyp:test_support',
-        '<(webrtc_root)/test/libtest/libtest.gyp:libtest',
+        '<(webrtc_root)/test/test.gyp:field_trial',
         'video_engine_core',
         'libvietest',
       ],
@@ -42,6 +43,7 @@
         'automated/two_windows_fixture.cc',
         'automated/vie_api_integration_test.cc',
         'automated/vie_extended_integration_test.cc',
+        'automated/vie_network_test.cc',
         'automated/vie_standard_integration_test.cc',
         'automated/vie_video_verification_test.cc',
 
@@ -135,7 +137,6 @@
           ],
           'includes': [
             '../../../build/isolate.gypi',
-            'vie_auto_test.isolate',
           ],
           'sources': [
             'vie_auto_test.isolate',

@@ -22,7 +22,7 @@ const uint16_t kRtpOneByteHeaderExtensionId = 0xBEDE;
 
 const size_t kRtpOneByteHeaderLength = 4;
 const size_t kTransmissionTimeOffsetLength = 4;
-const size_t kAudioLevelLength = 2;
+const size_t kAudioLevelLength = 4;
 const size_t kAbsoluteSendTimeLength = 4;
 
 struct HeaderExtension {
@@ -37,11 +37,7 @@ struct HeaderExtension {
         length = kTransmissionTimeOffsetLength;
         break;
       case kRtpExtensionAudioLevel:
-        // TODO(solenberg): Because of how the audio level extension is handled
-        // in RTPSenderAudio::SendAudio(), we cannot set the actual length here
-        // but must leave it at zero. The consequence is that any other header
-        // extensions registered for an audio channel are effectively ignored.
-        // length = kAudioLevelLength;
+        length = kAudioLevelLength;
         break;
       case kRtpExtensionAbsoluteSendTime:
         length = kAbsoluteSendTimeLength;
@@ -65,6 +61,8 @@ class RtpHeaderExtensionMap {
   int32_t Register(const RTPExtensionType type, const uint8_t id);
 
   int32_t Deregister(const RTPExtensionType type);
+
+  bool IsRegistered(RTPExtensionType type) const;
 
   int32_t GetType(const uint8_t id, RTPExtensionType* type) const;
 

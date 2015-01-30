@@ -12,11 +12,13 @@
 
 #include <assert.h>
 
+#include <cstdlib>
+
 #include "webrtc/modules/video_coding/main/source/encoded_frame.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/media_opt_util.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
@@ -26,15 +28,11 @@ enum { kMaxReceiverDelayMs = 10000 };
 VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
                          EventFactory* event_factory,
-                         int32_t vcm_id,
-                         int32_t receiver_id,
                          bool master)
     : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
-      vcm_id_(vcm_id),
       clock_(clock),
-      receiver_id_(receiver_id),
       master_(master),
-      jitter_buffer_(clock_, event_factory, vcm_id, receiver_id, master),
+      jitter_buffer_(clock_, event_factory),
       timing_(timing),
       render_wait_event_(event_factory->CreateEvent()),
       state_(kPassive),
@@ -79,13 +77,6 @@ void VCMReceiver::UpdateRtt(uint32_t rtt) {
 int32_t VCMReceiver::InsertPacket(const VCMPacket& packet,
                                   uint16_t frame_width,
                                   uint16_t frame_height) {
-  if (packet.frameType == kVideoFrameKey) {
-    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCoding,
-                 VCMId(vcm_id_, receiver_id_),
-                 "Inserting key frame packet seqnum=%u, timestamp=%u",
-                 packet.seqNum, packet.timestamp);
-  }
-
   // Insert the packet into the jitter buffer. The packet can either be empty or
   // contain media at this point.
   bool retransmitted = false;
@@ -96,10 +87,6 @@ int32_t VCMReceiver::InsertPacket(const VCMPacket& packet,
   } else if (ret == kFlushIndicator) {
     return VCM_FLUSH_INDICATOR;
   } else if (ret < 0) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding,
-                 VCMId(vcm_id_, receiver_id_),
-                 "Error inserting packet seqnum=%u, timestamp=%u",
-                 packet.seqNum, packet.timestamp);
     return VCM_JITTER_BUFFER_ERROR;
   }
   if (ret == kCompleteSession && !retransmitted) {
@@ -107,15 +94,6 @@ int32_t VCMReceiver::InsertPacket(const VCMPacket& packet,
     // retransmission here, since we compensate with extra retransmission
     // delay within the jitter estimate.
     timing_->IncomingTimestamp(packet.timestamp, clock_->TimeInMilliseconds());
-  }
-  if (master_) {
-    // Only trace the primary receiver to make it possible to parse and plot
-    // the trace file.
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
-                 VCMId(vcm_id_, receiver_id_),
-                 "Packet seqnum=%u timestamp=%u inserted at %u",
-                 packet.seqNum, packet.timestamp,
-                 MaskWord64ToUWord32(clock_->TimeInMilliseconds()));
   }
   return VCM_OK;
 }
@@ -161,19 +139,16 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
     timing_error = true;
   } else if (std::abs(static_cast<int>(next_render_time_ms - now_ms)) >
              max_video_delay_ms_) {
-    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
-                 VCMId(vcm_id_, receiver_id_),
-                 "This frame is out of our delay bounds, resetting jitter "
-                 "buffer: %d > %d",
-                 std::abs(static_cast<int>(next_render_time_ms - now_ms)),
-                 max_video_delay_ms_);
+    int frame_delay = std::abs(static_cast<int>(next_render_time_ms - now_ms));
+    LOG(LS_WARNING) << "A frame about to be decoded is out of the configured "
+                    << "delay bounds (" << frame_delay << " > "
+                    << max_video_delay_ms_
+                    << "). Resetting the video jitter buffer.";
     timing_error = true;
   } else if (static_cast<int>(timing_->TargetVideoDelay()) >
              max_video_delay_ms_) {
-    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
-                 VCMId(vcm_id_, receiver_id_),
-                 "More than %u ms target delay. Flushing jitter buffer and"
-                 "resetting timing.", max_video_delay_ms_);
+    LOG(LS_WARNING) << "The video target delay has grown larger than "
+                    << max_video_delay_ms_ << " ms. Resetting jitter buffer.";
     timing_error = true;
   }
 
@@ -284,10 +259,7 @@ VCMNackStatus VCMReceiver::NackList(uint16_t* nack_list,
   bool request_key_frame = false;
   uint16_t* internal_nack_list = jitter_buffer_.GetNackList(
       nack_list_length, &request_key_frame);
-  if (*nack_list_length > size) {
-    *nack_list_length = 0;
-    return kNackNeedMoreMemory;
-  }
+  assert(*nack_list_length <= size);
   if (internal_nack_list != NULL && *nack_list_length > 0) {
     memcpy(nack_list, internal_nack_list, *nack_list_length * sizeof(uint16_t));
   }
@@ -378,10 +350,7 @@ void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {
 void VCMReceiver::UpdateState(VCMReceiverState new_state) {
   CriticalSectionScoped cs(crit_sect_);
   assert(!(state_ == kPassive && new_state == kWaitForPrimaryDecode));
-  WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCoding,
-               VCMId(vcm_id_, receiver_id_),
-               "Receiver changing state: %d to %d",
-               state_, new_state);
+  LOG(LS_INFO) << "Receiver changing state: " << state_ << " to " << new_state;
   state_ = new_state;
 }
 

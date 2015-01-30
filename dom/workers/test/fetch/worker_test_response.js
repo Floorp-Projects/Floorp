@@ -52,6 +52,20 @@ function testRedirect() {
   }
 }
 
+function testOk() {
+  var r1 = new Response("", { status: 200});
+  ok(r1.ok, "Response with status 200 should have ok true");
+
+  var r2 = new Response("", { status: 204});
+  ok(r2.ok, "Response with status 204 should have ok true");
+
+  var r3 = new Response("", { status: 299});
+  ok(r3.ok, "Response with status 299 should have ok true");
+
+  var r4 = new Response("", { status: 302});
+  ok(!r4.ok, "Response with status 302 should have ok false");
+}
+
 function testBodyUsed() {
   var res = new Response("Sample body");
   ok(!res.bodyUsed, "bodyUsed is initially false.");
@@ -138,6 +152,7 @@ onmessage = function() {
   testDefaultCtor();
   testClone();
   testRedirect();
+  testOk();
 
   Promise.resolve()
     .then(testBodyCreation)

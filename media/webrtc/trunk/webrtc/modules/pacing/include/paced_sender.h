@@ -8,23 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_PACED_SENDER_H_
-#define WEBRTC_MODULES_PACED_SENDER_H_
+#ifndef WEBRTC_MODULES_PACING_INCLUDE_PACED_SENDER_H_
+#define WEBRTC_MODULES_PACING_INCLUDE_PACED_SENDER_H_
 
 #include <list>
 #include <set>
 
+#include "webrtc/base/thread_annotations.h"
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
+class BitrateProber;
+class Clock;
 class CriticalSectionWrapper;
+
 namespace paced_sender {
 class IntervalBudget;
 struct Packet;
-class PacketList;
+class PacketQueue;
 }  // namespace paced_sender
 
 class PacedSender : public Module {
@@ -48,15 +51,28 @@ class PacedSender : public Module {
                                   int64_t capture_time_ms,
                                   bool retransmission) = 0;
     // Called when it's a good time to send a padding data.
+    // Returns the number of bytes sent.
     virtual int TimeToSendPadding(int bytes) = 0;
+
    protected:
     virtual ~Callback() {}
   };
 
   static const int kDefaultMaxQueueLengthMs = 2000;
+  // Pace in kbits/s until we receive first estimate.
+  static const int kDefaultInitialPaceKbps = 2000;
+  // Pacing-rate relative to our target send rate.
+  // Multiplicative factor that is applied to the target bitrate to calculate
+  // the number of bytes that can be transmitted per interval.
+  // Increasing this factor will result in lower delays in cases of bitrate
+  // overshoots from the encoder.
+  static const float kDefaultPaceMultiplier;
 
-  PacedSender(Callback* callback, int target_bitrate_kbps,
-              float pace_multiplier);
+  PacedSender(Clock* clock,
+              Callback* callback,
+              int bitrate_kbps,
+              int max_bitrate_kbps,
+              int min_bitrate_kbps);
 
   virtual ~PacedSender();
 
@@ -71,13 +87,14 @@ class PacedSender : public Module {
   // Resume sending packets.
   void Resume();
 
-  // Set the pacing target bitrate and the bitrate up to which we are allowed to
-  // pad. We will send padding packets to increase the total bitrate until we
-  // reach |pad_up_to_bitrate_kbps|. If the media bitrate is above
-  // |pad_up_to_bitrate_kbps| no padding will be sent.
-  void UpdateBitrate(int target_bitrate_kbps,
-                     int max_padding_bitrate_kbps,
-                     int pad_up_to_bitrate_kbps);
+  // Set target bitrates for the pacer.
+  // We will pace out bursts of packets at a bitrate of |max_bitrate_kbps|.
+  // |bitrate_kbps| is our estimate of what we are allowed to send on average.
+  // Padding packets will be utilized to reach |min_bitrate| unless enough media
+  // packets are available.
+  void UpdateBitrate(int bitrate_kbps,
+                     int max_bitrate_kbps,
+                     int min_bitrate_kbps);
 
   // Returns true if we send the packet now, else it will add the packet
   // information to the queue and call TimeToSendPacket when it's time to send.
@@ -88,12 +105,14 @@ class PacedSender : public Module {
                           int bytes,
                           bool retransmission);
 
-  // Sets the max length of the pacer queue in milliseconds.
-  // A negative queue size is interpreted as infinite.
-  virtual void set_max_queue_length_ms(int max_queue_length_ms);
-
   // Returns the time since the oldest queued packet was enqueued.
   virtual int QueueInMs() const;
+
+  virtual size_t QueueSizePackets() const;
+
+  // Returns the number of milliseconds it will take to send the current
+  // packets in the queue, given the current size and bitrate, ignoring prio.
+  virtual int ExpectedQueueTimeMs() const;
 
   // Returns the number of milliseconds until the module want a worker thread
   // to call Process.
@@ -102,47 +121,40 @@ class PacedSender : public Module {
   // Process any pending packets in the queue(s).
   virtual int32_t Process() OVERRIDE;
 
+ protected:
+  virtual bool ProbingExperimentIsEnabled() const;
+
  private:
-  // Return true if next packet in line should be transmitted.
-  // Return packet list that contains the next packet.
-  bool ShouldSendNextPacket(paced_sender::PacketList** packet_list);
-
-  // Local helper function to GetNextPacket.
-  paced_sender::Packet GetNextPacketFromList(paced_sender::PacketList* packets);
-
-  bool SendPacketFromList(paced_sender::PacketList* packet_list);
-
   // Updates the number of bytes that can be sent for the next time interval.
-  void UpdateBytesPerInterval(uint32_t delta_time_in_ms);
+  void UpdateBytesPerInterval(uint32_t delta_time_in_ms)
+      EXCLUSIVE_LOCKS_REQUIRED(critsect_);
 
-  // Updates the buffers with the number of bytes that we sent.
-  void UpdateMediaBytesSent(int num_bytes);
+  bool SendPacket(const paced_sender::Packet& packet)
+      EXCLUSIVE_LOCKS_REQUIRED(critsect_);
+  void SendPadding(int padding_needed) EXCLUSIVE_LOCKS_REQUIRED(critsect_);
 
-  Callback* callback_;
-  const float pace_multiplier_;
-  bool enabled_;
-  bool paused_;
-  int max_queue_length_ms_;
+  Clock* const clock_;
+  Callback* const callback_;
+
   scoped_ptr<CriticalSectionWrapper> critsect_;
+  bool enabled_ GUARDED_BY(critsect_);
+  bool paused_ GUARDED_BY(critsect_);
   // This is the media budget, keeping track of how many bits of media
   // we can pace out during the current interval.
-  scoped_ptr<paced_sender::IntervalBudget> media_budget_;
+  scoped_ptr<paced_sender::IntervalBudget> media_budget_ GUARDED_BY(critsect_);
   // This is the padding budget, keeping track of how many bits of padding we're
-  // allowed to send out during the current interval.
-  scoped_ptr<paced_sender::IntervalBudget> padding_budget_;
-  // Media and padding share this budget, therefore no padding will be sent if
-  // media uses all of this budget. This is used to avoid padding above a given
-  // bitrate.
-  scoped_ptr<paced_sender::IntervalBudget> pad_up_to_bitrate_budget_;
+  // allowed to send out during the current interval. This budget will be
+  // utilized when there's no media to send.
+  scoped_ptr<paced_sender::IntervalBudget> padding_budget_
+      GUARDED_BY(critsect_);
 
-  TickTime time_last_update_;
-  TickTime time_last_send_;
-  int64_t capture_time_ms_last_queued_;
-  int64_t capture_time_ms_last_sent_;
+  scoped_ptr<BitrateProber> prober_ GUARDED_BY(critsect_);
+  int bitrate_bps_ GUARDED_BY(critsect_);
 
-  scoped_ptr<paced_sender::PacketList> high_priority_packets_;
-  scoped_ptr<paced_sender::PacketList> normal_priority_packets_;
-  scoped_ptr<paced_sender::PacketList> low_priority_packets_;
+  int64_t time_last_update_us_ GUARDED_BY(critsect_);
+
+  scoped_ptr<paced_sender::PacketQueue> packets_ GUARDED_BY(critsect_);
+  uint64_t packet_counter_ GUARDED_BY(critsect_);
 };
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_PACED_SENDER_H_
+#endif  // WEBRTC_MODULES_PACING_INCLUDE_PACED_SENDER_H_

@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 
+#include <assert.h>
+
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 
 namespace webrtc {

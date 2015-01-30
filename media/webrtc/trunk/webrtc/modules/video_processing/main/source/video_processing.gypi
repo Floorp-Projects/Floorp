@@ -31,8 +31,6 @@
         'content_analysis.h',
         'deflickering.cc',
         'deflickering.h',
-        'denoising.cc',
-        'denoising.h',
         'frame_preprocessor.cc',
         'frame_preprocessor.h',
         'spatial_resampler.cc',

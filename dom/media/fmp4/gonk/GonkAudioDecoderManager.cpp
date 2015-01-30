@@ -38,7 +38,8 @@ namespace mozilla {
 
 GonkAudioDecoderManager::GonkAudioDecoderManager(
   const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : mAudioChannels(aConfig.channel_count)
+  : GonkDecoderManager()
+  , mAudioChannels(aConfig.channel_count)
   , mAudioRate(aConfig.samples_per_second)
   , mAudioProfile(aConfig.aac_profile)
   , mUseAdts(true)
@@ -94,6 +95,31 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   } else {
     GADM_LOG("Failed to input codec specific data!");
     return nullptr;
+  }
+}
+
+status_t
+GonkAudioDecoderManager::SendSampleToOMX(mp4_demuxer::MP4Sample* aSample)
+{
+  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->data),
+                         aSample->size,
+                         aSample->composition_timestamp,
+                         0);
+}
+
+void
+GonkAudioDecoderManager::PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample)
+{
+  if (aSample && mUseAdts) {
+    int8_t frequency_index =
+        mp4_demuxer::Adts::GetFrequencyIndex(mAudioRate);
+    bool rv = mp4_demuxer::Adts::ConvertSample(mAudioChannels,
+                                               frequency_index,
+                                               mAudioProfile,
+                                               aSample);
+    if (!rv) {
+      GADM_LOG("Failed to apply ADTS header");
+    }
   }
 }
 
@@ -210,49 +236,11 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
   return NS_OK;
 }
 
-nsresult
-GonkAudioDecoderManager::Flush()
-{
-  return NS_OK;
-}
-
 void GonkAudioDecoderManager::ReleaseAudioBuffer() {
   if (mAudioBuffer) {
     mDecoder->ReleaseMediaBuffer(mAudioBuffer);
     mAudioBuffer = nullptr;
   }
-}
-
-nsresult
-GonkAudioDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
-{
-  if (mDecoder == nullptr) {
-    GADM_LOG("Decoder is not inited");
-    return NS_ERROR_UNEXPECTED;
-  }
-  if (aSample && mUseAdts) {
-    int8_t frequency_index =
-        mp4_demuxer::Adts::GetFrequencyIndex(mAudioRate);
-    bool rv = mp4_demuxer::Adts::ConvertSample(mAudioChannels,
-                                               frequency_index,
-                                               mAudioProfile,
-                                               aSample);
-    if (!rv) {
-      GADM_LOG("Failed to apply ADTS header");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  status_t rv;
-  if (aSample) {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
-    uint32_t length = aSample->size;
-    rv = mDecoder->Input(data, length, aSample->composition_timestamp, 0);
-  } else {
-    // Inputted data is null, so it is going to notify decoder EOS
-    rv = mDecoder->Input(0, 0, 0ll, 0);
-  }
-  return rv == OK ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 } // namespace mozilla
