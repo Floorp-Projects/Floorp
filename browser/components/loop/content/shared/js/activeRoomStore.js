@@ -68,7 +68,9 @@ loop.store.ActiveRoomStore = (function() {
         // session. 'Used' means at least one call has been placed
         // with it. Entering and leaving the room without seeing
         // anyone is not considered as 'used'
-        used: false
+        used: false,
+        localVideoDimensions: {},
+        remoteVideoDimensions: {}
       };
     },
 
@@ -119,7 +121,8 @@ loop.store.ActiveRoomStore = (function() {
         "remotePeerConnected",
         "windowUnload",
         "leaveRoom",
-        "feedbackComplete"
+        "feedbackComplete",
+        "videoDimensionsChanged"
       ]);
     },
 
@@ -477,6 +480,23 @@ loop.store.ActiveRoomStore = (function() {
       // Note, that we want some values, such as the windowId, so we don't
       // do a full reset here.
       this.setStoreState(this.getInitialStoreState());
+    },
+
+    /**
+     * Handles a change in dimensions of a video stream and updates the store data
+     * with the new dimensions of a local or remote stream.
+     *
+     * @param {sharedActions.VideoDimensionsChanged} actionData
+     */
+    videoDimensionsChanged: function(actionData) {
+      // NOTE: in the future, when multiple remote video streams are supported,
+      //       we'll need to make this support multiple remotes as well. Good
+      //       starting point for video tiling.
+      var storeProp = (actionData.isLocal ? "local" : "remote") + "VideoDimensions";
+      var nextState = {};
+      nextState[storeProp] = this.getStoreState()[storeProp];
+      nextState[storeProp][actionData.videoType] = actionData.dimensions;
+      this.setStoreState(nextState);
     }
   });
 
