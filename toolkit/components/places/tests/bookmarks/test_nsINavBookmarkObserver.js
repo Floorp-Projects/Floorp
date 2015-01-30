@@ -11,7 +11,7 @@ let gBookmarksObserver = {
     let args = this.expected.shift().args;
     do_check_eq(aArguments.length, args.length);
     for (let i = 0; i < aArguments.length; i++) {
-      do_log_info(aMethodName + "(args[" + i + "]: " + args[i].name + ")");
+      do_print(aMethodName + "(args[" + i + "]: " + args[i].name + ")");
       do_check_true(args[i].check(aArguments[i]));
     }
 

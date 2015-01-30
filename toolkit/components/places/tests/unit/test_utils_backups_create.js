@@ -42,7 +42,7 @@ add_task(function () {
     let backupFile = bookmarksBackupDir.clone();
     backupFile.append(backupFilename);
     backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
-    do_log_info("Creating fake backup " + backupFile.leafName);
+    do_print("Creating fake backup " + backupFile.leafName);
     if (!backupFile.exists())
       do_throw("Unable to create fake backup " + backupFile.leafName);
   }
