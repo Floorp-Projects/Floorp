@@ -337,6 +337,11 @@ nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
         // Found an ID3 header. We don't care about the body of the header, so
         // just skip past.
         buffer = ch + mID3Parser.GetHeaderLength() - (ID3_HEADER_LENGTH - 1);
+
+        if (buffer <= ch) {
+          return NS_ERROR_FAILURE;
+        }
+
         ch = buffer;
 
         mTotalID3Size += mID3Parser.GetHeaderLength();
