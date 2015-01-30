@@ -1014,45 +1014,9 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
         return false;
 
-    if (obj->is<ArrayObject>()) {
-        bool dummy;
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        for (size_t i = 0, len = ids.length(); i < len; i++) {
-            if (!DefinePropertyOnArray(cx, arr, ids[i], descs[i], true, &dummy))
-                return false;
-        }
-        return true;
-    }
-
-    if (IsAnyTypedArray(obj)) {
-        bool dummy;
-        for (size_t i = 0, len = ids.length(); i < len; i++) {
-            if (!DefinePropertyOnTypedArray(cx, obj, ids[i], descs[i], true, &dummy))
-                return false;
-        }
-        return true;
-    }
-
-    if (obj->is<UnboxedPlainObject>() && !obj->as<UnboxedPlainObject>().convertToNative(cx))
-        return false;
-
-    if (obj->getOps()->lookupProperty) {
-        if (obj->is<ProxyObject>()) {
-            Rooted<PropertyDescriptor> pd(cx);
-            for (size_t i = 0, len = ids.length(); i < len; i++) {
-                descs[i].populatePropertyDescriptor(obj, &pd);
-                if (!Proxy::defineProperty(cx, obj, ids[i], &pd))
-                    return false;
-            }
-            return true;
-        }
-        bool dummy;
-        return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, true, &dummy);
-    }
-
     bool dummy;
     for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!DefinePropertyOnObject(cx, obj.as<NativeObject>(), ids[i], descs[i], true, &dummy))
+        if (!StandardDefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
             return false;
     }
 
