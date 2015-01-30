@@ -132,8 +132,7 @@ public:
   nsXBLEventHandler* GetEventHandler()
   {
     if (!mHandler) {
-      NS_NewXBLEventHandler(this, mEventName, getter_AddRefs(mHandler));
-      // XXX Need to signal out of memory?
+      mHandler = NS_NewXBLEventHandler(this, mEventName);
     }
 
     return mHandler;
