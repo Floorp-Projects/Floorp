@@ -203,6 +203,7 @@ class SamplerThread : public Thread {
   // Implement Thread::Run().
   virtual void Run() {
     while (SamplerRegistry::sampler->IsActive()) {
+      SamplerRegistry::sampler->DeleteExpiredMarkers();
       if (!SamplerRegistry::sampler->IsPaused()) {
         mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
         std::vector<ThreadInfo*> threads =
@@ -218,8 +219,6 @@ class SamplerThread : public Thread {
           PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
           if (sleeping == PseudoStack::SLEEPING_AGAIN) {
             info->Profile()->DuplicateLastSample();
-            //XXX: This causes flushes regardless of jank-only mode
-            info->Profile()->flush();
             continue;
           }
 
