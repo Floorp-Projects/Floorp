@@ -118,6 +118,15 @@ class ObjectOpResult
         return true;
     }
 
+    JS_PUBLIC_API(bool) failCantRedefineProp();
+    JS_PUBLIC_API(bool) failReadOnly();
+    JS_PUBLIC_API(bool) failGetterOnly();
+
+    uint32_t failureCode() const {
+        MOZ_ASSERT(!ok());
+        return code_;
+    }
+
     /*
      * Report an error or warning if necessary; return true to proceed and
      * false if an error was reported. Call this when failure should cause
@@ -280,7 +289,8 @@ typedef bool
                      JS::MutableHandleObject objp, JS::MutableHandle<Shape*> propp);
 typedef bool
 (* DefinePropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                     JSGetterOp getter, JSSetterOp setter, unsigned attrs);
+                     JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                     JS::ObjectOpResult &result);
 typedef bool
 (* HasPropertyOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 typedef bool

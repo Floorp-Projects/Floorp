@@ -34,12 +34,12 @@ DirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, 
 
 bool
 DirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                   MutableHandle<PropertyDescriptor> desc) const
+                                   MutableHandle<PropertyDescriptor> desc,
+                                   ObjectOpResult &result) const
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    ObjectOpResult ignored;
-    return StandardDefineProperty(cx, target, id, desc, ignored);
+    return StandardDefineProperty(cx, target, id, desc, result);
 }
 
 bool

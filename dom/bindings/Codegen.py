@@ -7684,10 +7684,7 @@ class CGResolveHook(CGAbstractBindingMethod):
             // has already defined it on the object.  Don't try to also
             // define it.
             if (!desc.value().isUndefined() &&
-                !JS_DefinePropertyById(cx, obj, id, desc.value(),
-                                       desc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                                       JS_PROPERTYOP_GETTER(desc.getter()),
-                                       JS_PROPERTYOP_SETTER(desc.setter()))) {
+                !JS_DefinePropertyById(cx, obj, id, desc)) {
               return false;
             }
             *resolvedp = true;
@@ -9682,10 +9679,7 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
               // try to also define it.
               if (objDesc.object() &&
                   !objDesc.value().isUndefined() &&
-                  !JS_DefinePropertyById(cx, obj, id, objDesc.value(),
-                                         objDesc.attributes() | JSPROP_PROPOP_ACCESSORS,
-                                         JS_PROPERTYOP_GETTER(objDesc.getter()),
-                                         JS_PROPERTYOP_SETTER(objDesc.setter()))) {
+                  !JS_DefinePropertyById(cx, obj, id, objDesc)) {
                 return false;
               }
             }
@@ -10221,10 +10215,13 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
+        # The usual convention is to name the ObjectOpResult out-parameter
+        # `result`, but that name is a bit overloaded around here.
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc'),
+                Argument('JS::ObjectOpResult&', 'opresult'),
                 Argument('bool*', 'defined')]
         ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True, const=True)
         self.descriptor = descriptor
@@ -10242,7 +10239,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 if (IsArrayIndex(index)) {
                   *defined = true;
                   $*{callSetter}
-                  return true;
+                  return opresult.succeed();
                 }
                 """,
                 callSetter=CGProxyIndexedSetter(self.descriptor).define())
@@ -10255,7 +10252,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             set += fill(
                 """
                 if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
-                  return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, "${name}");
+                  return js::IsInNonStrictPropertySet(cx)
+                         ? opresult.succeed()
+                         : ThrowErrorMessage(cx, MSG_NO_INDEXED_SETTER, "${name}");
                 }
                 """,
                 name=self.descriptor.name)
@@ -10275,7 +10274,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 *defined = true;
                 $*{callSetter}
 
-                return true;
+                return opresult.succeed();
                 """,
                 callSetter=CGProxyNamedSetter(self.descriptor).define())
         else:
@@ -10291,7 +10290,9 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     $*{presenceChecker}
 
                     if (found) {
-                      return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
+                      return js::IsInNonStrictPropertySet(cx)
+                             ? opresult.succeed()
+                             : ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
                     }
                     """,
                     presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define(),

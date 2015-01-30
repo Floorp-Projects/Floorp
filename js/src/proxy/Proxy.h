@@ -29,7 +29,7 @@ class Proxy
     static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                          MutableHandle<JSPropertyDescriptor> desc);
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                               MutableHandle<JSPropertyDescriptor> desc);
+                               MutableHandle<JSPropertyDescriptor> desc, ObjectOpResult &result);
     static bool ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp);
