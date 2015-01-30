@@ -1190,7 +1190,8 @@ Http2Session::ParsePadding(uint8_t &paddingControlBytes, uint16_t &paddingLength
 nsresult
 Http2Session::RecvHeaders(Http2Session *self)
 {
-  MOZ_ASSERT(self->mInputFrameType == FRAME_TYPE_HEADERS);
+  MOZ_ASSERT(self->mInputFrameType == FRAME_TYPE_HEADERS ||
+             self->mInputFrameType == FRAME_TYPE_CONTINUATION);
 
   bool isContinuation = self->mExpectedHeaderID != 0;
 
