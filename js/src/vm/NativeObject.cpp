@@ -1175,7 +1175,15 @@ DefinePropertyOrElement(ExclusiveContext *cx, HandleNativeObject obj, HandleId i
         if (id == NameToId(cx->names().length)) {
             if (!cx->shouldBeJSContext())
                 return false;
-            return ArraySetLength(cx->asJSContext(), arr, id, attrs, value, setterIsStrict);
+
+            ObjectOpResult success;
+            if (!ArraySetLength(cx->asJSContext(), arr, id, attrs, value, success))
+                return false;
+            if (setterIsStrict && !success) {
+                success.reportError(cx->asJSContext(), arr, id);
+                return false;
+            }
+            return true;
         }
 
         uint32_t index;
@@ -2203,7 +2211,15 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
         if (pobj == receiver) {
             if (pobj->is<ArrayObject>() && id == NameToId(cx->names().length)) {
                 Rooted<ArrayObject*> arr(cx, &pobj->as<ArrayObject>());
-                return ArraySetLength(cx, arr, id, shape->attributes(), vp, strict);
+                ObjectOpResult success;
+                if (!ArraySetLength(cx, arr, id, shape->attributes(), vp, success))
+                    return false;
+                if (strict && !success) {
+                    if (cx->shouldBeJSContext())
+                        success.reportError(cx->asJSContext(), arr, id);
+                    return false;
+                }
+                return true;
             }
             return NativeSet(cx, obj, receiver, shape, strict, vp);
         }

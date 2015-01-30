@@ -119,17 +119,41 @@ class ObjectOpResult
     }
 
     /*
+     * Report an error or warning if necessary; return true to proceed and
+     * false if an error was reported. Call this when failure should cause
+     * a warning if extraWarnings are enabled.
+     *
+     * The precise rules are like this:
+     *
+     * -   If ok(), then we succeeded. Do nothing and return true.
+     * -   Otherwise, if |strict| is true, or if cx has both extraWarnings and
+     *     werrorOption enabled, throw a TypeError and return false.
+     * -   Otherwise, if cx has extraWarnings enabled, emit a warning and
+     *     return true.
+     * -   Otherwise, do nothing and return true.
+     */
+    bool checkStrictErrorOrWarning(JSContext *cx, HandleObject obj, HandleId id, bool strict) {
+        if (ok())
+            return true;
+        return reportStrictErrorOrWarning(cx, obj, id, strict);
+    }
+
+    /*
      * Convenience method. Return true if ok() or if strict is false; otherwise
      * throw a TypeError and return false.
      */
     bool checkStrict(JSContext *cx, HandleObject obj, HandleId id) {
-        if (ok())
-            return true;
-        return reportError(cx, obj, id);
+        return checkStrictErrorOrWarning(cx, obj, id, true);
     }
 
-    /* Throw an exception. Call this only if !ok(). */
-    JS_PUBLIC_API(bool) reportError(JSContext *cx, HandleObject obj, HandleId id);
+    /* Throw a TypeError. Call this only if !ok(). */
+    bool reportError(JSContext *cx, HandleObject obj, HandleId id) {
+        return reportStrictErrorOrWarning(cx, obj, id, true);
+    }
+
+    /* Helper function for checkStrictErrorOrWarning's slow path. */
+    JS_PUBLIC_API(bool) reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, HandleId id, bool strict);
+
 };
 
 }
