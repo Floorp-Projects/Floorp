@@ -552,38 +552,37 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
     return true;
 }
 
-// ES6 (5 April 2014) 9.5.6 Proxy.[[DefineOwnProperty]](O,P)
+// ES6 draft rev 31 (15 Jan 2015) 9.5.6 Proxy.[[DefineOwnProperty]](P, Desc)
 bool
 ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                           MutableHandle<PropertyDescriptor> desc) const
+                                           MutableHandle<PropertyDescriptor> desc,
+                                           ObjectOpResult &result) const
 {
-    // step 2
+    // steps 2-4
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-
-    // step 3
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
     }
 
-    // step 4
+    // step 5
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // step 5-6
+    // steps 6-7
     RootedValue trap(cx);
     if (!GetProperty(cx, handler, handler, cx->names().defineProperty, &trap))
         return false;
 
-    // step 7
+    // step 8
     if (trap.isUndefined())
-        return DirectProxyHandler::defineProperty(cx, proxy, id, desc);
+        return DirectProxyHandler::defineProperty(cx, proxy, id, desc, result);
 
-    // step 8-9
+    // step 9
     RootedValue descObj(cx);
     if (!NewPropertyDescriptorObject(cx, desc, &descObj))
         return false;
 
-    // step 10, 12
+    // steps 10-11
     RootedValue propKey(cx);
     if (!IdToStringOrSymbol(cx, id, &propKey))
         return false;
@@ -597,48 +596,50 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step 11, 13
-    if (ToBoolean(trapResult)) {
-        // step 14-15
-        Rooted<PropertyDescriptor> targetDesc(cx);
-        if (!GetOwnPropertyDescriptor(cx, target, id, &targetDesc))
-            return false;
+    // FIXME - bug 1132522: Step 12 is not implemented yet.
+    // if (!ToBoolean(trapResult))
+    //     return result.fail(JSMSG_PROXY_DEFINE_RETURNED_FALSE);
 
-        // step 16-17
-        bool extensibleTarget;
-        if (!IsExtensible(cx, target, &extensibleTarget))
-            return false;
+    // step 13-14
+    Rooted<PropertyDescriptor> targetDesc(cx);
+    if (!GetOwnPropertyDescriptor(cx, target, id, &targetDesc))
+        return false;
 
-        // step 18-19
-        bool settingConfigFalse = desc.isPermanent();
-        if (!targetDesc.object()) {
-            // step 20a
-            if (!extensibleTarget) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
-                return false;
-            }
-            // step 20b
-            if (settingConfigFalse) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
-                return false;
-            }
-        } else {
-            // step 21
-            bool valid;
-            Rooted<PropDesc> pd(cx);
-            pd.initFromPropertyDescriptor(desc);
-            if (!ValidatePropertyDescriptor(cx, extensibleTarget, pd, targetDesc, &valid))
-                return false;
-            if (!valid || (settingConfigFalse && !targetDesc.isPermanent())) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
-                return false;
-            }
+    // step 15-16
+    bool extensibleTarget;
+    if (!IsExtensible(cx, target, &extensibleTarget))
+        return false;
+
+    // step 17-18
+    // FIXME bug 1133081: settingConfigFalse should be false if we have
+    // JSPROP_IGNORE_PERMANENT.
+    bool settingConfigFalse = desc.isPermanent();
+    if (!targetDesc.object()) {
+        // step 19.a
+        if (!extensibleTarget) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
+            return false;
+        }
+        // step 19.b
+        if (settingConfigFalse) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
+            return false;
+        }
+    } else {
+        // step 20
+        bool valid;
+        Rooted<PropDesc> pd(cx);
+        pd.initFromPropertyDescriptor(desc);
+        if (!ValidatePropertyDescriptor(cx, extensibleTarget, pd, targetDesc, &valid))
+            return false;
+        if (!valid || (settingConfigFalse && !targetDesc.isPermanent())) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
+            return false;
         }
     }
 
-    // [[DefineProperty]] should return a boolean value, which is used to do things like
-    // strict-mode throwing. At present, the engine is not prepared to do that. See bug 826587.
-    return true;
+    // step 21
+    return result.succeed();
 }
 
 // ES6 (5 April 2014) 9.5.12 Proxy.[[OwnPropertyKeys]]()

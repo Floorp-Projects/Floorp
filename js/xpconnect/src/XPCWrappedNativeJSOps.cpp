@@ -364,13 +364,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             AutoResolveName arn(ccx, id);
             if (resolved)
                 *resolved = true;
-            return JS_DefinePropertyById(ccx, obj, id, desc.value(),
-                                         // Descriptors never store JSNatives
-                                         // for accessors: they have either
-                                         // JSFunctions or JSPropertyOps.
-                                         desc.attributes(),
-                                         JS_PROPERTYOP_GETTER(desc.getter()),
-                                         JS_PROPERTYOP_SETTER(desc.setter()));
+            return JS_DefinePropertyById(ccx, obj, id, desc);
         }
     }
 

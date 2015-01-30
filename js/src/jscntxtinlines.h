@@ -133,6 +133,15 @@ class CompartmentChecker
     void check(InterpreterFrame *fp);
     void check(AbstractFramePtr frame);
     void check(SavedStacks *stacks);
+
+    void check(Handle<JSPropertyDescriptor> desc) {
+        check(desc.object());
+        if (desc.hasGetterObject())
+            check(desc.getterObject());
+        if (desc.hasSetterObject())
+            check(desc.setterObject());
+        check(desc.value());
+    }
 };
 #endif /* JS_CRASH_DIAGNOSTICS */
 

@@ -746,42 +746,13 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id,
 }
 
 bool
-js::WouldDefinePastNonwritableLength(ExclusiveContext *cx,
-                                     HandleObject obj, uint32_t index, bool strict,
-                                     bool *definesPast)
+js::WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index)
 {
-    if (!obj->is<ArrayObject>()) {
-        *definesPast = false;
-        return true;
-    }
+    if (!obj->is<ArrayObject>())
+        return false;
 
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-    uint32_t length = arr->length();
-    if (index < length) {
-        *definesPast = false;
-        return true;
-    }
-
-    if (arr->lengthIsWritable()) {
-        *definesPast = false;
-        return true;
-    }
-
-    *definesPast = true;
-
-    // Error in strict mode code or warn with strict option.
-    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
-    if (!cx->isJSContext())
-        return true;
-
-    JSContext *ncx = cx->asJSContext();
-
-    if (!strict && !ncx->compartment()->options().extraWarnings(ncx))
-        return true;
-
-    // XXX include the index and maybe array length in the error message
-    return JS_ReportErrorFlagsAndNumber(ncx, flags, GetErrorMessage, nullptr,
-                                        JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+    ArrayObject *arr = &obj->as<ArrayObject>();
+    return !arr->lengthIsWritable() && index >= arr->length();
 }
 
 static bool

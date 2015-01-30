@@ -32,7 +32,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                                   JS::MutableHandle<JSPropertyDescriptor> desc);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                        JS::MutableHandle<JSPropertyDescriptor> desc);
+                        JS::MutableHandle<JSPropertyDescriptor> desc,
+                        JS::ObjectOpResult &result);
     bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy, bool *succeeded);
@@ -93,6 +94,10 @@ class WrapperOwner : public virtual JavaScriptShared
     bool ipcfail(JSContext *cx);
 
     // Check whether a return status is okay, and if not, propagate its error.
+    //
+    // If 'status' might be a ReturnObjectOpResult, which is only possible for
+    // a subset of the operations below, 'result' must be passed.
+    bool ok(JSContext *cx, const ReturnStatus &status, JS::ObjectOpResult &result);
     bool ok(JSContext *cx, const ReturnStatus &status);
 
     bool inactive_;

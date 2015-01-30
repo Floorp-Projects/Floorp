@@ -65,6 +65,15 @@ WrapperAnswer::ok(ReturnStatus *rs)
 }
 
 bool
+WrapperAnswer::ok(ReturnStatus *rs, const JS::ObjectOpResult &result)
+{
+    *rs = result
+          ? ReturnStatus(ReturnSuccess())
+          : ReturnStatus(ReturnObjectOpResult(result.failureCode()));
+    return true;
+}
+
+bool
 WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
                                      bool *succeeded)
 {
@@ -179,11 +188,10 @@ WrapperAnswer::RecvDefineProperty(const ObjectId &objId, const JSIDVariant &idVa
     if (!toDescriptor(cx, descriptor, &desc))
         return fail(cx, rs);
 
-    bool ignored;
-    if (!js::DefineOwnProperty(cx, obj, id, desc, &ignored))
+    ObjectOpResult success;
+    if (!js::DefineOwnProperty(cx, obj, id, desc, success))
         return fail(cx, rs);
-
-    return ok(rs);
+    return ok(rs, success);
 }
 
 bool

@@ -52,8 +52,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::RecvGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
     }
     bool RecvDefineProperty(const uint64_t &objId, const JSIDVariant &id,
-                              const PPropertyDescriptor &flags,
-                              ReturnStatus *rs) {
+                            const PPropertyDescriptor &flags, ReturnStatus *rs) {
         return Answer::RecvDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
     }
     bool RecvDelete(const uint64_t &objId, const JSIDVariant &id,
@@ -145,7 +144,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
     bool SendDefineProperty(const ObjectId &objId, const JSIDVariant &id,
                             const PPropertyDescriptor &flags,
-                              ReturnStatus *rs) {
+                            ReturnStatus *rs) {
         return Base::SendDefineProperty(objId.serialize(), id, flags, rs);
     }
     bool SendDelete(const ObjectId &objId, const JSIDVariant &id,

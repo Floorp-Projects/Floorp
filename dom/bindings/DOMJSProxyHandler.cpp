@@ -196,18 +196,15 @@ BaseDOMProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
 
 bool
 DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                MutableHandle<JSPropertyDescriptor> desc, bool* defined) const
+                                MutableHandle<JSPropertyDescriptor> desc,
+                                JS::ObjectOpResult &result, bool *defined) const
 {
   if (desc.hasGetterObject() && desc.setter() == JS_StrictPropertyStub) {
-    return JS_ReportErrorFlagsAndNumber(cx,
-                                        JSREPORT_WARNING | JSREPORT_STRICT |
-                                        JSREPORT_STRICT_MODE_ERROR,
-                                        js::GetErrorMessage, nullptr,
-                                        JSMSG_GETTER_ONLY);
+    return result.failGetterOnly();
   }
 
   if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
-    return true;
+    return result.succeed();
   }
 
   JSObject* expando = EnsureExpandoObject(cx, proxy);
@@ -215,8 +212,11 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
     return false;
   }
 
-  bool dummy;
-  return js::DefineOwnProperty(cx, expando, id, desc, &dummy);
+  if (!js::DefineOwnProperty(cx, expando, id, desc, result)) {
+    return false;
+  }
+  *defined = true;
+  return true;
 }
 
 bool

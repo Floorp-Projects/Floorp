@@ -168,6 +168,24 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext *cx, HandleObject obj, 
     return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr, code_);
 }
 
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failCantRedefineProp()
+{
+    return fail(JSMSG_CANT_REDEFINE_PROP);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failReadOnly()
+{
+    return fail(JSMSG_READ_ONLY);
+}
+
+JS_PUBLIC_API(bool)
+JS::ObjectOpResult::failGetterOnly()
+{
+    return fail(JSMSG_GETTER_ONLY);
+}
+
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {
@@ -2239,6 +2257,33 @@ JS_DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, double value
 }
 
 static bool
+DefinePropertyByDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+                           Handle<JSPropertyDescriptor> desc, ObjectOpResult &result)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id, desc);
+    return DefineProperty(cx, obj, id, desc.value(), desc.getter(), desc.setter(),
+                          desc.attributes(), result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id,
+                      Handle<JSPropertyDescriptor> desc, ObjectOpResult &result)
+{
+    return DefinePropertyByDescriptor(cx, obj, id, desc, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id,
+                      Handle<JSPropertyDescriptor> desc)
+{
+    ObjectOpResult result;
+    return DefinePropertyByDescriptor(cx, obj, id, desc, result) &&
+           result.checkStrict(cx, obj, id);
+}
+
+static bool
 DefineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue value,
               unsigned attrs, Native getter, Native setter)
 {
@@ -2492,6 +2537,31 @@ JS_DefineUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_
     Value value = NumberValue(valueArg);
     return DefineUCProperty(cx, obj, name, namelen, HandleValue::fromMarkedLocation(&value),
                             getter, setter, attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen,
+                    Handle<JSPropertyDescriptor> desc,
+                    ObjectOpResult &result)
+{
+    JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return DefinePropertyByDescriptor(cx, obj, id, desc, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext *cx, HandleObject obj, const char16_t *name, size_t namelen,
+                    Handle<JSPropertyDescriptor> desc)
+{
+    JSAtom *atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    ObjectOpResult result;
+    return DefinePropertyByDescriptor(cx, obj, id, desc, result) &&
+           result.checkStrict(cx, obj, id);
 }
 
 JS_PUBLIC_API(JSObject *)

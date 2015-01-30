@@ -28,8 +28,7 @@ class WrapperAnswer : public virtual JavaScriptShared
                                       ReturnStatus *rs,
                                       PPropertyDescriptor *out);
     bool RecvDefineProperty(const ObjectId &objId, const JSIDVariant &id,
-                            const PPropertyDescriptor &flags,
-                            ReturnStatus *rs);
+                            const PPropertyDescriptor &flags, ReturnStatus *rs);
     bool RecvDelete(const ObjectId &objId, const JSIDVariant &id,
                     ReturnStatus *rs, bool *success);
 
@@ -68,6 +67,7 @@ class WrapperAnswer : public virtual JavaScriptShared
   private:
     bool fail(JSContext *cx, ReturnStatus *rs);
     bool ok(ReturnStatus *rs);
+    bool ok(ReturnStatus *rs, const JS::ObjectOpResult &result);
 };
 
 } // mozilla

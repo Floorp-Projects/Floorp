@@ -1249,16 +1249,28 @@ IsObjectValueInCompartment(Value v, JSCompartment *comp)
 
 extern bool
 NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
-                     JSGetterOp getter, JSSetterOp setter, unsigned attrs);
+                     JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                     ObjectOpResult &result);
 
-inline bool
+extern bool
 NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
                      HandleValue value, GetterOp getter, SetterOp setter,
-                     unsigned attrs);
+                     unsigned attrs, ObjectOpResult &result);
 
 extern bool
 NativeDefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t index, HandleValue value,
-                    JSGetterOp getter, JSSetterOp setter, unsigned attrs);
+                    JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                    ObjectOpResult &result);
+
+/* If the result out-param is omitted, throw on failure. */
+extern bool
+NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
+                     JSGetterOp getter, JSSetterOp setter, unsigned attrs);
+
+extern bool
+NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, PropertyName *name,
+                     HandleValue value, JSGetterOp getter, JSSetterOp setter,
+                     unsigned attrs);
 
 extern bool
 NativeHasProperty(JSContext *cx, HandleNativeObject obj, HandleId id, bool *foundp);

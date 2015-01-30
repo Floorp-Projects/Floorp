@@ -1757,7 +1757,8 @@ ReportPropertyError(JSContext *cx,
 
 bool
 TypedObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                GetterOp getter, SetterOp setter, unsigned attrs)
+                                GetterOp getter, SetterOp setter, unsigned attrs,
+                                ObjectOpResult &result)
 {
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     return ReportTypedObjTypeError(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, typedObj);

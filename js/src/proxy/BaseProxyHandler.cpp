@@ -183,7 +183,10 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
 
         if (descIsOwn) {
             MOZ_ASSERT(desc.object() == proxy);
-            return handler->defineProperty(cx, proxy, id, desc);
+            ObjectOpResult result;
+            if (!handler->defineProperty(cx, proxy, id, desc, result))
+                return false;
+            return result.checkStrictErrorOrWarning(cx, proxy, id, strict);
         }
         return DefineProperty(cx, receiver, id, desc.value(),
                               desc.getter(), desc.setter(), desc.attributes());
