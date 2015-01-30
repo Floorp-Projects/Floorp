@@ -157,10 +157,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
         final BrowserToolbar toolbar;
-        if (NewTabletUI.isEnabled(context)) {
+        if (HardwareUtils.isTablet()) {
             toolbar = new BrowserToolbarNewTablet(context, attrs);
-        } else if (HardwareUtils.isTablet()) {
-            toolbar = new BrowserToolbarTablet(context, attrs);
         } else if (Versions.preHC) {
             toolbar = new BrowserToolbarPreHC(context, attrs);
         } else {
@@ -176,12 +174,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         // BrowserToolbar is attached to BrowserApp only.
         activity = (BrowserApp) context;
 
-        // Inflate the content.
-        if (!HardwareUtils.isTablet()) {
-            LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
-        } else {
-            LayoutInflater.from(context).inflate(R.layout.new_tablet_browser_toolbar, this);
-        }
+        LayoutInflater.from(context).inflate(R.layout.browser_toolbar, this);
 
         Tabs.registerOnTabsChangedListener(this);
         isSwitchingTabs = true;
