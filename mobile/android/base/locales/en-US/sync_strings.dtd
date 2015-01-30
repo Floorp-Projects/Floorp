@@ -150,6 +150,8 @@
      etc).  The account remains a "Firefox Account". -->
 <!ENTITY fxaccount_create_account_header2 'Create a Firefox Account'>
 <!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
+<!ENTITY fxaccount_create_account_day_of_birth 'Day'>
+<!ENTITY fxaccount_create_account_month_of_birth 'Month'>
 <!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
 <!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
 <!ENTITY fxaccount_create_account_policy_text2 'By proceeding, I agree to the &formatS1; and &formatS2; of Firefox cloud services.'>

@@ -37,9 +37,11 @@ This is likely the same like id.heading in crashes.dtd. -->
 <!ENTITY aboutSupport.appBasicsTitle "Application Basics">
 <!ENTITY aboutSupport.appBasicsName "Name">
 <!ENTITY aboutSupport.appBasicsVersion "Version">
+<!ENTITY aboutSupport.appBasicsBuildID "Build ID">
 
-<!-- LOCALIZATION NOTE (aboutSupport.appBasicsUpdateHistory, aboutSupport.appBasicsShowUpdateHistory):
+<!-- LOCALIZATION NOTE (aboutSupport.appBasicsUpdateChannel, aboutSupport.appBasicsUpdateHistory, aboutSupport.appBasicsShowUpdateHistory):
 "Update" is a noun here, not a verb. -->
+<!ENTITY aboutSupport.appBasicsUpdateChannel "Update Channel">
 <!ENTITY aboutSupport.appBasicsUpdateHistory "Update History">
 <!ENTITY aboutSupport.appBasicsShowUpdateHistory "Show Update History">
 
