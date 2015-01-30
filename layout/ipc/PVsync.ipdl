@@ -21,7 +21,7 @@ async protocol PVsync
 
 child:
   // Send vsync event from chrome to content process.
-  async Notify(TimeStamp aVsyncTimestamp);
+  async Notify(TimeStamp aVsyncTimestamp) compress;
 
 parent:
   // Content process use these messages to acquire the vsync event.
