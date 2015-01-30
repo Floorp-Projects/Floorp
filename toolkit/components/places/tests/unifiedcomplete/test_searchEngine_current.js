@@ -10,28 +10,28 @@ add_task(function*() {
   Services.search.addEngineWithDetails("AliasedMozSearch", "", "doit", "",
                                        "GET", "http://s.example.com/search");
 
-  do_log_info("search engine");
+  do_print("search engine");
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla", searchQuery: "mozilla"}), title: "MozSearch", style: [ "action", "searchengine" ] }, ]
   });
 
-  do_log_info("search engine, uri-like input");
+  do_print("search engine, uri-like input");
   yield check_autocomplete({
     search: "http:///",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "http:///", searchQuery: "http:///"}), title: "MozSearch", style: [ "action", "searchengine" ] }, ]
   });
 
-  do_log_info("search engine, multiple words");
+  do_print("search engine, multiple words");
   yield check_autocomplete({
     search: "mozzarella cheese",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozzarella cheese", searchQuery: "mozzarella cheese"}), title: "MozSearch", style: [ "action", "searchengine" ] }, ]
   });
 
-  do_log_info("search engine, after current engine has changed");
+  do_print("search engine, after current engine has changed");
   Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
                                        "http://s.example.com/search2");
   engine = Services.search.getEngineByName("MozSearch2");
