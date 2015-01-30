@@ -15,10 +15,9 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
 /**
- * A toolbar implementation for the tablet redesign (bug 1014156).
- * Expected to replace BrowserToolbarTablet once complete.
+ * The toolbar implementation for tablet.
  */
-class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
+class BrowserToolbarTablet extends BrowserToolbarTabletBase {
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
 
@@ -34,7 +33,7 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
 
     private boolean backButtonWasEnabledOnStartEditing;
 
-    public BrowserToolbarNewTablet(final Context context, final AttributeSet attrs) {
+    public BrowserToolbarTablet(final Context context, final AttributeSet attrs) {
         super(context, attrs);
 
         forwardButtonTranslationWidth =

@@ -12,7 +12,6 @@ import java.util.List;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -158,7 +157,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
         final BrowserToolbar toolbar;
         if (HardwareUtils.isTablet()) {
-            toolbar = new BrowserToolbarNewTablet(context, attrs);
+            toolbar = new BrowserToolbarTablet(context, attrs);
         } else if (Versions.preHC) {
             toolbar = new BrowserToolbarPreHC(context, attrs);
         } else {
