@@ -1298,7 +1298,9 @@ void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
         mRequestedSeekTarget.Reset();
         break;
       default:
-        /* No action needed */
+        // The state machine checks for things like PAUSED in RunStateMachine.
+        // Make sure to keep it in the loop.
+        ScheduleStateMachineThread();
         break;
     }
   }
