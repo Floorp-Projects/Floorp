@@ -160,6 +160,9 @@ private:
   SwitchReaderResult SwitchAudioReader(int64_t aTarget);
   SwitchReaderResult SwitchVideoReader(int64_t aTarget);
 
+  void DoAudioRequest();
+  void DoVideoRequest();
+
   void RequestAudioDataComplete(int64_t aTime);
   void RequestAudioDataFailed(nsresult aResult);
   void RequestVideoDataComplete(int64_t aTime);
