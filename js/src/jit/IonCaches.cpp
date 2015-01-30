@@ -1005,13 +1005,13 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         Register argObjReg       = argUintNReg;
         Register argIdReg        = regSet.takeGeneral();
 
-        PropertyOp target = shape->getterOp();
+        GetterOp target = shape->getterOp();
         MOZ_ASSERT(target);
 
         // Push stubCode for marking.
         attacher.pushStubCodePointer(masm);
 
-        // JSPropertyOp: bool fn(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+        // JSGetterOp: bool fn(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 
         // Push args on stack first so we can take pointers to make handles.
         masm.Push(UndefinedValue());
@@ -2098,10 +2098,9 @@ IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder, HandleSh
     if (shape->hasSetterValue())
         return false;
 
-    // Despite the vehement claims of Shape.h that writable() is only
-    // relevant for data descriptors, some PropertyOp setters care
-    // desperately about its value. The flag should be always true, apart
-    // from these rare instances.
+    // Despite the vehement claims of Shape.h that writable() is only relevant
+    // for data descriptors, some SetterOps care desperately about its
+    // value. The flag should be always true, apart from these rare instances.
     if (!shape->writable())
         return false;
 
@@ -2380,10 +2379,10 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         attacher.pushStubCodePointer(masm);
 
-        StrictPropertyOp target = shape->setterOp();
+        SetterOp target = shape->setterOp();
         MOZ_ASSERT(target);
-        // JSStrictPropertyOp: bool fn(JSContext *cx, HandleObject obj,
-        //                               HandleId id, bool strict, MutableHandleValue vp);
+        // JSSetterOp: bool fn(JSContext *cx, HandleObject obj,
+        //                     HandleId id, bool strict, MutableHandleValue vp);
 
         // Push args on stack first so we can take pointers to make handles.
         if (value.constant())

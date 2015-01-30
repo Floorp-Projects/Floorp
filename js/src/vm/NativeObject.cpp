@@ -1047,17 +1047,19 @@ static inline bool
 CallAddPropertyHook(ExclusiveContext *cx, HandleNativeObject obj, HandleShape shape,
                     HandleValue nominal)
 {
-    if (JSPropertyOp addProperty = obj->getClass()->addProperty) {
+    if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
         MOZ_ASSERT(addProperty != JS_PropertyStub);
 
         if (!cx->shouldBeJSContext())
             return false;
 
-        /* Make a local copy of value so addProperty can mutate its inout parameter. */
+        // Make a local copy of value so addProperty can mutate its inout parameter.
         RootedValue value(cx, nominal);
 
+        // Use CallJSGetterOp, since JSGetterOp and JSAddPropertyOp happen to
+        // have all the same argument types.
         Rooted<jsid> id(cx, shape->propid());
-        if (!CallJSPropertyOp(cx->asJSContext(), addProperty, obj, id, &value)) {
+        if (!CallJSGetterOp(cx->asJSContext(), addProperty, obj, id, &value)) {
             obj->removeProperty(cx, shape->propid());
             return false;
         }
@@ -1073,7 +1075,7 @@ static inline bool
 CallAddPropertyHookDense(ExclusiveContext *cx, HandleNativeObject obj, uint32_t index,
                          HandleValue nominal)
 {
-    /* Inline addProperty for array objects. */
+    // Inline addProperty for array objects.
     if (obj->is<ArrayObject>()) {
         ArrayObject *arr = &obj->as<ArrayObject>();
         uint32_t length = arr->length();
@@ -1082,7 +1084,7 @@ CallAddPropertyHookDense(ExclusiveContext *cx, HandleNativeObject obj, uint32_t 
         return true;
     }
 
-    if (JSPropertyOp addProperty = obj->getClass()->addProperty) {
+    if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
         MOZ_ASSERT(addProperty != JS_PropertyStub);
 
         if (!cx->shouldBeJSContext())
@@ -1091,11 +1093,13 @@ CallAddPropertyHookDense(ExclusiveContext *cx, HandleNativeObject obj, uint32_t 
         if (!obj->maybeCopyElementsForWrite(cx))
             return false;
 
-        /* Make a local copy of value so addProperty can mutate its inout parameter. */
+        // Make a local copy of value so addProperty can mutate its inout parameter.
         RootedValue value(cx, nominal);
 
+        // Use CallJSGetterOp, since JSGetterOp and JSAddPropertyOp happen to
+        // have all the same argument types.
         Rooted<jsid> id(cx, INT_TO_JSID(index));
-        if (!CallJSPropertyOp(cx->asJSContext(), addProperty, obj, id, &value)) {
+        if (!CallJSGetterOp(cx->asJSContext(), addProperty, obj, id, &value)) {
             obj->setDenseElementHole(cx, index);
             return false;
         }
@@ -1134,8 +1138,7 @@ NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
 
 static inline bool
 DefinePropertyOrElement(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                        PropertyOp getter, StrictPropertyOp setter,
-                        unsigned attrs, HandleValue value,
+                        GetterOp getter, SetterOp setter, unsigned attrs, HandleValue value,
                         bool callSetterAfterwards, bool setterIsStrict)
 {
     MOZ_ASSERT(getter != JS_PropertyStub);
@@ -1315,7 +1318,7 @@ PurgeScopeChain(ExclusiveContext *cx, HandleObject obj, HandleId id)
  */
 static inline bool
 CheckAccessorRedefinition(ExclusiveContext *cx, HandleObject obj, HandleShape shape,
-                          PropertyOp getter, StrictPropertyOp setter, HandleId id, unsigned attrs)
+                          GetterOp getter, SetterOp setter, HandleId id, unsigned attrs)
 {
     MOZ_ASSERT(shape->isAccessorDescriptor());
     if (shape->configurable() || (getter == shape->getter() && setter == shape->setter()))
@@ -1342,7 +1345,7 @@ CheckAccessorRedefinition(ExclusiveContext *cx, HandleObject obj, HandleShape sh
 
 bool
 js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
-                         PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                         GetterOp getter, SetterOp setter, unsigned attrs)
 {
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
@@ -1548,7 +1551,7 @@ js::NativeLookupElement(JSContext *cx, HandleNativeObject obj, uint32_t index,
 
 bool
 js::NativeDefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t index, HandleValue value,
-                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+                        GetterOp getter, SetterOp setter, unsigned attrs)
 {
     RootedId id(cx);
     if (index <= JSID_INT_MAX) {
@@ -1629,7 +1632,7 @@ CallGetter(JSContext* cx, HandleObject receiver, HandleShape shape, MutableHandl
     }
 
     RootedId id(cx, shape->propid());
-    return CallJSPropertyOp(cx, shape->getterOp(), receiver, id, vp);
+    return CallJSGetterOp(cx, shape->getterOp(), receiver, id, vp);
 }
 
 template <AllowGC allowGC>
@@ -1763,8 +1766,8 @@ GetNonexistentProperty(JSContext *cx, HandleNativeObject obj, HandleId id,
     // Non-standard extension: Call the getProperty hook. If it sets vp to a
     // value other than undefined, we're done. If not, fall through to the
     // warning/error checks below.
-    if (JSPropertyOp getProperty = obj->getClass()->getProperty) {
-        if (!CallJSPropertyOp(cx, getProperty, obj, id, vp))
+    if (JSGetterOp getProperty = obj->getClass()->getProperty) {
+        if (!CallJSGetterOp(cx, getProperty, obj, id, vp))
             return false;
 
         if (!vp.isUndefined())
@@ -2016,8 +2019,8 @@ js::SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver
         existing
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
-    JSPropertyOp getter = clasp->getProperty;
-    JSStrictPropertyOp setter = clasp->setProperty;
+    JSGetterOp getter = clasp->getProperty;
+    JSSetterOp setter = clasp->setProperty;
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
     if (!receiver->is<NativeObject>())

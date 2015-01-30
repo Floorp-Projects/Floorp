@@ -887,7 +887,7 @@ class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
 #define JSPROP_PROPOP_ACCESSORS 0x08    /* Passed to JS_Define(UC)Property* and
                                            JS_DefineElement if getters/setters
-                                           are JSPropertyOp/JSStrictPropertyOp */
+                                           are JSGetterOp/JSSetterOp */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
 #define JSPROP_SHARED           0x40    /* don't allocate a value slot for this
@@ -2094,10 +2094,10 @@ inline int
 CheckIsCharacterLiteral(const char (&arr)[N]);
 
 /* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_GETTER only. */
-inline int CheckIsPropertyOp(JSPropertyOp op);
+inline int CheckIsGetterOp(JSGetterOp op);
 
 /* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_SETTER only. */
-inline int CheckIsStrictPropertyOp(JSStrictPropertyOp op);
+inline int CheckIsSetterOp(JSSetterOp op);
 
 
 } // namespace detail
@@ -2116,11 +2116,11 @@ inline int CheckIsStrictPropertyOp(JSStrictPropertyOp op);
    (flags))
 
 #define JS_PROPERTYOP_GETTER(v) \
-  (static_cast<void>(sizeof(JS::detail::CheckIsPropertyOp(v))), \
+  (static_cast<void>(sizeof(JS::detail::CheckIsGetterOp(v))), \
    reinterpret_cast<JSNative>(v))
 
 #define JS_PROPERTYOP_SETTER(v) \
-  (static_cast<void>(sizeof(JS::detail::CheckIsStrictPropertyOp(v))), \
+  (static_cast<void>(sizeof(JS::detail::CheckIsSetterOp(v))), \
    reinterpret_cast<JSNative>(v))
 
 #define JS_STUBGETTER JS_PROPERTYOP_GETTER(JS_PropertyStub)
@@ -2598,11 +2598,11 @@ extern JS_PUBLIC_API(bool)
 JS_HasPropertyById(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *foundp);
 
 struct JSPropertyDescriptor {
-    JSObject           *obj;
-    unsigned           attrs;
-    JSPropertyOp       getter;
-    JSStrictPropertyOp setter;
-    JS::Value          value;
+    JSObject *obj;
+    unsigned attrs;
+    JSGetterOp getter;
+    JSSetterOp setter;
+    JS::Value value;
 
     JSPropertyDescriptor()
       : obj(nullptr), attrs(0), getter(nullptr), setter(nullptr), value(JSVAL_VOID)
@@ -2632,8 +2632,8 @@ class PropertyDescriptorOperations
     bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
     bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
 
-    // Descriptors with JSPropertyOps are considered data descriptors. It's
-    // complicated.
+    // Descriptors with JSGetterOp/JSSetterOp are considered data
+    // descriptors. It's complicated.
     bool isAccessorDescriptor() const { return hasGetterOrSetterObject(); }
     bool isDataDescriptor() const { return !isAccessorDescriptor(); }
 
@@ -2643,8 +2643,8 @@ class PropertyDescriptorOperations
         return JS::HandleObject::fromMarkedLocation(&desc()->obj);
     }
     unsigned attributes() const { return desc()->attrs; }
-    JSPropertyOp getter() const { return desc()->getter; }
-    JSStrictPropertyOp setter() const { return desc()->setter; }
+    JSGetterOp getter() const { return desc()->getter; }
+    JSSetterOp setter() const { return desc()->setter; }
     JS::HandleObject getterObject() const {
         MOZ_ASSERT(hasGetterObject());
         return JS::HandleObject::fromMarkedLocation(
@@ -2687,8 +2687,8 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         return JS::MutableHandleObject::fromMarkedLocation(&desc()->obj);
     }
     unsigned &attributesRef() { return desc()->attrs; }
-    JSPropertyOp &getter() { return desc()->getter; }
-    JSStrictPropertyOp &setter() { return desc()->setter; }
+    JSGetterOp &getter() { return desc()->getter; }
+    JSSetterOp &setter() { return desc()->setter; }
     JS::MutableHandleValue value() {
         return JS::MutableHandleValue::fromMarkedLocation(&desc()->value);
     }
@@ -2696,16 +2696,16 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
-    void setGetter(JSPropertyOp op) {
+    void setGetter(JSGetterOp op) {
         MOZ_ASSERT(op != JS_PropertyStub);
         desc()->getter = op;
     }
-    void setSetter(JSStrictPropertyOp op) {
+    void setSetter(JSSetterOp op) {
         MOZ_ASSERT(op != JS_StrictPropertyStub);
         desc()->setter = op;
     }
-    void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSPropertyOp>(obj); }
-    void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSStrictPropertyOp>(obj); }
+    void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSGetterOp>(obj); }
+    void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSSetterOp>(obj); }
 
     JS::MutableHandleObject getterObject() {
         MOZ_ASSERT(this->hasGetterObject());
