@@ -1191,8 +1191,9 @@ ExclusiveContext::stackLimitAddressForJitCode(StackKind kind)
 {
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     return runtime_->addressOfSimulatorStackLimit();
-#endif
+#else
     return stackLimitAddress(kind);
+#endif
 }
 
 JSVersion
