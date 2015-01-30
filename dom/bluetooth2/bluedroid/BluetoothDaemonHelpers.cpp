@@ -98,6 +98,13 @@ Convert(uint8_t aIn, int& aOut)
 }
 
 nsresult
+Convert(uint8_t aIn, unsigned long& aOut)
+{
+  aOut = static_cast<unsigned long>(aIn);
+  return NS_OK;
+}
+
+nsresult
 Convert(uint8_t aIn, BluetoothA2dpAudioState& aOut)
 {
   static const BluetoothA2dpAudioState sAudioState[] = {
@@ -139,6 +146,93 @@ Convert(uint8_t aIn, BluetoothAclState& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sAclState[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothAvrcpEvent& aOut)
+{
+  static const BluetoothAvrcpEvent sAvrcpEvent[] = {
+    CONVERT(0x00, static_cast<BluetoothAvrcpEvent>(0)),
+    CONVERT(0x01, AVRCP_EVENT_PLAY_STATUS_CHANGED),
+    CONVERT(0x02, AVRCP_EVENT_TRACK_CHANGE),
+    CONVERT(0x03, AVRCP_EVENT_TRACK_REACHED_END),
+    CONVERT(0x04, AVRCP_EVENT_TRACK_REACHED_START),
+    CONVERT(0x05, AVRCP_EVENT_PLAY_POS_CHANGED),
+    CONVERT(0x06, static_cast<BluetoothAvrcpEvent>(0)),
+    CONVERT(0x07, static_cast<BluetoothAvrcpEvent>(0)),
+    CONVERT(0x08, AVRCP_EVENT_APP_SETTINGS_CHANGED)
+  };
+  if (NS_WARN_IF(!aIn) ||
+      NS_WARN_IF(aIn == 0x06) ||
+      NS_WARN_IF(aIn == 0x07) ||
+      NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpEvent))) {
+    aOut = static_cast<BluetoothAvrcpEvent>(0); // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAvrcpEvent[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothAvrcpMediaAttribute& aOut)
+{
+  static const BluetoothAvrcpMediaAttribute sAvrcpMediaAttribute[] = {
+    CONVERT(0x00, static_cast<BluetoothAvrcpMediaAttribute>(0)),
+    CONVERT(0x01, AVRCP_MEDIA_ATTRIBUTE_TITLE),
+    CONVERT(0x02, AVRCP_MEDIA_ATTRIBUTE_ARTIST),
+    CONVERT(0x03, AVRCP_MEDIA_ATTRIBUTE_ALBUM),
+    CONVERT(0x04, AVRCP_MEDIA_ATTRIBUTE_TRACK_NUM),
+    CONVERT(0x05, AVRCP_MEDIA_ATTRIBUTE_NUM_TRACKS),
+    CONVERT(0x06, AVRCP_MEDIA_ATTRIBUTE_GENRE),
+    CONVERT(0x07, AVRCP_MEDIA_ATTRIBUTE_PLAYING_TIME)
+  };
+  if (NS_WARN_IF(!aIn) ||
+      NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpMediaAttribute))) {
+    // silences compiler warning
+    aOut = static_cast<BluetoothAvrcpMediaAttribute>(0);
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAvrcpMediaAttribute[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothAvrcpPlayerAttribute& aOut)
+{
+  static const BluetoothAvrcpPlayerAttribute sAvrcpPlayerAttribute[] = {
+    CONVERT(0x00, static_cast<BluetoothAvrcpPlayerAttribute>(0)),
+    CONVERT(0x01, AVRCP_PLAYER_ATTRIBUTE_EQUALIZER),
+    CONVERT(0x02, AVRCP_PLAYER_ATTRIBUTE_REPEAT),
+    CONVERT(0x03, AVRCP_PLAYER_ATTRIBUTE_SHUFFLE),
+    CONVERT(0x04, AVRCP_PLAYER_ATTRIBUTE_SCAN)
+  };
+  if (NS_WARN_IF(!aIn) ||
+      NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpPlayerAttribute))) {
+    // silences compiler warning
+    aOut = static_cast<BluetoothAvrcpPlayerAttribute>(0);
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAvrcpPlayerAttribute[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(uint8_t aIn, BluetoothAvrcpRemoteFeature& aOut)
+{
+  static const BluetoothAvrcpRemoteFeature sAvrcpRemoteFeature[] = {
+    CONVERT(0x00, AVRCP_REMOTE_FEATURE_NONE),
+    CONVERT(0x01, AVRCP_REMOTE_FEATURE_METADATA),
+    CONVERT(0x02, AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME),
+    CONVERT(0x03, AVRCP_REMOTE_FEATURE_BROWSE)
+  };
+  if (NS_WARN_IF(!aIn) ||
+      NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sAvrcpRemoteFeature))) {
+    // silences compiler warning
+    aOut = static_cast<BluetoothAvrcpRemoteFeature>(0);
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAvrcpRemoteFeature[aIn];
   return NS_OK;
 }
 
@@ -380,6 +474,18 @@ Convert(uint32_t aIn, int& aOut)
 }
 
 nsresult
+Convert(uint32_t aIn, uint8_t& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<uint8_t>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<uint8_t>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<uint8_t>(aIn);
+  return NS_OK;
+}
+
+nsresult
 Convert(size_t aIn, uint16_t& aOut)
 {
   if (NS_WARN_IF(aIn >= (1ul << 16))) {
@@ -518,6 +624,50 @@ Convert(const BluetoothAddress& aIn, nsAString& aOut)
 
   aOut = NS_ConvertUTF8toUTF16(str);
 
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothAvrcpEvent aIn, uint8_t& aOut)
+{
+  static const uint8_t sValue[] = {
+    CONVERT(AVRCP_EVENT_PLAY_STATUS_CHANGED, 0x01),
+    CONVERT(AVRCP_EVENT_TRACK_CHANGE, 0x02),
+    CONVERT(AVRCP_EVENT_TRACK_REACHED_END, 0x03),
+    CONVERT(AVRCP_EVENT_TRACK_REACHED_START, 0x04),
+    CONVERT(AVRCP_EVENT_PLAY_POS_CHANGED, 0x05),
+    CONVERT(AVRCP_EVENT_APP_SETTINGS_CHANGED, 0x08)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothAvrcpNotification aIn, uint8_t& aOut)
+{
+  static const bool sValue[] = {
+    CONVERT(AVRCP_NTF_INTERIM, 0x00),
+    CONVERT(AVRCP_NTF_CHANGED, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<unsigned long>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<unsigned long>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<unsigned long>(aIn);
   return NS_OK;
 }
 
@@ -732,6 +882,30 @@ Convert(BluetoothSspVariant aIn, uint8_t& aOut)
   return NS_OK;
 }
 
+nsresult
+Convert(ControlPlayStatus aIn, uint8_t& aOut)
+{
+  static const uint8_t sValue[] = {
+    CONVERT(PLAYSTATUS_STOPPED, 0x00),
+    CONVERT(PLAYSTATUS_PLAYING, 0x01),
+    CONVERT(PLAYSTATUS_PAUSED, 0x02),
+    CONVERT(PLAYSTATUS_FWD_SEEK, 0x03),
+    CONVERT(PLAYSTATUS_REV_SEEK, 0x04)
+  };
+  if (aIn == PLAYSTATUS_ERROR) {
+    /* This case is handled separately to not populate
+     * |sValue| with empty entries. */
+    aOut = 0xff;
+    return NS_OK;
+  }
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
+  return NS_OK;
+}
+
 /* |ConvertArray| is a helper for converting arrays. Pass an
  * instance of this structure as the first argument to |Convert|
  * to convert an array. The output type has to support the array
@@ -780,6 +954,142 @@ nsresult
 PackPDU(const BluetoothAddress& aIn, BluetoothDaemonPDU& aPDU)
 {
   return PackPDU(PackArray<uint8_t>(aIn.mAddr, sizeof(aIn.mAddr)), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothAvrcpAttributeTextPairs& aIn,
+        BluetoothDaemonPDU& aPDU)
+{
+  size_t i;
+
+  for (i = 0; i < aIn.mLength; ++i) {
+    nsresult rv = PackPDU(aIn.mAttr[i], aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    uint8_t len;
+    const uint8_t* str;
+
+    if (aIn.mText[i]) {
+      str = reinterpret_cast<const uint8_t*>(aIn.mText[i]);
+      len = strlen(aIn.mText[i]) + 1;
+    } else {
+      /* write \0 character for NULL strings */
+      str = reinterpret_cast<const uint8_t*>("\0");
+      len = 1;
+    }
+
+    rv = PackPDU(len, aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = PackPDU(PackArray<uint8_t>(str, len), aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+PackPDU(const BluetoothAvrcpAttributeValuePairs& aIn,
+        BluetoothDaemonPDU& aPDU)
+{
+  size_t i;
+
+  for (i = 0; i < aIn.mLength; ++i) {
+    nsresult rv = PackPDU(aIn.mAttr[i], aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = PackPDU(aIn.mValue[i], aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+PackPDU(const BluetoothAvrcpElementAttribute& aIn, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(PackConversion<uint32_t, uint8_t>(aIn.mId), aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  const NS_ConvertUTF16toUTF8 cstr(aIn.mValue);
+
+  if (NS_WARN_IF(cstr.Length() == PR_UINT32_MAX)) {
+    return NS_ERROR_ILLEGAL_VALUE; /* integer overflow detected */
+  }
+
+  PRUint32 clen = cstr.Length() + 1; /* include \0 character */
+
+  rv = PackPDU(PackConversion<PRUint32, uint8_t>(clen), aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return PackPDU(
+    PackArray<uint8_t>(reinterpret_cast<const uint8_t*>(cstr.get()), clen),
+    aPDU);
+}
+
+nsresult
+PackPDU(BluetoothAvrcpEvent aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothAvrcpEvent, uint8_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothAvrcpEventParamPair& aIn, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv;
+
+  switch (aIn.mEvent) {
+    case AVRCP_EVENT_PLAY_STATUS_CHANGED:
+      rv = PackPDU(aIn.mParam.mPlayStatus, aPDU);
+      break;
+    case AVRCP_EVENT_TRACK_CHANGE:
+      rv = PackPDU(PackArray<uint8_t>(aIn.mParam.mTrack,
+                                      MOZ_ARRAY_LENGTH(aIn.mParam.mTrack)),
+                   aPDU);
+      break;
+    case AVRCP_EVENT_TRACK_REACHED_END:
+      /* fall through */
+    case AVRCP_EVENT_TRACK_REACHED_START:
+      /* no data to pack */
+      rv = NS_OK;
+      break;
+    case AVRCP_EVENT_PLAY_POS_CHANGED:
+      rv = PackPDU(aIn.mParam.mSongPos, aPDU);
+      break;
+    case AVRCP_EVENT_APP_SETTINGS_CHANGED:
+      /* pack number of attribute-value pairs */
+      rv = PackPDU(aIn.mParam.mNumAttr, aPDU);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      /* pack attribute-value pairs */
+      rv = PackPDU(BluetoothAvrcpAttributeValuePairs(aIn.mParam.mIds,
+                                                     aIn.mParam.mValues,
+                                                     aIn.mParam.mNumAttr),
+                   aPDU);
+      break;
+    default:
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      break;
+  }
+  return rv;
+}
+
+nsresult
+PackPDU(BluetoothAvrcpNotification aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackConversion<BluetoothAvrcpNotification, uint8_t>(aIn), aPDU);
 }
 
 nsresult
@@ -933,6 +1243,12 @@ PackPDU(BluetoothSocketType aIn, BluetoothDaemonPDU& aPDU)
   return PackPDU(PackConversion<BluetoothSocketType, uint8_t>(aIn), aPDU);
 }
 
+nsresult
+PackPDU(ControlPlayStatus aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<ControlPlayStatus, uint8_t>(aIn), aPDU);
+}
+
 //
 // Unpacking
 //
@@ -967,6 +1283,56 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAclState& aOut)
 {
   return UnpackPDU(aPDU, UnpackConversion<uint8_t, BluetoothAclState>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAvrcpEvent& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpEvent>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAvrcpMediaAttribute& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpMediaAttribute>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAvrcpPlayerAttribute& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpPlayerAttribute>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAvrcpPlayerSettings& aOut)
+{
+  /* Read number of attribute-value pairs */
+  nsresult rv = UnpackPDU(aPDU, aOut.mNumAttr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* Read attribute-value pairs */
+  for (uint8_t i = 0; i < aOut.mNumAttr; ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut.mIds[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(aPDU, aOut.mValues[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAvrcpRemoteFeature& aOut)
+{
+  return UnpackPDU(
+    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpRemoteFeature>(aOut));
 }
 
 nsresult

@@ -22,13 +22,17 @@
 
         <include layout="@layout/fxaccount_custom_server_view" />
 
+        <TextView
+            android:id="@+id/remote_error"
+            style="@style/FxAccountErrorItem" />
+
         <include layout="@layout/fxaccount_email_password_view" />
 
         <TextView
             style="@style/FxAccountTextItem"
-            android:layout_marginTop="10dp"
             android:text="@string/fxaccount_create_account_password_length_restriction"
-            android:textColor="@color/fxaccount_textColorSubdued" />
+            android:textColor="@color/fxaccount_textColorSubdued"
+            android:textSize="12sp" />
 
         <!-- Per http://stackoverflow.com/questions/2359176/android-edittext-onclicklistener, not allowing focus allows us to highjack the click. -->
 
@@ -40,23 +44,37 @@
             android:hint="@string/fxaccount_create_account_year_of_birth"
             android:inputType="none" />
 
-        <TextView
-            android:id="@+id/policy"
-            style="@style/FxAccountLinkifiedItem"
-            android:layout_marginBottom="0dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:text="@string/fxaccount_create_account_policy_text"
-            android:textColorLink="@color/fxaccount_linkified_textColorLinkSubdued" />
+        <LinearLayout
+            android:id="@+id/month_day_combo"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="1" >
 
-        <TextView
-            android:id="@+id/remote_error"
-            style="@style/FxAccountErrorItem" />
+            <EditText
+                android:id="@+id/month_edit"
+                style="@style/FxAccountEditItem"
+                android:layout_marginRight="10dp"
+                android:drawableRight="@drawable/fxaccount_ddarrow_inactive"
+                android:focusable="false"
+                android:layout_weight="0.5"
+                android:maxLength="3"
+                android:hint="@string/fxaccount_create_account_month_of_birth"
+                android:inputType="none" />
+
+            <EditText
+                android:id="@+id/day_edit"
+                style="@style/FxAccountEditItem"
+                android:layout_marginLeft="10dp"
+                android:drawableRight="@drawable/fxaccount_ddarrow_inactive"
+                android:focusable="false"
+                android:layout_weight="0.5"
+                android:hint="@string/fxaccount_create_account_day_of_birth"
+                android:inputType="none" />
+        </LinearLayout>
 
         <RelativeLayout
-            style="@style/FxAccountButtonLayout"
-            android:layout_marginBottom="10dp" >
+            style="@style/FxAccountButtonLayout" >
 
             <ProgressBar
                 android:id="@+id/progress"
@@ -64,25 +82,29 @@
 
             <Button
                 android:id="@+id/button"
-                style="@style/FxAccountButton"
+                style="@style/FxAccountProgressButton"
                 android:text="@string/fxaccount_create_account_button" />
         </RelativeLayout>
+
+        <TextView
+            android:id="@+id/sign_in_instead_link"
+            style="@style/FxAccountLinkItem"
+            android:focusable="true"
+            android:layout_marginBottom="0dp"
+            android:text="@string/fxaccount_create_account_sign_in_instead" />
 
         <CheckBox
             android:id="@+id/choose_what_to_sync_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="0dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/fxaccount_create_account_choose_what_to_sync" />
 
         <TextView
-            android:id="@+id/sign_in_instead_link"
-            style="@style/FxAccountLinkItem"
-            android:layout_marginBottom="20dp"
-            android:layout_marginTop="20dp"
-            android:focusable="true"
-            android:text="@string/fxaccount_create_account_sign_in_instead" />
+            android:id="@+id/policy"
+            style="@style/FxAccountPolicyItem"
+            android:text="@string/fxaccount_create_account_policy_text" />
 
         <LinearLayout style="@style/FxAccountSpacer" />
 

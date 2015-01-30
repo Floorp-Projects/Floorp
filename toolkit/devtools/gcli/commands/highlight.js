@@ -9,6 +9,10 @@ const gcli = require("gcli/index");
 require("devtools/server/actors/inspector");
 const {HIGHLIGHTER_CLASSES} = require("devtools/server/actors/highlighter");
 const {BoxModelHighlighter} = HIGHLIGHTER_CLASSES;
+XPCOMUtils.defineLazyGetter(this, "nodesSelected", function() {
+  return Services.strings.createBundle("chrome://browser/locale/devtools/gclicommands.properties");
+});
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm","resource://gre/modules/PluralForm.jsm");
 
 // How many maximum nodes can be highlighted in parallel
 const MAX_HIGHLIGHTED_ELEMENTS = 100;
@@ -125,8 +129,9 @@ exports.items = [
         i ++;
       }
 
-      let output = gcli.lookupFormat("highlightOutputConfirm",
-        ["" + args.selector.length]);
+      let highlightText = nodesSelected.GetStringFromName("highlightOutputConfirm2");
+      let output = PluralForm.get(args.selector.length, highlightText)
+                             .replace("%1$S", args.selector.length);
       if (args.selector.length > i) {
         output = gcli.lookupFormat("highlightOutputMaxReached",
           ["" + args.selector.length, "" + i]);
