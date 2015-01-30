@@ -4465,6 +4465,12 @@ pref("dom.mozSettings.SettingsService.verbose.enabled", false);
 // readwrite.
 pref("dom.mozSettings.allowForceReadOnly", false);
 
+// The interval at which to check for slow running addons
+pref("browser.addon-watch.interval", 15000);
+pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\"]");
+// the percentage of time addons are allowed to use without being labeled slow
+pref("browser.addon-watch.percentage-limit", 1);
+
 // RequestSync API is disabled by default.
 pref("dom.requestSync.enabled", false);
 
