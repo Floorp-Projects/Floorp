@@ -191,7 +191,7 @@ NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
 
-class GPUAdapterReporter : public nsIMemoryReporter
+class GPUAdapterReporter MOZ_FINAL : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -330,6 +330,8 @@ Atomic<size_t> gfxWindowsPlatform::sD3D11MemoryUsed;
 
 class D3D11TextureReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~D3D11TextureReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 
