@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInterfaceRequestor;
+
+/**
+ * Functions that display warnings for transitions between secure
+ * and insecure pages, posts to insecure servers etc.
+ */
+[scriptable, uuid(a9561631-5964-4d3f-b372-9f23504054b1)]
+interface nsISecurityWarningDialogs : nsISupports
+{
+  /**
+   *  Inform the user: Although the currently displayed
+   *  page was loaded using a secure connection, and the UI probably
+   *  currently indicates a secure page, 
+   *  that information is being submitted to an insecure page.
+   *
+   *  @param ctx A user interface context.
+   *
+   *  @return true if the user confirms to submit.
+   */
+  boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
+};
+
+%{C++
+#define NS_SECURITYWARNINGDIALOGS_CONTRACTID "@mozilla.org/nsSecurityWarningDialogs;1"
+%}

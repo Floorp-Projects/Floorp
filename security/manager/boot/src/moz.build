@@ -15,6 +15,7 @@ UNIFIED_SOURCES += [
     'nsEntropyCollector.cpp',
     'nsSecureBrowserUIImpl.cpp',
     'nsSecurityHeaderParser.cpp',
+    'nsSecurityWarningDialogs.cpp',
     'nsSiteSecurityService.cpp',
     'PublicKeyPinningService.cpp',
     'RootCertificateTelemetryUtils.cpp',
